@@ -90,7 +90,6 @@ export const DISPLAY_SOURCE_WORDS = {
   // the 3D view (§53, space-view-panel.ts)
   'space.name':
     '3D view of {graph}. Drag to turn, Shift-drag to move, scroll to zoom. Click a thing to name it, double-click to fly to it. Question mark shows how to move. Escape goes back.',
-  'space.flatten': 'Back to 2D',
   'space.moves': 'Move the 3D view',
   'space.zoom-in': 'Zoom in',
   'space.zoom-out': 'Zoom out',

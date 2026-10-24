@@ -24,8 +24,9 @@ export const cardInUse = (): CardActions | null => (used?.root.isConnected ? use
 /** Makes the card drawn in `root` the one in use each time the focus or a press goes into it, while `card` is loaded. */
 export function trackUse(card: Lifecycle, root: HTMLElement, actions: CardActions): void {
   const mark = () => (used = { root, actions });
-  card.registerDomEvent(root, 'focusin', mark);
-  card.registerDomEvent(root, 'pointerdown', mark);
+  // as they come down, so a part that keeps its events to itself, as the view in space does, is the card's use too
+  card.registerDomEvent(root, 'focusin', mark, { capture: true });
+  card.registerDomEvent(root, 'pointerdown', mark, { capture: true });
   card.register(() => {
     if (used?.root === root) used = null;
   });

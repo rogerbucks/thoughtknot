@@ -25,6 +25,8 @@ import type { MenuItem } from './thing-menu';
 import { word } from '@thoughtknot/core';
 import type { Taps, Target } from './taps';
 import { SPACE_OPEN } from './space-view-panel';
+import { ZOOM_STEP } from '../../space-controls.ts';
+import type { SpaceMove } from '../../space-controls.ts';
 
 /** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
 const ownButton = (target: EventTarget | null): boolean =>
@@ -53,6 +55,8 @@ export interface ViewportHost {
   root: HTMLElement;
   /** The card's full screen, which a host's command opens. A full-screen card's own command closes it. */
   full: { show: () => void };
+  /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
+  space?: { move: (m: SpaceMove) => boolean };
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -65,9 +69,9 @@ export function bindViewportEvents(host: ViewportHost): void {
   // ? lists every keyboard shortcut, and the host's commands for the drawing act on the card used last (§44)
   const shortcuts = () => toggleShortcuts(host.root, vp);
   trackUse(card, host.root, {
-    zoomIn: () => zoom.zoomIn(),
-    zoomOut: () => zoom.zoomOut(),
-    fit: () => zoom.fit(),
+    zoomIn: () => host.space?.move({ zoom: ZOOM_STEP }) || zoom.zoomIn(),
+    zoomOut: () => host.space?.move({ zoom: 1 / ZOOM_STEP }) || zoom.zoomOut(),
+    fit: () => host.space?.move({ reset: true }) || zoom.fit(),
     fullScreen: () => (host.o?.mode === 'full' ? host.o.onClose?.() : host.full.show()),
     shortcuts,
     tour: () => showTour(host.root, vp),

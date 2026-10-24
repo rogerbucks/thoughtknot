@@ -267,20 +267,22 @@ window.paneInParts = async () => {
 };
 // the overview's 3D view: opened from its tools, named for the graph, and gone again on Back to 2D
 window.space3d = async () => {
-  card.querySelector('.thoughtknot-massive-tools button[aria-label="3D view"]').click();
+  // the same button in its tools opens the 3D view and takes it back to 2D
+  const button = card.querySelector('.thoughtknot-massive-tools button[aria-label="3D"]');
+  button.click();
   const view = () => card.querySelector('.thoughtknot-space-view');
-  const back = () => view()?.querySelector('button[aria-label="Back to 2D"]');
-  for (let i = 0; i < 100 && !back(); i++) await new Promise((r) => setTimeout(r, 20));
-  if (!back()) return { opened: false };
+  const pad = () => view()?.querySelector('.thoughtknot-space-pad');
+  for (let i = 0; i < 100 && !pad(); i++) await new Promise((r) => setTimeout(r, 20));
+  if (!pad()) return { opened: false };
   const label = view().getAttribute('aria-label');
   // the height starts by group only when the marks lifted hold the overview's groups
-  const height = view().querySelector('.thoughtknot-space-bar button[aria-label^="Height"]')?.getAttribute('aria-label');
+  const height = pad().querySelector('button[aria-label^="Height"]')?.getAttribute('aria-label');
   // a click in the middle picks the block under it, said aloud by the overview's own name for that cluster
   const at = view().getBoundingClientRect();
   const x = at.left + at.width / 2, y = at.top + at.height / 2;
   for (const type of ['pointerdown', 'pointerup']) view().dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: 1, bubbles: true }));
   const said = view().querySelector('.thoughtknot-space-said')?.textContent;
-  back().click();
+  button.click();
   return { opened: true, label, height, said, closed: !view() };
 };
 // a block too large to read at once, in the pane, with a style block after it in the note. The overview starts with
@@ -524,11 +526,11 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
   // proves: scale_space_view
   test('the overview opens as a 3D view from its tools, and goes back to 2D', options, async () => {
     const { opened, label, height, said, closed } = await run('space3d()');
-    assert.ok(opened, 'the 3D view opens, with its Back to 2D button');
+    assert.ok(opened, 'the 3D view opens, with its buttons');
     assert.match(label ?? '', /^3D view of Big\./, 'the 3D view of the overview, named for its graph');
     assert.equal(height, 'Height: groups', "the overview's groups are lifted as blocks");
     assert.match(said ?? '', /^Around Thing \d+, \d+ things$/, 'a click picks a block, said as one of its clusters');
-    assert.ok(closed, 'Back to 2D closes it');
+    assert.ok(closed, 'the same button closes it');
   });
 
   // proves: scale_filter_live

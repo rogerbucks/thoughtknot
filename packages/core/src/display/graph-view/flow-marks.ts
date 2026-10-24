@@ -57,9 +57,11 @@ export function markFlow(svg: SVGSVGElement, flow: readonly FlowLink[]): void {
 
 /**
  * The card's legend of what moves: each movement and its meaning once, its icon beside the words. None when none moves.
- * A link `folded` into a stub or a box by the View menu (§25) is not drawn, so not said.
+ * A link `folded` into a stub or a box by the View menu (§25) is not drawn, so not said. It takes the place of the
+ * legend `root` held, as the View menu lays the drawing out again.
  */
 export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], folded: readonly number[] = []): void {
+  root.empty();
   const entries = flowLegend(flow.filter((f) => !folded.includes(f.index)));
   if (!entries.length) return;
   const ul = root.createEl('ul', {

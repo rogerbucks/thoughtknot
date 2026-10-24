@@ -1,13 +1,14 @@
 // The 3D view of a card's drawing (editor spec §53, scale_space_view). Roger, 22 Oct 2026: a view you switch to from
-// the bar, never the default, so people can explore a graph in depth. It lies over the drawing and goes on Back to 2D
-// or Escape. It only looks: nothing is edited here, and nothing reaches the note.
+// the bar, never the default, so people can explore a graph in depth. It lies over the drawing, under the card's bar,
+// and goes by the bar's button or Escape (space-switch.ts). It only looks: nothing is edited here, and nothing reaches
+// the note.
 //
 // It reads the drawing already on screen: each box, group and link of the SVG, with the colours the theme gave them.
 // So it looks like the card in light and dark. The numbers live in core space-view.ts and space-spread.ts, and the
 // painters in space-painter.ts and space-gpu-painter.ts.
 //
-// A button switches how it is shown:
-// - in space, first: laid out again in space, each thing a ball sized by its links, each link an arrow (space-spread.ts);
+// It is shown as cards in space (2.5D, space-cards.ts), or in 3D, one of three ways a button among its moves switches:
+// - in space: laid out again in space, each thing a ball sized by its links, each link an arrow (space-spread.ts);
 // - groups: the drawing lifted, each group a floor, and things stand on their group;
 // - links: the drawing lifted, each thing as tall as its count of links, so the busiest things stand out.
 // How to move it is on screen (space-controls.ts says each way): a help line at the foot, and buttons to zoom, turn
@@ -16,7 +17,8 @@
 // What is picked is said aloud, and its name always shows (space-labels.ts).
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
-// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). The view stays still. Another click on it makes
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A thing the card selects, as by Find, is picked
+// here too. The view stays still. Another click on it makes
 // it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
 // the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
 // (focus_space).
@@ -27,7 +29,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -35,7 +37,7 @@ import { webgl2SpacePainter } from './space-painter.ts';
 import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
-import { button } from '../button';
+import { DEPTH_WORDS, linkCounts, spacePad } from './space-view-pad.ts';
 import { marksOfSvg } from './svg-marks.ts';
 import { reducedMotion } from './details-nav';
 import { MARKED } from './focus-marks';
@@ -58,26 +60,33 @@ const DOUBLE_TAP = 350;
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
 
-/** Each thing's count of links, by its key: what height means when it means links. */
-function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const m of marks)
-    if (m.kind === 'link')
-      for (const end of [m.from, m.to]) if (end !== undefined) counts.set(end, (counts.get(end) ?? 0) + 1);
-  return counts;
+/** How the view opens: as cards or in 3D. */
+export interface SpaceOptions {
+  cards?: boolean;
 }
 
+/** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
+export interface SpaceView {
+  close: () => void;
+  move: (m: SpaceMove) => void;
+  cards: (on: boolean) => void;
+}
+
+/** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
+const KEPT = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'click', 'dblclick', 'wheel', 'keydown'];
+
 /**
- * Opens the 3D view over `root`, the card. It is of `from`: the drawing's SVG, or marks already read, such as an
- * overview's, with their paints. It gives back how to close it, or null where the device can paint no 3D at all.
- * `closed` is called once it closes, by its button, by Escape, or by the card.
+ * Opens the 3D view over `root`, the drawing's frame. It is of `from`: the drawing's SVG, or marks already read, such
+ * as an overview's, with their paints. It gives back the open view, or null where the device can paint no 3D at all.
+ * `closed` is called once it closes, by the card's button, by Escape, or as the card goes.
  */
 export async function openSpaceView(
   root: HTMLElement,
   from: SVGSVGElement | { marks: DrawMark[]; paints: Paints },
   graph: string,
   closed: () => void,
-): Promise<(() => void) | null> {
+  more: SpaceOptions = {},
+): Promise<SpaceView | null> {
   const already = opened.get(root);
   if (already) {
     already();
@@ -96,7 +105,7 @@ export async function openSpaceView(
     el.remove();
     return null;
   }
-  const bar = el.createDiv({ cls: 'thoughtknot-space-bar', attr: { role: 'toolbar' } });
+  for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
   const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
   const win = el.win;
   // a card with no background of its own shows the page's: the label halo uses the system's page colour then
@@ -109,8 +118,8 @@ export async function openSpaceView(
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
     by === 'cards' ? spreadSpace(marks, undefined, true).space : by ? spaceOf(marks, by) : spreadSpace(marks).space;
-  // a drawing opens in space; an overview's groups (massive-paints.ts) are no things to lay out, so they are lifted
-  let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : 0;
+  // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
+  let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
   let width = 1,
     height = 1;
@@ -155,14 +164,21 @@ export async function openSpaceView(
   // fitted to them when they are other things than before
   const marked = () => {
     if ('marks' in from || !open) return;
-    const was = space.blocks.map((b) => b.of).join();
+    const was = space.blocks.map((b) => b.of).join(),
+      before = picked && { of: picked.of, at: middleOf(picked) };
     ({ marks, paints } = marksOfSvg(from));
     depths = depthsOf();
     space = spaceBy(depths[depth] ?? null);
-    picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
+    // what the card selects now is picked here too: a thing found, or none once its details close
+    const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
+    picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
     pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
-    if (space.blocks.map((b) => b.of).join() !== was) orbit = orbitFit(space, width / height);
-    orbit = centredOn(orbit, picked);
+    const other = space.blocks.map((b) => b.of).join() !== was;
+    if (other) orbit = orbitFit(space, width / height);
+    // the view follows the picked thing only where the drawing moved it; a pick, a fade or a find leaves the view still
+    const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
+    const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);
+    if (other || moved) orbit = centredOn(orbit, picked);
     again();
   };
   if (!('marks' in from)) from.addEventListener(MARKED, marked);
@@ -202,7 +218,7 @@ export async function openSpaceView(
     again();
   };
   /** Tells the card what was picked, so it opens its details as a tap in 2D does. */
-  const tell = (t: Target) => root.dispatchEvent(new CustomEvent<Target>(SPACE_OPEN, { detail: t }));
+  const tell = (t: Target) => root.dispatchEvent(new CustomEvent<Target>(SPACE_OPEN, { detail: t, bubbles: true }));
   /** Turns the view to face `point`, which it then turns round and zooms to; gliding, unless motion is to be still. */
   const turnTo = (point: Vec3) => {
     const from = orbit,
@@ -231,48 +247,23 @@ export async function openSpaceView(
   };
 
   const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
-  button(bar, word('space.flatten'), 'square', close, word('space.flatten'));
-  const depthButton = button(
-    bar,
-    depthWords(),
-    'bar-chart-3',
-    () => {
-      depth = (depth + 1) % depths.length;
-      space = spaceBy(depths[depth] ?? null);
-      picked = picked && (space.blocks.find((b) => b.id === picked?.id) ?? null);
-      orbit = centredOn(orbit, picked);
-      const label = depthWords();
-      depthButton.setAttribute('aria-label', label);
-      depthButton.querySelector<HTMLElement>('.thoughtknot-badge-text')?.setText(label);
-      said.setText(label);
-      again();
-    },
-    depthWords(),
-  );
-
-  // the buttons that move the view, for those who would rather press than drag
-  const pad = el.createDiv({
-    cls: 'thoughtknot-space-pad',
-    attr: { role: 'toolbar', 'aria-label': word('space.moves') },
-  });
-  button(pad, word('space.zoom-in'), 'zoom-in', () => move({ zoom: ZOOM_STEP }));
-  button(pad, word('space.zoom-out'), 'zoom-out', () => move({ zoom: 1 / ZOOM_STEP }));
-  button(pad, word('space.turn-left'), 'rotate-ccw', () => move({ turn: [-KEY_STEP * 2, 0] }));
-  button(pad, word('space.turn-right'), 'rotate-cw', () => move({ turn: [KEY_STEP * 2, 0] }));
-  button(pad, word('space.tilt-up'), 'chevron-up', () => move({ turn: [0, -KEY_STEP] }));
-  button(pad, word('space.tilt-down'), 'chevron-down', () => move({ turn: [0, KEY_STEP] }));
-  button(pad, word('space.reset'), 'maximize', () => move({ reset: true }));
-  const helpButton = button(pad, word('space.help'), 'help-circle', () => move({ help: true }));
-
-  // how to move it, in short steps, shown when it opens; touch screens get the touch words
-  const help = el.createEl('ul', { cls: 'thoughtknot-space-help' });
-  const touch = win.matchMedia?.('(pointer: coarse)').matches ?? false;
-  for (const key of touch ? TOUCH_HELP : MOUSE_HELP) help.createEl('li', { text: word(key) });
-  const showHelp = (show: boolean) => {
-    help.hidden = !show;
-    helpButton.setAttribute('aria-pressed', String(show));
+  /** Shows it the `next` way, the picked thing kept and the view centred on it, and says how. */
+  const showAs = (next: number) => {
+    depth = next;
+    space = spaceBy(depths[depth] ?? null);
+    picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
+    orbit = centredOn(orbit, picked);
+    const label = depthWords();
+    depthButton.setAttribute('aria-label', label);
+    depthButton.hidden = depth === 0;
+    said.setText(label);
+    again();
   };
-  showHelp(true);
+  // the buttons that move the view, and how it is shown in 3D: in space, or lifted by groups or by links
+  const { depthButton, showHelp, help } = spacePad(el, depthWords(), move, () =>
+    showAs((depth % (depths.length - 1)) + 1),
+  );
+  depthButton.hidden = depth === 0;
 
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move and pinch
   const down = new Map<number, Touch>();
@@ -281,7 +272,7 @@ export async function openSpaceView(
     lastTap: { at: number; x: number; y: number } | null = null;
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
   el.addEventListener('pointerdown', (e) => {
-    if ((e.target as Element | null)?.closest('.thoughtknot-space-bar, .thoughtknot-space-pad')) return;
+    if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (down.size === 1) {
       pans = e.shiftKey || e.button === 1 || e.button === 2;
@@ -369,19 +360,8 @@ export async function openSpaceView(
   resize();
   orbit = orbitFit(space, width / height);
   el.focus();
-  return close;
+  const cards = (on: boolean) => {
+    if (on !== (depth === 0)) showAs(on ? 0 : 1);
+  };
+  return { close, move, cards };
 }
-
-/** What the button that changes how it is shown says, for each way. */
-const DEPTH_WORDS = ['space.cards', 'space.spread', 'space.height-groups', 'space.height-links'] as const;
-
-/** The help line's steps, with a mouse or trackpad. */
-const MOUSE_HELP = [
-  'space.help-drag',
-  'space.help-move',
-  'space.help-zoom',
-  'space.help-pick',
-  'space.help-keys',
-] as const;
-/** The help line's steps, on a touch screen. */
-const TOUCH_HELP = ['space.help-finger', 'space.help-fingers', 'space.help-tap'] as const;
