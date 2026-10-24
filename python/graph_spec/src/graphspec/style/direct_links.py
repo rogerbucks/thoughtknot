@@ -7,19 +7,27 @@ Graphviz places the boxes. In place of its routing, each link is one curve from 
 a link would pass through moves aside, just clear of it, and boxes moved into each other are
 pushed apart again, a few rounds within a budget. Two links between the same two boxes bow apart.
 A lone link bows a little toward the middle of the drawing. Each arrowhead lands on its box edge,
-and the words sit by the curve (direct_words.py). It works on the marks marks.py reads from a
-layout, and marks_svg.py writes them, so every part keeps its id, class and title."""
+and the words sit by the curve (direct_words.py). First the boxes are given a little more room,
+and each link takes the slight bend that crosses fewest boxes and links (direct_bends.py). It
+works on the marks marks.py reads from a layout, and marks_svg.py writes them, so every part
+keeps its id, class and title."""
 
 from __future__ import annotations
 
 import math
 from typing import Any
 
+from graphspec.style.direct_bends import (
+    CLEARANCE,
+    ToBend,
+    bends,
+    crowded,
+    spread,
+    toward_middle,
+)
 from graphspec.style.direct_curve import Curve, Placed, curve_of, hypot
 from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
 
-# How much room a link keeps from a box it passes, in pixels.
-CLEARANCE = 10
 # The room kept round a line or words at the edge of the drawing, in pixels.
 EDGE = 2
 # The room kept between two boxes pushed apart, in pixels.
@@ -30,14 +38,8 @@ ROUNDS = 6
 WORK_MOST = 4_000_000
 # How far two links between the same boxes bow apart at their middle, as a share of their length.
 BOW = 0.16
-# How far a lone link bows toward the middle of the drawing, as a share of its length.
-GENTLE = 0.08
 
 Mark = dict[str, Any]
-
-
-def _sign(x: float) -> float:
-    return (x > 0) - (x < 0)
 
 
 def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
@@ -46,7 +48,7 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
     marks: list[Mark] = laid["marks"]
     boxes: dict[str, Placed] = {}
     groups = {
-        m["id"]: (m["x"], m["y"], m["x"] + m["width"], m["y"] + m["height"])
+        m["id"]: [m["x"], m["y"], m["x"] + m["width"], m["y"] + m["height"]]
         for m in marks
         if m["kind"] == "group"
     }
@@ -54,11 +56,19 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         of = m.get("of")
         if m["kind"] == "box" and m.get("role") == "thing" and of is not None and of not in boxes:
             hw, hh = m["width"] / 2, m["height"] / 2
-            boxes[of] = Placed(of, m["x"] + hw, m["y"] + hh, hw, hh, groups.get(m.get("group")))
+            # its group as marked, else the smallest one round it, as Graphviz drew it
+            g = _group_round(groups, m) if m.get("group") is None else groups.get(m["group"])
+            boxes[of] = Placed(of, m["x"] + hw, m["y"] + hh, hw, hh, g)
     links = [
         m for m in marks if m["kind"] == "link" and m.get("from") in boxes and m.get("to") in boxes
     ]
     start = {k: (b.x, b.y) for k, b in boxes.items()}
+    # a little more room, where a link drawn straight would run through a box or cross another
+    ends = [(boxes[x["from"]], boxes[x["to"]]) for x in links if x["from"] != x["to"]]
+    every_box = list(boxes.values())
+    group_moved = (
+        spread(every_box, groups, _middle_of(every_box)) if crowded(ends, every_box) else {}
+    )
     _settle(list(boxes.values()), links)
 
     # every mark of a moved box's part goes with it: its outline, its words, its pictures
@@ -77,6 +87,17 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         by = shift_of.get(m["id"]) or (None if layout else moved.get(m.get("of")))
         if by and m["kind"] != "link":
             shift_of[m["id"]] = by
+    # a group moved whole takes its outline and its words
+    clusters = (
+        [p for p in layout["parts"] if p["kind"] == "cluster"]
+        if layout
+        else [{"marks": [i]} for i in groups]
+    )
+    for part in clusters:
+        by = next((group_moved[i] for i in part["marks"] if i in group_moved), None)
+        if by and (by[0] or by[1]):
+            for i in part["marks"]:
+                shift_of[i] = by
     # a self link's loop, its arrowheads and its words go with its box
     for link in links:
         by = moved.get(link["from"]) if link["from"] == link["to"] else None
@@ -98,12 +119,9 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             p = pair_of(link["from"], link["to"])
             many[p] = many.get(p, 0) + 1
     every = list(boxes.values())
-    sx = sy = 0.0
-    for b in every:
-        sx += b.x
-        sy += b.y
-    middle = (sx / max(1, len(every)), sy / max(1, len(every)))
-    curves: dict[str, Curve] = {}
+    middle = _middle_of(every)
+    # each lone link takes the bend that crosses least; links between the same two boxes bow apart
+    to_bend: list[ToBend] = []
     for link in links:
         a, b = boxes[link["from"]], boxes[link["to"]]
         if a is b:
@@ -113,10 +131,12 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         nth[pair] = i + 1
         side = 1 if a.key < b.key else -1
         count = many.get(pair, 1)
-        base = _aside(a, b, every) or (0 if count > 1 else _gentle(a, b, side, middle, every))
-        bow = (i - (count - 1) / 2) * BOW * side + base
+        fixed = (i - (count - 1) / 2) * BOW * side if count > 1 else None
         of = link.get("of")
-        curves[link["id"] if of is None else of] = curve_of(a, b, bow)
+        key = link["id"] if of is None else of
+        to_bend.append(ToBend(key, a, b, toward_middle(a, b, side, middle), fixed))
+    bows = bends(to_bend, every)
+    curves: dict[str, Curve] = {t.key: curve_of(t.a, t.b, bow) for t, bow in zip(to_bend, bows)}
     spots = word_spots(marks, boxes, curves)
 
     out: list[Mark] = []
@@ -129,7 +149,9 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             rest = {k: v for k, v in m.items() if k != "outline"}
             out.append({**rest, "points": c.cubic(start_cut, end_cut), "curve": True})
         elif m["kind"] == "arrowhead" and c:
-            at_start = m["id"].startswith("tail:") or c.nearer((m["x"], m["y"]))
+            # which end it is at, as Graphviz drew it: the boxes have moved since
+            line = next((x for x in marks if x["kind"] == "link" and x.get("of") == m["of"]), None)
+            at_start = _at_first_end(line, m) if line else m["id"].startswith("tail:")
             tip, angle = c.tip_at(at_start)
             rest = {k: v for k, v in m.items() if k != "outline"}
             out.append({**rest, "x": tip[0], "y": tip[1], "angle": angle})
@@ -210,74 +232,50 @@ def _move_to(b: Placed, x: float, y: float) -> None:
     b.y = min(max(y, g[1] + b.hh), g[3] - b.hh) if g else y
 
 
-def _aside(a: Placed, b: Placed, boxes: list[Placed]) -> float:
-    """How far the link from `a` to `b` bows, as a share of its length, to clear a box still in
-    its way: away from the box, just far enough. Nothing in its way, it does not bow."""
-    dx, dy = b.x - a.x, b.y - a.y
-    long = hypot(dx, dy)
-    if long < 1e-6:
-        return 0
-    nx, ny = -dy / long, dx / long
-    most = 0.0
-    for c in boxes:
-        if c is a or c is b:
-            continue
-        t = ((c.x - a.x) * dx + (c.y - a.y) * dy) / (long * long)
-        if t <= 0.05 or t >= 0.95:
-            continue
-        off = (c.x - a.x) * nx + (c.y - a.y) * ny
-        reach = abs(nx) * c.hw + abs(ny) * c.hh + CLEARANCE
-        if abs(off) >= reach:
-            continue
-        # a curve's middle moves half as far as its bend, scaled by how near the box is to it
-        bend = (-_sign(off or 1) * 2 * (reach + abs(off))) / (4 * t * (1 - t)) / long
-        if abs(bend) > abs(most):
-            most = bend
-    return max(-0.6, min(0.6, most))
-
-
-def _gentle(a: Placed, b: Placed, side: int, middle, boxes: list[Placed]) -> float:
-    """The gentle bow of a lone link with nothing in its way: toward the middle of the drawing. If
-    that side would run through a box, it bows the other way; if both would, it stays straight."""
-    dx, dy = b.x - a.x, b.y - a.y
-    long = hypot(dx, dy)
-    if long < 1e-6:
-        return 0
-    # the side the middle of the drawing is on, seen from the link's middle
-    across = (middle[0] - (a.x + b.x) / 2) * -dy + (middle[1] - (a.y + b.y) / 2) * dx
-    toward = side if abs(across) < 1e-6 * long * long else _sign(across)
-    for bow in (toward * GENTLE, -toward * GENTLE):
-        c = curve_of(a, b, bow)
-        hits = any(
-            o is not a
-            and o is not b
-            and any(
-                abs(x - o.x) < o.hw and abs(y - o.y) < o.hh
-                for x, y in (c.at(t) for t in (0.2, 0.35, 0.5, 0.65, 0.8))
-            )
-            for o in boxes
-        )
-        if not hits:
-            return bow
-    return 0
-
-
 def _heads_of(marks: list[Mark], link: Mark) -> tuple[float, float]:
     """How long the arrowheads at the first and last ends of `link` are: none at an end, 0."""
-    pts = link["points"]
-    first, last = (pts[0], pts[-1]) if pts else (None, None)
-
-    def gap(p, x, y):
-        return hypot(p[0] - x, p[1] - y) if p else math.inf
-
     out = [0, 0]
     for h in marks:
         if h["kind"] == "arrowhead" and h.get("of") == link.get("of"):
-            at_start = h["id"].startswith("tail:") or gap(first, h["x"], h["y"]) < gap(
-                last, h["x"], h["y"]
-            )
-            out[0 if at_start else 1] = h["size"]
+            out[0 if _at_first_end(link, h) else 1] = h["size"]
     return out[0], out[1]
+
+
+def _at_first_end(link: Mark, h: Mark) -> bool:
+    """Whether arrowhead `h` is at the first end of `link`, as Graphviz drew them."""
+    pts = link["points"]
+    first, last = (pts[0], pts[-1]) if pts else (None, None)
+
+    def gap(p):
+        return hypot(p[0] - h["x"], p[1] - h["y"]) if p else math.inf
+
+    return h["id"].startswith("tail:") or gap(first) < gap(last)
+
+
+def _group_round(groups: dict[str, list[float]], m: Mark):
+    """The smallest group of `groups` round the box `m`, if any."""
+    best = None
+    for g in groups.values():
+        if (
+            g[0] <= m["x"]
+            and g[1] <= m["y"]
+            and m["x"] + m["width"] <= g[2]
+            and m["y"] + m["height"] <= g[3]
+        ):
+            if best is None or (g[2] - g[0]) * (g[3] - g[1]) < (best[2] - best[0]) * (
+                best[3] - best[1]
+            ):
+                best = g
+    return best
+
+
+def _middle_of(boxes: list[Placed]) -> tuple[float, float]:
+    """The middle of `boxes`: the mean of their middles."""
+    sx = sy = 0.0
+    for b in boxes:
+        sx += b.x
+        sy += b.y
+    return (sx / max(1, len(boxes)), sy / max(1, len(boxes)))
 
 
 def _shifted(m: Mark, dx: float, dy: float) -> Mark:

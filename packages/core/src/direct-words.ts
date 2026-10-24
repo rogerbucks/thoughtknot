@@ -2,7 +2,7 @@
 // avoid too many label overlaps." So each link's words take the spot along its curve that covers the least. Best is a
 // spot over no box, no words placed already and no other line. Host-free and pure.
 import type { DrawMark } from './drawing-marks.ts';
-import type { Curve, Placed } from './direct-links.ts';
+import type { Curve, Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 
 /** How far a link's words sit off its middle, as a share of their size, so they do not lie on the line. */
