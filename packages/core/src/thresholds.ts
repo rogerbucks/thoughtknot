@@ -25,6 +25,14 @@ export const THRESHOLDS = {
     said: 'A thing with more links than this is a busy hub, whose links can be folded into one stub.',
     requirement: 'untangle_hubs',
   },
+  found_groups: {
+    value: 30,
+    least: 2,
+    most: 100_000,
+    unit: 'things',
+    said: 'A network of at least this many things, with no groups written, is drawn in the groups its links make.',
+    requirement: 'untangle_found_groups',
+  },
   path_pace: {
     value: 2000,
     least: 500,

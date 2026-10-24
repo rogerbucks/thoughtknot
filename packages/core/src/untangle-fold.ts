@@ -1,12 +1,14 @@
 // Folding a large graph (editor spec §25, slice 3). It covers three things:
 // - a busy hub's links drawn folded into one stub marked with their count (untangle_hubs);
 // - a group drawn as one box showing its count (untangle_groups);
-// - the links running between the same two groups merged into shared trunks (untangle_merge).
+// - the links running between the same two groups merged into shared trunks (untangle_merge);
+// - a large network with no groups written drawn in the groups its links make, found by Louvain (untangle_found_groups).
 // Host-free and pure. This works out only what is folded, hidden or merged. That is a plan the layout source is written
 // from (fold-source.ts). So the host changes the drawing and nothing else (untangle_data_untouched). The Python library
 // works out the same plan (graphspec/style/folding.py). The shared cases hold it to this byte for byte
 // (python/graph_spec/tests/fold_cases.json).
 import { adjacency } from './focus.ts';
+import { louvain } from './louvain.ts';
 import type { FocusEdge } from './focus.ts';
 import type { Nudge } from './style-graph.ts';
 import { THRESHOLDS, thresholdValue } from './thresholds.ts';
@@ -78,6 +80,50 @@ export function drawnGroups(
     groups.set(n.group, members);
   }
   return [...groups];
+}
+
+/** A network of at least this many things, with no groups written, is drawn in the groups its links make. */
+export const FOUND_GROUPS = THRESHOLDS.found_groups.value;
+
+/**
+ * The groups the links of a large network make (untangle_found_groups). Roger chose them, 24 Oct 2026, to sort out the
+ * mess of lines: "Groups + bundled links". Louvain finds them over `keys` by `edges`. A group of one is none. Each is
+ * named by the words (`textOf`) of its thing with the most links, the first of those on a tie, made unique. None for a
+ * graph of fewer than `least` things, or where Louvain finds fewer than two groups. Groups come in the order of their
+ * first thing, each thing in the order of `keys`. The Python library finds the same (graphspec/style/folding.py).
+ */
+export function foundGroups(
+  keys: readonly string[],
+  edges: readonly FocusEdge[],
+  textOf: (key: string) => string,
+  least = FOUND_GROUPS,
+): [string, string[]][] {
+  if (keys.length < thresholdValue('found_groups', least)) return [];
+  const index = new Map(keys.map((k, i) => [k, i]));
+  const links: [number, number][] = [];
+  for (const e of edges) {
+    const a = index.get(e.from),
+      b = index.get(e.to);
+    if (a !== undefined && b !== undefined && a !== b) links.push([a, b]);
+  }
+  const groupOf = louvain(keys.length, links);
+  const members = new Map<number, string[]>();
+  keys.forEach((k, i) => {
+    const g = groupOf[i] as number;
+    members.set(g, [...(members.get(g) ?? []), k]);
+  });
+  const groups = [...members.values()].filter((m) => m.length > 1);
+  if (groups.length < 2) return [];
+  const linked = linksByThing(edges),
+    named = new Set<string>();
+  return groups.map((things) => {
+    const hub = things.reduce((best, k) => ((linked.get(k)?.length ?? 0) > (linked.get(best)?.length ?? 0) ? k : best));
+    const name = textOf(hub);
+    let label = name;
+    for (let n = 2; named.has(label); n++) label = `${name} (${n})`;
+    named.add(label);
+    return [label, things];
+  });
 }
 
 /**
