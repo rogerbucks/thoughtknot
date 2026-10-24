@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api -X PUT repos/rogerbucks/thoughtknot/pulls/*/merge -f merge_method=merge)",
+      "Bash(gh api -X PUT repos/rogerbucks/thoughtknot/pulls/*/ccr/auto_merge -f merge_method=MERGE)",
+      "Bash(gh pr merge * --merge)",
+      "mcp__github__merge_pull_request",
+      "mcp__github__enable_pr_auto_merge"
+    ]
+  }
+}
