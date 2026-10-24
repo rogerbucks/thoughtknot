@@ -270,3 +270,79 @@ test('every line, arrowhead and word lies inside the drawing, so no curve is cut
     assert.deepEqual(outside, [], `inside a drawing ${space.width.toFixed(0)} by ${space.height.toFixed(0)}`);
   }
 });
+
+// a denser graph, the same each time: 30 things and 55 links between them, picked by a fixed sequence
+let seed = 7;
+const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const MANY = [...Array(30)].map((_, i) => [`n${i}`, ['Alpha', 'Beta', 'Gamma'][i % 3]]);
+const MANY_LINKS = [];
+while (MANY_LINKS.length < 55) {
+  const a = Math.floor(next() * 30),
+    b = Math.floor(next() * 30);
+  if (a !== b) MANY_LINKS.push([`n${a}`, 'R', `n${b}`]);
+}
+const middleOf = (b) => [b.x + b.width / 2, b.y + b.height / 2];
+const turn = (o, s, t) => Math.sign((s[0] - o[0]) * (t[1] - o[1]) - (s[1] - o[1]) * (t[0] - o[0]));
+const crossing = (a, b, c, d) => turn(a, b, c) * turn(a, b, d) < 0 && turn(c, d, a) * turn(c, d, b) < 0;
+/** How many pairs of links that share no box cross, each link as `pieces` gives it. */
+function crossings(links, pieces) {
+  let n = 0;
+  for (let i = 0; i < links.length; i++)
+    for (let j = i + 1; j < links.length; j++) {
+      const [p, q] = [links[i], links[j]];
+      if ([p.from, p.to].some((k) => k === q.from || k === q.to)) continue;
+      const [ps, qs] = [pieces(p), pieces(q)];
+      const hit = ps.slice(1).some((a, s) => qs.slice(1).some((c, t) => crossing(ps[s], a, qs[t], c)));
+      if (hit) n++;
+    }
+  return n;
+}
+
+// proves: direct_fewest_crossings
+test('drawn direct, each link takes the slight bend that crosses fewer links than straight lines would', () => {
+  // Roger, 24 Oct 2026: "see how close you can get to direct (slight curve lines) for every connector minimising the
+  // nodes and edges crossed"
+  const { marks } = directLinks(engine.marks(dotOf(MANY, MANY_LINKS).dot));
+  const links = marks.filter((m) => m.kind === 'link' && m.from !== m.to);
+  const curved = crossings(links, along),
+    straight = crossings(links, (l) => [middleOf(box(marks, l.from)), middleOf(box(marks, l.to))]);
+  assert.ok(curved <= straight * 0.7, `curved, ${curved} crossings; straight between the same boxes, ${straight}`);
+  assert.ok(throughBoxes(marks).length <= 4, `through boxes: ${throughBoxes(marks).join(', ')}`);
+  for (const l of links) {
+    const [p0, , , p3] = l.points,
+      mid = along(l)[10];
+    const long = Math.hypot(p3[0] - p0[0], p3[1] - p0[1]);
+    const off = Math.abs((p3[0] - p0[0]) * (p0[1] - mid[1]) - (p0[0] - mid[0]) * (p3[1] - p0[1])) / long;
+    assert.ok(off < long * 0.3, `${l.from}>${l.to} bends only slightly`);
+  }
+});
+
+// proves: direct_fewest_crossings
+test('drawn direct, the boxes are given a little more room, a group moved whole with its boxes', () => {
+  const laid = engine.marks(SKIPS),
+    { marks } = directLinks(laid);
+  const spread = (ms) => {
+    const things = ms.filter((m) => m.kind === 'box' && m.role === 'thing').map(middleOf);
+    const [cx, cy] = things.reduce(([x, y], [a, b]) => [x + a / things.length, y + b / things.length], [0, 0]);
+    return things.reduce((n, [x, y]) => n + Math.hypot(x - cx, y - cy), 0);
+  };
+  assert.ok(spread(marks) > spread(laid.marks) * 1.1, 'further apart than Graphviz placed them');
+  const grouped = engine.marks(
+    'digraph G { subgraph cluster_a { label="A"; a1; a2; } subgraph cluster_b { label="B"; b1; b2; } c; a1 -> b1; a2 -> c; b2 -> c; }',
+  );
+  const after = directLinks(grouped).marks;
+  const inside = (b, g) =>
+    b.x >= g.x && b.y >= g.y && b.x + b.width <= g.x + g.width && b.y + b.height <= g.y + g.height;
+  const things = (ms) => ms.filter((m) => m.kind === 'box' && m.role === 'thing');
+  const held = (ms) =>
+    ms
+      .filter((m) => m.kind === 'group')
+      .flatMap((g) => things(ms).flatMap((b) => (inside(b, g) ? [`${b.of} in ${g.id}`] : [])));
+  assert.deepEqual(held(grouped.marks), [
+    'a1 in g:cluster_a',
+    'a2 in g:cluster_a',
+    'b1 in g:cluster_b',
+    'b2 in g:cluster_b',
+  ]);
+  assert.deepEqual(held(after), held(grouped.marks), 'each box stays inside the group Graphviz drew round it');
+});

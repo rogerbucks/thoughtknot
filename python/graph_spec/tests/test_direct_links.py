@@ -104,8 +104,10 @@ class DirectLinks(unittest.TestCase):
         link, head = self.by_id['e:["a","c"]#0'], self.by_id['head:e:["a","c"]#0']
         self.assertTrue(link["curve"])
         self.assertEqual(len(link["points"]), 4)
-        self.assertAlmostEqual(link["points"][0][0], 60)
-        self.assertAlmostEqual(head["x"], 240)
+        # from a's right edge to c's left one, wherever the room given to the boxes put them
+        a, c = self.by_id["t:a"], self.by_id["t:c"]
+        self.assertAlmostEqual(link["points"][0][0], a["x"] + a["width"])
+        self.assertAlmostEqual(head["x"], c["x"])
         end = link["points"][3]
         self.assertAlmostEqual(hypot(end[0] - head["x"], end[1] - head["y"]), 10)
 
