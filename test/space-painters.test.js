@@ -4,6 +4,9 @@
 // - The drawing on screen is read as marks (svg-marks.ts): boxes, groups and links, with the theme's colours. A
 //   thing's label is its name, the largest words in its box, not the kind written small above it.
 // - Things laid out in space as balls (space-spread.ts) are painted the same way, by both painters.
+// - One button on the card's bar shows the drawing flat (2D), as cards (2.5D) or as balls (3D), inside the drawing's
+//   frame (space-switch.ts). A pick in it reaches the card, the flat drawing under it takes none of its presses, and
+//   the bar's zoom moves its camera.
 // - WebGPU builds its shaders with no error, and a frame paints with no error, of blocks and of balls. Its picture is not read back here, as
 //   in gpu-painters.test.js: in software, Chrome reads a WebGPU canvas back blank.
 //
@@ -42,6 +45,7 @@ import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
 import { installHost } from './packages/core/src/display/host.ts';
 import { SPACE_OPEN, openSpaceView } from './packages/core/src/display/graph-view/space-view-panel.ts';
 import { MARKED } from './packages/core/src/display/graph-view/focus-marks.ts';
+import { SpaceSwitch } from './packages/core/src/display/graph-view/space-switch.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
 import { PALETTES } from './packages/core/src/palette.ts';
@@ -113,7 +117,7 @@ window.readSvg = (marked = false) => {
     <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/><polygon points="186,144 196,151 185,154"/><text x="130" y="110" font-size="10">KNOWS</text></g>
     <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
-    <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="40" font-size="14" fill="rgb(10, 10, 10)">Cy</text></g>
+    <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="34" font-size="14" fill="rgb(10, 10, 10)">Cy</text><text x="270" y="48" font-size="14" fill="rgb(10, 10, 10)">Young</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   if (marked) {
@@ -137,7 +141,7 @@ window.pickInSpace = async (hideBob = false) => {
   </g></svg>\`;
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
-  const close = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
+  const opened = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
   const view = root.querySelector('.thoughtknot-space-view');
   if (hideBob) {
     const svg = holder.querySelector('svg');
@@ -163,7 +167,7 @@ window.pickInSpace = async (hideBob = false) => {
       if (found.ball && found.link) break;
     }
   const said = view.querySelector('.thoughtknot-space-said')?.textContent;
-  close?.();
+  opened?.close();
   root.remove();
   return { ...found, said, keys: [...keys] };
 };
@@ -183,7 +187,7 @@ window.clickAgain = async () => {
   </g></svg>\`;
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail.key));
-  const close = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
+  const opened = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
   const view = root.querySelector('.thoughtknot-space-view');
   const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -213,10 +217,58 @@ window.clickAgain = async () => {
   await wait(450);
   await frames();
   const after = hits(middle.x, middle.y) === hit.key;
-  close?.();
+  opened?.close();
   root.remove();
   sized.remove();
   return { hit, before, first, after };
+};
+// a card's bar and drawing, as graph-view.ts builds them, with the one button that shows it flat or in space
+window.oneBar = async () => {
+  const root = document.body.appendChild(document.createElement('div'));
+  root.style.cssText = 'width:480px';
+  const bar = root.appendChild(document.createElement('div'));
+  const frame = root.appendChild(document.createElement('div'));
+  frame.style.cssText = 'position:relative;height:360px';
+  frame.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+    <g class="edge" data-link="0"><path fill="none" stroke="rgb(90, 90, 90)" d="M120,60 C150,90 180,120 200,140"/></g>
+  </g></svg>\`;
+  const spaces = new SpaceSwitch(() => frame.querySelector('svg'));
+  const b = bar.appendChild(document.createElement('button'));
+  b.createSpan({ cls: 'thoughtknot-badge-text' });
+  b.addEventListener('click', () => spaces.pressed());
+  spaces.bar(b, 'Team');
+  const told = [],
+    under = [];
+  root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
+  frame.addEventListener('pointerdown', () => under.push('down'));
+  let flat = 0;
+  const zoom = spaces.zooming(() => ({ fit: () => flat++, zoomIn: () => flat++, zoomOut: () => flat++ }));
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const steps = [];
+  for (let i = 0; i < 4; i++) {
+    b.click();
+    for (let n = 0; n < 20 && !frame.querySelector('.thoughtknot-space-pad') !== !spaces.mode(); n++) await frames();
+    const view = frame.querySelector(':scope > .thoughtknot-space-view');
+    steps.push({
+      said: b.textContent,
+      inFrame: !!view,
+      cards: !!view?.querySelector('.thoughtknot-space-pad button[hidden]'),
+    });
+    if (spaces.mode() !== 'cards') continue;
+    // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
+    zoom.zoomIn();
+    const at = view.getBoundingClientRect();
+    for (let y = 4; y < at.height && !told.length; y += 6)
+      for (let x = 4; x < at.width && !told.length; x += 6)
+        for (const type of ['pointerdown', 'pointerup'])
+          view.dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
+  }
+  await spaces.show(null);
+  zoom.zoomIn();
+  root.remove();
+  return { steps, told: told[0] ?? null, under: under.length, flat };
 };
 window.checkWebgpu = async () => {
   const canvas = document.body.appendChild(document.createElement('canvas'));
@@ -336,6 +388,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(byId.get('l:bob').size, 14);
     // the plugin's own drawing names a thing by data-key, not by a title, and its links have no title
     assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
+    // a long name is cut into rows of the same size: the label holds the whole name (Roger, 24 Oct 2026)
+    assert.equal(byId.get('l:cy').text, 'Cy Young');
     const untitled = byId.get('e:edge3');
     assert.deepEqual(
       [untitled.from, untitled.to],
@@ -360,6 +414,31 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(r.first, true, 'after the first click it is still where it was');
     assert.equal(r.after, true, 'after another click on it, it is in the middle');
   });
+
+  // proves: space_one_bar
+  test(
+    "one button on the card's bar goes from 2D to 2.5D to 3D and back, the view inside the drawing's frame",
+    options,
+    async () => {
+      const r = JSON.parse(await browser.run('oneBar().then(JSON.stringify)'));
+      assert.deepEqual(r.steps, [
+        { said: '2.5D', inFrame: true, cards: true },
+        { said: '3D', inFrame: true, cards: false },
+        { said: '2D', inFrame: false, cards: false },
+        { said: '2.5D', inFrame: true, cards: true },
+      ]);
+      assert.ok(
+        r.told && 'key' in r.told,
+        `a click on a card tells the card around the frame: ${JSON.stringify(r.told)}`,
+      );
+      assert.equal(r.under, 0, 'the flat drawing under the view takes none of its presses');
+      assert.equal(
+        r.flat,
+        1,
+        "the bar's zoom moves the camera in space, and zooms the flat drawing only once it is flat",
+      );
+    },
+  );
 
   // proves: focus_space
   test('what the card hides is gone from the 3D view too, once it marks its drawing again', options, async () => {

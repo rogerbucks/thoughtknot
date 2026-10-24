@@ -90,7 +90,6 @@ export const DISPLAY_SOURCE_WORDS = {
   // the 3D view (§53, space-view-panel.ts)
   'space.name':
     '3D view of {graph}. Drag to turn, Shift-drag to move, scroll to zoom. Click a thing to name it, double-click to fly to it. Question mark shows how to move. Escape goes back.',
-  'space.flatten': 'Back to 2D',
   'space.moves': 'Move the 3D view',
   'space.zoom-in': 'Zoom in',
   'space.zoom-out': 'Zoom out',
@@ -103,12 +102,13 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.help-drag': 'Drag: turn',
   'space.help-move': 'Shift-drag or right-drag: move',
   'space.help-zoom': 'Scroll or pinch: zoom',
-  'space.help-pick': 'Click: name it. Double-click: fly to it',
+  'space.help-pick': 'Click: pick it. Click again: turn to it. Double-click: fly to it',
   'space.help-keys': 'Keys: arrows, Shift + arrows, + and -, Home, Esc',
   'space.help-finger': 'One finger: turn',
   'space.help-fingers': 'Two fingers: move, and pinch to zoom',
-  'space.help-tap': 'Tap: name it. Double-tap: fly to it',
-  'space.spread': 'Layout: in space',
+  'space.help-tap': 'Tap: pick it. Tap again: turn to it. Double-tap: fly to it',
+  'space.cards': 'Layout: cards in space',
+  'space.spread': 'Layout: balls in space',
   'space.height-groups': 'Height: groups',
   'space.height-links': 'Height: links',
   // a graph too large to draw, as its overview (§53, massive-view.ts)

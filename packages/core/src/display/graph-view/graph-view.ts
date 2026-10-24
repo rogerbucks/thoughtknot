@@ -18,7 +18,7 @@ import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { renderBar } from './view-bar';
-import { openSpaceView } from './space-view-panel';
+import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
@@ -67,6 +67,7 @@ export class GraphView extends Lifecycle {
   private legendSlot!: HTMLElement;
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
+  private readonly spaces = new SpaceSwitch(() => this.svg); // shown flat or in space, by one button of the bar (§53)
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();
@@ -113,19 +114,18 @@ export class GraphView extends Lifecycle {
         list.hidden = !list.hidden;
         badge.setAttribute('aria-expanded', String(!list.hidden));
       },
-      fit: () => this.zoom.fit(),
-      zoomOut: () => this.zoom.zoomOut(),
-      zoomIn: () => this.zoom.zoomIn(),
+      ...this.spaces.zooming(() => this.zoom), // in space, Fit and zoom move its camera (space_one_bar)
       find: (b) => this.sel.untangle.toggleFind(b),
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),
       fullScreen: () => this.fullscreen.show(),
-      space: () => void (this.svg && openSpaceView(root, this.svg, this.o.graph, () => this.viewport.focus())),
+      space: () => this.spaces.pressed(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.source.toggle(b),
       export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: this.playable() }),
     });
     const { editing, source } = placed;
+    this.spaces.bar(placed.space, this.o.graph);
     this.editButton = placed.editButton;
     if (this.editButton) {
       this.showEditing();
@@ -171,11 +171,11 @@ export class GraphView extends Lifecycle {
       : [];
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
-    const at = () => typeLeftAt(this.zoom.view(), this.details.selectedKey(), mode === 'full'); // kept as types change
-    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at)); // its types (§15)
+    const at = () => typeLeftAt(this.zoom.view(), this.details.selectedKey(), mode === 'full', this.spaces.mode());
+    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
     // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
-    this.flowLegend();
+    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
     this.viewport = root.createDiv({
       cls: 'thoughtknot-viewport',
       attr: {
@@ -239,7 +239,8 @@ export class GraphView extends Lifecycle {
     const open = (t: Target, x?: boolean) => this.open(t, x),
       unfold = (fold: string, byKey?: boolean) =>
         this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
-    bindViewportEvents({ card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full });
+    const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
+    bindViewportEvents({ ...host, space: this.spaces });
     const observer = new ResizeObserver(() => {
       this.zoom.resize(this.zoomSize());
       this.aids.placeDetails();
@@ -267,6 +268,7 @@ export class GraphView extends Lifecycle {
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show());
+        void this.spaces.show(this.place.space() ?? null); // shown in space still, as the last card was (§53)
       },
       () => !gone,
     );
@@ -334,7 +336,7 @@ export class GraphView extends Lifecycle {
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
     if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
-    this.flowLegend();
+    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
@@ -344,12 +346,6 @@ export class GraphView extends Lifecycle {
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
     this.apply(this.zoom.view());
-  }
-
-  /** The legend of the moving links drawn now: a link folded into a stub or a box is not drawn, so not said (§7, §25). */
-  private flowLegend(): void {
-    this.legendSlot.empty();
-    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
   }
 
   private apply(v: View): void {

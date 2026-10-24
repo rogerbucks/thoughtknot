@@ -74,6 +74,25 @@ describe('Diagram type on a card', () => {
     }
   });
 
+  // proves: type_in_bar
+  test("Diagram type sits in the card's bar, before 2D, 2.5D or 3D, and opens its list under the strip", async () => {
+    const { env, el } = await card(noteOf(ORG));
+    try {
+      const bar = el.querySelector('.thoughtknot-bar');
+      const names = bar.querySelectorAll('button').map((b) => b.getAttribute('aria-label'));
+      const at = names.indexOf('Diagram type');
+      assert.ok(at > names.indexOf('View'), `after View, in ${names.join(', ')}`);
+      assert.match(names[at + 1], /^2D, 2\.5D or 3D/, 'just before the way it is shown');
+      assert.equal(el.querySelector('.thoughtknot-type-strip button'), null, 'no longer in the strip');
+      const toggle = labelled(el, 'Diagram type');
+      toggle.click();
+      assert.equal(el.querySelector('.thoughtknot-type-list').hidden, false);
+      assert.equal(toggle.getAttribute('aria-expanded'), 'true');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: suggest_type
   test('a suggestion is never drawn unless chosen: the graph is laid out as a network', async () => {
     const { env, el, asked } = await card(noteOf(ORG));
