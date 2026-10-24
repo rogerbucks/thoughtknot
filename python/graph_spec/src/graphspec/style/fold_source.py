@@ -129,7 +129,7 @@ def folded_source(dot: str, plan: Mapping | None) -> str:
             out.extend(_cluster(line, gone))
         else:
             out.append(line)
-    out[-1:-1] = _added(boxes, plan["hubs"], len(trunks))
+    out[-1:-1] = _added(boxes, plan["hubs"], [len(ls) for ls in trunks])
     return "\n".join(out)
 
 
@@ -148,8 +148,9 @@ def _cluster(line: str, gone) -> list[str]:
     return [kept]
 
 
-def _added(boxes: list, hubs: list, trunks: int) -> list[str]:
-    """The lines a fold adds: each folded group's box, each hub's stub, then each trunk."""
+def _added(boxes: list, hubs: list, trunks: list[int]) -> list[str]:
+    """The lines a fold adds: each folded group's box, each hub's stub, then each trunk, marked
+    with how many links it carries (`trunks`)."""
     size = LOCKED["kind_font_size"]
     out = [
         f'  "group: {i}" [id="fold_group_{i}", label=<{html.escape(label)}<br/>'
@@ -166,11 +167,12 @@ def _added(boxes: list, hubs: list, trunks: int) -> list[str]:
             f'  "{hub}" -> "hub: {j}" [id="fold_hub_{j}_link", style=dashed, dir=none, '
             'color="#0000fe"];'
         )
-    for t in range(1, trunks + 1):
+    for t, count in enumerate(trunks, start=1):
         out.append(f'  "trunk: {t} in" [id="trunk_{t}_in", shape=point, width=0.08, label=""];')
         out.append(f'  "trunk: {t} out" [id="trunk_{t}_out", shape=point, width=0.08, label=""];')
         out.append(
-            f'  "trunk: {t} in" -> "trunk: {t} out" [id="trunk_{t}", dir=none, penwidth=2.5];'
+            f'  "trunk: {t} in" -> "trunk: {t} out" [id="trunk_{t}", dir=none, penwidth=2.5, '
+            f'label="{count} links", fontsize={size}, fontcolor="#0000fe"];'
         )
     return out
 

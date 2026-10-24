@@ -154,18 +154,19 @@ describe('a card’s state of the switches', () => {
     ].join(',\n');
     const { drawing } = styledOf(two);
     const state = new ViewState({ labels: true, hubs: false, groups: false, merge: false });
-    assert.equal(state.folded(drawing).folding, undefined, 'nothing folded to start');
+    // 31 things: drawn in the groups their links make (untangle_found_groups), but no hub folded
+    assert.deepEqual(state.folded(drawing).folding?.hubs ?? [], [], 'nothing folded to start');
     assert.deepEqual(state.hub(drawing, 'hub2'), { links: 13, folded: false });
     state.fold({ hub: 'hub2' });
     assert.deepEqual(state.folded(drawing).folding.hubs, [['hub2', 13]], 'only the hub folded');
     assert.deepEqual(state.hub(drawing, 'hub2'), { links: 13, folded: true });
     assert.deepEqual(state.hub(drawing, 'hub'), { links: 13, folded: false });
     state.open({ hub: 'hub2' });
-    assert.equal(state.folded(drawing).folding, undefined, 'open again');
+    assert.deepEqual(state.folded(drawing).folding?.hubs ?? [], [], 'open again');
     state.fold({ hub: 'hub' });
     state.turn('hubs', true);
     state.turn('hubs', false);
-    assert.equal(state.folded(drawing).folding, undefined, 'turning the switch starts every hub open again');
+    assert.deepEqual(state.folded(drawing).folding?.hubs ?? [], [], 'turning the switch starts every hub open again');
   });
 
   test('turning a switch on again folds what was opened again', () => {
@@ -245,5 +246,66 @@ describe('a card regrouped to a thing and its neighbours (untangle_regroup)', ()
     assert.deepEqual(state.folded(drawing, card).folding.groups, [['Friends', ['ann', 'bob'], true]]);
     state.keepOnly(card, only);
     assert.deepEqual(state.folded(drawing, card).folding.groups, []);
+  });
+});
+
+// two teams of 16, each linked within itself, and three links between them: 32 things, so their groups are found
+const teams = () => {
+  const team = (t, name) =>
+    Array.from({ length: 16 }, (_, i) => `(${t}${i}:Person {name: '${name} ${i}'}),`).concat(
+      Array.from(
+        { length: 48 },
+        (_, i) => `(${t}${i % 16})-[:WORKS_WITH]->(${t}${(i + 1 + Math.floor(i / 16)) % 16}),`,
+      ),
+      Array.from({ length: 8 }, (_, i) => `(${t}0)-[:LEADS]->(${t}${i * 2 + 1}),`),
+    );
+  return [
+    '// graph: g',
+    ...team('a', 'Ann'),
+    ...team('b', 'Bob'),
+    '(a3)-[:HELPS]->(b3), (a5)-[:HELPS]->(b5),',
+    '(a7)-[:HELPS]->(b7)',
+  ].join('\n');
+};
+
+describe('a large network with no groups written', () => {
+  // proves: untangle_found_groups
+  test('is drawn in the groups its links make, named by their most linked thing, their links merged', () => {
+    const { drawing } = styledOf(teams());
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS));
+    const folded = state.folded(drawing);
+    const groups = state.plan.groups.map(([label, things]) => [label, things.length]);
+    assert.deepEqual(groups, [
+      ['Ann 0', 16],
+      ['Bob 0', 16],
+    ]);
+    assert.equal(state.plan.merge, true, 'the links between the two groups merged, a bundle');
+    assert.equal(state.switches.merge, true, 'and the View menu says so');
+    const drawnAs = folded.nudges.filter((n) => n.word === 'group');
+    assert.equal(drawnAs.length, 32, 'each thing drawn in its group');
+    assert.equal(drawing.nudges?.length ?? 0, 0, 'the drawing given is never changed');
+  });
+
+  // proves: untangle_found_groups
+  test('keeps its links apart once merging is turned off, and is drawn as ever when small or grouped', () => {
+    const { drawing } = styledOf(teams());
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS));
+    state.folded(drawing);
+    state.turn('merge', false);
+    state.folded(drawing);
+    assert.equal(state.plan?.merge ?? false, false);
+    const small = styledOf(star(3)).drawing;
+    const plain = new ViewState(startingSwitches(DEFAULT_SETTINGS));
+    assert.equal(plain.folded(small).nudges?.length ?? 0, 0, 'a graph of fewer than 30 things finds no groups');
+    const grouped = styledOf(
+      teams(),
+      GROUPED.replace("thing: 'ann'", "thing: 'a1'").replace("thing: 'bob'", "thing: 'a2'"),
+    );
+    const written = new ViewState(startingSwitches(DEFAULT_SETTINGS)).folded(grouped.drawing);
+    assert.deepEqual(
+      written.nudges.map((n) => n.group),
+      ['Friends', 'Friends'],
+      'groups written are drawn, none found',
+    );
   });
 });

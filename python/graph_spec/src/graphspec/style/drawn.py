@@ -21,7 +21,13 @@ from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
 from graphspec.style.flow import flow_links
-from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_switches
+from graphspec.style.folding import (
+    drawn_groups,
+    fold_plan,
+    found_groups,
+    links_of,
+    starting_switches,
+)
 from graphspec.style.inline import inline_rows
 from graphspec.style.picture import pictures_for
 from graphspec.style.reading import read_style
@@ -110,24 +116,34 @@ def render_args(
             file=sys.stderr,
         )
     keys = [key for key, _, _ in parts["nodes"]]
+    edges = [(s, d) for s, _, d in parts["edges"]]
+    nudges = style["nudges"]
     # with no View menu, as an export and the Claude Code pane draw a graph, nothing is folded
-    folding = (
-        None
-        if switches is None
-        else fold_plan(
-            keys,
-            [(s, d) for s, _, d in parts["edges"]],
-            drawn_groups(style["nudges"], keys, choice.get("plan")),
-            {**starting_switches(style, view), **switches, "opened": opened or {}},
-        )
-    )
+    folding = None
+    if switches is not None:
+        groups = drawn_groups(nudges, keys, choice.get("plan"))
+        turned = {**starting_switches(style, view), **switches, "opened": opened or {}}
+        # a large network with no groups written: the groups its links make, their links merged
+        # unless the switches say not (untangle_found_groups)
+        if not groups and choice.get("plan") is None:
+            text = {k: t for k, _, t in parts["nodes"]}
+            groups = found_groups(keys, edges, lambda k: text.get(k, k))
+            found = [
+                {"word": "group", "thing": k, "group": label}
+                for label, things in groups
+                for k in things
+            ]
+            if found:
+                nudges = [*nudges, *found]
+                turned["merge"] = switches.get("merge", True)
+        folding = fold_plan(keys, edges, groups, turned)
     # the links as its Links says (§25); said nowhere, they are direct, the default (None)
     routed = any("routing" in x and x.get("view") in (None, view) for x in style["links"])
     return {
         "nodes": parts["nodes"],
         "edges": parts["edges"],
         "suggested": parts["suggested"],
-        "nudges": style["nudges"],
+        "nudges": nudges,
         "direction": style["direction"],
         "arrowless": arrowless([t for t, _ in parts["links"]], style["arrows"], view),
         "inline": inline_rows(parts["boxes"], parts["links"], style["shows"], view),

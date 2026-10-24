@@ -3,7 +3,8 @@
 // graph's View menu (view_switches). They start from the plugin's settings (view_switch_defaults), the style graph's
 // merging, and a view's switches saved as shown. A card's state of them is the drawing's alone. It changes how the
 // graph is drawn, never the note. It is saved with the graph only when the user saves the view
-// (view_switch_view_only).
+// (view_switch_view_only). A large network with no groups written is drawn in the groups its links make. Their links
+// are merged unless the user turns that off (untangle_found_groups).
 import { READABLE_PX } from './details-nav.ts';
 import { edgesOf } from './focus.ts';
 import type { FocusEdge, Kept } from './focus.ts';
@@ -11,8 +12,8 @@ import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { linksOf } from './style.ts';
-import type { OnOff, StyleGraph } from './style-graph.ts';
-import { drawnGroups, foldPlan } from './untangle-fold.ts';
+import type { Nudge, OnOff, StyleGraph } from './style-graph.ts';
+import { drawnGroups, foldPlan, foundGroups } from './untangle-fold.ts';
 import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
@@ -100,6 +101,24 @@ function regrouped(
   };
 }
 
+/** The `at` of a group found by links: written nowhere. */
+const FOUND_AT = { block: -1, line: 0, id: 'found' };
+
+/**
+ * The groups drawing `d` draws: those its nudges write, else, for a large network, those its links make. The found
+ * ones come as nudges too, so its layout source draws their boxes (untangle_found_groups).
+ */
+function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly FocusEdge[]) {
+  const written = drawnGroups(d.nudges ?? [], keys, d.diagram);
+  if (written.length || d.diagram) return { groups: written, found: [] as Nudge[] };
+  const text = new Map(d.boxes.map((b) => [b.key, b.text]));
+  const groups = foundGroups(keys, edges, (k) => text.get(k) ?? k);
+  const found = groups.flatMap(([group, things]) =>
+    things.map((thing): Nudge => ({ word: 'group', thing, group, at: FOUND_AT })),
+  );
+  return { groups, found };
+}
+
 /**
  * One card's switches, and the hubs and groups opened since they were folded. They are the drawing's alone, never
  * written to the note. It folds a styled drawing for its layout (`folded`). It keeps the plan it last made, for what a
@@ -113,6 +132,8 @@ export class ViewState {
   /** The hubs the user folded one by one, with busy hubs not folded as a whole: all start open (Roger, 24 Oct 2026). */
   private readonly foldedHubs = new Set<string>();
   private readonly openedGroups = new Set<string>();
+  /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
+  private mergeTurned = false;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
   private readonly only = new WeakMap<object, Kept>();
 
@@ -128,6 +149,7 @@ export class ViewState {
   turn(s: ViewSwitch, on: boolean): boolean {
     if (this.switches[s] === on) return false;
     this.switches[s] = on;
+    if (s === 'merge') this.mergeTurned = true;
     if (s === 'hubs') {
       this.openedHubs.clear();
       this.foldedHubs.clear();
@@ -169,7 +191,9 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
-    const groups = drawnGroups(d.nudges ?? [], keys, d.diagram);
+    const { groups, found } = groupsOf(d, keys, edges);
+    // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
+    if (found.length && !this.mergeTurned) this.switches.merge = true;
     this.plan = foldPlan(keys, edges, groups, {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
@@ -179,7 +203,8 @@ export class ViewState {
     const only = card ? this.only.get(card) : undefined;
     const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;
     const { folding: _was, ...rest } = d;
-    return plan ? { ...rest, folding: plan } : rest;
+    const drawn = found.length ? { ...rest, nudges: [...(d.nudges ?? []), ...found] } : rest;
+    return plan ? { ...drawn, folding: plan } : drawn;
   }
 
   /**
@@ -190,7 +215,7 @@ export class ViewState {
   hub(d: GraphDrawing, key: string): { links: number; folded: boolean } | null {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d),
-      groups = drawnGroups(d.nudges ?? [], keys, d.diagram);
+      { groups } = groupsOf(d, keys, edges);
     const opened = this.openHubs(keys, edges, groups).filter((k) => k !== key);
     const plan = foldPlan(keys, edges, groups, {
       ...this.switches,
@@ -206,7 +231,7 @@ export class ViewState {
    * The busy hubs drawn open. With busy hubs folded as a whole, those opened since. Without, every one but those the
    * user folded one by one.
    */
-  private openHubs(keys: readonly string[], edges: readonly FocusEdge[], groups: ReturnType<typeof drawnGroups>) {
+  private openHubs(keys: readonly string[], edges: readonly FocusEdge[], groups: readonly [string, string[]][]) {
     if (this.switches.hubs) return [...this.openedHubs];
     const every = foldPlan(keys, edges, groups, {
       hubs: true,

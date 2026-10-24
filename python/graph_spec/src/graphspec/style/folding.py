@@ -4,15 +4,23 @@ into trunks (untangle_merge), and how the style graph routes links (untangle_rou
 untangle-fold.ts and the switches of view-switches.ts, as far as graph_svg draws them. The plan
 is written into the source by graphspec/style/fold_source.py. The View menu that turns the
 switches is the plugin's; graph_svg draws as its settings start a graph, unless told otherwise:
-busy hubs folded, groups not, links merged as the style graph says (view_switch_defaults)."""
+busy hubs folded, groups not, links merged as the style graph says (view_switch_defaults). A
+large network with no groups written is drawn in the groups its links make, with their links
+merged unless the switches say not (untangle_found_groups)."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
+
+from graphspec.engine.clusters.louvain import louvain
 
 # A thing with more links than this is a busy hub, whose links can be folded into one stub.
 BUSY_HUB = 12
+
+# A network of at least this many things, with no groups written, is drawn in the groups its
+# links make.
+FOUND_GROUPS = 30
 
 # The switches as the plugin's settings start every graph (view_switch_defaults).
 DEFAULT_SWITCHES = {"labels": True, "hubs": False, "groups": False, "merge": False}
@@ -54,6 +62,46 @@ def drawn_groups(
         members = groups.setdefault(n["group"], [])
         members.extend(k for k in things if k not in members)
     return [[label, things] for label, things in groups.items()]
+
+
+def found_groups(
+    keys: Sequence[str],
+    edges: Sequence[tuple[str, str]],
+    text_of: Callable[[str], str],
+    least: int = FOUND_GROUPS,
+) -> list[list[Any]]:
+    """The groups the links of a large network make, as the core's foundGroups finds them:
+    [label, things] for each group Louvain finds of two things or more, named by the words
+    (`text_of`) of its thing with the most links, the first on a tie, made unique. None for fewer
+    than `least` things, or fewer than two groups."""
+    if len(keys) < least:
+        return []
+    index = {k: i for i, k in enumerate(keys)}
+    links = [
+        (index[s], index[d])
+        for s, d in edges
+        if s in index and d in index and index[s] != index[d]
+    ]
+    group_of = louvain(len(keys), links)
+    members: dict[int, list[str]] = {}
+    for i, k in enumerate(keys):
+        members.setdefault(group_of[i], []).append(k)
+    groups = [m for m in members.values() if len(m) > 1]
+    if len(groups) < 2:
+        return []
+    linked, named, out = _links_by_thing(edges), set(), []
+    for things in groups:
+        hub = things[0]
+        for k in things[1:]:
+            if len(linked.get(k, [])) > len(linked.get(hub, [])):
+                hub = k
+        name = text_of(hub)
+        label, n = name, 2
+        while label in named:
+            label, n = f"{name} ({n})", n + 1
+        named.add(label)
+        out.append([label, things])
+    return out
 
 
 def fold_plan(

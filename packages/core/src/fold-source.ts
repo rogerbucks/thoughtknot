@@ -134,10 +134,11 @@ export function foldedSource(dot: string, plan: Folding | undefined): string {
       `  "hub: ${j + 1}" [id="fold_hub_${j + 1}", label="${count} link${count === 1 ? '' : 's'}", shape=box, style="rounded,dashed", fontsize=${STYLE.kind_font_size}, ${MUTED}];`,
       `  "${hub}" -> "hub: ${j + 1}" [id="fold_hub_${j + 1}_link", style=dashed, dir=none, color="#0000fe"];`,
     ]),
-    ...trunks.flatMap((_ls, t) => [
+    // each trunk marked with how many links it carries (untangle_found_groups)
+    ...trunks.flatMap((ls, t) => [
       `  "trunk: ${t + 1} in" [id="trunk_${t + 1}_in", shape=point, width=0.08, label=""];`,
       `  "trunk: ${t + 1} out" [id="trunk_${t + 1}_out", shape=point, width=0.08, label=""];`,
-      `  "trunk: ${t + 1} in" -> "trunk: ${t + 1} out" [id="trunk_${t + 1}", dir=none, penwidth=2.5];`,
+      `  "trunk: ${t + 1} in" -> "trunk: ${t + 1} out" [id="trunk_${t + 1}", dir=none, penwidth=2.5, label="${ls.length} links", fontsize=${STYLE.kind_font_size}, fontcolor="#0000fe"];`,
     ]),
   ];
   out.splice(out.length - 1, 0, ...added);
