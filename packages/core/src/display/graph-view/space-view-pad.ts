@@ -1,0 +1,60 @@
+// The 3D view's own buttons and help line (editor spec §53, scale_space_view), for space-view-panel.ts. The buttons
+// zoom, turn, tilt and reset the view, for those who would rather press than drag. One more switches how it is shown
+// in 3D. The help line says how to move it, in short steps, and touch screens get the touch words.
+import { word } from '@thoughtknot/core';
+import type { DrawMark } from '../../drawing-marks.ts';
+import { KEY_STEP, ZOOM_STEP } from '../../space-controls.ts';
+import type { SpaceMove } from '../../space-controls.ts';
+import { button } from '../button';
+
+/** What the button that changes how it is shown says, for each way: as cards, in space, or lifted. */
+export const DEPTH_WORDS = ['space.cards', 'space.spread', 'space.height-groups', 'space.height-links'] as const;
+
+/** The help line's steps, with a mouse or trackpad. */
+const MOUSE_HELP = [
+  'space.help-drag',
+  'space.help-move',
+  'space.help-zoom',
+  'space.help-pick',
+  'space.help-keys',
+] as const;
+/** The help line's steps, on a touch screen. */
+const TOUCH_HELP = ['space.help-finger', 'space.help-fingers', 'space.help-tap'] as const;
+
+/** Each thing's count of links, by its key: what height means when it means links. */
+export function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const m of marks)
+    if (m.kind === 'link')
+      for (const end of [m.from, m.to]) if (end !== undefined) counts.set(end, (counts.get(end) ?? 0) + 1);
+  return counts;
+}
+
+/**
+ * Builds the view's buttons and help line in `el`. Each button makes its `move`; the one named `shown` calls `next`,
+ * to show it the next way. Gives back that button, the help line, and how to show or hide it.
+ */
+export function spacePad(el: HTMLElement, shown: string, move: (m: SpaceMove) => void, next: () => void) {
+  const pad = el.createDiv({
+    cls: 'thoughtknot-space-pad',
+    attr: { role: 'toolbar', 'aria-label': word('space.moves') },
+  });
+  button(pad, word('space.zoom-in'), 'zoom-in', () => move({ zoom: ZOOM_STEP }));
+  button(pad, word('space.zoom-out'), 'zoom-out', () => move({ zoom: 1 / ZOOM_STEP }));
+  button(pad, word('space.turn-left'), 'rotate-ccw', () => move({ turn: [-KEY_STEP * 2, 0] }));
+  button(pad, word('space.turn-right'), 'rotate-cw', () => move({ turn: [KEY_STEP * 2, 0] }));
+  button(pad, word('space.tilt-up'), 'chevron-up', () => move({ turn: [0, -KEY_STEP] }));
+  button(pad, word('space.tilt-down'), 'chevron-down', () => move({ turn: [0, KEY_STEP] }));
+  button(pad, word('space.reset'), 'maximize', () => move({ reset: true }));
+  const depthButton = button(pad, shown, 'bar-chart-3', next);
+  const helpButton = button(pad, word('space.help'), 'help-circle', () => move({ help: true }));
+  const help = el.createEl('ul', { cls: 'thoughtknot-space-help' });
+  const touch = el.win.matchMedia?.('(pointer: coarse)').matches ?? false;
+  for (const key of touch ? TOUCH_HELP : MOUSE_HELP) help.createEl('li', { text: word(key) });
+  const showHelp = (show: boolean) => {
+    help.hidden = !show;
+    helpButton.setAttribute('aria-pressed', String(show));
+  };
+  showHelp(true);
+  return { depthButton, showHelp, help };
+}

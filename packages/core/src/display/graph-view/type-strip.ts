@@ -22,6 +22,7 @@ import type {
   StyleGraph,
 } from '@thoughtknot/core';
 import type { LeftAt } from '../link-host';
+import type { SpaceMode } from './space-switch';
 import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
@@ -81,6 +82,8 @@ export interface DiagramShown extends DiagramOffer {
 /** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
 export interface TypeLeftAt extends LeftAt {
   full?: boolean;
+  /** Shown in space, as cards or balls (space-switch.ts), so the card drawn next is shown so too. */
+  space?: SpaceMode;
   /** Where each box was on the screen, by its thing's key: the boxes of the card drawn next glide from there. */
   places?: Map<string, DOMRect>;
 }
