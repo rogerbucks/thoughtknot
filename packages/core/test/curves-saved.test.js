@@ -18,7 +18,8 @@ const chain = (n, name = 'Thing') =>
     ].join(',\n')}`,
   ]).graphs.get('g');
 
-const big = chain(QUICK_LAYOUT + 1);
+/** Drawn with Graphviz's own curves: direct links (the default) are laid out once, with none to come. */
+const big = { ...chain(QUICK_LAYOUT + 1), routing: 'curved' };
 
 /** A worker served on this thread, counting what its engine is asked to lay out. */
 async function counting() {
@@ -58,7 +59,7 @@ describe('curves kept by what was laid out', () => {
   test('a changed graph is drawn straight first again, and small graphs are laid out each time', async () => {
     const { laid, ask } = await counting();
     await ask(big);
-    const changed = await ask({ ...chain(QUICK_LAYOUT + 1, 'Step'), straightFirst: true });
+    const changed = await ask({ ...chain(QUICK_LAYOUT + 1, 'Step'), routing: 'curved', straightFirst: true });
     assert.equal(changed.drawn.curvesToCome, true);
     const small = chain(QUICK_LAYOUT);
     await ask(small);

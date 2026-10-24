@@ -116,21 +116,26 @@ export function directLinks(laid: LaidMarks): LaidMarks {
   const bows = bends(toBend, all);
   const curves = new Map<string, Curve>(toBend.map((l, i) => [l.id, curveOf(l.a, l.b, bows[i] as number)]));
   const spots = wordSpots(laid.marks, boxes, curves);
+  // each link's arrowheads, and the first line drawn for it, found by what it is of: looked up once, not per mark
+  const headsBy = new Map<string, (DrawMark & { kind: 'arrowhead' })[]>(),
+    lineBy = new Map<string, DrawMark & { kind: 'link' }>();
+  for (const m of laid.marks)
+    if (m.kind === 'arrowhead' && m.of !== undefined) headsBy.set(m.of, [...(headsBy.get(m.of) ?? []), m]);
+    else if (m.kind === 'link' && m.of !== undefined && !lineBy.has(m.of)) lineBy.set(m.of, m);
 
   const marks = laid.marks.map((m): DrawMark => {
     const by = shiftOf.get(m.id);
     const c = m.of === undefined ? undefined : curves.get(m.of);
     if (m.kind === 'link' && c) {
       // the line stops where an arrowhead begins, at either end that has one
-      const heads = headsOf(laid.marks, m);
+      const heads = headsOf(m.of === undefined ? [] : (headsBy.get(m.of) ?? []), m);
       const points = c.cubic(heads.start, heads.end);
       const { outline: _gone, ...rest } = m;
       return { ...rest, points, curve: true };
     }
     if (m.kind === 'arrowhead' && c) {
       // which end it is at, as Graphviz drew it: the boxes have moved since
-      const line = laid.marks.find((l) => l.kind === 'link' && l.of === m.of) as
-        (DrawMark & { kind: 'link' }) | undefined;
+      const line = m.of === undefined ? undefined : lineBy.get(m.of);
       const atStart = line ? atFirstEnd(line, m) : m.id.startsWith('tail:');
       const [tip, angle] = c.tipAt(atStart);
       const { outline: _gone, ...rest } = m;
@@ -231,11 +236,13 @@ function moveTo(b: Placed, x: number, y: number): void {
   b.y = g ? Math.min(Math.max(y, g.y0 + b.hh), g.y1 - b.hh) : y;
 }
 
-/** How long the arrowheads at the first and last ends of `link` are: none at an end, 0. */
-function headsOf(marks: readonly DrawMark[], link: DrawMark & { kind: 'link' }): { start: number; end: number } {
+/** How long the arrowheads `heads` of `link` are, at its first and last ends: none at an end, 0. */
+function headsOf(
+  heads: readonly (DrawMark & { kind: 'arrowhead' })[],
+  link: DrawMark & { kind: 'link' },
+): { start: number; end: number } {
   const out = { start: 0, end: 0 };
-  for (const h of marks)
-    if (h.kind === 'arrowhead' && h.of === link.of) out[atFirstEnd(link, h) ? 'start' : 'end'] = h.size;
+  for (const h of heads) out[atFirstEnd(link, h) ? 'start' : 'end'] = h.size;
   return out;
 }
 

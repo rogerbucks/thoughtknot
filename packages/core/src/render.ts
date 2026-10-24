@@ -91,8 +91,11 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const only = own ?? (drawing.diagram ? GraphLayout.typeDirection(drawing.diagram) : undefined);
   const keys = drawing.boxes.map((b) => b.key);
   const quick = drawing.boxes.length > QUICK_LAYOUT;
-  // straight first only where the links would be curved: a routing a person chose is drawn as chosen at once
-  const straight = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'curved');
+  // straight first only where Graphviz's own curves are drawn: a routing a person chose is drawn as chosen at once
+  const straight = quick && !!drawing.straightFirst && drawing.routing === 'curved';
+  // direct links (the default) are drawn again from where the boxes are, never along Graphviz's curves. So a large
+  // one is laid out once, straight, and drawn whole: curving it after would lay it out twice for the same drawing
+  const direct = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'direct');
   const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
@@ -125,7 +128,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       drawing.routing,
     );
     if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
-    return { rankdir, dot: quick ? quickSource(dot) : dot, src };
+    return { rankdir, dot: direct ? quickSource(dot, STRAIGHT_FIRST) : quick ? quickSource(dot) : dot, src };
   });
 }
 

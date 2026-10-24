@@ -141,13 +141,14 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[]): numbe
 /** Whether two links share no box, so a crossing between them is one to count. */
 const apartFrom = (l: ToBend, m: ToBend | undefined) => !!m && l.a !== m.a && l.a !== m.b && l.b !== m.a && l.b !== m.b;
 
-/** A curve as points along it, with the box round them. */
+/** A curve as points along it, with the box round them, and the box round each piece (x0, y0, x1, y1 in turn). */
 interface Path {
   points: MarkPoint[];
   x0: number;
   y0: number;
   x1: number;
   y1: number;
+  pieces: Float64Array;
 }
 
 /** The curve from `a` to `b` bowed by `bow`, cut into PIECES. */
@@ -157,7 +158,13 @@ function pathOf(a: Placed, b: Placed, bow: number): Path {
   for (let k = 0; k <= PIECES; k++) points.push(c.at(k / PIECES));
   const xs = points.map((p) => p[0]),
     ys = points.map((p) => p[1]);
-  return { points, x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+  const pieces = new Float64Array(PIECES * 4);
+  for (let i = 0; i < PIECES; i++) {
+    const [ax, ay] = points[i] as MarkPoint,
+      [bx, by] = points[i + 1] as MarkPoint;
+    pieces.set([Math.min(ax, bx), Math.min(ay, by), Math.max(ax, bx), Math.max(ay, by)], i * 4);
+  }
+  return { points, x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys), pieces };
 }
 
 /** How many boxes, other than its ends, the curve `p` of link `l` runs through. */
@@ -171,16 +178,33 @@ function through(p: Path, l: ToBend, boxes: readonly Placed[]): number {
   return n;
 }
 
-/** Whether two curves cross. */
+/**
+ * Whether two curves cross. Two pieces whose boxes are apart cannot cross. So only pieces whose boxes meet are tested.
+ * The answer is the same as testing every pair, in a small share of the time.
+ */
 function crosses(p: Path, q: Path): boolean {
   if (p.x1 < q.x0 || q.x1 < p.x0 || p.y1 < q.y0 || q.y1 < p.y0) return false;
+  const ps = p.pieces,
+    qs = q.pieces;
   for (let i = 0; i < PIECES; i++) {
+    const i4 = i * 4;
+    const px0 = ps[i4] as number,
+      py0 = ps[i4 + 1] as number,
+      px1 = ps[i4 + 2] as number,
+      py1 = ps[i4 + 3] as number;
+    if (px1 < q.x0 || q.x1 < px0 || py1 < q.y0 || q.y1 < py0) continue;
     const a = p.points[i] as MarkPoint,
       b = p.points[i + 1] as MarkPoint;
     for (let j = 0; j < PIECES; j++) {
-      const c = q.points[j] as MarkPoint,
-        d = q.points[j + 1] as MarkPoint;
-      if (cut(a, b, c, d)) return true;
+      const j4 = j * 4;
+      if (
+        px1 < (qs[j4] as number) ||
+        (qs[j4 + 2] as number) < px0 ||
+        py1 < (qs[j4 + 1] as number) ||
+        (qs[j4 + 3] as number) < py0
+      )
+        continue;
+      if (cut(a, b, q.points[j] as MarkPoint, q.points[j + 1] as MarkPoint)) return true;
     }
   }
   return false;
