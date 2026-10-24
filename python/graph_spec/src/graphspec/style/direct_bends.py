@@ -33,7 +33,9 @@ def _sign(x: float) -> float:
     return (x > 0) - (x < 0)
 
 
-def spread(boxes: list[Placed], groups: dict[str, list[float]], middle) -> dict[str, tuple]:
+def spread(
+    boxes: list[Placed], groups: dict[str, list[float]], middle: tuple[float, float]
+) -> dict[str, tuple]:
     """Spreads `boxes` apart from `middle` by ROOM. A box in a group moves with the outermost
     group it is in, as does that group and every group inside it. Each group's edges are a list
     (x0, y0, x1, y1), moved in place. Gives how far each group moved, by its id."""
@@ -110,7 +112,7 @@ class ToBend:
         self.key, self.a, self.b, self.toward, self.fixed = key, a, b, toward, fixed
 
 
-def toward_middle(a: Placed, b: Placed, side: int, middle) -> float:
+def toward_middle(a: Placed, b: Placed, side: int, middle: tuple[float, float]) -> float:
     """The way toward the middle of the drawing, seen from the link from `a` to `b`; on the line
     itself, `side`."""
     dx, dy = b.x - a.x, b.y - a.y
