@@ -45,5 +45,5 @@ export function spaceButton(
   now: () => { marks: DrawMark[]; paints: Paints },
   stage: HTMLElement,
 ): void {
-  button(tools, word('bar.space'), 'box', () => void openSpaceView(el, now(), graph, () => stage.focus()));
+  button(tools, word('bar.space-balls'), 'box', () => void openSpaceView(el, now(), graph, () => stage.focus()));
 }

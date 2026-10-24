@@ -22,6 +22,7 @@ import type {
   StyleGraph,
 } from '@thoughtknot/core';
 import type { LeftAt } from '../link-host';
+import type { SpaceMode } from './space-switch';
 import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
@@ -81,6 +82,8 @@ export interface DiagramShown extends DiagramOffer {
 /** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
 export interface TypeLeftAt extends LeftAt {
   full?: boolean;
+  /** Shown in space, as cards or balls (space-switch.ts), so the card drawn next is shown so too. */
+  space?: SpaceMode;
   /** Where each box was on the screen, by its thing's key: the boxes of the card drawn next glide from there. */
   places?: Map<string, DOMRect>;
 }
@@ -240,12 +243,14 @@ export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: '
  * read-only card takes away; what it says stays. Where the card can look at a type (`d.look`), its types stay offered
  * while `readOnly` says so, each drawn without being saved. A type looked at is said not saved, with Back to saved, and
  * Keep it where the note is edited. Each keeps where the card is (`where`) first, for the card drawn as the new type.
+ * Given the card's bar (`inBar`), Diagram type sits there with the bar's other buttons, its list still under the strip.
  */
 export function renderTypeStrip(
   root: HTMLElement,
   d: DiagramShown,
   readOnly: () => boolean = () => false,
   where?: () => TypeLeftAt,
+  inBar?: { bar: HTMLElement; before: HTMLElement },
 ): HTMLElement[] {
   const { choice, suggested, look } = d,
     writes: HTMLElement[] = [];
@@ -281,6 +286,8 @@ export function renderTypeStrip(
     toggle.setAttribute('aria-expanded', String(!list.hidden));
   };
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
+  toggle.setAttribute('aria-expanded', 'false');
+  inBar?.bar.insertBefore(toggle, inBar.before); // in the bar, with the rest that change how it is drawn (type_in_bar)
   const around = aroundSelected(toggle, d, where); // Radial with a thing selected (radial_centre_anywhere)
   picks(toggle, list);
   // a timeline's order and what it shows: looked at while the card is read-only, when it can be; else saved

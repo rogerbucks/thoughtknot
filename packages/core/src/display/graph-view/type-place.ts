@@ -1,20 +1,22 @@
 // Where a card was when its diagram type changed (spec §15, type_keeps_place). Changing the type draws a new card, saved
 // or only looked at. That card takes up where the last was left: its zoom, the thing selected with its details, and
-// full screen, if it was open. The selected thing is brought into view where the new layout put it.
+// full screen, if it was open. Shown in space, as cards or balls, it is shown so again (§53). The selected thing is brought into view where the new layout put it.
 import type { View, Zoom } from '@thoughtknot/core';
 import { glideBoxes } from './regroup';
 import { boxIn } from './taps';
 import type { Taps } from './taps';
+import type { SpaceMode } from './space-switch';
 import type { DiagramShown, TypeLeftAt } from './type-strip';
 import type { ViewOptions } from './view-options';
 
-/** Where a card is now, given its view, the thing selected, and whether it is the full-screen card. */
-export const typeLeftAt = (v: View, selected: string | null, full: boolean): TypeLeftAt => ({
+/** Where a card is now, given its view, the thing selected, whether it is the full-screen card, and if in space. */
+export const typeLeftAt = (v: View, selected: string | null, full: boolean, space?: SpaceMode | null): TypeLeftAt => ({
   zoom: v.scale,
   x: v.x,
   y: v.y,
   ...(selected ? { selected } : {}),
   ...(full ? { full: true } : {}),
+  ...(space ? { space } : {}),
 });
 
 /** What one card takes up of where the last card was left as its type changed. */
@@ -45,6 +47,11 @@ export class TypePlace {
         },
       },
     };
+  }
+
+  /** Whether the last card was shown in space, as cards or balls, so this one is shown so too (§53). */
+  space(): SpaceMode | undefined {
+    return this.kept?.space;
   }
 
   /** Once the card is placed: the thing selected brought into view, and full screen opened again when it was open. */
