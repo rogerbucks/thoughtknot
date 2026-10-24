@@ -80,11 +80,6 @@ class Curve:
         flip = -1 if self.dx >= 0 else 1
         return (x - (self.dy / self.long) * off * flip, y + (self.dx / self.long) * off * flip)
 
-    def nearer(self, p: tuple[float, float]) -> bool:
-        """Whether `p` is nearer the curve's first end than its last."""
-        (a, b) = self.ends
-        return hypot(p[0] - a[0], p[1] - a[1]) < hypot(p[0] - b[0], p[1] - b[1])
-
 
 def curve_of(a: Placed, b: Placed, bow: float) -> Curve:
     """The curve from the edge of box `a` to the edge of box `b`, bowed by `bow` of its length."""
