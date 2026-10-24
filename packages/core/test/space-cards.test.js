@@ -47,7 +47,29 @@ test('each card holds the whole name, wrapped to fit, and the picked card is mar
   assert.ok(a.picked && !b.picked);
   assert.ok(a.width >= Math.max(...a.rows.map((r) => r.length)) * a.size * 0.5, 'the card is wide enough');
   assert.ok(a.height >= a.rows.length * a.size, 'and tall enough');
-  for (let i = 1; i < cards.length; i++) assert.ok(cards[i - 1].far >= cards[i].far, 'far ones first');
+  assert.equal(cards.at(-1), a, 'the picked card is painted last, over the rest');
+  const rest = cardsOnScreen(space, matrix, W, H);
+  for (let i = 1; i < rest.length; i++) assert.ok(rest[i - 1].far >= rest[i].far, 'far ones first');
+});
+
+test('far off, a card still shows its name where that covers no nearer name, else it is plain', () => {
+  // the two things far apart, so seen whole their words are too small to be painted whatever they cover
+  const { space } = spreadSpace(MARKS, undefined, true);
+  const apart = { ...space, blocks: space.blocks.map((b, i) => ({ ...b, x: i ? 3000 : -3000, y: 0 })) };
+  apart.least = [-3100, -100, 0];
+  apart.most = [3100, 100, 100];
+  const orbit = orbitFit(apart, W / H);
+  const matrix = spaceMatrix(orbit, W / H, orbit.distance * 4);
+  const both = cardsOnScreen(apart, matrix, W, H);
+  assert.deepEqual(both.map((c) => c.rows.join(' ')).sort(), ['Billing', LONG].sort(), 'both show their names');
+  assert.ok(
+    both.every((c) => c.size >= 11),
+    'at a size that can be read',
+  );
+  // the same two things one before the other: only the nearer one is named
+  const stacked = { ...apart, blocks: apart.blocks.map((b, i) => ({ ...b, x: 0, floor: b.floor + i * 5 })) };
+  const named = cardsOnScreen(stacked, matrix, W, H).filter((c) => c.rows.length);
+  assert.equal(named.length, 1, 'one name, never one over another');
 });
 
 test('a click picks the nearest card under it', () => {

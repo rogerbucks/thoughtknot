@@ -107,7 +107,7 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
 }
 
 /**
- * Paints `frame`'s cards, its arrowheads, then its labels, on `ctx`, already at their pixels (space-cards.ts). Arrowheads
+ * Paints `frame`'s arrowheads, its cards, then its labels, on `ctx`, already at their pixels (space-cards.ts). Arrowheads
  * are in their link's colour, edged with the page colour so they read where links meet. Labels have a halo of the page
  * colour so they read over blocks. The picked thing's ring, or its card's edge, is in `ink`.
  */
@@ -124,7 +124,6 @@ export function paintSpaceLabels(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
-  paintCards(ctx, frame.cards, paints, halo, ink);
   ctx.lineWidth = 1;
   for (const a of arrows) {
     const line = paints(a.style).line;
@@ -139,6 +138,8 @@ export function paintSpaceLabels(
     ctx.strokeStyle = halo;
     ctx.stroke();
   }
+  // cards after the arrowheads, which sit at their edges: a card in front hides the arrowheads behind it
+  paintCards(ctx, frame.cards, paints, halo, ink);
   // the picked thing's ring: its ink edged both sides in the page colour, so it shows in either theme
   if (ring) {
     ctx.beginPath();
@@ -254,8 +255,13 @@ function paintCards(
     const paint = paints(c.block.style);
     ctx.beginPath();
     ctx.roundRect(c.x - c.width / 2, c.y - c.height / 2, c.width, c.height, Math.min(CARD_CORNER, c.height / 4));
-    ctx.fillStyle = paint.fill ?? halo;
+    // the page colour first: a thing's fill is often see-through, and a card must hide the lines and cards behind it
+    ctx.fillStyle = halo;
     ctx.fill();
+    if (paint.fill) {
+      ctx.fillStyle = paint.fill;
+      ctx.fill();
+    }
     if (c.picked) {
       ctx.strokeStyle = halo;
       ctx.lineWidth = 7;
