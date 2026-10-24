@@ -172,7 +172,7 @@ export class GraphView extends Lifecycle {
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     const at = () => typeLeftAt(this.zoom.view(), this.details.selectedKey(), mode === 'full', this.spaces.mode());
-    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at)); // its types (§15)
+    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
     // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
     renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);

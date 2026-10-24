@@ -1,5 +1,5 @@
 // A drawing's bar (spec §3). It holds the problems badge, Fit, zoom out and zoom in. Then Find a thing, Filter by kind
-// or link, View (§25), 2D, 2.5D or 3D (§53) and Full screen. Where the note is edited, it holds Edit here and Edit in pane. In reading
+// or link, View (§25), Diagram type (§15), 2D, 2.5D or 3D (§53) and Full screen. Where the note is edited, it holds Edit here and Edit in pane. In reading
 // view, it holds Source.
 // Each control says what it is in words as well as by its icon.
 import { button } from '../button';
@@ -50,6 +50,8 @@ export interface BarPlaced {
   source: HTMLButtonElement | null;
   /** 2D, 2.5D or 3D, which says how the drawing is shown now; none for a table. */
   space: HTMLButtonElement | null;
+  /** Where the type strip puts Diagram type in the bar: before 2D, 2.5D or 3D, or before Full screen (§15). */
+  types: { bar: HTMLElement; before: HTMLElement };
 }
 
 /** Builds the bar of a drawing at the top of its card. */
@@ -100,8 +102,10 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   const space = o.diagram?.table
     ? null
     : button(bar, word('bar.space'), 'box', () => on.space(), word('bar.space-flat'));
-  if (mode === 'full') button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.());
-  else button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
+  const full =
+    mode === 'full'
+      ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
+      : button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)
   if (o.exporting) button(bar, word('bar.export'), 'download', () => on.export());
   const editing: HTMLElement[] = [];
@@ -113,5 +117,5 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   if (mode !== 'pane') editing.push(button(bar, word('bar.edit-in-pane'), 'panel-right-open', () => o.onEdit()));
   const source: HTMLButtonElement | null =
     mode === 'note' ? button(bar, word('bar.show-source'), 'code', () => source && on.toggleSource(source)) : null;
-  return { editButton, editing, source, space };
+  return { editButton, editing, source, space, types: { bar, before: space ?? full } };
 }
