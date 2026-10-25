@@ -1203,5 +1203,45 @@
       "format_compose_out",
       "format_html_sandboxed"
     ]
+  },
+  "LE1": {
+    "title": "Our own layout engine: never text, groups as boxes, strategies",
+    "size": "M",
+    "requirements": [
+      "layout_never_text",
+      "layout_groups_as_boxes",
+      "layout_work_counted",
+      "layout_real_fixtures",
+      "layout_strategy_variables",
+      "layout_pick_said",
+      "layout_own_default"
+    ]
+  },
+  "LE2": {
+    "title": "Live layout: the loop, the glide and the six layers",
+    "size": "M",
+    "requirements": [
+      "layout_live_loop",
+      "layout_glide",
+      "layout_concept_layers",
+      "layout_plugins"
+    ]
+  },
+  "PJ1": {
+    "title": "Projections: all on",
+    "size": "L",
+    "requirements": [
+      "projections_all_on",
+      "projection_fisheye",
+      "projection_hyperbolic",
+      "projection_sphere",
+      "projection_arc",
+      "projection_matrix",
+      "projection_hive",
+      "projection_map",
+      "projection_grid",
+      "projection_semantic_zoom",
+      "projection_spatial"
+    ]
   }
 }

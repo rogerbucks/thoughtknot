@@ -85,6 +85,11 @@ export const SETTINGS_SOURCE_WORDS = {
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   'settings.merge-links.on': 'On',
   'settings.merge-links.off': 'Off',
+  'settings.own-layout.name': 'New layout engine (preview)',
+  'settings.own-layout.sentence':
+    'Whether ThoughtKnot lays graphs out by its own engine, not Graphviz; a graph’s View menu can change it.',
+  'settings.own-layout.on': 'On',
+  'settings.own-layout.off': 'Off',
   'settings.note-callouts.name': 'Draw notes as callouts',
   'settings.note-callouts.sentence':
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',

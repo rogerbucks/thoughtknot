@@ -95,9 +95,9 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
         d.curved !== undefined && saved.get(d.curved) !== undefined ? { ...d, dot: d.curved, straight: false } : d,
       );
       // direct links are drawn again from Graphviz's marks (untangle_direct); any other routing is Graphviz's own
-      const own = (dot: string): string => svgOf(e, dot, drawing.routing);
+      const drawnOf = (d: (typeof laid)[number]): string => svgOf(e, d.dot, drawing.routing, d.own);
       const svgs = laid.map((d) =>
-        !large || d.straight ? own(d.dot) : (saved.get(d.dot) ?? saved.keep(d.dot, own(d.dot))),
+        !large || d.straight ? drawnOf(d) : (saved.get(d.dot) ?? saved.keep(d.dot, drawnOf(d))),
       );
       return { id, drawn: chosen(laid, svgs, theme && PALETTES[theme]) };
     };

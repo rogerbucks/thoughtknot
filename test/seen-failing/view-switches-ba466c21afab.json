@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-switches.test.js",
+  "test": "the View menu > every graph starts from the settings: changed there, a new card starts as they now say",
+  "seen_failing_first": false,
+  "evidence": "Updated for the fifth switch, the new layout engine, whose code came in the commit before (77afd0b); the test was seen failing there."
+}
