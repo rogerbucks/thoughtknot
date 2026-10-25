@@ -338,6 +338,21 @@ describe('a fan of links', () => {
     assert.deepEqual(Object.fromEntries(near), { ab: 'to', ex: 'from' });
   });
 
+  // proves: layout_trunk_words
+  test('past a trunk, its links’ own words are gone, and the trunk keeps its count', () => {
+    const { gone } = fans([
+      link('t', 'trunk: 1 in', 'trunk: 1 out'),
+      link('e1', 'trunk: 1 out', 'b'),
+      link('e2', 'trunk: 1 out', 'b'),
+      link('cb', 'c', 'b'),
+      words('t', '2 links'),
+      words('e1', 'meets'),
+      words('e2', 'needs'),
+      words('cb', 'fails'),
+    ]);
+    assert.deepEqual([...gone].sort(), ['l:e1', 'l:e2']);
+  });
+
   test('our own engine draws a fan’s words once, on a real note', async () => {
     const engine = await loadEngine();
     const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');

@@ -206,8 +206,9 @@ describe('a trunk', () => {
       link('trunk: 1 in', 'trunk: 1 out'),
       ...[1, 2, 3].map(() => link('trunk: 1 out', 'group: 3')),
     ];
-    const { spots, via } = ownSpots({ marks, space: { width: 0, height: 0 } }, 'LR');
-    const x = (k) => spots.get(k)[0];
+    const { spots, via, rankdir } = ownSpots({ marks, space: { width: 0, height: 0 } }, 'LR');
+    // how far along the way its rows run, whichever way the overview turned them
+    const x = (k) => spots.get(k)[rankdir === 'TB' ? 1 : 0];
     // three rows, as if the trunk were one link, not five with a row for each dot
     assert.ok(Math.abs(x('group: 3') - x('group: 2') - (x('group: 2') - x('group: 1'))) < 1, 'rows evenly apart');
     assert.ok(
@@ -217,6 +218,25 @@ describe('a trunk', () => {
     assert.ok(x('trunk: 1 out') < x('group: 3'), 'and part before the last');
     // the trunk takes the bends between, round the row it skips
     assert.ok(via.has('trunk: 1 in\ntrunk: 1 out'));
+  });
+});
+
+describe('an overview', () => {
+  const box = (of) => ({ kind: 'box', id: of, role: 'thing', of, x: 0, y: 0, width: 260, height: 57 });
+  const link = (from, to) => ({ kind: 'link', id: `${from} ${to}`, from, to, points: [], curve: false });
+  const chain = (keys) => ({
+    marks: [...keys.map(box), ...keys.slice(1).map((k, i) => link(keys[i], k))],
+    space: { width: 0, height: 0 },
+  });
+
+  // proves: layout_overview_turns
+  test('turns its rows the way that gives it a screen’s shape nearer; a drawing of things keeps the way asked', () => {
+    // eight wide group boxes in a chain: left to right they make one long strip
+    const groups = Array.from({ length: 8 }, (_, i) => `group: ${i + 1}`);
+    assert.equal(ownSpots(chain(groups), 'LR').rankdir, 'TB');
+    assert.equal(ownSpots(chain(groups), 'TB').rankdir, 'TB');
+    const things = Array.from({ length: 8 }, (_, i) => `t${i + 1}`);
+    assert.equal(ownSpots(chain(things), 'LR').rankdir, 'LR');
   });
 });
 
