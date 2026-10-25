@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {
   between,
   fingerTurn,
+  pinchBy,
   zoomToward,
   fromAbove,
   KEY_STEP,
@@ -220,4 +221,20 @@ test('zooming toward a point keeps what is under it under it, from any side', ()
   }
   const o = ORBIT;
   assert.deepEqual(zoomToward(o, 2, 0, 0, 1).target, o.target);
+});
+
+test('two fingers pinching move, zoom and twist the view in one go, toward their middle', () => {
+  const was = [
+      { x: 400, y: 250 },
+      { x: 500, y: 250 },
+    ],
+    spread = [
+      { x: 350, y: 250 },
+      { x: 550, y: 250 },
+    ];
+  const moved = pinchBy(ORBIT, was, spread, { left: 0, top: 0 }, 900, 600);
+  assert.ok(moved.distance < ORBIT.distance, 'spread apart zooms in');
+  assert.equal(moved.turn, ORBIT.turn, 'no twist');
+  assert.notDeepEqual(moved.target, ORBIT.target, 'toward their middle, off the screen centre');
+  assert.equal(pinchBy(ORBIT, was, was, { left: 0, top: 0 }, 900, 600).distance, ORBIT.distance);
 });
