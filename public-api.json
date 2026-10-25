@@ -1331,6 +1331,9 @@
           "shapes: Array<Shape>",
           "viewBox: { x: number; y: number; width: number; height: number; }"
         ],
+        "holdsStill": [
+          "value: (s: Pick<Settings, 'viewPreset'>) => boolean"
+        ],
         "hops": [
           "value: (text: string) => [string, string, string][]"
         ],

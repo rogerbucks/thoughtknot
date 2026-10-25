@@ -13,6 +13,7 @@ import {
   presetFile,
   presetFrom,
   starterOf,
+  holdsStill,
 } from '../src/view-presets.ts';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
 
@@ -51,6 +52,8 @@ describe('the starter presets', () => {
   });
 
   test('Calm and predictable lays out again only when asked, and Focus support fades the rest', () => {
+    assert.equal(holdsStill({ viewPreset: 'calm' }), true);
+    assert.equal(holdsStill({ viewPreset: 'default' }), false, 'the default follows the device');
     assert.equal(starterOf('calm').chain.keys.layoutOnlyAsked, true);
     assert.equal(starterOf('calm').chain.motion.mode, 'off');
     assert.equal(starterOf('focus').chain.detail.rest, 'blurred');

@@ -129,6 +129,10 @@ export const STARTERS: readonly ViewPreset[] = [
 /** The starter of `id`, else the default. */
 export const starterOf = (id: string): ViewPreset => STARTERS.find((p) => p.id === id) ?? (STARTERS[0] as ViewPreset);
 
+/** Whether the view preset of `s` keeps everything still: nothing glides or plays, whatever the device says. */
+export const holdsStill = (s: Pick<Settings, 'viewPreset'>): boolean =>
+  starterOf(s.viewPreset).chain.motion.mode === 'off';
+
 /** The settings picking `id` sets: the preset's name, and every setting it turns. */
 export const presetChange = (id: string): Partial<Settings> => {
   const p = starterOf(id);

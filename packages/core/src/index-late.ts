@@ -26,6 +26,7 @@ export {
   STARTERS,
   PRESET_SETTINGS,
   starterOf,
+  holdsStill,
   presetChange,
   floored,
   deviceWins,
