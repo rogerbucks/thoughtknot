@@ -51,15 +51,15 @@
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "5e743cb4d123c6f0576e7217d39e702a72b55b0f021cd1f478571f12ead6fcc6",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "8472f52c67caa06a56d13016980feaf46b1f220506f08feaaf7c91b33b6b3204",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "39ad3f6cfb482c7493946f49a014091d954aea61b47d555218a06ef45d3d93a3",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "82610688c3285de64e4c0657208b89139991c00bbed859555c5b01398ad2b491",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
@@ -207,15 +207,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "08e775978e86de2c2acbe2684ddc1f082e4c6d47c7659af3d8e549569ca9eb93",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "3c82a753f4d7fc8c497727fe028da1b35659751e40067e5f19319cbab686af99",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "6bd377fddb7a08ce10f50c6f471b158ddb1aa77b30392332f4e1246cb4ffd984",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "a757a80c8ade8e9824d9483da9d5b2a9206d9c694da486fc57f19639b1c49220",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
@@ -267,27 +267,27 @@
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "b158c716e50a8423d6ab681e88fb69ec16635eb9008c418a0024344716e13643",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "d17984ffdb76ae4ef8942b7e5ded4bc2547410e8a86ced5954c5f43f9554b76c",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "79d85f5318931b37d4a45c0ff83a1861f1652769c150a6b3387b35c94d73728d",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "3e8568e8bdd7e53b437f422b958784769ee4b6088ffcc5e508cae4792ff3c286",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "d7a007b79bb14014831bfefe76c9162b12fa2c59f49d44bdc19e2a64ad95e157",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "99895a42fb1710ec0899fb645e8a77d1e4d477e43eadeab10a16d5f837688622",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "069606df5f716f17cb731ddd30b33990ed29ce445245b0a666af092594f27092",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "70febd167f521a1e72d00e0d7f166cf27b899b9d751f49c76c87bdceaf537cde",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
@@ -363,15 +363,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "eb9f476547fa09d82048b9dcfc7bf33414e64dccf340b91da5bb00a93ef4ffec",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "a85174ec86bac8890642ddd11c31b701e2aa1ae6e1be607d56b5d24324db79e2",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "7d4e722f91192214e3db242ec7dfba307de1dbb9faa5ff9841cf188c7cf9de3d",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "6282e71e725b023ce44c32addec08dcdd741dc6bf28270ac055dc81a5b18470a",
+      "reason": "A selected thing's own links are drawn a little thicker (select_links_stronger)",
+      "day": "2026-10-25"
     }
   ]
 }

@@ -92,3 +92,12 @@ export class DrawingMarks {
     g.classList.toggle('thoughtknot-hot', hot);
   }
 }
+
+/** Marks the links of the thing `key` among `links`, and only those, drawn a little thicker (Roger, 25 Oct 2026). */
+export function markTouching(svg: Element, links: readonly { from: string; to: string }[], key: string | null): void {
+  const touching = new Set(
+    links.flatMap((l, n) => (key !== null && (l.from === key || l.to === key) ? [String(n)] : [])),
+  );
+  for (const g of Array.from(svg.querySelectorAll('g.edge')))
+    g.classList.toggle('thoughtknot-touching', touching.has(g.getAttribute('data-link') ?? ''));
+}

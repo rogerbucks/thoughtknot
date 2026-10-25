@@ -9,8 +9,8 @@
       <text x="35.66" y="-144.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
       <text x="19.28" y="-124.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
     <g id="p4">
-      <path d="M78.32,-109C89.97,-94.88 99.03,-79.52 105.51,-62.93" paint="stroke:rgb(9, 152, 150);stroke-width:2">
-      <polygon points="103.22,-62.04 108.05,-56.4 107.79,-63.82 103.22,-62.04" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2">
+      <path d="M78.32,-109C89.97,-94.88 99.03,-79.52 105.51,-62.93" paint="stroke:rgb(9, 152, 150);stroke-width:2.5">
+      <polygon points="103.22,-62.04 108.05,-56.4 107.79,-63.82 103.22,-62.04" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2.5">
       <text x="99.47" y="-88.18" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
     <g id="p5">
       <path d="M207.72,-165.4C207.72,-165.4 158.42,-165.4 158.42,-165.4 152.42,-165.4 146.42,-159.4 146.42,-153.4 146.42,-153.4 146.42,-121 146.42,-121 146.42,-115 152.42,-109 158.42,-109 158.42,-109 207.72,-109 207.72,-109 213.72,-109 219.72,-115 219.72,-121 219.72,-121 219.72,-153.4 219.72,-153.4 219.72,-159.4 213.72,-165.4 207.72,-165.4" paint="fill:rgba(213, 57, 132, 0.16);fill-opacity:0;stroke:rgb(168, 51, 108);stroke-width:1">
@@ -25,8 +25,8 @@
       <text x="96.9" y="-253.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> REASON
       <text x="70.12" y="-233.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Easy on the eyes
     <g id="p8">
-      <path d="M107.28,-218C99.28,-197.11 91,-181.38 82.42,-170.83" paint="stroke:rgb(15, 147, 67);stroke-width:2">
-      <polygon points="80.52,-172.38 78,-165.4 84.32,-169.29 80.52,-172.38" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67);stroke-width:2">
+      <path d="M107.28,-218C99.28,-197.11 91,-181.38 82.42,-170.83" paint="stroke:rgb(15, 147, 67);stroke-width:2.5">
+      <polygon points="80.52,-172.38 78,-165.4 84.32,-169.29 80.52,-172.38" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67);stroke-width:2.5">
       <text x="88.96" y="-192.07" text-anchor="middle" paint="fill:rgb(21, 110, 56)"> favours
     <g id="p9">
       <path d="M129.3,-218C137.66,-197 146.23,-181.26 155,-170.77" paint="stroke:rgb(183, 45, 62);stroke-width:1">

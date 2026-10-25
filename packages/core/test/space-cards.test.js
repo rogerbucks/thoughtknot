@@ -102,3 +102,23 @@ test('with cards the graphics chip paints only the lines, and only link words fl
   const balls = spreadSpace(MARKS).space;
   assert.equal(frameOf(balls, matrix, W, H, null).shapes, balls, 'balls are painted as before');
 });
+
+// proves: select_links_stronger
+test("the picked thing's links, and only those, are drawn a little thicker in 3D", () => {
+  const marks = [
+    ...MARKS,
+    { id: 't:c', kind: 'box', style: 'thing', of: 'c', x: 600, y: 0, width: 90, height: 40 },
+    { id: 'e:bc', kind: 'link', style: 'link', from: 'b', to: 'c', points: [] },
+  ];
+  for (const cards of [true, false]) {
+    const { space } = spreadSpace(marks, undefined, cards);
+    const orbit = orbitFit(space, W / H);
+    const matrix = spaceMatrix(orbit, W / H, orbit.distance * 4);
+    const a = space.blocks.find((b) => b.of === 'a');
+    assert.deepEqual(frameOf(space, matrix, W, H, null).strong, [], 'nothing picked, nothing thicker');
+    const strong = frameOf(space, matrix, W, H, a).strong;
+    assert.equal(strong.length, 1, "only a's link");
+    assert.ok(strong[0].points.length >= 2, 'drawn along its line on the screen');
+    assert.equal(frameOf(space, matrix, W, H, null, 'e:bc').strong.length, 1, 'a link picked is thicker too');
+  }
+});
