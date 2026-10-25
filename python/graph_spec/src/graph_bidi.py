@@ -10,7 +10,7 @@ import re
 # A letter of a right-to-left block: Hebrew to Arabic Extended-A, their presentation forms, and
 # the astral ones. The same blocks as packages/core/src/bidi.ts.
 _RTL = re.compile(
-    "[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\U00010800-\U00010fff\U0001e800-\U0001efff]"
+    r"[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\U00010800-\U00010fff\U0001e800-\U0001efff]"
 )
 
 

@@ -10,7 +10,7 @@
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
 // stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD, eyeOf } from './space-view.ts';
+import { FIELD, eyeOf, orbitBy } from './space-view.ts';
 import type { Orbit, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
@@ -86,6 +86,15 @@ export function twoFingers(
     [x1, y1] = middle(now);
   const before = apart(was);
   return { dx: x1 - x0, dy: y1 - y0, zoom: before > 0 ? apart(now) / before : 1 };
+}
+
+/**
+ * `orbit` turned by one finger dragging `dx` and `dy` pixels. A finger turns the way it goes. The drawing beyond the
+ * middle follows it sideways (Roger, 25 Oct 2026: on iPhone one finger went the wrong way). A mouse drags the camera
+ * round, `orbitBy`.
+ */
+export function fingerTurn(orbit: Orbit, dx: number, dy: number): Orbit {
+  return orbitBy(orbit, -dx, dy);
 }
 
 /** How far the line between two fingers turned as they moved from `was` to `now`, in radians; clockwise on screen is positive. */

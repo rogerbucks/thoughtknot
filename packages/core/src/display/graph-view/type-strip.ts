@@ -288,7 +288,7 @@ export function renderTypeStrip(
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
   toggle.setAttribute('aria-expanded', 'false');
   inBar?.bar.insertBefore(toggle, inBar.before); // in the bar, with the rest that change how it is drawn (type_in_bar)
-  const around = aroundSelected(toggle, d, where); // Radial with a thing selected (radial_centre_anywhere)
+  const around = aroundSelected(toggle, d, where, root); // Radial with a thing selected (radial_centre_anywhere)
   picks(toggle, list);
   // a timeline's order and what it shows: looked at while the card is read-only, when it can be; else saved
   if (d.timeline) {

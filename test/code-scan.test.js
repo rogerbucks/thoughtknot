@@ -38,6 +38,11 @@ describe('the code scan on every change', () => {
       usesRefs(job).map((r) => r.split('@')[0]),
       ['actions/checkout', 'actions/setup-node', 'github/codeql-action/init', 'github/codeql-action/analyze'],
     );
+    assert.match(
+      job,
+      /languages: javascript-typescript, python, actions\n/,
+      'each language GitHub’s scan reads: a Python problem was missed when only the code was scanned',
+    );
     assert.match(job, /upload: never/);
     assert.match(job, /output: code-scan\n/);
     assert.doesNotMatch(job, /queries:|config-file:|paths-ignore/, 'the default queries, on all the code');

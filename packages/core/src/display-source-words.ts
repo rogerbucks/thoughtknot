@@ -45,6 +45,7 @@ export const DISPLAY_SOURCE_WORDS = {
     one: '{label}: {count} link folded. Open them.',
     other: '{label}: {count} links folded. Open them.',
   },
+  'fold.bundle': '{count} links from {from} to {to}, bundled. Open them.',
   'fold.things': {
     one: '{label}: {count} thing folded. Open the group.',
     other: '{label}: {count} things folded. Open the group.',
@@ -54,6 +55,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'strip.outside': 'outside the view',
   'redraw.drawing': 'Drawing again…',
   'redraw.failed': 'The drawing engine could not draw it so; it is shown as it was.',
+  'view.merge-nothing':
+    'There is nothing to merge: no two groups have more than one link between them. Merging only joins the links that run between the same two groups into one line.',
   'redraw.too-big': 'Drawn so, the graph is over a size or time limit, so it is shown as it was.',
   'suggested.label': '{text} (suggested name {name}, not yet written)',
   'suggested.says': '✎ Suggested name: {name} — not written yet. ',

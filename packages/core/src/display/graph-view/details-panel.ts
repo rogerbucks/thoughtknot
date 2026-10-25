@@ -5,7 +5,7 @@
 // retraced (§25). In view mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
-import type { Clear, Estimate, TrailStep } from '@thoughtknot/core';
+import type { Clear, Estimate, TrailStep, View } from '@thoughtknot/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
@@ -21,7 +21,7 @@ import { relabelShowOnly, untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
-import type { View } from '@thoughtknot/core';
+import { markTouching } from './focus-marks';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -144,11 +144,9 @@ export class DetailsPanel {
     );
   }
 
-  /**
-   * Marks the box, link or estimated link whose details are open — a heavier line, and pressed for screen readers — and
-   * only that one.
-   */
+  /** Marks the box, link or estimated link whose details are open (heavier, pressed), only that one, and its links. */
   private select(key: string | null, link: number | null = null, estimate: number | null = null): void {
+    markTouching(this.svg, this.o.reading.graphs.get(this.o.graph)?.links ?? [], key);
     for (const g of Array.from(this.svg.querySelectorAll('g.node, g.edge, tr[data-key], tr[data-link]'))) {
       // a thing folded into a group's box (§25) is selected as its box
       const on =

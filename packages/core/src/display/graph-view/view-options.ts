@@ -74,6 +74,8 @@ export interface SwitchesShown {
    * Without it, a drawing shown straight stays so.
    */
   curved?: (owner: object) => Promise<Drawn | Refusal | null>;
+  /** The note as read: what the drawing's things say, which they can be grouped by. Without it, no Group by. */
+  reading?: NoteReading;
 }
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */

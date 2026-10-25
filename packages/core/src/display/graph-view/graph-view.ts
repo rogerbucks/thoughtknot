@@ -17,7 +17,7 @@ import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
-import { renderBar } from './view-bar';
+import { overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
@@ -67,7 +67,11 @@ export class GraphView extends Lifecycle {
   private legendSlot!: HTMLElement;
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
-  private readonly spaces = new SpaceSwitch(() => this.svg); // shown flat or in space, by one button of the bar (§53)
+  // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
+  private readonly spaces = new SpaceSwitch(
+    () => this.svg,
+    () => this.o.diagram?.choice,
+  );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();
@@ -154,7 +158,7 @@ export class GraphView extends Lifecycle {
     if (this.o.switches)
       this.switching = new ViewSwitching(
         root,
-        this.o.switches,
+        { ...this.o.switches, reading: this.o.reading },
         { drawing: () => this.drawing(), relaid: (d) => this.relaid(d), shown: () => this.apply(this.zoom.view()) },
         this,
       );
@@ -185,7 +189,7 @@ export class GraphView extends Lifecycle {
       },
     });
     // a graph drawn as a table is the plugin's own table; by a plug-in's type, its picture; else Graphviz's SVG (§15)
-    this.table = drawnApart(this.viewport, this.o.diagram);
+    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram); // the bar's panels over it (§25)
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     // the mini-map, the quick-info tooltip and where the kept-open details go (§24)

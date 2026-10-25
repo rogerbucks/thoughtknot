@@ -17,7 +17,8 @@
 // What is picked is said aloud, and its name always shows (space-labels.ts).
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
-// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A thing the card selects, as by Find, is picked
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A bundle picked opens, as a tap on it in 2D does
+// (SPACE_UNFOLD). A thing the card selects, as by Find, is picked
 // here too. The view stays still. Another click on it makes
 // it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
 // the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
@@ -29,7 +30,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, fingerTurn, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -46,11 +47,17 @@ import type { Target } from './taps';
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
 export const SPACE_OPEN = 'thoughtknot-space-open';
 
+/** The event a bundle or a hub's stub picked in 3D sends its card, with its fold. The card opens it (§25). */
+export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
+
 /** How long the view takes to turn to face what was picked, in milliseconds. */
 const TURN_TIME = 280;
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
+
+/** What a line's key is when it is a fold to open, not a link: a bundle, a hub's stub or a group's box (§25). */
+const FOLD = /^(bundle|hub|group):/;
 
 /** How far a pointer may move, in pixels, and still be a click or tap rather than a drag. */
 const TAP_SLOP = 6;
@@ -60,9 +67,10 @@ const DOUBLE_TAP = 350;
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
 
-/** How the view opens: as cards or in 3D. */
+/** How the view opens: as cards or in 3D; and whether each thing stays where its diagram type drew it (space_follows_type). */
 export interface SpaceOptions {
   cards?: boolean;
+  asDrawn?: boolean;
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -117,7 +125,7 @@ export async function openSpaceView(
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
-    by === 'cards' ? spreadSpace(marks, undefined, true).space : by ? spaceOf(marks, by) : spreadSpace(marks).space;
+    by === 'cards' || !by ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn).space : spaceOf(marks, by);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
@@ -271,6 +279,7 @@ export async function openSpaceView(
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
+    touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
@@ -278,6 +287,7 @@ export async function openSpaceView(
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (down.size === 1) {
+      touching = e.pointerType === 'touch';
       pans = e.shiftKey || e.button === 1 || e.button === 2;
       travel = 0;
     }
@@ -299,7 +309,12 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
-      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : orbitBy(orbit, dx, dy);
+      orbit =
+        pans || e.shiftKey
+          ? panBy(orbit, dx, dy, height)
+          : touching
+            ? fingerTurn(orbit, dx, dy)
+            : orbitBy(orbit, dx, dy);
     }
     again();
   });
@@ -328,7 +343,10 @@ export async function openSpaceView(
     } else if (link) {
       if (pickedLine?.id === link.line.id) return turnTo(link.at);
       pickLine(link.line);
-      if (link.line.of !== undefined && link.line.of !== '') tell({ link: Number(link.line.of) });
+      const of = link.line.of ?? '';
+      // a bundle or a hub's stub opens, as a tap on it in 2D does; a link opens its details
+      if (FOLD.test(of)) root.dispatchEvent(new CustomEvent<string>(SPACE_UNFOLD, { detail: of, bubbles: true }));
+      else if (of !== '') tell({ link: Number(of) });
     } else pick(null);
   };
   el.addEventListener('pointerup', letGo);

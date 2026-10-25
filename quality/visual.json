@@ -51,13 +51,13 @@
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "74d72e9de8d58d2325a59730a1c36fd9c731678d66844b0c3464db7d662d08f8",
+      "sha256": "e37d8226bb66b40da9e0109e3a62ef99f830c5fa36efc04185e98b83afca8a43",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "d76cbe6c888fe0317b95bd43d758f3d501a457db95ba2faf7c360d8368bd8abd",
+      "sha256": "83dcf5bd3d78c377461b34710bc25893d56de4b721bba49345a51d6af30e8f71",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
@@ -207,13 +207,13 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "2f0336ad3bfa38976e79e4ca614fcf8d5b11ef16cdbdafc71dd85b48fb73dcdf",
+      "sha256": "65ba710da4143e0bd8507cd32e0c6d37fa9740a33462a108bcd575bb57f2b25e",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "fc417a39b96fa2d6ee2f06e211acbab0f7ea9ffb9ce626cb6bfe6b89d2e0c2d5",
+      "sha256": "2951b05034e95607978fc18ff2515e3448da56892c11abab23639c64fdecc861",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
@@ -267,25 +267,25 @@
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "02d5ca8b1f098f75bd2f9fd650fe1f82f65331970eb43fbafcbf8637b90107b3",
+      "sha256": "7fb9e5d8924b7d5ee4aab547bb56088e8d7fe703fee05c70c9d3bb408a9dfc58",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "d8dbdeb16703211acd7a5d17696d592f6962b3ca61880de87cc8b903ea59938b",
+      "sha256": "c8cd88137b572acd8beab184e1caef531cb68fecb8fec2953b3e2407b233cb9c",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "68772b0bf2957f9818f189a5b4f6f981ac27db9117f75d04791025d6acb2130b",
+      "sha256": "88cd7b14e3aed1c2e5a076feb2d1a5666e3dd04d996399a1a96fd3700676b20e",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "5260e61554c1878eeb547e5e7e00ca9189af331cb9ac52cee991a4a66b5705b9",
+      "sha256": "4b312fba9ff11427ccadac3cb1788cbdfaeb257b2af1a2195716ce49306b1004",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
@@ -363,13 +363,13 @@
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "50cbd9ff48162747a933430253bd7db6c4e6510ac4833f3dba8b331c0c3d2c5b",
+      "sha256": "66755770340eed462886caf534a88a6fbf40ea0158a4892fa0abade25dc28d17",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "5121c31c72ea3800f193f7adba9f695182f076a06b3128ffe484a8464ba03f0e",
+      "sha256": "2c1a4d9ff04097f8c5072f3974aebd73ef42d166ade2f95234a35c24b1e0b114",
       "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     }

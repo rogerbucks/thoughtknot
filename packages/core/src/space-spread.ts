@@ -6,7 +6,11 @@
 // a page would cross pass in front or behind. Each thing is a sphere. The more links it has, the larger it is: by the
 // square root, so a hub stands out without hiding its neighbours. Each link runs straight from sphere to sphere, ending
 // in an arrowhead on the sphere it points to. Two links between the same two things bow apart, so both show. A link's
-// words float at its middle, and a thing's name just above its sphere. Host-free and pure.
+// words float at its middle, and a thing's name just above its sphere.
+//
+// A drawing of any type but a network is kept as drawn (space_follows_type). Each thing stays where its type put it,
+// across and down, and only its depth is laid out. So a flow, a tree or a radial drawing looks like itself in space.
+// Host-free and pure.
 import type { DrawMark } from './drawing-marks.ts';
 import { FORCE_3D } from './layouts/layouts.ts';
 import type { Spots } from './layouts/layouts.ts';
@@ -30,9 +34,13 @@ const ARROW_SHARE = 0.12,
 const BOW = 0.18;
 /** How many straight pieces a bowed link is painted with. */
 const BOW_STEPS = 12;
-/** The size of a thing's name and of a link's words, in pixels of the space. */
+/** The size of a thing's name, of a link's words and of a group's name, in pixels of the space. */
 const NAME_SIZE = 14,
-  WORDS_SIZE = 11;
+  WORDS_SIZE = 11,
+  GROUP_SIZE = 18;
+
+/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). */
+const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
 
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
@@ -46,21 +54,75 @@ export function shapeOfMarks(marks: readonly DrawMark[]): GraphShape {
   for (const m of marks)
     if (m.kind === 'link' && m.from !== undefined && m.to !== undefined && things.has(m.from) && things.has(m.to))
       links.push({ from: m.from, type: m.name ?? '', to: m.to });
-  return { things: [...things].map(([key, text]) => ({ key, text, kinds: [] })), links };
+  // each group drawn, by its label, with the things whose boxes sit in it: the 2D drawing's groups, found or written
+  const named = new Map<string, string>();
+  for (const m of marks) if (m.kind === 'group') named.set(m.id, m.name ?? m.id);
+  const held = new Map<string, string[]>();
+  for (const m of marks)
+    if (m.kind === 'box' && m.of !== undefined && m.group !== undefined && named.has(m.group)) {
+      const here = held.get(m.group);
+      if (!here) held.set(m.group, [m.of]);
+      else if (!here.includes(m.of)) here.push(m.of);
+    }
+  const groups = [...held].map(([id, keys]): [string, string[]] => [named.get(id) ?? id, keys]);
+  return {
+    things: [...things].map(([key, text]) => ({ key, text, kinds: [] })),
+    links,
+    ...(groups.length ? { groups } : {}),
+  };
+}
+
+/**
+ * Whether a drawing of the diagram type `choice` says is kept as drawn in space (space_follows_type). A network is
+ * laid out afresh there, by the 3D force layout. Any other type keeps its places, so choosing a type changes the view
+ * in space as it does in 2D (Roger, 25 Oct 2026). So does a view type a plug-in draws as marks.
+ */
+export const asDrawnFor = (choice?: { drawn: string; plugin?: unknown }): boolean =>
+  !!choice && (choice.drawn !== 'network' || !!choice.plugin);
+
+/** Each thing's middle on the page, by its key: where its first box is drawn. */
+function middlesOf(marks: readonly DrawMark[]): Map<string, [number, number]> {
+  const at = new Map<string, [number, number]>();
+  for (const m of marks)
+    if (m.kind === 'box' && m.of !== undefined && !at.has(m.of)) at.set(m.of, [m.x + m.width / 2, m.y + m.height / 2]);
+  return at;
+}
+
+/**
+ * The spots of things kept where the drawing put them, `at`, in the layout's units: a link about one long. Each starts
+ * a little off the page, so the force layout can lift what lies close apart in depth. Gives back the pixels per unit.
+ */
+function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { seeds: Spots<3>; unit: number } {
+  const lengths = shape.links
+    .map((l) => [at.get(l.from), at.get(l.to)])
+    .flatMap(([a, b]) => (a && b && (a[0] !== b[0] || a[1] !== b[1]) ? [Math.hypot(a[0] - b[0], a[1] - b[1])] : []))
+    .sort((p, q) => p - q);
+  const unit = lengths[Math.floor(lengths.length / 2)] ?? SPREAD_UNIT;
+  const seeds = new Map<string, [number, number, number]>();
+  shape.things.forEach((t, i) => {
+    const [x, y] = at.get(t.key) ?? [0, 0];
+    seeds.set(t.key, [x / unit, y / unit, ((i % 3) - 1) * 0.1]);
+  });
+  return { seeds, unit };
 }
 
 /**
  * `marks` laid out in space as spheres and arrows, starting from `previous` spots where a thing has one. It gives
  * back the spots used too, so the next layout can start from them. Each sphere keeps the style of the box it stands for.
  * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
+ * With `asDrawn`, each thing stays where the drawing put it, across and down, and only its depth is laid out
+ * (space_follows_type).
  */
 export function spreadSpace(
   marks: readonly DrawMark[],
   previous?: Spots<3>,
   cards = false,
+  asDrawn = false,
 ): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
-  const spots = FORCE_3D.place(shape, previous);
+  const middles = asDrawn ? middlesOf(marks) : null;
+  const drawn = middles && drawnSpots(shape, middles);
+  const spots = FORCE_3D.place(shape, drawn?.seeds ?? previous);
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);
@@ -73,9 +135,10 @@ export function spreadSpace(
     if (m.kind !== 'box' || m.of === undefined || done.has(m.of)) continue;
     done.add(m.of);
     const [x, y, z] = spots.get(m.of) ?? [0, 0, 0],
-      unit = cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT;
-    const c: Vec3 = [x * unit, y * unit, z * unit],
-      r = cards ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
+      unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
+      page = middles?.get(m.of);
+    const c: Vec3 = page ? [page[0], page[1], z * unit] : [x * unit, y * unit, z * unit],
+      r = cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
     centre.set(m.of, c);
     radius.set(m.of, r);
     const block: Block = {
@@ -108,6 +171,22 @@ export function spreadSpace(
       text,
       size: NAME_SIZE,
       of: b.of,
+    });
+  }
+  // a group's name floats over the middle of its things, above the highest of them (space_groups)
+  const groupOf = new Map(marks.flatMap((m) => (m.kind === 'box' && m.group ? [[m.id, m.group] as const] : [])));
+  for (const m of marks) {
+    if (m.kind !== 'group' || !m.name) continue;
+    const inside = blocks.filter((b) => groupOf.get(b.id) === m.id);
+    if (!inside.length) continue;
+    const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
+    const top = Math.max(...inside.map((b) => b.floor + b.tall));
+    labels.push({
+      id: `${m.id}\ngroup`,
+      style: m.style,
+      at: [mid(0), mid(1), top + GROUP_SIZE * 2],
+      text: m.name,
+      size: GROUP_SIZE,
     });
   }
 

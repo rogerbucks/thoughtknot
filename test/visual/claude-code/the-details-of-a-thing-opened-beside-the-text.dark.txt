@@ -9,6 +9,6 @@
       <text x="44.65" y="-26.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> OPTION
       <text x="28.28" y="-6.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Large reader
     <g id="p4">
-      <path d="M119.13,-19.2C119.13,-19.2 119.13,-19.2 119.13,-19.2 140.13,-19.2 140.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2" paint="stroke:rgb(117, 222, 220);stroke-width:2">
-      <polygon points="154.13,-16.75 161.13,-19.2 154.13,-21.65 154.13,-16.75" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2">
+      <path d="M119.13,-19.2C119.13,-19.2 119.13,-19.2 119.13,-19.2 140.13,-19.2 140.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2" paint="stroke:rgb(117, 222, 220);stroke-width:2.5">
+      <polygon points="154.13,-16.75 161.13,-19.2 154.13,-21.65 154.13,-16.75" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2.5">
       <text x="140.13" y="-24.98" text-anchor="middle" paint="fill:rgb(151, 221, 220)"> answers

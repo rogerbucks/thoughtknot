@@ -15,15 +15,20 @@ keeps its id, class and title."""
 from __future__ import annotations
 
 import math
+import re
 from typing import Any
 
 from graphspec.style.direct_bends import (
     CLEARANCE,
+    HUG,
     ToBend,
     bends,
     crowded,
+    hug,
+    hugged,
     spread,
     toward_middle,
+    trunk_ends,
 )
 from graphspec.style.direct_curve import Curve, Placed, curve_of, hypot
 from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
@@ -70,6 +75,19 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         spread(every_box, groups, _middle_of(every_box)) if crowded(ends, every_box) else {}
     )
     _settle(list(boxes.values()), links)
+    # each group drawn just round its things, its name above them. Then each bundle runs from
+    # beside the group its links leave to beside the group they reach
+    drawn_as: dict[str, list[float]] = {}
+    heads: dict[str, tuple[float, float]] = {}
+    for m in marks:
+        if m["kind"] == "group":
+            drawn_as[m["id"]] = [m["x"], m["y"], m["x"] + m["width"], m["y"] + m["height"]]
+        named = re.match(r"^l:(.*)$", m["id"], re.S) if m["kind"] == "label" else None
+        was = drawn_as.get(named.group(1)) if named else None
+        if named and was:
+            heads[named.group(1)] = (m["y"] - was[1] + HUG, (m.get("maxWidth") or 0) + 2 * HUG)
+    hug(boxes.values(), groups, heads)
+    trunk_ends(boxes, links)
 
     # every mark of a moved box's part goes with it: its outline, its words, its pictures
     moved = {
@@ -120,7 +138,12 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             many[p] = many.get(p, 0) + 1
     every = list(boxes.values())
     middle = _middle_of(every)
-    # each lone link takes the bend that crosses least; links between the same two boxes bow apart
+    # each lone link takes the bend that crosses least; links between the same two boxes bow apart.
+    # A bundle goes round the groups as round boxes
+    walls = []
+    for gid, g in groups.items():
+        hw, hh = (g[2] - g[0]) / 2, (g[3] - g[1]) / 2
+        walls.append(Placed(gid, g[0] + hw, g[1] + hh, hw, hh))
     to_bend: list[ToBend] = []
     for link in links:
         a, b = boxes[link["from"]], boxes[link["to"]]
@@ -134,7 +157,9 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         fixed = (i - (count - 1) / 2) * BOW * side if count > 1 else None
         of = link.get("of")
         key = link["id"] if of is None else of
-        to_bend.append(ToBend(key, a, b, toward_middle(a, b, side, middle), fixed))
+        trunk = a.key.startswith("trunk: ") and b.key.startswith("trunk: ")
+        toward = toward_middle(a, b, side, middle)
+        to_bend.append(ToBend(key, a, b, toward, fixed, walls if trunk else None))
     bows = bends(to_bend, every)
     curves: dict[str, Curve] = {t.key: curve_of(t.a, t.b, bow) for t, bow in zip(to_bend, bows)}
     spots = word_spots(marks, boxes, curves)
@@ -159,7 +184,16 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             x, y = spots.get(m["id"]) or c.words_at(0.5, m["size"] * WORDS_OFF)
             out.append({**m, "x": x, "y": y})
         else:
-            out.append(_shifted(m, *by) if by else m)
+            # a group's outline and its name, where it hugs its things now; its corners keep their
+            # curve
+            owner = m["id"] if m["kind"] == "group" else None
+            named = re.match(r"^l\d*:(.*)$", m["id"], re.S) if m["kind"] == "label" else None
+            owner = named.group(1) if named else owner
+            was, now = drawn_as.get(owner or ""), groups.get(owner or "")
+            if was and now:
+                out.append(hugged(m, was, now))
+            else:
+                out.append(_shifted(m, *by) if by else m)
     return _grown({**laid, "marks": out})
 
 

@@ -267,6 +267,7 @@ jobs:
   # The code scan's security problems, checked on every change before it merges (#849, scripts/code-scan.mjs). GitHub's
   # code scanning stops a pull request only for a problem it adds. This fails on any in the code at all, as the release
   # does. It runs GitHub's own scan with its default queries, and sends nothing: GitHub's code scanning still reports.
+  # It reads each language GitHub's scan reads: the code, the Python library and the workflows.
   code-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -279,7 +280,7 @@ jobs:
           node-version: 24
       - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
-          languages: javascript-typescript
+          languages: javascript-typescript, python, actions
           build-mode: none
       - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
