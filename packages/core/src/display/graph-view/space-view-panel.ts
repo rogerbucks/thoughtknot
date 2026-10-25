@@ -29,7 +29,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -265,7 +265,10 @@ export async function openSpaceView(
   );
   depthButton.hidden = depth === 0;
 
-  // pointers down now, by id: one turns, or moves with Shift or the right button; two move and pinch
+  // a touch in the view goes no further, so the host's own swipes (Obsidian's side panels) never take it (gestures_stay_in_drawing)
+  for (const type of ['touchstart', 'touchmove'])
+    el.addEventListener(type, (e) => e.stopPropagation(), { passive: true });
+  // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
     travel = 0,
@@ -289,7 +292,7 @@ export async function openSpaceView(
       const before = pinch();
       down.set(e.pointerId, now);
       const { dx, dy, zoom } = twoFingers(before, pinch());
-      orbit = zoomBy(panBy(orbit, dx, dy, height), zoom);
+      orbit = twistBy(zoomBy(panBy(orbit, dx, dy, height), zoom), twistOf(before, pinch()));
       travel += TAP_SLOP;
     } else {
       down.set(e.pointerId, now);

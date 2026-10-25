@@ -4,6 +4,7 @@
 // So every move has a mouse way, a touch way, a key and a button, and the view says so on screen:
 // - turn: drag, one finger, the arrow keys, or the turn buttons;
 // - move across: Shift-drag or right-drag, two fingers, Shift and the arrow keys;
+// - twist: two fingers turning round each other turn the view round, as the drawing follows them;
 // - zoom: scroll, pinch, + and -, or the zoom buttons;
 // - show it all again: Home, 0, or Reset view.
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
@@ -85,6 +86,18 @@ export function twoFingers(
     [x1, y1] = middle(now);
   const before = apart(was);
   return { dx: x1 - x0, dy: y1 - y0, zoom: before > 0 ? apart(now) / before : 1 };
+}
+
+/** How far the line between two fingers turned as they moved from `was` to `now`, in radians; clockwise on screen is positive. */
+export function twistOf(was: readonly [Touch, Touch], now: readonly [Touch, Touch]): number {
+  const line = (t: readonly [Touch, Touch]) => Math.atan2(t[1].y - t[0].y, t[1].x - t[0].x);
+  const d = line(now) - line(was);
+  return d - Math.round(d / (2 * Math.PI)) * 2 * Math.PI;
+}
+
+/** `orbit` turned round the up line by `angle`, so that a drawing seen from above turns with two fingers twisting. */
+export function twistBy(orbit: Orbit, angle: number): Orbit {
+  return { ...orbit, turn: orbit.turn + angle };
 }
 
 /**

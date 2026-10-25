@@ -204,7 +204,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     'touchmove',
     (e: TouchEvent) => {
       if (owned(e)) e.stopPropagation();
-      if (drag?.holding) e.preventDefault();
+      if (drag?.holding || e.touches.length > 1) e.preventDefault(); // two fingers pinch the drawing, never scroll the note
     },
     { passive: false },
   );
