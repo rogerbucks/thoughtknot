@@ -113,7 +113,7 @@ test('a long name wraps and shrinks to stay inside; one that cannot be read ther
   const space = balls([ball('a', 0, 40, 'A rather long name for one small thing')]);
   const far = zoomBy(orbitFit(space, W / H), 0.1);
   assert.deepEqual(facesOnScreen(space, look(space, far), W, H), [], 'far off, the ball is too small to hold it');
-  const near = zoomBy(orbitFit(space, W / H), 8);
+  const near = zoomBy(orbitFit(space, W / H), 1.5);
   const [face] = facesOnScreen(space, look(space, near), W, H);
   assert.ok(face && face.size >= READABLE_LEAST, 'near, it shows at a readable size');
 });

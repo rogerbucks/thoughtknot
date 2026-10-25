@@ -3646,7 +3646,7 @@
           "value: (x: ImageAt & { reduced: boolean; moving: number; }) => Start"
         ],
         "STEP": [
-          "value: 1.25"
+          "value: 1.6"
         ],
         "stepContract": [
           "value: (s: PluginStep, pluginId: string) => StorageCheck[]"

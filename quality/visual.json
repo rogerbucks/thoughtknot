@@ -351,14 +351,14 @@
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "2e748db499343b5fdec1654748d485249172ffeb0b9d27a58fb43216f4407b69",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "8795069369f86c37d85c06fded2950ae5fb92548ed25e951c2e7b40ee9a65b9b",
+      "reason": "Zoom step is 1.6, so the zoomed-in mini-map is drawn at a new scale",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "b8c5d8fe924da765f5be4d05744a29752fcc329d2f62284e50cd4c0330d0a5cb",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "1a5ae11b2d2c6cfa61c28a3c1db2910179b83b485bdecc607b986d7adb0768b2",
+      "reason": "Zoom step is 1.6, so the zoomed-in mini-map is drawn at a new scale",
       "day": "2026-10-25"
     },
     {

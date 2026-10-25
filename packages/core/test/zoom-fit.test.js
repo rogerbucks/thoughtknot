@@ -162,8 +162,8 @@ describe('the fit is worked out again', () => {
     const z = make('pane', { width: 1000, height: 500 }, { width: 500, height: 250 });
     z.zoomIn();
     z.resize({ width: 0, height: 0 }, { width: 4000, height: 2000 });
-    close(z.view().scale, 0.625, 'hidden: its zoom kept');
-    assert.equal(z.view().width, 4000 * 0.625, 'at its new size');
+    close(z.view().scale, 0.8, 'hidden: its zoom kept');
+    assert.equal(z.view().width, 4000 * 0.8, 'at its new size');
     z.resize({ width: 500, height: 250 });
     for (const s of outEveryWay(z)) close(s, 0.125, 'the fit of the drawing laid out while hidden');
   });
@@ -180,7 +180,7 @@ describe('the fit is worked out again', () => {
     zoomed.zoomIn();
     zoomed.resize({ width: 0, height: 0 }, { width: 4000, height: 2000 });
     zoomed.resize({ width: 600, height: 300 });
-    close(zoomed.view().scale, 0.375, 'one zoomed in keeps its zoom');
+    close(zoomed.view().scale, 0.48, 'one zoomed in keeps its zoom');
   });
 
   // proves: zoom_fit_recomputed

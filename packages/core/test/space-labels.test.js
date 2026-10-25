@@ -49,8 +49,9 @@ test('with the whole graph in view, names still show, at a size people can read'
 
 test('no name covers another, and zooming in shows more names', () => {
   const space = grid(200);
-  const far = shownOf(space, 800, 600),
-    near = shownOf(space, 800, 600, 3);
+  // the fitted view already fills the screen, so far is zoomed out from it and near is the fit
+  const far = shownOf(space, 800, 600, 0.3),
+    near = shownOf(space, 800, 600);
   for (const list of [far, near])
     for (let i = 0; i < list.length; i++)
       for (let j = i + 1; j < list.length; j++)
