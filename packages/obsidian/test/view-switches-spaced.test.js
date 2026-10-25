@@ -52,8 +52,8 @@ describe('layout options', () => {
     input.value = String(v);
     input.dispatch('change');
   };
-  /** Where each of the drawing's things is drawn: the middle of the box round its outline. */
-  const middles = (el) =>
+  /** Where each of the drawing's things is drawn: the box round its outline, as its left, top, right and bottom. */
+  const boxes = (el) =>
     el
       .querySelectorAll('g.node[data-key]')
       .map((g) =>
@@ -63,16 +63,16 @@ describe('layout options', () => {
           .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y)),
       )
       .filter((points) => points.length)
-      .map((points) =>
-        [0, 1].map((k) => (Math.max(...points.map((p) => p[k])) + Math.min(...points.map((p) => p[k]))) / 2),
-      );
-  /** How far apart the drawing's things are: the middle of each thing's distance to its nearest neighbour. */
+      .map((points) => [0, 1, 0, 1].map((k, i) => (i < 2 ? Math.min : Math.max)(...points.map((p) => p[k]))));
+  /**
+   * How far apart the drawing's things are: the middle of each thing's room to its nearest neighbour, edge to edge. So
+   * it is the room beside each box, whichever way the drawing is laid out.
+   */
   const spread = (el) => {
-    const at = middles(el);
+    const at = boxes(el);
     if (at.length < 2) return 0;
-    const nearest = at
-      .map((a) => Math.min(...at.filter((b) => b !== a).map((b) => Math.hypot(a[0] - b[0], a[1] - b[1]))))
-      .sort((a, b) => a - b);
+    const room = (a, b) => Math.hypot(Math.max(0, a[0] - b[2], b[0] - a[2]), Math.max(0, a[1] - b[3], b[1] - a[3]));
+    const nearest = at.map((a) => Math.min(...at.filter((b) => b !== a).map((b) => room(a, b)))).sort((p, q) => p - q);
     return nearest[Math.floor(nearest.length / 2)];
   };
 
