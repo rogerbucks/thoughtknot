@@ -259,13 +259,37 @@ export interface Orbit {
 
 /** How wide the camera sees, top to bottom, in radians. */
 export const FIELD = Math.PI / 4;
-/** The camera that shows all of `space`, from the front and above, as the drawing reads on the page. */
+/** How much of the screen the fitted view fills, and how many corners it takes before it lets the farthest few fall off. */
+const FILL = 0.94,
+  MANY = 200;
+
+/**
+ * The camera that shows all of `space`, from the front and above, as the drawing reads on the page. The screen is
+ * `aspect` wide to each unit high. It goes as near as keeps each block corner in view, so the drawing fills the screen.
+ * Of many corners, the farthest hundredth may fall outside. Roger, 25 Oct 2026: it opened as a small knot.
+ */
 export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
-  const { least, most } = space;
-  const target: Vec3 = [(least[0] + most[0]) / 2, (least[1] + most[1]) / 2, (least[2] + most[2]) / 2];
-  const reach = Math.hypot(most[0] - least[0], most[1] - least[1], most[2] - least[2]) / 2 || 1;
-  const fit = Math.tan(FIELD / 2) * Math.min(1, aspect);
-  return { target, distance: (reach / fit) * 1.05, turn: -Math.PI / 2, tilt: 0.9 };
+  const { least, most } = space,
+    target: Vec3 = [(least[0] + most[0]) / 2, (least[1] + most[1]) / 2, (least[2] + most[2]) / 2];
+  const camera = { target, distance: 1, turn: -Math.PI / 2, tilt: 0.9 };
+  const f = norm(sub(target, eyeOf(camera))),
+    r = norm(cross(f, upOf(camera))),
+    u = cross(r, f);
+  const half = Math.tan(FIELD / 2),
+    corners: Vec3[] = space.blocks?.length ? [] : [least, most];
+  for (const b of space.blocks ?? [])
+    for (let i = 0; i < 8; i++)
+      corners.push([b.x + (i & 1) * b.width, b.y + ((i >> 1) & 1) * b.depth, b.floor + (i >> 2) * b.tall]);
+  // how far back each corner needs the camera to be to land in view, the perspective counted too
+  const needs = corners.map((c) => {
+    const o = sub(c, target);
+    const across = Math.abs(dot(o, r)) / (FILL * half * Math.max(0.1, aspect)),
+      up = Math.abs(dot(o, u)) / (FILL * half);
+    return Math.max(across, up) - dot(o, f);
+  });
+  needs.sort((x, y) => x - y);
+  const cut = needs.length > MANY ? Math.floor(0.99 * (needs.length - 1)) : needs.length - 1;
+  return { ...camera, distance: Math.max(needs[cut] ?? 1, 1) };
 }
 
 /**
