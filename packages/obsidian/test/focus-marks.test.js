@@ -87,6 +87,15 @@ describe('selecting a thing', () => {
     assert.deepEqual(keys(el, 'thoughtknot-kept'), ['eyes', 'large', 'tablet']);
   });
 
+  // proves: select_links_stronger
+  test('the thing selected has its own links drawn a little thicker, and only those', () => {
+    // Roger, 25 Oct 2026: links of selected nodes slightly thicker
+    assert.deepEqual(links(el, 'thoughtknot-touching'), ['2', '3']);
+    tap(el, thing(el, 'q'), 6);
+    assert.deepEqual(links(el, 'thoughtknot-touching'), ['0', '1']);
+    tap(el, thing(el, 'eyes'), 7);
+  });
+
   test('the thing selected is also marked as selected, as before', () => {
     assert.ok(thing(el, 'eyes').hasClass('is-selected'));
     assert.equal(thing(el, 'eyes').getAttribute('aria-pressed'), 'true');
@@ -284,6 +293,12 @@ describe('what is faded stays readable, and focus is shown by more than colour',
         '3',
         `a selected ${kind} is heavier than one only kept`,
       );
+  });
+
+  // proves: select_links_stronger
+  test("a selected thing's own links are heavier than the other links kept, and lighter than a link selected", () => {
+    const touching = value(shape(['edge', 'thoughtknot-kept', 'thoughtknot-touching']), 'stroke-width');
+    assert.ok(Number(touching) > KEPT.width && Number(touching) < 3, `its own links are ${touching} wide`);
   });
 
   test('a view’s look keeps its line, whether the thing is kept or faded: the focus never outranks it', () => {

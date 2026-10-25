@@ -219,6 +219,10 @@
 .thoughtknot-svg g.is-selected > :is(path, polygon) {
   stroke-width: 3;
 }
+/* The selected thing's own links, a little thicker, so where it reaches shows (Roger, 25 Oct 2026) */
+.thoughtknot-svg g.thoughtknot-touching > :is(path, polygon) {
+  stroke-width: 2.5;
+}
 .thoughtknot-svg g.edge[data-link],
 .thoughtknot-svg g.edge[data-estimate] {
   cursor: pointer;
