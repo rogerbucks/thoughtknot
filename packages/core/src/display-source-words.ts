@@ -45,6 +45,7 @@ export const DISPLAY_SOURCE_WORDS = {
     one: '{label}: {count} link folded. Open them.',
     other: '{label}: {count} links folded. Open them.',
   },
+  'fold.bundle': '{count} links from {from} to {to}, bundled. Open them.',
   'fold.things': {
     one: '{label}: {count} thing folded. Open the group.',
     other: '{label}: {count} things folded. Open the group.',

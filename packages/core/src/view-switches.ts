@@ -77,8 +77,8 @@ export function labelsHidden(switches: Pick<ViewSwitches, 'labels'>, scale: numb
   return switches.labels && scale < LABEL_SCALE;
 }
 
-/** A fold to open or close again: a busy hub's, by its key, or a group's, by its label. */
-export type Fold = { hub: string } | { group: string };
+/** A fold to open or close again: a busy hub's, by its key, a group's, by its label, or a bundle's (`bundleOf`). */
+export type Fold = { hub: string } | { group: string } | { bundle: string };
 
 /**
  * A plan that lays out only the things and links `only` keeps, so they are drawn together (untangle_regroup). The rest
@@ -135,6 +135,7 @@ export class ViewState {
   /** The hubs the user folded one by one, with busy hubs not folded as a whole: all start open (Roger, 24 Oct 2026). */
   private readonly foldedHubs = new Set<string>();
   private readonly openedGroups = new Set<string>();
+  private readonly openedBundles = new Set<string>();
   /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
   private mergeTurned = false;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
@@ -158,23 +159,26 @@ export class ViewState {
       this.foldedHubs.clear();
     }
     if (on && s === 'groups') this.openedGroups.clear();
+    if (s === 'merge') this.openedBundles.clear();
     return s !== 'labels';
   }
 
-  /** Opens a hub's or a group's fold: its links, or its things, drawn again. */
+  /** Opens a hub's, a group's or a bundle's fold: its links, or its things, drawn again. */
   open(fold: Fold): void {
     if ('hub' in fold) {
       this.openedHubs.add(fold.hub);
       this.foldedHubs.delete(fold.hub);
-    } else this.openedGroups.add(fold.group);
+    } else if ('bundle' in fold) this.openedBundles.add(fold.bundle);
+    else this.openedGroups.add(fold.group);
   }
 
-  /** Folds a hub or a group opened before. */
+  /** Folds a hub, a group or a bundle opened before. */
   fold(fold: Fold): void {
     if ('hub' in fold) {
       this.openedHubs.delete(fold.hub);
       if (!this.switches.hubs) this.foldedHubs.add(fold.hub);
-    } else this.openedGroups.delete(fold.group);
+    } else if ('bundle' in fold) this.openedBundles.delete(fold.bundle);
+    else this.openedGroups.delete(fold.group);
   }
 
   /**
@@ -201,7 +205,11 @@ export class ViewState {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
       merge: this.switches.merge,
-      opened: { hubs: this.openHubs(keys, edges, groups), groups: [...this.openedGroups] },
+      opened: {
+        hubs: this.openHubs(keys, edges, groups),
+        groups: [...this.openedGroups],
+        bundles: [...this.openedBundles],
+      },
     });
     const only = card ? this.only.get(card) : undefined;
     const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;

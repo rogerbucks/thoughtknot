@@ -10,9 +10,9 @@ import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { edgesOf } from '../src/focus.ts';
 import { drawingSource } from '../src/layout.ts';
-import { foldedSource, routedSource } from '../src/fold-source.ts';
+import { foldedSource, routedSource, trunksOf } from '../src/fold-source.ts';
 import { nudgedSource } from '../src/style-source.ts';
-import { drawnGroups, foldPlan } from '../src/untangle-fold.ts';
+import { bundleOf, drawnGroups, foldPlan } from '../src/untangle-fold.ts';
 import { loadEngine } from '../src/engine.ts';
 
 const star = (n) =>
@@ -211,5 +211,27 @@ describe('Graphviz draws it so', () => {
       'edge5',
       'trunk_1',
     ]);
+  });
+});
+
+describe('a bundle opened again', () => {
+  // proves: untangle_open_bundle
+  test('draws its links apart, each as itself, while the host names each trunk as the source draws it', () => {
+    const d = drawingOf(TEAMS);
+    const groups = drawnGroups(GROUPS, keys(d));
+    const merged = foldPlan(keys(d), edgesOf(d), groups, { ...NONE, merge: true });
+    const links = edgesOf(d).map((e, n) => ({ n, from: e.from, to: e.to }));
+    const red = bundleOf('Red team', 'Blue team');
+    assert.deepEqual(
+      trunksOf(merged, links).map((t) => [t.bundle, t.links.map((l) => l.n)]),
+      [[red, [1, 2]]],
+      'the two links from the red team to the blue team, named by their groups',
+    );
+    const opened = foldPlan(keys(d), edgesOf(d), groups, { ...NONE, merge: true, opened: { bundles: [red] } });
+    assert.deepEqual(opened.unmerged, [red]);
+    assert.deepEqual(trunksOf(opened, links), []);
+    assert.equal(foldedSource(grouped(d), opened), grouped(d), 'each link drawn as itself, no trunk');
+    const off = foldPlan(keys(d), edgesOf(d), groups, { ...NONE, opened: { bundles: [red] } });
+    assert.equal(off, undefined, 'with merging off, nothing to open');
   });
 });

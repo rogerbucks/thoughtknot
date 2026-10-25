@@ -237,6 +237,7 @@ export const VALUES = [
   'boundsOf',
   'breakpointsOf',
   'brokenLinks',
+  'bundleOf',
   'centres',
   'certaintyLevel',
   'changeNote',
