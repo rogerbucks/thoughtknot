@@ -180,3 +180,59 @@ test('only a network is laid out afresh in space; every other type keeps its pla
   for (const drawn of ['flow', 'tree', 'radial', 'lanes', 'timeline']) assert.equal(asDrawnFor({ drawn }), true, drawn);
   assert.equal(asDrawnFor({ drawn: 'network', plugin: { type: 'core.matrix' } }), true, 'a view type drawn as marks');
 });
+
+// two teams of ten, each a ring, with as many links across the teams as within: only their groups keep them apart
+const teamMarks = (grouped) => {
+  const keys = (t) => Array.from({ length: 10 }, (_, i) => `${t}${i}`);
+  const boxes = ['a', 'b'].flatMap((t) =>
+    keys(t)
+      .flatMap(thing)
+      .map((m) => (grouped && m.kind === 'box' ? { ...m, group: `g:${t}` } : m)),
+  );
+  const groups = grouped
+    ? ['a', 'b'].map((t) => ({
+        id: `g:${t}`,
+        kind: 'group',
+        style: 'svg.2',
+        name: `Team ${t}`,
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+      }))
+    : [];
+  const links = ['a', 'b'].flatMap((t) => keys(t).map((k, i) => link(`r:${k}`, k, `${t}${(i + 1) % 10}`, 'NEXT')));
+  const across = keys('a').map((k, i) => link(`x:${k}`, k, `b${(i * 3) % 10}`, 'HELPS'));
+  return [...groups, ...boxes, ...links, ...across];
+};
+/** How far apart the two teams sit, against how spread each team is: higher is better gathered. */
+const gathered = (space) => {
+  const at = new Map(space.blocks.map((b) => [b.of, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2]]));
+  const mid = (t) =>
+    [0, 1, 2].map((k) => [...at].filter(([key]) => key.startsWith(t)).reduce((s, [, p]) => s + p[k], 0) / 10);
+  const spread = (t) => {
+    const m = mid(t);
+    return (
+      [...at]
+        .filter(([key]) => key.startsWith(t))
+        .reduce((s, [, p]) => s + Math.hypot(...p.map((v, k) => v - m[k])), 0) / 10
+    );
+  };
+  const [ma, mb] = [mid('a'), mid('b')];
+  return Math.hypot(...ma.map((v, k) => v - mb[k])) / ((spread('a') + spread('b')) / 2);
+};
+
+test('in 3D the things of each group gather, apart from the other groups, and each group is named above them', () => {
+  // proves: space_groups
+  const { space } = spreadSpace(teamMarks(true));
+  const { space: loose } = spreadSpace(teamMarks(false));
+  assert.ok(gathered(space) > 1.5, `the teams sit apart: ${gathered(space).toFixed(2)}`);
+  assert.ok(gathered(space) > 2 * gathered(loose), 'far more than with no groups drawn');
+  const names = space.labels.filter((l) => l.id.endsWith('\ngroup'));
+  assert.deepEqual(names.map((l) => l.text).sort(), ['Team a', 'Team b']);
+  for (const l of names) {
+    const team = space.blocks.filter((b) => b.of.startsWith(l.text.slice(-1)));
+    assert.ok(l.at[2] > Math.max(...team.map((b) => b.floor + b.tall)), `${l.text} floats above its things`);
+  }
+  assert.deepEqual(spreadSpace(teamMarks(true)).space, space, 'the same each time');
+});

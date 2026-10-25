@@ -34,9 +34,10 @@ const ARROW_SHARE = 0.12,
 const BOW = 0.18;
 /** How many straight pieces a bowed link is painted with. */
 const BOW_STEPS = 12;
-/** The size of a thing's name and of a link's words, in pixels of the space. */
+/** The size of a thing's name, of a link's words and of a group's name, in pixels of the space. */
 const NAME_SIZE = 14,
-  WORDS_SIZE = 11;
+  WORDS_SIZE = 11,
+  GROUP_SIZE = 18;
 
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
@@ -50,7 +51,22 @@ export function shapeOfMarks(marks: readonly DrawMark[]): GraphShape {
   for (const m of marks)
     if (m.kind === 'link' && m.from !== undefined && m.to !== undefined && things.has(m.from) && things.has(m.to))
       links.push({ from: m.from, type: m.name ?? '', to: m.to });
-  return { things: [...things].map(([key, text]) => ({ key, text, kinds: [] })), links };
+  // each group drawn, by its label, with the things whose boxes sit in it: the 2D drawing's groups, found or written
+  const named = new Map<string, string>();
+  for (const m of marks) if (m.kind === 'group') named.set(m.id, m.name ?? m.id);
+  const held = new Map<string, string[]>();
+  for (const m of marks)
+    if (m.kind === 'box' && m.of !== undefined && m.group !== undefined && named.has(m.group)) {
+      const here = held.get(m.group);
+      if (!here) held.set(m.group, [m.of]);
+      else if (!here.includes(m.of)) here.push(m.of);
+    }
+  const groups = [...held].map(([id, keys]): [string, string[]] => [named.get(id) ?? id, keys]);
+  return {
+    things: [...things].map(([key, text]) => ({ key, text, kinds: [] })),
+    links,
+    ...(groups.length ? { groups } : {}),
+  };
 }
 
 /**
@@ -152,6 +168,22 @@ export function spreadSpace(
       text,
       size: NAME_SIZE,
       of: b.of,
+    });
+  }
+  // a group's name floats over the middle of its things, above the highest of them (space_groups)
+  const groupOf = new Map(marks.flatMap((m) => (m.kind === 'box' && m.group ? [[m.id, m.group] as const] : [])));
+  for (const m of marks) {
+    if (m.kind !== 'group' || !m.name) continue;
+    const inside = blocks.filter((b) => groupOf.get(b.id) === m.id);
+    if (!inside.length) continue;
+    const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
+    const top = Math.max(...inside.map((b) => b.floor + b.tall));
+    labels.push({
+      id: `${m.id}\ngroup`,
+      style: m.style,
+      at: [mid(0), mid(1), top + GROUP_SIZE * 2],
+      text: m.name,
+      size: GROUP_SIZE,
     });
   }
 

@@ -45,7 +45,9 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     const { x, y, width, height } = boxOf(shape);
     const id = `g:${titleOf(g) || clusters.length}`;
     clusters.push({ id, x, y, width, height });
-    marks.push({ id, kind: 'group', style: styled(shape, g.querySelector('text')), x, y, width, height });
+    const text = g.querySelector('text'),
+      name = text?.textContent?.trim();
+    marks.push({ id, kind: 'group', style: styled(shape, text), x, y, width, height, ...(name ? { name } : {}) });
   }
   /** The smallest group holding the box from (`x`, `y`), `width` by `height`. */
   const holding = (x: number, y: number, width: number, height: number, not = '') => {
