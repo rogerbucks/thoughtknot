@@ -19,6 +19,10 @@ import {
   pickedRing,
 } from './space-labels.ts';
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
+import { facesOnScreen, rowsOf } from './space-faces.ts';
+import type { FaceText } from './space-faces.ts';
+
+export { rowsOf };
 
 /** A card on the screen: its middle, its size, its words in rows and their size, all in pixels. */
 export interface ScreenCard {
@@ -55,20 +59,6 @@ const ARROW_SHARE = 0.9,
   ARROW_MOST = 18;
 /** How wide an arrowhead is at its back, as a share of its length. */
 const ARROW_WIDE = 0.6;
-
-/** `text` cut into rows of at most `letters` letters, at its spaces; a word longer than a row is a row of its own. */
-export function rowsOf(text: string, letters: number): string[] {
-  const rows: string[] = [];
-  let row = '';
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    if (row && row.length + 1 + word.length > letters) {
-      rows.push(row);
-      row = word;
-    } else row = row ? `${row} ${word}` : word;
-  }
-  if (row) rows.push(row);
-  return rows;
-}
 
 /** The middle of a block, in the space. */
 const middle = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
@@ -185,6 +175,8 @@ export function cardArrows(
 export interface SpaceFrame {
   shapes: SpaceMarks;
   cards: ScreenCard[];
+  /** In 3D, the things' names, each on the face of its box or ball the camera sees best (space_text_on_face). */
+  faces: FaceText[];
   arrows: ScreenArrow[];
   labels: ScreenLabel[];
   ring: { x: number; y: number; r: number } | null;
@@ -229,11 +221,18 @@ export function frameOf(
   };
   if (!space.cards) {
     const ring = picked && pickedRing(space, picked, matrix, width, height);
+    // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
+    const faces = facesOnScreen(space, matrix, width, height, chosen);
+    const onFace = new Set(faces.map((f) => f.id));
+    const floats = space.labels.filter(
+      (l) => !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked),
+    );
     return {
       shapes: space,
       cards: [],
+      faces,
       arrows: arrowsOnScreen(space, matrix, width, height),
-      labels: labelsOnScreen(space, matrix, width, height, chosen),
+      labels: labelsOnScreen({ ...space, labels: floats }, matrix, width, height, chosen),
       ring,
       strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
     };
@@ -243,6 +242,7 @@ export function frameOf(
   return {
     shapes: { ...space, blocks: [], arrows: [] },
     cards,
+    faces: [],
     arrows: cardArrows(space, matrix, width, height, cards),
     labels: labelsOnScreen(words, matrix, width, height, chosen),
     ring: null,
