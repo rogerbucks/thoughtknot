@@ -501,7 +501,9 @@ test('a graph folded, merged and routed is drawn the same by both, its Links rea
       // as the plugin draws a graph or a view (block.ts, view-block.ts): styled, then folded by the card's switches
       const { style } = readStyle(texts, graph, reading);
       const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
-      const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style, view ?? undefined));
+      // the Python library lays out by Graphviz only, so the core's Graphviz source is the one compared
+      const graphviz = { ...DEFAULT_SETTINGS, ownLayout: 'off' };
+      const state = new ViewState(startingSwitches(graphviz, style, view ?? undefined));
       for (const [s, on] of Object.entries(switches ?? {})) state.turn(s, on);
       for (const hub of opened?.hubs ?? []) state.open({ hub });
       for (const group of opened?.groups ?? []) state.open({ group });

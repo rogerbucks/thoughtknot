@@ -67,7 +67,7 @@ describe('a tap near things', () => {
       import('../../core/src/render.ts'),
     ]);
     const { hitAreas } = await import('../../core/src/hits.ts');
-    areas = hitAreas(draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg);
+    areas = hitAreas(draw({ ...readNote([GRAPH]).graphs.get('reader'), engine: 'own' }, await loadEngine()).svg);
     el = (await show(env, fence(GRAPH))).el;
     // a point in the drawing's own units, as the viewport's pixels
     drawnAt = (x, y) => {
