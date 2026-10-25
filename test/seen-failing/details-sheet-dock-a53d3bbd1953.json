@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet-dock.test.js",
+  "test": "in a wide window the details open on the right until a place is chosen (sheet_side_wide) > narrower, they open at the bottom as before",
+  "seen_failing_first": false,
+  "evidence": "A guard: narrow windows keep the bottom place they always had."
+}
