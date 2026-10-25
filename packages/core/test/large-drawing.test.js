@@ -82,7 +82,7 @@ describe('a large graph', () => {
 describe('a large graph drawn straight first', () => {
   // proves: curves_after_drawing
   test('past 300 things, has straight links and says its curves are to come, every box placed as when curved', async () => {
-    const g = chain(QUICK_LAYOUT + 1);
+    const g = { ...chain(QUICK_LAYOUT + 1), routing: 'curved' };
     const [first] = directions({ ...g, straightFirst: true });
     assert.match(first.dot, /^ {2}graph \[splines=line, nslimit=0\.5, mclimit=0\.05\];$/m);
     const engine = await loadEngine();
@@ -100,5 +100,18 @@ describe('a large graph drawn straight first', () => {
     const big = chain(QUICK_LAYOUT + 1);
     for (const routing of ['straight', 'right-angled'])
       assert.deepEqual(directions({ ...big, routing, straightFirst: true }), directions({ ...big, routing }), routing);
+  });
+
+  // proves: curves_after_drawing
+  test('past 300 things with direct links, is laid out once, straight, with no curves to come', async () => {
+    for (const routing of [undefined, 'direct']) {
+      const g = { ...chain(QUICK_LAYOUT + 1), routing, straightFirst: true };
+      const [only] = directions(g);
+      assert.match(only.dot, /^ {2}graph \[splines=line, nslimit=0\.5, mclimit=0\.05\];$/m, String(routing));
+      assert.equal(only.straight, undefined, 'no curves are laid out after: direct links never follow them');
+      assert.equal(only.curved, undefined);
+    }
+    const drawn = draw({ ...chain(QUICK_LAYOUT + 1), straightFirst: true }, await loadEngine());
+    assert.equal(drawn.curvesToCome, undefined, 'the drawing is whole at once');
   });
 });
