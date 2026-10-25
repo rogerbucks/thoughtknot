@@ -328,6 +328,8 @@ export type { Found, Layers, LegendItem, LegendState, PathFound } from './untang
 export { LEGEND_CHOICES } from './untangle-saved.ts';
 export type { LegendChoice, LegendChoiceState } from './untangle-saved.ts';
 export { BUSY_HUB, bundleOf, foldsHiding } from './untangle-fold.ts';
+export { BY_KIND, groupChoices, groupValues } from './group-by.ts';
+export type { GroupBy } from './group-by.ts';
 export { trunksOf } from './fold-source.ts';
 export type { Folding } from './untangle-fold.ts';
 export {

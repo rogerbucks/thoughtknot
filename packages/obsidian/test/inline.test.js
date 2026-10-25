@@ -59,7 +59,9 @@ describe('edit here, in the card', () => {
       ])
         assert.ok(card.querySelector(part), part);
       assert.ok(labelled(card, 'Done') && labelled(card, 'Undo') && labelled(card, 'Lock the graph'));
-      assert.equal(card.querySelector('select'), null, 'no picker: it edits this block');
+      // the View menu's Group by list is a select too: the picker would be any other
+      const pickers = [...card.querySelectorAll('select')].filter((s) => !s.closest('.thoughtknot-group-by'));
+      assert.equal(pickers.length, 0, 'no picker: it edits this block');
     } finally {
       env.uninstall();
     }
