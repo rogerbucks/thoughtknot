@@ -15,6 +15,8 @@ export const STEP_OUT = 12;
 export const SCREEN = 1.6;
 /** The room between two bands of a folded group. */
 const BAND_GAP = 56;
+/** The most bands a whole drawing is folded into. */
+const BANDS_MOST = 40;
 /** The bounds of a layout's spots, boxes and bends. */
 export function boundsOf(inner: Layered, sizes: ReadonlyMap<string, Size>): [number, number, number, number] {
   let x0 = Infinity,
@@ -55,34 +57,63 @@ export function folded(
   const [x0, y0, x1, y1] = boundsOf(inner, sizes);
   const along = axis === 0 ? x1 - x0 : y1 - y0,
     wide = axis === 0 ? y1 - y0 : x1 - x0;
-  // as few bands as keep it no longer across than `most`; with no most, as many as give it a screen's shape
-  const bands = Math.min(
-    inner.spots.size,
-    most
-      ? Math.ceil(wide / most)
-      : Math.round(Math.sqrt(axis === 0 ? (SCREEN * wide) / along : wide / (SCREEN * along))),
-  );
-  if (bands < 2 || !(along > 0)) return inner;
+  if (!(along > 0)) return inner;
   const half = (k: string) => (sizes.get(k) ?? [120, 40])[across] / 2;
   const order = [...inner.spots].sort((p, q) => p[1][across] - q[1][across]);
   const start = across === 0 ? x0 : y0;
-  // each band about as wide as the rest; a thing starts a new band once its own is full. A band's top is its
-  // highest thing's
-  const bandOf = new Map<string, number>(),
-    from: number[] = [];
-  let opened = -Infinity;
-  for (const [k, p] of order) {
-    if (!from.length || (from.length < bands && p[across] - opened > wide / bands)) {
-      opened = p[across] - half(k);
-      from.push(Infinity);
+  // the drawing in `bands` bands: each about as wide as the rest, a thing starting a new band once its own is full. A
+  // band's top is its highest thing's. Each band starts where the one before it ends, so a band with only the first
+  // rows leaves no room after it
+  const split = (bands: number) => {
+    const bandOf = new Map<string, number>(),
+      from: number[] = [],
+      to: number[] = [];
+    let opened = -Infinity;
+    for (const [k, p] of order) {
+      if (!from.length || (from.length < bands && p[across] - opened > wide / bands)) {
+        opened = p[across] - half(k);
+        from.push(Infinity);
+        to.push(-Infinity);
+      }
+      const n = from.length - 1;
+      bandOf.set(k, n);
+      from[n] = Math.min(from[n] as number, p[across] - half(k));
+      to[n] = Math.max(to[n] as number, p[across] + half(k));
     }
-    const n = from.length - 1;
-    bandOf.set(k, n);
-    from[n] = Math.min(from[n] as number, p[across] - half(k));
-  }
+    const lo = from.map(() => Infinity),
+      hi = from.map(() => -Infinity);
+    const reach = (band: number, at: number, size: number) => {
+      lo[band] = Math.min(lo[band] as number, at - size / 2);
+      hi[band] = Math.max(hi[band] as number, at + size / 2);
+    };
+    for (const [k, p] of inner.spots) reach(bandOf.get(k) as number, p[axis], (sizes.get(k) ?? [120, 40])[axis]);
+    for (const l of shape.links)
+      if (bandOf.get(l.from) === bandOf.get(l.to))
+        for (const p of inner.via.get(viaKey(l.from, l.to)) ?? []) reach(bandOf.get(l.from) as number, p[axis], 0);
+    const shift: number[] = [];
+    let cursor = axis === 0 ? x0 : y0;
+    for (let n = 0; n < from.length; n++) {
+      shift.push(cursor - (lo[n] as number));
+      cursor += (hi[n] as number) - (lo[n] as number) + BAND_GAP;
+    }
+    const long = cursor - BAND_GAP - (axis === 0 ? x0 : y0),
+      deep = Math.max(...from.map((f, n) => (to[n] as number) - f));
+    return { bandOf, from, shift, shape: axis === 0 ? long / deep : deep / long };
+  };
+  // as few bands as keep it no longer across than `most`. With no most, a drawing within twice a screen's shape stays
+  // as it is. One further off takes the fewest bands that bring it within, or else those nearest
+  const off = (shape: number) => Math.abs(Math.log(shape / SCREEN));
+  let best = split(Math.min(inner.spots.size, Math.ceil(wide / (most ?? Infinity)) || 1));
+  if (!most)
+    for (let n = 2; n <= Math.min(inner.spots.size, BANDS_MOST) && off(best.shape) > Math.log(2); n++) {
+      const next = split(n);
+      if (off(next.shape) < off(best.shape)) best = next;
+    }
+  const { bandOf, from, shift } = best;
+  if (from.length < 2) return inner;
   const moved = (p: readonly [number, number], band: number): [number, number] => {
     const q: [number, number] = [p[0], p[1]];
-    q[axis] += band * (along + BAND_GAP);
+    q[axis] += shift[band] as number;
     q[across] += start - (from[band] as number);
     return q;
   };
