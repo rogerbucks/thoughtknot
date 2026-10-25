@@ -536,7 +536,7 @@
     ]
   },
   "W32": {
-    "title": "iPhone, iPad and Android apps",
+    "title": "iOS app",
     "size": "L",
     "requirements": [
       "ios_app",
