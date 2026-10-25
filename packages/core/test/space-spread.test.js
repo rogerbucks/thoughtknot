@@ -164,7 +164,9 @@ test('kept as drawn, each thing stays where its diagram type put it, across and 
   for (const cards of [false, true])
     for (const at of [FLOW, RADIAL]) {
       const placed = across(spreadSpace(drawnAs(at), undefined, cards, true).space);
-      for (const [key, [x, y]] of Object.entries(at)) assert.deepEqual(placed.get(key), [x + 40, y + 15], key);
+      // down the page is back along the space, so the drawing's top shows at the top of the view (Roger, 25 Oct 2026)
+      for (const [key, [x, y]] of Object.entries(at))
+        assert.deepEqual(placed.get(key).map(Math.round), [x + 40, -(y + 15)], key);
     }
   // laid out afresh, the type made no difference: the bug Roger saw (25 Oct 2026)
   const fresh = (at) => [...across(spreadSpace(drawnAs(at)).space)];
@@ -243,4 +245,42 @@ test('a trunk’s joint, drawn as a point, stays a small point in 3D, not a ball
   const marks = [...MARKS, joint, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk: 1 in', ''))];
   const ball = spreadSpace(marks).space.blocks.find((b) => b.of === 'trunk: 1 in');
   assert.ok(ball.width <= 6, `${ball.width}`);
+});
+
+// proves: space_right_way_up
+test('kept as drawn, the drawing is the right way up: its top shows at the top of the view', () => {
+  const space = spreadSpace(drawnAs(FLOW), undefined, false, true).space;
+  const m = spaceMatrix(orbitFit(space, 1), 1, 4000);
+  const y = (key) => {
+    const b = space.blocks.find((x) => x.of === key);
+    return projectPoint(m, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2], 600, 600).y;
+  };
+  // each ball is lifted to its own depth too, so the row of spokes is below the hub on the whole
+  const row = ['a', 'b', 'c', 'd'].reduce((n, k) => n + y(k), 0) / 4;
+  assert.ok(y('hub') < row, `the hub at ${y('hub')} is above its spokes at ${row}`);
+});
+
+// proves: space_phone_readable
+test('an arrowhead is never longer than the ball it points at is wide on the screen', () => {
+  const space = spreadSpace(MARKS).space;
+  // far off, a ball is a few pixels wide: an arrowhead of ARROW_LEAST would be bigger than it
+  for (const times of [1, 0.1, 0.03]) {
+    const o = orbitFit(space, 1);
+    const m = spaceMatrix({ ...o, distance: o.distance / times }, 1, 4000);
+    const focal = 300 / Math.tan(Math.PI / 8);
+    const arrows = arrowsOnScreen(space, m, 600, 600);
+    assert.ok(arrows.length > 0);
+    for (const a of arrows) {
+      const wide = Math.max(
+        ...space.blocks.map((b) => {
+          const c = projectPoint(m, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2], 600, 600);
+          return Math.hypot(c.x - a.tip.x, c.y - a.tip.y) <= (b.width / 2) * (focal / c.far) + 1.5
+            ? (b.width * focal) / c.far
+            : 0;
+        }),
+      );
+      const long = Math.hypot(a.tip.x - (a.left.x + a.right.x) / 2, a.tip.y - (a.left.y + a.right.y) / 2);
+      assert.ok(long <= wide + 0.5, `${long} > ${wide}`);
+    }
+  }
 });

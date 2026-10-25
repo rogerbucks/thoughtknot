@@ -13,8 +13,8 @@ import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
   READABLE_LEAST,
-  READABLE_MOST,
   arrowsOnScreen,
+  largestName,
   labelsOnScreen,
   pickedRing,
 } from './space-labels.ts';
@@ -96,12 +96,13 @@ export function cardsOnScreen(
     named.every(
       (n) => Math.abs(n.x - x) * 2 >= n.width + w + NAMES_APART || Math.abs(n.y - y) * 2 >= n.height + h + NAMES_APART,
     );
-  const out: ScreenCard[] = [];
+  const out: ScreenCard[] = [],
+    largest = largestName(width, height);
   for (const { b, c, mine } of seen) {
     const scale = focal / c.far;
     const natural = WORDS_SIZE * scale;
     const text = (b.of === undefined ? undefined : names.get(b.of)) ?? b.name ?? '';
-    const size = Math.max(READABLE_LEAST, Math.min(READABLE_MOST, natural));
+    const size = Math.max(READABLE_LEAST, Math.min(largest, natural));
     const w = (b.card?.width ?? b.width) * scale,
       h = (b.card?.height ?? b.tall) * scale;
     // its name wrapped to fit, and the card grown to hold it

@@ -40,9 +40,18 @@ const GAP = 3;
 const LINK_WORDS_LATER = 1.6;
 /** The size of each cell of the grid that finds names that would overlap, in pixels. */
 const CELL = 48;
+/** A view narrower than this, in pixels, such as a phone's, paints its names smaller, down to READABLE_LEAST. */
+const SMALL_VIEW = 640;
 
-/** A name cut to LETTERS_MOST letters, ending in "…" when cut. */
-const shortened = (text: string) => (text.length > LETTERS_MOST ? `${text.slice(0, LETTERS_MOST - 1)}…` : text);
+/** The largest size a name is painted at in a view `width` by `height`: smaller on a phone (Roger, 25 Oct 2026). */
+export const largestName = (width: number, height: number): number =>
+  Math.max(READABLE_LEAST, READABLE_MOST * Math.min(1, Math.min(width, height) / SMALL_VIEW));
+
+/** A name cut to LETTERS_MOST letters, or to the `fits` letters the screen has room for, ending in "…" when cut. */
+const shortened = (text: string, fits = LETTERS_MOST) => {
+  const most = Math.min(LETTERS_MOST, fits);
+  return text.length > most ? `${text.slice(0, most - 1)}…` : text;
+};
 
 /**
  * The labels to paint, at most `most`, picked one first, then by how near the middle of the screen and the camera
@@ -57,13 +66,20 @@ export function labelsOnScreen(
 ): ScreenLabel[] {
   const focal = height / 2 / Math.tan(FIELD / 2),
     across = Math.hypot(width, height) / 2;
+  // a phone's view is narrow: its largest name is smaller, and none runs past its sides
+  const largest = largestName(width, height);
   const wanted: (ScreenLabel & { rank: number })[] = [];
   for (const l of space.labels) {
     const at = projectPoint(matrix, l.at, width, height);
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
     const mine = (picked !== undefined && l.of === picked) || (pickedLink !== undefined && l.link === pickedLink);
     const natural = (l.size * focal) / at.far;
-    const size = Math.max(mine ? PICKED_LEAST : READABLE_LEAST, Math.min(READABLE_MOST, natural));
+    // a long name is painted smaller to fit across the view, and cut only where even the smallest size will not fit
+    const text = shortened(l.text),
+      room = width - 4 * GAP,
+      least = mine ? PICKED_LEAST : READABLE_LEAST;
+    const size = Math.max(least, Math.min(largest, natural, room / (text.length * LETTER_WIDTH)));
+    const fits = Math.max(4, Math.floor(room / (size * LETTER_WIDTH)));
     // nearer the middle of the screen and nearer the camera ranks first; the picked name ranks before all
     const off = Math.hypot(at.x - width / 2, at.y - height / 2) / across;
     // a link's words come after the names near them: names say what is there, words only what joins it
@@ -71,7 +87,7 @@ export function labelsOnScreen(
     const label: ScreenLabel & { rank: number } = {
       id: l.id,
       style: l.style,
-      text: shortened(l.text),
+      text: shortened(text, fits),
       x: at.x,
       y: at.y,
       size,
@@ -146,12 +162,14 @@ export function arrowsOnScreen(space: SpaceMarks, matrix: Float32Array, width: n
     if (!tip || !back) continue;
     if (tip.x < -50 || tip.y < -50 || tip.x > width + 50 || tip.y > height + 50) continue;
     if (balls.some((b) => !touches(b, a.tip) && hides(b, tip))) continue;
+    // never bigger than the ball it points at (Roger, 24 Oct 2026): at most as long as that ball is wide on the screen
+    const at = balls.find((b) => touches(b, a.tip));
     let dx = tip.x - back.x,
       dy = tip.y - back.y;
     const seen = Math.hypot(dx, dy);
     // a link pointing straight at the camera has no way across the screen to point: its arrowhead is not painted
     if (seen < 0.5) continue;
-    const long = Math.max(ARROW_LEAST, seen);
+    const long = Math.min(Math.max(ARROW_LEAST, seen), at ? 2 * at.seen : Infinity);
     dx /= seen;
     dy /= seen;
     const bx = tip.x - dx * long,
