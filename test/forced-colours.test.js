@@ -44,7 +44,8 @@ const KEEPS_OWN = {
 const FOCUS_SHOWN = {
   '.thoughtknot-svg g.node:focus': '.thoughtknot-svg g.node:focus-visible > :is(path, polygon)',
   '.thoughtknot-editor textarea.thoughtknot-text': '.thoughtknot-editor:focus-within',
-  '.thoughtknot-type-list button:focus-visible': '.thoughtknot-type-list button:focus-visible::after',
+  ':is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible':
+    ':is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible::after',
 };
 
 const ruleWith = (rules, selector, media = '') =>

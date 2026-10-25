@@ -19,6 +19,13 @@ import { suggestedPlaces } from './suggested-names.ts';
 
 const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+/**
+ * A box's words without Markdown's marks for bold or code, which a quote often carries: "**Rules.**" is drawn
+ * "Rules." (UX review F12). Only marks in pairs go, so a lone star or underscore stays as written.
+ */
+export const plainMarks = (text: string): string =>
+  text.replace(/(\*\*|__)(\S(?:.*?\S)?)\1/g, '$2').replace(/`([^`\n]+)`/g, '$1');
+
 function drawingOf(
   world: World,
   name: string,
@@ -48,7 +55,7 @@ function drawingOf(
           .filter((l) => !hidden.has(l))
           .sort(byCode)
           .join(' · '),
-        text: shown(key)[0],
+        text: plainMarks(shown(key)[0]),
         ...(place ? { suggested: place } : {}),
         ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
         ...(certainty ? { certainty } : {}),
