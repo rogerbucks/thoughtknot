@@ -7,6 +7,7 @@ import type { TimelineChoice } from './timeline.ts';
 import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -113,7 +114,22 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
   Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
   ViewStyle: ['view', 'outside'],
-  Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge', 'legend'],
+  Shown: [
+    'view',
+    'zoom',
+    'x',
+    'y',
+    'frame',
+    'selected',
+    'labels',
+    'hubs',
+    'groups',
+    'merge',
+    'legend',
+    'spacing',
+    'link_length',
+    'group_pull',
+  ],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show', 'centre'],
   Flow: ['motion', 'means', 'type', 'view'],
@@ -284,6 +300,8 @@ export interface Shown {
   merge?: OnOff;
   /** The legend's lines brought forward or hidden, when written: those that are sound, in the order written. */
   legend?: LegendChoice[];
+  /** How the layout spaced it, each option written and in range (§53, layout_saved_with_view). */
+  layout?: Partial<LayoutOptions>;
 }
 
 /** A graph's style, read from its style blocks and checked: only what is sound is here; the rest is in the problems. */

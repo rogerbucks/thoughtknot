@@ -1,11 +1,9 @@
 // The 3D view of a card's drawing (editor spec §53, scale_space_view). Roger, 22 Oct 2026: a view you switch to from
-// the bar, never the default, so people can explore a graph in depth. It lies over the drawing, under the card's bar,
-// and goes by the bar's button or Escape (space-switch.ts). It only looks: nothing is edited here, and nothing reaches
-// the note.
+// the bar, so people can explore a graph in depth. It lies over the drawing, under the card's bar, and goes by the
+// bar's button or Escape (space-switch.ts). It only looks: nothing is edited here, and nothing reaches the note.
 //
-// It reads the drawing already on screen: each box, group and link of the SVG, with the colours the theme gave them.
-// So it looks like the card in light and dark. The numbers live in core space-view.ts and space-spread.ts, and the
-// painters in space-painter.ts and space-gpu-painter.ts.
+// It reads the drawing on screen: each box, group and link of the SVG, in the theme's colours, light or dark. The sums
+// live in space-view.ts and space-spread.ts, and the painters in space-painter.ts and space-gpu-painter.ts.
 //
 // It is shown as cards in space (2.5D, space-cards.ts), or in 3D, one of three ways a button among its moves switches:
 // - in space: laid out again in space, each thing a ball sized by its links, each link an arrow (space-spread.ts);
@@ -13,8 +11,7 @@
 // - links: the drawing lifted, each thing as tall as its count of links, so the busiest things stand out.
 // How to move it is on screen (space-controls.ts says each way): a help line at the foot, and buttons to zoom, turn
 // and reset. Drag turns, Shift-drag or right-drag moves, scroll zooms; on touch, one finger turns and two move and
-// pinch. A click or tap picks a thing or a link and names it; a double one flies to a thing. The keyboard does the same.
-// What is picked is said aloud, and its name always shows (space-labels.ts).
+// pinch. A click or tap picks a thing or a link and names it aloud; a double one flies to a thing. So do the keys.
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
 // as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A bundle picked opens, as a tap on it in 2D does
@@ -25,6 +22,7 @@ import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
+import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
@@ -69,6 +67,7 @@ type Depth = DepthBy | 'cards' | null;
 export interface SpaceOptions {
   cards?: boolean;
   asDrawn?: boolean;
+  layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -123,7 +122,9 @@ export async function openSpaceView(
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
-    by === 'cards' || !by ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn).space : spaceOf(marks, by);
+    by === 'cards' || !by
+      ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn, more.layout?.()).space
+      : spaceOf(marks, by);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);

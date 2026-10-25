@@ -36,11 +36,11 @@ MATCH (n:Person) RETURN n
 **Do this:**
 
 0. Open this note in Live Preview, with the cursor outside the blocks: Save as shown writes into the note, which reading view never changes.
-1. On the kit graph, tap Ann. Press View and turn Parallel links merged on, then Busy hubs folded off, then on again.
+1. On the kit graph, tap Ann. Press View and turn Bundle links between groups on, then Fold busy things off, then on again.
 2. After each, check Ann is still selected, her details are open, and Cy, Bob and the Toolbox are still in focus.
 3. Switch to reading view and turn the same switches: the drawing changes and the note's text does not.
-4. Back in Live Preview, on the people view, press View, turn Groups folded on, then press Save as shown. Check the style block has a Shown with the switches.
-5. Close the note and open it again: the people view opens with Groups folded on and its groups folded.
+4. Back in Live Preview, on the people view, press View, turn Fold groups on, then press Save as shown. Check the style block has a Shown with the switches.
+5. Close the note and open it again: the people view opens with Fold groups on and its groups folded.
 6. Delete the Shown from the style block, to leave the note as it was.
 
 **Checklist line:**

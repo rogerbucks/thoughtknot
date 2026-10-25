@@ -38,6 +38,8 @@ import type {
   ViewStyle,
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
+import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 import { legendChecked } from './untangle-saved.ts';
 import { word as say } from './words.ts';
@@ -258,6 +260,17 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
   for (const k of SAVED_SWITCHES) {
     const v = r.word(k, ON_OFF, mustBe(k, ON_OFF));
     if (v !== undefined) shown[k] = v;
+  }
+  // how the layout spaced it (§53, layout_saved_with_view): each option in its range
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]) {
+    const v = r.number(key),
+      [least, most] = LAYOUT_OPTION_RANGE[k];
+    if (v !== undefined && (v < least || v > most))
+      r.report(
+        say('styling.shown.layout-range', { key, least, most }),
+        say('styling.shown.layout-range.fix', { key, usual: DEFAULT_LAYOUT_OPTIONS[k] }),
+      );
+    else if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
   }
   // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept
   const legend = legendChecked(r, names);

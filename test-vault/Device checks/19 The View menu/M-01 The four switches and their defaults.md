@@ -1,6 +1,6 @@
 # M-01 The four switches and their defaults
 
-**You should see:** a View button on the drawing's bar. Pressing it opens a row of four switches under the bar: Labels by zoom — on, Busy hubs folded — on, Groups folded — off and Parallel links merged — off. VoiceOver reads each as a switch, on or off. After Groups folded is set to On in the settings and the note is opened again, the two groups are drawn folded, each as one box saying how many things it holds, and its switch says on.
+**You should see:** a View button on the drawing's bar. Pressing it opens a row of four switches under the bar, each with a line saying what it does: Hide labels too small to read — on, Fold busy things — on, Fold groups — off and Bundle links between groups — off. VoiceOver reads each as a switch, on or off. After Fold groups is set to On in the settings and the note is opened again, the two groups are drawn folded, each as one box saying how many things it holds, and its switch says on.
 
 **Test diagram:**
 
@@ -29,12 +29,12 @@
 
 1. Press View on the drawing's bar and read the four switches and whether each is on or off.
 2. With VoiceOver on, move through the switches and check each is read as a switch with its state.
-3. Open Settings › ThoughtKnot and, under Drawing, set Groups folded to On.
-4. Close this note and open it again. Check the groups are drawn folded and the View menu's Groups folded says on.
-5. Set Groups folded back to Off in the settings, to leave them as they were.
+3. Open Settings › ThoughtKnot and, under Drawing, set Fold groups to On.
+4. Close this note and open it again. Check the groups are drawn folded and the View menu's Fold groups says on.
+5. Set Fold groups back to Off in the settings, to leave them as they were.
 
 **Checklist line:**
 
-> **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links merged. Each says on or off. Labels and hubs are on, groups and merging off. In Settings › ThoughtKnot, change a switch's default under Drawing, then open the note again. Its graphs start as the settings now say.
+> **M-01** Press View on a graph's bar: four switches, Hide labels too small to read, Fold busy things, Fold groups and Bundle links between groups. Each has a line under it saying what it does, and says on or off. Labels and hubs are on, groups and merging off. In Settings › ThoughtKnot, change a switch's default under Drawing, then open the note again. Its graphs start as the settings now say.
 
 **Back to the checklist:** [M-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-01 in its list.

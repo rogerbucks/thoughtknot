@@ -8,7 +8,8 @@ problem on its line with its fix, the same words as the core's.
 A Look or ViewStyle is drawn by the plugin alone, never by graph_svg, so here only the keys it
 writes are checked; the core checks the rest. Of a Shown, graph_svg draws the switches a view was
 saved with, so its view and those are checked too; its zoom, place, frame and selection are the
-plugin's alone."""
+plugin's alone. So is how its layout was spaced (layout_saved_with_view): graph_svg lays out with
+Graphviz, which those options do not reach."""
 
 from __future__ import annotations
 

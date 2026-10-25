@@ -78,6 +78,8 @@ export const STYLE_SOURCE_WORDS = {
   'styling.shown.view': 'a Shown names its view',
   'styling.shown.zoom': 'zoom must be a number above 0',
   'styling.shown.zoom.fix': 'write a zoom above 0, such as zoom: 1',
+  'styling.shown.layout-range': '{key} must be a number from {least} to {most}',
+  'styling.shown.layout-range.fix': 'write {key}: {usual} for the layout as it lays out alone',
   // arrowheads, the diagram type and how links are drawn (style-choice-checks.ts)
   'styling.arrows.missing': 'an Arrows says show or hide',
   'styling.arrows.add': 'add arrowheads: {among}',

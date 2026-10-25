@@ -27,6 +27,7 @@ export const TYPES_LATE = [
   'Landing',
   'Layers',
   'LayoutLimits',
+  'LayoutOptions',
   'LayoutPort',
   'LayoutReply',
   'LayoutRequest',

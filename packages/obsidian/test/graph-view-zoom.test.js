@@ -93,7 +93,7 @@ describe('a view applied measures the viewport once', () => {
         });
       }
       const widths = new Set();
-      const steps = 6;
+      const steps = 3;
       for (let i = 0; i < steps; i++) {
         vp.dispatch('keydown', { key: '+' });
         widths.add(svgOf(el).getAttribute('width'));

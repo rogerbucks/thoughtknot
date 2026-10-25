@@ -16,7 +16,7 @@ import type { Orbit, Vec3 } from './space-view.ts';
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
 export const KEY_STEP = 24;
 /** How much one press of + or - zooms. */
-export const ZOOM_STEP = 1.25;
+export const ZOOM_STEP = 1.6;
 
 /**
  * `orbit` moved across the floor by a drag of `dx` and `dy` pixels on a screen `height` pixels high. What is under

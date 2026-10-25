@@ -1,5 +1,6 @@
 // The View menu's switches (editor spec §25), each on or off (view_switches). They are labels by zoom, busy hubs
-// folded, groups folded, parallel links merged and the new layout engine (layout_own_engine). They start from the
+// folded, groups folded, parallel links merged and the new layout engine (layout_own_engine). The settings page alone
+// offers the engine (view_switch_hints). They start from the
 // plugin's settings, a style graph's merging, and a view's switches saved as shown (view_switch_defaults). A card's
 // state of them folds, opens and saves, changing only the drawing (view_switch_view_only, untangle_data_untouched).
 import { afterEach, test, describe } from 'node:test';
@@ -48,7 +49,13 @@ describe('the switches', () => {
     assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine']);
     assert.deepEqual(
       VIEW_SWITCHES.map((s) => switchName(s)),
-      ['Labels by zoom', 'Busy hubs folded', 'Groups folded', 'Parallel links merged', 'ThoughtKnot layout engine'],
+      [
+        'Hide labels too small to read',
+        'Fold busy things',
+        'Fold groups',
+        'Bundle links between groups',
+        'Lay out with ThoughtKnot',
+      ],
     );
   });
 
