@@ -186,7 +186,8 @@ describe('the source Graphviz measures', () => {
 
   test('is not used where Graphviz draws groups as boxes round their things', () => {
     assert.equal(ownable(dot), true);
-    assert.equal(ownable(dot.replace('}', '  subgraph cluster_x { "a"; }\n}')), false);
+    const grouped = [...dot.split('\n').slice(0, -1), '  subgraph cluster_x { "a"; }', '}'].join('\n');
+    assert.equal(ownable(grouped), false);
   });
 });
 
