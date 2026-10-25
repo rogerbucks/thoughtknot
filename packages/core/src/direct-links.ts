@@ -32,8 +32,11 @@ const WORK_MOST = 4_000_000;
 /** How far two links between the same boxes bow apart at their middle, as a share of their length. */
 const BOW = 0.16;
 
-/** `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box. */
-export function directLinks(laid: LaidMarks): LaidMarks {
+/**
+ * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
+ * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts).
+ */
+export function directLinks(laid: LaidMarks, at?: ReadonlyMap<string, readonly [number, number]>): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
   for (const m of laid.marks)
@@ -55,10 +58,17 @@ export function directLinks(laid: LaidMarks): LaidMarks {
   const ends = links.flatMap((l) =>
     l.from === l.to ? [] : [[boxes.get(l.from ?? ''), boxes.get(l.to ?? '')] as [Placed, Placed]],
   );
-  const groupMoved = crowded(ends, [...boxes.values()])
-    ? spread([...boxes.values()], groups, middleOf([...boxes.values()]))
-    : new Map<string, MarkPoint>();
+  for (const [k, b] of at ?? []) {
+    const p = boxes.get(k);
+    if (p) [p.x, p.y] = b;
+  }
+  const groupMoved =
+    !at && crowded(ends, [...boxes.values()])
+      ? spread([...boxes.values()], groups, middleOf([...boxes.values()]))
+      : new Map<string, MarkPoint>();
   settle([...boxes.values()], links);
+  // boxes our own engine placed never end up on each other: the last pushes off links may leave some touching
+  if (at) for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
   const moved = new Map<string, [number, number]>();

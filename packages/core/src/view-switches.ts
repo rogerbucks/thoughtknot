@@ -18,9 +18,9 @@ import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
 
-/** The four switches, in the order the View menu lists them. */
-export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge'] as const;
-/** One of the four switches. */
+/** The switches, in the order the View menu lists them. */
+export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine'] as const;
+/** One of the switches. */
 export type ViewSwitch = (typeof VIEW_SWITCHES)[number];
 /** Each switch, on or off. */
 export type ViewSwitches = Record<ViewSwitch, boolean>;
@@ -31,6 +31,7 @@ const SWITCH_WORDS = {
   hubs: 'settings.fold-hubs.name',
   groups: 'settings.fold-groups.name',
   merge: 'settings.merge-links.name',
+  engine: 'settings.own-layout.name',
 } as const satisfies Record<ViewSwitch, WordKey>;
 
 /** Each switch as the View menu names it, in the reader's language. */
@@ -42,6 +43,7 @@ export const SWITCH_SETTINGS = {
   hubs: 'foldHubs',
   groups: 'foldGroups',
   merge: 'mergeLinks',
+  engine: 'ownLayout',
 } as const satisfies Record<ViewSwitch, keyof Settings>;
 
 /**
@@ -59,7 +61,8 @@ export function startingSwitches(
     VIEW_SWITCHES.map((s) => [s, settings[SWITCH_SETTINGS[s]] === 'on']),
   ) as ViewSwitches;
   if (style && written) start.merge = linksOf(style, view).merge;
-  for (const s of VIEW_SWITCHES) if (saved?.[s] !== undefined) start[s] = saved[s] === 'on';
+  // the engine switch is a preview, never saved with a view
+  for (const s of VIEW_SWITCHES) if (s !== 'engine' && saved?.[s] !== undefined) start[s] = saved[s] === 'on';
   return start;
 }
 
@@ -110,7 +113,8 @@ const FOUND_AT = { block: -1, line: 0, id: 'found' };
  */
 function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly FocusEdge[]) {
   const written = drawnGroups(d.nudges ?? [], keys, d.diagram);
-  if (written.length || d.diagram) return { groups: written, found: [] as Nudge[] };
+  // our own engine spreads a network into its groups by itself, so it finds none (layout_own_engine)
+  if (written.length || d.diagram || d.engine === 'own') return { groups: written, found: [] as Nudge[] };
   const text = new Map(d.boxes.map((b) => [b.key, b.text]));
   const groups = foundGroups(keys, edges, (k) => text.get(k) ?? k);
   const found = groups.flatMap(([group, things]) =>
@@ -191,7 +195,7 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
-    const { groups, found } = groupsOf(d, keys, edges);
+    const { groups, found } = groupsOf(this.switches.engine ? { ...d, engine: 'own' } : d, keys, edges);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
     this.plan = foldPlan(keys, edges, groups, {
@@ -203,7 +207,8 @@ export class ViewState {
     const only = card ? this.only.get(card) : undefined;
     const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;
     const { folding: _was, ...rest } = d;
-    const drawn = found.length ? { ...rest, nudges: [...(d.nudges ?? []), ...found] } : rest;
+    const grouped = found.length ? { ...rest, nudges: [...(d.nudges ?? []), ...found] } : rest;
+    const drawn = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 
@@ -243,9 +248,11 @@ export class ViewState {
   }
 
   /** The switches as a view saved as shown writes them (§7). */
-  saved(): Record<ViewSwitch, OnOff> {
-    return Object.fromEntries(VIEW_SWITCHES.map((s) => [s, this.switches[s] ? 'on' : 'off'])) as Record<
-      ViewSwitch,
+  saved(): Record<Exclude<ViewSwitch, 'engine'>, OnOff> {
+    // the engine switch is a preview, never saved with a view
+    const kept = VIEW_SWITCHES.filter((s) => s !== 'engine');
+    return Object.fromEntries(kept.map((s) => [s, this.switches[s] ? 'on' : 'off'])) as Record<
+      Exclude<ViewSwitch, 'engine'>,
       OnOff
     >;
   }

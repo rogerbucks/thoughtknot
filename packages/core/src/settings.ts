@@ -58,6 +58,8 @@ export interface Settings extends StrictnessSettings {
   foldHubs: SwitchSetting;
   foldGroups: SwitchSetting;
   mergeLinks: SwitchSetting;
+  /** Whether graphs are laid out by our own engine, as a preview, instead of Graphviz (§53, layout_own_engine). */
+  ownLayout: SwitchSetting;
   /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
   noteCallouts: SwitchSetting;
   /** When the small copy of the whole drawing, with the visible part outlined, shows (§24, mini_map_setting). */
@@ -100,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',
+  ownLayout: 'off',
   noteCallouts: 'off',
   miniMap: 'auto',
   detailsOpen: 'off',
@@ -259,6 +262,11 @@ export const OPTIONS: Option[] = [
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   ),
   switchOption(
+    'ownLayout',
+    'New layout engine (preview)',
+    'Whether graphs are laid out by ThoughtKnot’s own engine instead of Graphviz: rows for flows and trees, spread out for networks; a graph’s View menu can change it.',
+  ),
+  switchOption(
     'noteCallouts',
     'Draw notes as callouts',
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
@@ -347,6 +355,7 @@ export function settingsFrom(saved: unknown): Settings {
     foldHubs: oneOf<SwitchSetting>('foldHubs', s.foldHubs, d.foldHubs),
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
+    ownLayout: oneOf<SwitchSetting>('ownLayout', s.ownLayout, d.ownLayout),
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),

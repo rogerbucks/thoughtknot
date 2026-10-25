@@ -102,6 +102,8 @@ export interface GraphDrawing {
    * none, curved at once.
    */
   straightFirst?: boolean;
+  /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
+  engine?: 'own';
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
