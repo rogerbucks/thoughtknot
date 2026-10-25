@@ -28,7 +28,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, panBy, turnRound, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, panBy, pinchBy, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -301,8 +301,8 @@ export async function openSpaceView(
     if (down.size >= 2) {
       const before = pinch();
       down.set(e.pointerId, now);
-      const { dx, dy, zoom } = twoFingers(before, pinch());
-      orbit = twistBy(zoomBy(panBy(orbit, dx, dy, height), zoom), twistOf(before, pinch()));
+      // the pinch zooms toward the middle of the two fingers, as a map does
+      orbit = pinchBy(orbit, before, pinch(), el.getBoundingClientRect(), width, height);
       travel += TAP_SLOP;
     } else {
       down.set(e.pointerId, now);
@@ -353,8 +353,11 @@ export async function openSpaceView(
     'wheel',
     (e) => {
       e.preventDefault();
-      // a pinch on a trackpad comes as a scroll with Ctrl held, in small steps: it zooms faster
-      orbit = zoomBy(orbit, Math.pow(e.ctrlKey ? 1.01 : 1.0015, -e.deltaY));
+      // a trackpad pinch comes as a scroll with Ctrl held, in small steps, so it zooms faster. Both zoom toward the
+      // pointer, as a map does
+      const at = el.getBoundingClientRect(),
+        times = Math.pow(e.ctrlKey ? 1.01 : 1.0015, -e.deltaY);
+      orbit = zoomAtPixel(orbit, times, e.clientX - at.left, e.clientY - at.top, width, height);
       again();
     },
     { passive: false },
