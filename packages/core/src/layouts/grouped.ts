@@ -163,8 +163,8 @@ export function groupedLayered(
         if (m === k) return false;
         const p = out.spots.get(m) as [number, number],
           size = sizes.get(m) ?? [0, 0];
-        const reach = (size[axis]) / 2,
-          side = (size[across]) / 2;
+        const reach = size[axis] / 2,
+          side = size[across] / 2;
         return p[axis] + reach > lo && p[axis] - reach < hi && Math.abs(p[across] - at[across]) < side + 2;
       });
       if (!blocked) return [level(rim, at[across])];
