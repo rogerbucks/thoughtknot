@@ -131,6 +131,30 @@ export function orbitAround(orbit: Orbit, point: Vec3, share = 1): Orbit {
     : { target, distance, turn: flat, tilt: rise };
 }
 
+/** Just short of straight down, so the camera still knows which way is up: the drawing's top, as on the page. */
+const ABOVE = Math.PI / 2 - 1e-3;
+
+/**
+ * `orbit` seen from straight above: the drawing lies flat as it does in 2D, its top at the top of the screen. The view
+ * in space starts so, then glides to `orbit`, and so seems to rise out of the flat drawing (space_glide).
+ */
+export function fromAbove(orbit: Orbit): Orbit {
+  return { ...orbit, tilt: ABOVE };
+}
+
+/** The camera `share` of the way from `from` to `to`, eased so it starts and stops gently: 0 is `from`, 1 is `to`. */
+export function between(from: Orbit, to: Orbit, share: number): Orbit {
+  const t = Math.min(1, Math.max(0, share)),
+    e = t * t * (3 - 2 * t);
+  const at = (a: number, b: number) => a + (b - a) * e;
+  return {
+    target: [0, 1, 2].map((k) => at(from.target[k] ?? 0, to.target[k] ?? 0)) as Vec3,
+    distance: at(from.distance, to.distance),
+    turn: at(from.turn, to.turn),
+    tilt: at(from.tilt, to.tilt),
+  };
+}
+
 /** `v` turned by `angle` radians round the line through the origin along the unit `axis` (Rodrigues' rotation). */
 function turned(v: Vec3, axis: Vec3, angle: number): Vec3 {
   const [x, y, z] = axis,

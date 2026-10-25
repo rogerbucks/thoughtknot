@@ -71,6 +71,7 @@
   --gn-motion-dot: 2s;
   --gn-motion-step: 1s;
   --gn-motion-pulse: 1.2s;
+  --gn-motion-fade: 0.2s;
   --gn-ease-even: linear;
   --gn-ease-soft: var(--anim-motion-smooth, ease-in-out);
 }
@@ -2572,6 +2573,22 @@ pre.thoughtknot-code {
 }
 .thoughtknot-space-view:active {
   cursor: grabbing;
+}
+/* The view in space fades in over the flat drawing as its camera glides down from above, and out as it leaves
+   (space_glide). Where motion is to be still, it comes and goes at once. */
+@keyframes thoughtknot-space-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .thoughtknot-space-view {
+    animation: thoughtknot-space-in var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-space-view.is-leaving {
+    opacity: 0;
+    transition: opacity var(--gn-motion-fade) var(--gn-ease-soft);
+  }
 }
 .thoughtknot-space-canvas {
   position: absolute;

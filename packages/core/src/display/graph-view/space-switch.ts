@@ -10,6 +10,7 @@ import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import { openSpaceView } from './space-view-panel';
+import { fadeOut } from './space-view-pad.ts';
 import type { SpaceView } from './space-view-panel';
 
 /** How the drawing is shown in space: as cards (2.5D) or as balls (3D). Flat is null. */
@@ -63,8 +64,11 @@ export class SpaceSwitch {
     this.now = mode;
     this.label();
     if (!mode) {
-      this.view?.close();
+      // it fades out over the flat drawing (space_glide)
+      const view = this.view,
+        el = this.svg()?.parentElement?.querySelector<HTMLElement>(':scope > .thoughtknot-space-view');
       this.view = null;
+      if (view) el ? fadeOut(el, () => view.close()) : view.close();
       return;
     }
     if (this.view) return this.view.cards(mode === 'cards');
