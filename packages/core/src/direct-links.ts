@@ -87,7 +87,8 @@ export function directLinks(
       heads.set(owner, [m.y - was.y0 + HUG, (m.maxWidth ?? 0) + 2 * HUG]);
   }
   hug(boxes.values(), groups, heads);
-  trunkEnds(boxes, links);
+  // our own engine placed each trunk's ends in its rows and routed their links round boxes: kept where it put them
+  if (!at) trunkEnds(boxes, links);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
   const moved = new Map<string, [number, number]>();

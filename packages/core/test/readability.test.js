@@ -88,6 +88,52 @@ describe('groups as boxes', () => {
     );
   });
 
+  // proves: layout_links_never_over
+  test('a link out of a group, with another of its things in the way, steps past its row to the gutter', () => {
+    const blocked = shapeOf(
+      ['a', 'b', 'c', 'z'],
+      [
+        ['a', 'b'],
+        ['b', 'c'],
+        ['a', 'z'],
+      ],
+    );
+    const out = groupedLayered(blocked, sizes, [{ id: 'g', label: 'G', members: ['a', 'b', 'c'] }], 'LR');
+    const path = [out.spots.get('a'), ...out.via.get('a\nz'), out.spots.get('z')];
+    for (const k of ['b', 'c']) {
+      const [x, y] = out.spots.get(k);
+      const over = path.slice(1).some(([px, py], i) => {
+        const [qx, qy] = path[i];
+        const lo = [Math.min(px, qx), Math.min(py, qy)],
+          hi = [Math.max(px, qx), Math.max(py, qy)];
+        return lo[0] < x + 50 && hi[0] > x - 50 && lo[1] < y + 20 && hi[1] > y - 20;
+      });
+      assert.ok(!over, `the link a to z runs clear of ${k}`);
+    }
+  });
+
+  test('a lane keeps straight through its row, and a bend with its straight way blocked takes the nearest free room', () => {
+    const laid = groupedLayered(
+      shapeOf(
+        ['s', 'm', 'n', 't'],
+        [
+          ['s', 'm'],
+          ['m', 'n'],
+          ['n', 't'],
+          ['s', 't'],
+        ],
+      ),
+      sizes,
+      [{ id: 'g', label: 'G', members: ['n'] }],
+      'LR',
+    );
+    const lanes = laid.via.get('s\nt');
+    // after the way out of its row, each lane is two bends, one each side of the row it crosses
+    for (let i = 1; i + 1 < lanes.length - 1; i += 2) assert.equal(lanes[i][1], lanes[i + 1][1], 'one lane, level');
+    const top = Math.min(...[...laid.spots].map(([, [, y]]) => y - 20));
+    for (const [, y] of lanes) assert.ok(y > top - 60, 'never far out round the drawing');
+  });
+
   // proves: layout_links_past_groups
   test('a link past a group runs through the gap inside its border, never round its far side', () => {
     const past = shapeOf(
@@ -162,7 +208,11 @@ describe('the readability scores', () => {
     };
     const gv = scored(false),
       own = scored(true);
-    for (const k of ['clean', 'clear', 'flow', 'near'])
-      assert.ok(own[k] >= gv[k] - 0.02, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
+    // a bundle's ends stay in the rows our engine routes them through, never moved over boxes. So its legs run a
+    // little longer than Graphviz's, and near may fall short by a little more
+    const slack = { clean: 0.02, clear: 0.02, flow: 0.02, near: 0.06 };
+    for (const [k, by] of Object.entries(slack))
+      assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
+    assert.ok(own.clear >= 0.995, `no link of ours passes over a box: ${own.clear.toFixed(3)}`);
   });
 });
