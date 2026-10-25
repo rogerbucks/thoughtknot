@@ -37,6 +37,12 @@ const GUTTER = 12;
 const GUTTER_STEP = 4;
 /** How far past its own box a link from a group's thing steps, into the room after its row, before it turns. */
 const STEP_OUT = 12;
+/** The shape a group's box is folded towards, as its width over its height: a screen's. */
+const SCREEN = 1.6;
+/** The room between two bands of a folded group. */
+const BAND_GAP = 56;
+/** The room round each thing and group, about, when guessing how much room the whole drawing takes. */
+const ROOM = 60;
 
 /** The bounds of a layout's spots, boxes and bends. */
 function boundsOf(inner: Layered, sizes: ReadonlyMap<string, Size>): [number, number, number, number] {
@@ -78,7 +84,10 @@ export function groupedLayered(
   const used = groups.filter((g) => g.members.some((k) => groupOf.get(k) === g.id));
   if (!used.length) return { ...layered(shape, sizes, rankdir, previous, options), boxes: [] };
   // each group's own rows, and the box they need
-  const inside = new Map<string, { inner: Layered; bounds: [number, number, number, number]; size: Size }>();
+  const inside = new Map<
+    string,
+    { inner: Layered; sub: GraphShape; bounds: [number, number, number, number]; size: Size }
+  >();
   for (const g of used) {
     const members = new Set(g.members.filter((k) => groupOf.get(k) === g.id));
     const sub: GraphShape = {
@@ -86,13 +95,23 @@ export function groupedLayered(
       links: shape.links.filter((l) => members.has(l.from) && members.has(l.to)),
     };
     const inner = layered(sub, sizes, rankdir, previous, options);
+    inside.set(g.id, { inner, sub, bounds: boundsOf(inner, sizes), size: [0, 0] });
+  }
+  // the room the whole drawing takes, about: so no group is longer across the way than a screen-shaped drawing
+  let area = 0;
+  for (const t of shape.things)
+    if (!groupOf.has(t.key)) area += (sizes.get(t.key) ?? [120, 40]).reduce((p, v) => p * (v + ROOM), 1);
+  for (const { bounds } of inside.values()) area += (bounds[2] - bounds[0] + ROOM) * (bounds[3] - bounds[1] + ROOM);
+  const most = Math.sqrt(rankdir === 'LR' ? area / SCREEN : area * SCREEN);
+  for (const [id, it] of inside) {
+    const inner = folded(it.inner, it.sub, sizes, rankdir, pad, most);
     const bounds = boundsOf(inner, sizes);
     const extra = rankdir === 'LR' ? [0, 2 * GUTTER] : [2 * GUTTER, 0];
     const size: Size = [
       bounds[2] - bounds[0] + 2 * pad + (extra[0] as number),
       bounds[3] - bounds[1] + 2 * pad + LABEL + (extra[1] as number),
     ];
-    inside.set(g.id, { inner, bounds, size });
+    inside.set(id, { inner, sub: it.sub, bounds, size });
   }
   // the rows of groups and lone things: a group is one box, its links its things' links
   const node = (k: string) => (groupOf.has(k) ? `group:${groupOf.get(k)}` : k);
@@ -107,7 +126,8 @@ export function groupedLayered(
       .filter((l) => node(l.from) !== node(l.to))
       .map((l) => ({ from: node(l.from), type: l.type, to: node(l.to) })),
   };
-  const top = layered(outer, outerSizes, rankdir, undefined, options);
+  // the groups and lone things folded too, when the whole is far from a screen's shape
+  const top = folded(layered(outer, outerSizes, rankdir, undefined, options), outer, outerSizes, rankdir, PAD);
   const out: Layered & { boxes: GroupBox[] } = { spots: new Map(), via: new Map(), boxes: [] };
   for (const t of shape.things) if (!groupOf.has(t.key)) out.spots.set(t.key, top.spots.get(t.key) as [number, number]);
   for (const g of used) {
@@ -194,8 +214,98 @@ export function groupedLayered(
       in1 = edge(l.to, last).reverse();
     const own = new Set([groupOf.get(l.from), groupOf.get(l.to)]);
     const others = [...out.boxes.filter((g) => !own.has(g.id)), ...lone];
-    const between = throughGutters([...out1.slice(-1), ...bends, ...in1.slice(0, 1)], others, axis, inGutter, pad);
+    // a way between the bands of the folded rows runs clear of every box already: kept as it is
+    const ways = [...out1.slice(-1), ...bends, ...in1.slice(0, 1)];
+    const between = top.kept?.has(viaKey(a, b)) ? ways : throughGutters(ways, others, axis, inGutter, pad);
     out.via.set(viaKey(l.from, l.to), [...out1.slice(0, -1), ...between, ...in1.slice(1)]);
+  }
+  return out;
+}
+
+/**
+ * `inner`, a group's own rows, folded into bands side by side when it is longer across the drawing's way than `most`.
+ * With no `most`, the rows of the whole drawing, folded when they are far from a screen's shape. Roger, 25 Oct 2026: "The layout seems very sparse". So a group of many things in one row takes about a screen's
+ * shape, not one long strip. A thing goes in the band its middle falls in. A link within a band keeps its bends. A link
+ * between bands steps into the room after its row, runs along the gutter inside the group's border, and steps back.
+ * Its key is in `kept`, so its way is not moved again.
+ */
+function folded(
+  inner: Layered,
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size>,
+  rankdir: 'LR' | 'TB',
+  pad: number,
+  most?: number,
+): Layered & { kept?: Set<string> } {
+  const axis = rankdir === 'LR' ? 0 : 1,
+    across = (1 - axis) as 0 | 1;
+  const [x0, y0, x1, y1] = boundsOf(inner, sizes);
+  const along = axis === 0 ? x1 - x0 : y1 - y0,
+    wide = axis === 0 ? y1 - y0 : x1 - x0;
+  // as few bands as keep it no longer across than `most`; with no most, as many as give it a screen's shape
+  const bands = Math.min(
+    inner.spots.size,
+    most
+      ? Math.ceil(wide / most)
+      : Math.round(Math.sqrt(axis === 0 ? (SCREEN * wide) / along : wide / (SCREEN * along))),
+  );
+  if (bands < 2 || !(along > 0)) return inner;
+  const half = (k: string) => (sizes.get(k) ?? [120, 40])[across] / 2;
+  const order = [...inner.spots].sort((p, q) => p[1][across] - q[1][across]);
+  const start = across === 0 ? x0 : y0;
+  // each band about as wide as the rest; a thing starts a new band once its own is full. A band's top is its
+  // highest thing's
+  const bandOf = new Map<string, number>(),
+    from: number[] = [];
+  let opened = -Infinity;
+  for (const [k, p] of order) {
+    if (!from.length || (from.length < bands && p[across] - opened > wide / bands)) {
+      opened = p[across] - half(k);
+      from.push(Infinity);
+    }
+    const n = from.length - 1;
+    bandOf.set(k, n);
+    from[n] = Math.min(from[n] as number, p[across] - half(k));
+  }
+  const moved = (p: readonly [number, number], band: number): [number, number] => {
+    const q: [number, number] = [p[0], p[1]];
+    q[axis] += band * (along + BAND_GAP);
+    q[across] += start - (from[band] as number);
+    return q;
+  };
+  const out: Layered & { kept: Set<string> } = { spots: new Map(), via: new Map(), kept: new Set() };
+  for (const [k, p] of inner.spots) out.spots.set(k, moved(p, bandOf.get(k) as number));
+  // the deepest box of the row at `along`, so a step past it is in the room between rows
+  const deepest = (at: number) =>
+    [...out.spots].reduce(
+      (most, [k, p]) => (Math.abs(p[axis] - at) < 1 ? Math.max(most, (sizes.get(k) ?? [120, 40])[axis]) : most),
+      0,
+    );
+  // the gutter each link between bands runs along, inside the border on the near side, each in its own lane
+  let lanes = 0;
+  const gutter = start - (pad + GUTTER) / 2;
+  const level = (a: number, c: number): [number, number] => (axis === 0 ? [a, c] : [c, a]);
+  for (const l of shape.links) {
+    const a = out.spots.get(l.from),
+      b = out.spots.get(l.to);
+    if (!a || !b || l.from === l.to) continue;
+    const key = viaKey(l.from, l.to),
+      band = bandOf.get(l.from) as number;
+    if (band === bandOf.get(l.to)) {
+      const bends = inner.via.get(key);
+      if (bends)
+        out.via.set(
+          key,
+          bends.map((p) => moved(p, band)),
+        );
+      continue;
+    }
+    const way = Math.sign(b[axis] - a[axis]) || 1;
+    const stepA = a[axis] + way * (deepest(a[axis]) / 2 + STEP_OUT),
+      stepB = b[axis] - way * (deepest(b[axis]) / 2 + STEP_OUT);
+    const g = gutter + ((lanes++ % 5) - 2) * GUTTER_STEP;
+    out.via.set(key, [level(stepA, a[across]), level(stepA, g), level(stepB, g), level(stepB, b[across])]);
+    out.kept.add(key);
   }
   return out;
 }
