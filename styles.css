@@ -161,6 +161,7 @@
   .thoughtknot-proposal.is-sheet,
   .thoughtknot-details.is-sheet,
   .thoughtknot-viewport > .thoughtknot-pointer,
+  .thoughtknot-over-panels,
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
@@ -181,15 +182,15 @@
   margin: 0;
   padding: var(--gn-space-1) var(--gn-space-2);
 }
-.thoughtknot-view > .thoughtknot-problems,
-.thoughtknot-view > .thoughtknot-details {
+.thoughtknot-view > :is(.thoughtknot-problems, .thoughtknot-details),
+.thoughtknot-over-panels > .thoughtknot-problems {
   margin: 0;
   border: 0;
   border-radius: 0;
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-.thoughtknot-view > .thoughtknot-problems {
+.thoughtknot-over-panels > .thoughtknot-problems {
   border-top: 0;
   border-bottom: 1px solid var(--gn-border);
   background: var(--gn-bg-alt);
@@ -314,9 +315,27 @@
 .thoughtknot-svg g.thoughtknot-hot > text {
   text-decoration: underline;
 }
+/* The panels the bar opens lie over the drawing (spec §25, panels_over_drawing). They are the View menu, Find, the
+   filter, Diagram type's lists, the problems and Export. Their layer sits just above the drawing and takes no room, so opening
+   one moves nothing, and every control stays on screen. A panel longer than the drawing scrolls inside it. */
+.thoughtknot-view > .thoughtknot-over {
+  position: relative;
+  z-index: 4;
+  height: 0;
+}
+.thoughtknot-over-panels {
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  max-height: var(--thoughtknot-room, 60vh);
+  overflow-y: auto;
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-l);
+}
 /* Untangling (spec §25): the banner over a filtered drawing, the search row, the legend of kinds and links, and what a
    thing's details offer. Every control is a 44-point target; what a legend line does is said in words as well as shown. */
-.thoughtknot-view > :is(.thoughtknot-untangle, .thoughtknot-find, .thoughtknot-filter) {
+.thoughtknot-view > .thoughtknot-untangle,
+.thoughtknot-over-panels > :is(.thoughtknot-find, .thoughtknot-filter) {
   margin: 0;
   border-top: 1px solid var(--gn-border);
   padding: var(--gn-space-2) var(--gn-space-3);
@@ -425,7 +444,7 @@
    right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it. It
    never does so on a link in focus, highlighted or selected. It is paint only, as focus and the highlight are. So
    nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
-.thoughtknot-view > .thoughtknot-view-menu {
+.thoughtknot-over-panels > .thoughtknot-view-menu {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
   gap: var(--gn-space-1) var(--gn-space-4);

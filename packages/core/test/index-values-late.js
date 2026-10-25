@@ -114,6 +114,7 @@ export const VALUES_LATE = [
   'tooLarge',
   'transitionAltitude',
   'translationProblems',
+  'trunksOf',
   'typeFits',
   'typeSuggestions',
   'underStrictness',

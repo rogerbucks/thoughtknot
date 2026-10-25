@@ -119,3 +119,41 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     mode === 'note' ? button(bar, word('bar.show-source'), 'code', () => source && on.toggleSource(source)) : null;
   return { editButton, editing, source, space, types: { bar, before: space ?? full } };
 }
+
+/** The panels the bar opens, by their class: each lies over the drawing (panels_over_drawing). */
+const OVER = [
+  'thoughtknot-problems',
+  'thoughtknot-view-menu',
+  'thoughtknot-find',
+  'thoughtknot-filter',
+  'thoughtknot-type-list',
+  'thoughtknot-view-list',
+];
+
+/**
+ * Puts the panels the bar opens in one layer just above the card's drawing, `viewport`. Export opens there too
+ * (export-form.ts). It stops watching the drawing's size as the `card` goes. The layer takes no room, so a panel opened moves nothing. It lies over the drawing, and
+ * scrolls inside it when longer (Roger, 25 Oct 2026: "Suggest panels overlay the main view and do not move other
+ * elements around"). Gives back the drawing.
+ */
+export function overDrawing(
+  root: HTMLElement,
+  viewport: HTMLElement,
+  card: { register: (stop: () => void) => void },
+): HTMLElement {
+  const layer = root.createDiv({ cls: 'thoughtknot-over' });
+  root.insertBefore(layer, viewport);
+  const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
+  for (const el of Array.from(root.children))
+    if (OVER.some((cls) => el.classList.contains(cls))) panels.appendChild(el);
+  // as tall as the drawing at most, kept as it changes size
+  const room = () =>
+    viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });
+  room();
+  if (typeof ResizeObserver !== 'undefined') {
+    const watch = new ResizeObserver(room);
+    watch.observe(viewport);
+    card.register(() => watch.disconnect());
+  }
+  return viewport;
+}

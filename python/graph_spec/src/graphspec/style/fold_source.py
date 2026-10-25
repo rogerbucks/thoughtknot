@@ -79,14 +79,18 @@ def folded_source(dot: str, plan: Mapping | None) -> str:
             continue
         ends = (box.get(m.group(1), m.group(1)), box.get(m.group(2), m.group(2)))
         drawn[n] = {"n": n, "from": ends[0], "to": ends[1], "attrs": m.group(3)}
-    # two or more links from one group to another, in the order of their first: a trunk
+    # two or more links from one group to another, in the order of their first: a trunk, named
+    # by its two groups' labels. A bundle opened again ("unmerged") stays apart.
     pairs: dict[str, list[dict]] = {}
+    unmerged = set(plan.get("unmerged", []))
     if plan["merge"]:
         for link in drawn.values():
             a, b = group_of.get(link["from"]), group_of.get(link["to"])
             if a is None or b is None or a == b:
                 continue
-            pairs.setdefault(f"{a}>{b}", []).append(link)
+            bundle = f"{plan['groups'][a][0]}\n{plan['groups'][b][0]}"
+            if bundle not in unmerged:
+                pairs.setdefault(bundle, []).append(link)
     trunks = [ls for ls in pairs.values() if len(ls) > 1]
     trunk_of = {link["n"]: t + 1 for t, ls in enumerate(trunks) for link in ls}
     boxes = [
