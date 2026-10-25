@@ -11,6 +11,7 @@
 import { curveOf } from './direct-curve.ts';
 import type { Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
+import type { DrawMark } from './drawing-marks.ts';
 
 /** How much room a link keeps from a box it passes, in pixels. */
 export const CLEARANCE = 10;
@@ -294,4 +295,71 @@ export function trunkEnds(boxes: ReadonlyMap<string, Placed>, links: readonly { 
     p.y = y;
     delete p.inside;
   }
+}
+
+/** The room a group keeps round its things, in pixels, once it hugs them. */
+export const HUG = 8;
+
+/**
+ * Each group of `groups` drawn just round what it holds, never bigger than it was (untangle_group_hug). It holds its
+ * things of `boxes` and the groups inside it, HUG apart. `heads` gives, by a group's id, the room its name takes above its
+ * things and the least width that name needs. The smallest group goes first, so a group round it hugs it as drawn.
+ */
+export function hug(
+  boxes: Iterable<Placed>,
+  groups: ReadonlyMap<string, Edges>,
+  heads: ReadonlyMap<string, readonly [number, number]>,
+): void {
+  const within = (p: Edges, q: Edges) => p !== q && q.x0 <= p.x0 && q.y0 <= p.y0 && p.x1 <= q.x1 && p.y1 <= q.y1;
+  const all = [...boxes];
+  const area = (g: Edges) => (g.x1 - g.x0) * (g.y1 - g.y0);
+  const order = [...groups].sort(([, p], [, q]) => area(p) - area(q));
+  const inner = new Map(order.map(([, g]) => [g, order.filter(([, c]) => within(c, g)).map(([, c]) => c)]));
+  for (const [id, g] of order) {
+    const held: Edges[] = [
+      ...all
+        .filter((b) => b.inside === g)
+        .map((b) => ({ x0: b.x - b.hw, y0: b.y - b.hh, x1: b.x + b.hw, y1: b.y + b.hh })),
+      ...(inner.get(g) ?? []),
+    ];
+    if (!held.length) continue;
+    const [top, least] = heads.get(id) ?? [HUG, 0];
+    let x0 = Math.max(g.x0, Math.min(...held.map((e) => e.x0)) - HUG),
+      x1 = Math.min(g.x1, Math.max(...held.map((e) => e.x1)) + HUG);
+    // wide enough for its name, about its middle, as far as it was wide
+    const short = least - (x1 - x0);
+    if (short > 0) {
+      x0 = Math.max(g.x0, x0 - short / 2);
+      x1 = Math.min(g.x1, x0 + least);
+    }
+    Object.assign(g, {
+      x0,
+      y0: Math.max(g.y0, Math.min(...held.map((e) => e.y0)) - top),
+      x1,
+      y1: Math.min(g.y1, Math.max(...held.map((e) => e.y1)) + HUG),
+    });
+  }
+}
+
+/** The mark `m` of a group drawn at `was`, moved to where it is drawn `now`: its outline, or its name, kept centred. */
+export function hugged(m: DrawMark, was: Edges, now: Edges): DrawMark {
+  const midWas = (was.x0 + was.x1) / 2,
+    midNow = (now.x0 + now.x1) / 2,
+    upWas = (was.y0 + was.y1) / 2;
+  if (m.kind === 'label') return { ...m, x: m.x + midNow - midWas, y: m.y + now.y0 - was.y0 };
+  if (m.kind !== 'group') return m;
+  // each point of its outline keeps its place from the nearest corner
+  const at = ([x, y]: MarkPoint): MarkPoint => [
+    x < midWas ? x + now.x0 - was.x0 : x + now.x1 - was.x1,
+    y < upWas ? y + now.y0 - was.y0 : y + now.y1 - was.y1,
+  ];
+  const outline = m.outline && { ...m.outline, points: m.outline.points.map(at) };
+  return {
+    ...m,
+    x: now.x0,
+    y: now.y0,
+    width: now.x1 - now.x0,
+    height: now.y1 - now.y0,
+    ...(outline ? { outline } : {}),
+  };
 }

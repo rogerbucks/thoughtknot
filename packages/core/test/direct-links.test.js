@@ -380,3 +380,37 @@ test('drawn direct, each bundle runs from just beside one group to just beside t
     assert.deepEqual(inside, [], `${t.from} runs through no group`);
   }
 });
+
+// proves: untangle_group_hug
+test('drawn direct, each group hugs its things, its name just above them', () => {
+  const { cases } = JSON.parse(
+    readFileSync(new URL('../../../python/graph_spec/tests/direct_cases.json', import.meta.url), 'utf8'),
+  );
+  const laid = engine.marks(cases.find((c) => c.name.startsWith('three teams with groups found')).dot);
+  const drawn = directLinks(laid).marks;
+  const area = (g) => g.width * g.height;
+  const groups = drawn.filter((m) => m.kind === 'group');
+  for (const g of groups) {
+    const things = drawn.filter(
+      (m) =>
+        m.kind === 'box' &&
+        m.role === 'thing' &&
+        !/^trunk/.test(m.of ?? '') &&
+        m.x >= g.x &&
+        m.y >= g.y &&
+        m.x + m.width <= g.x + g.width &&
+        m.y + m.height <= g.y + g.height,
+    );
+    assert.ok(things.length, `${g.id} holds its things`);
+    const left = Math.min(...things.map((b) => b.x)),
+      right = Math.max(...things.map((b) => b.x + b.width)),
+      top = Math.min(...things.map((b) => b.y)),
+      bottom = Math.max(...things.map((b) => b.y + b.height));
+    assert.ok(left - g.x <= 8.5 && g.x + g.width - right <= 8.5, `${g.id} hugs its things side to side`);
+    assert.ok(g.y + g.height - bottom <= 8.5, `${g.id} hugs its things below`);
+    const name = drawn.find((m) => m.id === `l:${g.id}`);
+    assert.ok(name.y > g.y && name.y <= top - 7.5 && top - name.y <= 9, `${g.id}'s name sits just above its things`);
+  }
+  const before = laid.marks.filter((m) => m.kind === 'group').reduce((n, g) => n + area(g), 0);
+  assert.ok(groups.reduce((n, g) => n + area(g), 0) < before, 'the groups take less room than Graphviz gave them');
+});

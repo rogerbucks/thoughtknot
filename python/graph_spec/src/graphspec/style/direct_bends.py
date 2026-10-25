@@ -12,6 +12,7 @@ tries each again. Within a budget, so a big graph stays quick."""
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 import re
 
 from graphspec.style.direct_curve import Placed, curve_of, hypot
@@ -304,3 +305,67 @@ def trunk_ends(boxes: dict[str, Placed], links: list[dict]) -> None:
         spots.append((p, cx + ux * reach, cy + uy * reach))
     for p, x, y in spots:
         p.x, p.y, p.inside = x, y, None
+
+
+# The room a group keeps round its things, in pixels, once it hugs them.
+HUG = 8
+
+
+def hug(
+    boxes: Iterable[Placed], groups: dict[str, list[float]], heads: dict[str, tuple[float, float]]
+) -> None:
+    """Each group of `groups` drawn just round what it holds, never bigger than it was
+    (untangle_group_hug), as the core's hug does. It holds its things of `boxes` and the groups
+    inside it, HUG apart. `heads` gives, by a group's id, the room its name takes above its things
+    and the least width that name needs. The smallest group goes first, so a group round it hugs
+    it."""
+
+    def within(p, q) -> bool:
+        return p is not q and q[0] <= p[0] and q[1] <= p[1] and p[2] <= q[2] and p[3] <= q[3]
+
+    every = list(boxes)
+    order = sorted(groups.items(), key=lambda kv: (kv[1][2] - kv[1][0]) * (kv[1][3] - kv[1][1]))
+    inner = {id(g): [c for _, c in order if within(c, g)] for _, g in order}
+    for gid, g in order:
+        held = [
+            [b.x - b.hw, b.y - b.hh, b.x + b.hw, b.y + b.hh] for b in every if b.inside is g
+        ] + inner[id(g)]
+        if not held:
+            continue
+        top, least = heads.get(gid, (HUG, 0))
+        x0 = max(g[0], min(e[0] for e in held) - HUG)
+        x1 = min(g[2], max(e[2] for e in held) + HUG)
+        # wide enough for its name, about its middle, as far as it was wide
+        short = least - (x1 - x0)
+        if short > 0:
+            x0 = max(g[0], x0 - short / 2)
+            x1 = min(g[2], x0 + least)
+        g[:] = [
+            x0,
+            max(g[1], min(e[1] for e in held) - top),
+            x1,
+            min(g[3], max(e[3] for e in held) + HUG),
+        ]
+
+
+def hugged(m: dict, was: list[float], now: list[float]) -> dict:
+    """The mark `m` of a group drawn at `was`, moved to where it is drawn `now`: its outline, or
+    its name, kept centred."""
+    mid_was, mid_now, up_was = (was[0] + was[2]) / 2, (now[0] + now[2]) / 2, (was[1] + was[3]) / 2
+    if m["kind"] == "label":
+        return {**m, "x": m["x"] + mid_now - mid_was, "y": m["y"] + now[1] - was[1]}
+    if m["kind"] != "group":
+        return m
+
+    # each point of its outline keeps its place from the nearest corner
+    def at(p):
+        x, y = p
+        return [
+            x + now[0] - was[0] if x < mid_was else x + now[2] - was[2],
+            y + now[1] - was[1] if y < up_was else y + now[3] - was[3],
+        ]
+
+    out = {**m, "x": now[0], "y": now[1], "width": now[2] - now[0], "height": now[3] - now[1]}
+    if m.get("outline"):
+        out["outline"] = {**m["outline"], "points": [at(p) for p in m["outline"]["points"]]}
+    return out
