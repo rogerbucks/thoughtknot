@@ -135,6 +135,48 @@ describe('groups as boxes', () => {
     for (const [, y] of lanes) assert.ok(y > top - 60, 'never far out round the drawing');
   });
 
+  // proves: layout_screen_shaped
+  test('a group of many things in one row folds into bands, and so does the whole, about a screen’s shape', () => {
+    const many = Array.from({ length: 60 }, (_, i) => `t${i}`);
+    const star = shapeOf(['hub', ...many, 'lone'], [...many.map((k) => ['hub', k]), ['t0', 'lone']]);
+    const big = new Map(['hub', 'lone', ...many].map((k) => [k, [100, 40]]));
+    const span = (spots, boxes) => {
+      const xs = [...spots.values()].map(([x]) => x),
+        ys = [...spots.values()].map(([, y]) => y);
+      for (const b of boxes)
+        (xs.push(b.x - b.width / 2, b.x + b.width / 2), ys.push(b.y - b.height / 2, b.y + b.height / 2));
+      return (Math.max(...xs) - Math.min(...xs) + 100) / (Math.max(...ys) - Math.min(...ys) + 40);
+    };
+    // the whole: a hub and sixty things, one long row unfolded
+    const whole = groupedLayered(star, big, [{ id: 'g', label: 'G', members: ['lone'] }], 'LR');
+    assert.ok(
+      span(whole.spots, whole.boxes) > 0.8,
+      `the whole is ${span(whole.spots, whole.boxes).toFixed(2)} wide to high`,
+    );
+    // a group of them, beside a few lone things
+    const grouped = groupedLayered(star, big, [{ id: 'g', label: 'G', members: many }], 'LR');
+    const b = grouped.boxes[0];
+    assert.ok(b.width / b.height > 0.5, `the group is ${(b.width / b.height).toFixed(2)} wide to high`);
+    // no link runs over a box it does not join
+    for (const laid of [whole, grouped])
+      for (const l of star.links) {
+        const path = [laid.spots.get(l.from), ...(laid.via.get(`${l.from}\n${l.to}`) ?? []), laid.spots.get(l.to)];
+        for (const [k, [x, y]] of laid.spots) {
+          if (k === l.from || k === l.to) continue;
+          const over = path.slice(1).some(([px, py], i) => {
+            const [qx, qy] = path[i];
+            return (
+              Math.min(px, qx) < x + 48 &&
+              Math.max(px, qx) > x - 48 &&
+              Math.min(py, qy) < y + 18 &&
+              Math.max(py, qy) > y - 18
+            );
+          });
+          assert.ok(!over, `${l.from} to ${l.to} runs clear of ${k}`);
+        }
+      }
+  });
+
   // proves: layout_links_past_groups
   test('a link past a group runs through the gap inside its border, never round its far side', () => {
     const past = shapeOf(
