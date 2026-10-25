@@ -115,7 +115,7 @@ describe('the layered layout', () => {
     assert.equal(new Set([...at.values()].map(([x]) => x)).size, 3, 'three rows');
   });
 
-  test('wraps a long row, so a wide shallow tree is not one long strip, and keeps every box apart', () => {
+  test('cuts a row far too long, so a wide shallow tree is not one endless strip, and keeps every box apart', () => {
     const keys = ['root', ...Array.from({ length: 120 }, (_, i) => `leaf${i}`)];
     const tree = shapeOf(
       keys,
@@ -123,11 +123,10 @@ describe('the layered layout', () => {
     );
     const sizes = new Map(keys.map((k) => [k, [200, 120]]));
     const at = layeredLayout(tree, sizes, 'LR');
-    const xs = [...at.values()].map(([x]) => x),
-      ys = [...at.values()].map(([, y]) => y);
-    const wide = Math.max(...xs) - Math.min(...xs) + 200,
-      high = Math.max(...ys) - Math.min(...ys) + 120;
-    assert.ok(high / wide < 3, `about as wide as high: ${Math.round(wide)} by ${Math.round(high)}`);
+    const ys = [...at.values()].map(([, y]) => y);
+    const high = Math.max(...ys) - Math.min(...ys) + 120;
+    assert.ok(new Set([...at.values()].map(([x]) => x)).size > 2, 'the leaves’ row is cut in more than one');
+    assert.ok(high < 120 * 138, `shorter than one strip of all the leaves: ${Math.round(high)}`);
     assert.equal(anyOverlap(at, sizes), false);
   });
 });

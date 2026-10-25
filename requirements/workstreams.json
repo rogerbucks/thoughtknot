@@ -1210,6 +1210,8 @@
     "requirements": [
       "layout_never_text",
       "layout_groups_as_boxes",
+      "layout_links_routed",
+      "layout_readability_scored",
       "layout_work_counted",
       "layout_real_fixtures",
       "layout_strategy_variables",

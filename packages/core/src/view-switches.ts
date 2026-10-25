@@ -113,8 +113,7 @@ const FOUND_AT = { block: -1, line: 0, id: 'found' };
  */
 function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly FocusEdge[]) {
   const written = drawnGroups(d.nudges ?? [], keys, d.diagram);
-  // our own engine spreads a network into its groups by itself, so it finds none (layout_own_engine)
-  if (written.length || d.diagram || d.engine === 'own') return { groups: written, found: [] as Nudge[] };
+  if (written.length || d.diagram) return { groups: written, found: [] as Nudge[] };
   const text = new Map(d.boxes.map((b) => [b.key, b.text]));
   const groups = foundGroups(keys, edges, (k) => text.get(k) ?? k);
   const found = groups.flatMap(([group, things]) =>
@@ -195,7 +194,7 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
-    const { groups, found } = groupsOf(this.switches.engine ? { ...d, engine: 'own' } : d, keys, edges);
+    const { groups, found } = groupsOf(d, keys, edges);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
     this.plan = foldPlan(keys, edges, groups, {
