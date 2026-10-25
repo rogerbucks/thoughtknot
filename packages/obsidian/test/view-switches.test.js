@@ -158,6 +158,46 @@ describe('the View menu', () => {
   });
 });
 
+describe('group by', () => {
+  // proves: untangle_group_by
+  test('the View menu groups the things by a property, by kind, or not at all, and back as written', async () => {
+    // Roger, 24 Oct 2026: "Group by" a property, or none, in 2D and 3D alike
+    const roles = KIT.replace(/\(ann:Person \{name: 'Ann'\}\)/, "(ann:Person {name: 'Ann', role: 'lead'})")
+      .replace(/\(bob:Person \{name: 'Bob'\}\)/, "(bob:Person {name: 'Bob', role: 'lead'})")
+      .replace(/\(cy:Person \{name: 'Cy'\}\)/, "(cy:Person {name: 'Cy', role: 'crew'})");
+    const { env, el } = await card(noteOf(roles, GROUPS));
+    try {
+      const clusters = () =>
+        el
+          .querySelectorAll('g.cluster')
+          .map((g) => g.textContent.trim())
+          .sort();
+      await until(() => clusters().length === 2);
+      assert.deepEqual(clusters(), ['Helpers', 'Makers'], 'as written, to start');
+      labelled(el, 'View').click();
+      const list = el.querySelector('.thoughtknot-group-by select');
+      assert.match(el.querySelector('.thoughtknot-group-by').textContent, /^Group by/);
+      assert.deepEqual(
+        list.querySelectorAll('option').map((o) => o.textContent),
+        ['As written or found', 'No groups', 'Kind', 'role'],
+      );
+      list.value = 'role';
+      list.dispatch('change');
+      await until(() => clusters().includes('lead'));
+      assert.deepEqual(clusters(), ['crew', 'lead']);
+      list.value = ':none';
+      list.dispatch('change');
+      await until(() => clusters().length === 0);
+      list.value = '';
+      list.dispatch('change');
+      await until(() => clusters().length === 2);
+      assert.deepEqual(clusters(), ['Helpers', 'Makers'], 'back as written');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('busy hubs folded', () => {
   test('a busy hub is drawn with its links folded into one stub marked with their count, a button to open them', async () => {
     const { env, el } = await card(NOTE, FOLDED);

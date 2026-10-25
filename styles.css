@@ -459,6 +459,15 @@
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
+/* Group by (untangle_group_by): its name, then the list of what the things can be grouped by */
+.thoughtknot-view-menu > .thoughtknot-group-by {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: 0 var(--gn-space-2);
+  min-height: 44px;
+  color: var(--gn-text-normal);
+}
 .thoughtknot-view-menu button.thoughtknot-switch {
   display: flex;
   align-items: center;
