@@ -60,9 +60,10 @@ const DOUBLE_TAP = 350;
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
 
-/** How the view opens: as cards or in 3D. */
+/** How the view opens: as cards or in 3D; and whether each thing stays where its diagram type drew it (space_follows_type). */
 export interface SpaceOptions {
   cards?: boolean;
+  asDrawn?: boolean;
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -117,7 +118,7 @@ export async function openSpaceView(
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
-    by === 'cards' ? spreadSpace(marks, undefined, true).space : by ? spaceOf(marks, by) : spreadSpace(marks).space;
+    by === 'cards' || !by ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn).space : spaceOf(marks, by);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
