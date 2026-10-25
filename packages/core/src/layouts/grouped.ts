@@ -53,7 +53,9 @@ export function groupedLayered(
   const groupOf = new Map<string, string>();
   for (const g of groups) for (const k of g.members) if (known.has(k) && !groupOf.has(k)) groupOf.set(k, g.id);
   const used = groups.filter((g) => g.members.some((k) => groupOf.get(k) === g.id));
-  if (!used.length) return { ...layered(shape, sizes, rankdir, previous, options), boxes: [] };
+  // with no groups, the rows alone, folded when far from a screen's shape
+  if (!used.length)
+    return { ...folded(layered(shape, sizes, rankdir, previous, options), shape, sizes, rankdir, PAD), boxes: [] };
   // each group's own rows, and the box they need
   const inside = new Map<
     string,
@@ -99,6 +101,38 @@ export function groupedLayered(
   };
   // the groups and lone things folded too, when the whole is far from a screen's shape
   const top = folded(layered(outer, outerSizes, rankdir, undefined, options), outer, outerSizes, rankdir, PAD);
+  // each group's things ordered by where their links outside it go, so fewer links cross on their way out. A thing
+  // with none keeps its place. The new order is kept only where it fits the box already made for the group
+  const side = rankdir === 'LR' ? 1 : 0;
+  if (!previous)
+    for (const [id, it] of inside) {
+      const centre = (top.spots.get(`group:${id}`) as [number, number])[side],
+        mid = (it.bounds[side] + (it.bounds[side + 2] as number)) / 2;
+      const toward = new Map<string, number[]>();
+      for (const l of shape.links)
+        for (const [k, o] of [
+          [l.from, l.to],
+          [l.to, l.from],
+        ] as const) {
+          const p = groupOf.get(k) === id && groupOf.get(o) !== id ? top.spots.get(node(o)) : undefined;
+          if (p) toward.set(k, [...(toward.get(k) ?? []), p[side]]);
+        }
+      if (!toward.size) continue;
+      const hint = new Map<string, number[]>();
+      for (const [k, p] of it.inner.spots) {
+        const ws = toward.get(k),
+          at = [0, 0];
+        at[side] = ws ? ws.reduce((t, v) => t + v, 0) / ws.length : centre + p[side] - mid;
+        hint.set(k, at);
+      }
+      const inner = folded(layered(it.sub, sizes, rankdir, hint, options), it.sub, sizes, rankdir, pad, most);
+      const bounds = boundsOf(inner, sizes);
+      if (
+        bounds[2] - bounds[0] <= it.bounds[2] - it.bounds[0] + 1 &&
+        bounds[3] - bounds[1] <= it.bounds[3] - it.bounds[1] + 1
+      )
+        inside.set(id, { ...it, inner, bounds });
+    }
   const out: Layered & { boxes: GroupBox[] } = { spots: new Map(), via: new Map(), boxes: [] };
   for (const t of shape.things) if (!groupOf.has(t.key)) out.spots.set(t.key, top.spots.get(t.key) as [number, number]);
   for (const g of used) {
