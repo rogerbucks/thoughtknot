@@ -98,6 +98,8 @@ export const KEPT = {
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
   'packages/core/src/display/host-contract.ts': '*',
   'packages/core/src/display/panel-contract.ts': '*',
+  // the comment carrying the layout options in the source our engine is given, read by the engine, never by a person
+  'packages/core/src/layouts/own-draw.ts': ['  // layout options {}'],
   // the SQL the local store runs, read by SQLite and never by a person (mesh-index-backends.ts)
   'packages/core/src/mesh-index-backends.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app
