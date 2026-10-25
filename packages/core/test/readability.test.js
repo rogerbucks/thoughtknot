@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { routedCurve } from '../src/layouts/routed-curve.ts';
 import { groupedLayered } from '../src/layouts/grouped.ts';
 import { layered } from '../src/layouts/layered.ts';
+import { folded } from '../src/layouts/folded-rows.ts';
 import { readability } from '../src/layouts/readability.ts';
 import { ownMarks, groupsIn } from '../src/layouts/own-draw.ts';
 import { directLinks } from '../src/direct-links.ts';
@@ -245,6 +246,24 @@ describe('groups as boxes', () => {
     }
   });
 
+  // proves: layout_screen_shaped
+  test('each band starts where the band before it ends, so a band of only the first rows leaves no empty room', () => {
+    // twenty things in the first row, high up; a long chain of twenty in rows across, lower down
+    const first = Array.from({ length: 20 }, (_, i) => `a${i}`),
+      chain = Array.from({ length: 20 }, (_, i) => `b${i}`);
+    const shape = shapeOf(
+      [...first, ...chain],
+      chain.slice(1).map((k, i) => [chain[i], k]),
+    );
+    const sizes = new Map([...first, ...chain].map((k) => [k, [100, 20]]));
+    const spots = new Map([...first.map((k, i) => [k, [0, i * 30]]), ...chain.map((k, i) => [k, [i * 150, 1300]])]);
+    const out = folded({ spots, via: new Map() }, shape, sizes, 'LR', 16, 700);
+    const right = Math.max(...first.map((k) => out.spots.get(k)[0])) + 50,
+      left = Math.min(...chain.map((k) => out.spots.get(k)[0])) - 50;
+    assert.ok(left > right, 'the chain is in the band after the first row');
+    assert.ok(left - right <= 57, `the room between the bands is ${left - right}`);
+  });
+
   // proves: layout_links_past_groups
   test('a link past a group runs through the gap inside its border, never round its far side', () => {
     const past = shapeOf(
@@ -383,5 +402,8 @@ describe('the readability scores', () => {
     const { space } = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
     const shape = space.width / space.height;
     assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);
+    // each group drawn round its things, never inside out
+    for (const m of ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)).marks)
+      if (m.kind === 'group') assert.ok(m.width > 0 && m.height > 0, `${m.id} is ${m.width}x${m.height}`);
   });
 });

@@ -225,8 +225,8 @@ export function pointerTo(box: Bounds, view: View, viewport: Size, clear: number
   return { x: mx + dx * reach, y: my + dy * reach, angle: (Math.atan2(dy, dx) * 180) / Math.PI };
 }
 
-/** The most of the visible screen's height the sheet takes when restored: a share, so it never fills the screen. */
-export const SHEET_SHARE = 0.45;
+/** The most of the visible screen's height the sheet takes when restored: a third, so the drawing keeps most (F6). */
+export const SHEET_SHARE = 1 / 3;
 
 /** The height kept above the sheet for the chosen thing and some of the drawing round it, in pixels. */
 export const ABOVE_SHEET = 160;

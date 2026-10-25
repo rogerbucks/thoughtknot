@@ -234,7 +234,7 @@ describe('how much the sheet may take of the screen', () => {
   test('never more than its share, and always room above it for the thing and some of the drawing', () => {
     assert.equal(sheetLimit(800), 800 * SHEET_SHARE);
     assert.ok(sheetLimit(800) < 800);
-    assert.equal(sheetLimit(250), 250 - ABOVE_SHEET);
+    assert.equal(sheetLimit(220), 220 - ABOVE_SHEET);
     assert.ok(sheetLimit(100) > 0, 'on the smallest screen, still a bar');
   });
 
