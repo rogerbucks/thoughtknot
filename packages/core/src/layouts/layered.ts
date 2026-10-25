@@ -49,6 +49,9 @@ export interface Layered {
   via: Map<string, [number, number][]>;
 }
 
+/** The type of a link that stands for a trunk (own-engine.ts): it takes stand-ins of its own, shared with no other. */
+export const TRUNK_LINK = 'trunk';
+
 /** The key of a link from `from` to `to`, for `Layered.via`. */
 export const viaKey = (from: string, to: string): string => `${from}\n${to}`;
 
@@ -113,12 +116,14 @@ export function layered(
   const across = rankdir === 'LR' ? 1 : 0; // which size runs across a row
   const sizeOf = (i: number): Size => sizes.get(keys[i] as string) ?? [120, 40];
   const links: number[][] = keys.map(() => []);
-  const seen = new Set<string>();
+  const seen = new Set<string>(),
+    alone = new Set<string>();
   for (const l of shape.links) {
     const a = index.get(l.from),
       b = index.get(l.to);
     if (a === undefined || b === undefined || a === b || seen.has(`${a} ${b}`)) continue;
     seen.add(`${a} ${b}`);
+    if (l.type === TRUNK_LINK) alone.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
   const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, gap, rowGap);
@@ -132,11 +137,11 @@ export function layered(
       let from = v;
       const via: number[] = [];
       for (let r = (rows[v] as number) + 1; r < (rows[w] as number); r++) {
-        const known = shared.get(`${v} ${r}`);
+        const known = alone.has(`${v} ${w}`) ? undefined : shared.get(`${v} ${r}`);
         if (known === undefined) {
           items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
           (items[from] as Item).down.push(items.length - 1);
-          shared.set(`${v} ${r}`, items.length - 1);
+          if (!alone.has(`${v} ${w}`)) shared.set(`${v} ${r}`, items.length - 1);
         }
         from = known ?? items.length - 1;
         via.push(from);

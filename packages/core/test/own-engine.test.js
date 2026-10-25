@@ -5,7 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { stressLayout } from '../src/layouts/stress.ts';
 import { layeredLayout } from '../src/layouts/layered.ts';
-import { apart, pickLayout } from '../src/layouts/own-engine.ts';
+import { apart, ownSpots, pickLayout } from '../src/layouts/own-engine.ts';
 import { ownable, ownSource } from '../src/layouts/own-draw.ts';
 import { readNote } from '../src/drawing.ts';
 import { directions, draw } from '../src/render.ts';
@@ -186,6 +186,34 @@ describe('picking a layout', () => {
     const sizes = new Map([...at.keys()].map((k) => [k, [100, 40]]));
     apart(at, sizes);
     assert.equal(anyOverlap(at, sizes), false);
+  });
+});
+
+describe('a trunk', () => {
+  const box = (of, width = 120) => ({ kind: 'box', id: of, role: 'thing', of, x: 0, y: 0, width, height: 40 });
+  const link = (from, to) => ({ kind: 'link', id: `${from} ${to}`, from, to, points: [], curve: false });
+
+  // proves: layout_trunk_one_link
+  test('is laid out as the one link it stands for, its two dots on that link’s way, in no rows of their own', () => {
+    // one group to another two rows on, their three links merged into a trunk (fold-source.ts)
+    const marks = [
+      ...['group: 1', 'group: 2', 'group: 3'].map((k) => box(k)),
+      box('trunk: 1 in', 8),
+      box('trunk: 1 out', 8),
+      link('group: 1', 'group: 2'),
+      link('group: 2', 'group: 3'),
+      ...[1, 2, 3].map(() => link('group: 1', 'trunk: 1 in')),
+      link('trunk: 1 in', 'trunk: 1 out'),
+      ...[1, 2, 3].map(() => link('trunk: 1 out', 'group: 3')),
+    ];
+    const { spots, via } = ownSpots({ marks, space: { width: 0, height: 0 } }, 'LR');
+    const x = (k) => spots.get(k)[0];
+    // three rows, as if the trunk were one link, not five with a row for each dot
+    assert.ok(Math.abs(x('group: 3') - x('group: 2') - (x('group: 2') - x('group: 1'))) < 1, 'rows evenly apart');
+    assert.ok(x('group: 1') < x('trunk: 1 in') && x('trunk: 1 in') < x('trunk: 1 out'), 'its links meet past the first');
+    assert.ok(x('trunk: 1 out') < x('group: 3'), 'and part before the last');
+    // the trunk takes the bends between, round the row it skips
+    assert.ok(via.has('trunk: 1 in\ntrunk: 1 out'));
   });
 });
 
