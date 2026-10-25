@@ -39,8 +39,7 @@ export class GraphView extends Lifecycle {
   readonly o: ViewOptions; // what the card was given, behind the read-only gate; the plugin's tests reach it by this
   private zoom!: Zoom;
   private viewport!: HTMLElement;
-  /** The drawing: Graphviz's SVG, or, for a graph drawn as a table (§15), the table. */
-  private svg: SVGSVGElement | null = null;
+  private svg: SVGSVGElement | null = null; // the drawing: Graphviz's SVG; a graph drawn as a table has `table` (§15)
   private table: HTMLElement | null = null;
   /** Whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15). */
   private across = false;
@@ -68,7 +67,7 @@ export class GraphView extends Lifecycle {
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
-  private readonly spaces = new SpaceSwitch(
+  readonly spaces = new SpaceSwitch(
     () => this.svg,
     () => this.o.diagram?.choice,
   );
@@ -93,14 +92,15 @@ export class GraphView extends Lifecycle {
       card: this,
       draw: (el, close) =>
         new GraphView(el, {
-          ...this.place.forFull(this.o), // drawn again as a new type, it takes up where it was (§15)
+          ...this.place.forFull(this.o, this.spaces.mode()), // as a new type, it takes up where it was (§15, §53)
           drawn: this.drawn, // as laid out now, with the View menu's switches as they stand (§25)
           mode: 'full',
           onClose: close,
           readOnly: this.readOnly, // full screen opened in reading view is read-only too
         }),
-      closed: () => {
+      closed: (full) => {
         this.viewport.focus();
+        if (full instanceof GraphView) void this.spaces.show(full.spaces.mode()); // flat or in space, as left (§53)
         this.switching?.sync(); // a switch turned in full screen holds here too (§25)
       },
     });
@@ -272,7 +272,7 @@ export class GraphView extends Lifecycle {
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show());
-        void this.spaces.show(this.place.space() ?? null); // shown in space still, as the last card was (§53)
+        void this.spaces.show(this.place.space() ?? this.o.inSpace ?? null); // in space still, as the last card (§53)
       },
       () => !gone,
     );
