@@ -1245,5 +1245,22 @@
       "projection_semantic_zoom",
       "projection_spatial"
     ]
+  },
+  "VP1": {
+    "title": "View presets by need: saved, safe and portable",
+    "size": "M",
+    "requirements": [
+      "view_presets_saved",
+      "view_presets_by_need",
+      "view_presets_floor",
+      "view_presets_os_wins",
+      "view_presets_scoped",
+      "view_presets_portable",
+      "view_presets_predictable",
+      "view_focus_support",
+      "view_motion_safe",
+      "view_reading_support",
+      "view_presets_evidence"
+    ]
   }
 }
