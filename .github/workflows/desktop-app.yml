@@ -93,7 +93,15 @@ jobs:
         run: xvfb-run -a npm run test:ai -- test/standalone-app.test.js
       # the installers: a .dmg on macOS, an NSIS installer on Windows and a .deb on Linux. The .deb uses the system's
       # own WebKitGTK and carries none of it (licences/bundled.json, desktopBuildLibraries).
-      - run: cargo install tauri-cli --locked --version 2.12.4
+      # Compiling the installer tool from source took 4 to 10 minutes each night, so the binary is kept between runs, by the
+      # tool's version and the system. Only a run of main saves it (a pull request's cache stays its own).
+      - id: tauri-cli
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cargo/bin/cargo-tauri*
+          key: tauri-cli-2.12.4-${{ runner.os }}
+      - if: steps.tauri-cli.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --locked --version 2.12.4
       # Signed only off pull requests, where each system signs when all its keys are set (docs/app-signing.md). A
       # pull request's code could read the keys, so it builds unsigned and gets none. Windows is not signed (Roger,
       # 23 Oct 2026).

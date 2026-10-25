@@ -16,7 +16,7 @@ import { pictureSource } from './picture.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
-import { groupsIn, ownable, ownSource, ownSvg } from './layouts/own-draw.ts';
+import { groupsIn, optionsIn, ownable, ownSource, ownSvg } from './layouts/own-draw.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -101,9 +101,10 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // direct links (the default) are drawn again from where the boxes are, never along Graphviz's curves. So a large
   // one is laid out once, straight, and drawn whole: curving it after would lay it out twice for the same drawing
   const direct = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'direct');
-  // our own engine lays a graph out once, in the first direction: it picks rows or spread by the graph's shape
+  // our own engine picks rows or spread by the graph's shape. It tries each direction as Graphviz does, and the
+  // drawing that fits the note best is shown
   const ours = drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct');
-  const ways = only ? [only] : quick || ours ? STYLE.directions.slice(0, 1) : STYLE.directions;
+  const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
@@ -134,7 +135,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    if (ours && ownable(dot)) return { rankdir, dot: ownSource(dot), src, own: true };
+    if (ours && ownable(dot)) return { rankdir, dot: ownSource(dot, drawing.layoutOptions), src, own: true };
     if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
     return { rankdir, dot: direct ? quickSource(dot, STRAIGHT_FIRST) : quick ? quickSource(dot) : dot, src };
   });
@@ -181,7 +182,8 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   // our own engine places the boxes Graphviz measured (layout_own_engine); Graphviz's own layout where it cannot
   if (own && engine.placed) {
     const measured = engine.placed(dot);
-    if (!measured.layout?.lost) return ownSvg(measured, /rankdir=(\w+)/.exec(dot)?.[1] ?? 'LR', groupsIn(dot));
+    if (!measured.layout?.lost)
+      return ownSvg(measured, /rankdir=(\w+)/.exec(dot)?.[1] ?? 'LR', groupsIn(dot), optionsIn(dot));
   }
   // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
   if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);

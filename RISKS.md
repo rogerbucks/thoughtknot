@@ -1002,7 +1002,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** The tests of section 65 in packages/core/test/temporal-security.test.js, and the wave gate for Wave 13.
 
-## Done or accepted (41)
+## Done or accepted (42)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1047,3 +1047,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | LEGAL-2 | No privacy page the apps and the App Store can link to | done | #1062 |
 | LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |
 | SEC-18 | Tests that read a drawing with patterns that run slow | done | #1110; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-20 | The code scan read only the code, not the Python library or the workflows | done | #1367; kept out by `test/code-scan.test.js`, `scripts/code-scan.mjs`, `python/graph_spec/tests/test_graph_bidi.py` |

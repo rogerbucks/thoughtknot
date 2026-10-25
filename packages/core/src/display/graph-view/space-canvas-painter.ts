@@ -3,10 +3,28 @@
 // are painted, and how big, space-labels.ts picks.
 import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
 import type { ScreenCard, SpaceFrame } from '../../space-cards.ts';
+import { FACE_ROW } from '../../space-faces.ts';
+import type { FaceText } from '../../space-faces.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
+
+/** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
+const clear = (c: string) => !c || c === 'transparent' || /,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
+
+/**
+ * The colour seen behind `el`: its own background, or the first painted one of the elements round it. The system's page
+ * colour, `Canvas`, only when none is painted, as it can differ from the theme's.
+ */
+export function backgroundOf(el: Element): string {
+  const win = el.ownerDocument.defaultView;
+  for (let at: Element | null = el; at && win; at = at.parentElement) {
+    const c = win.getComputedStyle(at).backgroundColor;
+    if (!clear(c)) return c;
+  }
+  return 'Canvas';
+}
 
 /** A block's four top corners and four floor corners, as points of the space. */
 function cornersOf(b: Block): Vec3[] {
@@ -106,14 +124,18 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   };
 }
 
+/** How thick the picked thing's links are drawn in 3D, in pixels: a little thicker than the rest. */
+const STRONG = 2.5;
+
 /**
- * Paints `frame`'s arrowheads, its cards, then its labels, on `ctx`, already at their pixels (space-cards.ts). Arrowheads
- * are in their link's colour, edged with the page colour so they read where links meet. Labels have a halo of the page
- * colour so they read over blocks. The picked thing's ring, or its card's edge, is in `ink`.
+ * Paints `frame`'s picked links, its arrowheads, its cards, then its labels, on `ctx`, already at their pixels
+ * (space-cards.ts). Arrowheads are in their link's colour, edged with the page colour so they read where links meet.
+ * Labels have a halo of the page colour so they read over blocks. The picked thing's ring, or its card's edge, is in
+ * `ink`.
  */
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
-  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'>,
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong' | 'faces'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -124,6 +146,16 @@ export function paintSpaceLabels(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
+  // the picked thing's links, or the picked link, a little thicker, under the cards in front of them
+  ctx.lineWidth = STRONG;
+  for (const l of frame.strong ?? []) {
+    const line = paints(l.style).line;
+    if (!line || l.points.length < 2) continue;
+    ctx.beginPath();
+    l.points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.strokeStyle = line;
+    ctx.stroke();
+  }
   ctx.lineWidth = 1;
   for (const a of arrows) {
     const line = paints(a.style).line;
@@ -140,6 +172,8 @@ export function paintSpaceLabels(
   }
   // cards after the arrowheads, which sit at their edges: a card in front hides the arrowheads behind it
   paintCards(ctx, frame.cards, paints, halo, ink);
+  paintFaces(ctx, frame.faces ?? [], paints, ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   // the picked thing's ring: its ink edged both sides in the page colour, so it shows in either theme
   if (ring) {
     ctx.beginPath();
@@ -166,6 +200,32 @@ export function paintSpaceLabels(
     ctx.strokeText(l.text, l.x, l.y);
     ctx.fillStyle = text;
     ctx.fillText(l.text, l.x, l.y);
+  }
+}
+
+/**
+ * Paints each name on its face (space_text_on_face): laid along the face, edged in the thing's own colour, as in 2D.
+ * Each row is held to the face's width, so it never runs past its edge.
+ */
+function paintFaces(ctx: CanvasRenderingContext2D, faces: readonly FaceText[], paints: Paints, ratio: number) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const f of faces) {
+    const text = paints(f.style).text,
+      ground = paints(f.ground);
+    if (!text) continue;
+    const [ax, ay] = f.across,
+      [dx, dy] = f.down;
+    ctx.setTransform(ratio * ax, ratio * ay, ratio * dx, ratio * dy, ratio * f.x, ratio * f.y);
+    ctx.font = `${f.picked ? 'bold ' : ''}${f.size}px sans-serif`;
+    ctx.lineWidth = f.size / 5;
+    ctx.strokeStyle = ground.fill ?? ground.line ?? 'transparent';
+    f.rows.forEach((row, i) => {
+      const y = (i - (f.rows.length - 1) / 2) * f.size * FACE_ROW;
+      ctx.strokeText(row, 0, y, f.room);
+      ctx.fillStyle = text;
+      ctx.fillText(row, 0, y, f.room);
+    });
   }
 }
 

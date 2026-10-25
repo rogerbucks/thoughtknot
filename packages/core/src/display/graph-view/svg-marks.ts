@@ -45,7 +45,9 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     const { x, y, width, height } = boxOf(shape);
     const id = `g:${titleOf(g) || clusters.length}`;
     clusters.push({ id, x, y, width, height });
-    marks.push({ id, kind: 'group', style: styled(shape, g.querySelector('text')), x, y, width, height });
+    const text = g.querySelector('text'),
+      name = text?.textContent?.trim();
+    marks.push({ id, kind: 'group', style: styled(shape, text), x, y, width, height, ...(name ? { name } : {}) });
   }
   /** The smallest group holding the box from (`x`, `y`), `width` by `height`. */
   const holding = (x: number, y: number, width: number, height: number, not = '') => {
@@ -137,6 +139,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       ...(words ? { name: words } : {}),
       // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
       ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
+      // a bundle or a hub's stub is no link of the graph. It keeps the fold it opens, so a pick in 3D opens it (§25)
+      ...(g.getAttribute('data-fold') !== null ? { of: g.getAttribute('data-fold') ?? '' } : {}),
     });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };

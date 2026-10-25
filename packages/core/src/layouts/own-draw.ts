@@ -9,6 +9,8 @@ import { layoutSvg } from '../graphviz-svg.ts';
 import { colourToken } from '../graphviz-json.ts';
 import { MARGIN, ownSpots } from './own-engine.ts';
 import type { Group, GroupBox } from './grouped.ts';
+import { layoutOptions } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 
 /** A box line of the layout source: its indent and its key, before its attributes. */
 const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
@@ -59,8 +61,23 @@ export function groupsIn(dot: string): SourceGroup[] {
 export const ownable = (dot: string): boolean =>
   dot.split('\n').every((line) => !line.includes('subgraph cluster_') || GROUP_LINE.test(line));
 
-/** `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. */
-export function ownSource(dot: string): string {
+/** The line of a layout source that carries the options our engine lays it out by. */
+const OPTIONS_LINE = /^\s*\/\/ layout options (\{.*\})$/m;
+
+/** The options our engine lays out the source `dot` by: those `ownSource` wrote in, each kept in its range. */
+export function optionsIn(dot: string): LayoutOptions {
+  try {
+    return layoutOptions(JSON.parse(OPTIONS_LINE.exec(dot)?.[1] ?? '{}') as Partial<LayoutOptions>);
+  } catch {
+    return layoutOptions();
+  }
+}
+
+/**
+ * `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. `options`
+ * are written in as a comment, so a source laid out another way is another source, never one kept from before.
+ */
+export function ownSource(dot: string, options?: Partial<LayoutOptions>): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
     line.includes('->') || line.includes(' -- ')
@@ -71,7 +88,7 @@ export function ownSource(dot: string): string {
           return `${indent}${key} [pos="${(k % 50) * 300},${Math.floor(k / 50) * 200}", `;
         }),
   );
-  lines.splice(1, 0, '  graph [splines=false];');
+  lines.splice(1, 0, '  graph [splines=false];', `  // layout options ${JSON.stringify(layoutOptions(options))}`);
   return lines.join('\n');
 }
 
@@ -144,13 +161,23 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
  * The drawing Graphviz measured in `laid` as marks, its boxes placed by our own engine, its links direct. `groups`
  * are the layout source's groups (`groupsIn`), each drawn as a box round its things.
  */
-export function ownMarks(laid: LaidMarks, rankdir: string, groups: readonly SourceGroup[] = []): LaidMarks {
+export function ownMarks(
+  laid: LaidMarks,
+  rankdir: string,
+  groups: readonly SourceGroup[] = [],
+  options: Partial<LayoutOptions> = {},
+): LaidMarks {
   const way = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
-  const { spots, via, boxes } = ownSpots(laid, way, undefined, groups);
+  const { spots, via, boxes } = ownSpots(laid, way, undefined, groups, options);
   return directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way);
 }
 
 /** The SVG of the drawing Graphviz measured in `laid`, its boxes placed by our own engine, its links direct. */
-export function ownSvg(laid: LaidMarks, rankdir: string, groups: readonly SourceGroup[] = []): string {
-  return layoutSvg(ownMarks(laid, rankdir, groups));
+export function ownSvg(
+  laid: LaidMarks,
+  rankdir: string,
+  groups: readonly SourceGroup[] = [],
+  options: Partial<LayoutOptions> = {},
+): string {
+  return layoutSvg(ownMarks(laid, rankdir, groups, options));
 }

@@ -13,11 +13,11 @@
 import type { DrawMark } from './drawing-marks.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
-import { WORDS_OFF, wordSpots } from './direct-words.ts';
+import { WORDS_OFF, fans, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
-import { CLEARANCE, bends, crowded, spread, towardMiddle } from './direct-bends.ts';
+import { CLEARANCE, HUG, bends, crowded, hug, hugged, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
 export type { Curve, Placed } from './direct-curve.ts';
 export { CLEARANCE, GENTLE } from './direct-bends.ts';
@@ -75,6 +75,20 @@ export function directLinks(
   // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
   if (!at) settle([...boxes.values()], links);
   else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
+  // each group drawn just round its things, its name above them. Then each bundle runs from beside the group its links
+  // leave to beside the group they reach
+  const drawnAs = new Map<string, Edges>(),
+    heads = new Map<string, [number, number]>();
+  for (const m of laid.marks) {
+    if (m.kind === 'group') drawnAs.set(m.id, { x0: m.x, y0: m.y, x1: m.x + m.width, y1: m.y + m.height });
+    const owner = m.kind === 'label' ? /^l:(.*)$/s.exec(m.id)?.[1] : undefined;
+    const was = owner === undefined ? undefined : drawnAs.get(owner);
+    if (m.kind === 'label' && owner !== undefined && was)
+      heads.set(owner, [m.y - was.y0 + HUG, (m.maxWidth ?? 0) + 2 * HUG]);
+  }
+  hug(boxes.values(), groups, heads);
+  // our own engine placed each trunk's ends in its rows and routed their links round boxes: kept where it put them
+  if (!at) trunkEnds(boxes, links);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
   const moved = new Map<string, [number, number]>();
@@ -115,7 +129,13 @@ export function directLinks(
       many.set(pairOf(l.from ?? '', l.to ?? ''), (many.get(pairOf(l.from ?? '', l.to ?? '')) ?? 0) + 1);
   const all = [...boxes.values()];
   const middle = middleOf(all);
-  // each lone link takes the bend that crosses least; links between the same two boxes bow apart, as they must
+  // each lone link takes the bend that crosses least; links between the same two boxes bow apart, as they must. A
+  // bundle goes round the groups as round boxes
+  const walls: Placed[] = [...groups].map(([key, g]) => {
+    const hw = (g.x1 - g.x0) / 2,
+      hh = (g.y1 - g.y0) / 2;
+    return { key, x: g.x0 + hw, y: g.y0 + hh, hw, hh };
+  });
   const toBend: (ToBend & { id: string })[] = [];
   for (const l of links) {
     const a = boxes.get(l.from ?? '') as Placed,
@@ -127,7 +147,8 @@ export function directLinks(
     nth.set(pair, i + 1);
     const side = a.key < b.key ? 1 : -1;
     const fixed = count > 1 ? { fixed: (i - (count - 1) / 2) * BOW * side } : {};
-    toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed });
+    const trunk = a.key.startsWith('trunk: ') && b.key.startsWith('trunk: ') ? { avoid: walls } : {};
+    toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed, ...trunk });
   }
   const bows = bends(toBend, all);
   // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes
@@ -148,7 +169,9 @@ export function directLinks(
       ];
     }),
   );
-  const spots = wordSpots(laid.marks, boxes, curves);
+  // our own engine labels each fan of links once, near the end its links share
+  const fan = at ? fans(laid.marks) : undefined;
+  const spots = wordSpots(laid.marks, boxes, curves, fan);
   // each link's arrowheads, and the first line drawn for it, found by what it is of: looked up once, not per mark
   const headsBy = new Map<string, (DrawMark & { kind: 'arrowhead' })[]>(),
     lineBy = new Map<string, DrawMark & { kind: 'link' }>();
@@ -156,7 +179,11 @@ export function directLinks(
     if (m.kind === 'arrowhead' && m.of !== undefined) headsBy.set(m.of, [...(headsBy.get(m.of) ?? []), m]);
     else if (m.kind === 'link' && m.of !== undefined && !lineBy.has(m.of)) lineBy.set(m.of, m);
 
-  const marks = laid.marks.map((m): DrawMark => {
+  const marks = laid.marks.flatMap((m): DrawMark[] => (fan?.gone.has(m.id) ? [] : [drawnNow(m)]));
+  return grown({ ...laid, marks });
+
+  /** `m` where it is drawn now: a link along its curve, its words beside it, and the rest moved with its box. */
+  function drawnNow(m: DrawMark): DrawMark {
     const by = shiftOf.get(m.id);
     const c = m.of === undefined ? undefined : curves.get(m.of);
     if (m.kind === 'link' && c) {
@@ -178,10 +205,14 @@ export function directLinks(
       const [x, y] = spots.get(m.id) ?? c.wordsAt(0.5, m.size * WORDS_OFF);
       return { ...m, x, y };
     }
+    // a group's outline and its name, where it hugs its things now; its corners keep their curve
+    const owner = m.kind === 'group' ? m.id : m.kind === 'label' ? /^l\d*:(.*)$/s.exec(m.id)?.[1] : undefined;
+    const was = owner === undefined ? undefined : drawnAs.get(owner),
+      now = owner === undefined ? undefined : groups.get(owner);
+    if (was && now) return hugged(m, was, now);
     if (!by) return m;
     return shifted(m, by[0], by[1]);
-  });
-  return grown({ ...laid, marks });
+  }
 }
 
 /** The smallest group of `groups` round the box `m`, if any. */

@@ -24,7 +24,7 @@ import { ThingMenu } from './thing-menu';
 import type { MenuItem } from './thing-menu';
 import { word } from '@thoughtknot/core';
 import type { Taps, Target } from './taps';
-import { SPACE_OPEN } from './space-view-panel';
+import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 
@@ -120,6 +120,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   };
   // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
   card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
+  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => host.unfold(e.detail));
   // the details sheet is placed again as the window changes size and the note scrolls (§25)
   card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });

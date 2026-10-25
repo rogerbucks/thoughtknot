@@ -43,7 +43,7 @@ import { marksOfSvg } from './packages/core/src/display/graph-view/svg-marks.ts'
 import { spreadSpace } from './packages/core/src/space-spread.ts';
 import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
 import { installHost } from './packages/core/src/display/host.ts';
-import { SPACE_OPEN, openSpaceView } from './packages/core/src/display/graph-view/space-view-panel.ts';
+import { SPACE_OPEN, SPACE_UNFOLD, openSpaceView } from './packages/core/src/display/graph-view/space-view-panel.ts';
 import { MARKED } from './packages/core/src/display/graph-view/focus-marks.ts';
 import { SpaceSwitch } from './packages/core/src/display/graph-view/space-switch.ts';
 installDomHelpers(window);
@@ -129,8 +129,9 @@ window.readSvg = (marked = false) => {
   return marks.map((m) => ({ ...m, paint: paints(m.style) }));
 };
 // the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it. With
-// \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again
-window.pickInSpace = async (hideBob = false) => {
+// \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again. With \`bundle\`, the
+// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it
+window.pickInSpace = async (hideBob = false, bundle = false) => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -139,8 +140,14 @@ window.pickInSpace = async (hideBob = false) => {
     <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
     <g class="edge" data-link="0"><path fill="none" stroke="rgb(90, 90, 90)" d="M120,60 C150,90 180,120 200,140"/><polygon points="195,134 205,142 196,145"/><text x="160" y="100" font-size="10">KNOWS</text></g>
   </g></svg>\`;
+  if (bundle) {
+    const g = holder.querySelector('[data-link]');
+    g.removeAttribute('data-link');
+    g.setAttribute('data-fold', 'bundle:Ada team\\nBob team');
+  }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
+  root.addEventListener(SPACE_UNFOLD, (e) => told.push({ fold: e.detail }));
   const opened = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
   const view = root.querySelector('.thoughtknot-space-view');
   if (hideBob) {
@@ -163,7 +170,7 @@ window.pickInSpace = async (hideBob = false) => {
       const last = told.at(-1);
       if (last && 'key' in last) keys.add(last.key);
       if (last && 'key' in last && !found.ball) found.ball = last;
-      if (last && 'link' in last && !found.link) found.link = last;
+      if (last && ('link' in last || 'fold' in last) && !found.link) found.link = last;
       if (found.ball && found.link) break;
     }
   const said = view.querySelector('.thoughtknot-space-said')?.textContent;
@@ -403,6 +410,12 @@ describe("the 3D view's painters, in a real browser", () => {
     const { ball, link } = JSON.parse(await browser.run('pickInSpace().then(JSON.stringify)'));
     assert.ok(ball && ['ada', 'bob'].includes(ball.key), `a ball opens its thing: ${JSON.stringify(ball)}`);
     assert.deepEqual(link, { link: 0 }, 'a link opens by its number, as a tap reads it');
+  });
+
+  // proves: untangle_open_bundle
+  test('a click on a bundle in the 3D view tells the card to open it, as a tap on it in 2D does', options, async () => {
+    const { link } = JSON.parse(await browser.run('pickInSpace(false, true).then(JSON.stringify)'));
+    assert.deepEqual(link, { fold: 'bundle:Ada team\nBob team' }, 'the bundle opens by its fold, not as a link');
   });
 
   // proves: space_pick_opens

@@ -10,6 +10,7 @@ import { groupedLayered } from '../src/layouts/grouped.ts';
 import { readability } from '../src/layouts/readability.ts';
 import { ownMarks, groupsIn } from '../src/layouts/own-draw.ts';
 import { directLinks } from '../src/direct-links.ts';
+import { fans } from '../src/direct-words.ts';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
@@ -88,6 +89,94 @@ describe('groups as boxes', () => {
     );
   });
 
+  // proves: layout_links_never_over
+  test('a link out of a group, with another of its things in the way, steps past its row to the gutter', () => {
+    const blocked = shapeOf(
+      ['a', 'b', 'c', 'z'],
+      [
+        ['a', 'b'],
+        ['b', 'c'],
+        ['a', 'z'],
+      ],
+    );
+    const out = groupedLayered(blocked, sizes, [{ id: 'g', label: 'G', members: ['a', 'b', 'c'] }], 'LR');
+    const path = [out.spots.get('a'), ...out.via.get('a\nz'), out.spots.get('z')];
+    for (const k of ['b', 'c']) {
+      const [x, y] = out.spots.get(k);
+      const over = path.slice(1).some(([px, py], i) => {
+        const [qx, qy] = path[i];
+        const lo = [Math.min(px, qx), Math.min(py, qy)],
+          hi = [Math.max(px, qx), Math.max(py, qy)];
+        return lo[0] < x + 50 && hi[0] > x - 50 && lo[1] < y + 20 && hi[1] > y - 20;
+      });
+      assert.ok(!over, `the link a to z runs clear of ${k}`);
+    }
+  });
+
+  test('a lane keeps straight through its row, and a bend with its straight way blocked takes the nearest free room', () => {
+    const laid = groupedLayered(
+      shapeOf(
+        ['s', 'm', 'n', 't'],
+        [
+          ['s', 'm'],
+          ['m', 'n'],
+          ['n', 't'],
+          ['s', 't'],
+        ],
+      ),
+      sizes,
+      [{ id: 'g', label: 'G', members: ['n'] }],
+      'LR',
+    );
+    const lanes = laid.via.get('s\nt');
+    // after the way out of its row, each lane is two bends, one each side of the row it crosses
+    for (let i = 1; i + 1 < lanes.length - 1; i += 2) assert.equal(lanes[i][1], lanes[i + 1][1], 'one lane, level');
+    const top = Math.min(...[...laid.spots].map(([, [, y]]) => y - 20));
+    for (const [, y] of lanes) assert.ok(y > top - 60, 'never far out round the drawing');
+  });
+
+  // proves: layout_screen_shaped
+  test('a group of many things in one row folds into bands, and so does the whole, about a screen’s shape', () => {
+    const many = Array.from({ length: 60 }, (_, i) => `t${i}`);
+    const star = shapeOf(['hub', ...many, 'lone'], [...many.map((k) => ['hub', k]), ['t0', 'lone']]);
+    const big = new Map(['hub', 'lone', ...many].map((k) => [k, [100, 40]]));
+    const span = (spots, boxes) => {
+      const xs = [...spots.values()].map(([x]) => x),
+        ys = [...spots.values()].map(([, y]) => y);
+      for (const b of boxes)
+        (xs.push(b.x - b.width / 2, b.x + b.width / 2), ys.push(b.y - b.height / 2, b.y + b.height / 2));
+      return (Math.max(...xs) - Math.min(...xs) + 100) / (Math.max(...ys) - Math.min(...ys) + 40);
+    };
+    // the whole: a hub and sixty things, one long row unfolded
+    const whole = groupedLayered(star, big, [{ id: 'g', label: 'G', members: ['lone'] }], 'LR');
+    assert.ok(
+      span(whole.spots, whole.boxes) > 0.8,
+      `the whole is ${span(whole.spots, whole.boxes).toFixed(2)} wide to high`,
+    );
+    // a group of them, beside a few lone things
+    const grouped = groupedLayered(star, big, [{ id: 'g', label: 'G', members: many }], 'LR');
+    const b = grouped.boxes[0];
+    assert.ok(b.width / b.height > 0.5, `the group is ${(b.width / b.height).toFixed(2)} wide to high`);
+    // no link runs over a box it does not join
+    for (const laid of [whole, grouped])
+      for (const l of star.links) {
+        const path = [laid.spots.get(l.from), ...(laid.via.get(`${l.from}\n${l.to}`) ?? []), laid.spots.get(l.to)];
+        for (const [k, [x, y]] of laid.spots) {
+          if (k === l.from || k === l.to) continue;
+          const over = path.slice(1).some(([px, py], i) => {
+            const [qx, qy] = path[i];
+            return (
+              Math.min(px, qx) < x + 48 &&
+              Math.max(px, qx) > x - 48 &&
+              Math.min(py, qy) < y + 18 &&
+              Math.max(py, qy) > y - 18
+            );
+          });
+          assert.ok(!over, `${l.from} to ${l.to} runs clear of ${k}`);
+        }
+      }
+  });
+
   // proves: layout_links_past_groups
   test('a link past a group runs through the gap inside its border, never round its far side', () => {
     const past = shapeOf(
@@ -114,6 +203,56 @@ describe('groups as boxes', () => {
       assert.ok(Math.abs(y - b.y) < b.height / 2, `${x},${y} is inside the border`);
       for (const k of ms) assert.ok(Math.abs(y - out.spots.get(k)[1]) > 20, `${x},${y} is clear of ${k}`);
     }
+  });
+});
+
+describe('a fan of links', () => {
+  const link = (of, from, to) => ({ kind: 'link', id: of, of, from, to, points: [], curve: false });
+  const words = (of, text) => ({ kind: 'label', id: `l:${of}`, of, text, x: 0, y: 0, size: 10 });
+
+  // proves: layout_one_label_per_fan
+  test('of one type into one thing is labelled once, near that thing; so is one out of one thing', () => {
+    const { gone, near } = fans([
+      ...[
+        ['ab', 'a', 'b'],
+        ['cb', 'c', 'b'],
+        ['db', 'd', 'b'],
+        ['ex', 'e', 'x'],
+        ['ey', 'e', 'y'],
+        ['fb', 'f', 'b'],
+      ].map(([of, from, to]) => link(of, from, to)),
+      words('ab', 'meets'),
+      words('cb', 'meets'),
+      words('db', 'meets'),
+      words('ex', 'needs'),
+      words('ey', 'needs'),
+      words('fb', 'fails'),
+    ]);
+    assert.deepEqual([...gone].sort(), ['l:cb', 'l:db', 'l:ey']);
+    assert.deepEqual(Object.fromEntries(near), { ab: 'to', ex: 'from' });
+  });
+
+  test('our own engine draws a fan’s words once, on a real note', async () => {
+    const engine = await loadEngine();
+    const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
+    const note = readNote([text]);
+    const style = readStyle([text], 'requirements', note);
+    const drawing = {
+      ...styledDrawing(note.graphs.get('requirements'), style.style, note.world.requirements),
+      diagram: undefined,
+    };
+    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+    const laid = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
+    const into = new Map(laid.marks.filter((m) => m.kind === 'link').map((m) => [m.of, m.to]));
+    const seen = new Set();
+    for (const m of laid.marks)
+      if (m.kind === 'label' && into.has(m.of) && m.id.startsWith('l:')) {
+        const k = `${into.get(m.of)} ${m.text}`;
+        assert.ok(!seen.has(k), `“${m.text}” into ${into.get(m.of)} is drawn once`);
+        seen.add(k);
+      }
+    assert.ok(seen.size > 0, 'some links are labelled');
   });
 });
 
@@ -162,7 +301,11 @@ describe('the readability scores', () => {
     };
     const gv = scored(false),
       own = scored(true);
-    for (const k of ['clean', 'clear', 'flow', 'near'])
-      assert.ok(own[k] >= gv[k] - 0.02, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
+    // a bundle's ends stay in the rows our engine routes them through, never moved over boxes. So its legs run a
+    // little longer than Graphviz's, and near may fall short by a little more
+    const slack = { clean: 0.02, clear: 0.02, flow: 0.02, near: 0.06 };
+    for (const [k, by] of Object.entries(slack))
+      assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
+    assert.ok(own.clear >= 0.995, `no link of ours passes over a box: ${own.clear.toFixed(3)}`);
   });
 });

@@ -17,27 +17,26 @@
 // What is picked is said aloud, and its name always shows (space-labels.ts).
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
-// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A thing the card selects, as by Find, is picked
-// here too. The view stays still. Another click on it makes
-// it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
-// the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
-// (focus_space).
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A bundle picked opens, as a tap on it in 2D does
+// (SPACE_UNFOLD). A thing the card selects, as by Find, is picked here too. The view stays still. Another click on it
+// makes it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround).
+// What the card hides, fades or brings forward, from its details' controls, the 3D view shows too (focus_space).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { centredOn, focusOn, middleOf, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
+import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, panBy, turnRound, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
 import { webgl2SpacePainter } from './space-painter.ts';
-import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
+import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
-import { DEPTH_WORDS, linkCounts, spacePad } from './space-view-pad.ts';
+import { DEPTH_WORDS, glideIn, linkCounts, spacePad } from './space-view-pad.ts';
 import { marksOfSvg } from './svg-marks.ts';
 import { reducedMotion } from './details-nav';
 import { MARKED } from './focus-marks';
@@ -46,11 +45,17 @@ import type { Target } from './taps';
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
 export const SPACE_OPEN = 'thoughtknot-space-open';
 
+/** The event a bundle or a hub's stub picked in 3D sends its card, with its fold. The card opens it (§25). */
+export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
+
 /** How long the view takes to turn to face what was picked, in milliseconds. */
 const TURN_TIME = 280;
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
+
+/** What a line's key is when it is a fold to open, not a link: a bundle, a hub's stub or a group's box (§25). */
+const FOLD = /^(bundle|hub|group):/;
 
 /** How far a pointer may move, in pixels, and still be a click or tap rather than a drag. */
 const TAP_SLOP = 6;
@@ -60,9 +65,10 @@ const DOUBLE_TAP = 350;
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
 
-/** How the view opens: as cards or in 3D. */
+/** How the view opens: as cards or in 3D; and whether each thing stays where its diagram type drew it (space_follows_type). */
 export interface SpaceOptions {
   cards?: boolean;
+  asDrawn?: boolean;
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -108,16 +114,16 @@ export async function openSpaceView(
   for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
   const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
   const win = el.win;
-  // a card with no background of its own shows the page's: the label halo uses the system's page colour then
-  const background = win.getComputedStyle(root).backgroundColor;
-  const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
+  // the label halo is the colour behind the view: the first painted one up from it, as the theme sets it. The system's
+  // page colour is the last resort: a phone in light mode has a white one under a dark theme (Roger, 25 Oct 2026)
+  const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
   // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, or the drawing lifted as it is
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
-    by === 'cards' ? spreadSpace(marks, undefined, true).space : by ? spaceOf(marks, by) : spreadSpace(marks).space;
+    by === 'cards' || !by ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn).space : spaceOf(marks, by);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
@@ -193,10 +199,12 @@ export async function openSpaceView(
     closed();
   };
 
+  /** What the view turns round: the picked thing, else the drawing's middle (Roger, 25 Oct 2026). */
+  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target);
   /** Makes one move, from a key or a button, and paints it. */
   const move = (m: SpaceMove) => {
     if ('back' in m) return close();
-    if ('turn' in m) orbit = orbitBy(orbit, ...m.turn);
+    if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
     else if ('zoom' in m) orbit = zoomBy(orbit, m.zoom);
     else if ('reset' in m) orbit = orbitFit(space, width / height);
@@ -271,6 +279,7 @@ export async function openSpaceView(
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
+    touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
@@ -278,6 +287,7 @@ export async function openSpaceView(
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (down.size === 1) {
+      touching = e.pointerType === 'touch';
       pans = e.shiftKey || e.button === 1 || e.button === 2;
       travel = 0;
     }
@@ -299,7 +309,8 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
-      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : orbitBy(orbit, dx, dy);
+      // a finger turns the way it goes, as fingerTurn does; a mouse drags the camera round. Both turn round the pivot
+      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : turnRound(orbit, touching ? -dx : dx, dy, pivot());
     }
     again();
   });
@@ -328,7 +339,10 @@ export async function openSpaceView(
     } else if (link) {
       if (pickedLine?.id === link.line.id) return turnTo(link.at);
       pickLine(link.line);
-      if (link.line.of !== undefined && link.line.of !== '') tell({ link: Number(link.line.of) });
+      const of = link.line.of ?? '';
+      // a bundle or a hub's stub opens, as a tap on it in 2D does; a link opens its details
+      if (FOLD.test(of)) root.dispatchEvent(new CustomEvent<string>(SPACE_UNFOLD, { detail: of, bubbles: true }));
+      else if (of !== '') tell({ link: Number(of) });
     } else pick(null);
   };
   el.addEventListener('pointerup', letGo);
@@ -362,6 +376,7 @@ export async function openSpaceView(
   opened.set(root, close);
   resize();
   orbit = orbitFit(space, width / height);
+  glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
   el.focus();
   const cards = (on: boolean) => {
     if (on !== (depth === 0)) showAs(on ? 0 : 1);

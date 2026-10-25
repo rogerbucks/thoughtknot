@@ -2,6 +2,7 @@
 // is one curve from box to box, and boxes move aside so no link runs through a box it does not join.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { loadEngine } from '../src/engine.ts';
 import { directLinks } from '../src/direct-links.ts';
 import { directions, svgOf } from '../src/render.ts';
@@ -345,4 +346,71 @@ test('drawn direct, the boxes are given a little more room, a group moved whole 
     'b2 in g:cluster_b',
   ]);
   assert.deepEqual(held(after), held(grouped.marks), 'each box stays inside the group Graphviz drew round it');
+});
+
+// proves: untangle_bundle_ends
+test('drawn direct, each bundle runs from just beside one group to just beside the other', () => {
+  // Roger, 25 Oct 2026: bundles floated out in empty space, far from the groups they join
+  const { cases } = JSON.parse(
+    readFileSync(new URL('../../../python/graph_spec/tests/direct_cases.json', import.meta.url), 'utf8'),
+  );
+  const laid = engine.marks(cases.find((c) => c.name.startsWith('three teams with groups found')).dot);
+  const gaps = (ms) => {
+    const groups = ms.filter((m) => m.kind === 'group');
+    return ms
+      .filter((m) => m.kind === 'box' && /^trunk: \d+ (in|out)$/.test(m.of ?? ''))
+      .map((t) => {
+        const [x, y] = middleOf(t);
+        const off = (g) =>
+          Math.hypot(Math.max(g.x - x, 0, x - g.x - g.width), Math.max(g.y - y, 0, y - g.y - g.height));
+        return Math.min(...groups.map(off));
+      });
+  };
+  assert.ok(Math.max(...gaps(laid.marks)) > 30, 'Graphviz places a bundle end far from any group');
+  const after = gaps(directLinks(laid).marks);
+  assert.ok(after.length >= 4, 'the drawing has bundles');
+  for (const gap of after) assert.ok(gap > 0 && gap <= 12, `a bundle end sits ${gap.toFixed(1)} from its group`);
+  // and it goes round a group in its way, never through it
+  const drawn = directLinks(laid).marks;
+  const groups = drawn.filter((m) => m.kind === 'group');
+  for (const t of drawn.filter((m) => m.kind === 'link' && /^trunk: \d+ in$/.test(m.from ?? ''))) {
+    const inside = along(t).filter(([x, y]) =>
+      groups.some((g) => x > g.x && x < g.x + g.width && y > g.y && y < g.y + g.height),
+    );
+    assert.deepEqual(inside, [], `${t.from} runs through no group`);
+  }
+});
+
+// proves: untangle_group_hug
+test('drawn direct, each group hugs its things, its name just above them', () => {
+  const { cases } = JSON.parse(
+    readFileSync(new URL('../../../python/graph_spec/tests/direct_cases.json', import.meta.url), 'utf8'),
+  );
+  const laid = engine.marks(cases.find((c) => c.name.startsWith('three teams with groups found')).dot);
+  const drawn = directLinks(laid).marks;
+  const area = (g) => g.width * g.height;
+  const groups = drawn.filter((m) => m.kind === 'group');
+  for (const g of groups) {
+    const things = drawn.filter(
+      (m) =>
+        m.kind === 'box' &&
+        m.role === 'thing' &&
+        !/^trunk/.test(m.of ?? '') &&
+        m.x >= g.x &&
+        m.y >= g.y &&
+        m.x + m.width <= g.x + g.width &&
+        m.y + m.height <= g.y + g.height,
+    );
+    assert.ok(things.length, `${g.id} holds its things`);
+    const left = Math.min(...things.map((b) => b.x)),
+      right = Math.max(...things.map((b) => b.x + b.width)),
+      top = Math.min(...things.map((b) => b.y)),
+      bottom = Math.max(...things.map((b) => b.y + b.height));
+    assert.ok(left - g.x <= 8.5 && g.x + g.width - right <= 8.5, `${g.id} hugs its things side to side`);
+    assert.ok(g.y + g.height - bottom <= 8.5, `${g.id} hugs its things below`);
+    const name = drawn.find((m) => m.id === `l:${g.id}`);
+    assert.ok(name.y > g.y && name.y <= top - 7.5 && top - name.y <= 9, `${g.id}'s name sits just above its things`);
+  }
+  const before = laid.marks.filter((m) => m.kind === 'group').reduce((n, g) => n + area(g), 0);
+  assert.ok(groups.reduce((n, g) => n + area(g), 0) < before, 'the groups take less room than Graphviz gave them');
 });

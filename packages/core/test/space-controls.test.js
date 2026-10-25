@@ -3,16 +3,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  between,
+  fingerTurn,
+  fromAbove,
   KEY_STEP,
   ZOOM_STEP,
   keyMove,
   orbitAround,
   panBy,
+  turnRound,
   twistBy,
   twistOf,
   twoFingers,
 } from '../src/space-controls.ts';
-import { eyeOf, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
+import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
 
@@ -119,4 +123,54 @@ test('two fingers twisting turn the view with them: the drawing follows the fing
     after = at(twisted);
   const angle = (p) => Math.atan2(p.y - 300, p.x - 300);
   assert.ok(Math.abs(angle(after) - angle(before) - Math.PI / 6) < 0.02, `${angle(before)} -> ${angle(after)}`);
+});
+
+// proves: space_turns_round_pick
+test('a drag turns the view round the picked thing, or the middle: it stays still on the screen while all else turns', () => {
+  const pivot = [300, -200, 40];
+  const at = (o) => projectPoint(spaceMatrix(o, 1, 2000), pivot, 600, 600);
+  const start = at(ORBIT);
+  let o = ORBIT;
+  for (const [dx, dy] of [
+    [80, 0],
+    [0, 60],
+    [-150, -90],
+  ]) {
+    o = turnRound(o, dx, dy, pivot);
+    const now = at(o);
+    assert.ok(Math.abs(now.x - start.x) < 0.5 && Math.abs(now.y - start.y) < 0.5, `${now.x}, ${now.y}`);
+  }
+  assert.notDeepEqual(eyeOf(o), eyeOf(ORBIT), 'the camera did move');
+  assert.equal(o.distance, ORBIT.distance);
+});
+
+test('one finger turns the view the way it goes: the drawing beyond the middle follows it, where a mouse drags the camera', () => {
+  const far = (o) => projectPoint(spaceMatrix(o, 1, 4000), [0, 200, 0], 600, 600);
+  const was = far(ORBIT);
+  assert.ok(far(fingerTurn(ORBIT, 50, 0)).x > was.x + 20, 'a finger right takes the far side right');
+  assert.ok(far(fingerTurn(ORBIT, -50, 0)).x < was.x - 20);
+  assert.equal(fingerTurn(ORBIT, 0, 30).tilt, orbitBy(ORBIT, 0, 30).tilt, 'up and down are as they were');
+});
+
+// proves: space_glide
+test('the view starts from straight above, the drawing flat with its top up, and glides gently to its slant', () => {
+  const space = { least: [0, -100, 0], most: [200, 0, 10] };
+  const to = orbitFit(space, 1),
+    above = fromAbove(to);
+  const at = (o, p) => projectPoint(spaceMatrix(o, 1, 400), p, 600, 600);
+  // the page's top left, top right and bottom left: as on the page, and square, seen from above
+  const [tl, tr, bl] = [
+    [0, 0, 0],
+    [200, 0, 0],
+    [0, -100, 0],
+  ].map((p) => at(above, p));
+  assert.ok(tl.x < tr.x && Math.abs(tl.y - tr.y) < 0.5, 'its top runs across the screen');
+  assert.ok(bl.y > tl.y + 50 && Math.abs(bl.x - tl.x) < 0.5, 'its left side runs down the screen');
+  assert.ok(Math.abs((tr.x - tl.x) / (bl.y - tl.y) - 2) < 0.02, 'not squashed: twice as wide as tall, as drawn');
+  assert.deepEqual(between(above, to, 0), above);
+  assert.deepEqual(between(above, to, 1), to);
+  const early = between(above, to, 0.1).tilt - above.tilt,
+    mid = between(above, to, 0.5).tilt - above.tilt;
+  assert.ok(Math.abs(mid - (to.tilt - above.tilt) / 2) < 1e-9, 'half way at half time');
+  assert.ok(Math.abs(early) < Math.abs((to.tilt - above.tilt) * 0.1), 'it starts gently');
 });

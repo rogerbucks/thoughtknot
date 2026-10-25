@@ -11,6 +11,7 @@
 import { curveOf } from './direct-curve.ts';
 import type { Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
+import type { DrawMark } from './drawing-marks.ts';
 
 /** How much room a link keeps from a box it passes, in pixels. */
 export const CLEARANCE = 10;
@@ -20,6 +21,8 @@ export const GENTLE = 0.08;
 export const ROOM = 1.15;
 /** The bends a lone link is tried at, each way, as shares of its length. */
 const BENDS = [GENTLE, 0.16, 0.26, 0.4, 0.55];
+/** The wider bends a bundle is tried at too, so it can go round a whole group in its way. */
+const WIDE = [0.75, 1];
 /** How a bend is scored: for each box it runs through, each link it crosses, and how far it bends. */
 const THROUGH = 4,
   CROSSED = 1,
@@ -97,6 +100,8 @@ export interface ToBend {
   b: Placed;
   toward: number;
   fixed?: number;
+  /** More it goes round, as it does boxes: a bundle goes round the groups between its two (trunkEnds). */
+  avoid?: readonly Placed[];
 }
 
 /** The way toward the middle of the drawing, seen from the link from `a` to `b`; on the line itself, `side`. */
@@ -111,8 +116,9 @@ export function towardMiddle(a: Placed, b: Placed, side: number, middle: MarkPoi
 export function bends(links: readonly ToBend[], boxes: readonly Placed[]): number[] {
   const tries = links.map((l) => {
     if (l.fixed !== undefined) return [l.fixed];
-    const away = aside(l.a, l.b, boxes);
-    return [...(away ? [away] : []), ...BENDS.flatMap((s) => [l.toward * s, -l.toward * s])];
+    const away = aside(l.a, l.b, l.avoid ? [...boxes, ...l.avoid] : boxes);
+    const each = l.avoid ? [...BENDS, ...WIDE] : BENDS;
+    return [...(away ? [away] : []), ...each.flatMap((s) => [l.toward * s, -l.toward * s])];
   });
   const cost = links.length * links.length * PIECES + links.length * boxes.length * BENDS.length * 2 * PIECES;
   const crossing = cost <= WORK_MOST;
@@ -125,7 +131,7 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[]): numbe
       for (const bow of tries[i] as number[]) {
         const path = pathOf(l.a, l.b, bow);
         const score =
-          THROUGH * through(path, l, boxes) +
+          THROUGH * through(path, l, l.avoid ? [...boxes, ...l.avoid] : boxes) +
           CROSSED * others.filter((o) => crosses(path, o)).length +
           BENT * Math.abs(bow);
         if (score < best) {
@@ -235,4 +241,125 @@ export function aside(a: Placed, b: Placed, boxes: Iterable<Placed>): number {
     if (Math.abs(bend) > Math.abs(most)) most = bend;
   }
   return Math.max(-0.6, Math.min(0.6, most));
+}
+
+/** A trunk's two ends, as the layout source names them (fold-source.ts): its number, and which end. */
+const TRUNK_END = /^trunk: (\d+) (in|out)$/;
+
+/**
+ * Each trunk's two ends moved to beside the groups it joins (untangle_found_groups). The end its links come in to sits
+ * just outside the group they come from, on the side facing the group they go to. The other end sits the same way by
+ * the group they go to. So a bundle runs straight from group to group, never out into empty space. A group is the one
+ * its boxes sit in, or the box round them all.
+ */
+export function trunkEnds(boxes: ReadonlyMap<string, Placed>, links: readonly { from?: string; to?: string }[]): void {
+  const regionOf = (key: string, end: string): Edges | undefined => {
+    const near = links.flatMap((l) => {
+      const b = end === 'in' ? l.to === key && boxes.get(l.from ?? '') : l.from === key && boxes.get(l.to ?? '');
+      return b ? [b] : [];
+    });
+    if (!near.length) return undefined;
+    const first = near[0]?.inside;
+    if (first && near.every((b) => b.inside === first)) return first;
+    return {
+      x0: Math.min(...near.map((b) => b.x - b.hw)),
+      y0: Math.min(...near.map((b) => b.y - b.hh)),
+      x1: Math.max(...near.map((b) => b.x + b.hw)),
+      y1: Math.max(...near.map((b) => b.y + b.hh)),
+    };
+  };
+  const spots: [Placed, number, number][] = [];
+  for (const [key, p] of boxes) {
+    const m = TRUNK_END.exec(key);
+    if (!m) continue;
+    const other = m[2] === 'in' ? 'out' : 'in';
+    const here = regionOf(key, m[2] ?? ''),
+      there = regionOf(`trunk: ${m[1]} ${other}`, other);
+    if (!here || !there) continue;
+    const cx = (here.x0 + here.x1) / 2,
+      cy = (here.y0 + here.y1) / 2;
+    const dx = (there.x0 + there.x1) / 2 - cx,
+      dy = (there.y0 + there.y1) / 2 - cy;
+    const long = Math.hypot(dx, dy) || 1;
+    const ux = dx / long,
+      uy = dy / long;
+    const reach =
+      Math.min(
+        ux === 0 ? Infinity : (here.x1 - here.x0) / 2 / Math.abs(ux),
+        uy === 0 ? Infinity : (here.y1 - here.y0) / 2 / Math.abs(uy),
+      ) + CLEARANCE;
+    spots.push([p, cx + ux * reach, cy + uy * reach]);
+  }
+  for (const [p, x, y] of spots) {
+    p.x = x;
+    p.y = y;
+    delete p.inside;
+  }
+}
+
+/** The room a group keeps round its things, in pixels, once it hugs them. */
+export const HUG = 8;
+
+/**
+ * Each group of `groups` drawn just round what it holds, never bigger than it was (untangle_group_hug). It holds its
+ * things of `boxes` and the groups inside it, HUG apart. `heads` gives, by a group's id, the room its name takes above its
+ * things and the least width that name needs. The smallest group goes first, so a group round it hugs it as drawn.
+ */
+export function hug(
+  boxes: Iterable<Placed>,
+  groups: ReadonlyMap<string, Edges>,
+  heads: ReadonlyMap<string, readonly [number, number]>,
+): void {
+  const within = (p: Edges, q: Edges) => p !== q && q.x0 <= p.x0 && q.y0 <= p.y0 && p.x1 <= q.x1 && p.y1 <= q.y1;
+  const all = [...boxes];
+  const area = (g: Edges) => (g.x1 - g.x0) * (g.y1 - g.y0);
+  const order = [...groups].sort(([, p], [, q]) => area(p) - area(q));
+  const inner = new Map(order.map(([, g]) => [g, order.filter(([, c]) => within(c, g)).map(([, c]) => c)]));
+  for (const [id, g] of order) {
+    const held: Edges[] = [
+      ...all
+        .filter((b) => b.inside === g)
+        .map((b) => ({ x0: b.x - b.hw, y0: b.y - b.hh, x1: b.x + b.hw, y1: b.y + b.hh })),
+      ...(inner.get(g) ?? []),
+    ];
+    if (!held.length) continue;
+    const [top, least] = heads.get(id) ?? [HUG, 0];
+    let x0 = Math.max(g.x0, Math.min(...held.map((e) => e.x0)) - HUG),
+      x1 = Math.min(g.x1, Math.max(...held.map((e) => e.x1)) + HUG);
+    // wide enough for its name, about its middle, as far as it was wide
+    const short = least - (x1 - x0);
+    if (short > 0) {
+      x0 = Math.max(g.x0, x0 - short / 2);
+      x1 = Math.min(g.x1, x0 + least);
+    }
+    Object.assign(g, {
+      x0,
+      y0: Math.max(g.y0, Math.min(...held.map((e) => e.y0)) - top),
+      x1,
+      y1: Math.min(g.y1, Math.max(...held.map((e) => e.y1)) + HUG),
+    });
+  }
+}
+
+/** The mark `m` of a group drawn at `was`, moved to where it is drawn `now`: its outline, or its name, kept centred. */
+export function hugged(m: DrawMark, was: Edges, now: Edges): DrawMark {
+  const midWas = (was.x0 + was.x1) / 2,
+    midNow = (now.x0 + now.x1) / 2,
+    upWas = (was.y0 + was.y1) / 2;
+  if (m.kind === 'label') return { ...m, x: m.x + midNow - midWas, y: m.y + now.y0 - was.y0 };
+  if (m.kind !== 'group') return m;
+  // each point of its outline keeps its place from the nearest corner
+  const at = ([x, y]: MarkPoint): MarkPoint => [
+    x < midWas ? x + now.x0 - was.x0 : x + now.x1 - was.x1,
+    y < upWas ? y + now.y0 - was.y0 : y + now.y1 - was.y1,
+  ];
+  const outline = m.outline && { ...m.outline, points: m.outline.points.map(at) };
+  return {
+    ...m,
+    x: now.x0,
+    y: now.y0,
+    width: now.x1 - now.x0,
+    height: now.y1 - now.y0,
+    ...(outline ? { outline } : {}),
+  };
 }

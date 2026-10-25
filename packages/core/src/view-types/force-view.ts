@@ -13,6 +13,8 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { layoutOptions } from '../layouts/layout-options.ts';
+import type { LayoutOptions } from '../layouts/layout-options.ts';
 
 /** The most steps a layout takes. */
 export const FORCE_STEPS = 300;
@@ -33,7 +35,16 @@ const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 export type Places = ReadonlyMap<string, readonly [number, number]>;
 
 /** Where each thing of `shape` sits, in the layout's own units, starting from `previous` where it has a place. */
-export function forceLayout(shape: GraphShape, previous?: Places): Map<string, [number, number]> {
+export function forceLayout(
+  shape: GraphShape,
+  previous?: Places,
+  options: Partial<LayoutOptions> = {},
+): Map<string, [number, number]> {
+  const { spacing, linkLength } = layoutOptions(options);
+  // things push apart as far as `spacing` asks, and a link pulls weaker as it is asked to be longer
+  const apart = spacing * spacing,
+    reach = REACH * spacing,
+    pull = 1 / linkLength;
   const keys = shape.things.map((t) => t.key);
   const n = keys.length;
   const out = new Map<string, [number, number]>();
@@ -59,7 +70,7 @@ export function forceLayout(shape: GraphShape, previous?: Places): Map<string, [
   const hottest = warm ? 0.2 : Math.max(1, Math.sqrt(n) / 2);
   const dx = new Float64Array(n),
     dy = new Float64Array(n);
-  const cellOf = (i: number) => Math.floor((x[i] ?? 0) / REACH) * 1_000_003 + Math.floor((y[i] ?? 0) / REACH);
+  const cellOf = (i: number) => Math.floor((x[i] ?? 0) / reach) * 1_000_003 + Math.floor((y[i] ?? 0) / reach);
   for (let s = 0; s < steps; s++) {
     const heat = (hottest * (steps - s)) / steps;
     dx.fill(0);
@@ -74,8 +85,8 @@ export function forceLayout(shape: GraphShape, previous?: Places): Map<string, [
     for (let i = 0; i < n; i++) {
       const xi = x[i] ?? 0,
         yi = y[i] ?? 0;
-      const gx = Math.floor(xi / REACH),
-        gy = Math.floor(yi / REACH);
+      const gx = Math.floor(xi / reach),
+        gy = Math.floor(yi / reach);
       for (let ox = -1; ox <= 1; ox++)
         for (let oy = -1; oy <= 1; oy++)
           for (const j of grid.get((gx + ox) * 1_000_003 + gy + oy) ?? []) {
@@ -85,8 +96,8 @@ export function forceLayout(shape: GraphShape, previous?: Places): Map<string, [
             let d2 = ex * ex + ey * ey;
             // two things in one place are pushed apart along a fixed slant, so the layout stays the same each time
             if (d2 < 1e-18) [ex, ey, d2] = [((i - j) % 7) + 0.5, ((i + j) % 5) - 2.5, 1];
-            if (d2 > REACH * REACH) continue;
-            const f = 1 / d2;
+            if (d2 > reach * reach) continue;
+            const f = apart / d2;
             dx[i] = (dx[i] ?? 0) + ex * f;
             dy[i] = (dy[i] ?? 0) + ey * f;
             dx[j] = (dx[j] ?? 0) - ex * f;
@@ -96,7 +107,7 @@ export function forceLayout(shape: GraphShape, previous?: Places): Map<string, [
     for (const [a, b] of links) {
       const ex = (x[a] ?? 0) - (x[b] ?? 0),
         ey = (y[a] ?? 0) - (y[b] ?? 0);
-      const f = Math.hypot(ex, ey);
+      const f = Math.hypot(ex, ey) * pull;
       dx[a] = (dx[a] ?? 0) - ex * f;
       dy[a] = (dy[a] ?? 0) - ey * f;
       dx[b] = (dx[b] ?? 0) + ex * f;

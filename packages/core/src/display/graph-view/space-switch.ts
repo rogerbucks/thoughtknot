@@ -7,8 +7,10 @@
 // It stays open as the View menu lays the drawing out again, and as the type changes (type-place.ts).
 import { word } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
+import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import { openSpaceView } from './space-view-panel';
+import { fadeOut } from './space-view-pad.ts';
 import type { SpaceView } from './space-view-panel';
 
 /** How the drawing is shown in space: as cards (2.5D) or as balls (3D). Flat is null. */
@@ -29,8 +31,15 @@ export class SpaceSwitch {
   /** The graph's name, which the view in space is named by. */
   private graph = '';
 
-  /** For a card's drawing, its SVG, none for a table: the view in space lies over the frame it is in. */
-  constructor(private readonly svg: () => SVGSVGElement | null) {}
+  /**
+   * For a card's drawing, its SVG, none for a table: the view in space lies over the frame it is in. And the type it is
+   * drawn as. Its things stay where that type drew them, so a type chosen changes the view in space too. A network is
+   * laid out afresh in space (space_follows_type).
+   */
+  constructor(
+    private readonly svg: () => SVGSVGElement | null,
+    private readonly type: () => { drawn: string; plugin?: unknown } | undefined = () => undefined,
+  ) {}
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
   mode(): SpaceMode | null {
@@ -55,15 +64,21 @@ export class SpaceSwitch {
     this.now = mode;
     this.label();
     if (!mode) {
-      this.view?.close();
+      // it fades out over the flat drawing (space_glide)
+      const view = this.view,
+        el = this.svg()?.parentElement?.querySelector<HTMLElement>(':scope > .thoughtknot-space-view');
       this.view = null;
+      if (view) el ? fadeOut(el, () => view.close()) : view.close();
       return;
     }
     if (this.view) return this.view.cards(mode === 'cards');
     const svg = this.svg(),
       frame = svg?.parentElement;
     if (!svg || !frame) return this.closed(turn);
-    const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), { cards: mode === 'cards' });
+    const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
+      cards: mode === 'cards',
+      asDrawn: asDrawnFor(this.type()),
+    });
     if (turn !== this.turn) return view?.close();
     this.view = view;
     if (!view) this.closed(turn);

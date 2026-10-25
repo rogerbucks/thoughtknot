@@ -14,7 +14,7 @@ export const styles = readFileSync(`${root}styles.css`, 'utf8');
 export async function load(options = {}) {
   const doc = fakeDocument(options.width ?? 700),
     uninstall = installGlobals(doc),
-    state = { taken: options.taken, mobile: options.mobile };
+    state = { taken: options.taken, mobile: options.mobile, data: options.data };
   const obsidian = fakeObsidian(state);
   // main.js is CommonJS, as Obsidian loads it; the repository's own package type would make Node read it as a module
   const Module = require('node:module'),

@@ -5,11 +5,14 @@
 // folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
 // offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
+  BY_KIND,
   OPTIONS,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   edgesOf,
   foldsHiding,
+  groupChoices,
+  groupValues,
   labelsHidden,
   optionSaid,
   switchName,
@@ -21,8 +24,9 @@ const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
   return o ? optionSaid(o).name : switchName(s);
 };
-import type { Drawn, GraphDrawing, Kept, ViewState, ViewSwitch } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Kept, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
+import { trunkCount } from '../../untangle-fold.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -35,11 +39,25 @@ export interface ViewMenu {
   say: (words: string) => void;
 }
 
-/** Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. */
+/** The View menu's choice of what to group by: as written or found, none, or one of `groupChoices` (untangle_group_by). */
+const AUTO = '',
+  NONE = ':none';
+
+/** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
+export interface Grouping {
+  choices: () => string[];
+  pick: (choice: string) => void;
+}
+
+/**
+ * Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. With
+ * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens.
+ */
 export function renderViewMenu(
   root: HTMLElement,
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
+  grouping?: Grouping,
 ): ViewMenu {
   const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
@@ -53,18 +71,35 @@ export function renderViewMenu(
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
+  const label = grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by') });
+  const list = label?.createEl('select');
+  list?.addEventListener('change', () => grouping?.pick(list.value));
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
+  const fill = () => {
+    if (!list || !grouping) return;
+    const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
+    const choices: [string, string][] = [
+      [AUTO, word('view.group-by.auto')],
+      [NONE, word('view.group-by.none')],
+      ...grouping.choices().map((c): [string, string] => [c, said(c)]),
+    ];
+    list.replaceChildren();
+    for (const [value, text] of choices) list.createEl('option', { text, attr: { value } });
+    list.value = state.groupBy === undefined ? AUTO : state.groupBy === null ? NONE : state.groupBy.by;
+  };
   const refresh = () => {
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));
       says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
+    fill();
   };
   refresh();
   return {
     el,
     toggle: (b) => {
       el.hidden = !el.hidden;
+      if (!el.hidden) fill();
       b.setAttribute('aria-expanded', String(!el.hidden));
     },
     refresh,
@@ -98,7 +133,15 @@ export class ViewSwitching {
     this.o = o;
     this.host = host;
     this.owner = owner;
-    this.menu = renderViewMenu(root, o.state, (s, on) => this.turn(s, on));
+    const reading = o.reading;
+    const grouping = reading && {
+      choices: () => {
+        const d = host.drawing();
+        return d ? groupChoices(reading, d) : [];
+      },
+      pick: (choice: string) => this.groupBy(choice, reading),
+    };
+    this.menu = renderViewMenu(root, o.state, (s, on) => this.turn(s, on), grouping);
     this.drawnAs = this.now();
   }
 
@@ -122,14 +165,31 @@ export class ViewSwitching {
     }
   }
 
+  /** Groups the things by `choice` of the menu's Group by, and lays the graph out again (untangle_group_by). */
+  groupBy(choice: string, reading: NoteReading): void {
+    const d = this.host.drawing();
+    if (choice === AUTO || !d) this.o.state.groupBy = undefined;
+    else this.o.state.groupBy = choice === NONE ? null : { by: choice, values: groupValues(reading, d, choice) };
+    void this.redraw();
+  }
+
   /**
-   * Opens a busy hub's stub or a folded group's box, by its `data-fold` (`hub:` or `group:` and its name). Opened from the
-   * keyboard, `focus` then takes the keyboard to the hub, or to the group's first thing, on the drawing laid out again.
+   * Opens a busy hub's stub, a folded group's box or a bundle, by its `data-fold` (`hub:`, `group:` or `bundle:` and its
+   * name). Opened from the keyboard, `focus` then takes the keyboard to the hub, or to the group's first thing, on the
+   * drawing laid out again.
    */
   unfold(fold: string, focus?: (key: string) => void): void {
     const at = fold.indexOf(':'),
       name = fold.slice(at + 1),
       hub = fold.startsWith('hub:');
+    if (fold.startsWith('bundle:')) {
+      // a bundle opened: its links drawn apart again, the keyboard on the first thing of the group they run from
+      const from = name.split('\n')[0];
+      const first = this.o.state.plan?.groups.find(([label]) => label === from)?.[1][0];
+      this.o.state.open({ bundle: name });
+      void this.redraw(focus && first !== undefined ? () => focus(first) : undefined);
+      return;
+    }
     const to = hub ? name : this.o.state.plan?.groups.find(([label]) => label === name)?.[1][0];
     this.o.state.open(hub ? { hub: name } : { group: name });
     void this.redraw(focus && to !== undefined ? () => focus(to) : undefined);
@@ -175,6 +235,15 @@ export class ViewSwitching {
     void this.redraw();
   }
 
+  /**
+   * Whether links are to be merged, but no two groups have two links or more between them, so nothing is (Roger, 25 Oct
+   * 2026: "parallel links merged doesn't seem to work").
+   */
+  private nothingMerged(): boolean {
+    const d = this.host.drawing();
+    return this.o.state.switches.merge && !!d && trunkCount(edgesOf(d), this.o.state.plan?.groups ?? []) === 0;
+  }
+
   /** Lays the graph out again as the switches now fold it, and has the card put it in place; or says why not. */
   private async redraw(then?: () => void): Promise<void> {
     this.menu.say(word('redraw.drawing'));
@@ -191,7 +260,7 @@ export class ViewSwitching {
       return;
     }
     this.drawnAs = this.now();
-    this.menu.say('');
+    this.menu.say(this.nothingMerged() ? word('view.merge-nothing') : '');
     this.host.relaid(next);
     this.curveLater(next);
     then?.();

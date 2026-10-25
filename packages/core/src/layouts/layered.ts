@@ -13,6 +13,8 @@
 // Spots are box middles in CSS pixels, across (`LR`: rows run left to right) or down (`TB`). Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
 import { rowsOf, wrapped } from './layered-rows.ts';
+import { layoutOptions } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 
 /** A box's size, in CSS pixels. */
 export type Size = readonly [number, number];
@@ -79,8 +81,9 @@ export function layeredLayout(
   sizes: ReadonlyMap<string, Size> = new Map(),
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
+  options: Partial<LayoutOptions> = {},
 ): Map<string, [number, number]> {
-  return layered(shape, sizes, rankdir, previous).spots;
+  return layered(shape, sizes, rankdir, previous, options).spots;
 }
 
 /**
@@ -93,7 +96,12 @@ export function layered(
   sizes: ReadonlyMap<string, Size> = new Map(),
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
+  options: Partial<LayoutOptions> = {},
 ): Layered {
+  // the room beside each thing as `spacing` asks, and between rows, where links run, as `linkLength` asks
+  const { spacing, linkLength } = layoutOptions(options);
+  const gap = GAP * spacing,
+    rowGap = ROW_GAP * linkLength;
   const keys = shape.things.map((t) => t.key);
   const n = keys.length;
   const out: Layered = { spots: new Map(), via: new Map() };
@@ -110,7 +118,7 @@ export function layered(
     seen.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
-  const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, GAP, ROW_GAP);
+  const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, gap, rowGap);
   // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
   const chainOf = new Map<string, number[]>();
@@ -226,7 +234,7 @@ export function layered(
   const gapOf = (p: number, i: number) => {
     const a = items[p] as Item,
       b = items[i] as Item;
-    return (a.across + b.across) / 2 + (a.ends && b.ends ? LANE_GAP : a.ends || b.ends ? GAP / 2 : GAP);
+    return (a.across + b.across) / 2 + (a.ends && b.ends ? LANE_GAP : a.ends || b.ends ? gap / 2 : gap);
   };
   // each kept past the one before it by the room between them; `way` -1 runs leftward
   const keepApart = (row: number[], way: 1 | -1) => {
@@ -272,7 +280,7 @@ export function layered(
   let y = 0;
   for (let r = 0; r < rowCount; r++) {
     rowAt[r] = y + (depth[r] as number) / 2;
-    y += (depth[r] as number) + ROW_GAP;
+    y += (depth[r] as number) + rowGap;
   }
   let lo = Infinity;
   for (let i = 0; i < items.length; i++) lo = Math.min(lo, (at[i] as number) - (items[i] as Item).across / 2);

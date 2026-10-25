@@ -38,6 +38,16 @@ class BidiLabels(unittest.TestCase):
         self.assertIn(">&#x2068;مرحبا&#x2069;</text>", out)
         self.assertIn(">Ann</text>", out)
 
+    def test_the_blocks_end_where_the_core_ends_them(self):
+        # The pattern is a raw string, so re reads each escape. The code scan read the astral
+        # letters in a plain string as a range that overlaps another (risk SEC-20).
+        for letter in ["\u0590", "\ufeff", "\U00010800", "\U00010fff", "\U0001e800", "\U0001efff"]:
+            with self.subTest(hex(ord(letter))):
+                self.assertEqual(graph_bidi.isolated(letter), f"&#x2068;{letter}&#x2069;")
+        for letter in ["\u058f", "\u0900", "\ufffd", "\U000107ff", "\U00011000", "\U0001f600"]:
+            with self.subTest(hex(ord(letter))):
+                self.assertEqual(graph_bidi.isolated(letter), letter)
+
 
 if __name__ == "__main__":
     unittest.main()

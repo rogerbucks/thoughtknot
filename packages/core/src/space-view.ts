@@ -45,7 +45,7 @@ export interface SpaceLine {
   to?: string;
   /** What the link says, such as its relationship. */
   words?: string;
-  /** The link's own key in the drawing, such as its number, when it has one. */
+  /** The link's own key in the drawing, such as its number, or the fold it opens (`bundle:…`), when it has one. */
   of?: string;
 }
 

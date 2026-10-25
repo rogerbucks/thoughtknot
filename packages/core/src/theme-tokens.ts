@@ -86,6 +86,13 @@ const TABLE: [token: string, obsidian: string, kind: ThemeTokenKind, says: strin
   ['--gn-motion-dot', '', 'motion', 'how long a dot takes to travel a moving link', '2s'],
   ['--gn-motion-step', '', 'motion', 'how long a dot takes to run from one step of a path to the next', '1s'],
   ['--gn-motion-pulse', '', 'motion', 'how long the step now on takes to swell, then again to shrink', '1.2s'],
+  [
+    '--gn-motion-fade',
+    '',
+    'motion',
+    'how long the view in space takes to fade in over the flat drawing, or out',
+    '0.2s',
+  ],
   ['--gn-ease-even', '', 'motion', 'the easing of a movement that loops at an even speed', 'linear'],
   [
     '--gn-ease-soft',

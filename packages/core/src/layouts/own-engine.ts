@@ -15,6 +15,8 @@ import type { GraphShape } from '../types-shape.ts';
 import { groupedLayered } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import type { Size } from './layered.ts';
+import { layoutOptions } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
 
 /** The layouts the engine picks from. */
@@ -101,7 +103,7 @@ function backShare(shape: GraphShape): number {
 }
 
 /** Pushes apart boxes that overlap, by the shorter way, a few rounds, looking only at boxes near each other. */
-export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<string, Size>): void {
+export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<string, Size>, room = APART): void {
   const keys = [...spots.keys()];
   for (let round = 0; round < APART_ROUNDS; round++) {
     let moved = 0;
@@ -109,7 +111,7 @@ export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<s
       .map((k) => {
         const [x, y] = spots.get(k) as [number, number];
         const [w, h] = sizes.get(k) ?? [0, 0];
-        return { k, x, y, hw: w / 2 + APART / 2, hh: h / 2 + APART / 2 };
+        return { k, x, y, hw: w / 2 + room / 2, hh: h / 2 + room / 2 };
       })
       .sort((p, q) => p.x - p.hw - (q.x - q.hw) || (p.k < q.k ? -1 : 1));
     for (let i = 0; i < sorted.length; i++) {
@@ -146,20 +148,23 @@ export function ownSpots(
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
   groups: readonly Group[] = [],
+  options: Partial<LayoutOptions> = {},
 ): { spots: Map<string, [number, number]>; via: Map<string, [number, number][]>; boxes: GroupBox[]; pick: Pick } {
   const { shape, sizes } = marksShape(laid.marks);
+  const { spacing, linkLength } = layoutOptions(options);
   const pick = pickLayout(shape);
   let spots: Map<string, [number, number]>;
   let via = new Map<string, [number, number][]>();
   let boxes: GroupBox[] = [];
-  if (pick.layout === 'layered') ({ spots, via, boxes } = groupedLayered(shape, sizes, groups, rankdir, previous));
+  if (pick.layout === 'layered')
+    ({ spots, via, boxes } = groupedLayered(shape, sizes, groups, rankdir, previous, options));
   else {
-    // one link as long as a typical box is wide, plus room
+    // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
     const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
-    const unit = (ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30;
+    const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
     const placed = stressLayout(shape, 2, previous, { unit });
     spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
-    apart(spots, sizes);
+    apart(spots, sizes, APART * spacing);
   }
   // moved so the drawing starts at its top left, with a margin
   let x0 = Infinity,

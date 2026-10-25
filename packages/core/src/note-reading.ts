@@ -4,6 +4,7 @@
 import type { World } from '@thoughtknot/graph-spec';
 import type { CertaintyLevel } from './certainty-drawn.ts';
 import type { Estimate } from './estimates.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
@@ -104,6 +105,8 @@ export interface GraphDrawing {
   straightFirst?: boolean;
   /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
   engine?: 'own';
+  /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
+  layoutOptions?: Partial<LayoutOptions>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */

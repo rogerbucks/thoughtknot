@@ -11,6 +11,7 @@
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { LINK_LINE } from './arrows.ts';
 import { STYLE } from './layout.ts';
+import { bundleOf } from './untangle-fold.ts';
 import type { Folding } from './untangle-fold.ts';
 
 const NODE_LINE = /^ {2}"([^"]*)" \[label=/;
@@ -33,6 +34,33 @@ interface Drawn {
 }
 
 const quotedIn = (line: string): string[] => [...line.matchAll(/"([^"]*)"/g)].map((m) => m[1] ?? '');
+
+/**
+ * The trunks `plan` merges `links` into: two or more running from one group to another, in the order of their first.
+ * Each is named by its bundle (`bundleOf`). A link's ends are things, or a folded group's box (`group: 2`). Links
+ * folded, and bundles opened again (`unmerged`), are left apart. The host names each trunk the same way.
+ */
+export function trunksOf<L extends { n: number; from: string; to: string }>(
+  plan: Folding,
+  links: Iterable<L>,
+): { bundle: string; links: L[] }[] {
+  if (!plan.merge) return [];
+  const groupOf = new Map<string, number>(),
+    folded = new Set(plan.folded),
+    open = new Set(plan.unmerged ?? []);
+  plan.groups.forEach(([, things, isFolded], i) => {
+    for (const k of isFolded ? [`group: ${i + 1}`, ...things] : things) groupOf.set(k, i);
+  });
+  const pairs = new Map<string, L[]>();
+  for (const l of links) {
+    const a = groupOf.get(l.from),
+      b = groupOf.get(l.to);
+    if (folded.has(l.n) || a === undefined || b === undefined || a === b) continue;
+    const bundle = bundleOf(plan.groups[a]?.[0] ?? '', plan.groups[b]?.[0] ?? '');
+    if (!open.has(bundle)) pairs.set(bundle, [...(pairs.get(bundle) ?? []), l]);
+  }
+  return [...pairs].filter(([, ls]) => ls.length > 1).map(([bundle, ls]) => ({ bundle, links: ls }));
+}
 
 /** The two lines that draw a link of trunk `t`: from its thing to the trunk, then from the trunk on, with its reading. */
 function trunkLines(l: Drawn, t: number): string[] {
@@ -57,11 +85,9 @@ export function foldedSource(dot: string, plan: Folding | undefined): string {
   if (!plan) return dot;
   const hidden = new Set(plan.hidden),
     folded = new Set(plan.folded),
-    box = new Map<string, string>(),
-    groupOf = new Map<string, number>();
+    box = new Map<string, string>();
   plan.groups.forEach(([, things, isFolded], i) => {
     for (const k of things) if (isFolded) box.set(k, `group: ${i + 1}`);
-    for (const k of isFolded ? [`group: ${i + 1}`] : things) groupOf.set(k, i);
   });
   const gone = (k: string) => hidden.has(k) || box.has(k);
   const lines = dot.split('\n'),
@@ -79,16 +105,7 @@ export function foldedSource(dot: string, plan: Folding | undefined): string {
       attrs: m[3] ?? '',
     });
   }
-  // two or more links from one group to another, in the order of their first: a trunk
-  const pairs = new Map<string, Drawn[]>();
-  if (plan.merge)
-    for (const l of drawn.values()) {
-      const a = groupOf.get(l.from),
-        b = groupOf.get(l.to);
-      if (a === undefined || b === undefined || a === b) continue;
-      pairs.set(`${a}>${b}`, [...(pairs.get(`${a}>${b}`) ?? []), l]);
-    }
-  const trunks = [...pairs.values()].filter((ls) => ls.length > 1),
+  const trunks = trunksOf(plan, drawn.values()).map((t) => t.links),
     trunkOf = new Map(trunks.flatMap((ls, t) => ls.map((l): [number, number] => [l.n, t + 1])));
   const boxes = plan.groups.flatMap(([label, things, isFolded], i) =>
     isFolded ? [[i + 1, label, things.length] as const] : [],

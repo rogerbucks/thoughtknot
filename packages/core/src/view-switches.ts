@@ -14,6 +14,8 @@ import type { Settings } from './settings.ts';
 import { linksOf } from './style.ts';
 import type { Nudge, OnOff, StyleGraph } from './style-graph.ts';
 import { drawnGroups, foldPlan, foundGroups } from './untangle-fold.ts';
+import { groupsBy } from './group-by.ts';
+import type { GroupBy } from './group-by.ts';
 import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
@@ -77,8 +79,8 @@ export function labelsHidden(switches: Pick<ViewSwitches, 'labels'>, scale: numb
   return switches.labels && scale < LABEL_SCALE;
 }
 
-/** A fold to open or close again: a busy hub's, by its key, or a group's, by its label. */
-export type Fold = { hub: string } | { group: string };
+/** A fold to open or close again: a busy hub's, by its key, a group's, by its label, or a bundle's (`bundleOf`). */
+export type Fold = { hub: string } | { group: string } | { bundle: string };
 
 /**
  * A plan that lays out only the things and links `only` keeps, so they are drawn together (untangle_regroup). The rest
@@ -109,17 +111,21 @@ const FOUND_AT = { block: -1, line: 0, id: 'found' };
 
 /**
  * The groups drawing `d` draws: those its nudges write, else, for a large network, those its links make. The found
- * ones come as nudges too, so its layout source draws their boxes (untangle_found_groups).
+ * ones come as nudges too, so its layout source draws their boxes (untangle_found_groups). Grouped `by` a choice of
+ * the View menu, or by none (null), those groups stand instead of the written ones (untangle_group_by).
  */
-function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly FocusEdge[]) {
+function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly FocusEdge[], by?: GroupBy) {
+  const asNudges = (groups: [string, string[]][]) =>
+    groups.flatMap(([group, things]) => things.map((thing): Nudge => ({ word: 'group', thing, group, at: FOUND_AT })));
+  if (by !== undefined && !d.diagram) {
+    const groups = by ? groupsBy(by, keys) : [];
+    return { groups, found: asNudges(groups), instead: true };
+  }
   const written = drawnGroups(d.nudges ?? [], keys, d.diagram);
-  if (written.length || d.diagram) return { groups: written, found: [] as Nudge[] };
+  if (written.length || d.diagram) return { groups: written, found: [] as Nudge[], instead: false };
   const text = new Map(d.boxes.map((b) => [b.key, b.text]));
   const groups = foundGroups(keys, edges, (k) => text.get(k) ?? k);
-  const found = groups.flatMap(([group, things]) =>
-    things.map((thing): Nudge => ({ word: 'group', thing, group, at: FOUND_AT })),
-  );
-  return { groups, found };
+  return { groups, found: asNudges(groups), instead: false };
 }
 
 /**
@@ -135,8 +141,11 @@ export class ViewState {
   /** The hubs the user folded one by one, with busy hubs not folded as a whole: all start open (Roger, 24 Oct 2026). */
   private readonly foldedHubs = new Set<string>();
   private readonly openedGroups = new Set<string>();
+  private readonly openedBundles = new Set<string>();
   /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
   private mergeTurned = false;
+  /** What the things are grouped by, from the View menu: as written or found until the person picks (untangle_group_by). */
+  groupBy: GroupBy | undefined;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
   private readonly only = new WeakMap<object, Kept>();
 
@@ -158,23 +167,26 @@ export class ViewState {
       this.foldedHubs.clear();
     }
     if (on && s === 'groups') this.openedGroups.clear();
+    if (s === 'merge') this.openedBundles.clear();
     return s !== 'labels';
   }
 
-  /** Opens a hub's or a group's fold: its links, or its things, drawn again. */
+  /** Opens a hub's, a group's or a bundle's fold: its links, or its things, drawn again. */
   open(fold: Fold): void {
     if ('hub' in fold) {
       this.openedHubs.add(fold.hub);
       this.foldedHubs.delete(fold.hub);
-    } else this.openedGroups.add(fold.group);
+    } else if ('bundle' in fold) this.openedBundles.add(fold.bundle);
+    else this.openedGroups.add(fold.group);
   }
 
-  /** Folds a hub or a group opened before. */
+  /** Folds a hub, a group or a bundle opened before. */
   fold(fold: Fold): void {
     if ('hub' in fold) {
       this.openedHubs.delete(fold.hub);
       if (!this.switches.hubs) this.foldedHubs.add(fold.hub);
-    } else this.openedGroups.delete(fold.group);
+    } else if ('bundle' in fold) this.openedBundles.delete(fold.bundle);
+    else this.openedGroups.delete(fold.group);
   }
 
   /**
@@ -194,19 +206,24 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
-    const { groups, found } = groupsOf(d, keys, edges);
+    const { groups, found, instead } = groupsOf(d, keys, edges, this.groupBy);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
     this.plan = foldPlan(keys, edges, groups, {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
       merge: this.switches.merge,
-      opened: { hubs: this.openHubs(keys, edges, groups), groups: [...this.openedGroups] },
+      opened: {
+        hubs: this.openHubs(keys, edges, groups),
+        groups: [...this.openedGroups],
+        bundles: [...this.openedBundles],
+      },
     });
     const only = card ? this.only.get(card) : undefined;
     const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;
     const { folding: _was, ...rest } = d;
-    const grouped = found.length ? { ...rest, nudges: [...(d.nudges ?? []), ...found] } : rest;
+    const kept = instead ? (d.nudges ?? []).filter((n) => n.word !== 'group') : (d.nudges ?? []);
+    const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
     const drawn = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
     return plan ? { ...drawn, folding: plan } : drawn;
   }
@@ -219,7 +236,7 @@ export class ViewState {
   hub(d: GraphDrawing, key: string): { links: number; folded: boolean } | null {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d),
-      { groups } = groupsOf(d, keys, edges);
+      { groups } = groupsOf(d, keys, edges, this.groupBy);
     const opened = this.openHubs(keys, edges, groups).filter((k) => k !== key);
     const plan = foldPlan(keys, edges, groups, {
       ...this.switches,

@@ -96,7 +96,7 @@ describe('the View menu', () => {
         ['Busy hubs folded', 'switch', 'false'],
         ['Groups folded', 'switch', 'false'],
         ['Parallel links merged', 'switch', 'false'],
-        ['New layout engine (preview)', 'switch', 'false'],
+        ['ThoughtKnot layout engine', 'switch', 'true'],
       ]);
     } finally {
       env.uninstall();
@@ -147,11 +147,51 @@ describe('the View menu', () => {
           ['Busy hubs folded', 'false'],
           ['Groups folded', 'true'],
           ['Parallel links merged', 'false'],
-          ['New layout engine (preview)', 'false'],
+          ['ThoughtKnot layout engine', 'true'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');
       assert.ok(node(el, 'fold_group_1') && node(el, 'fold_group_2'), 'each group folded into its box');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('group by', () => {
+  // proves: untangle_group_by
+  test('the View menu groups the things by a property, by kind, or not at all, and back as written', async () => {
+    // Roger, 24 Oct 2026: "Group by" a property, or none, in 2D and 3D alike
+    const roles = KIT.replace(/\(ann:Person \{name: 'Ann'\}\)/, "(ann:Person {name: 'Ann', role: 'lead'})")
+      .replace(/\(bob:Person \{name: 'Bob'\}\)/, "(bob:Person {name: 'Bob', role: 'lead'})")
+      .replace(/\(cy:Person \{name: 'Cy'\}\)/, "(cy:Person {name: 'Cy', role: 'crew'})");
+    const { env, el } = await card(noteOf(roles, GROUPS));
+    try {
+      const clusters = () =>
+        el
+          .querySelectorAll('g.cluster')
+          .map((g) => g.textContent.trim())
+          .sort();
+      await until(() => clusters().length === 2);
+      assert.deepEqual(clusters(), ['Helpers', 'Makers'], 'as written, to start');
+      labelled(el, 'View').click();
+      const list = el.querySelector('.thoughtknot-group-by select');
+      assert.match(el.querySelector('.thoughtknot-group-by').textContent, /^Group by/);
+      assert.deepEqual(
+        list.querySelectorAll('option').map((o) => o.textContent),
+        ['As written or found', 'No groups', 'Kind', 'role'],
+      );
+      list.value = 'role';
+      list.dispatch('change');
+      await until(() => clusters().includes('lead'));
+      assert.deepEqual(clusters(), ['crew', 'lead']);
+      list.value = ':none';
+      list.dispatch('change');
+      await until(() => clusters().length === 0);
+      list.value = '';
+      list.dispatch('change');
+      await until(() => clusters().length === 2);
+      assert.deepEqual(clusters(), ['Helpers', 'Makers'], 'back as written');
     } finally {
       env.uninstall();
     }
@@ -287,6 +327,29 @@ describe('groups folded and links merged', () => {
       stub.focus();
       el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Enter', target: stub });
       await until(() => !!thing(el, 't2') && env.doc.activeElement === thing(el, 'box'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('tapping a bundle draws its links apart again, each as itself; merging turned again bundles them', async () => {
+    // proves: untangle_open_bundle
+    const { env, el } = await card();
+    try {
+      turn(el, 'Parallel links merged').click();
+      await until(() => !!edge(el, 'trunk_1'));
+      assert.equal(
+        edge(el, 'trunk_1').getAttribute('aria-label'),
+        '2 links from Makers to Helpers, bundled. Open them.',
+      );
+      assert.equal(edge(el, 'trunk_1').getAttribute('role'), 'button');
+      tap(el, edge(el, 'trunk_1'));
+      await until(() => !edge(el, 'trunk_1'));
+      assert.ok(edge(el, 'edge14') && !edge(el, 'edge14_tail'), 'Ann asks Cy, drawn on its own again');
+      turn(el, 'Parallel links merged').click();
+      await until(() => !edge(el, 'edge14_tail'));
+      turn(el, 'Parallel links merged').click();
+      await until(() => !!edge(el, 'trunk_1'));
     } finally {
       env.uninstall();
     }

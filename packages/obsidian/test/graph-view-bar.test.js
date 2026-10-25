@@ -106,7 +106,9 @@ describe('each bar and its details belong to their own drawing', () => {
     assert.match(bar, /background:\s*var\(--gn-bg-alt\)/);
     assert.match(bar, /border-bottom:\s*1px solid/);
     assert.match(
-      rule('.thoughtknot-view > .thoughtknot-problems,\n.thoughtknot-view > .thoughtknot-details'),
+      rule(
+        '.thoughtknot-view > :is(.thoughtknot-problems, .thoughtknot-details),\n.thoughtknot-over-panels > .thoughtknot-problems',
+      ),
       /border-top:\s*1px solid/,
     );
   });

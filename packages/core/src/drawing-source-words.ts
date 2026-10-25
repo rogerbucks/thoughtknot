@@ -126,4 +126,9 @@ export const DRAWING_SOURCE_WORDS = {
   'certainty.said.likely': 'likely',
   'certainty.said.doubtful': 'doubtful',
   'certainty.said.contested': 'contested',
+  // what the View menu groups things by (group-by.ts)
+  'view.group-by': 'Group by',
+  'view.group-by.auto': 'As written or found',
+  'view.group-by.none': 'No groups',
+  'view.group-by.kind': 'Kind',
 } as const;
