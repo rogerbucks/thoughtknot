@@ -4,7 +4,7 @@
 // Each score is a share from 0 to 1, read from the drawing's own marks, so Graphviz's drawing and ours are scored the
 // same way. Higher is better for every one:
 // - `clean`: links that cross no other link;
-// - `clear`: links that pass over no box but their own two;
+// - `clear`: links that pass over no box but their own two. A trunk's dots, where its links meet, are no box;
 // - `flow`: links that run the drawing's way, left to right or down;
 // - `near`: how short links are, against the spread of the drawing;
 // - `kinds`: how much nearer things of one kind sit to each other than to the rest;
@@ -26,6 +26,9 @@ export interface Readability {
 const PAIRS_MOST = 40_000;
 /** The room of the grid that finds links and boxes near each other, in CSS pixels. */
 const CELL = 128;
+
+/** The key of a trunk's dot (fold-source.ts). */
+const TRUNK_DOT = 'trunk: ';
 
 type Point = readonly [number, number];
 interface Line {
@@ -187,8 +190,9 @@ export function readability(
       }
   const boxCells = new Map<string, string[]>();
   for (const [k, { m, h }] of boxes)
-    for (const c of cells([m[0] - h[0], m[1] - h[1]], [m[0] + h[0], m[1] + h[1]]))
-      (boxCells.get(c) ?? boxCells.set(c, []).get(c) ?? []).push(k);
+    if (!k.startsWith(TRUNK_DOT))
+      for (const c of cells([m[0] - h[0], m[1] - h[1]], [m[0] + h[0], m[1] + h[1]]))
+        (boxCells.get(c) ?? boxCells.set(c, []).get(c) ?? []).push(k);
   const over = new Uint8Array(lines.length);
   for (const p of pieces) {
     if (over[p.link]) continue;

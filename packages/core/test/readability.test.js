@@ -308,7 +308,7 @@ describe('the overview', () => {
     const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
     const s = readability(ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)), d.rankdir);
     assert.ok(s.clear >= 0.995, `no link passes over a box: ${s.clear.toFixed(3)}`);
-    assert.ok(s.clean >= 0.6, `most links cross no other: ${s.clean.toFixed(2)}`);
+    assert.ok(s.clean >= 0.7, `most links cross no other: ${s.clean.toFixed(2)}`);
   });
 });
 
