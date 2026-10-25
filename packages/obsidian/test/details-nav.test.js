@@ -470,3 +470,47 @@ describe('in view mode, details in a tall card show on screen without covering t
     }
   });
 });
+
+describe('a second tap on what is selected', () => {
+  // second_tap_centres (Roger, 24 Oct 2026): the first tap selects and shows the details, the second centres it,
+  // readable, in 2D as in 3D. A tap again near things, not on the one selected, still chooses the next (§3).
+  let env, el;
+  before(async () => {
+    env = await load(GRAPHVIZ);
+    motion(env, true);
+    el = (await show(env, fence(GRAPH))).el;
+  });
+  after(() => env.uninstall());
+
+  /** A tap with a finger right on a thing's box. */
+  const tapOn = (key) => {
+    const vp = el.querySelector('.thoughtknot-viewport'),
+      p = placed(el, key),
+      middle = { clientX: (p.left + p.right) / 2, clientY: (p.top + p.bottom) / 2 },
+      at = { target: thing(el, key), pointerId: 21, pointerType: 'touch', button: 0, ...middle };
+    vp.dispatch('pointerdown', at);
+    vp.dispatch('pointerup', at);
+  };
+  /** How far a thing's middle is from the viewport's middle across, in pixels. */
+  const offMiddle = (key) => {
+    const p = placed(el, key);
+    return Math.abs((p.left + p.right) / 2 - 350);
+  };
+
+  test('the first tap selects and shows the details, and leaves the zoom as it was', () => {
+    zoomIn(el, 6);
+    const zoom = scale(el);
+    tapOn('q');
+    assert.ok(thing(el, 'q').hasClass('is-selected'), 'selected');
+    assert.equal(details(el).getAttribute('aria-label'), `Details of ${NAMES.q}`);
+    assert.ok(Math.abs(scale(el) - zoom) < 1e-9, 'the zoom kept');
+  });
+
+  test('the second centres it, readable, and keeps it selected', () => {
+    const before = offMiddle('q');
+    tapOn('q');
+    assert.ok(thing(el, 'q').hasClass('is-selected'), 'still the selection');
+    assert.ok(scale(el) >= READABLE_SCALE - 1e-9, `readable: ${scale(el)}`);
+    assert.ok(offMiddle('q') < 2, `in the middle: ${offMiddle('q')} from it, ${before} before`);
+  });
+});

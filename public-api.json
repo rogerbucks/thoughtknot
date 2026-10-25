@@ -15,7 +15,7 @@
         "AcrossZoom": [
           "class",
           "static new (content: Size, viewport: Size, mode: Mode): AcrossZoom",
-          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number) => Place | null",
+          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number, centre?: boolean) => Place | null",
           "fit: () => void",
           "fitScale: () => number",
           "handle: (e: ZoomEvent) => boolean",
@@ -4343,7 +4343,7 @@
         "Zoom": [
           "class",
           "static new (content: Size, viewport: Size, mode: Mode): Zoom",
-          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number) => Place | null",
+          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number, centre?: boolean) => Place | null",
           "fit: () => void",
           "fitScale: () => number",
           "handle: (e: ZoomEvent) => boolean",

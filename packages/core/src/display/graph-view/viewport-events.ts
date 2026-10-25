@@ -1,9 +1,9 @@
 // How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
 // Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
-// tap on empty space clears the selection. A box pressed with a mouse or pen and dragged moves it, and so does M on a
-// box (§6). A right-click on a box, or the menu key on it, opens its menu (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
-// again as the window and the
-// note move. The card (graph-view.ts) binds these once it has built its parts.
+// tap again on the one selected centres it. A tap on empty space clears the selection. A box pressed with a mouse or
+// pen and dragged moves it, and so does M on a box (§6). A right-click on a box, or the menu key on it, opens its menu
+// (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details
+// sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { BoxDrag } from './box-drag-view';
@@ -98,7 +98,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   };
   /** How the last press came: a finger held on a box opens its tooltip and picks it up, never the menu (§24, §6). */
   let lastPointer = 'mouse';
-  let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
+  let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean; again: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
   /** A press on a fold's stub or box: if it lifts where it came down, it opens the fold (§25). */
@@ -137,9 +137,11 @@ export function bindViewportEvents(host: ViewportHost): void {
     host.info.pressed(e); // any tooltip closes; a finger held on a thing or link opens it (§24)
     const fold = foldAt(e.target);
     if (fold) foldDown = { id: e.pointerId, ...p, fold };
-    else if (target ?? first)
-      boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse' };
-    else emptyDown = { id: e.pointerId, ...p };
+    else if (target ?? first) {
+      // pressed on what is selected, not only near it: a tap there centres it rather than choosing the next (§3)
+      const again = !!target && !!(e.target as Element).closest?.('g.node, g.edge')?.classList.contains('is-selected');
+      boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse', again };
+    } else emptyDown = { id: e.pointerId, ...p };
     if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
       vp.setPointerCapture(e.pointerId);
       vp.focus({ preventScroll: true });
@@ -182,9 +184,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
-    // on or near several things, a tap in the same place again chooses the next of them (§3)
-    const chosen = taps.choose(down, nearTo(down));
-    host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
+    // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
+    // (Roger, 24 Oct 2026, second_tap_centres). Near several, a tap in the same place again chooses the next (§3)
+    if (down.again && !e.shiftKey) sel.came('centre', () => host.open(down.target));
+    else {
+      const chosen = taps.choose(down, nearTo(down));
+      host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
+    }
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });

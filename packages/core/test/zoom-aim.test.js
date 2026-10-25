@@ -96,6 +96,20 @@ describe('aiming at a box', () => {
     assert.equal(to.scale, scale);
   });
 
+  // proves: second_tap_centres
+  test('asked to centre, a box in view and readable is brought to the middle all the same', () => {
+    const z = make();
+    z.zoomAt(4, 0, 0);
+    const box = { x: 0.15, y: 0.05, width: 0.05, height: 0.05 };
+    assert.equal(z.aim(box), null, 'in view, so no move otherwise');
+    const to = z.aim(box, 0, true);
+    assert.ok(to, 'a move');
+    z.restore(to.scale, to.x, to.y);
+    const v = z.view(),
+      middle = v.x + (box.x + box.width / 2) * v.width;
+    assert.ok(Math.abs(middle - 250) < 1e-6, `its middle across the viewport's middle: ${middle}`);
+  });
+
   test('reveal is aim and go, as before', () => {
     const a = make(),
       b = make();

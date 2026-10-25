@@ -367,6 +367,7 @@ describe('finding a thing', () => {
   test('Escape in the box closes the row and gives the focus back to the button that opened it', () => {
     const button = labelled(el, 'Find a thing'),
       row = el.querySelector('.thoughtknot-find');
+    if (row.hidden) button.click(); // a thing chosen closed it
     assert.ok(!row.hidden, 'open');
     const input = row.querySelector('input');
     input.focus();
