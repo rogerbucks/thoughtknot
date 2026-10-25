@@ -52,18 +52,28 @@ describe('layout options', () => {
     input.value = String(v);
     input.dispatch('change');
   };
-  /** How far the drawing's things spread: the diagonal of the box round them all. */
-  const spread = (el) => {
-    const points = el
+  /** Where each of the drawing's things is drawn: the middle of the box round its outline. */
+  const middles = (el) =>
+    el
       .querySelectorAll('g.node[data-key]')
-      .flatMap((g) =>
-        g.children.flatMap((c) => (c.getAttribute('points') ?? c.getAttribute('d') ?? '').split(/[ MCLZ]+/)),
+      .map((g) =>
+        g.children
+          .flatMap((c) => (c.getAttribute('points') ?? c.getAttribute('d') ?? '').split(/[ MCLZ]+/))
+          .map((p) => p.split(',').map(Number))
+          .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y)),
       )
-      .map((p) => p.split(',').map(Number))
-      .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
-    if (!points.length) return 0;
-    const side = (k) => Math.max(...points.map((p) => p[k])) - Math.min(...points.map((p) => p[k]));
-    return Math.hypot(side(0), side(1));
+      .filter((points) => points.length)
+      .map((points) =>
+        [0, 1].map((k) => (Math.max(...points.map((p) => p[k])) + Math.min(...points.map((p) => p[k]))) / 2),
+      );
+  /** How far apart the drawing's things are: the middle of each thing's distance to its nearest neighbour. */
+  const spread = (el) => {
+    const at = middles(el);
+    if (at.length < 2) return 0;
+    const nearest = at
+      .map((a) => Math.min(...at.filter((b) => b !== a).map((b) => Math.hypot(a[0] - b[0], a[1] - b[1]))))
+      .sort((a, b) => a - b);
+    return nearest[Math.floor(nearest.length / 2)];
   };
 
   // proves: layout_saved_with_view
@@ -86,7 +96,7 @@ describe('layout options', () => {
       await until(() => spread(el) > 0, LAID);
       const before = spread(el);
       slide(el, 0, 3);
-      await until(() => spread(el) > before * 1.2, LAID); // the things laid further apart
+      await until(() => spread(el) > before * 1.2, LAID); // each thing further from its neighbours
       assert.equal(env.state.files.get(PATH), note, 'not saved by sliding');
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
