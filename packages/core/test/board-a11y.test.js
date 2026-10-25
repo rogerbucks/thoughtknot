@@ -3,9 +3,9 @@
 // the board can be read without seeing it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readBoard } from '../packages/core/src/board.ts';
-import { boardOutline, boardSvg, itemSaid } from '../packages/core/src/board-svg.ts';
-import { PALETTES } from '../packages/core/src/palette.ts';
+import { readBoard } from '../src/board.ts';
+import { boardOutline, boardSvg, itemSaid } from '../src/board-svg.ts';
+import { PALETTES } from '../src/palette.ts';
 
 const BOARD = readBoard(`// graph: ideas · BOARD
 (c:Frame {x: 0, y: 0, w: 600, h: 300, text: 'Travel'}),
