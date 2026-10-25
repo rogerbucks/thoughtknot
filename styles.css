@@ -71,6 +71,7 @@
   --gn-motion-dot: 2s;
   --gn-motion-step: 1s;
   --gn-motion-pulse: 1.2s;
+  --gn-motion-fade: 0.2s;
   --gn-ease-even: linear;
   --gn-ease-soft: var(--anim-motion-smooth, ease-in-out);
 }
@@ -2582,11 +2583,11 @@ pre.thoughtknot-code {
 }
 @media (prefers-reduced-motion: no-preference) {
   .thoughtknot-space-view {
-    animation: thoughtknot-space-in 0.3s ease-out;
+    animation: thoughtknot-space-in var(--gn-motion-fade) var(--gn-ease-soft);
   }
   .thoughtknot-space-view.is-leaving {
     opacity: 0;
-    transition: opacity 0.2s ease-in;
+    transition: opacity var(--gn-motion-fade) var(--gn-ease-soft);
   }
 }
 .thoughtknot-space-canvas {

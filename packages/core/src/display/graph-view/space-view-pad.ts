@@ -68,7 +68,7 @@ export function spacePad(el: HTMLElement, shown: string, move: (m: SpaceMove) =>
 
 /** How long the camera takes to glide from above to its slant, in milliseconds. */
 export const GLIDE_MS = 700;
-/** How long the view takes to fade out over the flat drawing, in milliseconds; styles.css fades it in. */
+/** How long the view takes to fade out over the flat drawing, in milliseconds: the token --gn-motion-fade. */
 export const FADE_MS = 200;
 
 /** What stops the glide at once: the person reaching for the view, to turn, move, zoom or pick. */
