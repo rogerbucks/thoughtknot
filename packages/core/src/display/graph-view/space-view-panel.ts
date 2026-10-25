@@ -281,6 +281,7 @@ export async function openSpaceView(
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
+    touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
@@ -288,6 +289,7 @@ export async function openSpaceView(
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (down.size === 1) {
+      touching = e.pointerType === 'touch';
       pans = e.shiftKey || e.button === 1 || e.button === 2;
       travel = 0;
     }
@@ -309,7 +311,8 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
-      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : turnRound(orbit, dx, dy, pivot());
+      // a finger turns the way it goes, as fingerTurn does; a mouse drags the camera round. Both turn round the pivot
+      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : turnRound(orbit, touching ? -dx : dx, dy, pivot());
     }
     again();
   });

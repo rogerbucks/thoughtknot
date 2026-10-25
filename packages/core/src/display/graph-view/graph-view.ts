@@ -158,7 +158,7 @@ export class GraphView extends Lifecycle {
     if (this.o.switches)
       this.switching = new ViewSwitching(
         root,
-        this.o.switches,
+        { ...this.o.switches, reading: this.o.reading },
         { drawing: () => this.drawing(), relaid: (d) => this.relaid(d), shown: () => this.apply(this.zoom.view()) },
         this,
       );

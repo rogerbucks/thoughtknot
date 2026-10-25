@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  fingerTurn,
   KEY_STEP,
   ZOOM_STEP,
   keyMove,
@@ -13,7 +14,7 @@ import {
   twistOf,
   twoFingers,
 } from '../src/space-controls.ts';
-import { eyeOf, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
+import { eyeOf, orbitBy, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
 
@@ -139,4 +140,12 @@ test('a drag turns the view round the picked thing, or the middle: it stays stil
   }
   assert.notDeepEqual(eyeOf(o), eyeOf(ORBIT), 'the camera did move');
   assert.equal(o.distance, ORBIT.distance);
+});
+
+test('one finger turns the view the way it goes: the drawing beyond the middle follows it, where a mouse drags the camera', () => {
+  const far = (o) => projectPoint(spaceMatrix(o, 1, 4000), [0, 200, 0], 600, 600);
+  const was = far(ORBIT);
+  assert.ok(far(fingerTurn(ORBIT, 50, 0)).x > was.x + 20, 'a finger right takes the far side right');
+  assert.ok(far(fingerTurn(ORBIT, -50, 0)).x < was.x - 20);
+  assert.equal(fingerTurn(ORBIT, 0, 30).tilt, orbitBy(ORBIT, 0, 30).tilt, 'up and down are as they were');
 });

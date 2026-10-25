@@ -589,6 +589,7 @@ export const TYPES = [
   'GraphShape',
   'GraphSource',
   'GraphStep',
+  'GroupBy',
   'GroupRow',
   'GuardTried',
   ...TYPES_LATE,
