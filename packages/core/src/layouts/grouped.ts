@@ -35,6 +35,8 @@ const LABEL = 22;
 const GUTTER = 12;
 /** The room between two links sharing a gutter. */
 const GUTTER_STEP = 4;
+/** How far past its own box a link from a group's thing steps, into the room after its row, before it turns. */
+const STEP_OUT = 12;
 
 /** The bounds of a layout's spots, boxes and bends. */
 function boundsOf(inner: Layered, sizes: ReadonlyMap<string, Size>): [number, number, number, number] {
@@ -123,6 +125,8 @@ export function groupedLayered(
   }
   const boxOf = new Map(out.boxes.map((b) => [b.id, b]));
   const inGutter = new Map<string, number>();
+  const membersOf = new Map<string, string[]>();
+  for (const [k, id] of groupOf) membersOf.set(id, [...(membersOf.get(id) ?? []), k]);
   // the lone things, as boxes a link must not cut through
   const lone: GroupBox[] = shape.things
     .filter((t) => !groupOf.has(t.key))
@@ -137,27 +141,61 @@ export function groupedLayered(
       b = node(l.to);
     if (a === b) continue;
     const bends = top.via.get(viaKey(a, b)) ?? [];
-    // from a thing in a group, first out to the group's edge, level with the thing; into one, the same way round
-    const axis = rankdir === 'LR' ? 0 : 1;
+    // from a thing in a group, first out to the group's edge, level with the thing; into one, the same way round.
+    // Where another of the group's things is in that way, the link steps into the room after its thing's row. It runs
+    // to the gutter nearer where it is going, then along the gutter to the edge
+    const axis = rankdir === 'LR' ? 0 : 1,
+      across = (1 - axis) as 0 | 1;
     const edge = (k: string, toward: readonly [number, number]): [number, number][] => {
       const box = boxOf.get(groupOf.get(k) ?? '');
       const at = out.spots.get(k);
       if (!box || !at) return [];
       const middle = axis === 0 ? box.x : box.y,
         half = (axis === 0 ? box.width : box.height) / 2;
-      const rim = middle + Math.sign(toward[axis] - middle) * half;
-      return [axis === 0 ? [rim, at[1]] : [at[0], rim]];
+      const way = Math.sign(toward[axis] - middle) || 1,
+        rim = middle + way * half;
+      const level = (along: number, across: number): [number, number] =>
+        axis === 0 ? [along, across] : [across, along];
+      const own = (sizes.get(k) ?? [0, 0])[axis];
+      const lo = Math.min(at[axis] + (way * own) / 2, rim),
+        hi = Math.max(at[axis] + (way * own) / 2, rim);
+      const blocked = (membersOf.get(box.id) ?? []).some((m) => {
+        if (m === k) return false;
+        const p = out.spots.get(m) as [number, number],
+          size = sizes.get(m) ?? [0, 0];
+        const reach = size[axis] / 2,
+          side = size[across] / 2;
+        return p[axis] + reach > lo && p[axis] - reach < hi && Math.abs(p[across] - at[across]) < side + 2;
+      });
+      if (!blocked) return [level(rim, at[across])];
+      // the gutter nearer where the link goes, each link in its own lane
+      const centre = axis === 0 ? box.y : box.x,
+        span = (axis === 0 ? box.height : box.width) / 2;
+      const top = toward[across] < centre;
+      const key = `${box.id} ${top ? 'top' : 'bottom'}`,
+        n = inGutter.get(key) ?? 0;
+      inGutter.set(key, n + 1);
+      const inset = (pad + GUTTER) / 2 + (top && axis === 0 ? LABEL : 0);
+      const gutter = (top ? centre - span + inset : centre + span - inset) + ((n % 5) - 2) * GUTTER_STEP;
+      // past the deepest box of its row, so the turn is in the room between rows
+      const row = (membersOf.get(box.id) ?? []).reduce((most, m) => {
+        const p = out.spots.get(m) as [number, number];
+        return Math.abs(p[axis] - at[axis]) < 1 ? Math.max(most, (sizes.get(m) ?? [0, 0])[axis]) : most;
+      }, own);
+      const step = at[axis] + way * (row / 2 + STEP_OUT);
+      return [level(step, at[across]), level(step, gutter), level(rim, gutter)];
     };
     // with no bends between them, each end heads for the other's box
     const first = (bends[0] ?? top.spots.get(b)) as [number, number],
       last = (bends[bends.length - 1] ?? top.spots.get(a)) as [number, number];
     if (!bends.length && !groupOf.has(l.from) && !groupOf.has(l.to)) continue;
-    const path = [...edge(l.from, first), ...bends, ...edge(l.to, last).reverse()];
+    // the ways out of and into the groups stay as they are; only the bends between them move to a gutter
+    const out1 = edge(l.from, first),
+      in1 = edge(l.to, last).reverse();
     const own = new Set([groupOf.get(l.from), groupOf.get(l.to)]);
-    out.via.set(
-      viaKey(l.from, l.to),
-      throughGutters(path, [...out.boxes.filter((g) => !own.has(g.id)), ...lone], axis, inGutter),
-    );
+    const others = [...out.boxes.filter((g) => !own.has(g.id)), ...lone];
+    const between = throughGutters([...out1.slice(-1), ...bends, ...in1.slice(0, 1)], others, axis, inGutter, pad);
+    out.via.set(viaKey(l.from, l.to), [...out1.slice(0, -1), ...between, ...in1.slice(1)]);
   }
   return out;
 }
@@ -179,8 +217,8 @@ function throughGutters(
   const a = path[0] as [number, number],
     z = path[path.length - 1] as [number, number];
   const lane = new Map<string, number>();
-  return path.map((p, i) => {
-    if (i === 0 || i === path.length - 1) return p;
+  // where across a bend at `p` goes: into a gutter, back to the straight way, or where it is
+  const acrossAt = (p: readonly [number, number]): number => {
     const t = z[axis] === a[axis] ? 0 : (p[axis] - a[axis]) / (z[axis] - a[axis]);
     const ideal = a[across] + (z[across] - a[across]) * Math.min(1, Math.max(0, t));
     const box = boxes.find((b) => {
@@ -191,19 +229,20 @@ function throughGutters(
         hi = (mid[across] as number) + (half[across] as number);
       return inColumn && ideal > lo && ideal < hi && (p[across] <= lo || p[across] >= hi);
     });
-    if (!box) {
-      // in a row with nothing in the straight way, the bend comes back to it
-      const blocked = boxes.some((b) => {
-        const mid = [b.x, b.y],
-          half = [b.width / 2, b.height / 2];
-        return (
-          Math.abs(p[axis] - (mid[axis] as number)) <= (half[axis] as number) + 1 &&
-          Math.abs(ideal - (mid[across] as number)) <= (half[across] as number) + PAD
-        );
-      });
-      return blocked ? p : axis === 0 ? [p[0], ideal] : [ideal, p[1]];
+    if (!box?.id) {
+      // the bend comes back to the straight way, or to the free room in its row nearest it
+      const inRow = boxes.filter(
+        (b) => Math.abs(p[axis] - (axis === 0 ? b.x : b.y)) <= (axis === 0 ? b.width : b.height) / 2 + 1,
+      );
+      const span = (b: GroupBox): [number, number] => {
+        const mid = across === 0 ? b.x : b.y,
+          half = (across === 0 ? b.width : b.height) / 2 + PAD;
+        return [mid - half, mid + half];
+      };
+      const free = (v: number) => inRow.every((b) => !(v > span(b)[0] && v < span(b)[1]));
+      const choices = [ideal, ...inRow.flatMap(span)].filter(free);
+      return choices.reduce((best, v) => (Math.abs(v - ideal) < Math.abs(best - ideal) ? v : best), p[across]);
     }
-    if (!box.id) return p;
     const mid = across === 0 ? box.x : box.y,
       half = (across === 0 ? box.width : box.height) / 2;
     // the gutter on the side the link came round, below the name when it is the top one
@@ -215,7 +254,17 @@ function throughGutters(
       lane.set(key, ((k % 5) - 2) * GUTTER_STEP);
     }
     const inset = (pad + GUTTER) / 2 + (top && across === 1 ? LABEL : 0);
-    const at = (top ? mid - half + inset : mid + half - inset) + (lane.get(key) as number);
-    return axis === 0 ? [p[0], at] : [at, p[1]];
-  });
+    return (top ? mid - half + inset : mid + half - inset) + (lane.get(key) as number);
+  };
+  const out = path.map((p): [number, number] => [p[0], p[1]]);
+  for (let i = 1; i < path.length - 1; i++) {
+    const p = path[i] as [number, number],
+      q = path[i + 1] as [number, number];
+    // the two bends of a lane through one row move together, so the lane stays straight through the row
+    const pair = i + 1 < path.length - 1 && p[across] === q[across] && p[axis] !== q[axis];
+    const at = acrossAt(pair ? (axis === 0 ? [(p[0] + q[0]) / 2, p[1]] : [p[0], (p[1] + q[1]) / 2]) : p);
+    for (const j of pair ? [i, i + 1] : [i]) (out[j] as [number, number])[across] = at;
+    if (pair) i++;
+  }
+  return out;
 }
