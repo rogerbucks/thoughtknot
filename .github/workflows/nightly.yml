@@ -4,9 +4,10 @@ name: Nightly
 # newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
 # (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
 #
-# Six jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
-# nightly. `security` stops the night on an open high or critical security alert. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
-# check and the build, so a nightly is published only when every test passes. It uploads the same assets a release
+# Seven jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
+# nightly. `security` stops the night on an open high or critical security alert. `build` checks out main, installs and runs main's own code with read access only: the content check and the build.
+# `suite` runs the full suite on six machines at once, and `publish` waits for it, so a nightly is published only when
+# every test passes. `build` uploads the same assets a release
 # carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `desktop` builds the desktop app's
 # installers at the same commit, by the Desktop app workflow: a .dmg, an NSIS .exe and a .deb. Each is signed where
 # its keys are set, and unsigned where they are not (Roger, 23 Oct 2026: private nightlies only, unsigned if there is
@@ -112,11 +113,46 @@ jobs:
           enable-cache: false
       - run: node scripts/public-readiness.mjs --history --setup
 
+  # The whole suite, its test files split over six machines that run at once, as CI's suite does (ci.yml): about three
+  # minutes, not the thirteen one machine took. `publish` waits for all six, so a nightly still goes out only when every
+  # test passed. Like the build, it reads main with read access only.
+  suite:
+    needs: [check, security]
+    if: needs.check.outputs.moved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+          # the full history: the tests-first records test needs it
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's shards get 8 GB, and so does this
+      - env:
+          SHARD: ${{ matrix.shard }}
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
+        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/6" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-report-${{ matrix.shard }}
+          path: test-report.txt
+          retention-days: 7
+
   build:
     needs: [check, security]
     if: needs.check.outputs.moved == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     outputs:
       version: ${{ steps.version.outputs.version }}
       sha: ${{ steps.version.outputs.sha }}
@@ -133,10 +169,7 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
-      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 8 GB, and so does this
-      - env:
-          THOUGHTKNOT_TEST_MEMORY_MB: 8192
-        run: npm test
+      # the suite runs in the suite job, beside this one; publish waits for both
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
         id: version
@@ -203,9 +236,9 @@ jobs:
       LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
 
   publish:
-    needs: [check, build, desktop]
-    # the plugin is published when it built, with the installers when they built too
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    needs: [check, build, suite, desktop]
+    # the plugin is published when it built and every test passed, with the installers when they built too
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.suite.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

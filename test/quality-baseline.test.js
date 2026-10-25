@@ -189,7 +189,7 @@ describe('a baseline committed worse than its parent’s', () => {
     }
     assert.deepEqual(suiteJobs.sort(), [
       'ci.yml suite',
-      'nightly.yml build',
+      'nightly.yml suite',
       'os-check.yml suite',
       'quality-baseline.yml measure',
       'release-check.yml quality',
@@ -205,7 +205,7 @@ describe('a baseline committed worse than its parent’s', () => {
     const ci = ceiling(jobs(read('.github/workflows/ci.yml')).suite);
     assert.ok(ci, 'CI’s shards have a ceiling');
     for (const [file, name] of [
-      ['nightly.yml', 'build'],
+      ['nightly.yml', 'suite'],
       ['quality-baseline.yml', 'measure'],
       ['release-check.yml', 'quality'],
       ['release.yml', 'quality'],
