@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  fingerTurn,
   KEY_STEP,
   ZOOM_STEP,
   keyMove,
@@ -12,7 +13,7 @@ import {
   twistOf,
   twoFingers,
 } from '../src/space-controls.ts';
-import { eyeOf, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
+import { eyeOf, orbitBy, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
 
@@ -119,4 +120,12 @@ test('two fingers twisting turn the view with them: the drawing follows the fing
     after = at(twisted);
   const angle = (p) => Math.atan2(p.y - 300, p.x - 300);
   assert.ok(Math.abs(angle(after) - angle(before) - Math.PI / 6) < 0.02, `${angle(before)} -> ${angle(after)}`);
+});
+
+test('one finger turns the view the way it goes: the drawing beyond the middle follows it, where a mouse drags the camera', () => {
+  const far = (o) => projectPoint(spaceMatrix(o, 1, 4000), [0, 200, 0], 600, 600);
+  const was = far(ORBIT);
+  assert.ok(far(fingerTurn(ORBIT, 50, 0)).x > was.x + 20, 'a finger right takes the far side right');
+  assert.ok(far(fingerTurn(ORBIT, -50, 0)).x < was.x - 20);
+  assert.equal(fingerTurn(ORBIT, 0, 30).tilt, orbitBy(ORBIT, 0, 30).tilt, 'up and down are as they were');
 });
