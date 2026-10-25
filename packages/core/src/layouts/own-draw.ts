@@ -167,8 +167,9 @@ export function ownMarks(
   groups: readonly SourceGroup[] = [],
   options: Partial<LayoutOptions> = {},
 ): LaidMarks {
-  const way = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
-  const { spots, via, boxes } = ownSpots(laid, way, undefined, groups, options);
+  const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
+  // the way the rows went: an overview's may turn (own-engine.ts)
+  const { spots, via, boxes, rankdir: way } = ownSpots(laid, asked, undefined, groups, options);
   return directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way);
 }
 

@@ -15,7 +15,8 @@ import type { GraphShape } from '../types-shape.ts';
 import { groupedLayered } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { RESTARTS, TRUNK_LINK, viaKey } from './layered.ts';
-import type { Size } from './layered.ts';
+import type { Layered, Size } from './layered.ts';
+import { SCREEN, boundsOf } from './folded-rows.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
@@ -155,7 +156,13 @@ export function ownSpots(
   previous?: ReadonlyMap<string, readonly number[]>,
   groups: readonly Group[] = [],
   options: Partial<LayoutOptions> = {},
-): { spots: Map<string, [number, number]>; via: Map<string, [number, number][]>; boxes: GroupBox[]; pick: Pick } {
+): {
+  spots: Map<string, [number, number]>;
+  via: Map<string, [number, number][]>;
+  boxes: GroupBox[];
+  pick: Pick;
+  rankdir: 'LR' | 'TB';
+} {
   const { shape: whole, sizes } = marksShape(laid.marks);
   const { spacing, linkLength } = layoutOptions(options);
   const { shape, trunks } = trunksOut(whole);
@@ -163,17 +170,19 @@ export function ownSpots(
   let spots: Map<string, [number, number]>;
   let via = new Map<string, [number, number][]>();
   let boxes: GroupBox[] = [];
-  if (pick.layout === 'layered')
-    ({ spots, via, boxes } = groupedLayered(
-      shape,
-      sizes,
-      groups,
-      rankdir,
-      previous,
-      options,
-      pick.why === 'overview' && !previous ? RESTARTS : 0,
-    ));
-  else {
+  let way = rankdir;
+  if (pick.layout === 'layered') {
+    const rowsOf = (w: 'LR' | 'TB') =>
+      groupedLayered(shape, sizes, groups, w, previous, options, pick.why === 'overview' && !previous ? RESTARTS : 0);
+    let rows = rowsOf(rankdir);
+    // an overview's boxes are few and wide: its rows go whichever way gives the drawing a screen's shape, nearer
+    if (pick.why === 'overview') {
+      const other = rankdir === 'LR' ? 'TB' : 'LR';
+      const turned = rowsOf(other);
+      if (offScreen(turned, sizes) < offScreen(rows, sizes)) [rows, way] = [turned, other];
+    }
+    ({ spots, via, boxes } = rows);
+  } else {
     // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
     const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
     const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
@@ -181,7 +190,7 @@ export function ownSpots(
     spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
     apart(spots, sizes, APART * spacing);
   }
-  trunksBack(trunks, spots, via, rankdir === 'TB' ? 1 : 0);
+  trunksBack(trunks, spots, via, way === 'TB' ? 1 : 0);
   // moved so the drawing starts at its top left, with a margin
   let x0 = Infinity,
     y0 = Infinity;
@@ -198,7 +207,7 @@ export function ownSpots(
     const [x, y] = moved([b.x, b.y]);
     return { ...b, x, y };
   });
-  return { spots, via, boxes, pick };
+  return { spots, via, boxes, pick, rankdir: way };
 }
 
 /** A trunk's two points (fold-source.ts): where its links meet, and where they part. */
@@ -294,6 +303,12 @@ function trunksBack(
     via.set(viaKey(t.in, t.out), path.slice(2, k - 1));
     via.set(viaKey(t.out, t.to), [path[k - 1] as Point, path[k] as Point]);
   }
+}
+
+/** How far a layout's shape, its width over its height, is from a screen's, either way. */
+function offScreen(rows: Layered, sizes: ReadonlyMap<string, Size>): number {
+  const [x0, y0, x1, y1] = boundsOf(rows, sizes);
+  return x1 > x0 && y1 > y0 ? Math.abs(Math.log((x1 - x0) / (y1 - y0) / SCREEN)) : 0;
 }
 
 /** The room round a drawing laid out by our own engine, in CSS pixels. */
