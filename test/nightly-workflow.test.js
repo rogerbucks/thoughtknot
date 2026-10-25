@@ -95,7 +95,7 @@ describe('the nightly workflow', () => {
     assert.ok(at(/check-classification\.mjs --all/) > at(/^npm audit signatures$/), 'the content check');
     assert.ok(at(/^npm run build$/) > at(/check-classification\.mjs --all/), 'built after the content check');
     assert.equal(at(/^npm test\b/), -1, 'the suite is not run again: main’s CI ran it (tests-passed)');
-    assert.ok(at(/^npm run build$/) > at(/check-classification\.mjs --all/), 'built after the content check');
+    assert.doesNotMatch(build, /fetch-depth/, 'the build needs no history: it runs no test');
     assert.match(build, /git rev-parse HEAD\)" = "\$SHA"/, 'the build is of the commit whose tests passed');
     assert.equal(
       runs.some((r) => /\bnpm (install|i)\b/.test(r)),
