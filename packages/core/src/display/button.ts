@@ -1,6 +1,6 @@
 // An icon button, as every panel and bar of the display layer makes one (spec §3). It lives in the shell, below the
 // graph view. So the progress banner and the export form reach it without importing the graph view.
-import { setIcon } from './host';
+import { setIcon } from './host.ts';
 
 /** An icon button named for screen readers, with words beside the icon when given. */
 export function button(

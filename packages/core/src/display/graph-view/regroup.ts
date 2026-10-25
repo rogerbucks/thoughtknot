@@ -5,7 +5,7 @@
 // brief, and at once when the system asks for reduced motion (motion_reduced_respected). Only a shift and the
 // opacity move, for the length of the glide: nothing that places a box is changed. Nothing here reaches the note.
 import type { Kept, Size, View, Zoom } from '@thoughtknot/core';
-import { reducedMotion } from './details-nav';
+import { reducedMotion } from './details-nav.ts';
 import type { ViewSwitching } from './view-switches';
 
 /** How long the boxes take to glide to their new places, in milliseconds. */
