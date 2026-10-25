@@ -539,7 +539,9 @@
     "title": "iOS app",
     "size": "L",
     "requirements": [
-      "ios_app"
+      "ios_app",
+      "android_app",
+      "mobile_checked"
     ]
   },
   "W33": {
