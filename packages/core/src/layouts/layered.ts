@@ -12,6 +12,7 @@
 //
 // Spots are box middles in CSS pixels, across (`LR`: rows run left to right) or down (`TB`). Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
+import { rowsOf, wrapped } from './layered-rows.ts';
 
 /** A box's size, in CSS pixels. */
 export type Size = readonly [number, number];
@@ -20,10 +21,13 @@ export type Size = readonly [number, number];
 const GAP = 18;
 const ROW_GAP = 56;
 /** Sweeps of ordering rows by their neighbours, and rounds of pulling things across. */
-const SWEEPS = 8;
+const SWEEPS = 24;
+/** The most rounds of swapping neighbours after each sweep. */
+const TRANSPOSE_ROUNDS = 6;
 const PULLS = 12;
-/** The shape a drawing is aimed at: this many wide to one high, about a screen's. */
-const ASPECT = 1.6;
+/** The room a link bending through a row takes, and between two such links, in CSS pixels. */
+const LANE = 8;
+const LANE_GAP = 4;
 
 /** One thing or stand-in to place: its row, its size across the rows, and its neighbours in the rows either side. */
 interface Item {
@@ -35,113 +39,64 @@ interface Item {
   ends?: readonly [number, number];
 }
 
-/**
- * Each thing's row, by index. `out` is each thing's links, and is given back with the links that ran back turned round.
- */
-function rowsOf(n: number, out: number[][]): number[] {
-  // turn round the links that run back: a link to a thing still being searched from is one
-  const state = new Uint8Array(n);
-  const forward: number[][] = out.map(() => []);
-  const visit = (start: number) => {
-    const stack: [number, number][] = [[start, 0]];
-    state[start] = 1;
-    while (stack.length) {
-      const top = stack[stack.length - 1] as [number, number];
-      const [v, k] = top;
-      const next = out[v] ?? [];
-      if (k >= next.length) {
-        state[v] = 2;
-        stack.pop();
-        continue;
-      }
-      top[1] = k + 1;
-      const w = next[k] as number;
-      if (state[w] === 1) (forward[w] as number[]).push(v);
+/** A layered layout: each thing's middle, and the bends of each link that skips rows, by `from` and `to` keys. */
+export interface Layered {
+  spots: Map<string, [number, number]>;
+  via: Map<string, [number, number][]>;
+}
+
+/** The key of a link from `from` to `to`, for `Layered.via`. */
+export const viaKey = (from: string, to: string): string => `${from}\n${to}`;
+
+/** The crossings between two rows, as links from places in one to places in the next: inversions, by merge sort. */
+function crossingsOf(pairs: [number, number][]): number {
+  pairs.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  const xs = pairs.map((p) => p[1]);
+  let count = 0;
+  const sort = (lo: number, hi: number): number[] => {
+    if (hi - lo <= 1) return xs.slice(lo, hi);
+    const mid = (lo + hi) >> 1;
+    const a = sort(lo, mid),
+      b = sort(mid, hi);
+    const merged: number[] = [];
+    let i = 0,
+      j = 0;
+    while (i < a.length || j < b.length)
+      if (j >= b.length || (i < a.length && (a[i] as number) <= (b[j] as number))) merged.push(a[i++] as number);
       else {
-        (forward[v] as number[]).push(w);
-        if (state[w] === 0) {
-          state[w] = 1;
-          stack.push([w, 0]);
-        }
+        count += a.length - i;
+        merged.push(b[j++] as number);
       }
-    }
+    return merged;
   };
-  const into = new Int32Array(n);
-  for (const next of out) for (const w of next) into[w] = (into[w] as number) + 1;
-  for (let v = 0; v < n; v++) if (!into[v] && !state[v]) visit(v);
-  for (let v = 0; v < n; v++) if (!state[v]) visit(v);
-  // longest path: each thing a row after the latest thing that links to it
-  const indeg = new Int32Array(n);
-  for (const next of forward) for (const w of next) indeg[w] = (indeg[w] as number) + 1;
-  const row = new Int32Array(n);
-  const queue: number[] = [];
-  for (let v = 0; v < n; v++) if (!indeg[v]) queue.push(v);
-  for (let h = 0; h < queue.length; h++) {
-    const v = queue[h] as number;
-    for (const w of forward[v] ?? []) {
-      row[w] = Math.max(row[w] as number, (row[v] as number) + 1);
-      indeg[w] = (indeg[w] as number) - 1;
-      if (!indeg[w]) queue.push(w);
-    }
-  }
-  // a start sits just before the nearest thing it links to, so its links do not run the length of the drawing
-  const fed = new Uint8Array(n);
-  for (const next of forward) for (const w of next) fed[w] = 1;
-  for (let v = 0; v < n; v++) {
-    const next = forward[v] ?? [];
-    if (!fed[v] && next.length) row[v] = Math.min(...next.map((w) => row[w] as number)) - 1;
-  }
-  out.splice(0, out.length, ...forward);
-  return Array.from(row);
+  sort(0, xs.length);
+  return count;
 }
 
-/**
- * Rows too long for the drawing's shape, split into several, so a shallow graph is not one long strip. A drawing is
- * aimed at `ASPECT` wide to one high. Each long row is cut in order of where its things' sources sit, and the rows
- * after it move along.
- */
-function wrapped(rows: number[], links: readonly number[][], sizeOf: (i: number) => Size, across: number): number[] {
-  const count = Math.max(...rows) + 1;
-  let area = 0;
-  const length = new Float64Array(count);
-  rows.forEach((r, i) => {
-    const s = sizeOf(i);
-    area += (s[0] + GAP) * (s[1] + ROW_GAP);
-    length[r] = (length[r] as number) + (s[across] as number) + GAP;
-  });
-  // rows left to right are columns, so their length runs down the drawing
-  const most = across === 1 ? Math.sqrt(area / ASPECT) : Math.sqrt(area * ASPECT);
-  const parts = Array.from(length, (l) => Math.max(1, Math.ceil(l / most)));
-  if (parts.every((p) => p === 1)) return rows;
-  const firstSource = new Float64Array(rows.length).fill(Infinity);
-  links.forEach((next, v) => {
-    for (const w of next) firstSource[w] = Math.min(firstSource[w] as number, v);
-  });
-  const start = new Int32Array(count);
-  for (let r = 1; r < count; r++) start[r] = (start[r - 1] as number) + (parts[r - 1] as number);
-  const out = rows.slice();
-  for (let r = 0; r < count; r++) {
-    const members = rows.flatMap((row, i) => (row === r ? [i] : []));
-    members.sort((p, q) => (firstSource[p] as number) - (firstSource[q] as number) || p - q);
-    const each = Math.ceil(members.length / (parts[r] as number));
-    members.forEach((i, k) => (out[i] = (start[r] as number) + Math.floor(k / each)));
-  }
-  return out;
-}
-
-/**
- * Each thing of `shape` placed in rows, its middle in CSS pixels. `sizes` gives each box's width and height (absent:
- * 120 by 40). `rankdir` is `LR` (rows left to right) or `TB` (top to bottom). `previous` orders the rows as last time.
- */
+/** Each thing of `shape` placed in rows, as `layered` places it. */
 export function layeredLayout(
   shape: GraphShape,
   sizes: ReadonlyMap<string, Size> = new Map(),
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
 ): Map<string, [number, number]> {
+  return layered(shape, sizes, rankdir, previous).spots;
+}
+
+/**
+ * Each thing of `shape` placed in rows, its middle in CSS pixels, and the bends of each link that skips rows. `sizes`
+ * gives each box's width and height (absent: 120 by 40). `rankdir` is `LR` (rows left to right) or `TB` (top to
+ * bottom). `previous` orders the rows as last time.
+ */
+export function layered(
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size> = new Map(),
+  rankdir: 'LR' | 'TB' = 'LR',
+  previous?: ReadonlyMap<string, readonly number[]>,
+): Layered {
   const keys = shape.things.map((t) => t.key);
   const n = keys.length;
-  const out = new Map<string, [number, number]>();
+  const out: Layered = { spots: new Map(), via: new Map() };
   if (!n) return out;
   const index = new Map(keys.map((k, i) => [k, i]));
   const across = rankdir === 'LR' ? 1 : 0; // which size runs across a row
@@ -155,30 +110,49 @@ export function layeredLayout(
     seen.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
-  const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across);
-  // the items: things, then a stand-in in each row a link skips
+  const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, GAP, ROW_GAP);
+  // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
+  const chainOf = new Map<string, number[]>();
   links.forEach((next, v) => {
     for (const w of next) {
       let from = v;
+      const via: number[] = [];
       for (let r = (rows[v] as number) + 1; r < (rows[w] as number); r++) {
-        items.push({ row: r, across: 0, up: [from], down: [], ends: [v, w] });
+        items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
         (items[from] as Item).down.push(items.length - 1);
         from = items.length - 1;
+        via.push(from);
       }
       (items[w] as Item).up.push(from);
       (items[from] as Item).down.push(w);
+      chainOf.set(`${v} ${w}`, via);
     }
   });
   const rowCount = Math.max(...rows) + 1;
   const byRow: number[][] = Array.from({ length: rowCount }, () => []);
   items.forEach((it, i) => (byRow[it.row] as number[]).push(i));
-  // start in last time's order where there is one, else in the shape's order
+  // start in last time's order where there is one, else in the order a search from each start reaches them. A tree
+  // so ordered has no crossings at all
+  const reached = new Int32Array(items.length).fill(-1);
+  let count = 0;
+  const reach = (start: number) => {
+    const stack = [start];
+    while (stack.length) {
+      const i = stack.pop() as number;
+      if ((reached[i] as number) >= 0) continue;
+      reached[i] = count++;
+      const down = (items[i] as Item).down;
+      for (let k = down.length - 1; k >= 0; k--) stack.push(down[k] as number);
+    }
+  };
+  for (let i = 0; i < items.length; i++) if (!(items[i] as Item).up.length) reach(i);
+  for (let i = 0; i < items.length; i++) reach(i);
   const was = (i: number) => {
     const p = i < n ? previous?.get(keys[i] as string) : undefined;
     return p ? (p[across] ?? 0) : Infinity;
   };
-  for (const row of byRow) row.sort((p, q) => was(p) - was(q) || p - q);
+  for (const row of byRow) row.sort((p, q) => was(p) - was(q) || (reached[p] as number) - (reached[q] as number));
   const place = new Float64Array(items.length);
   const reorder = (row: number[], side: 'up' | 'down') => {
     const median = new Map<number, number>();
@@ -194,55 +168,87 @@ export function layeredLayout(
     );
     row.forEach((i, k) => (place[i] = k));
   };
+  const crossings = () => {
+    let total = 0;
+    for (let r = 0; r + 1 < rowCount; r++)
+      total += crossingsOf(
+        (byRow[r] as number[]).flatMap((i) =>
+          (items[i] as Item).down.map((j): [number, number] => [place[i] as number, place[j] as number]),
+        ),
+      );
+    return total;
+  };
+  // the crossings of the links of `u` with those of `v`, `u` placed before `v`, on both sides
+  const pairCrossings = (u: number, v: number) => {
+    let c = 0;
+    for (const side of ['up', 'down'] as const)
+      for (const a of (items[u] as Item)[side])
+        for (const b of (items[v] as Item)[side]) if ((place[a] as number) > (place[b] as number)) c++;
+    return c;
+  };
+  // two neighbours in a row swap places while that crosses fewer links (Gansner and others 1993)
+  const transpose = () => {
+    for (let round = 0; round < TRANSPOSE_ROUNDS; round++) {
+      let better = false;
+      for (const row of byRow)
+        for (let k = 0; k + 1 < row.length; k++) {
+          const u = row[k] as number,
+            v = row[k + 1] as number;
+          if (pairCrossings(u, v) > pairCrossings(v, u)) {
+            row[k] = v;
+            row[k + 1] = u;
+            place[u] = k + 1;
+            place[v] = k;
+            better = true;
+          }
+        }
+      if (!better) break;
+    }
+  };
+  // sweeps down and up, each row ordered by its neighbours' median; the order with fewest crossings is kept
   for (const row of byRow) row.forEach((i, k) => (place[i] = k));
-  for (let s = 0; s < SWEEPS; s++) {
+  let best = crossings(),
+    bestRows = byRow.map((row) => row.slice());
+  for (let s = 0; s < SWEEPS && best; s++) {
     if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
     else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
+    transpose();
+    const now = crossings();
+    if (now < best) [best, bestRows] = [now, byRow.map((row) => row.slice())];
   }
-  // across: packed in order, then pulled toward neighbours, kept in order and apart. Stand-ins take no room: they
-  // only keep the order, so a row is as long as its boxes, however many links pass through it.
+  bestRows.forEach((row, r) => {
+    byRow[r] = row;
+    row.forEach((i, k) => (place[i] = k));
+  });
+  // across: packed in order, then pulled toward neighbours, kept in order and apart. Stand-ins take a lane's room,
+  // so the links that bend through them pass between boxes, never over one.
   const at = new Float64Array(items.length);
-  const gapOf = (p: number, i: number) => ((items[p] as Item).across + (items[i] as Item).across) / 2 + GAP;
-  // each kept at or past the one before it, and a box past the box before it by the gap; `way` -1 runs leftward
+  const gapOf = (p: number, i: number) => {
+    const a = items[p] as Item,
+      b = items[i] as Item;
+    return (a.across + b.across) / 2 + (a.ends && b.ends ? LANE_GAP : a.ends || b.ends ? GAP / 2 : GAP);
+  };
+  // each kept past the one before it by the room between them; `way` -1 runs leftward
   const keepApart = (row: number[], way: 1 | -1) => {
-    let box = -1;
-    for (let o = 0; o < row.length; o++) {
+    for (let o = 1; o < row.length; o++) {
       const k = way === 1 ? o : row.length - 1 - o;
-      const i = row[k] as number;
-      const before = o ? (row[k - way] as number) : -1;
-      let bound = before < 0 ? way * -Infinity : (at[before] as number);
-      if (i < n && box >= 0)
-        bound =
-          way === 1
-            ? Math.max(bound, (at[box] as number) + gapOf(box, i))
-            : Math.min(bound, (at[box] as number) - gapOf(box, i));
+      const i = row[k] as number,
+        before = row[k - way] as number;
+      const bound = (at[before] as number) + way * gapOf(before, i);
       if (way * ((at[i] as number) - bound) < 0) at[i] = bound;
-      if (i < n) box = i;
     }
   };
   for (const row of byRow) {
     let x = 0;
-    for (const i of row) {
-      const w = (items[i] as Item).across;
-      at[i] = x + w / 2;
-      if (w) x += w + GAP;
-    }
+    row.forEach((i, k) => {
+      if (k) x += gapOf(row[k - 1] as number, i);
+      at[i] = x;
+    });
   }
   const settle = (row: number[]) => {
     const want = row.map((i) => {
       const it = items[i] as Item;
-      if (it.ends) {
-        // a stand-in sits on the straight line between its link's two ends
-        const [a, b] = it.ends;
-        const ra = (items[a] as Item).row,
-          rb = (items[b] as Item).row;
-        return (at[a] as number) + (((at[b] as number) - (at[a] as number)) * (it.row - ra)) / (rb - ra);
-      }
-      // a thing goes toward the things it links to, past any stand-ins between
-      const ns = [...it.up, ...it.down].map((j) => {
-        const e = (items[j] as Item).ends;
-        return e ? (e[0] === i ? e[1] : e[0]) : j;
-      });
+      const ns = [...it.up, ...it.down];
       return ns.length ? ns.reduce((t, j) => t + (at[j] as number), 0) / ns.length : (at[i] as number);
     });
     // each as near its wish as the order and the gaps allow: pushed right, then pulled back left
@@ -269,11 +275,30 @@ export function layeredLayout(
     y += (depth[r] as number) + ROW_GAP;
   }
   let lo = Infinity;
-  for (let i = 0; i < n; i++) lo = Math.min(lo, (at[i] as number) - (items[i] as Item).across / 2);
-  keys.forEach((k, i) => {
+  for (let i = 0; i < items.length; i++) lo = Math.min(lo, (at[i] as number) - (items[i] as Item).across / 2);
+  const spot = (i: number): [number, number] => {
     const a = (at[i] as number) - lo,
-      r = rowAt[rows[i] as number] as number;
-    out.set(k, rankdir === 'LR' ? [r, a] : [a, r]);
+      r = rowAt[(items[i] as Item).row] as number;
+    return rankdir === 'LR' ? [r, a] : [a, r];
+  };
+  keys.forEach((k, i) => out.spots.set(k, spot(i)));
+  // each link leaves its box toward the next row, crosses each row between in its lane, and comes into its box from
+  // the row before. So it runs through the room between rows, never over a box. A link turned to run with the flow
+  // takes the same way back
+  const point = (r: number, a: number): [number, number] => (rankdir === 'LR' ? [r, a - lo] : [a - lo, r]);
+  const edge = (r: number, side: 1 | -1) => (rowAt[r] as number) + (side * (depth[r] as number)) / 2;
+  links.forEach((next, v) => {
+    for (const w of next) {
+      const chain = chainOf.get(`${v} ${w}`) ?? [];
+      const points: [number, number][] = [point(edge(rows[v] as number, 1), at[v] as number)];
+      for (const i of chain) {
+        const r = (items[i] as Item).row;
+        points.push(point(edge(r, -1), at[i] as number), point(edge(r, 1), at[i] as number));
+      }
+      points.push(point(edge(rows[w] as number, -1), at[w] as number));
+      if (seen.has(`${v} ${w}`)) out.via.set(viaKey(keys[v] as string, keys[w] as string), points);
+      if (seen.has(`${w} ${v}`)) out.via.set(viaKey(keys[w] as string, keys[v] as string), points.slice().reverse());
+    }
   });
   return out;
 }

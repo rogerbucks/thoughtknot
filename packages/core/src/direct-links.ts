@@ -16,6 +16,7 @@ import type { MarkPoint } from './plugin-diagrams.ts';
 import { WORDS_OFF, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
+import { routedCurve } from './layouts/routed-curve.ts';
 import { CLEARANCE, bends, crowded, spread, towardMiddle } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
 export type { Curve, Placed } from './direct-curve.ts';
@@ -36,7 +37,12 @@ const BOW = 0.16;
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
  * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts).
  */
-export function directLinks(laid: LaidMarks, at?: ReadonlyMap<string, readonly [number, number]>): LaidMarks {
+export function directLinks(
+  laid: LaidMarks,
+  at?: ReadonlyMap<string, readonly [number, number]>,
+  via?: ReadonlyMap<string, readonly MarkPoint[]>,
+  rankdir: 'LR' | 'TB' = 'LR',
+): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
   for (const m of laid.marks)
@@ -66,9 +72,9 @@ export function directLinks(laid: LaidMarks, at?: ReadonlyMap<string, readonly [
     !at && crowded(ends, [...boxes.values()])
       ? spread([...boxes.values()], groups, middleOf([...boxes.values()]))
       : new Map<string, MarkPoint>();
-  settle([...boxes.values()], links);
-  // boxes our own engine placed never end up on each other: the last pushes off links may leave some touching
-  if (at) for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
+  // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
+  if (!at) settle([...boxes.values()], links);
+  else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
   const moved = new Map<string, [number, number]>();
@@ -124,7 +130,24 @@ export function directLinks(laid: LaidMarks, at?: ReadonlyMap<string, readonly [
     toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed });
   }
   const bows = bends(toBend, all);
-  const curves = new Map<string, Curve>(toBend.map((l, i) => [l.id, curveOf(l.a, l.b, bows[i] as number)]));
+  // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes
+  // take the same bends, moved apart across the drawing's way
+  const across = rankdir === 'TB' ? 0 : 1;
+  const routed = (l: ToBend) =>
+    via
+      ?.get(`${l.a.key}\n${l.b.key}`)
+      ?.map((p): MarkPoint => (across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]]));
+  const curves = new Map<string, Curve>(
+    toBend.map((l, i) => {
+      const bendsAt = routed(l);
+      return [
+        l.id,
+        bendsAt?.length
+          ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0)
+          : curveOf(l.a, l.b, bows[i] as number),
+      ];
+    }),
+  );
   const spots = wordSpots(laid.marks, boxes, curves);
   // each link's arrowheads, and the first line drawn for it, found by what it is of: looked up once, not per mark
   const headsBy = new Map<string, (DrawMark & { kind: 'arrowhead' })[]>(),

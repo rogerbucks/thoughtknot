@@ -12,7 +12,8 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { LaidMarks } from '../graphviz-marks.ts';
 import type { GraphShape } from '../types-shape.ts';
-import { layeredLayout } from './layered.ts';
+import { groupedLayered } from './grouped.ts';
+import type { Group, GroupBox } from './grouped.ts';
 import type { Size } from './layered.ts';
 import { stressLayout } from './stress.ts';
 
@@ -144,11 +145,14 @@ export function ownSpots(
   laid: LaidMarks,
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
-): { spots: Map<string, [number, number]>; pick: Pick } {
+  groups: readonly Group[] = [],
+): { spots: Map<string, [number, number]>; via: Map<string, [number, number][]>; boxes: GroupBox[]; pick: Pick } {
   const { shape, sizes } = marksShape(laid.marks);
   const pick = pickLayout(shape);
   let spots: Map<string, [number, number]>;
-  if (pick.layout === 'layered') spots = layeredLayout(shape, sizes, rankdir, previous);
+  let via = new Map<string, [number, number][]>();
+  let boxes: GroupBox[] = [];
+  if (pick.layout === 'layered') ({ spots, via, boxes } = groupedLayered(shape, sizes, groups, rankdir, previous));
   else {
     // one link as long as a typical box is wide, plus room
     const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
@@ -165,8 +169,15 @@ export function ownSpots(
     x0 = Math.min(x0, x - w / 2);
     y0 = Math.min(y0, y - h / 2);
   }
-  for (const [k, [x, y]] of spots) spots.set(k, [x - x0 + MARGIN, y - y0 + MARGIN]);
-  return { spots, pick };
+  for (const b of boxes) [x0, y0] = [Math.min(x0, b.x - b.width / 2), Math.min(y0, b.y - b.height / 2)];
+  const moved = ([x, y]: readonly [number, number]): [number, number] => [x - x0 + MARGIN, y - y0 + MARGIN];
+  for (const [k, p] of spots) spots.set(k, moved(p));
+  for (const [k, ps] of via) via.set(k, ps.map(moved));
+  boxes = boxes.map((b) => {
+    const [x, y] = moved([b.x, b.y]);
+    return { ...b, x, y };
+  });
+  return { spots, via, boxes, pick };
 }
 
 /** The room round a drawing laid out by our own engine, in CSS pixels. */
