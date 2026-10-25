@@ -213,8 +213,6 @@ export const SOURCE_WORDS = {
   'settings.section.drawing': 'Drawing',
   'settings.section.export': 'Export',
   'view.on': 'on',
-  'view.merge-nothing':
-    'There is nothing to merge: no two groups have more than one link between them. Merging only joins the links that run between the same two groups into one line.',
   'view.off': 'off',
   'drawing.of': {
     one: 'Drawing of graph {graph}: {count} thing. Plus, minus and zero zoom; Escape leaves full screen.',
