@@ -187,6 +187,26 @@ export interface SpaceFrame {
   arrows: ScreenArrow[];
   labels: ScreenLabel[];
   ring: { x: number; y: number; r: number } | null;
+  /** The picked thing's links, or the picked link, on the screen: drawn a little thicker over the rest (Roger, 25 Oct). */
+  strong: { style: string; points: { x: number; y: number }[] }[];
+}
+
+/** The lines of `space` that join the thing `picked`, or are the link `pickedLink`, as the camera's `matrix` sees them. */
+function strongLines(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+  picked?: string,
+  pickedLink?: string,
+): SpaceFrame['strong'] {
+  if (picked === undefined && pickedLink === undefined) return [];
+  return space.lines
+    .filter((l) => (picked !== undefined && (l.from === picked || l.to === picked)) || l.id === pickedLink)
+    .map((l) => ({
+      style: l.style,
+      points: l.points.flatMap((p) => projectPoint(matrix, p, width, height) ?? []),
+    }));
 }
 
 /**
@@ -214,6 +234,7 @@ export function frameOf(
       arrows: arrowsOnScreen(space, matrix, width, height),
       labels: labelsOnScreen(space, matrix, width, height, chosen),
       ring,
+      strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
     };
   }
   const cards = cardsOnScreen(space, matrix, width, height, picked?.of);
@@ -224,5 +245,6 @@ export function frameOf(
     arrows: cardArrows(space, matrix, width, height, cards),
     labels: labelsOnScreen(words, matrix, width, height, chosen),
     ring: null,
+    strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
   };
 }

@@ -111,9 +111,12 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
  * are in their link's colour, edged with the page colour so they read where links meet. Labels have a halo of the page
  * colour so they read over blocks. The picked thing's ring, or its card's edge, is in `ink`.
  */
+/** How thick the picked thing's links are drawn in 3D, in pixels: a little thicker than the rest. */
+const STRONG = 2.5;
+
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
-  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'>,
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -124,6 +127,16 @@ export function paintSpaceLabels(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
+  // the picked thing's links, or the picked link, a little thicker, under the cards in front of them
+  ctx.lineWidth = STRONG;
+  for (const l of frame.strong ?? []) {
+    const line = paints(l.style).line;
+    if (!line || l.points.length < 2) continue;
+    ctx.beginPath();
+    l.points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.strokeStyle = line;
+    ctx.stroke();
+  }
   ctx.lineWidth = 1;
   for (const a of arrows) {
     const line = paints(a.style).line;
