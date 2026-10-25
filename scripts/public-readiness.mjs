@@ -54,7 +54,7 @@ export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
     if (i > 0 && !pathOf.has(line.slice(0, i))) pathOf.set(line.slice(0, i), line.slice(i + 1));
   }
   const batch = git(root, ['cat-file', '--batch'], [...pathOf.keys()].join('\n') + '\n');
-  for (let at = 0; at < batch.length; ) {
+  for (let at = 0; at < batch.length;) {
     const nl = batch.indexOf(10, at);
     const [sha, type, size] = batch.subarray(at, nl).toString().split(' ');
     const body = batch.subarray(nl + 1, nl + 1 + Number(size));
