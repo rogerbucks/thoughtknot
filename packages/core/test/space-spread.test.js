@@ -3,7 +3,7 @@
 // arrowheads on the ball they point to, and words at the middle of each link.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { asDrawnFor, radiusOf, spreadSpace } from '../src/space-spread.ts';
+import { ROOM, SPREAD_UNIT, asDrawnFor, keepApart, radiusOf, spreadSpace } from '../src/space-spread.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../src/space-labels.ts';
 import { blockAt } from '../src/space-pick.ts';
 import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
@@ -283,4 +283,49 @@ test('an arrowhead is never longer than the ball it points at is wide on the scr
       assert.ok(long <= wide + 0.5, `${long} > ${wide}`);
     }
   }
+});
+
+// proves: space_room
+test('things laid out afresh keep clear room round each, and a lone part sits beside the rest', () => {
+  const lone = [
+    { id: 't:x', kind: 'box', style: 'svg.1', of: 'x', x: 0, y: 0, width: 80, height: 30 },
+    { id: 't:y', kind: 'box', style: 'svg.1', of: 'y', x: 0, y: 0, width: 80, height: 30 },
+    link('e:xy', 'x', 'y', 'OWNS'),
+  ];
+  for (const cards of [false, true]) {
+    const { space } = spreadSpace([...MARKS, ...lone], undefined, cards);
+    const at = new Map(space.blocks.map((b) => [b.of, { c: centreOf(b), r: b.width / 2 }]));
+    for (const [a, p] of at)
+      for (const [b, q] of at)
+        if (a < b) assert.ok(dist(p.c, q.c) >= p.r + q.r + ROOM - 1e-6, `${a} and ${b} keep clear room`);
+    // the lone pair sits no further from the rest than the rest is wide, and a link's length
+    const rest = ['hub', 'a', 'b', 'c', 'd'].map((k) => at.get(k).c);
+    const wide = Math.max(...rest.flatMap((p) => rest.map((q) => dist(p, q))));
+    const gap = Math.min(...['x', 'y'].flatMap((k) => rest.map((p) => dist(p, at.get(k).c))));
+    assert.ok(gap <= wide + 3 * SPREAD_UNIT * (cards ? 2.2 : 1), `the lone pair is ${gap.toFixed(0)} off`);
+  }
+});
+
+test('keepApart pushes two things in one place apart, the same each time', () => {
+  const run = () => {
+    const centre = new Map([
+      ['p', [0, 0, 0]],
+      ['q', [0, 0, 0]],
+      ['r', [500, 0, 0]],
+    ]);
+    keepApart(
+      centre,
+      new Map([
+        ['p', 10],
+        ['q', 10],
+        ['r', 10],
+      ]),
+      20,
+    );
+    return centre;
+  };
+  const centre = run();
+  assert.ok(dist(centre.get('p'), centre.get('q')) >= 40 - 1e-6);
+  assert.deepEqual(centre.get('r'), [500, 0, 0], 'one far off is left where it is');
+  assert.deepEqual(run(), centre);
 });
