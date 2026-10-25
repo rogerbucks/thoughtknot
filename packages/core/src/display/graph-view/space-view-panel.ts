@@ -30,7 +30,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, fingerTurn, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -279,6 +279,7 @@ export async function openSpaceView(
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
+    touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
@@ -286,6 +287,7 @@ export async function openSpaceView(
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (down.size === 1) {
+      touching = e.pointerType === 'touch';
       pans = e.shiftKey || e.button === 1 || e.button === 2;
       travel = 0;
     }
@@ -307,7 +309,12 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
-      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : orbitBy(orbit, dx, dy);
+      orbit =
+        pans || e.shiftKey
+          ? panBy(orbit, dx, dy, height)
+          : touching
+            ? fingerTurn(orbit, dx, dy)
+            : orbitBy(orbit, dx, dy);
     }
     again();
   });
