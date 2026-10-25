@@ -1,6 +1,6 @@
 // Drawing a graph by our own layout engine (editor spec §53, layout_own_engine). The layout source Graphviz is handed
-// is written as ever. For our own engine every box is given a stand-in spot and Graphviz's `nop` engine only measures
-// and writes it, then own-engine.ts places the boxes and direct-links.ts draws the links. A drawing in groups is
+// is written as ever. For our own engine every box is given a stand-in spot. Graphviz's `nop` engine only measures
+// and writes it. Then own-engine.ts places the boxes and direct-links.ts draws the links. A drawing in groups is
 // Graphviz's to lay out still: our engine does not draw groups yet. Host-free and pure.
 import type { DrawMark } from '../drawing-marks.ts';
 import { directLinks } from '../direct-links.ts';
@@ -14,7 +14,7 @@ const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
 const DEFAULTS = new Set(['graph', 'node', 'edge']);
 
 /** Whether a layout source can be laid out by our own engine: it draws no groups. */
-export const ownable = (dot: string): boolean => !dot.includes('subgraph cluster');
+export const ownable = (dot: string): boolean => !dot.includes('subgraph cluster_');
 
 /** `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. */
 export function ownSource(dot: string): string {

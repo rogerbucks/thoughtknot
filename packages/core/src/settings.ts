@@ -264,7 +264,7 @@ export const OPTIONS: Option[] = [
   switchOption(
     'ownLayout',
     'New layout engine (preview)',
-    'Whether graphs are laid out by ThoughtKnot’s own engine instead of Graphviz: rows for flows and trees, spread out for networks; a graph’s View menu can change it.',
+    'Whether ThoughtKnot lays graphs out by its own engine, not Graphviz; a graph’s View menu can change it.',
   ),
   switchOption(
     'noteCallouts',

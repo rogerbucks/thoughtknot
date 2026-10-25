@@ -1,10 +1,10 @@
 // Our own layout engine, for a drawing Graphviz has measured (editor spec §53, layout_own_engine). Roger, 25 Oct 2026:
 // "we should have our own layout engine".
 //
-// Graphviz still measures each box and writes its words, but places nothing: it is run with every box at a stand-in
-// spot (its `nop` engine), which costs a fraction of laying the graph out. Then the engine here:
+// Graphviz still measures each box and writes its words, but places nothing. It is run with every box at a stand-in
+// spot (its `nop` engine), a fraction of the cost of a layout. Then the engine here:
 // 1. reads the boxes, their sizes and the links from Graphviz's marks;
-// 2. picks a layout by the graph's shape (`pickLayout`): a flow or a tree goes in rows (layered.ts), anything else
+// 2. picks a layout by the graph's shape (`pickLayout`). A flow or a tree goes in rows (layered.ts). Anything else
 //    is placed by stress (stress.ts);
 // 3. pushes apart any boxes that still overlap;
 // 4. hands the spots to the direct links (direct-links.ts), which move each box's marks there and draw its links.
@@ -51,8 +51,8 @@ export function marksShape(marks: readonly DrawMark[]): { shape: GraphShape; siz
 }
 
 /**
- * The layout for `shape`: rows for a flow or a tree, stress for the rest. A flow has few links running back against
- * it (found by a search from each start) and few links per thing; a tree has about one link fewer than things.
+ * The layout for `shape`: rows for a flow or a tree, stress for the rest. A flow has few links per thing, and few
+ * running back against it, found by a search from each start. A tree has about one link fewer than things.
  */
 export function pickLayout(shape: GraphShape): Pick {
   const n = shape.things.length,

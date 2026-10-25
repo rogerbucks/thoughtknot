@@ -9,9 +9,9 @@
 // Near pairs count most, so a thing's neighbours sit round it and far parts only keep their rough place. Things not
 // joined at all are kept one step past the farthest joined pair, so separate parts sit side by side.
 //
-// Up to `FULL_MOST` things every pair is used. Past it, each thing keeps its links and its distance to a set of
-// pivots spread over the graph (sparse stress, Ortmann, Klimenta and Brandes 2016), so a round costs about the things
-// times the pivots, not their square.
+// Up to `FULL_MOST` things every pair is used. Past it, each keeps its links and its distance to a set of
+// pivots spread over the graph (sparse stress: Ortmann, Klimenta, Brandes 2016). So a round costs the things times
+// the pivots, not their square.
 //
 // The same in two dimensions or three. Given last time's spots it starts from them and takes small steps only, so a
 // small edit moves little. Host-free and pure: the same shape gives the same spots every time.

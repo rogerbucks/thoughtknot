@@ -1,6 +1,6 @@
-// Our own layout engine (editor spec §53, layout_own_engine, layout_stress, layout_layered): layouts/stress.ts,
-// layouts/layered.ts, layouts/own-engine.ts and layouts/own-draw.ts. A flow or a tree goes in rows, a network is
-// spread by stress, no two boxes sit on each other, and a graph drawn by it is never shown as text.
+// Our own layout engine (editor spec §53: layout_own_engine, layout_stress, layout_layered). Its files are
+// layouts/stress.ts, layouts/layered.ts, layouts/own-engine.ts and layouts/own-draw.ts. A flow or a tree goes in
+// rows. A network is spread by stress. No two boxes sit on each other, and a graph drawn by it is never text.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { stressLayout } from '../src/layouts/stress.ts';

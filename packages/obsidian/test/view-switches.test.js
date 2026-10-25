@@ -83,7 +83,7 @@ async function card(note = NOTE, options = {}) {
 }
 
 describe('the View menu', () => {
-  test('a View button in the bar opens the four switches, each on or off as the settings hold them', async () => {
+  test('a View button in the bar opens the five switches, each on or off as the settings hold them', async () => {
     const { env, el } = await card();
     try {
       const menu = el.querySelector('.thoughtknot-view-menu');
@@ -96,6 +96,7 @@ describe('the View menu', () => {
         ['Busy hubs folded', 'switch', 'false'],
         ['Groups folded', 'switch', 'false'],
         ['Parallel links merged', 'switch', 'false'],
+        ['New layout engine (preview)', 'switch', 'false'],
       ]);
     } finally {
       env.uninstall();
@@ -146,6 +147,7 @@ describe('the View menu', () => {
           ['Busy hubs folded', 'false'],
           ['Groups folded', 'true'],
           ['Parallel links merged', 'false'],
+          ['New layout engine (preview)', 'false'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');

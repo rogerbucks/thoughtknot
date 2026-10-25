@@ -87,7 +87,7 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.merge-links.off': 'Off',
   'settings.own-layout.name': 'New layout engine (preview)',
   'settings.own-layout.sentence':
-    'Whether graphs are laid out by ThoughtKnot’s own engine instead of Graphviz: rows for flows and trees, spread out for networks; a graph’s View menu can change it.',
+    'Whether ThoughtKnot lays graphs out by its own engine, not Graphviz; a graph’s View menu can change it.',
   'settings.own-layout.on': 'On',
   'settings.own-layout.off': 'Off',
   'settings.note-callouts.name': 'Draw notes as callouts',
