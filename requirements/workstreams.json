@@ -1184,5 +1184,22 @@
       "soc_report_routes",
       "soc_practice_run"
     ]
+  },
+  "DF1": {
+    "title": "Data formats: files as sources, content and parallel views",
+    "size": "M",
+    "requirements": [
+      "format_catalogue",
+      "format_plugin_contracts",
+      "format_parallel_views",
+      "format_content_node",
+      "format_graph_from_data",
+      "format_any_layout",
+      "format_text_first",
+      "format_untrusted_files",
+      "format_loss_stated",
+      "format_compose_out",
+      "format_html_sandboxed"
+    ]
   }
 }

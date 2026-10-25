@@ -87,6 +87,7 @@ describe('the workstreams file', () => {
       'GS8',
       'TS1',
       'SR1',
+      'DF1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -189,6 +190,7 @@ describe('the workstreams file', () => {
         "The graph spec's axioms, stated and checked",
         'Temporal security: history, clocks, replay and expiry',
         'Security response protocol',
+        'Data formats: files as sources, content and parallel views',
       ],
     );
   });
