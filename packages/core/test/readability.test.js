@@ -136,6 +136,30 @@ describe('groups as boxes', () => {
     for (const [, y] of lanes) assert.ok(y > top - 60, 'never far out round the drawing');
   });
 
+  // proves: layout_groups_ordered
+  test('a group’s things are ordered by where their links outside it go, so the links do not cross', () => {
+    const keys = ['s', 'x', 'y', 'z', 'm1', 'm2', 'm3'];
+    const out = [
+      ['m1', 'z'],
+      ['m2', 'y'],
+      ['m3', 'x'],
+    ];
+    const shape = shapeOf(keys, [['s', 'x'], ['s', 'y'], ['s', 'z'], ...out]);
+    const many = new Map(keys.map((k) => [k, [100, 40]]));
+    for (const way of ['LR', 'TB']) {
+      const laid = groupedLayered(shape, many, [{ id: 'g', label: 'G', members: ['m1', 'm2', 'm3'] }], way);
+      const at = (k) => laid.spots.get(k)[way === 'LR' ? 1 : 0];
+      for (const [p, a] of out)
+        for (const [q, b] of out)
+          if (p < q)
+            assert.equal(
+              Math.sign(at(p) - at(q)),
+              Math.sign(at(a) - at(b)),
+              `${way}: ${p} to ${a} and ${q} to ${b} cross`,
+            );
+    }
+  });
+
   // proves: layout_shared_trunks
   test('links out of one thing share their way until they part, and those between two groups share a lane', () => {
     const tree = layered(
@@ -191,13 +215,17 @@ describe('groups as boxes', () => {
       // within half and twice a screen's shape, which is 1.6 wide to high
       const shape = span(whole.spots, whole.boxes);
       assert.ok(shape > 0.8 && shape < 3.2, `${way}: the whole is ${shape.toFixed(2)} wide to high`);
+      // and with no groups at all
+      const plain = groupedLayered(star, big, [], way);
+      const bare = span(plain.spots, []);
+      assert.ok(bare > 0.8 && bare < 3.2, `${way}: with no groups the whole is ${bare.toFixed(2)} wide to high`);
       // a group of them, beside a few lone things
       const grouped = groupedLayered(star, big, [{ id: 'g', label: 'G', members: many }], way);
       const b = grouped.boxes[0];
       const boxShape = b.width / b.height;
       assert.ok(boxShape > 0.4 && boxShape < 4, `${way}: the group is ${boxShape.toFixed(2)} wide to high`);
       // no link runs over a box it does not join
-      for (const laid of [whole, grouped])
+      for (const laid of [whole, plain, grouped])
         for (const l of star.links) {
           const path = [laid.spots.get(l.from), ...(laid.via.get(`${l.from}\n${l.to}`) ?? []), laid.spots.get(l.to)];
           for (const [k, [x, y]] of laid.spots) {
@@ -347,5 +375,13 @@ describe('the readability scores', () => {
     for (const [k, by] of Object.entries(slack))
       assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
     assert.ok(own.clear >= 0.995, `no link of ours passes over a box: ${own.clear.toFixed(3)}`);
+    // about a screen's shape: within half and twice 1.6 wide to high
+    const d = directions({
+      ...new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
+      straightFirst: true,
+    })[0];
+    const { space } = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
+    const shape = space.width / space.height;
+    assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);
   });
 });
