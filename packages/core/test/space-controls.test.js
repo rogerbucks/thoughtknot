@@ -2,7 +2,16 @@
 // fingers move and pinch. Moving across the floor keeps the camera's turn, tilt and distance.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../src/space-controls.ts';
+import {
+  KEY_STEP,
+  ZOOM_STEP,
+  keyMove,
+  orbitAround,
+  panBy,
+  twistBy,
+  twistOf,
+  twoFingers,
+} from '../src/space-controls.ts';
 import { eyeOf, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
@@ -80,4 +89,34 @@ test('a picked point becomes what the view turns round and zooms to, the camera 
     eye = eyeOf(half);
   assert.ok(Math.hypot(eye[0] - was[0], eye[1] - was[1], eye[2] - was[2]) < 1e-6);
   assert.deepEqual(half.target, [150, -100, 25]);
+});
+
+test('two fingers twisting turn the view with them: the drawing follows the fingers, clockwise for clockwise', () => {
+  const was = [
+    { x: 100, y: 100 },
+    { x: 200, y: 100 },
+  ];
+  // the right-hand finger goes down: a quarter turn clockwise on the screen
+  const now = [
+    { x: 150, y: 50 },
+    { x: 150, y: 150 },
+  ];
+  assert.ok(Math.abs(twistOf(was, now) - Math.PI / 2) < 1e-9);
+  assert.equal(twistOf(was, was), 0);
+  // across the half turn the angle does not leap by a whole turn
+  const near = (y) => [
+    { x: 200, y: 100 },
+    { x: 100, y },
+  ];
+  assert.ok(Math.abs(twistOf(near(99), near(101)) + 0.02) < 0.01, 'a line crossing the half turn');
+  // seen from above, a point right of the middle goes down the screen as the twist goes clockwise
+  const top = { ...ORBIT, tilt: Math.PI / 2 - 0.01 };
+  const twisted = twistBy(top, Math.PI / 6);
+  assert.equal(twisted.tilt, top.tilt);
+  assert.equal(twisted.distance, top.distance);
+  const at = (o) => projectPoint(spaceMatrix(o, 1, 4000), [100, 0, 0], 600, 600);
+  const before = at(top),
+    after = at(twisted);
+  const angle = (p) => Math.atan2(p.y - 300, p.x - 300);
+  assert.ok(Math.abs(angle(after) - angle(before) - Math.PI / 6) < 0.02, `${angle(before)} -> ${angle(after)}`);
 });

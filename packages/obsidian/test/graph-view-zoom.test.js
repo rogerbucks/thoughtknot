@@ -146,6 +146,24 @@ describe('a touch the drawing uses goes no further', () => {
   });
 });
 
+describe('a pinch on a fitted drawing', () => {
+  let env;
+  before(async () => {
+    env = await load({ width: 300 });
+  });
+  after(() => env.uninstall());
+  // proves: gestures_stay_in_drawing
+  test('never scrolls the note under the fingers, though one finger on it still does', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const vp = el.querySelector('.thoughtknot-viewport');
+    const prevented = (n) =>
+      vp.dispatch('touchmove', { touches: Array.from({ length: n }, () => ({})), stopPropagation() {} })
+        .defaultPrevented;
+    assert.equal(prevented(1), false);
+    assert.equal(prevented(2), true);
+  });
+});
+
 describe('a card hidden and shown again', () => {
   const widthOf = (el) => Number(svgOf(el).getAttribute('width'));
   /** The drawing's natural width: its width in a note wide enough to draw it at natural size. */

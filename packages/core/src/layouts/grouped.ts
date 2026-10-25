@@ -29,10 +29,6 @@ export interface GroupBox {
 /** The room inside a group's box round its things, and the room its name takes at the top, in CSS pixels. */
 const PAD = 16;
 const LABEL = 22;
-/** The gap kept inside a group's border on each side across the drawing, which links passing the group run along. */
-const GUTTER = 12;
-/** The room between two links sharing a gutter. */
-const GUTTER_STEP = 4;
 
 /** The bounds of a layout's spots, boxes and bends. */
 function boundsOf(inner: Layered, sizes: ReadonlyMap<string, Size>): [number, number, number, number] {
@@ -80,11 +76,7 @@ export function groupedLayered(
     };
     const inner = layered(sub, sizes, rankdir, previous);
     const bounds = boundsOf(inner, sizes);
-    const extra = rankdir === 'LR' ? [0, 2 * GUTTER] : [2 * GUTTER, 0];
-    const size: Size = [
-      bounds[2] - bounds[0] + 2 * PAD + (extra[0] as number),
-      bounds[3] - bounds[1] + 2 * PAD + LABEL + (extra[1] as number),
-    ];
+    const size: Size = [bounds[2] - bounds[0] + 2 * PAD, bounds[3] - bounds[1] + 2 * PAD + LABEL];
     inside.set(g.id, { inner, bounds, size });
   }
   // the rows of groups and lone things: a group is one box, its links its things' links
@@ -107,25 +99,14 @@ export function groupedLayered(
     const { inner, bounds, size } = inside.get(g.id) as { inner: Layered; bounds: number[]; size: Size };
     const [cx, cy] = top.spots.get(`group:${g.id}`) as [number, number];
     // the group's things, moved so their bounds sit inside the box, below its name
-    const gx = rankdir === 'LR' ? 0 : GUTTER,
-      gy = rankdir === 'LR' ? GUTTER : 0;
-    const dx = cx - size[0] / 2 + PAD + gx - (bounds[0] as number),
-      dy = cy - size[1] / 2 + PAD + LABEL + gy - (bounds[1] as number);
+    const dx = cx - size[0] / 2 + PAD - (bounds[0] as number),
+      dy = cy - size[1] / 2 + PAD + LABEL - (bounds[1] as number);
     const moved = ([x, y]: readonly [number, number]): [number, number] => [x + dx, y + dy];
     for (const [k, p] of inner.spots) out.spots.set(k, moved(p));
     for (const [k, ps] of inner.via) out.via.set(k, ps.map(moved));
     out.boxes.push({ id: g.id, label: g.label, x: cx, y: cy, width: size[0], height: size[1] });
   }
   const boxOf = new Map(out.boxes.map((b) => [b.id, b]));
-  const inGutter = new Map<string, number>();
-  // the lone things, as boxes a link must not cut through
-  const lone: GroupBox[] = shape.things
-    .filter((t) => !groupOf.has(t.key))
-    .map((t) => {
-      const [x, y] = out.spots.get(t.key) as [number, number],
-        [width, height] = sizes.get(t.key) ?? [0, 0];
-      return { id: '', label: '', x, y, width: width + PAD, height: height + PAD };
-    });
   // a link that leaves or enters a group bends where the group's links do, at its edge
   for (const l of shape.links) {
     const a = node(l.from),
@@ -147,69 +128,7 @@ export function groupedLayered(
     const first = (bends[0] ?? top.spots.get(b)) as [number, number],
       last = (bends[bends.length - 1] ?? top.spots.get(a)) as [number, number];
     if (!bends.length && !groupOf.has(l.from) && !groupOf.has(l.to)) continue;
-    const path = [...edge(l.from, first), ...bends, ...edge(l.to, last).reverse()];
-    const own = new Set([groupOf.get(l.from), groupOf.get(l.to)]);
-    out.via.set(
-      viaKey(l.from, l.to),
-      throughGutters(path, [...out.boxes.filter((g) => !own.has(g.id)), ...lone], axis, inGutter),
-    );
+    out.via.set(viaKey(l.from, l.to), [...edge(l.from, first), ...bends, ...edge(l.to, last).reverse()]);
   }
   return out;
-}
-
-/**
- * `path` with each bend that goes round a group's box moved into the box's nearer gutter, when the link's straight
- * way runs through the box. So a link passes a group by the gap inside its border, not round its far end. `used`
- * counts the links in each gutter, so each takes its own lane.
- */
-function throughGutters(
-  path: [number, number][],
-  boxes: readonly GroupBox[],
-  axis: 0 | 1,
-  used: Map<string, number>,
-): [number, number][] {
-  if (path.length < 3) return path;
-  const across = (1 - axis) as 0 | 1;
-  const a = path[0] as [number, number],
-    z = path[path.length - 1] as [number, number];
-  const lane = new Map<string, number>();
-  return path.map((p, i) => {
-    if (i === 0 || i === path.length - 1) return p;
-    const t = z[axis] === a[axis] ? 0 : (p[axis] - a[axis]) / (z[axis] - a[axis]);
-    const ideal = a[across] + (z[across] - a[across]) * Math.min(1, Math.max(0, t));
-    const box = boxes.find((b) => {
-      const mid = [b.x, b.y],
-        half = [b.width / 2, b.height / 2];
-      const inColumn = Math.abs(p[axis] - (mid[axis] as number)) <= (half[axis] as number) + 1;
-      const lo = (mid[across] as number) - (half[across] as number),
-        hi = (mid[across] as number) + (half[across] as number);
-      return inColumn && ideal > lo && ideal < hi && (p[across] <= lo || p[across] >= hi);
-    });
-    if (!box) {
-      // in a row with nothing in the straight way, the bend comes back to it
-      const blocked = boxes.some((b) => {
-        const mid = [b.x, b.y],
-          half = [b.width / 2, b.height / 2];
-        return (
-          Math.abs(p[axis] - (mid[axis] as number)) <= (half[axis] as number) + 1 &&
-          Math.abs(ideal - (mid[across] as number)) <= (half[across] as number) + PAD
-        );
-      });
-      return blocked ? p : axis === 0 ? [p[0], ideal] : [ideal, p[1]];
-    }
-    if (!box.id) return p;
-    const mid = across === 0 ? box.x : box.y,
-      half = (across === 0 ? box.width : box.height) / 2;
-    // the gutter on the side the link came round, below the name when it is the top one
-    const top = p[across] < mid;
-    const key = `${box.id} ${top ? 'top' : 'bottom'}`;
-    if (!lane.has(key)) {
-      const k = used.get(key) ?? 0;
-      used.set(key, k + 1);
-      lane.set(key, ((k % 5) - 2) * GUTTER_STEP);
-    }
-    const inset = (PAD + GUTTER) / 2 + (top && across === 1 ? LABEL : 0);
-    const at = (top ? mid - half + inset : mid + half - inset) + (lane.get(key) as number);
-    return axis === 0 ? [p[0], at] : [at, p[1]];
-  });
 }
