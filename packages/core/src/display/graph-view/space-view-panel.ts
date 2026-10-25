@@ -18,11 +18,9 @@
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
 // as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A bundle picked opens, as a tap on it in 2D does
-// (SPACE_UNFOLD). A thing the card selects, as by Find, is picked
-// here too. The view stays still. Another click on it makes
-// it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
-// the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
-// (focus_space).
+// (SPACE_UNFOLD). A thing the card selects, as by Find, is picked here too. The view stays still. Another click on it
+// makes it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround).
+// What the card hides, fades or brings forward, from its details' controls, the 3D view shows too (focus_space).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
@@ -33,6 +31,7 @@ import { spreadSpace } from '../../space-spread.ts';
 import { keyMove, orbitAround, fingerTurn, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
+import { glideIn } from './space-glide.ts';
 import type { Paints } from './mark-painter.ts';
 import { webgl2SpacePainter } from './space-painter.ts';
 import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
@@ -380,6 +379,7 @@ export async function openSpaceView(
   opened.set(root, close);
   resize();
   orbit = orbitFit(space, width / height);
+  glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
   el.focus();
   const cards = (on: boolean) => {
     if (on !== (depth === 0)) showAs(on ? 0 : 1);

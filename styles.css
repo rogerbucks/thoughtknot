@@ -2573,6 +2573,22 @@ pre.thoughtknot-code {
 .thoughtknot-space-view:active {
   cursor: grabbing;
 }
+/* The view in space fades in over the flat drawing as its camera glides down from above, and out as it leaves
+   (space_glide). Where motion is to be still, it comes and goes at once. */
+@keyframes thoughtknot-space-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .thoughtknot-space-view {
+    animation: thoughtknot-space-in 0.3s ease-out;
+  }
+  .thoughtknot-space-view.is-leaving {
+    opacity: 0;
+    transition: opacity 0.2s ease-in;
+  }
+}
 .thoughtknot-space-canvas {
   position: absolute;
   inset: 0;
