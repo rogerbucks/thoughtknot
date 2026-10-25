@@ -57,11 +57,10 @@ export interface SelectionHost {
 }
 
 /**
- * How the selection came, which decides how it is brought into view. A tap is moved only to keep it clear of the
- * sheet. Chosen from the details, it is brought into view readable; pointed to by the arrow, as it is. Found or walked
- * to, it is brought into view at once, as finding always has.
+ * How the selection came decides how it is brought into view. A tap: only clear of the sheet. Chosen, found or tapped
+ * again: readable, the last centred. Shown by the arrow: as it is. Found or walked to comes at once.
  */
-type How = 'tap' | 'chosen' | 'shown' | 'found';
+export type How = 'tap' | 'chosen' | 'shown' | 'found' | 'centre';
 
 /** The selection of one card: its focus, its untangling and its highlight. */
 export class Selection {
@@ -168,7 +167,7 @@ export class Selection {
   }
 
   /** Runs `then` with the selection coming as `how`, and back to a tap's after. */
-  private came(how: How, then: () => void): void {
+  came(how: How, then: () => void): void {
     this.how = how;
     try {
       then();
@@ -201,7 +200,8 @@ export class Selection {
     };
     const any = this.kept.top + this.kept.right + this.kept.bottom + this.kept.left > 0;
     zoom.keepClear(this.kept);
-    const to = this.how === 'tap' && !any ? null : zoom.aim(box, this.how === 'chosen' ? READABLE_SCALE : 0);
+    const least = this.how === 'tap' ? (any ? 0 : null) : this.how === 'shown' ? 0 : READABLE_SCALE;
+    const to = least === null ? null : zoom.aim(box, least, this.how === 'centre');
     if (to && this.how === 'found') zoom.restore(to.scale, to.x, to.y);
     else if (to) (this.glide ??= new Glide(this.host.viewport())).to(zoom, to);
     if (top !== null && this.kept.bottom === 0 && cover > 0) {

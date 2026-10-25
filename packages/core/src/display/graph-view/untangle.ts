@@ -87,6 +87,9 @@ export class UntangleView {
       choose: (f) => {
         // a thing hidden by a filter would be chosen out of sight: show the whole graph first
         if (this.core.layers(null).hidden.things.has(f.key)) this.reset();
+        // the list closes, so it covers nothing, and the thing found comes into view readable (find_shows_readable)
+        this.finder.el.hidden = true;
+        this.findButton?.setAttribute('aria-expanded', 'false');
         host.go(f.key);
       },
       close: () => this.closeFind(),
