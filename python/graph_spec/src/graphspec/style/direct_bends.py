@@ -11,6 +11,9 @@ tries each again. Within a budget, so a big graph stays quick."""
 
 from __future__ import annotations
 
+import math
+import re
+
 from graphspec.style.direct_curve import Placed, curve_of, hypot
 
 # How much room a link keeps from a box it passes, in pixels.
@@ -21,6 +24,8 @@ GENTLE = 0.08
 ROOM = 1.15
 # The bends a lone link is tried at, each way, as shares of its length.
 BENDS = (GENTLE, 0.16, 0.26, 0.4, 0.55)
+# The wider bends a bundle is tried at too, so it can go round a whole group in its way.
+WIDE = (0.75, 1)
 # How a bend is scored: for each box it runs through, each link it crosses, and how far it bends.
 THROUGH, CROSSED, BENT = 4, 1, 2
 # How many pieces a curve is cut into, to find what it runs through and crosses.
@@ -106,10 +111,20 @@ def _cut(a, b, c, d) -> bool:
 
 class ToBend:
     """A link to bend: its ends, the way its gentle bend goes first, and its bow when that is
-    fixed already."""
+    fixed already. `avoid` is more it goes round, as it does boxes: a bundle goes round the groups
+    between its two (trunk_ends)."""
 
-    def __init__(self, key: str, a: Placed, b: Placed, toward: float, fixed: float | None = None):
+    def __init__(
+        self,
+        key: str,
+        a: Placed,
+        b: Placed,
+        toward: float,
+        fixed: float | None = None,
+        avoid: list[Placed] | None = None,
+    ):
         self.key, self.a, self.b, self.toward, self.fixed = key, a, b, toward, fixed
+        self.avoid = avoid
 
 
 def toward_middle(a: Placed, b: Placed, side: int, middle: tuple[float, float]) -> float:
@@ -128,8 +143,9 @@ def bends(links: list[ToBend], boxes: list[Placed]) -> list[float]:
         if link.fixed is not None:
             tries.append([link.fixed])
             continue
-        away = aside(link.a, link.b, boxes)
-        each = [v for s in BENDS for v in (link.toward * s, -link.toward * s)]
+        away = aside(link.a, link.b, boxes + link.avoid if link.avoid else boxes)
+        widths = BENDS + WIDE if link.avoid else BENDS
+        each = [v for s in widths for v in (link.toward * s, -link.toward * s)]
         tries.append(([away] if away else []) + each)
     n = len(links)
     cost = n * n * PIECES + n * len(boxes) * len(BENDS) * 2 * PIECES
@@ -151,7 +167,7 @@ def bends(links: list[ToBend], boxes: list[Placed]) -> list[float]:
             for bow in tries[i]:
                 path = _path_of(link.a, link.b, bow)
                 score = (
-                    THROUGH * _through(path, link, boxes)
+                    THROUGH * _through(path, link, boxes + link.avoid if link.avoid else boxes)
                     + CROSSED * sum(1 for o in others if _crosses(path, o))
                     + BENT * abs(bow)
                 )
@@ -232,3 +248,59 @@ def aside(a: Placed, b: Placed, boxes: list[Placed]) -> float:
         if abs(bend) > abs(most):
             most = bend
     return max(-0.6, min(0.6, most))
+
+
+_TRUNK_END = re.compile(r"^trunk: (\d+) (in|out)$")
+
+
+def trunk_ends(boxes: dict[str, Placed], links: list[dict]) -> None:
+    """Each trunk's two ends moved to beside the groups it joins (untangle_found_groups), as the
+    core's trunkEnds does. The end its links come in to sits just outside the group they come
+    from, facing the group they go to. The other end sits the same way by that group."""
+
+    def region_of(key: str, end: str):
+        near = []
+        for link in links:
+            if end == "in" and link.get("to") == key:
+                b = boxes.get(link.get("from") or "")
+            elif end == "out" and link.get("from") == key:
+                b = boxes.get(link.get("to") or "")
+            else:
+                b = None
+            if b:
+                near.append(b)
+        if not near:
+            return None
+        first = near[0].inside
+        if first and all(b.inside is first for b in near):
+            return first
+        return [
+            min(b.x - b.hw for b in near),
+            min(b.y - b.hh for b in near),
+            max(b.x + b.hw for b in near),
+            max(b.y + b.hh for b in near),
+        ]
+
+    spots = []
+    for key, p in boxes.items():
+        m = _TRUNK_END.match(key)
+        if not m:
+            continue
+        other = "out" if m.group(2) == "in" else "in"
+        here, there = region_of(key, m.group(2)), region_of(f"trunk: {m.group(1)} {other}", other)
+        if not here or not there:
+            continue
+        cx, cy = (here[0] + here[2]) / 2, (here[1] + here[3]) / 2
+        dx, dy = (there[0] + there[2]) / 2 - cx, (there[1] + there[3]) / 2 - cy
+        long = hypot(dx, dy) or 1
+        ux, uy = dx / long, dy / long
+        reach = (
+            min(
+                math.inf if ux == 0 else (here[2] - here[0]) / 2 / abs(ux),
+                math.inf if uy == 0 else (here[3] - here[1]) / 2 / abs(uy),
+            )
+            + CLEARANCE
+        )
+        spots.append((p, cx + ux * reach, cy + uy * reach))
+    for p, x, y in spots:
+        p.x, p.y, p.inside = x, y, None

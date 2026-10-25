@@ -24,6 +24,7 @@ from graphspec.style.direct_bends import (
     crowded,
     spread,
     toward_middle,
+    trunk_ends,
 )
 from graphspec.style.direct_curve import Curve, Placed, curve_of, hypot
 from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
@@ -70,6 +71,8 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         spread(every_box, groups, _middle_of(every_box)) if crowded(ends, every_box) else {}
     )
     _settle(list(boxes.values()), links)
+    # each bundle runs from beside the group its links leave to beside the group they reach
+    trunk_ends(boxes, links)
 
     # every mark of a moved box's part goes with it: its outline, its words, its pictures
     moved = {
@@ -120,7 +123,12 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             many[p] = many.get(p, 0) + 1
     every = list(boxes.values())
     middle = _middle_of(every)
-    # each lone link takes the bend that crosses least; links between the same two boxes bow apart
+    # each lone link takes the bend that crosses least; links between the same two boxes bow apart.
+    # A bundle goes round the groups as round boxes
+    walls = []
+    for gid, g in groups.items():
+        hw, hh = (g[2] - g[0]) / 2, (g[3] - g[1]) / 2
+        walls.append(Placed(gid, g[0] + hw, g[1] + hh, hw, hh))
     to_bend: list[ToBend] = []
     for link in links:
         a, b = boxes[link["from"]], boxes[link["to"]]
@@ -134,7 +142,9 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         fixed = (i - (count - 1) / 2) * BOW * side if count > 1 else None
         of = link.get("of")
         key = link["id"] if of is None else of
-        to_bend.append(ToBend(key, a, b, toward_middle(a, b, side, middle), fixed))
+        trunk = a.key.startswith("trunk: ") and b.key.startswith("trunk: ")
+        toward = toward_middle(a, b, side, middle)
+        to_bend.append(ToBend(key, a, b, toward, fixed, walls if trunk else None))
     bows = bends(to_bend, every)
     curves: dict[str, Curve] = {t.key: curve_of(t.a, t.b, bow) for t, bow in zip(to_bend, bows)}
     spots = word_spots(marks, boxes, curves)
