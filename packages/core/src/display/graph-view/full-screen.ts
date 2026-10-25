@@ -3,7 +3,7 @@
 // dialog does (spec §41, a11y_keyboard_auto). It takes the keyboard when it opens and keeps Tab and Shift+Tab in it. It
 // leaves on Escape from any control in it, and gives the keyboard back to what had it.
 import { word } from '@thoughtknot/core';
-import { readInHostDirection } from '../host';
+import { readInHostDirection } from '../host.ts';
 import type { Child, Lifecycle } from '../lifecycle';
 
 /** What full screen asks of its card. */
@@ -14,8 +14,8 @@ export interface FullScreenHost {
   card: Lifecycle;
   /** Draws the card in `el`; `close` is what its Close full screen does. */
   draw: (el: HTMLElement, close: () => void) => Child;
-  /** Full screen closed: the card it was opened from takes over again. */
-  closed: () => void;
+  /** Full screen closed: the card it was opened from takes over again, from the full-screen card `view`. */
+  closed: (view: Child) => void;
 }
 
 /** What the keyboard can rest on, before the hidden and the left-out are taken away. */
@@ -83,7 +83,7 @@ export class FullScreen {
     this.open = null;
     this.host.card.removeChild(f.view);
     f.overlay.remove();
-    this.host.closed();
+    this.host.closed(f.view);
     if (f.opener?.isConnected) f.opener.focus();
   }
 

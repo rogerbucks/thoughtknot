@@ -33,6 +33,7 @@ import type { Exporting } from '../export/export-form';
 import type { LinkHost } from '../link-host';
 import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
+import type { SpaceMode } from './space-switch';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -92,6 +93,8 @@ export interface ViewOptions {
   onEdit: () => void;
   /** In full screen: leaves it. */
   onClose?: () => void;
+  /** In full screen: shown in space as the card it was opened from is, as cards or balls (full_keeps_space). */
+  inSpace?: SpaceMode;
   /** The completeness report shown behind the badge (spec §8). */
   completeness?: CompletenessReport;
   /** The things parked for later, counted apart from problems behind the badge (spec §8). */

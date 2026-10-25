@@ -2,8 +2,8 @@
 // or only looked at. That card takes up where the last was left: its zoom, the thing selected with its details, and
 // full screen, if it was open. Shown in space, as cards or balls, it is shown so again (§53). The selected thing is brought into view where the new layout put it.
 import type { View, Zoom } from '@thoughtknot/core';
-import { glideBoxes } from './regroup';
-import { boxIn } from './taps';
+import { glideBoxes } from './regroup.ts';
+import { boxIn } from './taps.ts';
 import type { Taps } from './taps';
 import type { SpaceMode } from './space-switch';
 import type { DiagramShown, TypeLeftAt } from './type-strip';
@@ -32,12 +32,16 @@ export class TypePlace {
     return this.kept;
   }
 
-  /** The card's options `o`, for its full-screen card, which takes up where the last full-screen card was. */
-  forFull(o: ViewOptions): ViewOptions {
-    const { diagram } = o;
-    if (!diagram) return o;
+  /**
+   * The card's options `o`, for its full-screen card, which takes up where the last full-screen card was. Shown in
+   * `space` as cards or balls, the full-screen card is shown so too (full_keeps_space).
+   */
+  forFull(o: ViewOptions, space?: SpaceMode | null): ViewOptions {
+    const { diagram } = o,
+      kept = space ? { ...o, inSpace: space } : o;
+    if (!diagram) return kept;
     return {
-      ...o,
+      ...kept,
       diagram: {
         ...diagram,
         kept: () => {
