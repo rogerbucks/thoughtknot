@@ -9,6 +9,7 @@ import {
   keyMove,
   orbitAround,
   panBy,
+  turnRound,
   twistBy,
   twistOf,
   twoFingers,
@@ -120,6 +121,25 @@ test('two fingers twisting turn the view with them: the drawing follows the fing
     after = at(twisted);
   const angle = (p) => Math.atan2(p.y - 300, p.x - 300);
   assert.ok(Math.abs(angle(after) - angle(before) - Math.PI / 6) < 0.02, `${angle(before)} -> ${angle(after)}`);
+});
+
+// proves: space_turns_round_pick
+test('a drag turns the view round the picked thing, or the middle: it stays still on the screen while all else turns', () => {
+  const pivot = [300, -200, 40];
+  const at = (o) => projectPoint(spaceMatrix(o, 1, 2000), pivot, 600, 600);
+  const start = at(ORBIT);
+  let o = ORBIT;
+  for (const [dx, dy] of [
+    [80, 0],
+    [0, 60],
+    [-150, -90],
+  ]) {
+    o = turnRound(o, dx, dy, pivot);
+    const now = at(o);
+    assert.ok(Math.abs(now.x - start.x) < 0.5 && Math.abs(now.y - start.y) < 0.5, `${now.x}, ${now.y}`);
+  }
+  assert.notDeepEqual(eyeOf(o), eyeOf(ORBIT), 'the camera did move');
+  assert.equal(o.distance, ORBIT.distance);
 });
 
 test('one finger turns the view the way it goes: the drawing beyond the middle follows it, where a mouse drags the camera', () => {

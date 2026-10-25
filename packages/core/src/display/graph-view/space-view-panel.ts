@@ -25,17 +25,17 @@
 // (focus_space).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { centredOn, focusOn, middleOf, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
+import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { keyMove, orbitAround, fingerTurn, panBy, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
+import { keyMove, orbitAround, panBy, turnRound, twistBy, twistOf, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
 import { webgl2SpacePainter } from './space-painter.ts';
-import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
+import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { DEPTH_WORDS, linkCounts, spacePad } from './space-view-pad.ts';
@@ -116,9 +116,9 @@ export async function openSpaceView(
   for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
   const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
   const win = el.win;
-  // a card with no background of its own shows the page's: the label halo uses the system's page colour then
-  const background = win.getComputedStyle(root).backgroundColor;
-  const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
+  // the label halo is the colour behind the view: the first painted one up from it, as the theme sets it. The system's
+  // page colour is the last resort: a phone in light mode has a white one under a dark theme (Roger, 25 Oct 2026)
+  const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
   // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, or the drawing lifted as it is
@@ -201,10 +201,12 @@ export async function openSpaceView(
     closed();
   };
 
+  /** What the view turns round: the picked thing, else the drawing's middle (Roger, 25 Oct 2026). */
+  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target);
   /** Makes one move, from a key or a button, and paints it. */
   const move = (m: SpaceMove) => {
     if ('back' in m) return close();
-    if ('turn' in m) orbit = orbitBy(orbit, ...m.turn);
+    if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
     else if ('zoom' in m) orbit = zoomBy(orbit, m.zoom);
     else if ('reset' in m) orbit = orbitFit(space, width / height);
@@ -309,12 +311,8 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
-      orbit =
-        pans || e.shiftKey
-          ? panBy(orbit, dx, dy, height)
-          : touching
-            ? fingerTurn(orbit, dx, dy)
-            : orbitBy(orbit, dx, dy);
+      // a finger turns the way it goes, as fingerTurn does; a mouse drags the camera round. Both turn round the pivot
+      orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : turnRound(orbit, touching ? -dx : dx, dy, pivot());
     }
     again();
   });

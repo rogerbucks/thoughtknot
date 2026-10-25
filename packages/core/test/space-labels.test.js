@@ -3,7 +3,7 @@
 // nearest where you look, and no name covers another.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LABELS_MOST, READABLE_LEAST, READABLE_MOST, labelsOnScreen } from '../src/space-labels.ts';
+import { LABELS_MOST, READABLE_LEAST, READABLE_MOST, labelsOnScreen, largestName } from '../src/space-labels.ts';
 import { orbitFit, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
 
 /** A grid of `count` things, 20 a row, each a box with its name in a small font, as Graphviz draws 9-pixel names. */
@@ -95,4 +95,23 @@ test('a name is painted whole, up to the shown-text rule\'s 80 letters; a longer
   assert.ok(l.text.endsWith('…'));
   const whole = marks.map((m) => (m.kind === 'label' ? { ...m, text: 'x'.repeat(60) } : m));
   assert.equal(shownOf(spaceOf(whole, { by: 'group' }), 800, 600)[0].text, 'x'.repeat(60));
+});
+
+// proves: space_phone_readable
+test('on a phone the names are smaller, and none runs past the sides of the view', () => {
+  const space = grid(40, 30);
+  for (const l of space.labels) l.text = `${l.text} ${'and a great deal more said about it '.repeat(3)}`.trim();
+  const [w, h] = [390, 600];
+  assert.ok(largestName(w, h) < READABLE_MOST && largestName(w, h) >= READABLE_LEAST);
+  assert.equal(largestName(1200, 800), READABLE_MOST, 'a wide view keeps the full size');
+  const shown = shownOf(space, w, h, 6);
+  assert.ok(shown.length > 0);
+  for (const l of shown) {
+    assert.ok(l.size <= largestName(w, h), `${l.size}`);
+    assert.ok(l.text.length * l.size * 0.56 <= w, `${l.text} fits across`);
+  }
+  assert.ok(
+    shown.some((l) => l.text.endsWith('…')),
+    'a long name is cut to fit',
+  );
 });
