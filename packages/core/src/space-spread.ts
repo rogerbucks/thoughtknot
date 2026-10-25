@@ -291,7 +291,7 @@ export function partsNear(shape: GraphShape, spots: Spots<3>): Spots<3> {
     else parts.set(r, [t.key]);
   }
   if (parts.size < 2) return spots;
-  const at = (k: string) => (spots.get(k) ?? [0, 0, 0]);
+  const at = (k: string) => spots.get(k) ?? [0, 0, 0];
   const ball = (keys: readonly string[]) => {
     const mid = scale(keys.map(at).reduce(add, [0, 0, 0]), 1 / keys.length);
     return { mid, r: Math.max(...keys.map((k) => Math.hypot(...sub(at(k), mid)))) };
