@@ -61,7 +61,7 @@ describe('a graph laid out again by a switch', () => {
     const { env, el } = await card(note);
     try {
       assert.ok(edge(el, 'edge1').classList.contains('thoughtknot-flow-dot'));
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
       for (const id of ['edge1', 'edge1_tail', 'edge2', 'edge2_tail']) {
         assert.ok(edge(el, id).classList.contains('thoughtknot-flow-dot'), id);
@@ -78,7 +78,7 @@ describe('a graph laid out again by a switch', () => {
     try {
       labelled(el, 'Play Evening walk').click();
       assert.ok(labelled(el, 'Pause'), 'playing');
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
       assert.ok(!labelled(el, 'Pause'), 'stopped');
       assert.ok(labelled(el, 'Play Evening walk'), 'Play is offered again');
@@ -119,10 +119,10 @@ describe('the legend of moving links', () => {
     try {
       assert.ok(el.querySelector('#fold_hub_1'), 'the box’s links folded');
       assert.equal(legend(el), null, 'no moving link is drawn, so nothing to say');
-      turn(el, 'Busy hubs folded').click();
+      turn(el, 'Fold busy things').click();
       await until(() => !!legend(el));
       assert.match(legend(el).textContent, /kept in the box/);
-      turn(el, 'Busy hubs folded').click();
+      turn(el, 'Fold busy things').click();
       await until(() => !legend(el));
     } finally {
       env.uninstall();
@@ -137,16 +137,16 @@ describe('parallel links merged, with nothing to merge', () => {
     const menu = (el) => el.querySelector('.thoughtknot-view-menu .thoughtknot-quiet').textContent;
     const { env, el } = await card(noteOf(TOWN));
     try {
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => /nothing to merge/.test(menu(el)));
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => menu(el) === '');
     } finally {
       env.uninstall();
     }
     const grouped = await card(noteOf(TOWN, GROUPS()));
     try {
-      turn(grouped.el, 'Parallel links merged').click();
+      turn(grouped.el, 'Bundle links between groups').click();
       await until(() => !!edge(grouped.el, 'trunk_1'));
       assert.equal(menu(grouped.el), '', 'a trunk drawn: nothing more to say');
     } finally {

@@ -254,28 +254,28 @@ export const OPTIONS: Option[] = [
   },
   switchOption(
     'labelsByZoom',
-    'Labels by zoom',
+    'Hide labels too small to read',
     'Whether a link’s label shows only when zoomed in far enough to read it; a graph’s View menu can change it.',
   ),
   switchOption(
     'foldHubs',
-    'Busy hubs folded',
+    'Fold busy things',
     'Whether a thing with many links draws them folded into one stub marked with their count; a graph’s View menu can change it.',
   ),
   switchOption(
     'foldGroups',
-    'Groups folded',
+    'Fold groups',
     'Whether each group draws as one box showing how many things it holds; a graph’s View menu can change it.',
   ),
   switchOption(
     'mergeLinks',
-    'Parallel links merged',
+    'Bundle links between groups',
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   ),
   switchOption(
     'ownLayout',
-    'ThoughtKnot layout engine',
-    'Whether ThoughtKnot lays graphs out by its own engine, the default. Off lays them out by Graphviz, as before.',
+    'Lay out with ThoughtKnot',
+    'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
   ),
   switchOption(
     'noteCallouts',

@@ -1,7 +1,7 @@
 // The View menu (editor spec §25, view_switches): a graph's four switches, each on or off, under the bar's View button.
-// They are labels by zoom, busy hubs folded, groups folded and parallel links merged. They start as the plugin's
-// settings hold them (view_switch_defaults). Turning one redraws the graph at once: labels by zoom in place, the others
-// by laying the graph out again. The card puts that in place, keeping the selection and the focus. A busy hub's stub, a
+// They hide labels too small to read, fold busy things, fold groups and bundle links between groups, each with a line
+// saying what it does. They start as the plugin's settings hold them (view_switch_defaults). Turning one redraws the
+// graph at once: hiding labels in place, the others by laying the graph out again. The card puts that in place, keeping the selection and the focus. A busy hub's stub, a
 // folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
 // offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
@@ -25,7 +25,16 @@ const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
   return o ? optionSaid(o).name : switchName(s);
 };
-import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
+import type {
+  Drawn,
+  GraphDrawing,
+  Kept,
+  LayoutOptions,
+  NoteReading,
+  ViewState,
+  ViewSwitch,
+  WordKey,
+} from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { trunkCount } from '../../untangle-fold.ts';
 
@@ -39,6 +48,16 @@ export interface ViewMenu {
   /** Says how the last turn went, such as why the drawing could not be redrawn; empty, nothing. */
   say: (words: string) => void;
 }
+
+/** The line under each switch saying in plain words what it does (F9 of the UX review, 25 Oct 2026). */
+const HINTS = {
+  labels: 'view.hint.labels',
+  hubs: 'view.hint.hubs',
+  groups: 'view.hint.groups',
+  merge: 'view.hint.merge',
+} as const satisfies Record<Exclude<ViewSwitch, 'engine'>, WordKey>;
+/** How many hints have been drawn, so each has an id of its own its switch is described by. */
+let hints = 0;
 
 /** The View menu's choice of what to group by: as written or found, none, or one of `groupChoices` (untangle_group_by). */
 const AUTO = '',
@@ -76,9 +95,21 @@ export function renderViewMenu(
   el.hidden = true;
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
-    const b = el.createEl('button', { cls: 'thoughtknot-switch', attr: { type: 'button', role: 'switch' } });
-    // the name is the switch's name; the toggle and its words show its state, which aria-checked says to a screen reader
-    b.createSpan({ cls: 'thoughtknot-switch-name', text: nameOf(s) });
+    if (s === 'engine') continue; // which engine lays out is the settings page's alone (Roger, 25 Oct 2026)
+    const hint = `thoughtknot-switch-hint-${++hints}`;
+    const b = el.createEl('button', {
+      cls: 'thoughtknot-switch',
+      attr: { type: 'button', role: 'switch', 'aria-describedby': hint },
+    });
+    // the name is the switch's name, and its hint under it says what it does. The toggle and its words show its state,
+    // which aria-checked says to a screen reader
+    const words = b.createSpan({ cls: 'thoughtknot-switch-words' });
+    words.createSpan({ cls: 'thoughtknot-switch-name', text: nameOf(s) });
+    words.createSpan({
+      cls: 'thoughtknot-switch-hint',
+      text: word(HINTS[s]),
+      attr: { id: hint, 'aria-hidden': 'true' },
+    });
     b.createSpan({ cls: 'thoughtknot-switch-track', attr: { 'aria-hidden': 'true' } });
     const says = b.createSpan({ cls: 'thoughtknot-switch-state', attr: { 'aria-hidden': 'true' } });
     b.addEventListener('click', () => turned(s, !state.switches[s]));

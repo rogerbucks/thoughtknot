@@ -444,9 +444,9 @@
 .thoughtknot-filter button.is-hidden {
   text-decoration: line-through;
 }
-/* The View menu (spec §25): four switches. Each is a 44-point row with its name, a toggle drawn as Obsidian draws one,
-   and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when on, which a
-   right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it. It
+/* The View menu (spec §25): four switches. Each is a 44-point row with its name and hint, a toggle drawn as Obsidian
+   draws one, and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when
+   on, which a right-to-left line mirrors. Hiding labels paints a link's label clear while it is too small to read. It
    never does so on a link in focus, highlighted or selected. It is paint only, as focus and the highlight are. So
    nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
 .thoughtknot-over-panels > .thoughtknot-view-menu {
@@ -506,8 +506,17 @@
 .thoughtknot-view-menu button.thoughtknot-switch:hover {
   background: var(--gn-bg-hover);
 }
-.thoughtknot-switch-name {
+/* a switch's name, and under it the one line saying what it does (F9) */
+.thoughtknot-switch-words {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gn-space-1) 0;
+}
+.thoughtknot-switch-hint {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .thoughtknot-switch-track {
   display: flex;
