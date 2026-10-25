@@ -639,6 +639,11 @@ never data.
     whole numbers. They are also a link to a thing that is gone, or a link that is not CONNECTS. Whatever can be read stays on the board.
   - `writeBoard` writes a board in one fixed form, so the same board is always the same bytes.
   - `moveItem` changes only the moved item's own text, so notes and comments in the block stay as they were.
+- `board-svg.ts` — a board drawn and said.
+  - `boardSvg` draws a board as one SVG picture in the palette's colours, lower layers first. Given a view, it draws
+    only the items in it (board_speed). Each item carries `data-item`, so a host can tell what was tapped.
+  - `itemSaid` says an item's kind, text and what it joins. It is each item's title, for a screen reader.
+  - `boardOutline` lists the whole board as text, top to bottom, with what a frame holds under it.
 
 #### Reading and checking a style
 
