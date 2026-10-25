@@ -9,6 +9,7 @@ import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
+import { STARTERS } from './view-presets.ts';
 import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
 export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
@@ -50,6 +51,7 @@ export interface Settings extends StrictnessSettings {
   aiClassMap: Record<string, string>;
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
+  viewPreset: string; // the view preset last picked (§69)
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
@@ -96,6 +98,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiMatrixNote: '',
   aiClassMap: {},
   indent: 'four',
+  viewPreset: 'default',
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'on',
@@ -219,6 +222,14 @@ export const OPTIONS: Option[] = [
     name: 'Indent',
     sentence: 'How the editor indents the later lines of a thing it writes.',
     choices: INDENTS,
+  },
+  {
+    key: 'viewPreset',
+    section: 'Drawing',
+    name: 'View preset',
+    sentence:
+      'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',
+    choices: STARTERS.map((p) => ({ value: p.id, name: p.name, sentence: p.sentence })),
   },
   {
     key: 'direction',
@@ -349,6 +360,7 @@ export function settingsFrom(saved: unknown): Settings {
       ),
     ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
+    viewPreset: oneOf('viewPreset', s.viewPreset, d.viewPreset),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),

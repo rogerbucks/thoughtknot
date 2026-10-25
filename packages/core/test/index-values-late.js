@@ -134,4 +134,14 @@ export const VALUES_LATE = [
   'workstreamsFrom',
   'writeLens',
   'writeSafely',
+  // view presets by need (§69), 25 Oct 2026
+  'STARTERS',
+  'PRESET_SETTINGS',
+  'starterOf',
+  'presetChange',
+  'floored',
+  'deviceWins',
+  'presetFor',
+  'presetFile',
+  'presetFrom',
 ];

@@ -54,6 +54,28 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.indent.two': 'Two spaces',
   'settings.indent.four': 'Four spaces',
   'settings.indent.tab': 'A tab',
+  'settings.view-preset.name': 'View preset',
+  'settings.view-preset.sentence':
+    'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',
+  'settings.view-preset.default': 'Default',
+  'settings.view-preset.default.sentence': 'A drawing in rows by its flow, with an outline beside it.',
+  'settings.view-preset.focus': 'Focus support',
+  'settings.view-preset.focus.sentence':
+    'The selected thing and its near links stand out; the rest is faded, not hidden.',
+  'settings.view-preset.calm': 'Calm and predictable',
+  'settings.view-preset.calm.sentence': 'Nothing moves by itself, and the drawing is laid out again only when you ask.',
+  'settings.view-preset.detail': 'Detail first',
+  'settings.view-preset.detail.sentence': 'Every label and property shown, in an order you can scan.',
+  'settings.view-preset.big-picture': 'Big picture first',
+  'settings.view-preset.big-picture.sentence': 'Groups first, folded into one box each, opened as you go in.',
+  'settings.view-preset.reading': 'Reading support',
+  'settings.view-preset.reading.sentence':
+    'Short labels with wider spacing, the full words when you select one, and the outline one key away.',
+  'view-preset.imported': 'Imported preset',
+  'view-preset.not-json': 'This file is not a view preset: it is not JSON.',
+  'view-preset.not-preset': 'This file is not a view preset: it does not say {format}.',
+  'view-preset.less-motion': 'Your device asks for less motion, so nothing moves.',
+  'view-preset.more-contrast': 'Your device asks for more contrast, so colours are stronger.',
   'settings.direction.name': 'Direction',
   'settings.direction.sentence':
     'Which way a drawing runs: the best fit, or always one of the directions the locked style allows.',

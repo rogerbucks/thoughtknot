@@ -520,6 +520,7 @@ export const TYPES = [
   'Departure',
   'Details',
   'Device',
+  'DeviceAsks',
   'Diagnostic',
   'Diagram',
   'DiagramChoice',

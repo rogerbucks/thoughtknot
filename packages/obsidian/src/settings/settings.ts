@@ -10,6 +10,7 @@ import {
   classMapProblems,
   classMapText,
   optionSaid,
+  presetChange,
   unmatchedClasses,
   word,
 } from '@thoughtknot/core';
@@ -181,6 +182,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       change = { classifications: levels };
     } else if (key === 'aiClassMap') change = { aiClassMap: classMapFrom(String(value)) };
     else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value, this.matrix);
+    else if (key === 'viewPreset') change = presetChange(String(value));
     else change = { [key]: value };
     await this.owner.saveSettings({ ...s, ...change });
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
