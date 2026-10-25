@@ -16,6 +16,16 @@ flowchart LR
   P["Preset"] --> O["Ordering"] --> L["Layout"] --> V["View"] --> F["Formatting"] --> M["Motion"] --> T["Text and keys"]
 ```
 
+## Built so far
+
+The six starters are in `packages/core/src/view-presets.ts`. **View preset** heads the Drawing settings: picking one
+sets every Drawing setting it turns, and each stays yours to change. The floor, the device winning, the nearest
+preset winning and the one-file export are there too. The hosts read the device's settings, and a graph or vault
+keeps its own preset, next.
+
+A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
+of it a viewer is shown.
+
 ## Starter presets
 
 | Starter | Ordering | Layout | View | Motion | Extra |

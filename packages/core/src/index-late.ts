@@ -21,3 +21,18 @@ export {
   type LensFreshness,
   type LensRun,
 } from './lens-freshness.ts';
+// view presets by need (§69)
+export {
+  STARTERS,
+  PRESET_SETTINGS,
+  starterOf,
+  presetChange,
+  floored,
+  deviceWins,
+  presetFor,
+  presetFile,
+  presetFrom,
+  type ViewChain,
+  type ViewPreset,
+  type DeviceAsks,
+} from './view-presets.ts';
