@@ -10,7 +10,7 @@ import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import { openSpaceView } from './space-view-panel';
-import { fadeOut } from './space-glide.ts';
+import { fadeOut } from './space-view-pad.ts';
 import type { SpaceView } from './space-view-panel';
 
 /** How the drawing is shown in space: as cards (2.5D) or as balls (3D). Flat is null. */

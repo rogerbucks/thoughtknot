@@ -1,9 +1,9 @@
-// The change between the flat drawing and the view in space glides (editor spec §53, space_glide): space-glide.ts.
+// The change between the flat drawing and the view in space glides (editor spec §53, space_glide): space-view-pad.ts.
 // The camera glides from above to its slant, frame by frame, and stops at a move. Leaving, the view fades out.
 // Where motion is to be still, both happen at once.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GLIDE_MS, FADE_MS, fadeOut, glideIn } from '../src/display/graph-view/space-glide.ts';
+import { GLIDE_MS, FADE_MS, fadeOut, glideIn } from '../src/display/graph-view/space-view-pad.ts';
 import { fromAbove } from '../src/space-controls.ts';
 
 const TO = { target: [10, -20, 5], distance: 900, turn: -Math.PI / 2, tilt: 0.9 };
