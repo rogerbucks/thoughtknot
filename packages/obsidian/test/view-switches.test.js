@@ -292,6 +292,29 @@ describe('groups folded and links merged', () => {
     }
   });
 
+  test('tapping a bundle draws its links apart again, each as itself; merging turned again bundles them', async () => {
+    // proves: untangle_open_bundle
+    const { env, el } = await card();
+    try {
+      turn(el, 'Parallel links merged').click();
+      await until(() => !!edge(el, 'trunk_1'));
+      assert.equal(
+        edge(el, 'trunk_1').getAttribute('aria-label'),
+        '2 links from Makers to Helpers, bundled. Open them.',
+      );
+      assert.equal(edge(el, 'trunk_1').getAttribute('role'), 'button');
+      tap(el, edge(el, 'trunk_1'));
+      await until(() => !edge(el, 'trunk_1'));
+      assert.ok(edge(el, 'edge14') && !edge(el, 'edge14_tail'), 'Ann asks Cy, drawn on its own again');
+      turn(el, 'Parallel links merged').click();
+      await until(() => !edge(el, 'edge14_tail'));
+      turn(el, 'Parallel links merged').click();
+      await until(() => !!edge(el, 'trunk_1'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a Links that merges, written after the graph was first drawn, starts it merged when drawn again', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {

@@ -22,7 +22,7 @@ export const BUSY_HUB = THRESHOLDS.busy_hub.value;
  * - links not drawn, by their place among the drawing's links (`edgesOf`), folded into a stub or inside a folded box;
  * - each hub folded, with how many links its stub stands for;
  * - every group drawn, with its things and whether it is folded into one box;
- * - whether the links between two groups are merged into trunks.
+ * - whether the links between two groups are merged into trunks, and the bundles opened again since, if any.
  * Plain lists, so it crosses to a layout worker.
  */
 export interface Folding {
@@ -31,14 +31,19 @@ export interface Folding {
   hubs: [string, number][];
   groups: [string, string[], boolean][];
   merge: boolean;
+  /** Each bundle opened again, as its two groups' labels (`bundleOf`): its links drawn apart (untangle_open_bundle). */
+  unmerged?: string[];
 }
+
+/** A bundle's name: the labels of the group its links run from and the group they run to. */
+export const bundleOf = (from: string, to: string): string => `${from}\n${to}`;
 
 /** Which folds are wanted: hubs folded, groups folded, links merged, and the hubs and groups opened again since. */
 export interface FoldChoice {
   hubs: boolean;
   groups: boolean;
   merge: boolean;
-  opened?: { hubs?: readonly string[]; groups?: readonly string[] };
+  opened?: { hubs?: readonly string[]; groups?: readonly string[]; bundles?: readonly string[] };
 }
 
 /** The links of each thing, by their place among the drawing's links: a link to itself counted once. */
@@ -171,7 +176,9 @@ export function foldPlan(
   });
   const merge = choice.merge && plannedGroups.length > 0;
   if (!hubs.length && !boxed.size && !merge) return undefined;
-  return { hidden, folded: [...folded].sort((a, b) => a - b), hubs, groups: plannedGroups, merge };
+  const plan: Folding = { hidden, folded: [...folded].sort((a, b) => a - b), hubs, groups: plannedGroups, merge };
+  const unmerged = merge ? (choice.opened?.bundles ?? []) : [];
+  return unmerged.length ? { ...plan, unmerged: [...unmerged] } : plan;
 }
 
 /**

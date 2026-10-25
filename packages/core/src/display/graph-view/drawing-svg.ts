@@ -5,7 +5,7 @@
 // to a note, a file or an address are drawn as a link. A thing's attachments are counted (§18, links/link-marks.ts).
 // Laid out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new
 // drawing.
-import { textVersion, withoutColorMix, word } from '@thoughtknot/core';
+import { edgesOf, textVersion, trunksOf, withoutColorMix, word } from '@thoughtknot/core';
 import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
 import { markCertainty } from './certainty';
@@ -135,17 +135,29 @@ function decorate(
       word('estimate.label', { from: textOf(e.from), reading: e.reading, to: textOf(e.to) }),
     );
   }
-  markFolds(svg, plan, textOf);
+  markFolds(svg, plan, textOf, d);
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
   markCertainty(svg, boxes); // how sure each thing is: line weight, dash and a mark, never colour alone (§36)
   if (o?.links) markLinks(svg, o.reading, o.graph, o.links); // links shown as links, attachments counted (§18)
   if (o?.callouts && d) markCallouts(svg, drawn, d); // the notes, as callouts, over the finished layout (§24)
 }
 
-/** Each busy hub's stub and each folded group's box (§25): a button that opens it, named with its count. */
-function markFolds(svg: SVGSVGElement, plan: Folding | undefined, textOf: (k: string) => string): void {
+/** Each busy hub's stub, folded group's box and bundle (§25): a button that opens it, named with its count. */
+function markFolds(
+  svg: SVGSVGElement,
+  plan: Folding | undefined,
+  textOf: (k: string) => string,
+  d?: GraphDrawing,
+): void {
   if (!plan) return;
+  // each trunk, named by its bundle as the layout source numbers them: tapped, its links are drawn apart again
+  const links = d ? edgesOf(d).map((e, n) => ({ n, from: e.from, to: e.to })) : [];
+  const trunks = trunksOf(plan, links).map(({ bundle, links: ls }, t): [string, string, string] => {
+    const [from = '', to = ''] = bundle.split('\n');
+    return [`trunk_${t + 1}`, `bundle:${bundle}`, word('fold.bundle', { count: ls.length, from, to })];
+  });
   const folds: [string, string, string][] = [
+    ...trunks,
     ...plan.hubs.map(([key, count], j): [string, string, string] => [
       `fold_hub_${j + 1}`,
       `hub:${key}`,
