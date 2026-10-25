@@ -4,7 +4,6 @@
 // - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
 // - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
 // CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
-//
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
@@ -12,7 +11,7 @@
 //   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
-// A pull request's run uses --setup-since. Main and the release run everything.
+// A pull request's run uses --setup-since. Main and the release run everything. The nightly adds --no-tests (no npm test).
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -350,7 +349,8 @@ function main(argv) {
   }
   if (flag('--setup') || since) problems.push(...setupProblems());
   const changed = since && !flag('--setup') ? setupInputsChangedSince(ROOT, since) : [];
-  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, { log: console.error }));
+  const skipTests = flag('--no-tests');
+  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, { log: console.error, skipTests }));
   else if (since)
     console.error(`No setup input changed since ${since}: the fresh clone runs on main and at the release.`);
   for (const p of problems) console.error(`  ${p.where} — ${p.rule}${p.detail ? `\n${p.detail}` : ''}`);

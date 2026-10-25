@@ -13,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readmeSteps } from '../scripts/fresh-clone.mjs';
+import { readmeSteps, withoutTests } from '../scripts/fresh-clone.mjs';
 import { messageProblems } from '../scripts/history-text-problems.mjs';
 import { PRIVATE_LINKS_FROM, privateLinkProblems } from '../scripts/private-links.mjs';
 import { SIGN_OFF_FROM, signOffProblems } from '../scripts/sign-off.mjs';
@@ -410,6 +410,7 @@ describe('the settings on GitHub', () => {
 
 describe('kept so, in CI and at every release', () => {
   const COMMAND = /^node scripts\/public-readiness\.mjs --history --setup$/;
+  const NIGHTLY_COMMAND = /^node scripts\/public-readiness\.mjs --history --setup --no-tests$/;
 
   test('CI runs the history and setup checks in a job of their own, from the whole history', () => {
     const ci = read('.github/workflows/ci.yml');
@@ -437,9 +438,15 @@ describe('kept so, in CI and at every release', () => {
     assert.match(text, /needs: check\n\s+if: needs\.check\.outputs\.moved == 'true'/);
     assert.match(text, /ref: main\s*\n\s*persist-credentials: false\s*\n\s*fetch-depth: 0/);
     assert.ok(
-      runCommands(text).some((r) => COMMAND.test(r)),
-      'the whole setup check',
+      runCommands(text).some((r) => NIGHTLY_COMMAND.test(r)),
+      'the whole setup check, without the suite main’s CI already ran on this commit',
     );
+  });
+
+  test('leaves the README’s npm test line out of a fresh clone only when asked, and nothing else', () => {
+    assert.equal(withoutTests('npm ci\nnpm test\nnpm run build'), 'npm ci\nnpm run build');
+    assert.equal(withoutTests('npm ci\nnpm run test:ai'), 'npm ci\nnpm run test:ai');
+    assert.equal(withoutTests('uv sync'), 'uv sync');
   });
 
   test("a newer push to a pull request cancels CI's run of the older commit; a run on main is never cancelled", () => {
