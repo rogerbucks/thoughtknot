@@ -8,6 +8,7 @@
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
+//   node scripts/public-readiness.mjs --setup --no-tests   the same without the README's `npm test` line (the nightly).
 //   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
 //   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
@@ -53,7 +54,7 @@ export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
     if (i > 0 && !pathOf.has(line.slice(0, i))) pathOf.set(line.slice(0, i), line.slice(i + 1));
   }
   const batch = git(root, ['cat-file', '--batch'], [...pathOf.keys()].join('\n') + '\n');
-  for (let at = 0; at < batch.length;) {
+  for (let at = 0; at < batch.length; ) {
     const nl = batch.indexOf(10, at);
     const [sha, type, size] = batch.subarray(at, nl).toString().split(' ');
     const body = batch.subarray(nl + 1, nl + 1 + Number(size));
@@ -350,7 +351,8 @@ function main(argv) {
   }
   if (flag('--setup') || since) problems.push(...setupProblems());
   const changed = since && !flag('--setup') ? setupInputsChangedSince(ROOT, since) : [];
-  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, { log: console.error }));
+  if (flag('--setup') || changed.length)
+    problems.push(...freshCloneProblems(ROOT, { log: console.error, skipTests: flag('--no-tests') }));
   else if (since)
     console.error(`No setup input changed since ${since}: the fresh clone runs on main and at the release.`);
   for (const p of problems) console.error(`  ${p.where} — ${p.rule}${p.detail ? `\n${p.detail}` : ''}`);
