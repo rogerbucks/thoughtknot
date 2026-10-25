@@ -197,7 +197,9 @@ describe('where the sheet covers the whole drawing, the note scrolls the chosen 
         import('../../core/src/render.ts'),
         import('../../core/src/hits.ts'),
       ]);
-      const areas = hitAreas(draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg);
+      const areas = hitAreas(
+        draw({ ...readNote([GRAPH]).graphs.get('reader'), engine: 'own' }, await loadEngine()).svg,
+      );
       const b = boundsOf(areas, el.querySelector('g.node[data-key="q"]').getAttribute('id'));
       const y = parseFloat(vp.cssProps['--thoughtknot-y']);
       assert.equal(y, 0, 'the drawing itself does not move');
@@ -395,7 +397,7 @@ describe('the drawing pans so the chosen thing stays visible above the sheet', (
       import('../../core/src/engine.ts'),
       import('../../core/src/render.ts'),
     ]);
-    env.drawnSvg = draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg;
+    env.drawnSvg = draw({ ...readNote([GRAPH]).graphs.get('reader'), engine: 'own' }, await loadEngine()).svg;
     let moved = false;
     for (const key of ['q', 'large', 'tablet', 'eyes']) {
       labelled(el, 'Fit').click();

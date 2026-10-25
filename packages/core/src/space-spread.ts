@@ -101,7 +101,8 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
   const seeds = new Map<string, [number, number, number]>();
   shape.things.forEach((t, i) => {
     const [x, y] = at.get(t.key) ?? [0, 0];
-    seeds.set(t.key, [x / unit, y / unit, ((i % 3) - 1) * 0.1]);
+    // down the page is back along the space, as spaceOf lifts it: so the drawing's top is at the top of the view
+    seeds.set(t.key, [x / unit, -y / unit, ((i % 3) - 1) * 0.1]);
   });
   return { seeds, unit };
 }
@@ -137,7 +138,7 @@ export function spreadSpace(
     const [x, y, z] = spots.get(m.of) ?? [0, 0, 0],
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
-    const c: Vec3 = page ? [page[0], page[1], z * unit] : [x * unit, y * unit, z * unit],
+    const c: Vec3 = page ? [page[0], -page[1], z * unit] : [x * unit, y * unit, z * unit],
       r = cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
     centre.set(m.of, c);
     radius.set(m.of, r);

@@ -154,3 +154,37 @@ export function between(from: Orbit, to: Orbit, share: number): Orbit {
     tilt: at(from.tilt, to.tilt),
   };
 }
+
+/** `v` turned by `angle` radians round the line through the origin along the unit `axis` (Rodrigues' rotation). */
+function turned(v: Vec3, axis: Vec3, angle: number): Vec3 {
+  const [x, y, z] = axis,
+    c = Math.cos(angle),
+    s = Math.sin(angle);
+  const along = (x * v[0] + y * v[1] + z * v[2]) * (1 - c);
+  return [
+    v[0] * c + (y * v[2] - z * v[1]) * s + x * along,
+    v[1] * c + (z * v[0] - x * v[2]) * s + y * along,
+    v[2] * c + (x * v[1] - y * v[0]) * s + z * along,
+  ];
+}
+
+/**
+ * `orbit` turned and tilted by a drag of `dx` and `dy` pixels, as `orbitBy` turns it, but round `pivot`. The camera and
+ * the point it looks at both swing round it, so the view does not jump. The picked thing, or the drawing's middle,
+ * stays where it is on the screen while all else turns round it (Roger, 25 Oct 2026).
+ */
+export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Orbit {
+  const spin = -dx * 0.008,
+    lift = dy * 0.008;
+  const off: Vec3 = [0, 1, 2].map((k) => (orbit.target[k] ?? 0) - (pivot[k] ?? 0)) as Vec3;
+  // first round the upright line through the pivot, then round the level line square to the new way the camera looks
+  const spun = turned(off, [0, 0, 1], spin),
+    turn = orbit.turn + spin;
+  const lifted = turned(spun, [Math.sin(turn), -Math.cos(turn), 0], lift);
+  return {
+    target: [pivot[0] + lifted[0], pivot[1] + lifted[1], pivot[2] + lifted[2]],
+    distance: orbit.distance,
+    turn,
+    tilt: orbit.tilt + lift,
+  };
+}

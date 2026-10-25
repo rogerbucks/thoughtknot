@@ -8,6 +8,22 @@ import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 
+/** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
+const clear = (c: string) => !c || c === 'transparent' || /,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
+
+/**
+ * The colour seen behind `el`: its own background, or the first painted one of the elements round it. The system's page
+ * colour, `Canvas`, only when none is painted, as it can differ from the theme's.
+ */
+export function backgroundOf(el: Element): string {
+  const win = el.ownerDocument.defaultView;
+  for (let at: Element | null = el; at && win; at = at.parentElement) {
+    const c = win.getComputedStyle(at).backgroundColor;
+    if (!clear(c)) return c;
+  }
+  return 'Canvas';
+}
+
 /** A block's four top corners and four floor corners, as points of the space. */
 function cornersOf(b: Block): Vec3[] {
   const ring = [
