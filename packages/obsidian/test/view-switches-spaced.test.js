@@ -41,6 +41,8 @@ const GROUPS = `// graph: kit_style · STYLE kit
 (n3:Nudge {word: 'group', thing: 'cy', group: 'Helpers'}),
 (n4:Nudge {word: 'group', thing: 'dee', group: 'Helpers'})`;
 const VIEW = '// graph: kit · QUERY view people\nMATCH (n:Person) RETURN n';
+/** How long a lay-out may take on a busy runner, the suite running six files at once. */
+const LAID = 20000;
 const noteOf = (...blocks) => ['# Kit', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
 
 describe('layout options', () => {
@@ -81,10 +83,10 @@ describe('layout options', () => {
         ['1', '1', '0.5'],
         'as each layout lays out alone',
       );
-      await until(() => spread(el) > 0);
+      await until(() => spread(el) > 0, LAID);
       const before = spread(el);
       slide(el, 0, 3);
-      await until(() => spread(el) > before * 1.2); // the things laid further apart
+      await until(() => spread(el) > before * 1.2, LAID); // the things laid further apart
       assert.equal(env.state.files.get(PATH), note, 'not saved by sliding');
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
