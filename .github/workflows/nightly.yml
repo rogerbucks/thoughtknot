@@ -6,8 +6,8 @@ name: Nightly
 #
 # Seven jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
 # nightly. `security` stops the night on an open high or critical security alert. `build` checks out main, installs and runs main's own code with read access only: the content check and the build.
-# `suite` runs the full suite on six machines at once, and `publish` waits for it, so a nightly is published only when
-# every test passes. `build` uploads the same assets a release
+# `tests-passed` does not run the suite again: it asks GitHub whether main's own CI passed it on this
+# commit, and `publish` waits for that, so a nightly is published only when every test passed. `build` uploads the same assets a release
 # carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `desktop` builds the desktop app's
 # installers at the same commit, by the Desktop app workflow: a .dmg, an NSIS .exe and a .deb. Each is signed where
 # its keys are set, and unsigned where they are not (Roger, 23 Oct 2026: private nightlies only, unsigned if there is
@@ -113,40 +113,38 @@ jobs:
           enable-cache: false
       - run: node scripts/public-readiness.mjs --history --setup
 
-  # The whole suite, its test files split over six machines that run at once, as CI's suite does (ci.yml): about three
-  # minutes, not the thirteen one machine took. `publish` waits for all six, so a nightly still goes out only when every
-  # test passed. Like the build, it reads main with read access only.
-  suite:
-    needs: [check, security]
+  # The tests are not run a second time (Roger, 25 Oct 2026). Main's own CI ran the whole suite on this commit when it
+  # merged (a push to main is never cancelled: ci.yml), so the nightly asks GitHub whether that run's `test` check
+  # passed, and waits for it if it is still going. It reads only, with gh alone: no checkout, no install.
+  tests-passed:
+    needs: check
     if: needs.check.outputs.moved == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+    timeout-minutes: 40
+    permissions:
+      actions: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: main
-          persist-credentials: false
-          # the full history: the tests-first records test needs it
-          fetch-depth: 0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 24
-      - run: npm ci
-      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's shards get 8 GB, and so does this
-      - env:
-          SHARD: ${{ matrix.shard }}
-          THOUGHTKNOT_TEST_MEMORY_MB: 8192
-        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/6" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt
-      - if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: test-report-${{ matrix.shard }}
-          path: test-report.txt
-          retention-days: 7
+      - name: The CI run of this commit on main passed the whole suite
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
+          for attempt in $(seq 1 60); do
+            id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --event push --commit "$SHA" --json databaseId --jq '.[0].databaseId // empty')
+            state=""
+            if [ -n "$id" ]; then
+              state=$(gh run view "$id" --repo "$GITHUB_REPOSITORY" --json jobs --jq '[.jobs[] | select(.name == "test")][0] | if . == null then "" else .status + " " + (.conclusion // "") end')
+            fi
+            echo "Try $attempt: CI run ${id:-none}, test check: ${state:-not started}"
+            case "$state" in
+              "completed success") echo "The suite passed on $SHA in main's CI, so it is not run again."; exit 0 ;;
+              "completed "*) echo "::error::The suite did not pass on $SHA in main's CI ($state). See run $id."; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "::error::Main's CI had not finished the suite on $SHA after 30 minutes."
+          exit 1
 
   build:
     needs: [check, security]
@@ -161,15 +159,17 @@ jobs:
         with:
           ref: main
           persist-credentials: false
-          # the full history: npm test runs the tests-first records test, which needs it
-          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+      - name: Main has not moved since `check` named the commit whose tests passed
+        env:
+          SHA: ${{ needs.check.outputs.sha }}
+        run: '[ "$(git rev-parse HEAD)" = "$SHA" ] || { echo "::error::main moved from $SHA while this ran; run the nightly again"; exit 1; }'
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
-      # the suite runs in the suite job, beside this one; publish waits for both
+      # the suite is not run here: main's CI ran it on this commit (tests-passed); publish waits for that
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
         id: version
@@ -236,9 +236,9 @@ jobs:
       LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
 
   publish:
-    needs: [check, build, suite, desktop]
+    needs: [check, build, tests-passed, desktop]
     # the plugin is published when it built and every test passed, with the installers when they built too
-    if: ${{ !cancelled() && needs.build.result == 'success' && needs.suite.result == 'success' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs['tests-passed'].result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

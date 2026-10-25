@@ -1,6 +1,6 @@
 // The nightly pre-release (spec §41, nightly_prerelease). Checked here:
 // - What wakes the workflow.
-// - It builds only when main moved, and publishes only after the full suite passes.
+// - It builds only when main moved, and publishes only after main's CI passed the full suite.
 // - The one job that may write runs no code of the repository, only gh.
 // - The version it carries.
 // - The desktop app's installers, built by the Desktop app workflow at the same commit, signed only where keys are set.
@@ -58,7 +58,7 @@ describe('the nightly workflow', () => {
       'check',
       'security',
       'public-readiness',
-      'suite',
+      'tests-passed',
       'build',
       'desktop',
       'publish',
@@ -85,7 +85,7 @@ describe('the nightly workflow', () => {
     assert.match(jobs(text).build.join('\n'), /if: needs\.check\.outputs\.moved == 'true'/);
   });
 
-  test('builds main, and publishes only after the full suite and the content check pass', () => {
+  test('builds main, and publishes only after the content check and main’s CI suite pass', () => {
     const build = jobs(text).build.join('\n');
     assert.match(build, /ref: main\s*\n\s*persist-credentials: false/);
     const runs = runCommands(build);
@@ -94,14 +94,9 @@ describe('the nightly workflow', () => {
     assert.ok(at(/^npm audit signatures$/) > at(/^npm ci$/), 'signatures after the install');
     assert.ok(at(/check-classification\.mjs --all/) > at(/^npm audit signatures$/), 'the content check');
     assert.ok(at(/^npm run build$/) > at(/check-classification\.mjs --all/), 'built after the content check');
-    assert.equal(at(/^npm test\b/), -1, 'the suite runs in its own job, beside the build');
-    const suite = jobs(text).suite.join('\n');
-    assert.match(suite, /ref: main\s*\n\s*persist-credentials: false/);
-    assert.match(suite, /shard: \[1, 2, 3, 4, 5, 6\]/);
-    assert.ok(
-      runCommands(suite).some((r) => /^npm test -- .*--test-shard="\$SHARD\/6"/.test(r)),
-      'six shards of the full suite',
-    );
+    assert.equal(at(/^npm test\b/), -1, 'the suite is not run again: main’s CI ran it (tests-passed)');
+    assert.ok(at(/^npm run build$/) > at(/check-classification\.mjs --all/), 'built after the content check');
+    assert.match(build, /git rev-parse HEAD\)" = "\$SHA"/, 'the build is of the commit whose tests passed');
     assert.equal(
       runs.some((r) => /\bnpm (install|i)\b/.test(r)),
       false,
@@ -110,7 +105,7 @@ describe('the nightly workflow', () => {
     // after the build, and only when it passed, whatever became of the installers
     assert.match(
       jobs(text).publish.join('\n'),
-      /needs: \[check, build, suite, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\.suite\.result == 'success' \}\}\n/,
+      /needs: \[check, build, tests-passed, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\['tests-passed'\]\.result == 'success' \}\}\n/,
     );
   });
 
@@ -119,8 +114,21 @@ describe('the nightly workflow', () => {
   test('runs the full suite under the memory ceiling CI gives it, as the stable release does', () => {
     const ceiling = (job) => job.join('\n').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)?.[1];
     const ci = read('.github/workflows/ci.yml').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)[1];
-    assert.equal(ceiling(jobs(text).suite), ci, 'the nightly suite');
     assert.equal(ceiling(jobs(read('.github/workflows/release.yml')).release), ci, 'the stable release');
+  });
+
+  // Roger, 25 Oct 2026: if the tests already ran, why run them again? Main's CI runs them on every merge.
+  test('asks main’s CI whether the suite passed on the built commit, reading only, and waits for a run in progress', () => {
+    const job = jobs(text)['tests-passed'].join('\n');
+    assert.deepEqual(given('tests-passed'), ['actions: read']);
+    assert.deepEqual([...new Set(usesRefs(job))], [], 'no action, no checkout, no install');
+    const run = runCommands(job).join('\n');
+    assert.match(run, /gh run list .*--workflow ci\.yml --event push --commit "\$SHA"/);
+    assert.match(run, /select\(\.name == "test"\)/, 'the one check that stands for every shard');
+    assert.match(run, /"completed success"\) .*exit 0/);
+    assert.match(run, /"completed "\*\) .*exit 1/, 'any other end is a failure');
+    assert.match(run, /sleep 30/, 'waits for a run still going');
+    assert.match(run, /\[\[ "\$SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/, 'checks the commit it is handed');
   });
 
   test('carries the assets a release carries, with the nightly version in the manifest', () => {
@@ -201,10 +209,10 @@ describe('the nightly workflow', () => {
 
   test('carries the installers, named by the nightly, in its checksums; a night they fail still publishes the plugin', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.match(publish, /^ {4}needs: \[check, build, suite, desktop\]$/m);
+    assert.match(publish, /^ {4}needs: \[check, build, tests-passed, desktop\]$/m);
     assert.match(
       publish,
-      /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\.suite\.result == 'success' \}\}$/m,
+      /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\['tests-passed'\]\.result == 'success' \}\}$/m,
     );
     assert.match(publish, /pattern: thoughtknot-app-\*/);
     const runs = runCommands(publish).join('\n');
