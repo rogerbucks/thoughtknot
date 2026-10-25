@@ -88,6 +88,9 @@ describe('the workstreams file', () => {
       'TS1',
       'SR1',
       'DF1',
+      'LE1',
+      'LE2',
+      'PJ1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -191,6 +194,9 @@ describe('the workstreams file', () => {
         'Temporal security: history, clocks, replay and expiry',
         'Security response protocol',
         'Data formats: files as sources, content and parallel views',
+        'Our own layout engine: never text, groups as boxes, strategies',
+        'Live layout: the loop, the glide and the six layers',
+        'Projections: all on',
       ],
     );
   });

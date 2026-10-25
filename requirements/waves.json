@@ -212,7 +212,8 @@
         "W30",
         "W31",
         "CN1",
-        "CN3"
+        "CN3",
+        "LE1"
       ],
       "earlier_plan": {
         "start": "2027-03-01",
@@ -229,7 +230,9 @@
       "workstreams": [
         "W33",
         "W32",
-        "SR1"
+        "SR1",
+        "LE2",
+        "PJ1"
       ],
       "earlier_plan": {
         "start": "2027-03-15",
