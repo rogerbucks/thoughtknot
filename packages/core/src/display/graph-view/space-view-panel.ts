@@ -17,7 +17,8 @@
 // What is picked is said aloud, and its name always shows (space-labels.ts).
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
-// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A thing the card selects, as by Find, is picked
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). A bundle picked opens, as a tap on it in 2D does
+// (SPACE_UNFOLD). A thing the card selects, as by Find, is picked
 // here too. The view stays still. Another click on it makes
 // it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
 // the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
@@ -46,11 +47,17 @@ import type { Target } from './taps';
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
 export const SPACE_OPEN = 'thoughtknot-space-open';
 
+/** The event a bundle or a hub's stub picked in 3D sends its card, with its fold. The card opens it (§25). */
+export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
+
 /** How long the view takes to turn to face what was picked, in milliseconds. */
 const TURN_TIME = 280;
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
+
+/** What a line's key is when it is a fold to open, not a link: a bundle, a hub's stub or a group's box (§25). */
+const FOLD = /^(bundle|hub|group):/;
 
 /** How far a pointer may move, in pixels, and still be a click or tap rather than a drag. */
 const TAP_SLOP = 6;
@@ -329,7 +336,10 @@ export async function openSpaceView(
     } else if (link) {
       if (pickedLine?.id === link.line.id) return turnTo(link.at);
       pickLine(link.line);
-      if (link.line.of !== undefined && link.line.of !== '') tell({ link: Number(link.line.of) });
+      const of = link.line.of ?? '';
+      // a bundle or a hub's stub opens, as a tap on it in 2D does; a link opens its details
+      if (FOLD.test(of)) root.dispatchEvent(new CustomEvent<string>(SPACE_UNFOLD, { detail: of, bubbles: true }));
+      else if (of !== '') tell({ link: Number(of) });
     } else pick(null);
   };
   el.addEventListener('pointerup', letGo);

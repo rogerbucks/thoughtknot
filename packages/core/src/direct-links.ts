@@ -17,7 +17,7 @@ import { WORDS_OFF, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
-import { CLEARANCE, bends, crowded, spread, towardMiddle } from './direct-bends.ts';
+import { CLEARANCE, bends, crowded, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
 export type { Curve, Placed } from './direct-curve.ts';
 export { CLEARANCE, GENTLE } from './direct-bends.ts';
@@ -75,6 +75,8 @@ export function directLinks(
   // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
   if (!at) settle([...boxes.values()], links);
   else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
+  // each bundle runs from beside the group its links leave to beside the group they reach
+  trunkEnds(boxes, links);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
   const moved = new Map<string, [number, number]>();
@@ -115,7 +117,13 @@ export function directLinks(
       many.set(pairOf(l.from ?? '', l.to ?? ''), (many.get(pairOf(l.from ?? '', l.to ?? '')) ?? 0) + 1);
   const all = [...boxes.values()];
   const middle = middleOf(all);
-  // each lone link takes the bend that crosses least; links between the same two boxes bow apart, as they must
+  // each lone link takes the bend that crosses least; links between the same two boxes bow apart, as they must. A
+  // bundle goes round the groups as round boxes
+  const walls: Placed[] = [...groups].map(([key, g]) => {
+    const hw = (g.x1 - g.x0) / 2,
+      hh = (g.y1 - g.y0) / 2;
+    return { key, x: g.x0 + hw, y: g.y0 + hh, hw, hh };
+  });
   const toBend: (ToBend & { id: string })[] = [];
   for (const l of links) {
     const a = boxes.get(l.from ?? '') as Placed,
@@ -127,7 +135,8 @@ export function directLinks(
     nth.set(pair, i + 1);
     const side = a.key < b.key ? 1 : -1;
     const fixed = count > 1 ? { fixed: (i - (count - 1) / 2) * BOW * side } : {};
-    toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed });
+    const trunk = a.key.startsWith('trunk: ') && b.key.startsWith('trunk: ') ? { avoid: walls } : {};
+    toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed, ...trunk });
   }
   const bows = bends(toBend, all);
   // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes

@@ -20,6 +20,8 @@ export const GENTLE = 0.08;
 export const ROOM = 1.15;
 /** The bends a lone link is tried at, each way, as shares of its length. */
 const BENDS = [GENTLE, 0.16, 0.26, 0.4, 0.55];
+/** The wider bends a bundle is tried at too, so it can go round a whole group in its way. */
+const WIDE = [0.75, 1];
 /** How a bend is scored: for each box it runs through, each link it crosses, and how far it bends. */
 const THROUGH = 4,
   CROSSED = 1,
@@ -97,6 +99,8 @@ export interface ToBend {
   b: Placed;
   toward: number;
   fixed?: number;
+  /** More it goes round, as it does boxes: a bundle goes round the groups between its two (trunkEnds). */
+  avoid?: readonly Placed[];
 }
 
 /** The way toward the middle of the drawing, seen from the link from `a` to `b`; on the line itself, `side`. */
@@ -111,8 +115,9 @@ export function towardMiddle(a: Placed, b: Placed, side: number, middle: MarkPoi
 export function bends(links: readonly ToBend[], boxes: readonly Placed[]): number[] {
   const tries = links.map((l) => {
     if (l.fixed !== undefined) return [l.fixed];
-    const away = aside(l.a, l.b, boxes);
-    return [...(away ? [away] : []), ...BENDS.flatMap((s) => [l.toward * s, -l.toward * s])];
+    const away = aside(l.a, l.b, l.avoid ? [...boxes, ...l.avoid] : boxes);
+    const each = l.avoid ? [...BENDS, ...WIDE] : BENDS;
+    return [...(away ? [away] : []), ...each.flatMap((s) => [l.toward * s, -l.toward * s])];
   });
   const cost = links.length * links.length * PIECES + links.length * boxes.length * BENDS.length * 2 * PIECES;
   const crossing = cost <= WORK_MOST;
@@ -125,7 +130,7 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[]): numbe
       for (const bow of tries[i] as number[]) {
         const path = pathOf(l.a, l.b, bow);
         const score =
-          THROUGH * through(path, l, boxes) +
+          THROUGH * through(path, l, l.avoid ? [...boxes, ...l.avoid] : boxes) +
           CROSSED * others.filter((o) => crosses(path, o)).length +
           BENT * Math.abs(bow);
         if (score < best) {
@@ -235,4 +240,58 @@ export function aside(a: Placed, b: Placed, boxes: Iterable<Placed>): number {
     if (Math.abs(bend) > Math.abs(most)) most = bend;
   }
   return Math.max(-0.6, Math.min(0.6, most));
+}
+
+/** A trunk's two ends, as the layout source names them (fold-source.ts): its number, and which end. */
+const TRUNK_END = /^trunk: (\d+) (in|out)$/;
+
+/**
+ * Each trunk's two ends moved to beside the groups it joins (untangle_found_groups). The end its links come in to sits
+ * just outside the group they come from, on the side facing the group they go to. The other end sits the same way by
+ * the group they go to. So a bundle runs straight from group to group, never out into empty space. A group is the one
+ * its boxes sit in, or the box round them all.
+ */
+export function trunkEnds(boxes: ReadonlyMap<string, Placed>, links: readonly { from?: string; to?: string }[]): void {
+  const regionOf = (key: string, end: string): Edges | undefined => {
+    const near = links.flatMap((l) => {
+      const b = end === 'in' ? l.to === key && boxes.get(l.from ?? '') : l.from === key && boxes.get(l.to ?? '');
+      return b ? [b] : [];
+    });
+    if (!near.length) return undefined;
+    const first = near[0]?.inside;
+    if (first && near.every((b) => b.inside === first)) return first;
+    return {
+      x0: Math.min(...near.map((b) => b.x - b.hw)),
+      y0: Math.min(...near.map((b) => b.y - b.hh)),
+      x1: Math.max(...near.map((b) => b.x + b.hw)),
+      y1: Math.max(...near.map((b) => b.y + b.hh)),
+    };
+  };
+  const spots: [Placed, number, number][] = [];
+  for (const [key, p] of boxes) {
+    const m = TRUNK_END.exec(key);
+    if (!m) continue;
+    const other = m[2] === 'in' ? 'out' : 'in';
+    const here = regionOf(key, m[2] ?? ''),
+      there = regionOf(`trunk: ${m[1]} ${other}`, other);
+    if (!here || !there) continue;
+    const cx = (here.x0 + here.x1) / 2,
+      cy = (here.y0 + here.y1) / 2;
+    const dx = (there.x0 + there.x1) / 2 - cx,
+      dy = (there.y0 + there.y1) / 2 - cy;
+    const long = Math.hypot(dx, dy) || 1;
+    const ux = dx / long,
+      uy = dy / long;
+    const reach =
+      Math.min(
+        ux === 0 ? Infinity : (here.x1 - here.x0) / 2 / Math.abs(ux),
+        uy === 0 ? Infinity : (here.y1 - here.y0) / 2 / Math.abs(uy),
+      ) + CLEARANCE;
+    spots.push([p, cx + ux * reach, cy + uy * reach]);
+  }
+  for (const [p, x, y] of spots) {
+    p.x = x;
+    p.y = y;
+    delete p.inside;
+  }
 }
