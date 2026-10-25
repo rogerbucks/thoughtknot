@@ -58,6 +58,7 @@ describe('the nightly workflow', () => {
       'check',
       'security',
       'public-readiness',
+      'suite',
       'build',
       'desktop',
       'publish',
@@ -92,8 +93,15 @@ describe('the nightly workflow', () => {
     assert.ok(at(/^npm ci$/) >= 0, 'npm ci');
     assert.ok(at(/^npm audit signatures$/) > at(/^npm ci$/), 'signatures after the install');
     assert.ok(at(/check-classification\.mjs --all/) > at(/^npm audit signatures$/), 'the content check');
-    assert.ok(at(/^npm test$/) > at(/^npm audit signatures$/), 'the full suite');
-    assert.ok(at(/^npm run build$/) > at(/^npm test$/), 'built after the suite passes');
+    assert.ok(at(/^npm run build$/) > at(/check-classification\.mjs --all/), 'built after the content check');
+    assert.equal(at(/^npm test\b/), -1, 'the suite runs in its own job, beside the build');
+    const suite = jobs(text).suite.join('\n');
+    assert.match(suite, /ref: main\s*\n\s*persist-credentials: false/);
+    assert.match(suite, /shard: \[1, 2, 3, 4, 5, 6\]/);
+    assert.ok(
+      runCommands(suite).some((r) => /^npm test -- .*--test-shard="\$SHARD\/6"/.test(r)),
+      'six shards of the full suite',
+    );
     assert.equal(
       runs.some((r) => /\bnpm (install|i)\b/.test(r)),
       false,
@@ -102,7 +110,7 @@ describe('the nightly workflow', () => {
     // after the build, and only when it passed, whatever became of the installers
     assert.match(
       jobs(text).publish.join('\n'),
-      /needs: \[check, build, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}\n/,
+      /needs: \[check, build, suite, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\.suite\.result == 'success' \}\}\n/,
     );
   });
 
@@ -111,7 +119,7 @@ describe('the nightly workflow', () => {
   test('runs the full suite under the memory ceiling CI gives it, as the stable release does', () => {
     const ceiling = (job) => job.join('\n').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)?.[1];
     const ci = read('.github/workflows/ci.yml').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)[1];
-    assert.equal(ceiling(jobs(text).build), ci, 'the nightly build');
+    assert.equal(ceiling(jobs(text).suite), ci, 'the nightly suite');
     assert.equal(ceiling(jobs(read('.github/workflows/release.yml')).release), ci, 'the stable release');
   });
 
@@ -193,8 +201,11 @@ describe('the nightly workflow', () => {
 
   test('carries the installers, named by the nightly, in its checksums; a night they fail still publishes the plugin', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.match(publish, /^ {4}needs: \[check, build, desktop\]$/m);
-    assert.match(publish, /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}$/m);
+    assert.match(publish, /^ {4}needs: \[check, build, suite, desktop\]$/m);
+    assert.match(
+      publish,
+      /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' && needs\.suite\.result == 'success' \}\}$/m,
+    );
     assert.match(publish, /pattern: thoughtknot-app-\*/);
     const runs = runCommands(publish).join('\n');
     assert.match(runs, /mv "\$f" "nightly\/thoughtknot-app-\$VERSION-\$rest"/);
