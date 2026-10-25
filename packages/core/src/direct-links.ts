@@ -66,7 +66,12 @@ export function directLinks(
   );
   for (const [k, b] of at ?? []) {
     const p = boxes.get(k);
-    if (p) [p.x, p.y] = b;
+    if (!p) continue;
+    [p.x, p.y] = b;
+    // the group our engine placed it in holds it, not the one round its stand-in spot, so no box is drawn inside out
+    const round = groupRound(groups, { x: p.x - p.hw, y: p.y - p.hh, width: 2 * p.hw, height: 2 * p.hh });
+    if (round) p.inside = round;
+    else delete p.inside;
   }
   const groupMoved =
     !at && crowded(ends, [...boxes.values()])

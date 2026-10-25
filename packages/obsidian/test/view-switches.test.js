@@ -74,9 +74,14 @@ const middleOf = (el, g) => {
     ys = nums.filter((_, i) => i % 2 === 1);
   const [, , vw, vh] = (svg.getAttribute('viewBox') ?? '0 0 1 1').split(/\s+/).map(Number);
   const mid = (v) => (Math.min(...v) + Math.max(...v)) / 2;
+  // the drawing's paths are moved by the translate on its top group, as Graphviz writes it
+  const shift = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(svg.querySelector('g')?.getAttribute('transform') ?? '');
+  const [tx, ty] = shift ? [Number(shift[1]), Number(shift[2])] : [0, 0];
   return {
-    clientX: parseFloat(vp.cssProps['--thoughtknot-x'] ?? '0') + (mid(xs) * Number(svg.getAttribute('width'))) / vw,
-    clientY: parseFloat(vp.cssProps['--thoughtknot-y'] ?? '0') + (mid(ys) * Number(svg.getAttribute('height'))) / vh,
+    clientX:
+      parseFloat(vp.cssProps['--thoughtknot-x'] ?? '0') + ((mid(xs) + tx) * Number(svg.getAttribute('width'))) / vw,
+    clientY:
+      parseFloat(vp.cssProps['--thoughtknot-y'] ?? '0') + ((mid(ys) + ty) * Number(svg.getAttribute('height'))) / vh,
   };
 };
 const tap = (el, g) => {
