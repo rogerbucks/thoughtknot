@@ -102,7 +102,7 @@ describe('the nightly workflow', () => {
     // after the build, and only when it passed, whatever became of the installers
     assert.match(
       jobs(text).publish.join('\n'),
-      /needs: \[build, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}\n/,
+      /needs: \[check, build, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}\n/,
     );
   });
 
@@ -167,9 +167,10 @@ describe('the nightly workflow', () => {
   // Roger, 23 Oct 2026: releases stay private for now, as nightlies, unsigned where there is no signature.
   test('builds the app’s installers by the Desktop app workflow, at the built commit, reading only', () => {
     const desktop = jobs(text).desktop.join('\n');
-    assert.match(desktop, /^ {4}needs: build$/m);
+    assert.match(desktop, /^ {4}needs: \[check, security\]$/m);
+    assert.match(desktop, /^ {4}if: needs\.check\.outputs\.moved == 'true'$/m);
     assert.match(desktop, /^ {4}uses: \.\/\.github\/workflows\/desktop-app\.yml$/m);
-    assert.match(desktop, /^ {6}ref: \$\{\{ needs\.build\.outputs\.sha \}\}$/m);
+    assert.match(desktop, /^ {6}ref: \$\{\{ needs\.check\.outputs\.sha \}\}$/m);
     assert.deepEqual(given('desktop'), ['contents: read']);
     const called = read('.github/workflows/desktop-app.yml');
     assert.match(block(called.split('\n'), 'on', 0).join('\n'), /workflow_call:\s*\n\s*inputs:\s*\n\s*ref:/);
@@ -192,7 +193,7 @@ describe('the nightly workflow', () => {
 
   test('carries the installers, named by the nightly, in its checksums; a night they fail still publishes the plugin', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.match(publish, /^ {4}needs: \[build, desktop\]$/m);
+    assert.match(publish, /^ {4}needs: \[check, build, desktop\]$/m);
     assert.match(publish, /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}$/m);
     assert.match(publish, /pattern: thoughtknot-app-\*/);
     const runs = runCommands(publish).join('\n');
