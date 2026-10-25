@@ -17,7 +17,7 @@ import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
-import { renderBar } from './view-bar';
+import { overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
@@ -184,6 +184,7 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
+    overDrawing(root, this.viewport, this); // the panels the bar opens lie over the drawing (§25)
     // a graph drawn as a table is the plugin's own table; by a plug-in's type, its picture; else Graphviz's SVG (§15)
     this.table = drawnApart(this.viewport, this.o.diagram);
     if (!this.table)

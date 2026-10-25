@@ -49,9 +49,15 @@ const select = (el: HTMLElement, label: string, options: [string, string][], val
   return s;
 };
 
+/** Where the form opens in card `parent`: the layer of panels over its drawing, where it has one (view-bar.ts). */
+const placeIn = (parent: HTMLElement): HTMLElement =>
+  Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-over-panels')).find(
+    (p) => p.parentElement?.parentElement === parent,
+  ) ?? parent;
+
 /** The Export form shown in `parent`, if there is one. */
 const shownForm = (parent: HTMLElement) =>
-  Array.from(parent.children).find((c) => c.classList.contains('thoughtknot-export'));
+  Array.from(placeIn(parent).children).find((c) => c.classList.contains('thoughtknot-export'));
 
 /** Shows the Export form in `el`, or takes it away when it is shown; the focus goes to its first choice. */
 export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
@@ -66,7 +72,7 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
  */
 export function openExportForm(parent: HTMLElement, x: Exporting): void {
   shownForm(parent)?.remove();
-  const el = parent.createDiv({
+  const el = placeIn(parent).createDiv({
     cls: 'thoughtknot-export',
     attr: { role: 'group', 'aria-label': word('export.form') },
   });
