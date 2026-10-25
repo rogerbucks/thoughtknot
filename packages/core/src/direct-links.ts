@@ -17,7 +17,7 @@ import { WORDS_OFF, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
-import { CLEARANCE, bends, crowded, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
+import { CLEARANCE, HUG, bends, crowded, hug, hugged, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
 export type { Curve, Placed } from './direct-curve.ts';
 export { CLEARANCE, GENTLE } from './direct-bends.ts';
@@ -75,7 +75,18 @@ export function directLinks(
   // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
   if (!at) settle([...boxes.values()], links);
   else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
-  // each bundle runs from beside the group its links leave to beside the group they reach
+  // each group drawn just round its things, its name above them. Then each bundle runs from beside the group its links
+  // leave to beside the group they reach
+  const drawnAs = new Map<string, Edges>(),
+    heads = new Map<string, [number, number]>();
+  for (const m of laid.marks) {
+    if (m.kind === 'group') drawnAs.set(m.id, { x0: m.x, y0: m.y, x1: m.x + m.width, y1: m.y + m.height });
+    const owner = m.kind === 'label' ? /^l:(.*)$/s.exec(m.id)?.[1] : undefined;
+    const was = owner === undefined ? undefined : drawnAs.get(owner);
+    if (m.kind === 'label' && owner !== undefined && was)
+      heads.set(owner, [m.y - was.y0 + HUG, (m.maxWidth ?? 0) + 2 * HUG]);
+  }
+  hug(boxes.values(), groups, heads);
   trunkEnds(boxes, links);
 
   // every mark of a moved box's part goes with it: its outline, its words, its pictures
@@ -187,6 +198,11 @@ export function directLinks(
       const [x, y] = spots.get(m.id) ?? c.wordsAt(0.5, m.size * WORDS_OFF);
       return { ...m, x, y };
     }
+    // a group's outline and its name, where it hugs its things now; its corners keep their curve
+    const owner = m.kind === 'group' ? m.id : m.kind === 'label' ? /^l\d*:(.*)$/s.exec(m.id)?.[1] : undefined;
+    const was = owner === undefined ? undefined : drawnAs.get(owner),
+      now = owner === undefined ? undefined : groups.get(owner);
+    if (was && now) return hugged(m, was, now);
     if (!by) return m;
     return shifted(m, by[0], by[1]);
   });
