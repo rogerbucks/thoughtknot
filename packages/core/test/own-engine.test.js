@@ -210,7 +210,10 @@ describe('a trunk', () => {
     const x = (k) => spots.get(k)[0];
     // three rows, as if the trunk were one link, not five with a row for each dot
     assert.ok(Math.abs(x('group: 3') - x('group: 2') - (x('group: 2') - x('group: 1'))) < 1, 'rows evenly apart');
-    assert.ok(x('group: 1') < x('trunk: 1 in') && x('trunk: 1 in') < x('trunk: 1 out'), 'its links meet past the first');
+    assert.ok(
+      x('group: 1') < x('trunk: 1 in') && x('trunk: 1 in') < x('trunk: 1 out'),
+      'its links meet past the first',
+    );
     assert.ok(x('trunk: 1 out') < x('group: 3'), 'and part before the last');
     // the trunk takes the bends between, round the row it skips
     assert.ok(via.has('trunk: 1 in\ntrunk: 1 out'));
