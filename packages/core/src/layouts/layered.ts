@@ -122,14 +122,20 @@ export function layered(
   // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
   const chainOf = new Map<string, number[]>();
+  // the links out of one thing share each stand-in until they part, so they run as one line that branches
+  const shared = new Map<string, number>();
   links.forEach((next, v) => {
     for (const w of next) {
       let from = v;
       const via: number[] = [];
       for (let r = (rows[v] as number) + 1; r < (rows[w] as number); r++) {
-        items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
-        (items[from] as Item).down.push(items.length - 1);
-        from = items.length - 1;
+        const known = shared.get(`${v} ${r}`);
+        if (known === undefined) {
+          items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
+          (items[from] as Item).down.push(items.length - 1);
+          shared.set(`${v} ${r}`, items.length - 1);
+        }
+        from = known ?? items.length - 1;
         via.push(from);
       }
       (items[w] as Item).up.push(from);
