@@ -6,6 +6,7 @@
 // offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
   BY_KIND,
+  LAYOUT_OPTION_RANGE,
   OPTIONS,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
@@ -24,7 +25,7 @@ const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
   return o ? optionSaid(o).name : switchName(s);
 };
-import type { Drawn, GraphDrawing, Kept, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { trunkCount } from '../../untangle-fold.ts';
 
@@ -43,6 +44,16 @@ export interface ViewMenu {
 const AUTO = '',
   NONE = ':none';
 
+/**
+ * The View menu's layout options, each a slider, and how far one step moves it (§53, layout_saved_with_view). They
+ * space the layout in every view, flat or in space, and a view saved as shown keeps them.
+ */
+const LAYOUT_SLIDERS = [
+  ['spacing', 'view.layout.spacing', 0.25],
+  ['linkLength', 'view.layout.link-length', 0.25],
+  ['groupPull', 'view.layout.group-pull', 0.1],
+] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
+
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
   choices: () => string[];
@@ -51,13 +62,15 @@ export interface Grouping {
 
 /**
  * Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. With
- * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens.
+ * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens. With `spaced`,
+ * a slider for each layout option follows, which `spaced` acts on as one is let go.
  */
 export function renderViewMenu(
   root: HTMLElement,
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
   grouping?: Grouping,
+  spaced?: (k: keyof LayoutOptions, v: number) => void,
 ): ViewMenu {
   const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
@@ -74,6 +87,15 @@ export function renderViewMenu(
   const label = grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by') });
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
+  const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
+    const [least, most] = LAYOUT_OPTION_RANGE[k];
+    const row = el.createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
+    const input = row.createEl('input', {
+      attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
+    });
+    input.addEventListener('change', () => spaced?.(k, Number(input.value)));
+    return { k, input };
+  });
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
   const fill = () => {
     if (!list || !grouping) return;
@@ -92,6 +114,7 @@ export function renderViewMenu(
       b.setAttribute('aria-checked', String(state.switches[s]));
       says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
+    for (const { k, input } of sliders) input.value = String(state.layout[k]);
     fill();
   };
   refresh();
@@ -141,12 +164,18 @@ export class ViewSwitching {
       },
       pick: (choice: string) => this.groupBy(choice, reading),
     };
-    this.menu = renderViewMenu(root, o.state, (s, on) => this.turn(s, on), grouping);
+    this.menu = renderViewMenu(
+      root,
+      o.state,
+      (s, on) => this.turn(s, on),
+      grouping,
+      (k, v) => this.space(k, v),
+    );
     this.drawnAs = this.now();
   }
 
   private now(): string {
-    return JSON.stringify([this.o.state.switches, this.o.state.plan]);
+    return JSON.stringify([this.o.state.switches, this.o.state.plan, this.o.state.layout]);
   }
 
   /** Whether the drawing's link labels are hidden at `scale` (untangle_labels). */
@@ -163,6 +192,13 @@ export class ViewSwitching {
       this.drawnAs = this.now();
       this.host.shown();
     }
+  }
+
+  /** Spaces the layout as the menu's slider for `k` now says, and lays the graph out again (layout_saved_with_view). */
+  space(k: keyof LayoutOptions, v: number): void {
+    if (this.o.state.layout[k] === v) return;
+    this.o.state.layout = { ...this.o.state.layout, [k]: v };
+    void this.redraw();
   }
 
   /** Groups the things by `choice` of the menu's Group by, and lays the graph out again (untangle_group_by). */

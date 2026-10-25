@@ -4,10 +4,13 @@
 // TIMELINE_ORDERS, TIMELINE_SHOWS and chosenDiagram, listed in index-names.js, came on 22 Oct 2026 (timeline_order,
 // timeline_show, timeline_choice_card). CORE_AI and CORE_AI_PROVIDER (plugin_interface) came on 24 Oct 2026;
 // index-names.js sorts the whole list. BY_KIND, groupChoices and groupValues (untangle_group_by) came on 25 Oct 2026.
+// DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE and startingLayout (layout_saved_with_view) came on 25 Oct 2026.
 export const VALUES_LATE = [
   'BY_KIND',
   'CORE_AI',
   'CORE_AI_PROVIDER',
+  'DEFAULT_LAYOUT_OPTIONS',
+  'LAYOUT_OPTION_RANGE',
   'groupChoices',
   'groupValues',
   'processCoreOf',
@@ -87,6 +90,7 @@ export const VALUES_LATE = [
   'sqliteBackend',
   'standardBlocks',
   'startOf',
+  'startingLayout',
   'startingSwitches',
   'stepContract',
   'stepOf',

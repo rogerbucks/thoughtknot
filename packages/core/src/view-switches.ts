@@ -19,6 +19,8 @@ import type { GroupBy } from './group-by.ts';
 import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
+import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 
 /** The switches, in the order the View menu lists them. */
 export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine'] as const;
@@ -66,6 +68,14 @@ export function startingSwitches(
   // the engine switch is a preview, never saved with a view
   for (const s of VIEW_SWITCHES) if (s !== 'engine' && saved?.[s] !== undefined) start[s] = saved[s] === 'on';
   return start;
+}
+
+/**
+ * How the layout of a graph, or of `view`, starts spacing it (§53, layout_saved_with_view). It is as a view saved as
+ * shown wrote it, else as each layout lays out alone.
+ */
+export function startingLayout(style?: Pick<StyleGraph, 'shown'>, view?: string): LayoutOptions {
+  return layoutOptions(view === undefined ? undefined : style?.shown.get(view)?.layout);
 }
 
 /** The scale below which a link's label is drawn under `READABLE_PX` pixels, too small to read (untangle_labels). */
@@ -149,9 +159,13 @@ export class ViewState {
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
   private readonly only = new WeakMap<object, Kept>();
 
-  /** For a card starting with these switches. */
-  constructor(start: ViewSwitches) {
+  /** How the layout spaces the graph, from the View menu (§53, layout_saved_with_view). */
+  layout: LayoutOptions;
+
+  /** For a card starting with these switches, and laid out as `layout` says. */
+  constructor(start: ViewSwitches, layout: LayoutOptions = DEFAULT_LAYOUT_OPTIONS) {
     this.switches = { ...start };
+    this.layout = { ...layout };
   }
 
   /**
@@ -224,7 +238,8 @@ export class ViewState {
     const { folding: _was, ...rest } = d;
     const kept = instead ? (d.nudges ?? []).filter((n) => n.word !== 'group') : (d.nudges ?? []);
     const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
-    const drawn = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
+    const engined = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
+    const drawn = isDefaultLayout(this.layout) ? engined : { ...engined, layoutOptions: { ...this.layout } };
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 

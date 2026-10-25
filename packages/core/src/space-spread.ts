@@ -13,6 +13,7 @@
 // Host-free and pure.
 import type { DrawMark } from './drawing-marks.ts';
 import { FORCE_3D } from './layouts/layouts.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
@@ -112,18 +113,19 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
  * back the spots used too, so the next layout can start from them. Each sphere keeps the style of the box it stands for.
  * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
  * With `asDrawn`, each thing stays where the drawing put it, across and down, and only its depth is laid out
- * (space_follows_type).
+ * (space_follows_type). The View menu's `layout` spaces it, as it spaces the flat drawing (layout_saved_with_view).
  */
 export function spreadSpace(
   marks: readonly DrawMark[],
   previous?: Spots<3>,
   cards = false,
   asDrawn = false,
+  layout?: Partial<LayoutOptions>,
 ): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
   const middles = asDrawn ? middlesOf(marks) : null;
   const drawn = middles && drawnSpots(shape, middles);
-  const spots = FORCE_3D.place(shape, drawn?.seeds ?? previous);
+  const spots = FORCE_3D.place(shape, drawn?.seeds ?? previous, layout);
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);

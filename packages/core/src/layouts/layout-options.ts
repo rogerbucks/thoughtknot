@@ -24,6 +24,17 @@ export const LAYOUT_OPTION_RANGE: Readonly<Record<keyof LayoutOptions, readonly 
   groupPull: [0, 1],
 };
 
+/** How a view saved as shown writes each option in its style graph (§53, layout_saved_with_view). */
+export const SHOWN_LAYOUT_KEYS = {
+  spacing: 'spacing',
+  linkLength: 'link_length',
+  groupPull: 'group_pull',
+} as const satisfies Record<keyof LayoutOptions, string>;
+
+/** Whether `o` lays out as each layout does without options. */
+export const isDefaultLayout = (o: LayoutOptions): boolean =>
+  (Object.keys(DEFAULT_LAYOUT_OPTIONS) as (keyof LayoutOptions)[]).every((k) => o[k] === DEFAULT_LAYOUT_OPTIONS[k]);
+
 /** `raw` as options: each kept in its range, and the default where it is missing or not a number. */
 export function layoutOptions(raw?: Partial<Record<keyof LayoutOptions, unknown>>): LayoutOptions {
   const read = (k: keyof LayoutOptions): number => {

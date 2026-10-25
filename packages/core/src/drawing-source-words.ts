@@ -131,4 +131,8 @@ export const DRAWING_SOURCE_WORDS = {
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
   'view.group-by.kind': 'Kind',
+  // how the View menu spaces the layout (layout-options.ts)
+  'view.layout.spacing': 'Spacing',
+  'view.layout.link-length': 'Link length',
+  'view.layout.group-pull': 'Group pull',
 } as const;

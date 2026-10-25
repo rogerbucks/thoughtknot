@@ -16,6 +16,8 @@ import {
   orList,
 } from './style-graph.ts';
 import { legendRefusal } from './untangle-saved.ts';
+import { LAYOUT_OPTION_RANGE, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import { word } from './words.ts';
 
 /** The switches a view saved as shown keeps, in the order they are written. */
@@ -61,6 +63,12 @@ export function shownRefusal(s: ShownWrite): string | null {
     (k) => s.switches?.[k] !== undefined && !(ON_OFF as readonly string[]).includes(s.switches[k] ?? ''),
   );
   if (wrong) return mustBe(wrong, ON_OFF);
+  // how the layout spaces it: each option in its range (§53, layout_saved_with_view)
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]) {
+    const v = s.layout?.[k],
+      [least, most] = LAYOUT_OPTION_RANGE[k];
+    if (v !== undefined && !(v >= least && v <= most)) return word('styling.shown.layout-range', { key, least, most });
+  }
   return legendRefusal(s.legend ?? []);
 }
 

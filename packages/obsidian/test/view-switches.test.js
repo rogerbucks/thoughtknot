@@ -534,3 +534,63 @@ describe('a switch turned', () => {
     }
   });
 });
+
+describe('layout options', () => {
+  const sliders = (el) => el.querySelectorAll('.thoughtknot-layout-option');
+  const slide = (el, i, v) => {
+    const input = sliders(el)[i].querySelector('input');
+    input.value = String(v);
+    input.dispatch('change');
+  };
+  /** How far the drawing's things spread: the diagonal of the box round them all. */
+  const spread = (el) => {
+    const points = el
+      .querySelectorAll('g.node[data-key]')
+      .flatMap((g) =>
+        g.children.flatMap((c) => (c.getAttribute('points') ?? c.getAttribute('d') ?? '').split(/[ MCLZ]+/)),
+      )
+      .map((p) => p.split(',').map(Number))
+      .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
+    if (!points.length) return 0;
+    const side = (k) => Math.max(...points.map((p) => p[k])) - Math.min(...points.map((p) => p[k]));
+    return Math.hypot(side(0), side(1));
+  };
+
+  // proves: layout_saved_with_view
+  test('the View menu spaces the layout, saved with a view only when it is saved as shown, and opens so again', async () => {
+    const note = noteOf(KIT, GROUPS, VIEW);
+    const env = await load({ files: { [PATH]: note } });
+    let saved;
+    try {
+      const { el } = await show(env, note, 2);
+      labelled(el, 'View').click();
+      assert.deepEqual(
+        sliders(el).map((s) => s.textContent.trim()),
+        ['Spacing', 'Link length', 'Group pull'],
+      );
+      assert.deepEqual(
+        sliders(el).map((s) => s.querySelector('input').value),
+        ['1', '1', '0.5'],
+        'as each layout lays out alone',
+      );
+      await until(() => spread(el) > 0);
+      const before = spread(el);
+      slide(el, 0, 3);
+      await until(() => spread(el) > before * 1.2); // the things laid further apart
+      assert.equal(env.state.files.get(PATH), note, 'not saved by sliding');
+      labelled(el, 'Save as shown').click();
+      await until(() => /:Shown/.test(env.state.files.get(PATH)));
+      saved = env.state.files.get(PATH);
+      assert.match(saved, /spacing: 3, link_length: 1, group_pull: 0.5/);
+    } finally {
+      env.uninstall();
+    }
+    const again = await load({ files: { [PATH]: saved } });
+    try {
+      const { el } = await show(again, saved, 2);
+      assert.equal(sliders(el)[0].querySelector('input').value, '3', 'the view opens spaced as saved');
+    } finally {
+      again.uninstall();
+    }
+  });
+});

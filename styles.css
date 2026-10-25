@@ -473,6 +473,21 @@
   min-height: 44px;
   color: var(--gn-text-normal);
 }
+/* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
+.thoughtknot-view-menu > .thoughtknot-layout-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gn-space-2);
+  padding: 0 var(--gn-space-2);
+  min-height: 44px;
+  color: var(--gn-text-normal);
+}
+.thoughtknot-view-menu > .thoughtknot-layout-option > input {
+  flex: 1;
+  min-width: 96px;
+  max-width: 160px;
+}
 .thoughtknot-view-menu button.thoughtknot-switch {
   display: flex;
   align-items: center;

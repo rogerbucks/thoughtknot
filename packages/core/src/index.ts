@@ -338,9 +338,12 @@ export {
   VIEW_SWITCHES,
   ViewState,
   labelsHidden,
+  startingLayout,
   startingSwitches,
   switchName,
 } from './view-switches.ts';
+export { DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE } from './layouts/layout-options.ts';
+export type { LayoutOptions } from './layouts/layout-options.ts';
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
