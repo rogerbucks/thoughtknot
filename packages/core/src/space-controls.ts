@@ -10,7 +10,7 @@
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
 // stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD, eyeOf, orbitBy } from './space-view.ts';
+import { FIELD, eyeOf, orbitBy, upOf, zoomBy } from './space-view.ts';
 import type { Orbit, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
@@ -110,6 +110,37 @@ export function twistBy(orbit: Orbit, angle: number): Orbit {
 }
 
 /**
+ * `orbit` zoomed by `times`, toward the point of the screen at `nx` and `ny`. Each runs from -1 to 1, with up and to the
+ * right positive, on a screen `aspect` wide to each unit high. What is under that point stays under it, as a map zooms
+ * to the pointer or to the middle of a pinch. At 0 and 0 it is `zoomBy`.
+ */
+export function zoomToward(orbit: Orbit, times: number, nx: number, ny: number, aspect: number): Orbit {
+  const nearer = zoomBy(orbit, times),
+    k = orbit.distance / nearer.distance;
+  const eye = eyeOf(orbit);
+  const f = unit([0, 1, 2].map((i) => (orbit.target[i] ?? 0) - (eye[i] ?? 0)) as Vec3),
+    up = upOf(orbit);
+  const right = unit([f[1] * up[2] - f[2] * up[1], f[2] * up[0] - f[0] * up[2], f[0] * up[1] - f[1] * up[0]]);
+  const above = unit([
+    right[1] * f[2] - right[2] * f[1],
+    right[2] * f[0] - right[0] * f[2],
+    right[0] * f[1] - right[1] * f[0],
+  ]);
+  // how far the pointer is from the middle, in the space, at the depth of what the camera looks at
+  const reach = orbit.distance * Math.tan(FIELD / 2);
+  const shift = (1 - 1 / k) * reach;
+  const target = [0, 1, 2].map(
+    (i) => (orbit.target[i] ?? 0) + shift * (nx * aspect * (right[i] ?? 0) + ny * (above[i] ?? 0)),
+  ) as Vec3;
+  return { ...nearer, target };
+}
+
+const unit = (v: Vec3): Vec3 => {
+  const n = Math.hypot(...v) || 1;
+  return [v[0] / n, v[1] / n, v[2] / n];
+};
+
+/**
  * `orbit` turned to look at `point`, which it then turns round and zooms to. The camera stays where it is, so what it
  * sees turns to face the point rather than leaping to it. Called with `share` under 1, it looks only that share of the
  * way from what it looked at, so the turn can glide.
@@ -174,7 +205,8 @@ function turned(v: Vec3, axis: Vec3, angle: number): Vec3 {
  * stays where it is on the screen while all else turns round it (Roger, 25 Oct 2026).
  */
 export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Orbit {
-  const spin = -dx * 0.008,
+  // seen upside down, the upright line points down the screen, so the same drag turns the other way unless it is reversed
+  const spin = -dx * 0.008 * (Math.cos(orbit.tilt) < 0 ? -1 : 1),
     lift = dy * 0.008;
   const off: Vec3 = [0, 1, 2].map((k) => (orbit.target[k] ?? 0) - (pivot[k] ?? 0)) as Vec3;
   // first round the upright line through the pivot, then round the level line square to the new way the camera looks

@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {
   between,
   fingerTurn,
+  zoomToward,
   fromAbove,
   KEY_STEP,
   ZOOM_STEP,
@@ -173,4 +174,50 @@ test('the view starts from straight above, the drawing flat with its top up, and
     mid = between(above, to, 0.5).tilt - above.tilt;
   assert.ok(Math.abs(mid - (to.tilt - above.tilt) / 2) < 1e-9, 'half way at half time');
   assert.ok(Math.abs(early) < Math.abs((to.tilt - above.tilt) * 0.1), 'it starts gently');
+});
+
+test('a drag right turns the near side right, the right way up and upside down alike', () => {
+  for (const tilt of [0.9, 2.2]) {
+    const o = { ...ORBIT, tilt },
+      side = Math.cos(tilt) > 0 ? 1 : -1;
+    const near = [200 * side * Math.cos(o.turn), 200 * side * Math.sin(o.turn), 0];
+    const at = (v) => projectPoint(spaceMatrix(v, 1, 4000), near, 600, 600);
+    assert.ok(at(turnRound(o, 50, 0, [0, 0, 0])).x > at(o).x + 20, `tilt ${tilt}`);
+  }
+});
+
+test('zooming toward a point keeps what is under it under it, from any side', () => {
+  for (const tilt of [0.9, 2.2]) {
+    const o = { ...ORBIT, tilt },
+      aspect = 1.5,
+      [nx, ny] = [0.6, -0.4];
+    const eye = eyeOf(o);
+    // the point of the plane through the target, square to the way the camera looks, which is under the pointer
+    const matrix = spaceMatrix(o, aspect, 4000);
+    const f = o.target.map((v, i) => v - eye[i]);
+    assert.ok(Math.abs(Math.hypot(...f) - o.distance) < 1e-6);
+    const sees = (m, p) => projectPoint(m, p, 900, 600);
+    // find that point by search along the plane through the target: it is the one that projects to the pointer
+    const want = { x: ((nx + 1) / 2) * 900, y: ((1 - ny) / 2) * 600 };
+    const grid = [];
+    for (let a = -800; a <= 800; a += 20) for (let b = -800; b <= 800; b += 20) grid.push([a, b]);
+    const ray = grid
+      .map(([a, b]) => [o.target[0] + a, o.target[1] + b, 0])
+      .map((p) => ({ p, s: sees(matrix, p) }))
+      .filter((c) => c.s)
+      .sort((x, y) => Math.hypot(x.s.x - want.x, x.s.y - want.y) - Math.hypot(y.s.x - want.x, y.s.y - want.y))[0];
+    const zoomed = zoomToward(o, 2, nx, ny, aspect);
+    const was = sees(matrix, ray.p),
+      now = sees(spaceMatrix(zoomed, aspect, 4000), ray.p);
+    assert.ok(zoomed.distance < o.distance);
+    assert.ok(Math.abs(was.x - want.x) < 40, 'the search found the pointer');
+    // that point stays near the pointer after zooming, far nearer than if it zoomed on the middle
+    const middle = sees(spaceMatrix(zoomBy(o, 2), aspect, 4000), ray.p);
+    assert.ok(
+      Math.hypot(now.x - was.x, now.y - was.y) < Math.hypot(middle.x - was.x, middle.y - was.y) / 2,
+      `tilt ${tilt}`,
+    );
+  }
+  const o = ORBIT;
+  assert.deepEqual(zoomToward(o, 2, 0, 0, 1).target, o.target);
 });
