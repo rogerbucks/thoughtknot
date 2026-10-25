@@ -15,6 +15,9 @@ import { readNote } from '../../core/src/drawing.ts';
 import { draw } from '../../core/src/render.ts';
 import { loadEngine } from '../../core/src/engine.ts';
 
+// These tests walk, pan and zoom to things at the places Graphviz gives them, so they draw by Graphviz
+const GRAPHVIZ = { data: { settings: { ownLayout: 'off' } } };
+
 before(() => build());
 
 // the links, in order: 0 large→q, 1 tablet→q, 2 eyes→large, 3 eyes→tablet
@@ -44,7 +47,7 @@ const withText = (el, tag, text) => el.querySelectorAll(tag).find((b) => b.textC
 describe('show only a thing and its neighbours', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(ISLAND))).el;
     tap(el, thing(el, 'large'));
   });
@@ -147,7 +150,7 @@ describe('show only a thing and its neighbours', () => {
 describe('the legend', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -212,7 +215,7 @@ describe('the legend', () => {
 describe('the shortest path between two things', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(ISLAND))).el;
   });
   after(() => env.uninstall());
@@ -282,7 +285,7 @@ describe('the shortest path between two things', () => {
 describe('finding a thing', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(ISLAND))).el;
   });
   after(() => env.uninstall());
@@ -378,7 +381,7 @@ describe('finding a thing', () => {
 describe('finding a thing brings it into view', () => {
   let env, el, areas, ids;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(GRAPH))).el;
     const drawing = readNote([GRAPH]).graphs.get('reader');
     areas = hitAreas(draw(drawing, await loadEngine()).svg);
@@ -416,7 +419,7 @@ describe('finding a thing brings it into view', () => {
 describe('walking the links by arrow key', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -526,7 +529,7 @@ describe('labels by zoom, folded hubs and groups, merged links and routing', () 
 describe('only the drawing changes, never the note', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
   });
   after(() => env.uninstall());
 

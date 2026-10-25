@@ -105,7 +105,7 @@ export const DEFAULT_SETTINGS: Settings = {
   foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',
-  ownLayout: 'off',
+  ownLayout: 'on',
   noteCallouts: 'off',
   miniMap: 'auto',
   detailsOpen: 'off',
@@ -274,8 +274,8 @@ export const OPTIONS: Option[] = [
   ),
   switchOption(
     'ownLayout',
-    'New layout engine (preview)',
-    'Whether ThoughtKnot lays graphs out by its own engine, not Graphviz; a graph’s View menu can change it.',
+    'ThoughtKnot layout engine',
+    'Whether ThoughtKnot lays graphs out by its own engine, the default. Off lays them out by Graphviz, as before.',
   ),
   switchOption(
     'noteCallouts',

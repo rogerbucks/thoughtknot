@@ -48,18 +48,18 @@ describe('the switches', () => {
     assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine']);
     assert.deepEqual(
       VIEW_SWITCHES.map((s) => switchName(s)),
-      ['Labels by zoom', 'Busy hubs folded', 'Groups folded', 'Parallel links merged', 'New layout engine (preview)'],
+      ['Labels by zoom', 'Busy hubs folded', 'Groups folded', 'Parallel links merged', 'ThoughtKnot layout engine'],
     );
   });
 
-  test('start from the settings: labels by zoom on, busy hubs folded off, groups folded off, links merged off', () => {
+  test('start from the settings: labels by zoom on, busy hubs folded off, groups folded off, links merged off, our engine on', () => {
     // every thing starts open, its links drawn; the person folds what they want (Roger, 24 Oct 2026)
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS), {
       labels: true,
       hubs: false,
       groups: false,
       merge: false,
-      engine: false,
+      engine: true,
     });
     const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on', foldHubs: 'on' };
     assert.deepEqual(startingSwitches(changed), {
@@ -67,7 +67,7 @@ describe('the switches', () => {
       hubs: true,
       groups: true,
       merge: false,
-      engine: false,
+      engine: true,
     });
     assert.deepEqual(SWITCH_SETTINGS, {
       labels: 'labelsByZoom',
@@ -88,14 +88,14 @@ describe('the switches', () => {
       hubs: false,
       groups: false,
       merge: true,
-      engine: false,
+      engine: true,
     });
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style, 'near'), {
       labels: false,
       hubs: false,
       groups: true,
       merge: false,
-      engine: false,
+      engine: true,
     });
   });
 });
@@ -117,7 +117,7 @@ describe('a card’s state of the switches', () => {
     assert.equal(state.turn('labels', false), false);
     assert.equal(state.turn('groups', true), true);
     assert.equal(state.turn('groups', true), false, 'turned to what it was: nothing to do');
-    assert.deepEqual(state.switches, { labels: false, hubs: false, groups: true, merge: false, engine: false });
+    assert.deepEqual(state.switches, { labels: false, hubs: false, groups: true, merge: false, engine: true });
     assert.deepEqual(state.saved(), { labels: 'off', hubs: 'off', groups: 'on', merge: 'off' });
   });
 

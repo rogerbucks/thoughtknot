@@ -3,231 +3,231 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "5e743cb4d123c6f0576e7217d39e702a72b55b0f021cd1f478571f12ead6fcc6",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "74d72e9de8d58d2325a59730a1c36fd9c731678d66844b0c3464db7d662d08f8",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "39ad3f6cfb482c7493946f49a014091d954aea61b47d555218a06ef45d3d93a3",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "d76cbe6c888fe0317b95bd43d758f3d501a457db95ba2faf7c360d8368bd8abd",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "8d2497fc2e029f80a2cec8bda342d3faa5421329abf71c4ecacce6e7b493ff40",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "7e45a7769f1a3543c12bf6ec6178e4fdd9658731555b8a3bdd8c8314b15f9728",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "8e06c13a27e5b07b0cf73f3ed9545fecce14b91bc9711e6efcb62c1ef2f7eee6",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "0ac5100b37fe331d36b460dc7433463f4d071e63d19b1d466e92679a869fe8aa",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "9de074fb54d8a4d286fa0ed27e2c0a559ab87c8b91f0ef813f09193da4bf20d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "8543dec364c2b68d75f2499f4c83c16ffc4f512f39ad7a7a7e4e36fe173f9e27",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "9559475e2cd3c6a2fb07f2004a9b5876d409e2bacd1561684d8a558eccf2796c",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "6b173c3cdb2ec92123d039421cce99226670642efcf14fa979cd23c815841832",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "437c316bfb26f74a927748906a62218a7944d8d3e8d32b29ffd126c56157f8d0",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "1b9df999a100391b5b3afd7ef5746f12f292d531abf264bb96f4b553e8513b48",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "657ebeb5fd929e190a54d87822c76e7fa68dab655c944a5a16be694d6931ed50",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "77eb45e794c95a796587f41c38d73142325a950ab906323ab4aa0d52472011a3",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "83748fb44544ebcf0ea5d0b0c9707f2a8ff6899571ffe724a43b01e050305850",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "e3242523a4ac3089465bc97d57ae11fc772eef64e651741ef5e8054ff82a09bf",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "7882e231992b17a07f0ae25860ea64c1cdc1322963161e19009e191e692c36d4",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "7357bc7cf9d313546884d86d052950cdd972669f8f1a71cbb6995f97a706a83e",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "8194950f14fe17477db599b539fc4224359a60268a1f32bbee389f258829b559",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "0ecd3b4126e5a21f1aac2c129589deef2b9b47d94f1c11d7f3ab4bfede64c11d",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "f5fcbd08b8141055e7dce50e52b8312787dd0ab5563ddd53859482b4a706de2b",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "3fc2283810cec8f60b3181541bb123a2bcfbefa8a7aa897b1c16507927892d2f",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
-      "sha256": "dd14478c4a5c2753e0551f71e5e494088d1f5917e4aba2f93643a15c7f65ba34",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "3c889cb6ba9ce6b38cd870365593561f9bf390443b32c9de440387bb24d7a716",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
-      "sha256": "d8adb0cb9d66f6ffbb53a133719995783119eee0c573489cf27a2bcc87e785b3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "112c5e16ac3e760b85bb12c8a31ed00e464181d4b59595562ad1295b4290fc6c",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "08e775978e86de2c2acbe2684ddc1f082e4c6d47c7659af3d8e549569ca9eb93",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "2f0336ad3bfa38976e79e4ca614fcf8d5b11ef16cdbdafc71dd85b48fb73dcdf",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "6bd377fddb7a08ce10f50c6f471b158ddb1aa77b30392332f4e1246cb4ffd984",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "fc417a39b96fa2d6ee2f06e211acbab0f7ea9ffb9ce626cb6bfe6b89d2e0c2d5",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "982a5c5b683de526bc6abffa01dfd4d31266cbb510bd76343fccce480e5724c6",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "ff803fab40e748e7396afba9d46fb27a3bebf5d609814309526996efc54ac751",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "a8779a8e024cba2177ae50707e018e5a046cc0c7356a678d4a4ad9fde564c037",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "d8902693ff0b8901a084aa4943a8ef4d83729b3183691bc0c871f9bb67f7cf39",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
@@ -243,135 +243,135 @@
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "437c316bfb26f74a927748906a62218a7944d8d3e8d32b29ffd126c56157f8d0",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "1b9df999a100391b5b3afd7ef5746f12f292d531abf264bb96f4b553e8513b48",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "657ebeb5fd929e190a54d87822c76e7fa68dab655c944a5a16be694d6931ed50",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "77eb45e794c95a796587f41c38d73142325a950ab906323ab4aa0d52472011a3",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "b158c716e50a8423d6ab681e88fb69ec16635eb9008c418a0024344716e13643",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "02d5ca8b1f098f75bd2f9fd650fe1f82f65331970eb43fbafcbf8637b90107b3",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "79d85f5318931b37d4a45c0ff83a1861f1652769c150a6b3387b35c94d73728d",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "d8dbdeb16703211acd7a5d17696d592f6962b3ca61880de87cc8b903ea59938b",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "d7a007b79bb14014831bfefe76c9162b12fa2c59f49d44bdc19e2a64ad95e157",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "68772b0bf2957f9818f189a5b4f6f981ac27db9117f75d04791025d6acb2130b",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "069606df5f716f17cb731ddd30b33990ed29ce445245b0a666af092594f27092",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "5260e61554c1878eeb547e5e7e00ca9189af331cb9ac52cee991a4a66b5705b9",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "76d3081b69a8bc793729ad05de93296fd89fc7696e3ce943ca6700db24e889c1",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "29f3ced14deeef490ca75d9ecef4ebd6662c99338326c565d620b53c2ffbfe55",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "9e5562bfd2c4f7b73ab3a50c19a5ee8689813fdc28cd291e2df99395c4511f06",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "e00c1007b9a5f547e8733f7b34236ae15534c83ee7bc39483f6b33c6addcd8b3",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "4ceece91526b1921e7aca11f535349501b842657716cc99f2d001eb6da94094f",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "67197e9489858505b751b0df867d39b4e1cd4a28d593ce7b38574de052118af1",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "d164c8050e8aa3703335c0405d32b76b7efa361577fdd8977976b414df09084b",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "a1701013d5dd9a6c35087731a58eafbd0ac94195875b358aef5cf9d0b3a49974",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "8194950f14fe17477db599b539fc4224359a60268a1f32bbee389f258829b559",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "0ecd3b4126e5a21f1aac2c129589deef2b9b47d94f1c11d7f3ab4bfede64c11d",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "f5fcbd08b8141055e7dce50e52b8312787dd0ab5563ddd53859482b4a706de2b",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "3fc2283810cec8f60b3181541bb123a2bcfbefa8a7aa897b1c16507927892d2f",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "832aac542422003bc69de6bc319124ac54db25fdef0f5d5fc2384b2a2125dc3d",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "32789bd1e265cf1c0744be41be010595ee11f027cd1287ab4a900798f18acfc1",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "685826f16e04b2cd7c91d808ce09ca4f80332f661d166971b3b10a384d6b0d07",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "ff095e92f695ddfb5eb74322db260dec775da6f3068ce508291f082dc0a70986",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "eb9f476547fa09d82048b9dcfc7bf33414e64dccf340b91da5bb00a93ef4ffec",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "50cbd9ff48162747a933430253bd7db6c4e6510ac4833f3dba8b331c0c3d2c5b",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "7d4e722f91192214e3db242ec7dfba307de1dbb9faa5ff9841cf188c7cf9de3d",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "5121c31c72ea3800f193f7adba9f695182f076a06b3128ffe484a8464ba03f0e",
+      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     }
   ]
 }

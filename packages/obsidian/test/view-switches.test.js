@@ -96,7 +96,7 @@ describe('the View menu', () => {
         ['Busy hubs folded', 'switch', 'false'],
         ['Groups folded', 'switch', 'false'],
         ['Parallel links merged', 'switch', 'false'],
-        ['New layout engine (preview)', 'switch', 'false'],
+        ['ThoughtKnot layout engine', 'switch', 'true'],
       ]);
     } finally {
       env.uninstall();
@@ -147,7 +147,7 @@ describe('the View menu', () => {
           ['Busy hubs folded', 'false'],
           ['Groups folded', 'true'],
           ['Parallel links merged', 'false'],
-          ['New layout engine (preview)', 'false'],
+          ['ThoughtKnot layout engine', 'true'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');

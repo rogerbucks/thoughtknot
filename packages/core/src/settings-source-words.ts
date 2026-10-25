@@ -107,9 +107,9 @@ export const SETTINGS_SOURCE_WORDS = {
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   'settings.merge-links.on': 'On',
   'settings.merge-links.off': 'Off',
-  'settings.own-layout.name': 'New layout engine (preview)',
+  'settings.own-layout.name': 'ThoughtKnot layout engine',
   'settings.own-layout.sentence':
-    'Whether ThoughtKnot lays graphs out by its own engine, not Graphviz; a graph’s View menu can change it.',
+    'Whether ThoughtKnot lays graphs out by its own engine, the default. Off lays them out by Graphviz, as before.',
   'settings.own-layout.on': 'On',
   'settings.own-layout.off': 'Off',
   'settings.note-callouts.name': 'Draw notes as callouts',

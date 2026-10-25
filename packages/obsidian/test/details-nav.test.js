@@ -17,6 +17,9 @@ import { load, GRAPH, show } from './host/view-notes.js';
 import { editing, tapKey } from './host/inspector-steps.js';
 import { PATH, NOTE } from './host/card-notes.js';
 
+// These tests walk, pan and zoom to things at the places Graphviz gives them, so they draw by Graphviz
+const GRAPHVIZ = { data: { settings: { ownLayout: 'off' } } };
+
 before(() => build());
 
 const { readNote } = await import('../../core/src/drawing.ts');
@@ -92,7 +95,7 @@ const outOfView = (el) => {
 describe('a thing’s links are listed by relationship type and direction, in words, with a count', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -163,7 +166,7 @@ describe('a thing’s links are listed by relationship type and direction, in wo
 describe('choosing a linked thing or a link in the list', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -212,7 +215,7 @@ describe('choosing a linked thing or a link in the list', () => {
 describe('choosing a linked thing in a narrow card', () => {
   let env, el;
   before(async () => {
-    env = await load({ width: 200 });
+    env = await load({ ...GRAPHVIZ, width: 200 });
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -231,7 +234,7 @@ describe('choosing a linked thing in a narrow card', () => {
 describe('the move to a chosen thing', () => {
   let env, el, found;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
     zoomIn(el, 8);
@@ -305,7 +308,7 @@ describe('the move to a chosen thing', () => {
 describe('the trail of things chosen', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -349,7 +352,7 @@ describe('the trail of things chosen', () => {
 describe('an arrow to a selection out of view', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -407,7 +410,7 @@ describe('an arrow to a selection out of view', () => {
 describe('in view mode, details in a tall card show on screen without covering the thing chosen', () => {
   let env, el;
   before(async () => {
-    env = await load();
+    env = await load(GRAPHVIZ);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });

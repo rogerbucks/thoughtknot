@@ -200,11 +200,15 @@ describe('a graph drawn by our own engine', () => {
   ]).graphs.get('g');
 
   // proves: layout_own_engine
-  test('is laid out once, by our engine, and drawn as a picture with every thing in it', async () => {
+  test('is laid out by our engine in each direction, and drawn as a picture with every thing in it', async () => {
     const own = { ...tree, engine: 'own' };
     const laid = directions(own);
-    assert.equal(laid.length, 1, 'one direction');
-    assert.equal(laid[0].own, true);
+    assert.deepEqual(
+      laid.map((d) => d.rankdir),
+      ['LR', 'TB'],
+      'each direction, so the one that fits the note best is shown',
+    );
+    assert.ok(laid.every((d) => d.own));
     const drawn = draw(own, await loadEngine());
     assert.match(drawn.svg, /^<svg/);
     for (let i = 0; i < 40; i++) assert.ok(drawn.svg.includes(`>Thing ${i}<`), `Thing ${i} is drawn`);

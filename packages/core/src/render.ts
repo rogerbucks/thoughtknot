@@ -101,9 +101,10 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // direct links (the default) are drawn again from where the boxes are, never along Graphviz's curves. So a large
   // one is laid out once, straight, and drawn whole: curving it after would lay it out twice for the same drawing
   const direct = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'direct');
-  // our own engine lays a graph out once, in the first direction: it picks rows or spread by the graph's shape
+  // our own engine picks rows or spread by the graph's shape. It tries each direction as Graphviz does, and the
+  // drawing that fits the note best is shown
   const ours = drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct');
-  const ways = only ? [only] : quick || ours ? STYLE.directions.slice(0, 1) : STYLE.directions;
+  const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
