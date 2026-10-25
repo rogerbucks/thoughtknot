@@ -757,7 +757,7 @@
   outline: 2px solid var(--gn-border-focus);
   outline-offset: -2px;
 }
-.thoughtknot-type-list {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
   gap: var(--gn-space-2);
@@ -768,10 +768,10 @@
   padding: var(--gn-space-3);
   list-style: none;
 }
-.thoughtknot-type-list[hidden] {
+:is(.thoughtknot-type-list, .thoughtknot-view-list)[hidden] {
   display: none;
 }
-.thoughtknot-type-list li {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li {
   display: flex;
   position: relative;
   flex-direction: column;
@@ -782,11 +782,11 @@
   padding: var(--gn-space-2) var(--gn-space-3);
   min-height: 44px;
 }
-.thoughtknot-type-list li:not(.thoughtknot-type-unfit):hover {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li:not(.thoughtknot-type-unfit):hover {
   border-color: var(--gn-border-hover);
   background: var(--gn-bg-hover);
 }
-.thoughtknot-type-list button {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button {
   display: block;
   box-shadow: none;
   border: none;
@@ -800,36 +800,41 @@
   text-align: start;
 }
 /* the whole tile takes the click of its button, and shows its focus */
-.thoughtknot-type-list button::after {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button::after {
   position: absolute;
   inset: 0;
   border-radius: var(--gn-radius-m);
   content: '';
 }
-.thoughtknot-type-list button:focus-visible {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible {
   outline: none;
   box-shadow: none;
 }
-.thoughtknot-type-list button:focus-visible::after {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible::after {
   outline: 2px solid var(--gn-border-focus);
   outline-offset: 1px;
 }
-.thoughtknot-type-list button:not(:disabled) {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:not(:disabled) {
   cursor: var(--gn-cursor-link);
 }
-.thoughtknot-type-list .thoughtknot-type-why:empty {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) .thoughtknot-type-why:empty {
   display: none;
 }
-.thoughtknot-type-list li.thoughtknot-type-now {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now {
   border: 2px solid var(--gn-accent);
   padding: calc(var(--gn-space-2) - 1px) calc(var(--gn-space-3) - 1px);
 }
-.thoughtknot-type-list li.thoughtknot-type-now button {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now button {
   font-weight: var(--gn-font-weight-bold);
 }
+/* One grid for every type and view (F7). The views follow the types in the same panel, with no second rule. */
 .thoughtknot-type-list li.thoughtknot-type-suggested {
   border-style: dashed;
   border-color: var(--gn-accent);
+}
+.thoughtknot-type-list:not([hidden]) + .thoughtknot-view-list {
+  border-top: none;
+  padding-top: 0;
 }
 /* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
    across the panel with why beside its name */

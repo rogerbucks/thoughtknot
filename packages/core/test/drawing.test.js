@@ -72,6 +72,14 @@ describe('what a graph draws', () => {
     ]);
   });
 
+  test('a box’s text loses Markdown’s paired marks for bold and code, but a lone star stays (F12)', () => {
+    const block = "// graph: g\n(a:T {name: '**Rules.**'}), (b:T {name: 'use `go` __now__'}), (c:T {name: 'a * b'})";
+    const texts = readNote([block])
+      .graphs.get('g')
+      .boxes.map((b) => b.text);
+    assert.deepEqual(texts, ['Rules.', 'use go now', 'a * b']);
+  });
+
   test('the text is the name, else the title, the text or the label, else the id', () => {
     const block = `// graph: g
 (a:T {name: 'by name', title: 'not this'}), (b:T {title: 'by title', text: 'not this'}), (c:T {text: 'by text'}),
