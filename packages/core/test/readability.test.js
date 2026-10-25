@@ -87,6 +87,34 @@ describe('groups as boxes', () => {
       'a bend sits on the left edge of the group',
     );
   });
+
+  // proves: layout_links_past_groups
+  test('a link past a group runs through the gap inside its border, never round its far side', () => {
+    const past = shapeOf(
+      ['s', 'm1', 'm2', 'm3', 'm4', 't', 'u', 'v'],
+      [
+        ['s', 'm1'],
+        ['m1', 'm2'],
+        ['s', 'm3'],
+        ['m3', 'm4'],
+        ['m2', 't'],
+        ['m4', 't'],
+        ['s', 't'],
+        ['s', 'u'],
+        ['u', 'v'],
+        ['v', 't'],
+      ],
+    );
+    const ms = ['m1', 'm2', 'm3', 'm4'];
+    const out = groupedLayered(past, sizes, [{ id: 'g', label: 'G', members: ms }], 'LR');
+    const b = out.boxes[0];
+    const by = out.via.get('s\nt').filter(([x]) => Math.abs(x - b.x) <= b.width / 2);
+    assert.ok(by.length, 'the link passes the group');
+    for (const [x, y] of by) {
+      assert.ok(Math.abs(y - b.y) < b.height / 2, `${x},${y} is inside the border`);
+      for (const k of ms) assert.ok(Math.abs(y - out.spots.get(k)[1]) > 20, `${x},${y} is clear of ${k}`);
+    }
+  });
 });
 
 describe('the readability scores', () => {
