@@ -5,7 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { edgesOf } from '../src/focus.ts';
-import { BUSY_HUB, busyHubs, drawnGroups, foldPlan, foldsHiding } from '../src/untangle-fold.ts';
+import { BUSY_HUB, busyHubs, drawnGroups, foldPlan, foldsHiding, trunkCount } from '../src/untangle-fold.ts';
 
 /** A graph with a hub linked to `n` leaves, and one of those leaves linked on to another thing. */
 const star = (n) => {
@@ -164,4 +164,17 @@ describe('groups', () => {
     assert.deepEqual(plan.hubs, []);
     assert.deepEqual(plan.hidden, []);
   });
+});
+
+// proves: untangle_merge
+test('counts the trunks merging would draw: two links or more from one group to another', () => {
+  const groups = [
+    ['North', ['home', 'inn']],
+    ['South', ['park', 'cafe']],
+  ];
+  const near = (from, to) => ({ from, to, type: 'NEAR' });
+  assert.equal(trunkCount([near('home', 'park'), near('inn', 'cafe')], groups), 1);
+  assert.equal(trunkCount([near('home', 'park'), near('cafe', 'inn')], groups), 0, 'one each way is no trunk');
+  assert.equal(trunkCount([near('home', 'inn'), near('inn', 'home')], groups), 0, 'inside one group is no trunk');
+  assert.equal(trunkCount([near('home', 'park'), near('inn', 'cafe')], []), 0, 'no groups, nothing to merge');
 });
