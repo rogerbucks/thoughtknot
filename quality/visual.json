@@ -63,14 +63,14 @@
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "7e45a7769f1a3543c12bf6ec6178e4fdd9658731555b8a3bdd8c8314b15f9728",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "b66cb37c9648a3a77661ec3e9f342cbd78cff55612b8a89066c1f0a13c49ec0f",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "0ac5100b37fe331d36b460dc7433463f4d071e63d19b1d466e92679a869fe8aa",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "8dde78015ef17ed835eee769f6e86f24b2b1160c4203fc8dba4e5f9ac24a14bc",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
@@ -87,14 +87,14 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "8543dec364c2b68d75f2499f4c83c16ffc4f512f39ad7a7a7e4e36fe173f9e27",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "c3f2d73e57ea71b80cea79e2e4a471a2a42fad6568b62859d23864b4d576bc46",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "6b173c3cdb2ec92123d039421cce99226670642efcf14fa979cd23c815841832",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "d7e966ad745713cb02fac39fa03fc431e8822f7eeb218183a8b34a3eb5d2774b",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
@@ -171,26 +171,26 @@
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "e3242523a4ac3089465bc97d57ae11fc772eef64e651741ef5e8054ff82a09bf",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "dda5f7df4babca5d08c9c7e3f0e60c3f11ddb2f4466198d751e2c15fadef82bf",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "7357bc7cf9d313546884d86d052950cdd972669f8f1a71cbb6995f97a706a83e",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "afcaec7761b2cf7ae6d9b0d23e5d71b00051cf434c87389e7e0afb8480124443",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "0ecd3b4126e5a21f1aac2c129589deef2b9b47d94f1c11d7f3ab4bfede64c11d",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "3763cbeeb76b1a168bfba18b95ad6bc304ea61f4d43433aa48aeeb883f8ff2ab",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "3fc2283810cec8f60b3181541bb123a2bcfbefa8a7aa897b1c16507927892d2f",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "0724aca908b27648b41ccb3efa6da9df981aa5c7a9ef86cfe05816129c013fc0",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
@@ -207,26 +207,26 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "65ba710da4143e0bd8507cd32e0c6d37fa9740a33462a108bcd575bb57f2b25e",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "87bb46054bb47de6ae8de78de56d5c12be696c6ca372d16fbfa40400d32ae05a",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "2951b05034e95607978fc18ff2515e3448da56892c11abab23639c64fdecc861",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "dca8beec7162130ae18cb921d962be09692c4fd831e13d4d4808a7a3d0b1954f",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "ff803fab40e748e7396afba9d46fb27a3bebf5d609814309526996efc54ac751",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9ccc406f5774960918ef0367af30f79ef53369037bd7d62207cdb2f9c1548394",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "d8902693ff0b8901a084aa4943a8ef4d83729b3183691bc0c871f9bb67f7cf39",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "83aca0708dfeee935bf63296ade900ff9336c4ecea769669cf438c4488c940f9",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
@@ -267,50 +267,50 @@
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "7fb9e5d8924b7d5ee4aab547bb56088e8d7fe703fee05c70c9d3bb408a9dfc58",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "bc1e1cad2c6911c8c2bb6cbca4a917c9676d4fc456c35c6929f996e50f85e8bb",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "c8cd88137b572acd8beab184e1caef531cb68fecb8fec2953b3e2407b233cb9c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "c4bd064b7928d50e519fed5b1c3a72310b510a1339912233ef896ce214f2213d",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "88cd7b14e3aed1c2e5a076feb2d1a5666e3dd04d996399a1a96fd3700676b20e",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "59562dacbcaa6e736ea0a522fd5707a06bf421011daa89e028d4db3e8c4b3a36",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "4b312fba9ff11427ccadac3cb1788cbdfaeb257b2af1a2195716ce49306b1004",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "987cb5d91b3737379c75e6780cfb26f9440b3c4e2c1796efae590e0206e71203",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "29f3ced14deeef490ca75d9ecef4ebd6662c99338326c565d620b53c2ffbfe55",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "611f05fe53cb1cc86f37c94af9031fc8b370083fc4b0c152970cd39baf1f0092",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "e00c1007b9a5f547e8733f7b34236ae15534c83ee7bc39483f6b33c6addcd8b3",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "ae7ef8abeb729346da8cdec85bd004fc0b5105cbb3ac957ea603f8e49f4368b5",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "67197e9489858505b751b0df867d39b4e1cd4a28d593ce7b38574de052118af1",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "431f34015b32e1e9964dbd8cd1d3f7592c13915f2e3a6e9ca7716f2629b6eee3",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "a1701013d5dd9a6c35087731a58eafbd0ac94195875b358aef5cf9d0b3a49974",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "cc7091b491e455fa14bf7335259558c832049ad657ee7d50acb6a06dd19a0716",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
@@ -339,26 +339,26 @@
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "0ecd3b4126e5a21f1aac2c129589deef2b9b47d94f1c11d7f3ab4bfede64c11d",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "3763cbeeb76b1a168bfba18b95ad6bc304ea61f4d43433aa48aeeb883f8ff2ab",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "3fc2283810cec8f60b3181541bb123a2bcfbefa8a7aa897b1c16507927892d2f",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "0724aca908b27648b41ccb3efa6da9df981aa5c7a9ef86cfe05816129c013fc0",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "32789bd1e265cf1c0744be41be010595ee11f027cd1287ab4a900798f18acfc1",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "2e748db499343b5fdec1654748d485249172ffeb0b9d27a58fb43216f4407b69",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "ff095e92f695ddfb5eb74322db260dec775da6f3068ce508291f082dc0a70986",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "b8c5d8fe924da765f5be4d05744a29752fcc329d2f62284e50cd4c0330d0a5cb",
+      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
       "day": "2026-10-25"
     },
     {

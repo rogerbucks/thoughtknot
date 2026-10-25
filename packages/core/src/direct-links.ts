@@ -13,7 +13,7 @@
 import type { DrawMark } from './drawing-marks.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
-import { WORDS_OFF, wordSpots } from './direct-words.ts';
+import { WORDS_OFF, fans, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
@@ -169,7 +169,9 @@ export function directLinks(
       ];
     }),
   );
-  const spots = wordSpots(laid.marks, boxes, curves);
+  // our own engine labels each fan of links once, near the end its links share
+  const fan = at ? fans(laid.marks) : undefined;
+  const spots = wordSpots(laid.marks, boxes, curves, fan);
   // each link's arrowheads, and the first line drawn for it, found by what it is of: looked up once, not per mark
   const headsBy = new Map<string, (DrawMark & { kind: 'arrowhead' })[]>(),
     lineBy = new Map<string, DrawMark & { kind: 'link' }>();
@@ -177,7 +179,11 @@ export function directLinks(
     if (m.kind === 'arrowhead' && m.of !== undefined) headsBy.set(m.of, [...(headsBy.get(m.of) ?? []), m]);
     else if (m.kind === 'link' && m.of !== undefined && !lineBy.has(m.of)) lineBy.set(m.of, m);
 
-  const marks = laid.marks.map((m): DrawMark => {
+  const marks = laid.marks.flatMap((m): DrawMark[] => (fan?.gone.has(m.id) ? [] : [drawnNow(m)]));
+  return grown({ ...laid, marks });
+
+  /** `m` where it is drawn now: a link along its curve, its words beside it, and the rest moved with its box. */
+  function drawnNow(m: DrawMark): DrawMark {
     const by = shiftOf.get(m.id);
     const c = m.of === undefined ? undefined : curves.get(m.of);
     if (m.kind === 'link' && c) {
@@ -206,8 +212,7 @@ export function directLinks(
     if (was && now) return hugged(m, was, now);
     if (!by) return m;
     return shifted(m, by[0], by[1]);
-  });
-  return grown({ ...laid, marks });
+  }
 }
 
 /** The smallest group of `groups` round the box `m`, if any. */

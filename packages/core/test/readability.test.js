@@ -10,6 +10,7 @@ import { groupedLayered } from '../src/layouts/grouped.ts';
 import { readability } from '../src/layouts/readability.ts';
 import { ownMarks, groupsIn } from '../src/layouts/own-draw.ts';
 import { directLinks } from '../src/direct-links.ts';
+import { fans } from '../src/direct-words.ts';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
@@ -160,6 +161,56 @@ describe('groups as boxes', () => {
       assert.ok(Math.abs(y - b.y) < b.height / 2, `${x},${y} is inside the border`);
       for (const k of ms) assert.ok(Math.abs(y - out.spots.get(k)[1]) > 20, `${x},${y} is clear of ${k}`);
     }
+  });
+});
+
+describe('a fan of links', () => {
+  const link = (of, from, to) => ({ kind: 'link', id: of, of, from, to, points: [], curve: false });
+  const words = (of, text) => ({ kind: 'label', id: `l:${of}`, of, text, x: 0, y: 0, size: 10 });
+
+  // proves: layout_one_label_per_fan
+  test('of one type into one thing is labelled once, near that thing; so is one out of one thing', () => {
+    const { gone, near } = fans([
+      ...[
+        ['ab', 'a', 'b'],
+        ['cb', 'c', 'b'],
+        ['db', 'd', 'b'],
+        ['ex', 'e', 'x'],
+        ['ey', 'e', 'y'],
+        ['fb', 'f', 'b'],
+      ].map(([of, from, to]) => link(of, from, to)),
+      words('ab', 'meets'),
+      words('cb', 'meets'),
+      words('db', 'meets'),
+      words('ex', 'needs'),
+      words('ey', 'needs'),
+      words('fb', 'fails'),
+    ]);
+    assert.deepEqual([...gone].sort(), ['l:cb', 'l:db', 'l:ey']);
+    assert.deepEqual(Object.fromEntries(near), { ab: 'to', ex: 'from' });
+  });
+
+  test('our own engine draws a fan’s words once, on a real note', async () => {
+    const engine = await loadEngine();
+    const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
+    const note = readNote([text]);
+    const style = readStyle([text], 'requirements', note);
+    const drawing = {
+      ...styledDrawing(note.graphs.get('requirements'), style.style, note.world.requirements),
+      diagram: undefined,
+    };
+    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+    const laid = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
+    const into = new Map(laid.marks.filter((m) => m.kind === 'link').map((m) => [m.of, m.to]));
+    const seen = new Set();
+    for (const m of laid.marks)
+      if (m.kind === 'label' && into.has(m.of) && m.id.startsWith('l:')) {
+        const k = `${into.get(m.of)} ${m.text}`;
+        assert.ok(!seen.has(k), `“${m.text}” into ${into.get(m.of)} is drawn once`);
+        seen.add(k);
+      }
+    assert.ok(seen.size > 0, 'some links are labelled');
   });
 });
 
