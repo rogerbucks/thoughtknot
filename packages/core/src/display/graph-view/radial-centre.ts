@@ -10,6 +10,7 @@ import type { DiagramOffer, DiagramWrite, GraphDrawing, NoteReading, StyleGraph 
 import { boxPlaces } from './regroup';
 import type { DiagramShown, Trying, TypeLeftAt } from './type-strip';
 import { button } from '../button';
+import { SPACE_OPEN } from './space-view-panel';
 
 /** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
 export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {
@@ -63,13 +64,15 @@ export function centreShown(
 
 /**
  * Radial in the type list, with a thing selected (radial_centre_anywhere). As `toggle` opens the list, its `tile` says
- * which thing it will be drawn around. `put` puts that thing in the centre, if one is selected that can be. It says
- * whether it did. When it did not, the tile is chosen as any other.
+ * which thing it will be drawn around. So it does as a thing is selected in the card, `root`, while the list is open.
+ * `put` puts that thing in the centre, if one is selected that can be. It says whether it did. When it did not, the
+ * tile is chosen as any other.
  */
 export function aroundSelected(
   toggle: HTMLElement,
   d: DiagramShown,
   where?: () => TypeLeftAt,
+  root?: HTMLElement,
 ): { tile: (b: HTMLButtonElement, fits: boolean) => void; put: () => boolean } {
   let tile: HTMLButtonElement | null = null,
     fits = true;
@@ -77,12 +80,17 @@ export function aroundSelected(
     const key = where?.().selected;
     return key && d.canCentre?.(key) ? key : undefined;
   };
-  toggle.addEventListener('click', () => {
+  const say = () => {
     const key = around();
     tile?.setText(key ? word('type.radial-around', { thing: d.textOf?.(key) ?? key }) : word('type.radial'));
     // around a thing selected, radial can always be chosen, whether or not it fits with no centre picked
     if (tile) tile.disabled = !fits && !key;
-  });
+  };
+  toggle.addEventListener('click', say);
+  // a thing selected by a click, a key or a pick in space, once the card has taken it (Roger, 25 Oct 2026: "radial
+  // isn't available even though I have selected a node")
+  const later = () => window.setTimeout(say, 0);
+  for (const type of ['click', 'keydown', SPACE_OPEN]) root?.addEventListener(type, later);
   return {
     tile: (b, fit) => {
       tile = b;
