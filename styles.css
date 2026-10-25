@@ -1208,8 +1208,41 @@ pre.thoughtknot-code {
   justify-content: center;
   gap: var(--gn-space-1);
 }
+/* The problems count sits at the bar's far end, quiet unless something is wrong (bar_kept_short). An error is told by
+   its icon and its colour, never colour alone. */
 .thoughtknot-badge {
-  margin-inline-end: auto;
+  margin-inline-start: auto;
+}
+.thoughtknot-badge.is-calm {
+  color: var(--gn-text-muted);
+}
+.thoughtknot-badge.is-error {
+  color: var(--gn-text-error);
+}
+/* More: the bar's seldom-used buttons, dropped down over the drawing so the bar keeps one short row. Each shows its
+   name beside its icon. */
+.thoughtknot-bar-more {
+  position: relative;
+}
+.thoughtknot-bar-more-list {
+  position: absolute;
+  top: 100%;
+  inset-inline-start: 0;
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  min-width: 12em;
+  padding: var(--gn-space-1);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-bar-more-list[hidden] {
+  display: none;
+}
+.thoughtknot-bar .thoughtknot-bar-more-list button {
+  justify-content: flex-start;
 }
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover. Leave it room,
    as Obsidian does for its PDF toolbar, so it never covers the bar's last button. */

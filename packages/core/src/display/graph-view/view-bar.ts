@@ -1,7 +1,7 @@
-// A drawing's bar (spec §3). It holds the problems badge, Fit, zoom out and zoom in. Then Find a thing, Filter by kind
-// or link, View (§25), Diagram type (§15), 2D, 2.5D or 3D (§53) and Full screen. Where the note is edited, it holds Edit here and Edit in pane. In reading
-// view, it holds Source.
-// Each control says what it is in words as well as by its icon.
+// A drawing's bar (spec §3). In sight are Find a thing, View (§25), Diagram type (§15), 2D (§53), Fit and Full screen.
+// Then come More and last the problems badge (bar_kept_short). More opens the rest: zoom out and zoom in,
+// Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
+// Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options';
@@ -54,13 +54,9 @@ export interface BarPlaced {
   types: { bar: HTMLElement; before: HTMLElement };
 }
 
-/** Builds the bar of a drawing at the top of its card. */
-export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): BarPlaced {
-  const { problems, mode } = o;
-  const bar = root.createDiv({
-    cls: 'thoughtknot-bar',
-    attr: { role: 'toolbar', 'aria-label': word('bar.name', { graph: o.graph }) },
-  });
+/** The badge: problems and gaps counted, and what is parked (§8). Calm unless one is an error (bar_kept_short). */
+function badgeOf(bar: HTMLElement, o: ViewOptions, on: BarActions): void {
+  const { problems } = o;
   const gaps = o.completeness?.gaps ?? 0;
   // a hint only offers a fix, so it is listed behind the badge but never counted in it
   const counted = problems.filter((p) => p.severity !== 'hint').length;
@@ -73,26 +69,48 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     ...(found.length ? found : [word('bar.no-problems')]),
     ...parkedWords(o.parked && parkedCount(o.parked)),
   ].join(', ');
-  const badge = button(
-    bar,
-    label,
-    counted || gaps ? 'alert-triangle' : 'check-circle',
-    () => on.toggleProblems(badge),
-    label,
-  );
-  badge.addClass('thoughtknot-badge');
+  const errors = problems.some((p) => p.severity === 'error');
+  const icon = errors ? 'alert-triangle' : counted || gaps ? 'info' : 'check-circle';
+  const badge = button(bar, label, icon, () => on.toggleProblems(badge), label);
+  badge.addClass('thoughtknot-badge', errors ? 'is-error' : 'is-calm');
   badge.setAttribute('aria-expanded', 'false');
-  button(bar, word('bar.fit'), 'maximize', () => on.fit());
-  button(bar, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut());
-  button(bar, word('bar.zoom-in'), 'zoom-in', () => on.zoomIn());
+}
+
+/** More in the bar, and the list it opens: hidden until pressed, closed by Escape or once a control in it is chosen. */
+function moreMenu(bar: HTMLElement): HTMLElement {
+  const wrap = bar.createDiv({ cls: 'thoughtknot-bar-more' });
+  const list = wrap.createDiv({ cls: 'thoughtknot-bar-more-list', attr: { role: 'group' } });
+  const toggle = button(wrap, word('bar.more'), 'more-horizontal', () => shut(list.hidden !== false));
+  wrap.insertBefore(toggle, list);
+  list.setAttribute('aria-label', word('bar.more'));
+  const shut = (open = false) => {
+    list.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+  };
+  shut();
+  list.addEventListener('click', (e: Event) => {
+    if ((e.target as Element | null)?.closest?.('button')) shut();
+  });
+  wrap.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || list.hidden) return;
+    e.preventDefault();
+    shut();
+    toggle.focus();
+  });
+  return list;
+}
+
+/** Builds the bar of a drawing at the top of its card. */
+export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): BarPlaced {
+  const { mode } = o;
+  const bar = root.createDiv({
+    cls: 'thoughtknot-bar',
+    attr: { role: 'toolbar', 'aria-label': word('bar.name', { graph: o.graph }) },
+  });
   // finding a thing and filtering by kind only change the picture, never the note. So they are offered wherever it is
   // (§25). A graph drawn as a table (§15) has nothing to fade or hide, so there it is found but never filtered
   const find = button(bar, word('bar.find'), 'search', () => on.find(find));
   find.setAttribute('aria-expanded', 'false');
-  if (!o.diagram?.table) {
-    const legend = button(bar, word('bar.filter'), 'filter', () => on.legend(legend));
-    legend.setAttribute('aria-expanded', 'false');
-  }
   // the View menu's switches change the drawing alone, so it is offered wherever the drawing is (§25)
   if (o.switches) {
     const view = button(bar, word('bar.view'), 'layers', () => on.view(view));
@@ -102,21 +120,34 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   const space = o.diagram?.table
     ? null
     : button(bar, word('bar.space'), 'box', () => on.space(), word('bar.space-flat'));
+  button(bar, word('bar.fit'), 'maximize', () => on.fit());
   const full =
     mode === 'full'
       ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
       : button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
+  // the rest, used less, wait behind More, which opens over the drawing and closes once one is chosen
+  const more = moreMenu(bar);
+  button(more, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut(), word('bar.zoom-out'));
+  button(more, word('bar.zoom-in'), 'zoom-in', () => on.zoomIn(), word('bar.zoom-in'));
+  if (!o.diagram?.table) {
+    const legend = button(more, word('bar.filter'), 'filter', () => on.legend(legend), word('bar.filter'));
+    legend.setAttribute('aria-expanded', 'false');
+  }
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)
-  if (o.exporting) button(bar, word('bar.export'), 'download', () => on.export());
+  if (o.exporting) button(more, word('bar.export'), 'download', () => on.export(), word('bar.export'));
   const editing: HTMLElement[] = [];
   let editButton: HTMLButtonElement | null = null;
   if (mode !== 'pane' && o.onEditHere) {
-    editButton = button(bar, word('bar.edit-here'), 'pencil', () => on.editHere());
+    editButton = button(more, word('bar.edit-here'), 'pencil', () => on.editHere(), word('bar.edit-here'));
     editing.push(editButton);
   }
-  if (mode !== 'pane') editing.push(button(bar, word('bar.edit-in-pane'), 'panel-right-open', () => o.onEdit()));
+  const pane = word('bar.edit-in-pane');
+  if (mode !== 'pane') editing.push(button(more, pane, 'panel-right-open', () => o.onEdit(), pane));
   const source: HTMLButtonElement | null =
-    mode === 'note' ? button(bar, word('bar.show-source'), 'code', () => source && on.toggleSource(source)) : null;
+    mode === 'note'
+      ? button(more, word('bar.show-source'), 'code', () => source && on.toggleSource(source), word('bar.show-source'))
+      : null;
+  badgeOf(bar, o, on);
   return { editButton, editing, source, space, types: { bar, before: space ?? full } };
 }
 
