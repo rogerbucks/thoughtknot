@@ -89,9 +89,9 @@ export function twoFingers(
 }
 
 /**
- * `orbit` turned by one finger dragging `dx` and `dy` pixels. A finger turns the way it goes: the drawing under it, in
- * the middle and beyond, follows it sideways (Roger, 25 Oct 2026: on iPhone one finger went the wrong way). A mouse
- * drags the camera round, `orbitBy`.
+ * `orbit` turned by one finger dragging `dx` and `dy` pixels. A finger turns the way it goes. The drawing beyond the
+ * middle follows it sideways (Roger, 25 Oct 2026: on iPhone one finger went the wrong way). A mouse drags the camera
+ * round, `orbitBy`.
  */
 export function fingerTurn(orbit: Orbit, dx: number, dy: number): Orbit {
   return orbitBy(orbit, -dx, dy);
