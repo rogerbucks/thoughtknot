@@ -106,14 +106,15 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   };
 }
 
-/**
- * Paints `frame`'s arrowheads, its cards, then its labels, on `ctx`, already at their pixels (space-cards.ts). Arrowheads
- * are in their link's colour, edged with the page colour so they read where links meet. Labels have a halo of the page
- * colour so they read over blocks. The picked thing's ring, or its card's edge, is in `ink`.
- */
 /** How thick the picked thing's links are drawn in 3D, in pixels: a little thicker than the rest. */
 const STRONG = 2.5;
 
+/**
+ * Paints `frame`'s picked links, its arrowheads, its cards, then its labels, on `ctx`, already at their pixels
+ * (space-cards.ts). Arrowheads are in their link's colour, edged with the page colour so they read where links meet.
+ * Labels have a halo of the page colour so they read over blocks. The picked thing's ring, or its card's edge, is in
+ * `ink`.
+ */
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
   frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong'>>,
