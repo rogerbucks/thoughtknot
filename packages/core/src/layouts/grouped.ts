@@ -8,6 +8,8 @@
 import type { GraphShape } from '../types-shape.ts';
 import { layered, viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
+import { layoutOptions } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 
 /** A group: its id, its name, and the keys of its things. */
 export interface Group {
@@ -64,12 +66,15 @@ export function groupedLayered(
   groups: readonly Group[],
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
+  options: Partial<LayoutOptions> = {},
 ): Layered & { boxes: GroupBox[] } {
+  // a group's box holds its things as tightly as `groupPull` asks: half the room at the most, half again at none
+  const pad = PAD * (1.5 - layoutOptions(options).groupPull);
   const known = new Set(shape.things.map((t) => t.key));
   const groupOf = new Map<string, string>();
   for (const g of groups) for (const k of g.members) if (known.has(k) && !groupOf.has(k)) groupOf.set(k, g.id);
   const used = groups.filter((g) => g.members.some((k) => groupOf.get(k) === g.id));
-  if (!used.length) return { ...layered(shape, sizes, rankdir, previous), boxes: [] };
+  if (!used.length) return { ...layered(shape, sizes, rankdir, previous, options), boxes: [] };
   // each group's own rows, and the box they need
   const inside = new Map<string, { inner: Layered; bounds: [number, number, number, number]; size: Size }>();
   for (const g of used) {
@@ -78,12 +83,12 @@ export function groupedLayered(
       things: shape.things.filter((t) => members.has(t.key)),
       links: shape.links.filter((l) => members.has(l.from) && members.has(l.to)),
     };
-    const inner = layered(sub, sizes, rankdir, previous);
+    const inner = layered(sub, sizes, rankdir, previous, options);
     const bounds = boundsOf(inner, sizes);
     const extra = rankdir === 'LR' ? [0, 2 * GUTTER] : [2 * GUTTER, 0];
     const size: Size = [
-      bounds[2] - bounds[0] + 2 * PAD + (extra[0] as number),
-      bounds[3] - bounds[1] + 2 * PAD + LABEL + (extra[1] as number),
+      bounds[2] - bounds[0] + 2 * pad + (extra[0] as number),
+      bounds[3] - bounds[1] + 2 * pad + LABEL + (extra[1] as number),
     ];
     inside.set(g.id, { inner, bounds, size });
   }
@@ -100,7 +105,7 @@ export function groupedLayered(
       .filter((l) => node(l.from) !== node(l.to))
       .map((l) => ({ from: node(l.from), type: l.type, to: node(l.to) })),
   };
-  const top = layered(outer, outerSizes, rankdir);
+  const top = layered(outer, outerSizes, rankdir, undefined, options);
   const out: Layered & { boxes: GroupBox[] } = { spots: new Map(), via: new Map(), boxes: [] };
   for (const t of shape.things) if (!groupOf.has(t.key)) out.spots.set(t.key, top.spots.get(t.key) as [number, number]);
   for (const g of used) {
@@ -109,8 +114,8 @@ export function groupedLayered(
     // the group's things, moved so their bounds sit inside the box, below its name
     const gx = rankdir === 'LR' ? 0 : GUTTER,
       gy = rankdir === 'LR' ? GUTTER : 0;
-    const dx = cx - size[0] / 2 + PAD + gx - (bounds[0] as number),
-      dy = cy - size[1] / 2 + PAD + LABEL + gy - (bounds[1] as number);
+    const dx = cx - size[0] / 2 + pad + gx - (bounds[0] as number),
+      dy = cy - size[1] / 2 + pad + LABEL + gy - (bounds[1] as number);
     const moved = ([x, y]: readonly [number, number]): [number, number] => [x + dx, y + dy];
     for (const [k, p] of inner.spots) out.spots.set(k, moved(p));
     for (const [k, ps] of inner.via) out.via.set(k, ps.map(moved));
@@ -167,6 +172,7 @@ function throughGutters(
   boxes: readonly GroupBox[],
   axis: 0 | 1,
   used: Map<string, number>,
+  pad = PAD,
 ): [number, number][] {
   if (path.length < 3) return path;
   const across = (1 - axis) as 0 | 1;
@@ -208,7 +214,7 @@ function throughGutters(
       used.set(key, k + 1);
       lane.set(key, ((k % 5) - 2) * GUTTER_STEP);
     }
-    const inset = (PAD + GUTTER) / 2 + (top && across === 1 ? LABEL : 0);
+    const inset = (pad + GUTTER) / 2 + (top && across === 1 ? LABEL : 0);
     const at = (top ? mid - half + inset : mid + half - inset) + (lane.get(key) as number);
     return axis === 0 ? [p[0], at] : [at, p[1]];
   });

@@ -11,6 +11,7 @@
 import type { GraphShape } from '../types-shape.ts';
 import { forceLayout } from '../view-types/force-view.ts';
 import { forceLayout3d } from './force-3d.ts';
+import type { LayoutOptions } from './layout-options.ts';
 
 /** A spot in two dimensions, across and down, or in three, with up as the third. */
 export type Spot<D extends 2 | 3> = D extends 2 ? [number, number] : [number, number, number];
@@ -24,8 +25,11 @@ export interface Layout<D extends 2 | 3 = 2 | 3> {
   readonly id: string;
   /** How many dimensions its spots have. */
   readonly dims: D;
-  /** Each thing of `shape` placed, starting from `previous` where a thing has a spot already. */
-  place(shape: GraphShape, previous?: Spots<D>): Map<string, Spot<D>>;
+  /**
+   * Each thing of `shape` placed, starting from `previous` where a thing has a spot already. `options` space it, each a
+   * share of the layout's own default (layout-options.ts); a layout keeps to them as far as it has them.
+   */
+  place(shape: GraphShape, previous?: Spots<D>, options?: Partial<LayoutOptions>): Map<string, Spot<D>>;
 }
 
 /** Links pull, near things push apart, on a page (view-types/force-view.ts). */
