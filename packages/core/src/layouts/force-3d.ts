@@ -3,7 +3,8 @@
 //
 // As on a page (view-types/force-view.ts), links pull the things they join together and every pair of near things
 // pushes apart. With depth to spread into, links that would cross on a page pass in front or behind. And a busy graph
-// keeps more room round each thing.
+// keeps more room round each thing. Each group the page draws pulls its things to its middle and pushes other groups
+// away. So the groups found or written in 2D gather in space too (space_groups).
 //
 // The same shape gives the same spots. Given last time's spots, it starts from them and takes fewer, smaller steps, so
 // a small edit moves little (warm start). Things push apart only within nearby cubes of a grid. So each step costs
@@ -18,6 +19,10 @@ const WORK_MOST = 600_000;
 const REACH = 2;
 /** How strongly every thing is pulled to the middle, so parts that do not link stay near. */
 const PULL = 0.02;
+/** How strongly a thing in a group is pulled to its group's middle, so each group gathers as it does on the page. */
+const GROUP_PULL = 0.6;
+/** How strongly two groups push apart, each thing in one by the other's count of things, fading with distance. */
+const GROUP_PUSH = 0.5;
 /** How far a thing moves for each unit of force, until the heat caps it: weak forces still settle in time. */
 const GAIN = 2;
 /** The angle between one thing and the next on the starting spiral: the golden angle. */
@@ -42,6 +47,10 @@ export function forceLayout3d(shape: GraphShape, previous?: Spots3): Map<string,
       b = index.get(l.to);
     if (a !== undefined && b !== undefined && a !== b) links.push([a, b]);
   }
+  // the things of each group drawn, by their places; a thing in two groups is pulled toward both
+  const groups = (shape.groups ?? [])
+    .map(([, ks]) => ks.flatMap((k) => (index.has(k) ? [index.get(k) ?? 0] : [])))
+    .filter((g) => g.length > 1);
   // start from last time's spots, else on a spiral over a ball that grows with the count
   const p = [new Float64Array(n), new Float64Array(n), new Float64Array(n)] as const;
   const at = (k: 0 | 1 | 2, i: number) => p[k][i] ?? 0;
@@ -128,6 +137,21 @@ export function forceLayout3d(shape: GraphShape, previous?: Spots3): Map<string,
       push(1, b, ey * f);
       push(2, b, ez * f);
     }
+    const mids = groups.map((g) => ([0, 1, 2] as const).map((k) => g.reduce((t, i) => t + at(k, i), 0) / g.length));
+    groups.forEach((g, a) => {
+      const mid = mids[a] ?? [0, 0, 0];
+      for (const i of g) for (const k of [0, 1, 2] as const) push(k, i, ((mid[k] ?? 0) - at(k, i)) * GROUP_PULL);
+      // every other group pushes this one away as a whole, so groups sit apart rather than through each other
+      groups.forEach((h, b) => {
+        if (b === a) return;
+        const other = mids[b] ?? [0, 0, 0];
+        let e = mid.map((v, k) => v - (other[k] ?? 0));
+        let d2 = e.reduce((t, v) => t + v * v, 0);
+        if (d2 < 1e-18) [e, d2] = [[a - b + 0.5, ((a + b) % 3) - 1, 0.25], 1];
+        const f = (GROUP_PUSH * h.length) / (d2 + 1);
+        for (const i of g) for (const k of [0, 1, 2] as const) push(k, i, (e[k] ?? 0) * f);
+      });
+    });
     for (let i = 0; i < n; i++) {
       const mx = (d[0][i] ?? 0) - at(0, i) * PULL,
         my = (d[1][i] ?? 0) - at(1, i) * PULL,
