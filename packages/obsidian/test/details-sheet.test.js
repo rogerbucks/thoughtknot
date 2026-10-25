@@ -464,7 +464,7 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
     const max = css(SHEET, 'max-height');
     assert.match(max, /^var\(--thoughtknot-sheet-max, 45vh\)/, max);
     const limit = parseFloat(details(el).cssProps['--thoughtknot-sheet-max']);
-    assert.ok(limit > 0 && limit <= 800 * 0.45, `${limit}`);
+    assert.ok(limit > 0 && limit <= 800 / 3, `${limit}`);
   });
 });
 
