@@ -417,4 +417,28 @@ describe('formatting and drawing defaults', () => {
       env.uninstall();
     }
   });
+
+  // proves: view_presets_saved
+  test('a view preset picked on the page sets every Drawing setting it turns, and Calm keeps everything still', async () => {
+    const env = await load();
+    try {
+      choose(row(page(env), 'View preset'), 'calm');
+      await until(() => env.state.data?.settings?.viewPreset === 'calm');
+      const saved = env.state.data.settings;
+      assert.equal(saved.viewPreset, 'calm');
+      assert.equal(saved.direction, 'LR');
+      assert.equal(saved.labelsByZoom, 'off');
+      assert.equal(saved.mergeLinks, 'on');
+      assert.ok(globalThis.document.body.classList.contains('thoughtknot-still'), 'nothing glides or plays');
+      choose(row(page(env), 'Parallel links merged'), 'off');
+      await until(() => env.state.data.settings.mergeLinks === 'off');
+      assert.equal(env.state.data.settings.mergeLinks, 'off', 'each still a setting of its own');
+      choose(row(page(env), 'View preset'), 'big-picture');
+      await until(() => env.state.data.settings.viewPreset === 'big-picture');
+      assert.equal(env.state.data.settings.foldGroups, 'on');
+      assert.equal(globalThis.document.body.classList.contains('thoughtknot-still'), false);
+    } finally {
+      env.uninstall();
+    }
+  });
 });

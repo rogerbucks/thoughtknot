@@ -130,8 +130,13 @@ export function renderTrail(
     );
 }
 
-/** Whether the system asks for reduced motion. */
-export const reducedMotion = (win: Window): boolean => !!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+/** The class the host puts on the page's body while the view preset keeps everything still (§69). */
+export const STILL_CLASS = 'thoughtknot-still';
+
+/** Whether the system asks for reduced motion, or the view preset keeps everything still. */
+export const reducedMotion = (win: Window): boolean =>
+  !!win.document?.body?.classList?.contains(STILL_CLASS) ||
+  !!win.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 
 /** The move of a card's view to a chosen thing: one at a time, the next taking over from one under way. */
 export class Glide {

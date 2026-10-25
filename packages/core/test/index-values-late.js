@@ -138,6 +138,7 @@ export const VALUES_LATE = [
   'STARTERS',
   'PRESET_SETTINGS',
   'starterOf',
+  'holdsStill',
   'presetChange',
   'floored',
   'deviceWins',
