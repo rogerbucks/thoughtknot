@@ -4296,6 +4296,42 @@
       },
       "status": "open",
       "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "SEC-20",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "The code scan read only the code, not the Python library or the workflows",
+      "risk": "A pattern in the Python library wrote its astral letters in a plain string. The code scan read that as a range overlapping another, a medium finding. CI scanned only the JavaScript, so it merged unseen.",
+      "evidence": [
+        "python/graph_spec/src/graph_bidi.py",
+        ".github/workflows/ci.yml"
+      ],
+      "alerts": [
+        "code-scanning/67"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Write the pattern as a raw string, so re reads each escape. CI scans the code, the Python library and the workflows.",
+      "check": "python/graph_spec/tests/test_graph_bidi.py holds each block to its first and last letter. test/code-scan.test.js holds CI to each language GitHub scans.",
+      "paths": [
+        "python/graph_spec/src/graph_bidi.py",
+        ".github/workflows/ci.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-25",
+      "reviewed": {
+        "date": "2026-10-25",
+        "commit": "99c5bdaf5ca099e1808008a81f63b14d65be66cf"
+      },
+      "status": "done",
+      "done_in": "#TBD",
+      "prevented_by": [
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs",
+        "python/graph_spec/tests/test_graph_bidi.py"
+      ]
     }
   ]
 }
