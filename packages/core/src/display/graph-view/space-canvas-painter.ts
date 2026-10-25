@@ -3,6 +3,8 @@
 // are painted, and how big, space-labels.ts picks.
 import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
 import type { ScreenCard, SpaceFrame } from '../../space-cards.ts';
+import { FACE_ROW } from '../../space-faces.ts';
+import type { FaceText } from '../../space-faces.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
@@ -133,7 +135,7 @@ const STRONG = 2.5;
  */
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
-  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong'>>,
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong' | 'faces'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -170,6 +172,8 @@ export function paintSpaceLabels(
   }
   // cards after the arrowheads, which sit at their edges: a card in front hides the arrowheads behind it
   paintCards(ctx, frame.cards, paints, halo, ink);
+  paintFaces(ctx, frame.faces ?? [], paints, ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   // the picked thing's ring: its ink edged both sides in the page colour, so it shows in either theme
   if (ring) {
     ctx.beginPath();
@@ -196,6 +200,32 @@ export function paintSpaceLabels(
     ctx.strokeText(l.text, l.x, l.y);
     ctx.fillStyle = text;
     ctx.fillText(l.text, l.x, l.y);
+  }
+}
+
+/**
+ * Paints each name on its face (space_text_on_face): laid along the face, edged in the thing's own colour, as in 2D.
+ * Each row is held to the face's width, so it never runs past its edge.
+ */
+function paintFaces(ctx: CanvasRenderingContext2D, faces: readonly FaceText[], paints: Paints, ratio: number) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const f of faces) {
+    const text = paints(f.style).text,
+      ground = paints(f.ground);
+    if (!text) continue;
+    const [ax, ay] = f.across,
+      [dx, dy] = f.down;
+    ctx.setTransform(ratio * ax, ratio * ay, ratio * dx, ratio * dy, ratio * f.x, ratio * f.y);
+    ctx.font = `${f.picked ? 'bold ' : ''}${f.size}px sans-serif`;
+    ctx.lineWidth = f.size / 5;
+    ctx.strokeStyle = ground.fill ?? ground.line ?? 'transparent';
+    f.rows.forEach((row, i) => {
+      const y = (i - (f.rows.length - 1) / 2) * f.size * FACE_ROW;
+      ctx.strokeText(row, 0, y, f.room);
+      ctx.fillStyle = text;
+      ctx.fillText(row, 0, y, f.room);
+    });
   }
 }
 
