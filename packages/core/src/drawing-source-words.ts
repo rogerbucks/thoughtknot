@@ -131,4 +131,13 @@ export const DRAWING_SOURCE_WORDS = {
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
   'view.group-by.kind': 'Kind',
+  // how the View menu spaces the layout (layout-options.ts)
+  'view.layout.spacing': 'Spacing',
+  'view.layout.link-length': 'Link length',
+  'view.layout.group-pull': 'Group pull',
+  // the line under each View menu switch saying what it does (view-switches.ts)
+  'view.hint.labels': 'A link’s label shows once you zoom in far enough to read it.',
+  'view.hint.hubs': 'A thing with many links shows them as one stub you can open.',
+  'view.hint.groups': 'Each group shows as one box until you open it.',
+  'view.hint.merge': 'Links between the same two groups share one line.',
 } as const;

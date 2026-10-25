@@ -99,7 +99,7 @@ async function card(note = NOTE, options = {}) {
 }
 
 describe('the View menu', () => {
-  test('a View button in the bar opens the five switches, each on or off as the settings hold them', async () => {
+  test('a View button in the bar opens the four switches, each on or off as the settings hold them', async () => {
     const { env, el } = await card();
     try {
       const menu = el.querySelector('.thoughtknot-view-menu');
@@ -108,11 +108,10 @@ describe('the View menu', () => {
       assert.ok(!menu.hidden);
       assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'true');
       assert.deepEqual(switches(el), [
-        ['Labels by zoom', 'switch', 'true'],
-        ['Busy hubs folded', 'switch', 'false'],
-        ['Groups folded', 'switch', 'false'],
-        ['Parallel links merged', 'switch', 'false'],
-        ['ThoughtKnot layout engine', 'switch', 'true'],
+        ['Hide labels too small to read', 'switch', 'true'],
+        ['Fold busy things', 'switch', 'false'],
+        ['Fold groups', 'switch', 'false'],
+        ['Bundle links between groups', 'switch', 'false'],
       ]);
     } finally {
       env.uninstall();
@@ -123,8 +122,8 @@ describe('the View menu', () => {
     const { env, el } = await card();
     try {
       labelled(el, 'View').click();
-      const b = turn(el, 'Labels by zoom');
-      assert.equal(b.querySelector('.thoughtknot-switch-name')?.textContent, 'Labels by zoom');
+      const b = turn(el, 'Hide labels too small to read');
+      assert.equal(b.querySelector('.thoughtknot-switch-name')?.textContent, 'Hide labels too small to read');
       assert.equal(
         b.querySelector('.thoughtknot-switch-track')?.getAttribute('aria-hidden'),
         'true',
@@ -138,13 +137,35 @@ describe('the View menu', () => {
     }
   });
 
+  // proves: view_switch_hints
+  test('each switch says under its plain name what it does, and which engine lays out is left to the settings', async () => {
+    const { env, el } = await card();
+    try {
+      labelled(el, 'View').click();
+      const said = el.querySelectorAll('.thoughtknot-view-menu button').map((b) => {
+        const hint = b.querySelector('.thoughtknot-switch-hint');
+        assert.equal(b.getAttribute('aria-describedby'), hint.getAttribute('id'), 'a screen reader hears it too');
+        return [b.querySelector('.thoughtknot-switch-name').textContent, hint.textContent];
+      });
+      assert.deepEqual(said, [
+        ['Hide labels too small to read', 'A link’s label shows once you zoom in far enough to read it.'],
+        ['Fold busy things', 'A thing with many links shows them as one stub you can open.'],
+        ['Fold groups', 'Each group shows as one box until you open it.'],
+        ['Bundle links between groups', 'Links between the same two groups share one line.'],
+      ]);
+      assert.ok(!turn(el, 'Lay out with ThoughtKnot'), 'no engine switch in the menu');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the edit pane’s drawing has it too, its busy hub folded as the settings start it', async () => {
     const env = await open({ note: NOTE, line: 2, ...FOLDED });
     try {
       await until(() => !!env.el.querySelector('.thoughtknot-viewport svg'));
       assert.ok(labelled(env.el, 'View'));
       assert.ok(node(env.el, 'fold_hub_1'), 'the stub');
-      turn(env.el, 'Busy hubs folded').click();
+      turn(env.el, 'Fold busy things').click();
       await until(() => !node(env.el, 'fold_hub_1'));
     } finally {
       env.uninstall();
@@ -159,11 +180,10 @@ describe('the View menu', () => {
       assert.deepEqual(
         switches(el).map(([name, , on]) => [name, on]),
         [
-          ['Labels by zoom', 'false'],
-          ['Busy hubs folded', 'false'],
-          ['Groups folded', 'true'],
-          ['Parallel links merged', 'false'],
-          ['ThoughtKnot layout engine', 'true'],
+          ['Hide labels too small to read', 'false'],
+          ['Fold busy things', 'false'],
+          ['Fold groups', 'true'],
+          ['Bundle links between groups', 'false'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');
@@ -257,7 +277,7 @@ describe('busy hubs folded', () => {
       offers(el, 'Fold its 14 links').click();
       await until(() => !!node(el, 'fold_hub_1'));
       assert.ok(!thing(el, 't2'));
-      assert.equal(turn(el, 'Busy hubs folded').getAttribute('aria-checked'), 'false', 'the switch stays off');
+      assert.equal(turn(el, 'Fold busy things').getAttribute('aria-checked'), 'false', 'the switch stays off');
       tap(el, thing(el, 'box'));
       offers(el, 'Open its 14 links').click();
       await until(() => !!thing(el, 't2'));
@@ -269,11 +289,11 @@ describe('busy hubs folded', () => {
   test('switched off, every link is drawn; on again, the hub is folded', async () => {
     const { env, el } = await card(NOTE, FOLDED);
     try {
-      turn(el, 'Busy hubs folded').click();
+      turn(el, 'Fold busy things').click();
       await until(() => !node(el, 'fold_hub_1'));
-      assert.equal(turn(el, 'Busy hubs folded').getAttribute('aria-checked'), 'false');
+      assert.equal(turn(el, 'Fold busy things').getAttribute('aria-checked'), 'false');
       assert.ok(thing(el, 't13') && edge(el, 'edge13'));
-      turn(el, 'Busy hubs folded').click();
+      turn(el, 'Fold busy things').click();
       await until(() => !!node(el, 'fold_hub_1'));
     } finally {
       env.uninstall();
@@ -285,7 +305,7 @@ describe('groups folded and links merged', () => {
   test('a group folds into one box showing its count, its links drawn to it; tapping the box opens it', async () => {
     const { env, el } = await card();
     try {
-      turn(el, 'Groups folded').click();
+      turn(el, 'Fold groups').click();
       await until(() => !!node(el, 'fold_group_1'));
       assert.match(node(el, 'fold_group_1').textContent, /Makers.*2 things/);
       assert.equal(node(el, 'fold_group_1').getAttribute('aria-label'), 'Makers: 2 things folded. Open the group.');
@@ -302,7 +322,7 @@ describe('groups folded and links merged', () => {
   test('Enter on a folded box opens it; a thing found inside a folded group opens it, and is selected', async () => {
     const { env, el } = await card();
     try {
-      turn(el, 'Groups folded').click();
+      turn(el, 'Fold groups').click();
       await until(() => !!node(el, 'fold_group_2'));
       const vp = el.querySelector('.thoughtknot-viewport');
       vp.dispatch('keydown', { key: 'Enter', target: node(el, 'fold_group_1') });
@@ -324,7 +344,7 @@ describe('groups folded and links merged', () => {
     const { env, el } = await card();
     try {
       tap(el, thing(el, 'ann'));
-      turn(el, 'Groups folded').click();
+      turn(el, 'Fold groups').click();
       await until(() => !!node(el, 'fold_group_1'));
       assert.ok(!thing(el, 'ann'));
       assert.ok(node(el, 'fold_group_1').hasClass('is-selected'));
@@ -352,7 +372,7 @@ describe('groups folded and links merged', () => {
     // proves: untangle_open_bundle
     const { env, el } = await card();
     try {
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
       assert.equal(
         edge(el, 'trunk_1').getAttribute('aria-label'),
@@ -362,9 +382,9 @@ describe('groups folded and links merged', () => {
       tap(el, edge(el, 'trunk_1'));
       await until(() => !edge(el, 'trunk_1'));
       assert.ok(edge(el, 'edge14') && !edge(el, 'edge14_tail'), 'Ann asks Cy, drawn on its own again');
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !edge(el, 'edge14_tail'));
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
     } finally {
       env.uninstall();
@@ -375,12 +395,12 @@ describe('groups folded and links merged', () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       const before = (await show(env, NOTE)).el;
-      assert.equal(turn(before, 'Parallel links merged').getAttribute('aria-checked'), 'false');
+      assert.equal(turn(before, 'Bundle links between groups').getAttribute('aria-checked'), 'false');
       const merged = NOTE.replace("group: 'Helpers'})\n```", "group: 'Helpers'}),\n(r1:Links {merge: 'on'})\n```");
       assert.notEqual(merged, NOTE);
       env.state.files.set(PATH, merged);
       const after = (await show(env, merged)).el;
-      assert.equal(turn(after, 'Parallel links merged').getAttribute('aria-checked'), 'true');
+      assert.equal(turn(after, 'Bundle links between groups').getAttribute('aria-checked'), 'true');
       assert.ok(edge(after, 'trunk_1'), 'drawn merged, as the style graph now says');
     } finally {
       env.uninstall();
@@ -390,7 +410,7 @@ describe('groups folded and links merged', () => {
   test('links between the same two groups share one trunk, each still tapped and read as itself', async () => {
     const { env, el } = await card();
     try {
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
       const tail = edge(el, 'edge14_tail');
       assert.equal(tail.getAttribute('data-link'), '13');
@@ -414,9 +434,9 @@ describe('labels by zoom', () => {
       assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'zoomed in, the labels read');
       labelled(el, 'Fit').click();
       assert.ok(svg.hasClass('thoughtknot-labels-hidden'));
-      turn(el, 'Labels by zoom').click();
+      turn(el, 'Hide labels too small to read').click();
       assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'at once, with no new layout');
-      assert.equal(turn(el, 'Labels by zoom').getAttribute('aria-checked'), 'false');
+      assert.equal(turn(el, 'Hide labels too small to read').getAttribute('aria-checked'), 'false');
     } finally {
       env.uninstall();
     }
@@ -454,7 +474,7 @@ describe('labels by zoom', () => {
       check();
       assert.notEqual(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: highlighted');
       edge(el, 'edge15').classList.remove('thoughtknot-hot');
-      turn(el, 'Labels by zoom').click();
+      turn(el, 'Hide labels too small to read').click();
       assert.notEqual(painted(edge(el, 'edge15')), '0', 'switched off, every label is painted');
     } finally {
       env.uninstall();
@@ -480,7 +500,7 @@ describe('a switch turned', () => {
       const first = el.querySelector('#node1');
       first.focus();
       assert.equal(env.doc.activeElement, first);
-      turn(el, 'Parallel links merged').click();
+      turn(el, 'Bundle links between groups').click();
       await until(() => !!edge(el, 'trunk_1'));
       assert.equal(thing(el, 'ann').getAttribute('aria-pressed'), 'true', 'still selected');
       assert.ok(thing(el, 'ann').hasClass('is-selected'));
@@ -503,16 +523,16 @@ describe('a switch turned', () => {
     const env = await load({ files: { [PATH]: NOTE }, ...FOLDED });
     try {
       const live = await showIn(env, 'live', { note: NOTE });
-      turn(live, 'Groups folded').click();
+      turn(live, 'Fold groups').click();
       await until(() => !!node(live, 'fold_group_1'));
-      turn(live, 'Busy hubs folded').click();
+      turn(live, 'Fold busy things').click();
       await until(() => !node(live, 'fold_hub_1'));
       // the graph's View menu is the same in reading view: drawn as it was left, and turned there too
       const reading = await showIn(env, 'reading', { note: NOTE });
       assert.ok(node(reading, 'fold_group_1') && !node(reading, 'fold_hub_1'));
-      turn(reading, 'Groups folded').click();
+      turn(reading, 'Fold groups').click();
       await until(() => !node(reading, 'fold_group_1'));
-      turn(reading, 'Busy hubs folded').click();
+      turn(reading, 'Fold busy things').click();
       await until(() => !!node(reading, 'fold_hub_1'));
       assert.equal(env.state.files.get(PATH), NOTE);
       assert.deepEqual(env.state.writes ?? [], []);
@@ -527,9 +547,9 @@ describe('a switch turned', () => {
     let saved;
     try {
       const { el } = await show(env, note, 2);
-      turn(el, 'Groups folded').click();
+      turn(el, 'Fold groups').click();
       await until(() => !!node(el, 'fold_group_1'));
-      turn(el, 'Labels by zoom').click();
+      turn(el, 'Hide labels too small to read').click();
       assert.equal(env.state.files.get(PATH), note, 'not saved by turning');
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
@@ -542,8 +562,8 @@ describe('a switch turned', () => {
     const again = await load({ files: { [PATH]: saved } });
     try {
       const { el } = await show(again, saved, 2);
-      assert.equal(turn(el, 'Groups folded').getAttribute('aria-checked'), 'true');
-      assert.equal(turn(el, 'Labels by zoom').getAttribute('aria-checked'), 'false');
+      assert.equal(turn(el, 'Fold groups').getAttribute('aria-checked'), 'true');
+      assert.equal(turn(el, 'Hide labels too small to read').getAttribute('aria-checked'), 'false');
       assert.ok(node(el, 'fold_group_1'), 'drawn folded, as saved');
     } finally {
       again.uninstall();

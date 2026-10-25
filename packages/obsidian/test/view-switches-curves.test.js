@@ -80,7 +80,7 @@ describe('a card drawn with straight links first', () => {
       await until(() => asked.length === 2);
       labelled(el, 'View').click();
       el.querySelectorAll('.thoughtknot-view-menu button')
-        .find((b) => b.textContent.startsWith('Parallel links merged'))
+        .find((b) => b.textContent.startsWith('Bundle links between groups'))
         .click();
       await until(() => asked.length === 4);
       assert.deepEqual(asked, [true, false, true, false]);

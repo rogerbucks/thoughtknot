@@ -512,10 +512,10 @@ describe('labels by zoom, folded hubs and groups, merged links and routing', () 
       tap(el, byId(el, 'fold_hub_1'));
       await until(() => !!thing(el, 'p3'));
       // untangle_groups and untangle_merge, from the View menu
-      switched(el, 'Parallel links merged').click();
+      switched(el, 'Bundle links between groups').click();
       await until(() => !!byId(el, 'trunk_1'));
       assert.equal(byId(el, 'edge14_tail').getAttribute('data-link'), '13');
-      switched(el, 'Groups folded').click();
+      switched(el, 'Fold groups').click();
       await until(() => !!byId(el, 'fold_group_1'));
       assert.match(byId(el, 'fold_group_1').textContent, /Askers.*2 things/);
       // untangle_data_untouched

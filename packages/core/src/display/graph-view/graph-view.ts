@@ -62,14 +62,14 @@ export class GraphView extends Lifecycle {
   /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
   private switching: ViewSwitching | null = null;
   private unloaded = false;
-  /** Where the legend of moving links is (§7). */
-  private legendSlot!: HTMLElement;
+  private legendSlot!: HTMLElement; // where the legend of moving links is (§7)
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
     () => this.o.diagram?.choice,
+    () => this.o.switches?.state.layout,
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {

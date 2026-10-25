@@ -10,6 +10,7 @@ import {
   settingsFrom,
   shownAsRead,
   standardBlocks,
+  startingLayout,
   startingSwitches,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
@@ -194,9 +195,10 @@ export default class ThoughtKnotPlugin extends Plugin {
    */
   switchesFor(path: string, graph: string, style: StyleGraph, view?: string): ViewState {
     // where it starts is part of the key: a Links merging or a view saved as shown, written since, starts it afresh
-    const start = startingSwitches(this.settings, style, view);
-    const key = [path, graph, view ?? '', JSON.stringify(start)].join('\u0000');
-    const state = this.viewStates.get(key) ?? new ViewState(start);
+    const start = startingSwitches(this.settings, style, view),
+      layout = startingLayout(style, view);
+    const key = [path, graph, view ?? '', JSON.stringify([start, layout])].join('\u0000');
+    const state = this.viewStates.get(key) ?? new ViewState(start, layout);
     this.viewStates.set(key, state);
     return state;
   }
