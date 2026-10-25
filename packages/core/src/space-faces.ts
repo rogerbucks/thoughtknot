@@ -166,8 +166,8 @@ function outlinesOf(space: SpaceMarks, matrix: Float32Array, width: number, heig
     );
     const at = (p: Vec3) => projectPoint(matrix, p, width, height);
     const seen = corners.flatMap((p) => at(p) ?? []);
-    // a box beside or round the camera still hides what is behind it: each edge that runs behind the eye is cut
-    // where it leaves the view, so the box's outline is whole (Claude review, #1398)
+    // a box beside or round the camera still hides what is behind it. Each edge running behind the eye is cut where
+    // it leaves the view, so the box's outline stays whole (Claude review, #1398)
     if (seen.length < corners.length)
       corners.forEach((p, i) =>
         corners.forEach((q, j) => {
