@@ -67,7 +67,11 @@ export class GraphView extends Lifecycle {
   private legendSlot!: HTMLElement;
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
-  private readonly spaces = new SpaceSwitch(() => this.svg); // shown flat or in space, by one button of the bar (§53)
+  // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
+  private readonly spaces = new SpaceSwitch(
+    () => this.svg,
+    () => this.o.diagram?.choice,
+  );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();

@@ -3,7 +3,7 @@
 // arrowheads on the ball they point to, and words at the middle of each link.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { radiusOf, spreadSpace } from '../src/space-spread.ts';
+import { asDrawnFor, radiusOf, spreadSpace } from '../src/space-spread.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../src/space-labels.ts';
 import { blockAt } from '../src/space-pick.ts';
 import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
@@ -150,6 +150,35 @@ test('an arrowhead whose tip a nearer ball hides is left out, as it would seem t
   const after = arrowsOnScreen({ ...space, blocks: [...space.blocks, ball] }, m, 800, 800);
   assert.ok(!after.some((a) => a.id === hidden.id), 'the hidden arrowhead is left out');
   assert.equal(after.length, before.length - 1, 'the others still show, each at the front of the ball it points at');
+});
+
+/** MARKS as a diagram type drew them: each box where `at` puts its top-left corner. */
+const drawnAs = (at) => MARKS.map((m) => (m.kind === 'box' ? { ...m, x: at[m.of][0], y: at[m.of][1] } : m));
+// the hub on top and its spokes in a row under it, as a flow draws them; then the spokes round it, as radial does
+const FLOW = { hub: [160, 0], a: [0, 120], b: [100, 120], c: [220, 120], d: [320, 120] };
+const RADIAL = { hub: [160, 160], a: [160, 0], b: [320, 160], c: [160, 320], d: [0, 160] };
+const across = (space) => new Map(space.blocks.map((b) => [b.of, [b.x + b.width / 2, b.y + b.depth / 2]]));
+
+// proves: space_follows_type
+test('kept as drawn, each thing stays where its diagram type put it, across and down, as a ball or a card', () => {
+  for (const cards of [false, true])
+    for (const at of [FLOW, RADIAL]) {
+      const placed = across(spreadSpace(drawnAs(at), undefined, cards, true).space);
+      for (const [key, [x, y]] of Object.entries(at)) assert.deepEqual(placed.get(key), [x + 40, y + 15], key);
+    }
+  // laid out afresh, the type made no difference: the bug Roger saw (25 Oct 2026)
+  const fresh = (at) => [...across(spreadSpace(drawnAs(at)).space)];
+  assert.deepEqual(fresh(FLOW), fresh(RADIAL));
+  const kept = (at) => [...across(spreadSpace(drawnAs(at), undefined, false, true).space)];
+  assert.notDeepEqual(kept(FLOW), kept(RADIAL));
+});
+
+// proves: space_follows_type
+test('only a network is laid out afresh in space; every other type keeps its places', () => {
+  assert.equal(asDrawnFor(undefined), false);
+  assert.equal(asDrawnFor({ drawn: 'network' }), false);
+  for (const drawn of ['flow', 'tree', 'radial', 'lanes', 'timeline']) assert.equal(asDrawnFor({ drawn }), true, drawn);
+  assert.equal(asDrawnFor({ drawn: 'network', plugin: { type: 'core.matrix' } }), true, 'a view type drawn as marks');
 });
 
 // two teams of ten, each a ring, with as many links across the teams as within: only their groups keep them apart

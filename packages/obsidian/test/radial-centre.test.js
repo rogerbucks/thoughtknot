@@ -160,6 +160,22 @@ describe('where the note is edited', () => {
     }
   });
 
+  // proves: radial_centre_anywhere
+  test('with the list of types already open, selecting a thing makes Radial around it choosable at once', async () => {
+    // Roger, 25 Oct 2026: "radial isn't available even though I have selected a node"
+    const apart = noteOf(`${SKY},\n(pluto:Planet {name: 'Pluto'})`);
+    const { env } = await loaded(apart);
+    try {
+      const { el } = await show(env, apart, 0);
+      labelled(el, 'Diagram type').click();
+      assert.equal(saying(el, 'Radial').disabled, true, 'nothing selected: radial does not fit');
+      select(el, 'mars');
+      await until(() => saying(el, 'Radial, around Mars')?.disabled === false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: radial_centre_menu
   test('a right-click on a thing opens a menu with Centre here; Escape closes it', async () => {
     const { env } = await loaded(NETWORK);
