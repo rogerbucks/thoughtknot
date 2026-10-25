@@ -236,3 +236,11 @@ test('in 3D the things of each group gather, apart from the other groups, and ea
   }
   assert.deepEqual(spreadSpace(teamMarks(true)).space, space, 'the same each time');
 });
+
+// proves: untangle_merge
+test('a trunk’s joint, drawn as a point, stays a small point in 3D, not a ball sized by its links', () => {
+  const joint = { id: 'trunk_1_in', kind: 'box', style: 'svg.3', of: 'trunk: 1 in', x: 0, y: 0, width: 6, height: 6 };
+  const marks = [...MARKS, joint, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk: 1 in', ''))];
+  const ball = spreadSpace(marks).space.blocks.find((b) => b.of === 'trunk: 1 in');
+  assert.ok(ball.width <= 6, `${ball.width}`);
+});

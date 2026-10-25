@@ -23,6 +23,7 @@ const nameOf = (s: ViewSwitch): string => {
 };
 import type { Drawn, GraphDrawing, Kept, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
+import { trunkCount } from '../../untangle-fold.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -184,6 +185,15 @@ export class ViewSwitching {
     void this.redraw();
   }
 
+  /**
+   * Whether links are to be merged, but no two groups have two links or more between them, so nothing is (Roger, 25 Oct
+   * 2026: "parallel links merged doesn't seem to work").
+   */
+  private nothingMerged(): boolean {
+    const d = this.host.drawing();
+    return this.o.state.switches.merge && !!d && trunkCount(edgesOf(d), this.o.state.plan?.groups ?? []) === 0;
+  }
+
   /** Lays the graph out again as the switches now fold it, and has the card put it in place; or says why not. */
   private async redraw(then?: () => void): Promise<void> {
     this.menu.say(word('redraw.drawing'));
@@ -200,7 +210,7 @@ export class ViewSwitching {
       return;
     }
     this.drawnAs = this.now();
-    this.menu.say('');
+    this.menu.say(this.nothingMerged() ? word('view.merge-nothing') : '');
     this.host.relaid(next);
     this.curveLater(next);
     then?.();

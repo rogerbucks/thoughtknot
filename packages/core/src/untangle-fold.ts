@@ -199,3 +199,22 @@ export function foldsHiding(
         .filter((hub) => edges.some((e) => (e.from === hub && e.to === key) || (e.to === hub && e.from === key)));
   return group === undefined ? { hubs } : { hubs, group };
 }
+
+/**
+ * How many trunks merging draws, as fold-source.ts finds them. A trunk joins two groups of `groups` with two links or
+ * more of `edges` from the one to the other. With none, merging changes nothing, and the View menu says why.
+ */
+export function trunkCount(
+  edges: readonly FocusEdge[],
+  groups: readonly (readonly [string, readonly string[], ...unknown[]])[],
+): number {
+  const groupOf = new Map<string, number>();
+  groups.forEach(([, things], i) => things.forEach((k) => groupOf.set(k, i)));
+  const pairs = new Map<string, number>();
+  for (const e of edges) {
+    const a = groupOf.get(e.from),
+      b = groupOf.get(e.to);
+    if (a !== undefined && b !== undefined && a !== b) pairs.set(`${a}>${b}`, (pairs.get(`${a}>${b}`) ?? 0) + 1);
+  }
+  return [...pairs.values()].filter((n) => n > 1).length;
+}

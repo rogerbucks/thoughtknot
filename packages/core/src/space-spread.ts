@@ -39,6 +39,9 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
+/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). */
+const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
+
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
 
@@ -135,7 +138,7 @@ export function spreadSpace(
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
     const c: Vec3 = page ? [page[0], page[1], z * unit] : [x * unit, y * unit, z * unit],
-      r = cards ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
+      r = cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
     centre.set(m.of, c);
     radius.set(m.of, r);
     const block: Block = {

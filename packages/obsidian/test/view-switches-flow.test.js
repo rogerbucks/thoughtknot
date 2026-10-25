@@ -129,3 +129,28 @@ describe('the legend of moving links', () => {
     }
   });
 });
+
+describe('parallel links merged, with nothing to merge', () => {
+  // Roger, 25 Oct 2026: "parallel links merged doesn't seem to work". It only merges links between two groups.
+  // proves: untangle_merge
+  test('says why nothing changed: no two groups have more than one link between them', async () => {
+    const menu = (el) => el.querySelector('.thoughtknot-view-menu .thoughtknot-quiet').textContent;
+    const { env, el } = await card(noteOf(TOWN));
+    try {
+      turn(el, 'Parallel links merged').click();
+      await until(() => /nothing to merge/.test(menu(el)));
+      turn(el, 'Parallel links merged').click();
+      await until(() => menu(el) === '');
+    } finally {
+      env.uninstall();
+    }
+    const grouped = await card(noteOf(TOWN, GROUPS()));
+    try {
+      turn(grouped.el, 'Parallel links merged').click();
+      await until(() => !!edge(grouped.el, 'trunk_1'));
+      assert.equal(menu(grouped.el), '', 'a trunk drawn: nothing more to say');
+    } finally {
+      grouped.env.uninstall();
+    }
+  });
+});
