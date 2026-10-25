@@ -536,10 +536,12 @@
     ]
   },
   "W32": {
-    "title": "iOS app",
+    "title": "iPhone, iPad and Android apps",
     "size": "L",
     "requirements": [
-      "ios_app"
+      "ios_app",
+      "android_app",
+      "mobile_checked"
     ]
   },
   "W33": {
