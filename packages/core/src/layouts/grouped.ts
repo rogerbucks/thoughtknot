@@ -37,7 +37,8 @@ const ROOM = 60;
 
 /**
  * Each thing of `shape` placed in rows, the things of each of `groups` kept together in a box. A thing in two groups
- * stays in the first. Gives the spots, the links' bends and the groups' boxes.
+ * stays in the first. Gives the spots, the links' bends and the groups' boxes. With no groups, `tries` is how many
+ * times more the rows are ordered afresh (`layered`).
  */
 export function groupedLayered(
   shape: GraphShape,
@@ -46,6 +47,7 @@ export function groupedLayered(
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
   options: Partial<LayoutOptions> = {},
+  tries = 0,
 ): Layered & { boxes: GroupBox[] } {
   // a group's box holds its things as tightly as `groupPull` asks: half the room at the most, half again at none
   const pad = PAD * (1.5 - layoutOptions(options).groupPull);
@@ -55,7 +57,10 @@ export function groupedLayered(
   const used = groups.filter((g) => g.members.some((k) => groupOf.get(k) === g.id));
   // with no groups, the rows alone, folded when far from a screen's shape
   if (!used.length)
-    return { ...folded(layered(shape, sizes, rankdir, previous, options), shape, sizes, rankdir, PAD), boxes: [] };
+    return {
+      ...folded(layered(shape, sizes, rankdir, previous, options, tries), shape, sizes, rankdir, PAD),
+      boxes: [],
+    };
   // each group's own rows, and the box they need
   const inside = new Map<
     string,

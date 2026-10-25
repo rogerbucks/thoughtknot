@@ -293,6 +293,25 @@ describe('groups as boxes', () => {
   });
 });
 
+describe('the overview', () => {
+  // proves: layout_overview_rows
+  test('a real note with its groups folded is laid out in rows, its links clear of every box, most crossing none', async () => {
+    const engine = await loadEngine();
+    const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
+    const note = readNote([text]);
+    const style = readStyle([text], 'requirements', note);
+    const drawing = {
+      ...styledDrawing(note.graphs.get('requirements'), style.style, note.world.requirements),
+      diagram: undefined,
+    };
+    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true, groups: true });
+    const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+    const s = readability(ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)), d.rankdir);
+    assert.ok(s.clear >= 0.995, `no link passes over a box: ${s.clear.toFixed(3)}`);
+    assert.ok(s.clean >= 0.6, `most links cross no other: ${s.clean.toFixed(2)}`);
+  });
+});
+
 describe('a fan of links', () => {
   const link = (of, from, to) => ({ kind: 'link', id: of, of, from, to, points: [], curve: false });
   const words = (of, text) => ({ kind: 'label', id: `l:${of}`, of, text, x: 0, y: 0, size: 10 });

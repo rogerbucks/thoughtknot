@@ -158,6 +158,23 @@ describe('picking a layout', () => {
     const keys = ['a', 'b', 'c', 'd', 'e'];
     const all = keys.flatMap((p) => keys.filter((q) => q !== p).map((q) => [p, q]));
     assert.deepEqual(pickLayout(shapeOf(keys, all)), { layout: 'stress', why: 'dense' });
+    // with groups folded, each group one box: the overview goes in rows, however its links run
+    assert.deepEqual(
+      pickLayout(
+        shapeOf(
+          ['group: 1', 'group: 2', 'x'],
+          [
+            ['group: 1', 'group: 2'],
+            ['group: 2', 'x'],
+            ['x', 'group: 1'],
+          ],
+        ),
+      ),
+      {
+        layout: 'layered',
+        why: 'overview',
+      },
+    );
   });
 
   test('pushes apart boxes on each other', () => {
