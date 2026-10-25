@@ -39,10 +39,9 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
-/** How wide a box drawn as a point is at most, in pixels: a trunk's joint (untangle_merge). */
-const POINT_MOST = 10;
-/** Whether box `m` is drawn as a point, as a trunk's joint is: it stays one in space, never a ball sized by its links. */
-const isPoint = (m: { width: number; height: number }) => m.width <= POINT_MOST && m.height <= POINT_MOST;
+/** Whether box `m` is a trunk's joint (fold-source.ts), drawn as a point: it stays one in space, never a ball sized by
+ * its links (untangle_merge). */
+const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
 
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
