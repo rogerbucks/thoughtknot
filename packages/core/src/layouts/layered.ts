@@ -26,6 +26,8 @@ const ROW_GAP = 56;
 const SWEEPS = 24;
 /** The most rounds of swapping neighbours after each sweep. */
 const TRANSPOSE_ROUNDS = 6;
+/** Fresh starts of the ordering, rows shuffled, that a small drawing such as an overview is given (own-engine.ts). */
+export const RESTARTS = 40;
 const PULLS = 12;
 /** The room a link bending through a row takes, and between two such links, in CSS pixels. */
 const LANE = 8;
@@ -89,7 +91,7 @@ export function layeredLayout(
 /**
  * Each thing of `shape` placed in rows, its middle in CSS pixels, and the bends of each link that skips rows. `sizes`
  * gives each box's width and height (absent: 120 by 40). `rankdir` is `LR` (rows left to right) or `TB` (top to
- * bottom). `previous` orders the rows as last time.
+ * bottom). `previous` orders the rows as last time. `tries` is how many times more the rows are ordered afresh.
  */
 export function layered(
   shape: GraphShape,
@@ -97,6 +99,7 @@ export function layered(
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
   options: Partial<LayoutOptions> = {},
+  tries = 0,
 ): Layered {
   // the room beside each thing as `spacing` asks, and between rows, where links run, as `linkLength` asks
   const { spacing, linkLength } = layoutOptions(options);
@@ -223,12 +226,29 @@ export function layered(
   for (const row of byRow) row.forEach((i, k) => (place[i] = k));
   let best = crossings(),
     bestRows = byRow.map((row) => row.slice());
-  for (let s = 0; s < SWEEPS && best; s++) {
-    if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
-    else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
-    transpose();
-    const now = crossings();
-    if (now < best) [best, bestRows] = [now, byRow.map((row) => row.slice())];
+  // then again from shuffled rows, as `tries` asks, as sweeps alone can stop in a poor order. The shuffles are seeded,
+  // so a graph is always drawn the same
+  const first = bestRows.map((row) => row.slice());
+  let seed = 2463534242;
+  const random = () => ((seed ^= seed << 13), (seed ^= seed >>> 17), (seed ^= seed << 5), (seed >>> 0) / 4294967296);
+  for (let t = 0; t <= tries && best; t++) {
+    if (t)
+      first.forEach((row, r) => {
+        const shuffled = row.slice();
+        for (let k = shuffled.length - 1; k > 0; k--) {
+          const j = Math.floor(random() * (k + 1));
+          [shuffled[k], shuffled[j]] = [shuffled[j] as number, shuffled[k] as number];
+        }
+        byRow[r] = shuffled;
+        shuffled.forEach((i, k) => (place[i] = k));
+      });
+    for (let s = 0; s < SWEEPS && best; s++) {
+      if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
+      else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
+      transpose();
+      const now = crossings();
+      if (now < best) [best, bestRows] = [now, byRow.map((row) => row.slice())];
+    }
   }
   bestRows.forEach((row, r) => {
     byRow[r] = row;

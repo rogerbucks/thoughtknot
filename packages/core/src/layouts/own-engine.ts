@@ -14,6 +14,7 @@ import type { LaidMarks } from '../graphviz-marks.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { groupedLayered } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
+import { RESTARTS } from './layered.ts';
 import type { Size } from './layered.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
@@ -25,9 +26,11 @@ export type OwnLayout = 'layered' | 'stress';
 /** What the engine picked, and why, in a few words for a developer; a host says it from the catalogue. */
 export interface Pick {
   layout: OwnLayout;
-  why: 'flow' | 'tree' | 'network' | 'dense';
+  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview';
 }
 
+/** The key a folded group's box has (fold-source.ts). */
+const FOLDED_GROUP = 'group: ';
 /** The share of links that may run back against the flow, for a graph still to be read as a flow. */
 const BACK_MOST = 0.1;
 /** The most links per thing, on average, for a graph still to be drawn in rows. */
@@ -54,13 +57,16 @@ export function marksShape(marks: readonly DrawMark[]): { shape: GraphShape; siz
 }
 
 /**
- * The layout for `shape`: rows for a flow or a tree, stress for the rest. A flow has few links per thing, and few
- * running back against it, found by a search from each start. A tree has about one link fewer than things.
+ * The layout for `shape`: rows for a flow, a tree or an overview, stress for the rest. A flow has few links per thing,
+ * and few running back against it, found by a search from each start. A tree has about one link fewer than things. An
+ * overview has groups folded, each one box.
  */
 export function pickLayout(shape: GraphShape): Pick {
   const n = shape.things.length,
     m = shape.links.length;
   if (!n) return { layout: 'stress', why: 'network' };
+  // with groups folded, each group is one box: the overview reads best in rows, its links kept off the boxes
+  if (shape.things.some((t) => t.key.startsWith(FOLDED_GROUP))) return { layout: 'layered', why: 'overview' };
   if (m <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
   if (m / n > DENSE_MOST) return { layout: 'stress', why: 'dense' };
   return backShare(shape) <= BACK_MOST ? { layout: 'layered', why: 'flow' } : { layout: 'stress', why: 'network' };
@@ -157,7 +163,15 @@ export function ownSpots(
   let via = new Map<string, [number, number][]>();
   let boxes: GroupBox[] = [];
   if (pick.layout === 'layered')
-    ({ spots, via, boxes } = groupedLayered(shape, sizes, groups, rankdir, previous, options));
+    ({ spots, via, boxes } = groupedLayered(
+      shape,
+      sizes,
+      groups,
+      rankdir,
+      previous,
+      options,
+      pick.why === 'overview' && !previous ? RESTARTS : 0,
+    ));
   else {
     // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
     const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
