@@ -12,6 +12,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'pane.nothing-yet': 'Nothing to draw yet. Start with a thing.',
   'pane.engine-failed': 'The drawing engine could not start: {why}',
   'problems.none': 'No problems.',
+  'bar.more': 'More',
   'problems.at-line': 'Line {line}: {message}',
   'problems.new': { one: '{count} new problem: {message}', other: '{count} new problems: {message}' },
   'problems.broken-links': 'links to things not in the graph',

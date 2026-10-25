@@ -208,9 +208,8 @@ export class GraphView extends Lifecycle {
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
-    // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
-    if (d) describeDrawing(root, this.viewport, d);
+    if (d) describeDrawing(root, this.viewport, d); // the drawing as sentences, for screen readers (spec §11)
     this.detailsEl = root.createDiv({ cls: 'thoughtknot-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
     const sw = this.switching;
@@ -290,6 +289,7 @@ export class GraphView extends Lifecycle {
     b.empty();
     setIcon(b, on ? 'book-open' : 'pencil');
     b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
+    b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
   }
 
   override onunload(): void {
