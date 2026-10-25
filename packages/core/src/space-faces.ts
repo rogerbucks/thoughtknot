@@ -160,18 +160,41 @@ function outlinesOf(space: SpaceMarks, matrix: Float32Array, width: number, heig
   return space.blocks.flatMap((b): Outline[] => {
     const mid: Vec3 = [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
     const c = projectPoint(matrix, mid, width, height);
-    if (!c) return [];
-    if (space.round) return [{ b, x: c.x, y: c.y, far: c.far, r: ((b.width / 2) * focal) / c.far }];
-    const corners = [0, 1].flatMap((i) =>
-      [0, 1].flatMap((j) =>
-        [0, 1].map((k) =>
-          projectPoint(matrix, [b.x + i * b.width, b.y + j * b.depth, b.floor + k * b.tall], width, height),
-        ),
-      ),
+    if (space.round) return c ? [{ b, x: c.x, y: c.y, far: c.far, r: ((b.width / 2) * focal) / c.far }] : [];
+    const corners: Vec3[] = [0, 1].flatMap((i) =>
+      [0, 1].flatMap((j) => [0, 1].map((k): Vec3 => [b.x + i * b.width, b.y + j * b.depth, b.floor + k * b.tall])),
     );
-    if (corners.some((p) => !p)) return [];
-    return [{ b, x: c.x, y: c.y, far: c.far, hull: hullOf(corners as { x: number; y: number }[]) }];
+    const at = (p: Vec3) => projectPoint(matrix, p, width, height);
+    const seen = corners.flatMap((p) => at(p) ?? []);
+    // a box beside or round the camera still hides what is behind it: each edge that runs behind the eye is cut
+    // where it leaves the view, so the box's outline is whole (Claude review, #1398)
+    if (seen.length < corners.length)
+      corners.forEach((p, i) =>
+        corners.forEach((q, j) => {
+          const edge = j > i && [0, 1, 2].filter((k) => p[k] !== q[k]).length === 1;
+          if (edge && !at(p) !== !at(q)) seen.push(...cutAt(at(p) ? p : q, at(p) ? q : p, at));
+        }),
+      );
+    if (seen.length < 3) return [];
+    const far = c?.far ?? Math.min(...seen.map((p) => p.far));
+    return [{ b, x: c?.x ?? 0, y: c?.y ?? 0, far, hull: hullOf(seen) }];
   });
+}
+
+/** The last point of the edge from `inside`, which the camera sees, toward `behind`, which it does not. */
+function cutAt(
+  inside: Vec3,
+  behind: Vec3,
+  at: (p: Vec3) => { x: number; y: number; far: number } | null,
+): { x: number; y: number; far: number }[] {
+  let [lo, hi] = [0, 1];
+  for (let n = 0; n < 20; n++) {
+    const mid = (lo + hi) / 2;
+    if (at(add(inside, add(behind, inside, -1), mid))) lo = mid;
+    else hi = mid;
+  }
+  const last = at(add(inside, add(behind, inside, -1), lo));
+  return last ? [last] : [];
 }
 
 /** The smallest shape round `points` with no dent in it, its corners turning one way. */
