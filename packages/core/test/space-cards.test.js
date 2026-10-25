@@ -122,3 +122,45 @@ test("the picked thing's links, and only those, are drawn a little thicker in 3D
     assert.equal(frameOf(space, matrix, W, H, null, 'e:bc').strong.length, 1, 'a link picked is thicker too');
   }
 });
+
+// proves: space_link_shafts
+test('every link is drawn as a solid line, bolder near, with a wide arrowhead never longer than its card', () => {
+  const marks = [
+    ...MARKS,
+    { id: 't:c', kind: 'box', style: 'thing', of: 'c', x: 600, y: 0, width: 90, height: 40 },
+    { id: 'e:bc', kind: 'link', style: 'link', from: 'b', to: 'c', points: [] },
+  ];
+  for (const cards of [true, false]) {
+    const { space } = spreadSpace(marks, undefined, cards);
+    const orbit = orbitFit(space, W / H);
+    const near = spaceMatrix(orbit, W / H, orbit.distance * 4),
+      far = spaceMatrix({ ...orbit, distance: orbit.distance * 6 }, W / H, orbit.distance * 24);
+    const frame = frameOf(space, near, W, H, null);
+    assert.equal(frame.shafts.length, 2, 'each link');
+    for (const s of frame.shafts) {
+      assert.ok(s.points.length >= 2);
+      assert.ok(s.width >= 1.5, `never a hairline: ${s.width}`);
+    }
+    const thin = frameOf(space, far, W, H, null).shafts;
+    assert.ok(thin[0].width < frame.shafts[0].width, 'a far link is thinner than a near one');
+    for (const a of frame.arrows) {
+      const long = Math.hypot(a.tip.x - (a.left.x + a.right.x) / 2, a.tip.y - (a.left.y + a.right.y) / 2),
+        wide = Math.hypot(a.left.x - a.right.x, a.left.y - a.right.y);
+      assert.ok(wide >= 0.75 * long, `a bold head: ${wide.toFixed(1)} wide, ${long.toFixed(1)} long`);
+      if (!cards) continue;
+      const to = frame.cards.find((c) => c.block.of === 'b' || c.block.of === 'c');
+      assert.ok(long <= Math.max(11, to.height * 0.8) + 0.01, `${long} no longer than its card`);
+    }
+  }
+});
+
+// proves: space_link_shafts
+test('in 2D too, a link is a solid line with a bold, sharp arrowhead, under the focus rules', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
+  const width = (sel) => Number(new RegExp(`${sel}\\s*\\{[^}]*stroke-width:\\s*([\\d.]+)`).exec(css)?.[1]);
+  assert.ok(width(String.raw`g\.edge > :where\(path:not\(\[stroke-width\]\)\)`) >= 1.5, 'a link is no hairline');
+  assert.ok(width(String.raw`g\.edge > :where\(polygon:not\(\[stroke-width\]\)\)`) >= 2, 'its arrowhead bolder');
+  // :where weighs nothing, so a selected, kept or faded link still shows as the focus rules say
+  assert.ok(css.indexOf(':where(path:not([stroke-width]))') < css.indexOf('g.is-selected > :is(path, polygon)'));
+});

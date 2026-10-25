@@ -196,6 +196,17 @@
   border-bottom: 1px solid var(--gn-border);
   background: var(--gn-bg-alt);
 }
+/* Links read as a diagram's arrows, not hairlines (Roger, 25 Oct 2026: "more diagrammatic, professional looking rather
+   than just thin lines"). Each line is a little heavier and its arrowhead bolder, with a sharp tip. A width the drawing
+   sets itself, such as a trunk's, is kept. The selectors weigh less than the focus rules below, so a selected, kept or
+   faded link still shows as they say. */
+.thoughtknot-svg g.edge > :where(path:not([stroke-width])) {
+  stroke-width: 1.6;
+}
+.thoughtknot-svg g.edge > :where(polygon:not([stroke-width])) {
+  stroke-width: 2.2;
+  stroke-linejoin: miter;
+}
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
    lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to

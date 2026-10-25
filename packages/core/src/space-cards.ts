@@ -12,6 +12,7 @@ import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
+  ARROW_WIDE,
   READABLE_LEAST,
   arrowsOnScreen,
   largestName,
@@ -55,10 +56,20 @@ const WIDER = 1.5,
 /** How tall a row of words is, as a share of their size. */
 const ROW = 1.25;
 /** How long an arrowhead is on the screen, as a share of a card's words, kept between ARROW_LEAST and a most. */
-const ARROW_SHARE = 0.9,
-  ARROW_MOST = 18;
-/** How wide an arrowhead is at its back, as a share of its length. */
-const ARROW_WIDE = 0.6;
+const ARROW_SHARE = 1.2,
+  ARROW_MOST = 22;
+/** The most an arrowhead is long, as a share of the card it points to's height: never bigger than the card. */
+const ARROW_OF_CARD = 0.8;
+/**
+ * How thick a link is drawn, in pixels of the space, and the least and most it is on the screen. So a near link is a
+ * little bolder than a far one, and none is a hairline (Roger, 25 Oct 2026: "more diagrammatic ... rather than just thin
+ * lines").
+ */
+const SHAFT = 2.5,
+  SHAFT_LEAST = 1.5,
+  SHAFT_MOST = 3.5;
+/** The most links drawn thick. Past it only the graphics chip's thin lines are drawn, so a huge graph stays quick. */
+export const SHAFTS_MOST = 3000;
 
 /** The middle of a block, in the space. */
 const middle = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
@@ -155,7 +166,10 @@ export function cardArrows(
       seen = Math.hypot(vx, vy);
     const dx = -vx / seen,
       dy = -vy / seen;
-    const long = Math.max(ARROW_LEAST, Math.min(ARROW_MOST, to.size * ARROW_SHARE)),
+    const long = Math.min(
+        Math.max(ARROW_LEAST, Math.min(ARROW_MOST, to.size * ARROW_SHARE)),
+        Math.max(ARROW_LEAST, to.height * ARROW_OF_CARD),
+      ),
       half = (long * ARROW_WIDE) / 2;
     const bx = tip.x - dx * long,
       by = tip.y - dy * long;
@@ -182,6 +196,21 @@ export interface SpaceFrame {
   ring: { x: number; y: number; r: number } | null;
   /** The picked thing's links, or the picked link, on the screen: drawn a little thicker over the rest (Roger, 25 Oct). */
   strong: { style: string; points: { x: number; y: number }[] }[];
+  /** Every link on the screen, with how thick it is drawn, in pixels: none past SHAFTS_MOST links. */
+  shafts: { style: string; points: { x: number; y: number }[]; width: number }[];
+}
+
+/** Every line of `space` as the camera's `matrix` sees it, each as thick as its middle is near (space_link_shafts). */
+export function shaftsOf(space: SpaceMarks, matrix: Float32Array, width: number, height: number): SpaceFrame['shafts'] {
+  if (space.lines.length > SHAFTS_MOST) return [];
+  const focal = height / 2 / Math.tan(FIELD / 2);
+  return space.lines.flatMap((l) => {
+    const points = l.points.flatMap((p) => projectPoint(matrix, p, width, height) ?? []);
+    if (points.length < 2) return [];
+    const far = points.reduce((t, p) => t + p.far, 0) / points.length;
+    const seen = Math.min(SHAFT_MOST, Math.max(SHAFT_LEAST, (SHAFT * focal) / Math.max(far, 1e-9)));
+    return [{ style: l.style, points: points.map(({ x, y }) => ({ x, y })), width: seen }];
+  });
 }
 
 /** The lines of `space` that join the thing `picked`, or are the link `pickedLink`, as the camera's `matrix` sees them. */
@@ -235,6 +264,7 @@ export function frameOf(
       labels: labelsOnScreen({ ...space, labels: floats }, matrix, width, height, chosen),
       ring,
       strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
+      shafts: shaftsOf(space, matrix, width, height),
     };
   }
   const cards = cardsOnScreen(space, matrix, width, height, picked?.of);
@@ -247,5 +277,6 @@ export function frameOf(
     labels: labelsOnScreen(words, matrix, width, height, chosen),
     ring: null,
     strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
+    shafts: shaftsOf(space, matrix, width, height),
   };
 }

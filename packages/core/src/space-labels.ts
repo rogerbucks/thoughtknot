@@ -139,9 +139,9 @@ export interface ScreenArrow {
 }
 
 /** The smallest an arrowhead is painted, in screen pixels, so one far away still shows which way its link points. */
-export const ARROW_LEAST = 9;
-/** How wide an arrowhead is at its back, as a share of its length. */
-const ARROW_WIDE = 0.6;
+export const ARROW_LEAST = 11;
+/** How wide an arrowhead is at its back, as a share of its length: a bold head that shows which way (Roger, 25 Oct). */
+export const ARROW_WIDE = 0.8;
 
 /**
  * The arrowheads of `space` on the screen, far ones first, so near ones are painted over them. Each is a triangle

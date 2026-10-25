@@ -92,6 +92,9 @@ export function paintsOf(palette: Palette): Paints {
   };
 }
 
+/** How thick a link is painted, in screen pixels: a solid line, not a hairline, as in the SVG drawing (styles.css). */
+const LINK_WIDTH = 1.6;
+
 /** How a label's anchor is written on a canvas. */
 const ALIGN = { start: 'left', middle: 'center', end: 'right' } as const;
 
@@ -151,7 +154,9 @@ function paintMark(ctx: CanvasRenderingContext2D, m: DrawMark, camera: Camera, p
       }
     else for (const p of rest) ctx.lineTo(sx(p[0]), sy(p[1]));
     ctx.strokeStyle = paint.line;
+    ctx.lineWidth = LINK_WIDTH;
     ctx.stroke();
+    ctx.lineWidth = 1;
     return;
   }
   // an arrowhead: a triangle with its tip at (x, y), pointing along `angle` degrees; a board's marks are not painted yet
