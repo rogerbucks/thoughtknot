@@ -188,9 +188,8 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
-    overDrawing(root, this.viewport, this); // the panels the bar opens lie over the drawing (§25)
     // a graph drawn as a table is the plugin's own table; by a plug-in's type, its picture; else Graphviz's SVG (§15)
-    this.table = drawnApart(this.viewport, this.o.diagram);
+    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram); // the bar's panels over it (§25)
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     // the mini-map, the quick-info tooltip and where the kept-open details go (§24)

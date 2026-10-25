@@ -134,13 +134,13 @@ const OVER = [
  * Puts the panels the bar opens in one layer just above the card's drawing, `viewport`. Export opens there too
  * (export-form.ts). It stops watching the drawing's size as the `card` goes. The layer takes no room, so a panel opened moves nothing. It lies over the drawing, and
  * scrolls inside it when longer (Roger, 25 Oct 2026: "Suggest panels overlay the main view and do not move other
- * elements around").
+ * elements around"). Gives back the drawing.
  */
 export function overDrawing(
   root: HTMLElement,
   viewport: HTMLElement,
   card: { register: (stop: () => void) => void },
-): void {
+): HTMLElement {
   const layer = root.createDiv({ cls: 'thoughtknot-over' });
   root.insertBefore(layer, viewport);
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
@@ -155,4 +155,5 @@ export function overDrawing(
     watch.observe(viewport);
     card.register(() => watch.disconnect());
   }
+  return viewport;
 }
