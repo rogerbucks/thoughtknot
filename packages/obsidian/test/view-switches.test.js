@@ -64,11 +64,27 @@ const switches = (el) =>
     ]);
 const turn = (el, name) =>
   el.querySelectorAll('.thoughtknot-view-menu button').find((b) => b.textContent.startsWith(name));
+/** Where on the viewport the middle of `g`'s outline is drawn, so a tap there finds `g` itself, wherever it is laid out. */
+const middleOf = (el, g) => {
+  const svg = el.querySelector('svg'),
+    vp = el.querySelector('.thoughtknot-viewport');
+  const nums = (g?.querySelector('path')?.getAttribute('d') ?? '').match(/-?[\d.]+/g)?.map(Number) ?? [];
+  if (!svg || nums.length < 2) return { clientX: 20, clientY: 20 };
+  const xs = nums.filter((_, i) => i % 2 === 0),
+    ys = nums.filter((_, i) => i % 2 === 1);
+  const [, , vw, vh] = (svg.getAttribute('viewBox') ?? '0 0 1 1').split(/\s+/).map(Number);
+  const mid = (v) => (Math.min(...v) + Math.max(...v)) / 2;
+  return {
+    clientX: parseFloat(vp.cssProps['--thoughtknot-x'] ?? '0') + (mid(xs) * Number(svg.getAttribute('width'))) / vw,
+    clientY: parseFloat(vp.cssProps['--thoughtknot-y'] ?? '0') + (mid(ys) * Number(svg.getAttribute('height'))) / vh,
+  };
+};
 const tap = (el, g) => {
   const vp = el.querySelector('.thoughtknot-viewport');
-  const init = { target: g, pointerId: 3, pointerType: 'touch', clientX: 20, clientY: 20, button: 0 };
+  const at = middleOf(el, g);
+  const init = { target: g, pointerId: 3, pointerType: 'touch', ...at, button: 0 };
   vp.dispatch('pointerdown', init);
-  vp.dispatch('pointerup', { ...init, clientX: 21 });
+  vp.dispatch('pointerup', { ...init, clientX: at.clientX + 1 });
 };
 const offers = (el, text) =>
   el.querySelectorAll('.thoughtknot-details button').find((b) => b.textContent.includes(text));
