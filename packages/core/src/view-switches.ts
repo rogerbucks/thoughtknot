@@ -206,12 +206,12 @@ export class ViewState {
 
   /** Steps to the rung `level`, setting its switches as one. True when the drawing must be laid out again. */
   toDetail(level: DetailLevel): boolean {
+    this.overviewChosen = true;
     if (level === this.detail) return false;
     const on = { overview: [true, true], groups: [false, true], all: [false, false] }[level];
     this.turn('groups', on[0] as boolean);
     this.turn('merge', on[1] as boolean);
     if (level === 'all') this.turn('hubs', false);
-    this.overviewChosen = true;
     return true;
   }
 

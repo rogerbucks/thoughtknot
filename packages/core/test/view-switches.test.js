@@ -380,6 +380,9 @@ describe('the ladder of detail (cluster_detail_ladder)', () => {
     const turned = new ViewState(OFF);
     turned.toDetail('groups');
     assert.ok(!turned.folded(teams(OVERVIEW_THINGS + 1)).folding?.groups.some(([, , folded]) => folded));
+    const kept = new ViewState(OFF);
+    assert.equal(kept.toDetail('all'), false, 'already on All: nothing to redraw');
+    assert.equal(kept.folded(teams(OVERVIEW_THINGS + 1)).folding, undefined, 'but All was chosen, so it stays');
     const opened = new ViewState(OFF);
     opened.folded(teams(OVERVIEW_THINGS + 1));
     opened.open({ group: 'Odd' });
