@@ -39,9 +39,9 @@ export function globToRegExp(glob) {
 
 /**
  * The structure in `architecture` (the text of architecture.gql): the parts with a path, and the areas of each. An area
- * is {id, name, does, section, part, globs, nots, most}: its files are those matching a glob of `files` and none of
- * `not`, so a folder can be cut by file name without listing every file. Parts are sorted so the one with the longest
- * path, the closest folder, comes first.
+ * is {id, name, does, section, part, globs, nots, most}. Its files are those matching a glob of `files` and none of
+ * `not`, so a folder is cut by file name without listing every file. Parts are sorted so the one with the longest path,
+ * the closest folder, comes first.
  */
 export function readStructure(architecture) {
   const g = gs.worldFromStore(gs.read([architecture])).project_architecture;
