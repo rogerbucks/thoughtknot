@@ -3,7 +3,7 @@
 // The built plugin, loaded against the stand-ins for the page, laying out with the real engine.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
@@ -41,7 +41,7 @@ describe('a folded group opened by zooming in', () => {
       const wheel = (deltaY) =>
         vp.dispatch('wheel', { target: node(el, 'fold_group_1'), deltaY, ctrlKey: true, clientX: 10, clientY: 10 });
       wheel(100);
-      await new Promise((r) => setTimeout(r, 50));
+      await settled();
       assert.ok(node(el, 'fold_group_1') && !thing(el, 'ann'), 'zooming out leaves it folded');
       wheel(-100);
       await until(() => !!thing(el, 'ann'));
