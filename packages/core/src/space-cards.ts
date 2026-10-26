@@ -249,6 +249,21 @@ export function frameOf(
     ...(pickedLink === undefined ? {} : { pickedLink }),
   };
   if (!space.cards) {
+    // a folded group is a card here too, never a nameless ball (cluster_named_everywhere)
+    const clusters = space.blocks.filter((b) => b.cluster);
+    if (clusters.length) {
+      const into = new Set(clusters.map((b) => b.of)),
+        carded = new Set(space.lines.filter((l) => into.has(l.to)).map((l) => `${l.id}\narrow`));
+      // its arrowheads sit at the card's edge, drawn once
+      const balls = {
+        ...space,
+        blocks: space.blocks.filter((b) => !b.cluster),
+        arrows: space.arrows.filter((a) => !carded.has(a.id)),
+      };
+      const frame = frameOf(balls, matrix, width, height, picked?.cluster ? null : picked, pickedLink);
+      const cards = cardsOnScreen({ ...space, blocks: clusters }, matrix, width, height, picked?.of);
+      return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
+    }
     const ring = picked && pickedRing(space, picked, matrix, width, height);
     // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
     const faces = facesOnScreen(space, matrix, width, height, chosen);

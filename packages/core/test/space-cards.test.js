@@ -164,3 +164,37 @@ test('in 2D too, a link is a solid line with a bold, sharp arrowhead, under the 
   // :where weighs nothing, so a selected, kept or faded link still shows as the focus rules say
   assert.ok(css.indexOf(':where(path:not([stroke-width]))') < css.indexOf('g.is-selected > :is(path, polygon)'));
 });
+
+// proves: cluster_named_everywhere
+test('a folded group is a named card with its count even among balls, never a nameless ball', () => {
+  const marks = [
+    ...MARKS,
+    { id: 't:group: 1', kind: 'box', style: 'muted', of: 'group: 1', x: 0, y: 200, width: 220, height: 60 },
+    {
+      id: 'l:group: 1',
+      kind: 'label',
+      style: 'muted',
+      of: 'group: 1',
+      x: 110,
+      y: 230,
+      text: 'Identity · 8 things',
+      size: 14,
+      anchor: 'middle',
+    },
+    { id: 'e:a1', kind: 'link', style: 'link', from: 'a', to: 'group: 1', points: [] },
+  ];
+  const { space } = spreadSpace(marks);
+  const group = space.blocks.find((b) => b.of === 'group: 1');
+  assert.equal(group.cluster, true);
+  assert.deepEqual(group.card, { width: 220, height: 60 });
+  assert.equal(space.blocks.find((b) => b.of === 'a').card, undefined, 'a thing stays a ball');
+  const orbit = orbitFit(space, W / H);
+  const frame = frameOf(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H, null);
+  assert.deepEqual(
+    frame.cards.map((c) => c.block.of),
+    ['group: 1'],
+  );
+  assert.match(frame.cards[0].rows.join(' '), /Identity · 8 things/);
+  assert.ok(!frame.shapes.blocks.some((b) => b.cluster), 'no ball is painted for the group');
+  assert.equal(frame.arrows.length, 2, 'one arrowhead into the ball, one at the edge of the group card');
+});

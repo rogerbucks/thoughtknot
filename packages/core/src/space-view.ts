@@ -33,7 +33,12 @@ export interface Block {
   tall: number;
   /** Painted as a card flat to the screen (space-cards.ts): its size when one pixel of the space is one of the screen. */
   card?: { width: number; height: number };
+  /** A folded group (fold-source.ts): always a card with its name and count, never a nameless ball. */
+  cluster?: true;
 }
+
+/** Whether a thing's key is a folded group's box (`group: 2`, fold-source.ts). */
+export const isCluster = (of: string | undefined): boolean => /^group: \d+$/.test(of ?? '');
 
 /** A line through the space, painted in the colour of its style. */
 export interface SpaceLine {

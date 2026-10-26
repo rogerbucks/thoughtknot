@@ -17,7 +17,7 @@ import { layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
-import { boundsOf } from './space-view.ts';
+import { boundsOf, isCluster } from './space-view.ts';
 import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
@@ -160,7 +160,10 @@ export function spreadSpace(
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
     centre.set(m.of, page ? [page[0], -page[1], z * unit] : [x * unit, y * unit, z * unit]);
-    radius.set(m.of, cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0));
+    radius.set(
+      m.of,
+      cards || isPoint(m) || isCluster(m.of) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0),
+    );
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
   // where the drawing put them are spaced as the drawing is
@@ -180,7 +183,9 @@ export function spreadSpace(
       tall: 2 * r,
     };
     if (m.name !== undefined) block.name = m.name;
-    if (cards) block.card = { width: m.width, height: m.height };
+    // a folded group is a card among balls too, so its name and count always show (cluster_named_everywhere)
+    if (cards || isCluster(m.of)) block.card = { width: m.width, height: m.height };
+    if (isCluster(m.of)) block.cluster = true;
     blocks.push(block);
   }
   // a thing's name is the words its label mark says, else its own name
