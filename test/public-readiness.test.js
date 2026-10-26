@@ -509,7 +509,7 @@ describe('kept so, in CI and at every release', () => {
     const readme = read('README.md');
     assert.match(readme, /scripts\/public-readiness\.mjs/);
     assert.match(readme, /collaborators only/i);
-    assert.match(read('CONTRIBUTING.md'), /test\/public-readiness\.test\.js/);
+    assert.match(read('docs/tests-that-span-modules.md'), /test\/public-readiness\.test\.js/);
   });
 });
 

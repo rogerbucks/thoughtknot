@@ -50,7 +50,8 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
   [packages/claude-code/GUIDE.md](../../packages/claude-code/GUIDE.md), [packages/app/GUIDE.md](../../packages/app/GUIDE.md),
   [packages/vscode/GUIDE.md](../../packages/vscode/GUIDE.md).
 - [python/graph_spec/GUIDE.md](../../python/graph_spec/GUIDE.md) — the Python library.
-- Tests mirror the code: `src/zoom.ts` is tested in `test/zoom.test.js`. Tests that span modules sit in the root `test/`.
+- Tests mirror the code: `src/zoom.ts` is tested in `test/zoom.test.js`. Tests that span modules sit in the root `test/`
+  and are listed in [docs/tests-that-span-modules.md](tests-that-span-modules.md).
 - `scripts/` — tools that run from the command line: the quiet runners, `tests-first.mjs`, `check-classification.mjs`.
 - `test-vault/` — run `scripts/reset-test-vault.mjs` before and after any session in it, to restore it.
 
