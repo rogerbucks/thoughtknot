@@ -3,7 +3,8 @@
 // layers below it. A part with a path is built; one without names the requirement that plans it. scripts/wiki-developers.mjs
 // reads it and checks every path and requirement; the wiki's developer pages draw it. A part is cut into areas, each
 // naming its files: scripts/code-structure.mjs checks that every shipped file is in exactly one area and that no area is
-// over its ceiling of files (`most`, 40 unless said). So a new file has to be placed, and a crowded area split on purpose.
+// over its ceiling of files (`most`, 40 unless said). An area's `not` names the files its globs would match but that
+// belong to another area. So a new file has to be placed, and a crowded area split on purpose.
 // ── Layers, top to bottom ──
 (plugins:Layer {order: 1, name: 'Plug-ins', does: 'Add exports, theme colours and, later, diagram types, steps, storage and AI providers, through one checked interface.'}),
 (apps:Layer {order: 2, name: 'Apps', does: 'Put the editor where people work, each through a small adapter of its own.'}),
@@ -62,7 +63,8 @@
 (core_plugins:Area {name: 'Plug-ins', section: '43', does: 'The plug-in interface and its contract, how plug-ins are loaded, called, isolated and served.', files: 'packages/core/src/plugins.ts packages/core/src/plugins-contract.ts packages/core/src/plugin-*.ts packages/core/src/index-plugins.ts packages/core/src/core-storage.ts packages/core/src/core-ai.ts'}),
 (core_storage:Area {name: 'Storage and changes', section: '41', does: 'Where notes are kept, the storage contract, and the changes view with its review items.', files: 'packages/core/src/note-storage.ts packages/core/src/storage-contract.ts packages/core/src/workspace-storage.ts packages/core/src/changes-view.ts packages/core/src/github-review-items.ts packages/core/src/line-diff.ts'}),
 (core_massive:Area {name: 'Huge graphs', section: '53', does: 'A huge graph explored in parts: overview, filters, search, groups, the space view and the drawing store.', files: 'packages/core/src/colour-numbers.ts packages/core/src/expand-on-demand.ts packages/core/src/explore-trail.ts packages/core/src/facet-counts.ts packages/core/src/filter-live.ts packages/core/src/filter-saved.ts packages/core/src/mark-index.ts packages/core/src/note-parts.ts packages/core/src/overview.ts packages/core/src/overview-svg.ts packages/core/src/scale-groups.ts packages/core/src/search-fly.ts packages/core/src/space-controls.ts packages/core/src/space-labels.ts packages/core/src/space-faces.ts packages/core/src/space-view.ts packages/core/src/space-spread.ts packages/core/src/space-cards.ts packages/core/src/space-pick.ts packages/core/src/store-drawing.ts packages/core/src/louvain.ts packages/core/src/detail-steps.ts packages/core/src/layout-static.ts'}),
-(core_words:Area {name: 'Words and languages', section: '42', does: 'Every word the person reads, in one catalogue per area, with translations, test languages, direction and locale formats.', files: 'packages/core/src/*-source-words.ts packages/core/src/words.ts packages/core/src/source-words.ts packages/core/src/check-words.ts packages/core/src/reader-words.ts packages/core/src/settings-words.ts packages/core/src/pseudo-words.ts packages/core/src/bidi.ts packages/core/src/drawing-direction.ts packages/core/src/locale-formats.ts packages/core/src/translation-files.ts packages/core/src/settings-language.ts'}),
+(core_words:Area {name: 'Words and languages', section: '42', does: 'How words are read and translated: the word store, its checks, test languages, direction and locale formats.', files: 'packages/core/src/words.ts packages/core/src/source-words.ts packages/core/src/check-words.ts packages/core/src/reader-words.ts packages/core/src/settings-words.ts packages/core/src/pseudo-words.ts packages/core/src/bidi.ts packages/core/src/drawing-direction.ts packages/core/src/locale-formats.ts packages/core/src/translation-files.ts packages/core/src/settings-language.ts'}),
+(core_word_catalogues:Area {name: 'Word catalogues', section: '42', does: 'Every word the person reads, one catalogue per area of the editor.', files: 'packages/core/src/*-source-words.ts'}),
 (core_first_run:Area {name: 'First run, shortcuts and theme', section: '44', does: 'The first graph from an example, every keyboard shortcut in one list, and the interface\'s design tokens.', files: 'packages/core/src/first-run.ts packages/core/src/shortcuts.ts packages/core/src/theme-tokens.ts'}),
 (core_permissions:Area {name: 'Permissions', section: '39', does: 'Who may read or write a thing through a surface the engine serves, and how a change is previewed and confirmed.', files: 'packages/core/src/permissions.ts packages/core/src/permissions-change.ts'}),
 (core_export_code:Area {name: 'Export to code', section: '38', does: 'Exporting a graph to code: its gap summary, a setting\'s boundary rules, and secrets held by name only.', files: 'packages/core/src/export-code.ts packages/core/src/export-boundary.ts packages/core/src/secrets.ts'}),
@@ -77,11 +79,15 @@
 (core_tools:Area {name: 'Build and command line', section: '9', does: 'The build of the layout worker, and the layout source written from the command line.', files: 'packages/core/bin/** packages/core/esbuild.layout.mjs'}),
 (core_hosts:Area {name: 'Host helpers', section: '10', does: 'Small helpers the hosts share: the matrix table, refusal words, the vault folder.', files: 'packages/core/src/hosts/**'}),
 (core_view_types:Area {name: 'View types', section: '7', does: 'The view types drawn without Graphviz: blocks, chords, density, ego, force, matrix, plan, treemap.', files: 'packages/core/src/view-types/**'}),
-// The display layer, by folder. The graph view's ceiling is 80: it grew to 71 files by 24 Oct 2026, and a split is a
-// finding of the weekly review, not a rule to break quietly.
+// The display layer, by folder. The graph view reached its ceiling of 80 files on 26 Oct 2026 and was cut by file name
+// into the huge-graph views, the space view, the details and quick info, and untangling. Its ceiling is now 60.
 (display_shell:Area {name: 'The display shell', section: '10', does: 'The host interface and its contract, the lifecycle, language, progress, shortcuts and the tour.', files: 'packages/core/src/display/*.ts'}),
 (display_editor:Area {name: 'The text editor', section: '4', does: 'The block editor: typing, completions, drafts, help and the drawing beside the text.', files: 'packages/core/src/display/editor/**'}),
-(display_graph_view:Area {name: 'The graph view', section: '3', does: 'The drawing on the card: painting, selection, details, quick info, massive and space views, untangling.', files: 'packages/core/src/display/graph-view/**', most: 80}),
+(display_graph_view:Area {name: 'The graph view', section: '3', does: 'The drawing on the card: painting, selection, the view bar and its options, viewport and marks.', files: 'packages/core/src/display/graph-view/**', not: 'packages/core/src/display/graph-view/massive-*.ts packages/core/src/display/graph-view/space-*.ts packages/core/src/display/graph-view/details-*.ts packages/core/src/display/graph-view/quick-info*.ts packages/core/src/display/graph-view/rich-details.ts packages/core/src/display/graph-view/untangle*.ts', most: 60}),
+(display_massive:Area {name: 'Huge-graph views', section: '53', does: 'The overview, filters, search, growing and laying out of a huge graph on the card.', files: 'packages/core/src/display/graph-view/massive-*.ts'}),
+(display_space:Area {name: 'The space view', section: '68', does: 'The 2.5D and 3D projections: their painters, the switch, the pad and the panel.', files: 'packages/core/src/display/graph-view/space-*.ts'}),
+(display_details:Area {name: 'Details and quick info', section: '14', does: 'The details panel, sheet and summary of the selected thing, and the quick info shown on hover.', files: 'packages/core/src/display/graph-view/details-*.ts packages/core/src/display/graph-view/quick-info*.ts packages/core/src/display/graph-view/rich-details.ts'}),
+(display_untangle:Area {name: 'Untangling', section: '25', does: 'Finding the way round a tangled drawing: the banner, the finder and the legend.', files: 'packages/core/src/display/graph-view/untangle*.ts'}),
 (display_properties:Area {name: 'Property forms', section: '14', does: 'The forms that edit properties and lists, and where a menu is placed.', files: 'packages/core/src/display/properties/**'}),
 (display_links:Area {name: 'Links panel', section: '18', does: 'The list of links and their marks and types.', files: 'packages/core/src/display/links/**'}),
 (display_export:Area {name: 'Export form', section: '16', does: 'The export form and its types.', files: 'packages/core/src/display/export/**'}),
@@ -122,6 +128,7 @@
 (core_storage)-[:PART_OF]->(core_part),
 (core_massive)-[:PART_OF]->(core_part),
 (core_words)-[:PART_OF]->(core_part),
+(core_word_catalogues)-[:PART_OF]->(core_part),
 (core_first_run)-[:PART_OF]->(core_part),
 (core_permissions)-[:PART_OF]->(core_part),
 (core_export_code)-[:PART_OF]->(core_part),
@@ -139,6 +146,10 @@
 (display_shell)-[:PART_OF]->(display_part),
 (display_editor)-[:PART_OF]->(display_part),
 (display_graph_view)-[:PART_OF]->(display_part),
+(display_massive)-[:PART_OF]->(display_part),
+(display_space)-[:PART_OF]->(display_part),
+(display_details)-[:PART_OF]->(display_part),
+(display_untangle)-[:PART_OF]->(display_part),
 (display_properties)-[:PART_OF]->(display_part),
 (display_links)-[:PART_OF]->(display_part),
 (display_export)-[:PART_OF]->(display_part),
