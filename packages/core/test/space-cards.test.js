@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cardArrows, cardAt, cardsOnScreen, frameOf, rowsOf } from '../src/space-cards.ts';
 import { spreadSpace } from '../src/space-spread.ts';
-import { orbitFit, spaceMatrix } from '../src/space-view.ts';
+import { isCluster, orbitFit, spaceMatrix } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
 /** Two things in a row and a link from the first to the second, as the 2D drawing marks them. */
@@ -183,6 +183,8 @@ test('a folded group is a named card with its count even among balls, never a na
     },
     { id: 'e:a1', kind: 'link', style: 'link', from: 'a', to: 'group: 1', points: [] },
   ];
+  assert.ok(isCluster('fold_group_2'), 'the drawing on screen names a folded group by its id');
+  assert.ok(!isCluster('group: x') && !isCluster('a'));
   const { space } = spreadSpace(marks);
   const group = space.blocks.find((b) => b.of === 'group: 1');
   assert.equal(group.cluster, true);
@@ -197,4 +199,30 @@ test('a folded group is a named card with its count even among balls, never a na
   assert.match(frame.cards[0].rows.join(' '), /Identity · 8 things/);
   assert.ok(!frame.shapes.blocks.some((b) => b.cluster), 'no ball is painted for the group');
   assert.equal(frame.arrows.length, 2, 'one arrowhead into the ball, one at the edge of the group card');
+});
+
+// proves: cluster_named_everywhere
+test('an open group is outlined round its things, its name on the outline, as cards and as balls', () => {
+  const marks = [
+    { id: 'g:team', kind: 'group', style: 'group', x: -10, y: -10, width: 420, height: 80, name: 'Team' },
+    ...MARKS.map((m) => (m.kind === 'box' ? { ...m, group: 'g:team' } : m)),
+    { id: 't:c', kind: 'box', style: 'thing', of: 'c', x: 0, y: 300, width: 90, height: 40 },
+    { id: 'e:bc', kind: 'link', style: 'link', from: 'b', to: 'c', points: [] },
+  ];
+  for (const cards of [true, false]) {
+    const { space } = spreadSpace(marks, undefined, cards);
+    const orbit = orbitFit(space, W / H);
+    const frame = frameOf(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H, null);
+    assert.equal(frame.outlines.length, 1, cards ? 'cards' : 'balls');
+    const [o] = frame.outlines;
+    assert.equal(o.name, 'Team');
+    assert.equal(o.style, 'group');
+    const inside = (k) => {
+      const c = cardsOnScreen(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H).find((x) => x.block.of === k);
+      return c.x > o.x && c.x < o.x + o.width && c.y > o.y && c.y < o.y + o.height;
+    };
+    assert.ok(inside('a') && inside('b'), 'its things sit inside it');
+    assert.ok(!inside('c'), 'a thing in no group sits outside it');
+    assert.ok(!frame.labels.some((l) => l.text === 'Team'), 'its name is on the outline, not floating twice');
+  }
 });

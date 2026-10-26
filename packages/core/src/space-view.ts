@@ -37,8 +37,11 @@ export interface Block {
   cluster?: true;
 }
 
-/** Whether a thing's key is a folded group's box (`group: 2`, fold-source.ts). */
-export const isCluster = (of: string | undefined): boolean => /^group: \d+$/.test(of ?? '');
+/**
+ * Whether a thing's key is a folded group's box: `group: 2` as the layout source names it (fold-source.ts), or
+ * `fold_group_2` as the drawing on screen does, with no title to read it by (drawing-svg.ts).
+ */
+export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
 
 /** A line through the space, painted in the colour of its style. */
 export interface SpaceLine {
@@ -86,8 +89,18 @@ export interface SpaceMarks {
   round?: boolean;
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
+  /** Each open group, with the keys of its things: outlined round them on the screen (cluster_named_everywhere). */
+  groups?: SpaceGroup[];
   least: Vec3;
   most: Vec3;
+}
+
+/** An open group in the space: its id, its style, its name and the keys of the things in it. */
+export interface SpaceGroup {
+  id: string;
+  style: string;
+  name: string;
+  of: string[];
 }
 
 /** What height means: floors by group, or a number for each mark by its id (or its thing's key). */

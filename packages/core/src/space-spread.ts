@@ -18,7 +18,7 @@ import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf, isCluster } from './space-view.ts';
-import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
+import type { Block, SpaceArrow, SpaceGroup, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
 export const SPREAD_UNIT = 120;
@@ -52,8 +52,9 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
-/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). */
-const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
+/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge): */
+// the layout source names it `trunk: 1 in`, the drawing on screen, with no title to read, `trunk_1_in`
+const isPoint = (m: { of?: string }) => /^(?:trunk: \d+ (?:in|out)|trunk_\d+_(?:in|out))$/.test(m.of ?? '');
 
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
@@ -207,10 +208,17 @@ export function spreadSpace(
   }
   // a group's name floats over the middle of its things, above the highest of them (space_groups)
   const groupOf = new Map(marks.flatMap((m) => (m.kind === 'box' && m.group ? [[m.id, m.group] as const] : [])));
+  const groups: SpaceGroup[] = [];
   for (const m of marks) {
     if (m.kind !== 'group' || !m.name) continue;
     const inside = blocks.filter((b) => groupOf.get(b.id) === m.id);
     if (!inside.length) continue;
+    groups.push({
+      id: m.id,
+      style: m.style,
+      name: m.name,
+      of: inside.flatMap((b) => (b.of === undefined ? [] : [b.of])),
+    });
     const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
     const top = Math.max(...inside.map((b) => b.floor + b.tall));
     labels.push({
@@ -268,6 +276,7 @@ export function spreadSpace(
       labels.push({ id: `${m.id}\nwords`, style: m.style, at: curve(0.5), text: m.name, size: WORDS_SIZE, link: m.id });
   }
   const space: SpaceMarks = { blocks, lines, labels, arrows, round: true, ...boundsOf(blocks, lines, labels) };
+  if (groups.length) space.groups = groups;
   if (cards) space.cards = true;
   return { space, spots };
 }
