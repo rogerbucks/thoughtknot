@@ -186,6 +186,13 @@ after a module nor listed here, and on a listed file that is missing.
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+
+## The Obsidian plugin: the View menu and views
+
+- `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
+  built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
+- `packages/obsidian/test/cluster-open.test.js` — a folded group opened by zooming in on it, or picked again in 3D, in
+  the built plugin (editor spec §53, cluster_opens).
 - `packages/obsidian/test/view-types.test.js` — the card's Views list offers each view drawn as marks. A view chosen is
   saved in the style graph and drawn (editor spec §36, view_types_offered).
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
@@ -460,7 +467,7 @@ after a module nor listed here, and on a listed file that is missing.
 ## Community rules, Apple's terms and the working group
 
 - `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
-  `docs/apple-terms.md`). Nothing people read says Apple checked or endorses ThoughtKnot. `TRADEMARKS.md` names Apple's
+  `docs/apple-terms.md`). Nothing people read claims that Apple vouches for ThoughtKnot. `TRADEMARKS.md` names Apple's
   marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
 - `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and Grok their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.

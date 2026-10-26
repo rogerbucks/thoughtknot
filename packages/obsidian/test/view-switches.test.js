@@ -56,7 +56,7 @@ const edge = (el, id) => el.querySelectorAll('g.edge').find((g) => g.getAttribut
 const thing = (el, key) => el.querySelector(`g.node[data-key="${key}"]`);
 const switches = (el) =>
   el
-    .querySelectorAll('.thoughtknot-view-menu button')
+    .querySelectorAll('.thoughtknot-view-menu button.thoughtknot-switch')
     .map((b) => [
       b.querySelector('.thoughtknot-switch-name')?.textContent ?? b.textContent.replace(/ — (on|off)$/, ''),
       b.getAttribute('role'),
@@ -147,7 +147,7 @@ describe('the View menu', () => {
     const { env, el } = await card();
     try {
       labelled(el, 'View').click();
-      const said = el.querySelectorAll('.thoughtknot-view-menu button').map((b) => {
+      const said = el.querySelectorAll('.thoughtknot-view-menu button.thoughtknot-switch').map((b) => {
         const hint = b.querySelector('.thoughtknot-switch-hint');
         assert.equal(b.getAttribute('aria-describedby'), hint.getAttribute('id'), 'a screen reader hears it too');
         return [b.querySelector('.thoughtknot-switch-name').textContent, hint.textContent];

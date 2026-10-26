@@ -428,6 +428,8 @@ describe('the readability scores', () => {
     const kindOf = new Map(drawing.boxes.map((b) => [b.key, b.kind]));
     const scored = (own) => {
       const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: own });
+      // the whole drawing, not the overview a graph this big opens on
+      state.toDetail('all');
       const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
       const laid = own ? ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)) : directLinks(engine.marks(d.dot));
       return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
