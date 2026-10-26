@@ -23,11 +23,13 @@ const SMALL = `// graph: project_architecture · SOURCE
 (a_part:Part {name: 'A', path: 'packages/a'}),
 (b_part:Part {name: 'B', path: 'packages/b'}),
 (a_read:Area {name: 'Reading', section: '3', does: 'Reads.', files: 'packages/a/src/read*.ts'}),
-(a_draw:Area {name: 'Drawing', section: '3', does: 'Draws.', files: 'packages/a/src/draw/**', most: 2}),
+(a_draw:Area {name: 'Drawing', section: '3', does: 'Draws.', files: 'packages/a/src/draw/**', not: 'packages/a/src/draw/deep/**', most: 2}),
+(a_deep:Area {name: 'Deep drawing', section: '3', does: 'Draws deep.', files: 'packages/a/src/draw/deep/**'}),
 (a_part)-[:IN_LAYER]->(core),
 (b_part)-[:IN_LAYER]->(apps),
 (a_read)-[:PART_OF]->(a_part),
-(a_draw)-[:PART_OF]->(a_part)`;
+(a_draw)-[:PART_OF]->(a_part),
+(a_deep)-[:PART_OF]->(a_part)`;
 
 const FILES = {
   'packages/a/src/read.ts': "import { box } from './draw/box.ts';",
@@ -40,17 +42,19 @@ const FILES = {
 const readSmall = (f) => FILES[f];
 
 describe('the structure graph', () => {
-  test('reads each part with its areas, closest folder first, and a glob as a pattern', () => {
+  test('reads each part with its areas, closest folder first, a glob as a pattern and the globs an area leaves out', () => {
     const { parts, areas } = readStructure(SMALL);
     assert.deepEqual(
       parts.map((p) => [p.id, p.areas.map((a) => a.id)]),
       [
-        ['a_part', ['a_read', 'a_draw']],
+        ['a_part', ['a_read', 'a_draw', 'a_deep']],
         ['b_part', []],
       ],
     );
     assert.equal(areas.find((a) => a.id === 'a_draw').most, 2);
     assert.equal(areas.find((a) => a.id === 'a_read').most, 40);
+    assert.deepEqual(areas.find((a) => a.id === 'a_draw').nots, ['packages/a/src/draw/deep/**']);
+    assert.deepEqual(areas.find((a) => a.id === 'a_read').nots, []);
     assert.ok(globToRegExp('packages/a/src/draw/**').test('packages/a/src/draw/deep/line.ts'));
     assert.ok(globToRegExp('packages/a/src/*-words.ts').test('packages/a/src/ai-words.ts'));
     assert.ok(!globToRegExp('packages/a/src/*-words.ts').test('packages/a/src/deep/ai-words.ts'));
@@ -67,7 +71,11 @@ describe('the structure graph', () => {
       SMALL.replace("files: 'packages/a/src/draw/**'", "files: 'packages/a/src/draw/** packages/a/src/read.ts'"),
     );
     assert.match(structureProblems(twice, Object.keys(FILES)).join('\n'), /read\.ts: in more than one area/);
-    const crowded = structureProblems(readStructure(SMALL), [...Object.keys(FILES), 'packages/a/src/draw/more.ts']);
+    const crowded = structureProblems(readStructure(SMALL), [
+      ...Object.keys(FILES),
+      'packages/a/src/draw/more.ts',
+      'packages/a/src/draw/most.ts',
+    ]);
     assert.match(crowded.join('\n'), /a_draw: 3 files, over its ceiling of 2/);
     const empty = readStructure(SMALL.replace("files: 'packages/a/src/draw/**'", "files: 'packages/a/src/nothing/**'"));
     assert.match(structureProblems(empty, Object.keys(FILES)).join('\n'), /a_draw: the area matches no file/);
@@ -84,7 +92,8 @@ describe('the structure graph', () => {
       fact.areas.map((a) => [a.id, a.files, a.lines]),
       [
         ['a_read', 2, 2],
-        ['a_draw', 2, 2],
+        ['a_draw', 1, 1],
+        ['a_deep', 1, 1],
       ],
     );
     assert.deepEqual(fact.edges, [
@@ -100,7 +109,7 @@ describe('the structure graph', () => {
     assert.match(chart, /a_read\["Reading<br\/><i>:Area<\/i> · 2 files"\]/);
     assert.match(chart, /a_read -->\|1\| a_draw/);
     const table = structureTable(fact);
-    assert.match(table, /\| Drawing \| Draws\. \| §3 \| 2 \| 2 \| 2 \|/);
+    assert.match(table, /\| Drawing \| Draws\. \| §3 \| 1 \| 1 \| 2 \|/);
     assert.match(table, /- Drawing ↔ Reading/);
   });
 
