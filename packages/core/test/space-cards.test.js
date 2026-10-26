@@ -2,9 +2,19 @@
 // screen, with its whole name inside. Far ones come first, a click picks the nearest, and arrowheads sit at card edges.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardArrows, cardAt, cardsOnScreen, frameOf, isCluster, rowsOf } from '../src/space-cards.ts';
+import {
+  ZOOM_OPENS,
+  cardArrows,
+  cardAt,
+  cardsOnScreen,
+  clusterFilling,
+  fills,
+  frameOf,
+  isCluster,
+  rowsOf,
+} from '../src/space-cards.ts';
 import { spreadSpace } from '../src/space-spread.ts';
-import { orbitFit, spaceMatrix } from '../src/space-view.ts';
+import { middleOf, orbitFit, spaceMatrix } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
 /** Two things in a row and a link from the first to the second, as the 2D drawing marks them. */
@@ -224,4 +234,25 @@ test('an open group is outlined round its things, its name on the outline, as ca
     assert.ok(!inside('c'), 'a thing in no group sits outside it');
     assert.ok(!frame.labels.some((l) => l.text === 'Team'), 'its name is on the outline, not floating twice');
   }
+});
+
+// proves: cluster_opens
+test('zooming in on a folded group until its card fills the screen opens it; seen whole, it stays folded', () => {
+  assert.ok(fills({ width: W * ZOOM_OPENS, height: 10 }, W, H) && fills({ width: 10, height: H }, W, H));
+  assert.ok(!fills({ width: W * ZOOM_OPENS - 1, height: H * ZOOM_OPENS - 1 }, W, H));
+  const marks = [
+    ...MARKS,
+    { id: 't:fold_group_1', kind: 'box', style: 'muted', of: 'fold_group_1', x: 0, y: 200, width: 220, height: 60 },
+  ];
+  const { space } = spreadSpace(marks);
+  const whole = orbitFit(space, W / H);
+  const at = (orbit) => {
+    const m = spaceMatrix(orbit, W / H, orbit.distance * 4);
+    const card = cardsOnScreen(space, m, W, H).find((c) => c.block.of === 'fold_group_1');
+    return clusterFilling(space, m, W, H, card.x, card.y);
+  };
+  assert.equal(at(whole), undefined, 'the whole graph seen: the group stays folded');
+  const group = space.blocks.find((b) => b.of === 'fold_group_1');
+  assert.equal(at({ ...whole, target: middleOf(group), distance: whole.distance / 30 }), 'fold_group_1');
+  assert.equal(clusterFilling(space, spaceMatrix(whole, W / H, whole.distance * 4), W, H, -50, -50), undefined);
 });

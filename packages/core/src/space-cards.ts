@@ -211,6 +211,27 @@ export type SpaceGroup = NonNullable<SpaceMarks['groups']>[number];
  */
 export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
 
+/** How much of the screen, wide or high, a folded group fills before zooming in opens it (cluster_opens). */
+export const ZOOM_OPENS = 0.5;
+
+/** Whether a box of `box`'s size fills enough of a screen `width` by `height` for zooming in to open it. */
+export const fills = (box: { width: number; height: number }, width: number, height: number): boolean =>
+  box.width >= width * ZOOM_OPENS || box.height >= height * ZOOM_OPENS;
+
+/** The key of the folded group whose card is under `x`, `y` and fills the screen, if any: zooming in opens it. */
+export function clusterFilling(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+): string | undefined {
+  const clusters = { ...space, blocks: space.blocks.filter((b) => isCluster(b.of)) };
+  const card = cardAt(cardsOnScreen(clusters, matrix, width, height), x, y);
+  return card && fills(card, width, height) ? card.block.of : undefined;
+}
+
 /** An open group's outline on the screen: its corner and size in pixels, its style and its name. */
 export interface ScreenOutline {
   id: string;

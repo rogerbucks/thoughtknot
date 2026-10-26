@@ -131,8 +131,9 @@ window.readSvg = (marked = false) => {
 };
 // the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it. With
 // \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again. With \`bundle\`, the
-// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it
-window.pickInSpace = async (hideBob = false, bundle = false) => {
+// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it.
+// With \`cluster\`, Bob is a folded group's box instead: picked again, it tells the card to open it
+window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -145,6 +146,13 @@ window.pickInSpace = async (hideBob = false, bundle = false) => {
     const g = holder.querySelector('[data-link]');
     g.removeAttribute('data-link');
     g.setAttribute('data-fold', 'bundle:Ada team\\nBob team');
+  }
+  if (cluster) {
+    const g = holder.querySelector('[data-key="bob"]');
+    g.removeAttribute('data-key');
+    g.id = 'fold_group_1';
+    g.setAttribute('data-fold', 'group:Team');
+    holder.querySelector('[data-link]').remove(); // so the only thing a click opens is the group
   }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
@@ -420,6 +428,17 @@ describe("the 3D view's painters, in a real browser", () => {
     const { link } = JSON.parse(await browser.run('pickInSpace(false, true).then(JSON.stringify)'));
     assert.deepEqual(link, { fold: 'bundle:Ada team\nBob team' }, 'the bundle opens by its fold, not as a link');
   });
+
+  // proves: cluster_opens
+  test(
+    'a folded group clicked again in the 3D view tells the card to open it, by its box on screen',
+    options,
+    async () => {
+      // the tries across the screen come quick and close, so the second on the box is a click again
+      const { link } = JSON.parse(await browser.run('pickInSpace(false, false, true).then(JSON.stringify)'));
+      assert.deepEqual(link, { fold: 'fold_group_1' }, 'the card finds the fold its box opens (viewport-events.ts)');
+    },
+  );
 
   // proves: space_pick_opens
   test('a first click only picks a thing, and another click on it turns the view to it', options, async () => {
