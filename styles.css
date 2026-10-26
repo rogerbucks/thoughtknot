@@ -475,6 +475,39 @@
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
+/* the ladder of detail (cluster_detail_ladder). Its name and three rungs sit side by side, the chosen one filled.
+   The line under them says what each shows. */
+.thoughtknot-view-menu > .thoughtknot-detail {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1) var(--gn-space-2);
+  padding: 0 var(--gn-space-2);
+  color: var(--gn-text-normal);
+}
+.thoughtknot-detail > .thoughtknot-switch-hint {
+  flex-basis: 100%;
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung {
+  box-shadow: none;
+  border: 1px solid var(--gn-border-hover);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  padding: 0 var(--gn-space-3);
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--gn-text-normal);
+  font-weight: normal;
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung:hover {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung[aria-checked='true'] {
+  border-color: var(--gn-accent);
+  background: var(--gn-accent);
+  color: var(--gn-text-on-accent);
+}
 /* Group by (untangle_group_by): its name, then the list of what the things can be grouped by */
 .thoughtknot-view-menu > .thoughtknot-group-by {
   display: flex;

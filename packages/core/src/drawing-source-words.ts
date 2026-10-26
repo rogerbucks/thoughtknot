@@ -140,4 +140,11 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hint.hubs': 'A thing with many links shows them as one stub you can open.',
   'view.hint.groups': 'Each group shows as one box until you open it.',
   'view.hint.merge': 'Links between the same two groups share one line.',
+  // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
+  'view.detail': 'Detail',
+  'view.detail.overview': 'Overview',
+  'view.detail.groups': 'Groups',
+  'view.detail.all': 'All',
+  'view.hint.detail':
+    'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
 } as const;

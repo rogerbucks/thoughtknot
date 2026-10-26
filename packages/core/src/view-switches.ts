@@ -139,6 +139,17 @@ function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly Focu
 }
 
 /**
+ * The rungs of the ladder of detail (cluster_detail_ladder). Roger, 26 Oct 2026: "we need to sort out clusters and
+ * layers". One ladder stands for three switches. The overview shows each group as one box, its links bundled. Groups
+ * shows every thing, in its group's box, its links still bundled. All shows every thing and every link apart.
+ */
+export const DETAIL_LEVELS = ['overview', 'groups', 'all'] as const;
+/** A rung of the ladder of detail. */
+export type DetailLevel = (typeof DETAIL_LEVELS)[number];
+/** A drawing of more things than this, in two or more groups, opens as its overview, until the person turns it. */
+export const OVERVIEW_THINGS = 80;
+
+/**
  * One card's switches, and the hubs and groups opened since they were folded. They are the drawing's alone, never
  * written to the note. It folds a styled drawing for its layout (`folded`). It keeps the plan it last made, for what a
  * tap on a stub or a box opens.
@@ -154,6 +165,8 @@ export class ViewState {
   private readonly openedBundles = new Set<string>();
   /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
   private mergeTurned = false;
+  /** Whether a big grouped drawing has been folded to its overview once, or the person turned groups folded. */
+  private overviewChosen = false;
   /** What the things are grouped by, from the View menu: as written or found until the person picks (untangle_group_by). */
   groupBy: GroupBy | undefined;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
@@ -176,6 +189,7 @@ export class ViewState {
     if (this.switches[s] === on) return false;
     this.switches[s] = on;
     if (s === 'merge') this.mergeTurned = true;
+    if (s === 'groups') this.overviewChosen = true;
     if (s === 'hubs') {
       this.openedHubs.clear();
       this.foldedHubs.clear();
@@ -183,6 +197,22 @@ export class ViewState {
     if (on && s === 'groups') this.openedGroups.clear();
     if (s === 'merge') this.openedBundles.clear();
     return s !== 'labels';
+  }
+
+  /** The rung of the ladder of detail the switches stand on. */
+  get detail(): DetailLevel {
+    return this.switches.groups ? 'overview' : this.switches.merge || this.switches.hubs ? 'groups' : 'all';
+  }
+
+  /** Steps to the rung `level`, setting its switches as one. True when the drawing must be laid out again. */
+  toDetail(level: DetailLevel): boolean {
+    this.overviewChosen = true;
+    if (level === this.detail) return false;
+    const on = { overview: [true, true], groups: [false, true], all: [false, false] }[level];
+    this.turn('groups', on[0] as boolean);
+    this.turn('merge', on[1] as boolean);
+    if (level === 'all') this.turn('hubs', false);
+    return true;
   }
 
   /** Opens a hub's, a group's or a bundle's fold: its links, or its things, drawn again. */
@@ -223,6 +253,11 @@ export class ViewState {
     const { groups, found, instead } = groupsOf(d, keys, edges, this.groupBy);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
+    // a big grouped drawing opens as its overview, once, until the person turns it (cluster_detail_ladder)
+    if (!this.overviewChosen && groups.length > 1) {
+      this.overviewChosen = true;
+      if (keys.length > OVERVIEW_THINGS) [this.switches.groups, this.switches.merge] = [true, true];
+    }
     this.plan = foldPlan(keys, edges, groups, {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,

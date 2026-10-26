@@ -36,6 +36,7 @@ import type {
   WordKey,
 } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
+import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
@@ -90,9 +91,29 @@ export function renderViewMenu(
   turned: (s: ViewSwitch, on: boolean) => void,
   grouping?: Grouping,
   spaced?: (k: keyof LayoutOptions, v: number) => void,
+  stepped?: (level: DetailLevel) => void,
 ): ViewMenu {
   const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
+  // the ladder of detail first: one choice for what the three switches under it fold (cluster_detail_ladder)
+  const ladderHint = `thoughtknot-switch-hint-${++hints}`;
+  const ladder = stepped
+    ? el.createDiv({
+        cls: 'thoughtknot-detail',
+        attr: { role: 'radiogroup', 'aria-label': word('view.detail'), 'aria-describedby': ladderHint },
+      })
+    : null;
+  ladder?.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
+  const rungs = (ladder ? DETAIL_LEVELS : []).map((level) => {
+    const b = (ladder as HTMLElement).createEl('button', {
+      cls: 'thoughtknot-detail-rung',
+      text: word(`view.detail.${level}`),
+      attr: { type: 'button', role: 'radio' },
+    });
+    b.addEventListener('click', () => stepped?.(level));
+    return { level, b };
+  });
+  ladder?.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
     if (s === 'engine') continue; // which engine lays out is the settings page's alone (Roger, 25 Oct 2026)
@@ -141,6 +162,7 @@ export function renderViewMenu(
     list.value = state.groupBy === undefined ? AUTO : state.groupBy === null ? NONE : state.groupBy.by;
   };
   const refresh = () => {
+    for (const { level, b } of rungs) b.setAttribute('aria-checked', String(state.detail === level));
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));
       says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
@@ -201,6 +223,7 @@ export class ViewSwitching {
       (s, on) => this.turn(s, on),
       grouping,
       (k, v) => this.space(k, v),
+      (level) => this.step(level),
     );
     this.drawnAs = this.now();
   }
@@ -223,6 +246,13 @@ export class ViewSwitching {
       this.drawnAs = this.now();
       this.host.shown();
     }
+  }
+
+  /** Steps to the rung `level` of the ladder of detail, and lays the graph out again (cluster_detail_ladder). */
+  step(level: DetailLevel): void {
+    if (!this.o.state.toDetail(level)) return;
+    this.menu.refresh();
+    void this.redraw();
   }
 
   /** Spaces the layout as the menu's slider for `k` now says, and lays the graph out again (layout_saved_with_view). */
