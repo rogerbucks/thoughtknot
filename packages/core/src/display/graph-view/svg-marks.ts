@@ -5,7 +5,7 @@
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
 import { FADED, seeThrough } from '../../colour-numbers.ts';
-import { isCluster } from '../../space-view.ts';
+import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
 /** How many points a link's curve is read at. */

@@ -5,12 +5,10 @@
 // What height means is picked by `DepthBy`:
 // - `group`: a group inside another stands one floor higher, and each thing stands on its group, like a building.
 // - `size`: each block is as tall as a number says, such as a group's count of things, like a city seen from the air.
-// Links run between the tops of the blocks they join, rising in an arc. Labels float just above their block, and
-// space-labels.ts picks which to paint.
+// Links run between the tops of the blocks they join, rising in an arc. Labels float above their block (space-labels.ts).
 //
 // The orbit camera lives here too, as plain numbers: where it looks, how far away, its turn and its tilt. So the
-// painters (display/graph-view/space-painter.ts) only paint, and every sum can be tested without a screen.
-// Host-free and pure.
+// painters (display/graph-view/space-painter.ts) only paint, and every sum is tested without a screen. Host-free, pure.
 import type { DrawMark } from './drawing-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 
@@ -33,15 +31,7 @@ export interface Block {
   tall: number;
   /** Painted as a card flat to the screen (space-cards.ts): its size when one pixel of the space is one of the screen. */
   card?: { width: number; height: number };
-  /** A folded group (fold-source.ts): always a card with its name and count, never a nameless ball. */
-  cluster?: true;
 }
-
-/**
- * Whether a thing's key is a folded group's box: `group: 2` as the layout source names it (fold-source.ts), or
- * `fold_group_2` as the drawing on screen does, with no title to read it by (drawing-svg.ts).
- */
-export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
 
 /** A line through the space, painted in the colour of its style. */
 export interface SpaceLine {
@@ -90,17 +80,9 @@ export interface SpaceMarks {
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
   /** Each open group, with the keys of its things: outlined round them on the screen (cluster_named_everywhere). */
-  groups?: SpaceGroup[];
+  groups?: { id: string; style: string; name: string; of: string[] }[];
   least: Vec3;
   most: Vec3;
-}
-
-/** An open group in the space: its id, its style, its name and the keys of the things in it. */
-export interface SpaceGroup {
-  id: string;
-  style: string;
-  name: string;
-  of: string[];
 }
 
 /** What height means: floors by group, or a number for each mark by its id (or its thing's key). */

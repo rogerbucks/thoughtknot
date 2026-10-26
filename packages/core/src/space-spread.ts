@@ -17,8 +17,10 @@ import { layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
-import { boundsOf, isCluster } from './space-view.ts';
-import type { Block, SpaceArrow, SpaceGroup, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
+import { boundsOf } from './space-view.ts';
+import { isCluster } from './space-cards.ts';
+import type { SpaceGroup } from './space-cards.ts';
+import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
 export const SPREAD_UNIT = 120;
@@ -186,7 +188,6 @@ export function spreadSpace(
     if (m.name !== undefined) block.name = m.name;
     // a folded group is a card among balls too, so its name and count always show (cluster_named_everywhere)
     if (cards || isCluster(m.of)) block.card = { width: m.width, height: m.height };
-    if (isCluster(m.of)) block.cluster = true;
     blocks.push(block);
   }
   // a thing's name is the words its label mark says, else its own name

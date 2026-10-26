@@ -2,9 +2,9 @@
 // screen, with its whole name inside. Far ones come first, a click picks the nearest, and arrowheads sit at card edges.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardArrows, cardAt, cardsOnScreen, frameOf, rowsOf } from '../src/space-cards.ts';
+import { cardArrows, cardAt, cardsOnScreen, frameOf, isCluster, rowsOf } from '../src/space-cards.ts';
 import { spreadSpace } from '../src/space-spread.ts';
-import { isCluster, orbitFit, spaceMatrix } from '../src/space-view.ts';
+import { orbitFit, spaceMatrix } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
 /** Two things in a row and a link from the first to the second, as the 2D drawing marks them. */
@@ -187,7 +187,6 @@ test('a folded group is a named card with its count even among balls, never a na
   assert.ok(!isCluster('group: x') && !isCluster('a'));
   const { space } = spreadSpace(marks);
   const group = space.blocks.find((b) => b.of === 'group: 1');
-  assert.equal(group.cluster, true);
   assert.deepEqual(group.card, { width: 220, height: 60 });
   assert.equal(space.blocks.find((b) => b.of === 'a').card, undefined, 'a thing stays a ball');
   const orbit = orbitFit(space, W / H);
@@ -197,7 +196,7 @@ test('a folded group is a named card with its count even among balls, never a na
     ['group: 1'],
   );
   assert.match(frame.cards[0].rows.join(' '), /Identity · 8 things/);
-  assert.ok(!frame.shapes.blocks.some((b) => b.cluster), 'no ball is painted for the group');
+  assert.ok(!frame.shapes.blocks.some((b) => isCluster(b.of)), 'no ball is painted for the group');
   assert.equal(frame.arrows.length, 2, 'one arrowhead into the ball, one at the edge of the group card');
 });
 
