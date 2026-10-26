@@ -118,6 +118,7 @@ window.readSvg = (marked = false) => {
     <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
     <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="34" font-size="14" fill="rgb(10, 10, 10)">Cy</text><text x="270" y="48" font-size="14" fill="rgb(10, 10, 10)">Young</text></g>
+    <g class="node" id="node4" data-key="group: 1"><polygon fill="none" stroke="rgb(90, 90, 90)" points="160,20 240,20 240,60 160,60"/><text x="200" y="38" font-size="14">Identity</text><text x="200" y="52" font-size="10">8 things</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   if (marked) {
@@ -397,6 +398,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
     // a long name is cut into rows of the same size: the label holds the whole name (Roger, 24 Oct 2026)
     assert.equal(byId.get('l:cy').text, 'Cy Young');
+    // proves: cluster_named_everywhere
+    assert.equal(byId.get('l:group: 1').text, 'Identity · 8 things', 'a folded group keeps its count with its name');
     const untitled = byId.get('e:edge3');
     assert.deepEqual(
       [untitled.from, untitled.to],

@@ -6,6 +6,7 @@
 // blocks and lines are sent to the graphics chip once; turning the camera only sends its 16 numbers.
 // Text is painted by the 2D canvas on a canvas laid over this one (space-canvas-painter.ts, paintSpaceLabels).
 import type { SpaceMarks, Vec3 } from '../../space-view.ts';
+import type { ScreenOutline } from '../../space-cards.ts';
 import { colourReader } from './gl-painter.ts';
 import type { PainterKind, Paints } from './mark-painter.ts';
 
@@ -325,4 +326,42 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
       canvas.width = canvas.height = 0;
     },
   };
+}
+
+/** The size of a group's name on its outline, and how round its corners are, in pixels. */
+const OUTLINE_WORDS = 13,
+  OUTLINE_CORNER = 12;
+
+/**
+ * Paints each open group's outline under everything else. It is a rounded box in the group's colours, as in 2D, with
+ * its name on its top edge. So a cluster reads as one thing in 2.5D and 3D too (cluster_named_everywhere).
+ */
+export function paintOutlines(
+  ctx: CanvasRenderingContext2D,
+  outlines: readonly ScreenOutline[],
+  paints: Paints,
+  halo: string,
+  ink: string,
+) {
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = `${OUTLINE_WORDS}px sans-serif`;
+  for (const o of outlines) {
+    const paint = paints(o.style);
+    ctx.beginPath();
+    ctx.roundRect(o.x, o.y, o.width, o.height, OUTLINE_CORNER);
+    if (paint.fill) {
+      ctx.fillStyle = paint.fill;
+      ctx.fill();
+    }
+    ctx.strokeStyle = paint.line ?? ink;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = halo;
+    ctx.strokeText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, Math.max(0, o.width - OUTLINE_WORDS));
+    ctx.fillStyle = paint.text ?? ink;
+    ctx.fillText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, Math.max(0, o.width - OUTLINE_WORDS));
+  }
+  ctx.lineWidth = 1;
 }

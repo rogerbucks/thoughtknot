@@ -18,6 +18,8 @@ import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
+import { isCluster } from './space-cards.ts';
+import type { SpaceGroup } from './space-cards.ts';
 import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
@@ -52,8 +54,11 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
-/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). */
-const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
+/**
+ * Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). The
+ * layout source names it `trunk: 1 in`. The drawing on screen has no title to read, so there it is `trunk_1_in`.
+ */
+const isPoint = (m: { of?: string }) => /^(?:trunk: \d+ (?:in|out)|trunk_\d+_(?:in|out))$/.test(m.of ?? '');
 
 /** A thing's sphere radius, by its count of links. */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
@@ -160,7 +165,10 @@ export function spreadSpace(
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
     centre.set(m.of, page ? [page[0], -page[1], z * unit] : [x * unit, y * unit, z * unit]);
-    radius.set(m.of, cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0));
+    radius.set(
+      m.of,
+      cards || isPoint(m) || isCluster(m.of) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0),
+    );
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
   // where the drawing put them are spaced as the drawing is
@@ -180,7 +188,8 @@ export function spreadSpace(
       tall: 2 * r,
     };
     if (m.name !== undefined) block.name = m.name;
-    if (cards) block.card = { width: m.width, height: m.height };
+    // a folded group is a card among balls too, so its name and count always show (cluster_named_everywhere)
+    if (cards || isCluster(m.of)) block.card = { width: m.width, height: m.height };
     blocks.push(block);
   }
   // a thing's name is the words its label mark says, else its own name
@@ -202,10 +211,17 @@ export function spreadSpace(
   }
   // a group's name floats over the middle of its things, above the highest of them (space_groups)
   const groupOf = new Map(marks.flatMap((m) => (m.kind === 'box' && m.group ? [[m.id, m.group] as const] : [])));
+  const groups: SpaceGroup[] = [];
   for (const m of marks) {
     if (m.kind !== 'group' || !m.name) continue;
     const inside = blocks.filter((b) => groupOf.get(b.id) === m.id);
     if (!inside.length) continue;
+    groups.push({
+      id: m.id,
+      style: m.style,
+      name: m.name,
+      of: inside.flatMap((b) => (b.of === undefined ? [] : [b.of])),
+    });
     const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
     const top = Math.max(...inside.map((b) => b.floor + b.tall));
     labels.push({
@@ -263,6 +279,7 @@ export function spreadSpace(
       labels.push({ id: `${m.id}\nwords`, style: m.style, at: curve(0.5), text: m.name, size: WORDS_SIZE, link: m.id });
   }
   const space: SpaceMarks = { blocks, lines, labels, arrows, round: true, ...boundsOf(blocks, lines, labels) };
+  if (groups.length) space.groups = groups;
   if (cards) space.cards = true;
   return { space, spots };
 }

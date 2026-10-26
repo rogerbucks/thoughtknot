@@ -245,6 +245,10 @@ test('a trunk’s joint, drawn as a point, stays a small point in 3D, not a ball
   const marks = [...MARKS, joint, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk: 1 in', ''))];
   const ball = spreadSpace(marks).space.blocks.find((b) => b.of === 'trunk: 1 in');
   assert.ok(ball.width <= 6, `${ball.width}`);
+  // the drawing on screen has no titles: the joint is named by its id there (cluster_named_everywhere)
+  const onScreen = { ...joint, of: 'trunk_1_in' };
+  const shown = [...MARKS, onScreen, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk_1_in', ''))];
+  assert.ok(spreadSpace(shown).space.blocks.find((b) => b.of === 'trunk_1_in').width <= 6);
 });
 
 // proves: space_right_way_up

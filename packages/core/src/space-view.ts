@@ -5,12 +5,10 @@
 // What height means is picked by `DepthBy`:
 // - `group`: a group inside another stands one floor higher, and each thing stands on its group, like a building.
 // - `size`: each block is as tall as a number says, such as a group's count of things, like a city seen from the air.
-// Links run between the tops of the blocks they join, rising in an arc. Labels float just above their block, and
-// space-labels.ts picks which to paint.
+// Links run between the tops of the blocks they join, rising in an arc. Labels float above their block (space-labels.ts).
 //
 // The orbit camera lives here too, as plain numbers: where it looks, how far away, its turn and its tilt. So the
-// painters (display/graph-view/space-painter.ts) only paint, and every sum can be tested without a screen.
-// Host-free and pure.
+// painters (display/graph-view/space-painter.ts) only paint, and every sum is tested without a screen. Host-free, pure.
 import type { DrawMark } from './drawing-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 
@@ -81,6 +79,8 @@ export interface SpaceMarks {
   round?: boolean;
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
+  /** Each open group, with the keys of its things: outlined round them on the screen (cluster_named_everywhere). */
+  groups?: { id: string; style: string; name: string; of: string[] }[];
   least: Vec3;
   most: Vec3;
 }

@@ -5,6 +5,7 @@
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
 import { FADED, seeThrough } from '../../colour-numbers.ts';
+import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
 /** How many points a link's curve is read at. */
@@ -103,7 +104,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: wholeName(g, text),
+        text: isCluster(key) ? clusterName(g, text) : wholeName(g, text),
         size,
         anchor: 'middle',
       });
@@ -223,6 +224,14 @@ function wholeName(g: Element, first: Element): string {
     if (row) rows.push(row);
   }
   return rows.join(' ');
+}
+
+/** A folded group's name with its count, written smaller under it (fold-source.ts): `Identity · 8 things`. */
+function clusterName(g: Element, first: Element): string {
+  const texts = Array.from(g.querySelectorAll<Element>('text')),
+    after = texts.slice(texts.indexOf(first)).filter((t) => sizeOf(t) !== sizeOf(first));
+  const count = after.map((t) => t.textContent?.trim()).find(Boolean);
+  return count ? `${wholeName(g, first)} · ${count}` : wholeName(g, first);
 }
 
 /**
