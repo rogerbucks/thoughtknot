@@ -296,7 +296,8 @@ describe('groups as boxes', () => {
 describe("a group's name", () => {
   // proves: cluster_named_everywhere
   test('reads as written, with no entity left in it, in every view that takes it from the source', () => {
-    const dot = 'digraph {\n  subgraph cluster_1 {label=<The reader&#x27;s tools &amp; &#x2068;more&#x2069;>; "a"; "b"}\n}';
+    const dot =
+      'digraph {\n  subgraph cluster_1 {label=<The reader&#x27;s tools &amp; &#x2068;more&#x2069;>; "a"; "b"}\n}';
     assert.deepEqual(
       groupsIn(dot).map((g) => g.label),
       ["The reader's tools & \u2068more\u2069"],
