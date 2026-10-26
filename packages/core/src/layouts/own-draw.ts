@@ -35,6 +35,9 @@ const plain = (text: string) =>
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    // the source writes ' as &#x27; and wraps right-to-left words in &#x2068; … &#x2069; (bidi.ts)
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
     .replace(/&amp;/g, '&');
 
 /** The groups of a layout source, each written on one line as the style source writes them. */
