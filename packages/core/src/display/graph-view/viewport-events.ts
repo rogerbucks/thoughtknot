@@ -26,6 +26,7 @@ import { word } from '@thoughtknot/core';
 import type { Taps, Target } from './taps';
 import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
+import { fills } from '../../space-cards.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 
 /** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
@@ -120,7 +121,11 @@ export function bindViewportEvents(host: ViewportHost): void {
   };
   // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
   card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
-  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => host.unfold(e.detail));
+  // a folded group comes from 3D by its box's id on screen, which keeps the fold it opens (cluster_opens)
+  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => {
+    const box = /^fold_group_\d+$/.test(e.detail) ? host.root.querySelector(`#${e.detail}`) : null;
+    host.unfold(box ? (box.getAttribute('data-fold') ?? e.detail) : e.detail);
+  });
   // the details sheet is placed again as the window changes size and the note scrolls (§25)
   card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
@@ -246,7 +251,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      // zoomed in until a folded group fills the view: it opens (cluster_opens)
+      const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
+        r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),
+        v = vp.getBoundingClientRect();
+      if (fold?.startsWith('group:') && r && fills(r, v.width, v.height)) host.unfold(fold);
     },
     { passive: false },
   );
