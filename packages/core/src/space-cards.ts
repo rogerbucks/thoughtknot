@@ -9,6 +9,7 @@
 // named ones, so nothing covers a name. Each arrowhead is painted at the
 // edge of the card it points to. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
+import { isPlane } from './space-planes.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
@@ -330,18 +331,19 @@ export function frameOf(
     ...(pickedLink === undefined ? {} : { pickedLink }),
   };
   if (!space.cards) {
-    // a folded group is a card here too, never a nameless ball (cluster_named_everywhere)
-    const clusters = space.blocks.filter((b) => isCluster(b.of));
+    // a folded group is a card here too, never a nameless ball, and so is a group's card above (cluster_planes)
+    const carded = (b: Block | null | undefined) => isCluster(b?.of) || isPlane(b?.of);
+    const clusters = space.blocks.filter(carded);
     if (clusters.length) {
       const into = new Set(clusters.map((b) => b.of)),
-        carded = new Set(space.lines.filter((l) => into.has(l.to)).map((l) => `${l.id}\narrow`));
+        edged = new Set(space.lines.filter((l) => into.has(l.to)).map((l) => `${l.id}\narrow`));
       // its arrowheads sit at the card's edge, drawn once
       const balls = {
         ...space,
-        blocks: space.blocks.filter((b) => !isCluster(b.of)),
-        arrows: space.arrows.filter((a) => !carded.has(a.id)),
+        blocks: space.blocks.filter((b) => !carded(b)),
+        arrows: space.arrows.filter((a) => !edged.has(a.id)),
       };
-      const frame = frameOf(balls, matrix, width, height, isCluster(picked?.of) ? null : picked, pickedLink);
+      const frame = frameOf(balls, matrix, width, height, carded(picked) ? null : picked, pickedLink);
       const cards = cardsOnScreen({ ...space, blocks: clusters }, matrix, width, height, picked?.of);
       return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
     }
