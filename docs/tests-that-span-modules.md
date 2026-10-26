@@ -465,7 +465,7 @@ after a module nor listed here, and on a listed file that is missing.
 ## Community rules, Apple's terms and the working group
 
 - `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
-  `docs/apple-terms.md`). Nothing people read says Apple checked or endorses ThoughtKnot. `TRADEMARKS.md` names Apple's
+  `docs/apple-terms.md`). Nothing people read claims that Apple vouches for ThoughtKnot. `TRADEMARKS.md` names Apple's
   marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
 - `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and Grok their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
