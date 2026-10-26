@@ -41,6 +41,8 @@ const pluginSource = () =>
     .map((f) => ({ f, text: read(f) }));
 const ci = () => read('.github/workflows/ci.yml');
 const contributing = () => read('CONTRIBUTING.md');
+/** The list of tests that span modules, each with what it proves. */
+const SPANNING_LIST = 'docs/tests-that-span-modules.md';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const SNAKE = /^[a-z0-9]+(_[a-z0-9]+)*$/;
@@ -162,8 +164,11 @@ describe('naming conventions', () => {
     assert.deepEqual(wrong, []);
   });
 
-  test('each test file is named after its file, or listed in CONTRIBUTING.md as a test that spans modules', () => {
-    const spanning = new Set([...contributing().matchAll(/^- `([^`]+\.(?:test\.(?:js|mjs)|py))`/gm)].map((m) => m[1]));
+  test('each test file is named after its file, or listed in docs/tests-that-span-modules.md', () => {
+    const list = read(SPANNING_LIST);
+    assert.match(list, /^# Tests that span modules$/m);
+    assert.match(contributing(), /\(docs\/tests-that-span-modules\.md\)/, 'CONTRIBUTING.md points to the list');
+    const spanning = new Set([...list.matchAll(/^- `([^`]+\.(?:test\.(?:js|mjs)|py))`/gm)].map((m) => m[1]));
     const loose = [];
     const named = (mods, n) => mods.some((m) => n === m || n.startsWith(`${m}-`) || n.startsWith(`${m}_`));
     for (const p of PACKAGES) {
