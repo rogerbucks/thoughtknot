@@ -6,7 +6,6 @@
 // It shows cards in space (2.5D, space-cards.ts), or 3D in one of three ways. Things are laid out again as balls sized
 // by their links (space-spread.ts). Or each group is a floor its things stand on. Or each thing is as tall as its links.
 // How to move it is on screen (space-controls.ts): drag turns, Shift-drag or right-drag moves, scroll zooms.
-//
 // 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing and opens its details on the
 // card (SPACE_OPEN, viewport-events.ts). Another turns the view to it (orbitAround). A bundle picked opens (SPACE_UNFOLD).
 // So does a folded group picked again, or zoomed into until it fills the screen. A thing the card selects is picked
@@ -19,6 +18,7 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
+import { stackedPlanes } from '../../space-planes.ts';
 import { keyMove, orbitAround, panBy, pinchBy, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
@@ -116,7 +116,7 @@ export async function openSpaceView(
   let depths = depthsOf();
   const spaceBy = (by: Depth): SpaceMarks =>
     by === 'cards' || !by
-      ? spreadSpace(marks, undefined, by === 'cards', more.asDrawn, more.layout?.()).space
+      ? stackedPlanes(spreadSpace(marks, undefined, by === 'cards', more.asDrawn, more.layout?.()).space)
       : spaceOf(marks, by);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
