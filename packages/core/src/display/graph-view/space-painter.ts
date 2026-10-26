@@ -333,8 +333,8 @@ const OUTLINE_WORDS = 13,
   OUTLINE_CORNER = 12;
 
 /**
- * Paints each open group's outline under everything else: a rounded box in the group's colours, as in 2D, with its
- * name on its top edge, so a cluster reads as one thing in 2.5D and 3D too (cluster_named_everywhere).
+ * Paints each open group's outline under everything else. It is a rounded box in the group's colours, as in 2D, with
+ * its name on its top edge. So a cluster reads as one thing in 2.5D and 3D too (cluster_named_everywhere).
  */
 export function paintOutlines(
   ctx: CanvasRenderingContext2D,

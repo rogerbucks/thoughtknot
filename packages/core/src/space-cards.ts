@@ -206,8 +206,8 @@ export interface SpaceFrame {
 export type SpaceGroup = NonNullable<SpaceMarks['groups']>[number];
 
 /**
- * Whether a thing's key is a folded group's box: `group: 2` as the layout source names it (fold-source.ts), or
- * `fold_group_2` as the drawing on screen does, with no title to read it by (drawing-svg.ts).
+ * Whether a thing's key is a folded group's box. The layout source names it `group: 2` (fold-source.ts). The drawing
+ * on screen has no title to read, so there it is `fold_group_2` (drawing-svg.ts).
  */
 export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
 

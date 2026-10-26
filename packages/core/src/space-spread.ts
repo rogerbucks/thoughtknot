@@ -54,8 +54,10 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
-/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge): */
-// the layout source names it `trunk: 1 in`, the drawing on screen, with no title to read, `trunk_1_in`
+/**
+ * Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). The
+ * layout source names it `trunk: 1 in`. The drawing on screen has no title to read, so there it is `trunk_1_in`.
+ */
 const isPoint = (m: { of?: string }) => /^(?:trunk: \d+ (?:in|out)|trunk_\d+_(?:in|out))$/.test(m.of ?? '');
 
 /** A thing's sphere radius, by its count of links. */
