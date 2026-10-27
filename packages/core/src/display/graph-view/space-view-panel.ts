@@ -267,7 +267,7 @@ export async function openSpaceView(
   );
   depthButton.hidden = depth === 0;
 
-  // a touch in the view goes no further, so the host's own swipes (Obsidian's side panels) never take it (gestures_stay_in_drawing)
+  // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
