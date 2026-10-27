@@ -75,6 +75,29 @@ Each cluster gets one centroid. It is a thing of kind `Centroid`, derived and ne
 the first place groups come from. A thing in several clusters is put in the first one written, since a layout group
 must hold each thing once. Louvain is still the fallback, now called from the graph spec.
 
+## Clusters on screen: one look, a ladder and planes
+
+Roger found clusters hard to read on 26 October 2026. One idea, a group, was drawn five ways behind five switches.
+He chose one cluster look, a ladder of detail, and stacked planes in 2.5D and 3D. Each part is its own requirement
+in editor spec §53.
+
+| Part | What a reader sees | Requirement | Where the code lives |
+|---|---|---|---|
+| One look | A folded group is a named box with its count in 2D, 2.5D and 3D. An open group is outlined with its name | `cluster_named_everywhere` | `space-cards.ts`, `space-spread.ts`, `svg-marks.ts` |
+| The ladder | One Detail control: Overview, Groups and All. A grouped graph of more than 80 things opens on Overview | `cluster_detail_ladder` | `view-switches.ts`, in the core and the display |
+| Opening | Zoom in until a folded group fills half the view, or click it twice in 3D | `cluster_opens` | `space-cards.ts`, `space-view-panel.ts`, `viewport-events.ts` |
+| Planes | In 2.5D and 3D, a named card for each open group floats above its things, on a stalk | `cluster_planes` | `space-planes.ts` |
+| A plain menu | The ladder and the labels switch in sight. The older switches and the sliders sit under More choices | `cluster_menu_plain` | `display/graph-view/view-switches.ts` |
+
+- **The ladder turns the old switches.** Overview turns on Fold groups and Bundle links. Groups opens the groups and
+  keeps the bundles. All turns both off, and Fold busy things too. While Fold busy things is on, the ladder shows
+  Groups. The switches stay, under More choices, and follow the ladder.
+- **A choice is kept.** Once a person picks a step, a big graph no longer opens on Overview by itself.
+- **The planes add, never move.** The things keep the places the layout gave them. The plane only adds cards, stalks
+  and one counted line for the links between two groups.
+- **3D finds a folded group by its box.** The drawing on screen names it `fold_group_N`. The card reads the fold it
+  opens from that box.
+
 ## How it is built
 
 Each step is a pull request: the spec, then a test that fails first, then the code.

@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md)): 162 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md)): 163 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -201,6 +201,7 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/19 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
 - [[Device checks/19 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
 - [[Device checks/19 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]
+- [[Device checks/19 The View menu/M-08 The ladder of detail, zoom and planes|M-08 The ladder of detail, zoom and planes]]
 
 ## 20 Animated images
 
