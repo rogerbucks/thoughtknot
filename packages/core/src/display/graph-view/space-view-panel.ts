@@ -18,7 +18,7 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { stackedPlanes } from '../../space-planes.ts';
+import { isPlane, stackedPlanes } from '../../space-planes.ts';
 import { keyMove, orbitAround, panBy, pinchBy, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
@@ -332,7 +332,7 @@ export async function openSpaceView(
     else if (hit) {
       if (picked?.id === hit.id) return turnTo(middleOf(hit));
       pick(hit);
-      if (hit.of !== undefined) tell({ key: hit.of });
+      if (hit.of !== undefined && !isPlane(hit.of)) tell({ key: hit.of });
     } else if (link) {
       if (pickedLine?.id === link.line.id) return turnTo(link.at);
       pickLine(link.line);

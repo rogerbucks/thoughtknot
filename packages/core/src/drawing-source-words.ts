@@ -142,6 +142,7 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hint.merge': 'Links between the same two groups share one line.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
+  'view.more': 'More choices',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',
