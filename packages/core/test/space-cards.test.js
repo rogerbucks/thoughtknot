@@ -14,6 +14,8 @@ import {
   rowsOf,
 } from '../src/space-cards.ts';
 import { spreadSpace } from '../src/space-spread.ts';
+import { OUTLINE_FOLD, outlinesOf, stripTap } from '../src/space-outlines.ts';
+import { spotsKept } from '../src/space-parts.ts';
 import { middleOf, orbitFit, spaceMatrix } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
@@ -255,4 +257,76 @@ test('zooming in on a folded group until its card fills the screen opens it; see
   const group = space.blocks.find((b) => b.of === 'fold_group_1');
   assert.equal(at({ ...whole, target: middleOf(group), distance: whole.distance / 30 }), 'fold_group_1');
   assert.equal(clusterFilling(space, spaceMatrix(whole, W / H, whole.distance * 4), W, H, -50, -50), undefined);
+});
+
+/** Four things as cards: a and b in a group drawn open, which `folds` folds back when given; c and d outside it. */
+const grouped = (folds) => [
+  { id: 'g:1', kind: 'group', style: 'group', name: 'Makers', x: -10, y: -10, width: 300, height: 80, ...folds },
+  ...['a', 'b', 'c', 'd'].map((k, i) => ({
+    id: `t:${k}`,
+    kind: 'box',
+    style: 'thing',
+    of: k,
+    x: i * 140,
+    y: 0,
+    width: 100,
+    height: 40,
+    ...(i < 2 ? { group: 'g:1' } : {}),
+  })),
+  { id: 'e:ac', kind: 'link', style: 'link', from: 'a', to: 'c', points: [] },
+  { id: 'e:bd', kind: 'link', style: 'link', from: 'b', to: 'd', points: [] },
+];
+
+// proves: cluster_fold_back
+test('a tap on an opened group’s button folds it back; one on its name fits the view to its things', () => {
+  const { space } = spreadSpace(grouped({ of: 'group:Makers' }), undefined, true);
+  assert.equal(space.groups?.[0]?.folds, 'group:Makers', 'the group keeps the fold that folds it back');
+  const matrix = spaceMatrix(orbitFit(space, W / H), W / H, 4000);
+  const [o] = outlinesOf(space, matrix, W, H);
+  assert.equal(o.folds, 'group:Makers');
+  assert.deepEqual(stripTap(space, matrix, W, H, o.x + o.width - OUTLINE_FOLD / 2, o.y + 6), { folds: 'group:Makers' });
+  const named = stripTap(space, matrix, W, H, o.x + 12, o.y + 6);
+  assert.deepEqual(
+    named.fit.blocks.map((b) => b.of),
+    ['a', 'b'],
+    'its name fits the view to its things only',
+  );
+  assert.equal(stripTap(space, matrix, W, H, o.x + 12, o.y + o.height / 2), undefined, 'inside it, no tap of its own');
+  // a group open by the View menu, with no box to fold back to, has no button: its whole strip zooms to it
+  const { space: open } = spreadSpace(grouped({}), undefined, true);
+  const [all] = outlinesOf(open, matrix, W, H);
+  assert.ok(!all.folds);
+  assert.ok('fit' in stripTap(open, matrix, W, H, all.x + all.width - OUTLINE_FOLD / 2, all.y + 6));
+});
+
+// proves: cluster_in_place
+test('laid out again, a group just opened starts where its box was, and one just folded at its things’ middle', () => {
+  const kept = spotsKept(
+    new Map([
+      ['fold_group_1', [4, 5, 6]],
+      ['c', [0, 0, 0]],
+    ]),
+    [['fold_group_1', ['a', 'b']]],
+  );
+  assert.deepEqual(kept.get('c'), [0, 0, 0], 'what was there stays');
+  for (const k of ['a', 'b']) assert.ok(Math.hypot(...kept.get(k).map((v, i) => v - [4, 5, 6][i])) < 0.5, k);
+  assert.notDeepEqual(kept.get('a'), kept.get('b'), 'no two start in one place');
+  const folded = spotsKept(
+    new Map([
+      ['a', [0, 0, 0]],
+      ['b', [2, 4, 0]],
+    ]),
+    [['fold_group_1', ['a', 'b']]],
+  );
+  assert.deepEqual(folded.get('fold_group_1'), [1, 2, 0]);
+  // laid out from them, the things opened stay round where the box was, and the rest stay put
+  const box = [
+    { id: 't:fold_group_1', kind: 'box', style: 'thing', of: 'fold_group_1', x: 0, y: 0, width: 100, height: 40 },
+  ];
+  const toBox = (k) => ({ id: `e:${k}`, kind: 'link', style: 'link', from: 'fold_group_1', to: k, points: [] });
+  const before = spreadSpace([...box, ...grouped({}).slice(3, 5), toBox('c'), toBox('d')]).spots;
+  const after = spreadSpace(grouped({}), spotsKept(before, [['fold_group_1', ['a', 'b']]])).spots;
+  const far = (p, q) => Math.hypot(...p.map((v, i) => v - q[i]));
+  for (const k of ['a', 'b']) assert.ok(far(after.get(k), before.get('fold_group_1')) < 1.5, `${k} opens in place`);
+  for (const k of ['c', 'd']) assert.ok(far(after.get(k), before.get(k)) < 1, `${k} stays put`);
 });

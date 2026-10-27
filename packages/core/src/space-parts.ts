@@ -4,6 +4,7 @@
 // (fold-source.ts). Laid out like things, the two joints drifted anywhere, so the links bent at odd angles (Roger,
 // 27 Oct 2026: "the angles they go at don't make a lot of sense"). So the force layout lays out the things only, each
 // merged link joined straight through. Then each joint is set on the line between the things its links join.
+// A drawing laid out again, as a group opens or folds, starts from where each thing was (cluster_in_place).
 // Host-free and pure.
 import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
@@ -84,6 +85,30 @@ export function jointsBetween(shape: GraphShape, spots: Spots<3>): Spots<3> {
       joint,
       [0, 1, 2].map((i) => (here[i] ?? 0) + ((there[i] ?? 0) - (here[i] ?? 0)) * JOINT_AT) as [number, number, number],
     );
+  }
+  return out;
+}
+
+/** How far apart the things of a group just opened start, round where its box was, in the layout's units. */
+const OPENED_APART = 0.15;
+
+/**
+ * The spots to lay a drawing out again from, so a group opens or folds where it was (cluster_in_place). Each thing keeps
+ * its `last` spot. A thing that was in a folded box, by `held` (each box's key and its things), starts round the box's
+ * last spot. A box that has just folded starts at the middle of its things' last spots.
+ */
+export function spotsKept(last: Spots<3>, held: Iterable<readonly [string, readonly string[]]>): Spots<3> {
+  const out = new Map(last);
+  for (const [box, keys] of held) {
+    const at = last.get(box),
+      mid = middleOf(keys, last);
+    if (at)
+      keys.forEach((k, i) => {
+        // round the box on a small spiral, so no two start in one place
+        const r = OPENED_APART * Math.cbrt(i + 1);
+        if (!out.has(k)) out.set(k, [at[0] + r * Math.cos(i * 2.4), at[1] + r * Math.sin(i * 2.4), at[2]]);
+      });
+    else if (mid) out.set(box, mid);
   }
   return out;
 }

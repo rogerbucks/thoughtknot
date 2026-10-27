@@ -1185,6 +1185,26 @@ details.thoughtknot-style > summary {
   stroke: var(--gn-accent);
   stroke-width: 2;
 }
+/* a group opened from its box: a button at its top right folds it back, and its name zooms to it (cluster_fold_back) */
+.thoughtknot-svg .thoughtknot-fold-back {
+  cursor: pointer;
+}
+.thoughtknot-svg .thoughtknot-fold-back rect {
+  fill: var(--gn-bg);
+  stroke: var(--gn-text-normal);
+  stroke-width: 1;
+}
+.thoughtknot-svg .thoughtknot-fold-back path {
+  stroke: var(--gn-text-normal);
+  stroke-width: 1.6;
+}
+.thoughtknot-svg .thoughtknot-fold-back:focus-visible rect {
+  stroke: var(--gn-accent);
+  stroke-width: 2;
+}
+.thoughtknot-svg g.cluster > text[data-fold] {
+  cursor: zoom-in;
+}
 .thoughtknot-svg .thoughtknot-image-control[aria-disabled='true'] {
   cursor: not-allowed;
 }

@@ -228,6 +228,7 @@ export function spreadSpace(
       style: m.style,
       name: m.name,
       of: inside.flatMap((b) => (b.of === undefined ? [] : [b.of])),
+      ...(m.of ? { folds: m.of } : {}),
     });
     const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
     const top = Math.max(...inside.map((b) => b.floor + b.tall));

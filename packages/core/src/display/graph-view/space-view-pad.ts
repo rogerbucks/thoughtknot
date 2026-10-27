@@ -8,9 +8,9 @@
 // Where motion is to be still, it opens and closes at once.
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { KEY_STEP, between, fromAbove } from '../../space-controls.ts';
+import { KEY_STEP, between, fromAbove, orbitAround } from '../../space-controls.ts';
 import type { SpaceMove } from '../../space-controls.ts';
-import type { Orbit } from '../../space-view.ts';
+import type { Orbit, Vec3 } from '../../space-view.ts';
 import { button } from '../button.ts';
 import { reducedMotion } from './details-nav.ts';
 
@@ -115,4 +115,20 @@ export function fadeOut(el: HTMLElement, gone: () => void): void {
   if (reducedMotion(el.win)) return gone();
   el.addClass('is-leaving');
   el.win.setTimeout(gone, FADE_MS);
+}
+
+/** How long the view takes to turn to face what was picked, in milliseconds. */
+const TURN_TIME = 280;
+
+/** Turns the view from `from` to face `point`, gliding unless motion is to be still, while `going` says so. */
+export function turnToward(win: Window, from: Orbit, point: Vec3, set: (o: Orbit) => void, going: () => boolean): void {
+  if (reducedMotion(win)) return set(orbitAround(from, point));
+  const start = win.performance.now();
+  const step = (now: number) => {
+    if (!going()) return;
+    const t = Math.min(1, (now - start) / TURN_TIME);
+    set(orbitAround(from, point, 1 - (1 - t) * (1 - t)));
+    if (t < 1) win.requestAnimationFrame(step);
+  };
+  win.requestAnimationFrame(step);
 }

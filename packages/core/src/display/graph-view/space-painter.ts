@@ -6,7 +6,8 @@
 // blocks and lines are sent to the graphics chip once; turning the camera only sends its 16 numbers.
 // Text is painted by the 2D canvas on a canvas laid over this one (space-canvas-painter.ts, paintSpaceLabels).
 import type { SpaceMarks, Vec3 } from '../../space-view.ts';
-import type { ScreenOutline } from '../../space-cards.ts';
+import { OUTLINE_FOLD } from '../../space-outlines.ts';
+import type { ScreenOutline } from '../../space-outlines.ts';
 import { colourReader } from './gl-painter.ts';
 import type { PainterKind, Paints } from './mark-painter.ts';
 
@@ -357,11 +358,29 @@ export function paintOutlines(
     ctx.strokeStyle = paint.line ?? ink;
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    // the name leaves room at the right for the button that folds the group back, when it has one
+    const room = Math.max(0, o.width - OUTLINE_WORDS - (o.folds ? OUTLINE_FOLD : 0));
     ctx.lineWidth = 4;
     ctx.strokeStyle = halo;
-    ctx.strokeText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, Math.max(0, o.width - OUTLINE_WORDS));
+    ctx.strokeText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, room);
     ctx.fillStyle = paint.text ?? ink;
-    ctx.fillText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, Math.max(0, o.width - OUTLINE_WORDS));
+    ctx.fillText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, room);
+    if (o.folds) paintFoldButton(ctx, o.x + o.width - OUTLINE_FOLD + 3, o.y + 3, paint.line ?? ink);
   }
   ctx.lineWidth = 1;
+}
+
+/** The button that folds an open group back into its box: a minus in a small rounded square (cluster_fold_back). */
+function paintFoldButton(ctx: CanvasRenderingContext2D, x: number, y: number, ink: string): void {
+  const side = OUTLINE_FOLD - 6;
+  ctx.beginPath();
+  ctx.roundRect(x, y, side, side, 4);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + 4, y + side / 2);
+  ctx.lineTo(x + side - 4, y + side / 2);
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }

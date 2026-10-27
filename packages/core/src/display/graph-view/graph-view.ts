@@ -23,6 +23,7 @@ import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
 import { Taps, boxIn, type Target } from './taps';
+import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
 import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip';
@@ -240,14 +241,12 @@ export class GraphView extends Lifecycle {
     const { viewport, zoom, sel, details, taps, svg, o, fullscreen: full } = this,
       { info } = this.aids;
     const open = (t: Target, x?: boolean) => this.open(t, x),
+      focus = (key: string) => boxIn(this.svg, key)?.focus({ preventScroll: true }),
       unfold = (fold: string, byKey?: boolean) =>
-        this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
+        foldInPlace(this.svg, this.zoom, fold, this.switching, byKey && focus);
     const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
     bindViewportEvents({ ...host, space: this.spaces });
-    const observer = new ResizeObserver(() => {
-      this.zoom.resize(this.zoomSize());
-      this.aids.placeDetails();
-    });
+    const observer = new ResizeObserver(() => (this.zoom.resize(this.zoomSize()), this.aids.placeDetails()));
     observer.observe(this.viewport);
     if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)
     this.register(() => observer.disconnect());

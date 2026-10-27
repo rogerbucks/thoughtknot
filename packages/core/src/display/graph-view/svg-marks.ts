@@ -48,7 +48,19 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     clusters.push({ id, x, y, width, height });
     const text = g.querySelector('text'),
       name = text?.textContent?.trim();
-    marks.push({ id, kind: 'group', style: styled(shape, text), x, y, width, height, ...(name ? { name } : {}) });
+    // a group opened from its box keeps the fold that folds it back, so its outline in space can (cluster_fold_back)
+    const folds = g.getAttribute('data-refold');
+    marks.push({
+      id,
+      kind: 'group',
+      style: styled(shape, text),
+      x,
+      y,
+      width,
+      height,
+      ...(name ? { name } : {}),
+      ...(folds ? { of: folds } : {}),
+    });
   }
   /** The smallest group holding the box from (`x`, `y`), `width` by `height`. */
   const holding = (x: number, y: number, width: number, height: number, not = '') => {
@@ -249,4 +261,12 @@ function endsOf(title: string, keys: ReadonlySet<string>): { from?: string; to?:
     if (from !== null && to !== null) return { from, to };
   }
   return {};
+}
+
+/** Each folded group's box in `svg`, by its id, with the keys of the things it holds (cluster_in_place). */
+export function heldIn(svg: Element): [string, string[]][] {
+  return Array.from(svg.querySelectorAll('[data-fold^="group:"][data-keys]')).map((g) => [
+    g.id,
+    (g.getAttribute('data-keys') ?? '').split(' ').filter(Boolean),
+  ]);
 }
