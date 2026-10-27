@@ -1,9 +1,7 @@
-// The View menu (editor spec §25, view_switches): a graph's four switches, each on or off, under the bar's View button.
-// They hide labels too small to read, fold busy things, fold groups and bundle links between groups, each with a line
-// saying what it does. They start as the plugin's settings hold them (view_switch_defaults). Turning one redraws the
-// graph at once: hiding labels in place, the others by laying the graph out again. The card puts that in place, keeping the selection and the focus. A busy hub's stub, a
-// folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
-// offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
+// The View menu (editor spec §25, view_switches), under the bar's View button. It opens on the ladder of detail and
+// the switch that hides labels too small to read. The switches the ladder turns, and the layout sliders, fold away
+// under More. Each switch starts as the settings hold it (view_switch_defaults), and turning one redraws the graph.
+// Nothing here reaches the note, so it works in reading view too (view_switch_view_only).
 import {
   BY_KIND,
   LAYOUT_OPTION_RANGE,
@@ -115,10 +113,18 @@ export function renderViewMenu(
   });
   ladder?.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
+  // with the ladder, the switches it turns and the layout sliders fold away under More (cluster_menu_plain)
+  let more: HTMLElement | null = null;
+  const holder = (s?: ViewSwitch): HTMLElement => {
+    if (!ladder || s === 'labels') return el;
+    const d = more ? null : el.createEl('details', { cls: 'thoughtknot-view-more' });
+    d?.createEl('summary', { text: word('view.more') });
+    return (more ??= (d as HTMLElement).createDiv({ cls: 'thoughtknot-view-more-body' }));
+  };
   for (const s of VIEW_SWITCHES) {
     if (s === 'engine') continue; // which engine lays out is the settings page's alone (Roger, 25 Oct 2026)
     const hint = `thoughtknot-switch-hint-${++hints}`;
-    const b = el.createEl('button', {
+    const b = holder(s).createEl('button', {
       cls: 'thoughtknot-switch',
       attr: { type: 'button', role: 'switch', 'aria-describedby': hint },
     });
@@ -141,7 +147,7 @@ export function renderViewMenu(
   list?.addEventListener('change', () => grouping?.pick(list.value));
   const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
     const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = el.createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
+    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
     const input = row.createEl('input', {
       attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
     });
