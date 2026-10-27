@@ -90,7 +90,8 @@ in editor spec §53.
 | A plain menu | The ladder and the labels switch in sight. The older switches and the sliders sit under More choices | `cluster_menu_plain` | `display/graph-view/view-switches.ts` |
 
 - **The ladder turns the old switches.** Overview turns on Fold groups and Bundle links. Groups opens the groups and
-  keeps the bundles. All turns both off. The switches stay, under More choices, and follow the ladder.
+  keeps the bundles. All turns both off, and Fold busy things too. While Fold busy things is on, the ladder shows
+  Groups. The switches stay, under More choices, and follow the ladder.
 - **A choice is kept.** Once a person picks a step, a big graph no longer opens on Overview by itself.
 - **The planes add, never move.** The things keep the places the layout gave them. The plane only adds cards, stalks
   and one counted line for the links between two groups.
