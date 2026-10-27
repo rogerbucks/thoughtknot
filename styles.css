@@ -475,6 +475,20 @@
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
+/* the switches the ladder turns, and the layout sliders, folded away under More (cluster_menu_plain) */
+.thoughtknot-view-menu > .thoughtknot-view-more {
+  grid-column: 1 / -1;
+}
+.thoughtknot-view-more > summary {
+  cursor: pointer;
+  padding: var(--gn-space-1) var(--gn-space-2);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-view-more-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
+  gap: var(--gn-space-1) var(--gn-space-4);
+}
 /* the ladder of detail (cluster_detail_ladder). Its name and three rungs sit side by side, the chosen one filled.
    The line under them says what each shows. */
 .thoughtknot-view-menu > .thoughtknot-detail {
@@ -518,7 +532,8 @@
   color: var(--gn-text-normal);
 }
 /* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
-.thoughtknot-view-menu > .thoughtknot-layout-option {
+.thoughtknot-view-menu > .thoughtknot-layout-option,
+.thoughtknot-view-more-body > .thoughtknot-layout-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -527,7 +542,8 @@
   min-height: 44px;
   color: var(--gn-text-normal);
 }
-.thoughtknot-view-menu > .thoughtknot-layout-option > input {
+.thoughtknot-view-menu > .thoughtknot-layout-option > input,
+.thoughtknot-view-more-body > .thoughtknot-layout-option > input {
   flex: 1;
   min-width: 96px;
   max-width: 160px;
