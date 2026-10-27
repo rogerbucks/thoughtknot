@@ -79,8 +79,8 @@ export interface SpaceMarks {
   round?: boolean;
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
-  /** Each open group, with the keys of its things: outlined round them on the screen (cluster_named_everywhere). */
-  groups?: { id: string; style: string; name: string; of: string[] }[];
+  /** Each open group, its things' keys and the fold that folds it back, if any: outlined round them (cluster_fold_back). */
+  groups?: { id: string; style: string; name: string; of: string[]; folds?: string }[];
   least: Vec3;
   most: Vec3;
 }

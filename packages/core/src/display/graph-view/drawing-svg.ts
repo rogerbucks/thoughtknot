@@ -136,6 +136,7 @@ function decorate(
     );
   }
   markFolds(svg, plan, textOf, d);
+  if (o?.switches?.state.switches.groups) markOpened(svg, plan); // a group opened from its box folds back (§25)
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
   markCertainty(svg, boxes); // how sure each thing is: line weight, dash and a mark, never colour alone (§36)
   if (o?.links) markLinks(svg, o.reading, o.graph, o.links); // links shown as links, attachments counted (§18)
@@ -182,6 +183,55 @@ function markFolds(
     g?.setAttribute('data-keys', things.join(' '));
     g?.setAttribute('aria-pressed', 'false');
   });
+}
+
+/** The SVG namespace, for the button each opened group gets. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+/** The fold-back button's side, and its room from the group's top right corner, in the drawing's units. */
+const BACK_SIDE = 14,
+  BACK_ROOM = 4;
+
+/** The first child of `e` that is one of `tags`. */
+const childOf = (e: Element, tags: readonly string[]) => Array.from(e.children).find((c) => tags.includes(c.localName));
+
+/** Sets each of `attrs` on `e`. */
+const setAll = (e: Element, attrs: Record<string, string | number>) => {
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+};
+
+/**
+ * Each group opened from its box (cluster_fold_back): a button at its top right folds it back, and its name zooms to
+ * it. Both are folds the card opens as it opens a box: `group:` folds it back, `zoom:` zooms to it.
+ */
+function markOpened(svg: SVGSVGElement, plan: Folding | undefined): void {
+  const clusters = Array.from(svg.querySelectorAll('g.cluster'));
+  for (const [label, , folded] of plan?.groups ?? []) {
+    const g = folded ? undefined : clusters.find((c) => childOf(c, ['text'])?.textContent?.trim() === label),
+      name = g && childOf(g, ['text']),
+      shape = g && childOf(g, ['polygon', 'path']);
+    // its corners, from the outline's points as written, so it needs no layout of the page
+    const at = (shape?.getAttribute('points') ?? shape?.getAttribute('d') ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number);
+    if (!g || !name || !at?.length) continue;
+    g.setAttribute('data-refold', `group:${label}`);
+    setAll(name, {
+      'data-fold': `zoom:${label}`,
+      role: 'button',
+      tabindex: 0,
+      'aria-label': word('fold.zoom', { label }),
+    });
+    const make = (tag: string) => svg.ownerDocument.createElementNS(SVG_NS, tag);
+    const back = make('g'),
+      box = make('rect'),
+      minus = make('path');
+    setAll(back, { class: 'thoughtknot-fold-back', 'data-fold': `group:${label}`, role: 'button', tabindex: 0 });
+    back.setAttribute('aria-label', word('fold.back', { label }));
+    const x = Math.max(...at.filter((_, i) => i % 2 === 0)) - BACK_SIDE - BACK_ROOM,
+      y = Math.min(...at.filter((_, i) => i % 2 === 1)) + BACK_ROOM;
+    setAll(box, { x, y, width: BACK_SIDE, height: BACK_SIDE, rx: 3 });
+    minus.setAttribute('d', `M${x + 3},${y + BACK_SIDE / 2}h${BACK_SIDE - 6}`);
+    back.append(box, minus);
+    g.append(back);
+  }
 }
 
 /** The drawing as sentences, for screen readers (spec §11), named as the viewport's description. */

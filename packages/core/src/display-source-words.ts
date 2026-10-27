@@ -51,6 +51,8 @@ export const DISPLAY_SOURCE_WORDS = {
     one: '{label}: {count} thing folded. Open the group.',
     other: '{label}: {count} things folded. Open the group.',
   },
+  'fold.back': 'Fold {label} back into one box.',
+  'fold.zoom': 'Zoom to {label}.',
   'flow.legend': 'What the moving links mean',
   'callout.label': 'Note: {words}',
   'strip.outside': 'outside the view',
