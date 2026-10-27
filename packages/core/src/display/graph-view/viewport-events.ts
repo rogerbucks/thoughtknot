@@ -220,6 +220,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     },
     { passive: false },
   );
+  // the fingers really down, from the touch events, which settle what a lost pointerup left tracked (stuck_touch)
+  for (const type of ['touchstart', 'touchend', 'touchcancel'])
+    card.registerDomEvent(vp, type, (e: TouchEvent) => zoom.settle(e.touches.length), { passive: true });
   card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
     boxDown = emptyDown = foldDown = null;
     drag?.cancel();
