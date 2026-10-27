@@ -46,23 +46,16 @@ interface Mods {
   meta?: boolean;
   alt?: boolean;
 }
+type Near = { onBox?: boolean; near?: boolean };
 /** An input the host passes in: a key, the wheel, a pointer, or a double click. */
 export type ZoomEvent =
   | ({ kind: 'key'; key: string } & Mods)
   | ({ kind: 'wheel'; x: number; y: number; dy: number } & Mods)
-  | {
-      kind: 'down';
-      id: number;
-      pointer: 'mouse' | 'touch' | 'pen';
-      x: number;
-      y: number;
-      onBox?: boolean;
-      near?: boolean;
-    }
+  | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number } & Near)
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
   | { kind: 'cancel'; id: number }
-  | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean };
+  | ({ kind: 'dblclick'; x: number; y: number } & Near);
 
 /**
  * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's). It is
@@ -277,6 +270,13 @@ export class Zoom {
         this.pinch = null;
         return false;
     }
+  }
+
+  /** The host says how many fingers are really down; a lost lift must not leave one tracked to pinch (stuck_touch). */
+  settle(fingers: number): void {
+    const touches = [...this.pointers].filter(([, p]) => p.touch);
+    for (const [id] of touches.slice(0, Math.max(0, touches.length - fingers))) this.pointers.delete(id);
+    if (fingers < 2) this.pinch = null;
   }
 
   private key(e: Extract<ZoomEvent, { kind: 'key' }>): boolean {

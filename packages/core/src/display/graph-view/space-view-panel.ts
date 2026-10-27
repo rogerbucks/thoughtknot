@@ -22,7 +22,7 @@ import { spotsKept } from '../../space-parts.ts';
 import { stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
-import { keyMove, panBy, pinchBy, turnRound, zoomAtPixel } from '../../space-controls.ts';
+import { keyMove, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -262,15 +262,14 @@ export async function openSpaceView(
   );
   depthButton.hidden = depth === 0;
 
-  // a touch in the view goes no further, so the host's own swipes (Obsidian's side panels) never take it (gestures_stay_in_drawing)
-  for (const type of ['touchstart', 'touchmove'])
-    el.addEventListener(type, (e) => e.stopPropagation(), { passive: true });
+  // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
     touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
+  touchesStay(el, down);
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
   el.addEventListener('pointerdown', (e) => {
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;

@@ -29,6 +29,7 @@
           "restore: (scale: number, x: number, y: number) => void",
           "reveal: (box: { x: number; y: number; width: number; height: number; }) => void",
           "setMode: (mode: Mode) => void",
+          "settle: (fingers: number) => void",
           "touchAction: () => 'pan-x pan-y' | 'pan-y' | 'none'",
           "view: () => View",
           "zoomAt: (factor: number, px: number, py: number) => void",
@@ -4377,6 +4378,7 @@
           "restore: (scale: number, x: number, y: number) => void",
           "reveal: (box: { x: number; y: number; width: number; height: number; }) => void",
           "setMode: (mode: Mode) => void",
+          "settle: (fingers: number) => void",
           "touchAction: () => 'pan-x pan-y' | 'pan-y' | 'none'",
           "view: () => View",
           "zoomAt: (factor: number, px: number, py: number) => void",
@@ -4385,7 +4387,7 @@
           "zoomOut: () => void"
         ],
         "ZoomEvent": [
-          "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; } & Mods) | { kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; onBox?: boolean; near?: boolean; } | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean; }"
+          "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; } & Mods) | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; } & { onBox?: boolean; near?: boolean; }) | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | ({ kind: 'dblclick'; x: number; y: number; } & { onBox?: boolean; near?: boolean; })"
         ]
       },
       "./display/host": {

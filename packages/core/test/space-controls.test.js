@@ -16,6 +16,7 @@ import {
   turnRound,
   twistBy,
   twistOf,
+  touchesStay,
   twoFingers,
 } from '../src/space-controls.ts';
 import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
@@ -237,4 +238,21 @@ test('two fingers pinching move, zoom and twist the view in one go, toward their
   assert.equal(moved.turn, ORBIT.turn, 'no twist');
   assert.notDeepEqual(moved.target, ORBIT.target, 'toward their middle, off the screen centre');
   assert.equal(pinchBy(ORBIT, was, was, { left: 0, top: 0 }, 900, 600).distance, ORBIT.distance);
+});
+
+// stuck_touch (Roger, 27 Oct 2026): a lift that never arrived must not leave a finger tracked
+test('the touches really down settle the pointers tracked, keeping the newest', () => {
+  const seen = {};
+  const el = { addEventListener: (type, fn) => (seen[type] = fn) };
+  const down = new Map([
+    [1, 'old'],
+    [2, 'new'],
+  ]);
+  touchesStay(el, down);
+  const stopped = [];
+  seen.touchstart({ touches: { length: 1 }, stopPropagation: () => stopped.push('start') });
+  assert.deepEqual([...down.keys()], [2], 'one finger down: only the newest is kept');
+  seen.touchend({ touches: { length: 0 }, stopPropagation: () => stopped.push('end') });
+  assert.equal(down.size, 0, 'none down: none kept');
+  assert.deepEqual(stopped, ['start', 'end'], 'and the host never takes a touch');
 });
