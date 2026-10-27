@@ -244,19 +244,20 @@ export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Or
   };
 }
 
+type TouchLike = { stopPropagation(): void; touches: { length: number } };
 /**
  * A touch in the view goes no further, so the host's own swipes never take it. And the touches really down settle the
  * pointers tracked, keeping the newest: a lift that never arrived must not leave one, or the next single finger would
  * pinch instead of turn (stuck_touch).
  */
 export const touchesStay = (
-  el: { addEventListener(type: string, fn: (e: any) => void, o: object): void },
+  el: { addEventListener(type: string, fn: (e: TouchLike) => void, o: object): void },
   down: Map<number, unknown>,
 ): void => {
   for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel'])
     el.addEventListener(
       type,
-      (e: { stopPropagation(): void; touches: { length: number } }) => {
+      (e) => {
         e.stopPropagation();
         const fingers = e.touches.length;
         if (type !== 'touchmove')
