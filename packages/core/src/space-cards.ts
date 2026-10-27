@@ -147,9 +147,11 @@ export function cardArrows(
   cards: readonly ScreenCard[],
 ): ScreenArrow[] {
   const byKey = new Map(cards.flatMap((c) => (c.block.of === undefined ? [] : [[c.block.of, c] as const])));
+  // a line with no arrowhead in space, such as a merged link's to its trunk, has none at a card either
+  const headed = new Set(space.arrows.map((a) => a.id));
   const out: ScreenArrow[] = [];
   for (const l of space.lines) {
-    const to = l.to === undefined ? undefined : byKey.get(l.to);
+    const to = l.to === undefined || !headed.has(`${l.id}\narrow`) ? undefined : byKey.get(l.to);
     if (!to) continue;
     // the last point of the line outside the card: where the link comes in from
     let from: { x: number; y: number } | null = null;

@@ -176,7 +176,7 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       const tip = line.points[line.points.length - 1],
         back = line.points[line.points.length - 2];
       // never bigger than the block it points to (Roger, 24 Oct 2026)
-      if (b && tip && back)
+      if (b && tip && back && !m.headless)
         arrows.push({
           id: `${m.id}\narrow`,
           style: m.style,

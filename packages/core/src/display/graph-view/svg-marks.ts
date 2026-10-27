@@ -138,6 +138,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       points,
       ...ends,
       ...(words ? { name: words } : {}),
+      // a line drawn with no arrowhead, such as a merged link's to its trunk, has none in space either (untangle_merge)
+      ...(g.querySelector(':scope > polygon, :scope > a polygon') ? {} : { headless: true as const }),
       // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
       ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
       // a bundle or a hub's stub is no link of the graph. It keeps the fold it opens, so a pick in 3D opens it (§25)
