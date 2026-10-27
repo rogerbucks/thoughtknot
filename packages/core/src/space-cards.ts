@@ -23,6 +23,8 @@ import {
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
 import { facesOnScreen, rowsOf } from './space-faces.ts';
 import type { FaceText } from './space-faces.ts';
+import { outlined, outlinesOf } from './space-outlines.ts';
+import type { ScreenOutline } from './space-outlines.ts';
 
 export { rowsOf };
 
@@ -147,9 +149,11 @@ export function cardArrows(
   cards: readonly ScreenCard[],
 ): ScreenArrow[] {
   const byKey = new Map(cards.flatMap((c) => (c.block.of === undefined ? [] : [[c.block.of, c] as const])));
+  // a line with no arrowhead in space, such as a merged link's to its trunk, has none at a card either
+  const headed = new Set(space.arrows.map((a) => a.id));
   const out: ScreenArrow[] = [];
   for (const l of space.lines) {
-    const to = l.to === undefined ? undefined : byKey.get(l.to);
+    const to = l.to === undefined || !headed.has(`${l.id}\narrow`) ? undefined : byKey.get(l.to);
     if (!to) continue;
     // the last point of the line outside the card: where the link comes in from
     let from: { x: number; y: number } | null = null;
@@ -232,55 +236,6 @@ export function clusterFilling(
   const card = cardAt(cardsOnScreen(clusters, matrix, width, height), x, y);
   return card && fills(card, width, height) ? card.block.of : undefined;
 }
-
-/** An open group's outline on the screen: its corner and size in pixels, its style and its name. */
-export interface ScreenOutline {
-  id: string;
-  style: string;
-  name: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/** The room round a group's things inside its outline, and above them for its name, in pixels. */
-const OUTLINE_ROOM = 10,
-  OUTLINE_NAME = 18;
-
-/** The outlines of `space`'s open groups, as the camera's `matrix` sees their things: each round all of them. */
-export function outlinesOf(space: SpaceMarks, matrix: Float32Array, width: number, height: number): ScreenOutline[] {
-  if (!space.groups?.length) return [];
-  const focal = height / 2 / Math.tan(FIELD / 2);
-  const byKey = new Map(space.blocks.flatMap((b) => (b.of === undefined ? [] : [[b.of, b] as const])));
-  return space.groups.flatMap((g) => {
-    let x0 = Infinity,
-      y0 = Infinity,
-      x1 = -Infinity,
-      y1 = -Infinity;
-    for (const key of g.of) {
-      const b = byKey.get(key),
-        c = b && projectPoint(matrix, middle(b), width, height);
-      if (!b || !c) continue;
-      const scale = focal / c.far,
-        w = ((b.card?.width ?? b.width) * scale) / 2,
-        h = ((b.card?.height ?? b.depth) * scale) / 2;
-      [x0, y0, x1, y1] = [Math.min(x0, c.x - w), Math.min(y0, c.y - h), Math.max(x1, c.x + w), Math.max(y1, c.y + h)];
-    }
-    if (x0 > x1) return [];
-    const x = x0 - OUTLINE_ROOM,
-      y = y0 - OUTLINE_ROOM - OUTLINE_NAME;
-    return [
-      { id: g.id, style: g.style, name: g.name, x, y, width: x1 - x + OUTLINE_ROOM, height: y1 - y + OUTLINE_ROOM },
-    ];
-  });
-}
-
-/** `labels` less each group's floating name where its outline carries it. */
-const outlined = <L extends { id: string }>(labels: readonly L[], outlines: readonly ScreenOutline[]): L[] => {
-  const named = new Set(outlines.map((o) => `${o.id}\ngroup`));
-  return labels.filter((l) => !named.has(l.id));
-};
 
 /** Every line of `space` as the camera's `matrix` sees it, each as thick as its middle is near (space_link_shafts). */
 export function shaftsOf(space: SpaceMarks, matrix: Float32Array, width: number, height: number): SpaceFrame['shafts'] {

@@ -290,12 +290,14 @@ export class ViewSwitching {
       const from = name.split('\n')[0];
       const first = this.o.state.plan?.groups.find(([label]) => label === from)?.[1][0];
       this.o.state.open({ bundle: name });
-      void this.redraw(focus && first !== undefined ? () => focus(first) : undefined);
+      void this.redraw(focus && (() => focus(first ?? '')));
       return;
     }
-    const to = hub ? name : this.o.state.plan?.groups.find(([label]) => label === name)?.[1][0];
-    this.o.state.open(hub ? { hub: name } : { group: name });
-    void this.redraw(focus && to !== undefined ? () => focus(to) : undefined);
+    // a group opened from its box folds back by the button on it (cluster_fold_back)
+    const group = this.o.state.plan?.groups.find(([label]) => label === name);
+    if (!hub && group && !group[2]) this.o.state.fold({ group: name });
+    else this.o.state.open(hub ? { hub: name } : { group: name });
+    void this.redraw(focus && (() => focus((hub ? name : group?.[1][0]) ?? '')));
   }
 
   /** A busy hub's links and whether they are folded now, for its details; null for another thing. */

@@ -79,8 +79,8 @@ export interface SpaceMarks {
   round?: boolean;
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
-  /** Each open group, with the keys of its things: outlined round them on the screen (cluster_named_everywhere). */
-  groups?: { id: string; style: string; name: string; of: string[] }[];
+  /** Each open group, its things' keys and the fold that folds it back, if any: outlined round them (cluster_fold_back). */
+  groups?: { id: string; style: string; name: string; of: string[]; folds?: string }[];
   least: Vec3;
   most: Vec3;
 }
@@ -176,7 +176,7 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       const tip = line.points[line.points.length - 1],
         back = line.points[line.points.length - 2];
       // never bigger than the block it points to (Roger, 24 Oct 2026)
-      if (b && tip && back)
+      if (b && tip && back && !m.headless)
         arrows.push({
           id: `${m.id}\narrow`,
           style: m.style,

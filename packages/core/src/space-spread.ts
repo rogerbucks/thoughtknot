@@ -19,6 +19,7 @@ import type { Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
 import { isCluster } from './space-cards.ts';
+import { isJoint, jointsBetween, partsNear, withoutJoints } from './space-parts.ts';
 import type { SpaceGroup } from './space-cards.ts';
 import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
@@ -145,8 +146,10 @@ export function spreadSpace(
   // space is roomier than a page. Things laid out afresh sit further apart there, so how they link shows (Roger, 25 Oct
   // 2026: "give more spacing between the blocks")
   const options = layoutOptions(layout);
-  const laid = FORCE_3D.place(shape, drawn?.seeds ?? previous, drawn ? options : roomier(options));
-  const spots = drawn ? laid : partsNear(shape, laid);
+  // laid out afresh, a trunk's joints are set between its groups once the things are laid out (space-parts.ts)
+  const things = drawn ? shape : withoutJoints(shape);
+  const laid = FORCE_3D.place(things, drawn?.seeds ?? previous, drawn ? options : roomier(options));
+  const spots = drawn ? laid : jointsBetween(shape, partsNear(things, laid));
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);
@@ -171,8 +174,12 @@ export function spreadSpace(
     );
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
-  // where the drawing put them are spaced as the drawing is
-  if (!drawn) keepApart(centre, radius, ROOM * options.spacing);
+  // where the drawing put them are spaced as the drawing is. A trunk's joints then sit between the things kept apart
+  if (!drawn) {
+    const apart = new Map([...centre].filter(([k]) => !isJoint(k)));
+    keepApart(apart, radius, ROOM * options.spacing);
+    for (const [k, at] of jointsBetween(shape, apart)) centre.set(k, [...at]);
+  }
   for (const m of boxes) {
     const c = centre.get(m.of) as Vec3,
       r = radius.get(m.of) ?? 0;
@@ -221,6 +228,7 @@ export function spreadSpace(
       style: m.style,
       name: m.name,
       of: inside.flatMap((b) => (b.of === undefined ? [] : [b.of])),
+      ...(m.of ? { folds: m.of } : {}),
     });
     const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
     const top = Math.max(...inside.map((b) => b.floor + b.tall));
@@ -264,7 +272,9 @@ export function spreadSpace(
     const ra = cards ? 0 : (radius.get(m.from) ?? 0),
       rb = cards ? 0 : (radius.get(m.to) ?? 0);
     // never bigger than the ball it points to (Roger, 24 Oct 2026)
-    const head = Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
+    const head = m.headless
+      ? 0
+      : Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
     const t0 = Math.min(0.45, ra / length),
       tTip = Math.max(0.55, 1 - rb / length),
       tEnd = Math.max(0.5, tTip - head / length);
@@ -274,7 +284,9 @@ export function spreadSpace(
     if (m.name) line.words = m.name;
     if (m.of !== undefined) line.of = m.of;
     lines.push(line);
-    arrows.push({ id: `${m.id}\narrow`, style: m.style, tip: curve(tTip), back: curve(tEnd), size: head });
+    // a line drawn with no arrowhead, such as a merged link's to its trunk, has none in space either
+    if (!m.headless)
+      arrows.push({ id: `${m.id}\narrow`, style: m.style, tip: curve(tTip), back: curve(tEnd), size: head });
     if (m.name)
       labels.push({ id: `${m.id}\nwords`, style: m.style, at: curve(0.5), text: m.name, size: WORDS_SIZE, link: m.id });
   }
@@ -282,49 +294,6 @@ export function spreadSpace(
   if (groups.length) space.groups = groups;
   if (cards) space.cards = true;
   return { space, spots };
-}
-
-/**
- * `spots` with each lone part of `shape` moved in beside the largest part. A lone part is one no link joins to the
- * largest. It moves to a link's length clear of the largest, on the side it drifted to, when it is further off. Else the
- * rest push it far off. Then the view, fitting it in, draws the rest small and packed (Roger, 25 Oct 2026).
- */
-export function partsNear(shape: GraphShape, spots: Spots<3>): Spots<3> {
-  const top = new Map<string, string>();
-  const root = (k: string): string => {
-    let r = k;
-    while (top.has(r) && top.get(r) !== r) r = top.get(r) as string;
-    top.set(k, r);
-    return r;
-  };
-  for (const t of shape.things) top.set(t.key, t.key);
-  for (const l of shape.links) if (top.has(l.from) && top.has(l.to)) top.set(root(l.from), root(l.to));
-  const parts = new Map<string, string[]>();
-  for (const t of shape.things) {
-    if (!spots.has(t.key)) continue;
-    const r = root(t.key);
-    const here = parts.get(r);
-    if (here) here.push(t.key);
-    else parts.set(r, [t.key]);
-  }
-  if (parts.size < 2) return spots;
-  const at = (k: string) => spots.get(k) ?? [0, 0, 0];
-  const ball = (keys: readonly string[]) => {
-    const mid = scale(keys.map(at).reduce(add, [0, 0, 0]), 1 / keys.length);
-    return { mid, r: Math.max(...keys.map((k) => Math.hypot(...sub(at(k), mid)))) };
-  };
-  const [main, ...rest] = [...parts.values()].sort((a, b) => b.length - a.length);
-  const whole = ball(main ?? []);
-  const out = new Map(spots);
-  for (const keys of rest) {
-    const part = ball(keys),
-      away = sub(part.mid, whole.mid);
-    const clear = whole.r + part.r + 1;
-    if (Math.hypot(...away) <= clear) continue;
-    const by = sub(add(whole.mid, scale(norm(away), clear)), part.mid);
-    for (const k of keys) out.set(k, add(at(k), by));
-  }
-  return out;
 }
 
 /**

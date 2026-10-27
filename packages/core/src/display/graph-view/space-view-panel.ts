@@ -18,8 +18,11 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
+import { spotsKept } from '../../space-parts.ts';
+import { stripTap } from '../../space-outlines.ts';
+import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
-import { keyMove, orbitAround, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
+import { keyMove, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -27,9 +30,8 @@ import { webgl2SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
-import { DEPTH_WORDS, glideIn, linkCounts, spacePad } from './space-view-pad.ts';
-import { marksOfSvg } from './svg-marks.ts';
-import { reducedMotion } from './details-nav';
+import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
+import { heldIn, marksOfSvg } from './svg-marks.ts';
 import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
@@ -38,9 +40,6 @@ export const SPACE_OPEN = 'thoughtknot-space-open';
 
 /** The event a bundle or a hub's stub picked in 3D sends its card, with its fold. The card opens it (§25). */
 export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
-
-/** How long the view takes to turn to face what was picked, in milliseconds. */
-const TURN_TIME = 280;
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
@@ -114,10 +113,15 @@ export async function openSpaceView(
   // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, or the drawing lifted as it is
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
-  const spaceBy = (by: Depth): SpaceMarks =>
-    by === 'cards' || !by
-      ? stackedPlanes(spreadSpace(marks, undefined, by === 'cards', more.asDrawn, more.layout?.()).space)
-      : spaceOf(marks, by);
+  // laid out again, each thing starts where it was, so a group opens or folds in place (cluster_in_place)
+  let spots: Spots<3> | undefined,
+    held = new Map('marks' in from ? [] : heldIn(from));
+  const spaceBy = (by: Depth): SpaceMarks => {
+    if (by !== 'cards' && by) return spaceOf(marks, by);
+    const laid = spreadSpace(marks, spots && spotsKept(spots, held), by === 'cards', more.asDrawn, more.layout?.());
+    spots = laid.spots;
+    return stackedPlanes(laid.space);
+  };
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
@@ -168,13 +172,16 @@ export async function openSpaceView(
       before = picked && { of: picked.of, at: middleOf(picked) };
     ({ marks, paints } = marksOfSvg(from));
     depths = depthsOf();
+    // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
+    held = new Map([...held, ...heldIn(from)]);
+    const warm = !!spots && !more.asDrawn;
     space = spaceBy(depths[depth] ?? null);
     // what the card selects now is picked here too: a thing found, or none once its details close
     const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
     pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
     const other = space.blocks.map((b) => b.of).join() !== was;
-    if (other) orbit = orbitFit(space, width / height);
+    if (other && !warm) orbit = orbitFit(space, width / height);
     // the view follows the picked thing only where the drawing moved it; a pick, a fade or a find leaves the view still
     const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
     const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);
@@ -223,21 +230,9 @@ export async function openSpaceView(
   const tell = (t: Target) => root.dispatchEvent(new CustomEvent<Target>(SPACE_OPEN, { detail: t, bubbles: true }));
   /** Turns the view to face `point`, which it then turns round and zooms to; gliding, unless motion is to be still. */
   const turnTo = (point: Vec3) => {
-    const from = orbit,
-      run = ++turning;
-    if (reducedMotion(win)) {
-      orbit = orbitAround(from, point);
-      return again();
-    }
-    const start = win.performance.now();
-    const step = (now: number) => {
-      if (run !== turning || !open) return;
-      const t = Math.min(1, (now - start) / TURN_TIME);
-      orbit = orbitAround(from, point, 1 - (1 - t) * (1 - t));
-      paint();
-      if (t < 1) win.requestAnimationFrame(step);
-    };
-    win.requestAnimationFrame(step);
+    const run = ++turning,
+      going = () => run === turning && open;
+    turnToward(win, orbit, point, (o) => ((orbit = o), paint()), going);
   };
   /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
@@ -319,6 +314,9 @@ export async function openSpaceView(
     const hit = space.cards
       ? (cardAt(cardsOnScreen(space, matrixNow(), width, height), x, y)?.block ?? null)
       : blockAt(space, matrixNow(), width, height, x, y);
+    // an open group's name zooms to it, and the button beside folds it back (cluster_fold_back)
+    const strip = stripTap(space, matrixNow(), width, height, x, y);
+    if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = orbitFit(strip.fit, width / height)), again());
     const link = hit ? null : lineAt(space, matrixNow(), width, height, x, y);
     const twice =
       lastTap &&

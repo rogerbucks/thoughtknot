@@ -64,7 +64,16 @@ export interface MarkOutline {
 export type DrawMark = MarkCommon &
   (
     | { kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline }
-    | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline }
+    | {
+        kind: 'link';
+        points: MarkPoint[];
+        curve?: boolean;
+        from?: string;
+        to?: string;
+        outline?: MarkOutline;
+        /** Drawn with no arrowhead, such as a merged link's line to its trunk; a link has one at its end otherwise. */
+        headless?: true;
+      }
     | {
         kind: 'label';
         x: number;

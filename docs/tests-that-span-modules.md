@@ -193,6 +193,8 @@ after a module nor listed here, and on a listed file that is missing.
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
 - `packages/obsidian/test/cluster-open.test.js` — a folded group opened by zooming in on it, or picked again in 3D, in
   the built plugin (editor spec §53, cluster_opens).
+- `packages/obsidian/test/cluster-fold-back.test.js` — a group opened from its box folds back by its button. Its name
+  zooms to it. In the built plugin (editor spec §53, cluster_fold_back).
 - `packages/obsidian/test/view-types.test.js` — the card's Views list offers each view drawn as marks. A view chosen is
   saved in the style graph and drawn (editor spec §36, view_types_offered).
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
