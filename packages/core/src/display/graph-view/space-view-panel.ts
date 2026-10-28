@@ -185,7 +185,7 @@ export async function openSpaceView(
     held = new Map([...held, ...heldIn(from)]);
     const warm = !!spots && !more.asDrawn;
     space = spaceBy(depths[depth] ?? null);
-    if (warm) [space, spots] = linedUpLayout(shown, space, spots); // lined up with what was shown, so it does not spin
+    if (warm) [space, spots] = linedUpLayout(shown, space, spots, more.layout?.()?.pinned, before?.of); // not to spin
     // what the card selects now is picked here too: a thing found, or none once its details close
     const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
