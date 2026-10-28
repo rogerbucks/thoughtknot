@@ -27,8 +27,8 @@ preset winning and the one-file export are there too.
 - **Focus support:** the rest is blurred, not hidden, and a trail of picks is kept to go back along.
 - **Changing preset:** a preset picked first says what it would change. It is used only when asked, and undone in one
   step.
-- **Next:** a graph or vault keeping its own preset, the device's lines beside the drawing, and laying out again only
-  when asked.
+- **The device first:** a line beside the drawing says when the device's own setting wins over the preset.
+- **Next:** a graph or vault keeping its own preset in the style graph, and laying out again only when asked.
 
 A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
 of it a viewer is shown.
