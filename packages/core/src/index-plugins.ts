@@ -25,7 +25,7 @@ export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export type { DiagramDrawn } from './plugin-diagrams.ts';
 export { CORE_DIAGRAMS_ID, coreDiagramType, coreDiagrams } from './core-diagrams.ts';
 export type { MarksEngine } from './core-diagrams.ts';
-export { VIEW_TYPES } from './view-types/view-types.ts';
+export { FIRST_VIEW_TYPES, VIEW_TYPES } from './view-types/view-types.ts';
 export type { ViewType } from './view-types/view-types.ts';
 export {
   BOX_SHAPES,
