@@ -857,6 +857,7 @@
         ],
         "Drawn": [
           "interface",
+          "better?: Promise<Drawn | null> | undefined",
           "height: number",
           "mirrored?: boolean | undefined",
           "rankdir: string",
@@ -1284,6 +1285,7 @@
           "kindLanes?: false | undefined",
           "layoutOptions?: Partial<LayoutOptions> | undefined",
           "links: Array<Link>",
+          "live?: true | undefined",
           "nudges?: Array<Nudge> | undefined",
           "pictures?: Array<PictureBox> | undefined",
           "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined",
@@ -1693,7 +1695,7 @@
           "terminate: () => void"
         ],
         "LayoutReply": [
-          "type = { ready: true; } | { ready: false; error: string; } | { id: number; drawn: Drawn; } | { id: number; refusal: Refusal; } | { id: number; error: string; }"
+          "type = { ready: true; } | { ready: false; error: string; } | { id: number; drawn: Drawn; } | { id: number; early: Drawn; } | { id: number; refusal: Refusal; } | { id: number; error: string; }"
         ],
         "LayoutRequest": [
           "interface",
