@@ -671,6 +671,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/requirements-note.test.js` — the requirements kept as a graph note. The graph as the one block of a Markdown
   note is read by every tool that reads the requirements. It passes the same audit as the graph file
   (requirements_as_graph_note).
+- `test/requirements-drift.test.js` — the requirements and the tests may not drift further apart: each list in
+  `quality/requirements-drift.json` only shrinks (editor spec §12, requirements_drift_ratcheted).
 - `test/check-requirements-flips.test.js` — the requirements graph is edited here, in pull requests (Roger, 16 Oct
   2026: no vault holds it any more).
   - Records, links and comments may be added, changed and removed.
