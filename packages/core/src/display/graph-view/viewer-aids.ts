@@ -4,13 +4,15 @@
 // - how tall a drawing in a note may be (drawing_height_setting);
 // - the quick-info tooltip;
 // - the view preset, by its id: the graph's own, written in its style graph, else the settings' (§69);
-// - the space a card opens in and its painter, as its style graph's Render sets them (§68, layout_concept_layers).
+// - the space a card opens in, its painter and its lens, as its style graph's Render sets them (§68,
+//   layout_concept_layers, projections_all_on).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
-import type { Drawn, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
+import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
+import { LensSvg, renderLensChoice } from './lens-svg';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import type { Taps } from './taps';
@@ -28,11 +30,13 @@ export interface ViewerAids {
   /** The space the card opens in, and what paints it in space or as an overview (render-choice.ts). */
   space?: Space;
   painter?: Painter;
+  /** The lens the card's drawing is seen through until the View menu picks another (lenses.ts). */
+  lens?: Lens;
 }
 
 /**
  * The aids the settings give, with the preset the graph's style graph chooses winning over theirs (view_presets_scoped).
- * The style graph's Render for `view`, or the whole graph, gives the space and painter.
+ * The style graph's Render for `view`, or the whole graph, gives the space, painter and lens.
  */
 export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets' | 'renders'>, view?: string): ViewerAids => ({
   miniMap: s.miniMap,
@@ -58,12 +62,16 @@ export interface AidsHost {
   drawn: () => Drawn;
   taps: Taps;
   byKeyboard: () => boolean;
+  /** What a lens follows, the selected thing by its key, and the View menu it is picked in, if the card has one. */
+  lens: { selected: () => string | null; menu: () => HTMLElement | undefined };
 }
 
 /** The aids of one card: its mini-map, its tooltip, and where its kept-open details sit. */
 export class Aids {
   readonly info: QuickInfo;
   private readonly miniMap: MiniMap | null;
+  /** The lens the drawing is seen through (§68, projections_all_on); none for a table. */
+  private readonly lens: LensSvg | null;
   private readonly host: AidsHost;
 
   /** For the card (which owns their listeners) and what they ask of it. */
@@ -86,17 +94,26 @@ export class Aids {
         })
       : null;
     this.miniMap?.redrawn(host.drawn());
+    const { o, viewport, zoom, taps } = host,
+      state = o.switches?.state;
+    this.lens = host.svg()
+      ? new LensSvg(card, { svg: host.svg, viewport, zoom, taps, written: o.aids?.lens, state, ...host.lens })
+      : null;
+    const menu = host.lens.menu();
+    if (this.lens && menu) renderLensChoice(menu, this.lens, host.svg);
   }
 
-  /** The drawing was laid out again: the mini-map is a copy of the layout as it is now. */
+  /** The drawing was laid out again: the mini-map is a copy of the layout as it is now, and the lens bends it anew. */
   redrawn(drawn: Drawn): void {
     this.miniMap?.redrawn(drawn);
+    this.lens?.redrawn();
   }
 
-  /** The view changed: the mini-map outlines the part in view, and a tooltip, beside a thing as it was, closes. */
+  /** The view changed: the mini-map outlines the part in view, a tooltip closes, and the lens reaches as far on screen. */
   viewChanged(v: View): void {
     this.miniMap?.update(v);
     this.info.hide();
+    this.lens?.changed();
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */

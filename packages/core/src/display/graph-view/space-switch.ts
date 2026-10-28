@@ -11,6 +11,7 @@ import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import { openSpaceView } from './space-view-panel';
 import { fadeOut } from './space-view-pad.ts';
+import { flatAgain } from './lens-svg';
 import type { SpaceView } from './space-view-panel';
 import type { ViewOptions } from './view-options';
 
@@ -85,12 +86,14 @@ export class SpaceSwitch {
     const svg = this.svg(),
       frame = svg?.parentElement;
     if (!svg || !frame) return this.closed(turn);
+    flatAgain(svg); // read as drawn: in space it is bent there
     const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
       cards: mode === 'cards',
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',
       painter: this.says().aids?.painter,
+      lens: () => this.says().switches?.state.lens ?? this.says().aids?.lens, // as the View menu picks it (§68)
     });
     if (turn !== this.turn) return view?.close();
     this.view = view;
