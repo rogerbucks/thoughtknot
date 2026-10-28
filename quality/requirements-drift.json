@@ -63,10 +63,6 @@
     "open_no_lock_in",
     "platform_security_first",
     "portable_no_servers",
-    "temporal_checked_at_use",
-    "temporal_clock_not_trusted",
-    "temporal_erased_stays_erased",
-    "temporal_replay_refused",
     "web_layer_separate"
   ],
   "uncited": [
