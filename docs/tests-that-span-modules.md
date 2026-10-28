@@ -179,6 +179,8 @@ after a module nor listed here, and on a listed file that is missing.
 ## The Obsidian plugin
 
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
+- `packages/obsidian/test/focus-support.test.js` — the Focus support view preset (editor spec §69). The rest is
+  blurred, not hidden, and a trail of picks is kept to go back along (view_focus_support).
 - `packages/obsidian/test/reading-support.test.js` — the Reading support view preset (editor spec §69). It gives short
   labels, plain spaced words, the full words read aloud, and the outline on O (view_reading_support).
 - `packages/obsidian/test/matrix-send.test.js` — the send dialog and the destination matrix note. The note is read each

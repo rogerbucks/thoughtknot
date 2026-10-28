@@ -1,0 +1,74 @@
+// Changing view preset on the settings page, predictably (editor spec §69, view_presets_predictable). A preset picked
+// is not used at once: the page first says what it would change, from what to what. Use this preset makes the
+// change; Keep as it was drops it. Once used, one press undoes it. Nothing on a drawing moves until then.
+import type { SettingDefinition } from 'obsidian';
+import { presetChange, presetPreview, presetUndo, starterOf, word } from '@thoughtknot/core';
+import type { Settings } from '@thoughtknot/core';
+
+/** What the page needs: the settings now, a way to save them, and to draw the page again. */
+export interface PresetOwner {
+  settings: () => Settings;
+  save: (next: Settings) => Promise<void>;
+  update: () => void;
+}
+
+/** The preset picked but not yet used, and the one step back from the last one used. */
+export class PresetChoice {
+  pending: string | null = null;
+  private undo: Partial<Settings> | null = null;
+
+  constructor(private readonly owner: PresetOwner) {}
+
+  /** The preset the picker shows: the one picked, else the one in use. */
+  shown(): string {
+    return this.pending ?? this.owner.settings().viewPreset;
+  }
+
+  /** A preset picked: shown with what it would change, not used yet. Picking the one in use drops the pick. */
+  pick(id: string): void {
+    this.pending = id === this.owner.settings().viewPreset ? null : id;
+    this.owner.update();
+  }
+
+  /** The rows under the picker: what the pick would change and its two buttons, or the one undo. */
+  rows(): SettingDefinition[] {
+    const s = this.owner.settings();
+    if (this.pending) {
+      const id = this.pending,
+        lines = presetPreview(s, id).filter((l) => l.key !== 'viewPreset');
+      const said = lines.length
+        ? lines.map((l) => word('settings.view-preset.line', { ...l })).join(' ')
+        : word('settings.view-preset.nothing');
+      return [
+        { name: word('settings.view-preset.preview', { name: starterOf(id).name }), desc: said },
+        { name: word('settings.view-preset.use'), desc: '', action: () => void this.use(id) },
+        { name: word('settings.view-preset.keep'), desc: '', action: () => this.pick(s.viewPreset) },
+      ];
+    }
+    if (!this.undo) return [];
+    const back = this.undo;
+    return [
+      {
+        name: word('settings.view-preset.undo'),
+        desc: word('settings.view-preset.undo.sentence', { name: starterOf(String(back.viewPreset)).name }),
+        action: () => void this.back(back),
+      },
+    ];
+  }
+
+  /** Uses preset `id`, keeping what puts every setting it changed back. */
+  private async use(id: string): Promise<void> {
+    const s = this.owner.settings();
+    this.undo = presetUndo(s, id);
+    this.pending = null;
+    await this.owner.save({ ...s, ...presetChange(id) });
+    this.owner.update();
+  }
+
+  /** Puts back the settings as they were before the last preset used: one step. */
+  private async back(to: Partial<Settings>): Promise<void> {
+    this.undo = null;
+    await this.owner.save({ ...this.owner.settings(), ...to });
+    this.owner.update();
+  }
+}

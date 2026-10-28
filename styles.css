@@ -225,6 +225,11 @@
 .thoughtknot-svg g.thoughtknot-kept > :is(path, polygon) {
   stroke-width: 2;
 }
+/* Focus support (spec §69, view_focus_support) blurs what focus fades, rather than hiding it, so the rest stays as
+   context. It is soft enough to see where things are. A box under the pointer is never blurred. */
+.thoughtknot-blur-rest .thoughtknot-svg g.thoughtknot-dim {
+  filter: blur(1.5px);
+}
 .thoughtknot-svg g.thoughtknot-hidden {
   display: none;
 }

@@ -15,9 +15,7 @@
     "projection_semantic_zoom",
     "projection_spatial",
     "projection_sphere",
-    "projections_all_on",
-    "view_focus_support",
-    "view_presets_predictable"
+    "projections_all_on"
   ],
   "not-written": [
     "android_app",

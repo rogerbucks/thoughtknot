@@ -148,6 +148,8 @@ export const VALUES_LATE = [
   'starterOf',
   'holdsStill',
   'READING_CLASS',
+  'presetClasses',
+  'keepsTrail',
   'readsPlain',
   'shortLabel',
   'labelsFor',
@@ -157,6 +159,8 @@ export const VALUES_LATE = [
   'presetFor',
   'presetFile',
   'presetFrom',
+  'presetPreview',
+  'presetUndo',
   // one graph from many places (§63, CN1), 28 Oct 2026
   'CONNECTORS',
   'connect',

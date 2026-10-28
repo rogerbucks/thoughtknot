@@ -10,7 +10,6 @@ import {
   classMapProblems,
   classMapText,
   optionSaid,
-  presetChange,
   unmatchedClasses,
   word,
 } from '@thoughtknot/core';
@@ -21,6 +20,7 @@ import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
+import { PresetChoice } from './preset-rows';
 
 const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
@@ -42,7 +42,15 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     private readonly owner: ThoughtKnotPlugin,
   ) {
     super(app, owner);
+    this.preset = new PresetChoice({
+      settings: () => this.owner.settings,
+      save: (next) => this.owner.saveSettings(next),
+      update: () => this.update(),
+    });
   }
+
+  /** A view preset picked, shown with what it changes before it is used, and undone in one step (§69). */
+  private readonly preset: PresetChoice;
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
     void this.loadMatrix();
@@ -134,7 +142,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
           },
         },
       ];
-    const chosen = o.choices?.find((c) => c.value === s[o.key]);
+    const chosen = o.choices?.find((c) => c.value === (o.key === 'viewPreset' ? this.preset.shown() : s[o.key]));
+    const after = o.key === 'viewPreset' ? this.preset.rows() : [];
     return [
       {
         name: o.name,
@@ -145,6 +154,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
           options: Object.fromEntries((o.choices ?? []).map((c) => [c.value, c.name])),
         },
       },
+      ...after,
     ];
   }
 
@@ -157,6 +167,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (key === 'classifications') return s.classifications.join('\n');
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
     if (key.startsWith('aiModels.')) return getModelValue(s, key, this.matrix);
+    if (key === 'viewPreset') return this.preset.shown();
     return s[key as keyof Settings];
   }
 
@@ -168,6 +179,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       return this.update();
     }
     if (key.startsWith(PROFILE_KEY)) return setProfileValue(this.owner.profiles, key, value);
+    if (key === 'viewPreset') return this.preset.pick(String(value)); // shown first, used on asking (§69)
     let change: Partial<Settings>;
     if (key.startsWith('allowed.')) {
       const id = key.slice('allowed.'.length);
@@ -182,7 +194,6 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       change = { classifications: levels };
     } else if (key === 'aiClassMap') change = { aiClassMap: classMapFrom(String(value)) };
     else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value, this.matrix);
-    else if (key === 'viewPreset') change = presetChange(String(value));
     else change = { [key]: value };
     await this.owner.saveSettings({ ...s, ...change });
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
