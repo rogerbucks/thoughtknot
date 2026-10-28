@@ -34,6 +34,8 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 
 - **Merge commits only**, never squash or rebase. `pr-checks.yml` checks the rest: a `Requirements:` line, your
   `agent:` label, no `Claude-Session:` link, and each test in one commit with its code.
+- **Never disorient the user.** In every view, keep the person's place, glide instead of jumping, move nothing
+  unasked and give a way back. The rules are principle 8 in `requirements/ethos.gql`, shown on the wiki's Ethos page.
 - **Sign off as Roger, never as an AI:** CONTRIBUTING.md, "Signing off your work", gives the exact line. CI checks it.
 - **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
   for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
