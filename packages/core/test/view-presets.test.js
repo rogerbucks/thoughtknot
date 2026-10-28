@@ -14,6 +14,9 @@ import {
   presetFrom,
   starterOf,
   holdsStill,
+  readsPlain,
+  shortLabel,
+  labelsFor,
 } from '../src/view-presets.ts';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
 
@@ -139,5 +142,34 @@ describe('the research behind the starters', () => {
         assert.match(source, /\d{4}|WCAG|Association/, `${p.name}: a source`);
       }
     }
+  });
+});
+
+describe('reading support', () => {
+  // proves: view_reading_support
+  test('only the Reading preset spaces words wider, and cuts long labels short at a word, marked as cut', () => {
+    assert.deepEqual(
+      STARTERS.filter((p) => readsPlain({ viewPreset: p.id })).map((p) => p.id),
+      ['reading'],
+    );
+    assert.equal(shortLabel('Short', 40), 'Short');
+    const cut = shortLabel('The quarterly report on the reading habits of every reader', 40);
+    assert.equal(cut, 'The quarterly report on the reading…');
+    assert.ok(cut.length <= 40);
+    assert.equal(shortLabel('Supercalifragilisticexpialidocious', 12), 'Supercalifr…', 'cut inside a long word');
+    const d = {
+      graph: 'g',
+      boxes: [
+        { key: 'a', kind: 'Report', text: 'x'.repeat(50) },
+        { key: 'b', kind: 'Team', text: 'Team' },
+      ],
+      links: [],
+      estimates: [],
+    };
+    assert.equal(labelsFor(d, { viewPreset: 'default' }), d, 'the default keeps every word');
+    const read = labelsFor(d, { viewPreset: 'reading' });
+    assert.equal(read.boxes[0].text.length, 40);
+    assert.equal(read.boxes[1], d.boxes[1]);
+    assert.equal(d.boxes[0].text.length, 50, 'the graph itself is unchanged');
   });
 });
