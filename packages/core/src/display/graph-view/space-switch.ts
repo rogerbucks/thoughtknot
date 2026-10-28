@@ -5,7 +5,7 @@
 // So the view in space opens inside the drawing's frame, under the card's bar (space-view-panel.ts). The bar's types,
 // View menu, Find, filter, full screen and details all work on it as on the flat drawing. Fit and zoom move its camera.
 // It stays open as the View menu lays the drawing out again, and as the type changes (type-place.ts).
-import { word } from '@thoughtknot/core';
+import { spaceMode, word } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
@@ -22,6 +22,7 @@ export type SpaceMode = 'cards' | 'balls';
 
 /** Each way in the order the button goes through them, and what it says for each. */
 const MODES: (SpaceMode | null)[] = [null, 'cards', 'balls'];
+
 const WORDS = ['bar.space-flat', 'bar.space-cards', 'bar.space-balls'] as const;
 
 /** A card's switch between 2D, 2.5D and 3D. */
@@ -48,6 +49,11 @@ export class SpaceSwitch {
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
   mode(): SpaceMode | null {
     return this.now;
+  }
+
+  /** How the card opens, as its style graph's Render sets its space (§68, layout_concept_layers): flat, or in space. */
+  saved(): SpaceMode | null {
+    return spaceMode(this.says().aids?.space);
   }
 
   /** The bar's button, which says how the drawing is shown now, none for a table; and the graph's name. */
@@ -84,6 +90,7 @@ export class SpaceSwitch {
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',
+      painter: this.says().aids?.painter,
     });
     if (turn !== this.turn) return view?.close();
     this.view = view;

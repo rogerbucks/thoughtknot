@@ -269,7 +269,7 @@ export class GraphView extends Lifecycle {
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show());
-        void this.spaces.show(this.place.space() ?? this.o.inSpace ?? null); // in space still, as the last card (§53)
+        void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },
       () => !gone,
     );

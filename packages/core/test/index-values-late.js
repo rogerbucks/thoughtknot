@@ -177,4 +177,12 @@ export const VALUES_LATE = [
   'offerLayouts',
   'offerOf',
   'offeredLayouts',
+  // a view as six layers, and its Render line (§68, layout_concept_layers), 28 Oct 2026
+  'PAINTERS',
+  'SPACES',
+  'VIEW_LAYERS',
+  'paintersFrom',
+  'renderFor',
+  'spaceMode',
+  'viewLayers',
 ];

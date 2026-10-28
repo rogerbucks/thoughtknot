@@ -12,6 +12,7 @@ import {
   memoryBackend,
   parked,
   readStyle,
+  renderFor,
   setInParts,
   startingSwitches,
   storedGraphs,
@@ -146,6 +147,7 @@ export class PaneDrawing extends Lifecycle {
       layout: (part, by) => this.host.layout(part, by),
       props: (key) => reading.world[d.graph]?.p(key) ?? {},
       chosen: style.filters.find((f) => f.view === undefined)?.keep,
+      painter: renderFor(style).painter, // as its Render says (§68, layout_concept_layers)
       ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
     });
   }
@@ -183,6 +185,7 @@ export class PaneDrawing extends Lifecycle {
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
         ...(saved ? { chosen: saved } : {}),
+        ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
         picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
       });
