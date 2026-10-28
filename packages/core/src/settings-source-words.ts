@@ -71,6 +71,13 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.view-preset.reading': 'Reading support',
   'settings.view-preset.reading.sentence':
     'Short labels with wider spacing, the full words when you select one, and the outline one key away.',
+  'settings.view-preset.preview': 'Before you use {name}',
+  'settings.view-preset.line': '{name}: {from} becomes {to}.',
+  'settings.view-preset.nothing': 'No other setting changes.',
+  'settings.view-preset.use': 'Use this preset',
+  'settings.view-preset.keep': 'Keep as it was',
+  'settings.view-preset.undo': 'Undo the preset change',
+  'settings.view-preset.undo.sentence': 'Puts back {name} and every setting the change turned.',
   'view-preset.imported': 'Imported preset',
   'view-preset.not-json': 'This file is not a view preset: it is not JSON.',
   'view-preset.not-preset': 'This file is not a view preset: it does not say {format}.',

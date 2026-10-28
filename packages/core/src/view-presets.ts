@@ -134,6 +134,13 @@ export const starterOf = (id: string): ViewPreset => STARTERS.find((p) => p.id =
 export const holdsStill = (s: Pick<Settings, 'viewPreset'>): boolean =>
   starterOf(s.viewPreset).chain.motion.mode === 'off';
 
+/** The classes a card takes from its view preset `id` (§69): `thoughtknot-blur-rest` blurs what focus fades. */
+export const presetClasses = (id = 'default'): string[] =>
+  starterOf(id).chain.detail.rest === 'blurred' ? ['thoughtknot-blur-rest'] : [];
+
+/** Whether the view preset `id` keeps a trail of recent picks in the drawing, to go back along (view_focus_support). */
+export const keepsTrail = (id = 'default'): boolean => starterOf(id).chain.keys.trail;
+
 /** The class the host puts on the page's body while the view preset is for reading: plain words, spaced wider (§69). */
 export const READING_CLASS = 'thoughtknot-reading';
 
