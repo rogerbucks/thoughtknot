@@ -156,6 +156,18 @@ class Routing(unittest.TestCase):
                 self.assertEqual(drawn_svg.drawn_svg("dot", "digraph {}", routing), fake_dot.SVG)
         self.assertEqual(asked[2:], ["-Tsvg"] * 3)
 
+    def test_links_drawn_direct_are_laid_out_straight(self):
+        # curves_not_routed: Graphviz routes no curve only to have it thrown away
+        handed = []
+
+        def run(args, input, **_kw):
+            handed.append(input)
+            return mock.Mock(returncode=0, stdout=fake_dot.answer(args))
+
+        with mock.patch.object(drawn_svg.subprocess, "run", run):
+            drawn_svg.drawn_svg("dot", "digraph {\n  a -> b;\n}")
+        self.assertIn("splines=line", handed[0])
+
     def test_a_layout_the_marks_cannot_give_back_is_graphvizs_own(self):
         lost = json.dumps(
             {
