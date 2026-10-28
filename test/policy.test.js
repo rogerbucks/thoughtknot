@@ -29,6 +29,8 @@ const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const RUNTIME_ALLOWED = new Set(['@viz-js/viz', 'sql.js']); // two WebAssembly engines inside the bundle (§13, §20)
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
+// The one addition for the sync package alone (§40, local_encrypted_store; Roger, 28 Oct 2026): upstream Automerge.
+const CRDT = '@automerge/automerge';
 // The places that may reach the network (§13): sending to an AI, as the user sends (§19); a plug-in link, on Add (§54).
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
 const NETWORK_ALLOWED = [AI_SEND_MODULE, 'packages/obsidian/src/outside/outside-link.ts'];
@@ -145,14 +147,14 @@ describe('the supply chain', () => {
       );
   });
 
-  test('the only runtime dependencies are the Graphviz and SQLite WebAssembly engines and, for the browser host alone, one Markdown renderer', () => {
+  test('the only runtime dependencies are the Graphviz and SQLite WebAssembly engines, one Markdown renderer for the browser host and Automerge for sync', () => {
     const workspaceNames = new Set(jsPackages().map((p) => readJSON(`${p}/package.json`).name));
     for (const p of jsPackages()) {
       const deps = Object.keys(readJSON(`${p}/package.json`).dependencies ?? {});
       const other = deps.filter((d) => !RUNTIME_ALLOWED.has(d) && !workspaceNames.has(d));
       assert.deepEqual(
         other,
-        p === 'packages/claude-code' ? [MARKDOWN_RENDERER] : [],
+        p === 'packages/claude-code' ? [MARKDOWN_RENDERER] : p === 'packages/sync' ? [CRDT] : [],
         `${p} has runtime dependencies beyond the allowed`,
       );
     }
