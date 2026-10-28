@@ -1,0 +1,33 @@
+name: Requirements drift report
+
+# Once a week, how far the requirements and the tests have parted, as counts in the run's summary. The same check runs
+# on every pull request and fails on any new drift; this report is for Roger to read and for the lists to shrink. It
+# checks out main and runs no code from a pull request.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts
+      - name: Count the drift and fail if it grew
+        run: |
+          {
+            echo '## Requirements drift'
+            echo
+            node scripts/requirements-drift.mjs --report
+            echo
+            echo 'Each list is in quality/requirements-drift.json and only shrinks.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          node scripts/requirements-drift.mjs
