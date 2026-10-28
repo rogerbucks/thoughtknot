@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/axioms-generated.test.mjs",
+  "test": "axioms_safeguards > A2's check switched off, the test that finds its break fails",
+  "seen_failing_first": false,
+  "evidence": "It holds a law the reader and the join already keep (GS8): generated graphs check the existing code, so it passes on the code before it."
+}
