@@ -174,7 +174,7 @@ describe('where Workers run', () => {
       const [stuck, other] = await Promise.all([show(env, note, 0), show(env, note, 1)]);
       assert.match(bannerOf(stuck.el).text, /took too long/i);
       assert.ok(svgOf(other.el), 'the other block was drawn');
-      assert.equal(workers.made.length, 2, 'the stuck worker was replaced');
+      assert.ok(workers.made.length >= 2, 'the stuck worker was replaced');
       assert.ok(svgOf((await show(env, fence(GRAPH))).el), 'and the next block draws too');
     });
   });
@@ -185,13 +185,19 @@ describe('where Workers run', () => {
     console.warn = (...a) => warned.push(a.join(' '));
     try {
       await withPlugin({ swallow: () => true }, { ms: 100 }, async (env, workers) => {
-        for (let i = 0; i < 3; i++) assert.match(bannerOf((await show(env, fence(GRAPH))).el).text, /took too long/i);
+        // each is tried again by each cheaper step first, on a fresh worker each time (layout_never_text)
+        let each = 0;
+        for (let i = 0; i < 3; i++) {
+          assert.match(bannerOf((await show(env, fence(GRAPH))).el).text, /took too long/i);
+          each ||= workers.made.length;
+        }
         const { el } = await show(env, fence(GRAPH));
         assert.match(bannerOf(el).text, /paused/i);
         assert.ok(bannerOf(el).icon);
         assert.match(el.querySelector('code').textContent, /Large reader/);
         await show(env, fence(GRAPH));
-        assert.equal(workers.made.length, 3, 'no fourth worker');
+        assert.ok(each > 1, 'tried again by a cheaper step');
+        assert.equal(workers.made.length, 3 * each, 'none after the last step of the third');
       });
     } finally {
       console.warn = real;

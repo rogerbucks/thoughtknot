@@ -16,7 +16,7 @@ import { pictureSource } from './picture.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
-import { groupsIn, kindsIn, lanesIn, optionsIn, ownable, ownSource, ownSvg } from './layouts/own-draw.ts';
+import { groupsIn, kindsIn, lanesIn, optionsIn, ownable, ownSource, ownSvg, stepIn } from './layouts/own-draw.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -102,9 +102,13 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // one is laid out once, straight, and drawn whole: curving it after would lay it out twice for the same drawing
   const direct = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'direct');
   // our own engine picks rows or spread by the graph's shape. It tries each direction as Graphviz does, and the
-  // drawing that fits the note best is shown
-  const ours = drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct');
-  const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
+  // drawing that fits the note best is shown. A drawing whose layout ran out of time is laid out by a cheaper step,
+  // whatever its routing and type (layout_never_text). Rows and a grid are tried one way only
+  const { step } = drawing;
+  const ours =
+    step || (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct'));
+  const cheap = quick || (step && step !== 'own');
+  const ways = only ? [only] : cheap ? STYLE.directions.slice(0, 1) : STYLE.directions;
   const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
@@ -139,7 +143,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
     if (ours && ownable(dot))
       return {
         rankdir,
-        dot: ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false),
+        dot: ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false, step),
         src,
         own: true,
       };
@@ -197,6 +201,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         optionsIn(dot),
         kindsIn(dot),
         lanesIn(dot),
+        stepIn(dot),
       );
   }
   // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)

@@ -13,6 +13,8 @@ import type { PickShown } from './fingerprint.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
+import { LAYOUT_STEPS } from './cheaper.ts';
+import type { LayoutStep } from './cheaper.ts';
 
 /** A box line of the layout source: its indent and its key, before its attributes. */
 const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
@@ -75,6 +77,15 @@ const KINDS_LINE = /^\s*\/\/ layout kinds (\{.*\})$/m;
 /** The line of a layout source that says kinds are to get no lane each. */
 const NO_LANES_LINE = /^\s*\/\/ layout lanes off$/m;
 
+/** The line of a layout source that says the cheaper step it is laid out by, after a layout that was slow. */
+const STEP_LINE = /^\s*\/\/ layout step (\w+)$/m;
+
+/** The cheaper step `ownSource` wrote into the source `dot`, after a layout that ran out of time (layout_never_text). */
+export function stepIn(dot: string): LayoutStep | undefined {
+  const step = STEP_LINE.exec(dot)?.[1];
+  return LAYOUT_STEPS.find((s) => s === step);
+}
+
 /** Whether kinds that link in order get a lane each, as `ownSource` wrote into the source `dot` (layout_kind_lanes). */
 export const lanesIn = (dot: string): boolean => !NO_LANES_LINE.test(dot);
 
@@ -99,13 +110,15 @@ export function optionsIn(dot: string): LayoutOptions {
 
 /**
  * `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. `options`
- * and each thing's `kinds` are written in as comments, so a source laid out another way is another source.
+ * and each thing's `kinds` are written in as comments, so a source laid out another way is another source. So is
+ * the cheaper `step` it is laid out by.
  */
 export function ownSource(
   dot: string,
   options?: Partial<LayoutOptions>,
   kinds: ReadonlyMap<string, string> = new Map(),
   lanes = true,
+  step?: LayoutStep,
 ): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
@@ -121,6 +134,7 @@ export function ownSource(
   // each thing's kind, for the engine to read how kinds link (fingerprint.ts)
   if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);
   if (!lanes) lines.splice(3, 0, '  // layout lanes off');
+  if (step) lines.splice(3, 0, `  // layout step ${step}`);
   return lines.join('\n');
 }
 
@@ -193,7 +207,8 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
  * The drawing Graphviz measured in `laid` as marks, its boxes placed by our own engine, its links direct. `groups`
  * are the layout source's groups (`groupsIn`), each drawn as a box round its things. `kinds` are each thing's kind.
  * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
- * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes).
+ * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes). A `step` is said with it, and a
+ * step of rows or a grid lays it out that way (layout_never_text).
  */
 export function ownLaid(
   laid: LaidMarks,
@@ -202,10 +217,12 @@ export function ownLaid(
   options: Partial<LayoutOptions> = {},
   kinds: ReadonlyMap<string, string> = new Map(),
   lanes = true,
+  step?: LayoutStep,
 ): { marks: LaidMarks; shown: PickShown } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
-  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined);
+  const cheaper = step === 'own' ? undefined : step;
+  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined, cheaper);
   const { spots, via, boxes, rankdir: way, pick, parts, loose, bands } = drawn;
   const seen = kindsOf(marksShape(laid.marks).shape, kinds);
   return {
@@ -213,6 +230,7 @@ export function ownLaid(
     shown: {
       ...{ why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose, lanes: bands.size > 0 },
       ...(bands.size ? { bands: Object.fromEntries(bands) } : {}),
+      ...(step ? { step } : {}),
     },
   };
 }
