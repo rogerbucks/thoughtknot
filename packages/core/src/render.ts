@@ -16,6 +16,7 @@ import { pictureSource } from './picture.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
+import { marksInRows } from './layouts/rows-route.ts';
 import { groupsIn, kindsIn, lanesIn, optionsIn, ownable, ownSource, ownSvg, stepIn } from './layouts/own-draw.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
@@ -36,8 +37,6 @@ export interface Drawn {
   height: number;
   /** Shown right to left: laid out across and mirrored after, for a right-to-left language (drawing-direction.ts). */
   mirrored?: boolean;
-  /** Drawn with straight links for now: its curves are laid out next, every box where it is (curves_after_drawing). */
-  curvesToCome?: boolean;
 }
 
 /** One direction to lay a drawing out in: the source handed to Graphviz, and the kinds and readings to theme it by. */
@@ -45,10 +44,6 @@ export interface Direction {
   rankdir: string;
   dot: string;
   src: LayoutSource;
-  /** Laid out with straight links, for its curves to come after (curves_after_drawing). */
-  straight?: boolean;
-  /** For one laid out straight: the source its curves are laid out from next (curves_after_drawing, curves_saved). */
-  curved?: string;
   /** Laid out by our own engine (layout_own_engine): Graphviz only measures it (layouts/own-draw.ts). */
   own?: boolean;
 }
@@ -63,25 +58,17 @@ export interface Direction {
 export const QUICK_LAYOUT = 300;
 
 /**
- * Graphviz's quick settings. Links keep their curves, as Roger asked (23 Oct 2026). Curves cost about twice straight
- * lines: under a second at 1,000 things, and about three at 2,000. Placing the boxes in each row stops early
+ * Graphviz's quick settings. Placing the boxes in each row stops early
  * (`nslimit=0.5`). Uncrossing the links tries a twentieth as hard
  * (`mclimit=0.05`). The rows are kept, so the drawing still reads in order. The routing a person chose is written
  * after, so it still wins (`routedSource`). Never `nslimit=0`: Graphviz stopped on an assertion with it.
  */
 const QUICK_SETTINGS = '  graph [nslimit=0.5, mclimit=0.05];';
 
-/**
- * The quick settings with straight links, for a drawing shown first and curved after (§11, curves_after_drawing).
- * Graphviz puts every box in the same place either way: only the links differ. So the curves can follow without a box
- * moving. Routing the curves is about two fifths of laying out 500 things, and three tenths of 2,000.
- */
-const STRAIGHT_FIRST = '  graph [splines=line, nslimit=0.5, mclimit=0.05];';
-
 /** The source with the quick settings added after its first line, as `routedSource` adds its own. */
-function quickSource(dot: string, settings = QUICK_SETTINGS): string {
+function quickSource(dot: string): string {
   const lines = dot.split('\n');
-  lines.splice(1, 0, settings);
+  lines.splice(1, 0, QUICK_SETTINGS);
   return lines.join('\n');
 }
 
@@ -96,11 +83,6 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const only = own ?? (drawing.diagram ? GraphLayout.typeDirection(drawing.diagram) : undefined);
   const keys = drawing.boxes.map((b) => b.key);
   const quick = drawing.boxes.length > QUICK_LAYOUT;
-  // straight first only where Graphviz's own curves are drawn: a routing a person chose is drawn as chosen at once
-  const straight = quick && !!drawing.straightFirst && drawing.routing === 'curved';
-  // direct links (the default) are drawn again from where the boxes are, never along Graphviz's curves. So a large
-  // one is laid out once, straight, and drawn whole: curving it after would lay it out twice for the same drawing
-  const direct = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'direct');
   // our own engine picks rows or spread by the graph's shape. It tries each direction as Graphviz does, and the
   // drawing that fits the note best is shown. A drawing whose layout ran out of time is laid out by a cheaper step,
   // whatever its routing and type (layout_never_text). Rows and a grid are tried one way only
@@ -147,8 +129,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
         src,
         own: true,
       };
-    if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
-    return { rankdir, dot: direct ? quickSource(dot, STRAIGHT_FIRST) : quick ? quickSource(dot) : dot, src };
+    return { rankdir, dot: quick ? quickSource(dot) : dot, src };
   });
 }
 
@@ -167,7 +148,6 @@ export function chosen(laidOut: Direction[], svgs: string[], palette?: Palette):
     rankdir: best.rankdir,
     width: best.width,
     height: best.height,
-    ...(laidOut.some((d) => d.straight) ? { curvesToCome: true } : {}),
   };
 }
 
@@ -204,8 +184,9 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         stepIn(dot),
       );
   }
-  // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
-  if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);
+  // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)
+  const curved = routing === 'curved';
+  if ((routing !== undefined && routing !== 'direct' && !curved) || !engine.marks) return engine.render(dot);
   // its links are drawn again here, so Graphviz lays them out straight. Its curves would be thrown away, and routing
   // them is about a quarter of its work. Every box lands where it would have (curves_not_routed)
   const laid = engine.marks(routedSource(dot, 'direct'));
@@ -214,7 +195,12 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   // between the rows Graphviz laid out, and no box moves (links_routed_in_rows)
   const way = /rankdir=(TB|BT)/.test(dot) ? 'TB' : 'LR';
   const large = laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing').length > QUICK_LAYOUT;
-  return layoutSvg(directLinks(laid, undefined, undefined, way, large && !/\blayout=/.test(dot)));
+  // curved links a person chose are routed that way at any size, at once (curves_routed_ours). A drawing laid out in
+  // no rows, such as a radial one, keeps Graphviz's own curves while small. Past the quick size routing them is slow,
+  // so its links are drawn direct
+  const rows = !/\blayout=/.test(dot) && marksInRows(laid.marks, way === 'TB' ? 1 : 0);
+  if (curved && !rows && !large) return engine.render(dot);
+  return layoutSvg(directLinks(laid, undefined, undefined, way, rows && (large || curved)));
 }
 
 /** One link in or out of a box, as its details list it. */

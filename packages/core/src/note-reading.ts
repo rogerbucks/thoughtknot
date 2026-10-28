@@ -99,11 +99,6 @@ export interface GraphDrawing {
    * (direct-links.ts). None, direct: the default (Roger, 24 Oct 2026).
    */
   routing?: 'curved' | 'straight' | 'right-angled' | 'direct';
-  /**
-   * Laid out quickly with straight links first, past 300 things, for its curves to follow (§11, curves_after_drawing);
-   * none, curved at once.
-   */
-  straightFirst?: boolean;
   /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
   engine?: 'own';
   /** The cheaper step it is laid out by, after a layout that ran out of time (§68, layout_never_text); none, as asked. */

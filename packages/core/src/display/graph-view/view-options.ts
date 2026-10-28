@@ -70,11 +70,6 @@ export type Chosen = { thing: string } | { link: number } | { estimate: number }
 export interface SwitchesShown {
   state: ViewState;
   relayout: (owner: object) => Promise<Drawn | Refusal | null>;
-  /**
-   * The same layout with its links curved, for a drawing shown with straight links first (§11, curves_after_drawing).
-   * Without it, a drawing shown straight stays so.
-   */
-  curved?: (owner: object) => Promise<Drawn | Refusal | null>;
   /** The note as read: what the drawing's things say, which they can be grouped by. Without it, no Group by. */
   reading?: NoteReading;
 }

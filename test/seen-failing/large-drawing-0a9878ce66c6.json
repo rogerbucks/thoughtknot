@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/large-drawing.test.js",
+  "test": "a large graph drawn whole at once > past 300 things, curved or direct, is laid out once with no curves to come after",
+  "seen_failing_first": false,
+  "evidence": "Direct links past 300 were already drawn whole; the replay reaches only that case, curved past 300 is checked in rows-route.test.js, which failed first."
+}

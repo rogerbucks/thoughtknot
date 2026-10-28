@@ -317,7 +317,7 @@ describe('the overview', () => {
       diagram: undefined,
     };
     const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true, groups: true });
-    const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+    const d = directions(state.folded(drawing))[0];
     const s = readability(ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)), d.rankdir);
     assert.ok(s.clear >= 0.995, `no link passes over a box: ${s.clear.toFixed(3)}`);
     assert.ok(s.clean >= 0.7, `most links cross no other: ${s.clean.toFixed(2)}`);
@@ -375,7 +375,7 @@ describe('a fan of links', () => {
       diagram: undefined,
     };
     const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
-    const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+    const d = directions(state.folded(drawing))[0];
     const laid = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
     const into = new Map(laid.marks.filter((m) => m.kind === 'link').map((m) => [m.of, m.to]));
     const seen = new Set();
@@ -430,7 +430,7 @@ describe('the readability scores', () => {
       const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: own });
       // the whole drawing, not the overview a graph this big opens on
       state.toDetail('all');
-      const d = directions({ ...state.folded(drawing), straightFirst: true })[0];
+      const d = directions(state.folded(drawing))[0];
       const laid = own ? ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)) : directLinks(engine.marks(d.dot));
       return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
     };
@@ -443,10 +443,9 @@ describe('the readability scores', () => {
       assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
     assert.ok(own.clear >= 0.995, `no link of ours passes over a box: ${own.clear.toFixed(3)}`);
     // about a screen's shape: within half and twice 1.6 wide to high
-    const d = directions({
-      ...new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
-      straightFirst: true,
-    })[0];
+    const d = directions(
+      new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
+    )[0];
     const { space } = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
     const shape = space.width / space.height;
     assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);

@@ -54,9 +54,11 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
 
 Our engine draws its links through lanes it keeps between the boxes (`layouts/routed-curve.ts`). A drawing Graphviz
 lays out has its links routed by our own router (`layouts/rows-route.ts`, #1232). Graphviz lays the links out
-straight, so it routes nothing. Past 300 things, each link then runs through a gap in each row it crosses, and bends
-as one smooth curve between rows. No box moves, and no link runs over a box. The Python library routes them the
-same way.
+straight, so it routes nothing.
+
+Past 300 things, each link then runs through a gap in each row it crosses, and bends
+as one smooth curve between rows. Curved links a person chose are routed this way at any size. They are drawn at once.
+No box moves, and no link runs over a box. The Python library routes them the same way.
 
 ## Plug-ins
 
