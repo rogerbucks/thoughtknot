@@ -209,7 +209,12 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   // its links are drawn again here, so Graphviz lays them out straight. Its curves would be thrown away, and routing
   // them is about a quarter of its work. Every box lands where it would have (curves_not_routed)
   const laid = engine.marks(routedSource(dot, 'direct'));
-  return laid.layout?.lost ? engine.render(dot) : layoutSvg(directLinks(laid));
+  if (laid.layout?.lost) return engine.render(dot);
+  // past the quick size, moving boxes off links no longer keeps them clear. So our own router routes each link
+  // between the rows Graphviz laid out, and no box moves (links_routed_in_rows)
+  const way = /rankdir=(TB|BT)/.test(dot) ? 'TB' : 'LR';
+  const large = laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing').length > QUICK_LAYOUT;
+  return layoutSvg(directLinks(laid, undefined, undefined, way, large && !/\blayout=/.test(dot)));
 }
 
 /** One link in or out of a box, as its details list it. */

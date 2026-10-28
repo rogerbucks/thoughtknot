@@ -17,6 +17,7 @@ import { WORDS_OFF, fans, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
+import { inRows as inRowsOf, rowsRoute } from './layouts/rows-route.ts';
 import { CLEARANCE, HUG, bends, crowded, hug, hugged, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
 export type { Curve, Placed } from './direct-curve.ts';
@@ -35,13 +36,15 @@ const BOW = 0.16;
 
 /**
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
- * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts).
+ * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts). With
+ * `inRows`, the boxes stay where Graphviz put them and each link is routed between them, on its rows (rows-route.ts).
  */
 export function directLinks(
   laid: LaidMarks,
   at?: ReadonlyMap<string, readonly [number, number]>,
   via?: ReadonlyMap<string, readonly MarkPoint[]>,
   rankdir: 'LR' | 'TB' = 'LR',
+  inRows = false,
 ): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
@@ -55,6 +58,8 @@ export function directLinks(
       if (g) p.inside = g;
       boxes.set(m.of, p);
     }
+  // routed on its rows only where Graphviz laid it out in rows
+  const rowed = inRows && !at && !via && inRowsOf([...boxes.values()], rankdir === 'TB' ? 1 : 0);
   const links = laid.marks.filter(
     (m): m is DrawMark & { kind: 'link' } =>
       m.kind === 'link' && m.from !== undefined && m.to !== undefined && boxes.has(m.from) && boxes.has(m.to),
@@ -74,11 +79,11 @@ export function directLinks(
     else delete p.inside;
   }
   const groupMoved =
-    !at && crowded(ends, [...boxes.values()])
+    !at && !rowed && crowded(ends, [...boxes.values()])
       ? spread([...boxes.values()], groups, middleOf([...boxes.values()]))
       : new Map<string, MarkPoint>();
   // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
-  if (!at) settle([...boxes.values()], links);
+  if (!at && !rowed) settle([...boxes.values()], links);
   else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
   // each group drawn just round its things, its name above them. Then each bundle runs from beside the group its links
   // leave to beside the group they reach
@@ -157,22 +162,31 @@ export function directLinks(
     const trunk = a.key.startsWith('trunk: ') && b.key.startsWith('trunk: ') ? { avoid: walls } : {};
     toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed, ...trunk });
   }
-  const bows = bends(toBend, all);
+  // routed on Graphviz's rows, a link bends only where nothing is in its way: no box moves (links_routed_in_rows)
+  const across = rankdir === 'TB' ? 0 : 1;
+  const inRow = rowed
+    ? rowsRoute(
+        all,
+        toBend.map((l) => [l.a, l.b] as const),
+        across ? 0 : 1,
+      )
+    : [];
+  const free = rowed ? toBend.filter((_, i) => !inRow[i]?.length) : toBend;
+  const bowOf = new Map(bends(free, all).map((bow, i) => [free[i] as ToBend, bow]));
   // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes
   // take the same bends, moved apart across the drawing's way
-  const across = rankdir === 'TB' ? 0 : 1;
-  const routed = (l: ToBend) =>
-    via
-      ?.get(`${l.a.key}\n${l.b.key}`)
-      ?.map((p): MarkPoint => (across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]]));
+  const routed = (l: ToBend, i: number) =>
+    (rowed ? inRow[i] : via?.get(`${l.a.key}\n${l.b.key}`))?.map((p): MarkPoint =>
+      across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]],
+    );
   const curves = new Map<string, Curve>(
     toBend.map((l, i) => {
-      const bendsAt = routed(l);
+      const bendsAt = routed(l, i);
       return [
         l.id,
         bendsAt?.length
           ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0)
-          : curveOf(l.a, l.b, bows[i] as number),
+          : curveOf(l.a, l.b, bowOf.get(l) ?? 0),
       ];
     }),
   );
