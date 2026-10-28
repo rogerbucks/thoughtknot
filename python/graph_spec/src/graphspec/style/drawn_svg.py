@@ -10,6 +10,7 @@ import json
 import subprocess
 
 from graphspec.style.direct_links import direct_links
+from graphspec.style.fold_source import routed_source
 from graphspec.style.marks import layout_marks
 from graphspec.style.marks_svg import layout_svg
 
@@ -28,7 +29,9 @@ def drawn_svg(dot: str, src: str, routing: str | None = None) -> str:
     another way (None is the default, direct)."""
     if routing not in (None, "direct"):
         return run_dot(dot, src, "svg")
-    laid = layout_marks(json.loads(run_dot(dot, src, "json")))
+    # its links are drawn again here, so Graphviz lays them out straight. Its curves would be
+    # thrown away, and routing them is about a quarter of its work (curves_not_routed)
+    laid = layout_marks(json.loads(run_dot(dot, routed_source(src, "direct"), "json")))
     return (
         run_dot(dot, src, "svg") if laid["layout"].get("lost") else layout_svg(direct_links(laid))
     )
