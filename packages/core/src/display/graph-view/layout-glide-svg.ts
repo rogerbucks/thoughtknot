@@ -7,8 +7,9 @@
 import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { GLIDE_MOST, LAYOUT_GLIDE_MS, easeGlide, offsetAt, offsetsOf, placeKept } from '../../layout-glide.ts';
 import type { Offsets, Pt } from '../../layout-glide.ts';
-import type { View, Zoom } from '@thoughtknot/core';
+import type { Drawn, View, Zoom } from '@thoughtknot/core';
 import { reducedMotion } from './details-nav.ts';
+import { LiveHold } from './live-hold.ts';
 import type { Taps } from './taps.ts';
 
 /** What ends a glide at once: the person reaching for the drawing, to move, zoom, pick or press a key. */
@@ -54,9 +55,18 @@ export class LayoutGlide {
   private heard: HTMLElement | null = null;
   private readonly reach = () => this.stop();
 
+  /** A quick first picture's settled layout, put in once the drawing is let go (layout_live_loop). */
+  private readonly live: LiveHold;
+
   /** For the card's viewport, made once the card is built. */
   constructor(viewport: () => HTMLElement) {
     this.viewportOf = viewport;
+    this.live = new LiveHold(viewport);
+  }
+
+  /** Puts `drawn`'s settled layout in by `put` once it comes and nothing holds the drawing (live-hold.ts). */
+  follow(drawn: Drawn, put: (better: Drawn) => void): void {
+    this.live.follow(drawn, put);
   }
 
   /** The card's viewport, listened to from the first glide: a reach for it ends the glide. */

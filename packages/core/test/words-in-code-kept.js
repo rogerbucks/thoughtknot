@@ -126,11 +126,8 @@ export const CORE_KEPT = {
     "not a note's path in the store: {}",
   ],
   // a layout's failure as an error's message, for a developer: a host says it from the catalogue by its stage
-  'packages/core/src/layout-worker.ts': [
-    'the layout worker failed: {}',
-    'the layout engine could not start: {}',
-    'the layout engine took too long to start',
-  ],
+  'packages/core/src/layout-worker.ts': ['the layout engine took too long to start'],
+  'packages/core/src/layout-port.ts': ['the layout worker failed: {}', 'the layout engine could not start: {}'],
   // a developer's errors, for a palette, a theme or a drawing the code itself got wrong
   'packages/core/src/palette.ts': ['the theme has no {}', 'the style blends at {} only, not {}', ' and '],
   'packages/core/src/theme.ts': ['nothing was laid out'],
