@@ -164,4 +164,16 @@ export const READING_SOURCE_WORDS = {
   // a link that is not a connector
   'board.link-kind': 'a board joins its items with CONNECTS only, not {type}, so this link is left off the board',
   'board.link-kind.fix': 'write it as -[:CONNECTS]->, or remove it',
+  // drawings over a graph (editor spec §70, sketch_checked, sketch.ts): a kind that is not a drawing's
+  'sketch.kind-unknown': 'drawings are Ink, Shape or Text, not {kind}, so {id} is not drawn',
+  'sketch.kind-unknown.fix': 'change its kind to one of {kinds}',
+  // a drawing pinned to a thing the graph does not hold
+  'sketch.pin-gone': '{id} is pinned to {thing}, which the graph {graph} does not hold, so it is not drawn',
+  'sketch.pin-gone.fix': "pin it to a thing of {graph}, or remove pin: '{thing}'",
+  // a shape that is not one a drawing may be
+  'sketch.shape-unknown': '{id} is a {shape}, which is not one of {shapes}, so it is drawn as a box',
+  'sketch.shape-unknown.fix': 'change its shape to one of {shapes}',
+  // a stroke, line or arrow whose points are not pairs of numbers
+  'sketch.points': '{id} needs its points as pairs of numbers, two pairs at least, so it is not drawn',
+  'sketch.points.fix': "write its points in pairs, such as points: '0 0 40 10'",
 } as const;

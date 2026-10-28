@@ -17,7 +17,8 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   STYLES = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE${S}+([^${SPACE}·]+)`),
   STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`),
   FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`),
-  BOARDS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*BOARD(?:${S}+ON${S}+(${N}+))?${S}*$`);
+  BOARDS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*BOARD(?:${S}+ON${S}+(${N}+))?${S}*$`),
+  SKETCHES = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*SKETCH${S}+ON${S}+(${N}+)${S}*$`);
 
 /**
  * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts). Its graph line says FROM and a
@@ -67,13 +68,24 @@ export function boardOf(text: string): { name: string; on: string | null } | nul
 }
 
 /**
+ * The drawings a block holds over a graph (editor spec §70, sketch_is_text). Its graph line says SKETCH ON and the graph
+ * they are drawn over: `// graph: trip_ink · SKETCH ON trip`. Null for any other block. Drawings are never data to draw
+ * as a graph (`dataKind`): sketch.ts reads them.
+ */
+export function sketchOf(text: string): { name: string; on: string } | null {
+  const m = SKETCHES.exec(firstLine(text));
+  return m ? { name: m[1] ?? '', on: m[2] ?? '' } : null;
+}
+
+/**
  * The kind of a block, or null when it holds no data to draw. A query holds none (a view or a step among them), nor
  * does an excerpt or a change set. Nor does a style block, read only by style.ts, or a board, read only by board.ts.
- * Nor does a block drawn FROM elsewhere, read only by sources.ts. Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is
- * a problem, never data.
+ * Nor do drawings over a graph, read only by sketch.ts. Nor does a block drawn FROM elsewhere, read only by sources.ts.
+ * Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is a problem, never
+ * data.
  */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
-  if (styleOf(text) !== null || isSourceBlock(text) || boardOf(text)) return null;
+  if (styleOf(text) !== null || isSourceBlock(text) || boardOf(text) || sketchOf(text)) return null;
   if (STYLE_WORD.test(firstLine(text))) {
     const own = graphOf(text) ?? '<name>';
     return {

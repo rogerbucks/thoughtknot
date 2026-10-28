@@ -148,4 +148,14 @@ export const DRAWING_SOURCE_WORDS = {
   'view.detail.all': 'All',
   'view.hint.detail':
     'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
+  // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)
+  'sketch.layer': 'Drawings',
+  'sketch.kind.ink': 'Freehand drawing',
+  'sketch.kind.box': 'Box',
+  'sketch.kind.ellipse': 'Ellipse',
+  'sketch.kind.line': 'Line',
+  'sketch.kind.arrow': 'Arrow',
+  'sketch.kind.note': 'Note',
+  'sketch.said': '{kind}: {text}',
+  'sketch.pinned': '{said}, pinned to {pin}',
 } as const;
