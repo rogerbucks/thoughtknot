@@ -147,6 +147,9 @@ const NAMES = [
   'sameAsAcross',
   'worldIn',
   'searchContexts',
+  // the graph spec's axioms, and the check that finds each one a graph breaks (editor spec §64)
+  'AXIOMS',
+  'axioms',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
