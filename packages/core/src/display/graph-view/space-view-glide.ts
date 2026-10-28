@@ -27,8 +27,10 @@ export class SpaceGlide {
    */
   constructor(el: HTMLElement, space: SpaceMarks, paint: () => void, camera: (o: Orbit) => void) {
     [this.el, this.shown, this.paint, this.camera] = [el, space, paint, camera];
-    // caught on the way down, so the glide ends before the view acts on the reach
-    for (const type of REACHES) el.addEventListener(type, () => this.settle(), { capture: true });
+    // caught on the way down, so the glide ends before the view acts on the reach, its end painted, as the view
+    // need not paint again for a reach it ignores
+    const reach = () => this.end && (this.settle(), this.paint());
+    for (const type of REACHES) el.addEventListener(type, reach, { capture: true });
   }
 
   /** The block shown now for `block`, by its thing, so the ring round a picked thing glides with it. */

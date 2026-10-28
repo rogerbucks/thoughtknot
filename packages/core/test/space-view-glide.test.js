@@ -78,13 +78,17 @@ test('the things and the camera ease from where they were to where they go, then
 test('a reach for the view ends the glide at once, caught before the view acts on it; still, the end shows at once', () => {
   for (const type of ['pointerdown', 'wheel', 'keydown']) {
     const v = viewOf();
-    const { glide, cameras } = glideIn(v, spaceAt(0));
+    const { glide, cameras, painted } = glideIn(v, spaceAt(0));
     assert.equal(v.heard.get(type).o.capture, true, `${type} is caught on the way down`);
     const now = spaceAt(100);
     glide.to(now, glide.settle(), ORBIT(500), ORBIT(800));
     v.frame(LAYOUT_GLIDE_MS / 10);
+    const paints = painted();
     v.reach(type);
     assert.equal(glide.shown, now, `${type}: as laid out`);
+    assert.equal(painted(), paints + 1, 'the end painted, though the view may not act on the reach');
+    v.reach(type);
+    assert.equal(painted(), paints + 1, 'a reach with no glide under way paints nothing more');
     assert.equal(cameras.at(-1).distance, 800, 'the camera where the glide was taking it');
     const put = cameras.length;
     v.frame(LAYOUT_GLIDE_MS / 10);
