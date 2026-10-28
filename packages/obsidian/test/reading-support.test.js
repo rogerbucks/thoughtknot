@@ -83,7 +83,10 @@ describe('the Reading support preset', () => {
   // proves: view_reading_support
   test('spaces plain sans words wider, with a line height of 1.5, and no special font', () => {
     const css = styles.replace(/\/\*[\s\S]*?\*\//g, '');
-    const rule = /body\.thoughtknot-reading \.thoughtknot-view \{([^}]*)\}/.exec(css)?.[1] ?? '';
+    const rule =
+      /body\.thoughtknot-reading \.thoughtknot-view,\s*\.thoughtknot-view\.thoughtknot-reading \{([^}]*)\}/.exec(
+        css,
+      )?.[1] ?? '';
     assert.match(rule, /font-family: var\(--gn-font-ui\);/);
     assert.match(rule, /word-spacing: 0\.25em;/);
     assert.match(rule, /line-height: 1\.5;/);

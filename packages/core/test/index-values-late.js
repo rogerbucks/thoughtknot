@@ -144,6 +144,7 @@ export const VALUES_LATE = [
   'writeSafely',
   // view presets by need (§69), 25 Oct 2026
   'STARTERS',
+  'PRESET_IDS',
   'PRESET_SETTINGS',
   'starterOf',
   'holdsStill',

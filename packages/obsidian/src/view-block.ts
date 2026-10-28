@@ -311,7 +311,7 @@ export async function renderViewBlock(
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
       profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
-      aids: aidsOf(plugin.settings),
+      aids: aidsOf(plugin.settings, style),
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,

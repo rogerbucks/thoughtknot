@@ -160,7 +160,10 @@ describe('motion is safe', () => {
       css(),
       /body\.thoughtknot-still \.thoughtknot-svg path\.thoughtknot-flow-runner[^{]*\{\s*animation: none;/,
     );
-    assert.match(css(), /body\.thoughtknot-still \.thoughtknot-svg path\.thoughtknot-path-runner \{\s*display: none;/);
+    assert.match(
+      css(),
+      /body\.thoughtknot-still \.thoughtknot-svg path\.thoughtknot-path-runner[^{]*\{\s*display: none;/,
+    );
   });
 });
 

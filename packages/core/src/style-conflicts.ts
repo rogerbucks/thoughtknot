@@ -290,6 +290,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.pictures = checked.pictures;
   // a graph's filter is the first written for it (filter-saved.ts): none conflicts
   style.filters = checked.filters;
+  style.presets = checked.presets; // and its preset the first written (§69)
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {
     const first = style.views.get(view);

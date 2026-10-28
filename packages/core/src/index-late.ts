@@ -44,3 +44,4 @@ export {
   type DeviceAsks,
 } from './view-presets.ts';
 export { presetPreview, presetUndo, type PresetLine } from './view-preset-preview.ts';
+export { PRESET_IDS, type PresetChoice } from './style-graph.ts'; // a graph's own preset (§69)
