@@ -153,4 +153,11 @@ export const VALUES_LATE = [
   'presetFor',
   'presetFile',
   'presetFrom',
+  // one graph from many places (§63, CN1), 28 Oct 2026
+  'CONNECTORS',
+  'connect',
+  'connectorFor',
+  'gqlConnector',
+  'joinPlaces',
+  'placeKey',
 ];

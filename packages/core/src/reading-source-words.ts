@@ -109,6 +109,11 @@ export const READING_SOURCE_WORDS = {
     'a graph is drawn from a .gql file or a note, and {target} is neither: write FROM path/to/file.gql or FROM [[Note]]',
   'reading.source.holds-lines':
     'a block drawn from {target} holds nothing of its own, so its data is never copied here: move these lines into {target}, or take out · FROM',
+  // one graph from many places (connectors.ts)
+  'reading.source.place-too-large':
+    '{place} is too large to read, so graph {graph} is drawn without it: make it smaller, or split it in two.',
+  'reading.source.no-connector': 'Nothing reads places like {place} yet, so it is left out of the drawing.',
+  'reading.source.cited': '{place} line {line} ({version})',
   'reading.source.file': 'The file {target}',
   'reading.source.note': 'The note {target}',
   'reading.source.plugin': 'The plug-in source {target}',

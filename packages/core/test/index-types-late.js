@@ -1,6 +1,9 @@
 // The last part of the types src/index.ts exports, from HitAreas on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'Citation',
+  'Connected',
+  'Connector',
   'HitAreas',
   'HostAbilities',
   'HostAbility',
@@ -19,7 +22,9 @@ export const TYPES_LATE = [
   'IntentBreak',
   'IsolatedOptions',
   'IsolatedPlugin',
+  'JoinOptions',
   'JoinedGraph',
+  'JoinedRead',
   'Kept',
   'KeptDescent',
   'LaidMarks',
@@ -210,6 +215,7 @@ export const TYPES_LATE = [
   'SqlEngine',
   'Stale',
   'Start',
+  'Statement',
   'StepFault',
   'StepGiven',
   'StepOutput',
