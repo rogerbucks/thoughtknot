@@ -3,7 +3,7 @@
 // tapped or opened by keyboard. This ties together its folder's parts: bar, drawing, taps, details, where it is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
+import { AcrossZoom, Zoom, presetClasses, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -109,7 +109,7 @@ export class GraphView extends Lifecycle {
   override onload(): void {
     const { problems, mode } = this.o,
       root = this.containerEl;
-    readInHostDirection(root).addClass('thoughtknot-view', `is-${mode}`);
+    readInHostDirection(root).addClass('thoughtknot-view', `is-${mode}`, ...presetClasses(this.o.aids?.preset)); // §69
 
     let list: HTMLElement | null = null;
     const placed = renderBar(root, this.o, {
