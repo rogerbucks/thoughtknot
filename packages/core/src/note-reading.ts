@@ -107,6 +107,8 @@ export interface GraphDrawing {
   kindLanes?: false;
   /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
   layoutOptions?: Partial<LayoutOptions>;
+  /** Each thing's spot as the plug-in's layout its options choose placed it (§68, layout_plugins); none, not yet. */
+  placed?: Record<string, [number, number]>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */

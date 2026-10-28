@@ -300,4 +300,9 @@ export const TYPES_LATE = [
   'WriteResult',
   'WrittenNudge',
   'ZoomEvent',
+  'GivenSpots',
+  'LayoutGiven',
+  'LayoutOffer',
+  'LayoutPlaced',
+  'PluginLayout',
 ];

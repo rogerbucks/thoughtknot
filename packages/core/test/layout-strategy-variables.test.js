@@ -35,11 +35,12 @@ describe('the variables are named once, each with a default', () => {
   // proves: layout_strategy_variables
   test('the names, their words and their defaults, with a wrong one read as its default', () => {
     assert.deepEqual(Object.values(SHOWN_LAYOUT_KEYS), ['spacing', 'link_length', 'group_pull', 'rounds']);
-    assert.deepEqual(Object.values(SHOWN_LAYOUT_CHOICES), ['layout_direction', 'shape', 'pinned']);
+    assert.deepEqual(Object.values(SHOWN_LAYOUT_CHOICES), ['layout_direction', 'shape', 'pinned', 'layout_strategy']);
     assert.deepEqual(LAYOUT_CHOICES, {
       direction: ['best', 'LR', 'TB'],
       shape: ['screen', 'wide', 'tall'],
       pinned: ['selected', 'middle', 'nothing'],
+      strategy: ['auto', 'rows', 'spread'],
     });
     assert.deepEqual(layoutOptions(), ALONE);
     assert.deepEqual(

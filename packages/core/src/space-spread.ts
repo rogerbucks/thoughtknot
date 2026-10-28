@@ -146,7 +146,8 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
  * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
  * With `asDrawn`, each thing stays where the drawing put it, across and down, and only its depth is laid out
  * (space_follows_type). The View menu's `layout` spaces it, as it spaces the flat drawing (layout_saved_with_view).
- * `planes` puts kinds in order each on a plane of their own, by each thing's lane (layout_kind_lanes).
+ * `planes` puts kinds in order each on a plane of their own, by each thing's lane (layout_kind_lanes). A layout the
+ * person chose in rows, or a plug-in's, keeps its places too, so the same choice shows in every view (layout_plugins).
  */
 export function spreadSpace(
   marks: readonly DrawMark[],
@@ -157,7 +158,8 @@ export function spreadSpace(
   planes: ReadonlyMap<string, number> = new Map(),
 ): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
-  const middles = asDrawn ? middlesOf(marks) : null;
+  const strategy = layoutOptions(layout).strategy;
+  const middles = asDrawn || (strategy !== 'auto' && strategy !== 'spread') ? middlesOf(marks) : null;
   const drawn = middles && drawnSpots(shape, middles);
   // space is roomier than a page. Things laid out afresh sit further apart there, so how they link shows (Roger, 25 Oct
   // 2026: "give more spacing between the blocks")

@@ -31,6 +31,8 @@ export const POINT_ABOUT = {
   ai: 'An AI service’s request shape. It only shapes the body and reads the reply; the core keeps the gate and the person’s yes, and the host the key.',
   diagrams:
     'A diagram type, named under its id, that a style graph chooses. It gives back boxes, lines and text as data, and the core draws them.',
+  layouts:
+    'A layout, named under its id, offered in the View menu. It gives back a spot for each thing as data, and the core draws it in every view.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */
