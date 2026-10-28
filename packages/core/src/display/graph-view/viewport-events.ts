@@ -28,6 +28,7 @@ import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { fills } from '../../space-cards.ts';
 import type { SpaceMove } from '../../space-controls.ts';
+import type { SketchPointer } from './sketch-tool';
 
 /** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
 const ownButton = (target: EventTarget | null): boolean =>
@@ -58,6 +59,8 @@ export interface ViewportHost {
   full: { show: () => void };
   /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
   space?: { move: (m: SpaceMove) => boolean };
+  /** The drawing tools (§70): a press, move and lift they take draws or picks a drawing, never pans or selects. */
+  sketch?: SketchPointer | null;
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -133,6 +136,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
     lastPointer = e.pointerType || 'mouse';
     if (e.button === 2) return; // a right-click opens a menu: it neither selects nor pans
+    // with a drawing tool chosen, a drag draws; a press on a drawing picks it (§70)
+    if (host.sketch?.down(e, point(e))) {
+      vp.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
+    }
     const target = targetAt(e.target),
       p = point(e),
       near = nearTo(p);
@@ -162,6 +171,10 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
     if (onMiniMap(e.target)) return; // the mini-map moves the view by itself (§24)
     host.info.moved(e);
+    if (host.sketch?.move(e, point(e))) {
+      e.preventDefault();
+      return;
+    }
     if (drag?.move(e.pointerId, point(e))) {
       host.info.hide(); // the box is moving from under it
       e.preventDefault();
@@ -172,6 +185,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
     if (ownButton(e.target) || e.button === 2) return;
     const p = point(e);
+    if (host.sketch?.up(e, p)) return;
     use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
     // a box dragged and let go is moved, never opened as a tap (§6)
     if (drag?.up(e.pointerId)) {
@@ -286,7 +300,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
     host.info.key(e); // Escape closes a tooltip, and goes on to do what it did (§24)
     // Escape puts a box being dragged back, and writes nothing (§6)
-    if (e.key === 'Escape' && drag?.cancel()) {
+    if (e.key === 'Escape' && (drag?.cancel() || host.sketch?.escape())) {
       e.preventDefault();
       return;
     }

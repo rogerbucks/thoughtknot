@@ -213,7 +213,8 @@ const num = (x: number) => String(Math.round(x * 100) / 100);
 
 /**
  * The drawings as one SVG group in `palette`'s colours, to lay over the graph's drawing in its own pixels. Each drawing
- * carries `data-sketch` with its id, so a host can tell what was tapped, and is said by its title.
+ * carries `data-sketch` with its id, so a host can tell what was tapped, and `data-style` with its style token. Each is
+ * said by its title.
  */
 export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): string {
   const colour = (style: string) => {
@@ -221,7 +222,8 @@ export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): stri
     return hue ? palette.blend(hue, STYLE.line_mix) : palette.text;
   };
   const parts = new Map<string, string[]>();
-  const said = new Map<string, string>();
+  const said = new Map<string, string>(),
+    styles = new Map<string, string>();
   for (const { mark: m } of pieces) {
     const id = m.id.replace(/^sketch:/, '').replace(/:head$/, '');
     const ink = colour(m.style);
@@ -244,10 +246,11 @@ export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): stri
     if (!parts.has(id)) parts.set(id, []);
     parts.get(id)?.push(svg);
     if (m.name && !said.has(id)) said.set(id, m.name);
+    if (!styles.has(id)) styles.set(id, m.style);
   }
   const groups = [...parts].map(
     ([id, svgs]) =>
-      `<g data-sketch="${escaped(id)}" role="img"><title>${escaped(said.get(id) ?? '')}</title>${svgs.join('')}</g>`,
+      `<g data-sketch="${escaped(id)}" data-style="${escaped(styles.get(id) ?? 'sketch')}" role="img"><title>${escaped(said.get(id) ?? '')}</title>${svgs.join('')}</g>`,
   );
   return `<g class="tk-sketch" role="group" aria-label="${escaped(word('sketch.layer'))}">${groups.join('')}</g>`;
 }

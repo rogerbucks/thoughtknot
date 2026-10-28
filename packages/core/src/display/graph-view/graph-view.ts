@@ -2,7 +2,7 @@
 // zooms and pans by button, gesture and key, as the core's Zoom decides. It opens full screen, and a box's details when
 // tapped or opened by keyboard. This ties together its folder's parts: bar, drawing, taps, details, where it is placed.
 import { Lifecycle } from '../lifecycle';
-import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
+import { inHost, isPhone, readInHostDirection } from '../host';
 import { AcrossZoom, Zoom, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
@@ -13,11 +13,12 @@ import { Walk } from './walk';
 import { playablePaths } from './path-play';
 import { ViewMaker } from './view-maker';
 import { AddThing } from './add-thing';
+import { sketchOn, type SketchTool } from './sketch-tool';
 import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
-import { overDrawing, renderBar } from './view-bar';
+import { editButtonAs, overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
@@ -49,6 +50,7 @@ export class GraphView extends Lifecycle {
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
+  private sketcher: SketchTool | null = null;
   private readonly fullscreen: FullScreen;
   /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
   private sel!: Selection;
@@ -71,6 +73,7 @@ export class GraphView extends Lifecycle {
     () => this.svg,
     () => this.o.diagram?.choice,
     () => this.o.switches?.state.layout,
+    () => this.sketcher?.shownSketch() ?? null, // the drawings over it, drawn in space too (§70)
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
@@ -170,6 +173,8 @@ export class GraphView extends Lifecycle {
     this.walk = new Walk(root, this.o, () => this.svg ?? undefined, tools); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
     if (this.o.editing) this.adder = new AddThing(tools, this.o); // a thing added from its text, while edited (§5)
+    const card = { svg: () => this.svg, drawn: () => this.drawn, taps: this.taps, zoom: () => this.zoom };
+    this.sketcher = sketchOn(tools, this.o, { ...card, readOnly: this.readOnly }); // drawings over the graph (§70)
     const view = this.o.view;
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
@@ -209,6 +214,7 @@ export class GraphView extends Lifecycle {
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
+    this.sketcher?.layer(); // the drawings over it, on top (§70)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d); // the drawing as sentences, for screen readers (spec §11)
     this.detailsEl = root.createDiv({ cls: 'thoughtknot-details', attr: { role: 'region', 'aria-live': 'polite' } });
@@ -245,7 +251,7 @@ export class GraphView extends Lifecycle {
       unfold = (fold: string, byKey?: boolean) =>
         foldInPlace(this.svg, this.zoom, fold, this.switching, byKey && focus);
     const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
-    bindViewportEvents({ ...host, space: this.spaces });
+    bindViewportEvents({ ...host, space: this.spaces, sketch: this.sketcher });
     const observer = new ResizeObserver(() => (this.zoom.resize(this.zoomSize()), this.aids.placeDetails()));
     observer.observe(this.viewport);
     if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)
@@ -261,7 +267,7 @@ export class GraphView extends Lifecycle {
           [...editing, ...writes].forEach((b) => b.remove());
           this.editButton = null;
           slot?.remove();
-          this.showEditing(); // Record and Make a view, built before the card was placed, offered no more
+          this.showEditing(); // Record, Make a view and Draw, built before the card was placed, offered no more
         } else {
           source?.remove();
           if (slot) this.o.onReady?.(slot);
@@ -279,16 +285,9 @@ export class GraphView extends Lifecycle {
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
   private showEditing(): void {
-    this.walk?.show(); // Record and Make a view are offered only while the card is edited
-    this.maker?.show();
-    this.adder?.show();
-    const b = this.editButton;
-    if (!b) return;
-    const on = !!this.o.editing?.()?.session;
-    b.empty();
-    setIcon(b, on ? 'book-open' : 'pencil');
-    b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
-    b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
+    // Record, Make a view and Add are offered only while the card is edited; Draw where the note can be written (§70)
+    for (const tool of [this.walk, this.maker, this.adder, this.sketcher]) tool?.show();
+    if (this.editButton) editButtonAs(this.editButton, !!this.o.editing?.()?.session);
   }
 
   override onunload(): void {
@@ -343,6 +342,7 @@ export class GraphView extends Lifecycle {
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
+    this.sketcher?.layer(); // the drawings follow what they are pinned to (§70)
     this.aids.redrawn(drawn);
     this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
     this.sel.redrawn();
