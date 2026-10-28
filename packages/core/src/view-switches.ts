@@ -276,7 +276,8 @@ export class ViewState {
     const { folding: _was, ...rest } = d;
     const kept = instead ? (d.nudges ?? []).filter((n) => n.word !== 'group') : (d.nudges ?? []);
     const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
-    const engined = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
+    // our own engine shows a big drawing as it improves: a quick first picture, then the settled one (layout_live_loop)
+    const engined = this.switches.engine ? { ...grouped, engine: 'own' as const, live: true as const } : grouped;
     const laned = this.switches.lanes === false ? { ...engined, kindLanes: false as const } : engined;
     // a direction picked in the View menu wins over the best fit, and over the style's (layout_strategy_variables)
     const way = this.layout.direction === 'best' ? laned : { ...laned, direction: this.layout.direction };

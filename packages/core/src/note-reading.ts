@@ -107,6 +107,8 @@ export interface GraphDrawing {
   kindLanes?: false;
   /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
   layoutOptions?: Partial<LayoutOptions>;
+  /** Shown as it improves: a quick first picture, then the settled one (§68, layout_live_loop); none, once settled. */
+  live?: true;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
