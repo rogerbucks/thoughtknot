@@ -92,6 +92,7 @@ describe('the workstreams file', () => {
       'LE2',
       'PJ1',
       'VP1',
+      'DR1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -199,6 +200,7 @@ describe('the workstreams file', () => {
         'Live layout: the loop, the glide and the six layers',
         'Projections: all on',
         'View presets by need: saved, safe and portable',
+        'Drawings on the graph: ink, shapes and notes',
       ],
     );
   });
