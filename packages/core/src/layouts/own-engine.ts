@@ -22,6 +22,8 @@ import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
 import { groupsOver, packPlaced, partShape, partsOf, trayOf } from './parts.ts';
 import type { Placed } from './parts.ts';
+import { kindsOf } from './fingerprint.ts';
+import type { Kinds } from './fingerprint.ts';
 import { FOLDED_GROUP, TRY_MOST, pickLayout, tidier } from './pick.ts';
 import type { Pick } from './pick.ts';
 
@@ -91,7 +93,8 @@ export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<s
 /**
  * Each box of `laid` placed by our own engine, its middle in CSS pixels from the top left, with room round the edge.
  * `previous` is last time's spots, for a warm start. `rankdir` is the way rows run for a layered layout. It says how
- * many parts it laid out, and how many loose things went in the tray.
+ * many parts it laid out, and how many loose things went in the tray. `lanesBy` gives each thing's kind. A part whose
+ * kinds link in order, or across two sides, then has a lane for each kind in its rows (layout_kind_lanes).
  */
 export function ownSpots(
   laid: LaidMarks,
@@ -99,6 +102,7 @@ export function ownSpots(
   previous?: ReadonlyMap<string, readonly number[]>,
   groups: readonly Group[] = [],
   options: Partial<LayoutOptions> = {},
+  lanesBy?: ReadonlyMap<string, string>,
 ): {
   spots: Map<string, [number, number]>;
   via: Map<string, [number, number][]>;
@@ -107,6 +111,7 @@ export function ownSpots(
   rankdir: 'LR' | 'TB';
   parts: number;
   loose: number;
+  bands: Map<string, number>;
 } {
   const { shape: whole, sizes } = marksShape(laid.marks);
   const { shape, trunks } = trunksOut(whole);
@@ -124,7 +129,8 @@ export function ownSpots(
   const pieces: Piece[] = laidParts.map((part, i) => {
     const one = laidParts.length === 1 && !loose.length;
     const [these, over] = one ? [shape, groups] : [partShape(shape, part), groupsOver(groups, part)];
-    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0 });
+    const bands = lanesBy && bandsOf(kindsOf(these, lanesBy), these, lanesBy);
+    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands });
     if (i === 0) way = piece.way;
     return piece;
   });
@@ -154,13 +160,16 @@ export function ownSpots(
     const [x, y] = moved([b.x, b.y]);
     return { ...b, x, y };
   });
-  return { spots, via, boxes, pick, rankdir: way, parts: laidParts.length, loose: loose.length };
+  const bands = new Map(pieces.flatMap((p) => [...(p.bands ?? [])]));
+  return { spots, via, boxes, pick, rankdir: way, parts: laidParts.length, loose: loose.length, bands };
 }
 
 /** One part of a drawing laid out on its own, by the layout it picked, its rows running `way`. */
 interface Piece extends Placed {
   pick: Pick;
   way: 'LR' | 'TB';
+  /** Each thing's lane, where its rows have a lane for each kind. */
+  bands?: ReadonlyMap<string, number> | undefined;
 }
 
 /** How a part is laid out besides its shape: last time's spots, the person's options, and whether its rows may turn. */
@@ -168,6 +177,23 @@ interface PartMore {
   previous?: ReadonlyMap<string, readonly number[]>;
   options: Partial<LayoutOptions>;
   turn: boolean;
+  /** Each thing's lane, where its kinds link in order (layered.ts). */
+  bands?: ReadonlyMap<string, number> | undefined;
+}
+
+/** Each thing's lane, its kind's place in `kinds`' order, where kinds link in order or across two sides. */
+function bandsOf(
+  kinds: Kinds,
+  shape: GraphShape,
+  kindOf: ReadonlyMap<string, string>,
+): Map<string, number> | undefined {
+  if (kinds.pattern !== 'ordered' && kinds.pattern !== 'two-sided') return undefined;
+  const at = new Map(kinds.order.map((k, i) => [k, i]));
+  return new Map(
+    shape.things.flatMap((t) =>
+      at.has(kindOf.get(t.key) ?? '') ? [[t.key, at.get(kindOf.get(t.key) ?? '') as number]] : [],
+    ),
+  );
 }
 
 /**
@@ -197,12 +223,21 @@ function laidBy(
   rankdir: 'LR' | 'TB',
   more: PartMore,
 ): Piece {
-  const { previous, options } = more;
+  const { previous, options, bands } = more;
   const { spacing, linkLength } = layoutOptions(options);
   let way = rankdir;
   if (pick.layout === 'layered') {
     const rowsOf = (w: 'LR' | 'TB') =>
-      groupedLayered(shape, sizes, groups, w, previous, options, pick.why === 'overview' && !previous ? RESTARTS : 0);
+      groupedLayered(
+        shape,
+        sizes,
+        groups,
+        w,
+        previous,
+        options,
+        pick.why === 'overview' && !previous ? RESTARTS : 0,
+        bands,
+      );
     let rows = rowsOf(rankdir);
     // an overview's boxes are few and wide: its rows go whichever way gives the drawing a screen's shape, nearer
     if (pick.why === 'overview' && more.turn) {
@@ -210,7 +245,7 @@ function laidBy(
       const turned = rowsOf(other);
       if (offScreen(turned, sizes) < offScreen(rows, sizes)) [rows, way] = [turned, other];
     }
-    return { ...rows, pick, way };
+    return { ...rows, pick, way, bands };
   }
   // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
   const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));

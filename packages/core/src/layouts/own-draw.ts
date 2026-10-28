@@ -72,6 +72,12 @@ const OPTIONS_LINE = /^\s*\/\/ layout options (\{.*\})$/m;
 /** The line of a layout source that carries each thing's kind, by its key. */
 const KINDS_LINE = /^\s*\/\/ layout kinds (\{.*\})$/m;
 
+/** The line of a layout source that says kinds are to get no lane each. */
+const NO_LANES_LINE = /^\s*\/\/ layout lanes off$/m;
+
+/** Whether kinds that link in order get a lane each, as `ownSource` wrote into the source `dot` (layout_kind_lanes). */
+export const lanesIn = (dot: string): boolean => !NO_LANES_LINE.test(dot);
+
 /** Each thing's kind, by its key, as `ownSource` wrote them into the source `dot`. */
 export function kindsIn(dot: string): Map<string, string> {
   try {
@@ -99,6 +105,7 @@ export function ownSource(
   dot: string,
   options?: Partial<LayoutOptions>,
   kinds: ReadonlyMap<string, string> = new Map(),
+  lanes = true,
 ): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
@@ -113,6 +120,7 @@ export function ownSource(
   lines.splice(1, 0, '  graph [splines=false];', `  // layout options ${JSON.stringify(layoutOptions(options))}`);
   // each thing's kind, for the engine to read how kinds link (fingerprint.ts)
   if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);
+  if (!lanes) lines.splice(3, 0, '  // layout lanes off');
   return lines.join('\n');
 }
 
@@ -185,6 +193,7 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
  * The drawing Graphviz measured in `laid` as marks, its boxes placed by our own engine, its links direct. `groups`
  * are the layout source's groups (`groupsIn`), each drawn as a box round its things. `kinds` are each thing's kind.
  * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
+ * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes).
  */
 export function ownLaid(
   laid: LaidMarks,
@@ -192,14 +201,19 @@ export function ownLaid(
   groups: readonly SourceGroup[] = [],
   options: Partial<LayoutOptions> = {},
   kinds: ReadonlyMap<string, string> = new Map(),
+  lanes = true,
 ): { marks: LaidMarks; shown: PickShown } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
-  const { spots, via, boxes, rankdir: way, pick, parts, loose } = ownSpots(laid, asked, undefined, groups, options);
+  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined);
+  const { spots, via, boxes, rankdir: way, pick, parts, loose, bands } = drawn;
   const seen = kindsOf(marksShape(laid.marks).shape, kinds);
   return {
     marks: directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way),
-    shown: { why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose },
+    shown: {
+      ...{ why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose, lanes: bands.size > 0 },
+      ...(bands.size ? { bands: Object.fromEntries(bands) } : {}),
+    },
   };
 }
 

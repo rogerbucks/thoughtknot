@@ -8,6 +8,7 @@ import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
+import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { STARTERS } from './view-presets.ts';
 import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
@@ -62,6 +63,8 @@ export interface Settings extends StrictnessSettings {
   mergeLinks: SwitchSetting;
   /** Whether graphs are laid out by our own engine, as a preview, instead of Graphviz (§53, layout_own_engine). */
   ownLayout: SwitchSetting;
+  /** Whether kinds that link in order each get a lane of their own, or a plane in space (§68, layout_kind_lanes). */
+  kindLanes: SwitchSetting;
   /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
   noteCallouts: SwitchSetting;
   /** When the small copy of the whole drawing, with the visible part outlined, shows (§24, mini_map_setting). */
@@ -106,6 +109,7 @@ export const DEFAULT_SETTINGS: Settings = {
   foldGroups: 'off',
   mergeLinks: 'off',
   ownLayout: 'on',
+  kindLanes: 'on',
   noteCallouts: 'off',
   miniMap: 'auto',
   detailsOpen: 'off',
@@ -151,20 +155,6 @@ const INDENTS: Choice[] = [
   { value: 'four', name: 'Four spaces' },
   { value: 'tab', name: 'A tab' },
 ];
-
-/** The default of one of the View menu's switches (§25): on or off, in the Drawing section. */
-function switchOption(key: keyof Settings, name: string, sentence: string): Option {
-  return {
-    key,
-    section: 'Drawing',
-    name,
-    sentence,
-    choices: [
-      { value: 'on', name: 'On' },
-      { value: 'off', name: 'Off' },
-    ],
-  };
-}
 
 /** Every option, in the order the settings page shows them. */
 export const OPTIONS: Option[] = [
@@ -252,36 +242,7 @@ export const OPTIONS: Option[] = [
       { value: 'two', name: 'Two steps' },
     ],
   },
-  switchOption(
-    'labelsByZoom',
-    'Hide labels too small to read',
-    'Whether a link’s label shows only when zoomed in far enough to read it; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'foldHubs',
-    'Fold busy things',
-    'Whether a thing with many links draws them folded into one stub marked with their count; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'foldGroups',
-    'Fold groups',
-    'Whether each group draws as one box showing how many things it holds; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'mergeLinks',
-    'Bundle links between groups',
-    'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'ownLayout',
-    'Lay out with ThoughtKnot',
-    'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
-  ),
-  switchOption(
-    'noteCallouts',
-    'Draw notes as callouts',
-    'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
-  ),
+  ...SWITCH_OPTIONS, // the View menu's switches' defaults (§25)
   ...AID_OPTIONS, // the mini-map and the details kept open (§24)
   {
     key: 'exportTheme',
@@ -368,6 +329,7 @@ export function settingsFrom(saved: unknown): Settings {
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
     ownLayout: oneOf<SwitchSetting>('ownLayout', s.ownLayout, d.ownLayout),
+    kindLanes: oneOf<SwitchSetting>('kindLanes', s.kindLanes, d.kindLanes),
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
