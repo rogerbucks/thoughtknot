@@ -7,8 +7,9 @@
 // A drawing laid out again, as a group opens or folds, starts from where each thing was (cluster_in_place).
 // Host-free and pure.
 import type { Spots } from './layouts/layouts.ts';
+import { packPlaced, partsOf, trayOf } from './layouts/parts.ts';
+import type { Placed } from './layouts/parts.ts';
 import type { GraphShape } from './types-shape.ts';
-import type { Vec3 } from './space-view.ts';
 
 /** A trunk's joint, as the layout source names it (`trunk: 1 in`), or as the drawing on screen does (`trunk_1_in`). */
 const JOINT = /^(?:trunk: (\d+) (in|out)|trunk_(\d+)_(in|out))$/;
@@ -113,50 +114,37 @@ export function spotsKept(last: Spots<3>, held: Iterable<readonly [string, reado
   return out;
 }
 
+/** The room each thing takes in space, in the layout's units, round its spot: about half a link's length. */
+const PART_ROOM = 0.5;
+/** The room between two parts packed side by side in space, in the layout's units: a link's length. */
+const PART_GAP = 1;
+
 /**
- * `spots` with each lone part of `shape` moved in beside the largest part. A lone part is one no link joins to the
- * largest. It moves to a link's length clear of the largest, on the side it drifted to, when it is further off. Else the
- * rest push it far off. Then the view, fitting it in, draws the rest small and packed (Roger, 25 Oct 2026).
+ * `spots` with the parts of `shape` packed to a screen's shape, as the flat engine packs them (parts.ts). A part is
+ * what links join. The largest goes first, then the rest across and down, beside it. Things with no link sit in a tray,
+ * by name. Each keeps its depth. Else the rest push lone parts far off, and the view draws everything small (Roger,
+ * 25 and 28 Oct 2026).
  */
 export function partsNear(shape: GraphShape, spots: Spots<3>): Spots<3> {
-  const top = new Map<string, string>();
-  const root = (k: string): string => {
-    let r = k;
-    while (top.has(r) && top.get(r) !== r) r = top.get(r) as string;
-    top.set(k, r);
-    return r;
-  };
-  for (const t of shape.things) top.set(t.key, t.key);
-  for (const l of shape.links) if (top.has(l.from) && top.has(l.to)) top.set(root(l.from), root(l.to));
-  const parts = new Map<string, string[]>();
-  for (const t of shape.things) {
-    if (!spots.has(t.key)) continue;
-    const r = root(t.key);
-    const here = parts.get(r);
-    if (here) here.push(t.key);
-    else parts.set(r, [t.key]);
-  }
-  if (parts.size < 2) return spots;
+  const keys = shape.things.map((t) => t.key).filter((k) => spots.has(k));
+  const parts = partsOf(keys, shape.links);
+  if (parts.length < 2) return spots;
   const at = (k: string) => spots.get(k) ?? [0, 0, 0];
-  const ball = (keys: readonly string[]) => {
-    const mid = scale(keys.map(at).reduce(add, [0, 0, 0]), 1 / keys.length);
-    return { mid, r: Math.max(...keys.map((k) => Math.hypot(...sub(at(k), mid)))) };
-  };
-  const [main, ...rest] = [...parts.values()].sort((a, b) => b.length - a.length);
-  const whole = ball(main ?? []);
+  const text = new Map(shape.things.map((t) => [t.key, t.text]));
+  const loose = parts.filter((p) => p.length === 1).flat();
+  // across and down the page, as the packing reads it: up in space is up the page
+  const pieces: Placed[] = parts
+    .filter((p) => p.length > 1)
+    .map((p) => ({ spots: new Map(p.map((k) => [k, [at(k)[0], -at(k)[1]]])), via: new Map(), boxes: [] }));
+  const room = new Map(keys.map((k) => [k, [PART_ROOM * 2, PART_ROOM * 2] as const]));
+  if (loose.length)
+    pieces.push({ spots: trayOf(loose, room, (k) => text.get(k) ?? k, PART_ROOM).spots, via: new Map(), boxes: [] });
+  const packed = packPlaced(pieces, room, PART_GAP);
+  // the largest part stays where it was laid out; the rest move round it
+  const [k0] = parts[0] as string[];
+  const [px, py] = packed.spots.get(k0 as string) ?? [0, 0];
+  const [x0, y0] = at(k0 as string);
   const out = new Map(spots);
-  for (const keys of rest) {
-    const part = ball(keys),
-      away = sub(part.mid, whole.mid);
-    const clear = whole.r + part.r + 1;
-    if (Math.hypot(...away) <= clear) continue;
-    const by = sub(add(whole.mid, scale(norm(away), clear)), part.mid);
-    for (const k of keys) out.set(k, add(at(k), by));
-  }
+  for (const [k, [x, y]] of packed.spots) out.set(k, [x - px + x0, -(y - py) + y0, at(k)[2]]);
   return out;
 }
-
-const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
-const norm = (a: Vec3): Vec3 => scale(a, 1 / (Math.hypot(...a) || 1));
