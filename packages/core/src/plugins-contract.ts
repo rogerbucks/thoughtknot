@@ -10,6 +10,9 @@ import { providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramProblem, drawnMarks } from './plugin-diagrams.ts';
 import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
+import { layoutGiven, layoutProblem, spotsOf } from './plugin-layouts.ts';
+import type { PluginLayout } from './plugin-layouts.ts';
+import { layoutOptions } from './layouts/layout-options.ts';
 import type { GraphShape } from './types-shape.ts';
 import { storageContract } from './storage-contract.ts';
 import type { StorageCheck } from './storage-contract.ts';
@@ -324,6 +327,40 @@ export function diagramContract(d: PluginDiagram, pluginId: string): StorageChec
         const a: unknown = await drawn(SAMPLE_SHAPES.small as GraphShape);
         const b: unknown = await drawn(SAMPLE_SHAPES.small as GraphShape);
         if (JSON.stringify(a) !== JSON.stringify(b)) fail(d.type, 'the same marks twice', [a, b]);
+      },
+    },
+    { name: title.name, run: async () => title.run() },
+  ];
+}
+
+/** Every check a layout of the plug-in `pluginId` is held to (layout_plugins, layout_contract). */
+export function layoutContract(l: PluginLayout, pluginId: string): StorageCheck[] {
+  const title = readsInHostDirection(l.id, l.title);
+  const placed = async (shape: GraphShape) =>
+    l.place(layoutGiven({ shape, previous: {}, options: layoutOptions(), sizes: {} }));
+  return [
+    {
+      name: 'it is named under its plug-in’s own id, places things in two dimensions, and is offered under a title on one line',
+      run: async () => {
+        const why = layoutProblem(l, pluginId, new Map());
+        if (why) fail(l.id, 'a layout the registry accepts', why);
+      },
+    },
+    {
+      name: 'it gives every thing it was given one spot of two finite numbers, and no other, for an empty graph and a small one',
+      run: async () => {
+        for (const [name, shape] of Object.entries(SAMPLE_SHAPES)) {
+          const spots = spotsOf(await placed(shape), shape);
+          if (typeof spots === 'string') fail(`${l.id} on ${name}`, 'a spot for each thing', spots);
+        }
+      },
+    },
+    {
+      name: 'it gives the same spots each time for the same graph',
+      run: async () => {
+        const a = spotsOf(await placed(SAMPLE_SHAPES.small as GraphShape), SAMPLE_SHAPES.small as GraphShape);
+        const b = spotsOf(await placed(SAMPLE_SHAPES.small as GraphShape), SAMPLE_SHAPES.small as GraphShape);
+        if (JSON.stringify(a) !== JSON.stringify(b)) fail(l.id, 'the same spots twice', [a, b]);
       },
     },
     { name: title.name, run: async () => title.run() },

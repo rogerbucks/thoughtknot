@@ -117,29 +117,29 @@ describe('layout options', () => {
   });
 
   // proves: layout_strategy_variables
-  test('the View menu picks the direction, the shape and what is pinned, saved with a view as shown', async () => {
+  test('the View menu picks the layout, the direction, the shape and what is pinned, saved with a view as shown', async () => {
     const note = noteOf(KIT, ALL); // two parts: the toolbox with Ann and Cy, and Bob with Dee
     const env = await load({ files: { [PATH]: note } });
     try {
       const { el } = await show(env, note, 1);
       labelled(el, 'View').click();
       const lists = () => el.querySelectorAll('.thoughtknot-layout-choice');
-      const names = ['Direction', 'Shape', 'Keeps in place'];
+      const names = ['Layout', 'Direction', 'Shape', 'Keeps in place'];
       assert.deepEqual(
         lists().map((l, i) => l.textContent.startsWith(names[i])),
-        [true, true, true],
+        [true, true, true, true],
         lists()
           .map((l) => l.textContent)
           .join(' | '),
       );
       assert.deepEqual(
         lists().map((l) => l.querySelector('select').value),
-        ['best', 'screen', 'selected'],
+        ['auto', 'best', 'screen', 'selected'],
         'as each layout lays out alone',
       );
       await until(() => spread(el) > 0, LAID);
       const before = JSON.stringify(boxes(el));
-      const shape = lists()[1].querySelector('select');
+      const shape = lists()[2].querySelector('select');
       shape.value = 'tall';
       shape.dispatch('change');
       await until(() => spread(el) > 0 && JSON.stringify(boxes(el)) !== before, LAID); // its parts stacked

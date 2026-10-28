@@ -108,6 +108,7 @@ STYLE_KEYS = {
         "layout_direction",
         "shape",
         "pinned",
+        "layout_strategy",
     ),
     "Arrows": ("arrowheads", "view", "type"),
     "Diagram": ("type", "view", "relationship", "order", "by", "show", "centre"),
