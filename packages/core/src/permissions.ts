@@ -60,7 +60,14 @@ export interface GrantRule {
 
 /** Why a grant gives no access, as a code a host turns into words. */
 export type NoAccess =
-  'not-asserted' | 'no-rule' | 'not-their-role' | 'rule-not-asserted' | 'other-thing' | 'other-access' | 'no-grant';
+  | 'not-asserted'
+  | 'no-rule'
+  | 'not-their-role'
+  | 'rule-not-asserted'
+  | 'other-thing'
+  | 'other-access'
+  | 'no-grant'
+  | 'expired';
 
 /** One grant as a person inspects it: what it is for, its status, its rule and role, and whether it gives access. */
 export interface GrantView {
@@ -74,6 +81,8 @@ export interface GrantView {
   role: string | null;
   /** What each joined graph said, when they disagree: `graph: status` for each. */
   disputed?: string;
+  /** When it stops giving access, as an ISO instant: checked each time it is used (editor spec §65). */
+  expires?: string;
 }
 
 /** Whether access is given, and if not, why. */
@@ -110,9 +119,12 @@ export class Permissions {
   private readonly rules = new Map<string, GrantRule>();
   private readonly roles = new Map<string, Set<string>>();
   private readonly held: GrantView[] = [];
+  private readonly now: () => string;
 
-  constructor(graph: PermissionGraph) {
+  /** `now` gives the time each check is made at, so a grant's expiry is checked when it is used (editor spec §65). */
+  constructor(graph: PermissionGraph, now: () => string = () => new Date().toISOString()) {
     this.graph = graph;
+    this.now = now;
     const labelled = (label: string) => [...graph.nodes].filter(([, [labels]]) => labels.has(label));
     const owners = labelled('Person').filter(([, [, p]]) => p['owner'] === true);
     // two owners is no owner: the permissions fail closed
@@ -161,6 +173,8 @@ export class Permissions {
       const path = text(p['path']);
       const node = text(p['node']);
       const disputed = text(p['disputed']);
+      const expires = text(p['expires']);
+      if (expires !== undefined) view.expires = expires;
       if (path !== undefined) view.path = path;
       if (node !== undefined) view.node = node;
       if (disputed !== undefined) view.disputed = disputed;
@@ -201,6 +215,9 @@ export class Permissions {
       grant.path !== undefined ? grant.path === thing.path : grant.node !== undefined && grant.node === thing.id;
     if (!here) return { ok: false, why: 'other-thing' };
     if (grant.status !== 'asserted') return { ok: false, why: 'not-asserted' };
+    // checked now, at use, never only when the grant was made (temporal_checked_at_use)
+    if (grant.expires !== undefined && !(Date.parse(this.now()) < Date.parse(grant.expires)))
+      return { ok: false, why: 'expired' };
     const rule = grant.rule ? this.rules.get(grant.rule) : undefined;
     if (!rule) return { ok: false, why: 'no-rule' };
     if (!this.rolesOf(grant.person).includes(rule.role)) return { ok: false, why: 'not-their-role' };

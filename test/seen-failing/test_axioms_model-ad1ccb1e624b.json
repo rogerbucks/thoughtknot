@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_axioms_model.py",
+  "test": "AxiomsConsistent.test_a_graph_keeps_every_axiom",
+  "seen_failing_first": false,
+  "evidence": "It holds on generated graphs the axioms the checker of part 1 already finds (GS8), so it passes on the code before it."
+}
