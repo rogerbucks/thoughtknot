@@ -31,7 +31,8 @@ import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canv
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
-import { heldIn, marksOfSvg } from './svg-marks.ts';
+import { heldIn } from './svg-marks.ts';
+import { sketchedSpace, sketchPainted, type Sketch } from './space-sketch.ts';
 import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
@@ -60,6 +61,8 @@ export interface SpaceOptions {
   cards?: boolean;
   asDrawn?: boolean;
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
+  /** The drawings over the graph as shown now, laid on what they are pinned to in space (§70); none while hidden. */
+  sketch?: () => Sketch | null;
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -89,7 +92,7 @@ export async function openSpaceView(
     already();
     return null;
   }
-  let { marks, paints } = 'marks' in from ? from : marksOfSvg(from);
+  let { marks, paints } = 'marks' in from ? from : sketchPainted(from); // the drawings in their own colours (§70)
   const el = root.createDiv({
     cls: 'thoughtknot-space-view',
     attr: { tabindex: '0', role: 'img', 'aria-label': word('space.name', { graph }) },
@@ -117,10 +120,10 @@ export async function openSpaceView(
   let spots: Spots<3> | undefined,
     held = new Map('marks' in from ? [] : heldIn(from));
   const spaceBy = (by: Depth): SpaceMarks => {
-    if (by !== 'cards' && by) return spaceOf(marks, by);
+    if (by !== 'cards' && by) return sketchedSpace(spaceOf(marks, by), from, more.sketch, marks);
     const laid = spreadSpace(marks, spots && spotsKept(spots, held), by === 'cards', more.asDrawn, more.layout?.());
     spots = laid.spots;
-    return stackedPlanes(laid.space);
+    return sketchedSpace(stackedPlanes(laid.space), from, more.sketch, marks);
   };
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
@@ -170,7 +173,7 @@ export async function openSpaceView(
     if ('marks' in from || !open) return;
     const was = space.blocks.map((b) => b.of).join(),
       before = picked && { of: picked.of, at: middleOf(picked) };
-    ({ marks, paints } = marksOfSvg(from));
+    ({ marks, paints } = sketchPainted(from));
     depths = depthsOf();
     // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
     held = new Map([...held, ...heldIn(from)]);

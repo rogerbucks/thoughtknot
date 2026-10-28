@@ -659,6 +659,10 @@ never data.
 - `sketch-edit.ts` — a drawing made on the card, written to the note.
   - `sketchEdit` adds, moves or takes away one drawing, changing only its own text. The first writes the block.
   - `drawnItem` makes a drawing from what was drawn, pinned to what it began over (`pinAt`). `thinned` thins a stroke.
+- `display/graph-view/sketch-tool.ts` — Draw on the card's tools row, with the pen, box, ellipse, line, arrow and note.
+  - A drag draws, and letting go writes the drawing through the host (`ViewOptions.sketching`).
+  - A first tap on a drawing selects it and says what it is, with Delete. A second tap centres it.
+  - Hide drawings hides them flat and in space. The view in space draws them with `sketchInSpace`.
 
 #### Reading and checking a style
 

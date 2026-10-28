@@ -10,6 +10,7 @@ import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import type { LayoutOptions } from '../../layouts/layout-options.ts';
+import type { Sketch } from '../../sketch.ts';
 import { openSpaceView } from './space-view-panel';
 import { fadeOut } from './space-view-pad.ts';
 import type { SpaceView } from './space-view-panel';
@@ -41,6 +42,7 @@ export class SpaceSwitch {
     private readonly svg: () => SVGSVGElement | null,
     private readonly type: () => { drawn: string; plugin?: unknown } | undefined = () => undefined,
     private readonly layout: () => Partial<LayoutOptions> | undefined = () => undefined,
+    private readonly sketch: () => Sketch | null = () => null,
   ) {}
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
@@ -81,6 +83,7 @@ export class SpaceSwitch {
       cards: mode === 'cards',
       asDrawn: asDrawnFor(this.type()),
       layout: this.layout,
+      sketch: this.sketch,
     });
     if (turn !== this.turn) return view?.close();
     this.view = view;

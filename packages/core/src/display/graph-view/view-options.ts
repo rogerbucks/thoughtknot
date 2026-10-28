@@ -34,6 +34,7 @@ import type { LinkHost } from '../link-host';
 import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
 import type { SpaceMode } from './space-switch';
+import type { SketchHost } from './sketch-tool';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -115,6 +116,8 @@ export interface ViewOptions {
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */
   diagram?: DiagramShown;
+  /** The drawings over the graph (§70), and how to change them; none, no drawings are drawn and no Draw is offered. */
+  sketching?: SketchHost;
   /** Moving a box by dragging it (spec §6): the nudges written, and how to write one; none, no box moves. */
   moving?: BoxMoving;
   /** The View menu's switches (§25); without it, as for a graph drawn as a table, no View menu is offered. */

@@ -20,7 +20,6 @@ import {
   reversedLinks,
   stepOf,
   styledDrawing,
-  styleOf,
   viewsOf,
   underStrictness,
   word,
@@ -29,7 +28,7 @@ import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/co
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { waitShown } from '@thoughtknot/core/display/progress';
-import { renderStyleBlock } from './style-block';
+import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
@@ -160,13 +159,8 @@ export async function renderBlock(
   if (step) return renderStepBlock(plugin, source, el, ctx, step);
   // a change set is a proposal, drawn over its graph and decided change by change (§17)
   if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
-  const styled = styleOf(source);
-  if (styled) {
-    // a style block is never drawn as a graph: folded away until opened (§2)
-    const all = gqlBlocks(ctx.getSectionInfo(el)?.text ?? '').map((b) => b.text);
-    renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
-    return;
-  }
+  // a style block or a drawings block is never drawn as a graph: folded away until opened (§2, §70)
+  if (renderFoldedBlock(el, source, ctx.getSectionInfo(el)?.text ?? '')) return;
   // a block that holds only a schema, a graph's own or a shared one, is drawn as the schema itself (§3, schema_drawn)
   if (await renderSchemaBlock(plugin, source, el, ctx, owner)) return;
   const graph = graphOfBlock(source);
@@ -345,6 +339,7 @@ export async function renderBlock(
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
+      sketching: sketchingFor(plugin, target.path, graph, info?.text),
       exporting: {
         path: target.path,
         graph,

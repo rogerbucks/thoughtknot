@@ -1,0 +1,120 @@
+// Drawing on a graph's card (editor spec §70):
+// - Draw offers the tools. A drag with the pen writes a drawings block after the graph, and the stroke is drawn
+//   (sketch_drawn). A stroke begun on a thing is pinned to it.
+// - Hide drawings hides them all, and Show drawings brings them back (sketch_toggle).
+// - A first tap on a drawing selects it and says what it is, with Delete. A second tap keeps it selected
+//   (sketch_click_rule). Delete takes it out of the note.
+import { test, describe, before } from 'node:test';
+import assert from 'node:assert/strict';
+import { build, settled, until } from './host/load-plugin.js';
+import { fence } from './host/notes.js';
+import { PATH, TEAM, card, mouse, noteOf } from './host/drag-steps.js';
+
+before(() => build());
+
+const INKED = `// graph: team_ink · SKETCH ON team
+(d1:Ink {pin: 'ann', x: 0, y: 0, points: '0 0 30 10'})`;
+
+const buttonOf = (el, label) => el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
+const layerOf = (el) => el.querySelector('g.tk-sketch');
+
+/** Drags the pointer `id` along `points`, each a point in the drawing's own units. */
+function drag(vp, at, id, points) {
+  const [first, ...rest] = points.map(([x, y]) => at(x, y));
+  vp.dispatch('pointerdown', mouse(id, vp, first));
+  for (const p of rest) vp.dispatch('pointermove', mouse(id, vp, p));
+  vp.dispatch('pointerup', mouse(id, vp, rest.at(-1) ?? first));
+}
+
+describe('drawing on the card', () => {
+  // proves: sketch_drawn
+  test('a pen stroke begun on a thing writes a drawings block after the graph, pinned to it, and draws it', async () => {
+    const { env, el, vp, at, placeOf } = await card(noteOf(TEAM));
+    try {
+      buttonOf(el, 'Draw').click();
+      assert.ok(buttonOf(el, 'Pen'), 'the tools are offered');
+      assert.equal(buttonOf(el, 'Pen').getAttribute('aria-pressed'), 'true', 'the pen is chosen first');
+      assert.ok(el.querySelector('svg.thoughtknot-svg').classList.contains('is-sketching'));
+      const p = placeOf('ann');
+      drag(vp, at, 1, [
+        [p.x, p.y],
+        [p.x + 10, p.y + 2],
+        [p.x + 20, p.y + 8],
+        [p.x + 40, p.y + 20],
+      ]);
+      await until(() => /SKETCH ON team/.test(env.state.files.get(PATH)));
+      await settled();
+      const now = env.state.files.get(PATH);
+      assert.ok(now.includes(fence(TEAM)), 'the graph untouched');
+      assert.ok(now.indexOf('SKETCH ON team') > now.indexOf('// graph: team\n'), 'the drawings come after the graph');
+      assert.match(
+        now,
+        /\/\/ graph: team_ink · SKETCH ON team\n\(d1:Ink \{x: 0, y: 0, pin: 'ann', points: '0 0 [\d -]+'\}\)/,
+      );
+      assert.ok(layerOf(el)?.querySelector('[data-sketch]'), 'the stroke is drawn on the card');
+      assert.equal(el.querySelector('.tk-sketch-preview'), null, 'the line drawn while dragging is gone');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: sketch_drawn
+  test('Escape drops a stroke under way, and writes nothing', async () => {
+    const { env, el, vp, at, placeOf, writes } = await card(noteOf(TEAM));
+    try {
+      buttonOf(el, 'Draw').click();
+      const p = placeOf('bob');
+      vp.dispatch('pointerdown', mouse(2, vp, at(p.x, p.y)));
+      vp.dispatch('pointermove', mouse(2, vp, at(p.x + 30, p.y + 30)));
+      assert.ok(el.querySelector('.tk-sketch-preview'), 'shown while drawn');
+      assert.ok(vp.dispatch('keydown', { key: 'Escape' }).defaultPrevented);
+      assert.equal(el.querySelector('.tk-sketch-preview'), null);
+      vp.dispatch('pointerup', mouse(2, vp, at(p.x + 30, p.y + 30)));
+      assert.deepEqual(writes, [], 'nothing written');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('the drawings already in the note', () => {
+  // proves: sketch_toggle
+  test('Hide drawings hides them all, and Show drawings brings them back', async () => {
+    const { env, el } = await card(noteOf(TEAM, INKED));
+    try {
+      assert.ok(layerOf(el)?.querySelector('[data-sketch]'), 'drawn on the card');
+      buttonOf(el, 'Hide drawings').click();
+      assert.equal(layerOf(el), null, 'hidden');
+      assert.equal(buttonOf(el, 'Show drawings').getAttribute('aria-pressed'), 'true');
+      buttonOf(el, 'Show drawings').click();
+      assert.ok(layerOf(el)?.querySelector('[data-sketch]'), 'back again');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: sketch_click_rule
+  test('a first tap selects a drawing and says what it is; a second keeps it; Delete takes it out', async () => {
+    const { env, el, vp, at } = await card(noteOf(TEAM, INKED));
+    try {
+      const ink = layerOf(el).querySelector('[data-sketch]');
+      const tap = (id) => {
+        vp.dispatch('pointerdown', mouse(id, ink, at(0, 0)));
+        vp.dispatch('pointerup', mouse(id, ink, at(0, 0)));
+      };
+      tap(3);
+      assert.ok(layerOf(el).querySelector('[data-sketch]').classList.contains('is-selected'), 'selected');
+      assert.match(el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent, /^Selected: /);
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'a drawing is not a thing: nothing opens');
+      tap(4);
+      assert.ok(layerOf(el).querySelector('[data-sketch]').classList.contains('is-selected'), 'still selected');
+      buttonOf(el, 'Delete drawing').click();
+      await until(() => !/\(d1:Ink/.test(env.state.files.get(PATH)));
+      await settled();
+      assert.ok(env.state.files.get(PATH).includes(fence(TEAM)), 'the graph untouched');
+      assert.equal(layerOf(el), null, 'no drawings left to draw');
+    } finally {
+      env.uninstall();
+    }
+  });
+});

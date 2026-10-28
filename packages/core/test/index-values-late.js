@@ -153,4 +153,10 @@ export const VALUES_LATE = [
   'presetFor',
   'presetFile',
   'presetFrom',
+  // drawings on the graph (§70), 28 Oct 2026
+  'readSketch',
+  'sketchEdit',
+  'sketchInNote',
+  'sketchOf',
+  'writeSketch',
 ];
