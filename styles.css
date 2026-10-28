@@ -1266,8 +1266,10 @@ body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner {
   stroke: var(--gn-text-muted);
   stroke-dasharray: 3 3;
 }
-/* The one line that says a drawing was laid out by a cheaper step, as its layout was slow (spec §68, layout_never_text). */
-.thoughtknot-layout-step {
+/* The one line that says a drawing was laid out by a cheaper step, as its layout was slow (spec §68, layout_never_text).
+   A line that says the device's own setting won over the view preset looks the same (spec §69). */
+.thoughtknot-layout-step,
+.thoughtknot-device-line {
   padding: var(--gn-space-1) var(--gn-space-2);
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
