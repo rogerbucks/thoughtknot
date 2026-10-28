@@ -96,6 +96,8 @@ export const STYLE_SOURCE_WORDS = {
   'styling.diagram.by-only.fix': "remove by, or make it order: 'date' or 'number'",
   'styling.links.missing': 'a Links sets routing or merge',
   'styling.links.add': "add routing: {among}, or merge: 'on'",
+  'styling.preset.missing': 'a Preset names a view preset',
+  'styling.preset.add': 'add preset: {among}',
   'styling.links.routing-unknown': '{written} is not a routing: links are {among}',
   // links that move, and how a screen reader hears one (link-flow.ts)
   'styling.flow.dashes': 'moving dashes: {means}',

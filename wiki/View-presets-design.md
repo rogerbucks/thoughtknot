@@ -28,7 +28,9 @@ preset winning and the one-file export are there too.
 - **Changing preset:** a preset picked first says what it would change. It is used only when asked, and undone in one
   step.
 - **The device first:** a line beside the drawing says when the device's own setting wins over the preset.
-- **Next:** a graph or vault keeping its own preset in the style graph, and laying out again only when asked.
+- **A graph's own preset:** a Preset line in its style graph, such as `(p1:Preset {preset: 'focus'})`, wins over
+  the settings' for that card.
+- **Next:** a preset moved as one file between hosts, and laying out again only when asked.
 
 A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
 of it a viewer is shown.

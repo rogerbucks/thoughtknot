@@ -10,7 +10,7 @@ import type { Problem } from './note-reading.ts';
 import { filterOf } from './filter-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import { pictureOf } from './picture.ts';
-import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
+import { arrowsOf, diagramOf, linksOf, presetOf } from './style-choice-checks.ts';
 import {
   FORMATS,
   INLINE,
@@ -31,6 +31,7 @@ import type {
   Look,
   Nudge,
   Picture,
+  PresetChoice,
   Show,
   Shown,
   StyleAt,
@@ -84,6 +85,7 @@ export interface Checked {
   links: Links[];
   pictures: Picture[];
   filters: SavedFilter[];
+  presets: PresetChoice[];
   problems: Problem[];
 }
 
@@ -297,6 +299,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     links: [],
     pictures: [],
     filters: [],
+    presets: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -334,6 +337,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
     else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
     else if (kinds[0] === 'Filter') push(c.filters, kept(filterOf(thing, names, p)));
+    else if (kinds[0] === 'Preset') push(c.presets, kept(presetOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;
