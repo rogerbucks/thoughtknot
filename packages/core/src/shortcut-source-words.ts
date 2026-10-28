@@ -31,6 +31,8 @@ export const SHORTCUT_SOURCE_WORDS = {
   'shortcut.pick-up.keys': 'M',
   'shortcut.centre': 'Draw the graph radial, with the box in the centre',
   'shortcut.centre.keys': 'C',
+  'shortcut.outline': 'Show or hide the outline of the drawing beside it',
+  'shortcut.outline.keys': 'O',
   'shortcut.menu': 'Open the box’s menu, as a right-click does',
   'shortcut.menu.keys': 'Menu key, or Shift+F10',
   'shortcut.shortcuts': 'Show the keyboard shortcuts',
