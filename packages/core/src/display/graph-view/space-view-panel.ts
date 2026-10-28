@@ -143,7 +143,7 @@ export async function openSpaceView(
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    const frame = frameOf(glide.shown, matrix, width, height, picked, pickedLine?.id);
+    const frame = frameOf(glide.shown, matrix, width, height, glide.match(picked), pickedLine?.id);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
   };

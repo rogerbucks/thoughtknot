@@ -4,7 +4,7 @@
 import { LAYOUT_GLIDE_MS } from '../../layout-glide.ts';
 import { spaceGlide } from '../../space-glide.ts';
 import { between } from '../../space-controls.ts';
-import type { Orbit, SpaceMarks } from '../../space-view.ts';
+import type { Block, Orbit, SpaceMarks } from '../../space-view.ts';
 import { reducedMotion } from './details-nav.ts';
 
 /** What ends a glide at once: the person reaching for the view, to turn, move, zoom, pick or press a key. */
@@ -29,6 +29,12 @@ export class SpaceGlide {
     [this.el, this.shown, this.paint, this.camera] = [el, space, paint, camera];
     // caught on the way down, so the glide ends before the view acts on the reach
     for (const type of REACHES) el.addEventListener(type, () => this.settle(), { capture: true });
+  }
+
+  /** The block shown now for `block`, by its thing, so the ring round a picked thing glides with it. */
+  match(block: Block | null): Block | null {
+    if (!block || this.shown.blocks.includes(block)) return block;
+    return this.shown.blocks.find((b) => b.of !== undefined && b.of === block.of) ?? block;
   }
 
   /** Ends a glide under way, and gives what was shown: the drawing a new layout glides from. */

@@ -99,3 +99,19 @@ test('a reach for the view ends the glide at once, caught before the view acts o
   assert.equal(painted(), 1);
   assert.equal(v.frames.length, 0);
 });
+
+// proves: layout_glide
+test('the picked thing’s ring glides with it: the block shown now is the one marked', () => {
+  const v = viewOf();
+  const { glide } = glideIn(v, spaceAt(0));
+  const now = spaceAt(100);
+  const picked = now.blocks[0];
+  glide.to(now, glide.settle(), ORBIT(500), ORBIT(800));
+  v.frame(LAYOUT_GLIDE_MS / 2);
+  const marked = glide.match(picked);
+  assert.notEqual(marked, picked, 'mid-glide, the block on its way');
+  assert.equal(marked.x, glide.shown.blocks[0].x);
+  assert.equal(glide.match(null), null);
+  glide.settle();
+  assert.equal(glide.match(picked), picked, 'once there, the block itself');
+});
