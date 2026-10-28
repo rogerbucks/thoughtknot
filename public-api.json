@@ -781,12 +781,10 @@
         ],
         "Direction": [
           "interface",
-          "curved?: string | undefined",
           "dot: string",
           "own?: boolean | undefined",
           "rankdir: string",
-          "src: LayoutSource",
-          "straight?: boolean | undefined"
+          "src: LayoutSource"
         ],
         "directionOf": [
           "value: (tag: string) => 'ltr' | 'rtl'"
@@ -856,7 +854,6 @@
         ],
         "Drawn": [
           "interface",
-          "curvesToCome?: boolean | undefined",
           "height: number",
           "mirrored?: boolean | undefined",
           "rankdir: string",
@@ -1286,8 +1283,7 @@
           "links: Array<Link>",
           "nudges?: Array<Nudge> | undefined",
           "pictures?: Array<PictureBox> | undefined",
-          "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined",
-          "straightFirst?: boolean | undefined"
+          "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined"
         ],
         "GraphNames": [
           "type = Iterable<string> | ReadonlyMap<string, string>"

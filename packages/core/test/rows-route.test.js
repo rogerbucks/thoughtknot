@@ -1,6 +1,6 @@
-// Our own curve router (editor spec §25, links_routed_in_rows; #1232): layouts/rows-route.ts, and drawing with it
-// (direct-links.ts, render.ts svgOf). Past 300 things a link passes between the rows of boxes Graphviz laid out, and
-// no box moves.
+// Our own curve router (editor spec §25, links_routed_in_rows, curves_routed_ours; #1232): layouts/rows-route.ts,
+// and drawing with it (direct-links.ts, render.ts svgOf). Past 300 things, or curved as a person chose, a link passes
+// between the rows of boxes Graphviz laid out, and no box moves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';
@@ -114,4 +114,21 @@ test('a routed link meets its arrowhead running the drawing way', () => {
     checked++;
   }
   assert.ok(checked > 300);
+});
+
+test('curved links a person chose are routed by our router at any size, at once', () => {
+  // curves_routed_ours: Graphviz's own curves no more, so no straight links first and no curves to come after
+  const { dot, laid } = laidOut(60);
+  const curved = svgOf(engine, dot, 'curved');
+  const ours = directLinks(laid, undefined, undefined, 'LR', true);
+  assert.equal(curved, layoutSvg(ours));
+  assert.notEqual(curved, engine.render(dot), 'not Graphviz own curves');
+  assert.equal(readability(ours, 'LR').clear, 1);
+  assert.deepEqual(spots(ours), spots(laid), 'no box moved');
+});
+
+test('curved links laid out in no rows, as a radial drawing is, are Graphviz own', () => {
+  const { dot } = laidOut(60);
+  const radial = dot.replace('\n', '\n  graph [layout=twopi];\n');
+  assert.equal(svgOf(engine, radial, 'curved'), engine.render(radial));
 });
