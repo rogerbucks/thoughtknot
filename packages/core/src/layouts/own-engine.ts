@@ -22,22 +22,12 @@ import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
 import { groupsOver, packPlaced, partShape, partsOf, trayOf } from './parts.ts';
 import type { Placed } from './parts.ts';
+import { FOLDED_GROUP, TRY_MOST, pickLayout, tidier } from './pick.ts';
+import type { Pick } from './pick.ts';
 
-/** The layouts the engine picks from. */
-export type OwnLayout = 'layered' | 'stress';
+export { pickLayout };
+export type { OwnLayout, Pick } from './pick.ts';
 
-/** What the engine picked, and why, in a few words for a developer; a host says it from the catalogue. */
-export interface Pick {
-  layout: OwnLayout;
-  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview';
-}
-
-/** The key a folded group's box has (fold-source.ts). */
-const FOLDED_GROUP = 'group: ';
-/** The share of links that may run back against the flow, for a graph still to be read as a flow. */
-const BACK_MOST = 0.1;
-/** The most links per thing, on average, for a graph still to be drawn in rows. */
-const DENSE_MOST = 3;
 /** The room kept between two boxes pushed apart, in CSS pixels. */
 const APART = 14;
 /** The room between two parts of a drawing packed side by side, in CSS pixels. */
@@ -59,58 +49,6 @@ export function marksShape(marks: readonly DrawMark[]): { shape: GraphShape; siz
     if (m.kind === 'link' && m.from !== undefined && m.to !== undefined && sizes.has(m.from) && sizes.has(m.to))
       links.push({ from: m.from, type: '', to: m.to });
   return { shape: { things, links }, sizes };
-}
-
-/**
- * The layout for `shape`: rows for a flow, a tree or an overview, stress for the rest. A flow has few links per thing,
- * and few running back against it, found by a search from each start. A tree has about one link fewer than things. An
- * overview has groups folded, each one box.
- */
-export function pickLayout(shape: GraphShape): Pick {
-  const n = shape.things.length,
-    m = shape.links.length;
-  if (!n) return { layout: 'stress', why: 'network' };
-  // with groups folded, each group is one box: the overview reads best in rows, its links kept off the boxes
-  if (shape.things.some((t) => t.key.startsWith(FOLDED_GROUP))) return { layout: 'layered', why: 'overview' };
-  if (m <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
-  if (m / n > DENSE_MOST) return { layout: 'stress', why: 'dense' };
-  return backShare(shape) <= BACK_MOST ? { layout: 'layered', why: 'flow' } : { layout: 'stress', why: 'network' };
-}
-
-/** The share of links that run back against the flow: to a thing still being searched from. */
-function backShare(shape: GraphShape): number {
-  const index = new Map(shape.things.map((t, i) => [t.key, i]));
-  const out: number[][] = shape.things.map(() => []);
-  for (const l of shape.links) {
-    const a = index.get(l.from),
-      b = index.get(l.to);
-    if (a !== undefined && b !== undefined && a !== b) (out[a] as number[]).push(b);
-  }
-  const state = new Uint8Array(out.length);
-  let back = 0,
-    all = 0;
-  for (let s = 0; s < out.length; s++) {
-    if (state[s]) continue;
-    const stack: [number, number][] = [[s, 0]];
-    state[s] = 1;
-    while (stack.length) {
-      const top = stack[stack.length - 1] as [number, number];
-      const next = out[top[0]] as number[];
-      if (top[1] >= next.length) {
-        state[top[0]] = 2;
-        stack.pop();
-        continue;
-      }
-      const w = next[top[1]++] as number;
-      all++;
-      if (state[w] === 1) back++;
-      else if (!state[w]) {
-        state[w] = 1;
-        stack.push([w, 0]);
-      }
-    }
-  }
-  return all ? back / all : 0;
 }
 
 /** Pushes apart boxes that overlap, by the shorter way, a few rounds, looking only at boxes near each other. */
@@ -225,20 +163,42 @@ interface Piece extends Placed {
   way: 'LR' | 'TB';
 }
 
+/** How a part is laid out besides its shape: last time's spots, the person's options, and whether its rows may turn. */
+interface PartMore {
+  previous?: ReadonlyMap<string, readonly number[]>;
+  options: Partial<LayoutOptions>;
+  turn: boolean;
+}
+
 /**
- * `shape` laid out by the layout its shape picks. Rows run `rankdir`. With `turn`, an overview's rows may turn the
- * other way, where that gives it a screen's shape nearer.
+ * `shape` laid out by the layout its shape picks. Rows run `rankdir`. A flow or a network of up to `TRY_MOST` things
+ * is near the rule's line. It is laid out the other way too, and the tidier kept (pick.ts).
  */
 function placedPart(
   shape: GraphShape,
   sizes: ReadonlyMap<string, Size>,
   groups: readonly Group[],
   rankdir: 'LR' | 'TB',
-  more: { previous?: ReadonlyMap<string, readonly number[]>; options: Partial<LayoutOptions>; turn: boolean },
+  more: PartMore,
+): Piece {
+  const pick = pickLayout(shape);
+  const first = laidBy(pick, shape, sizes, groups, rankdir, more);
+  if ((pick.why !== 'flow' && pick.why !== 'network') || shape.things.length > TRY_MOST) return first;
+  const other: Pick = { layout: pick.layout === 'layered' ? 'stress' : 'layered', why: 'tried' };
+  return tidier(shape, sizes, first, laidBy(other, shape, sizes, groups, rankdir, more));
+}
+
+/** `shape` laid out by `pick`. With `turn`, an overview's rows may turn, where that gives a screen's shape nearer. */
+function laidBy(
+  pick: Pick,
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size>,
+  groups: readonly Group[],
+  rankdir: 'LR' | 'TB',
+  more: PartMore,
 ): Piece {
   const { previous, options } = more;
   const { spacing, linkLength } = layoutOptions(options);
-  const pick = pickLayout(shape);
   let way = rankdir;
   if (pick.layout === 'layered') {
     const rowsOf = (w: 'LR' | 'TB') =>
