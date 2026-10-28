@@ -640,6 +640,22 @@ never data.
   - `writeBoard` writes a board in one fixed form, so the same board is always the same bytes.
   - `moveItem` changes only the moved item's own text, so notes and comments in the block stay as they were.
 
+#### Drawings on a graph (editor spec §70)
+
+- `sketch.ts` — freehand ink, shapes and notes drawn over a graph, kept as its own block: `// graph: trip_ink · SKETCH
+  ON trip`.
+  - `sketchOf` (in `blocks.ts`) knows the block by its graph line. `dataKind` leaves it out of the drawing.
+  - `readSketch` reads it with the board's reader (`readItems`), with three kinds: Ink, Shape and Text. A drawing may
+    have a `pin`, the thing or group it moves with. Points are one text of number pairs, as a graph holds no lists.
+  - Each fault is a problem with its fix, GN905 to GN908. They are a kind that is not a drawing's, or a pin to a thing
+    that is gone. They are also a shape it does not know, or points that are not pairs.
+  - `writeSketch` writes the drawings in one fixed form.
+- `sketch-marks.ts` — the drawings drawn in every view.
+  - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
+    wraps it. A drawing pinned to a thing the view leaves out is not drawn.
+  - `sketchSvg` lays them over a 2D drawing as one layer, each part tagged `data-sketch` for a tap.
+  - `sketchInSpace` lays them on the top of their block in 2.5D and 3D, or on the ground.
+
 #### Reading and checking a style
 
 - `style-graph.ts` — what a style graph holds once read, and the words it allows.
