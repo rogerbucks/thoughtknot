@@ -17,6 +17,8 @@ after a module nor listed here, and on a listed file that is missing.
 ## The core
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/kind-lanes.test.js` — kinds that link in order each get a lane in rows and a plane in space. The
+  View menu says so, and its switch turns it off (editor spec §68, layout_kind_lanes).
 - `packages/core/test/progressive-draw.test.js` — a massive graph is drawn in steps. The overview comes first. Then
   come the chosen group and those nearest the middle, each added to the picture (editor spec §53, scale_progressive).
 - `packages/core/test/level-of-detail.test.js` — a massive graph opens as one box for each group. A group shows its

@@ -105,6 +105,8 @@ export interface GraphDrawing {
   straightFirst?: boolean;
   /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
   engine?: 'own';
+  /** False where kinds that link in order are not to get a lane each (§68, layout_kind_lanes). */
+  kindLanes?: false;
   /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
   layoutOptions?: Partial<LayoutOptions>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */

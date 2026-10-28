@@ -1221,7 +1221,8 @@
       "layout_parts_packed",
       "layout_kinds_read",
       "layout_pick_tried",
-      "layout_checks_gated"
+      "layout_checks_gated",
+      "layout_kind_lanes"
     ]
   },
   "LE2": {
