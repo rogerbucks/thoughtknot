@@ -59,15 +59,27 @@ export function turnedSpots(spots: ReadonlyMap<string, Vec3>, by: LineUp): Map<s
 
 /**
  * `now`, laid out afresh in space, and its `spots`, lined up with `was`, the drawing shown before. Unchanged where
- * nothing is in both or nothing would change.
+ * nothing is in both or nothing would change. What stays is as `pinned` says (layout_strategy_variables). The selected
+ * thing stays where it was on the floor, as in 2D. Or only the middle is kept, or nothing is lined up.
  */
 export function linedUpLayout(
   was: SpaceMarks,
   now: SpaceMarks,
   spots: ReadonlyMap<string, Vec3> | undefined,
+  pinned: 'selected' | 'middle' | 'nothing' = 'selected',
+  selected?: string | null,
 ): [SpaceMarks, ReadonlyMap<string, Vec3> | undefined] {
-  const by = lineUpSpace(was, now);
+  if (pinned === 'nothing') return [now, spots];
+  const turned = lineUpSpace(was, now);
+  const [a, b] = [selected && spotsOf(was).get(selected), selected && spotsOf(now).get(selected)];
+  const by = turned && pinned === 'selected' && a && b ? pinnedOn(turned, a, b) : turned;
   return by ? [turnedSpace(now, by), spots && turnedSpots(spots, by)] : [now, spots];
+}
+
+/** `by`, moved on so that `b`, the selected thing's new spot, lands on `a`, its spot before. */
+function pinnedOn(by: LineUp, a: Vec3, b: Vec3): LineUp {
+  const [x, y] = linedUp([b[0], b[1]], by);
+  return { ...by, to: [by.to[0] + a[0] - x, by.to[1] + a[1] - y] };
 }
 
 /** Each thing's offset from where it ends to where it was, by its key: only those that moved. */

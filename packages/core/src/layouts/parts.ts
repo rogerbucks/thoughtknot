@@ -6,6 +6,8 @@
 // Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
 import { SCREEN } from './folded-rows.ts';
+import { aspectOf } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 import type { Group, GroupBox } from './grouped.ts';
 
 /** A drawing, or one part of it, laid out: its boxes' middles, its links' bends and its groups' boxes. */
@@ -142,11 +144,12 @@ export const groupsOver = (groups: readonly Group[], keys: readonly string[]): G
   return groups.filter((g) => g.members.some((m) => here.has(m)));
 };
 
-/** `pieces` packed to a screen's shape, `gap` apart, the first at the top left, and made one. */
+/** `pieces` packed to the shape `options` ask, a screen's at first, `gap` apart, the first at the top left, and made one. */
 export function packPlaced(
   pieces: readonly Placed[],
   sizes: ReadonlyMap<string, readonly [number, number]>,
   gap: number,
+  options?: Partial<LayoutOptions>,
 ): Placed {
   const bounds = pieces.map((p) => {
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
@@ -165,6 +168,7 @@ export function packPlaced(
   const at = packed(
     bounds.map(([x0, y0, x1, y1]) => [x1 - x0, y1 - y0] as const),
     gap,
+    aspectOf(options, SCREEN),
   );
   const out: Placed = { spots: new Map(), via: new Map(), boxes: [] };
   pieces.forEach((p, i) => {

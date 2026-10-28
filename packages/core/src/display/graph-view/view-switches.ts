@@ -33,6 +33,7 @@ import type {
 } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
+import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
 
@@ -67,7 +68,10 @@ const LAYOUT_SLIDERS = [
   ['spacing', 'view.layout.spacing', 0.25],
   ['linkLength', 'view.layout.link-length', 0.25],
   ['groupPull', 'view.layout.group-pull', 0.1],
+  ['rounds', 'view.layout.rounds', 0.25],
 ] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
+/** The View menu's layout choices, each a list of its words, named alike in 2D and 3D (layout_strategy_variables). */
+const LAYOUT_LISTS = ['direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
 
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
@@ -78,14 +82,14 @@ export interface Grouping {
 /**
  * Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. With
  * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens. With `spaced`,
- * a slider for each layout option follows, which `spaced` acts on as one is let go.
+ * a slider for each layout number and a list for each choice follow, which `spaced` acts on as one is set.
  */
 export function renderViewMenu(
   root: HTMLElement,
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
   grouping?: Grouping,
-  spaced?: (k: keyof LayoutOptions, v: number) => void,
+  spaced?: <K extends keyof LayoutOptions>(k: K, v: LayoutOptions[K]) => void,
   stepped?: (level: DetailLevel) => void,
 ): ViewMenu {
   const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
@@ -152,6 +156,14 @@ export function renderViewMenu(
     input.addEventListener('change', () => spaced?.(k, Number(input.value)));
     return { k, input };
   });
+  const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
+    const row = holder().createEl('label', { cls: 'thoughtknot-layout-choice', text: word(`view.layout.${k}`) });
+    const input = row.createEl('select');
+    for (const v of LAYOUT_CHOICES[k])
+      input.createEl('option', { text: word(`view.layout.${k}.${v.toLowerCase()}` as WordKey), attr: { value: v } });
+    input.addEventListener('change', () => spaced?.(k, input.value as LayoutOptions[typeof k]));
+    return { k, input };
+  });
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
@@ -173,7 +185,7 @@ export function renderViewMenu(
       b.setAttribute('aria-checked', String(state.switches[s]));
       says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
-    for (const { k, input } of sliders) input.value = String(state.layout[k]);
+    for (const { k, input } of [...sliders, ...lists]) input.value = String(state.layout[k]);
     fill();
   };
   refresh();
@@ -259,8 +271,8 @@ export class ViewSwitching {
     void this.redraw();
   }
 
-  /** Spaces the layout as the menu's slider for `k` now says, and lays the graph out again (layout_saved_with_view). */
-  space(k: keyof LayoutOptions, v: number): void {
+  /** Lays the graph out again as the menu's slider or list for `k` now says (layout_saved_with_view). */
+  space<K extends keyof LayoutOptions>(k: K, v: LayoutOptions[K]): void {
     if (this.o.state.layout[k] === v) return;
     this.o.state.layout = { ...this.o.state.layout, [k]: v };
     void this.redraw();

@@ -28,6 +28,11 @@ export const VIEW_TYPES = [
   'centroid',
   'containment',
 ] as const;
+/**
+ * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
+ * More views (Roger, 28 Oct 2026, Q-12 option B: all views stay, six shown by default).
+ */
+export const FIRST_VIEW_TYPES: readonly ViewType[] = ['force', 'matrix', 'treemap', 'ego'];
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 

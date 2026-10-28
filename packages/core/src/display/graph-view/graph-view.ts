@@ -344,7 +344,8 @@ export class GraphView extends Lifecycle {
     this.taps.reset(drawn.svg);
     this.aids.redrawn(drawn);
     this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
-    if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey()); // the place kept (r_keep_place)
+    const pinned = this.o.switches?.state.layout.pinned; // as the View menu pins it (layout_strategy_variables)
+    if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey(), pinned); // r_keep_place
     this.sel.redrawn();
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });

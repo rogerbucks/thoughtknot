@@ -13,7 +13,7 @@
 // Spots are box middles in CSS pixels, across (`LR`: rows run left to right) or down (`TB`). Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
 import { banded, rowsOf, wrapped } from './layered-rows.ts';
-import { layoutOptions } from './layout-options.ts';
+import { layoutOptions, roundsOf } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 
 /** A box's size, in CSS pixels. */
@@ -109,7 +109,8 @@ export function layered(
   // the room beside each thing as `spacing` asks, and between rows, where links run, as `linkLength` asks
   const { spacing, linkLength } = layoutOptions(options);
   const gap = GAP * spacing,
-    rowGap = ROW_GAP * linkLength;
+    rowGap = ROW_GAP * linkLength,
+    [sweeps, transposes] = [roundsOf(options, SWEEPS), roundsOf(options, TRANSPOSE_ROUNDS)];
   const keys = shape.things.map((t) => t.key);
   const n = keys.length;
   const out: Layered = { spots: new Map(), via: new Map() };
@@ -220,7 +221,7 @@ export function layered(
   };
   // two neighbours in a row swap places while that crosses fewer links (Gansner and others 1993)
   const transpose = () => {
-    for (let round = 0; round < TRANSPOSE_ROUNDS; round++) {
+    for (let round = 0; round < transposes; round++) {
       let better = false;
       for (const row of byRow)
         for (let k = 0; k + 1 < row.length; k++) {
@@ -257,7 +258,7 @@ export function layered(
         byRow[r] = shuffled;
         shuffled.forEach((i, k) => (place[i] = k));
       });
-    for (let s = 0; s < SWEEPS && best; s++) {
+    for (let s = 0; s < sweeps && best; s++) {
       if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
       else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
       transpose();
