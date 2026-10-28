@@ -6,6 +6,7 @@
 // never overlaps another, and no Graphviz cluster is needed, the slowest thing Graphviz does. A link into a group
 // runs to the group's edge, then to its thing. Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
+import { tidyTree } from './tidy-tree.ts';
 import { layered, viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
 import { layoutOptions } from './layout-options.ts';
@@ -34,6 +35,17 @@ const PAD = 16;
 const LABEL = 22;
 /** The room round each thing and group, about, when guessing how much room the whole drawing takes. */
 const ROOM = 60;
+
+/** `shape`, a tree or a forest, laid out tidily and folded to about a screen's shape; undefined for any other shape. */
+export function tidyRows(
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size>,
+  rankdir: 'LR' | 'TB',
+  options: Partial<LayoutOptions>,
+): (Layered & { boxes: GroupBox[] }) | undefined {
+  const tidy = tidyTree(shape, sizes, rankdir, options);
+  return tidy && { ...folded(tidy, shape, sizes, rankdir, PAD), boxes: [] };
+}
 
 /**
  * Each thing of `shape` placed in rows, the things of each of `groups` kept together in a box. A thing in two groups
