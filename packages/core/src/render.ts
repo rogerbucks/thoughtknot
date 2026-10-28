@@ -201,7 +201,9 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   }
   // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
   if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);
-  const laid = engine.marks(dot);
+  // its links are drawn again here, so Graphviz lays them out straight. Its curves would be thrown away, and routing
+  // them is about a quarter of its work. Every box lands where it would have (curves_not_routed)
+  const laid = engine.marks(routedSource(dot, 'direct'));
   return laid.layout?.lost ? engine.render(dot) : layoutSvg(directLinks(laid));
 }
 
