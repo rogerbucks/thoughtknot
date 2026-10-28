@@ -6,6 +6,7 @@ import {
   between,
   fingerTurn,
   pinchBy,
+  tiltsTogether,
   zoomToward,
   fromAbove,
   KEY_STEP,
@@ -255,4 +256,23 @@ test('the touches really down settle the pointers tracked, keeping the newest', 
   seen.touchend({ touches: { length: 0 }, stopPropagation: () => stopped.push('end') });
   assert.equal(down.size, 0, 'none down: none kept');
   assert.deepEqual(stopped, ['start', 'end'], 'and the host never takes a touch');
+});
+
+// proves: space_two_finger_tilt
+test('two fingers going up together tilt the view, spreading or sideways ones do not, and tilt is not stopped', () => {
+  const at = { left: 0, top: 0 };
+  const pair = (y, gap = 100, x = 400) => [
+    { x, y },
+    { x: x + gap, y },
+  ];
+  const up = pinchBy(ORBIT, pair(300), pair(280), at, 900, 600);
+  assert.ok(up.tilt !== ORBIT.tilt, 'it tilts');
+  assert.deepEqual(up.target, ORBIT.target);
+  assert.equal(up.distance, ORBIT.distance);
+  assert.equal(up.tilt, fingerTurn(ORBIT, 0, -20).tilt, 'as one finger going the same way');
+  assert.ok(!tiltsTogether(pair(300), pair(280, 140)), 'spreading is a zoom');
+  assert.ok(!tiltsTogether(pair(300), pair(298, 100, 440)), 'mostly sideways moves across');
+  let over = ORBIT;
+  for (let i = 0; i < 60; i++) over = pinchBy(over, pair(300), pair(310), at, 900, 600);
+  assert.ok(over.tilt > Math.PI / 2 || over.tilt < -Math.PI / 2, 'it runs on past straight down or up');
 });

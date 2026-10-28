@@ -140,9 +140,16 @@ export function zoomAtPixel(orbit: Orbit, times: number, x: number, y: number, w
   return zoomToward(orbit, times, (2 * x) / width - 1, 1 - (2 * y) / height, width / height);
 }
 
+/** Whether two fingers went up or down together: mostly vertical, neither spreading nor twisting (space_two_finger_tilt). */
+export function tiltsTogether(was: readonly [Touch, Touch], now: readonly [Touch, Touch]): boolean {
+  const { dx, dy, zoom } = twoFingers(was, now);
+  return Math.abs(dy) > 2 * Math.abs(dx) && Math.abs(zoom - 1) < 0.02 && Math.abs(twistOf(was, now)) < 0.03;
+}
+
 /**
  * `orbit` moved as two fingers went from `was` to `now`. The screen is `width` by `height` pixels, with its top left at
- * `at`. The view moves across with them, zooms toward their middle and turns as they twist.
+ * `at`. Two fingers going up or down together tilt the view, as one finger dragging up or down does. Otherwise the view
+ * moves across with them, zooms toward their middle and turns as they twist.
  */
 export function pinchBy(
   orbit: Orbit,
@@ -153,6 +160,7 @@ export function pinchBy(
   height: number,
 ): Orbit {
   const { dx, dy, zoom } = twoFingers(was, now);
+  if (tiltsTogether(was, now)) return fingerTurn(orbit, 0, dy);
   const x = (now[0].x + now[1].x) / 2 - at.left,
     y = (now[0].y + now[1].y) / 2 - at.top;
   return twistBy(zoomAtPixel(panBy(orbit, dx, dy, height), zoom, x, y, width, height), twistOf(was, now));
