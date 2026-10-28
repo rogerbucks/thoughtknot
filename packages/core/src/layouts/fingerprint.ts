@@ -49,8 +49,9 @@ export function kindsOf(shape: GraphShape, kindOf?: ReadonlyMap<string, string>)
   }
   if (!all) return plain;
   const crossing = (all - same) / all;
-  if (count.size === 2 && crossing >= SIDES_LEAST) return { pattern: 'two-sided', order: [...count.keys()].sort() };
+  // two sides, or kinds in order, go the way most links between them run
   const order = kindOrder([...count.keys()], across);
+  if (count.size === 2 && crossing >= SIDES_LEAST) return { pattern: 'two-sided', order };
   if (count.size > 2 && crossing >= ACROSS_LEAST && forwardShare(order, across) >= ORDERED_LEAST)
     return { pattern: 'ordered', order };
   // how much more often things link to their own kind than if kinds were mixed at random

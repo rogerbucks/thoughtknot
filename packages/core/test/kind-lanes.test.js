@@ -39,6 +39,21 @@ describe('kinds that link in order', () => {
   });
 
   // proves: layout_kind_lanes
+  test('across two sides have a lane each, the side most links run from first, whatever their names', () => {
+    const links = [
+      ['z1', 'a1'],
+      ['z1', 'a2'],
+      ['z2', 'a2'],
+    ];
+    const keys = [...new Set(links.flat())];
+    const kinds = new Map(keys.map((k) => [k, k[0] === 'z' ? 'Zeta' : 'Alpha']));
+    const laid = { marks: [...keys.map(box), ...links.map(link)], space: { width: 0, height: 0 } };
+    const { spots, bands } = ownSpots(laid, 'LR', undefined, [], {}, kinds);
+    assert.deepEqual(Object.fromEntries(bands), { z1: 0, a1: 1, a2: 1, z2: 0 });
+    assert.ok(Math.max(spots.get('z1')[0], spots.get('z2')[0]) < Math.min(spots.get('a1')[0], spots.get('a2')[0]));
+  });
+
+  // proves: layout_kind_lanes
   test('each have a plane of their own in space, in their order', () => {
     const bands = ownSpots(LAID, 'LR', undefined, [], {}, KINDS).bands;
     const { space } = spreadSpace(LAID.marks, undefined, false, false, {}, bands);
