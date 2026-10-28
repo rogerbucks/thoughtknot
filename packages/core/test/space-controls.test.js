@@ -6,6 +6,7 @@ import {
   between,
   fingerTurn,
   pinchBy,
+  tiltsTogether,
   zoomToward,
   fromAbove,
   KEY_STEP,
@@ -22,6 +23,8 @@ import {
 import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
+
+const PIVOT = [0, 0, 0];
 
 test('a drag across moves the view over the floor, and what was under the pointer follows it', () => {
   const moved = panBy(ORBIT, 100, 0, 600);
@@ -233,11 +236,11 @@ test('two fingers pinching move, zoom and twist the view in one go, toward their
       { x: 350, y: 250 },
       { x: 550, y: 250 },
     ];
-  const moved = pinchBy(ORBIT, was, spread, { left: 0, top: 0 }, 900, 600);
+  const moved = pinchBy(ORBIT, was, spread, { left: 0, top: 0 }, 900, 600, PIVOT);
   assert.ok(moved.distance < ORBIT.distance, 'spread apart zooms in');
   assert.equal(moved.turn, ORBIT.turn, 'no twist');
   assert.notDeepEqual(moved.target, ORBIT.target, 'toward their middle, off the screen centre');
-  assert.equal(pinchBy(ORBIT, was, was, { left: 0, top: 0 }, 900, 600).distance, ORBIT.distance);
+  assert.equal(pinchBy(ORBIT, was, was, { left: 0, top: 0 }, 900, 600, PIVOT).distance, ORBIT.distance);
 });
 
 // stuck_touch (Roger, 27 Oct 2026): a lift that never arrived must not leave a finger tracked
@@ -255,4 +258,25 @@ test('the touches really down settle the pointers tracked, keeping the newest', 
   seen.touchend({ touches: { length: 0 }, stopPropagation: () => stopped.push('end') });
   assert.equal(down.size, 0, 'none down: none kept');
   assert.deepEqual(stopped, ['start', 'end'], 'and the host never takes a touch');
+});
+
+// proves: space_two_finger_tilt
+test('two fingers going up together tilt the view one finger at a time, as one finger does; spreading or sideways do not', () => {
+  const at = { left: 0, top: 0 };
+  const pair = (y0, y1 = y0, gap = 100, x = 400) => [
+    { x, y: y0 },
+    { x: x + gap, y: y1 },
+  ];
+  // the app moves one finger per event: the left, then the right
+  const half = pinchBy(ORBIT, pair(300), pair(295, 300), at, 900, 600, PIVOT);
+  assert.ok(half.tilt !== ORBIT.tilt, 'one finger moving still tilts');
+  assert.deepEqual(half.target, ORBIT.target);
+  assert.equal(half.distance, ORBIT.distance);
+  const both = pinchBy(ORBIT, pair(300), pair(290), at, 900, 600, PIVOT);
+  assert.equal(both.tilt, turnRound(ORBIT, 0, -10, PIVOT).tilt, 'as one finger going the same way, round the pivot');
+  assert.ok(!tiltsTogether(pair(300), pair(300, 300, 140)), 'spreading is a zoom');
+  assert.ok(!tiltsTogether(pair(300), pair(298, 298, 100, 440)), 'mostly sideways moves across');
+  let over = ORBIT;
+  for (let i = 0; i < 60; i++) over = pinchBy(over, pair(300), pair(310), at, 900, 600, PIVOT);
+  assert.ok(over.tilt > Math.PI / 2 || over.tilt < -Math.PI / 2, 'it runs on past straight down or up');
 });

@@ -663,7 +663,8 @@
       "plan_vs_actual",
       "plain_docs_auto",
       "waves_on_time",
-      "plan_milestones"
+      "plan_milestones",
+      "ideas_on_board"
     ]
   },
   "G1": {
@@ -1216,7 +1217,8 @@
       "layout_real_fixtures",
       "layout_strategy_variables",
       "layout_pick_said",
-      "layout_own_default"
+      "layout_own_default",
+      "layout_parts_packed"
     ]
   },
   "LE2": {

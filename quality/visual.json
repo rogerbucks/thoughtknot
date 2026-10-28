@@ -195,15 +195,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
-      "sha256": "6cdce2359ebc429351fc3dffab21dc43207511320e68f846771d3105b0eb68ed",
-      "reason": "a drawing with no groups folds to about a screen's shape (layout_screen_shaped, UX review F4)",
-      "day": "2026-10-25"
+      "sha256": "ef712aa447ac5c122d306102dc7bcec99e360e2f0e0f675dc0d6fcfbed09952b",
+      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
-      "sha256": "e202e014bab64d2b44df7cfcf6dc01c78c312fb12cc2cae2c850c0a0d7175878",
-      "reason": "a drawing with no groups folds to about a screen's shape (layout_screen_shaped, UX review F4)",
-      "day": "2026-10-25"
+      "sha256": "de09e45644e380ebede0bbe9f23a076b162531382eac08dfdf66b8ba690c9747",
+      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",

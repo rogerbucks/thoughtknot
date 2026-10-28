@@ -1,10 +1,10 @@
-<svg viewBox="0 0 182 89" width="242.67" height="118.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:inline;visibility:visible">
+<svg viewBox="0 0 151 89" width="201.33" height="118.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:inline;visibility:visible">
   <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
     <g id="p2">
       <path d="M51,-47.4C51,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 51,9 51,9 57,9 63,3 63,-3 63,-3 63,-35.4 63,-35.4 63,-41.4 57,-47.4 51,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
       <text x="32.89" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> T
       <text x="31.83" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> A
     <g id="p3">
-      <path d="M147,-47.4C147,-47.4 117,-47.4 117,-47.4 111,-47.4 105,-41.4 105,-35.4 105,-35.4 105,-3 105,-3 105,3 111,9 117,9 117,9 147,9 147,9 153,9 159,3 159,-3 159,-3 159,-35.4 159,-35.4 159,-41.4 153,-47.4 147,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
-      <text x="128.89" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> T
-      <text x="127.83" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> B
+      <path d="M115.5,-47.4C115.5,-47.4 85.5,-47.4 85.5,-47.4 79.5,-47.4 73.5,-41.4 73.5,-35.4 73.5,-35.4 73.5,-3 73.5,-3 73.5,3 79.5,9 85.5,9 85.5,9 115.5,9 115.5,9 121.5,9 127.5,3 127.5,-3 127.5,-3 127.5,-35.4 127.5,-35.4 127.5,-41.4 121.5,-47.4 115.5,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
+      <text x="97.39" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> T
+      <text x="96.33" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> B
