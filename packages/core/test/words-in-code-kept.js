@@ -16,6 +16,8 @@ const CATALOGUE = Object.fromEntries(
 /** The strings kept in the rest of the core, by file, each with why. `*` keeps every string of the file. */
 export const CORE_KEPT = {
   ...CATALOGUE,
+  // the header each place's block is joined under, read by the join and never by a person (connectors.ts)
+  'packages/core/src/connectors.ts': ['// graph: {} · document {} · schema {} · as of 1970-01-01\n{}'],
   // the settings in UK English, held equal to their catalogue words by settings-words.test.js, which says them
   'packages/core/src/settings.ts': '*',
   'packages/core/src/settings-aids.ts': '*',

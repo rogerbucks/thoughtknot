@@ -507,6 +507,25 @@ declare namespace GraphSpecCheck {
     sameDomain?: [string, string][];
   }): MeshJoin;
 
+  /** A §21 join answered end to end, its parts sorted and written as JSON values (editor spec §21). */
+  interface JoinAnswer {
+    rows: [kind: string, subject: string, attribute: string, finding: string, next: string][];
+    /** Each claim's status and confidence, by claim id: `claim:join/<thing>/<key>=<value>@<documents>`. */
+    claims: Record<string, [status: string, confidence: string]>;
+    pairs: [string, string][];
+    paradoxes: unknown[];
+    /** Each joined thing's labels and asserted properties, by id. */
+    nodes: Record<string, [labels: string[], props: Record<string, Value>]>;
+    /** Each joined link's properties, by its key written as JSON: `[from, type, to, [...]]`. */
+    edges: Record<string, Record<string, Value>>;
+  }
+  /** Documents joined by the §21 join, each a block whose header names its document, schema and as-of date. */
+  function joinDocs(q: {
+    docs: string[];
+    config?: object;
+    findings?: { confirms: string; refutes: string[] }[];
+  }): JoinAnswer;
+
   /** A graph as at a date on one kind of time: when it was recorded, or when it held in the world (editor spec §29). */
   function asAt(graph: Graph, axis: 'recorded' | 'real', date: string): Graph;
   /** A lens run on a graph as at a date: each thing's bucket as it was then, or null for a rule it cannot run. */
