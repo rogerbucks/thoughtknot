@@ -205,10 +205,9 @@ export async function openSpaceView(
     closed();
   };
 
-  /** What the view turns round: the picked thing, else the drawing's middle (Roger, 25 Oct 2026). */
-  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target);
-  /** Makes one move, from a key or a button, and paints it. */
+  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target); // what the view turns round
   const move = (m: SpaceMove) => {
+    // one move, from a key or a button, painted
     if ('back' in m) return close();
     if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
@@ -217,16 +216,14 @@ export async function openSpaceView(
     else if ('help' in m) showHelp(help.hidden !== false);
     again();
   };
-  /** Picks `block`, or none: its name shows and is said aloud. */
   const pick = (block: Block | null) => {
-    picked = block;
+    picked = block; // or none: its name shows and is said aloud
     pickedLine = null;
     said.setText(block ? (block.name ?? block.of ?? '') : '');
     again();
   };
-  /** Picks the link `line`: its words show and are said aloud. */
   const pickLine = (line: SpaceLine) => {
-    picked = null;
+    picked = null; // a link picked: its words show and are said aloud
     pickedLine = line;
     said.setText(line.words ?? '');
     again();
