@@ -48,7 +48,9 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
    to-be, aligned so the drawing never spins. A view is six layers: dimensions, filters, strategy, projection,
    formatting, painter.
 3. **PJ1: projections, all on.** Fisheye, hyperbolic, sphere, arc, matrix, hive, map, grid (kanban), semantic
-   zoom and spatial (VR). Each is in the View menu, in 2D and 3D where it has a 3D form.
+   zoom and spatial (VR). Each is in the View menu, in 2D and 3D where it has a 3D form. They come in two
+   families. A lens bends whatever a view drew round a focus, so one lens works on every view: fisheye (built),
+   semantic zoom, hyperbolic, sphere and spatial. A placement is a view of its own: arc, matrix, hive, grid and map.
 
 ## Links
 

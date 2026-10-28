@@ -185,4 +185,14 @@ export const VALUES_LATE = [
   'renderFor',
   'spaceMode',
   'viewLayers',
+  // lenses that bend any view round a focus (§68, projection_fisheye), 28 Oct 2026
+  'FISHEYE_PX',
+  'LENSES',
+  'bent',
+  'bentPoints',
+  'bentSpace',
+  'fisheye',
+  'lensOf',
+  'spaceSeen',
+  'unbent',
 ];
