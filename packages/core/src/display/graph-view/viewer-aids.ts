@@ -2,7 +2,8 @@
 // - when the mini-map shows (mini_map_setting);
 // - whether the details panel stays open (details_always_visible) and where it goes (details_narrow);
 // - how tall a drawing in a note may be (drawing_height_setting);
-// - the quick-info tooltip.
+// - the quick-info tooltip;
+// - the view preset, by its id (§69).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
@@ -21,6 +22,8 @@ export interface ViewerAids {
   detailsOpen: boolean;
   /** The share of the window a drawing in a note may take (§24, drawing_height_setting); null for no limit. */
   tallest?: number | null;
+  /** The view preset the settings pick (§69), by its id: how the card reads, selects and moves. */
+  preset?: string;
 }
 
 /** The aids the settings give. */
@@ -28,6 +31,7 @@ export const aidsOf = (s: Settings): ViewerAids => ({
   miniMap: s.miniMap,
   detailsOpen: s.detailsOpen === 'on',
   tallest: tallestOf(s.drawingHeight),
+  preset: s.viewPreset,
 });
 
 /** How wide a card must be, in pixels, for the details to sit beside the drawing; narrower, they go below it (§24). */

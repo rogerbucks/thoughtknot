@@ -5,6 +5,9 @@ import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
   gqlBlocks,
   holdsStill,
+  labelsFor,
+  READING_CLASS,
+  readsPlain,
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
@@ -91,6 +94,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.settings = settingsFrom(this.saved.settings);
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
     document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings)); // the view preset's motion (§69)
+    document.body.classList.toggle(READING_CLASS, readsPlain(this.settings)); // and its words
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -177,6 +181,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     chooseLanguage(this.settings.language);
     document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings));
+    document.body.classList.toggle(READING_CLASS, readsPlain(this.settings));
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -294,8 +299,9 @@ export default class ThoughtKnotPlugin extends Plugin {
    * Or why it is text only, or null once a newer drawing for its `owner` is asked. Rejects if the engine can't start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read (§42)
-    const laid = this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner);
+    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read
+    // (§42). Its words are as the view preset draws them: short labels for reading (§69)
+    const laid = this.layoutsOf()?.draw(directed(labelsFor(drawing, this.settings), this.settings.direction), owner);
     return laid?.then(shownAsRead) ?? Promise.resolve(null);
   }
 

@@ -19,6 +19,7 @@ import { RichDetails } from './rich-details';
 import { renderSummary } from './details-summary';
 import { relabelShowOnly, untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
+import { readAloudButton } from './read-aloud';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import { markTouching } from './focus-marks';
@@ -212,8 +213,9 @@ export class DetailsPanel {
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'thoughtknot-kind', text: kind });
     this.sheet.head(head);
-    button(head, word('details.close'), 'x', () => this.close());
     const body = el.createDiv({ cls: 'thoughtknot-details-body' });
+    readAloudButton(head, kind ? `${title}, ${kind}` : title, body); // under a preset for reading (§69)
+    button(head, word('details.close'), 'x', () => this.close());
     this.sheet.opened(body);
     return body;
   }
