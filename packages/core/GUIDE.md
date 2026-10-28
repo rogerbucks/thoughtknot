@@ -798,6 +798,13 @@ never data.
   - `savedFilterFor` gives the Filter for the whole graph or a view. `filterText` writes one; `filterRefusal` says why
     a choice cannot be written.
   - A host saves it only where the note is edited. In reading view a filter is only tried.
+
+#### A graph's own view preset
+
+- A `Preset` in the style graph, `(p1:Preset {preset: 'focus'})`, is the graph's own view preset (§69,
+  view_presets_scoped). It is one of `PRESET_IDS`, the starters of `view-presets.ts`; `presetOf` checks it.
+- `aidsOf(settings, style)` gives a card the first one written, else the settings' preset. `presetClasses` gives the
+  card its classes: blurred rest, still links and plain words.
   - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
     `python/graph_spec/tests/style_cases.json`.
 

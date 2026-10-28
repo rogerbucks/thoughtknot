@@ -101,6 +101,7 @@ export const STYLE_KINDS = [
   'Links',
   'Picture',
   'Filter',
+  'Preset',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
@@ -140,7 +141,16 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
   Filter: ['keep', 'view'],
+  Preset: ['preset'],
 };
+
+/** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
+export const PRESET_IDS = ['default', 'focus', 'calm', 'detail', 'big-picture', 'reading'] as const;
+/** A graph's own view preset, by its id, which wins over the one the settings pick (§69). */
+export interface PresetChoice {
+  preset: (typeof PRESET_IDS)[number];
+  at: StyleAt;
+}
 
 /** A word as a sentence says it before a kind's name: `an Arrows`, `a Show`. */
 export const article = (word: string): string => (/^[AEIOU]/i.test(word) ? 'an' : 'a');
@@ -331,6 +341,8 @@ export interface StyleGraph {
   pictures: Picture[];
   /** The filters saved for a graph too large to draw (§53), in the order written; the first for a view is used. */
   filters: SavedFilter[];
+  /** The graph's own view preset (§69), in the order written; the first is used. */
+  presets: PresetChoice[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -369,6 +381,7 @@ export function emptyStyle(): StyleGraph {
     links: [],
     pictures: [],
     filters: [],
+    presets: [],
   };
 }
 

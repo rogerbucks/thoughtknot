@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from graphspec.style.filter_saved import filter_of
+from graphspec.style.preset import preset_of
 from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.legend import legend_checked
 from graphspec.style.near_names import nearest
@@ -347,6 +348,7 @@ _CHECKS = {
     "Shown": (_shown_of, "shown"),
     "Picture": (_picture_of, "pictures"),
     "Filter": (lambda raw, names, out: filter_of(_Reader(raw, names, out), raw, names), "filters"),
+    "Preset": (lambda raw, names, out: preset_of(_Reader(raw, names, out), raw), "presets"),
 }
 
 

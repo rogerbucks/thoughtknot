@@ -80,7 +80,7 @@ export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], f
   }
   // nothing moves under reduced motion or a still preset, so there is nothing to pause
   const card = root.parentElement;
-  if (card && !reducedMotion(root.win)) pauseButton(root, card);
+  if (card && !reducedMotion(root.win) && !card.hasClass('thoughtknot-still')) pauseButton(root, card);
 }
 
 /**

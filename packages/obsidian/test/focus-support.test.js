@@ -1,6 +1,7 @@
 // The Focus support view preset (editor spec §69, view_focus_support):
 // - The selected thing and its neighbours two links away stay sharp; the rest is blurred, never hidden.
 // - A trail of recent picks in the drawing, to go back along, kept when the details close.
+// A graph's own preset, written in its style graph, wins over the settings' (view_presets_scoped).
 // The built plugin, against the stand-ins.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -69,6 +70,31 @@ describe('the Focus support preset', () => {
       tapKey(el, 'q');
       tapKey(el, 'tablet');
       assert.deepEqual(trail(el), []);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('a graph’s own preset', () => {
+  const own = (preset) =>
+    `${fence(GRAPH)}\n\n${fence(`// graph: reader_style · STYLE reader\n(p1:Preset {preset: '${preset}'})`)}`;
+
+  // proves: view_presets_scoped
+  test('written in its style graph, it wins over the one the settings pick, for that card alone', async () => {
+    const env = await load({ data: { settings: { viewPreset: 'reading', ownLayout: 'off' } } });
+    try {
+      const { el } = await show(env, own('focus'));
+      assert.ok(card(el).classList.contains('thoughtknot-blur-rest'), 'the graph’s Focus support blurs the rest');
+      assert.ok(card(el).classList.contains('thoughtknot-still'), 'and holds its moving links still');
+      tapKey(el, 'q');
+      tapKey(el, 'tablet');
+      assert.deepEqual(trail(el), ['Back to Which device?'], 'it keeps the trail');
+      const plain = await show(env, fence(GRAPH));
+      assert.ok(!card(plain.el).classList.contains('thoughtknot-blur-rest'), 'a graph with none follows the settings');
+      assert.ok(env.doc.body.classList.contains('thoughtknot-reading'), 'whose Reading support marks the page');
+      const reading = await show(env, own('reading'));
+      assert.ok(card(reading.el).classList.contains('thoughtknot-reading'), 'its words plain as Reading support asks');
     } finally {
       env.uninstall();
     }
