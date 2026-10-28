@@ -1725,6 +1725,29 @@ pre.thoughtknot-code {
   white-space: nowrap;
   border: 0;
 }
+/* The outline beside the drawing, shown by O (spec §69, view_reading_support): the same sentences a screen reader
+   hears, for every reader. It is in the card's flow, under the drawing, in every view. */
+.thoughtknot-outline.is-shown {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: var(--gn-space-2) 0 0;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+}
+/* A view preset for reading (spec §69). Every panel, list and outline of the card gets plain sans words, wider word
+   spacing and a line height of 1.5. A box's words are cut short before it is laid out, so the drawing needs no change here.
+   No special font: fonts made for dyslexia do not help, wider word spacing does a little (wiki: View presets design). */
+body.thoughtknot-reading .thoughtknot-view {
+  font-family: var(--gn-font-ui);
+  font-style: normal;
+  word-spacing: 0.25em;
+  line-height: 1.5;
+}
 
 /* Hidden means hidden, whatever display a rule gives the element. */
 .thoughtknot-pane [hidden],

@@ -11,6 +11,7 @@ import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
+import { toggleOutline } from './drawing-svg';
 import { showTour } from '../tour';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
@@ -307,6 +308,11 @@ export function bindViewportEvents(host: ViewportHost): void {
       fold = foldAt(e.target);
     const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
     if (keys && target && 'key' in target && plain && (e.key === 'm' || e.key === 'M') && keys.pick(target.key)) {
+      e.preventDefault();
+      return;
+    }
+    // O shows or hides the outline beside the drawing, in every view (§69, view_reading_support)
+    if (plain && !e.shiftKey && (e.key === 'o' || e.key === 'O') && toggleOutline(host.root) !== null) {
       e.preventDefault();
       return;
     }

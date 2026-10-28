@@ -7,6 +7,7 @@
 // text and keys. It also gives the settings it turns, so picking it sets them all at once. Each stays a setting of
 // its own after. Starters are named by need, never by diagnosis: the research is on wiki/View-presets-design.md.
 // WCAG 2.2 AA is a floor no preset goes below, and the device's own settings win. Host-free and pure.
+import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
@@ -132,6 +133,32 @@ export const starterOf = (id: string): ViewPreset => STARTERS.find((p) => p.id =
 /** Whether the view preset of `s` keeps everything still: nothing glides or plays, whatever the device says. */
 export const holdsStill = (s: Pick<Settings, 'viewPreset'>): boolean =>
   starterOf(s.viewPreset).chain.motion.mode === 'off';
+
+/** The class the host puts on the page's body while the view preset is for reading: plain words, spaced wider (§69). */
+export const READING_CLASS = 'thoughtknot-reading';
+
+/** Whether the view preset of `s` is for reading: its words spaced wider than the floor, so the host marks the page. */
+export const readsPlain = (s: Pick<Settings, 'viewPreset'>): boolean =>
+  starterOf(s.viewPreset).chain.text.wordSpacing > PLAIN_TEXT.wordSpacing;
+
+/** `text` cut to at most `most` characters, at a word where one is near, and marked as cut; else as it is. */
+export function shortLabel(text: string, most: number): string {
+  if (text.length <= most) return text;
+  const cut = text.slice(0, most - 1),
+    space = cut.lastIndexOf(' ');
+  return `${(space > most / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+/**
+ * `d` as the view preset of `s` draws it (view_reading_support). A box's words are cut short where the preset's labels
+ * are shorter than the default's. The full words stay in the details, the outline and what is read aloud, which
+ * read the graph, not the drawing. The default keeps every word. Every layout and every view draws the same boxes.
+ */
+export function labelsFor(d: GraphDrawing, s: Pick<Settings, 'viewPreset'>): GraphDrawing {
+  const most = floored(starterOf(s.viewPreset).chain).text.mostLabel;
+  if (most >= PLAIN_TEXT.mostLabel || !d.boxes.some((b) => b.text.length > most)) return d;
+  return { ...d, boxes: d.boxes.map((b) => (b.text.length > most ? { ...b, text: shortLabel(b.text, most) } : b)) };
+}
 
 /** The settings picking `id` sets: the preset's name, and every setting it turns. */
 export const presetChange = (id: string): Partial<Settings> => {
