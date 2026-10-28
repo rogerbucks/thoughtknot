@@ -20,9 +20,15 @@ flowchart LR
 
 The six starters are in `packages/core/src/view-presets.ts`. **View preset** heads the Drawing settings: picking one
 sets every Drawing setting it turns, and each stays yours to change. The floor, the device winning, the nearest
-preset winning and the one-file export are there too. Moving links have a pause beside their legend, and a still
-preset stops them as the device's reduced motion does. The hosts read the device's settings, and a graph or vault
-keeps its own preset, next.
+preset winning and the one-file export are there too.
+
+- **Motion:** moving links have a pause beside their legend. A still preset stops them as reduced motion does.
+- **Reading support:** long labels cut short, words spaced wider, the details read aloud. O shows the outline.
+- **Focus support:** the rest is blurred, not hidden, and a trail of picks is kept to go back along.
+- **Changing preset:** a preset picked first says what it would change. It is used only when asked, and undone in one
+  step.
+- **Next:** a graph or vault keeping its own preset, the device's lines beside the drawing, and laying out again only
+  when asked.
 
 A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
 of it a viewer is shown.

@@ -28,6 +28,8 @@ export {
   starterOf,
   holdsStill,
   READING_CLASS,
+  presetClasses,
+  keepsTrail,
   readsPlain,
   shortLabel,
   labelsFor,
@@ -41,3 +43,4 @@ export {
   type ViewPreset,
   type DeviceAsks,
 } from './view-presets.ts';
+export { presetPreview, presetUndo, type PresetLine } from './view-preset-preview.ts';
