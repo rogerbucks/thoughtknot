@@ -12,6 +12,7 @@ import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
 import { LAYOUT_LIMITS, PAGE_LIMITS, tooLarge } from '../src/layout-limits.ts';
 import { LayoutRunner, TIMEOUTS_BEFORE_STOPPING, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
+import { LAYOUT_STEPS } from '../src/layouts/cheaper.ts';
 import { watchedBox } from './reader-work.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
@@ -176,16 +177,17 @@ describe('the limits, checked before any layout', () => {
 });
 
 describe('the time limit', () => {
-  test('a layout that never answers is stopped at the limit, "timed out", and the next works on a fresh worker', async () => {
+  // proves: layout_never_text
+  test('a layout that never answers is stopped at the limit, and laid out again by our own engine on a fresh worker', async () => {
     const stuck = silent();
     const fresh = served();
     const { r } = runner([stuck], { rest: fresh.spawn, limits: { ms: 50 } });
     const d = drawingOf(READER);
-    assert.deepEqual(await r.draw(d), { reason: 'timed-out', ms: 50 });
+    const first = await r.draw(d);
     assert.equal(stuck.terminated, true, 'the stuck worker was terminated');
-    const next = await r.draw(d);
     assert.equal(fresh.made.length, 1, 'a fresh worker was started');
-    assert.deepEqual(next, draw(d, await loadEngine()));
+    assert.deepEqual(first, draw({ ...d, step: 'own' }, await loadEngine()), 'drawn, by the next step down');
+    assert.deepEqual(await r.draw(d), draw(d, await loadEngine()), 'the next is laid out as asked');
   });
 
   test('a real thread busy for ever is terminated, and the page’s own thread was never held', async () => {
@@ -194,6 +196,7 @@ describe('the time limit', () => {
     let ticks = 0;
     const tick = setInterval(() => ticks++, 20);
     try {
+      // each cheaper step is tried on a fresh thread first: only the last one's timing out is said
       assert.deepEqual(await r.draw(drawingOf(READER)), { reason: 'timed-out', ms: 300 });
     } finally {
       clearInterval(tick);
@@ -206,8 +209,8 @@ describe('the time limit', () => {
     const { r } = runner([silent()], { rest: served().spawn, limits: { ms: 50 } });
     const d = drawingOf(READER);
     const [first, second] = await Promise.all([r.draw(d), r.draw(d)]);
-    assert.deepEqual(first, { reason: 'timed-out', ms: 50 });
-    assert.match(second.svg, /^<svg/, 'the second was drawn');
+    assert.match(first.svg, /^<svg/, 'the stuck one was drawn by the next step down, first');
+    assert.deepEqual(second, draw(d, await loadEngine()), 'the second was drawn as asked');
   });
 
   test('a cold start is not charged to the layout: its time starts when the worker says its engine is ready', async () => {
@@ -217,7 +220,7 @@ describe('the time limit', () => {
     assert.match(drawn.svg, /^<svg/, 'drawn, though the engine took three times the layout’s limit to start');
   });
 
-  test(`after ${TIMEOUTS_BEFORE_STOPPING} timeouts in a row no worker is started again: the rest are "stopped", told once`, async () => {
+  test(`after ${TIMEOUTS_BEFORE_STOPPING} layouts in a row time out at every step, no worker is started again: the rest are "stopped", told once`, async () => {
     const workers = [];
     const { r, told } = runner([], {
       rest: () => {
@@ -231,7 +234,8 @@ describe('the time limit', () => {
     for (let i = 0; i < TIMEOUTS_BEFORE_STOPPING; i++) assert.equal((await r.draw(d)).reason, 'timed-out');
     assert.deepEqual(await r.draw(d), { reason: 'stopped', failures: TIMEOUTS_BEFORE_STOPPING });
     assert.deepEqual(await r.draw(d), { reason: 'stopped', failures: TIMEOUTS_BEFORE_STOPPING });
-    assert.equal(workers.length, TIMEOUTS_BEFORE_STOPPING, 'no fourth worker');
+    const each = LAYOUT_STEPS.length + 1; // Graphviz, then each cheaper step, each on a fresh worker
+    assert.equal(workers.length, TIMEOUTS_BEFORE_STOPPING * each, 'none after the last step of the last');
     assert.deepEqual(told, ['stopped']);
   });
 });
@@ -262,24 +266,23 @@ describe('the page’s own thread, only when the first worker cannot start', () 
       limits: { ms: 50 },
     });
     const d = drawingOf(READER);
-    assert.equal((await r.draw(d)).reason, 'timed-out');
+    // the stuck layout goes to the next step down, on the worker that cannot start
     await assert.rejects(r.draw(d), /could not start: .*out of memory/);
     assert.match((await r.draw(d)).svg, /^<svg/, 'the next worker draws');
     assert.equal(page.made.length, 0);
     assert.deepEqual(told, []);
   });
 
-  test('a layout handed to a worker is never retried on the page: timed out stays timed out, failed stays failed', async () => {
+  test('a layout handed to a worker is never retried on the page: one that failed stays failed', async () => {
     const crashing = silent();
     const { r, page } = runner([silent(), crashing], { rest: served().spawn, limits: { ms: 50 } });
     const d = drawingOf(READER);
-    assert.equal((await r.draw(d)).reason, 'timed-out');
-    const second = r.draw(d);
-    await sleep(20);
-    assert.equal(crashing.posted.length, 1, 'handed to the second worker');
+    const first = r.draw(d);
+    while (!crashing.posted.length) await sleep(5);
+    assert.equal(crashing.posted[0].drawing.step, 'own', 'past its limit, handed to the second worker, a step down');
     crashing.onerror(new Error('crashed on a hostile graph'));
-    await assert.rejects(second, /the layout worker failed/);
-    assert.equal(page.made.length, 0, 'the page never saw either');
+    await assert.rejects(first, /the layout worker failed/);
+    assert.equal(page.made.length, 0, 'the page never saw it');
   });
 
   // a layout is checked against the limits when it is asked for, before it is known whether a worker can start. One

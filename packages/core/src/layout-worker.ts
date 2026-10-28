@@ -12,6 +12,7 @@ import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
 import type { LayoutLimits, Refusal } from './layout-limits.ts';
 import type { ExportTheme } from './settings.ts';
+import { nextStep } from './layouts/cheaper.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
@@ -160,8 +161,9 @@ interface Job {
 /**
  * The page's side: lays drawings out in one worker, reused, one layout at a time. A worker says when its engine is
  * ready. Only then is a layout handed to it, given the time limit from that moment. So neither a cold start nor a wait
- * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh
- * one. After TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Layouts move to the page's own thread only when
+ * behind a stuck layout is charged to it. A worker past the limit is terminated. Its layout goes first again, by the
+ * next cheaper step, in a fresh worker. Only one past the last step times out. After TIMEOUTS_BEFORE_STOPPING in a
+ * row, none is started again. Layouts move to the page's own thread only when
  * the first worker cannot start, or its engine fails. One already handed to a worker never moves. Those queued by then
  * are held again to the page's lower limits, as the ones asked for afterwards are.
  */
@@ -243,7 +245,12 @@ export class LayoutRunner {
     job.id = this.next++;
     job.timer = this.o.clock.setTimeout(() => {
       this.drop(); // the worker may be stuck for ever: stop it, and start afresh for the next layout
-      this.failed(job, { reason: 'timed-out', ms });
+      // never shown as text for being slow: it is laid out again first, by the next cheaper step (layout_never_text)
+      const step = nextStep(job.drawing);
+      if (!step) return this.failed(job, { reason: 'timed-out', ms });
+      this.busy = null;
+      this.queue.unshift({ drawing: { ...job.drawing, step }, owner: job.owner, theme: job.theme, done: job.done });
+      this.pump();
     }, ms);
     const request: LayoutRequest = { id: job.id, drawing: job.drawing, sourceBytes };
     if (job.theme) request.theme = job.theme;
