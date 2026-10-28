@@ -30,7 +30,9 @@ preset winning and the one-file export are there too.
 - **The device first:** a line beside the drawing says when the device's own setting wins over the preset.
 - **A graph's own preset:** a Preset line in its style graph, such as `(p1:Preset {preset: 'focus'})`, wins over
   the settings' for that card.
-- **Next:** a preset moved as one file between hosts, and laying out again only when asked.
+- **Moving a preset:** Export writes the preset in use, as you have set it, to one small file. Its text pasted into
+  **Your own view preset** is checked, then offered as **Your own**.
+- **Next:** the other hosts' settings pages, and laying out again only when asked.
 
 A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
 of it a viewer is shown.

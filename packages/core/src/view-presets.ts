@@ -6,7 +6,8 @@
 // A preset is one choice for each link of a view's chain: ordering, layout, projection, detail, formatting, motion,
 // text and keys. It also gives the settings it turns, so picking it sets them all at once. Each stays a setting of
 // its own after. Starters are named by need, never by diagnosis: the research is on wiki/View-presets-design.md.
-// WCAG 2.2 AA is a floor no preset goes below, and the device's own settings win. Host-free and pure.
+// WCAG 2.2 AA is a floor no preset goes below, and the device's own settings win. Host-free; pure but for the
+// person's own preset, which the settings set as they are read in.
 import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { word } from './words.ts';
@@ -127,8 +128,28 @@ export const STARTERS: readonly ViewPreset[] = [
   ),
 ];
 
-/** The starter of `id`, else the default. */
-export const starterOf = (id: string): ViewPreset => STARTERS.find((p) => p.id === id) ?? (STARTERS[0] as ViewPreset);
+/** The id the person's own preset goes by, once read in from its file (view_presets_portable). */
+export const OWN_PRESET = 'own';
+// the person's own preset, as last read in with the settings: one for the whole host, as the settings are
+let own: ViewPreset | null = null;
+
+/** Takes the preset in the file text `text` as the person's own, or none when it is empty or not a preset file. */
+export function adoptOwn(text: string): ViewPreset | null {
+  const read = text ? presetFrom(text) : null;
+  own = read && !('problems' in read) ? { ...read, id: OWN_PRESET } : null;
+  return own;
+}
+
+/** The starter of `id`, or the person's own; else the default. */
+export const starterOf = (id: string): ViewPreset =>
+  (id === OWN_PRESET && own) || STARTERS.find((p) => p.id === id) || (STARTERS[0] as ViewPreset);
+
+/** The preset `s` uses, as its file to take to another host: its Drawing settings as they are set now. */
+export const presetToShare = (s: Settings): string =>
+  presetFile({
+    ...starterOf(s.viewPreset),
+    settings: Object.fromEntries(PRESET_SETTINGS.map((k) => [k, s[k]])),
+  });
 
 /** Whether the view preset of `s` keeps everything still: nothing glides or plays, whatever the device says. */
 export const holdsStill = (s: Pick<Settings, 'viewPreset'>): boolean =>
