@@ -1262,5 +1262,22 @@
       "view_reading_support",
       "view_presets_evidence"
     ]
+  },
+  "DR1": {
+    "title": "Drawings on the graph: ink, shapes and notes",
+    "size": "M",
+    "requirements": [
+      "sketch_drawn",
+      "sketch_is_text",
+      "sketch_pinned",
+      "sketch_pin_hidden",
+      "sketch_every_view",
+      "sketch_checked",
+      "sketch_toggle",
+      "sketch_click_rule",
+      "sketch_keyboard",
+      "sketch_reader_picture",
+      "sketch_to_graph"
+    ]
   }
 }
