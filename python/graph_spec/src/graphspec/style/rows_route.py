@@ -57,6 +57,17 @@ def in_rows(boxes: list[Placed], axis: int) -> bool:
     return len(boxes) > 2 and len(rows) > 1 and len(rows) * 2 <= len(boxes)
 
 
+def marks_in_rows(marks: list[dict], axis: int) -> bool:
+    """Whether the thing boxes of `marks` are laid out in rows along `axis`, as in_rows says."""
+    boxes: dict[str, Placed] = {}
+    for m in marks:
+        of = m.get("of")
+        if m["kind"] == "box" and m.get("role") == "thing" and of is not None and of not in boxes:
+            hw, hh = m["width"] / 2, m["height"] / 2
+            boxes[of] = Placed(of, m["x"] + hw, m["y"] + hh, hw, hh)
+    return in_rows(list(boxes.values()), axis)
+
+
 def _gap_at(spans: list[list[float]], v: float) -> int:
     lo, hi = 0, len(spans)
     while lo < hi:

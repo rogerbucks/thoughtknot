@@ -152,9 +152,12 @@ class Routing(unittest.TestCase):
             for routing in (None, "direct"):
                 self.assertIn('<g id="graph0"', drawn_svg.drawn_svg("dot", "digraph {}", routing))
             self.assertEqual(asked, ["-Tjson", "-Tjson"])
-            for routing in ("curved", "straight", "right-angled"):
+            for routing in ("straight", "right-angled"):
                 self.assertEqual(drawn_svg.drawn_svg("dot", "digraph {}", routing), fake_dot.SVG)
-        self.assertEqual(asked[2:], ["-Tsvg"] * 3)
+            self.assertEqual(asked[2:], ["-Tsvg"] * 2)
+            # curved is routed by our own router; laid out in no rows, it is Graphviz's own
+            self.assertEqual(drawn_svg.drawn_svg("dot", "digraph {}", "curved"), fake_dot.SVG)
+        self.assertEqual(asked[4:], ["-Tjson", "-Tsvg"])
 
     def test_links_drawn_direct_are_laid_out_straight(self):
         # curves_not_routed: Graphviz routes no curve only to have it thrown away

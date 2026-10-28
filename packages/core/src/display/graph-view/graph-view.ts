@@ -273,7 +273,6 @@ export class GraphView extends Lifecycle {
       },
       () => !gone,
     );
-    this.switching?.curveLater(this.drawn); // a drawing shown with straight links first gets its curves next (§11)
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */

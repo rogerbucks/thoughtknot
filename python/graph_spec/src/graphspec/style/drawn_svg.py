@@ -15,6 +15,7 @@ from graphspec.style.fold_source import routed_source
 from graphspec.style.marks import layout_marks
 from graphspec.style.marks_svg import layout_svg
 from graphspec.style.quick import QUICK_LAYOUT
+from graphspec.style.rows_route import marks_in_rows
 
 
 def run_dot(dot: str, src: str, form: str) -> str:
@@ -28,8 +29,9 @@ def run_dot(dot: str, src: str, form: str) -> str:
 
 def drawn_svg(dot: str, src: str, routing: str | None = None) -> str:
     """The SVG of `src`, drawn by the `dot` program: with direct links unless `routing` chooses
-    another way (None is the default, direct)."""
-    if routing not in (None, "direct"):
+    another way (None is the default, direct). Curved links are routed by our own router."""
+    curved = routing == "curved"
+    if routing not in (None, "direct", "curved"):
         return run_dot(dot, src, "svg")
     # its links are drawn again here, so Graphviz lays them out straight. Its curves would be
     # thrown away, and routing them is about a quarter of its work (curves_not_routed)
@@ -37,8 +39,15 @@ def drawn_svg(dot: str, src: str, routing: str | None = None) -> str:
     if laid["layout"].get("lost"):
         return run_dot(dot, src, "svg")
     # past the quick size, each link is routed between the rows Graphviz laid out, and no box
-    # moves (links_routed_in_rows)
+    # moves (links_routed_in_rows). Curved links a person chose are routed so at any size. A radial
+    # drawing has no rows. Small, its curves are Graphviz's own. Past the quick size, routing them
+    # is slow, so its links are drawn direct (curves_routed_ours)
     way = "TB" if re.search(r"rankdir=(TB|BT)", src) else "LR"
     things = sum(1 for m in laid["marks"] if m["kind"] == "box" and m.get("role") == "thing")
-    rows = things > QUICK_LAYOUT and not re.search(r"\blayout=", src)
-    return layout_svg(direct_links(laid, way, rows))
+    rows = not re.search(r"\blayout=", src) and marks_in_rows(
+        laid["marks"], 1 if way == "TB" else 0
+    )
+    large = things > QUICK_LAYOUT
+    if curved and not rows and not large:
+        return run_dot(dot, src, "svg")
+    return layout_svg(direct_links(laid, way, rows and (large or curved)))
