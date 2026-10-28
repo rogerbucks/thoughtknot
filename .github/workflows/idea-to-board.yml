@@ -1,0 +1,64 @@
+name: Idea to board
+
+# Puts every issue labelled "idea" on the "ThoughtKnot requirements" GitHub Project and sets its Status to Backlog, so a new
+# idea never waits for a person to drag it there. It runs when an issue is opened or labelled, and does nothing for any
+# other label. The workflow checks out nothing and runs no code from the repository or from the issue: the issue's node id
+# and the label name reach the shell only through env, never inside the script text.
+#
+# PROJECT_TOKEN (the project scope only) is the same secret project-mirror.yml uses. A missing or refused token is a
+# warning, not a failure, as in the mirror: the issue stays where it is and a person adds it.
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions: {}
+
+jobs:
+  add:
+    if: contains(github.event.issue.labels.*.name, 'idea')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: idea-to-board-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Add the issue to the project, in Backlog
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+          OWNER: ${{ github.repository_owner }}
+          TITLE: ThoughtKnot requirements
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::PROJECT_TOKEN is not set, so the idea was not added to the board."
+            exit 0
+          fi
+          find='query($owner: String!) { user(login: $owner) { projectsV2(first: 50) { nodes { id title
+                  field(name: "Status") { ... on ProjectV2SingleSelectField { id options { id name } } } } } } }'
+          project=$(gh api graphql -f query="$find" -f owner="$OWNER" \
+            --jq ".data.user.projectsV2.nodes[] | select(.title == \"$TITLE\")") || {
+            echo "::warning::The board could not be read (token refused?), so the idea was not added."
+            exit 0
+          }
+          if [ -z "$project" ]; then
+            echo "::warning::No project titled \"$TITLE\" was found for $OWNER."
+            exit 0
+          fi
+          project_id=$(jq -r .id <<<"$project")
+          item_id=$(gh api graphql -f query='mutation($p: ID!, $c: ID!) {
+              addProjectV2ItemById(input: {projectId: $p, contentId: $c}) { item { id } } }' \
+            -f p="$project_id" -f c="$ISSUE_NODE_ID" --jq .data.addProjectV2ItemById.item.id) || {
+            echo "::warning::Adding the idea to the board was refused."
+            exit 0
+          }
+          field_id=$(jq -r '.field.id // empty' <<<"$project")
+          option_id=$(jq -r '[.field.options[]? | select(.name == "Backlog")][0].id // empty' <<<"$project")
+          if [ -z "$field_id" ] || [ -z "$option_id" ]; then
+            echo "::warning::The board has no Status option named Backlog, so the idea was added without a status."
+            exit 0
+          fi
+          gh api graphql -f query='mutation($p: ID!, $i: ID!, $f: ID!, $o: String!) {
+              updateProjectV2ItemFieldValue(input: {projectId: $p, itemId: $i, fieldId: $f,
+                value: {singleSelectOptionId: $o}}) { projectV2Item { id } } }' \
+            -f p="$project_id" -f i="$item_id" -f f="$field_id" -f o="$option_id" >/dev/null
+          echo "Added to the board in Backlog."
