@@ -22,6 +22,7 @@ import type { WordKey } from './words.ts';
 import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Lens } from './lenses.ts';
+import type { SemanticRung } from './semantic-zoom.ts';
 
 /** The switches, in the order the View menu lists them. */
 export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes'] as const;
@@ -180,6 +181,10 @@ export class ViewState {
   layout: LayoutOptions;
   /** The lens the View menu shows the drawing through (§68, projections_all_on); none picked, its Render's. */
   lens: Lens | undefined;
+  /** Whether each thing shows its properties, the nearest rung of semantic zoom (projection_semantic_zoom). */
+  properties = false;
+  /** How many things the drawing last folded holds, for semantic zoom to count those on screen. */
+  things = 0;
 
   /** For a card starting with these switches, and laid out as `layout` says. */
   constructor(start: ViewSwitches, layout: LayoutOptions = DEFAULT_LAYOUT_OPTIONS) {
@@ -221,6 +226,18 @@ export class ViewState {
     return true;
   }
 
+  /** The rung of semantic zoom shown: the ladder of detail's, or every thing's properties. */
+  get rung(): SemanticRung {
+    return this.properties ? 'properties' : this.detail;
+  }
+
+  /** Steps to the rung `r` of semantic zoom. True when the drawing must be laid out again. */
+  toRung(r: SemanticRung): boolean {
+    const was = this.properties;
+    this.properties = r === 'properties';
+    return this.toDetail(r === 'properties' ? 'all' : r) || was !== this.properties;
+  }
+
   /** Opens a hub's, a group's or a bundle's fold: its links, or its things, drawn again. */
   open(fold: Fold): void {
     if ('hub' in fold) {
@@ -256,6 +273,7 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
+    this.things = keys.length;
     const { groups, found, instead } = groupsOf(d, keys, edges, this.groupBy);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
@@ -284,7 +302,10 @@ export class ViewState {
     const laned = this.switches.lanes === false ? { ...engined, kindLanes: false as const } : engined;
     // a direction picked in the View menu wins over the best fit, and over the style's (layout_strategy_variables)
     const way = this.layout.direction === 'best' ? laned : { ...laned, direction: this.layout.direction };
-    const drawn = isDefaultLayout(this.layout) ? laned : { ...way, layoutOptions: { ...this.layout } };
+    const laid = isDefaultLayout(this.layout) ? laned : { ...way, layoutOptions: { ...this.layout } };
+    // zoomed nearest, each thing shows its properties, and each link those its style shows (projection_semantic_zoom)
+    const every = this.properties && d.everyProperty,
+      drawn = every ? { ...laid, inline: { boxes: every.boxes, links: d.inline?.links ?? [] } } : laid;
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 

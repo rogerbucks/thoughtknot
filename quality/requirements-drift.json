@@ -8,7 +8,6 @@
     "projection_hyperbolic",
     "projection_map",
     "projection_matrix",
-    "projection_semantic_zoom",
     "projection_spatial",
     "projection_sphere"
   ],

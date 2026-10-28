@@ -90,6 +90,8 @@ export interface GraphDrawing {
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
   inline?: InlineProperties;
+  /** Every property of each box, as semantic zoom shows them zoomed nearest (§68); none, no box has any. */
+  everyProperty?: InlineProperties;
   /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */
   diagram?: DiagramPlan;
   /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */

@@ -302,7 +302,8 @@
           "(r4:Render {}),",
           "(r5:Render {spce: '2d'}),",
           "(r6:Render {lens: 'fisheye', view: 'plan'}),",
-          "(r7:Render {lens: 'fishbowl'})"
+          "(r7:Render {lens: 'fishbowl'}),",
+          "(r8:Render {lens: 'semantic', view: 'board'})"
         ]
       ]
     }
