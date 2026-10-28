@@ -70,6 +70,12 @@ export default defineConfig([
     rules: { 'obsidianmd/prefer-create-el': 'off', 'obsidianmd/no-global-this': 'off' },
   },
   {
+    // The sync package runs in every host: Node, a page and Obsidian alike (packages/sync/GUIDE.md). So it reaches Web
+    // Crypto through globalThis, the one name all of them share.
+    files: ['packages/sync/src/**/*.ts'],
+    rules: { 'obsidianmd/no-global-this': 'off' },
+  },
+  {
     // The graph-spec library is plain CommonJS modules, gathered by its entry point and bundled into one file for pages
     // (packages/graph-spec/GUIDE.md). The plugin's esbuild bundles them too. require() is how its modules import.
     // (graph-layout.js stays one UMD file, page global and module.exports, so it is left as it was.)
