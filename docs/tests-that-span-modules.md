@@ -16,6 +16,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The core
 
+- `packages/core/test/connector-contract.test.js` — every connector meets one contract: statements that cite the
+  place, its version and line. The join is the same for every kind of place (editor spec §63, connector_contract).
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/kind-lanes.test.js` — kinds that link in order each get a lane in rows and a plane in space. The
   View menu says so, and its switch turns it off (editor spec §68, layout_kind_lanes).
