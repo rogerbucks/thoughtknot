@@ -1220,6 +1220,12 @@ details.thoughtknot-style > summary {
   stroke: var(--gn-text-muted);
   stroke-dasharray: 3 3;
 }
+/* The one line that says a drawing was laid out by a cheaper step, as its layout was slow (spec §68, layout_never_text). */
+.thoughtknot-layout-step {
+  padding: var(--gn-space-1) var(--gn-space-2);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
 /* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
 .thoughtknot-flow-legend {
   display: flex;

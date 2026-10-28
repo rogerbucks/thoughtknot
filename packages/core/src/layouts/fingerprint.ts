@@ -4,6 +4,8 @@
 // words, where the View menu names the layout. Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
 import { word } from '../words.ts';
+import { LAYOUT_STEPS } from './cheaper.ts';
+import type { LayoutStep } from './cheaper.ts';
 
 /** How the kinds of a part's things link. */
 export type KindPattern = 'plain' | 'ordered' | 'two-sided' | 'clustered';
@@ -96,6 +98,8 @@ export interface PickShown {
   lanes?: boolean;
   /** Each thing's lane, by its key, so space can put each kind on a plane of its own. */
   bands?: Record<string, number>;
+  /** The cheaper step it was laid out by, after a layout that ran out of time (layout_never_text). */
+  step?: LayoutStep;
 }
 
 /** The SVG attribute that carries what the engine picked (`PickShown`), as JSON, URI-encoded so it needs no escapes. */
@@ -103,7 +107,10 @@ export const PICK_ATTRIBUTE = 'data-layout-pick';
 
 /** What the engine picked, `shown`, in words a person reads: how, why, and the parts and kinds it saw. */
 export function pickSaid(shown: PickShown): string {
-  const lines = [word(`view.layout.why.${shown.why}` as 'view.layout.why.tree')];
+  // a step of rows or a grid is said in place of why: the graph's shape did not pick it (layout_never_text)
+  const why = word(`view.layout.why.${shown.why}` as 'view.layout.why.tree');
+  const step = shown.step && word(`view.layout.step.${shown.step}`);
+  const lines = shown.step === 'own' ? [step as string, why] : [step || why];
   if (shown.parts > 1) lines.push(word('view.layout.parts', { count: shown.parts }));
   if (shown.loose) lines.push(word('view.layout.loose', { count: shown.loose }));
   if (shown.kinds === 'ordered') lines.push(word('view.layout.kinds.ordered', { order: shown.order.join(' → ') }));
@@ -125,6 +132,7 @@ export function pickShownOf(attribute: string | null | undefined): PickShown | u
           parts: Number(p.parts) || 1,
           loose: Number(p.loose) || 0,
           lanes: p.lanes === true,
+          ...(LAYOUT_STEPS.includes(p.step as LayoutStep) ? { step: p.step as LayoutStep } : {}),
           bands: Object.fromEntries(
             Object.entries(p.bands ?? {}).filter((e): e is [string, number] => Number.isInteger(e[1])),
           ),
