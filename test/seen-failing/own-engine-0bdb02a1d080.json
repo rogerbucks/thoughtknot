@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/own-engine.test.js",
+  "test": "the layered layout > cuts a row far too long, so a wide shallow tree is not one endless strip, and keeps every box apart",
+  "seen_failing_first": false,
+  "evidence": "a loosened check of an existing behaviour: the row cut now happens only far later, so the old check was relaxed"
+}

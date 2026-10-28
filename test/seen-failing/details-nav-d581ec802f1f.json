@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-nav.test.js",
+  "test": "a second tap on what is selected > the first tap selects and shows the details, and leaves the zoom as it was",
+  "seen_failing_first": false,
+  "evidence": "It guards what stays as it was: the first tap still only selects. The second tap's test beside it failed first."
+}

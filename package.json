@@ -1,0 +1,48 @@
+{
+  "name": "thoughtknot",
+  "version": "0.7.1",
+  "private": true,
+  "description": "Draw the graphs written in notes, and edit them by typing or by dragging the drawing.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian && npm run build --workspace packages/claude-code && npm run build --workspace packages/app && npm run build --workspace packages/vscode",
+    "dev": "npm run dev --workspace packages/obsidian",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/core/src/display --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit && tsc -p packages/claude-code/page --noEmit && tsc -p packages/app --noEmit && tsc -p packages/vscode --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "node scripts/run-ceiling.mjs node --test --test-timeout=300000",
+    "test:ai": "node scripts/run-ceiling.mjs node --test --test-timeout=300000 --test-reporter=./scripts/quiet-reporter.mjs",
+    "test:ai:py": "node scripts/run-ceiling.mjs uv run --locked --directory python/graph_spec python ../../scripts/quiet_unittest.py",
+    "test:changed": "node scripts/run-ceiling.mjs node scripts/changed-tests.mjs",
+    "build:layout": "node packages/core/esbuild.layout.mjs",
+    "bench:local": "node scripts/bench-local.mjs",
+    "bench:scale": "node --expose-gc scripts/scale-benchmark.mjs",
+    "project:plan": "node scripts/github-project.mjs --dry-run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "release:prepare": "node scripts/release-prepare.mjs",
+    "second-opinion": "node scripts/second-opinion.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@eslint/json": "0.14.0",
+    "axe-core": "4.14.0",
+    "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-obsidianmd": "0.4.2",
+    "jsdom": "30.1.2",
+    "obsidian": "1.13.1",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0"
+  },
+  "overrides": {
+    "moment": "2.31.0"
+  }
+}

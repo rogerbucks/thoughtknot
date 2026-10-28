@@ -1,0 +1,135 @@
+// Marking a drawn SVG for an export (editor spec §16, §7): what is outside a view faded, and each look drawn. In
+// Obsidian both are classes the stylesheet draws. An image cannot take the stylesheet, so here they are written into
+// the SVG itself. They go in the style attribute of the group or shape, in the palette's fixed colours. A look's hue is
+// drawn on the outline only, in the locked line blend (theme.ts `hueColour`). Text is never recoloured, so its locked
+// contrast holds on any box. Groups are found by Graphviz's numbering, node1, node2… and edge1, edge2…, in the order
+// the drawing's things and links were given.
+import type { Palette } from './palette.ts';
+import type { ThingLook } from './style-graph.ts';
+import { fixed, hueColour } from './theme.ts';
+
+/** How faded a thing outside the view is drawn: the pane's own opacity (styles.css), so an export matches what was seen. */
+export const FADED_OPACITY = 0.35;
+
+/**
+ * What to mark: the things and links to fade (the links by edge number), and the looks of things (by key) and links.
+ * `tags` gives each look colour's tag (look-tags.ts), drawn on each box or link the colour is on.
+ */
+export interface Marks {
+  faded: { things: string[]; links: number[] };
+  looks: { things: Map<string, ThingLook>; links: Map<number, ThingLook> };
+  tags?: Map<string, string>;
+}
+
+const DASHES = { dashed: '6 4', dotted: '2 3' } as const;
+
+/** A tag with these style declarations set: those it has are changed in place, the others added after them. */
+function styled(tag: string, set: [string, string][]): string {
+  if (!set.length) return tag;
+  const had = / style="([^"]*)"/.exec(tag);
+  const decls = new Map<string, string>();
+  for (const d of (had?.[1] ?? '').split(';')) {
+    const at = d.indexOf(':');
+    if (at > 0) decls.set(d.slice(0, at).trim(), d.slice(at + 1).trim());
+  }
+  for (const [name, value] of set) decls.set(name, value);
+  const style = ` style="${[...decls].map(([name, value]) => `${name}:${value}`).join(';')}"`;
+  if (had) return tag.replace(had[0], () => style);
+  return tag.replace(/\s*(\/?)>$/, (_, slash: string) => `${style}${slash}>`);
+}
+
+/** The declarations a look sets on a shape (a box or a line) and on a text. An arrowhead is a shape filled in the line's colour. */
+function declarations(look: ThingLook, p: Palette, part: 'shape' | 'arrow' | 'text'): [string, string][] {
+  const out: [string, string][] = [];
+  if (part === 'text') {
+    // a look's hue is on the outline only: the text keeps the palette's text colour, so its locked 4.5:1 holds on any box
+    if (look.format === 'bold') out.push(['font-weight', 'bold']);
+    if (look.format === 'italic') out.push(['font-style', 'italic']);
+    return out;
+  }
+  if (look.hue) {
+    if (part === 'arrow') out.push(['fill', hueColour(look.hue, 'line', p)]);
+    out.push(['stroke', hueColour(look.hue, 'line', p)]);
+  }
+  if (look.line === 'bold') out.push(['stroke-width', '3']);
+  if (look.line === 'dashed' || look.line === 'dotted') out.push(['stroke-dasharray', DASHES[look.line]]);
+  return out;
+}
+
+const NUMBER = /-?\d+(?:\.\d+)?/g;
+
+/** The first numbers of the attribute `name` in the first tag `of` in `body`: read by position, never by a pattern. */
+function numbersOf(body: string, of: string, name: string): number[] {
+  const at = body.indexOf(`<${of} `);
+  if (at < 0) return [];
+  const tag = body.slice(at, body.indexOf('>', at)),
+    from = tag.indexOf(` ${name}="`);
+  if (from < 0) return [];
+  const value = tag.slice(from + name.length + 3, tag.indexOf('"', from + name.length + 3));
+  return (value.match(NUMBER) ?? []).map(Number);
+}
+
+/**
+ * Where a look's tag goes: inside a box at its top left, or over a link's label, else beside its arrowhead. Null when
+ * the group draws none of these.
+ */
+function tagSpot(body: string, edge: boolean): { x: number; y: number } | null {
+  if (edge) {
+    const [x] = numbersOf(body, 'text', 'x'),
+      [y] = numbersOf(body, 'text', 'y');
+    if (x !== undefined && y !== undefined) return { x, y: y - 12 };
+    const [ax, ay] = numbersOf(body, 'polygon', 'points');
+    return ax === undefined || ay === undefined ? null : { x: ax + 4, y: ay - 4 };
+  }
+  const nums = numbersOf(body, 'path', 'd').length
+    ? numbersOf(body, 'path', 'd')
+    : numbersOf(body, 'polygon', 'points');
+  if (nums.length < 4) return null;
+  const xs = nums.filter((_, i) => i % 2 === 0),
+    ys = nums.filter((_, i) => i % 2 === 1);
+  return { x: Math.min(...xs) + 4, y: Math.min(...ys) + 10 };
+}
+
+/** The inside of a group with its look drawn, and its colour's tag when it has one. */
+function looked(body: string, look: ThingLook, p: Palette, edge: boolean, tag?: string): string {
+  const drawn = body.replace(/<(path|polygon|ellipse|polyline|text)\b[^>]*>/g, (t, name: string) =>
+    styled(t, declarations(look, p, name === 'text' ? 'text' : edge && name === 'polygon' ? 'arrow' : 'shape')),
+  );
+  const spot = tag ? tagSpot(body, edge) : null;
+  if (!spot || !tag) return drawn;
+  return `${drawn}<text class="look-tag" x="${fixed(spot.x, 2)}" y="${fixed(spot.y, 2)}" text-anchor="start" font-family="Helvetica,sans-Serif" font-size="10" fill="${p.text}">${tag}</text>\n`;
+}
+
+/**
+ * The SVG with what the view fades and each look drawn. `keys` are the drawing's things in the order they were laid out,
+ * so the n-th is `node<n>`. With nothing to mark the SVG is returned as it was.
+ */
+export function marked(svg: string, keys: readonly string[], marks: Marks, palette: Palette): string {
+  const fadedThings = new Set(marks.faded.things),
+    fadedLinks = new Set(marks.faded.links);
+  if (!fadedThings.size && !fadedLinks.size && !marks.looks.things.size && !marks.looks.links.size) return svg;
+  // a linear walk, never a regular expression over the whole SVG, so a hostile drawing cannot make it slow
+  let out = '',
+    from = 0;
+  for (let at = svg.indexOf('<g id="', from); at >= 0; at = svg.indexOf('<g id="', at + 1)) {
+    const id = /^(node|edge)(\d+)"/.exec(svg.slice(at + 7, at + 32));
+    if (!id) continue;
+    const openEnd = svg.indexOf('>', at);
+    if (openEnd < 0) break;
+    const close = svg.indexOf('</g>', openEnd + 1);
+    if (close < 0) break;
+    const [, kind, n] = id;
+    const pos = Number(n) - 1,
+      node = kind === 'node',
+      key = keys[pos] ?? '',
+      faded = node ? fadedThings.has(key) : fadedLinks.has(pos),
+      look = node ? marks.looks.things.get(key) : marks.looks.links.get(pos);
+    const open = svg.slice(at, openEnd + 1),
+      body = svg.slice(openEnd + 1, close);
+    const tag = look?.hue ? marks.tags?.get(look.hue) : undefined;
+    out += `${svg.slice(from, at)}${faded ? styled(open, [['opacity', String(FADED_OPACITY)]]) : open}${look ? looked(body, look, palette, !node, tag) : body}`;
+    from = close;
+    at = close;
+  }
+  return out + svg.slice(from);
+}

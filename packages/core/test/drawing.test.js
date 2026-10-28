@@ -1,0 +1,592 @@
+// What a note's graph blocks draw (spec §3). They draw the boxes and links of each graph, as graph-spec-draw.py chooses
+// them. A graph with problems is still drawn. What can be read is drawn, and the rest is listed as problems.
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { gqlBlocks } from '../src/blocks.ts';
+import { readNote } from '../src/drawing.ts';
+
+const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
+
+const fence = (body, info = 'gql') => '```' + info + '\n' + body + '\n```';
+
+const QUESTION = `// graph: reader · SOURCE
+(reader_question:Question {
+    title: 'Which device should I read long PDFs on?'}),
+(large_reader:Option {name: 'Large e-ink reader'}),
+(tablet:Option       {name: 'Keep using the tablet'}),
+(large_reader)-[:ANSWERS]->(reader_question),
+(tablet)-[:ANSWERS]->(reader_question)`;
+
+const REASONS = `// graph: reader · SOURCE
+(easy_on_eyes:Reason {title: 'E-ink is easier on the eyes'}),
+(easy_on_eyes)-[:FAVOURS]->(large_reader),
+(easy_on_eyes)-[:COUNTS_AGAINST]->(tablet)`;
+
+const SCHEMA = `// graph: reader · SOURCE
+(reader_schema:GraphMeta {graph: 'reader', schema: 'reader@1'}),
+(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),
+(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),
+(kind_reason:Meta:ElementType {name: 'Reason', kind: 'node', origin: 'source'}),
+(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'answered by'}),
+(link_favours:Meta:ElementType {name: 'FAVOURS', kind: 'edge', origin: 'source', reading: 'favours', reverse_name: 'favoured by'}),
+(link_against:Meta:ElementType {name: 'COUNTS_AGAINST', kind: 'edge', origin: 'source', reading: 'counts against', reverse_name: 'is counted against by'})`;
+
+describe('finding the graph blocks in a note', () => {
+  test('each gql fence is a block, with the note line its fence opens on', () => {
+    const note = [
+      '# A note',
+      '',
+      fence('// graph: a\n(x:Thing)'),
+      'text',
+      '~~~~gql',
+      '// graph: b',
+      '(y:Thing)',
+      '~~~~',
+      fence('print(1)', 'python'),
+    ].join('\n');
+    assert.deepEqual(gqlBlocks(note), [
+      { text: '// graph: a\n(x:Thing)', line: 3 },
+      { text: '// graph: b\n(y:Thing)', line: 8 },
+    ]);
+  });
+
+  test('a fence left open runs to the end of the note, as Markdown reads it', () => {
+    assert.deepEqual(gqlBlocks('```gql\n// graph: a\n(x:Thing)'), [{ text: '// graph: a\n(x:Thing)', line: 1 }]);
+  });
+
+  test('a closing fence must be as long as the opening one, and of the same character', () => {
+    assert.deepEqual(gqlBlocks('````gql\n(a)\n```\n~~~~\n(b)\n````'), [{ text: '(a)\n```\n~~~~\n(b)', line: 1 }]);
+  });
+});
+
+describe('what a graph draws', () => {
+  test('boxes in the order they were written, each with its kinds and its text', () => {
+    const { graphs, problems } = readNote([QUESTION]);
+    assert.deepEqual(problems, []);
+    assert.deepEqual(graphs.get('reader').boxes, [
+      { key: 'reader_question', kind: 'Question', text: 'Which device should I read long PDFs on?' },
+      { key: 'large_reader', kind: 'Option', text: 'Large e-ink reader' },
+      { key: 'tablet', kind: 'Option', text: 'Keep using the tablet' },
+    ]);
+  });
+
+  test('a box’s text loses Markdown’s paired marks for bold and code, but a lone star stays (F12)', () => {
+    const block = "// graph: g\n(a:T {name: '**Rules.**'}), (b:T {name: 'use `go` __now__'}), (c:T {name: 'a * b'})";
+    const texts = readNote([block])
+      .graphs.get('g')
+      .boxes.map((b) => b.text);
+    assert.deepEqual(texts, ['Rules.', 'use go now', 'a * b']);
+  });
+
+  test('the text is the name, else the title, the text or the label, else the id', () => {
+    const block = `// graph: g
+(a:T {name: 'by name', title: 'not this'}), (b:T {title: 'by title', text: 'not this'}), (c:T {text: 'by text'}),
+(d:T {label: 'by label'}), (e:T {name: ''}), (f:T {name: 3})`;
+    assert.deepEqual(
+      readNote([block])
+        .graphs.get('g')
+        .boxes.map((b) => b.text),
+      ['by name', 'by title', 'by text', 'by label', 'e', 'f'],
+    );
+  });
+
+  test('a thing with several kinds shows them sorted, joined by a dot', () => {
+    assert.equal(
+      readNote(['// graph: g\n(a:Zeta:Alpha {name: "x"})'.replace(/"/g, "'")]).graphs.get('g').boxes[0].kind,
+      'Alpha · Zeta',
+    );
+  });
+
+  test('links read in the words of the schema, even one written later in the note', () => {
+    const { graphs } = readNote([QUESTION, REASONS, SCHEMA]);
+    assert.deepEqual(graphs.get('reader').links, [
+      { from: 'large_reader', type: 'ANSWERS', reading: 'answers', to: 'reader_question' },
+      { from: 'tablet', type: 'ANSWERS', reading: 'answers', to: 'reader_question' },
+      { from: 'easy_on_eyes', type: 'FAVOURS', reading: 'favours', to: 'large_reader' },
+      { from: 'easy_on_eyes', type: 'COUNTS_AGAINST', reading: 'counts against', to: 'tablet' },
+    ]);
+  });
+
+  test('a draft reads a link in its type’s own words', () => {
+    const { graphs } = readNote([QUESTION, REASONS]);
+    assert.deepEqual(
+      graphs.get('reader').links.map((l) => l.reading),
+      ['answers', 'answers', 'favours', 'counts against'],
+    );
+  });
+
+  test('the schema’s own nodes are not drawn', () => {
+    const { graphs } = readNote([QUESTION, SCHEMA]);
+    assert.deepEqual(
+      graphs.get('reader').boxes.map((b) => b.key),
+      ['reader_question', 'large_reader', 'tablet'],
+    );
+  });
+
+  test('a block draws the graph as built by the blocks up to it, so a note can grow its graph in steps', () => {
+    const step1 = readNote([QUESTION, REASONS], 0).graphs.get('reader');
+    assert.equal(step1.boxes.length, 3);
+    assert.equal(readNote([QUESTION, REASONS], 1).graphs.get('reader').boxes.length, 4);
+  });
+
+  test('queries, excerpts, change sets and blocks with no graph line are not data, and are not drawn', () => {
+    const blocks = [
+      '// graph: g · QUERY\nMATCH (n) RETURN n',
+      '// excerpt\n(a:T)',
+      '// graph: g · excerpt — an example\n(a:T)',
+      '(a:T)',
+    ];
+    const { graphs, problems } = readNote(blocks);
+    assert.equal(graphs.size, 0);
+    assert.deepEqual(problems, []);
+  });
+
+  test('several graphs in one note are drawn apart', () => {
+    const { graphs } = readNote(['// graph: one\n(a:T)', '// graph: two\n(b:T)']);
+    assert.deepEqual([...graphs.keys()], ['one', 'two']);
+  });
+});
+
+describe('a graph with problems is still drawn', () => {
+  test('a path that cannot be read is left out, and the rest of its block is drawn', () => {
+    const block = `// graph: g
+(a:T {name: 'A'}),
+(b:T {name: 'B' oops}),
+(c:T {name: 'C'}),
+(a)-[:R]->(c)`;
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'c'],
+    );
+    assert.equal(graphs.get('g').links.length, 1);
+    assert.equal(problems.length, 1);
+    assert.deepEqual({ block: problems[0].block, line: problems[0].line }, { block: 0, line: 3 });
+    assert.ok(problems[0].message && problems[0].fix);
+  });
+
+  test('a link to a thing that is not in the graph is left out and listed, with its line', () => {
+    const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(nowhere),\n(a)-[:R]->(b)";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').links.map((l) => l.to),
+      ['b'],
+    );
+    assert.equal(problems.length, 1);
+    assert.equal(problems[0].line, 4);
+    assert.match(problems[0].message, /nowhere/);
+  });
+
+  test('a block whose graph line is wrong is listed, and the other blocks are drawn', () => {
+    const { graphs, problems } = readNote([
+      "// graph: not-one-word\n(a:T {name: 'A'})",
+      "// graph: g\n(b:T {name: 'B'})",
+    ]);
+    assert.deepEqual([...graphs.keys()], ['g']);
+    assert.deepEqual(
+      problems.map((p) => [p.block, p.line]),
+      [[0, 1]],
+    );
+  });
+
+  test('every bad path in a block is listed, each once', () => {
+    const block = "// graph: g\n(a:T {x: }),\n(b:T {name: 'B'}),\n(c:T {y: }),\n(d:T {name: 'D'})";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['b', 'd'],
+    );
+    assert.deepEqual(
+      problems.map((p) => p.line),
+      [2, 4],
+    );
+  });
+
+  test('a problem in a block after the one drawn does not hide it', () => {
+    const { graphs, problems } = readNote(["// graph: g\n(a:T {name: 'A'})", '// graph: g\n(b:T {oops'], 0);
+    assert.equal(graphs.get('g').boxes.length, 1);
+    assert.deepEqual(problems, []);
+  });
+
+  test('a comma inside a string or a property map does not split a path', () => {
+    const block = "// graph: g\n(a:T {name: 'one, two', note: 'it\\'s, so'}),\n(b:T {bad: }),\n(c:T)";
+    const { graphs } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => [b.key, b.text]),
+      [
+        ['a', 'one, two'],
+        ['c', 'c'],
+      ],
+    );
+  });
+});
+
+describe('which blocks are graphs', () => {
+  test('a data block with a graph line draws its graph; anything else is code', async () => {
+    const { graphOfBlock } = await import('../src/blocks.ts');
+    assert.equal(graphOfBlock('// graph: reader · SOURCE\n(a:T)'), 'reader');
+    assert.equal(graphOfBlock('\n\n// graph: g\n(a:T)'), 'g');
+    for (const code of [
+      '// graph: g · QUERY\nMATCH (n) RETURN n',
+      '// graph: s · SCHEMA s@1\n(a:T)',
+      '// graph: g · excerpt\n(a:T)',
+      '// graph: g · CHANGE SET c1 · against sha-256-64:0123456789abcdef · by ann\n(a:T)',
+      'MATCH (n) RETURN n',
+      '',
+      '// graph: not-one-word\n(a)',
+    ]) {
+      assert.equal(graphOfBlock(code), null, code);
+    }
+  });
+
+  // whitespace as GQL names it (§3), U+180E among it, in every reader. The graph line is read alike by the core and the
+  // Python library. So a problem names the same graph in both (decided 10 Oct 2026)
+  test('a graph line spaced with U+180E names its graph, in the core as in the Python library', () => {
+    const block = "//\u{180e}graph:\u{180e}ws\n(:T {name: 'Large reader'})";
+    const core = readNote([block]).problems.map((p) => p.graph);
+    const py = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+          'print(json.dumps([p["graph"] for p in gp.read_for_drawing([json.load(sys.stdin)])[1]]))',
+      ],
+      { input: JSON.stringify(block), encoding: 'utf8' },
+    );
+    assert.equal(py.status, 0, py.stderr);
+    assert.deepEqual(core, ['ws'], 'the core');
+    assert.deepEqual(JSON.parse(py.stdout), ['ws'], 'the Python library');
+  });
+
+  // a block drawn FROM elsewhere holds no data of its own (editor spec §20, gql_file_source). Neither reader draws it.
+  // So a note holding one draws the same in the plugin and the vault's Python (drawn_in_part)
+  test('a block drawn FROM a file or a note is no graph of its own, in the core as in the Python library', () => {
+    // a FROM block holding lines of its own is a fault (sources.ts), and still never read as data
+    const blocks = [
+      '// graph: trip · FROM Graphs/trip.gql',
+      "// graph: walk · FROM [[Walks]]\n(w:Walk {name: 'Copied in'})",
+      "// graph: home\n(a:Place {name: 'Home'})",
+    ];
+    const core = readNote(blocks);
+    const py = spawnSync(
+      'python3',
+      [
+        '-c',
+        `import json, sys\nsys.path.insert(0, ${JSON.stringify(PY_SRC)})\nimport gql_profile as gp\n` +
+          'store, problems = gp.read_for_drawing(json.load(sys.stdin))\n' +
+          'print(json.dumps([sorted(store.graphs), [p["message"] for p in problems]]))',
+      ],
+      { input: JSON.stringify(blocks), encoding: 'utf8' },
+    );
+    assert.equal(py.status, 0, py.stderr);
+    assert.deepEqual([[...core.graphs.keys()], core.problems], [['home'], []], 'the core');
+    assert.deepEqual(JSON.parse(py.stdout), [['home'], []], 'the Python library');
+  });
+});
+
+describe('a comma with nothing after it', () => {
+  // Roger's try-out, 8 Oct 2026: "adding a comma on the last line also causes the whole diagram to error". A comma waiting
+  // for its next pattern is the commonest state while typing. A missing comma is never a failure of the block (7 Oct).
+  // A block that cannot be read is drawn in part (8 Oct). So it is drawn whole, with one quiet warning whose fix
+  // removes it.
+  const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)";
+  for (const tail of [',', ',\n', ',\n\n// the next pattern goes here\n']) {
+    test(`everything before it is drawn, with one warning whose fix removes it: ${JSON.stringify(tail)}`, () => {
+      const { graphs, problems } = readNote([block + tail]);
+      assert.deepEqual(
+        graphs.get('g').boxes.map((b) => b.key),
+        ['a', 'b'],
+      );
+      assert.deepEqual(
+        graphs.get('g').links.map((l) => [l.from, l.to]),
+        [['a', 'b']],
+      );
+      assert.equal(problems.length, 1);
+      const [p] = problems;
+      assert.equal(p.severity, 'warning');
+      assert.equal(p.line, 4);
+      assert.match(p.message, /comma with nothing after it/);
+      assert.deepEqual(p.replace, { written: ',', with: [''] });
+      assert.deepEqual(p.span, { line: 3, character: '(a)-[:R]->(b)'.length, end: '(a)-[:R]->(b)'.length + 1 });
+      assert.equal(p.fixTitle, 'Remove the comma');
+    });
+  }
+
+  test('a comma inside a string at the block’s end is not taken for it', () => {
+    const { problems } = readNote(["// graph: g\n(a:T {name: 'A, then,'})"]);
+    assert.deepEqual(problems, []);
+  });
+});
+
+describe('a comment after code on its line', () => {
+  // spec §3: "Comments are whole lines starting //. A comment must not follow code on the same line, because // also
+  // occurs inside identifiers such as ni:/// hashes." Checking refuses it. Drawing leaves it out and draws the code.
+  // Its problem names the rule, and its fix puts the comment on its own line (§4, "Problems in place")
+  const RULE = 'a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes';
+  test('the code before it is drawn; one warning names the rule, and its fix puts the comment on its own line', () => {
+    const block = "// graph: g\n(a:T {name: 'A'}), // the first\n(b:T {name: 'B // not a comment'}),\n(a)-[:R]->(b)";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b'],
+    );
+    assert.equal(graphs.get('g').links.length, 1);
+    assert.equal(problems.length, 1);
+    const [p] = problems;
+    assert.deepEqual([p.severity, p.line, p.message, p.fix], ['warning', 2, RULE, 'put the comment on its own line']);
+    assert.equal(p.fixTitle, 'Put the comment on its own line');
+    const at = "(a:T {name: 'A'}),".length;
+    assert.deepEqual(p.span, { line: 1, character: at, end: at + 1 });
+    assert.deepEqual(p.replace, { written: ' ', with: ['\n'] });
+  });
+});
+
+describe('an emoji before what is left out', () => {
+  // drawn in part, byte for byte by both readers (8 Oct 2026). An emoji is two UTF-16 units but one character. The core
+  // blanked text by characters at places it had counted in units. So whatever followed an emoji on the line slipped
+  test('the item at fault is left out exactly, whatever came before it on the line', () => {
+    const block = "// graph: g\n(a:T {name: '🙂 smile'}), (b:T {name: 'B'}), (gone)-[:R]->(a), (b)-[:R]->(a)";
+    const { graphs, problems } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b'],
+    );
+    assert.deepEqual(
+      graphs.get('g').links.map((l) => [l.from, l.to]),
+      [['b', 'a']],
+    );
+    assert.deepEqual(
+      problems.map((p) => p.dropped),
+      ['(gone)-[:R]->(a)'],
+    );
+  });
+});
+
+describe('a missing comma', () => {
+  const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: 'C'}),\n(a)-[:R]->(b)";
+
+  test('a line break between two complete patterns is read as the comma: everything is drawn', () => {
+    const { graphs } = readNote([block]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b', 'c'],
+    );
+    assert.deepEqual(
+      graphs.get('g').links.map((l) => [l.from, l.to]),
+      [['a', 'b']],
+    );
+    assert.deepEqual(graphs.get('g').estimates, []);
+  });
+
+  test('it is a warning on the line missing the comma, whose fix adds it', () => {
+    const { problems } = readNote([block]);
+    assert.equal(problems.length, 1);
+    const [p] = problems;
+    assert.deepEqual([p.line, p.severity], [3, 'warning']);
+    assert.equal(p.message, 'a comma is missing at the end of this line; it is read as if it were there');
+    assert.equal(p.fix, 'add a comma at the end of the line');
+    assert.deepEqual(
+      p.insert,
+      { line: 2, character: 17, text: ',' },
+      'the edit that adds it: 0-based line and character in the block',
+    );
+  });
+
+  test('when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing', () => {
+    const broken = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'})\n(c:T {name: }),\n(a)-[:R]->(b)";
+    const { graphs, problems } = readNote([broken]);
+    assert.deepEqual(
+      graphs.get('g').boxes.map((b) => b.key),
+      ['a', 'b'],
+    );
+    assert.deepEqual(
+      graphs.get('g').links.map((l) => [l.from, l.to]),
+      [['a', 'b']],
+    );
+    assert.ok(problems.some((p) => p.line === 4 && p.severity === 'error'));
+  });
+});
+
+describe('a relationship type written without its colon', () => {
+  // req:3.bare-link-type: read as the graph's one type of that name, ignoring case, and reported with a fix
+  const FIRST = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";
+  const BARE = "// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]->(o)";
+
+  test('is drawn as that type, with a warning whose fix writes the colon, as the graph spells the type', () => {
+    const r = readNote([FIRST, BARE]);
+    assert.deepEqual(
+      r.graphs.get('g').links.map((l) => l.type),
+      ['FAVOURS', 'FAVOURS'],
+    );
+    // a departure from standard GQL, said so for strictness (spec §21)
+    assert.deepEqual(r.problems, [
+      {
+        graph: 'g',
+        block: 1,
+        line: 3,
+        severity: 'warning',
+        message: '[favours] has no colon; it is read as the relationship type FAVOURS',
+        code: 'GN703',
+        fix: 'write it with its colon: [:FAVOURS]',
+        replace: { written: 'favours', with: [':FAVOURS'] },
+        fixTitle: 'Write the colon: [:FAVOURS]',
+        span: { line: 2, character: 5, end: 12 },
+        departure: 'bare-type',
+      },
+    ]);
+  });
+
+  test('the fix covers only the name: with spaces in the brackets, after the same words in a string, or twice on a line', () => {
+    const spans = (block) => readNote([FIRST, block]).problems.map((p) => p.span);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[ favours ]->(o)"), [
+      { line: 2, character: 6, end: 13 },
+    ]);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'see [favours'})-[favours]->(o)"), [
+      { line: 1, character: 36, end: 43 },
+    ]);
+    assert.deepEqual(spans("// graph: g\n(s:Reason {title: 'Quiet'}),\n(s)-[favours]->(o), (s)-[favours]->(r)"), [
+      { line: 2, character: 5, end: 12 },
+      { line: 2, character: 25, end: 32 },
+    ]);
+  });
+
+  test('a first use is an error: it is not drawn, and says to write the colon', () => {
+    const r = readNote([BARE.replace('(o)', "(o:Option {name: 'Coast'})")]);
+    assert.equal(r.problems[0]?.severity, 'error');
+    assert.match(
+      r.problems[0]?.message ?? '',
+      /\[favours\] has no colon, and graph g has no relationship type called favours/,
+    );
+  });
+});
+
+describe('a schema whose types its GraphMeta does not declare', () => {
+  // graph spec model §5: each ElementType is linked from the GraphMeta by DECLARES. A graph locked by an earlier build
+  // has none: it is told so, with a fix that adds them.
+  const DATA = "// graph: g\n(a:Book {title: 'A'}),\n(p:Person {name: 'P'})";
+  const OLD = [
+    '// graph: g',
+    "(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),",
+    "(kind_book:Meta:ElementType {name: 'Book', kind: 'node', origin: 'source'}),",
+    "(kind_person:Meta:ElementType {name: 'Person', kind: 'node', origin: 'source'})",
+  ].join('\n');
+
+  test('is a warning on the first type it leaves out, whose fix adds every DECLARES missing from that block', () => {
+    const r = readNote([DATA, OLD]);
+    assert.deepEqual(r.problems, [
+      {
+        graph: 'g',
+        block: 1,
+        line: 3,
+        severity: 'warning',
+        message: 'the schema does not declare Book and Person: its GraphMeta must DECLARE each type',
+        code: 'GN713',
+        fix: 'add a DECLARES link from g_schema to each',
+        insert: {
+          line: 3,
+          character: OLD.split('\n')[3].length,
+          text: ',\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)',
+        },
+        fixTitle: 'Declare each type',
+      },
+    ]);
+    const fixed = OLD + ',\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)';
+    assert.deepEqual(readNote([DATA, fixed]).problems, []);
+  });
+
+  test('with no GraphMeta at all, the fix writes one too', () => {
+    const none = OLD.replace("(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n", '');
+    const [p] = readNote([DATA, none]).problems;
+    assert.equal(p.message, 'the schema has no GraphMeta to declare Book and Person: each type must be declared');
+    assert.equal(
+      p.insert.text,
+      ",\n(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)",
+    );
+    const fixed = none + p.insert.text;
+    assert.deepEqual(readNote([DATA, fixed]).problems, []);
+  });
+
+  test('a draft, or a schema that declares each type, has no such warning', () => {
+    assert.deepEqual(readNote([DATA]).problems, []);
+  });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('is found where the types are spaced with U+180E', () => {
+    const spaced = OLD.replaceAll('(kind_', '(\u{180e}kind_').replaceAll(':Meta:', '\u{180e}:\u{180e}Meta:');
+    assert.equal(
+      readNote([DATA, spaced]).problems[0]?.message,
+      'the schema does not declare Book and Person: its GraphMeta must DECLARE each type',
+    );
+  });
+});
+
+describe('a kind or link type the locked graph’s schema does not declare', () => {
+  // the try-out of 8 Oct 2026. A graph was locked from its first block, then given HOPE, Reason and FAVOURS. The schema
+  // never declared them, yet it showed "No problems" on its cards
+  const STEP1 = [
+    '// graph: trip · SOURCE',
+    "(trip_question:Question {title: 'How should we get to Sydney?'}),",
+    "(drive:Option {name: 'Drive'}),",
+    "(fly:Option   {name: 'Fly'}),",
+    '(drive)-[:ANSWERS {weight: 0.6}]->(trip_question),',
+    '(fly)-[:ANSWERS]->(trip_question),',
+    '(drive)-[:HOPE]->(trip_question)',
+  ].join('\n');
+  const STEP2 = [
+    '// graph: trip · SOURCE',
+    "(cheaper:Reason {title: 'Driving costs less for two people'}),",
+    "(faster:Reason  {title: 'Flying takes a morning, not two days'}),",
+    '(cheaper)-[:FAVOURS]->(drive),',
+    '(faster)-[:FAVOURS]->(fly)',
+  ].join('\n');
+  const SCHEMA = [
+    '// graph: trip · SOURCE',
+    "(trip_schema:GraphMeta {graph: 'trip', schema: 'trip@1'}),",
+    "(kind_option:Meta:ElementType {name: 'Option', kind: 'node', origin: 'source'}),",
+    "(kind_question:Meta:ElementType {name: 'Question', kind: 'node', origin: 'source'}),",
+    "(link_answers:Meta:ElementType {name: 'ANSWERS', kind: 'edge', origin: 'source', reading: 'answers', reverse_name: 'is answered by'}),",
+    '(trip_schema)-[:DECLARES]->(kind_option), (trip_schema)-[:DECLARES]->(kind_question), (trip_schema)-[:DECLARES]->(link_answers)',
+  ].join('\n');
+  const blocks = [STEP1, STEP2, SCHEMA];
+  const on = (r, block) => r.problems.filter((p) => p.block === block).map((p) => [p.line, p.severity, p.message]);
+
+  test('each card says so for what its own block uses: a warning on the line, saying where to declare it', () => {
+    assert.deepEqual(on(readNote(blocks, 0), 0), [
+      [
+        7,
+        'warning',
+        'HOPE is not a relationship type the schema of graph trip declares: declare it there, or use one it does',
+      ],
+    ]);
+    assert.deepEqual(on(readNote(blocks, 1), 1), [
+      [2, 'warning', 'Reason is not a kind the schema of graph trip declares: declare it there, or use one it does'],
+      [
+        4,
+        'warning',
+        'FAVOURS is not a relationship type the schema of graph trip declares: declare it there, or use one it does',
+      ],
+    ]);
+  });
+
+  test('a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported', () => {
+    assert.deepEqual(readNote([STEP1, STEP2]).problems, []);
+    assert.deepEqual(on(readNote(blocks), 2), []);
+  });
+
+  // whitespace as GQL names it (graph spec §3), U+180E among it, as the reader reads the block (10 Oct 2026)
+  test('a kind and a link type spaced with U+180E are found, as the reader reads them', () => {
+    const spaced = STEP2.replace('(cheaper:Reason', '(\u{180e}cheaper\u{180e}:\u{180e}Reason').replace(
+      '(cheaper)-[:FAVOURS]',
+      '(cheaper)-[\u{180e}:\u{180e}FAVOURS]',
+    );
+    assert.deepEqual(
+      on(readNote([STEP1, spaced, SCHEMA], 1), 1).map(([line, , message]) => [line, message.split(' ')[0]]),
+      [
+        [2, 'Reason'],
+        [4, 'FAVOURS'],
+      ],
+    );
+  });
+});

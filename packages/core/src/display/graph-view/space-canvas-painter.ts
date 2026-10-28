@@ -1,0 +1,363 @@
+// The 2D canvas painter of the 3D view (editor spec §53, scale_space_painters), for a device with neither WebGPU nor
+// WebGL 2. And the 3D view's text, which the 2D canvas always paints, on a canvas laid over the shapes. Which names
+// are painted, and how big, space-labels.ts picks.
+import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
+import type { ScreenCard, SpaceFrame } from '../../space-cards.ts';
+import { FACE_ROW } from '../../space-faces.ts';
+import type { FaceText } from '../../space-faces.ts';
+import { FIELD, projectPoint } from '../../space-view.ts';
+import { BALL_LIGHT } from '../../palette.ts';
+import type { Paints } from './mark-painter.ts';
+import { paintOutlines } from './space-painter.ts';
+import type { SpacePainter } from './space-painter.ts';
+
+/** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
+const clear = (c: string) => !c || c === 'transparent' || /,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
+
+/**
+ * The colour seen behind `el`: its own background, or the first painted one of the elements round it. The system's page
+ * colour, `Canvas`, only when none is painted, as it can differ from the theme's.
+ */
+export function backgroundOf(el: Element): string {
+  const win = el.ownerDocument.defaultView;
+  for (let at: Element | null = el; at && win; at = at.parentElement) {
+    const c = win.getComputedStyle(at).backgroundColor;
+    if (!clear(c)) return c;
+  }
+  return 'Canvas';
+}
+
+/** A block's four top corners and four floor corners, as points of the space. */
+function cornersOf(b: Block): Vec3[] {
+  const ring = [
+    [b.x, b.y],
+    [b.x + b.width, b.y],
+    [b.x + b.width, b.y + b.depth],
+    [b.x, b.y + b.depth],
+  ] as const;
+  return [...ring.map(([x, y]): Vec3 => [x, y, b.floor + b.tall]), ...ring.map(([x, y]): Vec3 => [x, y, b.floor])];
+}
+
+/**
+ * The 2D canvas painter of the 3D view: every device has it. It paints each block's sides and top, far blocks first,
+ * so near ones cover them. It is slower than the graphics chip, so it suits a few thousand blocks.
+ */
+export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | null {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  let width = 1,
+    height = 1,
+    ratio = 1;
+  return {
+    kind: 'canvas',
+    resize(w, h, r) {
+      width = Math.max(1, w);
+      height = Math.max(1, h);
+      ratio = r;
+      canvas.width = Math.max(1, Math.round(w * r));
+      canvas.height = Math.max(1, Math.round(h * r));
+    },
+    paint(space, matrix, paints) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineWidth = 1;
+      if (space.round) return paintBalls(ctx, space, matrix, paints, width, height);
+      const placed = space.blocks
+        .map((b) => ({ b, at: cornersOf(b).map((p) => projectPoint(matrix, p, width, height)) }))
+        .filter(({ at }) => at.every((p) => p !== null))
+        .map(({ b, at }) => {
+          const points = at as { x: number; y: number; far: number }[];
+          return { b, points, far: points.reduce((n, p) => n + p.far, 0) / points.length };
+        })
+        .sort((a, b) => b.far - a.far);
+      for (const { b, points } of placed) {
+        const paint = paints(b.style);
+        // the four sides, far ones first, then the top: so the sides facing the camera cover the ones facing away
+        const farOf = (face: number[]) => face.reduce((n, k) => n + (points[k]?.far ?? 0), 0);
+        const sides = [
+          [0, 1, 5, 4],
+          [1, 2, 6, 5],
+          [2, 3, 7, 6],
+          [3, 0, 4, 7],
+        ].sort((a, b) => farOf(b) - farOf(a));
+        for (const face of [...sides, [0, 1, 2, 3]]) {
+          ctx.beginPath();
+          face.forEach((k, i) => {
+            const p = points[k] as { x: number; y: number };
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.closePath();
+          if (paint.fill) {
+            ctx.fillStyle = paint.fill;
+            ctx.fill();
+          }
+          if (paint.line) {
+            ctx.strokeStyle = paint.line;
+            ctx.stroke();
+          }
+        }
+      }
+      for (const l of space.lines) {
+        const line = paints(l.style).line;
+        if (!line) continue;
+        ctx.beginPath();
+        let drawing = false;
+        for (const p of l.points) {
+          const at = projectPoint(matrix, p, width, height);
+          if (!at) {
+            drawing = false;
+            continue;
+          }
+          if (drawing) ctx.lineTo(at.x, at.y);
+          else ctx.moveTo(at.x, at.y);
+          drawing = true;
+        }
+        ctx.strokeStyle = line;
+        ctx.stroke();
+      }
+    },
+    painted: () => Promise.resolve(),
+    destroy() {
+      canvas.width = canvas.height = 0;
+    },
+  };
+}
+
+/** How much thicker the picked thing's links are drawn in 3D than the rest, in pixels. */
+const STRONG = 1.5;
+/** How far into an arrowhead its back is notched, as a share of its length: the shape of a diagram's arrow. */
+const NOTCH = 0.25;
+
+/**
+ * Paints `frame`'s picked links, its arrowheads, its cards, then its labels, on `ctx`, already at their pixels
+ * (space-cards.ts). Arrowheads are in their link's colour, edged with the page colour so they read where links meet.
+ * Labels have a halo of the page colour so they read over blocks. The picked thing's ring, or its card's edge, is in
+ * `ink`.
+ */
+export function paintSpaceLabels(
+  ctx: CanvasRenderingContext2D,
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> &
+    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts' | 'outlines'>>,
+  paints: Paints,
+  ratio: number,
+  halo: string,
+  ink: string,
+) {
+  const { labels, arrows, ring } = frame;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  paintOutlines(ctx, frame.outlines ?? [], paints, halo, ink);
+  // every link as a solid line, then the picked thing's links, or the picked link, thicker, under the cards in front
+  const widest = Math.max(0, ...(frame.shafts ?? []).map((l) => l.width));
+  const lines = [
+    ...(frame.shafts ?? []),
+    ...(frame.strong ?? []).map((l) => ({ ...l, width: Math.max(widest, 1) + STRONG })),
+  ];
+  for (const l of lines) {
+    const line = paints(l.style).line;
+    if (!line || l.points.length < 2) continue;
+    ctx.beginPath();
+    l.points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.lineWidth = l.width;
+    ctx.strokeStyle = line;
+    ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.lineWidth = 1;
+  // each arrowhead a bold, notched triangle in its link's colour, edged in the page colour where links meet
+  for (const a of arrows) {
+    const line = paints(a.style).line;
+    if (!line) continue;
+    const notch = {
+      x: a.tip.x + ((a.left.x + a.right.x) / 2 - a.tip.x) * (1 - NOTCH),
+      y: a.tip.y + ((a.left.y + a.right.y) / 2 - a.tip.y) * (1 - NOTCH),
+    };
+    ctx.beginPath();
+    ctx.moveTo(a.tip.x, a.tip.y);
+    ctx.lineTo(a.left.x, a.left.y);
+    ctx.lineTo(notch.x, notch.y);
+    ctx.lineTo(a.right.x, a.right.y);
+    ctx.closePath();
+    ctx.fillStyle = line;
+    ctx.fill();
+    ctx.strokeStyle = halo;
+    ctx.stroke();
+  }
+  ctx.lineJoin = 'round';
+  // cards after the arrowheads, which sit at their edges: a card in front hides the arrowheads behind it
+  paintCards(ctx, frame.cards, paints, halo, ink);
+  paintFaces(ctx, frame.faces ?? [], paints, ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  // the picked thing's ring: its ink edged both sides in the page colour, so it shows in either theme
+  if (ring) {
+    ctx.beginPath();
+    ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+    ctx.strokeStyle = halo;
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  // far ones first, so the nearest is on top
+  for (const l of [...labels].reverse()) {
+    const text = paints(l.style).text;
+    if (!text) continue;
+    // the picked thing's name is bold, with a wider halo, so it stands out from the rest.
+    // A link's words are in italics, so they read as what joins things rather than as a thing
+    ctx.font = `${l.picked ? 'bold ' : l.link ? 'italic ' : ''}${l.size}px sans-serif`;
+    ctx.lineWidth = Math.max(l.picked ? 4 : 2, l.size / (l.picked ? 3 : 5));
+    ctx.strokeStyle = halo;
+    ctx.strokeText(l.text, l.x, l.y);
+    ctx.fillStyle = text;
+    ctx.fillText(l.text, l.x, l.y);
+  }
+}
+
+/**
+ * Paints each name on its face (space_text_on_face): laid along the face, edged in the thing's own colour, as in 2D.
+ * Each row is held to the face's width, so it never runs past its edge.
+ */
+function paintFaces(ctx: CanvasRenderingContext2D, faces: readonly FaceText[], paints: Paints, ratio: number) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const f of faces) {
+    const text = paints(f.style).text,
+      ground = paints(f.ground);
+    if (!text) continue;
+    const [ax, ay] = f.across,
+      [dx, dy] = f.down;
+    ctx.setTransform(ratio * ax, ratio * ay, ratio * dx, ratio * dy, ratio * f.x, ratio * f.y);
+    ctx.font = `${f.picked ? 'bold ' : ''}${f.size}px sans-serif`;
+    ctx.lineWidth = f.size / 5;
+    ctx.strokeStyle = ground.fill ?? ground.line ?? 'transparent';
+    f.rows.forEach((row, i) => {
+      const y = (i - (f.rows.length - 1) / 2) * f.size * FACE_ROW;
+      ctx.strokeText(row, 0, y, f.room);
+      ctx.fillStyle = text;
+      ctx.fillText(row, 0, y, f.room);
+    });
+  }
+}
+
+/**
+ * Paints `space`'s blocks as balls and its lines, all far ones first, so nearer ones cover them. Each ball is a circle
+ * lit from above and the left, edged in its outline colour.
+ */
+function paintBalls(
+  ctx: CanvasRenderingContext2D,
+  space: SpaceMarks,
+  matrix: Float32Array,
+  paints: Paints,
+  width: number,
+  height: number,
+) {
+  const focal = height / 2 / Math.tan(FIELD / 2);
+  const items: { far: number; paint: () => void }[] = [];
+  for (const b of space.blocks) {
+    const r = b.width / 2;
+    const c = projectPoint(matrix, [b.x + r, b.y + r, b.floor + r], width, height);
+    if (!c) continue;
+    const seen = (r * focal) / c.far,
+      paint = paints(b.style);
+    items.push({
+      far: c.far,
+      paint: () => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, seen, 0, Math.PI * 2);
+        // filled as the graphics chip fills it: in its outline colour where its style gives no fill
+        const fill = paint.fill ?? paint.line;
+        if (fill) {
+          ctx.fillStyle = fill;
+          ctx.fill();
+          const light = ctx.createRadialGradient(c.x - seen / 3, c.y - seen / 3, seen / 10, c.x, c.y, seen);
+          light.addColorStop(0, BALL_LIGHT.shine);
+          light.addColorStop(1, BALL_LIGHT.shade);
+          ctx.fillStyle = light;
+          ctx.fill();
+        }
+        if (paint.line) {
+          ctx.strokeStyle = paint.line;
+          ctx.stroke();
+        }
+      },
+    });
+  }
+  for (const l of space.lines) {
+    const line = paints(l.style).line;
+    if (!line) continue;
+    for (let i = 1; i < l.points.length; i++) {
+      const a = projectPoint(matrix, l.points[i - 1] as Vec3, width, height),
+        b = projectPoint(matrix, l.points[i] as Vec3, width, height);
+      if (!a || !b) continue;
+      items.push({
+        far: (a.far + b.far) / 2,
+        paint: () => {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = line;
+          ctx.stroke();
+        },
+      });
+    }
+  }
+  items.sort((p, q) => q.far - p.far);
+  for (const item of items) item.paint();
+}
+
+/** How round a card's corners are, in pixels. */
+const CARD_CORNER = 6;
+
+/**
+ * Paints `cards`, far ones first, each filled and edged as its box is in 2D, with its words in rows inside. The picked
+ * card is edged in `ink`, with the page colour both sides, so it shows in either theme.
+ */
+function paintCards(
+  ctx: CanvasRenderingContext2D,
+  cards: readonly ScreenCard[],
+  paints: Paints,
+  halo: string,
+  ink: string,
+) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const c of cards) {
+    const paint = paints(c.block.style);
+    ctx.beginPath();
+    ctx.roundRect(c.x - c.width / 2, c.y - c.height / 2, c.width, c.height, Math.min(CARD_CORNER, c.height / 4));
+    // the page colour first: a thing's fill is often see-through, and a card must hide the lines and cards behind it
+    ctx.fillStyle = halo;
+    ctx.fill();
+    if (paint.fill) {
+      ctx.fillStyle = paint.fill;
+      ctx.fill();
+    }
+    if (c.picked) {
+      ctx.strokeStyle = halo;
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = 3;
+    } else {
+      ctx.strokeStyle = paint.line ?? ink;
+      ctx.lineWidth = 1;
+    }
+    ctx.stroke();
+    if (!c.rows.length) continue;
+    ctx.font = `${c.picked ? 'bold ' : ''}${c.size}px sans-serif`;
+    ctx.fillStyle = paint.text ?? ink;
+    const row = c.size * 1.25,
+      top = c.y - ((c.rows.length - 1) * row) / 2;
+    c.rows.forEach((r, i) => ctx.fillText(r, c.x, top + i * row));
+  }
+}

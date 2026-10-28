@@ -1,0 +1,1292 @@
+{
+  "W0": {
+    "title": "Slice switch and zoom",
+    "size": "S",
+    "requirements": [
+      "zoom_out_to_fit",
+      "zoom_fit_recomputed"
+    ]
+  },
+  "W1": {
+    "title": "Focus, hover and untangle",
+    "size": "L",
+    "requirements": [
+      "focus_neighbours",
+      "focus_link",
+      "focus_readable",
+      "focus_cleared",
+      "focus_depth",
+      "hover_highlight",
+      "hover_not_alone",
+      "hover_still",
+      "untangle_neighbourhood",
+      "untangle_toggle",
+      "untangle_regroup",
+      "untangle_legend",
+      "untangle_path",
+      "untangle_find",
+      "untangle_keyboard",
+      "untangle_data_untouched"
+    ]
+  },
+  "W2": {
+    "title": "Details navigation and sheet",
+    "size": "M",
+    "requirements": [
+      "details_links_listed",
+      "details_choose_moves",
+      "details_move_motion",
+      "details_trail",
+      "selection_pointer",
+      "details_on_screen",
+      "sheet_pinned",
+      "sheet_keeps_thing_clear",
+      "sheet_min_max",
+      "sheet_state_remembered",
+      "sheet_closed",
+      "sheet_reachable",
+      "sheet_docked",
+      "sheet_resized",
+      "details_scroll",
+      "sheet_layout_kept",
+      "details_in_host_pane",
+      "note_open_beside"
+    ]
+  },
+  "W3": {
+    "title": "Folding, routing and the View menu",
+    "size": "M",
+    "requirements": [
+      "untangle_labels",
+      "untangle_hubs",
+      "untangle_groups",
+      "untangle_merge",
+      "untangle_routing",
+      "view_switches",
+      "view_switch_defaults",
+      "view_switch_view_only"
+    ]
+  },
+  "W4": {
+    "title": "Arrows and inline properties",
+    "size": "M",
+    "requirements": [
+      "arrows_switchable",
+      "arrows_shown_unless_hidden",
+      "direction_never_lost",
+      "arrows_both_renderers",
+      "properties_switch",
+      "properties_remembered",
+      "properties_readable",
+      "crowded_properties"
+    ]
+  },
+  "W5": {
+    "title": "Diagram types",
+    "size": "M",
+    "requirements": [
+      "diagram_type_set",
+      "type_only_when_fits",
+      "tree_fits",
+      "timeline_fits",
+      "suggest_type",
+      "type_remembered",
+      "type_one_look",
+      "type_one_way_to_work",
+      "type_both_renderers",
+      "type_stops_fitting",
+      "large_way_in",
+      "wide_types_phone"
+    ]
+  },
+  "W6": {
+    "title": "Data export",
+    "size": "S",
+    "requirements": [
+      "export_data_formats",
+      "export_lossless",
+      "big_export"
+    ]
+  },
+  "W7": {
+    "title": "Links, attachments and rich details",
+    "size": "M",
+    "requirements": [
+      "links_shown",
+      "host_opens_links",
+      "attachments_at_a_glance",
+      "link_preview",
+      "back_where_you_were",
+      "broken_links_problems",
+      "renames_follow",
+      "safe_to_click",
+      "links_by_keyboard",
+      "rich_details",
+      "node_is_a_note",
+      "remote_images_asked"
+    ]
+  },
+  "W8": {
+    "title": "Proposals",
+    "size": "M",
+    "requirements": [
+      "proposal_shown_not_applied",
+      "proposal_one_by_one",
+      "accepting_is_an_edit",
+      "rejecting_recorded",
+      "proposal_provenance",
+      "person_decides",
+      "big_proposal",
+      "proposals_phone",
+      "proposals_read_back",
+      "proposals_checked",
+      "decider_named"
+    ]
+  },
+  "W9": {
+    "title": "AI",
+    "size": "L",
+    "requirements": [
+      "ai_off_until_chosen",
+      "host_ai_first",
+      "user_models",
+      "models_by_purpose",
+      "keys_kept_secret",
+      "model_ceiling",
+      "never_above_ceiling",
+      "never_credential",
+      "user_chooses_what",
+      "seen_before_sent",
+      "never_in_background",
+      "answers_are_proposals",
+      "record_every_send",
+      "ai_unreachable",
+      "ai_disclosed",
+      "unclassified_strictest"
+    ]
+  },
+  "W10": {
+    "title": "Sources, steps and views across notes",
+    "size": "M",
+    "requirements": [
+      "many_views_one_data",
+      "view_of_another_note",
+      "gql_file_source",
+      "gql_file_missing",
+      "db_import_on_request",
+      "settings_db_connections",
+      "graph_step_io",
+      "step_inputs_checked",
+      "run_declared_only",
+      "step_output_proposal"
+    ]
+  },
+  "W11": {
+    "title": "Link flow and path play",
+    "size": "M",
+    "requirements": [
+      "links_show_flow",
+      "flow_in_style_graph",
+      "motion_not_alone",
+      "path_autoplay",
+      "path_animation_export",
+      "animation_export_fits",
+      "motion_reduced_respected"
+    ]
+  },
+  "W12": {
+    "title": "Animated images",
+    "size": "S",
+    "requirements": [
+      "animated_image_shown",
+      "animation_pause_play",
+      "animated_image_limited",
+      "export_animation_stated"
+    ]
+  },
+  "W13": {
+    "title": "Notes reader parity",
+    "size": "M",
+    "requirements": [
+      "note_comment",
+      "note_text",
+      "note_never_other_comments",
+      "note_one_owner",
+      "note_both_readers",
+      "note_standard"
+    ]
+  },
+  "W14": {
+    "title": "Notes in the editor",
+    "size": "S",
+    "requirements": [
+      "note_shown",
+      "note_callouts",
+      "note_kept_by_edits",
+      "note_add"
+    ]
+  },
+  "W15": {
+    "title": "Viewer aids",
+    "size": "M",
+    "requirements": [
+      "mini_map",
+      "mini_map_setting",
+      "details_always_visible",
+      "details_narrow",
+      "quick_info",
+      "quick_info_no_hover_only"
+    ]
+  },
+  "C0": {
+    "title": "Editor server and its security",
+    "size": "M",
+    "requirements": [
+      "cc_loopback_only",
+      "cc_one_server",
+      "cc_session_token",
+      "cc_token_unkept",
+      "cc_host_checked",
+      "cc_origin_checked",
+      "cc_csp",
+      "cc_body_limit",
+      "cc_no_remote",
+      "cc_server_stops",
+      "cc_threats_tested"
+    ]
+  },
+  "C1": {
+    "title": "Editor note store",
+    "size": "M",
+    "requirements": [
+      "cc_open_notes_only",
+      "cc_no_escape",
+      "cc_atomic_write",
+      "cc_write_if_unchanged",
+      "cc_redrawn_on_change",
+      "cc_drafts_outside",
+      "cc_undo_safe"
+    ]
+  },
+  "C2": {
+    "title": "Editor in the Claude Code mod",
+    "size": "S",
+    "requirements": [
+      "cc_editor_opens",
+      "cc_start_failure",
+      "cc_transcript_clean"
+    ]
+  },
+  "C3": {
+    "title": "Classification in the core and the Claude ceiling",
+    "size": "S",
+    "requirements": [
+      "cc_classified_asks",
+      "cc_credential_never"
+    ]
+  },
+  "C4": {
+    "title": "Shared display layer",
+    "size": "S",
+    "requirements": [
+      "cc_core_only",
+      "cc_same_bytes"
+    ]
+  },
+  "C5": {
+    "title": "Browser host shell",
+    "size": "M",
+    "requirements": [
+      "cc_text_not_html",
+      "cc_one_renderer",
+      "cc_worker_same_origin",
+      "cc_theme_follows",
+      "cc_icons",
+      "cc_settings_shared",
+      "cc_offline"
+    ]
+  },
+  "C6": {
+    "title": "Editor export",
+    "size": "S",
+    "requirements": [
+      "cc_exports_new_only",
+      "cc_export_same"
+    ]
+  },
+  "C7": {
+    "title": "Proposals from Claude",
+    "size": "S",
+    "requirements": [
+      "cc_claude_only",
+      "cc_claude_proposes"
+    ]
+  },
+  "C8": {
+    "title": "Editor accessibility and motion",
+    "size": "S",
+    "requirements": [
+      "cc_keyboard",
+      "cc_reduced_motion",
+      "cc_text_version"
+    ]
+  },
+  "S3": {
+    "title": "Slice end",
+    "size": "S",
+    "requirements": [
+      "done_means_proved"
+    ]
+  },
+  "W16": {
+    "title": "Type and instance",
+    "size": "L",
+    "requirements": [
+      "embedded_backends",
+      "type_instance_split",
+      "instance_inherits_type",
+      "type_suggestion_bundle",
+      "mesh_one_format",
+      "format_version_named",
+      "schema_version_moves",
+      "rename_follows_notes",
+      "same_as_across_graphs",
+      "mesh_text_canonical",
+      "mesh_index_rebuilds",
+      "mesh_work_in_engine",
+      "mesh_engine_parity",
+      "mesh_rebuilt_alike"
+    ]
+  },
+  "W17": {
+    "title": "Certainty and contested links",
+    "size": "L",
+    "requirements": [
+      "conflicts_flagged_kept",
+      "certainty_in_words",
+      "certainty_query_dimension",
+      "doubt_stays_local",
+      "contested_link_marker",
+      "hand_clusters_contestable",
+      "certainty_drawn"
+    ]
+  },
+  "W18": {
+    "title": "Time and provenance",
+    "size": "L",
+    "requirements": [
+      "history_before_join",
+      "two_kinds_of_time",
+      "changes_logged_with_provenance"
+    ]
+  },
+  "W19": {
+    "title": "Mesh join",
+    "size": "L",
+    "requirements": [
+      "mesh_join_reports_gaps",
+      "state_names_start_doubtful"
+    ]
+  },
+  "W20": {
+    "title": "Cluster certainty",
+    "size": "S",
+    "requirements": [
+      "centroid_cohesion",
+      "parent_floor_optional"
+    ]
+  },
+  "W21": {
+    "title": "Altitude and audience profiles",
+    "size": "M",
+    "requirements": [
+      "altitude_query_parameter",
+      "audience_profiles_named",
+      "altitude_relative_to_lens",
+      "sibling_drafts",
+      "one_profile_mechanism",
+      "altitude_composition_apart",
+      "browsing_leaves_no_links",
+      "altitude_topic_index",
+      "phase_shifts_altitude"
+    ]
+  },
+  "W22": {
+    "title": "Lenses as graph data",
+    "size": "S",
+    "requirements": [
+      "lens_is_saved_query",
+      "lens_library",
+      "lens_freshness"
+    ]
+  },
+  "W23": {
+    "title": "Process core and views",
+    "size": "M",
+    "requirements": [
+      "transitions_walkable",
+      "hybrid_transitions",
+      "guards_are_data",
+      "run_log_is_truth",
+      "machines_inside_states",
+      "one_process_core",
+      "core_of_eight",
+      "views_declare_limits",
+      "edits_from_any_view",
+      "process_views_cached",
+      "running_rule_override"
+    ]
+  },
+  "W24": {
+    "title": "Runs, tests and debugger",
+    "size": "M",
+    "requirements": [
+      "test_runs_flagged",
+      "process_debugger",
+      "test_run_source",
+      "test_runs_leave_certainty",
+      "intent_checks",
+      "saved_scenarios",
+      "side_effects_stubbed",
+      "playback_controller"
+    ]
+  },
+  "W25": {
+    "title": "Trust in the drawing and the theme graph",
+    "size": "M",
+    "requirements": [
+      "drawing_follows_engine",
+      "drawing_holds_no_state",
+      "accessibility_queryable",
+      "accessibility_lenses_run",
+      "render_cascade",
+      "theme_graph",
+      "theme_links_meaningful",
+      "drawing_history_diffs"
+    ]
+  },
+  "W26": {
+    "title": "AI query contract and write scoring",
+    "size": "M",
+    "requirements": [
+      "ai_systems_query",
+      "ai_minimal_contract",
+      "ai_provenance_with_results",
+      "ai_queries_untrusted",
+      "ai_write_scoring",
+      "external_writes_reviewed",
+      "auto_writes_roll_back"
+    ]
+  },
+  "W27": {
+    "title": "Export gaps and secrets",
+    "size": "M",
+    "requirements": [
+      "export_only_way_out",
+      "engine_never_sends",
+      "export_gap_summary",
+      "export_one_way",
+      "secrets_named_only",
+      "boundary_rules_on_export"
+    ]
+  },
+  "W28": {
+    "title": "Permissions",
+    "size": "M",
+    "requirements": [
+      "default_no_access",
+      "inferred_grants_never_open",
+      "grant_status_only_revokes",
+      "permissions_before_read",
+      "permissions_graph_native",
+      "role_grant_rules",
+      "permission_preview",
+      "contested_grants_paused"
+    ]
+  },
+  "W29": {
+    "title": "Personal profiles",
+    "size": "M",
+    "requirements": [
+      "profiles_at_display",
+      "profile_settings",
+      "reminders_sent_elsewhere",
+      "pacing_automatic",
+      "profiles_private",
+      "adapted_for_viewer",
+      "learning_review_lens"
+    ]
+  },
+  "W30": {
+    "title": "Encrypted local store and CRDT transport",
+    "size": "L",
+    "requirements": [
+      "crdt_transport",
+      "local_encrypted_store",
+      "five_layer_stack",
+      "encrypted_everywhere",
+      "same_join_every_author"
+    ]
+  },
+  "W31": {
+    "title": "Peer-to-peer network fabric",
+    "size": "L",
+    "requirements": [
+      "mesh_vpn_sync"
+    ]
+  },
+  "W32": {
+    "title": "iOS app",
+    "size": "L",
+    "requirements": [
+      "ios_app",
+      "android_app",
+      "mobile_checked"
+    ]
+  },
+  "W33": {
+    "title": "Web layer and corporate boundary",
+    "size": "L",
+    "requirements": [
+      "web_layer_separate",
+      "corporate_personal_split",
+      "boundary_contract",
+      "open_no_lock_in",
+      "platform_security_first",
+      "corporate_filtered_views",
+      "portable_no_servers",
+      "mesh_surfaces_share_data"
+    ]
+  },
+  "W34": {
+    "title": "WCAG 2.2 AA for every interface",
+    "size": "S",
+    "requirements": [
+      "wcag_aa",
+      "wcag_new_hosts",
+      "wcag_checked"
+    ]
+  },
+  "W35": {
+    "title": "Tests make their own files",
+    "size": "S",
+    "requirements": [
+      "tests_self_contained",
+      "test_files_generated"
+    ]
+  },
+  "W36": {
+    "title": "Moving boxes",
+    "size": "M",
+    "requirements": [
+      "drag_moves_box",
+      "hold_to_drag_touch",
+      "move_box_keyboard",
+      "radial_spoke_order",
+      "gestures_stay_in_drawing",
+      "card_keeps_focus_from_editor"
+    ]
+  },
+  "A1": {
+    "title": "Automated quality checks",
+    "size": "M",
+    "requirements": [
+      "a11y_keyboard_auto",
+      "keyboard_any_device",
+      "a11y_semantics_auto",
+      "a11y_targets_reflow_auto",
+      "ux_journey_auto",
+      "ux_copy_auto",
+      "visual_regression_auto",
+      "speed_budgets",
+      "thresholds_named",
+      "requirements_as_graph_note"
+    ]
+  },
+  "R1": {
+    "title": "Library release on GitHub",
+    "size": "S",
+    "requirements": [
+      "lib_github_release",
+      "lib_public_api",
+      "nightly_prerelease"
+    ]
+  },
+  "R2": {
+    "title": "Obsidian community release",
+    "size": "S",
+    "requirements": [
+      "community_listing",
+      "readme_status_generated"
+    ]
+  },
+  "L1": {
+    "title": "Host and storage contracts",
+    "size": "S",
+    "requirements": [
+      "host_contract_published",
+      "storage_contract"
+    ]
+  },
+  "H1": {
+    "title": "Standalone app",
+    "size": "L",
+    "requirements": [
+      "standalone_app",
+      "app_signed",
+      "apple_terms"
+    ]
+  },
+  "H2": {
+    "title": "VS Code plugin",
+    "size": "L",
+    "requirements": [
+      "vscode_plugin"
+    ]
+  },
+  "V1": {
+    "title": "Changes view and pull request review",
+    "size": "S",
+    "requirements": [
+      "changes_view",
+      "github_review_items"
+    ]
+  },
+  "D1": {
+    "title": "Project wiki and user guide",
+    "size": "M",
+    "requirements": [
+      "wiki_generated",
+      "user_guide_wiki",
+      "wiki_reviewed",
+      "developer_wiki",
+      "plan_vs_actual",
+      "plain_docs_auto",
+      "waves_on_time",
+      "plan_milestones",
+      "ideas_on_board"
+    ]
+  },
+  "G1": {
+    "title": "Language, culture and direction",
+    "size": "M",
+    "requirements": [
+      "words_catalogue",
+      "language_follows_host",
+      "problem_codes",
+      "locale_formats",
+      "locale_never_changes_bytes",
+      "locale_sorting",
+      "rtl_mirrors",
+      "bidi_labels",
+      "rtl_drawing_direction",
+      "pseudo_locales_checked",
+      "translations_as_files"
+    ]
+  },
+  "T1": {
+    "title": "Layer and contract tests, and tests picked by imports",
+    "size": "S",
+    "requirements": [
+      "hosts_pass_contract",
+      "layers_checked",
+      "affected_tests_by_imports",
+      "drawing_counts_regained"
+    ]
+  },
+  "P1": {
+    "title": "Plug-in interface",
+    "size": "M",
+    "requirements": [
+      "plugin_interface",
+      "plugin_manifest_limits",
+      "plugin_contract_suites",
+      "plugin_theme_tokens",
+      "plugin_rtl",
+      "trust_ai_provider_bounded",
+      "plugin_diagram_type_named",
+      "trust_diagram_type_data",
+      "trust_source_joined",
+      "trust_plugin_isolated",
+      "plugin_point_versions",
+      "plugin_outside_file",
+      "plugin_source_from",
+      "plugin_step_named",
+      "plugin_outside_page"
+    ]
+  },
+  "U1": {
+    "title": "Theming and the standard interface needs",
+    "size": "M",
+    "requirements": [
+      "ui_theme_tokens",
+      "forced_colours",
+      "text_scaling",
+      "colour_never_alone",
+      "progress_shown",
+      "first_run_help",
+      "shortcuts_listed",
+      "print_ready"
+    ]
+  },
+  "Q": {
+    "title": "Open questions",
+    "size": "S",
+    "requirements": []
+  },
+  "B1": {
+    "title": "Whiteboard: the board",
+    "size": "M",
+    "requirements": [
+      "board_view",
+      "board_is_text",
+      "board_items",
+      "board_cards_rich",
+      "board_glyphs_offline",
+      "board_keyboard",
+      "board_speed",
+      "board_exchange",
+      "board_look_and_direction",
+      "board_item_plugins"
+    ]
+  },
+  "B2": {
+    "title": "Whiteboard: board and graph",
+    "size": "M",
+    "requirements": [
+      "board_to_graph",
+      "board_graph_linked",
+      "board_link_kept",
+      "graph_on_board",
+      "board_relations_drawn",
+      "board_checked",
+      "board_ai_decompose",
+      "board_arranged_by_graph"
+    ]
+  },
+  "B3": {
+    "title": "Whiteboard: brainstorming",
+    "size": "M",
+    "requirements": [
+      "board_quick_capture",
+      "board_cluster",
+      "board_vote",
+      "board_templates",
+      "board_facilitation"
+    ]
+  },
+  "B4": {
+    "title": "Whiteboard: working together",
+    "size": "M",
+    "requirements": [
+      "board_live_together",
+      "board_offline_merge",
+      "board_presence",
+      "board_access",
+      "board_authorship",
+      "board_comments"
+    ]
+  },
+  "M1": {
+    "title": "Copilot Cowork skill",
+    "size": "M",
+    "requirements": [
+      "cowork_skill",
+      "cowork_core_only",
+      "cowork_same_bytes",
+      "cowork_drawing",
+      "cowork_ceiling",
+      "cowork_no_server",
+      "cowork_released"
+    ]
+  },
+  "X1": {
+    "title": "Text to graph with AI",
+    "size": "M",
+    "requirements": [
+      "text_to_graph",
+      "text_to_graph_one_contract",
+      "text_to_graph_checked",
+      "text_to_graph_in_editor",
+      "text_to_graph_skill",
+      "text_to_graph_merge",
+      "text_to_graph_sources"
+    ]
+  },
+  "D2": {
+    "title": "Project home page",
+    "size": "S",
+    "requirements": [
+      "landing_page",
+      "site_demo"
+    ]
+  },
+  "D3": {
+    "title": "Developer site",
+    "size": "S",
+    "requirements": [
+      "developer_site"
+    ]
+  },
+  "K1": {
+    "title": "Graphs in a GitHub repository",
+    "size": "S",
+    "requirements": [
+      "github_repo_store",
+      "github_repo_extract",
+      "github_repo_writes_reviewed",
+      "github_repo_access"
+    ]
+  },
+  "Y1": {
+    "title": "Claude presents and decides in Claude Code",
+    "size": "M",
+    "requirements": [
+      "claude_shows",
+      "claude_presents",
+      "presentation_kept",
+      "claude_asks_decision",
+      "decision_person_only",
+      "decision_recorded"
+    ]
+  },
+  "Y2": {
+    "title": "Graphs and decisions in Claude chat",
+    "size": "M",
+    "requirements": [
+      "mcp_app",
+      "mcp_app_one_core",
+      "mcp_app_local",
+      "mcp_app_page_bounded",
+      "mcp_app_remote"
+    ]
+  },
+  "GS1": {
+    "title": "Every graph-spec rule checked in CI",
+    "size": "S",
+    "requirements": [
+      "spec_rules_proved",
+      "spec_conformance_in_repo",
+      "spec_no_general_proof",
+      "spec_index_true"
+    ]
+  },
+  "GS2": {
+    "title": "The graph spec versioned and repaired",
+    "size": "M",
+    "requirements": [
+      "spec_versioned",
+      "spec_version_in_files",
+      "spec_version_released",
+      "spec_text_restored",
+      "spec_sections_named"
+    ]
+  },
+  "GS3": {
+    "title": "The graph format written down for other programs",
+    "size": "M",
+    "requirements": [
+      "spec_grammar",
+      "spec_canonical_form",
+      "spec_library_api",
+      "spec_formats_listed",
+      "spec_ai_wire"
+    ]
+  },
+  "GS4": {
+    "title": "Graph format security",
+    "size": "M",
+    "requirements": [
+      "spec_author_from_session",
+      "spec_join_trust",
+      "spec_read_limits",
+      "spec_guard_language",
+      "spec_hashes_named",
+      "spec_secrets_and_fences"
+    ]
+  },
+  "GS5": {
+    "title": "AI rules in the graph spec that agree",
+    "size": "S",
+    "requirements": [
+      "spec_ai_rules_agree"
+    ]
+  },
+  "GS6": {
+    "title": "A graph spec that reads easily",
+    "size": "S",
+    "requirements": [
+      "spec_decisions_explained",
+      "spec_glossary",
+      "spec_gentle_words",
+      "spec_display_rules_here"
+    ]
+  },
+  "GS7": {
+    "title": "Smaller graph-spec gaps",
+    "size": "M",
+    "requirements": [
+      "spec_process_versions",
+      "spec_engine_catalogue",
+      "spec_zoned_time",
+      "spec_conserved",
+      "spec_text_licence"
+    ]
+  },
+  "E1": {
+    "title": "Data tables and cubes",
+    "size": "M",
+    "requirements": [
+      "data_tables_design",
+      "data_set_reference",
+      "data_set_linked_or_kept",
+      "data_set_cache",
+      "data_set_access"
+    ]
+  },
+  "Z1": {
+    "title": "Massive graphs on your own machine",
+    "size": "L",
+    "requirements": [
+      "scale_design",
+      "scale_limits_revisited",
+      "scale_benchmark",
+      "scale_groups",
+      "scale_layout_cache",
+      "scale_overview",
+      "scale_painters",
+      "scale_gpu_painters",
+      "scale_progressive",
+      "scale_layout_static",
+      "scale_filter_live",
+      "scale_search_fly",
+      "scale_massive_card",
+      "scale_expand_on_demand",
+      "scale_facet_counts",
+      "scale_explore_trail",
+      "scale_level_of_detail",
+      "scale_space_view",
+      "scale_space_painters"
+    ]
+  },
+  "TM1": {
+    "title": "Trust model review",
+    "size": "M",
+    "requirements": [
+      "trust_model_written",
+      "trust_model_reviewed",
+      "trust_model_kept_current",
+      "trust_plugin_own_secrets"
+    ]
+  },
+  "ST1": {
+    "title": "Storage of your choice",
+    "size": "M",
+    "requirements": [
+      "storage_user_choice",
+      "storage_defaults",
+      "storage_history_layer"
+    ]
+  },
+  "V2": {
+    "title": "New view types on the drawing marks",
+    "size": "L",
+    "requirements": [
+      "view_types_offered",
+      "views_over_one_graph",
+      "multi_member_drawn",
+      "views_as_scaffolds",
+      "process_fold_marks",
+      "board_item_marks"
+    ]
+  },
+  "V3": {
+    "title": "Clusters on the shared groups engine",
+    "size": "M",
+    "requirements": [
+      "cluster_kind_recorded",
+      "multiple_membership",
+      "recursive_centroids",
+      "stored_centroids",
+      "centroid_cycle_guard",
+      "cycles_allowed_flagged",
+      "derivations_need_no_upkeep",
+      "centroids_correct_first"
+    ]
+  },
+  "Z2": {
+    "title": "Massive graphs read in parts",
+    "size": "M",
+    "requirements": [
+      "scale_in_parts"
+    ]
+  },
+  "RL1": {
+    "title": "Rules and looks",
+    "size": "M",
+    "requirements": [
+      "rule_look_when",
+      "rule_look_not_colour_alone",
+      "rule_look_order",
+      "rule_look_legend",
+      "rule_look_bands",
+      "rule_look_massive",
+      "rule_look_try_save"
+    ]
+  },
+  "CV1": {
+    "title": "Calculated values and the table view",
+    "size": "L",
+    "requirements": [
+      "calc_in_schema",
+      "calc_by_tools",
+      "calc_engines_agree",
+      "calc_gaps_said",
+      "calc_loops_flagged",
+      "calc_set_totals",
+      "calc_details_shown",
+      "table_view",
+      "calc_measures_shared"
+    ]
+  },
+  "IN1": {
+    "title": "Intents and the pole view",
+    "size": "L",
+    "requirements": [
+      "intent_thing",
+      "intent_links",
+      "intent_standing",
+      "intent_rule_links",
+      "intent_checks_folded",
+      "intent_overlay",
+      "intent_pole_view",
+      "intent_poles_massive"
+    ]
+  },
+  "AS1": {
+    "title": "AI suggestions for categories and intents",
+    "size": "M",
+    "requirements": [
+      "ai_suggest_values",
+      "ai_suggest_groups",
+      "ai_suggest_preview",
+      "ai_suggest_on_ask",
+      "ai_never_draws"
+    ]
+  },
+  "DX1": {
+    "title": "Discovery in large graphs",
+    "size": "L",
+    "requirements": [
+      "discover_group_by",
+      "discover_gap_lenses",
+      "discover_bulk_edit",
+      "discover_saved_trail",
+      "discover_working_set",
+      "discover_ask_plain",
+      "discover_as_at",
+      "discover_compare_sets",
+      "discover_group_names",
+      "discover_watch_rule"
+    ]
+  },
+  "CX1": {
+    "title": "Contexts: where links may join",
+    "size": "S",
+    "requirements": [
+      "context_named",
+      "context_guess_default",
+      "context_guess_filter",
+      "context_names_apart",
+      "context_same_as_confirmed",
+      "context_no_leak"
+    ]
+  },
+  "RP1": {
+    "title": "A picture for readers without ThoughtKnot",
+    "size": "M",
+    "requirements": [
+      "picture_for_readers",
+      "picture_opt_in",
+      "picture_hidden_when_drawn",
+      "picture_kept_in_step",
+      "picture_same_everywhere",
+      "picture_never_read",
+      "picture_self_explaining",
+      "picture_where",
+      "picture_big_graph",
+      "picture_classified",
+      "picture_outside_tools"
+    ]
+  },
+  "CN1": {
+    "title": "Connectors: one graph from many GQL sources",
+    "size": "M",
+    "requirements": [
+      "connector_many_sources",
+      "connector_joined_by_mesh",
+      "connector_order_free",
+      "connector_cites_source",
+      "connector_source_missing",
+      "connector_contract"
+    ]
+  },
+  "CN2": {
+    "title": "Connectors for text, CSV, Excel and SQLite files",
+    "size": "M",
+    "requirements": [
+      "connector_files_to_gql",
+      "connector_mapping_written",
+      "connector_derived_kept_apart",
+      "connector_text_proposed",
+      "connector_files_on_device"
+    ]
+  },
+  "CN3": {
+    "title": "Updates across connectors through the CRDT",
+    "size": "L",
+    "requirements": [
+      "connector_sync_written_only",
+      "connector_edit_goes_home",
+      "connector_overlay_for_readonly",
+      "connector_refresh_rejoins",
+      "connector_devices_agree"
+    ]
+  },
+  "GS8": {
+    "title": "The graph spec's axioms, stated and checked",
+    "size": "M",
+    "requirements": [
+      "axioms_listed",
+      "axioms_cited",
+      "axioms_on_generated_graphs",
+      "axioms_readers_agree",
+      "axioms_checker",
+      "axioms_safeguards",
+      "axioms_before_sync",
+      "axioms_consistent"
+    ]
+  },
+  "TS1": {
+    "title": "Temporal security: history, clocks, replay and expiry",
+    "size": "M",
+    "requirements": [
+      "temporal_erased_stays_erased",
+      "temporal_clock_not_trusted",
+      "temporal_replay_refused",
+      "temporal_checked_at_use"
+    ]
+  },
+  "SR1": {
+    "title": "Security response protocol",
+    "size": "S",
+    "requirements": [
+      "soc_detection_sources",
+      "soc_severity_targets",
+      "soc_response_steps",
+      "soc_report_routes",
+      "soc_practice_run"
+    ]
+  },
+  "DF1": {
+    "title": "Data formats: files as sources, content and parallel views",
+    "size": "M",
+    "requirements": [
+      "format_catalogue",
+      "format_plugin_contracts",
+      "format_parallel_views",
+      "format_content_node",
+      "format_graph_from_data",
+      "format_any_layout",
+      "format_text_first",
+      "format_untrusted_files",
+      "format_loss_stated",
+      "format_compose_out",
+      "format_html_sandboxed"
+    ]
+  },
+  "LE1": {
+    "title": "Our own layout engine: never text, groups as boxes, strategies",
+    "size": "M",
+    "requirements": [
+      "layout_never_text",
+      "layout_groups_as_boxes",
+      "layout_links_routed",
+      "layout_readability_scored",
+      "layout_work_counted",
+      "layout_real_fixtures",
+      "layout_strategy_variables",
+      "layout_pick_said",
+      "layout_own_default",
+      "layout_parts_packed",
+      "layout_kinds_read",
+      "layout_pick_tried",
+      "layout_checks_gated",
+      "layout_kind_lanes",
+      "layout_tidy_tree"
+    ]
+  },
+  "LE2": {
+    "title": "Live layout: the loop, the glide and the six layers",
+    "size": "M",
+    "requirements": [
+      "layout_live_loop",
+      "layout_glide",
+      "orientation_cues",
+      "space_mini_map",
+      "layout_concept_layers",
+      "layout_plugins"
+    ]
+  },
+  "PJ1": {
+    "title": "Projections: all on",
+    "size": "L",
+    "requirements": [
+      "projections_all_on",
+      "projection_fisheye",
+      "projection_hyperbolic",
+      "projection_sphere",
+      "projection_arc",
+      "projection_matrix",
+      "projection_hive",
+      "projection_map",
+      "projection_grid",
+      "projection_semantic_zoom",
+      "projection_spatial"
+    ]
+  },
+  "VP1": {
+    "title": "View presets by need: saved, safe and portable",
+    "size": "M",
+    "requirements": [
+      "view_presets_saved",
+      "view_presets_by_need",
+      "view_presets_floor",
+      "view_presets_os_wins",
+      "view_presets_scoped",
+      "view_presets_portable",
+      "view_presets_predictable",
+      "view_focus_support",
+      "view_motion_safe",
+      "view_reading_support",
+      "view_presets_evidence"
+    ]
+  },
+  "DR1": {
+    "title": "Drawings on the graph: ink, shapes and notes",
+    "size": "M",
+    "requirements": [
+      "sketch_drawn",
+      "sketch_is_text",
+      "sketch_pinned",
+      "sketch_pin_hidden",
+      "sketch_every_view",
+      "sketch_checked",
+      "sketch_toggle",
+      "sketch_click_rule",
+      "sketch_keyboard",
+      "sketch_reader_picture",
+      "sketch_to_graph"
+    ]
+  }
+}

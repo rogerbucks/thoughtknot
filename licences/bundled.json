@@ -1,0 +1,153 @@
+{
+  "about": "What each bundled package carries inside it, and under which licence, keyed by its exact version. When a version changes, the tests fail until the new version's contents are checked and recorded here. THIRD_PARTY_NOTICES.md is generated from this file by scripts/notices.mjs.",
+  "packages": {
+    "@viz-js/viz@3.31.0": {
+      "licence": "MIT",
+      "licenceText": "texts/viz-js.MIT.txt",
+      "source": "https://github.com/mdaines/viz-js",
+      "checked": "2026-10-07, from lib/provenance.json and packages/viz/backend in the viz-js repository",
+      "inside": [
+        {
+          "name": "Graphviz",
+          "version": "16.1.0",
+          "licence": "EPL-2.0",
+          "licenceText": "texts/graphviz.EPL-2.0.txt",
+          "provenance": "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/16.1.0/graphviz-16.1.0.tar.gz",
+          "source": "https://gitlab.com/graphviz/graphviz/-/tree/16.1.0",
+          "note": "Compiled unmodified to WebAssembly and inlined in the package's JavaScript. Its source is available under EPL-2.0 at the link above."
+        },
+        {
+          "name": "Expat",
+          "version": "2.8.5",
+          "licence": "MIT",
+          "licenceText": "texts/expat.MIT.txt",
+          "provenance": "https://github.com/libexpat/libexpat/releases/download/R_2_8_5/expat-2.8.5.tar.gz",
+          "source": "https://github.com/libexpat/libexpat/tree/R_2_8_5"
+        },
+        {
+          "name": "Emscripten",
+          "version": "6.0.10",
+          "licence": "MIT OR NCSA",
+          "licenceText": "texts/emscripten.MIT-NCSA.txt",
+          "provenance": "pkg:docker/emscripten/emsdk@6.0.10?platform=linux%2Famd64",
+          "source": "https://github.com/emscripten-core/emscripten/tree/6.0.10",
+          "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
+        }
+      ]
+    },
+    "marked@18.1.0": {
+      "licence": "MIT",
+      "licenceText": "texts/marked.MIT.txt",
+      "source": "https://github.com/markedjs/marked",
+      "checked": "2026-10-16, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.0, published 2026-10-05",
+      "inside": []
+    },
+    "sql.js@1.14.2": {
+      "licence": "MIT",
+      "licenceText": "texts/sql-js.MIT.txt",
+      "source": "https://github.com/sql-js/sql.js",
+      "checked": "2026-10-20, from the Makefile and .devcontainer/Dockerfile at v1.14.2 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
+      "inside": [
+        {
+          "name": "SQLite",
+          "version": "3.49.1",
+          "licence": "blessing",
+          "licenceText": "texts/sqlite.blessing.txt",
+          "provenance": "https://sqlite.org/2025/sqlite-amalgamation-3490100.zip",
+          "source": "https://www.sqlite.org/src/timeline?t=version-3.49.1",
+          "note": "Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20)."
+        },
+        {
+          "name": "Emscripten",
+          "version": "5.0.0",
+          "licence": "MIT OR NCSA",
+          "licenceText": "texts/emscripten.MIT-NCSA.txt",
+          "provenance": "pkg:docker/emscripten/emsdk@5.0.0",
+          "source": "https://github.com/emscripten-core/emscripten/tree/5.0.0",
+          "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
+        }
+      ]
+    },
+    "lucide-icons@redrawn": {
+      "licence": "ISC AND MIT",
+      "licenceText": "texts/lucide.ISC.txt",
+      "source": "https://github.com/lucide-icons/lucide",
+      "checked": "2026-10-16: not an npm package; the browser editor's icon files (packages/claude-code/page/icons/) are drawn by hand after Lucide's shapes, none copied as a file, and credited here as Lucide asks",
+      "inside": []
+    }
+  },
+  "buildToolExceptions": {
+    "minimatch": {
+      "licence": "BlueOak-1.0.0",
+      "reason": "A permissive licence (Blue Oak Model License). Used by ESLint to match file names; never bundled."
+    },
+    "argparse": {
+      "licence": "Python-2.0",
+      "reason": "A permissive licence (Python Software Foundation License). Used by a lint dependency to read options; never bundled."
+    },
+    "eslint-plugin-no-unsanitized": {
+      "licence": "MPL-2.0",
+      "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. Part of the Obsidian review rules; run at lint time, never bundled or modified."
+    },
+    "axe-core": {
+      "licence": "MPL-2.0",
+      "reason": "Weak copyleft at the file level, applying only to its own files if modified and distributed. The accessibility checker the WCAG tests run (test/wcag.test.js, spec §11); used in tests only, never bundled or modified."
+    },
+    "@csstools/color-helpers": {
+      "licence": "MIT-0",
+      "reason": "A permissive licence (MIT with no attribution condition). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "@csstools/css-syntax-patches-for-csstree": {
+      "licence": "MIT-0",
+      "reason": "A permissive licence (MIT with no attribution condition). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "lru-cache": {
+      "licence": "BlueOak-1.0.0",
+      "reason": "A permissive licence (Blue Oak Model License). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    },
+    "mdn-data": {
+      "licence": "CC0-1.0",
+      "reason": "Public-domain dedication (data about CSS). Read by jsdom, the DOM the WCAG tests run in; tests only, never bundled."
+    }
+  },
+  "ciOnlyTools": {
+    "about": "The one allowance for a GPL tool (spec §13, build_tool_licences): a build tool that is not shipped should carry a licence on the allow-list, and a GPL tool is allowed only where it runs in CI alone and is never shipped. Each is installed by the CI runner's package manager in the jobs named, and in the developer-only images named (a container for counting on one's own machine, never shipped or published), never by npm, never in node_modules, and never in the job that builds what a release ships; test/licences.test.js holds that.",
+    "tools": {
+      "valgrind": {
+        "licence": "GPL-3.0",
+        "licenceSource": "https://valgrind.org/docs/manual/manual-intro.html",
+        "installedBy": "sudo apt-get install -y --no-install-recommends valgrind",
+        "jobs": [
+          "quality-baseline.yml measure",
+          "release-check.yml quality",
+          "release.yml quality"
+        ],
+        "images": [
+          "docker/benchmarks.Dockerfile"
+        ],
+        "reason": "Its Cachegrind counts the instructions the benchmarks take (scripts/instruction-counts.mjs). Running a GPL program is unrestricted (GPLv3 §2), the counts it writes are not a work covered by it, and nothing of it is copied, linked or shipped."
+      }
+    }
+  },
+  "desktopBuildLibraries": {
+    "about": "The one allowance for system libraries (spec §13, build_tool_licences; spec §41, standalone_app): what the desktop app builds against on Linux, and what its real-app test needs. Roger chose it on 22 Oct 2026 (PR #911). Each is installed by apt-get in the one job named, never by npm, never in node_modules, never bundled. None may be GPL: WebKitGTK is linked from the system at run time, as LGPL allows. Check the LGPL duties again before the first Linux package that bundles libraries, such as an AppImage. test/licences.test.js holds this.",
+    "job": "desktop-app.yml build",
+    "libraries": {
+      "libwebkit2gtk-4.1-dev": {
+        "licence": "LGPL-2.0-or-later",
+        "licenceSource": "https://webkitgtk.org/",
+        "reason": "WebKitGTK, the window Tauri draws on Linux. The app is built against its headers and loads it from the system at run time; nothing of it is copied in."
+      },
+      "webkit2gtk-driver": {
+        "licence": "LGPL-2.0-or-later",
+        "licenceSource": "https://webkitgtk.org/",
+        "reason": "WebKitGTK's WebDriver, which tauri-driver drives for test/standalone-app.test.js. Test only, never shipped."
+      },
+      "xvfb": {
+        "licence": "MIT",
+        "licenceSource": "https://gitlab.freedesktop.org/xorg/xserver/-/blob/master/COPYING",
+        "reason": "A virtual display, so the real-app test can open the app's window on a runner. Test only, never shipped."
+      }
+    }
+  }
+}
