@@ -57,10 +57,8 @@ export class GraphView extends Lifecycle {
   private readonly taps: Taps;
   private readonly source: SourceToggle;
   private readonly readOnly: () => boolean;
-  /** The drawing as laid out now: the one given, or the one a View menu switch laid out since (§25). */
-  private drawn: Drawn;
-  /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
-  private switching: ViewSwitching | null = null;
+  private drawn: Drawn; // as laid out now: the one given, or one laid out since (§25)
+  private switching: ViewSwitching | null = null; // the View menu and its switches (§25); none for a table
   private unloaded = false;
   private legendSlot!: HTMLElement; // where the legend of moving links is (§7)
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
@@ -192,6 +190,7 @@ export class GraphView extends Lifecycle {
     this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram); // the bar's panels over it (§25)
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
+    this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
     // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
     this.aids = new Aids(this, {
       o: this.o,
@@ -323,9 +322,8 @@ export class GraphView extends Lifecycle {
   }
 
   /**
-   * The graph laid out again, as a View menu switch, a stub or a box asks (§25). It goes in the same SVG element,
-   * marked as a view or a proposal marks it, and sized and tapped afresh. The selection, its focus and its details are
-   * kept. The keyboard goes back on the box or link it was on (view_switch_view_only).
+   * The graph laid out again, as a View menu switch, a stub, a box or a settled layout asks (§25, layout_live_loop). It
+   * goes in the same SVG element, marked, sized and tapped afresh, keeping the selection, its details and the keyboard.
    */
   private relaid(drawn: Drawn): void {
     const svg = this.svg;
@@ -347,6 +345,7 @@ export class GraphView extends Lifecycle {
     const pinned = this.o.switches?.state.layout.pinned; // as the View menu pins it (layout_strategy_variables)
     if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey(), pinned); // r_keep_place
     this.sel.redrawn();
+    this.glide.follow(drawn, (d) => this.drawn === drawn && this.relaid(d)); // a quick picture's settled layout
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
     this.apply(this.zoom.view());

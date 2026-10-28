@@ -47,6 +47,11 @@ export interface Drawn {
   height: number;
   /** Shown right to left: laid out across and mirrored after, for a right-to-left language (drawing-direction.ts). */
   mirrored?: boolean;
+  /**
+   * A quick first picture's settled layout, still coming (§68, layout_live_loop). It is null when no longer wanted, or
+   * when it could not settle; the quick picture then stays.
+   */
+  better?: Promise<Drawn | null>;
 }
 
 /** One direction to lay a drawing out in: the source handed to Graphviz, and the kinds and readings to theme it by. */
