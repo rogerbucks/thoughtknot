@@ -129,7 +129,6 @@ const docId = (place: string) => `doc:${place.replace(/[^A-Za-z0-9_./-]/g, '_')}
 /** A context's name as part of a thing's id. */
 const ctxWord = (ctx: string) => ctx.replace(/[^A-Za-z0-9_]/g, '_');
 
-
 /** Whether a statement writes this thing, rather than only naming it: `(id:Kind` or `(id {`. */
 const writes = (text: string, id: string) => new RegExp(`\\(\\s*${id}\\s*[:{]`).test(text);
 const names = (text: string, id: string) => new RegExp(`\\(\\s*${id}\\s*[:{)]`).test(text);
