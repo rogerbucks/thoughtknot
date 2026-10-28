@@ -127,8 +127,16 @@ test('curved links a person chose are routed by our router at any size, at once'
   assert.deepEqual(spots(ours), spots(laid), 'no box moved');
 });
 
+/** `dot` laid out radially, by twopi: in no rows. */
+const radial = (dot) => dot.replace(/^([^\n]*\n)/, '$1  graph [layout=twopi];\n');
+
 test('curved links laid out in no rows, as a radial drawing is, are Graphviz own', () => {
-  const { dot } = laidOut(60);
-  const radial = dot.replace('\n', '\n  graph [layout=twopi];\n');
-  assert.equal(svgOf(engine, radial, 'curved'), engine.render(radial));
+  const dot = radial(laidOut(60).dot);
+  assert.equal(svgOf(engine, dot, 'curved'), engine.render(dot));
+});
+
+test('past 300 things, curved links laid out in no rows are drawn direct, so Graphviz routes no curve', () => {
+  const dot = radial(laidOut(320).dot);
+  const direct = layoutSvg(directLinks(engine.marks(routedSource(dot, 'direct')), undefined, undefined, 'LR'));
+  assert.equal(svgOf(engine, dot, 'curved'), direct);
 });

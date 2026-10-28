@@ -191,9 +191,10 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   const way = /rankdir=(TB|BT)/.test(dot) ? 'TB' : 'LR';
   const large = laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing').length > QUICK_LAYOUT;
   // curved links a person chose are routed that way at any size, at once (curves_routed_ours). A drawing laid out in
-  // no rows, such as a radial one, keeps Graphviz's own curves
+  // no rows, such as a radial one, keeps Graphviz's own curves while small. Past the quick size routing them is slow,
+  // so its links are drawn direct
   const rows = !/\blayout=/.test(dot) && marksInRows(laid.marks, way === 'TB' ? 1 : 0);
-  if (curved && !rows) return engine.render(dot);
+  if (curved && !rows && !large) return engine.render(dot);
   return layoutSvg(directLinks(laid, undefined, undefined, way, rows && (large || curved)));
 }
 

@@ -40,12 +40,14 @@ def drawn_svg(dot: str, src: str, routing: str | None = None) -> str:
         return run_dot(dot, src, "svg")
     # past the quick size, each link is routed between the rows Graphviz laid out, and no box
     # moves (links_routed_in_rows). Curved links a person chose are routed so at any size. Laid
-    # out in no rows, as a radial drawing is, they are Graphviz's own (curves_routed_ours)
+    # out in no rows, as a radial drawing is, they are Graphviz's own while small; past the quick
+    # size routing them is slow, so they are drawn direct (curves_routed_ours)
     way = "TB" if re.search(r"rankdir=(TB|BT)", src) else "LR"
     things = sum(1 for m in laid["marks"] if m["kind"] == "box" and m.get("role") == "thing")
     rows = not re.search(r"\blayout=", src) and marks_in_rows(
         laid["marks"], 1 if way == "TB" else 0
     )
-    if curved and not rows:
+    large = things > QUICK_LAYOUT
+    if curved and not rows and not large:
         return run_dot(dot, src, "svg")
-    return layout_svg(direct_links(laid, way, rows and (things > QUICK_LAYOUT or curved)))
+    return layout_svg(direct_links(laid, way, rows and (large or curved)))
