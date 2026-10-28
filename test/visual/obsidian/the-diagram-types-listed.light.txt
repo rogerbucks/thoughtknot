@@ -1,0 +1,21 @@
+<svg viewBox="0 0 228 159" width="304" height="212" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+    <g id="p2">
+      <path d="M71.57,-47.4C71.57,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 71.57,9 71.57,9 77.57,9 83.57,3 83.57,-3 83.57,-3 83.57,-35.4 83.57,-35.4 83.57,-41.4 77.57,-47.4 71.57,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
+      <text x="25.12" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PERSON
+      <text x="35.16" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Ada
+    <g id="p3">
+      <path d="M192.14,-12.45C192.14,-12.45 137.57,-12.45 137.57,-12.45 131.57,-12.45 125.57,-6.45 125.57,-0.45 125.57,-0.45 125.57,31.95 125.57,31.95 125.57,37.95 131.57,43.95 137.57,43.95 137.57,43.95 192.14,43.95 192.14,43.95 198.14,43.95 204.14,37.95 204.14,31.95 204.14,31.95 204.14,-0.45 204.14,-0.45 204.14,-6.45 198.14,-12.45 192.14,-12.45" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174)">
+      <text x="141.33" y="8.35" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PROJECT
+      <text x="150.96" y="28.65" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Atlas
+    <g id="p4">
+      <path d="M83.57,-19.2C83.57,-19.2 83.57,-19.2 83.57,-19.2 104.57,-19.2 104.57,15.75 125.57,15.75 125.57,15.75 125.57,15.75 125.57,15.75" paint="stroke:rgb(168, 51, 108);stroke-width:1.6">
+      <polygon points="118.57,18.2 125.57,15.75 118.57,13.3 118.57,18.2" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108);stroke-width:2.2">
+      <text x="102.74" y="13.28" text-anchor="middle" paint="fill:rgb(124, 46, 83)"> works on
+    <g id="p5">
+      <path d="M71.57,22.5C71.57,22.5 21,22.5 21,22.5 15,22.5 9,28.5 9,34.5 9,34.5 9,66.9 9,66.9 9,72.9 15,78.9 21,78.9 21,78.9 71.57,78.9 71.57,78.9 77.57,78.9 83.57,72.9 83.57,66.9 83.57,66.9 83.57,34.5 83.57,34.5 83.57,28.5 77.57,22.5 71.57,22.5" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
+      <text x="25.12" y="43.3" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PERSON
+      <text x="35.16" y="63.6" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Bob
+    <g id="p6">
+      <path d="M83.57,50.7C83.57,50.7 83.57,50.7 83.57,50.7 104.57,50.7 104.57,15.75 125.57,15.75 125.57,15.75 125.57,15.75 125.57,15.75" paint="stroke:rgb(168, 51, 108);stroke-width:1.6">
+      <polygon points="118.57,18.2 125.57,15.75 118.57,13.3 118.57,18.2" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108);stroke-width:2.2">

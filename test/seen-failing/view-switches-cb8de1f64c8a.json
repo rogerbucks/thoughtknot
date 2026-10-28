@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-switches.test.js",
+  "test": "the View menu > a View button in the bar opens the five switches, each on or off as the settings hold them",
+  "seen_failing_first": false,
+  "evidence": "Updated for the fifth switch, the new layout engine, whose code came in the commit before (77afd0b); the test was seen failing there."
+}

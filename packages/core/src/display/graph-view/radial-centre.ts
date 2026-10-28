@@ -1,0 +1,145 @@
+// The centre of a radial drawing, picked on its card (spec §15, radial_centre_pick). A thing's details offer Centre
+// here, and so do C on its box and a right-click on it (radial_centre_menu). The drawing is laid out again around it,
+// and each box glides from where it was. A card drawn as any other type is drawn radial around it, fitting or not
+// (radial_centre_anywhere). Where the note is edited, the centre is saved in the style graph. In reading view it is only
+// looked at, never saved, as a diagram type is (type_try_reading). A radial drawing's strip says its centre and how to
+// pick another (radial_centre_hint). While a centre is picked, it gives the way back to the usual centre: the thing
+// with the most links.
+import { chosenDiagram, diagramOffer, word } from '@thoughtknot/core';
+import type { DiagramOffer, DiagramWrite, GraphDrawing, NoteReading, StyleGraph } from '@thoughtknot/core';
+import { boxPlaces } from './regroup';
+import type { DiagramShown, Trying, TypeLeftAt } from './type-strip';
+import { button } from '../button';
+import { SPACE_OPEN } from './space-view-panel';
+
+/** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
+export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {
+  return chosenDiagram(style, view)?.centre;
+}
+
+/**
+ * What a card is given to put a thing in the centre, for `drawing` in `view` as `offer` has it. When drawn radial, it
+ * gets its centre. With two things or more, from any type, it gets the way to put a thing there: radial always fits
+ * around a thing picked. That is saved by
+ * `write`, or only looked at by `trying` (radial_centre_anywhere).
+ */
+export function centreShown(
+  drawing: GraphDrawing,
+  style: StyleGraph,
+  g: NoteReading['world'][string] | undefined,
+  view: string | undefined,
+  offer: DiagramOffer,
+  write: (change: DiagramWrite, done: string) => void,
+  trying?: Trying,
+): Partial<DiagramShown> {
+  const plan = offer.choice.plan,
+    centre = plan?.type === 'radial' ? plan.centre : undefined;
+  if (centre === undefined && drawing.boxes.length < 2) return {};
+  const text = (key: string) => drawing.boxes.find((b) => b.key === key)?.text ?? key;
+  const radial = (key: string | null): DiagramWrite => ({
+    type: 'radial',
+    ...(view === undefined ? {} : { view }),
+    ...(key ? { centre: key } : {}),
+  });
+  // the usual centre: the one the radial drawing has with none picked
+  const usual = () => {
+    const at = { block: -1, line: 0, id: 'usual' },
+      p = diagramOffer(drawing, { ...style, diagrams: [{ type: 'radial', at }] }, g).choice.plan;
+    return p?.type === 'radial' ? p.centre : '';
+  };
+  return {
+    ...(centre === undefined
+      ? {}
+      : { centre: { key: centre, text: text(centre), picked: pickedCentre(style, view) !== undefined } }),
+    textOf: text,
+    centreOn: (key) => write(radial(key), word('type.now-centre', { thing: text(key ?? usual()) })),
+    ...(trying
+      ? {
+          centreLook: (key: string | null) =>
+            trying.tryOut(trying.saved === 'radial' && trying.savedCentre === (key ?? undefined) ? null : radial(key)),
+        }
+      : {}),
+  };
+}
+
+/**
+ * Radial in the type list, with a thing selected (radial_centre_anywhere). As `toggle` opens the list, its `tile` says
+ * which thing it will be drawn around. So it does as a thing is selected in the card, `root`, while the list is open.
+ * `put` puts that thing in the centre, if one is selected that can be. It says whether it did. When it did not, the
+ * tile is chosen as any other.
+ */
+export function aroundSelected(
+  toggle: HTMLElement,
+  d: DiagramShown,
+  where?: () => TypeLeftAt,
+  root?: HTMLElement,
+): { tile: (b: HTMLButtonElement, fits: boolean) => void; put: () => boolean } {
+  let tile: HTMLButtonElement | null = null,
+    fits = true;
+  const around = (): string | undefined => {
+    const key = where?.().selected;
+    return key && d.canCentre?.(key) ? key : undefined;
+  };
+  const say = () => {
+    const key = around();
+    tile?.setText(key ? word('type.radial-around', { thing: d.textOf?.(key) ?? key }) : word('type.radial'));
+    // around a thing selected, radial can always be chosen, whether or not it fits with no centre picked
+    if (tile) tile.disabled = !fits && !key;
+  };
+  toggle.addEventListener('click', say);
+  // a thing selected by a click, a key or a pick in space, once the card has taken it (Roger, 25 Oct 2026: "radial
+  // isn't available even though I have selected a node")
+  const later = () => window.setTimeout(say, 0);
+  for (const type of ['click', 'keydown', SPACE_OPEN]) root?.addEventListener(type, later);
+  return {
+    tile: (b, fit) => {
+      tile = b;
+      fits = fit;
+    },
+    put: () => {
+      const key = around();
+      return !!key && !!d.putCentre?.(key);
+    },
+  };
+}
+
+/**
+ * Gives `d` its way to put a thing in the centre, as `putCentre`, and says a centre picked under the strip in `root`.
+ * Looked at while the card is read-only (`readOnly`), where it can be; else saved. Where the card is (`where`) and its
+ * boxes are kept first, so the card drawn next takes up its place and glides its boxes. Returns the control that
+ * writes, which a read-only card takes away.
+ */
+export function centreStrip(
+  root: HTMLElement,
+  d: DiagramShown,
+  readOnly: () => boolean,
+  where?: () => TypeLeftAt,
+): HTMLElement[] {
+  const { centre, centreOn } = d;
+  if (!centreOn) return [];
+  const look = () => !!d.centreLook && readOnly();
+  const can = () => !readOnly() || !!d.centreLook;
+  d.canCentre = (key) => key !== centre?.key && can();
+  d.putCentre = (key) => {
+    if (!can() || (key === null ? !centre?.picked : key === centre?.key)) return false;
+    const places = boxPlaces(root.querySelector<SVGSVGElement>('svg.thoughtknot-svg'));
+    if (where) d.leave?.({ ...where(), places });
+    if (look()) d.centreLook?.(key);
+    else centreOn(key);
+    return true;
+  };
+  if (!centre) return [];
+  // the centre said, and how to pick another, so the way is found without knowing it is there (radial_centre_hint)
+  const line = root.createDiv({ cls: 'thoughtknot-type-centre', attr: { role: 'status' } });
+  line.createSpan({ text: word('type.centred', { thing: centre.text }) });
+  if (can()) line.createSpan({ cls: 'thoughtknot-type-centre-how', text: ` ${word('type.centre-how')}` });
+  if (!centre.picked) return [];
+  const back = button(
+    line,
+    word('type.usual-centre'),
+    'locate-fixed',
+    () => d.putCentre?.(null),
+    word('type.usual-centre'),
+  );
+  return d.centreLook ? [] : [back];
+}

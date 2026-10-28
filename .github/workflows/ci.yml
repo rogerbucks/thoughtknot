@@ -1,0 +1,328 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  # GitHub's merge queue, when Roger turns it on: the queued change runs everything, as main does
+  merge_group:
+
+permissions:
+  contents: read
+
+# One run for each pull request: a newer push cancels the run of the older commit, which can no longer be merged (the
+# Build status workflow skips such a run as stale). A push to main is never cancelled, so every merge is checked.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # What runs: a pull request runs only the tests its change reaches, unless labelled ci:full; a push to main runs
+  # everything (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when
+  # it fails.
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tier: ${{ steps.plan.outputs.tier }}
+      shards: ${{ steps.plan.outputs.shards }}
+      python: ${{ steps.plan.outputs.python }}
+      tests: ${{ steps.plan.outputs.tests }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the change is measured from where the branch left main
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # the plan reads only the repository's files and git, so it needs no install
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
+        run: node scripts/ci-plan.mjs --base "$BASE"
+
+  # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
+  # prints only its failures; the full report of a failed one is kept as the run's artifact. The test job below stands
+  # for them all as one required check.
+  suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: plan
+    # runs when the plan failed too: then every shard runs the whole suite
+    if: ${{ !cancelled() }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the record of tests seen failing first is checked against the history it was made from
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # the lint job verifies the signatures of this same locked install
+      - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
+        run: npm ci
+      # six files at once on the runner's four cores, as the files mostly wait on the processes they start
+      # A shard that draws in the browser for three files at once peaked at 4.2 GB here (19 Oct 2026), over the
+      # default 4 GB ceiling, so it got 6 GB. A shard drawing in the browser for four files at once then reached 6.3 GB
+      # (23 Oct 2026). 8 GB keeps a runaway stopped inside the runner's 16 GB.
+      # A partial run gives the shards only its own test files, through the environment, never spliced into the command.
+      # Each name is checked to hold only letters, digits and `_ . / @ -`, so the shell splits them and nothing more.
+      - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
+        env:
+          SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 6 }}
+          TESTS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.tests || '' }}
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
+        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/$SHARDS" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt $TESTS
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-report-${{ matrix.shard }}
+          path: test-report.txt
+          retention-days: 7
+
+  # Passes when every part of the suite passed: the one check the default branch requires for them. A partial run says
+  # so here, and a failed plan is named, though the suite then ran whole.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [plan, suite]
+    if: always()
+    steps:
+      - env:
+          PLAN: ${{ needs.plan.result }}
+          TIER: ${{ needs.plan.outputs.tier }}
+          RESULT: ${{ needs.suite.result }}
+        run: |
+          if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
+          if [ "$TIER" = subset ]; then echo "::notice::A partial run: only what the change reaches. The label ci:full runs everything; main always does."; fi
+          test "$RESULT" = success
+
+  # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the quality baseline and the requirements' flips are compared with the base of the change
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - run: npm run format:check
+      - run: npm run lint
+      - run: node scripts/check-classification.mjs --all
+      # the quick quality metrics (file sizes, secrets) against the baseline; the slow ones are the release's
+      - run: node scripts/quality-check.mjs --fast
+      # big graphs: open, draw, pan and edit up to 100 copies of the V-10 graph, each step held to its budget
+      - run: npm run bench:scale
+      # a baseline committed worse than the base's needs a reason in quality/accepted.json, as a measured run does
+      - env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: node scripts/quality-check.mjs --baseline-since "$BASE"
+      - run: npm run typecheck
+      # the requirements graph is edited here, but a pull request never moves a test back or removes a proved one
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        # against the merge base, so a change main gained after the branch point is not read as a hand revert
+        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
+      # the requirements and the tests may not drift further apart: each list in quality/requirements-drift.json only shrinks
+      - run: node scripts/requirements-drift.mjs
+      - run: npm run build
+
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: plan
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
+    if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
+    defaults:
+      run:
+        working-directory: python/graph_spec
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The parity tests read the shared cases through Node, and run the core's reader, which needs the packages.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: .
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: uv sync --locked
+      - run: uv run --locked ruff check
+      - run: uv run --locked ruff format --check
+      # a working copy has the reference engine, Grafeo: every test that needs it runs here, and fails if it is missing
+      - run: node ../../scripts/run-ceiling.mjs uv run --locked python -m unittest discover -s tests
+        env:
+          GRAPH_SPEC_ENGINE: required
+
+  # A plain install, with Grafeo not installed (req:14.no-engine-install): reading, checking, joining and drawing pass
+  # without it; only the tests that need the engine are skipped.
+  python-no-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: plan
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
+    if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
+    defaults:
+      run:
+        working-directory: python/graph_spec
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The parity tests read the shared cases through Node, and run the core's reader, which needs the packages.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: .
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: uv sync --locked --no-default-groups
+      - name: Grafeo is not installed
+        run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
+      - run: node ../../scripts/run-ceiling.mjs uv run --locked --no-default-groups python -m unittest discover -s tests
+
+  # The libraries' runnable examples (risk API-12), run as a reader runs them: from the release archive's layout, where
+  # the JavaScript entry point is the built file. Each one reads a block, checks it and exits non-zero on a failed rule.
+  # Every file in examples/js and examples/python is run (test/library-examples.test.js holds this list to the folders).
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/graph-spec
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - name: Lay out the libraries as the release archive does, with the examples beside them
+        run: |
+          git archive --format=tar --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix= HEAD LICENSE packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src examples/js examples/python | tar -x -C "$RUNNER_TEMP"
+      - name: Run each example
+        working-directory: ${{ runner.temp }}
+        run: |
+          node examples/js/read-and-check.cjs
+          uv run --locked --no-default-groups --project python/graph_spec python examples/python/read_and_check.py
+
+  # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
+  # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
+  # It reads only that folder, never the record in test/tests-first/, so the record cannot weaken it.
+  tests-first:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: uv sync --locked
+        working-directory: python/graph_spec
+      - name: Replay each new commit's tests against its parent's code
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
+        run: |
+          commits=$(git rev-list --no-merges "$BASE..$HEAD")
+          if [ -n "$commits" ]; then node scripts/tests-first.mjs --check $commits; fi
+      # every commit since the baseline that changed a test has its record, written on its own branch
+      - name: Every commit that changed a test is recorded
+        run: node scripts/tests-first.mjs --complete
+
+  # The code scan's security problems, checked on every change before it merges (#849, scripts/code-scan.mjs). GitHub's
+  # code scanning stops a pull request only for a problem it adds. This fails on any in the code at all, as the release
+  # does. It runs GitHub's own scan with its default queries, and sends nothing: GitHub's code scanning still reports.
+  # It reads each language GitHub's scan reads: the code, the Python library and the workflows.
+  code-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: javascript-typescript, python, actions
+          build-mode: none
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          upload: never
+          output: code-scan
+      - run: node scripts/code-scan.mjs code-scan
+
+  # Fit to be public, and kept so (spec §13): no secret and nothing confidential or personal in any commit of the
+  # checked-out history (HEAD: main and the pull request's own commits, not another branch's, such as a bot's), every
+  # commit from a no-reply address, and a stranger's fresh clone sets up and builds from the README's steps alone. The
+  # full depth gives HEAD its whole history. The clone runs the steps for real, so the job needs what the README asks
+  # for: Node and uv.
+  public-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The fresh clone's `npm test` runs the whole suite at once, browser drawing included. That passed the default 4 GB
+    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their ceiling too: 8 GB.
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      # The fresh clone runs the same tests, lint and build as the jobs above, which took 14 minutes on every push to main
+      # (24 Oct 2026). So it runs only when a setup input changed (the README's steps, the npm scripts they run, the
+      # hook): a pull request or a queued change since its base, main since the push before. The nightly and the release
+      # run it whole, so a break in the steps is found within a day.
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
+      - if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE"
