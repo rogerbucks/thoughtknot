@@ -17,7 +17,7 @@ import type { Group, GroupBox } from './grouped.ts';
 import { RESTARTS, TRUNK_LINK, viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
 import { SCREEN, boundsOf } from './folded-rows.ts';
-import { layoutOptions } from './layout-options.ts';
+import { layoutOptions, roundsOf } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
 import { groupsOver, packPlaced, partShape, partsOf, trayOf } from './parts.ts';
@@ -55,9 +55,14 @@ export function marksShape(marks: readonly DrawMark[]): { shape: GraphShape; siz
 }
 
 /** Pushes apart boxes that overlap, by the shorter way, a few rounds, looking only at boxes near each other. */
-export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<string, Size>, room = APART): void {
+export function apart(
+  spots: Map<string, Point>,
+  sizes: ReadonlyMap<string, Size>,
+  room = APART,
+  n = APART_ROUNDS,
+): void {
   const keys = [...spots.keys()];
-  for (let round = 0; round < APART_ROUNDS; round++) {
+  for (let round = 0; round < n; round++) {
     let moved = 0;
     const sorted = keys
       .map((k) => {
@@ -147,7 +152,7 @@ export function ownSpots(
     const tray = trayOf(loose, sizes, (k) => text.get(k) ?? k, APART * spacing);
     pieces.push({ spots: tray.spots, via: new Map(), boxes: [], pick, way });
   }
-  const drawn = pieces.length === 1 ? (pieces[0] as Piece) : packPlaced(pieces, sizes, PART_GAP * spacing);
+  const drawn = pieces.length === 1 ? (pieces[0] as Piece) : packPlaced(pieces, sizes, PART_GAP * spacing, options);
   const { spots, via } = drawn;
   let boxes = drawn.boxes;
   trunksBack(trunks, spots, via, way === 'TB' ? 1 : 0);
@@ -262,7 +267,7 @@ function laidBy(
   const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
   const placed = stressLayout(shape, 2, previous, { unit });
   const spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
-  apart(spots, sizes, APART * spacing);
+  apart(spots, sizes, APART * spacing, roundsOf(options, APART_ROUNDS));
   return { spots, via: new Map(), boxes: [], pick, way };
 }
 

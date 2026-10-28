@@ -27,6 +27,7 @@ import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from '../button';
+import { FIRST_VIEW_TYPES } from '../../view-types/view-types.ts';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
 import type { TimelinePick, TimelineShown } from './timeline-choice';
 export { TypePlace, typeLeftAt } from './type-place';
@@ -164,9 +165,9 @@ export function diagramShown(
       ? word('type.now-graph', { type: said(type) })
       : word('type.now-view', { view, type: said(type) });
   const choose = (type: DiagramType) => write(change(type), now(type));
-  // the view types drawn as marks, each a plug-in type of the core's own (view_types_offered)
+  // the view types drawn as marks, each a plug-in type of the core's own (view_types_offered): first those shown at first
   const drawnView = chosenDiagram(style, view)?.plugin;
-  const views = VIEW_TYPES.map((v) => {
+  const views = [...FIRST_VIEW_TYPES, ...VIEW_TYPES.filter((v) => !FIRST_VIEW_TYPES.includes(v))].map((v) => {
     const type = `${CORE_DIAGRAMS_ID}.${v}`;
     return { type, title: word(`view.${v}`), now: drawnView === type };
   });
@@ -336,8 +337,17 @@ export function renderTypeStrip(
   toggle.addEventListener('click', () => (views.hidden = list.hidden));
   picks(views);
   const { lookView } = d;
+  // the first views shown, the rest folded under More views, open when one of them is drawn now (Q-12, option B)
+  const first = (v: { type: string }) => FIRST_VIEW_TYPES.some((t) => v.type === `${CORE_DIAGRAMS_ID}.${t}`);
+  let more: HTMLElement | null = null;
   for (const v of d.views) {
-    const li = views.createEl('li', { cls: v.now ? ['thoughtknot-type-now'] : [] });
+    if (!first(v) && !more) {
+      const fold = views.createEl('li', { cls: 'thoughtknot-view-more' }).createEl('details');
+      fold.open = d.views.some((w) => w.now && !first(w));
+      fold.createEl('summary', { text: word('view.list.more') });
+      more = fold.createEl('ul');
+    }
+    const li = (more ?? views).createEl('li', { cls: v.now ? ['thoughtknot-type-now'] : [] });
     const b = li.createEl('button', { text: v.title, attr: { type: 'button', 'aria-pressed': String(v.now) } });
     b.addEventListener('click', () =>
       leaving(() => (lookView && readOnly() ? lookView(v.type) : d.chooseView(v.type)))(),
@@ -347,9 +357,7 @@ export function renderTypeStrip(
   const stopped = choice.stopped;
   if (stopped) {
     const banner = root.createDiv({ cls: ['thoughtknot-banner', 'thoughtknot-type-stopped'], attr: { role: 'alert' } });
-    banner.createSpan({
-      text: word('type.stopped', { type: said(stopped.type), why: stopped.why }),
-    });
+    banner.createSpan({ text: word('type.stopped', { type: said(stopped.type), why: stopped.why }) });
     const label =
       stopped.nearest === 'network'
         ? word('type.as-network')

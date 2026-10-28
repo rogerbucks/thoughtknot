@@ -27,7 +27,7 @@ import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { legendText } from './untangle-saved.ts';
-import { isDefaultLayout, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import { isDefaultLayout, SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import { word } from './words.ts';
@@ -250,10 +250,9 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       ...SWITCH_KEYS.map((k): [string, Value] => [k, s.switches?.[k]]),
       // written only when something is chosen, and only here, as the view is saved as shown (untangle_legend)
       ['legend', s.legend?.length ? legendText(s.legend) : undefined],
-      ...(Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]).map(([k, key]): [string, Value] => [
-        key,
-        s.layout && !isDefaultLayout(s.layout) ? s.layout[k] : undefined,
-      ]),
+      ...(Object.entries({ ...SHOWN_LAYOUT_KEYS, ...SHOWN_LAYOUT_CHOICES }) as [keyof LayoutOptions, string][]).map(
+        ([k, key]): [string, Value] => [key, s.layout && !isDefaultLayout(s.layout) ? s.layout[k] : undefined],
+      ),
     ],
     match: [['view', s.view]],
   };

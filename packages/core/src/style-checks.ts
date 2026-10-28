@@ -38,8 +38,9 @@ import type {
   ViewStyle,
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
-import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
-import type { LayoutOptions } from './layouts/layout-options.ts';
+import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_CHOICES, LAYOUT_OPTION_RANGE } from './layouts/layout-options.ts';
+import { SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import type { LayoutChoice, LayoutShare } from './layouts/layout-options.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 import { legendChecked } from './untangle-saved.ts';
 import { word as say } from './words.ts';
@@ -262,7 +263,7 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
     if (v !== undefined) shown[k] = v;
   }
   // how the layout spaced it (§53, layout_saved_with_view): each option in its range
-  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]) {
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [LayoutShare, string][]) {
     const v = r.number(key),
       [least, most] = LAYOUT_OPTION_RANGE[k];
     if (v !== undefined && (v < least || v > most))
@@ -271,6 +272,10 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
         say('styling.shown.layout-range.fix', { key, usual: DEFAULT_LAYOUT_OPTIONS[k] }),
       );
     else if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
+  }
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_CHOICES) as [LayoutChoice, string][]) {
+    const v = r.word(key, LAYOUT_CHOICES[k], mustBe(key, LAYOUT_CHOICES[k]));
+    if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
   }
   // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept
   const legend = legendChecked(r, names);

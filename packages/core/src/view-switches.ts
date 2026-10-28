@@ -278,7 +278,9 @@ export class ViewState {
     const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
     const engined = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
     const laned = this.switches.lanes === false ? { ...engined, kindLanes: false as const } : engined;
-    const drawn = isDefaultLayout(this.layout) ? laned : { ...laned, layoutOptions: { ...this.layout } };
+    // a direction picked in the View menu wins over the best fit, and over the style's (layout_strategy_variables)
+    const way = this.layout.direction === 'best' ? laned : { ...laned, direction: this.layout.direction };
+    const drawn = isDefaultLayout(this.layout) ? laned : { ...way, layoutOptions: { ...this.layout } };
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 

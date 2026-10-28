@@ -4,6 +4,7 @@
 // was seen and eases to its new spot. A box new to the drawing fades in. Links and group boxes can't be drawn between
 // moving boxes, so they fade in as the boxes arrive. A move by the person ends the glide at once. So do reduced motion
 // and a drawing too big to follow.
+import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { GLIDE_MOST, LAYOUT_GLIDE_MS, easeGlide, offsetAt, offsetsOf, placeKept } from '../../layout-glide.ts';
 import type { Offsets, Pt } from '../../layout-glide.ts';
 import type { View, Zoom } from '@thoughtknot/core';
@@ -82,13 +83,21 @@ export class LayoutGlide {
 
   /**
    * The drawing was laid out again; `was` is where its boxes were on the screen. The view moves to keep the person's
-   * place. Then each box glides from where it was to where it goes. `selected` is the key of what is selected, if any.
+   * place. Then each box glides from where it was to where it goes. `selected` is the key of what is selected, if any,
+   * and `pinned` what the View menu keeps in place.
    */
-  after(svg: SVGSVGElement, taps: Taps, zoom: Zoom, was: ReadonlyMap<string, Pt>, selected?: string | null): void {
+  after(
+    svg: SVGSVGElement,
+    taps: Taps,
+    zoom: Zoom,
+    was: ReadonlyMap<string, Pt>,
+    selected?: string | null,
+    pinned?: LayoutOptions['pinned'],
+  ): void {
     if (!was.size) return;
     // a fitted drawing stays fitted, as the person left it; any other keeps its place (r_keep_place)
     if (!zoom.isFitted()) {
-      const shift = placeKept(was, onScreen(svg, taps, zoom.view()), selected);
+      const shift = placeKept(was, onScreen(svg, taps, zoom.view()), selected, pinned);
       if (shift) zoom.panBy(shift[0], shift[1]);
     }
     const now = onScreen(svg, taps, zoom.view());

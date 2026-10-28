@@ -9,6 +9,7 @@ import { spreadSpace } from '../src/space-spread.ts';
 import { readStyle } from '../src/style.ts';
 import { styleEdit } from '../src/style-edit.ts';
 import { styledDrawing } from '../src/style-source.ts';
+import { DEFAULT_LAYOUT_OPTIONS as ALONE } from '../src/layouts/layout-options.ts';
 import { ViewState, startingLayout, startingSwitches } from '../src/view-switches.ts';
 
 const TRIP = `// graph: trip · SOURCE
@@ -35,13 +36,9 @@ describe('a view saved as shown keeps how its layout was spaced', () => {
       [3, 'spacing must be a number from 0.25 to 4', 'write spacing: 1 for the layout as it lays out alone'],
     ]);
     assert.deepEqual(style.shown.get('near').layout, { spacing: 2, linkLength: 0.5, groupPull: 0.8 });
-    assert.deepEqual(startingLayout(style, 'near'), { spacing: 2, linkLength: 0.5, groupPull: 0.8 });
-    assert.deepEqual(startingLayout(style, 'far'), { spacing: 1, linkLength: 1, groupPull: 0.5 }, 'as alone');
-    assert.deepEqual(
-      startingLayout(style),
-      { spacing: 1, linkLength: 1, groupPull: 0.5 },
-      'the graph itself, as alone',
-    );
+    assert.deepEqual(startingLayout(style, 'near'), { ...ALONE, spacing: 2, linkLength: 0.5, groupPull: 0.8 });
+    assert.deepEqual(startingLayout(style, 'far'), ALONE, 'as alone');
+    assert.deepEqual(startingLayout(style), ALONE, 'the graph itself, as alone');
   });
 
   // proves: layout_saved_with_view
@@ -71,7 +68,7 @@ describe('a card spaced from the View menu', () => {
     const state = new ViewState(startingSwitches(DEFAULT_SETTINGS), startingLayout(style));
     assert.equal(state.folded(drawing).layoutOptions, undefined);
     state.layout = { ...state.layout, spacing: 2 };
-    assert.deepEqual(state.folded(drawing).layoutOptions, { spacing: 2, linkLength: 1, groupPull: 0.5 });
+    assert.deepEqual(state.folded(drawing).layoutOptions, { ...ALONE, spacing: 2 });
   });
 
   // proves: layout_saved_with_view
