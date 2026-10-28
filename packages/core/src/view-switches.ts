@@ -23,7 +23,7 @@ import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layout
 import type { LayoutOptions } from './layouts/layout-options.ts';
 
 /** The switches, in the order the View menu lists them. */
-export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine'] as const;
+export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes'] as const;
 /** One of the switches. */
 export type ViewSwitch = (typeof VIEW_SWITCHES)[number];
 /** Each switch, on or off. */
@@ -36,6 +36,7 @@ const SWITCH_WORDS = {
   groups: 'settings.fold-groups.name',
   merge: 'settings.merge-links.name',
   engine: 'settings.own-layout.name',
+  lanes: 'settings.kind-lanes.name',
 } as const satisfies Record<ViewSwitch, WordKey>;
 
 /** Each switch as the View menu names it, in the reader's language. */
@@ -48,6 +49,7 @@ export const SWITCH_SETTINGS = {
   groups: 'foldGroups',
   merge: 'mergeLinks',
   engine: 'ownLayout',
+  lanes: 'kindLanes',
 } as const satisfies Record<ViewSwitch, keyof Settings>;
 
 /**
@@ -65,8 +67,9 @@ export function startingSwitches(
     VIEW_SWITCHES.map((s) => [s, settings[SWITCH_SETTINGS[s]] === 'on']),
   ) as ViewSwitches;
   if (style && written) start.merge = linksOf(style, view).merge;
-  // the engine switch is a preview, never saved with a view
-  for (const s of VIEW_SWITCHES) if (s !== 'engine' && saved?.[s] !== undefined) start[s] = saved[s] === 'on';
+  // the engine and lanes switches are the person's, never saved with a view
+  for (const s of VIEW_SWITCHES)
+    if (s !== 'engine' && s !== 'lanes' && saved?.[s] !== undefined) start[s] = saved[s] === 'on';
   return start;
 }
 
@@ -274,7 +277,8 @@ export class ViewState {
     const kept = instead ? (d.nudges ?? []).filter((n) => n.word !== 'group') : (d.nudges ?? []);
     const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
     const engined = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
-    const drawn = isDefaultLayout(this.layout) ? engined : { ...engined, layoutOptions: { ...this.layout } };
+    const laned = this.switches.lanes === false ? { ...engined, kindLanes: false as const } : engined;
+    const drawn = isDefaultLayout(this.layout) ? laned : { ...laned, layoutOptions: { ...this.layout } };
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 
@@ -314,11 +318,11 @@ export class ViewState {
   }
 
   /** The switches as a view saved as shown writes them (§7). */
-  saved(): Record<Exclude<ViewSwitch, 'engine'>, OnOff> {
-    // the engine switch is a preview, never saved with a view
-    const kept = VIEW_SWITCHES.filter((s) => s !== 'engine');
+  saved(): Record<Exclude<ViewSwitch, 'engine' | 'lanes'>, OnOff> {
+    // the engine and lanes switches are the person's, never saved with a view
+    const kept = VIEW_SWITCHES.filter((s) => s !== 'engine' && s !== 'lanes');
     return Object.fromEntries(kept.map((s) => [s, this.switches[s] ? 'on' : 'off'])) as Record<
-      Exclude<ViewSwitch, 'engine'>,
+      Exclude<ViewSwitch, 'engine' | 'lanes'>,
       OnOff
     >;
   }

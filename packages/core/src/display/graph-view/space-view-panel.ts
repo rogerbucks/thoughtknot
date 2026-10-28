@@ -18,6 +18,7 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
+import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
 import { spotsKept } from '../../space-parts.ts';
 import { stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
@@ -115,9 +116,11 @@ export async function openSpaceView(
   // laid out again, each thing starts where it was, so a group opens or folds in place (cluster_in_place)
   let spots: Spots<3> | undefined,
     held = new Map('marks' in from ? [] : heldIn(from));
+  const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
     if (by !== 'cards' && by) return spaceOf(marks, by);
-    const laid = spreadSpace(marks, spots && spotsKept(spots, held), by === 'cards', more.asDrawn, more.layout?.());
+    const kept = spots && spotsKept(spots, held);
+    const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
     spots = laid.spots;
     return stackedPlanes(laid.space);
   };

@@ -53,6 +53,7 @@ const HINTS = {
   hubs: 'view.hint.hubs',
   groups: 'view.hint.groups',
   merge: 'view.hint.merge',
+  lanes: 'view.hint.lanes',
 } as const satisfies Record<Exclude<ViewSwitch, 'engine'>, WordKey>;
 /** How many hints have been drawn, so each has an id of its own its switch is described by. */
 let hints = 0;

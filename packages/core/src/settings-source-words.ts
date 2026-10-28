@@ -112,6 +112,11 @@ export const SETTINGS_SOURCE_WORDS = {
     'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
   'settings.own-layout.on': 'On',
   'settings.own-layout.off': 'Off',
+  'settings.kind-lanes.name': 'Lanes by kind',
+  'settings.kind-lanes.sentence':
+    'Whether kinds that link in order each get a lane, or a plane in space; a graph’s View menu can change it.',
+  'settings.kind-lanes.on': 'On',
+  'settings.kind-lanes.off': 'Off',
   'settings.note-callouts.name': 'Draw notes as callouts',
   'settings.note-callouts.sentence':
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',

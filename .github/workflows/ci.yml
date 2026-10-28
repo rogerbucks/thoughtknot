@@ -141,6 +141,8 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
         run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
+      # the requirements and the tests may not drift further apart: each list in quality/requirements-drift.json only shrinks
+      - run: node scripts/requirements-drift.mjs
       - run: npm run build
 
   python:
