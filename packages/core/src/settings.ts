@@ -10,7 +10,7 @@ import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
-import { STARTERS } from './view-presets.ts';
+import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
 import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
 export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
@@ -53,6 +53,8 @@ export interface Settings extends StrictnessSettings {
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   viewPreset: string; // the view preset last picked (§69)
+  /** A preset of the person's own, as the text of the one file it moves in (view_presets_portable); none, empty. */
+  ownPreset: string;
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
@@ -102,6 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiClassMap: {},
   indent: 'four',
   viewPreset: 'default',
+  ownPreset: '',
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'on',
@@ -219,7 +222,17 @@ export const OPTIONS: Option[] = [
     name: 'View preset',
     sentence:
       'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',
-    choices: STARTERS.map((p) => ({ value: p.id, name: p.name, sentence: p.sentence })),
+    choices: [
+      ...STARTERS.map((p) => ({ value: p.id, name: p.name, sentence: p.sentence })),
+      { value: OWN_PRESET, name: 'Your own', sentence: 'The preset you brought in from a file, below.' },
+    ],
+  },
+  {
+    key: 'ownPreset',
+    section: 'Drawing',
+    name: 'Your own view preset',
+    sentence:
+      'Paste the text of a view preset file to use it as Your own. It is checked first. Export writes the preset in use, as you have set it, to a file.',
   },
   {
     key: 'direction',
@@ -297,6 +310,8 @@ export function settingsFrom(saved: unknown): Settings {
   const given: unknown[] = Array.isArray(s.classifications) ? s.classifications : [];
   const levels = given.filter((c): c is string => typeof c === 'string');
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
+  // the person's own preset, taken as the settings are read in, so every host that reads them has it (§69)
+  const own = adoptOwn(text(s.ownPreset));
   return {
     language: oneOf('language', s.language, d.language),
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
@@ -321,7 +336,9 @@ export function settingsFrom(saved: unknown): Settings {
       ),
     ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
-    viewPreset: oneOf('viewPreset', s.viewPreset, d.viewPreset),
+    ownPreset: own ? text(s.ownPreset) : d.ownPreset,
+    // Your own is picked only while there is one
+    viewPreset: s.viewPreset === OWN_PRESET && !own ? d.viewPreset : oneOf('viewPreset', s.viewPreset, d.viewPreset),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),

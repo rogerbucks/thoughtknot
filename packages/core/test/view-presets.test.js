@@ -18,6 +18,9 @@ import {
   shortLabel,
   labelsFor,
   presetClasses,
+  OWN_PRESET,
+  adoptOwn,
+  presetToShare,
 } from '../src/view-presets.ts';
 import { PRESET_IDS } from '../src/style-graph.ts';
 import { readStyle } from '../src/style.ts';
@@ -39,7 +42,8 @@ describe('the starter presets', () => {
     assert.equal(option.section, 'Drawing');
     assert.deepEqual(
       option.choices.map((c) => c.value),
-      STARTERS.map((p) => p.id),
+      [...STARTERS.map((p) => p.id), 'own'],
+      'and Your own, once one is read in',
     );
   });
 
@@ -127,6 +131,26 @@ describe('where a preset applies, and moving it', () => {
     assert.deepEqual(presetClasses('reading'), ['thoughtknot-reading']);
     assert.deepEqual(presetClasses('focus'), ['thoughtknot-blur-rest', 'thoughtknot-still']);
     assert.deepEqual(presetClasses('default'), []);
+  });
+
+  // proves: view_presets_portable
+  test('the preset in use goes out as set now, and a file read back in is the person’s own, kept with the settings', () => {
+    const s = { ...DEFAULT_SETTINGS, viewPreset: 'focus', mergeLinks: 'on' };
+    const text = presetToShare(s);
+    const back = presetFrom(text);
+    assert.equal(back.name, 'Focus support');
+    assert.equal(back.settings.mergeLinks, 'on', 'the settings as they are, not as the starter came');
+    assert.deepEqual(back.chain, starterOf('focus').chain);
+    const read = settingsFrom({ ownPreset: text, viewPreset: OWN_PRESET });
+    assert.equal(read.viewPreset, OWN_PRESET);
+    assert.equal(read.ownPreset, text);
+    assert.equal(starterOf(OWN_PRESET).name, 'Focus support', 'every part of the host finds it by its id');
+    assert.ok(holdsStill(read));
+    const none = settingsFrom({ ownPreset: '{"format": "other"}', viewPreset: OWN_PRESET });
+    assert.equal(none.ownPreset, '', 'a file that is not a preset is not kept');
+    assert.equal(none.viewPreset, 'default', 'and Your own is not picked');
+    assert.equal(starterOf(OWN_PRESET).id, 'default');
+    assert.equal(adoptOwn(''), null);
   });
 
   // proves: view_presets_portable

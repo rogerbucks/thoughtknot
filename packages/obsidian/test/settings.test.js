@@ -448,6 +448,42 @@ describe('formatting and drawing defaults', () => {
     }
   });
 
+  // proves: view_presets_portable
+  test('a preset moves as one file: Export writes the one in use as set, and its text pasted in is Your own', async () => {
+    const env = await load({ data: { settings: { viewPreset: 'focus', mergeLinks: 'on' } } });
+    try {
+      const offered = () =>
+        row(page(env), 'View preset')
+          .querySelectorAll('option')
+          .map((o) => o.getAttribute('value'));
+      assert.ok(!offered().includes('own'), 'no Your own until one is read in');
+      press(env, 'Export the preset in use');
+      await until(() => [...env.state.files.keys()].some((k) => k.endsWith('View preset.json')));
+      const [path] = [...env.state.files.keys()].filter((k) => k.endsWith('View preset.json'));
+      const text = env.state.files.get(path);
+      assert.match(text, /"format": "thoughtknot-view-preset@1"/);
+      assert.match(text, /"mergeLinks": "on"/, 'as it is set now, not as the starter came');
+      const field = row(page(env), 'Your own view preset').querySelector('textarea');
+      field.value = text.replace('Focus support', 'Mine');
+      field.dispatch('input');
+      await until(() => !!env.state.data.settings.ownPreset);
+      assert.ok(row(page(env), 'Your own view preset'), 'read in');
+      assert.match(page(env).textContent, /Read in: Mine\./);
+      assert.ok(offered().includes('own'), 'Your own can be picked now');
+      pickPreset(env, 'own');
+      press(env, 'Use this preset');
+      await until(() => env.state.data.settings.viewPreset === 'own');
+      assert.equal(env.state.data.settings.mergeLinks, 'on');
+      // a file that is not a preset is never used, and says why
+      field.value = '{"format": "something else"}';
+      field.dispatch('input');
+      await until(() => env.state.data.settings.ownPreset === '');
+      assert.equal(env.state.data.settings.viewPreset, 'default', 'Your own goes with it');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: view_presets_predictable
   test('a view preset picked first says what it would change, is used only when asked, and is undone in one step', async () => {
     const env = await load();
