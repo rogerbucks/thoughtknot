@@ -1,8 +1,8 @@
 // Changing view preset on the settings page, predictably (editor spec §69, view_presets_predictable). A preset picked
 // is not used at once: the page first says what it would change, from what to what. Use this preset makes the
 // change; Keep as it was drops it. Once used, one press undoes it. Nothing on a drawing moves until then.
-// A preset moves between hosts as one small file (view_presets_portable): its text pasted in is Your own, once checked,
-// and Export writes the one in use, as set now.
+// A preset moves between hosts as one small file (view_presets_portable). Its text pasted in is checked, then is Your
+// own. Export writes the one in use, as set now.
 import { Notice } from 'obsidian';
 import type { SettingDefinition } from 'obsidian';
 import {
