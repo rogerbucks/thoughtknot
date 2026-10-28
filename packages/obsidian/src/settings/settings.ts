@@ -20,7 +20,7 @@ import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
-import { PresetChoice } from './preset-rows';
+import { PresetChoice, sharePreset } from './preset-rows';
 
 const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
@@ -46,6 +46,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       settings: () => this.owner.settings,
       save: (next) => this.owner.saveSettings(next),
       update: () => this.update(),
+      share: (text) => sharePreset(this.owner, text),
     });
   }
 
@@ -107,6 +108,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'ownPreset')
+      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } }, ...this.preset.ownRows()];
     if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
       return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
     if (o.key === 'aiClassMap')
@@ -151,7 +154,9 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         control: {
           type: 'dropdown',
           key: o.key,
-          options: Object.fromEntries((o.choices ?? []).map((c) => [c.value, c.name])),
+          options: Object.fromEntries(
+            (o.choices ?? []).filter((c) => this.preset.offers(c.value)).map((c) => [c.value, c.name]),
+          ),
         },
       },
       ...after,
@@ -199,7 +204,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
     const chosen = key.endsWith('.ceiling') || key.endsWith('.matrixRow') || key.includes('.matrixOn.');
     const typed =
-      ['classifications', 'exportFolder', 'decider', 'aiMatrixNote', 'aiClassMap'].includes(key) ||
+      ['classifications', 'exportFolder', 'decider', 'aiMatrixNote', 'aiClassMap', 'ownPreset'].includes(key) ||
       (key.startsWith('aiModels.') && !chosen);
     if (!typed) this.update();
     // the matrix note, or how its classes are matched, changed what the page shows of it

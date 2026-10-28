@@ -160,6 +160,9 @@ export const VALUES_LATE = [
   'presetFor',
   'presetFile',
   'presetFrom',
+  'OWN_PRESET',
+  'adoptOwn',
+  'presetToShare',
   'presetPreview',
   'presetUndo',
   // one graph from many places (§63, CN1), 28 Oct 2026
