@@ -5,7 +5,8 @@ direct-links.ts, step for step, so both libraries draw the same links for the sa
 
 Graphviz places the boxes. In place of its routing, each link is one curve from box to box. A box
 a link would pass through moves aside, just clear of it, and boxes moved into each other are
-pushed apart again, a few rounds within a budget. Two links between the same two boxes bow apart.
+pushed apart again, a few rounds, each pass counting its work against its budget (work.py). Two
+links between the same two boxes bow apart.
 A lone link bows a little toward the middle of the drawing. Each arrowhead lands on its box edge,
 and the words sit by the curve (direct_words.py). First the boxes are given a little more room,
 and each link takes the slight bend that crosses fewest boxes and links (direct_bends.py). It
@@ -33,6 +34,7 @@ from graphspec.style.direct_curve import Placed, hypot
 from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
 from graphspec.style.rows_route import in_rows as rows_fit
 from graphspec.style.rows_route import routed_curves
+from graphspec.style.work import WORK_MOST, Work
 
 # The room kept round a line or words at the edge of the drawing, in pixels.
 EDGE = 2
@@ -40,8 +42,6 @@ EDGE = 2
 BOX_GAP = 12
 # The most rounds of moving boxes off links and apart again.
 ROUNDS = 6
-# The most box and link pairs looked at in all, so a big graph stays quick.
-WORK_MOST = 4_000_000
 # How far two links between the same boxes bow apart at their middle, as a share of their length.
 BOW = 0.16
 
@@ -206,17 +206,20 @@ def direct_links(
     return _grown({**laid, "marks": out})
 
 
-def _settle(boxes: list[Placed], links: list[Mark]) -> None:
-    """Moves boxes off links they do not join and apart from each other, a few rounds, within the
-    budget."""
+def _settle(boxes: list[Placed], links: list[Mark], work: Work | None = None) -> None:
+    """Moves boxes off links they do not join and apart from each other, a few rounds. Each box
+    looked at by a link counts against `work`, as does each pair pushed apart. It stops where the
+    next would go past the budget."""
+    work = work or Work(WORK_MOST["settle"])
     by_key = {b.key: b for b in boxes}
-    rounds = max(1, min(ROUNDS, math.floor(WORK_MOST / max(1, len(boxes) * len(links)))))
-    for _ in range(rounds):
+    for _ in range(ROUNDS):
         moves = 0
         for link in links:
             a, b = by_key.get(link["from"]), by_key.get(link["to"])
             if not a or not b or a is b:
                 continue
+            if not work.take(len(boxes)):
+                return
             dx, dy = b.x - a.x, b.y - a.y
             long = hypot(dx, dy)
             if long < 1e-6:
@@ -237,18 +240,20 @@ def _settle(boxes: list[Placed], links: list[Mark]) -> None:
                 push = (1 if off >= 0 else -1) * (reach - abs(off))
                 _move_to(c, c.x + nx * push, c.y + ny * push)
                 moves += 1
-        moves += _apart(boxes)
+        moves += _apart(boxes, work)
         if not moves:
             break
 
 
-def _apart(boxes: list[Placed]) -> int:
+def _apart(boxes: list[Placed], work: Work) -> int:
     """Pushes apart boxes that overlap, along the way that parts them least, and says how many
-    moved."""
+    moved. Each pair looked at counts against `work`; it stops where the next would go past it."""
     moves = 0
     ordered = sorted(boxes, key=lambda b: b.x - b.hw)
     for i, p in enumerate(ordered):
         for q in ordered[i + 1 :]:
+            if not work.take(1):
+                return moves
             if q.x - q.hw >= p.x + p.hw + BOX_GAP:
                 break
             ox = p.hw + q.hw + BOX_GAP - abs(q.x - p.x)
