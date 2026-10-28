@@ -176,6 +176,7 @@ export const DRAWING_SOURCE_WORDS = {
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
   'view.more': 'More choices',
+  'view.list.more': 'More views',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',

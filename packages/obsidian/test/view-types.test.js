@@ -18,7 +18,10 @@ const ORG = `// graph: org
 (ada)-[:MANAGES]->(cy)`;
 const styled = (...lines) => ['// graph: org_style · STYLE org', ...lines].join('\n');
 const noteOf = (...blocks) => ['# Org', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
-const VIEWS = ['Matrix', 'Treemap', 'Chord', 'Ego', 'Force', 'Density', 'Block', 'Plan', 'Centroid', 'Containment'];
+/** The views shown at first, then those under More views (Q-12, option B). */
+const FIRST = ['Force', 'Matrix', 'Treemap', 'Ego'];
+const MORE = ['Chord', 'Density', 'Block', 'Plan', 'Centroid', 'Containment'];
+const VIEWS = [...FIRST, ...MORE];
 
 async function card(note) {
   const env = await load({ files: { [PATH]: note } });
@@ -41,6 +44,42 @@ describe('the view picker', () => {
         views.querySelectorAll('button').map((b) => b.textContent),
         VIEWS,
       );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_types_offered
+  test('shows four views at first, beside Timeline and Radial among the types, and folds the rest under More views', async () => {
+    const { env, el } = await card(noteOf(ORG));
+    try {
+      labelled(el, 'Diagram type').click();
+      const views = el.querySelector('.thoughtknot-view-list');
+      const fold = views.querySelector('.thoughtknot-view-more details');
+      assert.ok(fold, 'the rest folded');
+      assert.equal(fold.open, false, 'closed while none of them is drawn');
+      assert.equal(fold.querySelector('summary').textContent, 'More views');
+      assert.deepEqual(
+        fold.querySelectorAll('button').map((b) => b.textContent),
+        MORE,
+      );
+      const types = el.querySelectorAll('.thoughtknot-type-list button').map((b) => b.textContent);
+      assert.ok(
+        ['Timeline', 'Radial'].every((t) => types.includes(t)),
+        types.join(', '),
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_types_offered
+  test('opens More views when the view drawn now is one of them, so it is never hidden', async () => {
+    const { env, el } = await card(noteOf(ORG, styled("(d1:Diagram {type: 'thoughtknot.diagrams.chord'})")));
+    try {
+      await until(() => el.querySelector('.thoughtknot-plugin-picture svg'));
+      labelled(el, 'Diagram type').click();
+      assert.equal(el.querySelector('.thoughtknot-view-more details').open, true);
     } finally {
       env.uninstall();
     }

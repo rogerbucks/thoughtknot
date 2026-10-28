@@ -52,7 +52,7 @@ const UPPER_SNAKE = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
 
 describe('one code style', () => {
   test('one formatter, Prettier, pinned, with its settings in the repository', () => {
-    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.9');
+    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.10');
     assert.deepEqual(readJSON('.prettierrc.json'), { printWidth: 120, singleQuote: true });
     assert.ok(exists('.prettierignore'));
   });
@@ -81,7 +81,7 @@ describe('one code style', () => {
 
   test('the Python library follows PEP 8: Ruff checks and formats it, pinned, in CI', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
-    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.16\.9"\]/);
+    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.17\.1"\]/);
     assert.match(py, /\[tool\.ruff\][^[]*\nline-length = 99/);
     assert.match(py, /\[tool\.ruff\.lint\]\n(?:#[^\n]*\n)*select = \["E", "W", "F", "N"[\],]/);
     assert.match(ci(), /run: uv run --locked ruff check/);
