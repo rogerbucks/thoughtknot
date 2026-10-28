@@ -1232,6 +1232,7 @@
     "requirements": [
       "layout_live_loop",
       "layout_glide",
+      "orientation_cues",
       "layout_concept_layers",
       "layout_plugins"
     ]

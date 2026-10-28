@@ -191,6 +191,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Obsidian plugin: the View menu and views
 
+- `test/orientation-cues.test.js` — every projection keeps the cues to where the person is (editor spec §25,
+  orientation_cues; ethos rule r_cues). In 2D the mini-map and the marked selection, also laid out again. In 2.5D and 3D
+  the picked card or ball, marked and named.
 - `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
 - `packages/obsidian/test/layout-said.test.js` — the View menu says how the drawing was laid out, and why. It says
