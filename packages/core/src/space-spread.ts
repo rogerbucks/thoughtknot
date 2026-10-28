@@ -149,7 +149,8 @@ export function spreadSpace(
   // laid out afresh, a trunk's joints are set between its groups once the things are laid out (space-parts.ts)
   const things = drawn ? shape : withoutJoints(shape);
   const laid = FORCE_3D.place(things, drawn?.seeds ?? previous, drawn ? options : roomier(options));
-  const spots = drawn ? laid : jointsBetween(shape, partsNear(things, laid));
+  // laid out again from last time's spots, each part stays where it was (cluster_in_place); afresh, they are packed
+  const spots = drawn ? laid : jointsBetween(shape, previous ? laid : partsNear(things, laid));
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);
