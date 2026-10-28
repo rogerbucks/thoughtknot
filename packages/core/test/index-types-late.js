@@ -305,4 +305,9 @@ export const TYPES_LATE = [
   'LayoutOffer',
   'LayoutPlaced',
   'PluginLayout',
+  'Painter',
+  'Render',
+  'Space',
+  'ViewLayer',
+  'ViewLayers',
 ];
