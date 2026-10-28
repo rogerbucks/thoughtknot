@@ -1,0 +1,229 @@
+# Device checks
+
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md)): 163 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+
+## 01 Viewing
+
+- [[Device checks/01 Viewing/V-01 Every graph is drawn|V-01 Every graph is drawn]]
+- [[Device checks/01 Viewing/V-02 Each step draws so far|V-02 Each step draws so far]]
+- [[Device checks/01 Viewing/V-03 Query block as code|V-03 Query block as code]]
+- [[Device checks/01 Viewing/V-04 Empty block prompt|V-04 Empty block prompt]]
+- [[Device checks/01 Viewing/V-05 The bar on each drawing|V-05 The bar on each drawing]]
+- [[Device checks/01 Viewing/V-06 Misspelt link dashed|V-06 Misspelt link dashed]]
+- [[Device checks/01 Viewing/V-07 Tap a box for details|V-07 Tap a box for details]]
+- [[Device checks/01 Viewing/V-08 Tap beside a box|V-08 Tap beside a box]]
+- [[Device checks/01 Viewing/V-09 Fifty things on a phone|V-09 Fifty things on a phone]]
+- [[Device checks/01 Viewing/V-10 Huge graph shows text|V-10 Huge graph shows text]]
+- [[Device checks/01 Viewing/V-11 Slow layout banner|V-11 Slow layout banner]]
+- [[Device checks/01 Viewing/V-12 Light and dark themes|V-12 Light and dark themes]]
+- [[Device checks/01 Viewing/V-13 Schema drawn as a picture|V-13 Schema drawn as a picture]]
+
+## 02 Zoom
+
+- [[Device checks/02 Zoom/Z-01 Desktop wheel and pinch|Z-01 Desktop wheel and pinch]]
+- [[Device checks/02 Zoom/Z-02 Desktop drag and keys|Z-02 Desktop drag and keys]]
+- [[Device checks/02 Zoom/Z-03 Phone scroll and pinch|Z-03 Phone scroll and pinch]]
+- [[Device checks/02 Zoom/Z-04 Double click zooms in|Z-04 Double click zooms in]]
+- [[Device checks/02 Zoom/Z-05 Zoom limits and sharp text|Z-05 Zoom limits and sharp text]]
+- [[Device checks/02 Zoom/Z-06 Full screen|Z-06 Full screen]]
+- [[Device checks/02 Zoom/Z-07 No text highlight|Z-07 No text highlight]]
+- [[Device checks/02 Zoom/Z-08 Locked graph undeclared|Z-08 Locked graph undeclared]]
+- [[Device checks/02 Zoom/Z-09 Reading view read only|Z-09 Reading view read only]]
+- [[Device checks/02 Zoom/Z-10 One set of zoom controls|Z-10 One set of zoom controls]]
+- [[Device checks/02 Zoom/Z-11 Gestures stay in the drawing|Z-11 Gestures stay in the drawing]]
+- [[Device checks/02 Zoom/Z-12 First tap does not jump|Z-12 First tap does not jump]]
+
+## 03 The edit pane
+
+- [[Device checks/03 The edit pane/P-01 Edit opens the pane|P-01 Edit opens the pane]]
+- [[Device checks/03 The edit pane/P-02 Coloured text and read back|P-02 Coloured text and read back]]
+- [[Device checks/03 The edit pane/P-03 Misspelt name fix|P-03 Misspelt name fix]]
+- [[Device checks/03 The edit pane/P-04 Suggestions while typing|P-04 Suggestions while typing]]
+- [[Device checks/03 The edit pane/P-05 Typing reaches the note|P-05 Typing reaches the note]]
+- [[Device checks/03 The edit pane/P-06 Same block edited twice|P-06 Same block edited twice]]
+- [[Device checks/03 The edit pane/P-07 Undo and redo|P-07 Undo and redo]]
+- [[Device checks/03 The edit pane/P-08 Comma and colon added|P-08 Comma and colon added]]
+- [[Device checks/03 The edit pane/P-09 Auto pair brackets|P-09 Auto pair brackets]]
+- [[Device checks/03 The edit pane/P-10 Completing as you type|P-10 Completing as you type]]
+- [[Device checks/03 The edit pane/P-11 Thing without name or text|P-11 Thing without name or text]]
+- [[Device checks/03 The edit pane/P-12 Graph locked by earlier build|P-12 Graph locked by earlier build]]
+- [[Device checks/03 The edit pane/P-13 Link type without colon|P-13 Link type without colon]]
+- [[Device checks/03 The edit pane/P-14 Lock the graph|P-14 Lock the graph]]
+- [[Device checks/03 The edit pane/P-15 Lock over two blocks|P-15 Lock over two blocks]]
+- [[Device checks/03 The edit pane/P-16 Phone pane tabs|P-16 Phone pane tabs]]
+
+## 04 Editing in place and the inspector
+
+- [[Device checks/04 Editing in place and the inspector/I-01 Edit here opens the card|I-01 Edit here opens the card]]
+- [[Device checks/04 Editing in place and the inspector/I-02 Edit here after reload|I-02 Edit here after reload]]
+- [[Device checks/04 Editing in place and the inspector/I-03 Text box height|I-03 Text box height]]
+- [[Device checks/04 Editing in place and the inspector/I-04 Page stays still|I-04 Page stays still]]
+- [[Device checks/04 Editing in place and the inspector/I-05 Typing keeps focus|I-05 Typing keeps focus]]
+- [[Device checks/04 Editing in place and the inspector/I-06 Hover keeps colours|I-06 Hover keeps colours]]
+- [[Device checks/04 Editing in place and the inspector/I-07 Pencil becomes book|I-07 Pencil becomes book]]
+- [[Device checks/04 Editing in place and the inspector/I-08 Properties look native|I-08 Properties look native]]
+- [[Device checks/04 Editing in place and the inspector/I-09 Typed property fields|I-09 Typed property fields]]
+- [[Device checks/04 Editing in place and the inspector/I-10 Value written on leave|I-10 Value written on leave]]
+- [[Device checks/04 Editing in place and the inspector/I-11 Property icon menu|I-11 Property icon menu]]
+- [[Device checks/04 Editing in place and the inspector/I-12 Make a list|I-12 Make a list]]
+- [[Device checks/04 Editing in place and the inspector/I-13 List chips|I-13 List chips]]
+- [[Device checks/04 Editing in place and the inspector/I-14 Properties after Done|I-14 Properties after Done]]
+- [[Device checks/04 Editing in place and the inspector/I-15 Rivals list row name|I-15 Rivals list row name]]
+- [[Device checks/04 Editing in place and the inspector/I-16 Type menu opens above|I-16 Type menu opens above]]
+- [[Device checks/04 Editing in place and the inspector/I-17 Choosing selects the text|I-17 Choosing selects the text]]
+- [[Device checks/04 Editing in place and the inspector/I-18 Properties sheet on phone|I-18 Properties sheet on phone]]
+- [[Device checks/04 Editing in place and the inspector/I-19 Suggested name box|I-19 Suggested name box]]
+- [[Device checks/04 Editing in place and the inspector/I-20 Add a thing|I-20 Add a thing]]
+
+## 05 The style graph
+
+- [[Device checks/05 The style graph/S-01 Style block folds|S-01 Style block folds]]
+- [[Device checks/05 The style graph/S-02 Broken nudge word|S-02 Broken nudge word]]
+- [[Device checks/05 The style graph/S-03 Drag a box to move it|S-03 Drag a box to move it]]
+- [[Device checks/05 The style graph/S-04 Hold a box to move it|S-04 Hold a box to move it]]
+- [[Device checks/05 The style graph/S-05 Move a box from the keyboard|S-05 Move a box from the keyboard]]
+- [[Device checks/05 The style graph/S-06 Move a box round a radial drawing|S-06 Move a box round a radial drawing]]
+- [[Device checks/05 The style graph/S-07 Put a thing in the centre|S-07 Put a thing in the centre]]
+- [[Device checks/05 The style graph/S-08 Centre on a thing from any view|S-08 Centre on a thing from any view]]
+
+## 06 Views
+
+- [[Device checks/06 Views/W-01 View card and hide others|W-01 View card and hide others]]
+- [[Device checks/06 Views/W-02 Five view kinds|W-02 Five view kinds]]
+- [[Device checks/06 Views/W-03 Look with colour|W-03 Look with colour]]
+- [[Device checks/06 Views/W-04 Make a view by tapping|W-04 Make a view by tapping]]
+- [[Device checks/06 Views/W-05 Save as shown|W-05 Save as shown]]
+
+## 07 Parked for later
+
+- [[Device checks/07 Parked for later/D-01 Park for later|D-01 Park for later]]
+- [[Device checks/07 Parked for later/D-02 Overdue parked thing|D-02 Overdue parked thing]]
+- [[Device checks/07 Parked for later/D-03 Declare Deferred in schema|D-03 Declare Deferred in schema]]
+
+## 08 Walked paths
+
+- [[Device checks/08 Walked paths/T-01 Record a path|T-01 Record a path]]
+- [[Device checks/08 Walked paths/T-02 Play a path|T-02 Play a path]]
+- [[Device checks/08 Walked paths/T-03 Path with missing step|T-03 Path with missing step]]
+
+## 09 Export
+
+- [[Device checks/09 Export/X-01 Export SVG on Mac|X-01 Export SVG on Mac]]
+- [[Device checks/09 Export/X-02 PNG is sharp|X-02 PNG is sharp]]
+- [[Device checks/09 Export/X-03 Export a view|X-03 Export a view]]
+- [[Device checks/09 Export/X-04 Companion note and classification|X-04 Companion note and classification]]
+- [[Device checks/09 Export/X-05 iPhone share sheet|X-05 iPhone share sheet]]
+- [[Device checks/09 Export/X-06 Android saves in vault|X-06 Android saves in vault]]
+- [[Device checks/09 Export/X-07 Second export same day|X-07 Second export same day]]
+
+## 10 Settings
+
+- [[Device checks/10 Settings/C-01 Settings page|C-01 Settings page]]
+- [[Device checks/10 Settings/C-02 Strictness levels|C-02 Strictness levels]]
+- [[Device checks/10 Settings/C-03 Convert to standard GQL|C-03 Convert to standard GQL]]
+- [[Device checks/10 Settings/C-04 AI models|C-04 AI models]]
+- [[Device checks/10 Settings/C-05 Indent and direction|C-05 Indent and direction]]
+- [[Device checks/10 Settings/C-06 Convert refused for unreadable line|C-06 Convert refused for unreadable line]]
+- [[Device checks/10 Settings/C-07 Convert refused in reading view|C-07 Convert refused in reading view]]
+
+## 11 Accessibility
+
+- [[Device checks/11 Accessibility/A-01 Keyboard only|A-01 Keyboard only]]
+- [[Device checks/11 Accessibility/A-02 VoiceOver|A-02 VoiceOver]]
+
+## 12 Focus and untangle
+
+- [[Device checks/12 Focus and untangle/F-01 Focus on a thing|F-01 Focus on a thing]]
+- [[Device checks/12 Focus and untangle/F-02 Focus on a link and its reach|F-02 Focus on a link and its reach]]
+- [[Device checks/12 Focus and untangle/F-03 Hover highlight with a pointer|F-03 Hover highlight with a pointer]]
+- [[Device checks/12 Focus and untangle/F-04 Highlight by touch and keyboard|F-04 Highlight by touch and keyboard]]
+- [[Device checks/12 Focus and untangle/F-05 Show only a thing and its neighbours|F-05 Show only a thing and its neighbours]]
+- [[Device checks/12 Focus and untangle/F-06 Legend brings forward and hides|F-06 Legend brings forward and hides]]
+- [[Device checks/12 Focus and untangle/F-07 Shortest path|F-07 Shortest path]]
+- [[Device checks/12 Focus and untangle/F-08 Find a thing|F-08 Find a thing]]
+- [[Device checks/12 Focus and untangle/F-09 Walk the links by arrow key|F-09 Walk the links by arrow key]]
+
+## 13 Proposals
+
+- [[Device checks/13 Proposals/R-01 Proposal on the phone|R-01 Proposal on the phone]]
+
+## 14 Details and the sheet
+
+- [[Device checks/14 Details and the sheet/G-01 Links listed in words|G-01 Links listed in words]]
+- [[Device checks/14 Details and the sheet/G-02 Reduced motion|G-02 Reduced motion]]
+- [[Device checks/14 Details and the sheet/G-03 Trail back and forward|G-03 Trail back and forward]]
+- [[Device checks/14 Details and the sheet/G-04 Arrow to the selection|G-04 Arrow to the selection]]
+- [[Device checks/14 Details and the sheet/G-05 Sheet pinned and clear|G-05 Sheet pinned and clear]]
+- [[Device checks/14 Details and the sheet/G-06 Sheet minimised and remembered|G-06 Sheet minimised and remembered]]
+- [[Device checks/14 Details and the sheet/G-07 Sheet closed and reached|G-07 Sheet closed and reached]]
+
+## 15 Diagram types
+
+- [[Device checks/15 Diagram types/E-01 Choose a diagram type|E-01 Choose a diagram type]]
+- [[Device checks/15 Diagram types/E-02 Same look in every type|E-02 Same look in every type]]
+- [[Device checks/15 Diagram types/E-03 One way to work in every type|E-03 One way to work in every type]]
+- [[Device checks/15 Diagram types/E-04 Tree stops fitting|E-04 Tree stops fitting]]
+- [[Device checks/15 Diagram types/E-05 Wide types on a phone|E-05 Wide types on a phone]]
+- [[Device checks/15 Diagram types/E-06 Large graph way in|E-06 Large graph way in]]
+
+## 16 AI models
+
+- [[Device checks/16 AI models/U-01 AI off until turned on|U-01 AI off until turned on]]
+- [[Device checks/16 AI models/U-02 Models by address and purpose|U-02 Models by address and purpose]]
+- [[Device checks/16 AI models/U-03 See exactly what is sent|U-03 See exactly what is sent]]
+- [[Device checks/16 AI models/U-04 Choose what is sent|U-04 Choose what is sent]]
+- [[Device checks/16 AI models/U-05 Ceiling and credentials|U-05 Ceiling and credentials]]
+- [[Device checks/16 AI models/U-06 Unreachable model and the send record|U-06 Unreachable model and the send record]]
+
+## 17 Sources and steps
+
+- [[Device checks/17 Sources and steps/Q-01 Two views of one graph|Q-01 Two views of one graph]]
+- [[Device checks/17 Sources and steps/Q-02 Views of a graph in another note|Q-02 Views of a graph in another note]]
+- [[Device checks/17 Sources and steps/Q-03 Graph from a gql file|Q-03 Graph from a gql file]]
+- [[Device checks/17 Sources and steps/Q-04 Missing or moved gql file|Q-04 Missing or moved gql file]]
+- [[Device checks/17 Sources and steps/Q-05 Run a step|Q-05 Run a step]]
+
+## 18 Link flow and path play
+
+- [[Device checks/18 Link flow and path play/L-01 Dashes for one type|L-01 Dashes for one type]]
+- [[Device checks/18 Link flow and path play/L-02 A dot on every link|L-02 A dot on every link]]
+- [[Device checks/18 Link flow and path play/L-03 Still under reduced motion|L-03 Still under reduced motion]]
+- [[Device checks/18 Link flow and path play/L-04 Play on its own|L-04 Play on its own]]
+- [[Device checks/18 Link flow and path play/L-05 Export as an animated SVG|L-05 Export as an animated SVG]]
+- [[Device checks/18 Link flow and path play/L-06 Too large for the phone|L-06 Too large for the phone]]
+
+## 19 The View menu
+
+- [[Device checks/19 The View menu/M-01 The four switches and their defaults|M-01 The four switches and their defaults]]
+- [[Device checks/19 The View menu/M-02 Labels by zoom|M-02 Labels by zoom]]
+- [[Device checks/19 The View menu/M-03 Busy hub folded into a stub|M-03 Busy hub folded into a stub]]
+- [[Device checks/19 The View menu/M-04 Groups folded into boxes|M-04 Groups folded into boxes]]
+- [[Device checks/19 The View menu/M-05 Links merged into a trunk|M-05 Links merged into a trunk]]
+- [[Device checks/19 The View menu/M-06 Straight and right-angled links|M-06 Straight and right-angled links]]
+- [[Device checks/19 The View menu/M-07 Switches keep the selection|M-07 Switches keep the selection]]
+- [[Device checks/19 The View menu/M-08 The ladder of detail, zoom and planes|M-08 The ladder of detail, zoom and planes]]
+
+## 20 Animated images
+
+- [[Device checks/20 Animated images/K-01 Images in the details|K-01 Images in the details]]
+- [[Device checks/20 Animated images/K-02 A picture on a box|K-02 A picture on a box]]
+- [[Device checks/20 Animated images/K-03 Pause and play|K-03 Pause and play]]
+- [[Device checks/20 Animated images/K-04 Still under reduced motion|K-04 Still under reduced motion]]
+- [[Device checks/20 Animated images/K-05 Over the size limit|K-05 Over the size limit]]
+- [[Device checks/20 Animated images/K-06 Six moving at once|K-06 Six moving at once]]
+- [[Device checks/20 Animated images/K-07 Export says what it did|K-07 Export says what it did]]
+
+## 21 Links and attachments
+
+- [[Device checks/21 Links and attachments/H-01 Links shown as links|H-01 Links shown as links]]
+- [[Device checks/21 Links and attachments/H-02 Opened by Obsidian|H-02 Opened by Obsidian]]
+- [[Device checks/21 Links and attachments/H-03 Attachments at a glance|H-03 Attachments at a glance]]
+- [[Device checks/21 Links and attachments/H-04 Preview on hover or long press|H-04 Preview on hover or long press]]
+- [[Device checks/21 Links and attachments/H-05 Back where you were|H-05 Back where you were]]
+- [[Device checks/21 Links and attachments/H-06 Broken link and its fixes|H-06 Broken link and its fixes]]
+- [[Device checks/21 Links and attachments/H-07 Renames follow|H-07 Renames follow]]
+- [[Device checks/21 Links and attachments/H-08 Safe to click|H-08 Safe to click]]
+- [[Device checks/21 Links and attachments/H-09 Links by keyboard|H-09 Links by keyboard]]
+- [[Device checks/21 Links and attachments/H-10 Rich details|H-10 Rich details]]
+- [[Device checks/21 Links and attachments/H-11 A thing that is a note|H-11 A thing that is a note]]
+- [[Device checks/21 Links and attachments/H-12 No picture loaded from an embed|H-12 No picture loaded from an embed]]

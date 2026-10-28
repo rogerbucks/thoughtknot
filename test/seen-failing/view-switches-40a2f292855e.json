@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-switches.test.js",
+  "test": "a large network with no groups written > keeps its links apart once merging is turned off, and is drawn as ever when small or grouped",
+  "seen_failing_first": false,
+  "evidence": "It guards what must not change: merging off, small graphs and written groups draw as before, which they already did"
+}

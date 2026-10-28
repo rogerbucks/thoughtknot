@@ -1,0 +1,50 @@
+# Version updates wait seven days after publication and arrive grouped, once a
+# week. Security updates are not grouped and have no cooldown: they are raised
+# as soon as an advisory is published, and run the full CI suite as a pull request.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    # Held back: the Obsidian review rules (eslint-plugin-obsidianmd 0.4.2)
+    # need ESLint 9, @eslint/json 0.14 and a TypeScript that typescript-eslint
+    # supports (below 6.1). A new major of any of these fails npm ci. Lift each
+    # hold when the Obsidian linter supports it. Minor and patch updates, and
+    # security fixes, still come through.
+    ignore:
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/json' # pinned exactly by the Obsidian linter: every version is held
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+    groups:
+      npm-version-updates:
+        applies-to: version-updates
+        patterns: ['*']
+
+  - package-ecosystem: uv
+    directory: /python/graph_spec
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      uv-version-updates:
+        applies-to: version-updates
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-version-updates:
+        applies-to: version-updates
+        patterns: ['*']

@@ -1,0 +1,187 @@
+// What reading a note's graph blocks gives (spec §3). It gives each graph ready to draw: its boxes, its links, and the
+// estimates drawn where what was written was a near miss. It gives the problems too, each with its block, its line and
+// its fix.
+import type { World } from '@thoughtknot/graph-spec';
+import type { CertaintyLevel } from './certainty-drawn.ts';
+import type { Estimate } from './estimates.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
+import type { InlineProperties } from './inline-properties.ts';
+import type { Refusal } from './layout-limits.ts';
+import type { FlowLink } from './link-flow.ts';
+import type { PictureBox } from './picture.ts';
+import type { Nudge } from './style-graph.ts';
+import type { TimelineOrder } from './timeline.ts';
+import type { Folding } from './untangle-fold.ts';
+
+/** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
+export interface Block {
+  text: string;
+  line: number;
+}
+
+/**
+ * A note on a thing or a link (editor spec §24, note_comment, note_text): the /// lines written directly above it. Its
+ * text is CommonMark for the host to render, its summary the text's first paragraph. The block (index in the note) and
+ * the /// lines in that block (1 = its graph line) say where it is written.
+ */
+export interface ThingNote {
+  text: string;
+  summary: string;
+  block: number;
+  lines: number[];
+}
+
+/** One thing to draw: its id, its kinds joined by a dot, and its text. */
+export interface Box {
+  key: string;
+  kind: string;
+  text: string;
+  /** Only for a thing with a note written directly above it (editor spec §24). */
+  note?: ThingNote;
+  /**
+   * Only for a thing written without a name, drawn under the name suggested for it (spec §4, unnamed_drawn_suggested).
+   * It holds the block it is written in, and the 0-based line and character there. That is just after its (, where the
+   * name would go.
+   */
+  suggested?: { block: number; line: number; character: number };
+  /**
+   * Only for a thing some Deferred defers (spec §5, deferred_drawn). It holds what is needed before it is done, and
+   * whether every Deferred on it is past its revisit date. The core only says which boxes these are. The host draws the
+   * dashing and the later mark on the finished drawing, so the layout source stays byte-identical with the Python
+   * library's.
+   */
+  deferred?: { overdue: boolean; what: string };
+  /**
+   * Only for a thing whose certainty is written (editor spec §36, certainty_drawn): how sure it is. The host draws its
+   * line weight, dash and mark (certainty-drawn.ts) on the finished drawing, as it does a deferred thing's.
+   */
+  certainty?: CertaintyLevel;
+}
+
+/** One link to draw, read in its schema's words. */
+export interface Link {
+  from: string;
+  type: string;
+  reading: string;
+  to: string;
+  /** Which written link this is, as an index into its graph's edges, where the drawing holds only some links (a view). */
+  edge?: number;
+  /** Only for a link with a note written directly above it (editor spec §24). */
+  note?: ThingNote;
+}
+
+/** One graph, ready to draw: its boxes, its links, and the estimates added where what was written was a near miss. */
+export interface GraphDrawing {
+  graph: string;
+  boxes: Box[];
+  /** Every link as written, in order — what graph_svg.py draws. */
+  links: Link[];
+  /** Near misses drawn as guesses (spec §3): never written to the note. */
+  estimates: Estimate[];
+  /** The one direction to lay it out in, one the locked style lists (spec §21); unset, the best fit of them all. */
+  direction?: string;
+  /** The nudges of its style graph (spec §6), written into the layout; none, the layout the Python library gives. */
+  nudges?: Nudge[];
+  /**
+   * The links its style graph draws without their arrowheads (spec §15). Each is given by its order in the layout
+   * source: its links, then the links guessed from a near miss of a name. None: every arrowhead is drawn.
+   */
+  arrowless?: number[];
+  /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
+  inline?: InlineProperties;
+  /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */
+  diagram?: DiagramPlan;
+  /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */
+  flow?: FlowLink[];
+  /**
+   * How its style graph routes its links (spec §25): curved as Graphviz draws them, straight, right-angled, or direct
+   * (direct-links.ts). None, direct: the default (Roger, 24 Oct 2026).
+   */
+  routing?: 'curved' | 'straight' | 'right-angled' | 'direct';
+  /**
+   * Laid out quickly with straight links first, past 300 things, for its curves to follow (§11, curves_after_drawing);
+   * none, curved at once.
+   */
+  straightFirst?: boolean;
+  /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
+  engine?: 'own';
+  /** False where kinds that link in order are not to get a lane each (§68, layout_kind_lanes). */
+  kindLanes?: false;
+  /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
+  layoutOptions?: Partial<LayoutOptions>;
+  /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
+  folding?: Folding;
+  /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
+  pictures?: PictureBox[];
+}
+
+/**
+ * How Graphviz lays a diagram type out (spec §15; graph-layout.js, `typedSource`):
+ * - a tree by its links (indexes in the order the layout source draws links);
+ * - a radial drawing around its centre;
+ * - lanes by kind (each lane's label and its things, and the groups drawn inside them);
+ * - a timeline by its things grouped by place, first first: by day, by number, as written or by links. Its things
+ *   hidden (timeline_show) are left out of the drawing.
+ * A flow needs nothing more. A network and a table have none: a network is the layout source as it is, and a table is
+ * drawn by the host.
+ */
+export type DiagramPlan =
+  | { type: 'tree'; tree: number[] }
+  | { type: 'flow' }
+  | { type: 'radial'; centre: string }
+  | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][] }
+  | { type: 'timeline'; order: TimelineOrder; dates: string[][]; hidden?: string[] };
+
+/**
+ * Something that could not be read: its graph, the block (index in the note) and the line in that block (1 = its
+ * graph line). Also what is wrong, and the fix.
+ */
+export interface Problem {
+  graph: string | null;
+  block: number;
+  line: number;
+  message: string;
+  fix: string;
+  /** An error leaves something out of the drawing; a warning draws it, as an estimate; a hint only offers a fix, and is no problem. */
+  severity: 'error' | 'warning' | 'hint';
+  /** The text left out of the drawing, when a path or clause was. */
+  dropped?: string;
+  /** A word to change, and what it could be changed to — one fix each. */
+  replace?: { written: string; with: string[] };
+  /** Text to add, at a 0-based line and character of the block: the fix, as an edit. */
+  insert?: { line: number; character: number; text: string };
+  /** What the fix is called where it is offered, when "Change … to …" would not say it. */
+  fixTitle?: string;
+  /** Exactly where the word to change is: a 0-based line of the block, and the characters it spans on it. */
+  span?: { line: number; character: number; end: number };
+  /** The name suggested for a thing written without one, which it is drawn under until its fix writes it. */
+  suggested?: string;
+  /** Further edits made with the `replace` fix, each at a 0-based line and characters of the block, as one change. */
+  also?: { span: { line: number; character: number; end: number }; text: string }[];
+  /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
+  departure?: Departure;
+  /** The problem's stable code, given as the diagnostic's code (editor spec §42, problem_codes). The graph spec
+   * reader's own, such as GN207, or for what the core finds beyond it, one of drawing-problem-codes.json, such as
+   * GN709. Every problem has one, the same from the Python library where it finds the problem too. */
+  code: string;
+  /** What sort of problem the core raised, where no code says it: a link to a missing thing, or a relationship type
+   * the graph lacks. Many problems are grouped by it (spec §8). */
+  kind?: 'broken-links' | 'unknown-types';
+}
+
+/** A departure from standard GQL that the reader reads as meant (spec §21): what strictness acts on. */
+export type Departure = 'missing-comma' | 'trailing-comma' | 'bare-type';
+
+/** What a note's graph blocks say: each graph as drawn, the problems, and the graphs themselves, as written and joined. */
+export interface NoteReading {
+  graphs: Map<string, GraphDrawing>;
+  problems: Problem[];
+  /** The blocks as written, up to the one drawn. */
+  texts: string[];
+  /** The world as read, for checks and details. */
+  world: World;
+  /** The whole note's world, whose schemas lock a graph even when written after the block drawn (§5). */
+  whole: World;
+  /** Set when the graph blocks were too large to read (§9, layout_contained): nothing was read, and this says why. */
+  tooLarge?: Refusal;
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet-dock.test.js",
+  "test": "in a wide window the details open on the right until a place is chosen (sheet_side_wide) > a place kept from before wins over the wide window",
+  "seen_failing_first": false,
+  "evidence": "A guard: a kept place already won before the wide default existed."
+}

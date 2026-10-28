@@ -1,0 +1,197 @@
+// The settings page (spec §21): one page in Obsidian's plugin settings, holding every option the editor offers. Each
+// comes with its sentence. Each is defined from the core's list of options, so none can be left off. They are in
+// Obsidian's declarative form, so each is found by the settings search. Each change is saved at once, read back as the
+// core reads settings.
+import { PluginSettingTab } from 'obsidian';
+import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
+import {
+  OPTIONS,
+  classMapFrom,
+  classMapProblems,
+  classMapText,
+  optionSaid,
+  presetChange,
+  unmatchedClasses,
+  word,
+} from '@thoughtknot/core';
+import type { MatrixRow, Option, Settings } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from '../main';
+import { knownClass } from '../ai/matrix-known';
+import { readMatrix } from '../ai/matrix-note';
+import { aiModelList, getModelValue, setModelValue } from './ai-models';
+import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
+import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
+
+const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
+
+/** The heading of each section, in the person's language. */
+const SECTION_WORDS = {
+  Language: 'settings.section.language',
+  Strictness: 'settings.section.strictness',
+  'AI models': 'settings.section.ai-models',
+  Proposals: 'settings.section.proposals',
+  Formatting: 'settings.section.formatting',
+  Drawing: 'settings.section.drawing',
+  Export: 'settings.section.export',
+} as const;
+
+/** The plugin's settings page. */
+export class ThoughtKnotSettingTab extends PluginSettingTab {
+  constructor(
+    app: App,
+    private readonly owner: ThoughtKnotPlugin,
+  ) {
+    super(app, owner);
+  }
+
+  override getSettingDefinitions(): SettingDefinitionItem[] {
+    void this.loadMatrix();
+    return SECTIONS.flatMap((heading): SettingDefinitionItem[] => [
+      {
+        type: 'group',
+        heading: word(SECTION_WORDS[heading]),
+        items: OPTIONS.filter((o) => o.section === heading).flatMap((o) => this.definitions(o)),
+      },
+      // a list stands on its own, after its part of the page
+      ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this, this.matrix)] : []),
+    ])
+      .concat(profileGroup(this.owner.profiles, () => this.update()))
+      .concat(outsideGroup(this.owner.outside, () => void this.addLink()));
+  }
+
+  /** The link typed in for a plug-in from outside: never saved, only fetched once Add is pressed. */
+  private link = '';
+
+  private async addLink(): Promise<void> {
+    await this.owner.outside.addFromLink(this.link);
+    this.link = '';
+    this.update();
+  }
+
+  /** The matrix note's rows as last read; the page is drawn again when the note, or the path to it, changes them. */
+  private matrix: MatrixRow[] = [];
+
+  private async loadMatrix(): Promise<void> {
+    const rows = await readMatrix(this.app, this.owner.settings.aiMatrixNote, knownClass(this.owner.settings));
+    if (JSON.stringify(rows) === JSON.stringify(this.matrix)) return;
+    this.matrix = rows;
+    this.update();
+  }
+
+  /** The rows an option is shown in: one for most; for the departures, one each and the action that converts. */
+  private definitions(option: Option): SettingDefinition[] {
+    const s = this.owner.settings;
+    const o = optionSaid(option);
+    if (o.key === 'allowed')
+      return [
+        { name: o.name, desc: o.sentence },
+        ...(o.choices ?? []).map((c): SettingDefinition => ({
+          name: c.name,
+          desc: c.sentence ?? '',
+          control: { type: 'toggle', key: `allowed.${c.value}` },
+        })),
+        {
+          name: word('settings.convert'),
+          desc: word('settings.convert.sentence'),
+          action: () => void this.owner.convertToStandard(),
+        },
+      ];
+    if (o.key === 'classifications')
+      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
+    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
+      return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
+    if (o.key === 'aiClassMap')
+      return [
+        {
+          name: o.name,
+          // a class of the matrix matched by neither name nor the table here is said, never guessed
+          desc: [
+            o.sentence,
+            ...(unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).length
+              ? [
+                  word('settings.flagged', {
+                    classes: unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).join(', '),
+                  }),
+                ]
+              : []),
+            ...classMapProblems(s.classifications, s.aiClassMap),
+          ].join(' '),
+          control: { type: 'textarea', key: 'aiClassMap' },
+        },
+      ];
+    // two levels are each one of the classifications as they are set now. They are the level an export asks above,
+    // and the level an unlabelled note counts as for AI
+    if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
+      return [
+        {
+          name: o.name,
+          desc: o.sentence,
+          control: {
+            type: 'dropdown',
+            key: o.key,
+            options: Object.fromEntries(s.classifications.map((c) => [c, c])),
+          },
+        },
+      ];
+    const chosen = o.choices?.find((c) => c.value === s[o.key]);
+    return [
+      {
+        name: o.name,
+        desc: chosen?.sentence ? `${o.sentence} ${chosen.sentence}` : o.sentence,
+        control: {
+          type: 'dropdown',
+          key: o.key,
+          options: Object.fromEntries((o.choices ?? []).map((c) => [c.value, c.name])),
+        },
+      },
+    ];
+  }
+
+  override getControlValue(key: string): unknown {
+    const s = this.owner.settings;
+    if (key.startsWith(OUTSIDE_KEY)) return this.owner.outside.isOn(key.slice(OUTSIDE_KEY.length));
+    if (key === LINK_KEY) return this.link;
+    if (key.startsWith(PROFILE_KEY)) return profileValue(this.owner.profiles, key);
+    if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
+    if (key === 'classifications') return s.classifications.join('\n');
+    if (key === 'aiClassMap') return classMapText(s.aiClassMap);
+    if (key.startsWith('aiModels.')) return getModelValue(s, key, this.matrix);
+    return s[key as keyof Settings];
+  }
+
+  override async setControlValue(key: string, value: unknown): Promise<void> {
+    const s = this.owner.settings;
+    if (key === LINK_KEY) return void (this.link = String(value));
+    if (key.startsWith(OUTSIDE_KEY)) {
+      await this.owner.outside.turn(key.slice(OUTSIDE_KEY.length), !!value);
+      return this.update();
+    }
+    if (key.startsWith(PROFILE_KEY)) return setProfileValue(this.owner.profiles, key, value);
+    let change: Partial<Settings>;
+    if (key.startsWith('allowed.')) {
+      const id = key.slice('allowed.'.length);
+      const others = s.allowed.filter((a) => a !== id);
+      change = { allowed: value ? ([...others, id] as Settings['allowed']) : others };
+    } else if (key === 'classifications') {
+      const levels = String(value)
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (!levels.length) return;
+      change = { classifications: levels };
+    } else if (key === 'aiClassMap') change = { aiClassMap: classMapFrom(String(value)) };
+    else if (key.startsWith('aiModels.')) change = setModelValue(s, key, value, this.matrix);
+    else if (key === 'viewPreset') change = presetChange(String(value));
+    else change = { [key]: value };
+    await this.owner.saveSettings({ ...s, ...change });
+    // a level's own sentence, and a model's ceiling, follow a choice; the page is never drawn again under typing
+    const chosen = key.endsWith('.ceiling') || key.endsWith('.matrixRow') || key.includes('.matrixOn.');
+    const typed =
+      ['classifications', 'exportFolder', 'decider', 'aiMatrixNote', 'aiClassMap'].includes(key) ||
+      (key.startsWith('aiModels.') && !chosen);
+    if (!typed) this.update();
+    // the matrix note, or how its classes are matched, changed what the page shows of it
+    if (key === 'aiMatrixNote' || key === 'aiClassMap') void this.loadMatrix();
+  }
+}

@@ -1,0 +1,375 @@
+// How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
+// Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
+// tap again on the one selected centres it. A tap on empty space clears the selection. A box pressed with a mouse or
+// pen and dragged moves it, and so does M on a box (§6). A right-click on a box, or the menu key on it, opens its menu
+// (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details
+// sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
+import type { Lifecycle } from '../lifecycle';
+import type { Zoom, ZoomEvent } from '@thoughtknot/core';
+import { BoxDrag } from './box-drag-view';
+import type { DragHost } from './box-drag-view';
+import { BoxMoveKeys } from './box-move-keys';
+import { trackUse } from './card-in-use';
+import { toggleShortcuts } from '../shortcuts-list';
+import { showTour } from '../tour';
+import type { ViewOptions } from './view-options';
+import type { DetailsPanel } from './details-panel';
+import type { Selection } from './selection';
+import { onPointer } from './selection-pointer';
+import { onImageControl } from './animated-images';
+import { onMiniMap } from './mini-map';
+import type { QuickInfo } from './quick-info';
+import { boxIn, foldAt, targetAt, targetOf } from './taps';
+import { ThingMenu } from './thing-menu';
+import type { MenuItem } from './thing-menu';
+import { word } from '@thoughtknot/core';
+import type { Taps, Target } from './taps';
+import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
+import { ZOOM_STEP } from '../../space-controls.ts';
+import { fills } from '../../space-cards.ts';
+import type { SpaceMove } from '../../space-controls.ts';
+
+/** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
+const ownButton = (target: EventTarget | null): boolean =>
+  onPointer(target) || onImageControl(target) || onMiniMap(target);
+
+/** What the drawing's events need of their card, all built before they are bound. */
+export interface ViewportHost {
+  /** The card, which registers each listener, so that it goes with the card. */
+  card: Lifecycle;
+  viewport: HTMLElement;
+  zoom: Zoom;
+  sel: Selection;
+  details: DetailsPanel;
+  taps: Taps;
+  /** The quick-info tooltip (§24): opened by a hover, a long press and the keyboard focus, closed by a press or Escape. */
+  info: QuickInfo;
+  /** The drawing's SVG; none for a graph drawn as a table (§15). */
+  svg: SVGSVGElement | null;
+  /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). */
+  open: (t: Target, extend?: boolean) => void;
+  /** Opens a busy hub's stub or a folded group's box (§25), by its `data-fold`; `byKey` when the keyboard opened it. */
+  unfold: (fold: string, byKey?: boolean) => void;
+  /** The card's options, for moving a box by dragging it (§6) where they give a way to write a nudge. */
+  o?: ViewOptions;
+  /** The card's own element, for the list of shortcuts and to know when the card is used (§44). */
+  root: HTMLElement;
+  /** The card's full screen, which a host's command opens. A full-screen card's own command closes it. */
+  full: { show: () => void };
+  /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
+  space?: { move: (m: SpaceMove) => boolean };
+}
+
+/** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
+export function bindViewportEvents(host: ViewportHost): void {
+  const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom }) : null,
+    drag = movers?.drag ?? null,
+    keys = movers?.keys ?? null;
+  if (drag) card.register(() => drag.onunload());
+  // ? lists every keyboard shortcut, and the host's commands for the drawing act on the card used last (§44)
+  const shortcuts = () => toggleShortcuts(host.root, vp);
+  trackUse(card, host.root, {
+    zoomIn: () => host.space?.move({ zoom: ZOOM_STEP }) || zoom.zoomIn(),
+    zoomOut: () => host.space?.move({ zoom: 1 / ZOOM_STEP }) || zoom.zoomOut(),
+    fit: () => host.space?.move({ reset: true }) || zoom.fit(),
+    fullScreen: () => (host.o?.mode === 'full' ? host.o.onClose?.() : host.full.show()),
+    shortcuts,
+    tour: () => showTour(host.root, vp),
+  });
+  if (host.o?.tour) showTour(host.root, vp); // the first drawing after an example opens the tour (§44)
+  // Move in a box's details picks it up as M does, its box given the focus for the keys that follow (§6)
+  if (keys)
+    details.onMove = (key) => {
+      if (keys.pick(key))
+        Array.from(svg?.querySelectorAll<SVGGElement>('g.node') ?? [])
+          .find((g) => g.getAttribute('data-key') === key)
+          ?.focus({ preventScroll: true });
+    };
+  // a thing's menu: what can be done with it from here, opened by a right-click or the menu key (radial_centre_menu)
+  const menu = new ThingMenu(card, host.root);
+  const menuOf = (key: string): MenuItem[] => {
+    const d = host.o?.diagram;
+    return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
+  };
+  const openMenu = (key: string, at: { x: number; y: number }): boolean => {
+    const box = svg ? boxIn(svg, key) : undefined;
+    host.info.hide();
+    return menu.show(at, host.o?.diagram?.textOf?.(key) ?? key, menuOf(key), (box as HTMLElement | undefined) ?? null);
+  };
+  /** How the last press came: a finger held on a box opens its tooltip and picks it up, never the menu (§24, §6). */
+  let lastPointer = 'mouse';
+  let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean; again: boolean } | null = null;
+  /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
+  let emptyDown: { id: number; x: number; y: number } | null = null;
+  /** A press on a fold's stub or box: if it lifts where it came down, it opens the fold (§25). */
+  let foldDown: { id: number; x: number; y: number; fold: string } | null = null;
+  const point = (e: { clientX: number; clientY: number }) => {
+    const r = vp.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  // what a tap at a point in the viewport reaches, nearest first (tap_cycles_near, §3)
+  const nearTo = (p: { x: number; y: number }): string[] => taps.near(p, zoom.view());
+  const use = (e: Event, ev: ZoomEvent) => {
+    if (zoom.handle(ev)) {
+      // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
+      if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') sel.stop();
+      e.preventDefault();
+      return true;
+    }
+    return false;
+  };
+  // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
+  card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
+  // a folded group comes from 3D by its box's id on screen, which keeps the fold it opens (cluster_opens)
+  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => {
+    const box = /^fold_group_\d+$/.test(e.detail) ? host.root.querySelector(`#${e.detail}`) : null;
+    host.unfold(box ? (box.getAttribute('data-fold') ?? e.detail) : e.detail);
+  });
+  // the details sheet is placed again as the window changes size and the note scrolls (§25)
+  card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
+  card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
+  card.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
+    if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
+    lastPointer = e.pointerType || 'mouse';
+    if (e.button === 2) return; // a right-click opens a menu: it neither selects nor pans
+    const target = targetAt(e.target),
+      p = point(e),
+      near = nearTo(p);
+    const first = near[0] && svg ? targetOf(svg, near[0]) : null;
+    const pointer = e.pointerType === 'touch' || e.pointerType === 'pen' ? e.pointerType : 'mouse';
+    sel.pressed();
+    host.info.pressed(e); // any tooltip closes; a finger held on a thing or link opens it (§24)
+    const fold = foldAt(e.target);
+    if (fold) foldDown = { id: e.pointerId, ...p, fold };
+    else if (target ?? first) {
+      // pressed on what is selected, not only near it: a tap there centres it rather than choosing the next (§3)
+      const again = !!target && !!(e.target as Element).closest?.('g.node, g.edge')?.classList.contains('is-selected');
+      boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse', again };
+    } else emptyDown = { id: e.pointerId, ...p };
+    if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
+      vp.setPointerCapture(e.pointerId);
+      vp.focus({ preventScroll: true });
+    }
+    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box). A finger is held there first
+    // (hold_to_drag_touch), so a swipe still scrolls or pans
+    const box = (e.target as Element | null)?.closest?.<SVGElement>('g.node');
+    if (drag && e.button === 0 && target && 'key' in target && box) {
+      drag.down(e.pointerId, target.key, box, p, pointer === 'touch');
+      vp.setPointerCapture(e.pointerId);
+    }
+  });
+  card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
+    if (onMiniMap(e.target)) return; // the mini-map moves the view by itself (§24)
+    host.info.moved(e);
+    if (drag?.move(e.pointerId, point(e))) {
+      host.info.hide(); // the box is moving from under it
+      e.preventDefault();
+      return;
+    }
+    use(e, { kind: 'move', id: e.pointerId, ...point(e) });
+  });
+  card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
+    if (ownButton(e.target) || e.button === 2) return;
+    const p = point(e);
+    use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
+    // a box dragged and let go is moved, never opened as a tap (§6)
+    if (drag?.up(e.pointerId)) {
+      boxDown = emptyDown = foldDown = null;
+      host.info.released(e.pointerId);
+      return;
+    }
+    const down = boxDown,
+      empty = emptyDown,
+      folded = foldDown;
+    boxDown = emptyDown = foldDown = null;
+    if (host.info.released(e.pointerId)) return; // a finger held on a thing opened its tooltip: the lift is not a tap (§24)
+    if (folded && folded.id === e.pointerId && Math.hypot(p.x - folded.x, p.y - folded.y) < 10)
+      host.unfold(folded.fold);
+    // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
+    if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
+    if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
+    // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
+    // (Roger, 24 Oct 2026, second_tap_centres). Near several, a tap in the same place again chooses the next (§3)
+    if (down.again && !e.shiftKey) sel.came('centre', () => host.open(down.target));
+    else {
+      const chosen = taps.choose(down, nearTo(down));
+      host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
+    }
+    // on touch there is no hover: the tap that selects gives the highlight (§25)
+    sel.touched(down.touch);
+  });
+  // a touch the drawing uses goes no further: one finger panning it zoomed in, a pinch, a finger moving a box. So the
+  // host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing). A swipe on a
+  // fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
+  const owned = (e: TouchEvent) => e.touches.length > 1 || zoom.touchAction() === 'none' || !!drag?.holding;
+  card.registerDomEvent(
+    vp,
+    'touchstart',
+    (e: TouchEvent) => {
+      if (owned(e)) e.stopPropagation();
+    },
+    { passive: true },
+  );
+  card.registerDomEvent(
+    vp,
+    'touchmove',
+    (e: TouchEvent) => {
+      if (owned(e)) e.stopPropagation();
+      if (drag?.holding || e.touches.length > 1) e.preventDefault(); // two fingers pinch the drawing, never scroll the note
+    },
+    { passive: false },
+  );
+  // the fingers really down, from the touch events, which settle what a lost pointerup left tracked (stuck_touch)
+  for (const type of ['touchstart', 'touchend', 'touchcancel'])
+    card.registerDomEvent(vp, type, (e: TouchEvent) => zoom.settle(e.touches.length), { passive: true });
+  card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
+    boxDown = emptyDown = foldDown = null;
+    drag?.cancel();
+    host.info.released(e.pointerId);
+    zoom.handle({ kind: 'cancel', id: e.pointerId });
+  });
+  // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
+  // and the quick-info tooltip after a moment (§24)
+  card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => {
+    sel.over(e);
+    host.info.over(e);
+  });
+  card.registerDomEvent(vp, 'pointerout', (e: PointerEvent) => {
+    sel.out(e);
+    host.info.out(e);
+  });
+  // and the same highlight, and tooltip, with the keyboard focus, which a click's focus is not
+  card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => {
+    sel.focusIn(e);
+    host.info.focusIn(e);
+  });
+  card.registerDomEvent(vp, 'focusout', (e: FocusEvent) => {
+    sel.focusOut(e);
+    host.info.focusOut();
+  });
+  card.registerDomEvent(
+    vp,
+    'wheel',
+    (e: WheelEvent) => {
+      host.info.hide(); // the drawing is about to move from under it
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      // zoomed in until a folded group fills the view: it opens (cluster_opens)
+      const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
+        r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),
+        v = vp.getBoundingClientRect();
+      if (fold?.startsWith('group:') && r && fills(r, v.width, v.height)) host.unfold(fold);
+    },
+    { passive: false },
+  );
+  // a right-click on a box opens its menu, in place of the host's, when there is something in it (radial_centre_menu)
+  card.registerDomEvent(vp, 'contextmenu', (e: MouseEvent) => {
+    // the menu key opened it already: some systems send a contextmenu after that key too, which must not open it again
+    if (menu.open) {
+      e.preventDefault();
+      return;
+    }
+    const target = targetAt(e.target);
+    if (lastPointer === 'touch' || !target || !('key' in target)) return;
+    if (!openMenu(target.key, { x: e.clientX, y: e.clientY })) return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
+  card.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
+    if (ownButton(e.target)) return;
+    const p = point(e),
+      onBox = !!targetAt(e.target);
+    use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && nearTo(p).length > 0 });
+  });
+  card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
+    host.info.key(e); // Escape closes a tooltip, and goes on to do what it did (§24)
+    // Escape puts a box being dragged back, and writes nothing (§6)
+    if (e.key === 'Escape' && drag?.cancel()) {
+      e.preventDefault();
+      return;
+    }
+    // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
+    if (keys?.key(e)) {
+      e.preventDefault();
+      return;
+    }
+    // ? shows every keyboard shortcut (§44, shortcuts_listed)
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      shortcuts();
+      return;
+    }
+    // Enter and Space press an image's control, never the box it is on (§18)
+    if (onImageControl(e.target) && (e.key === 'Enter' || e.key === ' ')) return;
+    const target = targetAt(e.target),
+      fold = foldAt(e.target);
+    const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (keys && target && 'key' in target && plain && (e.key === 'm' || e.key === 'M') && keys.pick(target.key)) {
+      e.preventDefault();
+      return;
+    }
+    // C on a box puts it in the centre of a radial drawing (§15, radial_centre_pick)
+    const c = e.key === 'c' || e.key === 'C';
+    if (target && 'key' in target && plain && c && host.o?.diagram?.putCentre?.(target.key)) {
+      e.preventDefault();
+      return;
+    }
+    // the menu key, or Shift+F10, on a box opens its menu beside it (radial_centre_menu)
+    const menuKey = e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey && plain);
+    if (target && 'key' in target && menuKey) {
+      const r = (e.target as Element).getBoundingClientRect();
+      if (openMenu(target.key, { x: r.left + r.width / 2, y: r.top + r.height / 2 })) e.preventDefault();
+      return;
+    }
+    // Enter or Space on a fold's stub or box opens it (§25)
+    if (fold && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      host.unfold(fold, true);
+      return;
+    }
+    // Escape clears the selection and the focus first; with a thing selected the arrow keys walk its links (§25)
+    const used = sel.key(e);
+    if (target && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      host.open(target);
+      return;
+    }
+    if (used) {
+      e.preventDefault();
+      return;
+    }
+    use(e, { kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });
+  });
+}
+
+/**
+ * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
+ * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
+ * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
+ */
+function boxMoversFor(
+  o: ViewOptions,
+  svg: SVGSVGElement | null,
+  host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
+): { drag: BoxDrag; keys: BoxMoveKeys } | null {
+  const moving = o.moving;
+  if (!moving || !svg) return null;
+  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+  const shared = {
+    viewport: host.viewport,
+    taps: host.taps,
+    moving,
+    textOf: (key: string) => boxes.find((b) => b.key === key)?.text ?? key,
+    readOnly: () => !!o.readOnly?.(),
+  };
+  return {
+    drag: new BoxDrag({
+      ...shared,
+      view: () => host.zoom.view(),
+      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+    }),
+    keys: new BoxMoveKeys(shared),
+  };
+}
