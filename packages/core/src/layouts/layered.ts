@@ -12,7 +12,7 @@
 //
 // Spots are box middles in CSS pixels, across (`LR`: rows run left to right) or down (`TB`). Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
-import { rowsOf, wrapped } from './layered-rows.ts';
+import { banded, rowsOf, wrapped } from './layered-rows.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 
@@ -95,6 +95,7 @@ export function layeredLayout(
  * Each thing of `shape` placed in rows, its middle in CSS pixels, and the bends of each link that skips rows. `sizes`
  * gives each box's width and height (absent: 120 by 40). `rankdir` is `LR` (rows left to right) or `TB` (top to
  * bottom). `previous` orders the rows as last time. `tries` is how many times more the rows are ordered afresh.
+ * `bands` puts each kind in a lane of its own: each thing's band, its kind's place in the kinds' order.
  */
 export function layered(
   shape: GraphShape,
@@ -103,6 +104,7 @@ export function layered(
   previous?: ReadonlyMap<string, readonly number[]>,
   options: Partial<LayoutOptions> = {},
   tries = 0,
+  bands?: ReadonlyMap<string, number>,
 ): Layered {
   // the room beside each thing as `spacing` asks, and between rows, where links run, as `linkLength` asks
   const { spacing, linkLength } = layoutOptions(options);
@@ -126,7 +128,15 @@ export function layered(
     if (l.type === TRUNK_LINK) alone.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
-  const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, gap, rowGap);
+  const ranked = rowsOf(n, links);
+  const laned = bands?.size
+    ? banded(
+        ranked,
+        keys.map((k) => bands.get(k) ?? -1),
+        links,
+      )
+    : ranked;
+  const rows = wrapped(laned, links, (i) => sizeOf(i), across, gap, rowGap);
   // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
   const chainOf = new Map<string, number[]>();

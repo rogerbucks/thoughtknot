@@ -49,8 +49,9 @@ export function kindsOf(shape: GraphShape, kindOf?: ReadonlyMap<string, string>)
   }
   if (!all) return plain;
   const crossing = (all - same) / all;
-  if (count.size === 2 && crossing >= SIDES_LEAST) return { pattern: 'two-sided', order: [...count.keys()].sort() };
+  // two sides, or kinds in order, go the way most links between them run
   const order = kindOrder([...count.keys()], across);
+  if (count.size === 2 && crossing >= SIDES_LEAST) return { pattern: 'two-sided', order };
   if (count.size > 2 && crossing >= ACROSS_LEAST && forwardShare(order, across) >= ORDERED_LEAST)
     return { pattern: 'ordered', order };
   // how much more often things link to their own kind than if kinds were mixed at random
@@ -91,6 +92,10 @@ export interface PickShown {
   order: string[];
   parts: number;
   loose: number;
+  /** Whether each kind has a lane of its own. */
+  lanes?: boolean;
+  /** Each thing's lane, by its key, so space can put each kind on a plane of its own. */
+  bands?: Record<string, number>;
 }
 
 /** The SVG attribute that carries what the engine picked (`PickShown`), as JSON, URI-encoded so it needs no escapes. */
@@ -103,6 +108,7 @@ export function pickSaid(shown: PickShown): string {
   if (shown.loose) lines.push(word('view.layout.loose', { count: shown.loose }));
   if (shown.kinds === 'ordered') lines.push(word('view.layout.kinds.ordered', { order: shown.order.join(' → ') }));
   else if (shown.kinds !== 'plain') lines.push(word(`view.layout.kinds.${shown.kinds}`));
+  if (shown.lanes) lines.push(word('view.layout.kinds.lanes'));
   return lines.join(' ');
 }
 
@@ -118,12 +124,20 @@ export function pickShownOf(attribute: string | null | undefined): PickShown | u
           order: Array.isArray(p.order) ? p.order.map(String) : [],
           parts: Number(p.parts) || 1,
           loose: Number(p.loose) || 0,
+          lanes: p.lanes === true,
+          bands: Object.fromEntries(
+            Object.entries(p.bands ?? {}).filter((e): e is [string, number] => Number.isInteger(e[1])),
+          ),
         }
       : undefined;
   } catch {
     return undefined;
   }
 }
+
+/** Each thing's lane as a drawing's SVG `attribute` carries it, for space's planes (layout_kind_lanes). */
+export const lanesShown = (attribute: string | null | undefined): Map<string, number> =>
+  new Map(Object.entries(pickShownOf(attribute)?.bands ?? {}));
 
 /** Every reason the engine gives for a layout (own-engine.ts `Pick`). */
 const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried'];

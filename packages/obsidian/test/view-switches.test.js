@@ -104,7 +104,7 @@ async function card(note = NOTE, options = {}) {
 }
 
 describe('the View menu', () => {
-  test('a View button in the bar opens the four switches, each on or off as the settings hold them', async () => {
+  test('a View button in the bar opens the five switches, each on or off as the settings hold them', async () => {
     const { env, el } = await card();
     try {
       const menu = el.querySelector('.thoughtknot-view-menu');
@@ -117,6 +117,7 @@ describe('the View menu', () => {
         ['Fold busy things', 'switch', 'false'],
         ['Fold groups', 'switch', 'false'],
         ['Bundle links between groups', 'switch', 'false'],
+        ['Lanes by kind', 'switch', 'true'],
       ]);
     } finally {
       env.uninstall();
@@ -157,6 +158,7 @@ describe('the View menu', () => {
         ['Fold busy things', 'A thing with many links shows them as one stub you can open.'],
         ['Fold groups', 'Each group shows as one box until you open it.'],
         ['Bundle links between groups', 'Links between the same two groups share one line.'],
+        ['Lanes by kind', 'Kinds that link in order each get a lane, or a plane in space.'],
       ]);
       assert.ok(!turn(el, 'Lay out with ThoughtKnot'), 'no engine switch in the menu');
     } finally {
@@ -180,7 +182,10 @@ describe('the View menu', () => {
   test('every graph starts from the settings: changed there, a new card starts as they now say', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      await env.plugin.saveSettings({ ...env.plugin.settings, foldHubs: 'off', foldGroups: 'on', labelsByZoom: 'off' });
+      await env.plugin.saveSettings({
+        ...env.plugin.settings,
+        ...{ foldHubs: 'off', foldGroups: 'on', labelsByZoom: 'off', kindLanes: 'off' },
+      });
       const { el } = await show(env, NOTE);
       assert.deepEqual(
         switches(el).map(([name, , on]) => [name, on]),
@@ -189,6 +194,7 @@ describe('the View menu', () => {
           ['Fold busy things', 'false'],
           ['Fold groups', 'true'],
           ['Bundle links between groups', 'false'],
+          ['Lanes by kind', 'false'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');

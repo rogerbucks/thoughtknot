@@ -19,6 +19,7 @@ export const CORE_KEPT = {
   // the settings in UK English, held equal to their catalogue words by settings-words.test.js, which says them
   'packages/core/src/settings.ts': '*',
   'packages/core/src/settings-aids.ts': '*',
+  'packages/core/src/settings-switches.ts': '*',
   'packages/core/src/settings-matrix.ts': '*',
   'packages/core/src/settings-language.ts': '*',
   // what each open number governs, for a developer reading the register: no host shows it
