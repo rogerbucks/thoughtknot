@@ -462,7 +462,7 @@ used by default, but certain options use it (e.g., the optional closure compiler
 flag will run closure compiler from third_party/).
 ```
 
-## marked@18.1.0
+## marked@18.1.1
 
 - Licence: MIT
 - Source: https://github.com/markedjs/marked
@@ -514,13 +514,13 @@ Redistribution and use in source and binary forms, with or without modification,
 This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 ```
 
-## sql.js@1.14.2
+## sql.js@1.15.1
 
 - Licence: MIT
 - Source: https://github.com/sql-js/sql.js
 - Compiled inside it:
-  - SQLite 3.49.1 — blessing
-  - Emscripten 5.0.0 — MIT OR NCSA
+  - SQLite 3.54.0 — blessing
+  - Emscripten 6.0.12 — MIT OR NCSA
 
 ```text
 MIT license
@@ -569,10 +569,10 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### SQLite 3.49.1
+### SQLite 3.54.0
 
 - Licence: blessing
-- Source: https://www.sqlite.org/src/timeline?t=version-3.49.1
+- Source: https://www.sqlite.org/src/timeline?t=version-3.54.0
 - Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20).
 
 ```text
@@ -587,10 +587,10 @@ See https://www.sqlite.org/copyright.html. The extension functions compiled in w
 (https://www.sqlite.org/contrib, extension-functions.c) are also in the public domain.
 ```
 
-### Emscripten 5.0.0
+### Emscripten 6.0.12
 
 - Licence: MIT OR NCSA
-- Source: https://github.com/emscripten-core/emscripten/tree/5.0.0
+- Source: https://github.com/emscripten-core/emscripten/tree/6.0.12
 - The compiler's runtime and system libraries, linked into the WebAssembly.
 
 ```text
