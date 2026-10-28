@@ -89,17 +89,12 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       const refusal = measured(asked, sourceBytes);
       if (refusal) return { id, refusal };
       const e = await engine;
-      // a large graph's curves are kept, so one opened again is drawn curved at once (curves_saved)
+      // a large graph's drawing is kept, so one opened again is drawn at once (curves_saved)
       const large = drawing.boxes.length > QUICK_LAYOUT;
-      const laid = asked.map((d) =>
-        d.curved !== undefined && saved.get(d.curved) !== undefined ? { ...d, dot: d.curved, straight: false } : d,
-      );
-      // direct links are drawn again from Graphviz's marks (untangle_direct); any other routing is Graphviz's own
-      const drawnOf = (d: (typeof laid)[number]): string => svgOf(e, d.dot, drawing.routing, d.own);
-      const svgs = laid.map((d) =>
-        !large || d.straight ? drawnOf(d) : (saved.get(d.dot) ?? saved.keep(d.dot, drawnOf(d))),
-      );
-      return { id, drawn: chosen(laid, svgs, theme && PALETTES[theme]) };
+      // direct and curved links are drawn again from Graphviz's marks (untangle_direct); any other routing is its own
+      const drawnOf = (d: (typeof asked)[number]): string => svgOf(e, d.dot, drawing.routing, d.own);
+      const svgs = asked.map((d) => (!large ? drawnOf(d) : (saved.get(d.dot) ?? saved.keep(d.dot, drawnOf(d)))));
+      return { id, drawn: chosen(asked, svgs, theme && PALETTES[theme]) };
     };
     void answer().then(
       (reply) => scope.postMessage(reply),

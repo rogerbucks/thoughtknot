@@ -56,7 +56,7 @@ function drawingsOf(file, graph) {
   return ['overview', 'all'].flatMap((level) => {
     const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
     state.toDetail(level);
-    return directions({ ...state.folded(drawing), straightFirst: true }).map((d) => ({ level, d, kindOf }));
+    return directions(state.folded(drawing)).map((d) => ({ level, d, kindOf }));
   });
 }
 

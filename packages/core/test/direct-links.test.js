@@ -230,7 +230,7 @@ test('a drawing with direct links keeps every part of the SVG Graphviz writes, i
   assert.deepEqual(parts(direct), parts(own));
   assert.notEqual(direct, own);
   assert.equal(svgOf(engine, dot, undefined), direct, 'direct is the default');
-  assert.equal(svgOf(engine, dot, 'curved'), own, 'any other routing is Graphviz own');
+  assert.equal(svgOf(engine, dot, 'right-angled'), own, 'any other routing but curved is Graphviz own');
   assert.match(dot, /splines=line/, 'laid out straight, the quickest, before the links are drawn again');
 });
 

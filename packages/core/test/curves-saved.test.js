@@ -1,6 +1,5 @@
-// Curves kept by what was laid out (spec §11, curves_saved). Past 300 things a card is drawn straight first, and its
-// curves are laid out next (curves_after_drawing). The worker keeps those curves. So the same graph opened again is
-// drawn curved at once, with no Graphviz run at all.
+// Curves kept by what was laid out (spec §11, curves_saved). Past 300 things the worker keeps each drawing it laid out,
+// by its source. So the same graph opened again is drawn at once, with no Graphviz run at all.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -18,7 +17,7 @@ const chain = (n, name = 'Thing') =>
     ].join(',\n')}`,
   ]).graphs.get('g');
 
-/** Drawn with Graphviz's own curves: direct links (the default) are laid out once, with none to come. */
+/** Its links curved, as a person chose. */
 const big = { ...chain(QUICK_LAYOUT + 1), routing: 'curved' };
 
 /** A worker served on this thread, counting what its engine is asked to lay out. */
@@ -43,29 +42,27 @@ async function counting() {
 
 describe('curves kept by what was laid out', () => {
   // proves: curves_saved
-  test('a large graph asked for straight first again comes back curved at once, with no layout', async () => {
+  test('a large graph asked for again comes back at once, with no layout', async () => {
     const { laid, ask } = await counting();
-    const first = await ask({ ...big, straightFirst: true });
-    assert.equal(first.drawn.curvesToCome, true);
-    const curved = await ask(big);
+    const first = await ask(big);
     const before = laid.length;
-    const again = await ask({ ...big, straightFirst: true });
-    assert.equal(laid.length, before, 'Graphviz is not run for curves it laid out before');
-    assert.equal(again.drawn.curvesToCome, undefined);
-    assert.equal(again.drawn.svg, curved.drawn.svg);
+    const again = await ask(big);
+    assert.equal(laid.length, before, 'Graphviz is not run for a drawing it laid out before');
+    assert.equal(again.drawn.svg, first.drawn.svg);
   });
 
   // proves: curves_saved
-  test('a changed graph is drawn straight first again, and small graphs are laid out each time', async () => {
+  test('a changed graph is laid out again, and small graphs are laid out each time', async () => {
     const { laid, ask } = await counting();
     await ask(big);
-    const changed = await ask({ ...chain(QUICK_LAYOUT + 1, 'Step'), routing: 'curved', straightFirst: true });
-    assert.equal(changed.drawn.curvesToCome, true);
+    const before = laid.length;
+    await ask({ ...chain(QUICK_LAYOUT + 1, 'Step'), routing: 'curved' });
+    assert.ok(laid.length > before, 'a changed graph is laid out again');
     const small = chain(QUICK_LAYOUT);
     await ask(small);
-    const before = laid.length;
+    const then = laid.length;
     await ask(small);
-    assert.ok(laid.length > before, 'a small graph is laid out as before');
+    assert.ok(laid.length > then, 'a small graph is laid out as before');
   });
 
   // proves: curves_saved

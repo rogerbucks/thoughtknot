@@ -6,6 +6,7 @@
 // in the order they come from, so they do not cross there. The bends are drawn as a curve by routed-curve.ts.
 // Host-free and pure.
 import type { Placed } from '../direct-curve.ts';
+import type { DrawMark } from '../drawing-marks.ts';
 import type { MarkPoint } from '../plugin-diagrams.ts';
 
 /** The room kept between a link and a box it passes, in pixels. */
@@ -60,6 +61,15 @@ export function rowsOf(boxes: readonly Placed[], axis: 0 | 1): Row[] {
 export function inRows(boxes: readonly Placed[], axis: 0 | 1): boolean {
   const rows = rowsOf(boxes, axis);
   return boxes.length > 2 && rows.length > 1 && rows.length * 2 <= boxes.length;
+}
+
+/** Whether the thing boxes of `marks` are laid out in rows along `axis`, as `inRows` says. */
+export function marksInRows(marks: readonly DrawMark[], axis: 0 | 1): boolean {
+  const boxes = new Map<string, Placed>();
+  for (const m of marks)
+    if (m.kind === 'box' && m.role === 'thing' && m.of !== undefined && !boxes.has(m.of))
+      boxes.set(m.of, { key: m.of, x: m.x + m.width / 2, y: m.y + m.height / 2, hw: m.width / 2, hh: m.height / 2 });
+  return inRows([...boxes.values()], axis);
 }
 
 /** The first span of `spans` that ends past `v`: the gap before it is gap `i`, the room after the last is gap length. */
