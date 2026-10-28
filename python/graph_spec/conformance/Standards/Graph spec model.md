@@ -754,6 +754,27 @@ Roger, 10 Oct 2026: *"Confirm the three homes for extensions"* — [[2026-10-10 
 - **Notes are not extensions.** Text for people is a `///` note (§26); a `//@` line is for tools.
 - **Two readers, one answer.** Both readers must read the same `//@` lines from the same text, proved by shared conformance cases. *(Not yet built.)*
 
+### 28. Axioms — the few laws every graph obeys
+
+Roger, 24 Oct 2026: *"Look at Axioms with the graph and specification"* (editor spec §64, GS8). Added 28 Oct 2026.
+
+An axiom is a law every valid graph obeys. Most rules of §§3–27 follow from one or more of them. In the requirements graph each rule names the axioms it `rests_on`, or is marked `stands_alone`.
+
+| # | Axiom | In plain words | Formal line | Rules that rest on it |
+|---|---|---|---|---|
+| A1 | Identity | Each thing has one id, and no other thing in its graph has it. | `id is one-to-one on the things of a graph` | 3.id-once, 3.match-finds, 5.graphmeta, 10.natural-ids, 14.one-owner, 17.c-owner, 3.name-is-id, 3.set-keeps-id, 3.id-is-text, 21.prefix-owner, 10.bare-local, 10.prefixed-global, 10.explicit-local, 10.forced, 10.joins-global |
+| A2 | Links have two ends | Every link starts and ends at a thing that is in the graph. | `for every link l: from(l) and to(l) are things of the graph` | 4.ref-resolves, 6.reference-resolves, 16.detail-ref, 17.c-refs, 23.rule2, 24.serving1 |
+| A3 | Declared types | Every thing and every link has a type its schema declares. | `for every element e: type(e) is declared in schema(g)` | 5.kind, 5.name, 5.origin, 5.reading, 5.reverse-name, 5.identified-by, 5.declared, 5.shared-schema, 17.c-types, 20.claims-not-counted, 5.marker, 5.meta-schema, 5.draft, 25.schema-nodes, 25.meta-schema |
+| A4 | Same text, same graph | Reading is a function: the same text gives the same graph, and writing it out and reading it back changes nothing. | `read(write(g)) = g` | 3.comment-whole-line, 3.profile-reader, 3.word-quotes, 10.natural-ids, 17.c-reload, 17.c-rebuild, 17.c-projection, 18.lossless, 18.no-list-property, 24.cs-two-readers, 3.data-shortcut, 3.missing-comma, 3.bare-link-type, 3.engine-gets-corrected, 3.engine-text-keeps-lines, 3.engine-reads-first, 3.engine-keeps-comments, 3.engine-gets-commas, 3.reader-default, 17.engine-agreement, 7.machine-reads-plain, 18.scxml-reads-plain, 21.loan-balance-reads-plain, 24.view-server-reads-plain, 24.fill-reads-plain, 3.gql-escapes, 25.two-readers, 26.plain, 26.two-readers, 27.test, 27.two-readers |
+| A5 | SAME_AS is an equivalence | A thing is the same as itself, same-as goes both ways, and it chains. | `SAME_AS is reflexive, symmetric and transitive` | 21.flags, 10.joins-global |
+| A6 | Joins are order-free | Graphs joined in any order, or joined twice, give the same graph, and the join loses and invents nothing. | `join is commutative, associative and idempotent, and keeps every statement` | 17.c-join, 21.restate, 21.order-free, 21.loses-nothing, 21.one-sided-change, 21.subflow-join, 21.trust-counted |
+| A7 | Certainty in range | A likelihood is a word on the graph's scale, and a range never runs from high to low. | `0 <= low <= high <= 1` | 17.c-claims, 20.scale-in-graph, 20.confidence-counted, 20.combine, 20.independence |
+| A8 | History is a chain | An item has at most one successor, and following successors never comes back to the start. | `SUPERSEDES is a forest: at most one successor each, and no loop` | 8.two-times, 12.one-successor, 12.archive-unchanged, 12.prov-revision, 13.hash-name, 23.rule7, 24.serving5 |
+| A9 | Derived equals recompute | Every cache, snapshot and derived element equals a fresh recompute from the source. | `derive(source(g)) = derived(g)` | 5.rule, 6.rule-remakes, 11.provenance, 11.cache-same-transaction, 11.cache-proved, 11.snapshot, 11.had-plan, 14.certified, 15.stored-membership, 17.c-caches, 17.c-rebuild, 17.c-lenses, 17.c-calibration, 17.c-digest, 20.before-settlement, 22.rule5, 23.review-cache, 23.rule4, 25.lock-carries |
+| A10 | Conflicts are kept | A real clash becomes contested claims, and neither side is asserted. | `never assert p and assert not p` | 17.c-join, 21.contested, 21.paradox-cycle, 21.incomplete, 21.three-paradox, 21.removal-meets-change, 21.incomplete-missing |
+
+A broken axiom is reported with its place, the axiom in its words and a fix, under its code (GA01 to GA10). It never stops a graph being read or drawn. A1 to A4, A7 and A8 can be seen in one graph. A5, A6, A9 and A10 are laws of an operation, such as a join, and tests on generated graphs hold them.
+
 ## Examples
 
 **Everything below illustrates the specification; none of it is part of it.** E1–E11 use the **lending demo** — four people, three loans, September 2026 to January 2027; data in [[Lending demo graph data]]. E12 is a separate small budget-review example; E14 is a small claims example using the demo's people.

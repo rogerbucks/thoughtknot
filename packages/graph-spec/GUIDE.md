@@ -76,6 +76,9 @@ and no module requires one that requires it back.
   `claims.js`, `union.js`, `merge3.js`, `finish.js`, and `join-docs.js`, which answers a join request end to end.
   `trust.js` holds a union to each document's trust. Only own and trusted ones count, and an id prefix has an owner
   (req:21.trust-counted, req:21.prefix-owner).
+- **`src/axioms/`** — the graph spec's axioms, its §28 (editor spec §64). `axioms.json` holds each axiom's words, code
+  and fix. `axioms.js` is one check that finds each axiom a graph breaks. It never stops a graph being read or drawn.
+  `test/axiom-cases.json` holds it and `graphspec/rules/axioms.py` to the same answers.
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
 

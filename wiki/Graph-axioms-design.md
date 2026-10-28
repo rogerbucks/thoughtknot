@@ -41,7 +41,16 @@ flowchart LR
 | A9 | Derived equals recompute | Every cache, snapshot and derived element equals a fresh recompute from source | `derive(source(g)) = derived(g)` | §11, §17 c-caches |
 | A10 | Conflicts are kept | A real clash becomes contested claims; neither side is asserted | `¬(assert p ∧ assert ¬p)` | §21 contested |
 
-The list is a draft. GS8 settles it with Roger before it goes into the graph spec.
+The list is now §28 of the graph spec (28 October 2026), in `Graph spec model.md`. In `requirements/graph-spec.gql`
+each rule names the axioms it `rests_on`, or is marked `stands_alone`: 110 rest on one or more, 102 stand alone. They
+are properties, not links, so the requirements drawing stays as it was. Roger can still change the list.
+
+## The check
+
+`axioms(world, graph)` in the library, and `axioms(w, name)` in `graphspec/rules/axioms.py`, report every axiom one
+graph breaks: A1, A2, A3, A4, A7 and A8. Each problem has its place, the axiom in its words, a fix and a code from
+GA01 to GA10. The other four (A5, A6, A9, A10) are laws of an operation, such as a join. Tests on generated graphs
+hold those.
 
 ## Why before sync (Wave 13)
 
