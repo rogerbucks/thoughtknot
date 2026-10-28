@@ -1,5 +1,5 @@
 {
-  "packages/core/test/layout-worker.test.js": 2,
+  "packages/core/test/layout-worker.test.js": 1,
   "packages/obsidian/test/block-no-section.test.js": 3,
   "packages/obsidian/test/block-note-moved.test.js": 2,
   "packages/obsidian/test/block-reading-view.test.js": 2,

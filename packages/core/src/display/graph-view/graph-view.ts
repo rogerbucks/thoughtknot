@@ -21,7 +21,8 @@ import { overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
-import { markFlow, renderFlowLegend } from './flow-marks';
+import { markFlow } from './flow-marks';
+import { renderBeside } from './layout-step-line';
 import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
@@ -178,7 +179,7 @@ export class GraphView extends Lifecycle {
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
     // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
-    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
+    renderBeside(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded, this.drawn.svg);
     this.viewport = root.createDiv({
       cls: 'thoughtknot-viewport',
       attr: {
@@ -338,7 +339,7 @@ export class GraphView extends Lifecycle {
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
     if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
-    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
+    renderBeside(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded, this.drawn.svg);
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);

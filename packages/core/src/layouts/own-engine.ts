@@ -26,6 +26,7 @@ import { kindsOf } from './fingerprint.ts';
 import type { Kinds } from './fingerprint.ts';
 import { FOLDED_GROUP, TRY_MOST, pickLayout, tidier } from './pick.ts';
 import type { Pick } from './pick.ts';
+import { cheaperSpots } from './cheaper.ts';
 
 export { pickLayout };
 export type { OwnLayout, Pick } from './pick.ts';
@@ -94,7 +95,8 @@ export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<s
  * Each box of `laid` placed by our own engine, its middle in CSS pixels from the top left, with room round the edge.
  * `previous` is last time's spots, for a warm start. `rankdir` is the way rows run for a layered layout. It says how
  * many parts it laid out, and how many loose things went in the tray. `lanesBy` gives each thing's kind. A part whose
- * kinds link in order, or across two sides, then has a lane for each kind in its rows (layout_kind_lanes).
+ * kinds link in order, or across two sides, then has a lane for each kind in its rows (layout_kind_lanes). A `step`
+ * of rows or a grid lays it out the cheaper way instead (layout_never_text).
  */
 export function ownSpots(
   laid: LaidMarks,
@@ -103,6 +105,7 @@ export function ownSpots(
   groups: readonly Group[] = [],
   options: Partial<LayoutOptions> = {},
   lanesBy?: ReadonlyMap<string, string>,
+  step?: 'rows' | 'grid',
 ): {
   spots: Map<string, [number, number]>;
   via: Map<string, [number, number][]>;
@@ -114,6 +117,10 @@ export function ownSpots(
   bands: Map<string, number>;
 } {
   const { shape: whole, sizes } = marksShape(laid.marks);
+  if (step) {
+    const c = cheaperSpots(step, whole, sizes, rankdir, layoutOptions(options).spacing, MARGIN);
+    return { ...c, via: new Map(), boxes: [], pick: pickLayout(whole), parts: 1, loose: 0, bands: new Map() };
+  }
   const { shape, trunks } = trunksOut(whole);
   const { spacing } = layoutOptions(options);
   // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray
