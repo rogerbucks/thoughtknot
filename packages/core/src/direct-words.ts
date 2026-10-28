@@ -4,6 +4,7 @@
 import type { DrawMark } from './drawing-marks.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
+import { Work, WORK_MOST } from './layout-work.ts';
 
 /** How far a link's words sit off its middle, as a share of their size, so they do not lie on the line. */
 export const WORDS_OFF = 0.55;
@@ -71,13 +72,15 @@ const ALONG: Readonly<Record<FanEnd | 'middle', readonly number[]>> = {
  * Graphviz set them. The block sits at the middle of the curve if it covers no box, no earlier words and no other line.
  * Else it takes the first clear spot along it, either side, a little further off if need be. With no clear spot, it
  * takes the one that covers least. Given `fan`, words it has gone are not placed. A fan's words start near its end,
- * and every block keeps off the words that name no link.
+ * and every block keeps off the words that name no link. Each box, word or line a spot is checked against counts
+ * against `work`. Once it is spent, each block left takes the first spot it would have tried (layout_work_counted).
  */
 export function wordSpots(
   marks: readonly DrawMark[],
   boxes: ReadonlyMap<string, Placed>,
   curves: ReadonlyMap<string, Curve>,
   fan?: ReturnType<typeof fans>,
+  work = new Work(WORK_MOST.words),
 ): Map<string, MarkPoint> {
   const taken = new Grid<Rect>();
   for (const b of boxes.values()) taken.addRect({ x0: b.x - b.hw, y0: b.y - b.hh, x1: b.x + b.hw, y1: b.y + b.hh });
@@ -117,11 +120,14 @@ export function wordSpots(
     const cover = (p: MarkPoint) => {
       let n = 0;
       for (const r of placed(p)) {
-        for (const o of taken.near(r))
+        const under = taken.near(r),
+          lines = ats.near(r);
+        if (!work.take(under.length + lines.length)) return undefined;
+        for (const o of under)
           n +=
             Math.max(0, Math.min(r.x1, o.x1) - Math.max(r.x0, o.x0)) *
             Math.max(0, Math.min(r.y1, o.y1) - Math.max(r.y0, o.y0));
-        for (const { of: on, x, y } of ats.near(r))
+        for (const { of: on, x, y } of lines)
           if (on !== of && x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) n += size * size * 0.36;
       }
       return n;
@@ -136,6 +142,7 @@ export function wordSpots(
         for (const side of [1, -1]) {
           const p = c.wordsAt(t, side * far);
           const n = cover(p);
+          if (n === undefined) break search; // the budget is spent: the best found so far, or the first spot
           if (n < least) [best, least] = [p, n];
           if (!n) break search;
         }
