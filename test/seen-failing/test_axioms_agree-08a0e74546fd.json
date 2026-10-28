@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_axioms_agree.py",
+  "test": "ReadersAgree.test_both_readers_give_the_same_answers_on_the_same_generated_graphs",
+  "seen_failing_first": false,
+  "evidence": "It holds on generated graphs the axioms the checker of part 1 already finds (GS8), so it passes on the code before it."
+}
