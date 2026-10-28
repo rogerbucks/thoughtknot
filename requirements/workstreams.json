@@ -1217,7 +1217,8 @@
       "layout_real_fixtures",
       "layout_strategy_variables",
       "layout_pick_said",
-      "layout_own_default"
+      "layout_own_default",
+      "layout_parts_packed"
     ]
   },
   "LE2": {
