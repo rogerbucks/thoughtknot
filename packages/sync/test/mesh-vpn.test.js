@@ -10,14 +10,22 @@ import { join } from 'node:path';
 import { DeviceKeys, FolderStore, MESH_VPNS, MemoryStore, Peer, VaultKey, framed, syncedOver } from '../src/index.ts';
 import { NOTE, TEXT, at, nodeFiles } from './helpers.js';
 
-/** A relay on this machine: it joins the first two devices that reach it, and keeps every byte it carries. */
+/**
+ * A relay on this machine: it joins the first two devices that reach it, and keeps every byte it carries. `sent` holds
+ * the bytes each device sent, in the order the devices reached it.
+ */
 async function relay() {
   const carried = [];
+  const sent = [];
   const waiting = [];
   const server = createServer((socket) => {
     waiting.push(socket);
     if (waiting.length < 2) return;
     const [a, b] = waiting.splice(0, 2);
+    for (const [i, from] of [a, b].entries()) {
+      sent[i] = [];
+      from.on('data', (bytes) => sent[i].push(...bytes));
+    }
     for (const [from, to] of [
       [a, b],
       [b, a],
@@ -30,7 +38,7 @@ async function relay() {
     }
   });
   await new Promise((done) => server.listen(0, '127.0.0.1', done));
-  return { carried, port: server.address().port, close: () => server.close() };
+  return { carried, sent, port: server.address().port, close: () => server.close() };
 }
 
 /** A channel to the relay: each message after its length, as a host carries it over the VPN. */
@@ -112,11 +120,10 @@ describe('sync over a mesh VPN', () => {
       assert.ok('refused' in a, JSON.stringify(a));
       assert.ok('refused' in b, JSON.stringify(b));
       assert.equal((await stranger.store.held()).size, 0, 'the stranger got nothing');
-      // only the two public keys crossed: 65 bytes each, after their length
-      assert.equal(
-        r.carried.reduce((n, c) => n + c.length, 0),
-        2 * (4 + 65),
-      );
+      // the laptop sent its public key alone, 65 bytes after their length, and nothing more
+      const hello = [...framed([laptop.keys.publicKey])];
+      const fromLaptop = r.sent.find((bytes) => hello.every((b, i) => bytes[i] === b));
+      assert.deepEqual(fromLaptop, hello);
     } finally {
       r.close();
     }
