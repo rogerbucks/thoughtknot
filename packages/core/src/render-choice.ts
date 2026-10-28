@@ -1,9 +1,11 @@
 // How a view is put on the screen, set in the style graph (editor spec §68, layout_concept_layers). Roger, 25 Oct 2026:
 // a view is six layers, and two of them are here. A Render line sets them for the whole graph or one view:
 // - its space: flat (2D), cards in space (2.5D) or balls in space (3D), part of the projection layer;
-// - its painter: the device's best, or one no faster than it names, the painter layer.
+// - its painter: the device's best, or one no faster than it names, the painter layer;
+// - its lens: none, or one that bends what the view drew round a focus (lenses.ts), part of the projection layer.
 // Each key is changed alone. A view's own Render wins, key by key, over the whole graph's; the first written is used.
 // Host-free and pure.
+import type { Lens } from './lenses.ts';
 import type { StyleAt } from './style-graph.ts';
 
 /** The spaces a view is shown in: flat, as cards in space, or as balls in space. */
@@ -16,21 +18,25 @@ export const PAINTERS = ['auto', 'webgpu', 'webgl2', 'canvas'] as const;
 /** One of the painters. */
 export type Painter = (typeof PAINTERS)[number];
 
-/** A Render line: the space a view is shown in, its painter, or both; for the whole graph, or for one view. */
+/** A Render line: the space a view is shown in, its painter, its lens, or some of them; for the graph, or one view. */
 export interface Render {
   space?: Space;
   painter?: Painter;
+  lens?: Lens;
   /** The view it is chosen for; none, the whole graph. */
   view?: string;
   at: StyleAt;
 }
 
-/** The space and painter of `view`, or of the whole graph with none: the view's own first, each key alone. */
-export function renderFor(style: { renders: readonly Render[] }, view?: string): { space: Space; painter: Painter } {
-  const first = <K extends 'space' | 'painter'>(k: K) =>
+/** The space, painter and lens of `view`, or of the whole graph with none: the view's own first, each key alone. */
+export function renderFor(
+  style: { renders: readonly Render[] },
+  view?: string,
+): { space: Space; painter: Painter; lens: Lens } {
+  const first = <K extends 'space' | 'painter' | 'lens'>(k: K) =>
     (view === undefined ? undefined : style.renders.find((r) => r.view === view && r[k] !== undefined)?.[k]) ??
     style.renders.find((r) => r.view === undefined && r[k] !== undefined)?.[k];
-  return { space: first('space') ?? '2d', painter: first('painter') ?? 'auto' };
+  return { space: first('space') ?? '2d', painter: first('painter') ?? 'auto', lens: first('lens') ?? 'none' };
 }
 
 /** How a card opens in `space`: flat (null), as cards in space (2.5D) or as balls in space (3D). */

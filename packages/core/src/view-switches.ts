@@ -21,6 +21,7 @@ import { word } from './words.ts';
 import type { WordKey } from './words.ts';
 import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
+import type { Lens } from './lenses.ts';
 
 /** The switches, in the order the View menu lists them. */
 export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes'] as const;
@@ -177,6 +178,8 @@ export class ViewState {
 
   /** How the layout spaces the graph, from the View menu (§53, layout_saved_with_view). */
   layout: LayoutOptions;
+  /** The lens the View menu shows the drawing through (§68, projections_all_on); none picked, its Render's. */
+  lens: Lens | undefined;
 
   /** For a card starting with these switches, and laid out as `layout` says. */
   constructor(start: ViewSwitches, layout: LayoutOptions = DEFAULT_LAYOUT_OPTIONS) {

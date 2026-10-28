@@ -48,6 +48,8 @@ interface Press {
   held: boolean;
   dragging: boolean;
   landing: Landing | null;
+  /** How the box was moved before it was pressed, such as by a lens (lenses.ts): it moves on from there. */
+  was: string | null;
 }
 
 /** A box being moved by a mouse or pen: pressed, dragged past the slop, then let go or put back. */
@@ -70,7 +72,8 @@ export class BoxDrag {
   down(id: number, key: string, box: SVGElement, p: { x: number; y: number }, touch = false): void {
     this.cancel();
     if (this.host.readOnly()) return;
-    const press: Press = { id, key, box, ...p, held: !touch, dragging: false, landing: null };
+    const was = box.getAttribute('transform');
+    const press: Press = { id, key, box, ...p, held: !touch, dragging: false, landing: null, was };
     this.press = press;
     if (touch)
       this.timer = window.setTimeout(() => {
@@ -102,7 +105,7 @@ export class BoxDrag {
     if (!per || !origin || !at) return true;
     const dx = (p.x - press.x) * (per.x - origin.x),
       dy = (p.y - press.y) * (per.y - origin.y);
-    press.box.setAttribute('transform', `translate(${dx} ${dy})`);
+    press.box.setAttribute('transform', `translate(${dx} ${dy})${press.was ? ` ${press.was}` : ''}`);
     const keyOf = (id: string) => this.host.viewport.querySelector(`#${id}`)?.getAttribute('data-key') ?? null;
     press.landing = landingFor(
       press.key,
@@ -160,7 +163,8 @@ export class BoxDrag {
   private putBack(press: Press): void {
     if (this.timer !== null) window.clearTimeout(this.timer);
     this.timer = null;
-    press.box.removeAttribute('transform');
+    if (press.was) press.box.setAttribute('transform', press.was);
+    else press.box.removeAttribute('transform');
     press.box.removeClass('is-dragged', 'is-held');
     this.host.viewport.querySelectorAll('g.node.is-landing').forEach((g) => g.removeClass('is-landing'));
     if (this.hint) this.hint.hidden = true;

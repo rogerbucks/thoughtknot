@@ -1,16 +1,13 @@
 // The 3D view of a card's drawing (editor spec §53, scale_space_view), switched to from the bar (Roger, 22 Oct 2026).
 // It lies over the drawing, under the bar, and goes by the bar's button or Escape. It only looks: nothing reaches the
 // note. It reads each box, group and link on screen, in the theme's colours. The sums are in space-view.ts and
-// space-spread.ts. The painters are in space-painter.ts and space-gpu-painter.ts.
-//
-// It shows cards in space (2.5D, space-cards.ts), or 3D in one of three ways. Things are laid out again as balls sized
-// by their links (space-spread.ts). Or each group is a floor its things stand on. Or each thing is as tall as its links.
-// How to move it is on screen (space-controls.ts): drag turns, Shift-drag or right-drag moves, scroll zooms.
-// 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing, its details on the card
-// (SPACE_OPEN). Another turns to it (orbitAround). A bundle, or a folded group picked again or filling the view, opens
-// (SPACE_UNFOLD). A thing the card selects is picked here too, and what it hides or fades is so here (focus_space).
+// space-spread.ts, the painters in space-painter.ts and space-gpu-painter.ts. It shows cards in space (2.5D), or 3D:
+// balls sized by their links, floors by group, or things as tall as their links. Moves are on screen
+// (space-controls.ts). 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing, its
+// details on the card (SPACE_OPEN); another turns to it. A bundle, or a folded group picked again or filling the view,
+// opens (SPACE_UNFOLD). What the card selects or fades is so here (focus_space), and its lens bends it here (lenses.ts).
 import { paintersFrom, word } from '@thoughtknot/core';
-import type { MiniMapSetting, Painter } from '@thoughtknot/core';
+import type { Lens, MiniMapSetting, Painter } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
@@ -18,6 +15,7 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
+import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
 import { spotsKept } from '../../space-parts.ts';
 import { stripTap } from '../../space-outlines.ts';
@@ -63,6 +61,7 @@ export interface SpaceOptions {
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
+  lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -142,11 +141,12 @@ export async function openSpaceView(
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
+  const seen = () => spaceSeen(glide.shown, more.lens?.(), glide.match(picked)); // painted and picked, through its lens
   const paint = () => {
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    const frame = frameOf(glide.shown, matrix, width, height, glide.match(picked), pickedLine?.id);
+    const frame = frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
@@ -319,12 +319,12 @@ export async function openSpaceView(
     const x = e.clientX - at.left,
       y = e.clientY - at.top;
     const hit = space.cards
-      ? (cardAt(cardsOnScreen(space, matrixNow(), width, height), x, y)?.block ?? null)
-      : blockAt(space, matrixNow(), width, height, x, y);
+      ? (cardAt(cardsOnScreen(seen(), matrixNow(), width, height), x, y)?.block ?? null)
+      : blockAt(seen(), matrixNow(), width, height, x, y);
     // an open group's name zooms to it, and the button beside folds it back (cluster_fold_back)
     const strip = stripTap(space, matrixNow(), width, height, x, y);
     if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = orbitFit(strip.fit, width / height)), again());
-    const link = hit ? null : lineAt(space, matrixNow(), width, height, x, y);
+    const link = hit ? null : lineAt(seen(), matrixNow(), width, height, x, y);
     const twice =
       lastTap &&
       e.timeStamp - lastTap.at < DOUBLE_TAP &&

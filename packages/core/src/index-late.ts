@@ -60,3 +60,17 @@ export {
   type Space,
 } from './render-choice.ts';
 export { VIEW_LAYERS, viewLayers, type ViewLayer, type ViewLayers } from './view-layers.ts';
+// lenses that bend what any view drew round a focus, flat and in space (§68, projections_all_on, projection_fisheye)
+export {
+  FISHEYE_PX,
+  LENSES,
+  bent,
+  bentPoints,
+  bentSpace,
+  fisheye,
+  lensOf,
+  spaceSeen,
+  unbent,
+  type Lens,
+  type Radial,
+} from './lenses.ts';

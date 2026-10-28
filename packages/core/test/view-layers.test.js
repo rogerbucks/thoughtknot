@@ -48,7 +48,7 @@ describe('a view is six layers, each set in the style graph (layout_concept_laye
     assert.deepEqual(l.filters, { keep: { Kind: ['Task'] } });
     assert.equal(l.strategy.options.strategy, 'rows');
     assert.equal(l.strategy.options.spacing, 2);
-    assert.deepEqual(l.projection, { type: 'radial', space: '3d' });
+    assert.deepEqual(l.projection, { type: 'radial', space: '3d', lens: 'none' });
     assert.deepEqual(
       l.formatting.looks.map((x) => x.colour),
       ['red'],
@@ -75,7 +75,7 @@ describe('a view is six layers, each set in the style graph (layout_concept_laye
     assert.deepEqual(l.dimensions, {});
     assert.deepEqual(l.filters, {});
     assert.equal(l.strategy.options.strategy, 'auto');
-    assert.deepEqual(l.projection, { type: 'network', space: '2d' });
+    assert.deepEqual(l.projection, { type: 'network', space: '2d', lens: 'none' });
     assert.equal(l.painter, 'auto');
   });
 });
@@ -87,9 +87,9 @@ describe('a Render sets the space and the painter (layout_concept_layers)', () =
       a: "(r1:Render {space: '3d', painter: 'canvas'})",
       b: "(r2:Render {view: 'plan', space: '2.5d'})",
     });
-    assert.deepEqual(renderFor(style), { space: '3d', painter: 'canvas' });
-    assert.deepEqual(renderFor(style, 'plan'), { space: '2.5d', painter: 'canvas' });
-    assert.deepEqual(renderFor(style, 'other'), { space: '3d', painter: 'canvas' });
+    assert.deepEqual(renderFor(style), { space: '3d', painter: 'canvas', lens: 'none' });
+    assert.deepEqual(renderFor(style, 'plan'), { space: '2.5d', painter: 'canvas', lens: 'none' });
+    assert.deepEqual(renderFor(style, 'other'), { space: '3d', painter: 'canvas', lens: 'none' });
   });
 
   // proves: layout_concept_layers
@@ -105,7 +105,7 @@ describe('a Render sets the space and the painter (layout_concept_layers)', () =
       [
         'space must be 2d, 2.5d or 3d',
         'painter must be auto, webgpu, webgl2 or canvas',
-        'a Render sets space or painter',
+        'a Render sets space, painter or lens',
       ],
     );
   });

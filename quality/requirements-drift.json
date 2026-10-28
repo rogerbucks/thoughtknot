@@ -3,7 +3,6 @@
   "no-test": [
     "ideas_on_board",
     "projection_arc",
-    "projection_fisheye",
     "projection_grid",
     "projection_hive",
     "projection_hyperbolic",
@@ -11,8 +10,7 @@
     "projection_matrix",
     "projection_semantic_zoom",
     "projection_spatial",
-    "projection_sphere",
-    "projections_all_on"
+    "projection_sphere"
   ],
   "not-written": [
     "android_app",

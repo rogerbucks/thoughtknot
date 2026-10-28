@@ -310,4 +310,6 @@ export const TYPES_LATE = [
   'Space',
   'ViewLayer',
   'ViewLayers',
+  'Lens',
+  'Radial',
 ];

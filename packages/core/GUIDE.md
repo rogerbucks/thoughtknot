@@ -817,6 +817,15 @@ never data.
   - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
     `python/graph_spec/tests/style_cases.json`.
 
+#### Lenses
+
+- A lens bends whatever a view drew round a focus (§68, projections_all_on), so it works on every view type and layout.
+  `lenses.ts` holds the sums: `fisheye` (projection_fisheye), and `bent` and `unbent` for a point. `bentPoints` bends
+  SVG path data, and `bentSpace` and `spaceSeen` a drawing in space. Each lens is radial, the same in 2D and 3D.
+- `(r1:Render {lens: 'fisheye'})` picks it for the whole graph or a view; the View menu's Lens list picks another, held
+  in `ViewState.lens`. Flat, `display/graph-view/lens-svg.ts` bends the card's SVG round the mouse, else the selection.
+  In space the view bends round the picked thing. The mini-map stays the drawing as laid out.
+
 #### Writing a style
 
 - `style-edit.ts` — `styleEdit` writes a choice as text into the graph's style block.

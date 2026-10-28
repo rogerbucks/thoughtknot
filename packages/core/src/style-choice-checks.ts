@@ -7,6 +7,7 @@ import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, PRESET_IDS, ROUTINGS, orList, plugin
 import { TIMELINE_ORDERS, TIMELINE_SHOWS } from './timeline.ts';
 import type { Arrows, Diagram, Links, PresetChoice } from './style-graph.ts';
 import { PAINTERS, SPACES } from './render-choice.ts';
+import { LENSES } from './lenses.ts';
 import type { Render } from './render-choice.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
@@ -149,21 +150,23 @@ export function presetOf(raw: RawThing, names: StyledNames, out: Problem[]): Pre
   return preset ? { preset, at: raw.at } : null;
 }
 
-/** The space and painter of the whole graph or a view, checked (§68, layout_concept_layers): either, or both. */
+/** The space, painter and lens of the whole graph or a view, checked (§68, layout_concept_layers): one or more. */
 export function renderOf(raw: RawThing, names: StyledNames, out: Problem[]): Render | null {
   const r = reader(raw, names, out),
     before = out.length;
-  if (raw.props.space === undefined && raw.props.painter === undefined) {
+  if (raw.props.space === undefined && raw.props.painter === undefined && raw.props.lens === undefined) {
     r.missing(word('styling.render.missing'), word('styling.render.add', { among: quoted(SPACES) }));
     return null;
   }
   const space = r.word('space', SPACES, mustBe('space', SPACES)),
     painter = r.word('painter', PAINTERS, mustBe('painter', PAINTERS)),
+    lens = r.word('lens', LENSES, mustBe('lens', LENSES)),
     view = r.text('view');
   if (out.length !== before) return null;
   return {
     ...(space === undefined ? {} : { space }),
     ...(painter === undefined ? {} : { painter }),
+    ...(lens === undefined ? {} : { lens }),
     ...inView(view),
     at: raw.at,
   };

@@ -121,7 +121,7 @@ STYLE_KEYS = {
     # a graph's own view preset (editor spec §69), checked in preset.py
     "Preset": ("preset",),
     # a graph's or a view's space and painter (editor spec §68), checked in render.py
-    "Render": ("space", "painter", "view"),
+    "Render": ("space", "painter", "lens", "view"),
 }
 
 
