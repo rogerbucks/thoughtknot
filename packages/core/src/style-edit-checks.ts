@@ -19,6 +19,7 @@ import { legendRefusal } from './untangle-saved.ts';
 import {
   LAYOUT_CHOICES,
   LAYOUT_OPTION_RANGE,
+  choiceFits,
   SHOWN_LAYOUT_CHOICES,
   SHOWN_LAYOUT_KEYS,
 } from './layouts/layout-options.ts';
@@ -76,7 +77,7 @@ export function shownRefusal(s: ShownWrite): string | null {
   }
   for (const [k, key] of Object.entries(SHOWN_LAYOUT_CHOICES) as [LayoutChoice, string][]) {
     const v = s.layout?.[k];
-    if (v !== undefined && !(LAYOUT_CHOICES[k] as readonly string[]).includes(v)) return mustBe(key, LAYOUT_CHOICES[k]);
+    if (v !== undefined && !choiceFits(k, v)) return mustBe(key, LAYOUT_CHOICES[k]);
   }
   return legendRefusal(s.legend ?? []);
 }

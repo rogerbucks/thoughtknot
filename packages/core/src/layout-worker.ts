@@ -15,6 +15,7 @@ import type { ExportTheme } from './settings.ts';
 import { nextStep } from './layouts/cheaper.ts';
 import { LayoutFailure } from './layout-port.ts';
 export { LayoutFailure, inThreadPort } from './layout-port.ts';
+import { needsPlacing, placedFor } from './layouts/offered.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
@@ -155,6 +156,8 @@ export class LayoutRunner {
   private busy: Job | null = null;
   private readonly queue: Job[] = [];
   private next = 1;
+  /** The drawing each owner asked for last, while a plug-in's layout places it, so an older one placed late is dropped. */
+  private readonly placing = new WeakMap<object, GraphDrawing>();
 
   constructor(options: RunnerOptions) {
     this.o = options;
@@ -169,9 +172,15 @@ export class LayoutRunner {
    * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted. It is no longer
    * wanted when the runner closed, or a newer drawing for the same `owner` superseded it before its layout started.
    * Rejects when the engine fails. With a `theme` it is themed in that fixed palette, as an export is. That runs under
-   * the same limits and in the same worker.
+   * the same limits and in the same worker. A drawing that chooses a plug-in's layout is placed by it here, where the
+   * plug-in runs. Its spots go to the worker with it (layouts/offered.ts, layout_plugins).
    */
   draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
+    if (owner) this.placing.set(owner, drawing);
+    if (needsPlacing(drawing))
+      return placedFor(drawing).then((placed) =>
+        owner && this.placing.get(owner) !== drawing ? null : this.draw(placed, owner, theme),
+      );
     if (owner)
       for (const old of this.queue.filter((j) => j.owner === owner)) {
         this.queue.splice(this.queue.indexOf(old), 1);

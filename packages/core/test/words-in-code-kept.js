@@ -61,6 +61,18 @@ export const CORE_KEPT = {
     'the theme token {} is already added by {}',
     'it failed while registering: {}',
   ],
+  // why a layout is refused, and what is wrong with the spots it gave back: faults of its code, for its developer
+  'packages/core/src/plugin-layouts.ts': [
+    'the layout "{}" is not named {}.<word>',
+    'the layout "{}" is added already',
+    'the layout "{}" has no title on one line',
+    'the layout "{}" does not place things in two dimensions',
+    'the layout "{}" places nothing',
+    'it gave back no spots',
+    'it gave a spot to {}, which it was not given',
+    'the spot of {} is not two numbers',
+    'it gave no spot to {}',
+  ],
   // why a diagram type is refused, and what is wrong with the marks it gave back: faults of its code, for its developer
   'packages/core/src/plugin-diagrams.ts': [
     'the diagram type "{}" is not named {}.<word>',

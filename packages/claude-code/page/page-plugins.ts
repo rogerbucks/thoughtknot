@@ -13,6 +13,7 @@ import { readNote } from '../../core/src/drawing.ts';
 import { isolatedPlugin } from '../../core/src/plugin-isolated.ts';
 import type { PluginPort } from '../../core/src/plugin-isolated.ts';
 import { pluginRegistry } from '../../core/src/plugins.ts';
+import { offerLayouts, offerOf } from '../../core/src/layouts/offered.ts';
 import type { PluginRegistry } from '../../core/src/plugins.ts';
 import { readStyle } from '../../core/src/style.ts';
 import { diagramFor, shapeOf } from '../../core/src/types.ts';
@@ -75,6 +76,8 @@ export async function startPlugins(
       told.push(word('page.plugin-not-started', { name: p.name, why: said(e) }));
     }
   }
+  // the layouts of each plug-in running are offered in the View menu (layout_plugins)
+  offerLayouts(offerOf(() => registries));
   return { registries, said: told };
 }
 

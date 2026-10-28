@@ -17,7 +17,17 @@ import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
 import { marksInRows } from './layouts/rows-route.ts';
-import { groupsIn, kindsIn, lanesIn, optionsIn, ownable, ownSource, ownSvg, stepIn } from './layouts/own-draw.ts';
+import {
+  groupsIn,
+  kindsIn,
+  lanesIn,
+  placedIn,
+  optionsIn,
+  ownable,
+  ownSource,
+  ownSvg,
+  stepIn,
+} from './layouts/own-draw.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -130,7 +140,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
     if (ours && ownable(dot))
       return {
         rankdir,
-        dot: ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false, step),
+        dot: ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false, step, drawing.placed),
         src,
         own: true,
       };
@@ -187,6 +197,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         kindsIn(dot),
         lanesIn(dot),
         stepIn(dot),
+        placedIn(dot),
       );
   }
   // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)

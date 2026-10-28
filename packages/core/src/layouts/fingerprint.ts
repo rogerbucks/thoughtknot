@@ -6,6 +6,7 @@ import type { GraphShape } from '../types-shape.ts';
 import { word } from '../words.ts';
 import { LAYOUT_STEPS } from './cheaper.ts';
 import type { LayoutStep } from './cheaper.ts';
+import { strategyName } from './offered.ts';
 
 /** How the kinds of a part's things link. */
 export type KindPattern = 'plain' | 'ordered' | 'two-sided' | 'clustered';
@@ -100,6 +101,10 @@ export interface PickShown {
   bands?: Record<string, number>;
   /** The cheaper step it was laid out by, after a layout that ran out of time (layout_never_text). */
   step?: LayoutStep;
+  /** The layout the person chose, where they chose one: rows, spread, or a plug-in's id (layout_plugins). */
+  chosen?: string;
+  /** Whether the layout chosen could not lay it out, so its shape picked one instead. */
+  missed?: boolean;
 }
 
 /** The SVG attribute that carries what the engine picked (`PickShown`), as JSON, URI-encoded so it needs no escapes. */
@@ -108,9 +113,11 @@ export const PICK_ATTRIBUTE = 'data-layout-pick';
 /** What the engine picked, `shown`, in words a person reads: how, why, and the parts and kinds it saw. */
 export function pickSaid(shown: PickShown): string {
   // a step of rows or a grid is said in place of why: the graph's shape did not pick it (layout_never_text)
-  const why = word(`view.layout.why.${shown.why}` as 'view.layout.why.tree');
+  const name = shown.chosen === undefined ? '' : strategyName(shown.chosen);
+  const why = word(`view.layout.why.${shown.why}` as 'view.layout.why.chosen', { name });
   const step = shown.step && word(`view.layout.step.${shown.step}`);
   const lines = shown.step === 'own' ? [step as string, why] : [step || why];
+  if (shown.missed) lines.unshift(word('view.layout.missed', { name }));
   if (shown.parts > 1) lines.push(word('view.layout.parts', { count: shown.parts }));
   if (shown.loose) lines.push(word('view.layout.loose', { count: shown.loose }));
   if (shown.kinds === 'ordered') lines.push(word('view.layout.kinds.ordered', { order: shown.order.join(' → ') }));
@@ -132,6 +139,7 @@ export function pickShownOf(attribute: string | null | undefined): PickShown | u
           parts: Number(p.parts) || 1,
           loose: Number(p.loose) || 0,
           lanes: p.lanes === true,
+          ...(typeof p.chosen === 'string' ? { chosen: p.chosen, missed: p.missed === true } : {}),
           ...(LAYOUT_STEPS.includes(p.step as LayoutStep) ? { step: p.step as LayoutStep } : {}),
           bands: Object.fromEntries(
             Object.entries(p.bands ?? {}).filter((e): e is [string, number] => Number.isInteger(e[1])),
@@ -148,6 +156,6 @@ export const lanesShown = (attribute: string | null | undefined): Map<string, nu
   new Map(Object.entries(pickShownOf(attribute)?.bands ?? {}));
 
 /** Every reason the engine gives for a layout (own-engine.ts `Pick`). */
-const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried'];
+const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried', 'chosen'];
 /** Every kind pattern. */
 const KIND_PATTERNS: readonly KindPattern[] = ['plain', 'ordered', 'two-sided', 'clustered'];

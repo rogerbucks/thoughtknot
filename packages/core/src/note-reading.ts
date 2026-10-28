@@ -109,6 +109,8 @@ export interface GraphDrawing {
   layoutOptions?: Partial<LayoutOptions>;
   /** Shown as it improves: a quick first picture, then the settled one (§68, layout_live_loop); none, once settled. */
   live?: true;
+  /** Each thing's spot as the plug-in's layout its options choose placed it (§68, layout_plugins); none, not yet. */
+  placed?: Record<string, [number, number]>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */

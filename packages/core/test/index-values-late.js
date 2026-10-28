@@ -172,4 +172,9 @@ export const VALUES_LATE = [
   'gqlConnector',
   'joinPlaces',
   'placeKey',
+  // layouts a plug-in adds (§68, layout_plugins), 28 Oct 2026
+  'layoutContract',
+  'offerLayouts',
+  'offerOf',
+  'offeredLayouts',
 ];
