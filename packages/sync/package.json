@@ -1,0 +1,16 @@
+{
+  "name": "@thoughtknot/sync",
+  "version": "0.7.1",
+  "private": true,
+  "description": "Sync between an owner's devices with no server: notes as upstream Automerge text, sealed at rest and on the wire, checked before they replicate.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@automerge/automerge": "3.5.0",
+    "@thoughtknot/core": "0.7.1",
+    "@thoughtknot/graph-spec": "0.7.1"
+  }
+}
