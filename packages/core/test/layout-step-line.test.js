@@ -1,6 +1,7 @@
 // The one line beside a drawing that says the cheaper step it was laid out by (editor spec §68, layout_never_text).
 // It is read from the drawing itself, so only a step actually taken is said. It is drawn again with the legend of
-// moving links each time the graph is laid out again.
+// moving links each time the graph is laid out again. A line beside it says when the device's own setting wins over
+// the view preset (editor spec §69, view_presets_os_wins).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';
@@ -29,6 +30,35 @@ describe('the line beside a drawing', () => {
       assert.equal(slot.querySelector('.thoughtknot-layout-step'), null);
       renderBeside(slot, [], [], '<svg width="1pt"></svg>');
       assert.equal(slot.querySelector('.thoughtknot-layout-step'), null, 'a drawing Graphviz laid out says nothing');
+    } finally {
+      uninstall();
+    }
+  });
+
+  // proves: view_presets_os_wins
+  test('says in a line each of the device’s settings that wins over the view preset, and nothing when none does', () => {
+    const doc = fakeDocument(),
+      uninstall = installGlobals(doc);
+    try {
+      const asked = new Set();
+      doc.defaultView.matchMedia = (q) => ({ media: q, matches: asked.has(q) });
+      const slot = doc.body.createDiv();
+      const lines = () => slot.querySelectorAll('.thoughtknot-device-line').map((l) => l.textContent);
+      renderBeside(slot, [], [], '', 'default');
+      assert.deepEqual(lines(), [], 'the device asks for nothing');
+      asked.add('(prefers-reduced-motion: reduce)');
+      renderBeside(slot, [], [], '', 'default');
+      assert.deepEqual(lines(), ['Your device asks for less motion, so nothing moves.']);
+      assert.equal(slot.querySelector('.thoughtknot-device-line').getAttribute('role'), 'status');
+      renderBeside(slot, [], [], '', 'calm');
+      assert.deepEqual(lines(), [], 'Calm already holds still: the device changes nothing');
+      asked.add('(forced-colors: active)');
+      renderBeside(slot, [], [], '', 'calm');
+      assert.deepEqual(lines(), ['Your device asks for more contrast, so colours are stronger.']);
+      asked.clear();
+      asked.add('(prefers-contrast: more)');
+      renderBeside(slot, [], [], '', 'reading');
+      assert.equal(lines().length, 1, 'drawn again, not added to');
     } finally {
       uninstall();
     }
