@@ -52,7 +52,12 @@ function viewportOf(still = false) {
     matchMedia: () => ({ matches: still }),
     document: { body: { classList: { contains: () => false } } },
   };
-  const viewport = { win, addEventListener: (type, f) => heard.set(type, f) };
+  // only what is heard on the way down, before the view's own pan and zoom act on the reach
+  const viewport = {
+    win,
+    addEventListener: (type, f, o) => o?.capture && heard.set(type, f),
+    removeEventListener: (type, f) => heard.get(type) === f && heard.delete(type),
+  };
   const frame = (ms) => {
     now += ms;
     for (const f of frames.splice(0)) f(now);
