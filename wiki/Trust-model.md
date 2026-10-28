@@ -177,10 +177,11 @@ Wave 6.
 - **Controls:** No `pull_request_target`. Every action is pinned to a full SHA. Permissions are read only unless a job
   needs more. Credentials are not kept after checkout. Release tags must be on `main`. Releases are attested.
 - **Code:** the workflows that hold a secret other than their own token: `.github/workflows/build-status.yml`,
-  `.github/workflows/claude-review.yml`, `.github/workflows/desktop-app.yml`, `.github/workflows/nightly.yml`, `.github/workflows/project-mirror.yml`,
+  `.github/workflows/claude-review.yml`, `.github/workflows/desktop-app.yml`, `.github/workflows/idea-to-board.yml`, `.github/workflows/nightly.yml`, `.github/workflows/project-mirror.yml`,
   `.github/workflows/release-check.yml`, `.github/workflows/release.yml`, `.github/workflows/risk-panel.yml`,
   `.github/workflows/security.yml`, `.github/workflows/wave-nightly.yml` and `.github/workflows/working-group.yml`.
-  The wave one reads the project board with the project token, then calls the nightly.
+  The wave one reads the project board with the project token, then calls the nightly. The idea one uses the project
+  token to add a labelled issue to the board, and checks out nothing.
 - **Gaps:**
   - The stable release builds and publishes in one job that holds the signing permissions (TRUST-3).
   - Any commenter could wake the working-group agent, which could write the script that checks it. Fixed in #836

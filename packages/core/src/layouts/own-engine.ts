@@ -20,6 +20,8 @@ import { SCREEN, boundsOf } from './folded-rows.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { stressLayout } from './stress.ts';
+import { groupsOver, packPlaced, partShape, partsOf, trayOf } from './parts.ts';
+import type { Placed } from './parts.ts';
 
 /** The layouts the engine picks from. */
 export type OwnLayout = 'layered' | 'stress';
@@ -38,6 +40,8 @@ const BACK_MOST = 0.1;
 const DENSE_MOST = 3;
 /** The room kept between two boxes pushed apart, in CSS pixels. */
 const APART = 14;
+/** The room between two parts of a drawing packed side by side, in CSS pixels. */
+const PART_GAP = 40;
 /** The most rounds of pushing boxes apart. */
 const APART_ROUNDS = 40;
 
@@ -164,32 +168,45 @@ export function ownSpots(
   rankdir: 'LR' | 'TB';
 } {
   const { shape: whole, sizes } = marksShape(laid.marks);
-  const { spacing, linkLength } = layoutOptions(options);
   const { shape, trunks } = trunksOut(whole);
-  const pick = pickLayout(shape);
-  let spots: Map<string, [number, number]>;
-  let via = new Map<string, [number, number][]>();
-  let boxes: GroupBox[] = [];
+  const { spacing } = layoutOptions(options);
+  // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray
+  const grouped = new Set(groups.flatMap((g) => g.members));
+  const parts = partsOf(
+    shape.things.map((t) => t.key),
+    shape.links,
+    groups.map((g) => g.members),
+  );
+  const isLoose = (p: readonly string[]) =>
+    p.length === 1 && !grouped.has(p[0] as string) && !(p[0] as string).startsWith(FOLDED_GROUP);
+  const loose = parts.filter(isLoose).flat();
+  const laidParts = parts.filter((p) => !isLoose(p));
   let way = rankdir;
-  if (pick.layout === 'layered') {
-    const rowsOf = (w: 'LR' | 'TB') =>
-      groupedLayered(shape, sizes, groups, w, previous, options, pick.why === 'overview' && !previous ? RESTARTS : 0);
-    let rows = rowsOf(rankdir);
-    // an overview's boxes are few and wide: its rows go whichever way gives the drawing a screen's shape, nearer
-    if (pick.why === 'overview') {
-      const other = rankdir === 'LR' ? 'TB' : 'LR';
-      const turned = rowsOf(other);
-      if (offScreen(turned, sizes) < offScreen(rows, sizes)) [rows, way] = [turned, other];
-    }
-    ({ spots, via, boxes } = rows);
-  } else {
-    // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
-    const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
-    const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
-    const placed = stressLayout(shape, 2, previous, { unit });
-    spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
-    apart(spots, sizes, APART * spacing);
+  const pieces: Piece[] = laidParts.map((keys, i) => {
+    const one = laidParts.length === 1 && !loose.length;
+    const piece = placedPart(
+      one ? shape : partShape(shape, keys),
+      sizes,
+      one ? groups : groupsOver(groups, keys),
+      way,
+      {
+        previous,
+        options,
+        turn: i === 0,
+      },
+    );
+    if (i === 0) way = piece.way;
+    return piece;
+  });
+  const pick = pieces[0]?.pick ?? pickLayout({ things: [], links: [] });
+  if (loose.length) {
+    const text = new Map(shape.things.map((t) => [t.key, t.text]));
+    const tray = trayOf(loose, sizes, (k) => text.get(k) ?? k, APART * spacing);
+    pieces.push({ spots: tray.spots, via: new Map(), boxes: [], pick, way });
   }
+  const drawn = pieces.length === 1 ? (pieces[0] as Piece) : packPlaced(pieces, sizes, PART_GAP * spacing);
+  const { spots, via } = drawn;
+  let boxes = drawn.boxes;
   trunksBack(trunks, spots, via, way === 'TB' ? 1 : 0);
   // moved so the drawing starts at its top left, with a margin
   let x0 = Infinity,
@@ -208,6 +225,48 @@ export function ownSpots(
     return { ...b, x, y };
   });
   return { spots, via, boxes, pick, rankdir: way };
+}
+
+/** One part of a drawing laid out on its own, by the layout it picked, its rows running `way`. */
+interface Piece extends Placed {
+  pick: Pick;
+  way: 'LR' | 'TB';
+}
+
+/**
+ * `shape` laid out by the layout its shape picks. Rows run `rankdir`. With `turn`, an overview's rows may turn the
+ * other way, where that gives it a screen's shape nearer.
+ */
+function placedPart(
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size>,
+  groups: readonly Group[],
+  rankdir: 'LR' | 'TB',
+  more: { previous?: ReadonlyMap<string, readonly number[]>; options: Partial<LayoutOptions>; turn: boolean },
+): Piece {
+  const { previous, options } = more;
+  const { spacing, linkLength } = layoutOptions(options);
+  const pick = pickLayout(shape);
+  let way = rankdir;
+  if (pick.layout === 'layered') {
+    const rowsOf = (w: 'LR' | 'TB') =>
+      groupedLayered(shape, sizes, groups, w, previous, options, pick.why === 'overview' && !previous ? RESTARTS : 0);
+    let rows = rowsOf(rankdir);
+    // an overview's boxes are few and wide: its rows go whichever way gives the drawing a screen's shape, nearer
+    if (pick.why === 'overview' && more.turn) {
+      const other = rankdir === 'LR' ? 'TB' : 'LR';
+      const turned = rowsOf(other);
+      if (offScreen(turned, sizes) < offScreen(rows, sizes)) [rows, way] = [turned, other];
+    }
+    return { ...rows, pick, way };
+  }
+  // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
+  const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
+  const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
+  const placed = stressLayout(shape, 2, previous, { unit });
+  const spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
+  apart(spots, sizes, APART * spacing);
+  return { spots, via: new Map(), boxes: [], pick, way };
 }
 
 /** A trunk's two points (fold-source.ts): where its links meet, and where they part. */

@@ -293,7 +293,7 @@ export async function openSpaceView(
       const before = pinch();
       down.set(e.pointerId, now);
       // the pinch zooms toward the middle of the two fingers, as a map does
-      orbit = pinchBy(orbit, before, pinch(), el.getBoundingClientRect(), width, height);
+      orbit = pinchBy(orbit, before, pinch(), el.getBoundingClientRect(), width, height, pivot());
       travel += TAP_SLOP;
     } else {
       down.set(e.pointerId, now);
