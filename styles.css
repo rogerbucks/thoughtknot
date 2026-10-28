@@ -903,6 +903,30 @@
   border-top: none;
   padding-top: 0;
 }
+/* the rarer views, folded under More views across the whole panel: their tiles a grid of their own (Q-12, option B) */
+.thoughtknot-view-list li.thoughtknot-view-more {
+  grid-column: 1 / -1;
+  border: none;
+  background: none;
+  padding: 0;
+  min-height: 0;
+}
+.thoughtknot-view-list li.thoughtknot-view-more:hover {
+  background: none;
+}
+.thoughtknot-view-more summary {
+  cursor: pointer;
+  padding: var(--gn-space-2) 0;
+  min-height: 44px;
+}
+.thoughtknot-view-more ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
+  gap: var(--gn-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 /* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
    across the panel with why beside its name */
 .thoughtknot-type-list li.thoughtknot-type-unfit {
