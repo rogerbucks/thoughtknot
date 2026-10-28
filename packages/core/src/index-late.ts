@@ -48,3 +48,15 @@ export {
 } from './view-presets.ts';
 export { presetPreview, presetUndo, type PresetLine } from './view-preset-preview.ts';
 export { PRESET_IDS, type PresetChoice } from './style-graph.ts'; // a graph's own preset (§69)
+// a view as its six layers, and the Render line that sets its space and painter (§68, layout_concept_layers)
+export {
+  PAINTERS,
+  SPACES,
+  paintersFrom,
+  renderFor,
+  spaceMode,
+  type Painter,
+  type Render,
+  type Space,
+} from './render-choice.ts';
+export { VIEW_LAYERS, viewLayers, type ViewLayer, type ViewLayers } from './view-layers.ts';

@@ -805,6 +805,15 @@ never data.
   view_presets_scoped). It is one of `PRESET_IDS`, the starters of `view-presets.ts`; `presetOf` checks it.
 - `aidsOf(settings, style)` gives a card the first one written, else the settings' preset. `presetClasses` gives the
   card its classes: blurred rest, still links and plain words.
+
+#### A view's six layers
+
+- A view is six layers (§68, layout_concept_layers): dimensions, filters, strategy, projection, formatting, painter.
+  `viewLayers(style, view)` reads each from its own lines of the style graph, so each changes alone.
+- A `Render` line, `(r1:Render {view: 'plan', space: '3d', painter: 'canvas'})`, sets the space and the painter
+  (`render-choice.ts`). `renderFor` gives a view's own first, key by key, then the whole graph's.
+- `aidsOf(settings, style, view)` hands both to the card. It opens in its space (`spaceMode`), and `paintersFrom` keeps
+  the painter named and those slower than it, in space and in an overview.
   - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
     `python/graph_spec/tests/style_cases.json`.
 

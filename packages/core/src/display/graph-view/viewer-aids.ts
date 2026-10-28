@@ -3,12 +3,13 @@
 // - whether the details panel stays open (details_always_visible) and where it goes (details_narrow);
 // - how tall a drawing in a note may be (drawing_height_setting);
 // - the quick-info tooltip;
-// - the view preset, by its id: the graph's own, written in its style graph, else the settings' (§69).
+// - the view preset, by its id: the graph's own, written in its style graph, else the settings' (§69);
+// - the space a card opens in and its painter, as its style graph's Render sets them (§68, layout_concept_layers).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
-import { presetFor, tallestOf } from '@thoughtknot/core';
-import type { Drawn, MiniMapSetting, Settings, StyleGraph, View, Zoom } from '@thoughtknot/core';
+import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
+import type { Drawn, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
@@ -24,14 +25,21 @@ export interface ViewerAids {
   tallest?: number | null;
   /** The view preset that applies (§69), by its id: how the card reads, selects and moves. */
   preset?: string;
+  /** The space the card opens in, and what paints it in space or as an overview (render-choice.ts). */
+  space?: Space;
+  painter?: Painter;
 }
 
-/** The aids the settings give, with the preset the graph's style graph chooses winning over theirs (view_presets_scoped). */
-export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets'>): ViewerAids => ({
+/**
+ * The aids the settings give, with the preset the graph's style graph chooses winning over theirs (view_presets_scoped).
+ * The style graph's Render for `view`, or the whole graph, gives the space and painter.
+ */
+export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets' | 'renders'>, view?: string): ViewerAids => ({
   miniMap: s.miniMap,
   detailsOpen: s.detailsOpen === 'on',
   tallest: tallestOf(s.drawingHeight),
   preset: presetFor({ graph: style?.presets[0]?.preset, everywhere: s.viewPreset }).id,
+  ...(style ? renderFor(style, view) : {}),
 });
 
 /** How wide a card must be, in pixels, for the details to sit beside the drawing; narrower, they go below it (§24). */
