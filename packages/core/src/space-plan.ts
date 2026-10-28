@@ -1,5 +1,5 @@
-// The plan of the view in space: its whole drawing seen from straight above, for its mini-map (editor spec §24,
-// mini_map; space_mini_map; ethos principle 8, never disorient the user). Each thing is its footprint on the floor and
+// The plan of the view in space, for its mini-map (editor spec §24, space_mini_map; ethos principle 8). It is the
+// whole drawing seen from straight above. Each thing is its footprint on the floor and
 // each link its line. The floor the camera sees is outlined. Its near side is narrower than its far one, so the
 // outline shows which way the view looks as well as where. The sums are here. The mini-map itself is in
 // display/graph-view/space-mini-map.ts.

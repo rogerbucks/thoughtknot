@@ -1,7 +1,7 @@
 // The mini-map of the view in space (editor spec §24, space_mini_map; ethos principle 8). The plan is the whole drawing
 // seen from straight above, with the floor the camera sees outlined, its near side the narrower (space-plan.ts). The
-// mini-map shows it by the setting, marks the picked thing, and a tap or drag on it moves the camera there, the press
-// going no further (space-mini-map.ts).
+// mini-map shows it by the setting and marks the picked thing. A tap or drag on it moves the camera there. The press
+// goes no further (space-mini-map.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from '../../obsidian/test/host/fake-dom.js';

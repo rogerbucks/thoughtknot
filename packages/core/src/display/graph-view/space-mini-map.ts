@@ -1,6 +1,6 @@
 // The mini-map of the view in space (editor spec §24, mini_map, mini_map_setting; space_mini_map; ethos principle 8,
-// never disorient the user). The 2D drawing has had one from the start, and 2.5D and 3D now do too (Roger, 28 Oct
-// 2026: the same concepts in every view). It is the whole drawing seen from straight above, in the corner the pad
+// never disorient the user). The 2D drawing has one, and now 2.5D and 3D do too: the same concepts in every view
+// (Roger, 24 Oct 2026). It is the whole drawing seen from straight above, in the corner the pad
 // leaves free. The floor the camera sees is outlined, its near side the narrower, and the picked thing is marked. A tap
 // or drag on it moves the view there, turned and as far off as it was. It shows by the same setting as in 2D: never,
 // only when some thing is off the screen (the default), or always. The sums are in space-plan.ts.

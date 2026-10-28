@@ -525,12 +525,15 @@ describe("the 3D view's painters, in a real browser", () => {
     },
   );
 
+  // the mini-map and the glide in it, read once for both checks below
+  let read;
+  const mini = () => (read ??= browser.run('miniInSpace().then(JSON.stringify)').then(JSON.parse));
   // proves: space_mini_map
   test(
     '2.5D and 3D have a mini-map too: every thing, the floor seen, and a press on it moves the view',
     options,
     async () => {
-      const r = JSON.parse(await browser.run('miniInSpace().then(JSON.stringify)'));
+      const r = await mini();
       assert.deepEqual(
         r.shown,
         { there: true, boxes: 2, seen: 4 },
@@ -543,7 +546,7 @@ describe("the 3D view's painters, in a real browser", () => {
 
   // proves: layout_glide
   test('laid out again, each thing glides there in the view in space, through the spots between', options, async () => {
-    const { path } = JSON.parse(await browser.run('miniInSpace().then(JSON.stringify)'));
+    const { path } = await mini();
     const [first, last] = [path[0], path.at(-1)];
     assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
     const between = path.filter((x) => x > first + 1 && x < last - 1);
