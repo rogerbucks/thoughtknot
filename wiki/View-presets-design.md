@@ -20,7 +20,8 @@ flowchart LR
 
 The six starters are in `packages/core/src/view-presets.ts`. **View preset** heads the Drawing settings: picking one
 sets every Drawing setting it turns, and each stays yours to change. The floor, the device winning, the nearest
-preset winning and the one-file export are there too. The hosts read the device's settings, and a graph or vault
+preset winning and the one-file export are there too. Moving links have a pause beside their legend, and a still
+preset stops them as the device's reduced motion does. The hosts read the device's settings, and a graph or vault
 keeps its own preset, next.
 
 A preset sits beside a personal profile (section 39). The preset says how a graph is drawn. The profile says how much
@@ -36,6 +37,25 @@ of it a viewer is shown.
 | Detail first | By name or property | Grid or matrix | Matrix or outline | Off | Every label shown |
 | Big picture first | By kind or group | Groups as boxes, folded | Semantic zoom | Optional | One key to fit all |
 | Reading support | By flow or kind | Rows, short labels | 2D and outline | Follows the device | Wider spacing, read aloud |
+
+## Why each starter
+
+Each starter's choices, the research behind them, and how sure that research is. **Looked at again:** 28 October
+2026. Look again when a source below changes or a new study is found, and change this table first.
+
+| Starter | Choice | Why | How sure | Source |
+| --- | --- | --- | --- | --- |
+| Default | 2D drawing with an outline beside it | No general gain from 3D, and it hurts memory of where things are | Medium | Kotlarek 2020, Schroeder 2018 |
+| Default | Motion follows the device, a pause for anything moving | Moving content needs a pause and must stop on request | High | WCAG 2.2 (2.2.2, 2.3.3) |
+| Focus support | The selected thing and two links round it, the rest blurred | ADHD readers prefer blurring to hiding, and keep the context | Medium | Zhu 2025, Forster and Lavie 2023 |
+| Focus support | A trail of recent picks to go back along | Hyperfocus makes "where was I" hard | Low | Bowen 2026, Zhu 2025 |
+| Focus support | Nothing moves by itself | A distractor holds ADHD attention longer once it catches it | Medium | Zhang 2024 |
+| Calm and predictable | Laid out again only when asked, pinned things stay | Uncertainty and surprise raise anxiety for many autistic people | High | Jenkinson 2020, WCAG 2.2 (3.2.5) |
+| Calm and predictable | A preview before a change, undone in one step | Unexpected changes overwhelm some readers | Medium | Wu 2023, W3C COGA 2021 |
+| Detail first | Matrix or grid, every label shown | A matrix suits a dense graph; no general local bias, so a style to choose, not a group's | Low | Okoe 2018, Van der Hallen 2015 |
+| Big picture first | Groups folded into boxes, one key to fit all | Seeing the whole takes longer for autistic readers, so start from it | Medium | Van der Hallen 2015, Alpizar 2020 |
+| Reading support | Plain sans font, no special dyslexia font | Fonts made for dyslexia do not help | High | Wery 2017, Kuster 2018, Galliussi 2020 |
+| Reading support | Wider word spacing, a line height of 1.5, short labels | Wider word spacing helps a little; style guides agree | Medium | Galliussi 2020, British Dyslexia Association |
 
 ## What the research says
 

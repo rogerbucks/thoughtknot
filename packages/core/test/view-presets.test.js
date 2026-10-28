@@ -113,3 +113,31 @@ describe('where a preset applies, and moving it', () => {
     assert.deepEqual(odd.settings, { foldHubs: 'on' }, 'only the settings a preset may turn');
   });
 });
+
+describe('the research behind the starters', () => {
+  // proves: view_presets_evidence
+  test('each starter cites its research with how sure it is, on the wiki, with the day it was last looked at', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const page = await readFile(new URL('../../../wiki/View-presets-design.md', import.meta.url), 'utf8');
+    const part = page.slice(page.indexOf('## Why each starter'), page.indexOf('## What the research says'));
+    assert.match(part, /\*\*Looked at again:\*\* \d{1,2} [A-Z][a-z]+\s+\d{4}/, 'when it was last looked at');
+    const rows = part
+      .split('\n')
+      .filter((l) => l.startsWith('| ') && !l.startsWith('| ---') && !l.startsWith('| Starter'))
+      .map((l) =>
+        l
+          .split('|')
+          .map((c) => c.trim())
+          .slice(1, -1),
+      );
+    for (const p of STARTERS) {
+      const mine = rows.filter((r) => r[0] === p.name);
+      assert.ok(mine.length, `${p.name} has its reasons`);
+      for (const [, choice, why, sure, source] of mine) {
+        assert.ok(choice && why, `${p.name}: a choice and why`);
+        assert.ok(['High', 'Medium', 'Low'].includes(sure), `${p.name}: how sure, not "${sure}"`);
+        assert.match(source, /\d{4}|WCAG|Association/, `${p.name}: a source`);
+      }
+    }
+  });
+});
