@@ -50,6 +50,14 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
 3. **PJ1: projections, all on.** Fisheye, hyperbolic, sphere, arc, matrix, hive, map, grid (kanban), semantic
    zoom and spatial (VR). Each is in the View menu, in 2D and 3D where it has a 3D form.
 
+## Links
+
+Our engine draws its links through lanes it keeps between the boxes (`layouts/routed-curve.ts`). A drawing Graphviz
+lays out has its links routed by our own router (`layouts/rows-route.ts`, #1232). Graphviz lays the links out
+straight, so it routes nothing. Past 300 things, each link then runs through a gap in each row it crosses, and bends
+as one smooth curve between rows. No box moves, and no link runs over a box. The Python library routes them the
+same way.
+
 ## Plug-ins
 
 Layouts, content and sources each have one contract (layout_contract, format_plugin_contracts, connectors). A new
