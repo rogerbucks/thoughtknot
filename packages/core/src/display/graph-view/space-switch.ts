@@ -9,10 +9,13 @@ import { word } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
-import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { openSpaceView } from './space-view-panel';
 import { fadeOut } from './space-view-pad.ts';
 import type { SpaceView } from './space-view-panel';
+import type { ViewOptions } from './view-options';
+
+/** What the card's options say of the view in space: its type, its spacing, and whether its mini-map shows. */
+export type SpaceSays = Pick<ViewOptions, 'diagram' | 'switches' | 'aids'>;
 
 /** How the drawing is shown in space: as cards (2.5D) or as balls (3D). Flat is null. */
 export type SpaceMode = 'cards' | 'balls';
@@ -33,14 +36,13 @@ export class SpaceSwitch {
   private graph = '';
 
   /**
-   * For a card's drawing, its SVG, none for a table: the view in space lies over the frame it is in. And the type it is
-   * drawn as. Its things stay where that type drew them, so a type chosen changes the view in space too. A network is
-   * laid out afresh in space (space_follows_type).
+   * For a card's drawing, its SVG, none for a table: the view in space lies over the frame it is in. And what the card's
+   * options say. Its things stay where the type drew them, so a type chosen changes the view in space too. A network is
+   * laid out afresh in space (space_follows_type). Its mini-map shows as the flat drawing's does (space_mini_map).
    */
   constructor(
     private readonly svg: () => SVGSVGElement | null,
-    private readonly type: () => { drawn: string; plugin?: unknown } | undefined = () => undefined,
-    private readonly layout: () => Partial<LayoutOptions> | undefined = () => undefined,
+    private readonly says: () => SpaceSays = () => ({}),
   ) {}
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
@@ -79,8 +81,9 @@ export class SpaceSwitch {
     if (!svg || !frame) return this.closed(turn);
     const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
       cards: mode === 'cards',
-      asDrawn: asDrawnFor(this.type()),
-      layout: this.layout,
+      asDrawn: asDrawnFor(this.says().diagram?.choice),
+      layout: () => this.says().switches?.state.layout,
+      miniMap: () => this.says().aids?.miniMap ?? 'off',
     });
     if (turn !== this.turn) return view?.close();
     this.view = view;

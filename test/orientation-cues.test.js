@@ -1,7 +1,7 @@
 // Orientation cues stay in every view (editor spec §25, orientation_cues; ethos principle 8, never disorient the
 // user, rule r_cues). It is one check over each projection.
 // - 2D: the mini-map shows the whole drawing and outlines where the view is. The selected thing is marked. Both hold
-//   when the drawing is laid out again.
+//   when the drawing is laid out again, as the rest glide there round the selected thing, which stays put.
 // - 2.5D: the picked card is marked, holds its whole name and is painted over the rest.
 // - 3D: the picked ball is ringed and named, from near and from far.
 // The 2D card is the built plugin against the stand-ins for the page; the views in space are their pure frames.
@@ -58,7 +58,12 @@ describe('orientation_cues: every view keeps the cues to where the person is', (
       input.value = String(Number(input.getAttribute('max') ?? 3));
       input.dispatch('change');
       await until(() => thing(el, 'ann') && thing(el, 'ann') !== was, LAID);
+      // the rest glide to their new spots (layout_glide), and Ann, selected, stays where she was on the screen
+      const gliding = () => [...el.querySelectorAll('g.node')].filter((g) => g.getAttribute('transform'));
+      assert.ok(gliding().length > 0, 'the things glide there');
+      assert.equal(thing(el, 'ann').getAttribute('transform'), null, 'Ann kept in place');
       assert.deepEqual(cues(el), { map: true, whole: true, where: true, marked: true }, 'laid out again');
+      await until(() => !gliding().length, LAID);
     } finally {
       env.uninstall();
     }

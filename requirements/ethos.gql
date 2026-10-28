@@ -39,7 +39,7 @@
 (r_glide:Rule {text: 'Things glide from where they were to where they go, aligned first so the drawing does not spin or jump. Reduced motion shows the end at once, and a move by the person stops the glide.', requirements: 'space_glide layout_glide motion_reduced_respected'}),
 (r_unasked:Rule {text: 'Nothing moves or recentres unless the person asked: a pinned thing stays put, a layout runs again only when asked, and the first click only selects.', requirements: 'view_presets_predictable layout_checks_gated sketch_click_rule'}),
 (r_way_back:Rule {text: 'Every change of view has a way back: a group folds back where it opened, and a preset can be undone in one step.', requirements: 'cluster_fold_back view_presets_predictable'}),
-(r_cues:Rule {text: 'Orientation cues stay: the minimap shows the whole drawing and where the view is, and the thing in focus is always marked.', requirements: 'orientation_cues mini_map mini_map_shape'}),
+(r_cues:Rule {text: 'Orientation cues stay: the minimap shows the whole drawing and where the view is, and the thing in focus is always marked.', requirements: 'orientation_cues mini_map mini_map_shape space_mini_map'}),
 (r_every_view:Rule {text: 'These rules hold for every user interaction in every view and projection (2D, 2.5D, 3D), tuned to each, never in one view only.', check: 'person', how: 'Reviewed in each pull request that touches a view or an interaction (CONTRIBUTING.md).'}),
 // ── Links ──
 (everyone)-[:HAS_RULE]->(r_wcag),
