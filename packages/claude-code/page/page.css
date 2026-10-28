@@ -1,0 +1,371 @@
+/* The browser page's own styles (spec §26). The colours are the theme's variables (theme-css.ts). The shared display
+   layer's styles (the plugin's styles.css) are added to this file when the page is built. No inline style and no remote address:
+   every file named here is the server's own. */
+
+/* The design tokens (editor spec §44, ui_theme_tokens). The page's theme (theme-css.ts) is written in the names of
+   Obsidian's. The drawing's Obsidian palette reads those too. Here they map to the --gn-* tokens that every rule of the
+   page and the shared styles reads. The page has no theme class on its body, so this is the one mapping it has. */
+:root {
+  --gn-bg: var(--background-primary);
+  --gn-bg-alt: var(--background-secondary);
+  --gn-bg-hover: var(--background-modifier-hover);
+  --gn-border: var(--background-modifier-border);
+  --gn-border-hover: var(--background-modifier-border-hover);
+  --gn-border-focus: var(--background-modifier-border-focus);
+  --gn-text-normal: var(--text-normal);
+  --gn-text-muted: var(--text-muted);
+  --gn-text-faint: var(--text-faint);
+  --gn-text-error: var(--text-error);
+  --gn-text-warning: var(--text-warning);
+  --gn-text-on-accent: var(--text-on-accent);
+  --gn-text-selection: var(--text-selection);
+  --gn-accent: var(--interactive-accent);
+  --gn-link: var(--link-color);
+  --gn-link-unresolved: var(--link-unresolved-color);
+  --gn-hue-red: var(--color-red);
+  --gn-hue-orange: var(--color-orange);
+  --gn-hue-green: var(--color-green);
+  --gn-code-background: var(--code-background);
+  --gn-code-normal: var(--code-normal);
+  --gn-code-keyword: var(--code-keyword);
+  --gn-code-important: var(--code-important);
+  --gn-code-operator: var(--code-operator);
+  --gn-code-value: var(--code-value);
+  --gn-code-tag: var(--code-tag);
+  --gn-code-string: var(--code-string);
+  --gn-code-property: var(--code-property);
+  --gn-code-function: var(--code-function);
+  --gn-shadow-s: var(--shadow-s);
+  --gn-shadow-l: var(--shadow-l);
+  --gn-layer-popover: var(--layer-popover);
+  --gn-layer-tooltip: var(--layer-tooltip);
+  --gn-layer-modal: var(--layer-modal);
+  --gn-font-ui: var(--font-interface);
+  --gn-font-mono: var(--font-monospace);
+  --gn-font-size-xs: var(--font-ui-smaller);
+  --gn-font-size-s: var(--font-ui-small);
+  --gn-font-size-l: var(--font-ui-large);
+  --gn-font-size-text-s: var(--font-smaller);
+  --gn-code-size: var(--code-size);
+  --gn-font-weight-bold: var(--font-bold);
+  --gn-font-weight-semibold: var(--font-semibold);
+  --gn-icon-xs: var(--icon-xs);
+  --gn-space-half-1: var(--size-2-1);
+  --gn-space-half-2: var(--size-2-2);
+  --gn-space-1: var(--size-4-1);
+  --gn-space-2: var(--size-4-2);
+  --gn-space-3: var(--size-4-3);
+  --gn-space-4: var(--size-4-4);
+  --gn-space-5: var(--size-4-5);
+  --gn-space-6: var(--size-4-6);
+  --gn-space-9: var(--size-4-9);
+  --gn-radius-s: var(--radius-s);
+  --gn-radius-m: var(--radius-m);
+  --gn-radius-l: var(--radius-l);
+  --gn-cursor-link: var(--cursor-link);
+  --gn-motion-dash: 1s;
+  --gn-motion-dot: 2s;
+  --gn-motion-step: 1s;
+  --gn-motion-pulse: 1.2s;
+  --gn-motion-fade: 0.2s;
+  --gn-ease-even: linear;
+  --gn-ease-soft: var(--anim-motion-smooth);
+}
+
+/* Forced colours and more contrast (editor spec §44, forced_colours), for the page's own elements. They use the same
+   tables as the shared styles (theme-tokens.ts, FORCED_TOKEN_COLOURS and MORE_CONTRAST_TOKENS). */
+@media (forced-colors: active) {
+  :root {
+    --gn-bg: Canvas;
+    --gn-bg-alt: Canvas;
+    --gn-bg-hover: Canvas;
+    --gn-border: CanvasText;
+    --gn-border-hover: CanvasText;
+    --gn-border-focus: CanvasText;
+    --gn-text-normal: CanvasText;
+    --gn-text-muted: CanvasText;
+    --gn-text-faint: CanvasText;
+    --gn-text-error: CanvasText;
+    --gn-text-warning: CanvasText;
+    --gn-text-on-accent: HighlightText;
+    --gn-text-selection: Highlight;
+    --gn-accent: Highlight;
+    --gn-link: LinkText;
+    --gn-link-unresolved: LinkText;
+    --gn-hue-red: CanvasText;
+    --gn-hue-orange: CanvasText;
+    --gn-hue-green: CanvasText;
+    --gn-code-background: Canvas;
+    --gn-code-normal: CanvasText;
+    --gn-code-keyword: CanvasText;
+    --gn-code-important: CanvasText;
+    --gn-code-operator: CanvasText;
+    --gn-code-value: CanvasText;
+    --gn-code-tag: CanvasText;
+    --gn-code-string: CanvasText;
+    --gn-code-property: CanvasText;
+    --gn-code-function: CanvasText;
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --gn-text-muted: var(--gn-text-normal);
+    --gn-text-faint: var(--gn-text-normal);
+    --gn-border: var(--gn-text-normal);
+    --gn-border-hover: var(--gn-text-normal);
+  }
+}
+body {
+  margin: 0;
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  /* in rem, so the browser’s own font size scales the page (text_scaling) */
+  font: 0.9375rem/1.5 var(--gn-font-ui);
+}
+
+.gn-page {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--gn-space-4);
+}
+
+header {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--gn-space-4) var(--gn-space-4) 0;
+}
+
+.gn-title {
+  margin: 0;
+  font-size: 1.3em;
+}
+
+/* the keyboard (spec §26, WCAG 2.2 AA 2.4.1, 2.4.7, 2.4.11). A skip link is off the screen until it has the focus. A
+   visible focus ring in the text colour is on every control and every target the keyboard can rest on */
+.gn-skip {
+  position: absolute;
+  inset-inline-start: -999px;
+  top: 0;
+  z-index: var(--gn-layer-popover);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+}
+
+.gn-skip:focus {
+  inset-inline-start: 0;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--gn-text-normal);
+  outline-offset: 2px;
+}
+
+/* the text version of the graph (cc_text_version): in the page, read by everyone */
+.gn-text-version h2 {
+  font-size: 1.1em;
+}
+
+.gn-text-version ul {
+  padding-inline-start: var(--gn-space-5);
+}
+
+/* reduced motion (cc_reduced_motion, WCAG 2.2 AA 2.3.3): the system asks for none. So nothing moves, fades or scrolls
+   smoothly, the shared layer's own movements among them. Nothing is hidden, so the editor is the same without them */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.gn-drawing img {
+  max-width: 100%;
+  height: auto;
+}
+
+.gn-prose pre,
+.gn-prose code {
+  font-family: var(--gn-font-mono);
+  font-size: var(--gn-code-size);
+  background: var(--gn-code-background);
+}
+
+.gn-prose pre {
+  padding: var(--gn-space-2);
+  overflow-x: auto;
+  border-radius: var(--gn-radius-s);
+}
+
+.gn-prose a {
+  color: var(--gn-link);
+}
+
+/* an icon is an image file the server holds, painted in the text colour; a name with no file shows the dashed square */
+.gn-icon {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+  background-color: currentColor;
+  -webkit-mask: var(--gn-icon-image, url('/icons/unknown.svg')) center / contain no-repeat;
+  mask: var(--gn-icon-image, url('/icons/unknown.svg')) center / contain no-repeat;
+}
+
+#gn-notices {
+  position: fixed;
+  inset-inline-end: var(--gn-space-4);
+  bottom: var(--gn-space-4);
+  z-index: var(--gn-layer-popover);
+}
+
+.gn-notice,
+.gn-menu {
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  box-shadow: var(--gn-shadow-s);
+}
+
+.gn-notice {
+  padding: var(--gn-space-2) var(--gn-space-3);
+  margin-top: var(--gn-space-1);
+}
+
+.gn-menu {
+  position: fixed;
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+  padding: var(--gn-space-1);
+}
+
+.gn-menu-row {
+  display: flex;
+  gap: var(--gn-space-2);
+  align-items: center;
+  padding: var(--gn-space-1) var(--gn-space-2);
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gn-menu-row:hover,
+.gn-menu-row:focus-visible {
+  background: var(--gn-bg-hover);
+}
+
+/* the Export button and form (WCAG 2.2 AA: a visible focus on every control, its words beside its icon, never colour alone) */
+.gn-graph .gn-export-bar button,
+.gn-graph .thoughtknot-export button,
+.gn-graph .thoughtknot-export select {
+  min-height: 24px;
+  min-width: 24px;
+  color: var(--gn-text-normal);
+  background: var(--gn-bg-alt);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gn-graph .gn-export-bar button:focus-visible,
+.gn-graph .thoughtknot-export button:focus-visible,
+.gn-graph .thoughtknot-export select:focus-visible {
+  outline: 2px solid var(--gn-text-normal);
+  outline-offset: 2px;
+}
+
+.gn-graph .thoughtknot-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+  align-items: center;
+  margin-top: var(--gn-space-2);
+}
+
+.gn-menu-warning {
+  color: var(--gn-text-error);
+}
+
+/* Claude's proposals on a card (spec §26, WCAG 2.2 AA). The text colours are the theme's locked pairs. A control has a
+   visible focus ring in the text colour, and is at least 24 CSS pixels to hit. Nothing is told by colour alone */
+.gn-card {
+  margin: var(--gn-space-4) 0;
+  padding: var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-m);
+}
+
+.gn-card h2 {
+  margin-top: 0;
+  font-size: 1.1em;
+}
+
+.gn-card-changes {
+  padding-inline-start: var(--gn-space-5);
+}
+
+.gn-card-changes li {
+  margin: var(--gn-space-2) 0;
+}
+
+.gn-card-button {
+  min-width: 2rem;
+  min-height: 2rem;
+  margin: var(--gn-space-1) var(--gn-space-2) var(--gn-space-1) 0;
+  padding: var(--gn-space-1) var(--gn-space-3);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-s);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gn-card-button[disabled] {
+  border-style: dashed;
+  color: var(--gn-text-muted);
+  cursor: not-allowed;
+}
+
+.gn-card :focus-visible,
+.gn-card-button:focus-visible {
+  outline: 3px solid var(--gn-text-normal);
+  outline-offset: 2px;
+}
+
+#gn-notices:empty {
+  display: none;
+}
+
+#gn-notices {
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-normal);
+  border: 2px solid var(--gn-text-normal);
+  border-radius: var(--gn-radius-m);
+}
+
+/* The buttons that open the changes and the review choosers under a graph: 44-point targets, as the bar's are (spec §5),
+   never under the 24 by 24 every pointer target needs (spec §41, a11y_targets_reflow_auto). */
+.gn-changes > button,
+.gn-review > button {
+  min-height: 44px;
+}

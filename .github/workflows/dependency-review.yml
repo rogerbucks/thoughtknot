@@ -1,0 +1,33 @@
+name: Dependency review
+
+# Every pull request's dependency changes are read against the published advisories: a new or changed package with a
+# known vulnerability fails the check (spec §13, Delivery). It only reads, and posts nothing to the pull request.
+# GitHub gives the review to a public repository for nothing and to a private one only on a paid plan, so the job waits
+# until the repository is public; a skipped required check does not hold up a merge.
+on:
+  pull_request:
+  # GitHub's merge queue, when Roger turns it on: the same review, of the queued change against its base
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: low
+          # One advisory, accepted by Roger on 22 Oct 2026 (risk SEC-16): glib 0.18 in the desktop app's Linux build.
+          # Tauri pins it through GTK 3. Remove this line when Tauri supports GTK 4 and glib can be bumped.
+          allow-ghsas: GHSA-wrw7-89jp-8q8g
+          comment-summary-in-pr: never
+          # a queued change names its two commits itself; on a pull request the action finds them
+          base-ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}

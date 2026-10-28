@@ -1,0 +1,21 @@
+{
+  "name": "@thoughtknot/obsidian",
+  "version": "0.7.1",
+  "private": true,
+  "description": "The Obsidian plugin: draws graph blocks and edits them.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.mjs --watch"
+  },
+  "dependencies": {
+    "@thoughtknot/core": "0.7.1",
+    "@viz-js/viz": "3.31.0",
+    "sql.js": "1.14.2"
+  },
+  "devDependencies": {
+    "@codemirror/state": "6.5.0",
+    "@codemirror/view": "6.38.6"
+  }
+}

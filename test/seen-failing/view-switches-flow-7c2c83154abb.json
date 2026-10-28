@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-switches-flow.test.js",
+  "test": "the legend of moving links > leaves out the links folded into a stub, and says them again once they are drawn",
+  "seen_failing_first": false,
+  "evidence": "the test now turns hub folding on itself, as things start open by default; it passed before because folding was then the default"
+}

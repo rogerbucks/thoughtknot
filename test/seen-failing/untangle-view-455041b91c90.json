@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/untangle-view.test.js",
+  "test": "labels by zoom, folded hubs and groups, merged links and routing > each changes only the drawing: folded, merged, routed and labelled by zoom, the note never written",
+  "seen_failing_first": false,
+  "evidence": "the test now turns hub folding on itself, as things start open by default; it passed before because folding was then the default"
+}

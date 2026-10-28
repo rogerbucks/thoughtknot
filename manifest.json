@@ -1,0 +1,10 @@
+{
+  "id": "thoughtknot",
+  "name": "ThoughtKnot",
+  "version": "0.7.1",
+  "minAppVersion": "1.13.0",
+  "description": "Draw the graphs written in your notes, and edit them as text, in place or beside the note.",
+  "author": "Roger Bucks",
+  "authorUrl": "https://github.com/rogerbucks",
+  "isDesktopOnly": false
+}

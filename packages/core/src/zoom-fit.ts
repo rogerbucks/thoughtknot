@@ -1,0 +1,140 @@
+// The limits a drawing is zoomed and panned within (spec §3, §25). They are how far in and out it zooms, the scale that
+// fits the whole drawing, and where it may sit in its viewport. Pure and host-free. zoom.ts's `Zoom` holds a drawing to
+// them, and zoom-across.ts's `AcrossZoom` does through it. They work them out again from the sizes they hold each time
+// they ask. So a resized view, full screen entered or left, or a drawing laid out again has its own
+// (zoom_fit_recomputed).
+//
+// From slice 3 the furthest out is the fit (zoom_out_to_fit). That is where the whole drawing fits its view, or natural
+// size when it would fit larger. It replaces §3's quarter of natural size. So a drawing that fits only below a quarter
+// can still be seen whole. Four times natural size stays the furthest in.
+
+/** How much of the drawing, in pixels, stays in the viewport however far it is dragged: enough to find and grab it. */
+export const SIGHT = 48;
+/** The furthest the drawing zooms in. */
+export const MAX_SCALE = 4;
+/** One press of zoom in or zoom out: three presses from Fit read the text (Roger, 25 Oct 2026). */
+export const STEP = 1.6;
+
+/** Where the drawing is shown: in a note, full-screen, or in the edit pane. Only in a note does the wheel alone scroll. */
+export type Mode = 'note' | 'full' | 'pane';
+
+/** A width and a height, in CSS pixels. */
+export interface Size {
+  width: number;
+  height: number;
+  /** A drawing read right to left (§42): it starts at its right end. */
+  fromRight?: boolean;
+}
+
+/** `v` held between `lo` and `hi`. */
+export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
+
+/** The scale at which the whole drawing just fits its viewport; 1, natural size, for a drawing or a view with no size. */
+export function wholeFit(content: Size, viewport: Size): number {
+  const { width: cw, height: ch } = content,
+    { width: vw, height: vh } = viewport;
+  return cw > 0 && ch > 0 && vw > 0 && vh > 0 ? Math.min(vw / cw, vh / ch) : 1;
+}
+
+/** Whether a viewport has a size: one with none (its card hidden, or not yet laid out) has no fit to hold a drawing to. */
+export const hasSize = (viewport: Size): boolean => viewport.width > 0 && viewport.height > 0;
+
+/**
+ * The furthest the drawing zooms out (zoom_out_to_fit): where the whole of it fits, or natural size if it fits larger.
+ * 0 while the viewport has no size: no fit is known yet, so a zoom restored before layout is kept until there is one.
+ */
+export function outLimit(content: Size, viewport: Size): number {
+  return hasSize(viewport) ? Math.min(wholeFit(content, viewport), 1) : 0;
+}
+
+/** A scale held within the limits: no further out than the fit, if one is known, and never 0; no further in than 4. */
+export function held(scale: number, content: Size, viewport: Size): number {
+  return clamp(scale, outLimit(content, viewport) || Number.MIN_VALUE, MAX_SCALE);
+}
+
+/** The scale that shows the whole drawing: in a note never above natural size, as a note draws it; elsewhere up to the limit. */
+export function fitScale(content: Size, viewport: Size, mode: Mode): number {
+  return Math.min(wholeFit(content, viewport), mode === 'note' ? 1 : MAX_SCALE);
+}
+
+/** What a sheet over the viewport covers at each of its edges, in pixels (§25, sheet_docked). */
+export interface Clear {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+/** Nothing kept clear. */
+export const NO_CLEAR: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
+
+/** What is kept clear: a number is the strip at the viewport's foot, as a sheet at the bottom covers it. */
+export const clearOf = (c: number | Clear): Clear => (typeof c === 'number' ? { ...NO_CLEAR, bottom: c } : c);
+
+/** What is kept clear, each edge held within a viewport of `size`. */
+export function clearWithin(covered: number | Clear, size: Size): Clear {
+  const c = clearOf(covered);
+  return {
+    top: clamp(c.top, 0, size.height),
+    right: clamp(c.right, 0, size.width),
+    bottom: clamp(c.bottom, 0, size.height),
+    left: clamp(c.left, 0, size.width),
+  };
+}
+
+/** Where the drawing may sit: its viewport, what is kept clear at its edges (§25), and its size there. */
+export interface Room {
+  content: Size;
+  viewport: Size;
+  /** What a sheet over the viewport covers, in pixels: a number is the strip at its foot. */
+  clear: number | Clear;
+}
+
+/**
+ * Where a drag may take the drawing: anywhere, past its edges, as far as you like (pan_freely). It never stops because an
+ * edge has come into view. The one limit: a strip of it, `SIGHT` pixels or all of it if smaller, stays in the viewport
+ * on each axis. So it can never be lost off screen, and Fit brings the whole of it back.
+ */
+export function inSight(room: Room, scale: number, x: number, y: number): [number, number] {
+  const axis = (v: number, size: number, space: number) => {
+    const keep = Math.min(SIGHT, size, space);
+    return clamp(v, keep - size, space - keep);
+  };
+  return [
+    axis(x, room.content.width * scale, room.viewport.width),
+    axis(y, room.content.height * scale, room.viewport.height),
+  ];
+}
+
+/**
+ * Where the drawing sits when the view is placed for you: fitted, or aimed at a thing (§25), not dragged. It is
+ * centred on an axis where it is smaller than the viewport, edge to edge where it is larger. It may also move into what
+ * is kept clear at an edge, by as much as is covered there and no further. With `centre`, centred on both axes.
+ */
+export function clampPan(room: Room, scale: number, x: number, y: number, centre = false): [number, number] {
+  const w = room.content.width * scale,
+    h = room.content.height * scale,
+    { width: vw, height: vh } = room.viewport,
+    c = clearOf(room.clear);
+  const range = (size: number, space: number): [number, number] =>
+    size <= space ? [(space - size) / 2, (space - size) / 2] : [space - size, 0];
+  const axis = (v: number, size: number, space: number, near: number, far: number) => {
+    const [lo, hi] = range(size, space);
+    if (centre) return (space - size) / 2;
+    return clamp(v, Math.min(lo, space - far - size), Math.max(hi, near));
+  };
+  return [axis(x, w, vw, c.left, c.right), axis(y, h, vh, c.top, c.bottom)];
+}
+
+/**
+ * Where the drawing goes when what is kept clear changes to `clear` (§25). Within the old limits on an axis, it is held
+ * within the new ones. Dragged freely past them, it stays where it was put.
+ */
+export function heldClear(room: Room, scale: number, x: number, y: number, clear: Clear): [number, number] {
+  const now = { ...room, clear },
+    [lx, ly] = clampPan(room, scale, -Infinity, -Infinity),
+    [hx, hy] = clampPan(room, scale, Infinity, Infinity);
+  const [nx, ny] = clampPan(now, scale, x, y),
+    back = (v: number, lo: number, hi: number, n: number) => (v < lo - 1e-9 || v > hi + 1e-9 ? v : n);
+  return [back(x, lx, hx, nx), back(y, ly, hy, ny)];
+}
