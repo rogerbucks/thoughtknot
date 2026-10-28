@@ -5,7 +5,6 @@
     "layout_concept_layers",
     "layout_live_loop",
     "layout_plugins",
-    "layout_strategy_variables",
     "projection_arc",
     "projection_fisheye",
     "projection_grid",
