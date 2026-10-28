@@ -68,8 +68,7 @@ export class GraphView extends Lifecycle {
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
-    () => this.o.diagram?.choice,
-    () => this.o.switches?.state.layout,
+    () => this.o,
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {

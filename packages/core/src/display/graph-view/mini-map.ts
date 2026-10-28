@@ -10,7 +10,7 @@
 import { hitAreas, word } from '@thoughtknot/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
-import { make } from './note-callouts';
+import { make } from './note-callouts.ts';
 
 /** The longest side of the copy, in pixels, for a drawing of an ordinary shape. */
 const LONGEST = 120;

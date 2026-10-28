@@ -192,8 +192,8 @@ after a module nor listed here, and on a listed file that is missing.
 ## The Obsidian plugin: the View menu and views
 
 - `test/orientation-cues.test.js` — every projection keeps the cues to where the person is (editor spec §25,
-  orientation_cues; ethos rule r_cues). In 2D the mini-map and the marked selection, also laid out again. In 2.5D and 3D
-  the picked card or ball, marked and named.
+  orientation_cues; ethos rule r_cues). In 2D the mini-map and the marked selection, also laid out again. The rest
+  glide there round the selected thing, which stays put. In 2.5D and 3D the picked card or ball, marked and named.
 - `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
 - `packages/obsidian/test/layout-said.test.js` — the View menu says how the drawing was laid out, and why. It says
@@ -937,5 +937,7 @@ after a module nor listed here, and on a listed file that is missing.
   must paint with no error.
 - `test/space-painters.test.js` — the 3D view's painters in headless Chrome (editor spec §53, scale_space_painters).
   WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
+  The view's mini-map must copy each thing and move the view when pressed (space_mini_map). A thing moved by a new
+  layout must glide there, a frame at a time (layout_glide).
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
   scale_massive_card). Its search must find a thing in any group and fly there.

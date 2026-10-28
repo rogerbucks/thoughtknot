@@ -1233,6 +1233,7 @@
       "layout_live_loop",
       "layout_glide",
       "orientation_cues",
+      "space_mini_map",
       "layout_concept_layers",
       "layout_plugins"
     ]
