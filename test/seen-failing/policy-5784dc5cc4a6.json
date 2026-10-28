@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the supply chain > the only runtime dependencies are the Graphviz and SQLite WebAssembly engines, one Markdown renderer for the browser host and Automerge for sync",
+  "seen_failing_first": false,
+  "evidence": "A guard: it widens an allow-list, so before Automerge was added the narrower rule already held."
+}

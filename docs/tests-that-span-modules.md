@@ -5,6 +5,19 @@ modules, or the repository itself. They are named after their subject and listed
 proves. A new one goes in the group of its subject. `test/conventions.test.js` fails on a test file that is neither named
 after a module nor listed here, and on a listed file that is missing.
 
+## Sync between devices
+
+- `packages/sync/test/local-encrypted-store.test.js` — devices apart then together agree, and what each keeps is sealed
+  (editor spec §40, local_encrypted_store). It spans the stores, the keys and the CRDT.
+- `packages/sync/test/five-layers.test.js` — each layer holds only the one below. The engine refuses a bad edit before
+  it replicates, and a store is swapped with no change above it (five_layer_stack).
+- `packages/sync/test/encrypted-everywhere.test.js` — no key in any file, log or sealed copy, and a device's private key
+  cannot be exported (encrypted_everywhere).
+- `packages/sync/test/mesh-vpn.test.js` — two devices sync through a real TCP relay, which carries ciphertext only. A
+  device that is not the owner's gets nothing (mesh_vpn_sync). It spans the peer, the keys and the stores.
+- `packages/sync/test/connector-sync.test.js` — a graph from a file, a note and a plug-in's place, kept in step between
+  devices (§63, CN3). It spans the core's connectors and the sync layers.
+
 ## The core: test runs
 
 - `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).

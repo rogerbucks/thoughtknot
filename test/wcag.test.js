@@ -256,7 +256,7 @@ describe('VS Code: the editor in its tab, in both themes', () => {
 
 describe('every host', () => {
   /** The packages that are hosts, which draw an interface: the others are libraries with none. */
-  const LIBRARIES = ['core', 'graph-spec'];
+  const LIBRARIES = ['core', 'graph-spec', 'sync'];
   /** The hosts this file checks, with the views it checks of each. */
   const HOSTS = {
     obsidian: Object.keys(OBSIDIAN),
