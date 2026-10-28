@@ -1219,7 +1219,9 @@
       "layout_pick_said",
       "layout_own_default",
       "layout_parts_packed",
-      "layout_kinds_read"
+      "layout_kinds_read",
+      "layout_pick_tried",
+      "layout_checks_gated"
     ]
   },
   "LE2": {

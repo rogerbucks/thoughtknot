@@ -126,6 +126,6 @@ export function pickShownOf(attribute: string | null | undefined): PickShown | u
 }
 
 /** Every reason the engine gives for a layout (own-engine.ts `Pick`). */
-const WHYS = ['flow', 'tree', 'network', 'dense', 'overview'];
+const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried'];
 /** Every kind pattern. */
 const KIND_PATTERNS: readonly KindPattern[] = ['plain', 'ordered', 'two-sided', 'clustered'];
