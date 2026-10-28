@@ -10,7 +10,8 @@
 // a small edit moves little (warm start). Things push apart only within nearby cubes of a grid. So each step costs
 // about as much as the number of things. Units: a link is about one long. Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
-import { DEFAULT_LAYOUT_OPTIONS, layoutOptions } from './layout-options.ts';
+import { DEFAULT_LAYOUT_OPTIONS, aspectOf, layoutOptions, roundsOf } from './layout-options.ts';
+import { SCREEN } from './folded-rows.ts';
 import type { LayoutOptions } from './layout-options.ts';
 
 /** The most steps a layout takes. */
@@ -49,6 +50,9 @@ export function forceLayout3d(
     reach = REACH * spacing,
     pull = 1 / linkLength,
     gather = (GROUP_PULL * groupPull) / DEFAULT_LAYOUT_OPTIONS.groupPull;
+  // a wide or tall shape pulls less toward the middle across than up, or more (layout_strategy_variables)
+  const stretch = Math.sqrt(aspectOf(options, SCREEN) / SCREEN),
+    pullOn = [PULL / stretch, PULL * stretch, PULL] as const;
   const keys = shape.things.map((t) => t.key);
   const n = keys.length;
   const out = new Map<string, [number, number, number]>();
@@ -95,7 +99,7 @@ export function forceLayout3d(
     for (const [i, by] of near)
       for (const k of [0, 1, 2] as const) p[k][i] = by.reduce((s, j) => s + at(k, j), 0) / by.length + 0.1 * at(k, i);
   }
-  const steps = Math.max(1, Math.floor(Math.min(FORCE_3D_STEPS, WORK_MOST / n) / (warm ? 4 : 1)));
+  const steps = Math.max(1, Math.floor(Math.min(roundsOf(options, FORCE_3D_STEPS), WORK_MOST / n) / (warm ? 4 : 1)));
   // space has more ways to drift than a page, so a warm start moves more gently than force-view.ts does
   const hottest = warm ? 0.05 : Math.max(1, Math.cbrt(n) / 2);
   const d = [new Float64Array(n), new Float64Array(n), new Float64Array(n)] as const;
@@ -167,9 +171,9 @@ export function forceLayout3d(
       });
     });
     for (let i = 0; i < n; i++) {
-      const mx = (d[0][i] ?? 0) - at(0, i) * PULL,
-        my = (d[1][i] ?? 0) - at(1, i) * PULL,
-        mz = (d[2][i] ?? 0) - at(2, i) * PULL;
+      const mx = (d[0][i] ?? 0) - at(0, i) * pullOn[0],
+        my = (d[1][i] ?? 0) - at(1, i) * pullOn[1],
+        mz = (d[2][i] ?? 0) - at(2, i) * pullOn[2];
       const m = Math.hypot(mx, my, mz);
       if (m < 1e-12) continue;
       const move = Math.min(m * GAIN, heat) / m;

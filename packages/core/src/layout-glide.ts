@@ -116,15 +116,18 @@ export function offsetAt(d: Pt, t: number): Pt {
 
 /**
  * The shift of the view that keeps the person's place across a new layout (r_keep_place). What they had selected
- * stays where it was on the screen. Else the things in both keep their middle where it was.
+ * stays where it was on the screen. Else the things in both keep their middle where it was. What `pinned` says
+ * stays (layout_strategy_variables): the selected thing, as here, the middle alone, or nothing.
  */
 export function placeKept(
   was: ReadonlyMap<string, Pt>,
   now: ReadonlyMap<string, Pt>,
   selected?: string | null,
+  pinned: 'selected' | 'middle' | 'nothing' = 'selected',
 ): Pt | null {
-  const a = selected ? was.get(selected) : undefined,
-    b = selected ? now.get(selected) : undefined;
+  if (pinned === 'nothing') return null;
+  const a = selected && pinned === 'selected' ? was.get(selected) : undefined,
+    b = selected && pinned === 'selected' ? now.get(selected) : undefined;
   if (a && b) return [a[0] - b[0], a[1] - b[1]];
   const by = lineUp(was, now, false);
   if (by === AS_IS) return null;
