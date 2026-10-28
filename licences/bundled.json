@@ -35,35 +35,35 @@
         }
       ]
     },
-    "marked@18.1.0": {
+    "marked@18.1.1": {
       "licence": "MIT",
       "licenceText": "texts/marked.MIT.txt",
       "source": "https://github.com/markedjs/marked",
-      "checked": "2026-10-16, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.0, published 2026-10-05",
+      "checked": "2026-10-28, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.1, published 2026-10-12",
       "inside": []
     },
-    "sql.js@1.14.2": {
+    "sql.js@1.15.1": {
       "licence": "MIT",
       "licenceText": "texts/sql-js.MIT.txt",
       "source": "https://github.com/sql-js/sql.js",
-      "checked": "2026-10-20, from the Makefile and .devcontainer/Dockerfile at v1.14.2 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
+      "checked": "2026-10-28, from the Makefile and .devcontainer/Dockerfile at v1.15.1 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
       "inside": [
         {
           "name": "SQLite",
-          "version": "3.49.1",
+          "version": "3.54.0",
           "licence": "blessing",
           "licenceText": "texts/sqlite.blessing.txt",
-          "provenance": "https://sqlite.org/2025/sqlite-amalgamation-3490100.zip",
-          "source": "https://www.sqlite.org/src/timeline?t=version-3.49.1",
+          "provenance": "https://sqlite.org/2026/sqlite-amalgamation-3540000.zip",
+          "source": "https://www.sqlite.org/src/timeline?t=version-3.54.0",
           "note": "Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20)."
         },
         {
           "name": "Emscripten",
-          "version": "5.0.0",
+          "version": "6.0.12",
           "licence": "MIT OR NCSA",
           "licenceText": "texts/emscripten.MIT-NCSA.txt",
-          "provenance": "pkg:docker/emscripten/emsdk@5.0.0",
-          "source": "https://github.com/emscripten-core/emscripten/tree/5.0.0",
+          "provenance": "pkg:docker/emscripten/emsdk@6.0.12",
+          "source": "https://github.com/emscripten-core/emscripten/tree/6.0.12",
           "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
         }
       ]

@@ -1,0 +1,6 @@
+{
+  "file": "test/conventions.test.js",
+  "test": "one code style > the Python library follows PEP 8: Ruff checks and formats it, pinned, in CI",
+  "seen_failing_first": false,
+  "evidence": "the pin follows the ruff bump in the commit before it; it cannot fail before the bump"
+}
