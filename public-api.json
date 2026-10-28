@@ -1927,7 +1927,7 @@
           "source: string"
         ],
         "LogKind": [
-          "type = 'change' | 'ai-query' | 'bundle' | 'join'"
+          "type = 'change' | 'ai-query' | 'bundle' | 'join' | 'erase'"
         ],
         "Look": [
           "interface",
@@ -2083,6 +2083,7 @@
           "bundle: (id: string, texts: Record<string, string | null>, source: string) => LogEntry",
           "change: (note: string, text: string | null, source: string) => LogEntry",
           "contestedSince: (claim: string) => string | null",
+          "erase: (erasure: Erasure, source: string) => LogEntry",
           "join: (notes: string[], source: string) => MeshJoin",
           "joinAt: (notes: string[], at?: string) => MeshJoin",
           "lastJoinBefore: (at: string) => string | null",

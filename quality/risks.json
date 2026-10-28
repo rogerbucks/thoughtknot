@@ -4277,7 +4277,7 @@
         "packages/graph-spec/src/mesh/as-at.js",
         "packages/core/test/mesh-history.test.js",
         "packages/core/test/mesh-history-log.test.js",
-        "unverified: no review has looked at these together; requirements §65 plan the checks"
+        "packages/core/src/temporal.ts"
       ],
       "likelihood": "medium",
       "impact": "high",
@@ -4291,11 +4291,16 @@
       "effort": "days",
       "raised": "2026-10-24",
       "reviewed": {
-        "date": "2026-10-24",
-        "commit": "bb0e524729d761a56f141608ff7e51cff40bf43f"
+        "date": "2026-10-28",
+        "commit": "a3ea6dc9f8c52a2e16560f44a4e5a94873d75113"
       },
-      "status": "open",
-      "wave": "Wave 13 · Slice 9 store, sync and network"
+      "status": "done",
+      "wave": "Wave 13 · Slice 9 store, sync and network",
+      "done_in": "#1489",
+      "prevented_by": [
+        "packages/core/test/temporal-security.test.js",
+        "packages/core/src/temporal.ts"
+      ]
     },
     {
       "id": "SEC-20",
