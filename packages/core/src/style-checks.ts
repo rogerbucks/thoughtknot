@@ -39,7 +39,7 @@ import type {
   ViewStyle,
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
-import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_CHOICES, LAYOUT_OPTION_RANGE } from './layouts/layout-options.ts';
+import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_CHOICES, LAYOUT_OPTION_RANGE, choiceFits } from './layouts/layout-options.ts';
 import { SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
 import type { LayoutChoice, LayoutShare } from './layouts/layout-options.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
@@ -275,8 +275,13 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
       );
     else if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
   }
+  // a layout a plug-in adds is chosen by its id (layout_plugins)
   for (const [k, key] of Object.entries(SHOWN_LAYOUT_CHOICES) as [LayoutChoice, string][]) {
-    const v = r.word(key, LAYOUT_CHOICES[k], mustBe(key, LAYOUT_CHOICES[k]));
+    const written = r.text(key);
+    const v =
+      written === undefined || choiceFits(k, written)
+        ? written
+        : r.word(key, LAYOUT_CHOICES[k], mustBe(key, LAYOUT_CHOICES[k]));
     if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
   }
   // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept

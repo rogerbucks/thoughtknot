@@ -8,14 +8,27 @@ import { viaKey } from './layered.ts';
 import type { Size } from './layered.ts';
 import type { Placed } from './parts.ts';
 import { readability } from './readability.ts';
+import { placesMost } from './given.ts';
 
-/** The layouts the engine picks from. */
-export type OwnLayout = 'layered' | 'stress';
+/** The layouts the engine picks from, and the spots a plug-in's layout gave (given.ts). */
+export type OwnLayout = 'layered' | 'stress' | 'given';
 
 /** What the engine picked, and why, in a few words for a developer; a host says it from the catalogue. */
 export interface Pick {
   layout: OwnLayout;
-  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview' | 'tried';
+  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview' | 'tried' | 'chosen';
+}
+
+/**
+ * The layout the person chose as `strategy` (§68, layout_plugins). It is undefined where the graph's shape picks. That
+ * is when asked to, or when a plug-in's layout gave too few of `shape`'s things a spot.
+ */
+export function chosenPick(shape: GraphShape, strategy: string, placed?: ReadonlyMap<string, [number, number]>) {
+  if (strategy === 'rows') return { layout: 'layered', why: 'chosen' } satisfies Pick;
+  if (strategy === 'spread') return { layout: 'stress', why: 'chosen' } satisfies Pick;
+  return strategy !== 'auto' && placesMost(shape, placed)
+    ? ({ layout: 'given', why: 'chosen' } satisfies Pick)
+    : undefined;
 }
 
 /** The key a folded group's box has (fold-source.ts). */
