@@ -1088,9 +1088,6 @@
         "findLenses": [
           "value: (library: readonly LibraryLens[], runs: readonly LensRun[], now: string, options?: { topic?: string; by?: 'often' | 'recent'; }) => { lens: LibraryLens; freshness: LensFreshness; }[]"
         ],
-        "FIRST_VIEW_TYPES": [
-          "value: ReadonlyArray<'matrix' | 'treemap' | 'chord' | 'ego' | 'force' | 'density' | 'block' | 'plan' | 'centroid' | 'containment'>"
-        ],
         "fixed": [
           "value: (x: number, digits: number) => string"
         ],
@@ -4255,7 +4252,7 @@
           "layout: 'rows' | 'grid' | 'groups' | 'best' | 'pinned'",
           "motion: { mode: 'device' | 'off'; glideMs: number; }",
           "ordering: 'flow' | 'kind' | 'name' | 'hubs' | 'fixed'",
-          "projection: 'network' | 'matrix' | 'grid' | 'zoom'",
+          "projection: 'network' | 'grid' | 'zoom' | 'matrix'",
           "text: { wordSpacing: number; lineHeight: number; mostLabel: number; }"
         ],
         "ViewKind": [
@@ -4319,7 +4316,7 @@
           "type = { lanes: boolean; labels: boolean; hubs: boolean; groups: boolean; merge: boolean; engine: boolean; }"
         ],
         "ViewType": [
-          "type = 'matrix' | 'treemap' | 'chord' | 'ego' | 'force' | 'density' | 'block' | 'plan' | 'centroid' | 'containment'"
+          "type = 'density' | 'block' | 'matrix' | 'treemap' | 'chord' | 'ego' | 'force' | 'plan' | 'centroid' | 'containment'"
         ],
         "Visit": [
           "interface",

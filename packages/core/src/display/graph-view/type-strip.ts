@@ -8,16 +8,7 @@
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
 // (type_try_reading). Under the types, Views lists the core's view types drawn as marks. Each is chosen and written
 // the same way, and said by its title once drawn (view_types_offered).
-import {
-  CORE_DIAGRAMS_ID,
-  FIRST_VIEW_TYPES,
-  VIEW_TYPES,
-  chosenDiagram,
-  diagramOffer,
-  tableOf,
-  wayIn,
-  word,
-} from '@thoughtknot/core';
+import { CORE_DIAGRAMS_ID, VIEW_TYPES, chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -36,6 +27,7 @@ import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from '../button';
+import { FIRST_VIEW_TYPES } from '../../view-types/view-types.ts';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
 import type { TimelinePick, TimelineShown } from './timeline-choice';
 export { TypePlace, typeLeftAt } from './type-place';
