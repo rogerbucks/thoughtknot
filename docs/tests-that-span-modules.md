@@ -858,6 +858,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Speed and plain words
 
+- `packages/core/test/slow-notes.test.js` — the slowest real notes are kept as fixtures. Each is laid out within a work
+  limit, every thing drawn by our own engine (editor spec §68, layout_real_fixtures).
 - `test/speed-budgets.test.js` — each host held, in CPU instructions, to a budget (editor spec §41, speed_budgets).
   - The budgets are for drawing 50 things and 500, and a cold start of each host. There is one too for a query over a
     10 000-thing mesh: 100 notes of 100 things, until slice 6 builds the mesh.

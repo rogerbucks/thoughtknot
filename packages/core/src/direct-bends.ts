@@ -6,12 +6,14 @@
 // middle of the drawing. A group moves whole, so it keeps its
 // boxes. Then each lone link is tried at a few bends, each way, the slightest first, toward the middle of the drawing.
 // A bend scores the boxes it runs through, the links it crosses, and how far it bends. Each link takes the bend that
-// scores least, given the rest. A second round tries each again. Within a budget, so a big graph stays quick. The
-// Python library does the same, step for step (graphspec/style/direct_bends.py). Host-free and pure.
+// scores least, given the rest. A second round tries each again. Each pass counts its looks against its budget and
+// stops there, so a big graph stays quick (layout-work.ts). The Python library does the same, step for step
+// (graphspec/style/direct_bends.py). Host-free and pure.
 import { curveOf } from './direct-curve.ts';
 import type { Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 import type { DrawMark } from './drawing-marks.ts';
+import { CROSSINGS_PLANNED, Work, WORK_MOST, linkWork } from './layout-work.ts';
 
 /** How much room a link keeps from a box it passes, in pixels. */
 export const CLEARANCE = 10;
@@ -29,8 +31,6 @@ const THROUGH = 4,
   BENT = 2;
 /** How many pieces a curve is cut into, to find what it runs through and crosses. */
 const PIECES = 16;
-/** The most looks at a piece of a curve in all, so a big graph stays quick. */
-const WORK_MOST = 40_000_000;
 
 /** A group's edges. */
 export type Edges = { x0: number; y0: number; x1: number; y1: number };
@@ -65,11 +65,16 @@ export function spread(boxes: readonly Placed[], groups: ReadonlyMap<string, Edg
 
 /**
  * Whether some link of `pairs`, drawn straight from middle to middle, runs through a box or crosses another. Then the
- * boxes are given room. A big graph is taken to need it.
+ * boxes are given room. Each look at a piece of a link by a box counts as work, as does each pair of links. A graph
+ * that spends the budget before an answer is taken to need room.
  */
-export function crowded(pairs: readonly (readonly [Placed, Placed])[], boxes: readonly Placed[]): boolean {
-  if (pairs.length * (pairs.length + boxes.length) * PIECES > WORK_MOST) return true;
+export function crowded(
+  pairs: readonly (readonly [Placed, Placed])[],
+  boxes: readonly Placed[],
+  work = new Work(WORK_MOST.crowded),
+): boolean {
   for (let i = 0; i < pairs.length; i++) {
+    if (!work.take(boxes.length * PIECES + pairs.length - i - 1)) return true;
     const [a, b] = pairs[i] as readonly [Placed, Placed];
     for (const o of boxes)
       if (o !== a && o !== b)
@@ -112,26 +117,40 @@ export function towardMiddle(a: Placed, b: Placed, side: number, middle: MarkPoi
   return Math.abs(across) < 1e-6 * (dx * dx + dy * dy) ? side : Math.sign(across);
 }
 
-/** How far each link of `links` bows, as a share of its length: the bend that scores least, given the rest. */
-export function bends(links: readonly ToBend[], boxes: readonly Placed[]): number[] {
+/**
+ * How far each link of `links` bows, as a share of its length: the bend that scores least, given the rest. Each look
+ * at a box counts against `work.bends`, and each pair of links compared against `work.crossings`. Links planned to
+ * take too long (CROSSINGS_PLANNED), or met once the crossings' budget is spent, are scored by the boxes alone. Once
+ * the bends' budget is spent, each link left keeps the bend it was first given.
+ */
+export function bends(links: readonly ToBend[], boxes: readonly Placed[], work = linkWork()): number[] {
+  const near = (l: ToBend) => (l.avoid ? [...boxes, ...l.avoid] : boxes);
   const tries = links.map((l) => {
     if (l.fixed !== undefined) return [l.fixed];
-    const away = aside(l.a, l.b, l.avoid ? [...boxes, ...l.avoid] : boxes);
+    const pool = near(l);
+    const away = work.bends.take(pool.length) ? aside(l.a, l.b, pool) : 0;
     const each = l.avoid ? [...BENDS, ...WIDE] : BENDS;
     return [...(away ? [away] : []), ...each.flatMap((s) => [l.toward * s, -l.toward * s])];
   });
-  const cost = links.length * links.length * PIECES + links.length * boxes.length * BENDS.length * 2 * PIECES;
-  const crossing = cost <= WORK_MOST;
+  let crossing = links.length * (links.length + boxes.length * BENDS.length * 2) * PIECES <= CROSSINGS_PLANNED;
   const lines = links.map((l, i) => pathOf(l.a, l.b, (tries[i] as number[])[0] as number));
   const bows = tries.map((t) => t[0] as number);
-  for (let round = 0; round < (crossing ? 2 : 1); round++)
-    links.forEach((l, i) => {
+  for (let round = 0; round < 2; round++)
+    for (let i = 0; i < links.length; i++) {
+      const l = links[i] as ToBend,
+        each = tries[i] as number[],
+        pool = near(l);
+      crossing &&= work.crossings.take(lines.length);
+      if (round > 0 && !crossing) return bows;
       const others = crossing ? lines.filter((_, j) => j !== i && (round > 0 || j < i) && apartFrom(l, links[j])) : [];
+      crossing &&= work.crossings.take(each.length * others.length);
+      if (!crossing) others.length = 0;
+      if (!work.bends.take(each.length * pool.length)) return bows;
       let best = Infinity;
-      for (const bow of tries[i] as number[]) {
+      for (const bow of each) {
         const path = pathOf(l.a, l.b, bow);
         const score =
-          THROUGH * through(path, l, l.avoid ? [...boxes, ...l.avoid] : boxes) +
+          THROUGH * through(path, l, pool) +
           CROSSED * others.filter((o) => crosses(path, o)).length +
           BENT * Math.abs(bow);
         if (score < best) {
@@ -140,7 +159,7 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[]): numbe
           lines[i] = path;
         }
       }
-    });
+    }
   return bows;
 }
 
@@ -253,11 +272,16 @@ const TRUNK_END = /^trunk: (\d+) (in|out)$/;
  * its boxes sit in, or the box round them all.
  */
 export function trunkEnds(boxes: ReadonlyMap<string, Placed>, links: readonly { from?: string; to?: string }[]): void {
+  // the boxes each thing's links come from, and go to, found in one pass over the links
+  const ends = { in: new Map<string, Placed[]>(), out: new Map<string, Placed[]>() };
+  const add = (to: Map<string, Placed[]>, key = '', b?: Placed) =>
+    b && (to.get(key) ?? to.set(key, []).get(key))?.push(b);
+  for (const l of links) {
+    add(ends.in, l.to, boxes.get(l.from ?? ''));
+    add(ends.out, l.from, boxes.get(l.to ?? ''));
+  }
   const regionOf = (key: string, end: string): Edges | undefined => {
-    const near = links.flatMap((l) => {
-      const b = end === 'in' ? l.to === key && boxes.get(l.from ?? '') : l.from === key && boxes.get(l.to ?? '');
-      return b ? [b] : [];
-    });
+    const near = (end === 'in' ? ends.in : ends.out).get(key) ?? [];
     if (!near.length) return undefined;
     const first = near[0]?.inside;
     if (first && near.every((b) => b.inside === first)) return first;
