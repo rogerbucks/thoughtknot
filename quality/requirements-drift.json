@@ -29,10 +29,7 @@
   "not-written": [
     "android_app",
     "axioms_before_sync",
-    "axioms_checker",
-    "axioms_cited",
     "axioms_consistent",
-    "axioms_listed",
     "axioms_on_generated_graphs",
     "axioms_readers_agree",
     "axioms_safeguards",
