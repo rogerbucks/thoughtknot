@@ -51,6 +51,7 @@ export class LayoutGlide {
   private readonly viewportOf: () => HTMLElement;
   /** The viewport listened to, so a reach for it ends the glide. */
   private heard: HTMLElement | null = null;
+  private readonly reach = () => this.stop();
 
   /** For the card's viewport, made once the card is built. */
   constructor(viewport: () => HTMLElement) {
@@ -60,7 +61,11 @@ export class LayoutGlide {
   /** The card's viewport, listened to from the first glide: a reach for it ends the glide. */
   private get viewport(): HTMLElement {
     const el = this.viewportOf();
-    if (this.heard !== el) for (const type of REACHES) el.addEventListener(type, () => this.stop());
+    if (this.heard !== el) {
+      // caught on the way down, so the glide ends before the view pans or zooms the boxes still on their way
+      for (const type of REACHES) this.heard?.removeEventListener(type, this.reach, { capture: true });
+      for (const type of REACHES) el.addEventListener(type, this.reach, { capture: true });
+    }
     this.heard = el;
     return el;
   }
