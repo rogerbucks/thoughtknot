@@ -11,6 +11,7 @@
 // So does a folded group picked again, or zoomed into until it fills the screen. A thing the card selects is picked
 // here too. What the card hides, fades or brings forward, the 3D view shows too (focus_space).
 import { word } from '@thoughtknot/core';
+import type { MiniMapSetting } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
@@ -35,6 +36,7 @@ import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-
 import { heldIn, marksOfSvg } from './svg-marks.ts';
 import { linedUpLayout } from '../../space-glide.ts';
 import { SpaceGlide } from './space-view-glide.ts';
+import { SpaceMiniMap } from './space-mini-map.ts';
 import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
@@ -60,6 +62,7 @@ export interface SpaceOptions {
   cards?: boolean;
   asDrawn?: boolean;
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
+  miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -146,6 +149,7 @@ export async function openSpaceView(
     const frame = frameOf(glide.shown, matrix, width, height, glide.match(picked), pickedLine?.id);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
+    map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
   };
   const again = () => {
     if (asked) return;
@@ -153,6 +157,7 @@ export async function openSpaceView(
     win.requestAnimationFrame(paint);
   };
   const glide = new SpaceGlide(el, space, again, (o) => (orbit = o)); // laid out again, it glides there (layout_glide)
+  const map = new SpaceMiniMap(el, more.miniMap ?? (() => 'off'), (by) => ((orbit = by(orbit)), again()));
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the view goes with it, and frees the graphics chip
     if (!el.isConnected) return close();
@@ -236,9 +241,8 @@ export async function openSpaceView(
       going = () => run === turning && open;
     turnToward(win, orbit, point, (o) => ((orbit = o), paint()), going);
   };
-  /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
-    // a ball is looked at from its middle, a block from its top
+    // flies to it: the camera looks at a ball's middle, or a block's top, from near
     const top = block.floor + (space.round ? block.tall / 2 : block.tall);
     const near = Math.max(block.width, block.depth, block.tall) * 4;
     orbit = focusOn(orbit, [block.x + block.width / 2, block.y + block.depth / 2, top], near);
@@ -364,16 +368,12 @@ export async function openSpaceView(
     { passive: false },
   );
   el.addEventListener('keydown', (e) => {
-    if ((e.target as Element | null)?.closest('button')) {
-      // a button keeps Enter and Space for itself
-      if (e.key === 'Enter' || e.key === ' ') return;
-    }
+    // a button keeps Enter and Space for itself
+    if ((e.target as Element | null)?.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
+    const m = keyMove(e.key, e.shiftKey);
     if (e.key === 'Enter' && picked) flyTo(picked);
-    else {
-      const m = keyMove(e.key, e.shiftKey);
-      if (!m) return;
-      move(m);
-    }
+    else if (m) move(m);
+    else return;
     e.preventDefault();
   });
 

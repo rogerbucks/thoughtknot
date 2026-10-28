@@ -238,6 +238,56 @@ window.clickAgain = async () => {
   sized.remove();
   return { hit, before, first, after };
 };
+// the view's mini-map (space_mini_map), and the drawing laid out again gliding in it (layout_glide): Bob moved on the
+// page, the card marks its drawing again, and Bob's footprint passes through the spots between, a frame at a time
+window.miniInSpace = async () => {
+  const sized = document.head.appendChild(document.createElement('style'));
+  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const root = document.body.appendChild(document.createElement('div'));
+  root.style.cssText = 'position:relative;width:480px;height:360px';
+  const holder = root.appendChild(document.createElement('div'));
+  holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+  </g></svg>\`;
+  const told = [];
+  root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
+  const svg = holder.querySelector('svg');
+  const opened = await openSpaceView(root, svg, 'Team', () => {}, { cards: false, asDrawn: true, miniMap: () => 'always' });
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await frames();
+  await new Promise((r) => setTimeout(r, 450)); // past its rise out of the flat drawing
+  await frames();
+  const mini = root.querySelector('.thoughtknot-mini-map.is-space');
+  const xs = () => [...(mini?.querySelectorAll('rect.thoughtknot-mini-box') ?? [])].map((r) => Number(r.getAttribute('x')));
+  const seen = () => mini?.querySelector('polygon.thoughtknot-mini-frame')?.getAttribute('points');
+  const shown = { there: !!mini && !mini.hidden, boxes: xs().length, seen: (seen() ?? '').split(' ').length };
+  // Bob moved far across the page, and the drawing marked again
+  svg.querySelector('[data-key="bob"] polygon').setAttribute('points', '600,140 680,140 680,180 600,180');
+  svg.querySelector('[data-key="bob"] text').setAttribute('x', '640');
+  svg.dispatchEvent(new Event(MARKED));
+  const path = [];
+  for (let i = 0; i < 40; i++) {
+    path.push(Math.max(...xs()));
+    await new Promise((r) => requestAnimationFrame(r));
+  }
+  await new Promise((r) => setTimeout(r, 450));
+  await frames();
+  path.push(Math.max(...xs()));
+  // a press on the mini-map moves the view, and picks nothing under it
+  const was = seen(),
+    at = mini.querySelector('svg').getBoundingClientRect();
+  for (const type of ['pointerdown', 'pointerup'])
+    mini
+      .querySelector('svg')
+      .dispatchEvent(new PointerEvent(type, { clientX: at.left + 2, clientY: at.top + 2, pointerId: 2, bubbles: true }));
+  await frames();
+  const moved = seen() !== was;
+  opened?.close();
+  root.remove();
+  sized.remove();
+  return { shown, path, moved, told: told.length };
+};
 // a card's bar and drawing, as graph-view.ts builds them, with the one button that shows it flat or in space
 window.oneBar = async () => {
   const root = document.body.appendChild(document.createElement('div'));
@@ -474,6 +524,31 @@ describe("the 3D view's painters, in a real browser", () => {
       );
     },
   );
+
+  // proves: space_mini_map
+  test(
+    '2.5D and 3D have a mini-map too: every thing, the floor seen, and a press on it moves the view',
+    options,
+    async () => {
+      const r = JSON.parse(await browser.run('miniInSpace().then(JSON.stringify)'));
+      assert.deepEqual(
+        r.shown,
+        { there: true, boxes: 2, seen: 4 },
+        'shown, each thing copied, the floor seen outlined',
+      );
+      assert.equal(r.moved, true, 'a press on it moves the view');
+      assert.equal(r.told, 0, 'and picks nothing under it');
+    },
+  );
+
+  // proves: layout_glide
+  test('laid out again, each thing glides there in the view in space, through the spots between', options, async () => {
+    const { path } = JSON.parse(await browser.run('miniInSpace().then(JSON.stringify)'));
+    const [first, last] = [path[0], path.at(-1)];
+    assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
+    const between = path.filter((x) => x > first + 1 && x < last - 1);
+    assert.ok(between.length >= 3, `it passed through the spots between, a frame at a time: ${path}`);
+  });
 
   // proves: focus_space
   test('what the card hides is gone from the 3D view too, once it marks its drawing again', options, async () => {

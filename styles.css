@@ -2581,6 +2581,18 @@ pre.thoughtknot-code {
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
+/* in 2.5D and 3D (space_mini_map): the plan from above, in the corner the buttons leave free, the picked thing marked */
+.thoughtknot-mini-map.is-space {
+  inset-inline-start: var(--gn-space-2);
+  inset-inline-end: auto;
+  touch-action: none;
+  cursor: pointer;
+}
+.thoughtknot-mini-box.is-picked {
+  fill: var(--gn-accent);
+  stroke: var(--gn-text-normal);
+  stroke-width: 2;
+}
 
 /* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing. It wraps below it
    in a card too narrow for both (the plugin sets is-details-below by the card's width). */
