@@ -14,7 +14,8 @@ import type { LaidMarks } from '../graphviz-marks.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { groupedLayered, tidyRows } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
-import { RESTARTS, TRUNK_LINK, viaKey } from './layered.ts';
+import { RESTARTS } from './layered.ts';
+import { trunksBack, trunksOut } from './trunks.ts';
 import type { Layered, Size } from './layered.ts';
 import { SCREEN, boundsOf } from './folded-rows.ts';
 import { layoutOptions, roundsOf } from './layout-options.ts';
@@ -24,12 +25,15 @@ import { groupsOver, packPlaced, partShape, partsOf, trayOf } from './parts.ts';
 import type { Placed } from './parts.ts';
 import { kindsOf } from './fingerprint.ts';
 import type { Kinds } from './fingerprint.ts';
-import { FOLDED_GROUP, TRY_MOST, pickLayout, tidier } from './pick.ts';
+import { FOLDED_GROUP, TRY_MOST, chosenPick, pickLayout, tidier } from './pick.ts';
+import { givenSpots } from './given.ts';
 import type { Pick } from './pick.ts';
 import { cheaperSpots } from './cheaper.ts';
 
 export { pickLayout };
 export type { OwnLayout, Pick } from './pick.ts';
+
+type Point = [number, number];
 
 /** The room kept between two boxes pushed apart, in CSS pixels. */
 const APART = 14;
@@ -101,7 +105,8 @@ export function apart(
  * `previous` is last time's spots, for a warm start. `rankdir` is the way rows run for a layered layout. It says how
  * many parts it laid out, and how many loose things went in the tray. `lanesBy` gives each thing's kind. A part whose
  * kinds link in order, or across two sides, then has a lane for each kind in its rows (layout_kind_lanes). A `step`
- * of rows or a grid lays it out the cheaper way instead (layout_never_text).
+ * of rows or a grid lays it out the cheaper way instead (layout_never_text). `placed` is each thing's spot as a plug-in's
+ * layout gave it, where the options choose one (layout_plugins).
  */
 export function ownSpots(
   laid: LaidMarks,
@@ -111,6 +116,7 @@ export function ownSpots(
   options: Partial<LayoutOptions> = {},
   lanesBy?: ReadonlyMap<string, string>,
   step?: 'rows' | 'grid',
+  placed?: ReadonlyMap<string, [number, number]>,
 ): {
   spots: Map<string, [number, number]>;
   via: Map<string, [number, number][]>;
@@ -142,7 +148,7 @@ export function ownSpots(
     const one = laidParts.length === 1 && !loose.length;
     const [these, over] = one ? [shape, groups] : [partShape(shape, part), groupsOver(groups, part)];
     const bands = lanesBy && bandsOf(kindsOf(these, lanesBy), these, lanesBy);
-    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands });
+    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands, placed });
     if (i === 0) way = piece.way;
     return piece;
   });
@@ -191,6 +197,8 @@ interface PartMore {
   turn: boolean;
   /** Each thing's lane, where its kinds link in order (layered.ts). */
   bands?: ReadonlyMap<string, number> | undefined;
+  /** Each thing's spot as a plug-in's layout gave it. */
+  placed?: ReadonlyMap<string, [number, number]> | undefined;
 }
 
 /** Each thing's lane, its kind's place in `kinds`' order, where kinds link in order or across two sides. */
@@ -219,6 +227,9 @@ function placedPart(
   rankdir: 'LR' | 'TB',
   more: PartMore,
 ): Piece {
+  // the layout the person chose is used as it is, never tried against another (layout_plugins)
+  const chosen = chosenPick(shape, layoutOptions(more.options).strategy, more.placed);
+  if (chosen) return laidBy(chosen, shape, sizes, groups, rankdir, more);
   const pick = pickLayout(shape);
   const first = laidBy(pick, shape, sizes, groups, rankdir, more);
   if ((pick.why !== 'flow' && pick.why !== 'network') || shape.things.length > TRY_MOST) return first;
@@ -265,105 +276,12 @@ function laidBy(
   // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
   const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
   const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
-  const placed = stressLayout(shape, 2, previous, { unit });
-  const spots = new Map([...placed].map(([k, [x = 0, y = 0]]) => [k, [x, y] as [number, number]]));
+  const placed = pick.layout === 'given' ? givenSpots(shape, more.placed ?? new Map(), unit) : null;
+  const spots =
+    placed ??
+    new Map([...stressLayout(shape, 2, previous, { unit })].map(([k, [x = 0, y = 0]]) => [k, [x, y] as Point]));
   apart(spots, sizes, APART * spacing, roundsOf(options, APART_ROUNDS));
   return { spots, via: new Map(), boxes: [], pick, way };
-}
-
-/** A trunk's two points (fold-source.ts): where its links meet, and where they part. */
-const TRUNK = /^trunk: (\d+) (in|out)$/;
-/** How far along its one piece or lane a trunk's links meet, and how far from its end they part. */
-const MEET = 0.4;
-type Point = [number, number];
-
-/** A trunk laid out as the one link it stands for: from the thing its links come from to the one they go to. */
-interface Trunk {
-  in: string;
-  out: string;
-  from: string;
-  to: string;
-}
-
-/**
- * `shape` with each trunk that runs from one thing to one other taken out, and a link between those two in its place.
- * So the trunk is laid out as one link, not as two more things in rows of their own.
- */
-function trunksOut(shape: GraphShape): { shape: GraphShape; trunks: Trunk[] } {
-  const ends = new Map<string, { in: string; out: string; from: Set<string>; to: Set<string> }>();
-  const endOf = (key: string) => {
-    const m = TRUNK.exec(key);
-    if (!m) return undefined;
-    const t = m[1] as string;
-    return (
-      ends.get(t) ??
-      ends
-        .set(t, { in: key.replace(/out$/, 'in'), out: key.replace(/in$/, 'out'), from: new Set(), to: new Set() })
-        .get(t)
-    );
-  };
-  for (const l of shape.links) {
-    const a = TRUNK.exec(l.from),
-      b = TRUNK.exec(l.to);
-    if (b?.[2] === 'in' && !a) endOf(l.to)?.from.add(l.from);
-    if (a?.[2] === 'out' && !b) endOf(l.from)?.to.add(l.to);
-  }
-  const trunks: Trunk[] = [];
-  for (const e of ends.values())
-    if (e.from.size === 1 && e.to.size === 1) {
-      const [from] = e.from,
-        [to] = e.to;
-      if (from !== to) trunks.push({ in: e.in, out: e.out, from: from as string, to: to as string });
-    }
-  if (!trunks.length) return { shape, trunks };
-  const gone = new Set(trunks.flatMap((t) => [t.in, t.out]));
-  return {
-    shape: {
-      things: shape.things.filter((t) => !gone.has(t.key)),
-      links: [
-        ...shape.links.filter((l) => !gone.has(l.from) && !gone.has(l.to)),
-        ...trunks.map((t) => ({ from: t.from, type: TRUNK_LINK, to: t.to })),
-      ],
-    },
-    trunks,
-  };
-}
-
-/**
- * Each of `trunks` put back on the way its link was laid out. Its links meet in the first row it skips. They part in
- * the last, in the lane its link takes there. A trunk's link has lanes of its own (`TRUNK_LINK`). Between rows side
- * by side, they meet and part along the one piece. Each piece of the trunk takes its share of the way's bends.
- */
-function trunksBack(
-  trunks: readonly Trunk[],
-  spots: Map<string, [number, number]>,
-  via: Map<string, [number, number][]>,
-  axis: 0 | 1,
-): void {
-  const lerp = (p: Point, q: Point, s: number): Point => [p[0] + (q[0] - p[0]) * s, p[1] + (q[1] - p[1]) * s];
-  for (const t of trunks) {
-    const a = spots.get(t.from),
-      b = spots.get(t.to);
-    if (!a || !b) continue;
-    const way = via.get(viaKey(t.from, t.to)) ?? [];
-    const path: Point[] = way.length >= 2 ? way : [a, b];
-    const k = path.length - 1;
-    if (k < 3) {
-      spots.set(t.in, onPiece(path[0] as Point, path[k] as Point, MEET, axis));
-      spots.set(t.out, onPiece(path[0] as Point, path[k] as Point, 1 - MEET, axis));
-      if (way.length < 2) continue;
-      via.set(viaKey(t.from, t.in), [path[0] as Point]);
-      via.set(viaKey(t.out, t.to), [path[k] as Point]);
-      continue;
-    }
-    // the lanes are the pieces from 1 to 2, from 3 to 4, and on; one lane alone holds both ends
-    const one = k === 3;
-    spots.set(t.in, lerp(path[1] as Point, path[2] as Point, one ? MEET : 0.5));
-    spots.set(t.out, lerp(path[k - 2] as Point, path[k - 1] as Point, one ? 1 - MEET : 0.5));
-    via.set(viaKey(t.from, t.in), [path[0] as Point, path[1] as Point]);
-    via.set(viaKey(t.in, t.out), path.slice(2, k - 1));
-    via.set(viaKey(t.out, t.to), [path[k - 1] as Point, path[k] as Point]);
-  }
 }
 
 /** How far a layout's shape, its width over its height, is from a screen's, either way. */
@@ -374,16 +292,3 @@ function offScreen(rows: Layered, sizes: ReadonlyMap<string, Size>): number {
 
 /** The room round a drawing laid out by our own engine, in CSS pixels. */
 export const MARGIN = 12;
-
-/**
- * The point a share `s` along the piece from `p` to `q`, drawn as routed-curve.ts draws it. It leaves and arrives
- * running the drawing's way (`axis` 0 across, 1 down).
- */
-function onPiece(p: Point, q: Point, s: number, axis: 0 | 1): Point {
-  const half = (q[axis] - p[axis]) / 2;
-  const c1: Point = axis === 0 ? [p[0] + half, p[1]] : [p[0], p[1] + half];
-  const c2: Point = axis === 0 ? [q[0] - half, q[1]] : [q[0], q[1] - half];
-  const r = 1 - s;
-  const at = (c: 0 | 1) => r * r * r * p[c] + 3 * r * r * s * c1[c] + 3 * r * s * s * c2[c] + s * s * s * q[c];
-  return [at(0), at(1)];
-}

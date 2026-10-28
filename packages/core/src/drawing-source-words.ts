@@ -155,6 +155,13 @@ export const DRAWING_SOURCE_WORDS = {
   'view.layout.why.dense': 'Spread out: it has many links for each thing.',
   'view.layout.why.overview': 'Laid out in rows: each group is one box.',
   'view.layout.why.tried': 'Laid out in rows and spread out, and the one with fewer crossings kept.',
+  'view.layout.why.chosen': 'Laid out as you chose: {name}.',
+  'view.layout.missed': '{name} could not lay this graph out, so one was picked by its shape.',
+  // the View menu's choice of layout (§68, layout_plugins); a plug-in's layout is named by its own title
+  'view.layout.strategy': 'Layout',
+  'view.layout.strategy.auto': 'Picked by its shape',
+  'view.layout.strategy.rows': 'Rows',
+  'view.layout.strategy.spread': 'Spread out',
   'view.layout.step.own': 'Graphviz took too long, so our own engine laid it out.',
   'view.layout.step.rows': 'Laying it out took too long, so it is drawn in rows, in no order.',
   'view.layout.step.grid': 'Laying it out took too long, so it is drawn as a grid.',

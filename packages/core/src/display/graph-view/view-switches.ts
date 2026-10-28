@@ -36,6 +36,7 @@ import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
+import { offeredLayouts, strategyName } from '../../layouts/offered.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -70,8 +71,14 @@ const LAYOUT_SLIDERS = [
   ['groupPull', 'view.layout.group-pull', 0.1],
   ['rounds', 'view.layout.rounds', 0.25],
 ] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
-/** The View menu's layout choices, each a list of its words, named alike in 2D and 3D (layout_strategy_variables). */
-const LAYOUT_LISTS = ['direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
+/** The View menu's layout choices: the layout first, then its variables, alike in 2D and 3D (layout_plugins). */
+const LAYOUT_LISTS = ['strategy', 'direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
+
+/** The words choice `k` may be, each with what the menu says for it. */
+const listed = (k: LayoutChoice): [string, string][] =>
+  k === 'strategy'
+    ? [...LAYOUT_CHOICES.strategy, ...offeredLayouts().map((l) => l.id)].map((v) => [v, strategyName(v)])
+    : LAYOUT_CHOICES[k].map((v) => [v, word(`view.layout.${k}.${v.toLowerCase()}` as WordKey)]);
 
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
@@ -159,9 +166,8 @@ export function renderViewMenu(
   const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
     const row = holder().createEl('label', { cls: 'thoughtknot-layout-choice', text: word(`view.layout.${k}`) });
     const input = row.createEl('select');
-    for (const v of LAYOUT_CHOICES[k])
-      input.createEl('option', { text: word(`view.layout.${k}.${v.toLowerCase()}` as WordKey), attr: { value: v } });
-    input.addEventListener('change', () => spaced?.(k, input.value as LayoutOptions[typeof k]));
+    for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
+    input.addEventListener('change', () => spaced?.(k, input.value));
     return { k, input };
   });
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });

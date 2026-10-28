@@ -72,6 +72,7 @@ export const REST_AREA = [
   'packages/core/src/plugin-calls.ts',
   'packages/core/src/plugin-sources.ts',
   'packages/core/src/plugin-diagrams.ts',
+  'packages/core/src/plugin-layouts.ts',
   'packages/core/src/plugin-ai.ts',
   'packages/core/src/plugin-isolated.ts',
   'packages/core/src/core-storage.ts',
@@ -105,6 +106,7 @@ export const KEPT = {
     '  // layout kinds {}',
     '  // layout lanes off',
     '  // layout step {}',
+    '  // layout spots {}',
   ],
   // the SQL the local store runs, read by SQLite and never by a person (mesh-index-backends.ts)
   'packages/core/src/mesh-index-backends.ts': '*',
