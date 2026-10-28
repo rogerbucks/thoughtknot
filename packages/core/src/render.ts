@@ -16,7 +16,7 @@ import { pictureSource } from './picture.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
-import { groupsIn, optionsIn, ownable, ownSource, ownSvg } from './layouts/own-draw.ts';
+import { groupsIn, kindsIn, optionsIn, ownable, ownSource, ownSvg } from './layouts/own-draw.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -105,6 +105,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // drawing that fits the note best is shown
   const ours = drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct');
   const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
+  const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
@@ -135,7 +136,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    if (ours && ownable(dot)) return { rankdir, dot: ownSource(dot, drawing.layoutOptions), src, own: true };
+    if (ours && ownable(dot))
+      return { rankdir, dot: ownSource(dot, drawing.layoutOptions, kindsByKey), src, own: true };
     if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
     return { rankdir, dot: direct ? quickSource(dot, STRAIGHT_FIRST) : quick ? quickSource(dot) : dot, src };
   });
@@ -183,7 +185,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   if (own && engine.placed) {
     const measured = engine.placed(dot);
     if (!measured.layout?.lost)
-      return ownSvg(measured, /rankdir=(\w+)/.exec(dot)?.[1] ?? 'LR', groupsIn(dot), optionsIn(dot));
+      return ownSvg(measured, /rankdir=(\w+)/.exec(dot)?.[1] ?? 'LR', groupsIn(dot), optionsIn(dot), kindsIn(dot));
   }
   // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
   if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);

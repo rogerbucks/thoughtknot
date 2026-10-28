@@ -19,10 +19,8 @@ import {
 } from '@thoughtknot/core';
 
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
-const nameOf = (s: ViewSwitch): string => {
-  const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
-  return o ? optionSaid(o).name : switchName(s);
-};
+const nameOf = (s: ViewSwitch, o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s])): string =>
+  o ? optionSaid(o).name : switchName(s);
 import type {
   Drawn,
   GraphDrawing,
@@ -36,6 +34,7 @@ import type {
 import type { SwitchesShown } from './view-options';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import { trunkCount } from '../../untangle-fold.ts';
+import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -62,10 +61,7 @@ let hints = 0;
 const AUTO = '',
   NONE = ':none';
 
-/**
- * The View menu's layout options, each a slider, and how far one step moves it (§53, layout_saved_with_view). They
- * space the layout in every view, flat or in space, and a view saved as shown keeps them.
- */
+/** The View menu's layout sliders, and how far one step moves each, in every view (§53, layout_saved_with_view). */
 const LAYOUT_SLIDERS = [
   ['spacing', 'view.layout.spacing', 0.25],
   ['linkLength', 'view.layout.link-length', 0.25],
@@ -112,6 +108,7 @@ export function renderViewMenu(
     return { level, b };
   });
   ladder?.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
+  const pickLine = el.createDiv({ cls: 'thoughtknot-layout-said' }); // the engine's pick, said (layout_pick_said)
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   // with the ladder, the switches it turns and the layout sliders fold away under More (cluster_menu_plain)
   let more: HTMLElement | null = null;
@@ -156,6 +153,8 @@ export function renderViewMenu(
   });
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
   const fill = () => {
+    const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
+    [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
     if (!list || !grouping) return;
     const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
     const choices: [string, string][] = [

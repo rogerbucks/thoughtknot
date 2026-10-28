@@ -135,6 +135,20 @@ export const DRAWING_SOURCE_WORDS = {
   'view.layout.spacing': 'Spacing',
   'view.layout.link-length': 'Link length',
   'view.layout.group-pull': 'Group pull',
+  // what the engine picked for the drawing, and why, under the ladder of detail (fingerprint.ts, layout_pick_said)
+  'view.layout.why.tree': 'Laid out in rows as a tree: most things have one link in.',
+  'view.layout.why.flow': 'Laid out in rows as a flow: its links mostly run one way.',
+  'view.layout.why.network': 'Spread out as a network: its links run every way.',
+  'view.layout.why.dense': 'Spread out: it has many links for each thing.',
+  'view.layout.why.overview': 'Laid out in rows: each group is one box.',
+  'view.layout.parts': { one: '{count} part, packed to the screen.', other: '{count} parts, packed to the screen.' },
+  'view.layout.loose': {
+    one: '{count} thing with no link sits in the tray.',
+    other: '{count} things with no link sit in the tray.',
+  },
+  'view.layout.kinds.ordered': 'Its kinds link in order: {order}.',
+  'view.layout.kinds.two-sided': 'Its two kinds link to each other.',
+  'view.layout.kinds.clustered': 'Things link mostly to their own kind.',
   // the line under each View menu switch saying what it does (view-switches.ts)
   'view.hint.labels': 'A link’s label shows once you zoom in far enough to read it.',
   'view.hint.hubs': 'A thing with many links shows them as one stub you can open.',
