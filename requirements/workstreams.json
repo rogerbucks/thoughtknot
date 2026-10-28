@@ -1218,7 +1218,8 @@
       "layout_strategy_variables",
       "layout_pick_said",
       "layout_own_default",
-      "layout_parts_packed"
+      "layout_parts_packed",
+      "layout_kinds_read"
     ]
   },
   "LE2": {

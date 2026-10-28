@@ -152,7 +152,8 @@ export function apart(spots: Map<string, [number, number]>, sizes: ReadonlyMap<s
 
 /**
  * Each box of `laid` placed by our own engine, its middle in CSS pixels from the top left, with room round the edge.
- * `previous` is last time's spots, for a warm start. `rankdir` is the way rows run for a layered layout.
+ * `previous` is last time's spots, for a warm start. `rankdir` is the way rows run for a layered layout. It says how
+ * many parts it laid out, and how many loose things went in the tray.
  */
 export function ownSpots(
   laid: LaidMarks,
@@ -166,35 +167,26 @@ export function ownSpots(
   boxes: GroupBox[];
   pick: Pick;
   rankdir: 'LR' | 'TB';
+  parts: number;
+  loose: number;
 } {
   const { shape: whole, sizes } = marksShape(laid.marks);
   const { shape, trunks } = trunksOut(whole);
   const { spacing } = layoutOptions(options);
   // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray
-  const grouped = new Set(groups.flatMap((g) => g.members));
-  const parts = partsOf(
-    shape.things.map((t) => t.key),
-    shape.links,
-    groups.map((g) => g.members),
-  );
+  const together = groups.map((g) => g.members);
+  const grouped = new Set(together.flat());
+  const keys = shape.things.map((t) => t.key);
+  const parts = partsOf(keys, shape.links, together);
   const isLoose = (p: readonly string[]) =>
     p.length === 1 && !grouped.has(p[0] as string) && !(p[0] as string).startsWith(FOLDED_GROUP);
   const loose = parts.filter(isLoose).flat();
   const laidParts = parts.filter((p) => !isLoose(p));
   let way = rankdir;
-  const pieces: Piece[] = laidParts.map((keys, i) => {
+  const pieces: Piece[] = laidParts.map((part, i) => {
     const one = laidParts.length === 1 && !loose.length;
-    const piece = placedPart(
-      one ? shape : partShape(shape, keys),
-      sizes,
-      one ? groups : groupsOver(groups, keys),
-      way,
-      {
-        previous,
-        options,
-        turn: i === 0,
-      },
-    );
+    const [these, over] = one ? [shape, groups] : [partShape(shape, part), groupsOver(groups, part)];
+    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0 });
     if (i === 0) way = piece.way;
     return piece;
   });
@@ -224,7 +216,7 @@ export function ownSpots(
     const [x, y] = moved([b.x, b.y]);
     return { ...b, x, y };
   });
-  return { spots, via, boxes, pick, rankdir: way };
+  return { spots, via, boxes, pick, rankdir: way, parts: laidParts.length, loose: loose.length };
 }
 
 /** One part of a drawing laid out on its own, by the layout it picked, its rows running `way`. */

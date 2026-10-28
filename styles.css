@@ -475,6 +475,13 @@
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
+/* what the engine picked for the drawing, and why, in a quiet line across the menu (layout_pick_said) */
+.thoughtknot-view-menu > .thoughtknot-layout-said {
+  grid-column: 1 / -1;
+  padding: 0 var(--gn-space-2);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
 /* the switches the ladder turns, and the layout sliders, folded away under More (cluster_menu_plain) */
 .thoughtknot-view-menu > .thoughtknot-view-more {
   grid-column: 1 / -1;
