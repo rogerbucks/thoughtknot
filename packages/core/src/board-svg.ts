@@ -67,7 +67,7 @@ const meets = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.
 const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
 
 /** The kind of an item, in words. */
-const kindSaid = (kind: BoardKind) => word(`board.kind.${kind}`);
+const kindSaid = (kind: BoardKind) => word(`board.kind.${kind.toLowerCase() as Lowercase<BoardKind>}`);
 
 /** An item named in words: its kind and text, or its kind alone. */
 const named = (item: BoardItem) =>
