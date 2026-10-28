@@ -61,7 +61,9 @@ export function mirrored(svg: string): string {
  */
 export function inReadingDirection(drawn: Drawn, direction: 'ltr' | 'rtl' = currentDirection()): Drawn {
   if (direction !== 'rtl' || drawn.rankdir !== 'LR' || !drawn.svg) return drawn;
-  return { ...drawn, svg: mirrored(drawn.svg), mirrored: true };
+  // the settled layout that follows a quick first picture is mirrored too (layout_live_loop)
+  const better = drawn.better && { better: drawn.better.then((b) => b && inReadingDirection(b, direction)) };
+  return { ...drawn, svg: mirrored(drawn.svg), mirrored: true, ...better };
 }
 
 /** A layout's result as shown: a drawing in the direction the interface is read in; a refusal or nothing as it is. */
