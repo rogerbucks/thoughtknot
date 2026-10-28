@@ -33,6 +33,8 @@ import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
 import { heldIn, marksOfSvg } from './svg-marks.ts';
+import { linedUpLayout } from '../../space-glide.ts';
+import { SpaceGlide } from './space-view-glide.ts';
 import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
@@ -45,13 +47,10 @@ export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
 
-/** What a line's key is when it is a fold to open, not a link: a bundle, a hub's stub or a group's box (§25). */
-const FOLD = /^(bundle|hub|group):/;
+const FOLD = /^(bundle|hub|group):/; // a line's key that is a fold to open, not a link: a bundle, a stub, a group's box
 
-/** How far a pointer may move, in pixels, and still be a click or tap rather than a drag. */
-const TAP_SLOP = 6;
-/** How soon a second click or tap must follow the first to fly, in milliseconds. */
-const DOUBLE_TAP = 350;
+const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
+const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
 
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
@@ -144,7 +143,7 @@ export async function openSpaceView(
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    const frame = frameOf(space, matrix, width, height, picked, pickedLine?.id);
+    const frame = frameOf(glide.shown, matrix, width, height, glide.match(picked), pickedLine?.id);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
   };
@@ -153,6 +152,7 @@ export async function openSpaceView(
     asked = true;
     win.requestAnimationFrame(paint);
   };
+  const glide = new SpaceGlide(el, space, again, (o) => (orbit = o)); // laid out again, it glides there (layout_glide)
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the view goes with it, and frees the graphics chip
     if (!el.isConnected) return close();
@@ -173,12 +173,14 @@ export async function openSpaceView(
     if ('marks' in from || !open) return;
     const was = space.blocks.map((b) => b.of).join(),
       before = picked && { of: picked.of, at: middleOf(picked) };
+    const [shown, shownOrbit] = [glide.settle(), orbit];
     ({ marks, paints } = marksOfSvg(from));
     depths = depthsOf();
     // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
     held = new Map([...held, ...heldIn(from)]);
     const warm = !!spots && !more.asDrawn;
     space = spaceBy(depths[depth] ?? null);
+    if (warm) [space, spots] = linedUpLayout(shown, space, spots); // lined up with what was shown, so it does not spin
     // what the card selects now is picked here too: a thing found, or none once its details close
     const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
@@ -189,7 +191,7 @@ export async function openSpaceView(
     const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
     const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);
     if (other || moved) orbit = centredOn(orbit, picked);
-    again();
+    glide.to(space, shown, shownOrbit, orbit);
   };
   if (!('marks' in from)) from.addEventListener(MARKED, marked);
   const close = () => {
@@ -203,10 +205,9 @@ export async function openSpaceView(
     closed();
   };
 
-  /** What the view turns round: the picked thing, else the drawing's middle (Roger, 25 Oct 2026). */
-  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target);
-  /** Makes one move, from a key or a button, and paints it. */
+  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target); // what the view turns round
   const move = (m: SpaceMove) => {
+    // one move, from a key or a button, painted
     if ('back' in m) return close();
     if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
@@ -215,16 +216,14 @@ export async function openSpaceView(
     else if ('help' in m) showHelp(help.hidden !== false);
     again();
   };
-  /** Picks `block`, or none: its name shows and is said aloud. */
   const pick = (block: Block | null) => {
-    picked = block;
+    picked = block; // or none: its name shows and is said aloud
     pickedLine = null;
     said.setText(block ? (block.name ?? block.of ?? '') : '');
     again();
   };
-  /** Picks the link `line`: its words show and are said aloud. */
   const pickLine = (line: SpaceLine) => {
-    picked = null;
+    picked = null; // a link picked: its words show and are said aloud
     pickedLine = line;
     said.setText(line.words ?? '');
     again();
@@ -249,6 +248,7 @@ export async function openSpaceView(
   const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
   /** Shows it the `next` way, the picked thing kept and the view centred on it, and says how. */
   const showAs = (next: number) => {
+    const [shown, shownOrbit] = [glide.settle(), orbit];
     depth = next;
     space = spaceBy(depths[depth] ?? null);
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
@@ -257,7 +257,7 @@ export async function openSpaceView(
     depthButton.setAttribute('aria-label', label);
     depthButton.hidden = depth === 0;
     said.setText(label);
-    again();
+    glide.to(space, shown, shownOrbit, orbit);
   };
   // the buttons that move the view, and how it is shown in 3D: in space, or lifted by groups or by links
   const { depthButton, showHelp, help } = spacePad(el, depthWords(), move, () =>
