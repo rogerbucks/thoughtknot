@@ -17,7 +17,11 @@ import {
   readsPlain,
   shortLabel,
   labelsFor,
+  presetClasses,
 } from '../src/view-presets.ts';
+import { PRESET_IDS } from '../src/style-graph.ts';
+import { readStyle } from '../src/style.ts';
+import { readNote } from '../src/drawing.ts';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
 
 describe('the starter presets', () => {
@@ -95,6 +99,34 @@ describe('where a preset applies, and moving it', () => {
     assert.equal(presetFor({ vault: 'calm', everywhere: 'focus' }).id, 'calm');
     assert.equal(presetFor({ everywhere: 'focus' }).id, 'focus');
     assert.equal(presetFor({}).id, 'default');
+  });
+
+  // proves: view_presets_scoped
+  test('a graph’s own preset is a Preset line in its style graph, one of the starters, checked like any other', () => {
+    assert.deepEqual(
+      [...PRESET_IDS],
+      STARTERS.map((p) => p.id),
+      'the style graph knows every starter',
+    );
+    const texts = [
+      "// graph: work\n(a:Task {name: 'A'})",
+      "// graph: work_style · STYLE work\n(p1:Preset {preset: 'calm'}),\n(p2:Preset {preset: 'clam'}),\n(p3:Preset {})",
+    ];
+    const { style, problems } = readStyle(texts, 'work', readNote(texts));
+    assert.deepEqual(
+      style.presets.map((p) => p.preset),
+      ['calm'],
+    );
+    assert.deepEqual(
+      problems.map((p) => p.message),
+      ['preset must be default, focus, calm, detail, big-picture or reading', 'a Preset names a view preset'],
+    );
+    assert.equal(presetFor({ graph: style.presets[0].preset, everywhere: 'focus' }).id, 'calm');
+    // and its card takes what the preset asks of it, as the page's body does for the settings' preset
+    assert.deepEqual(presetClasses('calm'), ['thoughtknot-still']);
+    assert.deepEqual(presetClasses('reading'), ['thoughtknot-reading']);
+    assert.deepEqual(presetClasses('focus'), ['thoughtknot-blur-rest', 'thoughtknot-still']);
+    assert.deepEqual(presetClasses('default'), []);
   });
 
   // proves: view_presets_portable

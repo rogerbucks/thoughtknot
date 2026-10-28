@@ -1171,11 +1171,17 @@ details.thoughtknot-style > summary {
 body.thoughtknot-still .thoughtknot-svg .thoughtknot-flow-dashes > path,
 body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
 body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
-body.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+body.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon),
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg .thoughtknot-flow-dashes > path,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
   animation: none;
 }
 body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
-body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner {
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner {
   display: none;
 }
 /* Moving links paused by the legend's button hold where they are, and play on from there */
@@ -1749,7 +1755,8 @@ pre.thoughtknot-code {
 /* A view preset for reading (spec §69). Every panel, list and outline of the card gets plain sans words, wider word
    spacing and a line height of 1.5. A box's words are cut short before it is laid out, so the drawing needs no change here.
    No special font: fonts made for dyslexia do not help, wider word spacing does a little (wiki: View presets design). */
-body.thoughtknot-reading .thoughtknot-view {
+body.thoughtknot-reading .thoughtknot-view,
+.thoughtknot-view.thoughtknot-reading {
   font-family: var(--gn-font-ui);
   font-style: normal;
   word-spacing: 0.25em;

@@ -225,7 +225,7 @@ export class PaneDrawing extends Lifecycle {
           depth,
           { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
-          aidsOf(this.host.settings()),
+          aidsOf(this.host.settings(), readStyle(reading.texts, s.graph, reading).style), // its own preset first (§69)
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

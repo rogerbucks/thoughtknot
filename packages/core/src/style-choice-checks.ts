@@ -3,9 +3,9 @@
 // whether they are merged into trunks (Links). What is sound is kept. Each fault is a problem on its line with its fix,
 // and the thing is left out.
 import type { Problem } from './note-reading.ts';
-import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
+import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, PRESET_IDS, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
 import { TIMELINE_ORDERS, TIMELINE_SHOWS } from './timeline.ts';
-import type { Arrows, Diagram, Links } from './style-graph.ts';
+import type { Arrows, Diagram, Links, PresetChoice } from './style-graph.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
 import { word } from './words.ts';
@@ -134,4 +134,15 @@ export function linksOf(raw: RawThing, names: StyledNames, out: Problem[]): Link
     ...inView(view),
     at: raw.at,
   };
+}
+
+/** A graph's own view preset, checked (§69, view_presets_scoped): one of the starters, by its id. */
+export function presetOf(raw: RawThing, names: StyledNames, out: Problem[]): PresetChoice | null {
+  const r = reader(raw, names, out);
+  if (raw.props.preset === undefined) {
+    r.missing(word('styling.preset.missing'), word('styling.preset.add', { among: quoted(PRESET_IDS) }));
+    return null;
+  }
+  const preset = r.word('preset', PRESET_IDS, mustBe('preset', PRESET_IDS));
+  return preset ? { preset, at: raw.at } : null;
 }
