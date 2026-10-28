@@ -4241,7 +4241,7 @@
           "layout: LayoutOptions",
           "open: (fold: Fold) => void",
           "plan: Folding | undefined",
-          "saved: () => Record<Exclude<ViewSwitch, 'engine'>, OnOff>",
+          "saved: () => Record<Exclude<ViewSwitch, 'engine' | 'lanes'>, OnOff>",
           "readonly switches: ViewSwitches",
           "toDetail: (level: DetailLevel) => boolean",
           "turn: (s: ViewSwitch, on: boolean) => boolean"
