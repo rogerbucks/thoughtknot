@@ -158,4 +158,7 @@ export const DRAWING_SOURCE_WORDS = {
   'sketch.kind.note': 'Note',
   'sketch.said': '{kind}: {text}',
   'sketch.pinned': '{said}, pinned to {pin}',
+  // a drawing that could not be written to the note (sketch-edit.ts)
+  'sketch.write.graph-gone': 'the graph {graph} is not in this note any more, so the drawing was not kept',
+  'sketch.write.gone': 'the drawing {id} is not in the note any more, so it was left as it is',
 } as const;
