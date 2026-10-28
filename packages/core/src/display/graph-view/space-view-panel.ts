@@ -6,12 +6,11 @@
 // It shows cards in space (2.5D, space-cards.ts), or 3D in one of three ways. Things are laid out again as balls sized
 // by their links (space-spread.ts). Or each group is a floor its things stand on. Or each thing is as tall as its links.
 // How to move it is on screen (space-controls.ts): drag turns, Shift-drag or right-drag moves, scroll zooms.
-// 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing and opens its details on the
-// card (SPACE_OPEN, viewport-events.ts). Another turns the view to it (orbitAround). A bundle picked opens (SPACE_UNFOLD).
-// So does a folded group picked again, or zoomed into until it fills the screen. A thing the card selects is picked
-// here too. What the card hides, fades or brings forward, the 3D view shows too (focus_space).
-import { word } from '@thoughtknot/core';
-import type { MiniMapSetting } from '@thoughtknot/core';
+// 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing, its details on the card
+// (SPACE_OPEN). Another turns to it (orbitAround). A bundle, or a folded group picked again or filling the view, opens
+// (SPACE_UNFOLD). A thing the card selects is picked here too, and what it hides or fades is so here (focus_space).
+import { paintersFrom, word } from '@thoughtknot/core';
+import type { MiniMapSetting, Painter } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
@@ -63,6 +62,7 @@ export interface SpaceOptions {
   asDrawn?: boolean;
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
+  painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -99,17 +99,17 @@ export async function openSpaceView(
   });
   const shapes = el.createEl('canvas', { cls: 'thoughtknot-space-canvas' }),
     words = el.createEl('canvas', { cls: 'thoughtknot-space-canvas' });
-  const painter = await pickPainter<SpacePainter>(shapes, [webgpuSpacePainter, webgl2SpacePainter, canvasSpacePainter]);
+  const makers = [webgpuSpacePainter, webgl2SpacePainter, canvasSpacePainter];
+  const painter = await pickPainter<SpacePainter>(shapes, paintersFrom(more.painter, makers));
   const ctx = words.getContext('2d');
   if (!painter || !ctx) {
     el.remove();
     return null;
   }
   for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
-  const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
-  const win = el.win;
-  // the label halo is the colour behind the view: the first painted one up from it, as the theme sets it. The system's
-  // page colour is the last resort: a phone in light mode has a white one under a dark theme (Roger, 25 Oct 2026)
+  const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } }),
+    win = el.win;
+  // the label halo is the colour behind the view: the first painted one up from it, else the system's page colour
   const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';

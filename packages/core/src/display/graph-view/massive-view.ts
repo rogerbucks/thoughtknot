@@ -6,11 +6,10 @@
 // group's box (core search-fly.ts) and flies the view there. Under reduced motion the view is there at once.
 // Filtering keeps the groups' order: they glide to their new places (core filter-live.ts), at once under reduced motion.
 // Each search, grown thing and filter is a step on a trail (core explore-trail.ts). Back and Forward draw any earlier
-// picture again, exactly as it was. Moving about is massive-moves.ts. 3D view lifts the groups into blocks.
-// Nothing is edited here. A filter chosen goes to the host, which saves it where the note is edited (filter-saved.ts).
-// A filter the host gives is the one the overview starts with.
-import { formatCount, word } from '@thoughtknot/core';
-import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
+// picture again, exactly as it was. Moving about is massive-moves.ts. 3D view lifts the groups into blocks. Nothing is
+// edited here. A filter chosen goes to the host, which saves it where the note is edited; one it gives is the first.
+import { formatCount, paintersFrom, word } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Painter, Refusal } from '@thoughtknot/core';
 import type { LaidMarks } from '../../graphviz-marks.ts';
 import { partOf } from '../../expand-on-demand.ts';
 import { FacetIndex, facetsOf } from '../../facet-counts.ts';
@@ -55,6 +54,7 @@ export interface MassiveOptions {
   chose?: (keep: FilterKeep) => void;
   /** Told the thing chosen: found by search, even in a group too large to draw, or clicked in an opened group. */
   picked?: (key: string) => void;
+  painter?: Painter; // the fastest that may paint it, as the style graph's Render says (layout_concept_layers)
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */
@@ -173,7 +173,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(stage);
   void Promise.all([
-    pickPainter(shapes, [webgpuPainter, webgl2Painter, canvasPainter]),
+    pickPainter(shapes, paintersFrom(o.painter, [webgpuPainter, webgl2Painter, canvasPainter])),
     pickPainter(words, [(c) => canvasPainter(c, true)]),
   ]).then(([shaped, worded]) => {
     painter = shaped;

@@ -72,6 +72,7 @@ STYLE_KINDS = (
     "Picture",
     "Filter",
     "Preset",
+    "Render",
 )
 # The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
 # id is its name.
@@ -119,6 +120,8 @@ STYLE_KEYS = {
     "Filter": ("keep", "view"),
     # a graph's own view preset (editor spec §69), checked in preset.py
     "Preset": ("preset",),
+    # a graph's or a view's space and painter (editor spec §68), checked in render.py
+    "Render": ("space", "painter", "view"),
 }
 
 

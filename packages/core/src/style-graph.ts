@@ -7,6 +7,7 @@ import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
+import type { Render } from './render-choice.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -52,20 +53,6 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
 /**
- * The plug-in a diagram type is named under, and the type's own word, or null when it is not one (§15,
- * plugin_diagram_type_named). A plug-in's type is its id, dotted lower-case words, then a dot and a word:
- * `acme.charts.sankey` is `sankey` of the plug-in `acme.charts`.
- */
-export function pluginTypeOf(name: string): { plugin: string; word: string } | null {
-  const at = name.lastIndexOf('.');
-  const plugin = name.slice(0, at),
-    own = name.slice(at + 1);
-  return at > 0 && /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(plugin) && /^[a-z][a-z0-9-]*$/.test(own)
-    ? { plugin, word: own }
-    : null;
-}
-
-/**
  * How a link moves to show flow (§7, links_show_flow). Dashes run along its arrow, a dot travels along it, or it is
  * still. Still takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
  */
@@ -101,6 +88,7 @@ export const STYLE_KINDS = [
   'Picture',
   'Filter',
   'Preset',
+  'Render',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
@@ -142,6 +130,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Picture: ['property', 'kind', 'thing', 'view'],
   Filter: ['keep', 'view'],
   Preset: ['preset'],
+  Render: ['space', 'painter', 'view'],
 };
 
 /** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
@@ -343,6 +332,8 @@ export interface StyleGraph {
   filters: SavedFilter[];
   /** The graph's own view preset (§69), in the order written; the first is used. */
   presets: PresetChoice[];
+  /** The space and painter of the whole graph or a view (§68, render-choice.ts), in the order written. */
+  renders: Render[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -382,8 +373,11 @@ export function emptyStyle(): StyleGraph {
     pictures: [],
     filters: [],
     presets: [],
+    renders: [],
   };
 }
 
+// a plug-in's diagram type, by its name: plugin-type.ts
+export { pluginTypeOf } from './plugin-type.ts';
 // how a fault in the style graph is said, and its fix: style-fix.ts
 export { orList, styleProblem, wordFix } from './style-fix.ts';

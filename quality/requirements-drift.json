@@ -2,7 +2,6 @@
   "about": "Drift between requirements/editor-requirements.md and the tests. Each list only shrinks: see scripts/requirements-drift.mjs.",
   "no-test": [
     "ideas_on_board",
-    "layout_concept_layers",
     "projection_arc",
     "projection_fisheye",
     "projection_grid",
