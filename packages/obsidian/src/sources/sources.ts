@@ -16,7 +16,7 @@ import {
   underStrictness,
   word,
 } from '@thoughtknot/core';
-import type { Drawn, Refusal, SourceRead } from '@thoughtknot/core';
+import type { Drawn, JoinedRead, Refusal, SourceRead } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
@@ -76,7 +76,9 @@ export async function renderSourceBlock(
     renderCode(root, text);
     return;
   }
-  sourceStrip(root, plugin, s, ctx.sourcePath);
+  // a FROM list names each place it drew from, and each it could not, with why (connector_source_missing)
+  for (const place of s.places ?? [s]) sourceStrip(root, plugin, { ...place, places: undefined }, ctx.sourcePath);
+  if ('missing' in read) for (const gone of (read as JoinedRead).missing) sourceAlert(root, gone.refused);
   const graph = s.graph;
   if (read.reading.tooLarge) {
     // too large to read (spec §9): nothing of it was read, as a note's own blocks over the limits are not
@@ -89,7 +91,10 @@ export async function renderSourceBlock(
   // a problem's line is its line in the source, which is where it is fixed
   const problems = [...reading.problems, ...styling.problems]
     .filter((p) => p.graph === graph)
-    .map((p) => ({ ...p, noteLine: lineInSource(read, p) }));
+    .map((p) => ({ ...p, noteLine: lineInSource(read, p) }))
+    .concat(
+      'placeProblems' in read ? (read as JoinedRead).placeProblems.map((p) => ({ ...p, noteLine: p.placeLine })) : [],
+    );
   const plain = reading.graphs.get(graph);
   if (!plain || !plain.boxes.length) {
     if (problems.length) renderProblems(root, problems, false);
