@@ -7,12 +7,14 @@ layout the marks cannot give back exactly."""
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 
 from graphspec.style.direct_links import direct_links
 from graphspec.style.fold_source import routed_source
 from graphspec.style.marks import layout_marks
 from graphspec.style.marks_svg import layout_svg
+from graphspec.style.quick import QUICK_LAYOUT
 
 
 def run_dot(dot: str, src: str, form: str) -> str:
@@ -32,6 +34,11 @@ def drawn_svg(dot: str, src: str, routing: str | None = None) -> str:
     # its links are drawn again here, so Graphviz lays them out straight. Its curves would be
     # thrown away, and routing them is about a quarter of its work (curves_not_routed)
     laid = layout_marks(json.loads(run_dot(dot, routed_source(src, "direct"), "json")))
-    return (
-        run_dot(dot, src, "svg") if laid["layout"].get("lost") else layout_svg(direct_links(laid))
-    )
+    if laid["layout"].get("lost"):
+        return run_dot(dot, src, "svg")
+    # past the quick size, each link is routed between the rows Graphviz laid out, and no box
+    # moves (links_routed_in_rows)
+    way = "TB" if re.search(r"rankdir=(TB|BT)", src) else "LR"
+    things = sum(1 for m in laid["marks"] if m["kind"] == "box" and m.get("role") == "thing")
+    rows = things > QUICK_LAYOUT and not re.search(r"\blayout=", src)
+    return layout_svg(direct_links(laid, way, rows))
