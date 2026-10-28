@@ -32,6 +32,7 @@ import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
 import { showProfile } from './profile-shown';
 import { Measuring, viewportSize, zoomSize } from './viewport-size';
+import { LayoutGlide } from './layout-glide-svg';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -42,18 +43,15 @@ export class GraphView extends Lifecycle {
   private viewport!: HTMLElement;
   private svg: SVGSVGElement | null = null; // the drawing: Graphviz's SVG; a graph drawn as a table has `table` (§15)
   private table: HTMLElement | null = null;
-  /** Whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15). */
-  private across = false;
+  private across = false; // whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15)
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
   private readonly fullscreen: FullScreen;
-  /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
-  private sel!: Selection;
-  /** The mini-map, the quick-info tooltip and where the kept-open details go (§24). */
-  private aids!: Aids;
+  private sel!: Selection; // the selection and so the focus, the highlight, and untangling the drawing (§25)
+  private aids!: Aids; // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
   private editButton: HTMLButtonElement | null = null;
   private readonly taps: Taps;
   private readonly source: SourceToggle;
@@ -66,6 +64,7 @@ export class GraphView extends Lifecycle {
   private legendSlot!: HTMLElement; // where the legend of moving links is (§7)
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
+  private readonly glide = new LayoutGlide(() => this.viewport); // laid out again, it glides there (layout_glide)
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
@@ -334,6 +333,7 @@ export class GraphView extends Lifecycle {
     if (!svg || this.unloaded) return; // a card gone while its layout ran has nothing to put it in
     const was = activeDocument.activeElement,
       on = was && svg.contains(was) ? was.getAttribute('id') : null;
+    const seen = this.spaces.mode() ? null : this.glide.before(svg, this.taps, this.zoom.view()); // in space it glides there
     this.drawn = drawn;
     this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
@@ -345,6 +345,7 @@ export class GraphView extends Lifecycle {
     this.taps.reset(drawn.svg);
     this.aids.redrawn(drawn);
     this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
+    if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey()); // the place kept (r_keep_place)
     this.sel.redrawn();
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
