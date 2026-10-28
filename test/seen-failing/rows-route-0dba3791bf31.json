@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rows-route.test.js",
+  "test": "curved links laid out in no rows, as a radial drawing is, are Graphviz own",
+  "seen_failing_first": false,
+  "evidence": "Guards the fallback: a radial drawing keeps Graphviz curves, as it did before."
+}
