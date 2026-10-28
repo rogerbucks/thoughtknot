@@ -234,6 +234,38 @@ test('a drawing with direct links keeps every part of the SVG Graphviz writes, i
   assert.match(dot, /splines=line/, 'laid out straight, the quickest, before the links are drawn again');
 });
 
+test('links drawn direct are laid out straight, so Graphviz routes no curve only to have it thrown away', () => {
+  // curves_not_routed: the default routing hands Graphviz a source that asks for curves
+  const { dot } = dotOf(
+    [
+      ['ada', 'Person'],
+      ['bob', 'Person'],
+      ['cy', 'Person'],
+      ['atlas', 'Book'],
+    ],
+    [
+      ['ada', 'KNOWS', 'bob'],
+      ['bob', 'KNOWS', 'cy'],
+      ['ada', 'READ', 'atlas'],
+      ['cy', 'READ', 'atlas'],
+    ],
+    null,
+  );
+  assert.doesNotMatch(dot, /splines=line/);
+  const asked = [];
+  const watched = { ...engine, marks: (source) => (asked.push(source), engine.marks(source)) };
+  svgOf(watched, dot, undefined);
+  assert.equal(asked.length, 1);
+  assert.match(asked[0], /splines=line/, 'laid out straight');
+  // every box where the curved layout puts it, against the others: only the drawing's edge moves with the curves
+  const spots = (laid) => {
+    const boxes = laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing');
+    const [x0, y0] = [Math.min(...boxes.map((b) => b.x)), Math.min(...boxes.map((b) => b.y))];
+    return boxes.map((b) => [b.of, Math.round(b.x - x0), Math.round(b.y - y0)]);
+  };
+  assert.deepEqual(spots(engine.marks(asked[0])), spots(engine.marks(dot)));
+});
+
 test('every line, arrowhead and word lies inside the drawing, so no curve is cut off at its edge', () => {
   // Roger, 24 Oct 2026: "some curves seem to get clipped on the edges of the image"
   const edgy = dotOf(

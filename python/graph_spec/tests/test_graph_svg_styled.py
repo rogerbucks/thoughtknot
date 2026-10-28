@@ -169,7 +169,7 @@ class Styled(unittest.TestCase):
         given = []
 
         def run(_args, input, **_kw):
-            given.append(input)
+            given.append(fake_dot.as_written(input))
             return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
         with (
@@ -275,7 +275,7 @@ class Styled(unittest.TestCase):
         given = []
 
         def run(_args, input, **_kw):
-            given.append(input)
+            given.append(fake_dot.as_written(input))
             return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
         with (
