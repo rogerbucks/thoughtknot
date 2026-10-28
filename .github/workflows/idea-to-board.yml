@@ -1,6 +1,6 @@
 name: Idea to board
 
-# Puts every issue labelled "idea" on the "ThoughtKnot requirements" GitHub Project and sets its Status to Backlog, so a new
+# Puts every issue labelled "idea" on the "ThoughtKnot requirements" GitHub Project and sets its Status to Backlog (Todo on this board, which has no Backlog option), so a new
 # idea never waits for a person to drag it there. It runs when an issue is opened or labelled, and does nothing for any
 # other label. The workflow checks out nothing and runs no code from the repository or from the issue: the issue's node id
 # and the label name reach the shell only through env, never inside the script text.
@@ -52,9 +52,9 @@ jobs:
             exit 0
           }
           field_id=$(jq -r '.field.id // empty' <<<"$project")
-          option_id=$(jq -r '[.field.options[]? | select(.name == "Backlog")][0].id // empty' <<<"$project")
+          option_id=$(jq -r '[.field.options[]? | select(.name == "Backlog" or .name == "Todo")] | sort_by(.name == "Backlog" | not) | .[0].id // empty' <<<"$project")
           if [ -z "$field_id" ] || [ -z "$option_id" ]; then
-            echo "::warning::The board has no Status option named Backlog, so the idea was added without a status."
+            echo "::warning::The board has no Status option named Backlog or Todo, so the idea was added without a status."
             exit 0
           fi
           gh api graphql -f query='mutation($p: ID!, $i: ID!, $f: ID!, $o: String!) {
