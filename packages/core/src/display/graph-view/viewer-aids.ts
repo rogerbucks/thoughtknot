@@ -15,6 +15,8 @@ import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
+import { SemanticZoom } from './semantic-zoom-view.ts';
+import type { SemanticRung } from '../../semantic-zoom.ts';
 import type { Taps } from './taps';
 import type { ViewOptions } from './view-options';
 
@@ -63,7 +65,13 @@ export interface AidsHost {
   taps: Taps;
   byKeyboard: () => boolean;
   /** What a lens follows, the selected thing by its key, and the View menu it is picked in, if the card has one. */
-  lens: { selected: () => string | null; menu: () => HTMLElement | undefined };
+  lens: { selected: () => string | null; menu: () => LensMenu | null };
+}
+
+/** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
+interface LensMenu {
+  menu: { el: HTMLElement };
+  step: (r: SemanticRung) => void;
 }
 
 /** The aids of one card: its mini-map, its tooltip, and where its kept-open details sit. */
@@ -72,6 +80,8 @@ export class Aids {
   private readonly miniMap: MiniMap | null;
   /** The lens the drawing is seen through (§68, projections_all_on); none for a table. */
   private readonly lens: LensSvg | null;
+  /** Semantic zoom, stepping the ladder of detail as the person zooms (projection_semantic_zoom). */
+  private readonly semantic: SemanticZoom | null;
   private readonly host: AidsHost;
 
   /** For the card (which owns their listeners) and what they ask of it. */
@@ -99,21 +109,29 @@ export class Aids {
     this.lens = host.svg()
       ? new LensSvg(card, { svg: host.svg, viewport, zoom, taps, written: o.aids?.lens, state, ...host.lens })
       : null;
-    const menu = host.lens.menu();
-    if (this.lens && menu) renderLensChoice(menu, this.lens, host.svg);
+    const menu = host.lens.menu(),
+      written = o.aids?.lens;
+    const step = (r: SemanticRung) => host.lens.menu()?.step(r);
+    this.semantic =
+      state && menu
+        ? new SemanticZoom({ win: viewport.win, state, written, view: () => zoom().view(), size: host.size, step })
+        : null;
+    if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
   }
 
-  /** The drawing was laid out again: the mini-map is a copy of the layout as it is now, and the lens bends it anew. */
+  /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
   redrawn(drawn: Drawn): void {
     this.miniMap?.redrawn(drawn);
     this.lens?.redrawn();
+    this.semantic?.redrawn();
   }
 
-  /** The view changed: the mini-map outlines the part in view, a tooltip closes, and the lens reaches as far on screen. */
+  /** The view changed: the mini-map outlines the part in view, a tooltip closes, the lens follows, semantic zoom steps. */
   viewChanged(v: View): void {
     this.miniMap?.update(v);
     this.info.hide();
     this.lens?.changed();
+    this.semantic?.changed();
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */
