@@ -143,6 +143,7 @@ export const TYPES_LATE = [
   'Pointing',
   'Position',
   'PreparedSend',
+  'PresetLine',
   'Problem',
   'ProcessCore',
   'ProcessEdit',
