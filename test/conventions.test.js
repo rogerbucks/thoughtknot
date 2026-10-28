@@ -52,7 +52,7 @@ const UPPER_SNAKE = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
 
 describe('one code style', () => {
   test('one formatter, Prettier, pinned, with its settings in the repository', () => {
-    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.9');
+    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.10');
     assert.deepEqual(readJSON('.prettierrc.json'), { printWidth: 120, singleQuote: true });
     assert.ok(exists('.prettierignore'));
   });
