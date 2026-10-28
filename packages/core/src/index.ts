@@ -145,13 +145,8 @@ export { isSourceBlock, isStepBlock } from './blocks.ts';
 export { lineInSource, placeKey, readSource, sourceFor, sourceOf } from './sources.ts';
 export { CONNECTORS, connect, connectorFor, gqlConnector, joinPlaces } from './connectors.ts';
 export type { Citation, Connected, Connector, JoinedRead, JoinOptions, Statement } from './connectors.ts';
-export type {
-  Fetched as SourceFetched,
-  Source as GraphSource,
-  SourceFault,
-  SourceRead,
-  SourceRefusal,
-} from './sources.ts';
+export type { Fetched as SourceFetched, Source as GraphSource, SourceFault, SourceRead } from './sources.ts';
+export type { SourceRefusal } from './sources.ts';
 export { runStep, stepOf } from './steps.ts';
 export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
 export { givenLabel } from './steps-input.ts';
