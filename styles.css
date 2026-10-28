@@ -1138,6 +1138,23 @@ details.thoughtknot-style > summary {
     display: none;
   }
 }
+/* A view preset that keeps everything still (spec §69, view_motion_safe) stops the same, whatever the device says */
+body.thoughtknot-still .thoughtknot-svg .thoughtknot-flow-dashes > path,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+body.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+  animation: none;
+}
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner {
+  display: none;
+}
+/* Moving links paused by the legend's button hold where they are, and play on from there */
+.thoughtknot-motion-paused .thoughtknot-svg .thoughtknot-flow-dashes > path,
+.thoughtknot-motion-paused .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-motion-paused .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+  animation-play-state: paused;
+}
 /* Animated images (spec §18). A thing's images sit in its details, each a figure with its pause and play button and
    what it says. A picture on a box sits in the square Graphviz kept for it, its control drawn in the corner. Whether
    one moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
@@ -1240,6 +1257,11 @@ details.thoughtknot-style > summary {
 .thoughtknot-flow-legend .thoughtknot-flow-icon {
   color: var(--gn-text-normal);
   font-weight: var(--gn-font-weight-bold);
+}
+/* Its pause for the card's moving links, so nothing runs past five seconds without one (spec §69, WCAG 2.2.2) */
+.thoughtknot-flow-pause {
+  align-self: flex-start;
+  margin: 0 var(--gn-space-2);
 }
 .thoughtknot-walk-pace {
   display: flex;

@@ -54,6 +54,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'fold.back': 'Fold {label} back into one box.',
   'fold.zoom': 'Zoom to {label}.',
   'flow.legend': 'What the moving links mean',
+  'flow.pause': 'Pause moving links',
   'callout.label': 'Note: {words}',
   'strip.outside': 'outside the view',
   'redraw.drawing': 'Drawing again…',
