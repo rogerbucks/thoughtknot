@@ -12,7 +12,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { LaidMarks } from '../graphviz-marks.ts';
 import type { GraphShape } from '../types-shape.ts';
-import { groupedLayered } from './grouped.ts';
+import { groupedLayered, tidyRows } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { RESTARTS, TRUNK_LINK, viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
@@ -227,7 +227,10 @@ function laidBy(
   const { spacing, linkLength } = layoutOptions(options);
   let way = rankdir;
   if (pick.layout === 'layered') {
+    // a tree with no groups and no lanes is drawn as a tree: each parent at the middle of its children (tidy-tree.ts)
+    const tidy = pick.why === 'tree' && !groups.length && !bands?.size;
     const rowsOf = (w: 'LR' | 'TB') =>
+      (tidy ? tidyRows(shape, sizes, w, options) : undefined) ??
       groupedLayered(
         shape,
         sizes,
