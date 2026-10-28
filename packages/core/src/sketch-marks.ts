@@ -8,6 +8,7 @@
 //
 // Each mark is a picture to a screen reader, with what it is, its text and what it is pinned to. Host-free and pure.
 import { isolated } from './bidi.ts';
+import { boundsOf, hitAreas } from './hits.ts';
 import type { DrawMark } from './drawing-marks.ts';
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
@@ -17,10 +18,11 @@ import type { SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './spac
 import { STYLE_HUES } from './style-graph.ts';
 import { word } from './words.ts';
 
-/** One mark of a drawing, and the key of the block it sits on in space, when it is pinned. */
+/** One mark of a drawing, and, when it is pinned, the id of the mark it is pinned to and that mark's centre. */
 export interface SketchMark {
   mark: DrawMark;
   pin?: string;
+  centre?: MarkPoint;
 }
 
 /** How far a shape that wraps what it is pinned to stands off it, in pixels. */
@@ -69,9 +71,14 @@ export function sketchSaid(item: SketchItem, pinName?: string): string {
 
 /**
  * The marks of the drawings over a graph, placed against `marks`, the marks of its drawing in this view. Drawings pinned
- * to a thing the view leaves out are not drawn; `hidden` names them.
+ * to a thing the view leaves out are not drawn; `hidden` names them. `spot` turns the place of a drawing with no pin
+ * into the marks' own pixels. That matters where they are not the drawing's: a 3D view reads them inside its transform.
  */
-export function sketchMarks(sketch: Sketch, marks: readonly DrawMark[]): { pieces: SketchMark[]; hidden: string[] } {
+export function sketchMarks(
+  sketch: Sketch,
+  marks: readonly DrawMark[],
+  spot: (p: MarkPoint) => MarkPoint = (p) => p,
+): { pieces: SketchMark[]; hidden: string[] } {
   const pieces: SketchMark[] = [],
     hidden: string[] = [];
   for (const item of sketch.items) {
@@ -80,7 +87,7 @@ export function sketchMarks(sketch: Sketch, marks: readonly DrawMark[]): { piece
       hidden.push(item.id);
       continue;
     }
-    const [ox, oy] = on ? [on.x + on.width / 2, on.y + on.height / 2] : [0, 0];
+    const [ox, oy] = on ? [on.x + on.width / 2, on.y + on.height / 2] : spot([0, 0]);
     const common = {
       id: `sketch:${item.id}`,
       style: styleOf(item),
@@ -88,7 +95,7 @@ export function sketchMarks(sketch: Sketch, marks: readonly DrawMark[]): { piece
       role: 'picture' as const,
       name: sketchSaid(item, on?.name),
     };
-    const pin = on ? { pin: on.key } : {};
+    const pin = on ? { pin: on.key, centre: [ox, oy] as MarkPoint } : {};
     const at = (p: MarkPoint): MarkPoint => [ox + item.x + p[0], oy + item.y + p[1]];
     if (item.kind === 'Text') {
       const mark: DrawMark = {
@@ -156,21 +163,24 @@ function outlineOf(m: DrawMark & { kind: 'box' }): MarkPoint[] {
 
 /**
  * The drawings lifted into a space (space-view.ts `spaceOf`). Each lies flat on the top of the block it is pinned to,
- * or on the ground when it has no pin. They join the space's own lines, words and arrowheads, so every painter in space
+ * where that block stands in the space. One with no pin lies on the ground. So it follows its thing in a view that
+ * spreads the things out afresh, as 2.5D does. They join the space's own lines, words and arrowheads, so every painter in space
  * paints them as it paints a link.
  */
 export function sketchInSpace(
   pieces: readonly SketchMark[],
   space: Pick<SpaceMarks, 'blocks'>,
 ): { lines: SpaceLine[]; labels: SpaceLabel[]; arrows: SpaceArrow[] } {
-  const tops = new Map<string, number>();
-  for (const b of space.blocks) tops.set(b.id, b.floor + b.tall);
+  const byId = new Map(space.blocks.map((b) => [b.id, b]));
   const lines: SpaceLine[] = [],
     labels: SpaceLabel[] = [],
     arrows: SpaceArrow[] = [];
-  for (const { mark: m, pin } of pieces) {
-    const up = (pin === undefined ? 0 : (tops.get(pin) ?? 0)) + LIFT;
-    const lift = (p: MarkPoint): Vec3 => [p[0], along(p[1]), up];
+  for (const { mark: m, pin, centre } of pieces) {
+    const on = pin === undefined ? undefined : byId.get(pin);
+    const up = (on ? on.floor + on.tall : 0) + LIFT;
+    // how far its block stands from where its thing is on the page, in the space's own directions
+    const [dx, dy] = on && centre ? [on.x + on.width / 2 - centre[0], on.y + on.depth / 2 - along(centre[1])] : [0, 0];
+    const lift = (p: MarkPoint): Vec3 => [p[0] + dx, along(p[1]) + dy, up];
     if (m.kind === 'link' || m.kind === 'box') {
       const line: SpaceLine = {
         id: m.id,
@@ -180,7 +190,13 @@ export function sketchInSpace(
       if (m.name) line.words = m.name;
       lines.push(line);
     } else if (m.kind === 'label')
-      labels.push({ id: m.id, style: m.style, at: [m.x, along(m.y), up + m.size / 2], text: m.text, size: m.size });
+      labels.push({
+        id: m.id,
+        style: m.style,
+        at: [m.x + dx, along(m.y) + dy, up + m.size / 2],
+        text: m.text,
+        size: m.size,
+      });
     else if (m.kind === 'arrowhead') {
       const back: MarkPoint = [m.x - Math.cos(m.angle) * m.size, m.y - Math.sin(m.angle) * m.size];
       arrows.push({ id: m.id, style: m.style, tip: lift([m.x, m.y]), back: lift(back), size: m.size });
@@ -234,4 +250,49 @@ export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): stri
       `<g data-sketch="${escaped(id)}" role="img"><title>${escaped(said.get(id) ?? '')}</title>${svgs.join('')}</g>`,
   );
   return `<g class="tk-sketch" role="group" aria-label="${escaped(word('sketch.layer'))}">${groups.join('')}</g>`;
+}
+
+/**
+ * The boxes and groups of a drawing as Graphviz wrote it, as marks in the units of its viewBox. They are what a
+ * drawing on it is pinned to and placed from. `keys` are the things' keys in the order drawn, node1 the first. Read from the SVG's text,
+ * so it needs no screen.
+ */
+export function drawnMarks(svg: string, keys: readonly string[]): DrawMark[] {
+  const areas = hitAreas(svg),
+    vb = areas.viewBox;
+  const marks: DrawMark[] = [];
+  const placed = (b: { x: number; y: number; width: number; height: number }) => ({
+    x: vb.x + b.x * vb.width,
+    y: vb.y + b.y * vb.height,
+    width: b.width * vb.width,
+    height: b.height * vb.height,
+  });
+  for (const s of areas.shapes) {
+    const key = s.kind === 'node' ? keys[Number(/^node(\d+)$/.exec(s.id)?.[1]) - 1] : undefined;
+    const b = key === undefined ? null : boundsOf(areas, s.id);
+    if (key !== undefined && b) marks.push({ id: s.id, kind: 'box', style: 'thing', of: key, ...placed(b) });
+  }
+  // a group's box: its title names it, and its outline is a polygon, placed as hits.ts places a box's
+  const graph = /<g\b[^>]*class="graph"[^>]*>/.exec(svg)?.[0] ?? '';
+  const nums = (t: string) => (t.match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? []).map(Number);
+  const [sx = 1, sy = sx] = nums(/scale\(([^()]*)\)/.exec(graph)?.[1] ?? '1');
+  const [tx = 0, ty = 0] = nums(/translate\(([^()]*)\)/.exec(graph)?.[1] ?? '0 0');
+  for (const [, body] of svg.matchAll(/<g\b[^>]*class="cluster"[^>]*>([\s\S]*?)<\/g>/g)) {
+    const title = /<title>([^<]*)<\/title>/.exec(body ?? '')?.[1];
+    const points = nums(/<polygon\b[^>]*\bpoints="([^"]*)"/.exec(body ?? '')?.[1] ?? '');
+    if (!title || points.length < 4) continue;
+    const xs = points.filter((_, i) => i % 2 === 0).map((x) => sx * (x + tx)),
+      ys = points.filter((_, i) => i % 2 === 1).map((y) => sy * (y + ty));
+    const [x, y] = [Math.min(...xs), Math.min(...ys)];
+    marks.push({
+      id: `g:${title}`,
+      kind: 'group',
+      style: 'group',
+      x,
+      y,
+      width: Math.max(...xs) - x,
+      height: Math.max(...ys) - y,
+    });
+  }
+  return marks;
 }
