@@ -15,6 +15,7 @@ import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { LAYOUT_STEPS } from './cheaper.ts';
 import type { LayoutStep } from './cheaper.ts';
+import type { Pick as LayoutPick } from './pick.ts';
 
 /** A box line of the layout source: its indent and its key, before its attributes. */
 const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
@@ -77,6 +78,21 @@ const KINDS_LINE = /^\s*\/\/ layout kinds (\{.*\})$/m;
 /** The line of a layout source that says kinds are to get no lane each. */
 const NO_LANES_LINE = /^\s*\/\/ layout lanes off$/m;
 
+/** The line of a layout source that carries each thing's spot, as a plug-in's layout gave it. */
+const PLACED_LINE = /^\s*\/\/ layout spots (\{.*\})$/m;
+
+/** Each thing's spot as a plug-in's layout gave it, as `ownSource` wrote them into the source `dot` (layout_plugins). */
+export function placedIn(dot: string): Map<string, [number, number]> {
+  try {
+    const placed = JSON.parse(PLACED_LINE.exec(dot)?.[1] ?? '{}') as Record<string, unknown>;
+    const pair = (v: unknown): v is [number, number] =>
+      Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === 'number' && Number.isFinite(n));
+    return new Map(Object.entries(placed).flatMap(([k, v]) => (pair(v) ? [[k, v] as const] : [])));
+  } catch {
+    return new Map();
+  }
+}
+
 /** The line of a layout source that says the cheaper step it is laid out by, after a layout that was slow. */
 const STEP_LINE = /^\s*\/\/ layout step (\w+)$/m;
 
@@ -111,7 +127,7 @@ export function optionsIn(dot: string): LayoutOptions {
 /**
  * `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. `options`
  * and each thing's `kinds` are written in as comments, so a source laid out another way is another source. So is
- * the cheaper `step` it is laid out by.
+ * the cheaper `step` it is laid out by, and each thing's spot `placed` by a plug-in's layout.
  */
 export function ownSource(
   dot: string,
@@ -119,6 +135,7 @@ export function ownSource(
   kinds: ReadonlyMap<string, string> = new Map(),
   lanes = true,
   step?: LayoutStep,
+  placed: Readonly<Record<string, readonly [number, number]>> = {},
 ): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
@@ -135,6 +152,7 @@ export function ownSource(
   if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);
   if (!lanes) lines.splice(3, 0, '  // layout lanes off');
   if (step) lines.splice(3, 0, `  // layout step ${step}`);
+  if (Object.keys(placed).length) lines.splice(3, 0, `  // layout spots ${JSON.stringify(placed)}`);
   return lines.join('\n');
 }
 
@@ -208,7 +226,8 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
  * are the layout source's groups (`groupsIn`), each drawn as a box round its things. `kinds` are each thing's kind.
  * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
  * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes). A `step` is said with it, and a
- * step of rows or a grid lays it out that way (layout_never_text).
+ * step of rows or a grid lays it out that way (layout_never_text). `placed` is each thing's spot from a plug-in's
+ * layout, where the options choose one. Where it gave too few, the pick says the layout was missed.
  */
 export function ownLaid(
   laid: LaidMarks,
@@ -218,11 +237,12 @@ export function ownLaid(
   kinds: ReadonlyMap<string, string> = new Map(),
   lanes = true,
   step?: LayoutStep,
+  placed?: ReadonlyMap<string, [number, number]>,
 ): { marks: LaidMarks; shown: PickShown } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
   const cheaper = step === 'own' ? undefined : step;
-  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined, cheaper);
+  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined, cheaper, placed);
   const { spots, via, boxes, rankdir: way, pick, parts, loose, bands } = drawn;
   const seen = kindsOf(marksShape(laid.marks).shape, kinds);
   return {
@@ -231,9 +251,14 @@ export function ownLaid(
       ...{ why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose, lanes: bands.size > 0 },
       ...(bands.size ? { bands: Object.fromEntries(bands) } : {}),
       ...(step ? { step } : {}),
+      ...chosenShown(layoutOptions(options).strategy, pick),
     },
   };
 }
+
+/** The layout the person chose, `strategy`, as the pick says it; and whether it was missed, so the shape picked. */
+const chosenShown = (strategy: string, pick: LayoutPick): Pick<PickShown, 'chosen' | 'missed'> =>
+  strategy === 'auto' ? {} : { chosen: strategy, ...(pick.why === 'chosen' ? {} : { missed: true }) };
 
 /** The drawing Graphviz measured in `laid`, as `ownLaid` draws it, as marks. */
 export const ownMarks = (...args: Parameters<typeof ownLaid>): LaidMarks => ownLaid(...args).marks;

@@ -29,8 +29,8 @@ const NAMES = {
 };
 
 describe('the plug-in interface', () => {
-  test('it is versioned, and its extension points are the data exports, the theme, storage, commands, panels, graph sources and steps, and AI providers', () => {
-    assert.equal(PLUGIN_API, '1.1');
+  test('it is versioned, and its extension points are the data exports, the theme, storage, commands, panels, graph sources and steps, AI providers, diagram types and layouts', () => {
+    assert.equal(PLUGIN_API, '1.2');
     assert.deepEqual(EXTENSION_POINTS, [
       'exports',
       'theme',
@@ -41,6 +41,7 @@ describe('the plug-in interface', () => {
       'steps',
       'ai',
       'diagrams',
+      'layouts',
     ]);
   });
 

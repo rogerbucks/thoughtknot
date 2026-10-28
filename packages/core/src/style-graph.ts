@@ -1,8 +1,7 @@
-// The style graph's shape (editor spec §2, §6, §7, §14, §15). It is what a style block holds once read, and the words
-// each part may use. It holds nudges, the properties shown inline, and looks for views and paths. It holds whether a
-// view fades or hides what is outside it, and how a view was shown. It holds where arrowheads are hidden, the diagram
-// type chosen, how links move and the pictures on boxes (§18). A style graph is written in the same notation as the
-// data, in its own block, and never in the data.
+// The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read, and its words. It
+// holds nudges, properties shown inline, looks for views and paths, and whether a view fades or hides what is outside.
+// It holds how a view was shown, hidden arrowheads, the diagram type, how links move and pictures on boxes (§18). It is
+// written in the same notation as the data, in its own block, never in the data.
 import type { TimelineChoice } from './timeline.ts';
 import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
@@ -134,6 +133,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
     'layout_direction',
     'shape',
     'pinned',
+    'layout_strategy',
   ],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show', 'centre'],
