@@ -34,6 +34,28 @@ describe('a tidy tree', () => {
   });
 
   // proves: layout_tidy_tree
+  test('runs each link from its parent’s row to its child’s, so a chain is one straight line', () => {
+    const chain = tidyTree(
+      shapeOf([
+        ['p', 'q'],
+        ['q', 's'],
+      ]),
+      new Map([['q', [120, 60]]]),
+      'LR',
+    );
+    for (const [from, to] of [
+      ['p', 'q'],
+      ['q', 's'],
+    ]) {
+      const way = chain.via.get(`${from}\n${to}`);
+      assert.equal(way.length, 2, `${from} to ${to} has its way`);
+      assert.ok(way[0][0] < way[1][0], 'from the row before to the row after');
+      assert.deepEqual([way[0][1], way[1][1]], [chain.spots.get(from)[1], chain.spots.get(to)[1]]);
+    }
+    assert.equal(chain.spots.get('p')[1], chain.spots.get('s')[1], 'one straight line');
+  });
+
+  // proves: layout_tidy_tree
   test('is how our engine draws a part that is a tree, and only that', () => {
     const laid = {
       marks: [...shapeOf(TREE).things.map((t) => box(t.key)), ...TREE.map(link)],

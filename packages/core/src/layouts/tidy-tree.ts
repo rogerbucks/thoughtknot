@@ -3,6 +3,7 @@
 // own, so no two links cross. A parent sits at the middle of its children. Children keep the order their links were
 // written in. Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
+import { viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
@@ -99,5 +100,15 @@ export function tidyTree(
     place(r, start);
     start += (span.get(r) as number) + gap;
   }
-  return { spots, via: new Map() };
+  // each link leaves its parent's row and comes into its child's row, as the layered rows draw it
+  const via = new Map<string, [number, number][]>();
+  const point = (k: string, side: 1 | -1): [number, number] => {
+    const r = row.get(k) as number;
+    const p: [number, number] = [0, 0];
+    p[along] = (rowAt[r] as number) + (side * (depth[r] as number)) / 2;
+    p[across] = (spots.get(k) as [number, number])[across] as number;
+    return p;
+  };
+  for (const [k, kids] of children) for (const c of kids) via.set(viaKey(k, c), [point(k, 1), point(c, -1)]);
+  return { spots, via };
 }
