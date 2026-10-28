@@ -12,6 +12,7 @@ import type { PictureBox } from './picture.ts';
 import type { Nudge } from './style-graph.ts';
 import type { TimelineOrder } from './timeline.ts';
 import type { Folding } from './untangle-fold.ts';
+import type { LayoutStep } from './layouts/cheaper.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -105,6 +106,8 @@ export interface GraphDrawing {
   straightFirst?: boolean;
   /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
   engine?: 'own';
+  /** The cheaper step it is laid out by, after a layout that ran out of time (§68, layout_never_text); none, as asked. */
+  step?: LayoutStep;
   /** False where kinds that link in order are not to get a lane each (§68, layout_kind_lanes). */
   kindLanes?: false;
   /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
