@@ -5,6 +5,7 @@
 //   The card's legend says each in words beside its icon (motion_not_alone).
 // - A view moves its own, and no link moves without a Flow (flow_in_style_graph).
 // - Under reduced motion no dot runs (motion_reduced_respected).
+// - Moving links have a pause, and a view preset that keeps still stops them as the device does (view_motion_safe).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
@@ -25,7 +26,8 @@ const noteOf = (...blocks) => ['# Trip', '', ...blocks.flatMap((b) => [fence(b),
 const linkOf = (el, n) => el.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === String(n));
 
 async function drawn(note, options = {}) {
-  const env = await load({ files: { [PATH]: note } });
+  const data = options.still ? { settings: { viewPreset: 'calm' } } : null;
+  const env = await load({ files: { [PATH]: note }, data });
   if (options.reduce)
     env.doc.defaultView.matchMedia = (q) => ({ media: q, matches: q === '(prefers-reduced-motion: reduce)' });
   const { el } = await show(env, note);
@@ -111,6 +113,54 @@ describe('under reduced motion', () => {
     } finally {
       env.uninstall();
     }
+  });
+});
+
+describe('motion is safe', () => {
+  const css = () => styles.replace(/\/\*[\s\S]*?\*\//g, '');
+  const DOT = STYLE("(f1:Flow {motion: 'dot', means: 'coffee goes this way'})");
+
+  // proves: view_motion_safe
+  test('the legend pauses the moving links of its card and plays them again, saying when they are held', async () => {
+    const { env, el } = await drawn(noteOf(TRIP, DOT));
+    try {
+      const card = el.querySelector('.thoughtknot-view');
+      const pause = el.querySelector('.thoughtknot-flow-pause');
+      assert.ok(pause, 'a pause beside the legend');
+      assert.equal(pause.getAttribute('aria-label'), 'Pause moving links');
+      assert.equal(pause.getAttribute('aria-pressed'), 'false');
+      pause.click();
+      assert.ok(card.classList.contains('thoughtknot-motion-paused'));
+      assert.equal(pause.getAttribute('aria-pressed'), 'true', 'pressed while they are held');
+      // the styles hold every moving line where it is while the card is paused
+      assert.match(
+        css(),
+        /\.thoughtknot-motion-paused \.thoughtknot-svg path\.thoughtknot-flow-runner[^{]*\{\s*animation-play-state: paused;/,
+      );
+      pause.click();
+      assert.ok(!card.classList.contains('thoughtknot-motion-paused'));
+      assert.equal(pause.getAttribute('aria-pressed'), 'false');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_motion_safe
+  test('a still preset stops every moving link as reduced motion does, and nothing is left to pause', async () => {
+    for (const options of [{ still: true }, { reduce: true }]) {
+      const { env, el } = await drawn(noteOf(TRIP, DOT), options);
+      try {
+        assert.ok(!el.querySelector('.thoughtknot-flow-pause'), `no pause with ${JSON.stringify(options)}`);
+        assert.ok(el.querySelector('.thoughtknot-flow-legend'), 'the words stay');
+      } finally {
+        env.uninstall();
+      }
+    }
+    assert.match(
+      css(),
+      /body\.thoughtknot-still \.thoughtknot-svg path\.thoughtknot-flow-runner[^{]*\{\s*animation: none;/,
+    );
+    assert.match(css(), /body\.thoughtknot-still \.thoughtknot-svg path\.thoughtknot-path-runner \{\s*display: none;/);
   });
 });
 

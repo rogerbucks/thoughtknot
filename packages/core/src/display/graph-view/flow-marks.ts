@@ -2,9 +2,14 @@
 // style graph moves is marked by class for `styles.css` to run its dashes, or a dot along a copy of its line. So the
 // line itself stays. Each is named for a screen reader with its movement and what it means. The card's legend says each
 // in words beside its icon. The movement is the style sheet's alone, stopped under reduced motion, where the dot is
-// hidden.
+// hidden. It never runs past five seconds without a pause: the legend has one for the card (view_motion_safe).
 import { flowLegend, flowSaid, word } from '@thoughtknot/core';
 import type { FlowLink } from '@thoughtknot/core';
+import { button } from '../button.ts';
+import { reducedMotion } from './details-nav.ts';
+
+/** The class on a card whose moving links its person paused: `styles.css` holds them where they are. */
+export const PAUSED_CLASS = 'thoughtknot-motion-paused';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -73,4 +78,26 @@ export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], f
     li.createSpan({ cls: 'thoughtknot-flow-icon', text: e.icon, attr: { 'aria-hidden': 'true' } });
     li.appendText(` ${flowSaid(e)}`);
   }
+  // nothing moves under reduced motion or a still preset, so there is nothing to pause
+  const card = root.parentElement;
+  if (card && !reducedMotion(root.win)) pauseButton(root, card);
+}
+
+/**
+ * The pause of a card's moving links: a toggle, pressed while they are held, so its name stays the same. It is kept on
+ * the card, so drawing it again keeps the choice.
+ */
+function pauseButton(root: HTMLElement, card: HTMLElement): void {
+  const b = button(
+    root,
+    word('flow.pause'),
+    'pause',
+    () => {
+      card.toggleClass(PAUSED_CLASS, !card.hasClass(PAUSED_CLASS));
+      b.setAttribute('aria-pressed', String(card.hasClass(PAUSED_CLASS)));
+    },
+    word('flow.pause'),
+  );
+  b.addClass('thoughtknot-flow-pause');
+  b.setAttribute('aria-pressed', String(card.hasClass(PAUSED_CLASS)));
 }
