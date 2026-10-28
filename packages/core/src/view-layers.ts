@@ -4,11 +4,12 @@
 // - dimensions: what a Diagram orders and lays its things by (`order`, `by`, `relationship`, `centre`);
 // - filters: what a Filter keeps (filter-saved.ts), and which things a Diagram shows (`show`);
 // - strategy: the layout options a Shown keeps (`layout_strategy` and its variables), and how Links are routed;
-// - projection: the Diagram's type, and the Render's space: flat, 2.5D or 3D (render-choice.ts);
+// - projection: the Diagram's type, the Render's space: flat, 2.5D or 3D (render-choice.ts), and its lens (lenses.ts);
 // - formatting: the Looks, Shows, Pictures, Arrows and Flows, which colour, show and move links, never a thing;
 // - painter: the Render's painter.
 // A view's own lines win over the whole graph's. The same six layers hold in 2D and in 3D. Host-free and pure.
 import type { FilterKeep } from './filter-saved.ts';
+import type { Lens } from './lenses.ts';
 import { savedFilterFor } from './filter-saved.ts';
 import { layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
@@ -32,8 +33,8 @@ export interface ViewLayers {
   filters: { keep?: FilterKeep; show?: TimelineShow };
   /** How it is laid out: the strategy and its variables, and how its links are routed and merged. */
   strategy: { options: LayoutOptions; routing: Routing; merge: boolean };
-  /** How its places are shown: its diagram type, or a plug-in's by its whole name, and its space. */
-  projection: { type: string; space: Space };
+  /** How its places are shown: its diagram type, or a plug-in's by its whole name, its space and its lens. */
+  projection: { type: string; space: Space; lens: Lens };
   /** How its things and links look, without moving one: the lines of the style graph that hold in it. */
   formatting: { looks: Look[]; shows: Show[]; pictures: Picture[]; arrows: Arrows[]; flows: Flow[] };
   /** What paints it. */
@@ -58,7 +59,7 @@ export function viewLayers(style: StyleGraph, view?: string): ViewLayers {
       options: layoutOptions(view === undefined ? undefined : style.shown.get(view)?.layout),
       ...linksOf(style, view),
     },
-    projection: { type: d?.plugin ?? d?.type ?? 'network', space: render.space },
+    projection: { type: d?.plugin ?? d?.type ?? 'network', space: render.space, lens: render.lens },
     formatting: {
       looks: style.looks.filter((l) => view !== undefined && l.view === view),
       shows: holds(style.shows),

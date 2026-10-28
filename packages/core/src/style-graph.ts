@@ -130,7 +130,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Picture: ['property', 'kind', 'thing', 'view'],
   Filter: ['keep', 'view'],
   Preset: ['preset'],
-  Render: ['space', 'painter', 'view'],
+  Render: ['space', 'painter', 'lens', 'view'],
 };
 
 /** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */

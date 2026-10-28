@@ -180,6 +180,10 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hint.groups': 'Each group shows as one box until you open it.',
   'view.hint.merge': 'Links between the same two groups share one line.',
   'view.hint.lanes': 'Kinds that link in order each get a lane, or a plane in space.',
+  'view.lens': 'Lens',
+  'view.lens.none': 'None',
+  'view.lens.fisheye': 'Fisheye',
+  'view.hint.lens': 'A fisheye enlarges what is round the pointer, or the selection, and keeps the rest in view.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
   'view.more': 'More choices',
