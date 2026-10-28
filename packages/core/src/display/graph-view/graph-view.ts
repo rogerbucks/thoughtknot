@@ -23,6 +23,7 @@ import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
 import { Taps, boxIn, type Target } from './taps';
+import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
 import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip';
@@ -62,14 +63,14 @@ export class GraphView extends Lifecycle {
   /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
   private switching: ViewSwitching | null = null;
   private unloaded = false;
-  /** Where the legend of moving links is (§7). */
-  private legendSlot!: HTMLElement;
+  private legendSlot!: HTMLElement; // where the legend of moving links is (§7)
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
     () => this.o.diagram?.choice,
+    () => this.o.switches?.state.layout,
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
@@ -208,9 +209,8 @@ export class GraphView extends Lifecycle {
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
     if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
-    // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
-    if (d) describeDrawing(root, this.viewport, d);
+    if (d) describeDrawing(root, this.viewport, d); // the drawing as sentences, for screen readers (spec §11)
     this.detailsEl = root.createDiv({ cls: 'thoughtknot-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
     const sw = this.switching;
@@ -241,14 +241,12 @@ export class GraphView extends Lifecycle {
     const { viewport, zoom, sel, details, taps, svg, o, fullscreen: full } = this,
       { info } = this.aids;
     const open = (t: Target, x?: boolean) => this.open(t, x),
+      focus = (key: string) => boxIn(this.svg, key)?.focus({ preventScroll: true }),
       unfold = (fold: string, byKey?: boolean) =>
-        this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
+        foldInPlace(this.svg, this.zoom, fold, this.switching, byKey && focus);
     const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
     bindViewportEvents({ ...host, space: this.spaces });
-    const observer = new ResizeObserver(() => {
-      this.zoom.resize(this.zoomSize());
-      this.aids.placeDetails();
-    });
+    const observer = new ResizeObserver(() => (this.zoom.resize(this.zoomSize()), this.aids.placeDetails()));
     observer.observe(this.viewport);
     if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)
     this.register(() => observer.disconnect());
@@ -290,6 +288,7 @@ export class GraphView extends Lifecycle {
     b.empty();
     setIcon(b, on ? 'book-open' : 'pencil');
     b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
+    b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
   }
 
   override onunload(): void {

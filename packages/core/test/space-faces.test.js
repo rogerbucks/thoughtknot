@@ -113,7 +113,7 @@ test('a long name wraps and shrinks to stay inside; one that cannot be read ther
   const space = balls([ball('a', 0, 40, 'A rather long name for one small thing')]);
   const far = zoomBy(orbitFit(space, W / H), 0.1);
   assert.deepEqual(facesOnScreen(space, look(space, far), W, H), [], 'far off, the ball is too small to hold it');
-  const near = zoomBy(orbitFit(space, W / H), 8);
+  const near = zoomBy(orbitFit(space, W / H), 1.5);
   const [face] = facesOnScreen(space, look(space, near), W, H);
   assert.ok(face && face.size >= READABLE_LEAST, 'near, it shows at a readable size');
 });
@@ -154,5 +154,46 @@ test("in 3D the frame's names are on the things; a link's words, and a picked na
     plain.labels.map((l) => l.id),
     ['w'],
     'a name that fits nowhere floats only when picked',
+  );
+});
+
+// proves: space_text_on_face
+test('a box beside the camera, reaching behind it, still hides the names behind it', () => {
+  const block = (key, x, y, width, depth) => ({
+    id: key,
+    style: 'thing',
+    of: key,
+    x,
+    y,
+    width,
+    depth,
+    floor: 0,
+    tall: 200,
+  });
+  const name = (key) => ({ id: `${key}\nname`, style: 'thing.name', at: [0, 0, 0], text: key, size: 14, of: key });
+  const space = {
+    blocks: [block('wall', 20, -1000, 980, 2000), block('b', 250, 550, 100, 100)],
+    lines: [],
+    labels: [name('wall'), name('b')],
+    arrows: [],
+    least: [-1000, -1000, 0],
+    most: [1000, 1000, 200],
+  };
+  const eye = [0, 0, 100],
+    t = [300, 600, 100];
+  const d = Math.hypot(t[0] - eye[0], t[1] - eye[1]);
+  const orbit = { target: t, distance: d, turn: Math.atan2(eye[1] - t[1], eye[0] - t[0]), tilt: 0 };
+  const m = look(space, orbit);
+  assert.equal(projectPoint(m, [20, -1000, 0], W, H), null, 'the wall reaches behind the camera');
+  assert.ok(projectPoint(m, [300, 550, 100], W, H), 'b is in front of the camera');
+  assert.deepEqual(
+    facesOnScreen(space, m, W, H).map((f) => f.id),
+    [],
+  );
+  space.blocks[0] = block('wall', 2000, -1000, 980, 2000);
+  assert.deepEqual(
+    facesOnScreen(space, m, W, H).map((f) => f.id),
+    ['b\nname'],
+    'with the wall moved away, b shows its name',
   );
 });

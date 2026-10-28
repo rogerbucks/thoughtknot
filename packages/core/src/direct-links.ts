@@ -66,7 +66,12 @@ export function directLinks(
   );
   for (const [k, b] of at ?? []) {
     const p = boxes.get(k);
-    if (p) [p.x, p.y] = b;
+    if (!p) continue;
+    [p.x, p.y] = b;
+    // the group our engine placed it in holds it, not the one round its stand-in spot, so no box is drawn inside out
+    const round = groupRound(groups, { x: p.x - p.hw, y: p.y - p.hh, width: 2 * p.hw, height: 2 * p.hh });
+    if (round) p.inside = round;
+    else delete p.inside;
   }
   const groupMoved =
     !at && crowded(ends, [...boxes.values()])
@@ -146,7 +151,9 @@ export function directLinks(
       count = many.get(pair) ?? 1;
     nth.set(pair, i + 1);
     const side = a.key < b.key ? 1 : -1;
-    const fixed = count > 1 ? { fixed: (i - (count - 1) / 2) * BOW * side } : {};
+    // with our own engine, a trunk's links run as one into it and out of it, as its one line does
+    const merged = at !== undefined && (a.key.startsWith('trunk: ') || b.key.startsWith('trunk: '));
+    const fixed = count > 1 ? { fixed: merged ? 0 : (i - (count - 1) / 2) * BOW * side } : {};
     const trunk = a.key.startsWith('trunk: ') && b.key.startsWith('trunk: ') ? { avoid: walls } : {};
     toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed, ...trunk });
   }

@@ -19,6 +19,8 @@ import type { GroupBy } from './group-by.ts';
 import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
+import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 
 /** The switches, in the order the View menu lists them. */
 export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge', 'engine'] as const;
@@ -66,6 +68,14 @@ export function startingSwitches(
   // the engine switch is a preview, never saved with a view
   for (const s of VIEW_SWITCHES) if (s !== 'engine' && saved?.[s] !== undefined) start[s] = saved[s] === 'on';
   return start;
+}
+
+/**
+ * How the layout of a graph, or of `view`, starts spacing it (§53, layout_saved_with_view). It is as a view saved as
+ * shown wrote it, else as each layout lays out alone.
+ */
+export function startingLayout(style?: Pick<StyleGraph, 'shown'>, view?: string): LayoutOptions {
+  return layoutOptions(view === undefined ? undefined : style?.shown.get(view)?.layout);
 }
 
 /** The scale below which a link's label is drawn under `READABLE_PX` pixels, too small to read (untangle_labels). */
@@ -129,6 +139,17 @@ function groupsOf(d: GraphDrawing, keys: readonly string[], edges: readonly Focu
 }
 
 /**
+ * The rungs of the ladder of detail (cluster_detail_ladder). Roger, 26 Oct 2026: "we need to sort out clusters and
+ * layers". One ladder stands for three switches. The overview shows each group as one box, its links bundled. Groups
+ * shows every thing, in its group's box, its links still bundled. All shows every thing and every link apart.
+ */
+export const DETAIL_LEVELS = ['overview', 'groups', 'all'] as const;
+/** A rung of the ladder of detail. */
+export type DetailLevel = (typeof DETAIL_LEVELS)[number];
+/** A drawing of more things than this, in two or more groups, opens as its overview, until the person turns it. */
+export const OVERVIEW_THINGS = 80;
+
+/**
  * One card's switches, and the hubs and groups opened since they were folded. They are the drawing's alone, never
  * written to the note. It folds a styled drawing for its layout (`folded`). It keeps the plan it last made, for what a
  * tap on a stub or a box opens.
@@ -144,14 +165,20 @@ export class ViewState {
   private readonly openedBundles = new Set<string>();
   /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
   private mergeTurned = false;
+  /** Whether a big grouped drawing has been folded to its overview once, or the person turned groups folded. */
+  private overviewChosen = false;
   /** What the things are grouped by, from the View menu: as written or found until the person picks (untangle_group_by). */
   groupBy: GroupBy | undefined;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
   private readonly only = new WeakMap<object, Kept>();
 
-  /** For a card starting with these switches. */
-  constructor(start: ViewSwitches) {
+  /** How the layout spaces the graph, from the View menu (§53, layout_saved_with_view). */
+  layout: LayoutOptions;
+
+  /** For a card starting with these switches, and laid out as `layout` says. */
+  constructor(start: ViewSwitches, layout: LayoutOptions = DEFAULT_LAYOUT_OPTIONS) {
     this.switches = { ...start };
+    this.layout = { ...layout };
   }
 
   /**
@@ -162,6 +189,7 @@ export class ViewState {
     if (this.switches[s] === on) return false;
     this.switches[s] = on;
     if (s === 'merge') this.mergeTurned = true;
+    if (s === 'groups') this.overviewChosen = true;
     if (s === 'hubs') {
       this.openedHubs.clear();
       this.foldedHubs.clear();
@@ -169,6 +197,22 @@ export class ViewState {
     if (on && s === 'groups') this.openedGroups.clear();
     if (s === 'merge') this.openedBundles.clear();
     return s !== 'labels';
+  }
+
+  /** The rung of the ladder of detail the switches stand on. */
+  get detail(): DetailLevel {
+    return this.switches.groups ? 'overview' : this.switches.merge || this.switches.hubs ? 'groups' : 'all';
+  }
+
+  /** Steps to the rung `level`, setting its switches as one. True when the drawing must be laid out again. */
+  toDetail(level: DetailLevel): boolean {
+    this.overviewChosen = true;
+    if (level === this.detail) return false;
+    const on = { overview: [true, true], groups: [false, true], all: [false, false] }[level];
+    this.turn('groups', on[0] as boolean);
+    this.turn('merge', on[1] as boolean);
+    if (level === 'all') this.turn('hubs', false);
+    return true;
   }
 
   /** Opens a hub's, a group's or a bundle's fold: its links, or its things, drawn again. */
@@ -209,6 +253,11 @@ export class ViewState {
     const { groups, found, instead } = groupsOf(d, keys, edges, this.groupBy);
     // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
     if (found.length && !this.mergeTurned) this.switches.merge = true;
+    // a big grouped drawing opens as its overview, once, until the person turns it (cluster_detail_ladder)
+    if (!this.overviewChosen && groups.length > 1) {
+      this.overviewChosen = true;
+      if (keys.length > OVERVIEW_THINGS) [this.switches.groups, this.switches.merge] = [true, true];
+    }
     this.plan = foldPlan(keys, edges, groups, {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
@@ -224,7 +273,8 @@ export class ViewState {
     const { folding: _was, ...rest } = d;
     const kept = instead ? (d.nudges ?? []).filter((n) => n.word !== 'group') : (d.nudges ?? []);
     const grouped = found.length || instead ? { ...rest, nudges: [...kept, ...found] } : rest;
-    const drawn = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
+    const engined = this.switches.engine ? { ...grouped, engine: 'own' as const } : grouped;
+    const drawn = isDefaultLayout(this.layout) ? engined : { ...engined, layoutOptions: { ...this.layout } };
     return plan ? { ...drawn, folding: plan } : drawn;
   }
 

@@ -26,10 +26,17 @@ export const remembered: { state: SheetState; place: DetailsPlace; up: number | 
 /** Whether what the host kept has been read yet: once, before the first details open. */
 let read = false;
 
-/** What the host kept of the last place, size and state, read into `remembered` once; anything not valid is left out. */
-export function readKept(): void {
+/** How wide a window is, at least, for the details to open at its side until a place is chosen (sheet_side_wide). */
+const WIDE_WINDOW = 1024;
+
+/**
+ * What the host kept of the last place, size and state, read into `remembered` once; anything not valid is left out.
+ * Where nothing was kept, a window `width` wide enough opens the details at its side, so the drawing keeps its height.
+ */
+export function readKept(width = 0): void {
   if (read) return;
   read = true;
+  if (width >= WIDE_WINDOW) remembered.place = 'end';
   const k = keptLayout()?.saved() as Partial<Record<keyof typeof remembered, unknown>> | null | undefined;
   if (!k || typeof k !== 'object') return;
   if (k.state === 'restored' || k.state === 'minimised') remembered.state = k.state;

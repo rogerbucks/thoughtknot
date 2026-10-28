@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import {
   between,
   fingerTurn,
+  pinchBy,
+  tiltsTogether,
+  zoomToward,
   fromAbove,
   KEY_STEP,
   ZOOM_STEP,
@@ -14,11 +17,14 @@ import {
   turnRound,
   twistBy,
   twistOf,
+  touchesStay,
   twoFingers,
 } from '../src/space-controls.ts';
 import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
+
+const PIVOT = [0, 0, 0];
 
 test('a drag across moves the view over the floor, and what was under the pointer follows it', () => {
   const moved = panBy(ORBIT, 100, 0, 600);
@@ -173,4 +179,104 @@ test('the view starts from straight above, the drawing flat with its top up, and
     mid = between(above, to, 0.5).tilt - above.tilt;
   assert.ok(Math.abs(mid - (to.tilt - above.tilt) / 2) < 1e-9, 'half way at half time');
   assert.ok(Math.abs(early) < Math.abs((to.tilt - above.tilt) * 0.1), 'it starts gently');
+});
+
+test('a drag right turns the near side right, the right way up and upside down alike', () => {
+  for (const tilt of [0.9, 2.2]) {
+    const o = { ...ORBIT, tilt },
+      side = Math.cos(tilt) > 0 ? 1 : -1;
+    const near = [200 * side * Math.cos(o.turn), 200 * side * Math.sin(o.turn), 0];
+    const at = (v) => projectPoint(spaceMatrix(v, 1, 4000), near, 600, 600);
+    assert.ok(at(turnRound(o, 50, 0, [0, 0, 0])).x > at(o).x + 20, `tilt ${tilt}`);
+  }
+});
+
+test('zooming toward a point keeps what is under it under it, from any side', () => {
+  for (const tilt of [0.9, 2.2]) {
+    const o = { ...ORBIT, tilt },
+      aspect = 1.5,
+      [nx, ny] = [0.6, -0.4];
+    const eye = eyeOf(o);
+    // the point of the plane through the target, square to the way the camera looks, which is under the pointer
+    const matrix = spaceMatrix(o, aspect, 4000);
+    const f = o.target.map((v, i) => v - eye[i]);
+    assert.ok(Math.abs(Math.hypot(...f) - o.distance) < 1e-6);
+    const sees = (m, p) => projectPoint(m, p, 900, 600);
+    // find that point by search along the plane through the target: it is the one that projects to the pointer
+    const want = { x: ((nx + 1) / 2) * 900, y: ((1 - ny) / 2) * 600 };
+    const grid = [];
+    for (let a = -800; a <= 800; a += 20) for (let b = -800; b <= 800; b += 20) grid.push([a, b]);
+    const ray = grid
+      .map(([a, b]) => [o.target[0] + a, o.target[1] + b, 0])
+      .map((p) => ({ p, s: sees(matrix, p) }))
+      .filter((c) => c.s)
+      .sort((x, y) => Math.hypot(x.s.x - want.x, x.s.y - want.y) - Math.hypot(y.s.x - want.x, y.s.y - want.y))[0];
+    const zoomed = zoomToward(o, 2, nx, ny, aspect);
+    const was = sees(matrix, ray.p),
+      now = sees(spaceMatrix(zoomed, aspect, 4000), ray.p);
+    assert.ok(zoomed.distance < o.distance);
+    assert.ok(Math.abs(was.x - want.x) < 40, 'the search found the pointer');
+    // that point stays near the pointer after zooming, far nearer than if it zoomed on the middle
+    const middle = sees(spaceMatrix(zoomBy(o, 2), aspect, 4000), ray.p);
+    assert.ok(
+      Math.hypot(now.x - was.x, now.y - was.y) < Math.hypot(middle.x - was.x, middle.y - was.y) / 2,
+      `tilt ${tilt}`,
+    );
+  }
+  const o = ORBIT;
+  assert.deepEqual(zoomToward(o, 2, 0, 0, 1).target, o.target);
+});
+
+test('two fingers pinching move, zoom and twist the view in one go, toward their middle', () => {
+  const was = [
+      { x: 400, y: 250 },
+      { x: 500, y: 250 },
+    ],
+    spread = [
+      { x: 350, y: 250 },
+      { x: 550, y: 250 },
+    ];
+  const moved = pinchBy(ORBIT, was, spread, { left: 0, top: 0 }, 900, 600, PIVOT);
+  assert.ok(moved.distance < ORBIT.distance, 'spread apart zooms in');
+  assert.equal(moved.turn, ORBIT.turn, 'no twist');
+  assert.notDeepEqual(moved.target, ORBIT.target, 'toward their middle, off the screen centre');
+  assert.equal(pinchBy(ORBIT, was, was, { left: 0, top: 0 }, 900, 600, PIVOT).distance, ORBIT.distance);
+});
+
+// stuck_touch (Roger, 27 Oct 2026): a lift that never arrived must not leave a finger tracked
+test('the touches really down settle the pointers tracked, keeping the newest', () => {
+  const seen = {};
+  const el = { addEventListener: (type, fn) => (seen[type] = fn) };
+  const down = new Map([
+    [1, 'old'],
+    [2, 'new'],
+  ]);
+  touchesStay(el, down);
+  const stopped = [];
+  seen.touchstart({ touches: { length: 1 }, stopPropagation: () => stopped.push('start') });
+  assert.deepEqual([...down.keys()], [2], 'one finger down: only the newest is kept');
+  seen.touchend({ touches: { length: 0 }, stopPropagation: () => stopped.push('end') });
+  assert.equal(down.size, 0, 'none down: none kept');
+  assert.deepEqual(stopped, ['start', 'end'], 'and the host never takes a touch');
+});
+
+// proves: space_two_finger_tilt
+test('two fingers going up together tilt the view one finger at a time, as one finger does; spreading or sideways do not', () => {
+  const at = { left: 0, top: 0 };
+  const pair = (y0, y1 = y0, gap = 100, x = 400) => [
+    { x, y: y0 },
+    { x: x + gap, y: y1 },
+  ];
+  // the app moves one finger per event: the left, then the right
+  const half = pinchBy(ORBIT, pair(300), pair(295, 300), at, 900, 600, PIVOT);
+  assert.ok(half.tilt !== ORBIT.tilt, 'one finger moving still tilts');
+  assert.deepEqual(half.target, ORBIT.target);
+  assert.equal(half.distance, ORBIT.distance);
+  const both = pinchBy(ORBIT, pair(300), pair(290), at, 900, 600, PIVOT);
+  assert.equal(both.tilt, turnRound(ORBIT, 0, -10, PIVOT).tilt, 'as one finger going the same way, round the pivot');
+  assert.ok(!tiltsTogether(pair(300), pair(300, 300, 140)), 'spreading is a zoom');
+  assert.ok(!tiltsTogether(pair(300), pair(298, 298, 100, 440)), 'mostly sideways moves across');
+  let over = ORBIT;
+  for (let i = 0; i < 60; i++) over = pinchBy(over, pair(300), pair(310), at, 900, 600, PIVOT);
+  assert.ok(over.tilt > Math.PI / 2 || over.tilt < -Math.PI / 2, 'it runs on past straight down or up');
 });

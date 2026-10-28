@@ -1,6 +1,7 @@
 // Diagram types on a drawing's card (editor spec §15).
 // - Diagram type lists the seven types. Each that fits can be chosen. Each that does not says why.
 // - The suggested one says so, and nothing is drawn as it until chosen.
+// - Types and views are one grid of tiles: drawn now first, then suggested, and what does not fit last (type_one_grid).
 // - Choosing writes the type into the style graph, for the graph or the view the card shows.
 // - A chosen type that has stopped fitting is said, with the nearest that fits offered. The graph is drawn as a network
 //   meanwhile.
@@ -11,7 +12,7 @@ import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
-import { show } from './host/view-notes.js';
+import { show, styles } from './host/view-notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { installWorkers } from './host/workers.js';
 
@@ -64,9 +65,9 @@ describe('Diagram type on a card', () => {
         ['Tree', true, 'suggested: each thing has at most one parent along MANAGES'],
         ['Flow', true, ''],
         ['Radial', true, ''],
-        ['Lanes', false, 'lanes need things of two kinds or more'],
         ['Timeline', true, ''],
         ['Table', true, ''],
+        ['Lanes', false, 'lanes need things of two kinds or more'],
       ]);
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
     } finally {
@@ -158,15 +159,19 @@ describe('the Diagram type list looks native', () => {
             .filter((c) => li.classList.contains(c))
             .join(' '),
         );
+      // drawn now first, then suggested, then the rest that fit, and last what does not, in the order read (type_one_grid)
       assert.deepEqual(marks, [
         'thoughtknot-type-now',
         'thoughtknot-type-suggested',
         '',
         '',
+        '',
+        '',
         'thoughtknot-type-unfit',
-        '',
-        '',
       ]);
+      const unfit = el.querySelector('.thoughtknot-type-list li.thoughtknot-type-unfit');
+      assert.equal(unfit.getAttribute('title'), unfit.querySelector('.thoughtknot-type-why').textContent, 'why, whole');
+      assert.match(styles, /:is\(\.thoughtknot-type-list, \.thoughtknot-view-list\) li \{/, 'views are tiles too');
     } finally {
       env.uninstall();
     }

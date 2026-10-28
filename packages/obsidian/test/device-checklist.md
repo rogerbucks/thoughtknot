@@ -607,23 +607,24 @@ Run these with the system's reduce-motion setting off, as it is by default, unti
 
 ## The View menu — spec §25
 
-- [ ] **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel
-      links merged. Each says on or off. Labels and hubs are on, groups and merging off. In Settings › ThoughtKnot,
-      change a switch's default under Drawing, then open the note again. Its graphs start as the settings now say (slice
-      3, view_switches, view_switch_defaults).
+- [ ] **M-01** Press View on a graph's bar: Detail with Overview, Groups and All, then Hide labels too small to read
+      and Group by. More choices holds Fold busy things, Fold groups, Bundle links and the sliders. Each switch says
+      what it does, and on or off. Change a switch's default in Settings › ThoughtKnot › Drawing. Open the note again:
+      its graphs start as the settings say (slice 3, view_switches, view_switch_defaults, cluster_menu_plain).
 - [ ] **M-02** On the phone, a wide graph fitted to the note shows its boxes but no link labels. Pinch to zoom in, and
       the labels appear once they can be read. Tap a box: its own links keep their labels at any zoom, as does a link
-      under the pointer on the Mac. Turn Labels by zoom off: every label shows at any zoom (slice 3, untangle_labels).
+      under the pointer on the Mac. Turn Hide labels too small to read off: every label shows at any zoom (slice 3,
+      untangle_labels).
 - [ ] **M-03** A thing with 13 links or more is drawn with its links folded into one dashed stub saying how many. Tap the
       stub: the links and the things on them come back, the drawing redrawn at once. Tap the thing and press Fold its 14
       links in its details: they fold again; Open its 14 links opens them (slice 3, untangle_hubs).
-- [ ] **M-04** Turn Groups folded on: each group is one box with its name and how many things it holds. The links to its
+- [ ] **M-04** Turn Fold groups on: each group is one box with its name and how many things it holds. The links to its
       things run to the box. Tap a box, or press Enter on it: that group opens and the other stays folded. Find a thing
       inside a folded group: its group opens and it is selected (slice 3, untangle_groups).
 ### Merged links, routing and the selection
 
-- [ ] **M-05** Turn Parallel links merged on: the links running from one group to the other share one thick trunk. Tap a
-      link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style
+- [ ] **M-05** Turn Bundle links between groups on: the links running from one group to the other share one thick
+      trunk. Tap a link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style
       block, merge: 'on' starts the graph merged (slice 3, untangle_merge).
 - [ ] **M-06** In the style block, routing: 'straight' draws every link as a straight line, and routing: 'right-angled'
       as lines with right angles, each reading set beside its line; 'curved' is the drawing as before. A word that is not
@@ -632,6 +633,13 @@ Run these with the system's reduce-motion setting off, as it is by default, unti
       details stay open and its neighbours stay in focus. Nothing in the note changes, in reading view too. In a view,
       Save as shown writes the switches into the style block. Close the note and open it again: the view opens with them
       (slice 3, view_switch_view_only, untangle_data_untouched).
+
+### The ladder of detail, zoom and planes
+
+- [ ] **M-08** Press View, then Overview: each group is one named box with its count. Press Groups: every thing shows
+      in its group. Zoom in on a folded group until it fills half the view: it opens. Switch to 3D: each group's named
+      card floats on a plane above its things, a stalk down to them. Click a folded group twice in 3D: it opens (slice
+      10, cluster_detail_ladder, cluster_opens, cluster_planes).
 
 ## Animated images — spec §18, §11, §16
 

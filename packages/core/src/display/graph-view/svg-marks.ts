@@ -5,6 +5,7 @@
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
 import { FADED, seeThrough } from '../../colour-numbers.ts';
+import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
 /** How many points a link's curve is read at. */
@@ -47,7 +48,19 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     clusters.push({ id, x, y, width, height });
     const text = g.querySelector('text'),
       name = text?.textContent?.trim();
-    marks.push({ id, kind: 'group', style: styled(shape, text), x, y, width, height, ...(name ? { name } : {}) });
+    // a group opened from its box keeps the fold that folds it back, so its outline in space can (cluster_fold_back)
+    const folds = g.getAttribute('data-refold');
+    marks.push({
+      id,
+      kind: 'group',
+      style: styled(shape, text),
+      x,
+      y,
+      width,
+      height,
+      ...(name ? { name } : {}),
+      ...(folds ? { of: folds } : {}),
+    });
   }
   /** The smallest group holding the box from (`x`, `y`), `width` by `height`. */
   const holding = (x: number, y: number, width: number, height: number, not = '') => {
@@ -103,7 +116,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: wholeName(g, text),
+        text: isCluster(key) ? clusterName(g, text) : wholeName(g, text),
         size,
         anchor: 'middle',
       });
@@ -137,6 +150,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       points,
       ...ends,
       ...(words ? { name: words } : {}),
+      // a line drawn with no arrowhead, such as a merged link's to its trunk, has none in space either (untangle_merge)
+      ...(g.querySelector(':scope > polygon, :scope > a polygon') ? {} : { headless: true as const }),
       // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
       ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
       // a bundle or a hub's stub is no link of the graph. It keeps the fold it opens, so a pick in 3D opens it (§25)
@@ -225,6 +240,14 @@ function wholeName(g: Element, first: Element): string {
   return rows.join(' ');
 }
 
+/** A folded group's name with its count, written smaller under it (fold-source.ts): `Identity · 8 things`. */
+function clusterName(g: Element, first: Element): string {
+  const texts = Array.from(g.querySelectorAll<Element>('text')),
+    after = texts.slice(texts.indexOf(first)).filter((t) => sizeOf(t) !== sizeOf(first));
+  const count = after.map((t) => t.textContent?.trim()).find(Boolean);
+  return count ? `${wholeName(g, first)} · ${count}` : wholeName(g, first);
+}
+
 /**
  * A link's two ends from its title, `a->b` or `a--b`, each a key drawn. A key may hold `->` itself, so each place the
  * title could be cut is tried. A port after a colon, as in `a:n->b`, is left off. None when no cut gives two keys.
@@ -238,4 +261,12 @@ function endsOf(title: string, keys: ReadonlySet<string>): { from?: string; to?:
     if (from !== null && to !== null) return { from, to };
   }
   return {};
+}
+
+/** Each folded group's box in `svg`, by its id, with the keys of the things it holds (cluster_in_place). */
+export function heldIn(svg: Element): [string, string[]][] {
+  return Array.from(svg.querySelectorAll('[data-fold^="group:"][data-keys]')).map((g) => [
+    g.id,
+    (g.getAttribute('data-keys') ?? '').split(' ').filter(Boolean),
+  ]);
 }

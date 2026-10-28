@@ -5,12 +5,10 @@
 // What height means is picked by `DepthBy`:
 // - `group`: a group inside another stands one floor higher, and each thing stands on its group, like a building.
 // - `size`: each block is as tall as a number says, such as a group's count of things, like a city seen from the air.
-// Links run between the tops of the blocks they join, rising in an arc. Labels float just above their block, and
-// space-labels.ts picks which to paint.
+// Links run between the tops of the blocks they join, rising in an arc. Labels float above their block (space-labels.ts).
 //
 // The orbit camera lives here too, as plain numbers: where it looks, how far away, its turn and its tilt. So the
-// painters (display/graph-view/space-painter.ts) only paint, and every sum can be tested without a screen.
-// Host-free and pure.
+// painters (display/graph-view/space-painter.ts) only paint, and every sum is tested without a screen. Host-free, pure.
 import type { DrawMark } from './drawing-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 
@@ -81,6 +79,8 @@ export interface SpaceMarks {
   round?: boolean;
   /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
   cards?: boolean;
+  /** Each open group, its things' keys and the fold that folds it back, if any: outlined round them (cluster_fold_back). */
+  groups?: { id: string; style: string; name: string; of: string[]; folds?: string }[];
   least: Vec3;
   most: Vec3;
 }
@@ -176,7 +176,7 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       const tip = line.points[line.points.length - 1],
         back = line.points[line.points.length - 2];
       // never bigger than the block it points to (Roger, 24 Oct 2026)
-      if (b && tip && back)
+      if (b && tip && back && !m.headless)
         arrows.push({
           id: `${m.id}\narrow`,
           style: m.style,
@@ -259,13 +259,37 @@ export interface Orbit {
 
 /** How wide the camera sees, top to bottom, in radians. */
 export const FIELD = Math.PI / 4;
-/** The camera that shows all of `space`, from the front and above, as the drawing reads on the page. */
+/** How much of the screen the fitted view fills, and how many corners it takes before it lets the farthest few fall off. */
+const FILL = 0.94,
+  MANY = 200;
+
+/**
+ * The camera that shows all of `space`, from the front and above, as the drawing reads on the page. The screen is
+ * `aspect` wide to each unit high. It goes as near as keeps each block corner in view, so the drawing fills the screen.
+ * Of many corners, the farthest hundredth may fall outside. Roger, 25 Oct 2026: it opened as a small knot.
+ */
 export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
-  const { least, most } = space;
-  const target: Vec3 = [(least[0] + most[0]) / 2, (least[1] + most[1]) / 2, (least[2] + most[2]) / 2];
-  const reach = Math.hypot(most[0] - least[0], most[1] - least[1], most[2] - least[2]) / 2 || 1;
-  const fit = Math.tan(FIELD / 2) * Math.min(1, aspect);
-  return { target, distance: (reach / fit) * 1.05, turn: -Math.PI / 2, tilt: 0.9 };
+  const { least, most } = space,
+    target: Vec3 = [(least[0] + most[0]) / 2, (least[1] + most[1]) / 2, (least[2] + most[2]) / 2];
+  const camera = { target, distance: 1, turn: -Math.PI / 2, tilt: 0.9 };
+  const f = norm(sub(target, eyeOf(camera))),
+    r = norm(cross(f, upOf(camera))),
+    u = cross(r, f);
+  const half = Math.tan(FIELD / 2),
+    corners: Vec3[] = space.blocks?.length ? [] : [least, most];
+  for (const b of space.blocks ?? [])
+    for (let i = 0; i < 8; i++)
+      corners.push([b.x + (i & 1) * b.width, b.y + ((i >> 1) & 1) * b.depth, b.floor + (i >> 2) * b.tall]);
+  // how far back each corner needs the camera to be to land in view, the perspective counted too
+  const needs = corners.map((c) => {
+    const o = sub(c, target);
+    const across = Math.abs(dot(o, r)) / (FILL * half * Math.max(0.1, aspect)),
+      up = Math.abs(dot(o, u)) / (FILL * half);
+    return Math.max(across, up) - dot(o, f);
+  });
+  needs.sort((x, y) => x - y);
+  const cut = needs.length > MANY ? Math.floor(0.99 * (needs.length - 1)) : needs.length - 1;
+  return { ...camera, distance: Math.max(needs[cut] ?? 1, 1) };
 }
 
 /**

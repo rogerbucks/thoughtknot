@@ -298,8 +298,11 @@ export function renderTypeStrip(
     );
     if (!lookTimeline) writes.push(row);
   }
+  // the type drawn now first, then the one suggested, then the rest that fit, in reading and keyboard order alike (F7)
+  const rank = (f: (typeof d.fits)[number]) =>
+    f.type === choice.drawn ? 0 : f.fits && f.type === suggested.type ? 1 : f.fits ? 2 : 3;
   // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
-  for (const f of d.fits) {
+  for (const f of [...d.fits].sort((a, b) => rank(a) - rank(b))) {
     const li = list.createEl('li', {
       cls: [
         ...(f.type === choice.drawn ? ['thoughtknot-type-now'] : []),
@@ -325,6 +328,7 @@ export function renderTypeStrip(
           .join('; ')
       : (f.why ?? '');
     li.createSpan({ cls: 'thoughtknot-type-why', text: why });
+    if (!f.fits) li.setAttribute('title', why); // its reason on hover too (F7)
   }
   // the view types drawn as marks, in a list of their own under the types (view_types_offered)
   const views = root.createEl('ul', { cls: 'thoughtknot-view-list', attr: { 'aria-label': word('view.list') } });

@@ -9,9 +9,11 @@
 // named ones, so nothing covers a name. Each arrowhead is painted at the
 // edge of the card it points to. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
+import { isPlane } from './space-planes.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
+  ARROW_WIDE,
   READABLE_LEAST,
   arrowsOnScreen,
   largestName,
@@ -21,6 +23,8 @@ import {
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
 import { facesOnScreen, rowsOf } from './space-faces.ts';
 import type { FaceText } from './space-faces.ts';
+import { outlined, outlinesOf } from './space-outlines.ts';
+import type { ScreenOutline } from './space-outlines.ts';
 
 export { rowsOf };
 
@@ -55,10 +59,20 @@ const WIDER = 1.5,
 /** How tall a row of words is, as a share of their size. */
 const ROW = 1.25;
 /** How long an arrowhead is on the screen, as a share of a card's words, kept between ARROW_LEAST and a most. */
-const ARROW_SHARE = 0.9,
-  ARROW_MOST = 18;
-/** How wide an arrowhead is at its back, as a share of its length. */
-const ARROW_WIDE = 0.6;
+const ARROW_SHARE = 1.2,
+  ARROW_MOST = 22;
+/** The most an arrowhead is long, as a share of the card it points to's height: never bigger than the card. */
+const ARROW_OF_CARD = 0.8;
+/**
+ * How thick a link is drawn, in pixels of the space, and the least and most it is on the screen. So a near link is a
+ * little bolder than a far one, and none is a hairline (Roger, 25 Oct 2026: "more diagrammatic ... rather than just thin
+ * lines").
+ */
+const SHAFT = 2.5,
+  SHAFT_LEAST = 1.5,
+  SHAFT_MOST = 3.5;
+/** The most links drawn thick. Past it only the graphics chip's thin lines are drawn, so a huge graph stays quick. */
+export const SHAFTS_MOST = 3000;
 
 /** The middle of a block, in the space. */
 const middle = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
@@ -135,9 +149,11 @@ export function cardArrows(
   cards: readonly ScreenCard[],
 ): ScreenArrow[] {
   const byKey = new Map(cards.flatMap((c) => (c.block.of === undefined ? [] : [[c.block.of, c] as const])));
+  // a line with no arrowhead in space, such as a merged link's to its trunk, has none at a card either
+  const headed = new Set(space.arrows.map((a) => a.id));
   const out: ScreenArrow[] = [];
   for (const l of space.lines) {
-    const to = l.to === undefined ? undefined : byKey.get(l.to);
+    const to = l.to === undefined || !headed.has(`${l.id}\narrow`) ? undefined : byKey.get(l.to);
     if (!to) continue;
     // the last point of the line outside the card: where the link comes in from
     let from: { x: number; y: number } | null = null;
@@ -155,7 +171,10 @@ export function cardArrows(
       seen = Math.hypot(vx, vy);
     const dx = -vx / seen,
       dy = -vy / seen;
-    const long = Math.max(ARROW_LEAST, Math.min(ARROW_MOST, to.size * ARROW_SHARE)),
+    const long = Math.min(
+        Math.max(ARROW_LEAST, Math.min(ARROW_MOST, to.size * ARROW_SHARE)),
+        Math.max(ARROW_LEAST, to.height * ARROW_OF_CARD),
+      ),
       half = (long * ARROW_WIDE) / 2;
     const bx = tip.x - dx * long,
       by = tip.y - dy * long;
@@ -182,6 +201,53 @@ export interface SpaceFrame {
   ring: { x: number; y: number; r: number } | null;
   /** The picked thing's links, or the picked link, on the screen: drawn a little thicker over the rest (Roger, 25 Oct). */
   strong: { style: string; points: { x: number; y: number }[] }[];
+  /** Every link on the screen, with how thick it is drawn, in pixels: none past SHAFTS_MOST links. */
+  shafts: { style: string; points: { x: number; y: number }[]; width: number }[];
+  /** Each open group outlined round its things on the screen, its name on its top edge (cluster_named_everywhere). */
+  outlines: ScreenOutline[];
+}
+
+/** An open group in the space: its id, its style, its name and the keys of the things in it. */
+export type SpaceGroup = NonNullable<SpaceMarks['groups']>[number];
+
+/**
+ * Whether a thing's key is a folded group's box. The layout source names it `group: 2` (fold-source.ts). The drawing
+ * on screen has no title to read, so there it is `fold_group_2` (drawing-svg.ts).
+ */
+export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
+
+/** How much of the screen, wide or high, a folded group fills before zooming in opens it (cluster_opens). */
+export const ZOOM_OPENS = 0.5;
+
+/** Whether a box of `box`'s size fills enough of a screen `width` by `height` for zooming in to open it. */
+export const fills = (box: { width: number; height: number }, width: number, height: number): boolean =>
+  box.width >= width * ZOOM_OPENS || box.height >= height * ZOOM_OPENS;
+
+/** The key of the folded group whose card is under `x`, `y` and fills the screen, if any: zooming in opens it. */
+export function clusterFilling(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+): string | undefined {
+  const clusters = { ...space, blocks: space.blocks.filter((b) => isCluster(b.of)) };
+  const card = cardAt(cardsOnScreen(clusters, matrix, width, height), x, y);
+  return card && fills(card, width, height) ? card.block.of : undefined;
+}
+
+/** Every line of `space` as the camera's `matrix` sees it, each as thick as its middle is near (space_link_shafts). */
+export function shaftsOf(space: SpaceMarks, matrix: Float32Array, width: number, height: number): SpaceFrame['shafts'] {
+  if (space.lines.length > SHAFTS_MOST) return [];
+  const focal = height / 2 / Math.tan(FIELD / 2);
+  return space.lines.flatMap((l) => {
+    const points = l.points.flatMap((p) => projectPoint(matrix, p, width, height) ?? []);
+    if (points.length < 2) return [];
+    const far = points.reduce((t, p) => t + p.far, 0) / points.length;
+    const seen = Math.min(SHAFT_MOST, Math.max(SHAFT_LEAST, (SHAFT * focal) / Math.max(far, 1e-9)));
+    return [{ style: l.style, points: points.map(({ x, y }) => ({ x, y })), width: seen }];
+  });
 }
 
 /** The lines of `space` that join the thing `picked`, or are the link `pickedLink`, as the camera's `matrix` sees them. */
@@ -220,6 +286,22 @@ export function frameOf(
     ...(pickedLink === undefined ? {} : { pickedLink }),
   };
   if (!space.cards) {
+    // a folded group is a card here too, never a nameless ball, and so is a group's card above (cluster_planes)
+    const carded = (b: Block | null | undefined) => isCluster(b?.of) || isPlane(b?.of);
+    const clusters = space.blocks.filter(carded);
+    if (clusters.length) {
+      const into = new Set(clusters.map((b) => b.of)),
+        edged = new Set(space.lines.filter((l) => into.has(l.to)).map((l) => `${l.id}\narrow`));
+      // its arrowheads sit at the card's edge, drawn once
+      const balls = {
+        ...space,
+        blocks: space.blocks.filter((b) => !carded(b)),
+        arrows: space.arrows.filter((a) => !edged.has(a.id)),
+      };
+      const frame = frameOf(balls, matrix, width, height, carded(picked) ? null : picked, pickedLink);
+      const cards = cardsOnScreen({ ...space, blocks: clusters }, matrix, width, height, picked?.of);
+      return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
+    }
     const ring = picked && pickedRing(space, picked, matrix, width, height);
     // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
     const faces = facesOnScreen(space, matrix, width, height, chosen);
@@ -227,19 +309,23 @@ export function frameOf(
     const floats = space.labels.filter(
       (l) => !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked),
     );
+    const outlines = outlinesOf(space, matrix, width, height);
     return {
       shapes: space,
       cards: [],
       faces,
       arrows: arrowsOnScreen(space, matrix, width, height),
-      labels: labelsOnScreen({ ...space, labels: floats }, matrix, width, height, chosen),
+      labels: labelsOnScreen({ ...space, labels: outlined(floats, outlines) }, matrix, width, height, chosen),
+      outlines,
       ring,
       strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
+      shafts: shaftsOf(space, matrix, width, height),
     };
   }
   const cards = cardsOnScreen(space, matrix, width, height, picked?.of);
   const words = { ...space, labels: space.labels.filter((l) => l.link !== undefined) };
   return {
+    outlines: outlinesOf(space, matrix, width, height),
     shapes: { ...space, blocks: [], arrows: [] },
     cards,
     faces: [],
@@ -247,5 +333,6 @@ export function frameOf(
     labels: labelsOnScreen(words, matrix, width, height, chosen),
     ring: null,
     strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
+    shafts: shaftsOf(space, matrix, width, height),
   };
 }

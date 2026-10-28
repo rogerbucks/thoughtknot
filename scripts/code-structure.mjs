@@ -39,8 +39,9 @@ export function globToRegExp(glob) {
 
 /**
  * The structure in `architecture` (the text of architecture.gql): the parts with a path, and the areas of each. An area
- * is {id, name, does, section, part, globs, most}. Parts are sorted so the one with the longest path, the closest
- * folder, comes first.
+ * is {id, name, does, section, part, globs, nots, most}. Its files are those matching a glob of `files` and none of
+ * `not`, so a folder is cut by file name without listing every file. Parts are sorted so the one with the longest path,
+ * the closest folder, comes first.
  */
 export function readStructure(architecture) {
   const g = gs.worldFromStore(gs.read([architecture])).project_architecture;
@@ -58,6 +59,7 @@ export function readStructure(architecture) {
     section: text(a, 'section'),
     part: g.out(a, 'PART_OF')[0]?.[2],
     globs: (text(a, 'files') ?? '').split(/\s+/).filter(Boolean),
+    nots: (text(a, 'not') ?? '').split(/\s+/).filter(Boolean),
     most: g.p(a).most === undefined ? MOST_FILES : Number(g.p(a).most),
   }));
   for (const a of areas) if (byId.has(a.part)) byId.get(a.part).areas.push(a);
@@ -67,8 +69,12 @@ export function readStructure(architecture) {
 /** The part a file belongs to: the one whose folder holds it most closely; undefined for none. */
 const partOf = (parts, file) => parts.find((p) => file === p.path || file.startsWith(`${p.path}/`));
 
-/** The areas of `part` that match `file`. */
-const areasOf = (part, file) => part.areas.filter((a) => a.globs.some((glob) => globToRegExp(glob).test(file)));
+/** The areas of `part` that match `file`: one of its globs does, and none of the globs it leaves out. */
+const areasOf = (part, file) =>
+  part.areas.filter(
+    (a) =>
+      a.globs.some((glob) => globToRegExp(glob).test(file)) && !a.nots.some((glob) => globToRegExp(glob).test(file)),
+  );
 
 /** The shipped code among `files`. */
 export const shippedCode = (files) => files.filter((f) => CODE.test(f) && !LEFT_OUT.test(f));

@@ -26,6 +26,8 @@ const ROW_GAP = 56;
 const SWEEPS = 24;
 /** The most rounds of swapping neighbours after each sweep. */
 const TRANSPOSE_ROUNDS = 6;
+/** Fresh starts of the ordering, rows shuffled, that a small drawing such as an overview is given (own-engine.ts). */
+export const RESTARTS = 40;
 const PULLS = 12;
 /** The room a link bending through a row takes, and between two such links, in CSS pixels. */
 const LANE = 8;
@@ -46,6 +48,9 @@ export interface Layered {
   spots: Map<string, [number, number]>;
   via: Map<string, [number, number][]>;
 }
+
+/** The type of a link that stands for a trunk (own-engine.ts): it takes stand-ins of its own, shared with no other. */
+export const TRUNK_LINK = 'trunk';
 
 /** The key of a link from `from` to `to`, for `Layered.via`. */
 export const viaKey = (from: string, to: string): string => `${from}\n${to}`;
@@ -89,7 +94,7 @@ export function layeredLayout(
 /**
  * Each thing of `shape` placed in rows, its middle in CSS pixels, and the bends of each link that skips rows. `sizes`
  * gives each box's width and height (absent: 120 by 40). `rankdir` is `LR` (rows left to right) or `TB` (top to
- * bottom). `previous` orders the rows as last time.
+ * bottom). `previous` orders the rows as last time. `tries` is how many times more the rows are ordered afresh.
  */
 export function layered(
   shape: GraphShape,
@@ -97,6 +102,7 @@ export function layered(
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
   options: Partial<LayoutOptions> = {},
+  tries = 0,
 ): Layered {
   // the room beside each thing as `spacing` asks, and between rows, where links run, as `linkLength` asks
   const { spacing, linkLength } = layoutOptions(options);
@@ -110,26 +116,34 @@ export function layered(
   const across = rankdir === 'LR' ? 1 : 0; // which size runs across a row
   const sizeOf = (i: number): Size => sizes.get(keys[i] as string) ?? [120, 40];
   const links: number[][] = keys.map(() => []);
-  const seen = new Set<string>();
+  const seen = new Set<string>(),
+    alone = new Set<string>();
   for (const l of shape.links) {
     const a = index.get(l.from),
       b = index.get(l.to);
     if (a === undefined || b === undefined || a === b || seen.has(`${a} ${b}`)) continue;
     seen.add(`${a} ${b}`);
+    if (l.type === TRUNK_LINK) alone.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
   const rows = wrapped(rowsOf(n, links), links, (i) => sizeOf(i), across, gap, rowGap);
   // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
   const chainOf = new Map<string, number[]>();
+  // the links out of one thing share each stand-in until they part, so they run as one line that branches
+  const shared = new Map<string, number>();
   links.forEach((next, v) => {
     for (const w of next) {
       let from = v;
       const via: number[] = [];
       for (let r = (rows[v] as number) + 1; r < (rows[w] as number); r++) {
-        items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
-        (items[from] as Item).down.push(items.length - 1);
-        from = items.length - 1;
+        const known = alone.has(`${v} ${w}`) ? undefined : shared.get(`${v} ${r}`);
+        if (known === undefined) {
+          items.push({ row: r, across: LANE, up: [from], down: [], ends: [v, w] });
+          (items[from] as Item).down.push(items.length - 1);
+          if (!alone.has(`${v} ${w}`)) shared.set(`${v} ${r}`, items.length - 1);
+        }
+        from = known ?? items.length - 1;
         via.push(from);
       }
       (items[w] as Item).up.push(from);
@@ -217,12 +231,29 @@ export function layered(
   for (const row of byRow) row.forEach((i, k) => (place[i] = k));
   let best = crossings(),
     bestRows = byRow.map((row) => row.slice());
-  for (let s = 0; s < SWEEPS && best; s++) {
-    if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
-    else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
-    transpose();
-    const now = crossings();
-    if (now < best) [best, bestRows] = [now, byRow.map((row) => row.slice())];
+  // then again from shuffled rows, as `tries` asks, as sweeps alone can stop in a poor order. The shuffles are seeded,
+  // so a graph is always drawn the same
+  const first = bestRows.map((row) => row.slice());
+  let seed = 2463534242;
+  const random = () => ((seed ^= seed << 13), (seed ^= seed >>> 17), (seed ^= seed << 5), (seed >>> 0) / 4294967296);
+  for (let t = 0; t <= tries && best; t++) {
+    if (t)
+      first.forEach((row, r) => {
+        const shuffled = row.slice();
+        for (let k = shuffled.length - 1; k > 0; k--) {
+          const j = Math.floor(random() * (k + 1));
+          [shuffled[k], shuffled[j]] = [shuffled[j] as number, shuffled[k] as number];
+        }
+        byRow[r] = shuffled;
+        shuffled.forEach((i, k) => (place[i] = k));
+      });
+    for (let s = 0; s < SWEEPS && best; s++) {
+      if (s % 2 === 0) for (let r = 1; r < rowCount; r++) reorder(byRow[r] as number[], 'up');
+      else for (let r = rowCount - 2; r >= 0; r--) reorder(byRow[r] as number[], 'down');
+      transpose();
+      const now = crossings();
+      if (now < best) [best, bestRows] = [now, byRow.map((row) => row.slice())];
+    }
   }
   bestRows.forEach((row, r) => {
     byRow[r] = row;

@@ -62,6 +62,7 @@
       "start": "2026-10-21",
       "end": "2026-10-22",
       "estimate": true,
+      "late_reason": "Its last items wait on other work and on Roger's choices; the plan is re-dated when they are picked up (Roger, 28 Oct 2026).",
       "workstreams": [
         "V1",
         "D1",
@@ -213,7 +214,8 @@
         "W31",
         "CN1",
         "CN3",
-        "LE1"
+        "LE1",
+        "DR1"
       ],
       "earlier_plan": {
         "start": "2027-03-01",

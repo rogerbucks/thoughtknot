@@ -71,7 +71,7 @@ export class DetailsSheet {
     this.el = el;
     this.host = host;
     this.pane = new InPane(el);
-    readKept();
+    readKept(el.ownerDocument?.defaultView?.innerWidth ?? 0);
     el.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
   }
 

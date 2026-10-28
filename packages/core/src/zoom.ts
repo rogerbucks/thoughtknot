@@ -46,23 +46,16 @@ interface Mods {
   meta?: boolean;
   alt?: boolean;
 }
+type Near = { onBox?: boolean; near?: boolean };
 /** An input the host passes in: a key, the wheel, a pointer, or a double click. */
 export type ZoomEvent =
   | ({ kind: 'key'; key: string } & Mods)
   | ({ kind: 'wheel'; x: number; y: number; dy: number } & Mods)
-  | {
-      kind: 'down';
-      id: number;
-      pointer: 'mouse' | 'touch' | 'pen';
-      x: number;
-      y: number;
-      onBox?: boolean;
-      near?: boolean;
-    }
+  | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number } & Near)
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
   | { kind: 'cancel'; id: number }
-  | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean };
+  | ({ kind: 'dblclick'; x: number; y: number } & Near);
 
 /**
  * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's). It is
@@ -183,10 +176,10 @@ export class Zoom {
   /**
    * Where the view would go to bring a rectangle of the drawing (in fractions of it) wholly into view, without going
    * there. In view means in the part of the viewport not kept clear. Null when it is already there at a scale of at
-   * least `minScale`. Otherwise the zoom is kept, or raised to `minScale` when below (a thing too small to read, §25).
-   * The rectangle is centred in that part, as far as the drawing's edges and the strip kept clear allow.
+   * least `minScale`, unless `centre` asks for the middle all the same. Else the zoom is kept, or raised to `minScale`
+   * when below (too small to read, §25). The rectangle is centred in that part, as far as the edges and strip allow.
    */
-  aim(box: { x: number; y: number; width: number; height: number }, minScale = 0): Place | null {
+  aim(box: { x: number; y: number; width: number; height: number }, minScale = 0, centre = false): Place | null {
     const { width: cw, height: ch } = this.content,
       c = this.clear,
       right = this.viewport.width - c.right,
@@ -196,7 +189,7 @@ export class Zoom {
       top = this.y + box.y * ch * s;
     const inView =
       left >= c.left && top >= c.top && left + box.width * cw * s <= right && top + box.height * ch * s <= foot;
-    if (s === this.scale && inView) return null;
+    if (s === this.scale && inView && !centre) return null;
     const [x, y] = this.clampPan(
       s,
       (c.left + right) / 2 - (box.x + box.width / 2) * cw * s,
@@ -277,6 +270,13 @@ export class Zoom {
         this.pinch = null;
         return false;
     }
+  }
+
+  /** The host says how many fingers are really down; a lost lift must not leave one tracked to pinch (stuck_touch). */
+  settle(fingers: number): void {
+    const touches = [...this.pointers].filter(([, p]) => p.touch);
+    for (const [id] of touches.slice(0, Math.max(0, touches.length - fingers))) this.pointers.delete(id);
+    if (fingers < 2) this.pinch = null;
   }
 
   private key(e: Extract<ZoomEvent, { kind: 'key' }>): boolean {

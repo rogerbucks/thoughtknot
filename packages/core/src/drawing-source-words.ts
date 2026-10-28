@@ -131,4 +131,46 @@ export const DRAWING_SOURCE_WORDS = {
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
   'view.group-by.kind': 'Kind',
+  // how the View menu spaces the layout (layout-options.ts)
+  'view.layout.spacing': 'Spacing',
+  'view.layout.link-length': 'Link length',
+  'view.layout.group-pull': 'Group pull',
+  // what the engine picked for the drawing, and why, under the ladder of detail (fingerprint.ts, layout_pick_said)
+  'view.layout.why.tree': 'Laid out in rows as a tree: most things have one link in.',
+  'view.layout.why.flow': 'Laid out in rows as a flow: its links mostly run one way.',
+  'view.layout.why.network': 'Spread out as a network: its links run every way.',
+  'view.layout.why.dense': 'Spread out: it has many links for each thing.',
+  'view.layout.why.overview': 'Laid out in rows: each group is one box.',
+  'view.layout.why.tried': 'Laid out in rows and spread out, and the one with fewer crossings kept.',
+  'view.layout.parts': { one: '{count} part, packed to the screen.', other: '{count} parts, packed to the screen.' },
+  'view.layout.loose': {
+    one: '{count} thing with no link sits in the tray.',
+    other: '{count} things with no link sit in the tray.',
+  },
+  'view.layout.kinds.ordered': 'Its kinds link in order: {order}.',
+  'view.layout.kinds.two-sided': 'Its two kinds link to each other.',
+  'view.layout.kinds.clustered': 'Things link mostly to their own kind.',
+  // the line under each View menu switch saying what it does (view-switches.ts)
+  'view.hint.labels': 'A link’s label shows once you zoom in far enough to read it.',
+  'view.hint.hubs': 'A thing with many links shows them as one stub you can open.',
+  'view.hint.groups': 'Each group shows as one box until you open it.',
+  'view.hint.merge': 'Links between the same two groups share one line.',
+  // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
+  'view.detail': 'Detail',
+  'view.more': 'More choices',
+  'view.detail.overview': 'Overview',
+  'view.detail.groups': 'Groups',
+  'view.detail.all': 'All',
+  'view.hint.detail':
+    'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
+  // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)
+  'sketch.layer': 'Drawings',
+  'sketch.kind.ink': 'Freehand drawing',
+  'sketch.kind.box': 'Box',
+  'sketch.kind.ellipse': 'Ellipse',
+  'sketch.kind.line': 'Line',
+  'sketch.kind.arrow': 'Arrow',
+  'sketch.kind.note': 'Note',
+  'sketch.said': '{kind}: {text}',
+  'sketch.pinned': '{said}, pinned to {pin}',
 } as const;

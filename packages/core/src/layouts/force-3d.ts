@@ -154,14 +154,15 @@ export function forceLayout3d(
     groups.forEach((g, a) => {
       const mid = mids[a] ?? [0, 0, 0];
       for (const i of g) for (const k of [0, 1, 2] as const) push(k, i, ((mid[k] ?? 0) - at(k, i)) * gather);
-      // every other group pushes this one away as a whole, so groups sit apart rather than through each other
+      // every other group pushes this one away as a whole, so groups sit apart rather than through each other. It
+      // pushes as far as `spacing` asks, as things do, so groups spaced out keep apart
       groups.forEach((h, b) => {
         if (b === a) return;
         const other = mids[b] ?? [0, 0, 0];
         let e = mid.map((v, k) => v - (other[k] ?? 0));
         let d2 = e.reduce((t, v) => t + v * v, 0);
         if (d2 < 1e-18) [e, d2] = [[a - b + 0.5, ((a + b) % 3) - 1, 0.25], 1];
-        const f = (GROUP_PUSH * h.length) / (d2 + 1);
+        const f = (GROUP_PUSH * near * h.length) / (d2 + near);
         for (const i of g) for (const k of [0, 1, 2] as const) push(k, i, (e[k] ?? 0) * f);
       });
     });

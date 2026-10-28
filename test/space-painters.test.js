@@ -118,6 +118,7 @@ window.readSvg = (marked = false) => {
     <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
     <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="34" font-size="14" fill="rgb(10, 10, 10)">Cy</text><text x="270" y="48" font-size="14" fill="rgb(10, 10, 10)">Young</text></g>
+    <g class="node" id="node4" data-key="group: 1"><polygon fill="none" stroke="rgb(90, 90, 90)" points="160,20 240,20 240,60 160,60"/><text x="200" y="38" font-size="14">Identity</text><text x="200" y="52" font-size="10">8 things</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   if (marked) {
@@ -130,8 +131,9 @@ window.readSvg = (marked = false) => {
 };
 // the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it. With
 // \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again. With \`bundle\`, the
-// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it
-window.pickInSpace = async (hideBob = false, bundle = false) => {
+// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it.
+// With \`cluster\`, Bob is a folded group's box instead: picked again, it tells the card to open it
+window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -144,6 +146,13 @@ window.pickInSpace = async (hideBob = false, bundle = false) => {
     const g = holder.querySelector('[data-link]');
     g.removeAttribute('data-link');
     g.setAttribute('data-fold', 'bundle:Ada team\\nBob team');
+  }
+  if (cluster) {
+    const g = holder.querySelector('[data-key="bob"]');
+    g.removeAttribute('data-key');
+    g.id = 'fold_group_1';
+    g.setAttribute('data-fold', 'group:Team');
+    holder.querySelector('[data-link]').remove(); // so the only thing a click opens is the group
   }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
@@ -397,6 +406,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
     // a long name is cut into rows of the same size: the label holds the whole name (Roger, 24 Oct 2026)
     assert.equal(byId.get('l:cy').text, 'Cy Young');
+    // proves: cluster_named_everywhere
+    assert.equal(byId.get('l:group: 1').text, 'Identity · 8 things', 'a folded group keeps its count with its name');
     const untitled = byId.get('e:edge3');
     assert.deepEqual(
       [untitled.from, untitled.to],
@@ -417,6 +428,17 @@ describe("the 3D view's painters, in a real browser", () => {
     const { link } = JSON.parse(await browser.run('pickInSpace(false, true).then(JSON.stringify)'));
     assert.deepEqual(link, { fold: 'bundle:Ada team\nBob team' }, 'the bundle opens by its fold, not as a link');
   });
+
+  // proves: cluster_opens
+  test(
+    'a folded group clicked again in the 3D view tells the card to open it, by its box on screen',
+    options,
+    async () => {
+      // the tries across the screen come quick and close, so the second on the box is a click again
+      const { link } = JSON.parse(await browser.run('pickInSpace(false, false, true).then(JSON.stringify)'));
+      assert.deepEqual(link, { fold: 'fold_group_1' }, 'the card finds the fold its box opens (viewport-events.ts)');
+    },
+  );
 
   // proves: space_pick_opens
   test('a first click only picks a thing, and another click on it turns the view to it', options, async () => {

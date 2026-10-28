@@ -663,7 +663,8 @@
       "plan_vs_actual",
       "plain_docs_auto",
       "waves_on_time",
-      "plan_milestones"
+      "plan_milestones",
+      "ideas_on_board"
     ]
   },
   "G1": {
@@ -1216,7 +1217,11 @@
       "layout_real_fixtures",
       "layout_strategy_variables",
       "layout_pick_said",
-      "layout_own_default"
+      "layout_own_default",
+      "layout_parts_packed",
+      "layout_kinds_read",
+      "layout_pick_tried",
+      "layout_checks_gated"
     ]
   },
   "LE2": {
@@ -1261,6 +1266,23 @@
       "view_motion_safe",
       "view_reading_support",
       "view_presets_evidence"
+    ]
+  },
+  "DR1": {
+    "title": "Drawings on the graph: ink, shapes and notes",
+    "size": "M",
+    "requirements": [
+      "sketch_drawn",
+      "sketch_is_text",
+      "sketch_pinned",
+      "sketch_pin_hidden",
+      "sketch_every_view",
+      "sketch_checked",
+      "sketch_toggle",
+      "sketch_click_rule",
+      "sketch_keyboard",
+      "sketch_reader_picture",
+      "sketch_to_graph"
     ]
   }
 }

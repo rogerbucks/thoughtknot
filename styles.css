@@ -196,6 +196,17 @@
   border-bottom: 1px solid var(--gn-border);
   background: var(--gn-bg-alt);
 }
+/* Links read as a diagram's arrows, not hairlines (Roger, 25 Oct 2026: "more diagrammatic, professional looking rather
+   than just thin lines"). Each line is a little heavier and its arrowhead bolder, with a sharp tip. A width the drawing
+   sets itself, such as a trunk's, is kept. The selectors weigh less than the focus rules below, so a selected, kept or
+   faded link still shows as they say. */
+.thoughtknot-svg g.edge > :where(path:not([stroke-width])) {
+  stroke-width: 1.6;
+}
+.thoughtknot-svg g.edge > :where(polygon:not([stroke-width])) {
+  stroke-width: 2.2;
+  stroke-linejoin: miter;
+}
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
    lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to
@@ -444,9 +455,9 @@
 .thoughtknot-filter button.is-hidden {
   text-decoration: line-through;
 }
-/* The View menu (spec §25): four switches. Each is a 44-point row with its name, a toggle drawn as Obsidian draws one,
-   and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when on, which a
-   right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it. It
+/* The View menu (spec §25): four switches. Each is a 44-point row with its name and hint, a toggle drawn as Obsidian
+   draws one, and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when
+   on, which a right-to-left line mirrors. Hiding labels paints a link's label clear while it is too small to read. It
    never does so on a link in focus, highlighted or selected. It is paint only, as focus and the highlight are. So
    nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
 .thoughtknot-over-panels > .thoughtknot-view-menu {
@@ -464,6 +475,60 @@
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
 }
+/* what the engine picked for the drawing, and why, in a quiet line across the menu (layout_pick_said) */
+.thoughtknot-view-menu > .thoughtknot-layout-said {
+  grid-column: 1 / -1;
+  padding: 0 var(--gn-space-2);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+/* the switches the ladder turns, and the layout sliders, folded away under More (cluster_menu_plain) */
+.thoughtknot-view-menu > .thoughtknot-view-more {
+  grid-column: 1 / -1;
+}
+.thoughtknot-view-more > summary {
+  cursor: pointer;
+  padding: var(--gn-space-1) var(--gn-space-2);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-view-more-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
+  gap: var(--gn-space-1) var(--gn-space-4);
+}
+/* the ladder of detail (cluster_detail_ladder). Its name and three rungs sit side by side, the chosen one filled.
+   The line under them says what each shows. */
+.thoughtknot-view-menu > .thoughtknot-detail {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1) var(--gn-space-2);
+  padding: 0 var(--gn-space-2);
+  color: var(--gn-text-normal);
+}
+.thoughtknot-detail > .thoughtknot-switch-hint {
+  flex-basis: 100%;
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung {
+  box-shadow: none;
+  border: 1px solid var(--gn-border-hover);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  padding: 0 var(--gn-space-3);
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--gn-text-normal);
+  font-weight: normal;
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung:hover {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-view-menu button.thoughtknot-detail-rung[aria-checked='true'] {
+  border-color: var(--gn-accent);
+  background: var(--gn-accent);
+  color: var(--gn-text-on-accent);
+}
 /* Group by (untangle_group_by): its name, then the list of what the things can be grouped by */
 .thoughtknot-view-menu > .thoughtknot-group-by {
   display: flex;
@@ -472,6 +537,23 @@
   padding: 0 var(--gn-space-2);
   min-height: 44px;
   color: var(--gn-text-normal);
+}
+/* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
+.thoughtknot-view-menu > .thoughtknot-layout-option,
+.thoughtknot-view-more-body > .thoughtknot-layout-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gn-space-2);
+  padding: 0 var(--gn-space-2);
+  min-height: 44px;
+  color: var(--gn-text-normal);
+}
+.thoughtknot-view-menu > .thoughtknot-layout-option > input,
+.thoughtknot-view-more-body > .thoughtknot-layout-option > input {
+  flex: 1;
+  min-width: 96px;
+  max-width: 160px;
 }
 .thoughtknot-view-menu button.thoughtknot-switch {
   display: flex;
@@ -491,8 +573,17 @@
 .thoughtknot-view-menu button.thoughtknot-switch:hover {
   background: var(--gn-bg-hover);
 }
-.thoughtknot-switch-name {
+/* a switch's name, and under it the one line saying what it does (F9) */
+.thoughtknot-switch-words {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gn-space-1) 0;
+}
+.thoughtknot-switch-hint {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .thoughtknot-switch-track {
   display: flex;
@@ -733,7 +824,7 @@
   outline: 2px solid var(--gn-border-focus);
   outline-offset: -2px;
 }
-.thoughtknot-type-list {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
   gap: var(--gn-space-2);
@@ -744,10 +835,10 @@
   padding: var(--gn-space-3);
   list-style: none;
 }
-.thoughtknot-type-list[hidden] {
+:is(.thoughtknot-type-list, .thoughtknot-view-list)[hidden] {
   display: none;
 }
-.thoughtknot-type-list li {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li {
   display: flex;
   position: relative;
   flex-direction: column;
@@ -758,11 +849,11 @@
   padding: var(--gn-space-2) var(--gn-space-3);
   min-height: 44px;
 }
-.thoughtknot-type-list li:not(.thoughtknot-type-unfit):hover {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li:not(.thoughtknot-type-unfit):hover {
   border-color: var(--gn-border-hover);
   background: var(--gn-bg-hover);
 }
-.thoughtknot-type-list button {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button {
   display: block;
   box-shadow: none;
   border: none;
@@ -776,36 +867,41 @@
   text-align: start;
 }
 /* the whole tile takes the click of its button, and shows its focus */
-.thoughtknot-type-list button::after {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button::after {
   position: absolute;
   inset: 0;
   border-radius: var(--gn-radius-m);
   content: '';
 }
-.thoughtknot-type-list button:focus-visible {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible {
   outline: none;
   box-shadow: none;
 }
-.thoughtknot-type-list button:focus-visible::after {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible::after {
   outline: 2px solid var(--gn-border-focus);
   outline-offset: 1px;
 }
-.thoughtknot-type-list button:not(:disabled) {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) button:not(:disabled) {
   cursor: var(--gn-cursor-link);
 }
-.thoughtknot-type-list .thoughtknot-type-why:empty {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) .thoughtknot-type-why:empty {
   display: none;
 }
-.thoughtknot-type-list li.thoughtknot-type-now {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now {
   border: 2px solid var(--gn-accent);
   padding: calc(var(--gn-space-2) - 1px) calc(var(--gn-space-3) - 1px);
 }
-.thoughtknot-type-list li.thoughtknot-type-now button {
+:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now button {
   font-weight: var(--gn-font-weight-bold);
 }
+/* One grid for every type and view (F7). The views follow the types in the same panel, with no second rule. */
 .thoughtknot-type-list li.thoughtknot-type-suggested {
   border-style: dashed;
   border-color: var(--gn-accent);
+}
+.thoughtknot-type-list:not([hidden]) + .thoughtknot-view-list {
+  border-top: none;
+  padding-top: 0;
 }
 /* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
    across the panel with why beside its name */
@@ -1096,6 +1192,26 @@ details.thoughtknot-style > summary {
   stroke: var(--gn-accent);
   stroke-width: 2;
 }
+/* a group opened from its box: a button at its top right folds it back, and its name zooms to it (cluster_fold_back) */
+.thoughtknot-svg .thoughtknot-fold-back {
+  cursor: pointer;
+}
+.thoughtknot-svg .thoughtknot-fold-back rect {
+  fill: var(--gn-bg);
+  stroke: var(--gn-text-normal);
+  stroke-width: 1;
+}
+.thoughtknot-svg .thoughtknot-fold-back path {
+  stroke: var(--gn-text-normal);
+  stroke-width: 1.6;
+}
+.thoughtknot-svg .thoughtknot-fold-back:focus-visible rect {
+  stroke: var(--gn-accent);
+  stroke-width: 2;
+}
+.thoughtknot-svg g.cluster > text[data-fold] {
+  cursor: zoom-in;
+}
 .thoughtknot-svg .thoughtknot-image-control[aria-disabled='true'] {
   cursor: not-allowed;
 }
@@ -1208,8 +1324,41 @@ pre.thoughtknot-code {
   justify-content: center;
   gap: var(--gn-space-1);
 }
+/* The problems count sits at the bar's far end, quiet unless something is wrong (bar_kept_short). An error is told by
+   its icon and its colour, never colour alone. */
 .thoughtknot-badge {
-  margin-inline-end: auto;
+  margin-inline-start: auto;
+}
+.thoughtknot-badge.is-calm {
+  color: var(--gn-text-muted);
+}
+.thoughtknot-badge.is-error {
+  color: var(--gn-text-error);
+}
+/* More: the bar's seldom-used buttons, dropped down over the drawing so the bar keeps one short row. Each shows its
+   name beside its icon. */
+.thoughtknot-bar-more {
+  position: relative;
+}
+.thoughtknot-bar-more-list {
+  position: absolute;
+  top: 100%;
+  inset-inline-start: 0;
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  min-width: 12em;
+  padding: var(--gn-space-1);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-bar-more-list[hidden] {
+  display: none;
+}
+.thoughtknot-bar .thoughtknot-bar-more-list button {
+  justify-content: flex-start;
 }
 /* In Live Preview, Obsidian puts its own edit-block button at a code block's top right, shown on hover. Leave it room,
    as Obsidian does for its PDF toolbar, so it never covers the bar's last button. */

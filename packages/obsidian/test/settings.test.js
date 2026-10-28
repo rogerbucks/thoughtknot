@@ -430,13 +430,25 @@ describe('formatting and drawing defaults', () => {
       assert.equal(saved.labelsByZoom, 'off');
       assert.equal(saved.mergeLinks, 'on');
       assert.ok(globalThis.document.body.classList.contains('thoughtknot-still'), 'nothing glides or plays');
-      choose(row(page(env), 'Parallel links merged'), 'off');
+      choose(row(page(env), 'Bundle links between groups'), 'off');
       await until(() => env.state.data.settings.mergeLinks === 'off');
       assert.equal(env.state.data.settings.mergeLinks, 'off', 'each still a setting of its own');
       choose(row(page(env), 'View preset'), 'big-picture');
       await until(() => env.state.data.settings.viewPreset === 'big-picture');
       assert.equal(env.state.data.settings.foldGroups, 'on');
       assert.equal(globalThis.document.body.classList.contains('thoughtknot-still'), false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_switch_hints
+  test('which engine lays graphs out is chosen here, as the View menu no longer offers it', async () => {
+    const env = await load();
+    try {
+      choose(row(page(env), 'Lay out with ThoughtKnot'), 'off');
+      await until(() => env.state.data?.settings?.ownLayout === 'off');
+      assert.equal(env.state.data.settings.ownLayout, 'off', 'off lays them out with Graphviz');
     } finally {
       env.uninstall();
     }

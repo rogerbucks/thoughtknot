@@ -8,6 +8,7 @@ import type { FaceText } from '../../space-faces.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
+import { paintOutlines } from './space-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 
 /** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
@@ -124,8 +125,10 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   };
 }
 
-/** How thick the picked thing's links are drawn in 3D, in pixels: a little thicker than the rest. */
-const STRONG = 2.5;
+/** How much thicker the picked thing's links are drawn in 3D than the rest, in pixels. */
+const STRONG = 1.5;
+/** How far into an arrowhead its back is notched, as a share of its length: the shape of a diagram's arrow. */
+const NOTCH = 0.25;
 
 /**
  * Paints `frame`'s picked links, its arrowheads, its cards, then its labels, on `ctx`, already at their pixels
@@ -135,7 +138,8 @@ const STRONG = 2.5;
  */
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
-  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> & Partial<Pick<SpaceFrame, 'strong' | 'faces'>>,
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> &
+    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts' | 'outlines'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -146,23 +150,38 @@ export function paintSpaceLabels(
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
-  // the picked thing's links, or the picked link, a little thicker, under the cards in front of them
-  ctx.lineWidth = STRONG;
-  for (const l of frame.strong ?? []) {
+  ctx.lineCap = 'round';
+  paintOutlines(ctx, frame.outlines ?? [], paints, halo, ink);
+  // every link as a solid line, then the picked thing's links, or the picked link, thicker, under the cards in front
+  const widest = Math.max(0, ...(frame.shafts ?? []).map((l) => l.width));
+  const lines = [
+    ...(frame.shafts ?? []),
+    ...(frame.strong ?? []).map((l) => ({ ...l, width: Math.max(widest, 1) + STRONG })),
+  ];
+  for (const l of lines) {
     const line = paints(l.style).line;
     if (!line || l.points.length < 2) continue;
     ctx.beginPath();
     l.points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.lineWidth = l.width;
     ctx.strokeStyle = line;
     ctx.stroke();
   }
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
   ctx.lineWidth = 1;
+  // each arrowhead a bold, notched triangle in its link's colour, edged in the page colour where links meet
   for (const a of arrows) {
     const line = paints(a.style).line;
     if (!line) continue;
+    const notch = {
+      x: a.tip.x + ((a.left.x + a.right.x) / 2 - a.tip.x) * (1 - NOTCH),
+      y: a.tip.y + ((a.left.y + a.right.y) / 2 - a.tip.y) * (1 - NOTCH),
+    };
     ctx.beginPath();
     ctx.moveTo(a.tip.x, a.tip.y);
     ctx.lineTo(a.left.x, a.left.y);
+    ctx.lineTo(notch.x, notch.y);
     ctx.lineTo(a.right.x, a.right.y);
     ctx.closePath();
     ctx.fillStyle = line;
@@ -170,6 +189,7 @@ export function paintSpaceLabels(
     ctx.strokeStyle = halo;
     ctx.stroke();
   }
+  ctx.lineJoin = 'round';
   // cards after the arrowheads, which sit at their edges: a card in front hides the arrowheads behind it
   paintCards(ctx, frame.cards, paints, halo, ink);
   paintFaces(ctx, frame.faces ?? [], paints, ratio);

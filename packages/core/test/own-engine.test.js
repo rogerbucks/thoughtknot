@@ -5,7 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { stressLayout } from '../src/layouts/stress.ts';
 import { layeredLayout } from '../src/layouts/layered.ts';
-import { apart, pickLayout } from '../src/layouts/own-engine.ts';
+import { apart, ownSpots, pickLayout } from '../src/layouts/own-engine.ts';
 import { ownable, ownSource } from '../src/layouts/own-draw.ts';
 import { readNote } from '../src/drawing.ts';
 import { directions, draw } from '../src/render.ts';
@@ -158,6 +158,23 @@ describe('picking a layout', () => {
     const keys = ['a', 'b', 'c', 'd', 'e'];
     const all = keys.flatMap((p) => keys.filter((q) => q !== p).map((q) => [p, q]));
     assert.deepEqual(pickLayout(shapeOf(keys, all)), { layout: 'stress', why: 'dense' });
+    // with groups folded, each group one box: the overview goes in rows, however its links run
+    assert.deepEqual(
+      pickLayout(
+        shapeOf(
+          ['group: 1', 'group: 2', 'x'],
+          [
+            ['group: 1', 'group: 2'],
+            ['group: 2', 'x'],
+            ['x', 'group: 1'],
+          ],
+        ),
+      ),
+      {
+        layout: 'layered',
+        why: 'overview',
+      },
+    );
   });
 
   test('pushes apart boxes on each other', () => {
@@ -169,6 +186,57 @@ describe('picking a layout', () => {
     const sizes = new Map([...at.keys()].map((k) => [k, [100, 40]]));
     apart(at, sizes);
     assert.equal(anyOverlap(at, sizes), false);
+  });
+});
+
+describe('a trunk', () => {
+  const box = (of, width = 120) => ({ kind: 'box', id: of, role: 'thing', of, x: 0, y: 0, width, height: 40 });
+  const link = (from, to) => ({ kind: 'link', id: `${from} ${to}`, from, to, points: [], curve: false });
+
+  // proves: layout_trunk_one_link
+  test('is laid out as the one link it stands for, its two dots on that link’s way, in no rows of their own', () => {
+    // one group to another two rows on, their three links merged into a trunk (fold-source.ts)
+    const marks = [
+      ...['group: 1', 'group: 2', 'group: 3'].map((k) => box(k)),
+      box('trunk: 1 in', 8),
+      box('trunk: 1 out', 8),
+      link('group: 1', 'group: 2'),
+      link('group: 2', 'group: 3'),
+      ...[1, 2, 3].map(() => link('group: 1', 'trunk: 1 in')),
+      link('trunk: 1 in', 'trunk: 1 out'),
+      ...[1, 2, 3].map(() => link('trunk: 1 out', 'group: 3')),
+    ];
+    const { spots, via, rankdir } = ownSpots({ marks, space: { width: 0, height: 0 } }, 'LR');
+    // how far along the way its rows run, whichever way the overview turned them
+    const x = (k) => spots.get(k)[rankdir === 'TB' ? 1 : 0];
+    // three rows, as if the trunk were one link, not five with a row for each dot
+    assert.ok(Math.abs(x('group: 3') - x('group: 2') - (x('group: 2') - x('group: 1'))) < 1, 'rows evenly apart');
+    assert.ok(
+      x('group: 1') < x('trunk: 1 in') && x('trunk: 1 in') < x('trunk: 1 out'),
+      'its links meet past the first',
+    );
+    assert.ok(x('trunk: 1 out') < x('group: 3'), 'and part before the last');
+    // the trunk takes the bends between, round the row it skips
+    assert.ok(via.has('trunk: 1 in\ntrunk: 1 out'));
+  });
+});
+
+describe('an overview', () => {
+  const box = (of) => ({ kind: 'box', id: of, role: 'thing', of, x: 0, y: 0, width: 260, height: 57 });
+  const link = (from, to) => ({ kind: 'link', id: `${from} ${to}`, from, to, points: [], curve: false });
+  const chain = (keys) => ({
+    marks: [...keys.map(box), ...keys.slice(1).map((k, i) => link(keys[i], k))],
+    space: { width: 0, height: 0 },
+  });
+
+  // proves: layout_overview_turns
+  test('turns its rows the way that gives it a screen’s shape nearer; a drawing of things keeps the way asked', () => {
+    // eight wide group boxes in a chain: left to right they make one long strip
+    const groups = Array.from({ length: 8 }, (_, i) => `group: ${i + 1}`);
+    assert.equal(ownSpots(chain(groups), 'LR').rankdir, 'TB');
+    assert.equal(ownSpots(chain(groups), 'TB').rankdir, 'TB');
+    const things = Array.from({ length: 8 }, (_, i) => `t${i + 1}`);
+    assert.equal(ownSpots(chain(things), 'LR').rankdir, 'LR');
   });
 });
 

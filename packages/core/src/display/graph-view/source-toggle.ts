@@ -42,5 +42,6 @@ export class SourceToggle {
     b.empty();
     setIcon(b, showing ? 'network' : 'code');
     b.setAttribute('aria-label', word(showing ? 'bar.show-drawing' : 'bar.show-source'));
+    b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
   }
 }

@@ -7,7 +7,9 @@ import { directLinks } from '../direct-links.ts';
 import type { LaidMarks } from '../graphviz-marks.ts';
 import { layoutSvg } from '../graphviz-svg.ts';
 import { colourToken } from '../graphviz-json.ts';
-import { MARGIN, ownSpots } from './own-engine.ts';
+import { MARGIN, marksShape, ownSpots } from './own-engine.ts';
+import { PICK_ATTRIBUTE, kindsOf } from './fingerprint.ts';
+import type { PickShown } from './fingerprint.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
@@ -35,6 +37,9 @@ const plain = (text: string) =>
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    // the source writes ' as &#x27; and wraps right-to-left words in &#x2068; … &#x2069; (bidi.ts)
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
     .replace(/&amp;/g, '&');
 
 /** The groups of a layout source, each written on one line as the style source writes them. */
@@ -64,6 +69,19 @@ export const ownable = (dot: string): boolean =>
 /** The line of a layout source that carries the options our engine lays it out by. */
 const OPTIONS_LINE = /^\s*\/\/ layout options (\{.*\})$/m;
 
+/** The line of a layout source that carries each thing's kind, by its key. */
+const KINDS_LINE = /^\s*\/\/ layout kinds (\{.*\})$/m;
+
+/** Each thing's kind, by its key, as `ownSource` wrote them into the source `dot`. */
+export function kindsIn(dot: string): Map<string, string> {
+  try {
+    const kinds = JSON.parse(KINDS_LINE.exec(dot)?.[1] ?? '{}') as Record<string, unknown>;
+    return new Map(Object.entries(kinds).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v] as const] : [])));
+  } catch {
+    return new Map();
+  }
+}
+
 /** The options our engine lays out the source `dot` by: those `ownSource` wrote in, each kept in its range. */
 export function optionsIn(dot: string): LayoutOptions {
   try {
@@ -75,9 +93,13 @@ export function optionsIn(dot: string): LayoutOptions {
 
 /**
  * `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. `options`
- * are written in as a comment, so a source laid out another way is another source, never one kept from before.
+ * and each thing's `kinds` are written in as comments, so a source laid out another way is another source.
  */
-export function ownSource(dot: string, options?: Partial<LayoutOptions>): string {
+export function ownSource(
+  dot: string,
+  options?: Partial<LayoutOptions>,
+  kinds: ReadonlyMap<string, string> = new Map(),
+): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
     line.includes('->') || line.includes(' -- ')
@@ -89,6 +111,8 @@ export function ownSource(dot: string, options?: Partial<LayoutOptions>): string
         }),
   );
   lines.splice(1, 0, '  graph [splines=false];', `  // layout options ${JSON.stringify(layoutOptions(options))}`);
+  // each thing's kind, for the engine to read how kinds link (fingerprint.ts)
+  if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);
   return lines.join('\n');
 }
 
@@ -159,25 +183,33 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
 
 /**
  * The drawing Graphviz measured in `laid` as marks, its boxes placed by our own engine, its links direct. `groups`
- * are the layout source's groups (`groupsIn`), each drawn as a box round its things.
+ * are the layout source's groups (`groupsIn`), each drawn as a box round its things. `kinds` are each thing's kind.
+ * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
  */
-export function ownMarks(
+export function ownLaid(
   laid: LaidMarks,
   rankdir: string,
   groups: readonly SourceGroup[] = [],
   options: Partial<LayoutOptions> = {},
-): LaidMarks {
-  const way = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
-  const { spots, via, boxes } = ownSpots(laid, way, undefined, groups, options);
-  return directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way);
+  kinds: ReadonlyMap<string, string> = new Map(),
+): { marks: LaidMarks; shown: PickShown } {
+  const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
+  // the way the rows went: an overview's may turn (own-engine.ts)
+  const { spots, via, boxes, rankdir: way, pick, parts, loose } = ownSpots(laid, asked, undefined, groups, options);
+  const seen = kindsOf(marksShape(laid.marks).shape, kinds);
+  return {
+    marks: directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way),
+    shown: { why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose },
+  };
 }
 
-/** The SVG of the drawing Graphviz measured in `laid`, its boxes placed by our own engine, its links direct. */
-export function ownSvg(
-  laid: LaidMarks,
-  rankdir: string,
-  groups: readonly SourceGroup[] = [],
-  options: Partial<LayoutOptions> = {},
-): string {
-  return layoutSvg(ownMarks(laid, rankdir, groups, options));
+/** The drawing Graphviz measured in `laid`, as `ownLaid` draws it, as marks. */
+export const ownMarks = (...args: Parameters<typeof ownLaid>): LaidMarks => ownLaid(...args).marks;
+
+/** The SVG of the drawing Graphviz measured in `laid`, as `ownLaid` draws it, carrying what the engine picked. */
+export function ownSvg(...args: Parameters<typeof ownLaid>): string {
+  const { marks, shown } = ownLaid(...args);
+  const said = encodeURIComponent(JSON.stringify(shown));
+  // last in the tag: the page reads `<svg width=` from its start (theme.ts)
+  return layoutSvg(marks).replace(/<svg\b[^>]*/, (open) => `${open} ${PICK_ATTRIBUTE}="${said}"`);
 }

@@ -1,9 +1,9 @@
 // How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
 // Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
-// tap on empty space clears the selection. A box pressed with a mouse or pen and dragged moves it, and so does M on a
-// box (§6). A right-click on a box, or the menu key on it, opens its menu (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
-// again as the window and the
-// note move. The card (graph-view.ts) binds these once it has built its parts.
+// tap again on the one selected centres it. A tap on empty space clears the selection. A box pressed with a mouse or
+// pen and dragged moves it, and so does M on a box (§6). A right-click on a box, or the menu key on it, opens its menu
+// (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details
+// sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { BoxDrag } from './box-drag-view';
@@ -26,6 +26,7 @@ import { word } from '@thoughtknot/core';
 import type { Taps, Target } from './taps';
 import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
+import { fills } from '../../space-cards.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 
 /** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
@@ -98,7 +99,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   };
   /** How the last press came: a finger held on a box opens its tooltip and picks it up, never the menu (§24, §6). */
   let lastPointer = 'mouse';
-  let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
+  let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean; again: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
   /** A press on a fold's stub or box: if it lifts where it came down, it opens the fold (§25). */
@@ -120,7 +121,11 @@ export function bindViewportEvents(host: ViewportHost): void {
   };
   // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
   card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
-  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => host.unfold(e.detail));
+  // a folded group comes from 3D by its box's id on screen, which keeps the fold it opens (cluster_opens)
+  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => {
+    const box = /^fold_group_\d+$/.test(e.detail) ? host.root.querySelector(`#${e.detail}`) : null;
+    host.unfold(box ? (box.getAttribute('data-fold') ?? e.detail) : e.detail);
+  });
   // the details sheet is placed again as the window changes size and the note scrolls (§25)
   card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
@@ -137,9 +142,11 @@ export function bindViewportEvents(host: ViewportHost): void {
     host.info.pressed(e); // any tooltip closes; a finger held on a thing or link opens it (§24)
     const fold = foldAt(e.target);
     if (fold) foldDown = { id: e.pointerId, ...p, fold };
-    else if (target ?? first)
-      boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse' };
-    else emptyDown = { id: e.pointerId, ...p };
+    else if (target ?? first) {
+      // pressed on what is selected, not only near it: a tap there centres it rather than choosing the next (§3)
+      const again = !!target && !!(e.target as Element).closest?.('g.node, g.edge')?.classList.contains('is-selected');
+      boxDown = { id: e.pointerId, ...p, target: (target ?? first) as Target, touch: pointer !== 'mouse', again };
+    } else emptyDown = { id: e.pointerId, ...p };
     if (use(e, { kind: 'down', id: e.pointerId, pointer, ...p, onBox: !!target, near: !target && near.length > 0 })) {
       vp.setPointerCapture(e.pointerId);
       vp.focus({ preventScroll: true });
@@ -182,9 +189,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     // a tap on empty space clears the selection and the focus (§25); a drag across it only pans
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
-    // on or near several things, a tap in the same place again chooses the next of them (§3)
-    const chosen = taps.choose(down, nearTo(down));
-    host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
+    // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
+    // (Roger, 24 Oct 2026, second_tap_centres). Near several, a tap in the same place again chooses the next (§3)
+    if (down.again && !e.shiftKey) sel.came('centre', () => host.open(down.target));
+    else {
+      const chosen = taps.choose(down, nearTo(down));
+      host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
+    }
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });
@@ -209,6 +220,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     },
     { passive: false },
   );
+  // the fingers really down, from the touch events, which settle what a lost pointerup left tracked (stuck_touch)
+  for (const type of ['touchstart', 'touchend', 'touchcancel'])
+    card.registerDomEvent(vp, type, (e: TouchEvent) => zoom.settle(e.touches.length), { passive: true });
   card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
     boxDown = emptyDown = foldDown = null;
     drag?.cancel();
@@ -240,7 +254,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      // zoomed in until a folded group fills the view: it opens (cluster_opens)
+      const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
+        r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),
+        v = vp.getBoundingClientRect();
+      if (fold?.startsWith('group:') && r && fills(r, v.width, v.height)) host.unfold(fold);
     },
     { passive: false },
   );

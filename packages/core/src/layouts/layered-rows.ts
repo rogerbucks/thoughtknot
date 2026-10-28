@@ -3,8 +3,8 @@
 import type { Size } from './layered.ts';
 
 /**
- * The shape a drawing is aimed at: this many wide to one high. Very tall, so a row is cut only when far too long,
- * since a cut row breaks the flow a reader follows.
+ * The shape a drawing is aimed at: this many across the rows to one along them. Very long rows, so a row is cut only
+ * when far too long, since a cut row breaks the flow a reader follows.
  */
 const ASPECT = 0.05;
 
@@ -89,8 +89,8 @@ export function wrapped(
     area += (s[0] + gap) * (s[1] + rowGap);
     length[r] = (length[r] as number) + (s[across] as number) + gap;
   });
-  // rows left to right are columns, so their length runs down the drawing
-  const most = across === 1 ? Math.sqrt(area / ASPECT) : Math.sqrt(area * ASPECT);
+  // a row is cut only when far longer than the drawing is deep, whichever way the rows run
+  const most = Math.sqrt(area / ASPECT);
   const parts = Array.from(length, (l) => Math.max(1, Math.ceil(l / most)));
   if (parts.every((p) => p === 1)) return rows;
   const firstSource = new Float64Array(rows.length).fill(Infinity);

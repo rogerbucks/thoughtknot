@@ -209,6 +209,30 @@
       "section": "45",
       "words": ["board.link-kind"],
       "libraries": ["core"]
+    },
+    {
+      "code": "GN905",
+      "section": "70",
+      "words": ["sketch.kind-unknown"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN906",
+      "section": "70",
+      "words": ["sketch.pin-gone"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN907",
+      "section": "70",
+      "words": ["sketch.shape-unknown"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN908",
+      "section": "70",
+      "words": ["sketch.points"],
+      "libraries": ["core"]
     }
   ]
 }

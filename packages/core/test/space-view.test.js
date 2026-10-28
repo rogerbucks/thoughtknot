@@ -217,3 +217,34 @@ test('after a redraw the camera centres on the thing picked again, keeping its t
   assert.deepEqual(centredOn(orbit, b), { ...orbit, target: middleOf(b) });
   assert.deepEqual(centredOn(orbit, null), orbit, 'nothing picked: the camera stays');
 });
+
+test('the fitted camera fills the screen with the drawing, whatever its shape, and keeps all of it in view', () => {
+  const block = (id, x, y, width, depth) => ({ id, style: 's', x, y, width, depth, floor: 0, tall: 4 });
+  const wide = {
+    blocks: [block('a', 0, 0, 200, 100), block('b', 3800, 900, 200, 100)],
+    lines: [],
+    labels: [],
+    arrows: [],
+    least: [0, 0, 0],
+    most: [4000, 1000, 4],
+  };
+  const W = 1200,
+    H = 600;
+  const orbit = orbitFit(wide, W / H);
+  const at = (p) => projectPoint(spaceMatrix(orbit, W / H, 4000), p, W, H);
+  const seen = [];
+  for (const b of wide.blocks)
+    for (const [dx, dy] of [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ])
+      seen.push(at([b.x + dx * b.width, b.y + dy * b.depth, 0]));
+  assert.ok(
+    seen.every((p) => p && p.x >= 0 && p.x <= W && p.y >= 0 && p.y <= H),
+    'all in view',
+  );
+  const span = Math.max(...seen.map((p) => p.x)) - Math.min(...seen.map((p) => p.x));
+  assert.ok(span > W * 0.7, `fills the width: ${span}`);
+});

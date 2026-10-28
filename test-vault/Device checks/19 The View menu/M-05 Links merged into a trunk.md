@@ -1,6 +1,6 @@
 # M-05 Links merged into a trunk
 
-**You should see:** with Parallel links merged on, the three links from the Makers to the Helpers leave their boxes as short lines, meet, run together as one thick trunk across the gap, and part again to reach Cy and Dee, each still with its own label. Tapping any part of Ann's link, before or after the trunk, opens its details reading "Ann asks Cy". The second graph, whose style block says merge: 'on', starts merged.
+**You should see:** with Bundle links between groups on, the three links from the Makers to the Helpers leave their boxes as short lines, meet, run together as one thick trunk across the gap, and part again to reach Cy and Dee, each still with its own label. Tapping any part of Ann's link, before or after the trunk, opens its details reading "Ann asks Cy". The second graph, whose style block says merge: 'on', starts merged.
 
 **Test diagram:**
 
@@ -47,14 +47,14 @@
 
 **Do this:**
 
-1. On the crew graph, press View and turn Parallel links merged on. Check the three links share one thick trunk.
+1. On the crew graph, press View and turn Bundle links between groups on. Check the three links share one thick trunk.
 2. Tap Ann's link near Ann, then near Cy. Check both open the details of Ann asks Cy.
 3. With VoiceOver on, move to Ann's link and check it is read as "Link: Ann asks Cy".
-4. Look at the team graph: its View menu says Parallel links merged is on, and its two links share a trunk.
-5. Turn the crew graph's Parallel links merged off, to leave it as it was.
+4. Look at the team graph: its View menu says Bundle links between groups is on, and its two links share a trunk.
+5. Turn the crew graph's Bundle links between groups off, to leave it as it was.
 
 **Checklist line:**
 
-> **M-05** Turn Parallel links merged on: the links running from one group to the other share one thick trunk. Tap a link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style block, merge: 'on' starts the graph merged.
+> **M-05** Turn Bundle links between groups on: the links running from one group to the other share one thick trunk. Tap a link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style block, merge: 'on' starts the graph merged.
 
 **Back to the checklist:** [M-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-05 in its list.

@@ -233,6 +233,7 @@ export async function renderViewBlock(
             ...(selected ? { selected } : {}),
             switches: state.saved(),
             legend,
+            layout: state.layout,
           },
         },
         word('blocks.view-saved', { name: v.name }),

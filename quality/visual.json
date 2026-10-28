@@ -3,50 +3,50 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
@@ -75,135 +75,135 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "c3f2d73e57ea71b80cea79e2e4a471a2a42fad6568b62859d23864b4d576bc46",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "50830e92a2cb3bcb1f189d27f7bf539ef13a16f5433d087c731205f8e3f8a768",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "d7e966ad745713cb02fac39fa03fc431e8822f7eeb218183a8b34a3eb5d2774b",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "f1a2d2372f4de11a1c83b029b4cab8097cab4b0d1a24b77ae890b8e9a780e53e",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "baf94cab519608e11f7537b90e1b05e5d8368bf01b1ada40aa724274c98c60ab",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "9e8e20cf4c41f3505ba708b9c452e502933a275ac56956b7dd8bc3225097d18c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "1b9df999a100391b5b3afd7ef5746f12f292d531abf264bb96f4b553e8513b48",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "c18df102ff44521ef88984a63518a1e014c6023fa19f7d9dfd7dae2e3eb5087c",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "77eb45e794c95a796587f41c38d73142325a950ab906323ab4aa0d52472011a3",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "0b397c3263da38d8732086a477198b4f1f6b170a146398b732dac60cc6ad1195",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "dda5f7df4babca5d08c9c7e3f0e60c3f11ddb2f4466198d751e2c15fadef82bf",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "02a1c2d37d7ebfbb7f43f6a833dfb4573229b837d62a39441a5d270db0d3b62d",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "afcaec7761b2cf7ae6d9b0d23e5d71b00051cf434c87389e7e0afb8480124443",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "db5834b6acf627b3d5fdf0f11fad65d2384bc8a1a86178a959fc217e165c1cd9",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "3763cbeeb76b1a168bfba18b95ad6bc304ea61f4d43433aa48aeeb883f8ff2ab",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "8a9b4d059c3a6021b49a7cc1d08c9784bebfaa3158e3d9e85fa7facfdc07c0b1",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "0724aca908b27648b41ccb3efa6da9df981aa5c7a9ef86cfe05816129c013fc0",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "f9f2b68b4960d79fff1b490632aef73a116ca63c8d8d5e5dc2173947d98ad864",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
-      "sha256": "3c889cb6ba9ce6b38cd870365593561f9bf390443b32c9de440387bb24d7a716",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ef712aa447ac5c122d306102dc7bcec99e360e2f0e0f675dc0d6fcfbed09952b",
+      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
-      "sha256": "112c5e16ac3e760b85bb12c8a31ed00e464181d4b59595562ad1295b4290fc6c",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "de09e45644e380ebede0bbe9f23a076b162531382eac08dfdf66b8ba690c9747",
+      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
@@ -219,50 +219,50 @@
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "9ccc406f5774960918ef0367af30f79ef53369037bd7d62207cdb2f9c1548394",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "024e7501f5148067a2e0021d49e40104bb687b0e78a5da70d18cd3413f3af06d",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "83aca0708dfeee935bf63296ade900ff9336c4ecea769669cf438c4488c940f9",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "d047c0e6b82309f51003726a385790b317f7d74a12b7d0b285a93827524bb18c",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "00f86a257d5c3c84014badc6c46769922ade3972e2ec296190d5b83529c13ec7",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "59a1a0ee50742a2d3be4b4df16666ade21aa93f29a8799ac484cb8f3284d2186",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "46945618d738df3f51ad2d2894732815c05a6589524d56f64a107574e3ebdf80",
-      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
-      "day": "2026-10-24"
+      "sha256": "f1e2d73ed5a4a4987c22e16b233e52b362c0a4f367d1cd49a891f6074ccfa10c",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
+      "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "1b9df999a100391b5b3afd7ef5746f12f292d531abf264bb96f4b553e8513b48",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "c18df102ff44521ef88984a63518a1e014c6023fa19f7d9dfd7dae2e3eb5087c",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "77eb45e794c95a796587f41c38d73142325a950ab906323ab4aa0d52472011a3",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "0b397c3263da38d8732086a477198b4f1f6b170a146398b732dac60cc6ad1195",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
@@ -291,74 +291,74 @@
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "611f05fe53cb1cc86f37c94af9031fc8b370083fc4b0c152970cd39baf1f0092",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "03f78590b464f2799163cdb00dc2c2df4d6f462cbe316f84d03db8c27e300646",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "ae7ef8abeb729346da8cdec85bd004fc0b5105cbb3ac957ea603f8e49f4368b5",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "8b31f896d0a9b5d84b18ea02cf705d9006a9e867423a8a7e50e021de1aa03981",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "431f34015b32e1e9964dbd8cd1d3f7592c13915f2e3a6e9ca7716f2629b6eee3",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "6bb39e2b53740708f90dacc52ee0a98ce1eb00fba5f85ad99487dfe1f9f83823",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "cc7091b491e455fa14bf7335259558c832049ad657ee7d50acb6a06dd19a0716",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "8fc43b80bd54a5719e7fc33f3c456ef722e5853d3e0efb246a48b00fc54cd81c",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "9d67396b9548d338d6268408e2053b97899d4b57bf636b61346a9ee0639d02a9",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "8ca12997fee28fb30274eacf700be8d95cbfdee7c8c86f412ad344359ed75fef",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
+      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "3763cbeeb76b1a168bfba18b95ad6bc304ea61f4d43433aa48aeeb883f8ff2ab",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "8a9b4d059c3a6021b49a7cc1d08c9784bebfaa3158e3d9e85fa7facfdc07c0b1",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "0724aca908b27648b41ccb3efa6da9df981aa5c7a9ef86cfe05816129c013fc0",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "f9f2b68b4960d79fff1b490632aef73a116ca63c8d8d5e5dc2173947d98ad864",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "2e748db499343b5fdec1654748d485249172ffeb0b9d27a58fb43216f4407b69",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "97e2f74e4cf52fb5d57a81f4389904c89144b1c2a2f589f224347695a9320c2b",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "b8c5d8fe924da765f5be4d05744a29752fcc329d2f62284e50cd4c0330d0a5cb",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
+      "sha256": "38dbfa86dd49e58fa5eff48e0c2a936e1c3f146ab0fd57e80ab719fc3fba3661",
+      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
       "day": "2026-10-25"
     },
     {

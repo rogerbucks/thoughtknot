@@ -4,6 +4,7 @@
 // - It keeps the size and place set, whatever its details hold: they scroll within it.
 // - The edge facing the drawing is a resize bar, a named separator. It is dragged with a pointer or moved with the
 //   arrow keys, Home and End taking it to its least and most. The size holds for the rest of the session too.
+// - In a window 1024 pixels wide or more, they open on the right until a place is chosen (sheet_side_wide).
 // - The place, size and state are kept in the plugin's data, so they hold across restarts (sheet_layout_kept).
 // - Details that do not fit scroll within their space: the sheet wherever it sits, the card, or the side pane. The
 //   header with its buttons is kept in sight (details_scroll).
@@ -155,6 +156,51 @@ describe('the place button chooses where the sheet sits', () => {
   });
 });
 
+describe('in a wide window the details open on the right until a place is chosen (sheet_side_wide)', () => {
+  /** A card in a window `width` wide, with `data` as the plugin's saved data, and a thing's details open. */
+  async function wide(width, data) {
+    const env = await loadPlugin({ files: { [PATH]: NOTE }, data });
+    env.doc.defaultView.innerWidth = width;
+    const el = await showNote(env);
+    details(el).getBoundingClientRect = laidOut(details(el));
+    tapKey(el, 'large');
+    return { env, el };
+  }
+
+  test('1024 pixels wide or more, they open docked on the right, and the menu ticks it', async () => {
+    const { env, el } = await wide(1280, null);
+    try {
+      assert.ok(details(el).hasClass('is-dock-right'), 'on the right');
+      assert.deepEqual(
+        placeMenu(env, el)
+          .items.filter((i) => i.checked)
+          .map((i) => i.title),
+        ['Dock on the right'],
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('narrower, they open at the bottom as before', async () => {
+    const { env, el } = await wide(1000, null);
+    try {
+      assert.ok(details(el).hasClass('is-dock-bottom'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a place kept from before wins over the wide window', async () => {
+    const { env, el } = await wide(1280, { detailsLayout: { place: 'bottom' } });
+    try {
+      assert.ok(details(el).hasClass('is-dock-bottom'));
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('the edge facing the drawing is a resize bar', () => {
   let env, el;
   const prop = (k) => details(el).cssProps[`--thoughtknot-sheet-${k}`];
@@ -174,24 +220,29 @@ describe('the edge facing the drawing is a resize bar', () => {
     assert.equal(g.getAttribute('aria-orientation'), 'horizontal');
     assert.equal(g.getAttribute('aria-valuemin'), String(Math.round((52 / 800) * 100)));
     assert.equal(g.getAttribute('aria-valuemax'), String(Math.round(((800 - 160) / 800) * 100)));
-    assert.equal(g.getAttribute('aria-valuenow'), '45');
+    assert.equal(g.getAttribute('aria-valuenow'), '33');
   });
 
   test('before it is resized, it is its own share of the screen, whatever its details hold', () => {
-    assert.equal(prop('height'), `${800 * 0.45}px`);
+    assert.equal(prop('height'), `${800 * (1 / 3)}px`);
     tapKey(el, 'q');
-    assert.equal(prop('height'), `${800 * 0.45}px`, 'other details, the same size: it never grows or shrinks to fit');
+    assert.equal(
+      prop('height'),
+      `${800 * (1 / 3)}px`,
+      'other details, the same size: it never grows or shrinks to fit',
+    );
     tapKey(el, 'large');
   });
 
   test('at the bottom, Up makes the sheet taller by a step and Down shorter', () => {
+    const near = (k, share) => assert.ok(Math.abs(parseFloat(prop(k)) - 800 * share) < 1e-6, `${k}: ${prop(k)}`);
     key('ArrowUp');
-    assert.equal(prop('height'), `${800 * 0.5}px`);
-    assert.equal(prop('max'), `${800 * 0.5}px`);
-    assert.equal(grip(el).getAttribute('aria-valuenow'), '50');
+    near('height', 1 / 3 + 0.05);
+    near('max', 1 / 3 + 0.05);
+    assert.equal(grip(el).getAttribute('aria-valuenow'), '38');
     key('ArrowDown');
     key('ArrowDown');
-    assert.equal(prop('height'), `${800 * 0.4}px`);
+    near('height', 1 / 3 - 0.05);
   });
 
   test('Home takes it to its bar, End to the most that leaves the chosen thing in sight above it', () => {
@@ -309,7 +360,7 @@ describe('the place, size and state are kept in the plugin’s data, across rest
       const kept = env.state.data.detailsLayout;
       assert.equal(kept.place, 'top');
       assert.equal(kept.state, 'restored');
-      assert.ok(Math.abs(kept.up - 0.5) < 1e-9, `the share set: ${kept.up}`);
+      assert.ok(Math.abs(kept.up - (1 / 3 + 0.05)) < 1e-9, `the share set: ${kept.up}`);
     } finally {
       env.uninstall();
     }
@@ -332,7 +383,7 @@ describe('the place, size and state are kept in the plugin’s data, across rest
     try {
       assert.ok(details(el).hasClass('is-dock-bottom'));
       assert.ok(!details(el).hasClass('is-minimised'));
-      assert.equal(prop('height'), `${800 * 0.45}px`);
+      assert.equal(prop('height'), `${800 * (1 / 3)}px`);
     } finally {
       env.uninstall();
     }

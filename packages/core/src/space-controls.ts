@@ -10,13 +10,13 @@
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
 // stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD, eyeOf, orbitBy } from './space-view.ts';
+import { FIELD, eyeOf, orbitBy, upOf, zoomBy } from './space-view.ts';
 import type { Orbit, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
 export const KEY_STEP = 24;
 /** How much one press of + or - zooms. */
-export const ZOOM_STEP = 1.25;
+export const ZOOM_STEP = 1.6;
 
 /**
  * `orbit` moved across the floor by a drag of `dx` and `dy` pixels on a screen `height` pixels high. What is under
@@ -110,6 +110,72 @@ export function twistBy(orbit: Orbit, angle: number): Orbit {
 }
 
 /**
+ * `orbit` zoomed by `times`, toward the point of the screen at `nx` and `ny`. Each runs from -1 to 1, with up and to the
+ * right positive, on a screen `aspect` wide to each unit high. What is under that point stays under it, as a map zooms
+ * to the pointer or to the middle of a pinch. At 0 and 0 it is `zoomBy`.
+ */
+export function zoomToward(orbit: Orbit, times: number, nx: number, ny: number, aspect: number): Orbit {
+  const nearer = zoomBy(orbit, times),
+    k = orbit.distance / nearer.distance;
+  const eye = eyeOf(orbit);
+  const f = unit([0, 1, 2].map((i) => (orbit.target[i] ?? 0) - (eye[i] ?? 0)) as Vec3),
+    up = upOf(orbit);
+  const right = unit([f[1] * up[2] - f[2] * up[1], f[2] * up[0] - f[0] * up[2], f[0] * up[1] - f[1] * up[0]]);
+  const above = unit([
+    right[1] * f[2] - right[2] * f[1],
+    right[2] * f[0] - right[0] * f[2],
+    right[0] * f[1] - right[1] * f[0],
+  ]);
+  // how far the pointer is from the middle, in the space, at the depth of what the camera looks at
+  const reach = orbit.distance * Math.tan(FIELD / 2);
+  const shift = (1 - 1 / k) * reach;
+  const target = [0, 1, 2].map(
+    (i) => (orbit.target[i] ?? 0) + shift * (nx * aspect * (right[i] ?? 0) + ny * (above[i] ?? 0)),
+  ) as Vec3;
+  return { ...nearer, target };
+}
+
+/** `zoomToward` for the pixel `x`, `y` of a screen `width` by `height` pixels. */
+export function zoomAtPixel(orbit: Orbit, times: number, x: number, y: number, width: number, height: number): Orbit {
+  return zoomToward(orbit, times, (2 * x) / width - 1, 1 - (2 * y) / height, width / height);
+}
+
+/**
+ * Whether two fingers went up or down together: mostly vertical, neither spreading nor twisting (space_two_finger_tilt).
+ * Touch events come for one finger at a time, so one step moves one finger and leaves a small twist.
+ */
+export function tiltsTogether(was: readonly [Touch, Touch], now: readonly [Touch, Touch]): boolean {
+  const { dx, dy, zoom } = twoFingers(was, now);
+  return Math.abs(dy) > 2 * Math.abs(dx) && Math.abs(zoom - 1) < 0.02 && Math.abs(twistOf(was, now)) < 0.15;
+}
+
+/**
+ * `orbit` moved as two fingers went from `was` to `now`. The screen is `width` by `height` pixels, with its top left at
+ * `at`. Two fingers going up or down together tilt the view round `pivot`, as one finger dragging does. Otherwise the view
+ * moves across with them, zooms toward their middle and turns as they twist.
+ */
+export function pinchBy(
+  orbit: Orbit,
+  was: readonly [Touch, Touch],
+  now: readonly [Touch, Touch],
+  at: { left: number; top: number },
+  width: number,
+  height: number,
+  pivot: Vec3,
+): Orbit {
+  const { dx, dy, zoom } = twoFingers(was, now);
+  if (tiltsTogether(was, now)) return turnRound(orbit, 0, dy, pivot);
+  const x = (now[0].x + now[1].x) / 2 - at.left,
+    y = (now[0].y + now[1].y) / 2 - at.top;
+  return twistBy(zoomAtPixel(panBy(orbit, dx, dy, height), zoom, x, y, width, height), twistOf(was, now));
+}
+
+const unit = (v: Vec3): Vec3 => {
+  const n = Math.hypot(...v) || 1;
+  return [v[0] / n, v[1] / n, v[2] / n];
+};
+
+/**
  * `orbit` turned to look at `point`, which it then turns round and zooms to. The camera stays where it is, so what it
  * sees turns to face the point rather than leaping to it. Called with `share` under 1, it looks only that share of the
  * way from what it looked at, so the turn can glide.
@@ -174,7 +240,8 @@ function turned(v: Vec3, axis: Vec3, angle: number): Vec3 {
  * stays where it is on the screen while all else turns round it (Roger, 25 Oct 2026).
  */
 export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Orbit {
-  const spin = -dx * 0.008,
+  // seen upside down, the upright line points down the screen, so the same drag turns the other way unless it is reversed
+  const spin = -dx * 0.008 * (Math.cos(orbit.tilt) < 0 ? -1 : 1),
     lift = dy * 0.008;
   const off: Vec3 = [0, 1, 2].map((k) => (orbit.target[k] ?? 0) - (pivot[k] ?? 0)) as Vec3;
   // first round the upright line through the pivot, then round the level line square to the new way the camera looks
@@ -188,3 +255,26 @@ export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Or
     tilt: orbit.tilt + lift,
   };
 }
+
+type TouchLike = { stopPropagation(): void; touches: { length: number } };
+/**
+ * A touch in the view goes no further, so the host's own swipes never take it. The touches really down also settle the
+ * pointers tracked, keeping the newest. A lift that never arrived must not leave one. Else the next single finger
+ * would pinch instead of turn (stuck_touch).
+ */
+export const touchesStay = (
+  el: { addEventListener(type: string, fn: (e: TouchLike) => void, o: object): void },
+  down: Map<number, unknown>,
+): void => {
+  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel'])
+    el.addEventListener(
+      type,
+      (e) => {
+        e.stopPropagation();
+        const fingers = e.touches.length;
+        if (type !== 'touchmove')
+          for (const id of [...down.keys()].slice(0, Math.max(0, down.size - fingers))) down.delete(id);
+      },
+      { passive: true },
+    );
+};

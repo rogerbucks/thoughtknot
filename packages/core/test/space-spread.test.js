@@ -3,8 +3,9 @@
 // arrowheads on the ball they point to, and words at the middle of each link.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { asDrawnFor, radiusOf, spreadSpace } from '../src/space-spread.ts';
+import { ROOM, SPREAD_UNIT, asDrawnFor, keepApart, radiusOf, spreadSpace } from '../src/space-spread.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../src/space-labels.ts';
+import { cardArrows, cardsOnScreen } from '../src/space-cards.ts';
 import { blockAt } from '../src/space-pick.ts';
 import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
 
@@ -245,6 +246,58 @@ test('a trunk’s joint, drawn as a point, stays a small point in 3D, not a ball
   const marks = [...MARKS, joint, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk: 1 in', ''))];
   const ball = spreadSpace(marks).space.blocks.find((b) => b.of === 'trunk: 1 in');
   assert.ok(ball.width <= 6, `${ball.width}`);
+  // the drawing on screen has no titles: the joint is named by its id there (cluster_named_everywhere)
+  const onScreen = { ...joint, of: 'trunk_1_in' };
+  const shown = [...MARKS, onScreen, ...['a', 'b', 'c'].map((k, i) => link(`j:${i}`, k, 'trunk_1_in', ''))];
+  assert.ok(spreadSpace(shown).space.blocks.find((b) => b.of === 'trunk_1_in').width <= 6);
+});
+
+// proves: space_trunks_clear
+test('a trunk’s joints sit between its groups, and only a merged link’s own end has an arrowhead', () => {
+  const joint = (end) => ({
+    id: `trunk_1_${end}`,
+    kind: 'box',
+    style: 'svg.3',
+    of: `trunk_1_${end}`,
+    x: 0,
+    y: 0,
+    width: 6,
+    height: 6,
+  });
+  const bare = (l) => ({ ...l, headless: true });
+  // a and b link to c and d through one trunk; c also links on to hub
+  const marks = [
+    ...MARKS,
+    joint('in'),
+    joint('out'),
+    bare(link('t:a', 'a', 'trunk_1_in', '')),
+    bare(link('t:b', 'b', 'trunk_1_in', '')),
+    bare(link('t:1', 'trunk_1_in', 'trunk_1_out', '2 links')),
+    link('t:c', 'trunk_1_out', 'c', 'USES'),
+    link('t:d', 'trunk_1_out', 'd', 'USES'),
+  ];
+  for (const cards of [false, true]) {
+    const { space } = spreadSpace(marks, undefined, cards);
+    const at = (k) => centreOf(space.blocks.find((b) => b.of === k));
+    const mid = (p, q) => p.map((v, i) => (v + q[i]) / 2);
+    const from = mid(at('a'), at('b')),
+      to = mid(at('c'), at('d'));
+    for (const [end, near, far] of [
+      ['in', from, to],
+      ['out', to, from],
+    ]) {
+      const j = at(`trunk_1_${end}`);
+      // on the way from its own things to the others: never off to one side, where links would bend back
+      assert.ok(dist(j, near) < dist(j, far), `${end} sits nearer its own things`);
+      assert.ok(dist(near, j) + dist(j, far) < 1.25 * dist(near, far), `${end} sits between the groups`);
+    }
+    const arrowed = new Set(space.arrows.map((a) => a.id.split('\n')[0]));
+    for (const id of ['t:a', 't:b', 't:1']) assert.ok(!arrowed.has(id), `${id} has no arrowhead in space`);
+    for (const id of ['t:c', 't:d']) assert.ok(arrowed.has(id) || cards, `${id} keeps its arrowhead`);
+    const matrix = spaceMatrix(orbitFit(space, 1), 1, 2000);
+    const onCards = cardArrows(space, matrix, 800, 800, cardsOnScreen(space, matrix, 800, 800));
+    for (const a of onCards) assert.ok(!['t:a', 't:b', 't:1'].includes(a.id.split('\n')[0]), `${a.id} at a card`);
+  }
 });
 
 // proves: space_right_way_up
@@ -283,4 +336,49 @@ test('an arrowhead is never longer than the ball it points at is wide on the scr
       assert.ok(long <= wide + 0.5, `${long} > ${wide}`);
     }
   }
+});
+
+// proves: space_room
+test('things laid out afresh keep clear room round each, and a lone part sits beside the rest', () => {
+  const lone = [
+    { id: 't:x', kind: 'box', style: 'svg.1', of: 'x', x: 0, y: 0, width: 80, height: 30 },
+    { id: 't:y', kind: 'box', style: 'svg.1', of: 'y', x: 0, y: 0, width: 80, height: 30 },
+    link('e:xy', 'x', 'y', 'OWNS'),
+  ];
+  for (const cards of [false, true]) {
+    const { space } = spreadSpace([...MARKS, ...lone], undefined, cards);
+    const at = new Map(space.blocks.map((b) => [b.of, { c: centreOf(b), r: b.width / 2 }]));
+    for (const [a, p] of at)
+      for (const [b, q] of at)
+        if (a < b) assert.ok(dist(p.c, q.c) >= p.r + q.r + ROOM - 1e-6, `${a} and ${b} keep clear room`);
+    // the lone pair sits no further from the rest than the rest is wide, and a link's length
+    const rest = ['hub', 'a', 'b', 'c', 'd'].map((k) => at.get(k).c);
+    const wide = Math.max(...rest.flatMap((p) => rest.map((q) => dist(p, q))));
+    const gap = Math.min(...['x', 'y'].flatMap((k) => rest.map((p) => dist(p, at.get(k).c))));
+    assert.ok(gap <= wide + 3 * SPREAD_UNIT * (cards ? 2.2 : 1), `the lone pair is ${gap.toFixed(0)} off`);
+  }
+});
+
+test('keepApart pushes two things in one place apart, the same each time', () => {
+  const run = () => {
+    const centre = new Map([
+      ['p', [0, 0, 0]],
+      ['q', [0, 0, 0]],
+      ['r', [500, 0, 0]],
+    ]);
+    keepApart(
+      centre,
+      new Map([
+        ['p', 10],
+        ['q', 10],
+        ['r', 10],
+      ]),
+      20,
+    );
+    return centre;
+  };
+  const centre = run();
+  assert.ok(dist(centre.get('p'), centre.get('q')) >= 40 - 1e-6);
+  assert.deepEqual(centre.get('r'), [500, 0, 0], 'one far off is left where it is');
+  assert.deepEqual(run(), centre);
 });

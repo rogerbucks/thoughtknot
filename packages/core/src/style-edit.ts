@@ -27,6 +27,8 @@ import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { legendText } from './untangle-saved.ts';
+import { isDefaultLayout, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
@@ -65,6 +67,8 @@ export interface ShownWrite {
   switches?: Partial<Record<(typeof SWITCH_KEYS)[number], string>>;
   /** The legend's lines brought forward or hidden (§25, untangle_legend), as `LegendFilter.choices` gives them. */
   legend?: readonly LegendChoice[];
+  /** How the layout spaces it now (§53, layout_saved_with_view): written only when it differs from alone. */
+  layout?: LayoutOptions;
 }
 
 /** A property to switch on or off for showing inline (§14): for one kind, thing or relationship type, in a view or not. */
@@ -246,6 +250,10 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       ...SWITCH_KEYS.map((k): [string, Value] => [k, s.switches?.[k]]),
       // written only when something is chosen, and only here, as the view is saved as shown (untangle_legend)
       ['legend', s.legend?.length ? legendText(s.legend) : undefined],
+      ...(Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]).map(([k, key]): [string, Value] => [
+        key,
+        s.layout && !isDefaultLayout(s.layout) ? s.layout[k] : undefined,
+      ]),
     ],
     match: [['view', s.view]],
   };

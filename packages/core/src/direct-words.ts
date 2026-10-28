@@ -8,6 +8,9 @@ import type { MarkPoint } from './plugin-diagrams.ts';
 /** How far a link's words sit off its middle, as a share of their size, so they do not lie on the line. */
 export const WORDS_OFF = 0.55;
 
+/** The key of the dot a trunk's links part at (fold-source.ts). */
+const TRUNK_OUT = /^trunk: \d+ out$/;
+
 /** The end of a fan of links its one block of words sits near. */
 export type FanEnd = 'from' | 'to';
 
@@ -16,6 +19,7 @@ export type FanEnd = 'from' | 'to';
  * layouts are still a hideous mess". Links of one type into one thing are a fan, and so are those out of one thing. A
  * fan keeps its first link's words, near the end it shares. The rest of its words are gone. A link into a fan of its
  * own is never counted in one out of a thing as well. Links between the same two things show each row of words once.
+ * A trunk's links show none: its own words count them.
  */
 export function fans(marks: readonly DrawMark[]): { gone: Set<string>; near: Map<string, FanEnd> } {
   const ends = new Map<string, { from: string; to: string }>();
@@ -29,6 +33,11 @@ export function fans(marks: readonly DrawMark[]): { gone: Set<string>; near: Map
   const words = new Map<string, (DrawMark & { kind: 'label' })[]>();
   for (const m of marks)
     if (m.kind === 'label' && m.of !== undefined && ends.has(m.of)) {
+      // past a trunk, its links are told by the trunk's count of them: their own words are gone
+      if (TRUNK_OUT.test(ends.get(m.of)?.from ?? '')) {
+        gone.add(m.id);
+        continue;
+      }
       const rows = words.get(m.of) ?? [];
       if (rows.some((r) => r.text === m.text)) gone.add(m.id);
       else words.set(m.of, [...rows, m]);

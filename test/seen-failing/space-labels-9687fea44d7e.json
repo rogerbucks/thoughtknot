@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/space-labels.test.js",
+  "test": "no name covers another, and zooming in shows more names",
+  "seen_failing_first": false,
+  "evidence": "The test was already passing; only the zoom levels changed because the fit now fills the screen, so far is zoomed out from the fit and near is the fit."
+}
