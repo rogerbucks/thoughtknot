@@ -72,30 +72,55 @@ export function unbent(lens: Radial, q: readonly number[]): number[] {
   return d.map((v, i) => (lens.focus[i] ?? 0) + v * k);
 }
 
-/** A pair of numbers in an SVG path or a list of points, as Graphviz and our own engine write them: `x,y`. */
-const PAIR = /(-?\d*\.?\d+(?:e-?\d+)?),(-?\d*\.?\d+(?:e-?\d+)?)/g;
+/** Whether `c` may be part of a number as SVG writes one: a digit, a point, a sign or an exponent. */
+const inNumber = (c: string) => (c >= '0' && c <= '9') || c === '.' || c === '-' || c === 'e';
+
+/**
+ * Each pair of numbers in an SVG path or a list of points, as Graphviz and our own engine write them: `x,y`. Read in
+ * one pass, with no pattern to backtrack, so text of any length is read in time in proportion to it.
+ */
+function pairsIn(text: string): { at: number; end: number; x: number; y: number }[] {
+  const out: { at: number; end: number; x: number; y: number }[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (!inNumber(text[i] as string)) {
+      i++;
+      continue;
+    }
+    const at = i;
+    while (i < text.length && inNumber(text[i] as string)) i++;
+    if (text[i] !== ',') continue;
+    const mid = i++;
+    while (i < text.length && inNumber(text[i] as string)) i++;
+    const x = Number(text.slice(at, mid)),
+      y = Number(text.slice(mid + 1, i));
+    if (i > mid + 1 && Number.isFinite(x) && Number.isFinite(y)) out.push({ at, end: i, x, y });
+  }
+  return out;
+}
 
 /** Rounds to two places, as the drawing is written. */
 const two = (v: number) => String(Math.round(v * 100) / 100);
 
 /** The middle of the box round each `x,y` of SVG path data or points; none for none. */
 export function pointsMiddle(text: string): number[] | null {
-  const xs: number[] = [],
-    ys: number[] = [];
-  for (const [, x, y] of text.matchAll(PAIR)) {
-    xs.push(Number(x));
-    ys.push(Number(y));
-  }
-  if (!xs.length) return null;
+  const pairs = pairsIn(text);
+  if (!pairs.length) return null;
+  const xs = pairs.map((p) => p.x),
+    ys = pairs.map((p) => p.y);
   return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
 }
 
 /** SVG path data or points, each `x,y` moved by `to`. */
 export function bentPoints(text: string, to: (x: number, y: number) => readonly number[]): string {
-  return text.replace(PAIR, (_, x: string, y: string) => {
-    const [bx = 0, by = 0] = to(Number(x), Number(y));
-    return `${two(bx)},${two(by)}`;
-  });
+  let out = '',
+    from = 0;
+  for (const { at, end, x, y } of pairsIn(text)) {
+    const [bx = 0, by = 0] = to(x, y);
+    out += `${text.slice(from, at)}${two(bx)},${two(by)}`;
+    from = end;
+  }
+  return out + text.slice(from);
 }
 
 /**
