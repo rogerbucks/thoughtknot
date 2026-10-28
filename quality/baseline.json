@@ -1,0 +1,337 @@
+{
+  "about": "Measured by scripts/quality-metrics.mjs. quality/baseline.json is the committed copy of a run, the figures every release is held to by scripts/quality-check.mjs; a worse figure needs a reason in quality/accepted.json. To move the baseline, re-run the script with --out quality/baseline.json.",
+  "measured": "2026-10-09",
+  "node": "v26.9.0",
+  "machine": {
+    "os": "darwin",
+    "node_major": 26
+  },
+  "metrics": {
+    "max_source_lines": 390,
+    "max_test_lines": 598,
+    "audit_critical": 0,
+    "audit_high": 0,
+    "audit_moderate": 0,
+    "audit_low": 0,
+    "secrets_found": 0,
+    "bundle_bytes": 1958060,
+    "bundle_bytes_without_viz": 357577,
+    "suite_seconds": 24.3,
+    "flaky_tests": 0,
+    "quiet_run_bytes": 14,
+    "coverage_percent": 99.2,
+    "speed_index": 3.86,
+    "instructions_draw_fifty": 912574259,
+    "instructions_reading_limits": 24966800552,
+    "instructions_layout_refusals": 654100188,
+    "instructions_naming": 2845924661,
+    "instructions_keystroke": 389586025,
+    "instruction_claims_broken": 0,
+    "instructions_cold_start": 2672152969,
+    "instructions_draw_five_hundred": 3328961961,
+    "instructions_mesh_query": 27360517,
+    "journey_steps_obsidian": 9,
+    "journey_interactions_obsidian": 9,
+    "journey_steps_claude_code": 6,
+    "journey_interactions_claude_code": 6,
+    "journey_steps_app": 6,
+    "journey_interactions_app": 6,
+    "journey_steps_vscode": 6,
+    "journey_interactions_vscode": 6
+  },
+  "details": {
+    "instructions": {
+      "measured": true,
+      "machine": {
+        "os": "linux",
+        "arch": "x64",
+        "node_major": 24,
+        "node": "v24.20.0",
+        "valgrind": "valgrind-3.22.0",
+        "cpu": "AMD EPYC 9V45 96-Core Processor"
+      },
+      "flags": {
+        "node": [
+          "--single-threaded",
+          "--predictable",
+          "--predictable-gc-schedule",
+          "--random-seed=1",
+          "--disable-wasm-trap-handler",
+          "--no-wasm-dynamic-tiering"
+        ],
+        "valgrind": [
+          "--tool=cachegrind",
+          "--cache-sim=no",
+          "--smc-check=all"
+        ]
+      },
+      "runs": 1,
+      "benchmarks": [
+        {
+          "name": "draw_fifty",
+          "spec": "§11, fifty_in_half_second",
+          "proves": "a graph of 50 things is read and drawn, on the calling thread and through the layout runner, in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
+          "fingerprint": "f22a7becec175cf5d866c0ccdf37b30bedd4fabc509599817444f4a3d0f052c9",
+          "setup": 6252897577,
+          "cases": {
+            "draw": 455017111,
+            "through-runner": 457557148
+          }
+        },
+        {
+          "name": "reading_limits",
+          "spec": "§9, reading_contained",
+          "proves": "the worst broken blocks under the size limits are read within the one budget of reading again",
+          "fingerprint": "e99fa40fcc224a05e84d915a6ddc9b2d8a93085e7c919d8254654fdc29af9bfd",
+          "setup": 1140231426,
+          "cases": {
+            "broken-2000": 6945089244,
+            "mended-2000": 443183886,
+            "one-line-broken": 9976679688,
+            "one-line-mended": 1150602512,
+            "every-line-broken": 8045031620,
+            "every-line-mended": 2352067713
+          }
+        },
+        {
+          "name": "layout_refusals",
+          "spec": "§9, layout_contained",
+          "proves": "a block, a word or a note over a limit is refused at once, for less than reading a tenth of the note",
+          "fingerprint": "4e14f64ec376cffd5dcabe586676250fbaa0f1fc125f098439ced8efda978604",
+          "setup": 870734704,
+          "cases": {
+            "block-5mb": 426604009,
+            "word-999k": 123182771,
+            "note-600k": 104313408,
+            "note-tenth": 319047497
+          }
+        },
+        {
+          "name": "naming",
+          "spec": "§9, naming thousands of things never freezes the page",
+          "proves": "naming thousands of things, by the name book or as suggested names, takes work linear in their number",
+          "fingerprint": "152a5fdf39cf00f8d19b7f5c5b36f4e00a921284658d1334b246e60264c03b68",
+          "setup": 304836409,
+          "cases": {
+            "book-5000": 194154152,
+            "book-quarters": 191394701,
+            "unnamed-9000": 2651770509,
+            "unnamed-quarters": 2709944773
+          }
+        },
+        {
+          "name": "keystroke",
+          "spec": "§5, quick_to_note",
+          "proves": "a keystroke reaches the note with the core work of one read; reading back costs less than reading",
+          "fingerprint": "baf1eed8e5882c5d2fa12e3a5f0137813390ac9e088c738915233c970aae0c3b",
+          "setup": 2075801538,
+          "cases": {
+            "keystroke": 111350541,
+            "read": 1635766680,
+            "read-back": 278235484
+          }
+        },
+        {
+          "name": "draw_five_hundred",
+          "spec": "§41, speed_budgets",
+          "proves": "a graph of 500 things is read and drawn, on the calling thread and through the layout runner, within its budget of instructions",
+          "fingerprint": "c4d1fcc5ba3e2e0b22afbf404a6e3113cd52c0982f081dce9eebd9b506249a7c",
+          "setup": 8906512181,
+          "cases": {
+            "draw": 1654847472,
+            "through-runner": 1674114489
+          }
+        },
+        {
+          "name": "mesh_query",
+          "spec": "§41, speed_budgets",
+          "proves": "a query over a 10 000-thing mesh, by name and by a property’s value, stays within its budget",
+          "fingerprint": "1975b568b0f5e0d1c615a0b2049ded252f6f1659a7b020a75548554e1085847b",
+          "setup": 7122766734,
+          "cases": {
+            "by-name": 7047025,
+            "by-property": 20313492
+          }
+        },
+        {
+          "name": "cold_start",
+          "spec": "§41, speed_budgets",
+          "proves": "each host draws a note of 50 things from a cold start within its own budget",
+          "fingerprint": "f3dd910d6dd3acf8cdbda2d2185d27b78f5bcc77a85653c9d1928aa978d2da8c",
+          "setup": 158257955,
+          "cases": {
+            "obsidian": 1285163241,
+            "claude-code": 1386989728
+          }
+        }
+      ],
+      "claims": [
+        {
+          "benchmark": "draw_fifty",
+          "says": "read and drawn in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
+          "measured": 455017111,
+          "allowed": 2000000000,
+          "holds": true
+        },
+        {
+          "benchmark": "draw_fifty",
+          "says": "read and drawn through the layout runner in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
+          "measured": 457557148,
+          "allowed": 2000000000,
+          "holds": true
+        },
+        {
+          "benchmark": "reading_limits",
+          "says": "2,000 things, 1 in 40 broken, read within the budget",
+          "measured": 6945089244,
+          "allowed": 44095601036.04985,
+          "holds": true
+        },
+        {
+          "benchmark": "reading_limits",
+          "says": "6,000 things on one line, the last broken, read within the budget",
+          "measured": 9976679688,
+          "allowed": 71840447550.10008,
+          "holds": true
+        },
+        {
+          "benchmark": "reading_limits",
+          "says": "nearly 512 kB, every line broken, read within the budget",
+          "measured": 8045031620,
+          "allowed": 47980827448.46346,
+          "holds": true
+        },
+        {
+          "benchmark": "layout_refusals",
+          "says": "a 600 kB note refused for less than reading a tenth of it",
+          "measured": 104313408,
+          "allowed": 319047497,
+          "holds": true
+        },
+        {
+          "benchmark": "naming",
+          "says": "naming 5,000 things of the same text is linear in them",
+          "measured": 194154152,
+          "allowed": 574184103,
+          "holds": true
+        },
+        {
+          "benchmark": "naming",
+          "says": "9,000 things written without a name are named linearly",
+          "measured": 2651770509,
+          "allowed": 8129834319,
+          "holds": true
+        },
+        {
+          "benchmark": "keystroke",
+          "says": "what is read back as each key is typed costs less than reading",
+          "measured": 278235484,
+          "allowed": 1635766680,
+          "holds": true
+        },
+        {
+          "benchmark": "draw_five_hundred",
+          "says": "read and drawn within its budget of instructions",
+          "measured": 1654847472,
+          "allowed": 7700000000,
+          "holds": true
+        },
+        {
+          "benchmark": "draw_five_hundred",
+          "says": "read and drawn through the layout runner within its budget of instructions",
+          "measured": 1674114489,
+          "allowed": 7700000000,
+          "holds": true
+        },
+        {
+          "benchmark": "mesh_query",
+          "says": "a thing found by its name among 10 000 within its budget of instructions",
+          "measured": 7047025,
+          "allowed": 25000000,
+          "holds": true
+        },
+        {
+          "benchmark": "mesh_query",
+          "says": "things found by a property’s value among 10 000 within its budget of instructions",
+          "measured": 20313492,
+          "allowed": 25000000,
+          "holds": true
+        },
+        {
+          "benchmark": "cold_start",
+          "says": "the Obsidian plugin draws its first note of 50 things from a cold start within its budget",
+          "measured": 1285163241,
+          "allowed": 2400000000,
+          "holds": true
+        },
+        {
+          "benchmark": "cold_start",
+          "says": "the Claude Code pane draws its first note of 50 things from a cold start within its budget",
+          "measured": 1386989728,
+          "allowed": 2300000000,
+          "holds": true
+        }
+      ]
+    },
+    "max_source_file": "packages/obsidian/src/block-editor/block-editor.ts",
+    "max_test_file": "test/cheap-checks.test.js",
+    "secrets": [],
+    "audited_total": 0,
+    "bundle": [
+      {
+        "name": "@viz-js/viz",
+        "bytes": 1600483
+      },
+      {
+        "name": "packages/core/src",
+        "bytes": 113126
+      },
+      {
+        "name": "packages/graph-spec/src/joins",
+        "bytes": 46559
+      },
+      {
+        "name": "packages/obsidian/src/block-editor",
+        "bytes": 41075
+      },
+      {
+        "name": "packages/graph-spec/src/rules",
+        "bytes": 40635
+      },
+      {
+        "name": "packages/obsidian/src/graph-view",
+        "bytes": 25712
+      },
+      {
+        "name": "packages/graph-spec/src/reader",
+        "bytes": 19072
+      },
+      {
+        "name": "packages/obsidian/src",
+        "bytes": 16277
+      },
+      {
+        "name": "packages/obsidian/src/properties",
+        "bytes": 16141
+      },
+      {
+        "name": "packages/graph-spec/src",
+        "bytes": 10592
+      },
+      {
+        "name": "packages/graph-spec/src/changesets",
+        "bytes": 9194
+      },
+      {
+        "name": "python/graph_spec/src",
+        "bytes": 3450
+      }
+    ],
+    "tests": 1028,
+    "failing": [],
+    "flaky": [],
+    "coverage_files": 26,
+    "coverage_lines": 4108,
+    "second_run_passed": true
+  }
+}

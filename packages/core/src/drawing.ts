@@ -1,0 +1,122 @@
+// What a note's graph blocks draw (spec §3): the boxes and links of each graph. They are chosen as graph-spec-draw.py
+// chooses them, so the core's layout source matches graph_svg.py's (spec §12). A graph with problems is still drawn. A
+// path that cannot be read is left out, and the rest of its block is drawn. What was left out is listed as a problem.
+import gs from '@thoughtknot/graph-spec';
+import type { Graph, World } from '@thoughtknot/graph-spec';
+import { estimate } from './estimates.ts';
+import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
+import { addNotes } from './notes.ts';
+import { mergePathProblems } from './paths.ts';
+import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
+import { textTooLarge } from './layout-limits.ts';
+import { dataKind, namesSharedSchema } from './blocks.ts';
+import { withStandardSchemas } from './standard-schemas.ts';
+import { parkedIn } from './deferred.ts';
+import { certaintyLevel } from './certainty-drawn.ts';
+import { undeclared, undeclaredUse } from './schema-checks.ts';
+import { missingSchemas } from './schema-names.ts';
+import { suggestedPlaces } from './suggested-names.ts';
+
+const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * A box's words without Markdown's marks for bold or code, which a quote often carries: "**Rules.**" is drawn
+ * "Rules." (UX review F12). Only marks in pairs go, so a lone star or underscore stays as written.
+ */
+export const plainMarks = (text: string): string =>
+  text.replace(/(\*\*|__)(\S(?:.*?\S)?)\1/g, '$2').replace(/`([^`\n]+)`/g, '$1');
+
+function drawingOf(
+  world: World,
+  name: string,
+  own: Graph | undefined,
+  problems: Problem[],
+  today: string,
+): GraphDrawing {
+  const g = world[name] as Graph;
+  const later = parkedIn(g, today);
+  const hidden = new Set(gs.SCHEMA_LABELS);
+  const shared = g.labelled('ElementType').length ? undefined : (gs.schemaFor(world, name)[1] ?? own);
+  const readings = gs.readings(g, shared);
+  const ids = [...g.nodes.keys()].filter((i) => ![...(g.nodes.get(i)?.[0] ?? [])].some((l) => hidden.has(l)));
+  const drawn = new Set(ids);
+  // a thing written without a name is drawn under the name suggested for it, and marked so until the name is written (§4)
+  const suggested = suggestedPlaces(problems, name);
+  const shown = gs.shownTexts(g, shared);
+  return {
+    graph: name,
+    boxes: ids.map((key) => {
+      const place = suggested.get(key),
+        parked = later.get(key),
+        certainty = certaintyLevel(g.p(key));
+      return {
+        key,
+        kind: [...(g.nodes.get(key)?.[0] ?? [])]
+          .filter((l) => !hidden.has(l))
+          .sort(byCode)
+          .join(' · '),
+        text: plainMarks(shown(key)[0]),
+        ...(place ? { suggested: place } : {}),
+        ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
+        ...(certainty ? { certainty } : {}),
+      };
+    }),
+    links: g.edges
+      .filter(([s, , d]) => drawn.has(s) && drawn.has(d))
+      .map(([from, type, to]) => ({ from, type, reading: gs.word(readings, type), to })),
+    estimates: [],
+  };
+}
+
+/**
+ * What a note's graph blocks draw, as built by the blocks up to and including block `upTo` (default: all of them).
+ * Readings come from each graph's own schema anywhere in the note; a schema is written last. Else they come from the
+ * shared schema it names. That is from `shared` (the vault's SCHEMA blocks) or the standard schemas
+ * (standard-schemas.ts), which a vault schema of the same name stands in for. Given the vault's, a graph naming a
+ * schema none of them holds is warned of (schema-names.ts). Not given them, as by a caller that cannot see the vault,
+ * it is not. Problems are listed for the blocks up to `upTo`. `budget` caps reading a broken block again
+ * (partial-read.ts), as the Python reader's does. `today` (YYYY-MM-DD, default the current day) decides which deferred
+ * things are overdue (deferred.ts). The graph library's completeness check does the same.
+ */
+export function readNote(
+  blocks: string[],
+  upTo = blocks.length - 1,
+  vault: string[] = [],
+  budget = REREAD_BUDGET,
+  today = new Date().toISOString().slice(0, 10),
+): NoteReading {
+  const upto = blocks.slice(0, upTo + 1);
+  // the standard schemas only for a note that names a shared schema, so no other note reads them
+  const shared = blocks.some(namesSharedSchema) ? withStandardSchemas(vault) : vault;
+  // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9). It
+  // covers the graph blocks and the shared schemas, which are read; never a query or an excerpt, which are not. The
+  // plugin's own exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at
+  // all.
+  const tooLarge = textTooLarge([...blocks.filter((b) => typeof dataKind(b) === 'string'), ...shared]);
+  if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
+  // drawn from the blocks up to `upTo`, with names suggested against every block, as the whole note suggests them
+  const { store, problems, read } = readBlocks(blocks, shared, budget, dataKind, upTo);
+  const world = gs.worldFromStore(store);
+  const whole = upTo >= blocks.length - 1 ? world : gs.worldFromStore(readBlocks(blocks, shared, budget).store);
+  const graphs = new Map<string, GraphDrawing>();
+  for (const name of Object.keys(world)) {
+    const own = whole[name]?.labelled('ElementType').length ? whole[name] : undefined;
+    const d = drawingOf(world, name, own, problems, today);
+    const shared = (world[name] as Graph).labelled('ElementType').length
+      ? undefined
+      : (gs.schemaFor(world, name)[1] ?? own);
+    d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
+    graphs.set(name, d);
+  }
+  problems.push(
+    ...undeclared(whole, upto),
+    ...undeclaredUse(whole, upto, problems),
+    ...(vault.length ? missingSchemas(whole, upto) : []),
+  );
+  // each note on the box or link below it, and a note that belongs to none of a line's things said (editor spec §24)
+  problems.push(...addNotes(graphs, upto, read));
+  // a path's own problems (editor spec §7) say what the reader's reports of a step through nothing left unsaid
+  const all = mergePathProblems({ graphs, problems, world, whole, texts: upto });
+  all.sort((a, b) => a.block - b.block || a.line - b.line);
+  return { graphs, problems: all, world, whole, texts: upto };
+}

@@ -1,0 +1,448 @@
+{
+  "a-bare-name-that-names-nothing": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 3: no thing called nobody in graph g — check the spelling — or write it here with its kind: (nobody:Kind {…})"
+  },
+  "a-change-set-current-and-stale": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [
+      { "failed": [], "after": "5e79de97087e10c4", "refreshes": [], "changes": [] },
+      {
+        "failed": ["it was made against the graph as it stands"],
+        "after": "4f7522a52031960b",
+        "refreshes": [],
+        "changes": []
+      }
+    ],
+    "lint": [],
+    "views": {}
+  },
+  "a-draft-with-near-duplicate-kinds-and-types": {
+    "canon": { "draft": "0bcee60a1bf9a3f3ec79bab19eac2017d9eecd665bf3dde03e8a78d7023fa23a" },
+    "verdicts": {
+      "draft": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", false],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "draft": {
+        "projection": "{\"blocks\":{\"a\":{\"id\":\"a\",\"title\":\"One\",\"type\":[\"Book\"]},\"b\":{\"id\":\"b\",\"title\":\"Two\",\"type\":[\"Bok\"]},\"c\":{\"id\":\"c\",\"name\":\"Lin\",\"type\":[\"Person\"],\"write\":[\"b\"],\"wrote\":[\"a\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"a<br/>One\"]\n    n1[\"b<br/>Two\"]\n    n2[\"c<br/>Lin\"]\n    n2 -->|write| n1\n    n2 -->|wrote| n0",
+        "legend": "write = WRITE\nwrote = WROTE"
+      }
+    }
+  },
+  "a-graph-name-that-is-not-one-word": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 1: the graph name 'reader-choice' is not one word — use letters, digits and underscores only, such as reader_choice, not reader-choice"
+  },
+  "a-join-of-two-documents-that-disagree": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {},
+    "join": {
+      "rows": [
+        [
+          "duplicate",
+          "acme, other",
+          "name",
+          "POSSIBLE DUPLICATE — flagged, never merged by the join",
+          "decide; if one thing, declare an id map and re-join"
+        ],
+        ["labels-refine", "widget", "labels", "refined — one adds to the other", "—"],
+        ["value", "widget", "price", "VALUE CONFLICT — contested", "find evidence; a finding confirms one"]
+      ],
+      "claims": {
+        "claim:join/widget/price=10@shop-a": ["contested", "low"],
+        "claim:join/widget/price=12@shop-b": ["contested", "low"]
+      },
+      "pairs": [["claim:join/widget/price=10@shop-a", "claim:join/widget/price=12@shop-b"]],
+      "paradoxes": [],
+      "nodes": {
+        "acme": [["Maker"], { "id": "acme", "name": "Acme" }],
+        "other": [["Maker"], { "id": "other", "name": "Acme" }],
+        "widget": [["Gadget", "Product"], { "colour": "blue", "id": "widget", "name": "Widget" }]
+      },
+      "edges": { "[\"widget\",\"MADE_BY\",\"acme\",[]]": {} }
+    }
+  },
+  "a-match-that-finds-nothing": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: MATCH finds no A with id 'missing' in graph g — the thing must be written earlier — in this document or one loaded before it"
+  },
+  "a-name-used-before-it-is-written": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: a is used before it is written — write the thing before any link that uses it"
+  },
+  "a-query-block-offered-as-data": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 1: this is a query block — queries ask questions of a graph; they are not data"
+  },
+  "a-typed-graph-read-through-every-shortcut": {
+    "canon": { "library": "591ff647f2820967ee38884a38da98b0f8d9c53a04c1c83761fe37f71874413f" },
+    "verdicts": {
+      "library": [
+        ["§5: every element has a declared type", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "library": {
+        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"],\"wrote\":[\"notes\"]},\"grace\":{\"checked\":\"2026-10-07T18:30:00+10:00\",\"id\":\"grace\",\"name\":\"Grace\",\"type\":[\"Person\"]},\"meta:library\":{\"declares\":[\"type:Book\",\"type:Person\",\"type:WROTE\"],\"graph\":\"library\",\"id\":\"meta:library\",\"schema\":\"library@1\",\"type\":[\"GraphMeta\"]},\"notes\":{\"id\":\"notes\",\"pages\":66,\"published\":\"1843-10-01\",\"shelf\":3,\"title\":\"Notes on the engine\",\"type\":[\"Book\"]},\"type:Book\":{\"id\":\"type:Book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"type:Person\":{\"id\":\"type:Person\",\"kind\":\"node\",\"name\":\"Person\",\"type\":[\"ElementType\"]},\"type:WROTE\":{\"id\":\"type:WROTE\",\"kind\":\"edge\",\"name\":\"WROTE\",\"reading\":\"wrote\",\"reverse_name\":\"written by\",\"type\":[\"ElementType\"]}},\"relationships\":[{\"from\":\"grace\",\"relationship\":\"WROTE\",\"to\":\"notes\",\"year\":1952}]}",
+        "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"grace<br/>Grace\"]\n    n2[\"notes<br/>Notes on the engine\"]\n    n0 -->|wrote| n2\n    n1 -->|wrote| n2",
+        "legend": "wrote = WROTE · reverse: written by"
+      }
+    }
+  },
+  "an-id-written-twice": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: id 'a' is already a thing in graph g — an id names one thing — MATCH it to add to it, or supersede it"
+  },
+  "an-instant-with-no-offset": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: '2026-10-07T09:30:00' has no offset — add its offset from UTC, such as +10:00"
+  },
+  "certainty-likelihoods-assessments-and-evidence": {
+    "canon": { "forecast": "d1f0e7f1e4b308390bb882405f889af1393e7266eadd664148a340e5013c8b6b" },
+    "verdicts": {
+      "forecast": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        ["§20: every likelihood is a band declared in the graph", true],
+        ["§20: each claim's likelihood is its latest assessment", true],
+        ["§20: each claim's confidence is counted from its evidence", false],
+        ["§20: each claim's status follows its confirmations and refutations", true],
+        ["§20: every claim not derived by a rule has an assessment", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "forecast": {
+        "projection": "{\"blocks\":{\"a1\":{\"assesses\":[\"rain\"],\"at\":\"2026-10-01T19:00:00+10:00\",\"id\":\"a1\",\"likelihood\":\"unlikely\",\"type\":[\"Assessment\"]},\"a2\":{\"assesses\":[\"rain\"],\"at\":\"2026-10-02T19:00:00+10:00\",\"id\":\"a2\",\"likelihood\":\"likely\",\"type\":[\"Assessment\"]},\"a3\":{\"assesses\":[\"wind\"],\"at\":\"2026-10-02T19:00:00+10:00\",\"id\":\"a3\",\"likelihood\":\"unlikely\",\"type\":[\"Assessment\"]},\"e1\":{\"from\":[\"radar\"],\"id\":\"e1\",\"says\":\"Cloud is building\",\"type\":[\"Evidence\"]},\"likely\":{\"id\":\"likely\",\"term\":\"likely\",\"type\":[\"LikelihoodBand\"]},\"radar\":{\"id\":\"radar\",\"name\":\"Radar\",\"type\":[\"Source\"]},\"rain\":{\"confidence\":\"moderate\",\"id\":\"rain\",\"likelihood\":\"likely\",\"status\":\"open\",\"supported_by\":[\"e1\"],\"text\":\"It rains tomorrow\",\"type\":[\"Claim\"]},\"unlikely\":{\"id\":\"unlikely\",\"term\":\"unlikely\",\"type\":[\"LikelihoodBand\"]},\"wind\":{\"confidence\":\"high\",\"id\":\"wind\",\"likelihood\":\"unlikely\",\"status\":\"open\",\"text\":\"It is windy tomorrow\",\"type\":[\"Claim\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"a1\"]\n    n1[\"a2\"]\n    n2[\"a3\"]\n    n3[\"e1\"]\n    n4[\"radar<br/>Radar\"]\n    n5[\"rain\"]\n    n6[\"wind\"]\n    n0 -->|assesses| n5\n    n1 -->|assesses| n5\n    n2 -->|assesses| n6\n    n3 -->|from| n4\n    n5 -->|supported by| n3",
+        "legend": "assesses = ASSESSES\nfrom = FROM\nsupported by = SUPPORTED_BY"
+      }
+    }
+  },
+  "completeness-a-rule-met-missed-and-parked": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {},
+    "completeness": {
+      "rules": [
+        {
+          "rule": "r1",
+          "kind": "cardinality",
+          "says": "every book has an author",
+          "counted": 3,
+          "met": 1,
+          "excused": 0,
+          "missing": [
+            {
+              "at": "b2",
+              "found": 0,
+              "fix": "add a WROTE link (in): it has 0, needs at least 1; or park it with a Deferred whose rule is r1"
+            }
+          ],
+          "deferred": [],
+          "overdue": ["b3"],
+          "malformed": ""
+        },
+        {
+          "rule": "r2",
+          "kind": "cardinality",
+          "says": "a rule with parts missing",
+          "counted": 0,
+          "met": 0,
+          "excused": 0,
+          "missing": [],
+          "deferred": [],
+          "overdue": [],
+          "malformed": "a Cardinality must carry relationship, direction, min or max"
+        }
+      ],
+      "deferred_malformed": []
+    }
+  },
+  "hashes-and-canonical-json": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {},
+    "sha256": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "d2c8c9bb6b6d28d0dbb5573e3c3ad68c2944e72325d34d8eee142f545142894e"
+    ],
+    "jcs": ["{\"a\":[1,\"x\",true,null],\"b\":2,\"c\":{\"y\":\"é\",\"z\":1}}", "\"plain\"", "1.5"]
+  },
+  "paths-a-story-told-at-two-altitudes": {
+    "canon": { "story": "59fabc139be6547856a1466474b9fee32f488095b028048ca9a33eed3468d576" },
+    "verdicts": {
+      "story": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        ["§22 rule 1: altitude falls at every step into a path — no path contains itself", true],
+        ["§22 rule 2: each path's steps are numbered 1 to n", true],
+        ["§22 rule 3: every path grounds out in facts", true],
+        ["§22 rule 4: a path that declares an order keeps it", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "story": {
+        "projection": "{\"blocks\":{\"f1\":{\"id\":\"f1\",\"name\":\"Rain fell\",\"type\":[\"Fact\"]},\"f2\":{\"id\":\"f2\",\"name\":\"The river rose\",\"type\":[\"Fact\"]},\"f3\":{\"id\":\"f3\",\"name\":\"The bridge closed\",\"type\":[\"Fact\"]},\"inner\":{\"altitude\":1,\"id\":\"inner\",\"name\":\"The flood\",\"type\":[\"Path\"]},\"outer\":{\"altitude\":2,\"id\":\"outer\",\"name\":\"The week\",\"type\":[\"Path\"]}},\"relationships\":[{\"from\":\"inner\",\"relationship\":\"STEP\",\"seq\":1,\"to\":\"f1\"},{\"from\":\"inner\",\"relationship\":\"STEP\",\"seq\":2,\"to\":\"f2\"},{\"from\":\"outer\",\"relationship\":\"STEP\",\"seq\":1,\"to\":\"inner\"},{\"from\":\"outer\",\"relationship\":\"STEP\",\"seq\":2,\"to\":\"f3\"}]}",
+        "relationships": "flowchart LR\n    n0[\"f1<br/>Rain fell\"]\n    n1[\"f2<br/>The river rose\"]\n    n2[\"f3<br/>The bridge closed\"]\n    n3[\"inner<br/>The flood\"]\n    n4[\"outer<br/>The week\"]\n    n3 -->|step| n0\n    n3 -->|step| n1\n    n4 -->|step| n2\n    n4 -->|step| n3",
+        "legend": "step = STEP",
+        "path outer at 2": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 2\"]\n    s0[\"inner<br/>The flood\"]\n    s1[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1",
+        "path outer at 1": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 1\"]\n    s0[\"inner<br/>The flood\"]\n    s1[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1",
+        "path outer at 0": "flowchart TB\n    p[\"outer<br/>The week<br/>at altitude 0\"]\n    s0[\"f1<br/>Rain fell\"]\n    s1[\"f2<br/>The river rose\"]\n    s2[\"f3<br/>The bridge closed\"]\n    p --> s0\n    s0 --> s1\n    s1 --> s2"
+      }
+    }
+  },
+  "the-dialect-linter": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [
+      [],
+      ["reserved word"],
+      ["pattern returns to a bound variable"],
+      ["zoned datetime"],
+      ["aggregate mixed with a value"],
+      ["SET before INSERT"],
+      ["byte literal"],
+      ["outside the document profile"]
+    ],
+    "views": {}
+  },
+  "a-schema-its-graphmeta-does-not-declare-types-nothing-5": {
+    "canon": { "undeclared": "db0ceb8dfa9411ec002d45f2d27dd29d27ab4178a127e4227ce892962c01398f" },
+    "verdicts": {
+      "undeclared": [
+        ["§5: every element has a declared type", false],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "undeclared": {
+        "projection": "{\"blocks\":{\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Author\"]},\"notes\":{\"id\":\"notes\",\"title\":\"Notes\",\"type\":[\"Book\"]},\"t_author\":{\"id\":\"t_author\",\"kind\":\"node\",\"name\":\"Author\",\"type\":[\"ElementType\"]},\"t_book\":{\"id\":\"t_book\",\"kind\":\"node\",\"name\":\"Book\",\"type\":[\"ElementType\"]},\"u_schema\":{\"declares\":[\"t_book\"],\"graph\":\"undeclared\",\"id\":\"u_schema\",\"schema\":\"undeclared@1\",\"type\":[\"GraphMeta\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"ada<br/>Ada\"]\n    n1[\"notes<br/>Notes\"]",
+        "legend": ""
+      }
+    }
+  },
+  "a-relationship-type-written-without-its-colon-read-as-the-graph-s-one-type-of-that-name-3": {
+    "canon": { "bare": "98dae544a3f56a2c7912044d7e378c8e9cb3feb19493f107a99b86d45ad203de" },
+    "verdicts": {
+      "bare": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "bare": {
+        "projection": "{\"blocks\":{\"o\":{\"id\":\"o\",\"name\":\"Coast\",\"type\":[\"Option\"]},\"r\":{\"favours\":[\"o\"],\"id\":\"r\",\"title\":\"Sun\",\"type\":[\"Reason\"]},\"s\":{\"favours\":[\"o\"],\"id\":\"s\",\"title\":\"Quiet\",\"type\":[\"Reason\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"o<br/>Coast\"]\n    n1[\"r<br/>Sun\"]\n    n2[\"s<br/>Quiet\"]\n    n1 -->|favours| n0\n    n2 -->|favours| n0",
+        "legend": "favours = FAVOURS"
+      }
+    }
+  },
+  "a-first-use-written-without-its-colon-is-refused-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 4: [favours] has no colon, and graph bare has no relationship type called favours — a relationship type is written with its colon: [:FAVOURS]"
+  },
+  "whitespace-inside-a-string-is-kept-as-written-line-and-paragraph-separators-too-3": {
+    "canon": { "ws_strings": "ab76be15c7c21a8614b8af9b3d639288960d712424cc3b553aa9505c7558f22a" },
+    "verdicts": {
+      "ws_strings": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "ws_strings": {
+        "projection": "{\"blocks\":{\"a\":{\"id\":\"a\",\"name\":\"no break\",\"type\":[\"T\"]},\"b\":{\"id\":\"b\",\"name\":\"line separator\",\"type\":[\"T\"]},\"c\":{\"id\":\"c\",\"name\":\"paragraph separator\",\"type\":[\"T\"]},\"d\":{\"id\":\"d\",\"name\":\"byte﻿order\",\"type\":[\"T\"]},\"e\":{\"id\":\"e\",\"name\":\"vowel᠎separator\",\"type\":[\"T\"]},\"f\":{\"id\":\"f\",\"name\":\"file\\u001cseparator\",\"type\":[\"T\"]},\"g\":{\"id\":\"g\",\"name\":\"next\u0085line\",\"type\":[\"T\"]},\"h\":{\"id\":\"h\",\"name\":\"escaped separator\",\"type\":[\"T\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"a<br/>no break\"]\n    n1[\"b<br/>line separator\"]\n    n2[\"c<br/>paragraph separator\"]\n    n3[\"d<br/>byte﻿order\"]\n    n4[\"e<br/>vowel᠎separator\"]\n    n5[\"f<br/>file\u001cseparator\"]\n    n6[\"g<br/>next\u0085line\"]\n    n7[\"h<br/>escaped separator\"]",
+        "legend": ""
+      }
+    }
+  },
+  "every-whitespace-character-gql-names-parts-words-and-items-before-keywords-too-3": {
+    "canon": { "ws_parts": "6de9949895fa650fd19392e962aeb187b784cf40fa5ee5b138dc5ca4b0886fd3" },
+    "verdicts": {
+      "ws_parts": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "ws_parts": {
+        "projection": "{\"blocks\":{\"n0\":{\"id\":\"n0\",\"name\":\"n0\",\"seen\":true,\"type\":[\"T\"]},\"n1\":{\"id\":\"n1\",\"name\":\"n1\",\"type\":[\"T\"]},\"n10\":{\"id\":\"n10\",\"name\":\"n10\",\"type\":[\"T\"]},\"n11\":{\"id\":\"n11\",\"name\":\"n11\",\"type\":[\"T\"]},\"n12\":{\"id\":\"n12\",\"name\":\"n12\",\"type\":[\"T\"]},\"n13\":{\"id\":\"n13\",\"name\":\"n13\",\"type\":[\"T\"]},\"n14\":{\"id\":\"n14\",\"name\":\"n14\",\"type\":[\"T\"]},\"n15\":{\"id\":\"n15\",\"name\":\"n15\",\"type\":[\"T\"]},\"n16\":{\"id\":\"n16\",\"name\":\"n16\",\"type\":[\"T\"]},\"n17\":{\"id\":\"n17\",\"name\":\"n17\",\"type\":[\"T\"]},\"n18\":{\"id\":\"n18\",\"name\":\"n18\",\"type\":[\"T\"]},\"n19\":{\"id\":\"n19\",\"name\":\"n19\",\"type\":[\"T\"]},\"n2\":{\"id\":\"n2\",\"name\":\"n2\",\"type\":[\"T\"]},\"n20\":{\"id\":\"n20\",\"name\":\"n20\",\"type\":[\"T\"]},\"n21\":{\"id\":\"n21\",\"name\":\"n21\",\"type\":[\"T\"]},\"n22\":{\"id\":\"n22\",\"name\":\"n22\",\"type\":[\"T\"]},\"n23\":{\"id\":\"n23\",\"name\":\"n23\",\"type\":[\"T\"]},\"n24\":{\"id\":\"n24\",\"name\":\"n24\",\"type\":[\"T\"]},\"n25\":{\"id\":\"n25\",\"name\":\"n25\",\"type\":[\"T\"]},\"n26\":{\"id\":\"n26\",\"name\":\"n26\",\"type\":[\"T\"]},\"n27\":{\"id\":\"n27\",\"name\":\"n27\",\"type\":[\"T\"]},\"n3\":{\"id\":\"n3\",\"name\":\"n3\",\"type\":[\"T\"]},\"n4\":{\"id\":\"n4\",\"name\":\"n4\",\"type\":[\"T\"]},\"n5\":{\"id\":\"n5\",\"name\":\"n5\",\"type\":[\"T\"]},\"n6\":{\"id\":\"n6\",\"name\":\"n6\",\"type\":[\"T\"]},\"n7\":{\"id\":\"n7\",\"name\":\"n7\",\"type\":[\"T\"]},\"n8\":{\"id\":\"n8\",\"name\":\"n8\",\"type\":[\"T\"]},\"n9\":{\"id\":\"n9\",\"name\":\"n9\",\"type\":[\"T\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"n0<br/>n0\"]\n    n1[\"n1<br/>n1\"]\n    n2[\"n10<br/>n10\"]\n    n3[\"n11<br/>n11\"]\n    n4[\"n12<br/>n12\"]\n    n5[\"n13<br/>n13\"]\n    n6[\"n14<br/>n14\"]\n    n7[\"n15<br/>n15\"]\n    n8[\"n16<br/>n16\"]\n    n9[\"n17<br/>n17\"]\n    n10[\"n18<br/>n18\"]\n    n11[\"n19<br/>n19\"]\n    n12[\"n2<br/>n2\"]\n    n13[\"n20<br/>n20\"]\n    n14[\"n21<br/>n21\"]\n    n15[\"n22<br/>n22\"]\n    n16[\"n23<br/>n23\"]\n    n17[\"n24<br/>n24\"]\n    n18[\"n25<br/>n25\"]\n    n19[\"n26<br/>n26\"]\n    n20[\"n27<br/>n27\"]\n    n21[\"n3<br/>n3\"]\n    n22[\"n4<br/>n4\"]\n    n23[\"n5<br/>n5\"]\n    n24[\"n6<br/>n6\"]\n    n25[\"n7<br/>n7\"]\n    n26[\"n8<br/>n8\"]\n    n27[\"n9<br/>n9\"]",
+        "legend": ""
+      }
+    }
+  },
+  "a-byte-order-mark-is-not-whitespace-before-match-it-is-refused-on-the-line-it-is-on-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 3: cannot read '﻿MATCH (a:T {id: 'a'' — a data block holds only things, links and plain values"
+  },
+  "u-0085-is-not-whitespace-while-u-001c-is-3": {
+    "canon": {},
+    "verdicts": {},
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "error": "line 2: cannot read '\u0085(c:T {name: 'C'})' — a data block holds only things, links and plain values"
+  },
+  "provenance-kept-a-plan-an-agent-and-a-revision-in-order": {
+    "canon": {
+      "prov_kept": "be025e9e322668baed69db657c9df0c66799ad04952992833b37d80ca72f0aa9"
+    },
+    "verdicts": {
+      "prov_kept": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        ["§11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one", true],
+        [
+          "§24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
+          true
+        ],
+        ["§12 req:12.prov-revision: every successor was generated after what it supersedes", true]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "prov_kept": {
+        "projection": "{\"blocks\":{\"acme\":{\"id\":\"acme\",\"name\":\"Acme\",\"type\":[\"Organization\"]},\"ada\":{\"id\":\"ada\",\"name\":\"Ada\",\"type\":[\"Person\"]},\"bot\":{\"id\":\"bot\",\"name\":\"Drafter\",\"type\":[\"Model\"]},\"derive\":{\"had_plan\":[\"rule:total@1\"],\"id\":\"derive\",\"name\":\"Derive totals\",\"type\":[\"Activity\"],\"was_attributed_to\":[\"importer\"]},\"importer\":{\"id\":\"importer\",\"name\":\"Importer\",\"type\":[\"SoftwareAgent\"]},\"rule:total@1\":{\"id\":\"rule:total@1\",\"name\":\"Total\",\"type\":[\"Rule\"]},\"v1\":{\"generated_at\":\"2026-09-01T10:00:00+10:00\",\"id\":\"v1\",\"title\":\"One\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"ada\"]},\"v2\":{\"generated_at\":\"2026-09-01\",\"id\":\"v2\",\"supersedes\":[\"v1\"],\"title\":\"Two\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"acme\"]},\"v3\":{\"id\":\"v3\",\"supersedes\":[\"v2\"],\"title\":\"Three\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"bot\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"acme<br/>Acme\"]\n    n1[\"ada<br/>Ada\"]\n    n2[\"bot<br/>Drafter\"]\n    n3[\"derive<br/>Derive totals\"]\n    n4[\"importer<br/>Importer\"]\n    n5[\"rule:total@1<br/>Total\"]\n    n6[\"v1<br/>One\"]\n    n7[\"v2<br/>Two\"]\n    n8[\"v3<br/>Three\"]\n    n3 -->|had plan| n5\n    n3 -->|was attributed to| n4\n    n6 -->|was attributed to| n1\n    n7 -->|supersedes| n6\n    n7 -->|was attributed to| n0\n    n8 -->|supersedes| n7\n    n8 -->|was attributed to| n2",
+        "legend": "had plan = HAD_PLAN\nsupersedes = SUPERSEDES\nwas attributed to = WAS_ATTRIBUTED_TO"
+      }
+    }
+  },
+  "provenance-broken-a-plan-that-is-no-rule-no-agent-and-a-revision-out-of-order": {
+    "canon": {
+      "prov_broken": "5c2fc9f37ca8dfae2f5c13ad4dd6c17790d71dbbfd5db2ffb45a62d7043da2c0"
+    },
+    "verdicts": {
+      "prov_broken": [
+        ["§5: a draft's kinds and relationship types hold no near-duplicates", true],
+        ["§18: the flat projection rebuilds the graph", true],
+        ["§11 req:11.had-plan: every HAD_PLAN link goes to a Rule, or to a Ref to one", false],
+        [
+          "§24 req:24.prov-attributed: every WAS_ATTRIBUTED_TO link goes to a Person, Organization or SoftwareAgent (a Model counts as one)",
+          false
+        ],
+        ["§12 req:12.prov-revision: every successor was generated after what it supersedes", false]
+      ]
+    },
+    "reviews": [],
+    "whys": [],
+    "changesets": [],
+    "lint": [],
+    "views": {
+      "prov_broken": {
+        "projection": "{\"blocks\":{\"derive\":{\"had_plan\":[\"rule:total@1\"],\"id\":\"derive\",\"name\":\"Derive totals\",\"type\":[\"Activity\"]},\"derive_wrong\":{\"had_plan\":[\"derive\",\"rule:other@1\"],\"id\":\"derive_wrong\",\"name\":\"Derive others\",\"type\":[\"Activity\"]},\"rule:other@1\":{\"id\":\"rule:other@1\",\"name\":\"Other\",\"type\":[\"Rule\"]},\"rule:total@1\":{\"id\":\"rule:total@1\",\"name\":\"Total\",\"type\":[\"Rule\"]},\"v1\":{\"generated_at\":\"2026-09-01T10:00:00+10:00\",\"id\":\"v1\",\"title\":\"One\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"rule:total@1\"]},\"v2\":{\"generated_at\":\"2026-08-01T10:00:00+10:00\",\"id\":\"v2\",\"supersedes\":[\"v1\"],\"title\":\"Two\",\"type\":[\"Doc\"],\"was_attributed_to\":[\"v3\"]},\"v3\":{\"generated_at\":\"2026-07-01\",\"id\":\"v3\",\"supersedes\":[\"v1\"],\"title\":\"Three\",\"type\":[\"Doc\"]}},\"relationships\":[]}",
+        "relationships": "flowchart LR\n    n0[\"derive<br/>Derive totals\"]\n    n1[\"derive_wrong<br/>Derive others\"]\n    n2[\"rule:other@1<br/>Other\"]\n    n3[\"rule:total@1<br/>Total\"]\n    n4[\"v1<br/>One\"]\n    n5[\"v2<br/>Two\"]\n    n6[\"v3<br/>Three\"]\n    n0 -->|had plan| n3\n    n1 -->|had plan| n0\n    n1 -->|had plan| n2\n    n4 -->|was attributed to| n3\n    n5 -->|supersedes| n4\n    n5 -->|was attributed to| n6\n    n6 -->|supersedes| n4",
+        "legend": "had plan = HAD_PLAN\nsupersedes = SUPERSEDES\nwas attributed to = WAS_ATTRIBUTED_TO"
+      }
+    }
+  }
+}

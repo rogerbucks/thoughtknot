@@ -1,0 +1,14 @@
+<svg viewBox="0 0 304 89" width="405.33" height="118.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+    <g id="p2">
+      <path d="M268.98,-47.4C268.98,-47.4 173.13,-47.4 173.13,-47.4 167.13,-47.4 161.13,-41.4 161.13,-35.4 161.13,-35.4 161.13,-3 161.13,-3 161.13,3 167.13,9 173.13,9 173.13,9 268.98,9 268.98,9 274.98,9 280.98,3 280.98,-3 280.98,-3 280.98,-35.4 280.98,-35.4 280.98,-41.4 274.98,-47.4 268.98,-47.4" paint="fill:rgba(236, 117, 0, 0.16);stroke:rgb(186, 96, 9);stroke-width:2">
+      <text x="194.67" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> QUESTION
+      <text x="180.41" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Which device?
+    <g id="p3">
+      <path d="M107.13,-47.4C107.13,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 107.13,9 107.13,9 113.13,9 119.13,3 119.13,-3 119.13,-3 119.13,-35.4 119.13,-35.4 119.13,-41.4 113.13,-47.4 107.13,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108);stroke-width:3">
+      <text x="44.65" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
+      <text x="28.28" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
+    <g id="p4">
+      <path d="M119.13,-19.2C119.13,-19.2 119.13,-19.2 119.13,-19.2 140.13,-19.2 140.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2" paint="stroke:rgb(9, 152, 150);stroke-width:2.5">
+      <polygon points="154.13,-16.75 161.13,-19.2 154.13,-21.65 154.13,-16.75" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2.5">
+      <text x="140.13" y="-24.98" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers

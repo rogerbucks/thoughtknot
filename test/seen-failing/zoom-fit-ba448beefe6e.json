@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom-fit.test.js",
+  "test": "the fit is worked out again > a drawing laid out again while its card is hidden takes its new size, and is held to it when shown",
+  "seen_failing_first": false,
+  "evidence": "The test already passed; only its expected zoom values changed because the zoom step grew from 1.25 to 1.6 in an earlier commit of this PR."
+}

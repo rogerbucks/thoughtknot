@@ -1,0 +1,2105 @@
+{
+  "note": "The tests-first record as it stood when it was split into a file for each commit (11 Oct 2026), frozen at its head: do not edit. Each commit since is recorded in a file of its own beside it.",
+  "head": "b0819d32181762888daa2d4c308d7571a190f588",
+  "files": {
+    "packages/claude-code/test/build.test.mjs": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/claude-code/test/graph-view.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/claude-code/test/graphviz-process.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/abuse.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/autocomplete.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 24,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/commas.test.js": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 16,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/completeness.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/deferred.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 32,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "1d8c6150fde8855ac62d126c2f137e52bcdce93a",
+          "name": "parking a thing for later (park_for_later) > a locked graph that declares them is parked in with no undeclared-type warning"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/display.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/drawing.test.js": {
+      "replayed": 15,
+      "notReplayed": 0,
+      "seenFailing": 37,
+      "excused": 4,
+      "passedFirst": [
+        {
+          "commit": "5d3a4425f803a88146120a241d1ac85de4d88d34",
+          "name": "a missing comma > when the next line is not otherwise valid, it is left out, and the problem still says the comma is missing"
+        },
+        {
+          "commit": "0822eadc72ce1e233cf3dbd3e08ffe8c1c0324d1",
+          "name": "a schema whose types its GraphMeta does not declare > a draft, or a schema that declares each type, has no such warning"
+        },
+        {
+          "commit": "dcffbbe2ddb91eb86854b67705690b2f4f0d7b7b",
+          "name": "a kind or link type the locked graph’s schema does not declare > a draft has no schema to declare anything, so nothing is said; and what the schema declares is never reported"
+        },
+        {
+          "commit": "d000d29e7120b619c41fb5119e1eb3454cb8fd3a",
+          "name": "a comma with nothing after it > a comma inside a string at the block’s end is not taken for it"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/edge-cases.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 15,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/edits.test.js": {
+      "replayed": 7,
+      "notReplayed": 0,
+      "seenFailing": 11,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/engine.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/estimates.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 17,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "50e99cb83b9c1e41027adfe10937114c2b35f86f",
+          "name": "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > a name shorter than three characters is never estimated"
+        },
+        {
+          "commit": "50e99cb83b9c1e41027adfe10937114c2b35f86f",
+          "name": "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > a name of three characters may be estimated, one letter away"
+        },
+        {
+          "commit": "50e99cb83b9c1e41027adfe10937114c2b35f86f",
+          "name": "how near (decided 7 Oct 2026): one letter under eight characters, two from eight, ignoring case and underscores > from eight characters, two letters away is near"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-frame.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-marks.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-note.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-plan.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 23,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "ed2b29372713fe5b72fb4b7caf82474ee3d3e52f",
+          "name": "names that are not ASCII > each part is cut at a whole character, never in the middle of one"
+        },
+        {
+          "commit": "ed2b29372713fe5b72fb4b7caf82474ee3d3e52f",
+          "name": "names that are not ASCII > a short Japanese name is kept whole"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-scope.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 12,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export-write.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 12,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/export.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 17,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/help.test.js": {
+      "replayed": 11,
+      "notReplayed": 0,
+      "seenFailing": 31,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "86a7c50287315264d6311c0a5677d01cba13647d",
+          "name": "suggestions while typing > after the name of a thing already in the graph, no kinds: it is a reference, not a new thing"
+        },
+        {
+          "commit": "dcffbbe2ddb91eb86854b67705690b2f4f0d7b7b",
+          "name": "reading back a link whose type has no reading of its own > a type its schema gives a reading is read in those words"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/history.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 9,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/hits.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 11,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/imports.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 9,
+      "passedFirst": [
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "there is core source to check"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "drawing.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "index.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "layout.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "render.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "theme.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "tokens.ts imports no host"
+        },
+        {
+          "commit": "52cfcf62bea19b5fdf70225e01e2dd73638d7536",
+          "name": "zoom.ts imports no host"
+        },
+        {
+          "commit": "072d48efc2f40f30d1e8c8d1dededf0bfa84a2f6",
+          "name": "within the core, only the entry imports engine.ts"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/index.test.js": {
+      "replayed": 14,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "d08e23f3b3a7684e116bf17e802902a2e15ea167",
+          "name": "the package entry > exports the same values it did before the core was split into modules"
+        },
+        {
+          "commit": "d08e23f3b3a7684e116bf17e802902a2e15ea167",
+          "name": "the package entry > exports the same types it did before the core was split into modules"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/inspector.test.js": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 27,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/layout-bin.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/layout-limits.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 11,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "ff02d6d112341c88fa6e375e99c887e1036dd7f4",
+          "name": "the note’s text, measured before it is read > over the limits the plugin draws nothing, so there is nothing to hold to the Python reader (drawn_in_part)"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/layout-parity.test.js": {
+      "replayed": 12,
+      "notReplayed": 0,
+      "seenFailing": 6,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/layout-worker.test.js": {
+      "replayed": 6,
+      "notReplayed": 0,
+      "seenFailing": 26,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/linked-list.test.js": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 38,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "7ddc304b375620bf68bbebb273c8c0e181272680",
+          "name": "choosing List for a property > new items go before a SET, after the last path, and a comment on its own line stays where it was"
+        },
+        {
+          "commit": "7ddc304b375620bf68bbebb273c8c0e181272680",
+          "name": "review fixes: values are never merged, comments never lost, and the edit follows the block > a comment above a removed item in the middle of the block stays too"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/name-book.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/name-gaps.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 30,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/name-suggestions.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 26,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/palette.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 26,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/pane.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 14,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/partial-read.test.js": {
+      "replayed": 6,
+      "notReplayed": 0,
+      "seenFailing": 14,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/paths.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 39,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "1d8c6150fde8855ac62d126c2f137e52bcdce93a",
+          "name": "a step through something removed > renumbering touches only the path the step was taken out of"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/render.test.js": {
+      "replayed": 10,
+      "notReplayed": 0,
+      "seenFailing": 14,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "c96b0ad03155d0953e9c593f245e864c6e4f1ff3",
+          "name": "speed > a graph of 50 things is read and drawn in under half a second (spec §11; the phone is checked on the device)"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/settings.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 26,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "afff22a2ac5948fc6587c8badc35b7a3ae522945",
+          "name": "the AI models of §19 > a model given no ceiling gets the lowest classification"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/store.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 9,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/strictness.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "afff22a2ac5948fc6587c8badc35b7a3ae522945",
+          "name": "converting a note of several blocks > each block is converted in its own place, and the note as written is checked whole"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/style-edit.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/style-source.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 9,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/style.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 20,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/theme.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/tokens.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 23,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/view-evaluate.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 16,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/view-profile.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 37,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/view-write.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/views-across.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "dd937306946e50bc5f5d24bbb83f8642539ca357",
+          "name": "a view saved as shown > is written in the style graph, and the data is left exactly as it was"
+        },
+        {
+          "commit": "dd937306946e50bc5f5d24bbb83f8642539ca357",
+          "name": "a view saved as shown > saved again, replaces what was saved before rather than adding to it"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/views.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 9,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/core/test/zoom.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 29,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/characterisation.test.mjs": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 16,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/commas.test.mjs": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 6,
+      "excused": 6,
+      "passedFirst": [
+        {
+          "commit": "5d3a4425f803a88146120a241d1ac85de4d88d34",
+          "name": "patterns on one line with no comma are still refused: only a line break stands for the comma"
+        },
+        {
+          "commit": "5d3a4425f803a88146120a241d1ac85de4d88d34",
+          "name": "a line that is not otherwise valid is refused as before"
+        },
+        {
+          "commit": "5d3a4425f803a88146120a241d1ac85de4d88d34",
+          "name": "a missing comma before SET, or after MATCH’s list, is not guessed at"
+        },
+        {
+          "commit": "335a8baf414dd3ecdea3a8cbeb6e5a245ec4b299",
+          "name": "a CRLF line: the comma goes before its \\r, as the Python reader writes it"
+        },
+        {
+          "commit": "335a8baf414dd3ecdea3a8cbeb6e5a245ec4b299",
+          "name": "whitespace from the reader’s set ends a line: the comma goes before it (NBSP, U+3000, U+2028)"
+        },
+        {
+          "commit": "335a8baf414dd3ecdea3a8cbeb6e5a245ec4b299",
+          "name": "a string holding a comma, a ) or // is never taken for the end of the code, nor is an emoji miscounted"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/escapes.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-api.test.mjs": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "8b8d9a28b8776cb42fa54779df3fe4d21626538d",
+          "name": "the entry point exports exactly the names the one file did, in its order"
+        },
+        {
+          "commit": "8b8d9a28b8776cb42fa54779df3fe4d21626538d",
+          "name": "every name is defined: each module gives the entry point what it asks for"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-atomic.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-bare.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-built.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-comments.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "de4677302a9436821a92f9ea830bec527167a46f",
+          "name": "a // inside a string is text, not a comment"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-declares.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "522b41d9a46e277a8a3a85293d5a91df0743172a",
+          "name": "a schema whose GraphMeta declares each type passes §5"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/graph-spec-check-readings.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/layout.test.mjs": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 16,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/lint-parity.test.mjs": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "7db2ca8e8967b9eea33d23db7d119bf373d02c15",
+          "name": "the linter finds the same traps on the same lines as Python, on hand-picked edges"
+        },
+        {
+          "commit": "7db2ca8e8967b9eea33d23db7d119bf373d02c15",
+          "name": "the linter finds the same traps on the same lines as Python, on 4000 random texts"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/owned-comments.test.mjs": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 22,
+      "excused": 6,
+      "passedFirst": [
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a note above a thing written over several lines is owned by it"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a //@ line above a link written without its colon is owned by it, its type as written"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a //@ line above a SET line owns nothing"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a marker indented with GQL whitespace other than a space is read, and the value is trimmed by GQL's set"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a block of only its header owns nothing"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "owned comments: a block the reader refuses is refused alike, at the same line"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/graph-spec/test/store-ids.test.mjs": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "req:3.set-keeps-id: SET never changes a node’s id > req:3.set-keeps-id: a SET of any other key is still read, in the same block and in a later one"
+        },
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "req:3.id-is-text: a node’s id is always text > req:3.id-is-text: a text id is read, a number among the other properties too"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/accessibility.test.js": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 21,
+      "passedFirst": [
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, purple: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, orange: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, cyan: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, pink: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, yellow: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, green: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme, red: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > light theme: links drawn in the muted edge colour, and estimated links, keep 3:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, blue: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, purple: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, orange: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, cyan: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, pink: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, yellow: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, green: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme, red: labels 4.5:1, lines and borders 3:1 on the page, and text on its boxes 4.5:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "contrast in both themes > dark theme: links drawn in the muted edge colour, and estimated links, keep 3:1"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "one colour mapping > the plugin names no colour of its own: the drawing’s colours come from the style, through the core’s one table"
+        },
+        {
+          "commit": "3ff0c19f6dedd363207e3670d6c9af532f137a26",
+          "name": "one colour mapping > styles.css colours only with the theme’s variables"
+        },
+        {
+          "commit": "3bbd4510e34531931e40bacdb9d004dfb540d52c",
+          "name": "one colour mapping > the core’s fixed palettes, for a host with no theme variables, are Obsidian’s default themes as read here"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/block-editor-styles.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/block-reading-view.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/build.test.mjs": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "c834d6053ecb920ba107852fb6fbb570c24c6fa3",
+          "name": "the files the plugin is installed from are at the repository root"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/details-panel-after-done.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/editor.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/export-cases.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 11,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "763c2c838d9d9e9b82e5aee258ee2a9f99b3447a",
+          "name": "the form > takes one press at a time: a second press while it works writes nothing more"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/export.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-bar.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-details.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-maker.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-parked.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "1ce9135eff7812473f1dc799c2fe730f49468de4",
+          "name": "the badge > with nothing parked, says nothing of parking"
+        },
+        {
+          "commit": "1ce9135eff7812473f1dc799c2fe730f49468de4",
+          "name": "Park for later, while the card is edited > is offered only while the card is edited: reading a drawing never changes it"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-walk.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "8c7d5bf79797080f2a58ae31a0874fc321467667",
+          "name": "Record, while the card is edited > is offered only while the card is edited"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view-zoom.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/graph-view.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/inline-completion.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 18,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "e9351151490aac785c1703a6ad245df0fbba2f58",
+          "name": "the best match, shown inline > it is never written to the note unasked"
+        },
+        {
+          "commit": "e9351151490aac785c1703a6ad245df0fbba2f58",
+          "name": "accepting with Tab or Enter > with no match shown, Enter is a new line as before, and Shift-Tab, Control-Enter and a composing Enter leave it alone"
+        },
+        {
+          "commit": "e9351151490aac785c1703a6ad245df0fbba2f58",
+          "name": "accepting with Tab or Enter > the suggestions row keeps working: Tab still takes a name, where the match would only close the bracket"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/inline.test.js": {
+      "replayed": 13,
+      "notReplayed": 0,
+      "seenFailing": 50,
+      "excused": 4,
+      "passedFirst": [
+        {
+          "commit": "0cea41d73a058c7b78272ec7db3fb0b593d8f780",
+          "name": "the inspector, in edit mode > outside edit mode, a box’s details are for reading only"
+        },
+        {
+          "commit": "e0fd9d24a0c2f6849d321ef4cb3d42ae3ae61cfe",
+          "name": "edit here, in the card > a box left on purpose stays left: a redraw after it gives no focus back"
+        },
+        {
+          "commit": "e52fbf7f044b485a222fb493ddce683fb3a7e8fe",
+          "name": "edit here, in the card > once the person has moved to something else, a card coming back never takes the focus from it"
+        },
+        {
+          "commit": "d56d2fe52afcf62e2a5a0413a1d33676c11c2791",
+          "name": "selecting in the drawing moves the text to it > when nothing is being edited, choosing a box changes no text and moves no focus"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/layout-worker.test.js": {
+      "replayed": 6,
+      "notReplayed": 1,
+      "seenFailing": 7,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "6a50e416525441225c6ad72468571b0bc8c45e5c",
+          "name": "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, each line broken — is its text and a banner at once, never read"
+        },
+        {
+          "commit": "ff02d6d112341c88fa6e375e99c887e1036dd7f4",
+          "name": "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read"
+        }
+      ],
+      "notReplayedCommits": [
+        {
+          "commit": "7590e450b56d89c780d0bff6fe968d3c50799c7f",
+          "reason": "its run against the code before it did not finish",
+          "tests": [
+            "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > too many drawing instructions: the same, in bytes, in words a person reads",
+            "a graph over a size limit is shown as its text, with a banner saying which limit and the numbers > a block too large to read — 5 MB, each line broken — is its text and a banner at once, never read",
+            "where Workers run > the worker’s code stands alone: every helper it calls is its own, never one of main.js’s, such as __name",
+            "where Workers run > after 3 layouts in a row take too long, no worker is started again: the rest say so, with their text",
+            "where Workers run > on unload, a layout still waiting is dropped quietly, and none is started after",
+            "in the pane > a block typed or pasted past the size to read shows the banner in the drawing’s place, never read"
+          ]
+        }
+      ]
+    },
+    "packages/obsidian/test/live-preview.test.js": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "d6a8d952ac24083dead2580531335977bf24fb23",
+          "name": "the editing view draws graph blocks with its own widget > in Source mode nothing is drawn: the text is the text"
+        },
+        {
+          "commit": "d6a8d952ac24083dead2580531335977bf24fb23",
+          "name": "what is typed in place is written through the editor > with the note in reading view or closed, the pane still writes the file"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/menu-place.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "94bf8e5fbbfacd45cc51297202110690e7f8ded8",
+          "name": "where the property type menu is shown > with room below the icon it opens under it, at its left edge"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/pane-added-for-you.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/pane-help.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/pane-writing.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/pane.test.js": {
+      "replayed": 14,
+      "notReplayed": 0,
+      "seenFailing": 37,
+      "excused": 6,
+      "passedFirst": [
+        {
+          "commit": "20916faf7b981e0a0270d3b6f9258eebed2892ef",
+          "name": "shared schemas > a graph that names no shared schema never reads the vault for one"
+        },
+        {
+          "commit": "a6620f90d13dc15a7ce86459cf02ce7625d2b1b5",
+          "name": "the comma added for you > a line that is not otherwise valid gets no comma"
+        },
+        {
+          "commit": "b4a4e6d88bb2e82496299a7212644e3d2bb464b2",
+          "name": "the colon added for you > a first use gets no colon: it is not guessed"
+        },
+        {
+          "commit": "40d335ed953ce0ad1dc7e71cba162abefc955b15",
+          "name": "a note nobody is editing > is drawn with a missing comma read in, and offered the fix, but never rewritten"
+        },
+        {
+          "commit": "dcffbbe2ddb91eb86854b67705690b2f4f0d7b7b",
+          "name": "an empty graph block > typing the first thing, and taking a suggestion, keeps the graph line"
+        },
+        {
+          "commit": "e0fd9d24a0c2f6849d321ef4cb3d42ae3ae61cfe",
+          "name": "typing keeps the field > in the pane, each write redraws the drawing and the same field keeps the focus and the caret"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/placement.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 6,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "f2439e09986bb918aa88084190bff3baac1731ae",
+          "name": "waiting for a card to be put on the page > a card unloaded before it is placed is never acted on"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/properties-list.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 21,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/properties.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/settings.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 16,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "cd1c849ad316b754b5831f511d845ebcf3bf7595",
+          "name": "strictness > Forgiving, the default: a slip is drawn, and reported as a warning"
+        },
+        {
+          "commit": "afff22a2ac5948fc6587c8badc35b7a3ae522945",
+          "name": "back to standard GQL > the button on the settings page converts the note in front, as the command does"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/style-block.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/suggested-name.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 6,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "packages/obsidian/test/view-block.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_changeset_header.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 10,
+      "passedFirst": [
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "EngineChangesetHeader.test_a_first_line_holding_only_u0085_is_the_header_line_so_there_is_no_header"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "EngineChangesetHeader.test_a_first_line_holding_only_u2028_is_blank_and_the_next_line_is_the_header"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "EngineChangesetHeader.test_a_no_break_space_before_the_header_is_whitespace_and_the_header_is_read"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "EngineChangesetHeader.test_a_plain_header_is_read"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "EngineChangesetHeader.test_u2028_before_the_header_is_whitespace_and_the_header_is_read"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "RulesChangesetHeader.test_a_first_line_holding_only_u0085_is_the_header_line_so_there_is_no_header"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "RulesChangesetHeader.test_a_first_line_holding_only_u2028_is_blank_and_the_next_line_is_the_header"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "RulesChangesetHeader.test_a_no_break_space_before_the_header_is_whitespace_and_the_header_is_read"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "RulesChangesetHeader.test_a_plain_header_is_read"
+        },
+        {
+          "commit": "6869b1c9ba0b593f0d7bdd7334216dbc4017b20b",
+          "name": "RulesChangesetHeader.test_u2028_before_the_header_is_whitespace_and_the_header_is_read"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_changesets.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "4a330ecf3dc053c7dd59a279133148b3b26cf9fb",
+          "name": "ChecksReadPlain.test_the_reader_s_dry_run_reaches_the_engine_s_outcome"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_engine_gets_commas.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 14,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_engine_gets_corrected.py": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_engine_text_comments.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 15,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_escapes.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "485fd0a00ed790c3e47e7345e136859fd0ed9fa6",
+          "name": "EngineWritesEscapes.test_a_rule_reads_a_texts_backslash_and_line_breaks_as_written"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_fill.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "5194b41dd2bc14ac2b6d50a874038a707f486364",
+          "name": "FillReadsPlain.test_each_recipe_s_value_from_the_reader_s_reading_is_grafeo_s"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_gql_profile_bare.py": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 13,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_gql_profile_drawn.py": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 9,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "e4d665231a71c6c79a38f12d9800b90759e1bc0e",
+          "name": "CheckingStaysWhole.test_apply_still_refuses_both_shapes"
+        },
+        {
+          "commit": "d000d29e7120b619c41fb5119e1eb3454cb8fd3a",
+          "name": "ADanglingComma.test_checking_and_loading_may_still_refuse_it"
+        },
+        {
+          "commit": "de4677302a9436821a92f9ea830bec527167a46f",
+          "name": "AnEmojiBeforeWhatIsLeftOut.test_the_item_at_fault_is_left_out_exactly"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_gql_profile_entry_point.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GqlProfileEntryPoint.test_it_imports_in_a_fresh_interpreter_with_only_src_on_the_path"
+        },
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GqlProfileEntryPoint.test_it_keeps_every_name_it_had"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_rules_declares.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "522b41d9a46e277a8a3a85293d5a91df0743172a",
+          "name": "Declares.test_declared_by_the_graphmeta_passes"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_rules_entry_point.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphRulesEntryPoint.test_it_imports_in_a_fresh_interpreter_with_only_src_on_the_path"
+        },
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphRulesEntryPoint.test_it_keeps_every_name_it_had"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_rules_readings.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_spec_declares.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "522b41d9a46e277a8a3a85293d5a91df0743172a",
+          "name": "Declares.test_declared_by_the_graphmeta_passes"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_spec_entry_point.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphSpecEntryPoint.test_it_imports_in_a_fresh_interpreter_with_only_src_on_the_path"
+        },
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphSpecEntryPoint.test_it_keeps_every_name_it_had"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_svg_entry_point.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphSvgEntryPoint.test_each_name_is_the_object_where_it_lives_now"
+        },
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphSvgEntryPoint.test_it_imports_in_a_fresh_interpreter_with_only_src_on_the_path"
+        },
+        {
+          "commit": "39caf916ed92532d20609c05160fd9f3ca62d30d",
+          "name": "GraphSvgEntryPoint.test_it_keeps_every_name_it_had"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_graph_svg_suggested.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_id_once_engine.py": {
+      "replayed": 11,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 18,
+      "passedFirst": [
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_check_changeset_refuses_a_change_set_reusing_a_base_id"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_check_changeset_refuses_an_id_repeated_across_two_base_blocks"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_compute_refuses_an_id_repeated_across_two_blocks_of_one_graph"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_load_refuses_an_id_repeated_in_one_text"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_parse_by_default_refuses_a_block_the_reader_cannot_read"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_parse_by_default_refuses_a_variable_written_twice"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_parse_by_default_refuses_an_id_repeated_in_one_block"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_the_default_parser_is_grafeo"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "EnginePathsSkipTheReader.test_the_reader_based_check_changeset_refuses_a_change_set_reusing_a_base_id"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "GrafeoTakesARepeat.test_grafeo_makes_a_second_node_for_a_variable_written_twice"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "GrafeoTakesARepeat.test_grafeo_stores_two_nodes_for_one_id_across_two_texts_of_one_graph"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "GrafeoTakesARepeat.test_grafeo_stores_two_nodes_for_one_id_in_one_insert"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "GrafeoTakesARepeat.test_grafeo_stores_two_nodes_for_two_insert_statements_in_one_text"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "OneIdInTwoDocumentsOfAJoin.test_one_id_in_two_documents_joins_as_one_thing_stated_in_both"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "OneIdInTwoDocumentsOfAJoin.test_one_id_with_two_values_in_two_documents_is_contested_not_dropped"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "TheReaderRefusesARepeat.test_parse_under_the_profile_setting_refuses_an_id_repeated_in_one_block"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "TheReaderRefusesARepeat.test_the_reader_refuses_an_id_repeated_across_two_blocks_of_one_graph"
+        },
+        {
+          "commit": "2ff13771a945018c04c6c7160d12fdd3932b2d55",
+          "name": "ValidateComesAfterGrafeo.test_validate_reports_an_id_repeated_in_one_document"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_ids_engine.py": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_layout_source.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_lexer.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_licences.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_machine.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_name_gaps.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_name_suggestions.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 5,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_named_rules.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "5d48977f3f27780e08211e42affb32193ce6e644",
+          "name": "LoanBalanceReadsPlain.test_a_repayment_with_no_amount_fails_the_balance_as_grafeo_s_reading_does"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_optional_imports.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "e5f8e7eab61ef2d6324abad3c7fd772c98b7bd18",
+          "name": "NoEngineInstalled.test_a_plain_install_reads_checks_joins_and_draws"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_owned_comments.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_parity.py": {
+      "replayed": 14,
+      "notReplayed": 0,
+      "seenFailing": 12,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "e4d3dddc016c1d4bf682966a3c1e8d8584f0b978",
+          "name": "IdOnce.test_both_readers_refuse_a_name_or_id_used_twice_alike"
+        },
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "IdIsText.test_both_readers_read_a_text_id"
+        },
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "SetKeepsId.test_both_readers_read_a_set_of_another_key"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_reader_agrees_with_grafeo.py": {
+      "replayed": 5,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 12,
+      "passedFirst": [
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_a_gql_constraint_finds_what_its_reference_finds"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_every_case_grafeo_refuses_is_a_known_one"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_every_rule_is_seen_holding_and_failing"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p1_the_reader_builds_grafeos_graphs"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_a_change_sets_dry_run_reaches_grafeos_outcome"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_judgements_agree"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_paths_agree"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_review_agrees"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_section20_values_agree"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_the_plain_rules_give_grafeos_verdicts"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_p2_why_layer_agrees"
+        },
+        {
+          "commit": "14fe7ff885bfe98ec7403e03ced9a780f1083683",
+          "name": "Agreement.test_there_are_cases"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_reading.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_settings.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 6,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_settings_forwarded.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 4,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_settings_reader_default.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "ef7ed86de35bf590420b5bcd0e4a3a5353405e49",
+          "name": "ReaderDefault.test_a_gql_constraint_with_no_twin_is_still_run_as_gql"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_store.py": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 3,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_store_ids.py": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "IdIsText.test_a_text_id_is_read_and_a_number_among_the_other_properties_too"
+        },
+        {
+          "commit": "26ab3003b853291f7aadcba80f1e56d15e3fada3",
+          "name": "SetKeepsId.test_a_set_of_any_other_key_is_still_read_in_the_same_block_and_a_later_one"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_to_gql.py": {
+      "replayed": 7,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "df43e93d1695d00610555609b6ced0dab68ea881",
+          "name": "ToGqlRefusesWhatTheReaderRefuses.test_a_node_written_where_it_cannot_be_found_is_said_not_hidden"
+        },
+        {
+          "commit": "e7c2165a447ba2544dbf20e30db94428f2a47026",
+          "name": "ToGqlKeepsOwnedComments.test_comments_above_the_first_thing_stay_owned_in_a_block_whose_lines_end_in_cr_lf"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_view_server.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "python/graph_spec/tests/test_whitespace.py": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 3,
+      "passedFirst": [
+        {
+          "commit": "b40c69880ace85f26f44c48492baaef08e9445e2",
+          "name": "BeforeKeywords.test_whitespace_before_match_insert_and_set_parts_them_as_a_space_does"
+        },
+        {
+          "commit": "b40c69880ace85f26f44c48492baaef08e9445e2",
+          "name": "BetweenItems.test_every_whitespace_character_parts_items_as_a_space_does"
+        },
+        {
+          "commit": "b40c69880ace85f26f44c48492baaef08e9445e2",
+          "name": "InsideStrings.test_whitespace_and_what_is_not_whitespace_are_kept_as_written_inside_a_string"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "spikes/graph-note-spike/test/spike.test.mjs": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 2,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/cheap-checks.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 51,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/classification.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "8d5a0a3b923e1057bcc707fd507462c8e6603af7",
+          "name": "built from general patterns only > a list of names, as strings or as a pattern’s alternatives, is found"
+        },
+        {
+          "commit": "8d5a0a3b923e1057bcc707fd507462c8e6603af7",
+          "name": "built from general patterns only > the check holds none: only patterns and checksums"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/conventions.test.js": {
+      "replayed": 8,
+      "notReplayed": 0,
+      "seenFailing": 12,
+      "excused": 8,
+      "passedFirst": [
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "one code style > the linter runs in CI with no warnings allowed"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "naming conventions > files are kebab-case; Python files are snake_case"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "the code’s layout > each package keeps its code in src/ and its tests in test/; the Python library in src/ and tests/"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "the code’s layout > each module says first what it is for: one module, one purpose"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "Obsidian’s guidelines, beyond the linter > the linter is the plugin store’s own, sentence case in the interface among its rules"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "Obsidian’s guidelines, beyond the linter > no inline styles and no HTML strings: classes and the DOM helpers"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "Obsidian’s guidelines, beyond the linter > every listener on the app, window or document is registered, so it goes when the plugin does"
+        },
+        {
+          "commit": "54908e44ad4366586b33ff5c088ead641c52bdbb",
+          "name": "Obsidian’s guidelines, beyond the linter > the vault is changed only through its API, atomically, and the app is never the global one"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/engine-version.test.js": {
+      "replayed": 4,
+      "notReplayed": 0,
+      "seenFailing": 45,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/licences.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/offline.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 0,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "74b796c498cdd5e95f481f7251025f00d6815385",
+          "name": "the Graphviz engine starts and draws without reaching for the network"
+        },
+        {
+          "commit": "74b796c498cdd5e95f481f7251025f00d6815385",
+          "name": "the trap records an attempt"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/policy.test.js": {
+      "replayed": 14,
+      "notReplayed": 0,
+      "seenFailing": 7,
+      "excused": 5,
+      "passedFirst": [
+        {
+          "commit": "5933c98e50517f6e453d68d2024d2606f0387bbf",
+          "name": "GitHub Actions > every library the plugin bundles is linted with the Obsidian review rules"
+        },
+        {
+          "commit": "90ed1a99ca796d9fa6a576ad433ec643774a8ced",
+          "name": "GitHub Actions > CI runs the Python library tests from its locked environment"
+        },
+        {
+          "commit": "44bc037b7a4a5e41257068436dc7253ca03a05c6",
+          "name": "the supply chain > every override is pinned to an exact version or to a direct dependency"
+        },
+        {
+          "commit": "40d335ed953ce0ad1dc7e71cba162abefc955b15",
+          "name": "its own repository > the source is a Git repository whose remote is on GitHub"
+        },
+        {
+          "commit": "40d335ed953ce0ad1dc7e71cba162abefc955b15",
+          "name": "its own repository > it sits inside no Obsidian vault: no folder above it holds one"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/public-readiness.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 22,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/quality-baseline.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 19,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/quality-metrics.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 45,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/requirements.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 10,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/slice-board-style.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 11,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/slice-board.test.js": {
+      "replayed": 3,
+      "notReplayed": 0,
+      "seenFailing": 43,
+      "excused": 4,
+      "passedFirst": [
+        {
+          "commit": "e40539cd72ea68b22b091e28bc5a428fe26f202e",
+          "name": "the page > the light and both dark token sets define exactly the same custom properties"
+        },
+        {
+          "commit": "e40539cd72ea68b22b091e28bc5a428fe26f202e",
+          "name": "the page > a bar is to scale: the proved, part and open segments start and run in proportion"
+        },
+        {
+          "commit": "e40539cd72ea68b22b091e28bc5a428fe26f202e",
+          "name": "the page > escapes where a test is kept and the file text, never letting a tag through"
+        },
+        {
+          "commit": "e40539cd72ea68b22b091e28bc5a428fe26f202e",
+          "name": "the open pull requests panel > escapes an https url holding a quote or a tag, the branch name, and never breaks out of the attribute"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/test-vault.test.js": {
+      "replayed": 2,
+      "notReplayed": 0,
+      "seenFailing": 8,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "c81b4294bf04c00e743c0bfa325619b92fda3cf9",
+          "name": "only the notes and two settings are committed > nothing committed in the vault is a workspace file, a plugin build or anything but a note or the two settings"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/tests-first-run.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 0,
+      "passedFirst": [],
+      "notReplayedCommits": []
+    },
+    "test/tests-first.test.js": {
+      "replayed": 9,
+      "notReplayed": 0,
+      "seenFailing": 18,
+      "excused": 2,
+      "passedFirst": [
+        {
+          "commit": "4c91ec72c9c5ebaedfe6d856c1d754c99450c2be",
+          "name": "replaying a commit against its parent’s code > a Python test whose subTests raise an error, not a failed assertion, has failed: it is seen failing first"
+        },
+        {
+          "commit": "4c91ec72c9c5ebaedfe6d856c1d754c99450c2be",
+          "name": "replaying a commit against its parent’s code > a Python test with one subTest failing among others that pass has failed: it is seen failing first"
+        }
+      ],
+      "notReplayedCommits": []
+    },
+    "test/whitespace.test.js": {
+      "replayed": 1,
+      "notReplayed": 0,
+      "seenFailing": 1,
+      "excused": 1,
+      "passedFirst": [
+        {
+          "commit": "f609d9b2789175d0aa87b02d99da1ac37e85bbdb",
+          "name": "the three copies hold the same 29 code points, the ones openGQL’s grammar names"
+        }
+      ],
+      "notReplayedCommits": []
+    }
+  }
+}

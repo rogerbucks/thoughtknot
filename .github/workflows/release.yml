@@ -1,0 +1,193 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+jobs:
+  # First, and in seconds (risk OPS-2): the tag names a commit main already holds, so it passed main's required checks,
+  # and the tag is the manifest's version. A tag typed on another branch or a stale checkout stops here, before the
+  # long jobs. It installs nothing, so nothing a package runs sees the tag's code first.
+  on-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # every branch, so origin/main is there to compare with
+          fetch-depth: 0
+      - name: The tagged commit is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::The tag $GITHUB_REF_NAME is on a commit main does not hold. Tag a commit on main."; exit 1; }
+      - name: The tag matches the manifest version
+        run: test "$GITHUB_REF_NAME" = "$(node -p "require('./manifest.json').version")"
+
+  # Before anything is released (spec §12 and §13): the code's quality metrics are measured and held to the committed
+  # baseline, and the Graphviz inside the engine is checked against a fresh reading of the published advisories. It
+  # only reads; the release job waits for it. The advisories are asked of OSV here, and nowhere else but the weekly refresh
+  # and this job's dry run. The "Release check (dry run)" workflow (release-check.yml) runs this job and public-readiness,
+  # step for step, by hand on main before a tag, so a failure there costs no version number.
+  quality:
+    needs: on-main
+    # pinned, as the instruction counts are held only to counts from the same machine; and bounded, as Cachegrind is slow
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    # The quality metrics run the whole suite at once, twice, as the fresh clone does. That passed the default 4 GB
+    # ceiling (4.2 GB, 22 Oct 2026), so it gets CI's ceiling too.
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history: the suite the metrics run needs it to find each tests-first record's commit, and the
+          # baseline check needs the commit before the tagged one (HEAD~1) to hold the baseline against its earlier copy
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # exact, as a Node patch can move the instruction counts: changed only on purpose, with a new baseline
+          node-version: 24.20.0
+      - run: npm ci
+      - run: npm audit signatures
+      # UX-1: a person walked the build by hand, in every host and theme, and recorded it (RELEASING.md)
+      - name: The accessibility walk-through of this version is recorded, every check ticked or given its reason
+        run: node scripts/walkthrough-record.mjs --release
+      - name: The baseline is no worse than the commit before, or every change has a reason
+        run: node scripts/quality-check.mjs --baseline-since HEAD~1
+      - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
+        run: node scripts/engine-version.mjs --refresh
+      - name: The engine is the version the notices name, and no advisory affects it
+        run: node scripts/engine-version.mjs
+      - name: Every known risk is decided, none is overdue, and none went stale since it was looked at
+        run: node scripts/risk-register.mjs --release
+      # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools
+      - name: Install Valgrind, whose Cachegrind counts the benchmarks' instructions
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
+      - name: Measure the quality metrics
+        run: node scripts/quality-metrics.mjs --out quality/metrics.json
+      - name: No metric is worse than the baseline without a recorded reason
+        run: node scripts/quality-check.mjs quality/metrics.json
+
+  # Fit to be public, as CI checks on every pull request: the whole history clean, and a fresh clone set up from the
+  # README's steps alone. A release is the moment it matters most, so it is checked again here.
+  public-readiness:
+    needs: on-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: node scripts/public-readiness.mjs --history --setup
+  release-notes:
+    # the notes the release writes, checked before anything is built: they must tell users what the library changed
+    needs: on-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history and tags: the changelog starts at the last release
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: The changelog since the last release, as the release writes it
+        run: node scripts/changelog.mjs --out release-notes.md
+      - name: The release notes tell users what the library changed, and the version rule
+        run: node scripts/changelog.mjs --check release-notes.md
+
+  # No open security alert (spec §50, security_release_gate): code scanning, Dependabot and secret scanning, read here
+  # with a token that may see them, and npm audit and OSV over the lock files. An alert stops the release whatever its
+  # severity, unless the risk register accepts it. It installs nothing, and only reads.
+  security:
+    needs: on-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: No security alert is open, unless the risk register accepts it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: node scripts/security-alerts.mjs --release
+
+  release:
+    needs: [quality, public-readiness, release-notes, security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history: npm test runs the tests-first records test, which needs it
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - run: node scripts/check-classification.mjs --all
+      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 8 GB, and so does this
+      - env:
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
+        run: npm test
+      - run: npm run build
+      - name: The library breaks nothing since the last release without a new major version
+        run: node scripts/public-api.mjs --release
+      - name: Bundle the core's layout source into one file, for the vault's layout parity check
+        run: npm run build:layout
+      # The checker ships as the one file npm run build made, at the path its entry point has in the repository.
+      - name: Archive the graph-spec libraries from the tagged commit, for the vault to vendor
+        run: git archive --format=tar.gz -o "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix=packages/core/dist/ --add-file=packages/core/dist/layout-source-node.cjs --prefix= HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
+      # The JavaScript library as two packages, installed from the release and never published to npm (Q-02)
+      - name: Build the library's packages, the reader, checker and layout, and the core
+        run: node scripts/library-release.mjs --out .
+      - name: Checksums for every asset
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" > SHA256SUMS
+      # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+            graph-spec-libraries-*.tar.gz
+            thoughtknot-*.tgz
+      - name: The Graphviz version inside the engine, for the release notes
+        run: node scripts/engine-version.mjs --notes engine-notes.md
+      - name: The changelog since the last release, at the top of the release notes
+        run: node scripts/changelog.mjs --out release-notes.md && cat engine-notes.md >> release-notes.md
+      - name: The release notes tell users what the library changed, and the version rule
+        run: node scripts/changelog.mjs --check release-notes.md
+      - name: Draft the release with the store assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes

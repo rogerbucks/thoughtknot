@@ -1,0 +1,388 @@
+#!/usr/bin/env python3
+"""Lays out a graph with Graphviz and returns it as inline SVG that follows Obsidian's light and
+dark themes.
+
+Usage:
+  from graph_svg import available, render
+      # render(nodes, edges) -> '<svg …>' string; available() -> bool
+  python3 python/graph_spec/src/graph_svg.py   # self-test: draws a small graph to stdout
+
+Writes: nothing (read-only library). Presentation comes from graph_svg.style.json beside it.
+
+Why Graphviz: a diagram whose relationships get a little complex was almost impossible to read with
+Mermaid's flowchart layout, which leaves crossings in and drops edge labels on top of each other.
+Graphviz's dot is built for layered graphs: it minimises crossings and gives every edge label its
+own space. So the layout is Graphviz's, and the drawing is designed around it:
+- things of one kind stand in one column when no link joins two of them, so the eye reads kind by
+  kind;
+- each box says its kind in small capitals above its text, and its kind's colour repeats that —
+  colour is never the only cue;
+- long text wraps at about 22 characters, so columns stay narrow and the drawing fits a note with
+  little shrinking;
+- each relationship type has its colour, and its label is the colour of its line, so a label is
+  never matched to the wrong link.
+Readability: lines inside a box are spaced 1.25x the font size — label spacing, not paragraph
+spacing: at 1.5x the lines of one box read as separate sentences — the caption has its own gap and
+letter-spacing, boxes keep about one em of padding, and every colour is blended to meet WCAG
+contrast in both themes. The numbers live in the style sidecar, each with its reason.
+Colours are Obsidian theme variables written as inline styles, because a note's SVG cannot carry a
+stylesheet reliably.
+Each colour is chosen from the kind's or reading's own name, so it is the same in every step and
+every note (first cut chose by alphabetical position, and Reason changed colour between steps). The
+drawing sits in a .mermaid box so the Mermaid Zoom plugin gives it zoom, drag and fullscreen; that
+plugin inverts a diagram's colours in dark mode (it assumes Mermaid's light theme), so the SVG
+carries filter:none — it already follows the theme.
+If Graphviz is missing, available() says so and the caller falls back to Mermaid, loudly — a
+drawing never disappears.
+"""
+
+import html
+import json
+import os
+import re
+import shutil
+import subprocess  # noqa: F401 — Graphviz runs through it (graphspec.style.drawn_svg)
+import textwrap
+import zlib
+from collections.abc import Collection, Mapping, Sequence
+
+# Arrowheads hidden and the diagram type (editor spec §15), and properties shown inline (§14). Also
+# links that move (§7), nudges (§6), and folds, trunks and routing (§25). Each is written into the
+# source as the plugin's core writes it. They live with the style graph that chooses them, as do
+# the directions laid out (re-exported here). Labels set apart (editor spec §42).
+from graph_bidi import isolate_labels
+from graphspec.style.arrows import arrowless_source
+from graphspec.style.diagram_types import typed_source
+from graphspec.style.drawn_svg import drawn_svg
+from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
+from graphspec.style.flow import flow_source
+from graphspec.style.fold_source import folded_source, routed_source
+from graphspec.style.inline import inline_source
+from graphspec.style.nudges import nudged_source
+from graphspec.style.picture import picture_source
+from graphspec.style.quick import QUICK_SETTINGS, directions, quick_source  # noqa: F401
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
+DOT = shutil.which("dot") or next(
+    (p for p in ("/opt/homebrew/bin/dot", "/usr/local/bin/dot") if os.path.exists(p)), None
+)
+
+
+def available() -> bool:
+    """Whether Graphviz's dot is installed, so render() can draw; when it is not, the caller falls
+    back to Mermaid."""
+    return DOT is not None
+
+
+def _pick(names, palette, pinned):
+    """A colour per name, chosen from the name itself (a checksum), so a kind or a reading keeps
+    its colour in every step and every note. names come in order of first appearance; on a clash
+    the later name moves to the next free colour, so a graph that grows never recolours what it
+    already had."""
+    out, taken = {}, set()
+    for n in names:
+        if n in pinned:
+            out[n] = pinned[n]
+            continue
+        i = zlib.crc32(n.encode()) % len(palette)
+        for k in range(len(palette)):
+            if palette[(i + k) % len(palette)] not in taken:
+                i = (i + k) % len(palette)
+                break
+        out[n] = palette[i]
+        taken.add(palette[i])
+    return out
+
+
+def _hue(kind, kinds):
+    """The colour name for a kind: pinned in the sidecar, else chosen from its name."""
+    return _pick(kinds, STYLE["kind_hues"], STYLE["kind_colours"])[kind]
+
+
+def _label(kind, text, suggested=False):
+    """A box's text as a table, one row per line, so line spacing can be set: Graphviz's own <br/>
+    spacing is about 1.0x the font size. The extra space per line, (line_height - 1.0) x font size
+    in whole points, is split between the cell's padding (twice, above and below) and the table's
+    cell spacing (once), since Graphviz takes only whole points for both.
+    The kind's caption gets a gap of its own beneath it. A box drawn under a suggested name says
+    so beneath its text, after the same gap, as the caption is written (10 Oct 2026)."""
+    style = STYLE
+    lines = textwrap.wrap(text, style["wrap_chars"], break_on_hyphens=False) or [""]
+    extra = max(0, round((style["line_height"] - 1.0) * style["font_size"]))
+    pad, spacing = extra // 2, extra % 2
+    rows = "".join(f'<tr><td cellpadding="{pad}">{html.escape(line)}</td></tr>' for line in lines)
+    cap = (
+        (
+            f'<tr><td cellpadding="0"><font point-size="{style["kind_font_size"]}" '
+            f'color="#0000fe">{html.escape(kind.upper())}</font></td></tr>'
+            f'<tr><td cellpadding="0" height="{style["caption_gap"]}"></td></tr>'
+        )
+        if kind
+        else ""
+    )
+    mark = (
+        (
+            f'<tr><td cellpadding="0" height="{style["caption_gap"]}"></td></tr>'
+            f'<tr><td cellpadding="0"><font point-size="{style["kind_font_size"]}" '
+            f'color="#0000fe">{html.escape(style["suggested_label"].upper())}</font></td></tr>'
+        )
+        if suggested
+        else ""
+    )
+    return (
+        f'<<table border="0" cellborder="0" cellspacing="{spacing}" cellpadding="0">'
+        f"{cap}{rows}{mark}</table>>"
+    )
+
+
+def dot_source(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    rankdir: str | None = None,
+    suggested: Collection[str] = (),
+) -> tuple[str, list[str], list[str]]:
+    """nodes: [(key, kind, text)]; edges: [(source key, reading, target key)]. Kind colours are
+    placeholders #0001xx. suggested: the keys of boxes drawn under a suggested name — a thing
+    written without one (10 Oct 2026) — each outlined in the style's suggested_style and labelled
+    with its suggested_label. One key given as a plain string is refused, with TypeError: read
+    letter by letter, it would mark boxes whose keys are part of it."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
+    # order of first appearance — colours depend on it
+    kinds = list(dict.fromkeys(k for _, k, _ in nodes if k))
+    style = STYLE
+    out = [
+        "digraph G {",
+        f"  graph [rankdir={rankdir or style['rankdir']}, ranksep={style['ranksep']}, "
+        f'nodesep={style["nodesep"]}, bgcolor="transparent", pad=0.1];',
+        f'  node [shape=box, style="rounded,filled", fontname="{style["font"]}", '
+        f'fontsize={style["font_size"]}, fontcolor="#0000fd", penwidth=1.2, '
+        f'margin="{style["box_padding"]}"];',
+        f'  edge [fontname="{style["font"]}", fontsize={style["edge_font_size"]}, '
+        f'fontcolor="#0000fe", color="#0000fc", arrowsize=0.7, penwidth=1.0];',
+    ]
+    for key, kind, text in nodes:
+        i = kinds.index(kind) if kind else 99
+        dashed = f', style="{style["suggested_style"]}"' if key in suggested else ""
+        out.append(
+            f'  "{key}" [label={_label(kind, text, key in suggested)}, '
+            f'fillcolor="#0001{i:02x}", color="#0002{i:02x}"{dashed}];'
+        )
+    # one column per kind, when no link joins two things of that kind
+    of = {key: kind for key, kind, _ in nodes}
+    for kind in kinds:
+        members = [key for key, k, _ in nodes if k == kind]
+        if len(members) > 1 and not any(
+            of.get(s) == kind and of.get(d) == kind for s, _, d in edges
+        ):
+            out.append("  { rank=same; " + " ".join(f'"{m}";' for m in members) + " }")
+    # A kind that only receives links (a dead end, like Source), and is not the graph's main
+    # destination, is laid out on the far side. So its links stay short instead of crossing the
+    # middle. The arrow still points the way the link reads.
+    reach = {k: set() for k in kinds}
+    for _ in kinds:
+        for s, _, d in edges:
+            if of.get(s) and of.get(d):
+                reach[of[s]] |= {of[d]} | reach[of[d]]
+    sinks = [
+        k
+        for k in kinds
+        if not any(of.get(s) == k for s, _, _ in edges)
+        and any(of.get(d) == k for _, _, d in edges)
+    ]
+    main = max(sinks, key=lambda k: sum(k in reach[o] for o in kinds), default=None)
+    readings = list(dict.fromkeys(r for _, r, _ in edges))
+    for s, reading, d in edges:
+        # line #0003xx, its label #0004xx — blended differently, for their contrast minimums
+        i = readings.index(reading)
+        a = f'label="{html.escape(reading)}", color="#0003{i:02x}", fontcolor="#0004{i:02x}"'
+        out.append(
+            f'  "{d}" -> "{s}" [{a}, dir=back];'
+            if of.get(d) in sinks and of.get(d) != main
+            else f'  "{s}" -> "{d}" [{a}];'
+        )
+    out.append("}")
+    return "\n".join(out), kinds, readings
+
+
+def drawn_source(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    rankdir: str,
+    suggested: Collection[str] = (),
+    nudges: Sequence[Mapping] = (),
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
+    plan: Mapping | None = None,
+    flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
+    pictures: Sequence[Mapping] = (),
+) -> tuple[str, list[str], list[str]]:
+    """The Graphviz source render lays a graph out from in `rankdir`, with its kinds and readings,
+    as the plugin's core writes it (render.ts, directions): the layout source (dot_source), laid
+    out as its diagram type (typed_source), its moving links marked (flow_source), its arrowheads
+    hidden and properties shown (arrowless_source, inline_source), room kept for its pictures
+    (picture_source), its nudges written in (nudged_source), then folded and merged as `folding`
+    says (folded_source), its links routed (routed_source), and when large, laid out quickly."""
+    src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
+    src = flow_source(typed_source(src, plan), flow)
+    src = picture_source(inline_source(arrowless_source(src, arrowless), inline), pictures)
+    src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
+    src = routed_source(folded_source(src, folding), routing)
+    return quick_source(src, len(nodes)), kinds, readings
+
+
+def _themed(svg, kinds, readings=()):
+    """Swap the placeholder colours for Obsidian theme variables, as inline styles, and make the
+    SVG fit a note."""
+    style = STYLE
+    colour = {
+        "#0000fd": style["text"],
+        "#0000fe": style["muted"],
+        "#0000fc": style["edge"],
+        "#000000": style["edge"],
+    }
+
+    # Contrast (WCAG 2.2): a theme's own hues fall short on its background. Light-mode yellow is
+    # 2.1:1. So each is blended with the theme's text colour. Lines and borders go to line_mix (3:1
+    # for shapes, SC 1.4.11). Labels go to label_mix (4.5:1 for text, SC 1.4.3). Measured on
+    # Obsidian's default themes: every label 5.4:1 or more, every line 3.2:1 or more.
+    def blend(h, pct):
+        return f"color-mix(in srgb, var(--color-{h}) {pct}%, var(--text-normal))"
+
+    kh = _pick(kinds, style["kind_hues"], style["kind_colours"])
+    for i, k in enumerate(kinds):
+        h = kh[k]
+        colour[f"#0001{i:02x}"] = f"rgba(var(--color-{h}-rgb), {style['fill_opacity']})"
+        colour[f"#0002{i:02x}"] = blend(h, style["line_mix"])
+    eh = _pick(readings, style["edge_hues"], style["edge_colours"])
+    for i, r in enumerate(readings):
+        colour[f"#0003{i:02x}"] = blend(eh[r], style["line_mix"])
+        colour[f"#0004{i:02x}"] = blend(eh[r], style["label_mix"])
+
+    def fix(m):
+        tag = m.group(0)
+        declarations = []
+        for attr in ("fill", "stroke"):
+            a = re.search(rf'\s{attr}="(#[0-9a-f]{{6}})"', tag)
+            if a and a.group(1) in colour:
+                tag = tag.replace(a.group(0), "")
+                declarations.append(f"{attr}:{colour[a.group(1)]}")
+        if not declarations:
+            return tag
+        return tag.replace(" ", f' style="{";".join(declarations)}" ', 1)
+
+    # the kind caption is in capitals: tracked out a little, as capitals need, and kept centred
+    def track(m):
+        tag, n = m.group(1), len(m.group(2))
+        ls = style["caption_letter_spacing"] * style["kind_font_size"]
+        if 'text-anchor="start"' in tag:
+            tag = re.sub(
+                r'\sx="([\d.-]+)"', lambda x: f' x="{float(x.group(1)) - n * ls / 2:.2f}"', tag, 1
+            )
+        return (
+            tag.replace("<text ", f'<text letter-spacing="{ls:.2f}" ', 1) + m.group(2) + "</text>"
+        )
+
+    svg = re.sub(r'(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)</text>', track, svg)
+    svg = re.sub(r"<(?:path|polygon|ellipse|polyline|text)\b[^>]*>", fix, svg)
+    svg = isolate_labels(svg)  # a right-to-left label reads in its own direction (bidi_labels)
+    svg = re.sub(r"<\?xml.*?\?>|<!DOCTYPE.*?>|<!--.*?-->|<title>.*?</title>", "", svg, flags=re.S)
+    m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', svg)
+    if m:
+        w = float(m.group(1)) * 4 / 3
+        # A natural width, no height, capped at the page. The note shrinks it to fit and never
+        # clips it. The zoom plugin's full-screen view lays the SVG out at its intrinsic width, so
+        # it has one to use. Tried and dropped, 6 Oct 2026, each seen in Obsidian:
+        # - a minimum width (the plugin's box clipped the right edge);
+        # - a fixed height (full-screen lost the bottom);
+        # - width 100% (no intrinsic width, so full-screen fell back to the browser's 300 px and
+        #   showed it tiny).
+        svg = svg.replace(
+            m.group(0), f'<svg width="{w:.0f}" style="max-width:100%;height:auto;filter:none"', 1
+        )
+    # an HTML block in Markdown ends at a blank line, and an indented line can read as code — so
+    # neither may appear
+    return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
+
+
+def _layout(nodes, edges, rankdir, **drawn):
+    src, kinds, readings = drawn_source(nodes, edges, rankdir, **drawn)
+    svg = drawn_svg(DOT, src, drawn.get("routing"))
+    m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', svg)
+    return svg, kinds, readings, float(m.group(1)) * 4 / 3, float(m.group(2)) * 4 / 3
+
+
+def render(
+    nodes: list[tuple[str, str, str]],
+    edges: list[tuple[str, str, str]],
+    suggested: Collection[str] = (),
+    nudges: Sequence[Mapping] = (),
+    direction: str | None = None,
+    arrowless: Sequence[int] = (),
+    inline: Mapping | None = None,
+    diagram: Mapping | None = None,
+    flow: Sequence[Mapping] = (),
+    folding: Mapping | None = None,
+    routing: str | None = None,
+    pictures: Sequence[Mapping] = (),
+) -> str:
+    """The graph as one block of inline SVG. Raises RuntimeError if Graphviz is missing or fails.
+    Laid out both left-to-right and top-to-bottom; the one that shrinks least to fit the page width
+    wins, because a drawing shrunk to fit a narrow note is a drawing nobody can read — the text in
+    its boxes becomes hard to read. A tall drawing is capped, so a long chain is not stood on
+    end. suggested: the keys of boxes drawn under a suggested name, marked as dot_source marks
+    them, and refused as it refuses them. nudges and direction: the graph's style, as
+    gql_profile.read_style gives it (editor spec §6): the nudges written into each source
+    (nudged_source), and only the direction a direction nudge sets laid out (directions).
+    arrowless and inline: the links drawn without their arrowheads (graphspec.style.arrows,
+    arrowless) and the properties shown (graphspec.style.inline, inline_rows), written into each
+    source before the nudges (arrowless_source, inline_source), as the core writes them. diagram:
+    the plan of the diagram type it is drawn as (diagram_types.diagram_for), written in first
+    (typed_source), and laid out in that type's direction unless a nudge sets one (§15). flow: the
+    links that move (flow_links), marked as the core's link-flow.ts marks them (flow_source).
+    folding and routing: what a View menu folds and merges (graphspec.style.folding, fold_plan;
+    none unless asked for) and how the style graph routes the links (§25), written in last
+    (folded_source, routed_source). pictures: the boxes drawn with a picture (pictures_for), room
+    kept for each before the nudges (picture_source); the image is a host's to put there."""
+    if isinstance(suggested, str):
+        raise TypeError("suggested is a collection of keys, not one key as a string")
+    if not DOT:
+        raise RuntimeError("Graphviz (dot) is not installed")
+    target, best = STYLE["page_width"], None
+    for rd in directions(direction, diagram, len(nodes)):
+        svg, kinds, readings, w, h = _layout(
+            nodes,
+            edges,
+            rd,
+            suggested=suggested,
+            nudges=nudges,
+            arrowless=arrowless,
+            inline=inline,
+            plan=diagram,
+            flow=flow,
+            folding=folding,
+            routing=routing,
+            pictures=pictures,
+        )
+        fit = min(1.0, target / w) - (
+            0.25 if h > STYLE["max_height_ratio"] * max(w, target) else 0
+        )
+        if best is None or fit > best[0] + 0.02:
+            best = (fit, svg, kinds, readings)
+    return _themed(*best[1:])
+
+
+if __name__ == "__main__":
+    print(
+        render(
+            [
+                ("q", "Question", "Which device?"),
+                ("o", "Option", "A tablet"),
+                ("r", "Reason", "It costs nothing extra"),
+            ],
+            [("o", "answers", "q"), ("r", "favours", "o")],
+        )
+    )

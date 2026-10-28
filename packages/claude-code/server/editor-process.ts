@@ -1,0 +1,63 @@
+// The editor server run as a process (spec §26, slice 4). It is what `mod/bin/editor-server.mjs` does. It is also what
+// the tests' own process does, with their API handed in.
+// - It takes no argument. So nothing can make it listen anywhere but 127.0.0.1, or on a port of its own choosing.
+// - It will not start orphaned, with no session to stop it.
+// - It hands its address over once, as one line of JSON on stdout, `{"url":"http://127.0.0.1:<port>/#token=<token>"}`.
+//   The token is in the fragment, which a browser never sends. It is written nowhere else.
+// - It stops on the first of an idle period, its input closing, its parent exiting or a stop signal. It says why on
+//   stderr, and exits.
+import { word } from '@thoughtknot/core';
+import type { PageAssets } from './page-assets.ts';
+import { startEditorServer, type ApiHandler } from './start-server.ts';
+import { watchSession } from './session-watch.ts';
+
+/** What a process may be handed by the code that runs it, never by its arguments. */
+export interface EditorProcessOptions {
+  /** What answers the API: the note store's (editor-store.ts), once the mod hands it a vault (C2). */
+  api?: ApiHandler;
+  /** What a stop waits for: the note store's own stop, which finishes the writes under way. */
+  drain?: () => Promise<void>;
+  /** The page's files (page-assets.ts), served from the server's own origin. */
+  page?: PageAssets;
+  /** The id of the note the page opens on, handed over in the address's fragment beside the token. */
+  note?: string;
+  /** The session's end is not this process's input closing: the host closed it when it started the process (C2). */
+  ignoreInput?: boolean;
+  /** The key for Claude's proposals, handed in by the mod's environment, good for the proposal route alone. */
+  proposerKey?: string;
+}
+
+/** Exits with code 2, saying why on stderr, before anything is started. */
+function refuse(why: string): never {
+  process.stderr.write(`editor server: ${why}\n`);
+  process.exit(2);
+}
+
+/** Runs the server as this process, with its command-line arguments, until something stops it. */
+export async function runEditorProcess(args: string[], options: EditorProcessOptions = {}): Promise<void> {
+  process.stdout.on('error', () => {});
+  process.stderr.on('error', () => {});
+  if (process.ppid === 1) refuse(word('server.orphaned'));
+  if (args.length) refuse(word('server.takes-no-argument', { argument: args[0] as string }));
+  const server = await startEditorServer({
+    ...(options.api ? { api: options.api } : {}),
+    ...(options.drain ? { drain: options.drain } : {}),
+    ...(options.page ? { page: options.page } : {}),
+    ...(options.proposerKey ? { proposerKey: options.proposerKey } : {}),
+  });
+  const finish = (reason: string) => {
+    void server.stop(reason).then(() => {
+      // exits once what it says is written, or soon after if no one is left to read it
+      process.stderr.write(`editor server stopped: ${reason}\n`, () => process.exit(0));
+      setTimeout(() => process.exit(0), 2000);
+    });
+  };
+  void server.closed.then((reason) => reason === 'idle' && finish(reason));
+  watchSession(finish, { input: !options.ignoreInput });
+  process.stdout.write(`${JSON.stringify({ url: pageAddress(server.origin, server.token, options.note) })}\n`);
+}
+
+/** The address the page opens at, with the token and the note's id in the fragment. The id is encoded so no character in it can end or add a field. */
+export function pageAddress(origin: string, token: string, note?: string): string {
+  return `${origin}/#token=${token}${note ? `&note=${encodeURIComponent(note)}` : ''}`;
+}

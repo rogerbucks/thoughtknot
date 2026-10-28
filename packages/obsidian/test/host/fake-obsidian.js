@@ -1,0 +1,490 @@
+// A stand-in for the obsidian module, enough to load the built plugin in Node. It has a Plugin that records what it
+// registers, Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
+import { createRequire } from 'node:module';
+import { fakeSettings } from './fake-settings.js';
+import { addVaultWrites, fakeFileManager, fakeMetadataCache, getFrontMatterInfo, parseYaml } from './fake-vault.js';
+import { fakeKeymap, fakeMarkdownRenderer } from './fake-markdown.js';
+
+// the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
+const require = createRequire(import.meta.url);
+const cmState = require('@codemirror/state');
+const cmView = require('@codemirror/view');
+/** Obsidian's own editor fields: whether an editor is in Live Preview, and which file it shows. */
+const editorLivePreviewField = cmState.StateField.define({ create: () => true, update: (v) => v });
+const editorInfoField = cmState.StateField.define({ create: () => ({ file: null }), update: (v) => v });
+export { cmState, cmView, editorLivePreviewField, editorInfoField };
+
+export function fakeObsidian(state = {}) {
+  state.notices = [];
+  state.processors = new Map();
+  state.taken = state.taken ?? new Set();
+  state.icons = [];
+  class Component {
+    constructor() {
+      this._children = [];
+      this._cleanups = [];
+      this._loaded = false;
+    }
+    load() {
+      this._loaded = true;
+      this.onload?.();
+      this._children.forEach((c) => c.load());
+    }
+    unload() {
+      this._children.forEach((c) => c.unload());
+      this._cleanups.splice(0).forEach((f) => f());
+      this._loaded = false;
+      this.onunload?.();
+    }
+    addChild(c) {
+      this._children.push(c);
+      if (this._loaded) c.load();
+      return c;
+    }
+    removeChild(c) {
+      this._children = this._children.filter((x) => x !== c);
+      c.unload();
+      return c;
+    }
+    register(f) {
+      this._cleanups.push(f);
+    }
+    registerDomEvent(el, type, fn, opts) {
+      el.addEventListener(type, fn, opts);
+      this._cleanups.push(() => el.removeEventListener(type, fn));
+    }
+    // released when the component unloads, as Obsidian's is: a listener left behind shows in state.listening()
+    registerEvent(ref) {
+      this._cleanups.push(() => ref?.e?.offref(ref));
+    }
+    registerInterval(id) {
+      return id;
+    }
+  }
+  class MarkdownRenderChild extends Component {
+    constructor(containerEl) {
+      super();
+      this.containerEl = containerEl;
+    }
+  }
+  // A vault of notes by path, which reports changes as Obsidian's does; and a workspace whose leaves hold views.
+  const files = state.files ?? (state.files = new Map());
+  const listeners = [];
+  // who hears a note renamed (told the file at its new path, and its old path) or deleted, as Obsidian's vault tells them
+  const heard = { rename: [], delete: [] };
+  state.tell = (name, ...args) => [...heard[name]].forEach((l) => l(...args));
+  /** How many listeners the vault has: each one a loaded component registered, until it unloads. */
+  state.listening = () => listeners.length + heard.rename.length + heard.delete.length;
+  class TFile {
+    constructor(path) {
+      this.path = path;
+      this.name = path.split('/').pop();
+      this.extension = path.split('.').pop() ?? 'md';
+      // its name without the ending, as Obsidian gives it
+      this.basename = this.name.replace(/\.[^.]*$/, '');
+    }
+    // its size in bytes, as Obsidian keeps it without reading the file
+    get stat() {
+      const held = files.get(this.path);
+      return { size: typeof held === 'string' ? Buffer.byteLength(held) : (held?.byteLength ?? 0), ctime: 0, mtime: 0 };
+    }
+  }
+  const file = (path) => (files.has(path) ? new TFile(path) : null);
+  const vault = {
+    getFileByPath: file,
+    getAbstractFileByPath: file,
+    getMarkdownFiles: () => [...files.keys()].filter((p) => p.endsWith('.md')).map((p) => new TFile(p)),
+    getFiles: () => [...files.keys()].map((p) => new TFile(p)),
+    read: async (f) => files.get(f.path),
+    // a read from the cache, kept in `state.reads` when a test asks which notes were read
+    cachedRead: async (f) => {
+      state.reads?.push(f.path);
+      return files.get(f.path);
+    },
+    // the address a file is shown from without being read, as Obsidian gives one for an image
+    getResourcePath: (f) => `app://vault/${f.path}`,
+    // a file's bytes, as an attachment is read: a note's text as UTF-8, bytes as they are
+    readBinary: async (f) => {
+      const held = files.get(f.path);
+      const bytes = typeof held === 'string' ? new TextEncoder().encode(held) : held;
+      return bytes.slice().buffer;
+    },
+    process: async (f, fn) => {
+      const next = fn(files.get(f.path));
+      if (next !== files.get(f.path)) {
+        files.set(f.path, next);
+        (state.writes ??= []).push(f.path);
+        listeners.forEach((l) => l(file(f.path)));
+      }
+      return next;
+    },
+    modify: async (f, text) => {
+      files.set(f.path, text);
+      listeners.forEach((l) => l(file(f.path)));
+    },
+    on: (name, cb) => {
+      if (name === 'modify') listeners.push(cb);
+      else heard[name]?.push(cb);
+      return { e: vault, name, cb };
+    },
+    offref: (ref) => {
+      for (const l of [listeners, ...Object.values(heard)]) {
+        const i = l.indexOf(ref.cb);
+        if (i >= 0) l.splice(i, 1);
+      }
+    },
+  };
+  const leaves = [];
+  const workspace = {
+    leaves,
+    getLeaf: (how) => {
+      const leaf = new WorkspaceLeaf(app, how);
+      leaves.push(leaf);
+      return leaf;
+    },
+    // a leaf in the right sidebar, as Obsidian gives one for a view of a plugin's own
+    getRightLeaf: () => {
+      const leaf = new WorkspaceLeaf(app, 'right');
+      leaves.push(leaf);
+      return leaf;
+    },
+    getLeavesOfType: (type) => leaves.filter((l) => l.view?.getViewType() === type),
+    revealLeaf: async (leaf) => {
+      state.revealed = leaf;
+    },
+    detachLeavesOfType: (type) => {
+      for (const l of leaves.filter((x) => x.view?.getViewType() === type)) l.detach();
+    },
+    // an event the workspace tells: only a pop-out window opening or closing is kept, for a test to tell with `tell`
+    handlers: new Map(),
+    on(name, fn) {
+      const ref = { name, fn, e: workspace };
+      if (name === 'window-open' || name === 'window-close') workspace.handlers.set(ref, ref);
+      return ref;
+    },
+    offref: (ref) => workspace.handlers.delete(ref),
+    tell: (name, ...args) => {
+      for (const { name: n, fn } of [...workspace.handlers.values()]) if (n === name) fn(...args);
+    },
+    // the vault and the workspace are ready at once here, as Obsidian's are once it has started
+    onLayoutReady: (run) => run(),
+    // a link opened, as a tap on a link in a note opens it. Kept, for a test to see which, from where, and in which leaf
+    openLinkText: async (link, from, newLeaf) => {
+      state.opened = newLeaf === undefined ? { link, from } : { link, from, newLeaf };
+    },
+    // an event told to the workspace: a hover over a link, which Page preview answers with its preview, is kept
+    trigger: (name, data) => {
+      if (name === 'hover-link') state.hovered = data;
+    },
+  };
+  // the note in front, by its path in state.active
+  workspace.getActiveFile = () => file(state.active ?? '');
+  // the view in front, a MarkdownView in its mode ('source' or 'preview') when a test sets state.activeView
+  workspace.getActiveViewOfType = (type) => (state.activeView instanceof type ? state.activeView : null);
+  addVaultWrites(vault, state, file);
+  const app = { vault, workspace, metadataCache: fakeMetadataCache(state), fileManager: fakeFileManager(state) };
+  // a link found as Obsidian finds one: the file whose path is the link, or ends with it, a note's .md left off
+  app.metadataCache.getFirstLinkpathDest = (link) => {
+    const ends = (p, l) => p === l || p.endsWith(`/${l}`);
+    const path = [...files.keys()].find((p) => ends(p, link) || ends(p, `${link}.md`));
+    return path ? file(path) : null;
+  };
+  const settings = fakeSettings(state, app);
+  class WorkspaceLeaf {
+    constructor(app_, how) {
+      this.app = app_;
+      this.how = how;
+      this.view = null;
+    }
+    async setViewState({ type, state: viewState }) {
+      const factory = state.views.get(type);
+      if (!factory) throw new Error(`no view ${type}`);
+      if (!this.view || this.view.getViewType() !== type) {
+        this.view = factory(this);
+        this.view.load();
+        await this.view.onOpen?.();
+      }
+      await this.view.setState?.(viewState ?? {}, {});
+    }
+    getViewState() {
+      return { type: this.view?.getViewType(), state: this.view?.getState?.() };
+    }
+    detach() {
+      this.view?.onClose?.();
+      this.view?.unload();
+      const i = leaves.indexOf(this);
+      if (i >= 0) leaves.splice(i, 1);
+      this.view = null;
+    }
+  }
+  class ItemView extends Component {
+    constructor(leaf) {
+      super();
+      this.leaf = leaf;
+      this.app = leaf.app;
+      // a view is on the page, as a workspace leaf is
+      this.containerEl = globalThis.activeDocument.body.createDiv();
+      this.containerEl.createDiv({ cls: 'view-header' });
+      this.contentEl = this.containerEl.createDiv({ cls: 'view-content' });
+    }
+    getState() {
+      return {};
+    }
+    async setState() {}
+    addAction(icon, title, cb) {
+      const b = this.containerEl.children[0].createEl('button', { attr: { 'aria-label': title } });
+      b.addEventListener('click', cb);
+      return b;
+    }
+  }
+  state.views = new Map();
+  state.data = state.data ?? null;
+  class Plugin extends Component {
+    constructor(app_, manifest) {
+      super();
+      this.app = app_ ?? app;
+      this.manifest = manifest ?? { id: 'thoughtknot' };
+    }
+    registerView(type, factory) {
+      state.views.set(type, factory);
+    }
+    async loadData() {
+      return state.data === null ? null : JSON.parse(JSON.stringify(state.data));
+    }
+    async saveData(d) {
+      state.data = JSON.parse(JSON.stringify(d));
+    }
+    registerMarkdownCodeBlockProcessor(lang, fn) {
+      if (state.taken.has(lang) || state.processors.has(lang))
+        throw new Error(`Code block postprocessor for language ${lang} is already registered`);
+      state.processors.set(lang, fn);
+    }
+    addCommand(c) {
+      (state.commands ??= []).push(c);
+      return c;
+    }
+    removeCommand(id) {
+      state.commands = (state.commands ?? []).filter((c) => c.id !== id);
+    }
+    registerEditorExtension(ext) {
+      (state.editorExtensions ??= []).push(ext);
+    }
+    addSettingTab(tab) {
+      state.settingTabs.push(tab);
+    }
+    registerHoverLinkSource(id, info) {
+      state.hoverSources.set(id, info);
+    }
+  }
+  state.hoverSources = new Map();
+  class Notice {
+    constructor(message) {
+      state.notices.push(String(message));
+    }
+    hide() {}
+    setMessage() {
+      return this;
+    }
+  }
+  // A menu, as Obsidian shows one from a button: each item with its title, icon and tick, recorded when it is shown.
+  state.menus = [];
+  class Menu {
+    constructor() {
+      this.items = [];
+      // the rows in the order shown, separators among them
+      this.rows = [];
+    }
+    addItem(build) {
+      const item = {
+        title: '',
+        icon: '',
+        checked: false,
+        setTitle(t) {
+          item.title = String(t);
+          return item;
+        },
+        setIcon(i) {
+          item.icon = i;
+          return item;
+        },
+        setChecked(c) {
+          item.checked = !!c;
+          item.checkable = true;
+          return item;
+        },
+        setSection() {
+          return item;
+        },
+        setWarning(w) {
+          item.warning = !!w;
+          return item;
+        },
+        onClick(f) {
+          item.click = () => f({});
+          return item;
+        },
+        click() {},
+      };
+      build(item);
+      this.items.push(item);
+      this.rows.push(item);
+      return this;
+    }
+    addSeparator() {
+      this.rows.push('separator');
+      return this;
+    }
+    showAtMouseEvent() {
+      state.menus.push(this);
+      return this;
+    }
+    showAtPosition(position, doc) {
+      this.shownAt = position;
+      this.shownIn = doc;
+      state.menus.push(this);
+      return this;
+    }
+    hide() {
+      return this;
+    }
+  }
+  // A dialog, as Obsidian's Modal: its title and content on the page while it is open; each open one in state.modals.
+  state.modals = [];
+  class Modal {
+    constructor(app_) {
+      this.app = app_;
+      this.modalEl = globalThis.activeDocument.body.createDiv({ cls: 'modal' });
+      this.titleEl = this.modalEl.createDiv({ cls: 'modal-title' });
+      this.contentEl = this.modalEl.createDiv({ cls: 'modal-content' });
+    }
+    setTitle(t) {
+      this.titleEl.setText(t);
+      return this;
+    }
+    open() {
+      state.modals.push(this);
+      this.onOpen?.();
+    }
+    close() {
+      this.onClose?.();
+      this.modalEl.remove();
+      state.modals = state.modals.filter((m) => m !== this);
+    }
+  }
+  // Obsidian's request function, which never reaches the network here. Each request is kept in state.requests. It is
+  // answered by state.reply(request), a test's own. With none, it fails as an unreachable address does
+  state.requests = [];
+  const requestUrl = async (request) => {
+    state.requests.push(JSON.parse(JSON.stringify(request)));
+    if (!state.reply) throw new Error('net::ERR_CONNECTION_REFUSED');
+    const { status, text } = await state.reply(request);
+    if (status >= 400 && request.throw !== false) throw new Error(`Request failed, status ${status}`);
+    return { status, text, headers: {}, json: undefined, arrayBuffer: new ArrayBuffer(0) };
+  };
+  const setIcon = (el, icon) => {
+    el.setAttribute('data-icon', icon);
+    state.icons.push(icon);
+  };
+  const setTooltip = (el, tip) => el.setAttribute('data-tooltip', tip);
+  const Platform = {
+    isMobile: !!state.mobile,
+    isPhone: !!state.mobile,
+    isDesktop: !state.mobile,
+    isDesktopApp: !state.mobile,
+  };
+  /** A note open in an editor: its mode, and an Editor over a text, as Obsidian's MarkdownView has. */
+  class MarkdownView {
+    constructor(file, text, mode = 'source') {
+      this.file = file;
+      this.mode = mode;
+      this.text = text;
+      this.transactions = [];
+      const view = this;
+      const pos = (offset) => {
+        const before = view.text.slice(0, offset).split('\n');
+        return { line: before.length - 1, ch: before[before.length - 1].length };
+      };
+      const offset = (p) =>
+        view.text
+          .split('\n')
+          .slice(0, p.line)
+          .reduce((a, l) => a + l.length + 1, 0) + p.ch;
+      this.editor = {
+        getValue: () => view.text,
+        offsetToPos: pos,
+        posToOffset: offset,
+        transaction: (tx) => {
+          view.transactions.push(tx);
+          for (const c of [...(tx.changes ?? [])].sort((a, b) => offset(b.from) - offset(a.from)))
+            view.text = view.text.slice(0, offset(c.from)) + c.text + view.text.slice(offset(c.to ?? c.from));
+        },
+      };
+    }
+    getViewType() {
+      return 'markdown';
+    }
+    getMode() {
+      return this.mode;
+    }
+  }
+  return {
+    Component,
+    MarkdownRenderChild,
+    MarkdownView,
+    editorLivePreviewField,
+    editorInfoField,
+    Plugin,
+    ItemView,
+    WorkspaceLeaf,
+    TFile,
+    Notice,
+    Menu,
+    Modal,
+    requestUrl,
+    setIcon,
+    setTooltip,
+    Platform,
+    getLanguage: () => state.language ?? 'en',
+    MarkdownRenderer: fakeMarkdownRenderer(state),
+    Keymap: fakeKeymap,
+    app,
+    ...settings,
+    parseYaml,
+    getFrontMatterInfo,
+    arrayBufferToBase64: (b) => Buffer.from(b).toString('base64'),
+  };
+}
+
+/** What Obsidian hands a code block processor: the note text and the lines of this block, and a place for children. */
+export function fakeContext(note, fenceLine, children = []) {
+  const lines = note.split('\n');
+  let end = fenceLine + 1;
+  while (end < lines.length && !/^\s*(```|~~~)/.test(lines[end])) end++;
+  return {
+    sourcePath: 'Some note.md',
+    docId: 'x',
+    frontmatter: {},
+    getSectionInfo: () => (fenceLine < 0 ? null : { text: note, lineStart: fenceLine, lineEnd: end }),
+    addChild: (c) => {
+      children.push(c);
+      c.load();
+    },
+    children,
+  };
+}
+
+/** Stand-ins for the CodeMirror modules Obsidian supplies at run time: enough to load the plugin and drive its editor hooks. */
+export function fakeCodeMirror(state = {}) {
+  state.listeners = [];
+  // the real modules, with the editor's update listener caught, so a test can drive what the plugin hears
+  class EditorView extends cmView.EditorView {}
+  Object.defineProperty(EditorView, 'updateListener', {
+    value: {
+      of: (fn) => {
+        state.listeners.push(fn);
+        return { listener: fn };
+      },
+    },
+  });
+  return { '@codemirror/view': { ...cmView, EditorView }, '@codemirror/state': cmState };
+}

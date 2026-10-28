@@ -1,0 +1,309 @@
+// The mod's data folder is the user's alone (spec §26). It holds the editor's drafts, and settings.json. That file sets
+// Claude's classification gate: the ceiling, the matrix row, the classes switched on, the level for an unlabelled note.
+// A session that could write there could loosen its own gate. So Claude's own calls that write are refused when they
+// reach it: Write, Edit, MultiEdit, NotebookEdit and Bash, and any other tool whose input names a path (risk TRUST-2).
+// Reads stay allowed.
+//
+// File tools are judged by the target's real path, links settled. A relative path is taken from the session's folder. A
+// file not yet made is judged by its nearest folder that exists. Bash cannot be parsed, so the rule is the conservative
+// one. A command is refused when it names the folder at all. That is as written, through the home folder or
+// $CLAUDE_PLUGIN_DATA, or in a word that resolves into it. What it cannot see, it does not stop. That is a path built
+// by the shell, such as `cd` then a bare file name, or a variable other than those named. GUIDE.md says so. No Node
+// module is imported. The real path is asked through the port.
+//
+// The note open in the editor is guarded the same way (cc_claude_proposes, risk AI-1). Claude changes it only by the
+// propose tool, so the user sees each change on the card first. Its own writing calls, of every tool above, that
+// reach the note are refused, and the refusal points to that tool. For Bash, the note's file name alone counts too.
+import { word } from '@thoughtknot/core';
+
+/** The tools whose target is a file path, and the field that holds it. */
+const FILE_TOOLS: Readonly<Record<string, 'file_path' | 'notebook_path'>> = {
+  Write: 'file_path',
+  Edit: 'file_path',
+  MultiEdit: 'file_path',
+  NotebookEdit: 'notebook_path',
+};
+
+/** The fields that name a path in the input of a tool not listed above, such as a file tool from another server. */
+const PATH_FIELDS = ['file_path', 'notebook_path', 'path'] as const;
+
+/** The tools that only read. They name a path, but are never judged. */
+const READ_TOOLS: ReadonlySet<string> = new Set(['Read', 'Glob', 'Grep', 'LS', 'NotebookRead']);
+
+/**
+ * The path a call writes, or null when it writes none the guards judge. A listed file tool gives its own field. Any
+ * other tool but the readers gives the first path field it holds, so a tool the guard has not met is judged too.
+ */
+export function pathOf(tool: string, input: ToolInput): string | null {
+  if (tool === 'Bash' || READ_TOOLS.has(tool)) return null;
+  const listed = FILE_TOOLS[tool];
+  for (const field of listed ? [listed] : PATH_FIELDS) {
+    const value = input[field];
+    if (typeof value === 'string' && value) return value;
+  }
+  return null;
+}
+
+/** The most words of a command that are looked up as paths, each a process to start. */
+const MAX_WORDS = 40;
+
+// The refusals are said when made, in the language set then. Claude Code shows them in the chat, so the person may read them.
+
+/** The refusal, in words: it names no path, command or text of the call. */
+export const dataFolderRefusal = (): string =>
+  word('cc.refusal.data-folder', { settings: 'settings.json', variable: 'CLAUDE_PLUGIN_DATA' });
+
+/** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
+export const checkFailedRefusal = (): string => word('cc.refusal.data-check-failed');
+
+/** The refusal on the note open in the editor: it names the propose tool, and no path or text of the call. */
+export const openNoteRefusal = (): string => word('cc.refusal.open-note', { tool: 'mcp__thoughtknot__propose' });
+
+/** The refusal when the open note's guard could not tell where a path leads. */
+export const noteCheckFailedRefusal = (): string =>
+  word('cc.refusal.note-check-failed', { tool: 'mcp__thoughtknot__propose' });
+
+/** What the guard asks of the host: the folder, the home and working folders, and a real-path call. */
+export interface GuardPorts {
+  /** The mod's data folder, as the mod names it. */
+  data: string;
+  /** The user's home folder, when known. */
+  home?: string;
+  /** The session's working folder. */
+  cwd: string;
+  /** A path's real path, links settled; rejects when the path does not exist. */
+  realPath: (path: string) => Promise<string>;
+  /** Where the link at a path leads as a full path, or null when it is no link or not there; rejects on failure. */
+  readLink?: (path: string) => Promise<string | null>;
+}
+
+/** A path with `.` and `..` settled by its text alone. */
+function normalise(path: string): string {
+  const parts: string[] = [];
+  for (const part of path.split('/')) {
+    if (part === '' || part === '.') continue;
+    if (part === '..') parts.pop();
+    else parts.push(part);
+  }
+  return `/${parts.join('/')}`;
+}
+
+/** `path` as a full path: `~` is the home folder, a relative path starts at the session's folder. */
+function absolute(path: string, ports: GuardPorts): string {
+  if (path === '~' || path.startsWith('~/')) return ports.home ? `${ports.home}${path.slice(1)}` : path;
+  return path.startsWith('/') ? path : `${ports.cwd}/${path}`;
+}
+
+/** Whether `path` is `folder` or inside it. */
+function inside(path: string, folder: string): boolean {
+  // the case of a name is not told apart. macOS and Windows disks do not, and a folder with only its case changed is
+  // never worth refusing less
+  const here = path.toLowerCase();
+  const there = folder.toLowerCase();
+  return here === there || here.startsWith(`${there}/`);
+}
+
+/** Why a path could not be settled: a path that is not there is an answer, anything else is a failure. */
+function isNotThere(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 'ENOENT' || code === 'ENOTDIR';
+}
+
+/** How many links in a row are followed before the guard gives up and refuses. */
+const MAX_LINKS = 8;
+
+/**
+ * The real path of `path`, or of its nearest parent that exists with the rest put back; null when none can be had. A
+ * part that is not there but is a link (dangling) is followed to where it leads. Rejects when the real-path or link
+ * call cannot run, which the caller takes as a refusal.
+ */
+async function settle(path: string, ports: GuardPorts, links = 0): Promise<string | null> {
+  let rest = '';
+  let head = path;
+  for (;;) {
+    try {
+      const real = await ports.realPath(head);
+      return rest ? `${real.replace(/\/$/, '')}${rest}` : real;
+    } catch (err) {
+      if (!isNotThere(err)) throw err;
+      const leads = ports.readLink ? await ports.readLink(head) : null;
+      if (leads !== null) {
+        if (links >= MAX_LINKS) throw new Error('Too many links in a row.');
+        return settle(`${normalise(leads)}${rest}`, ports, links + 1);
+      }
+      const cut = head.lastIndexOf('/');
+      if (cut <= 0) return null;
+      rest = `${head.slice(cut)}${rest}`;
+      head = head.slice(0, cut);
+    }
+  }
+}
+
+/** Every form of `path` that matters: as written and normalised, and the real path of each. */
+export async function forms(path: string, ports: GuardPorts): Promise<string[]> {
+  const full = absolute(path, ports);
+  const out = new Set<string>([normalise(full)]);
+  for (const text of [full, normalise(full)]) {
+    const real = await settle(text, ports);
+    if (real !== null) out.add(normalise(real));
+  }
+  return [...out];
+}
+
+/** Whether `text` holds `needle` as a whole path: what follows it is not part of a longer name. */
+function names(text: string, needle: string): boolean {
+  const hay = text.toLowerCase();
+  const find = needle.toLowerCase();
+  for (let at = hay.indexOf(find); at >= 0; at = hay.indexOf(find, at + 1)) {
+    if (!/[a-z0-9._-]/.test(hay.charAt(at + find.length))) return true;
+  }
+  return false;
+}
+
+/** `plugins/data` as whole path parts, the folder every plugin's data lives in, however it was renamed or moved. */
+const PLUGINS_DATA = /(^|[^A-Za-z0-9._-])plugins\/data(?![A-Za-z0-9._-])/i;
+
+/** A command that moves, removes, copies, syncs or links whole folders: `mv`, `rm`, `cp`, `rsync` or `ln` as a command. */
+const MOVERS = /(^|[\s;|&(`])(mv|rm|cp|rsync|ln)(?=\s)/;
+
+/**
+ * A copy of the command as the shell would read it. Quotes and backslashes are taken out. The home folder is put in for
+ * `$HOME`, `${HOME}`, `~` and `~name`. Any named user is taken as the home folder, which only widens the match.
+ */
+function plain(command: string, ports: GuardPorts): string {
+  const bare = command.replace(/['"`\\]/g, '');
+  const home = ports.home?.replace(/\/$/, '');
+  if (!home) return bare;
+  return bare
+    .replace(/\$\{HOME\}|\$HOME(?![A-Za-z0-9_])/g, home)
+    .replace(/(^|[\s=:;|&<>(])~[A-Za-z0-9_.-]*(?=\/|[\s;|&<>)]|$)/g, (_all, before: string) => `${before}${home}`);
+}
+
+/** The ways a command may write the kept path: as given, real, through the home folder. */
+function spellings(folderForms: readonly string[], kept: Kept, ports: GuardPorts): string[] {
+  const out = new Set<string>(kept.spelt);
+  const home = ports.home?.replace(/\/$/, '');
+  for (const form of [kept.target, ...folderForms]) {
+    out.add(form);
+    if (home && form.startsWith(`${home}/`)) {
+      const rest = form.slice(home.length);
+      out.add(`~${rest}`);
+      out.add(`$HOME${rest}`);
+      out.add(`\${HOME}${rest}`);
+    }
+  }
+  return [...out];
+}
+
+/** What one guard keeps: the path, what it answers, and what else in a command counts as naming the path. */
+interface Kept {
+  target: string;
+  refusal: string;
+  /** The answer when where a path leads cannot be checked. */
+  failed: string;
+  /** Words a command names the path by, wherever they stand in it. */
+  spelt: string[];
+  /** A file name that names the path when it stands as a whole word. */
+  word?: string;
+  /** Whether `plugins/data` anywhere in a command counts. */
+  pluginsData?: boolean;
+}
+
+/** The data folder, as the guard keeps it: `CLAUDE_PLUGIN_DATA` and `plugins/data` name it too. */
+const dataKept = (ports: GuardPorts): Kept => ({
+  target: ports.data,
+  refusal: dataFolderRefusal(),
+  failed: checkFailedRefusal(),
+  spelt: ['CLAUDE_PLUGIN_DATA'],
+  pluginsData: true,
+});
+
+async function guardFile(path: string, kept: Kept, ports: GuardPorts): Promise<string | null> {
+  const where = await forms(kept.target, ports);
+  for (const form of await forms(path, ports)) {
+    if (where.some((folder) => inside(form, folder))) return kept.refusal;
+  }
+  return null;
+}
+
+/** Whether `text` holds `name` as a whole word: neither what comes before nor what follows is part of a longer name. */
+export function namesWord(text: string, name: string): boolean {
+  const hay = text.toLowerCase();
+  const find = name.toLowerCase();
+  for (let at = hay.indexOf(find); at >= 0; at = hay.indexOf(find, at + 1)) {
+    const before = at === 0 ? '' : hay.charAt(at - 1);
+    if (!/[a-z0-9._-]/.test(before) && !/[a-z0-9._-]/.test(hay.charAt(at + find.length))) return true;
+  }
+  return false;
+}
+
+async function guardCommand(command: string, kept: Kept, ports: GuardPorts): Promise<string | null> {
+  const where = await forms(kept.target, ports);
+  const copy = plain(command, ports);
+  const refusal = kept.refusal;
+  if (kept.pluginsData && PLUGINS_DATA.test(copy)) return refusal;
+  if (kept.word && namesWord(copy, kept.word)) return refusal;
+  const spelt = spellings(where, kept, ports);
+  if (spelt.some((spelling) => names(command, spelling) || names(copy, spelling))) return refusal;
+  const words = copy
+    .split(/[\s'"`;|&<>()=,]+/)
+    .filter((word) => word.includes('/') || word.startsWith('.') || word.startsWith('~'))
+    .slice(0, MAX_WORDS);
+  const moves = MOVERS.test(copy);
+  const home = ports.home ? normalise(ports.home) : null;
+  for (const word of words) {
+    for (const form of await forms(word, ports)) {
+      if (where.some((folder) => inside(form, folder))) return refusal;
+      // moving, removing, copying, syncing or linking a folder above what is kept, below home, takes it too
+      if (moves && home && form.toLowerCase() !== home.toLowerCase() && inside(form, home)) {
+        if (where.some((folder) => inside(folder, form))) return refusal;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * The refusal for a call that would write the mod's data folder, or null when the call may go on. A tool that names
+ * no path, and the tools that only read (Read, Grep and the rest), are not judged.
+ */
+export async function guardDataFolder(tool: string, input: ToolInput, ports: GuardPorts): Promise<string | null> {
+  return guardCall(tool, input, dataKept(ports), ports);
+}
+
+/** What a guarded call holds: a file tool's path, or a command. */
+export type ToolInput = { file_path?: unknown; notebook_path?: unknown; path?: unknown; command?: unknown };
+
+/** What the open note's guard asks of the host: the note open in the editor (none when none is), with the rest. */
+export type OpenNotePorts = Omit<GuardPorts, 'data'> & { note: string | null };
+
+/**
+ * The refusal for a call that would change the note open in the editor, or null when the call may go on (risk AI-1).
+ * With no note open, nothing is refused. Reads are not judged.
+ */
+export async function guardOpenNote(tool: string, input: ToolInput, ports: OpenNotePorts): Promise<string | null> {
+  const { note, ...rest } = ports;
+  if (!note) return null;
+  const kept = {
+    target: note,
+    refusal: openNoteRefusal(),
+    failed: noteCheckFailedRefusal(),
+    spelt: [],
+    word: note.slice(note.lastIndexOf('/') + 1),
+  };
+  return guardCall(tool, input, kept, { ...rest, data: note });
+}
+
+async function guardCall(tool: string, input: ToolInput, kept: Kept, ports: GuardPorts): Promise<string | null> {
+  const path = pathOf(tool, input);
+  if (tool !== 'Bash' && path === null) return null;
+  try {
+    if (tool === 'Bash') {
+      return typeof input.command === 'string' && input.command ? await guardCommand(input.command, kept, ports) : null;
+    }
+    return path === null ? null : await guardFile(path, kept, ports);
+  } catch {
+    // the real path could not be had (the process did not run, node is missing, it timed out): not knowing is a no
+    return kept.failed;
+  }
+}

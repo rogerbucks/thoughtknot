@@ -1,0 +1,67 @@
+node_modules/
+# Built by CI from a tag, never committed.
+main.js
+dist/
+*.tsbuildinfo
+.venv/
+__pycache__/
+.DS_Store
+
+# The desktop app's Rust build and the schemas Tauri writes beside it (packages/app/src-tauri).
+packages/app/src-tauri/target/
+packages/app/src-tauri/gen/
+
+# The phone spike is built locally, never committed.
+spikes/*/main.js
+
+# Local preview servers for the browser harness; they name folders on this machine.
+.claude/launch.json
+.ruff_cache/
+
+# Worktrees of agents working in parallel, made and removed by the tools.
+.claude/worktrees/
+
+# The test vault: only its notes and two settings are committed. What Obsidian writes as it runs, and the plugin
+# build copied in by scripts/reset-test-vault.mjs, never are.
+/test-vault/*
+!/test-vault/*.md
+# The device check notes, one folder of notes for each section of the device checklist.
+!/test-vault/Device checks/
+/test-vault/Device checks/*
+!/test-vault/Device checks/*.md
+!/test-vault/Device checks/*/
+/test-vault/Device checks/*/*
+!/test-vault/Device checks/*/*.md
+# The images and the PDF the checks need are made by scripts/make-test-files.mjs, which test/test-files.test.js holds to
+# this list; the small ones are kept, by name (a picture pasted in a session is not), so a check can be run from a
+# clone. The GIF over the size limit, big.gif, is not kept: it is made when a check is set up (reset-test-vault.mjs).
+!/test-vault/Device checks/20 Animated images/cat.gif
+!/test-vault/Device checks/20 Animated images/spin.png
+!/test-vault/Device checks/20 Animated images/dance.webp
+!/test-vault/Device checks/20 Animated images/loop.svg
+!/test-vault/Device checks/20 Animated images/kit.png
+!/test-vault/Device checks/20 Animated images/tom.gif
+!/test-vault/Device checks/20 Animated images/kit.gif
+!/test-vault/Device checks/20 Animated images/rex.gif
+!/test-vault/Device checks/20 Animated images/small.gif
+!/test-vault/Device checks/20 Animated images/c[1-7].gif
+!/test-vault/Device checks/21 Links and attachments/photo.png
+!/test-vault/Device checks/21 Links and attachments/report.pdf
+# The graph file of device checks Q-03 and Q-04, also made by the generator.
+!/test-vault/Graph files/
+/test-vault/Graph files/*
+!/test-vault/Graph files/trip.gql
+!/test-vault/.obsidian/
+/test-vault/.obsidian/*
+!/test-vault/.obsidian/app.json
+!/test-vault/.obsidian/community-plugins.json
+
+# A build interrupted before its rename into place.
+main.js.*.part
+
+# A release's measured quality metrics; only the baseline they are held to, quality/baseline.json, is committed.
+quality/metrics.json
+quality/instruction-spread.json
+
+# Each person's own AI plans and limits, read by the tools on their machine (docs/agents/ROLES.md). Never committed.
+/docs/agents/*.local.md
