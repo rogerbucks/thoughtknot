@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/curves-saved.test.js",
+  "test": "curves kept by what was laid out > a large graph asked for again comes back at once, with no layout",
+  "seen_failing_first": false,
+  "evidence": "Rewritten to guard the saved-drawing cache that stays after the curves-later steps go; it held before and must keep holding."
+}
