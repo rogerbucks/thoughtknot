@@ -128,11 +128,14 @@ describe('the layout source', () => {
       ['large', 'Option', 'Large'],
       ['large_reader', 'Option', 'Large reader'],
     ];
-    assert.throws(() => layout.dotSource(nodes, [], 'LR', style, 'large_reader'), TypeError);
+    assert.throws(() => layout.dotSource(nodes, [], 'LR', style, 'large_reader'), {
+      name: 'LayoutError',
+      code: 'GL01',
+    });
   });
 
   test('with no direction, and none in the style, it refuses as Python does', () => {
-    assert.throws(() => layout.dotSource([['a', 'A', 'a']], [], null, style), /rankdir/);
+    assert.throws(() => layout.dotSource([['a', 'A', 'a']], [], null, style), { code: 'GL02', message: /rankdir/ });
   });
 });
 

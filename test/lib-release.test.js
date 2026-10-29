@@ -105,7 +105,7 @@ describe('the two packages, built and installed from their files', () => {
     const program = (typed) =>
       [
         "import { readNote, History, layoutSource } from '@thoughtknot/core';",
-        "import spec from '@thoughtknot/graph-spec';",
+        "import spec, { check } from '@thoughtknot/graph-spec';",
         `const reading = readNote([${JSON.stringify(NOTE)}]);`,
         `const history${typed ? ': History' : ''} = new History();`,
         "history.record('a', 'b');",
@@ -117,6 +117,8 @@ describe('the two packages, built and installed from their files', () => {
         '  undo: history.canUndo(),',
         '  checked: checks.length > 0,',
         "  layout: layoutSource(drawing, 'LR').source.startsWith('digraph'),",
+        // graph-spec as an ES module: a name imported by name is the module's own (API-8)
+        '  named: check === spec.check,',
         '}));',
       ].join('\n');
     writeFileSync(join(app, 'use.ts'), program(true));
@@ -131,7 +133,7 @@ describe('the two packages, built and installed from their files', () => {
     );
     writeFileSync(join(app, 'use.mjs'), program(false));
     const said = JSON.parse(execFileSync(process.execPath, ['use.mjs'], { cwd: app, encoding: 'utf8' }));
-    assert.deepEqual(said, { graphs: 1, undo: true, checked: true, layout: true });
+    assert.deepEqual(said, { graphs: 1, undo: true, checked: true, layout: true, named: true });
   });
 });
 

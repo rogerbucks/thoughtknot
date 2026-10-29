@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Readings guessed for a relationship type with none declared, from the type's own words (graph_rules.guess_readings).
 'use strict';
 

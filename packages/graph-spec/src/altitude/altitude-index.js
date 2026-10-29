@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The altitude and topic index (editor spec §32, altitude_topic_index). Its Python twin is
 // graphspec/engine/altitude/altitude_index.py, and test/altitude-index-cases.json holds both to the same answers.
 //

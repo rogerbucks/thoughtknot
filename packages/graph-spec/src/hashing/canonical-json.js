@@ -1,6 +1,8 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // RFC 8785 canonical JSON, and the short hashes made from it (rule:basis-hash@1).
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { isTime, norm } = require('../values/times.js');
 const { sha256hex } = require('./sha256.js');
 
@@ -10,7 +12,7 @@ function jcs(v) {
   if (v === null || v === undefined) return 'null';
   if (isTime(v)) return JSON.stringify(v.s);
   if (typeof v === 'boolean' || typeof v === 'number') {
-    if (typeof v === 'number' && !isFinite(v)) throw new Error('RFC 8785 has no NaN or infinity');
+    if (typeof v === 'number' && !isFinite(v)) throw refused('GR02', 'RFC 8785 has no NaN or infinity');
     return JSON.stringify(v);
   }
   if (typeof v === 'string') return JSON.stringify(v);

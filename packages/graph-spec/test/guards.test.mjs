@@ -16,7 +16,8 @@ describe('the guard language', () => {
     test(`${JSON.stringify(c.guard)} ${'holds' in c ? `is ${c.holds}` : 'refused' in c ? 'is refused' : 'is unknown'}`, () => {
       const ctx = c.ctx ?? table.ctx;
       if ('holds' in c) assert.equal(guardHolds(c.guard, ctx), c.holds);
-      else if ('refused' in c) assert.throws(() => guardHolds(c.guard, ctx), /^Error: refused/);
+      else if ('refused' in c)
+        assert.throws(() => guardHolds(c.guard, ctx), { name: 'Refusal', code: 'GR12', message: /^refused/ });
       else assert.throws(() => guardHolds(c.guard, ctx), /is not defined/);
     });
   }
@@ -37,7 +38,7 @@ describe('the guard language', () => {
       'not '.repeat(nesting + 1) + 'False',
       '('.repeat(5000) + 'True' + ')'.repeat(5000),
     ])
-      assert.throws(() => guardHolds(g, table.ctx), /^Error: refused/);
+      assert.throws(() => guardHolds(g, table.ctx), { name: 'Refusal', code: 'GR12', message: /^refused/ });
   });
 
   test('the join check reads its guards in this language', () => {

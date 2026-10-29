@@ -1,6 +1,7 @@
-// Types for graph-spec-check.js, for the TypeScript that uses it (packages/core). Only what the core calls is declared.
-// The library itself stays plain JavaScript. These types cover its entry point's API, gathered from the feature modules
-// (GUIDE.md). They cover the same API in the built file pages load too.
+// Types for graph-spec-check.js, for the TypeScript that uses it (packages/core) and for anyone who installs the library.
+// Every name the entry point exports is declared, so public-api.json holds the whole module. A break in any of them
+// needs a new major version (API-1). The library itself stays plain JavaScript. These types cover its entry point's API,
+// gathered from the feature modules (GUIDE.md). They cover the same API in the built file pages load too.
 
 declare namespace GraphSpecCheck {
   /** A property value as the document profile reads it. */
@@ -627,6 +628,134 @@ declare namespace GraphSpecCheck {
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
+
+  // ── the spec's own vocabulary, types and views (§5, §18, §22) ─────────────────────────────────────────────────
+
+  /** The schema the spec's own vocabulary is, by name and version: `graph-spec@3`. */
+  const SPEC_SCHEMA: string;
+  /** The spec's marker labels: a node labelled only with one is untyped. */
+  const SPEC_MARKERS: string[];
+  /** The spec's own relationship types. */
+  const SPEC_EDGES: string[];
+
+  /**
+   * §5: [node types, edge types, edge types declared without both readings]. They come from the graph's own schema,
+   * else the shared one given. The spec's built-in vocabulary is added unless `builtin` is false.
+   */
+  function types(g: Graph, shared?: Graph | null, builtin?: boolean): [string[], string[], string[]];
+  /** §5: whether every node and relationship type is declared, and every declared edge type has both readings. */
+  function typed(g: Graph, shared?: Graph | null, builtin?: boolean): boolean;
+  /** What §5 would refuse: [untyped node labels, undeclared relationship types, edge types lacking a reading]. */
+  function untyped(g: Graph, shared?: Graph | null, builtin?: boolean): [string[], string[], string[]];
+
+  /** One node of the flat projection (§18): its id, its labels as `type`, its attributes and its targets by type. */
+  type ProjectedBlock = Record<string, Value | string[]>;
+  /** §18: the flat projection, [blocks by id, relationships with properties]. Throws for what it cannot hold. */
+  function project(g: Graph): [Record<string, ProjectedBlock>, Edge[]];
+  /** A profile data block for graph `name`, rebuilt from the flat projection alone. */
+  function rebuild(name: string, blocks: Record<string, ProjectedBlock>, rels: Edge[]): string;
+  /** §18: whether the flat projection, rebuilt by the reader, gives back the same graph. */
+  function projectsBack(g: Graph, name: string): boolean;
+
+  /** Every view of one graph: its flat projection, its relationships with their legend, each path at each altitude. */
+  function views(
+    g: Graph,
+    shared?: Graph | null,
+  ): { projection: string; relationships: string; legend: string; [path: string]: string };
+  /** The graph's knowledge as a Mermaid flowchart, each relationship labelled by its reading. */
+  function mermaidGraph(g: Graph, shared?: Graph | null): string;
+  /** What each reading in the relationships view stands for, one line per relationship type drawn. */
+  function legend(g: Graph, shared?: Graph | null): string;
+  /** §22: path `top` seen at altitude `level`, as a Mermaid flowchart. */
+  function mermaidPath(g: Graph, top: string, level: number): string;
+  /** §22: path `pid` seen at altitude `level`: each step above it opened. `seen` stops a path that holds itself. */
+  function viewAt(g: Graph, pid: string, level: number, seen: Set<string>, depth?: number): string[];
+  /** §22: everything path `top` steps to, at any depth up to `depth`. */
+  function below(g: Graph, top: string, depth?: number): Set<string>;
+
+  // ── the rules of each section, as [label, ok] pairs (§15, §20, §22, §23, §24) ───────────────────────────────────
+
+  /** §15: a lens rule's buckets in its simple shape, each thing's bucket by id; null for a rule it cannot run. */
+  function lensBuckets(g: Graph, rule: string): Record<string, string> | null;
+  /** §20's checks on one graph: every stored certainty value equals its rule. `sw` switches checks off. */
+  function section20(g: Graph, sw?: Set<string>): [string, boolean][];
+  /** §22's rules on one graph; none for a graph with no paths. */
+  function pathsRules(g: Graph): [string, boolean][];
+  /** rule:judgement-review@1: each current decision's reasons for review, by decision id; none, an empty list. */
+  function review(w: World, jg: string, sw?: Set<string>): Record<string, string[]>;
+  /** The current judgements in `jg` resting on what path `top` of graph `dg` shows at `level`, sorted. */
+  function whyLayer(w: World, jg: string, dg: string, top: string, level: number, sw?: Set<string>): string[];
+  /** §23's rules on judgement graph `jg` and the graphs it refers into. */
+  function judgementsRules(w: World, jg: string): [string, boolean][];
+  /** §24 H3's rules on judgement graph `jg`'s servings and proposals, against the destination matrix. */
+  function servedRules(w: World, jg: string, matrix?: unknown): [string, boolean][];
+
+  // ── reading and hashing ─────────────────────────────────────────────────────────────────────────────────────
+
+  /** A document's blocks applied, in turn, to a fresh store; the first that cannot be read throws its ProfileError. */
+  function read(blocks: readonly string[]): Store;
+  /** The SHA-256 of a text's UTF-8 bytes, as 64 lower-case hex digits. */
+  function sha256hex(text: string): string;
+  /** rule:basis-hash@1: hash16 of only the properties a judgement read, named in `reads`, comma-separated. */
+  function basisHash(props: Record<string, Value>, reads: string): string;
+
+  // ── the §21 join, step by step ─────────────────────────────────────────────────────────────────────────────
+
+  /** A document's block read for joining: its header's id, schema, date and revision, its things and its links. */
+  interface JoinDoc {
+    id: string;
+    schema: string;
+    as_of: string;
+    revision_of: string | null;
+    nodes: Map<string, { labels: Set<string>; props: Record<string, Value> }>;
+    raw_edges: [from: string, type: string, to: string, props: Record<string, Value>][];
+  }
+  /** A join's configuration, each part empty when the suite does not give it (configFrom). */
+  type JoinConfig = Record<string, unknown>;
+  /** What a join gives before it is written as JSON: the joined things, links and claims, and its reading rows. */
+  interface Joined {
+    nodes: Map<string, { labels: Set<string>; props: Record<string, Value> }>;
+    edges: Map<string, { key: unknown[]; props: Record<string, Value> }>;
+    claims: Map<string, { status: string; confidence: string }>;
+    pairs: [string, string][];
+    paradoxes: unknown[];
+    report: unknown[][];
+  }
+  /** A document's block read for joining (JoinDoc). */
+  function parseDoc(block: string): JoinDoc;
+  /** Two or more documents joined, a document given twice counted once. */
+  function union(docs: readonly JoinDoc[], config: JoinConfig): Joined;
+  /** Two revisions joined over their base: one side's change kept, both sides' differing changes contested. */
+  function merge3(base: JoinDoc, a: JoinDoc, b: JoinDoc, config: JoinConfig, hold?: boolean): Joined;
+  /** A join finished: its paradox checks, its flags for a person, then its findings and each claim's confidence. */
+  function finish(
+    joined: Joined,
+    config: JoinConfig,
+    findings?: readonly unknown[],
+    checks?: readonly string[],
+  ): Joined;
+  /** A join configuration from the declared data in the suite (§17). */
+  function configFrom(declared?: Record<string, unknown> | null): JoinConfig;
+  /** A value as Python's repr writes it, which a join's walking order is made from. */
+  function pyrepr(v: unknown): string;
+
+  // ── the axioms (editor spec §64) ───────────────────────────────────────────────────────────────────────────
+
+  /** One axiom of a graph, with its code (GA01 to GA10), its words and the message and fix of its breach. */
+  interface Axiom {
+    id: string;
+    name: string;
+    plain: string;
+    formal: string;
+    code: string;
+    checked: string;
+    message: string;
+    fix: string;
+  }
+  /** The ten axioms, in order. */
+  const AXIOMS: Axiom[];
+  /** Each breach of the axioms in graph `name` of the world. */
+  function axioms(world: World, name: string, options?: Record<string, unknown>): unknown[];
 }
 
 export = GraphSpecCheck;

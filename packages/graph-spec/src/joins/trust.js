@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §21 joins: trust on joined graphs (req:21.trust-counted, req:21.prefix-owner; editor spec §51, spec_join_trust).
 // - A join may name each document's trust: own, trusted or untrusted. One it does not name is untrusted. A join that
 //   names none counts every document as own.
@@ -7,6 +8,7 @@
 //   relationships to and from it go with it.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { pyeq } = require('./python-text.js');
 
 // The levels of trust a join may name for a document, most trusted first.
@@ -19,7 +21,8 @@ const edgeText = ([from, type, to]) => `${from}-[:${type}]->${to}`;
 function levelsOf(docs, trust) {
   const named = trust || {};
   for (const [id, level] of Object.entries(named))
-    if (!LEVELS.includes(level)) throw new Error(`The trust of ${id} must be own, trusted or untrusted, not ${level}`);
+    if (!LEVELS.includes(level))
+      throw refused('GR18', `The trust of ${id} must be own, trusted or untrusted, not ${level}`);
   const none = Object.keys(named).length === 0;
   return new Map(docs.map((d) => [d.id, none ? 'own' : named[d.id] || 'untrusted']));
 }
