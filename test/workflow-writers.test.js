@@ -35,10 +35,10 @@ describe('GitHub Actions writers', () => {
         // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =
-          only('/nightly.yml', 'publish', 'contents: write') ||
+          only('/nightly.yml', 'publish', 'attestations: write,contents: write,id-token: write') ||
           only('/nightly.yml', 'drafts', 'contents: write') ||
           // a wave's end calls the nightly, handing it the most its own jobs ask for (test/wave-nightly-workflow.test.js)
-          only('/wave-nightly.yml', 'wave-nightly', 'contents: write,security-events: read');
+          only('/wave-nightly.yml', 'wave-nightly', 'attestations: write,contents: write,id-token: write,security-events: read');
         // the risk panel's issue, the security issue and Claude's security branches: security-workflow.test.js
         const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
