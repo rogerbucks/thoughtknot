@@ -13,7 +13,10 @@ import { cleanUpApp, emptyFolder, fakeInvoke } from './app-window.js';
 test.after(cleanUpApp);
 
 describe("notes kept in the desktop app's folder pass the storage contract", () => {
-  for (const check of storageContract(() => tauriStorage(fakeInvoke(emptyFolder())))) test(check.name, check.run);
+  for (const check of storageContract(() => tauriStorage(fakeInvoke(emptyFolder())), {
+    windows: process.platform === 'win32',
+  }))
+    test(check.name, check.run);
 });
 
 test('the app\'s "no file" is read as no note, and any other failure is said as it came', async () => {
