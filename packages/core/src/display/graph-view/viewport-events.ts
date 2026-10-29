@@ -6,9 +6,10 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag } from './box-drag-view';
+import { BoxDrag, nudgeDrops } from './box-drag-view';
 import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
+import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
 import { toggleOutline } from './drawing-svg';
@@ -353,29 +354,33 @@ export function bindViewportEvents(host: ViewportHost): void {
 /**
  * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
  * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
- * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
+ * On a grid, a card is dragged to another column instead, and no keys move it (§68). None when the card was given no
+ * way to write a nudge, or draws a table. Nothing moves while the card is only read.
  */
 function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
   host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): { drag: BoxDrag; keys: BoxMoveKeys } | null {
-  const moving = o.moving;
-  if (!moving || !svg) return null;
-  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+): { drag: BoxDrag; keys: BoxMoveKeys | null } | null {
+  const grid = svg ? gridDrops(o, host.viewport) : null;
   const shared = {
     viewport: host.viewport,
     taps: host.taps,
-    moving,
-    textOf: (key: string) => boxes.find((b) => b.key === key)?.text ?? key,
+    view: () => host.zoom.view(),
     readOnly: () => !!o.readOnly?.(),
   };
+  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null };
+  const moving = o.moving;
+  if (!moving || !svg) return null;
+  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+  const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
+  const rankdir = () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir);
   return {
     drag: new BoxDrag({
       ...shared,
-      view: () => host.zoom.view(),
-      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+      textOf,
+      ...nudgeDrops(moving, textOf, rankdir),
     }),
-    keys: new BoxMoveKeys(shared),
+    keys: new BoxMoveKeys({ ...shared, moving, textOf }),
   };
 }

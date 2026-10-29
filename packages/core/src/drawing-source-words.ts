@@ -189,6 +189,11 @@ export const DRAWING_SOURCE_WORDS = {
   // the hive and grid views (view-types/hive-view.ts, projection_hive; grid-view.ts, projection_grid)
   'view.hive': 'Hive',
   'view.grid': 'Grid',
+  // a card dragged to another column of the grid (view-types/grid-move.ts, projection_grid)
+  'view.grid.move': 'Move {thing} to {column}',
+  'view.grid.moved': 'Moved {thing} to {column}',
+  'view.grid.nowhere': 'Let go over another column to move {thing} there',
+  'view.grid.not-here': '{thing} is not written in this note, so it cannot be moved here.',
   // a hive's axes, with one kind of thing: what each thing's links do; with many kinds, the smallest share the last
   'view.hive.sends': 'Sends',
   'view.hive.both': 'Sends and receives',

@@ -33,7 +33,7 @@ const WORK_STEPS = [
 const stepOf = new Map(WORK_STEPS);
 
 /** What a thing is called where it carries no value: the column of things not yet sorted. */
-const NONE = '(none)';
+export const GRID_NONE = '(none)';
 
 /**
  * The property most things carry with two to twelve values, some shared, the first written when two are as common; or
@@ -64,12 +64,12 @@ export function gridSplit(shape: GraphShape): GridSplit {
   const by = gridProperty(shape);
   const kindOf = (t: GraphShape['things'][number]) => t.kinds.join(', ') || 'Thing';
   const kinds = [...new Set(shape.things.map(kindOf))];
-  const columnOf = (t: GraphShape['things'][number]) => (by ? (t.texts?.get(by) ?? NONE) : kindOf(t));
+  const columnOf = (t: GraphShape['things'][number]) => (by ? (t.texts?.get(by) ?? GRID_NONE) : kindOf(t));
   let firstSeen = [...new Set(shape.things.map(columnOf))];
   const step = (c: string) => stepOf.get(c.toLowerCase());
-  if (by && firstSeen.every((c) => c === NONE || step(c) !== undefined))
+  if (by && firstSeen.every((c) => c === GRID_NONE || step(c) !== undefined))
     firstSeen = firstSeen.sort((x, y) => (step(x) ?? 9) - (step(y) ?? 9));
-  const columns = [...firstSeen.filter((c) => c !== NONE), ...(firstSeen.includes(NONE) ? [NONE] : [])];
+  const columns = [...firstSeen.filter((c) => c !== GRID_NONE), ...(firstSeen.includes(GRID_NONE) ? [GRID_NONE] : [])];
   const rows = by && kinds.length > 1 ? kinds : [''];
   const cell = new Map(
     shape.things.map((t): [string, [number, number]] => [

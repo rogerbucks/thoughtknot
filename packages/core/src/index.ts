@@ -305,6 +305,8 @@ export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
 export { landingFor, landingSaid, placesFor } from './box-drag.ts';
+export { gridDrop, gridMoved } from './view-types/grid-move.ts';
+export type { GridDrop } from './view-types/grid-move.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
 export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {
