@@ -118,14 +118,23 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   scoped();
   // what the form says beyond the notices: a question, or the image ready to share — never the same words twice
   const said = el.createDiv({ cls: 'thoughtknot-export-said', attr: { role: 'alert' } });
-  // closed: the focus goes back to the bar's Export button, never lost to the page
+  // closed: the focus goes back to the bar's Export button, never lost to the page. Behind More, which has closed by now,
+  // the button cannot take it, so More does
   const close = () => {
     el.remove();
-    Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-bar button'))
-      .find((b) => b.getAttribute('aria-label') === word('bar.export'))
-      ?.focus();
+    const opener = Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-bar button')).find(
+      (b) => b.getAttribute('aria-label') === word('bar.export'),
+    );
+    const list = opener?.closest<HTMLElement>('.thoughtknot-bar-more-list');
+    (list?.hidden ? parent.querySelector('.thoughtknot-bar-more')?.querySelector('button') : opener)?.focus();
   };
   let busy = false;
+  // Escape closes the form, unless an export is under way, which has its own way to stop
+  el.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key !== 'Escape' || busy) return;
+    e.preventDefault();
+    close();
+  });
   const show = (outcome: ExportOutcome) => {
     said.empty();
     if ('ask' in outcome) {

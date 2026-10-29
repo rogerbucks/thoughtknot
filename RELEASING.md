@@ -242,11 +242,13 @@ Use a note with the graph guide's example, a problem in one graph, and an empty 
 - [ ] **AX-01** Tab reaches every control of the card, the details, the edit pane, the settings page and the page's Export form.
       It goes in an order that follows the picture (SC 2.4.3). It never leaves the view or traps the focus (SC 2.1.2).
 - [ ] **AX-02** The focus is always visible. It is at least as clear as 2 pixels of line or a change of 3 to 1 against what is
-      next to it. It is never hidden behind the details sheet or a menu (SC 2.4.7, 2.4.11, 1.4.11).
+      next to it. It is never hidden behind the details sheet or a menu (SC 2.4.7, 2.4.11, 1.4.11). CI holds the ring on a
+      box, in both themes, on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-03** Every action of the editor can be done from the keyboard (SC 2.1.1). That covers choosing a thing and a link and
       moving along links. It covers the trail's Back and Forward, Fit and zoom, opening and closing the details, editing and Export.
 - [ ] **AX-04** Nothing needs a drag: every move made by dragging can also be made by a single press or by typing (SC 2.5.7).
 - [ ] **AX-05** Escape closes the details sheet, a menu or a form. The focus goes back to where it was (SC 3.2.2, 2.4.3).
+      CI holds it for the bar's panels on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-06** Keys typed in the note are never taken by the drawing. No single-character shortcut works while a text field
       has the focus (SC 2.1.4).
 
@@ -272,13 +274,16 @@ VoiceOver on macOS and on iOS; NVDA on Windows where one is at hand. Turn the di
       (SC 1.4.11). These are the box outlines, the link arrows, the field borders and the focus ring. Check them with a
       colour picker.
 - [ ] **AX-14** On a phone every target is 24 by 24 CSS pixels at least. The details sheet's buttons are 44 points (SC 2.5.8).
+      CI holds the 44 points on the harness (test/a11y-states.test.js); this is Obsidian itself, on a phone.
 - [ ] **AX-15** At a window 320 CSS pixels wide, or at 400% zoom, nothing is lost. Nothing needs scrolling in two directions,
       except the drawing itself (SC 1.4.10). CI holds AX-14 and AX-15 on the harness and the browser page
       (test/a11y-targets-reflow.test.js); this is Obsidian itself, on a phone.
 - [ ] **AX-16** Raise the text spacing and set the text size to 200%: nothing is cut off or overlaps (SC 1.4.12, 1.4.4).
       The spacing is line height 1.5, paragraph spacing 2, letter spacing 0.12 and word spacing 0.16, all times the font size.
+      CI holds this on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-17** With the system set to reduce motion, no movement plays. Nothing flashes more than three times a second
-      (SC 2.3.1, 2.2.2; the motion rules of §11).
+      (SC 2.3.1, 2.2.2; the motion rules of §11). CI holds that nothing runs on for ever with reduced motion asked for
+      (test/a11y-states.test.js); this is what a person sees.
 - [ ] **AX-18** Nothing is said by colour alone (SC 1.4.1). Kinds of thing, problems, the chosen thing and a link that is
       estimated each also differ by a shape, a word or a line style.
 - [ ] **AX-19** Pointer: a press that can be undone is done on release, not on press. A tooltip can be reached, held and
@@ -290,7 +295,8 @@ Open the browser editor's page with the browser's language set to `en-XA`, then 
 `packages/core/src/pseudo-words.ts`). `test/pseudo-locales.test.js` checks the words and the direction of every view in a
 DOM with no layout; this checks what it cannot see.
 
-- [ ] **AX-20** In `en-XA` no longer word is cut off, overlaps another part, or pushes a control out of its view.
+- [ ] **AX-20** In `en-XA` no longer word is cut off, overlaps another part, or pushes a control out of its view. CI holds the
+      reflow and the controls of three views in both test languages (test/a11y-states.test.js); this is the rest.
 - [ ] **AX-21** In `ar-XB` the page and the details mirror, the drawing does not, and the arrow keys still move the way the
       drawing shows.
 
