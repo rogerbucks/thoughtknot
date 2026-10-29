@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-review.test.js",
+  "test": "deciding, one change at a time > nobody who does not say who they are decides anything",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

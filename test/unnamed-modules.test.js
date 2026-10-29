@@ -1,4 +1,4 @@
-// No new core module of more than 100 lines goes without a test named after it (spec §13, test_conventions: CODE-7).
+// No new core module of more than 100 lines goes without a test named after it (spec §13, naming_conventions: CODE-7).
 // Those that have none are held by test/unnamed-modules.json, a list that only shrinks. Proved on the repository's own
 // core and on modules and tests planted for the purpose.
 import { test, describe } from 'node:test';
