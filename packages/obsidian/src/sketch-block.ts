@@ -1,14 +1,26 @@
 // Drawings over a graph in Obsidian (editor spec §70), and the other blocks folded away. The drawings block is never
 // drawn as a graph: it is folded away, saying how many drawings it holds, and opens to its text. The graph's card draws
 // the drawings, and each one made there is written to the note here, against the note as it is when written.
-import { gqlBlocks, readSketch, sketchEdit, sketchInNote, sketchOf, styleOf, PALETTES, word } from '@thoughtknot/core';
+import {
+  gqlBlocks,
+  namesSharedSchema,
+  noteWithProposal,
+  readSketch,
+  sketchEdit,
+  sketchInNote,
+  sketchOf,
+  sketchProposal,
+  styleOf,
+  PALETTES,
+  word,
+} from '@thoughtknot/core';
 import type { Sketch, SketchChange } from '@thoughtknot/core';
 import { renderCode } from '@thoughtknot/core/display/code';
 import type { SketchHost } from '@thoughtknot/core/display/graph-view/sketch-tool';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import type ThoughtKnotPlugin from './main';
 import { renderStyleBlock } from './style-block';
-import { changeVaultNote } from './storage/plugin-notes';
+import { changeVaultNote, noteText } from './storage/plugin-notes';
 
 /** A block never drawn as a graph, folded: a style block or a drawings block. False for any other. */
 export function renderFoldedBlock(el: HTMLElement, source: string, note: string): boolean {
@@ -51,5 +63,29 @@ export function sketchingFor(plugin: ThoughtKnotPlugin, path: string, graph: str
       });
       return out;
     },
+    propose: (marks) => proposeSketch(plugin, path, graph, marks),
   };
+}
+
+/** The marks of the card's drawing, for where each drawing lies. */
+type Marks = Parameters<NonNullable<SketchHost['propose']>>[0];
+
+/**
+ * The drawings over `graph` offered as things and links (sketch_to_graph). It is a proposal written beside the graph,
+ * which a person accepts or rejects there as any other. Resolves to what came of it, in words.
+ */
+async function proposeSketch(plugin: ThoughtKnotPlugin, path: string, graph: string, marks: Marks): Promise<string> {
+  let said = word('blocks.note-gone');
+  const text = (await noteText(plugin.app, path, { shown: true })) ?? '';
+  const shared = gqlBlocks(text).some((b) => namesSharedSchema(b.text)) ? await plugin.sharedSchemas() : [];
+  await changeVaultNote(plugin.app, path, (now) => {
+    const on = sketchInNote(now, graph);
+    const r = on ? sketchProposal(now, on.sketch, marks, { at: new Date().toISOString(), shared }) : null;
+    const written = r && 'proposal' in r ? noteWithProposal(now, r.proposal) : null;
+    if (typeof written === 'string') said = word('sketch.proposed');
+    else if (r && 'nothing' in r) said = r.nothing;
+    else if (r || written) said = word('sketch.refused', { why: (written ?? (r as { refused: string })).refused });
+    return typeof written === 'string' ? written : now;
+  });
+  return said;
 }
