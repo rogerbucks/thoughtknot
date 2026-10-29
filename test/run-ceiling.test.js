@@ -168,6 +168,25 @@ describe('a test run under the ceiling', () => {
   });
 });
 
+describe('on Windows, with no process groups, the memory of the command and every process under it', () => {
+  test('is added up from the list of processes, its own and its children’s and theirs, and no other', async () => {
+    const { treeMemoryKb } = await import(pathToFileURL(path('scripts/run-ceiling.mjs')).href);
+    const listing = [
+      '4 0 1048576', // System, no part of the run
+      '10 4 2048', // the command
+      '11 10 4096', // a test file it started
+      '12 11 1024', // and that file's own child
+      '20 4 999999999', // another program
+      '', // PowerShell's last line
+    ].join('\r\n');
+    assert.equal(treeMemoryKb(listing, 10), 7);
+    assert.equal(treeMemoryKb(listing, 12), 1);
+    assert.equal(treeMemoryKb(listing, 999), 0, 'a command already gone holds nothing');
+    // a number given again names a parent it is not: each process counts once
+    assert.equal(treeMemoryKb('10 12 1024\n12 10 1024\n', 10), 2);
+  });
+});
+
 // the quality ratchet's own two full runs of the suite (scripts/quality-suite.mjs) are test runs too. A bare
 // `node --test` there is the uncapped run the requirement forbids (11 Oct 2026)
 describe('the quality ratchet’s runs of the suite run under the ceiling', () => {
