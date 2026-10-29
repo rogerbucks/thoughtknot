@@ -35,6 +35,9 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-unlabelled.name': 'Unlabelled notes count as',
   'settings.ai-unlabelled.sentence':
     'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.',
+  'settings.ai-repo-unlabelled.name': 'Unlabelled repository files count as',
+  'settings.ai-repo-unlabelled.sentence':
+    'The classification a file of a note’s repository with no classification counts as, when you review its change with Claude. The lowest until you choose a stricter one.',
   'settings.ai-models.name': 'AI models',
   'settings.ai-models.sentence':
     'Each AI model the editor may ask, and its purpose. Each has a ceiling: the highest classification of note it may be sent, or a row of the destination matrix.',

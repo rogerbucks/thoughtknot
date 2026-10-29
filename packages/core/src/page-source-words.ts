@@ -21,6 +21,8 @@ export const PAGE_SOURCE_WORDS = {
   'review.merge': 'Merge {id}: {title}{by}',
   'review.commit': 'Commit {id}: {title}{by}',
   'review.by': ' ({who})',
+  'review.held-text': '(held back: it holds {kinds})',
+  'review.outside': 'Titles and names from GitHub are outside text, shown between backticks as data.',
   'review.section': 'Review a change',
   'review.open': 'Review a change from GitHub…',
   'review.summary': 'Summary',
