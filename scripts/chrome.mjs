@@ -156,6 +156,12 @@ export async function startAgainIfStuck(start, attempts = 2) {
  */
 export const startChrome = (options) => startAgainIfStuck(() => startOnce(options));
 
+/**
+ * The media features every check starts from, whatever the machine is set to. A Mac can ask for reduced motion, and
+ * then every glide jumps to its end: the checks of a glide would fail there only. A check may still ask for it.
+ */
+export const SETTLED_MEDIA = [{ name: 'prefers-reduced-motion', value: 'no-preference' }];
+
 /** One try at starting Chrome, as `startChrome` describes. */
 async function startOnce({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'thoughtknot-chrome-'));
@@ -185,6 +191,7 @@ async function startOnce({ chrome, width = 1400, height = 1000, scale = 2, flags
   try {
     const { send, on, close } = await devtools(await portOf(profile));
     await send('Page.enable');
+    await send('Emulation.setEmulatedMedia', { features: SETTLED_MEDIA });
     const resize = (w, h = height) =>
       send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: scale, mobile: false });
     await resize(width);

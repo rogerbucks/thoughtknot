@@ -2,7 +2,16 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { findChrome, firstPage, INSTALLED, portOf, removeProfile, startAgainIfStuck } from '../scripts/chrome.mjs';
+import { readFileSync } from 'node:fs';
+import {
+  findChrome,
+  firstPage,
+  INSTALLED,
+  portOf,
+  removeProfile,
+  SETTLED_MEDIA,
+  startAgainIfStuck,
+} from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
 
@@ -107,5 +116,13 @@ describe('the Chrome to run', () => {
   test('is said to be missing when none is on the PATH or installed', () => {
     assert.throws(() => findChrome(undefined, none, { platform: 'linux', exists: () => true }), /no Chrome found/);
     assert.throws(() => findChrome(undefined, none, { platform: 'win32', exists: () => false }), /no Chrome found/);
+  });
+});
+
+describe('a headless Chrome, once started', () => {
+  test('asks for full motion, whatever the machine is set to, so a glide is checked the same on a Mac', () => {
+    assert.deepEqual(SETTLED_MEDIA, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+    const source = readFileSync(new URL('../scripts/chrome.mjs', import.meta.url), 'utf8');
+    assert.match(source, /send\('Emulation\.setEmulatedMedia', \{ features: SETTLED_MEDIA \}\)/);
   });
 });
