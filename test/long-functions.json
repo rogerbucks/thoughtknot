@@ -40,7 +40,7 @@
   "packages/core/src/view-types/map-view.ts#mapMarks": 154,
   "packages/graph-spec/src/changesets/changeset.js#checkChangeset": 141,
   "packages/graph-spec/src/joins/finish.js#finish": 167,
-  "packages/graph-spec/src/joins/merge3.js#merge3": 306,
+  "packages/graph-spec/src/joins/merge3.js#merge3": 286,
   "packages/graph-spec/src/joins/union.js#union": 125,
   "packages/graph-spec/src/reader/store.js#Store.applyWhole": 149,
   "packages/graph-spec/src/rules/completeness.js#completeness": 112,
