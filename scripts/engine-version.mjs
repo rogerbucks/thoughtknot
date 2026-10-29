@@ -256,7 +256,7 @@ function merge(list) {
 
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 
-/** `fetch`, asked up to three times: a throw, a 429, a 403 (NVD's rate limit) or a 5xx is asked again after 1 s, then 2 s. */
+/** `fetch`, asked up to three times. A throw, a 429, a 403 (NVD's rate limit) or a 5xx is asked again after 1 s, then 2 s. */
 export const retrying =
   (fetch, sleep = pause) =>
   async (...args) => {

@@ -539,8 +539,8 @@ latest stable release. To look at the wiki before a merge:
   only the benchmarks a change reaches are counted again.
 - **Counting them all.** Tick "count every benchmark" to count them all; a release always does. Ticked, "spread" also
   writes `instruction-spread.json`, every benchmark counted three times. Its `largest_spread` is how far a count moved
-  between runs there, which the tolerance must stay well above. It is recorded in the metrics, so the baseline committed
-  from them carries it, and `quality-check.mjs` refuses a baseline whose instruction tolerance is under twice it.
+  between runs there, which the tolerance must stay well above. The metrics record it, so the baseline carries it.
+  `quality-check.mjs` refuses a baseline whose instruction tolerance is under twice it.
 
 ### Tests and time
 
@@ -572,8 +572,8 @@ latest stable release. To look at the wiki before a merge:
   published advisories differ from the committed cache. Then someone runs `--refresh` and opens a pull request. The
   plugin never asks.
 - **A slow or failing service does not spend a version number** (OPS-5). `--refresh` asks each service up to three times,
-  after 1 s and then 2 s. If one still fails and the committed cache is for this engine and was checked within 14 days,
-  the release goes on with that cache and a warning. Otherwise it fails as before. `--watch` never falls back.
+  after 1 s and then 2 s. Say one still fails. If the committed cache is for this engine and was checked within 14
+  days, the release goes on with that cache and a warning. Otherwise it fails as before. `--watch` never falls back.
 
 ### Who may write what
 
@@ -609,8 +609,9 @@ in this table.
 
 ### Pins that are bumped by hand
 
-Dependabot proposes the npm, uv, Docker base image and GitHub Actions updates (OPS-9). It cannot bump three pins, so
-they move only on purpose. The Node patch (`24.20.0`) in the quality workflows and `setup-uv`'s `version:` change with a
-new quality baseline, as a Node patch can move the instruction counts. The release writes `npm sbom --sbom-format
-cyclonedx` as an asset, with a checksum and, once the repository is public, an attestation, so a user can list what is
-inside `main.js`.
+Dependabot proposes the npm, uv, Docker base image and GitHub Actions updates (OPS-9). It cannot bump two pins, so
+they move only on purpose. These are the Node patch (`24.20.0`) in the quality workflows and `setup-uv`'s `version:`.
+Each changes with a new quality baseline, as a Node patch can move the instruction counts.
+
+The release writes `npm sbom --sbom-format cyclonedx` as an asset. It has a checksum, and once the repository is public
+an attestation. A user can list what is inside `main.js`.

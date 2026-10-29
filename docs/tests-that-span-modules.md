@@ -647,13 +647,15 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+## Failure reports and process docs
+
+- `test/report-failure-workflow.test.js` — four workflows report a failed job through one reusable workflow. It writes
+  an issue and nothing else. A daily token probe opens an issue on the third refusal in a row (OPS-6, OPS-7).
+- `test/process-risks-ops.test.js` — Dependabot watches the Docker image, and the release writes an SBOM. The wiki
+  survives a missing Chrome. The docs name every job that writes (OPS-9, OPS-11, OPS-12).
+
 ## Workflows and the desktop app
 
-- `test/report-failure-workflow.test.js` — the nightly, wiki, Pages and engine advisories each report a failed job through
-  one reusable workflow that writes an issue and nothing else, and a daily token probe opens an issue on the third
-  refusal in a row (OPS-6, OPS-7).
-- `test/process-risks-ops.test.js` — Dependabot watches the Docker image, the release writes and attests an SBOM, the wiki
-  survives a missing Chrome, and the docs name every job that writes (OPS-9, OPS-11, OPS-12).
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
   runner for hours (editor spec §13, ci_jobs_time_limited).
 - `test/os-check-workflow.test.js` — the tests on macOS and Windows read as on Linux. Every text file is checked out

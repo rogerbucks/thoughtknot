@@ -1,5 +1,5 @@
 // OPS-6 and OPS-7: a scheduled or background workflow that fails must tell somebody. The nightly, the wiki, Pages and the
-// engine advisories each call one reusable workflow, which keeps an issue labelled workflow-failure; a daily token
+// engine advisories each call one reusable workflow. It keeps an issue labelled workflow-failure. A daily token
 // probe opens one on the third refusal in a row. Read as text, by indentation, as the other workflow tests do.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

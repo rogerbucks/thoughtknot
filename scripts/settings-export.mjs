@@ -1,7 +1,7 @@
 // The repository's settings that live on GitHub and nowhere in the code: the default branch's whole ruleset and the Pages
 // settings (OPS-8). `node scripts/public-readiness.mjs --settings --export` writes both to .github/settings/ (an admin,
 // with the GitHub CLI, before each release: RELEASING.md). `--settings` then holds GitHub's copy against the committed
-// one, whole, so a rule loosened by hand shows as a difference, not only a missing required check.
+// one. It holds the whole ruleset, so a rule loosened by hand shows, not only a missing required check.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,9 +47,9 @@ export function exportSettings({ ruleset, pages }, root = ROOT) {
 
 /**
  * The two whole-setting entries for `WANTED`: each wants the committed copy and reads GitHub's. Until a copy is exported,
- * the entry has nothing to hold GitHub against, and reads as what it wants (the release and the weekly settings check
- * must not fail for a file nobody has made yet). Pages that cannot be read (no site, or a token that may not see it) are
- * not compared either. `gh` and `defaultRuleset` come from the caller, which owns the GitHub CLI.
+ * there is nothing to hold GitHub against. The entry then reads as what it wants. So the release and the weekly settings
+ * check do not fail for a file nobody has made yet. Pages that cannot be read are not compared either: there may be no
+ * site, or the token may not see it. `gh` and `defaultRuleset` come from the caller, which owns the GitHub CLI.
  */
 export function wholeSettings({ gh, quiet, defaultRuleset, root = ROOT }) {
   const entry = (name, file, plain, read, write) => {

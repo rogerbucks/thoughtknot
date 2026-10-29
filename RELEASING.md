@@ -53,13 +53,9 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
    `manifest.json`, `versions.json`, every `package.json`, the mod's `plugin.json`, `pyproject.toml` and both lockfiles.
    Open a pull request with the change.
 2. **Export the settings, then run the dry run.** An admin runs `node scripts/public-readiness.mjs --settings --export`
-   with the GitHub CLI. It writes the default branch's whole ruleset and the Pages settings to `.github/settings/`. A
-   difference from the committed copy is a change someone made by hand: commit it if it was meant (OPS-8). Then run the
+   with the GitHub CLI. It writes the default branch's whole ruleset and the Pages settings to `.github/settings/`. Then run the
    "Release check (dry run)" workflow on main by hand. It runs every check the release waits on. A failure here costs
-   no version number. If the instruction counts fail because the runner changed, or one flaky benchmark moved, recover
-   in this order: run "Quality baseline" with "count every benchmark" and "spread" ticked, commit its `metrics.json` as
-   `quality/baseline.json` (it carries `largest_spread`, and `quality-check.mjs` refuses a tolerance under twice it),
-   re-run the dry run, and only then tag (OPS-10).
+   no version number. If the instruction counts fail, see "When the instruction counts fail" below.
 3. **Merge the bump.** Merge the latest main into the bump's pull request first, then merge it once CI is green.
 4. **Walk the accessibility checks** below, on the build to be released.
 5. **Push the tag** on the merge commit, from an up-to-date main:
@@ -67,6 +63,18 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
    The release's first job stops in seconds if the commit is not on main, or the tag is not the manifest version.
 6. **Publish the draft.** `release.yml` makes a draft release with the assets and the notes. Read the notes, then
    publish it. The nightly fails while a draft has waited more than a day, so a forgotten draft is seen.
+
+A difference between the export and the committed copy was made by hand. Commit it if it was meant (OPS-8).
+
+### When the instruction counts fail
+
+A new runner image or one flaky benchmark can fail the counts (OPS-10). Recover in this order:
+
+1. Run the "Quality baseline" workflow with "count every benchmark" and "spread" ticked.
+2. Commit its `metrics.json` as `quality/baseline.json`. It carries `largest_spread`. `quality-check.mjs` refuses a
+   tolerance under twice that.
+3. Run the dry run again.
+4. Only then push the tag.
 
 ## Listing in the community directory
 
@@ -126,9 +134,10 @@ Every secret a workflow reads has a row here, with its owner, its scope and when
 
 **The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
 settings with the wanted ones. The release and the weekly Settings check (`settings-check.yml`) run it, and fail when one
-differs. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI. Beside the single
-settings it holds the default branch's whole ruleset and the Pages settings against the copies in `.github/settings/`
-(`--settings --export` writes them), so a rule loosened by hand shows as a difference (OPS-8).
+differs. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
+
+It also holds the default branch's whole ruleset and the Pages settings against the copies in `.github/settings/`.
+`--settings --export` writes them. So a rule loosened by hand shows as a difference (OPS-8).
 
 **Anyone can rebuild a release and compare it.** Check out the tag, then run `node scripts/reproducible-build.mjs`: it
 builds twice in clean checkouts and prints each asset's SHA-256, to compare with the release's `SHA256SUMS`. The release
