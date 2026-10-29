@@ -5,17 +5,21 @@
 // are the mod's (cc_settings_shared). The session writes a note in a later workstream, never here.
 import { settingsFrom } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
-import type { PageVersion } from './changes-section.ts';
+import { whyOf } from '../src/api-types.ts';
+import type { NoteReply, PageVersion } from '../src/api-types.ts';
 import type { ListedPlugin } from './page-plugins.ts';
-import type { PageItemFiles } from './review-section.ts';
+import type { PageItemFiles } from '../src/api-types.ts';
 import type { ReviewItem } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 
-/** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
-export interface NoteReply {
-  text: string;
-  version: string;
-  draft: { text: string; against: string | null } | string | null;
+export type { NoteReply };
+
+/** What a refused call comes to, in the server's words: its JSON why, with the status (risk API-4). */
+export async function refusedWhy(reply: Response): Promise<string> {
+  const why = whyOf(await reply.json().catch(() => null));
+  return why === null
+    ? word('page.server-said', { status: reply.status })
+    : word('page.server-said-why', { status: reply.status, why });
 }
 
 /** The address's fragment as the token and the note's id; both are empty when the address had none. */
@@ -29,7 +33,7 @@ export function takeFragment(win: Window): { token: string; note: string } {
 export function serverCalls(token: string, fetcher: typeof fetch) {
   const get = async (path: string): Promise<unknown> => {
     const reply = await fetcher(`/api/${path}`, { headers: { authorization: `Bearer ${token}` } });
-    if (!reply.ok) throw new Error(word('page.server-said-why', { status: reply.status, why: await reply.text() }));
+    if (!reply.ok) throw new Error(await refusedWhy(reply));
     return reply.json();
   };
   // an answer the server explains with a `why` is said in its words

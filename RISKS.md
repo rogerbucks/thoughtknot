@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (60)
+## Open (58)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -22,7 +22,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-12 | Docs disagree with the workflows on schedules and write access | ●●● | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-5 | No test runs vault.process with a real interleaving | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
@@ -52,7 +51,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -201,16 +199,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add `tsc -p packages/claude-code/mod --noEmit` to the typecheck script. Add a release-check step that runs `claude plugin validate` and `claude plugin test` where the CLI is installed. Make it fail when the CLI is not installed.
 
 **Check:** A CI job with the Claude Code CLI that runs the mod's test. Until then, a conventions test that register.tsx imports nothing but src/ modules already under test.
-
-### CODE-5 No test runs vault.process with a real interleaving
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/harness/obsidian-shim.js`, `packages/obsidian/test/**`, `packages/obsidian/src/block-editor/**`.
-
-**Risk:** The code defends against a stale write well. Every write passes through vault.process and is refused when the block text differs from the one last read. But the test shim applies the process callback synchronously. So no test can place a keystroke or a vault change between the read and the write, where Obsidian's asynchronous process really runs.
-
-**Fix:** Give the shim's process an awaited read and an awaited write with a hook between them. Add one test for each writer that changes the note in that gap. It expects a refusal and a kept draft.
-
-**Check:** A test in pane-writing.test.js and block tests that uses the gap hook. The conventions test lists the shim as a file the plugin's tests load.
 
 ### CODE-6 77 fixed sleeps remain in 26 plugin test files
 
@@ -502,16 +490,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** Already held by test/licences.test.js if its bundle walk is complete; otherwise manual.
 
-### API-4 Local server has two error formats and no shared schema
-
-**Who found it:** API design expert. **Where:** `packages/claude-code/server/**`, `packages/claude-code/page/*-calls.ts`.
-
-**Risk:** start-server answers 401, 404, 405 and 413 as text/plain, while every route answers JSON {why}. The page's write() throws away the server's why for all statuses but 409. So a 410 'note gone' or a 403 refusal reaches the person as 'The editor server said 410'. Reply shapes (NoteReply, PageVersion, PageItemFiles) are typed once in the page and once, untyped, in the server. The page tests use a fake fetcher, so a drift is caught by nobody.
-
-**Fix:** Put the route reply and error types in one module (packages/claude-code/src/api-types.ts) imported by both page and server. Send every refusal as JSON {why}. Read why on every non-ok status in note-calls.ts.
-
-**Check:** A test that starts the real server and runs serverCalls/noteCalls/exportCalls against it. It asserts each reply satisfies the shared types and each refusal is JSON with why.
-
 ### API-9 AI transport is hard-wired to the OpenAI chat shape
 
 **Who found it:** API design expert. **Where:** `packages/core/src/ai-request.ts`, `packages/core/src/ai-choice.ts`, `packages/core/src/plugins.ts`.
@@ -672,7 +650,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (72)
+## Done or accepted (74)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -689,6 +667,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
+| CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
@@ -715,6 +694,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
+| API-4 | Local server has two error formats and no shared schema | done | #1546 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
 | API-6 | Python library is loose files, not an installable package | done | #1545 |
 | API-7 | Python public surface is everything, private names included | done | #1545 |

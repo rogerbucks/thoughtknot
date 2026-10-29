@@ -13,13 +13,9 @@ import { PALETTES } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 import type { Drawn } from '@thoughtknot/core';
 import type { Refusal } from '@thoughtknot/core';
+import type { PageVersion } from '../src/api-types.ts';
 
-/** One earlier version, as the server lists it. */
-export interface PageVersion {
-  commit: string;
-  kind: 'commit' | 'branch';
-  label: string;
-}
+export type { PageVersion };
 
 /** What the section needs: the note now, the server's two calls, a layout in a fixed theme and the scheme. */
 export interface ChangesDeps {
