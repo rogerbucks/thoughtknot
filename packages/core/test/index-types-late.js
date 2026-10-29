@@ -318,4 +318,13 @@ export const TYPES_LATE = [
   'Radial',
   // where a grid's card dragged goes (§68, projection_grid), 29 Oct 2026
   'GridDrop',
+  // the boundary's rules and a block's data (§40, packages/boundary), 29 Oct 2026
+  'Bounded',
+  'CorporateSetting',
+  'DataInfo',
+  'DataLink',
+  'DataThing',
+  'ExportedData',
+  'Guarded',
+  'Redaction',
 ];

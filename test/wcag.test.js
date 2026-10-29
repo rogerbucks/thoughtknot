@@ -27,7 +27,10 @@ import { styles } from '../packages/obsidian/test/host/view-notes.js';
 import { editing, row, tapKey } from '../packages/obsidian/test/host/inspector-steps.js';
 import * as cardNotes from '../packages/obsidian/test/host/card-notes.js';
 import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
-import { THEMES, audit, auditView, openWindow, pageFor, obsidianVariables } from './repository/wcag.js';
+import { THEMES, audit, auditView, openWindow, pageFor, pageStyleFor, obsidianVariables } from './repository/wcag.js';
+import { makeParcel, readSetting } from '@thoughtknot/boundary';
+import { loadEngine } from '@thoughtknot/core';
+import { buildSite } from '@thoughtknot/web';
 import { PAGE_NOTE, auditPage, openEditorPage } from './repository/wcag-page.js';
 import { builtApp, cleanUpApp, emptyFolder, openAppEditor, openAppStart } from '../packages/app/test/app-window.js';
 import {
@@ -254,15 +257,33 @@ describe('VS Code: the editor in its tab, in both themes', () => {
     });
 });
 
+describe('the web layer: its page, in both themes', () => {
+  const NOTE =
+    "# Shop\n\n```gql\n// graph: shop\n(w:Product {name: 'Widget'}),\n(g:Product {name: 'Gadget', ai_assisted: TRUE}),\n(w)-[:SOLD_WITH]->(g)\n```\n";
+
+  for (const theme of THEMES)
+    test(`the page of a shared note meets WCAG 2.2 AA in the ${theme} theme`, async () => {
+      const { setting } = readSetting({ name: 'Acme' });
+      const crossing = makeParcel({ path: 'Shop.md', text: NOTE }, setting, { engine: await loadEngine() });
+      const site = buildSite(crossing.parcel);
+      const { style, variables } = pageStyleFor(site.find((f) => f.path === 'site.css').text, theme);
+      const page = site[0].text.replace('<link rel="stylesheet" href="site.css">', `<style>${style}</style>`);
+      const result = await audit(openWindow(page), theme, variables['--paper']);
+      assert.ok(result.rules >= 5, 'the check ran its rules');
+      assert.deepEqual(found(result), []);
+    });
+});
+
 describe('every host', () => {
   /** The packages that are hosts, which draw an interface: the others are libraries with none. */
-  const LIBRARIES = ['core', 'graph-spec', 'sync'];
+  const LIBRARIES = ['boundary', 'core', 'graph-spec', 'sync'];
   /** The hosts this file checks, with the views it checks of each. */
   const HOSTS = {
     obsidian: Object.keys(OBSIDIAN),
     'claude-code': ['the browser editor’s page'],
     app: ['the first page', 'the editor in the app'],
     vscode: ['the editor in its VS Code tab'],
+    web: ['the page of a shared note'],
   };
 
   test('has its views checked here before it can be released: a new host with no entry fails', () => {

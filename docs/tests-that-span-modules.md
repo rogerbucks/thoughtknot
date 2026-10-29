@@ -18,6 +18,22 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/sync/test/connector-sync.test.js` — a graph from a file, a note and a plug-in's place, kept in step between
   devices (§63, CN3). It spans the core's connectors and the sync layers.
 
+## The work and personal boundary, and the web layer
+
+- `packages/boundary/test/boundary-contract.test.js` — what crosses to a corporate setting holds no key, and AI-made
+  content is labelled, left out or held (editor spec §40, boundary_contract). It spans the setting, the key check and
+  the parcel, with the sync package's keys.
+- `packages/boundary/test/layers.test.js` — the personal layer works with downloads blocked, and draws the same in both
+  layers (corporate_personal_split). It spans the core's drawing and the parcel.
+- `packages/boundary/test/platform-security.test.js` — a SharePoint item the person cannot read is never shown, and the
+  policy only narrows (platform_security_first). It spans the platform's rights and the setting's policy.
+- `packages/web/test/web-layer.test.js` — the site is built from a parcel alone, with no store behind it
+  (web_layer_separate). It spans the sync stores, the parcel and the site.
+- `test/open-no-lock-in.test.js` — the library is open source, with no vendor's SDK, and builds on each platform
+  (open_no_lock_in). It reads the repository.
+- `test/portability.test.js` — the app works offline, and a corporate install starts no server (portable_no_servers).
+  It spans the core, the boundary and the web layer, and reads the repository.
+
 ## The core: test runs
 
 - `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
