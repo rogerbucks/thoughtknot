@@ -360,6 +360,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
+- `python/graph_spec/tests/test_public_names.py` — each entry point declares its public names. `js_parity.json`
+  names the Python twin of each JavaScript export (spec §41, lib_public_api).
+- `python/graph_spec/tests/test_wheel.py` — the library builds as a wheel that installs and reads a note. The release
+  attaches it (lib_github_release).
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the
   things the core returns (editor spec §7, views_agree_with_grafeo). It is given a fixed list of GQL's and Cypher's
