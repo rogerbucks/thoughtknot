@@ -8,7 +8,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { KEYS, gpgSign, signingPlan } from '../scripts/desktop-build.mjs';
@@ -99,7 +99,7 @@ test('a .deb gets a GPG signature that checks out against the key', { skip: !has
         input,
         encoding: 'utf8',
       });
-    spawnSync('mkdir', ['-m', '700', home]);
+    mkdirSync(home, { mode: 0o700 });
     assert.equal(gpg(['--passphrase', 'pw', '--quick-gen-key', 'Test <t@example.org>', 'ed25519', 'sign']).status, 0);
     const key = gpg(['--passphrase', 'pw', '--armor', '--export-secret-keys']).stdout;
     const deb = join(dir, 'app.deb');
