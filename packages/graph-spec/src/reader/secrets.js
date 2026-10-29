@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The secrets a reader refuses to serve, each found by its shape (editor spec §51, spec_secrets_and_fences). The editor
 // finds credentials with the same shapes (packages/core/src/ai-ceiling.ts), and so does the Python library
 // (graphspec/reader/secrets.py). test/secret-cases.json holds them all to the same answers.

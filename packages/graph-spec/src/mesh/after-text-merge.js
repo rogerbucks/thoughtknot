@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A text merge checked by the meaning-level join (editor spec §30, same_join_every_author). A sync or a version tool
 // can merge two edits of one note by its text. So it can pick one value where the two edits disagree. That pick is never
 // the decision. The two edits are joined over their base by the §21 join, as any author's edits are. Each value the

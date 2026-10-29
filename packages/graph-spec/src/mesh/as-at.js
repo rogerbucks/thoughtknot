@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A graph as at a date, on either of its two kinds of time (editor spec §29, two_kinds_of_time):
 // - recorded time: when a thing or link was written into the graph, its `recorded_at`. As at a date, the graph holds
 //   only what was recorded by then. A thing superseded by then (§12, a successor's SUPERSEDES) is no longer current.
@@ -8,6 +9,7 @@
 // test/two-times-cases.json holds both to the same answers.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { Graph } = require('../graph/graph.js');
 const { lensBuckets } = require('../rules/lenses.js');
 
@@ -32,7 +34,7 @@ function holds(p, axis, date) {
 
 /** `graph` as at `date` (YYYY-MM-DD, or an instant) on `axis`: 'recorded' or 'real'. */
 function asAt(graph, axis, date) {
-  if (!AXES.includes(axis)) throw new Error(`The axis of time must be recorded or real, not ${axis}`);
+  if (!AXES.includes(axis)) throw refused('GR01', `The axis of time must be recorded or real, not ${axis}`);
   const on = String(date);
   const kept = new Set([...graph.nodes].filter(([, [, p]]) => holds(p, axis, on)).map(([id]) => id));
   if (axis === 'recorded')

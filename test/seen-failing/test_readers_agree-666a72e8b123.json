@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_readers_agree.py",
+  "test": "ReadersAgree.test_a_divergence_is_named_by_its_seed_and_block",
+  "seen_failing_first": false,
+  "evidence": "ARCH-5: checks on the block generator and the seed, which hold before the readers were made to agree."
+}

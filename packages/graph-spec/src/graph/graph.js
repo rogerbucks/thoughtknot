@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The plain graph the rules run on (graph_rules.py), the world made from a store, and a graph's canonical hash.
 'use strict';
 

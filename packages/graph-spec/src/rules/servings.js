@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §24 servings: what the serving matrix lets be served, and the rules that a proposal's pins were served to its model.
 'use strict';
 

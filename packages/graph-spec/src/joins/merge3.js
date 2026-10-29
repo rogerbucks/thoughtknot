@@ -13,12 +13,21 @@ const ABSENT = { absent: true };
 // Two revisions of one earlier version. A change made on one side only is kept, including a removal. Changes on
 // both sides that differ are contested. With hold, say one side removes a thing or relationship while the other
 // changes it. Then it is held back, its removal contested with the change, rather than removed.
+/** @typedef {import('./claims.js').JoinDoc} JoinDoc */
+/** @typedef {import('./claims.js').JoinEdge} JoinEdge */
+/** @typedef {Map<string, any>} SlotMap Each slot by its text: [slot, value]. */
+/** @typedef {[JoinDoc, SlotMap][][]} Pairs Each side as the one that removed, then the other. */
+/** @typedef {any[]} Slot A part of a document: ['node', id], ['label', id, label], ['prop', id, key], ['edge', key]… */
+/**
+ * @param {JoinDoc} base @param {JoinDoc} a @param {JoinDoc} b @param {Record<string, any>} config
+ * @returns {import('./claims.js').Joined}
+ */
 function merge3(base, a, b, config, hold = true) {
   const joined = newJ();
-  const slots = (d) => {
+  const slots = (/** @type {JoinDoc} */ d) => {
     // slot repr -> [slot, value]
-    const s = new Map(),
-      put = (sl, v) => s.set(keystr(sl), [sl, v]);
+    const s = /** @type {SlotMap} */ (new Map()),
+      put = (/** @type {Slot} */ sl, /** @type {unknown} */ v) => s.set(keystr(sl), [sl, v]);
     for (const [nid, n] of d.nodes) {
       put(['node', nid], true);
       for (const label of n.labels) put(['label', nid, label], true);
@@ -34,21 +43,21 @@ function merge3(base, a, b, config, hold = true) {
     aSlots = slots(a),
     bSlots = slots(b),
     res = new Map(),
-    from = new Map(),
+    from = /** @type {Map<string, any>} */ (new Map()),
     changedPresence = new Set();
-  const get = (slotMap, ks) => (slotMap.has(ks) ? slotMap.get(ks)[1] : ABSENT),
-    eqv = (x, y) => (x === ABSENT || y === ABSENT ? x === y : pyeq(x, y));
-  const belongs = (s, n) =>
+  const get = (/** @type {SlotMap} */ m, /** @type {string} */ ks) => (m.has(ks) ? m.get(ks)[1] : ABSENT),
+    eqv = (/** @type {unknown} */ x, /** @type {unknown} */ y) => (x === ABSENT || y === ABSENT ? x === y : pyeq(x, y));
+  const belongs = (/** @type {Slot} */ s, /** @type {string} */ n) =>
     (['node', 'label', 'prop'].includes(s[0]) && s[1] === n) ||
     (['edge', 'eprop'].includes(s[0]) && (s[1][0] === n || s[1][2] === n));
-  const slotOf = (ks) => (baseSlots.get(ks) || aSlots.get(ks) || bSlots.get(ks))[0];
+  const slotOf = (/** @type {string} */ ks) => (baseSlots.get(ks) || aSlots.get(ks) || bSlots.get(ks))[0];
   const heldBack = new Map(),
     heldEdges = new Map();
   for (const n of [...baseSlots.values()]
     .filter(([s]) => s[0] === 'node')
     .map(([s]) => s[1])
     .sort()) {
-    for (const [[dl, dlSlots], [kp, kpSlots]] of [
+    for (const [[dl, dlSlots], [kp, kpSlots]] of /** @type {Pairs} */ ([
       [
         [a, aSlots],
         [b, bSlots],
@@ -57,7 +66,7 @@ function merge3(base, a, b, config, hold = true) {
         [b, bSlots],
         [a, aSlots],
       ],
-    ]) {
+    ])) {
       if (
         hold &&
         !dlSlots.has(keystr(['node', n])) &&
@@ -76,7 +85,7 @@ function merge3(base, a, b, config, hold = true) {
       .map(([s]) => s[1])
       .sort(byKey(keystr))) {
       if (heldBack.has(k[0]) || heldBack.has(k[2])) continue;
-      for (const [[dl, dlSlots], [kp, kpSlots]] of [
+      for (const [[dl, dlSlots], [kp, kpSlots]] of /** @type {Pairs} */ ([
         [
           [a, aSlots],
           [b, bSlots],
@@ -85,7 +94,7 @@ function merge3(base, a, b, config, hold = true) {
           [b, bSlots],
           [a, aSlots],
         ],
-      ]) {
+      ])) {
         const ek = keystr(['edge', k]);
         if (
           !dlSlots.has(ek) &&
@@ -99,8 +108,8 @@ function merge3(base, a, b, config, hold = true) {
       }
     }
   const all = new Map([...baseSlots, ...aSlots, ...bSlots]),
-    rows = [];
-  for (const [ks, [s]] of [...all].sort(byKey(([k]) => k))) {
+    rows = /** @type {any[][]} */ ([]);
+  for (const [ks, [s]] of [...all].sort(byKey((/** @type {[string, unknown]} */ [k]) => k))) {
     const o = get(baseSlots, ks);
     let x = get(aSlots, ks),
       y = get(bSlots, ks);
@@ -197,28 +206,7 @@ function merge3(base, a, b, config, hold = true) {
         y = ABSENT;
       }
     }
-    let r, src, cat;
-    if (eqv(x, y)) {
-      r = x;
-      src = [a.id, b.id];
-      cat = !eqv(x, o) ? 'both-same' : null;
-    } else if (hb.length || he.length) {
-      r = ABSENT;
-      src = [];
-      cat = 'remove-v-change';
-    } else if (eqv(x, o)) {
-      r = y;
-      src = [b.id];
-      cat = 'one-side-' + (o === ABSENT ? 'addition' : y === ABSENT ? 'removal' : 'change');
-    } else if (eqv(y, o)) {
-      r = x;
-      src = [a.id];
-      cat = 'one-side-' + (o === ABSENT ? 'addition' : x === ABSENT ? 'removal' : 'change');
-    } else {
-      r = ABSENT;
-      src = [];
-      cat = x === ABSENT || y === ABSENT ? 'remove-v-change' : 'both-differ';
-    }
+    const [r, src, cat] = choose(x, y, o, hb.length + he.length > 0, a.id, b.id, eqv);
     if (cat && ['node', 'edge'].includes(s[0])) changedPresence.add(keystr(s[1]));
     if (cat === 'both-differ' || cat === 'remove-v-change') {
       const subj = s[0] === 'prop' ? s[1] : s[1][0],
@@ -299,9 +287,9 @@ function merge3(base, a, b, config, hold = true) {
         stated_in: [...new Set([...from.get(ks), ...[a, b].filter((d) => d.nodes.has(s[1])).map((d) => d.id)])].sort(),
       });
   for (const [ks, [s, v]] of res) {
-    if (s[0] === 'label' && joined.nodes.has(s[1])) joined.nodes.get(s[1]).labels.add(s[2]);
+    if (s[0] === 'label' && joined.nodes.has(s[1])) joined.nodes.get(s[1])?.labels.add(s[2]);
     if (s[0] === 'prop' && joined.nodes.has(s[1])) {
-      joined.nodes.get(s[1]).props[s[2]] = v;
+      /** @type {import('./claims.js').JoinNode} */ (joined.nodes.get(s[1])).props[s[2]] = v;
       joined.src.set(s[1] + '\u0000' + s[2], from.get(ks));
     }
     if (s[0] === 'edge') {
@@ -316,8 +304,26 @@ function merge3(base, a, b, config, hold = true) {
     }
   }
   for (const [, [s, v]] of res)
-    if (s[0] === 'eprop' && joined.edges.has(keystr(s[1]))) joined.edges.get(keystr(s[1])).props[s[2]] = v;
+    if (s[0] === 'eprop' && joined.edges.has(keystr(s[1])))
+      /** @type {JoinEdge} */ (joined.edges.get(keystr(s[1]))).props[s[2]] = v;
   return joined;
+}
+
+/**
+ * The three-way choice for one slot: what the join keeps, which sides it came from, and the kind of change, or null
+ * for none. `x` and `y` are the two sides, `o` the base; `held` is true when one side removed what the other changed.
+ * @param {unknown} x @param {unknown} y @param {unknown} o @param {boolean} held @param {string} aId @param {string} bId
+ * @param {(x: unknown, y: unknown) => boolean} eqv
+ * @returns {[unknown, string[], string | null]}
+ */
+function choose(x, y, o, held, aId, bId, eqv) {
+  const kind = (/** @type {unknown} */ v) =>
+    'one-side-' + (o === ABSENT ? 'addition' : v === ABSENT ? 'removal' : 'change');
+  if (eqv(x, y)) return [x, [aId, bId], !eqv(x, o) ? 'both-same' : null];
+  if (held) return [ABSENT, [], 'remove-v-change'];
+  if (eqv(x, o)) return [y, [bId], kind(y)];
+  if (eqv(y, o)) return [x, [aId], kind(x)];
+  return [ABSENT, [], x === ABSENT || y === ABSENT ? 'remove-v-change' : 'both-differ'];
 }
 
 module.exports = { merge3 };
