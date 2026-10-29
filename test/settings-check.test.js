@@ -4,8 +4,11 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment } from './repository/repo.js';
+import { WANTED } from '../scripts/public-readiness.mjs';
+import { graphRead } from '../scripts/repo-profile.mjs';
 
 const steps = (lines) => lines.map(stripComment).filter((l) => l.trim() && l !== '    needs: on-main');
+const wanted = (name) => WANTED.find((s) => s.name === name);
 const job = (file) => jobs(read(`.github/workflows/${file}`)).settings;
 
 describe('the settings check', () => {
@@ -32,5 +35,34 @@ describe('the settings check', () => {
     assert.match(block(release.release, 'needs', 4).join('\n'), /\bsettings\b/);
     assert.deepEqual(steps(job('release.yml')), steps(job('settings-check.yml')));
     assert.deepEqual(steps(job('release-check.yml')), steps(job('settings-check.yml')));
+  });
+
+  test('auto-merge and branch clean-up are read through GraphQL when REST leaves them out for a read-only token', () => {
+    // SECURITY_ALERTS_TOKEN reads REST without these two fields, so the weekly check failed on them (SEC-2)
+    const asked = [];
+    const query = (repo, name) => (asked.push(`${repo} ${name}`), name === 'autoMergeAllowed');
+    assert.equal(
+      wanted('allow_auto_merge').read('o/n', false, () => ({}), query),
+      true,
+    );
+    assert.equal(
+      wanted('delete_branch_on_merge').read('o/n', false, () => ({}), query),
+      false,
+    );
+    assert.deepEqual(asked, ['o/n autoMergeAllowed', 'o/n deleteBranchOnMerge']);
+    assert.equal(
+      wanted('allow_auto_merge').read('o/n', false, () => ({ allow_auto_merge: false }), query),
+      false,
+    );
+    assert.equal(asked.length, 2, 'REST is used when it has the field');
+    const sent = [];
+    const read = graphRead(
+      (args) => (sent.push(args), { data: { repository: { autoMergeAllowed: true } } }),
+      (f) => f(),
+    );
+    assert.equal(read('rogerbucks/thoughtknot', 'autoMergeAllowed'), true);
+    assert.deepEqual(sent, [
+      ['graphql', '-f', 'query={repository(owner:"rogerbucks",name:"thoughtknot"){autoMergeAllowed}}'],
+    ]);
   });
 });
