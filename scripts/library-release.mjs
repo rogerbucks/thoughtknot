@@ -26,21 +26,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
+import { npmCommand } from './npm-command.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'rogerbucks/thoughtknot';
 
-// npm's own script, run by this Node. On Windows npm is npm.cmd, which Node starts only through a shell (since
-// CVE-2024-27980), so the script is run instead. Under `npm test` npm names it; otherwise it is where Node keeps it.
-const NPM_CLI = [
-  process.env.npm_execpath,
-  join(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js'),
-  join(dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js'),
-].find((file) => file && /npm-cli\.js$/.test(file) && existsSync(file));
-
 /** Runs npm with `args`, as execFileSync runs a program. */
-export const runNpm = (args, options) =>
-  NPM_CLI ? execFileSync(process.execPath, [NPM_CLI, ...args], options) : execFileSync('npm', args, options);
+export const runNpm = (args, options) => execFileSync(...npmCommand(args), options);
 
 // The two packages: their short name, their package name and the start of their asset's file name.
 export const PACKAGES = [
