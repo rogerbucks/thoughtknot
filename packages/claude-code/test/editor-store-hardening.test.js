@@ -132,7 +132,7 @@ describe('the note’s own file kept (cc_atomic_write)', () => {
 
   test('a folder swapped for a link out of the vault before a read is caught, and nothing outside is read', async () => {
     const v = tempVault();
-    const real = realpathSync(v.plan),
+    const real = realpathSync.native(v.plan),
       copy = join(v.outside, 'Notes copy');
     mkdirSync(copy);
     writeFileSync(join(copy, 'plan.md'), 'OUTSIDE\n');
@@ -150,7 +150,7 @@ describe('the real watcher (cc_redrawn_on_change)', () => {
     // again until the watcher has seen a change, within a polling deadline. The event is what is asserted
     const v = tempVault();
     let changes = 0;
-    const close = watching.watchWith(0)(dirname(realpathSync(v.plan)), 'plan.md', () => changes++);
+    const close = watching.watchWith(0)(dirname(realpathSync.native(v.plan)), 'plan.md', () => changes++);
     for (let i = 0; changes === 0 && i < 200; i++) {
       writeFileSync(v.plan, `${PLAN_THEIRS}${i}\n`);
       await pause(50);

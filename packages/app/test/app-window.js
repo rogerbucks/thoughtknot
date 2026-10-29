@@ -15,7 +15,7 @@ let building;
 
 /** A new empty folder, real path, put away by `cleanUpApp`. */
 export function emptyFolder() {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-app-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-app-')));
   folders.push(dir);
   return dir;
 }

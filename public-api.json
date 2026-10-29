@@ -4043,7 +4043,7 @@
           "run: () => Promise<void>"
         ],
         "storageContract": [
-          "value: (make: () => NoteStorage | Promise<NoteStorage>) => StorageCheck[]"
+          "value: (make: () => NoteStorage | Promise<NoteStorage>, { windows }?: { windows?: boolean; }) => StorageCheck[]"
         ],
         "StorageLayer": [
           "type = (inner: NoteStorage) => NoteStorage"
