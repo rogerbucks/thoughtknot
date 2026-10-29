@@ -17,7 +17,7 @@ const NOTE = '---\ntitle: Plan\nclassification: secret\n---\n\nThe plan.\n';
 
 /** A vault with a matrix note and a classified note, and the ports the guard takes. */
 function vault({ read = true } = {}) {
-  const top = realpathSync(mkdtempSync(join(tmpdir(), 'tk-gate-')));
+  const top = realpathSync.native(mkdtempSync(join(tmpdir(), 'tk-gate-')));
   made.push(top);
   mkdirSync(join(top, 'Settings'), { recursive: true });
   const matrix = join(top, 'Settings', 'AI matrix.md');

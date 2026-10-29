@@ -142,7 +142,7 @@ describe('no escape (cc_no_escape)', () => {
   test('the store’s vault is its real path, and a drafts folder inside the vault is refused', async () => {
     const v = tempVault();
     const store = await NoteStore.create({ vault: v.vault, drafts: v.data, watch: handWatch().watch });
-    assert.equal(store.vault, realpathSync(v.vault));
+    assert.equal(store.vault, realpathSync.native(v.vault));
     await store.stop();
     for (const drafts of [join(v.vault, 'drafts'), v.vault, join(v.vault, '.obsidian')])
       await assert.rejects(NoteStore.create({ vault: v.vault, drafts }), /outside the vault/);
@@ -156,7 +156,7 @@ describe('atomic writes (cc_atomic_write)', () => {
     const before = folderOf(v.plan);
     const pending = put(s, id, PLAN_THEIRS, version);
     const [temp, target] = await hold.at;
-    assert.equal(target, realpathSync(v.plan));
+    assert.equal(target, realpathSync.native(v.plan));
     assert.equal(dirname(temp), dirname(target));
     assert.notEqual(temp, target);
     assert.equal(readFileSync(temp, 'utf8'), PLAN_THEIRS);
@@ -235,7 +235,7 @@ describe('drawn again on a change on disk (cc_redrawn_on_change)', () => {
     const { v, s, id, version } = await opened({ watch: w.watch });
     assert.deepEqual(
       w.watched.map((e) => [e.folder, e.file]),
-      [[dirname(realpathSync(v.plan)), 'plan.md']],
+      [[dirname(realpathSync.native(v.plan)), 'plan.md']],
     );
     const stream = follow(s, id);
     assert.equal(await stream.status, 200);

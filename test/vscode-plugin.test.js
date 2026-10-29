@@ -27,7 +27,7 @@ import { until as untilTrue } from '../packages/obsidian/test/host/load-plugin.j
 const made = [];
 /** A new empty folder, real path, put away after the tests. */
 const folder = () => {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
   made.push(dir);
   return dir;
 };
