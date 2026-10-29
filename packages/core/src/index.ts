@@ -138,6 +138,7 @@ export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view
 export { addView, makeView } from './view-write.ts';
 export { readSketch, sketchOf, writeSketch, type Sketch, type SketchItem } from './sketch.ts';
 export { sketchEdit, sketchInNote, type NewSketchItem, type SketchChange } from './sketch-edit.ts';
+export { sketchProposal } from './sketch-proposals.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';

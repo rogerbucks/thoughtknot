@@ -4,6 +4,8 @@
 // - Hide drawings hides them all, and Show drawings brings them back (sketch_toggle).
 // - A first tap on a drawing selects it and says what it is, with Delete. A second tap keeps it selected
 //   (sketch_click_rule). Delete takes it out of the note.
+// - Offer as things and links writes what the drawings say as a proposal under the graph, the graph untouched
+//   (sketch_to_graph).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, settled, until } from './host/load-plugin.js';
@@ -113,6 +115,34 @@ describe('the drawings already in the note', () => {
       await settled();
       assert.ok(env.state.files.get(PATH).includes(fence(TEAM)), 'the graph untouched');
       assert.equal(layerOf(el), null, 'no drawings left to draw');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('drawings offered as things and links', () => {
+  // proves: sketch_to_graph
+  test('an arrow drawn from one thing to another is offered as a link under the graph, the graph untouched', async () => {
+    const { env, el, vp, at, placeOf } = await card(noteOf(TEAM));
+    try {
+      buttonOf(el, 'Draw').click();
+      buttonOf(el, 'Arrow').click();
+      const [a, c] = [placeOf('ann'), placeOf('cy')];
+      drag(vp, at, 6, [
+        [a.x, a.y],
+        [c.x, c.y],
+      ]);
+      await until(() => /SKETCH ON team/.test(env.state.files.get(PATH)));
+      await settled();
+      buttonOf(el, 'Done drawing').click();
+      buttonOf(el, 'Offer as things and links').click();
+      await until(() => /sketch_1/.test(env.state.files.get(PATH)));
+      await settled();
+      const now = env.state.files.get(PATH);
+      assert.ok(now.includes(fence(TEAM)), 'the graph untouched: the link waits to be accepted');
+      assert.match(now, /\(ann\)-\[:ASKS\]->\(cy\)/, 'offered as a link of the graph’s usual type');
+      assert.match(el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent, /^Offered /);
     } finally {
       env.uninstall();
     }

@@ -253,6 +253,12 @@ export const DRAWING_SOURCE_WORDS = {
   'sketch.select-first': 'Select a thing first, then draw on it.',
   'sketch.next': 'Next drawing',
   'sketch.refused': 'Not kept: {why}',
+  'sketch.propose': 'Offer as things and links',
+  'sketch.propose.reason': 'Drawn as {said}',
+  'sketch.propose.nothing':
+    'The drawings say nothing new about {graph}: no note to make a thing of, no line from one thing to another.',
+  'sketch.propose.graph-gone': 'The graph {graph} is not in this note any more, so nothing was offered.',
+  'sketch.proposed': 'Offered as a proposal under the graph: accept or reject each change there.',
   // the drawings block, folded away (the plug-in's sketch-block.ts)
   'sketch.summary': {
     one: 'Drawings over {graph}: {count} drawing, shown on its drawing',

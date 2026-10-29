@@ -676,11 +676,18 @@ never data.
   - `sketchEdit` adds, moves or takes away one drawing, changing only its own text. The first writes the block.
   - `drawnItem` makes a drawing from what was drawn, pinned to what it began over (`pinAt`). `thinned` thins a stroke.
   - `drawnOn` makes one by keyboard on the thing selected: a shape round it, a note above, an arrow at it.
+- `sketch-proposals.ts` — `sketchProposal`: what the drawings seem to say, offered as a proposal (§17). It is never
+  applied by itself.
+  - A free note, or a box or ellipse with words, is a new thing named by its words.
+  - A line, an arrow or a stroke from one thing to another is a link. Its words name the type; else the usual type.
+  - What the graph holds already is not offered. The host writes it beside the graph (`noteWithProposal`).
 - `display/graph-view/sketch-tool.ts` — Draw on the card's tools row, with the pen, box, ellipse, line, arrow and note.
   - A drag draws, and letting go writes the drawing through the host (`ViewOptions.sketching`).
   - A first tap on a drawing selects it and says what it is, with Delete. A second tap centres it.
   - By keyboard, Draw on the selected thing makes the tool's drawing on it. Next drawing selects each in turn.
   - Hide drawings hides them flat and in space. The view in space draws them with `sketchInSpace`.
+  - Offer as things and links asks the host to propose them (`SketchHost.propose`). `sketch-preview.ts` draws the
+    drawing under way.
 
 #### Reading and checking a style
 
