@@ -63,7 +63,12 @@ test('the app takes no plug-in that reaches the disk, the network or a shell on 
     ([, name, a, b]) => [name, a ?? b],
   );
   const plugins = crates.map(([n]) => n).filter((n) => n.startsWith('tauri-plugin-'));
-  assert.deepEqual(plugins, ['tauri-plugin-dialog']);
+  assert.deepEqual(plugins, ['tauri-plugin-keeper', 'tauri-plugin-dialog']);
+  assert.match(
+    cargo,
+    /^tauri-plugin-keeper = \{ version = "=[\d.]+", path = "keeper" \}$/m,
+    'the keeper is the app’s own',
+  );
   for (const [name, version] of crates.filter(([n]) => n.startsWith('tauri')))
     assert.match(version, /^=\d+\.\d+\.\d+$/, `${name} is pinned to one version`);
 });
@@ -132,4 +137,30 @@ test('CI builds the Android app and the iPhone simulator app, with no key of Rog
   assert.doesNotMatch(workflow, /actions\/cache@/, 'nothing restored from a cache an earlier run could have poisoned');
   for (const name of ['thoughtknot-app-android', 'thoughtknot-app-ios-simulator'])
     assert.match(workflow, new RegExp(`name: ${name}\\n\\s+if-no-files-found: error`), `${name} is kept`);
+});
+
+test('the vault key is made on the device and kept in its secure store, and the window may not ask for it yet', () => {
+  const keeper = (path) => read(`src-tauri/keeper/${path}`);
+  const kotlin = keeper('android/src/main/java/Keeper.kt');
+  assert.match(kotlin, /KeyStore\.getInstance\(STORE\)/);
+  assert.match(kotlin, /STORE = "AndroidKeyStore"/, 'the sealing key lives in the Android Keystore');
+  assert.match(kotlin, /context\.noBackupFilesDir/, 'the sealed copy is never backed up');
+  assert.match(kotlin, /SecureRandom\(\)\.nextBytes/, 'made on the device');
+  const swift = keeper('ios/Sources/KeeperPlugin.swift');
+  assert.match(swift, /kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly/, 'in the Keychain, for this device only');
+  assert.match(swift, /SecRandomCopyBytes/, 'made on the device');
+  // no key is carried in the app: no run of 16 or more bytes or hex digits is written in the keeper's code
+  for (const path of ['src/lib.rs', 'android/src/main/java/Keeper.kt', 'ios/Sources/KeeperPlugin.swift']) {
+    assert.doesNotMatch(keeper(path), /(?:0x[0-9a-f]{2}\s*,\s*){16}/i, `${path} holds no key bytes`);
+    assert.doesNotMatch(keeper(path), /[0-9a-f]{32}/i, `${path} holds no key written out`);
+  }
+  assert.match(read('src-tauri/src/lib.rs'), /\.plugin\(tauri_plugin_keeper::init\(\)\)/);
+  const capability = JSON.parse(read('src-tauri/capabilities/default.json'));
+  assert.ok(!capability.permissions.some((p) => p.startsWith('keeper:')), 'sync allows it when it joins the app (W30)');
+  const workflow = readFileSync(new URL('../../../.github/workflows/mobile-app.yml', import.meta.url), 'utf8');
+  assert.match(
+    workflow,
+    /\.\/gradlew --no-daemon :tauri-plugin-keeper:connectedDebugAndroidTest\n/,
+    'run on an emulator',
+  );
 });

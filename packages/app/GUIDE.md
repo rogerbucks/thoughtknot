@@ -92,6 +92,16 @@ The same shell is built for Android, and for the iPhone and iPad (spec §40). On
 - The first page lists the notes, with nothing to pick. Its button, New note, makes a note with an empty graph and
   opens it. A name already taken gets the next number, so no note is written over.
 - The folder dialog plug-in is built for computers only (`Cargo.toml`).
+- The vault key (packages/sync/src/keys.ts) is made on the phone at first launch. It is kept in the phone's own secure
+  store, never in the app. The app's own plug-in does it, in `src-tauri/keeper/`:
+  - Android (`Keeper.kt`): 32 random bytes, sealed by a key that lives in the Android Keystore and cannot leave it. Only
+    the sealed copy is written, in the app's storage that is never backed up. A copy that cannot be opened is never
+    written over.
+  - iPhone and iPad (`KeeperPlugin.swift`): in the Keychain, for this device only. It stays through a reinstall, so a
+    signing expiry means only reinstalling.
+  - The window may not ask for the key yet: the capability does not allow `vault_key`. Sync allows it when it joins
+    the app (W30). On a computer the command says it keeps none yet.
+  - Its tests run on an Android emulator in the phone app workflow (`keeper/android/src/androidTest`).
 - The phone app's id is `app.thoughtknot.mobile` (`tauri.android.conf.json`, `tauri.ios.conf.json`).
 
 The phone and tablet app workflow (`.github/workflows/mobile-app.yml`) builds both on each change:
