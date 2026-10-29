@@ -6,7 +6,9 @@
 // A long function has more than 100 lines, from its first line to its last. Only the code that ships counts: each
 // package's src, server and page folders. A function is named by its file and the path of names down to it, such as
 // `packages/obsidian/src/block.ts#renderBlock` or `…#BlockView.draw`. One with no name is named by what holds it and its
-// place there: `…#bindViewportEvents>2` is the second nameless function inside it.
+// place there: `…#bindViewportEvents>2` is the second nameless function inside it. A function that wraps a whole module,
+// `(function (root) { … })(this)`, is read as the file: the file's cap holds it, and each function in it is named as if
+// at the top.
 //
 // Those already there are held in test/long-functions.json, a ratchet: each one's lines may only go down. A new long
 // function fails, and so does one on the list that grew. One that shrank, or now has 100 lines or fewer, fails too until
@@ -55,6 +57,19 @@ const isFunction = (n) =>
   ts.isGetAccessorDeclaration(n) ||
   ts.isSetAccessorDeclaration(n);
 
+/**
+ * Whether `n` wraps a whole module: a function called where it is written, as a statement at the top of the file, such
+ * as `(function (root) { … })(this)`. The file's cap holds it, so it is read as the file and what it holds as the top.
+ */
+function wrapsModule(n) {
+  let call = n.parent;
+  while (call && ts.isParenthesizedExpression(call)) call = call.parent;
+  if (!call || !ts.isCallExpression(call) || ts.skipOuterExpressions(call.expression) !== n) return false;
+  let statement = call.parent;
+  while (statement && ts.isParenthesizedExpression(statement)) statement = statement.parent;
+  return !!statement && ts.isExpressionStatement(statement) && ts.isSourceFile(statement.parent);
+}
+
 /** Every function of `sources` ({file: text}) over the line limit, as {name, lines}, by name. */
 export function longFunctions(sources, most = MOST_LINES) {
   const found = [];
@@ -62,6 +77,8 @@ export function longFunctions(sources, most = MOST_LINES) {
     const kind = /\.tsx$/.test(file) ? ts.ScriptKind.TSX : /\.ts$/.test(file) ? ts.ScriptKind.TS : ts.ScriptKind.JS;
     const src = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind);
     const visit = (n, path, nameless) => {
+      if ((ts.isFunctionExpression(n) || ts.isArrowFunction(n)) && wrapsModule(n))
+        return n.forEachChild((c) => visit(c, path, nameless));
       if (isFunction(n) && n.body) {
         const own = ownName(n) ?? `${path.length ? '>' : ''}${(nameless.count = (nameless.count ?? 0) + 1)}`;
         const name = own.startsWith('>') ? `${path.join('.')}${own}` : [...path, own].join('.');

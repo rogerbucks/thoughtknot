@@ -1,4 +1,4 @@
-// No new function over 100 lines in the code that ships, and none on the list grows (spec §13, test_conventions:
+// No new function over 100 lines in the code that ships, and none on the list grows (spec §13, no_monolith_files:
 // CODE-9). Those already long are held, each to its lines, by test/long-functions.json, an allowance that only goes
 // down. Proved on the repository's own code and on functions planted for the purpose.
 import { test, describe } from 'node:test';
@@ -45,6 +45,24 @@ describe('a long function is found and named', () => {
     const inner = fn('  run(() =>', 11).replace(/}$/, '});');
     const text = `function outer() {\n  run(() => 1);\n${inner}\n${body(5)}\n}\n${fn('wire(function ()', 11)})`;
     assert.deepEqual(longIn(text), ['1 11', 'outer 17', 'outer>2 11']);
+  });
+});
+
+describe('a module wrapper', () => {
+  test('a function that wraps a whole module is read as the file, and what it holds as at the top', () => {
+    const wrapped = (inner) => `(function (root) {\n${inner}\n${body(5)}\n})(this);`;
+    assert.deepEqual(longIn(wrapped(fn('  function big()', 11))), ['big 11']);
+    assert.deepEqual(
+      longIn(`(${wrapped(fn('  function big()', 11)).slice(0, -1)});`),
+      ['big 11'],
+      'in parentheses too',
+    );
+    assert.deepEqual(longIn(`wire(${fn('function ()', 11)});`), ['1 11'], 'one handed in is no wrapper');
+    assert.deepEqual(
+      longIn(`function outer() {\n${wrapped(fn('  function big()', 11))}\n}`).sort(),
+      ['outer 18', 'outer>1 16', 'outer>1.big 11'],
+      'nor one inside a function',
+    );
   });
 });
 
