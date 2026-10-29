@@ -18,7 +18,7 @@ import { built, cleanUp, pageSources, runWorker, servePage } from './editor-page
 
 /** Registers the cases; `at` makes a repository path absolute, `ROOT` is the repository, `LAYER` the shared display layer. */
 export function accessCases({ at, ROOT, LAYER }) {
-  const page = (m) => import(`${at('packages/claude-code/page')}/${m}`);
+  const page = (m) => import(pathToFileURL(`${at('packages/claude-code/page')}/${m}`).href);
   const fenced = (body) => `\`\`\`gql\n${body}\n\`\`\``;
   const ONE = "// graph: g\n(a:Thing {name: 'A'}),\n(b:Thing {name: 'B'}),\n(a)-[:KNOWS]->(b)";
   const TWO = `${ONE},\n(c:Thing {name: 'C'}),\n(b)-[:KNOWS]->(c)`;
