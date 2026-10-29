@@ -7,7 +7,7 @@
 // Both take the change out of the change set. Both go through the vault's API against the note as it is then, and can
 // be undone. The card shows the graph spec's check of the change set.
 import { Notice, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from '../block-context';
 import {
   ProposalReview,
   changeSetId,
@@ -49,7 +49,7 @@ export async function renderProposalBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
   held?: string,
 ): Promise<void> {

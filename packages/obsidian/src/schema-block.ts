@@ -1,7 +1,7 @@
 // A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn). Its kinds of thing are boxes and
 // its relationship types are arrows between them. The text is one press of Source away. The card is read-only: the
 // picture is not the note's text, so it never writes. The schema is changed in its text, as any block is.
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from './block-context';
 import { gqlBlocks, namesSharedSchema, schemaPicture } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { graphCard } from './graph-card';
@@ -14,7 +14,7 @@ export async function renderSchemaBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
 ): Promise<boolean> {
   const info = ctx.getSectionInfo(el);
