@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (64)
+## Open (61)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -26,10 +26,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
@@ -54,7 +52,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -246,16 +243,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/host-adapters.test.js runs every adapter against every contract check. A conventions rule fails a host package that defines its own note read or write outside the adapter.
 
-### ARCH-3 Layering is not held across packages; hosts reach into core internals
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `test/layers.test.js`, `packages/claude-code/page/**`, `packages/obsidian/src/layout-worker/**`, `packages/core/src/index.ts`.
-
-**Risk:** The page imports 55 core modules by relative path in 15 files, bypassing the package's exports map and the public-api check. A core refactor that keeps the public surface still breaks the Claude Code host, and the planned layers test does not exist.
-
-**Fix:** Add test/layers.test.js now: every import outside packages/core that names core must go through @thoughtknot/core, its display/* or hosts/* paths. Export what the page needs from the entry. Replace the relative imports.
-
-**Check:** test/layers.test.js in the suite, built on scripts/import-graph.mjs, failing any ../core/src or ../graph-spec/src import from a host package.
-
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/src/hosts/vault-folder.ts`, `scripts/instruction-counts.mjs`.
@@ -275,16 +262,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** In W27 (Wave 11), add CSV and GraphML as sources through the plug-in interface. Or state in the user guide that export is one way.
 
 **Check:** The exporter contract gains a read-back check once an importer exists; until then, manual.
-
-### ARCH-9 The JavaScript library is private TypeScript sources in an archive
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/package.json`, `packages/core/esbuild.layout.mjs`, `.github/workflows/release.yml`, `packages/*/LICENSE`.
-
-**Risk:** Every package is private, core exports raw .ts files, graph-spec is CommonJS beside ESM packages, and no package folder carries a LICENSE. A VS Code or Tauri project outside this repository cannot install the library; it must vendor sources and compile them.
-
-**Fix:** Before Wave 8, build core to ESM plus .d.ts in the release archive alongside graph-spec's dist. Add a LICENSE copy to each package. Keep the one lockstep version (0.x minor as major, as public-api.mjs already reads it).
-
-**Check:** release.yml installs the archive into an empty project and imports @thoughtknot/core and @thoughtknot/graph-spec with plain Node.
 
 ### UX-2 Half the manual walk-through could run on the existing Chrome harness
 
@@ -526,16 +503,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** Already held by test/licences.test.js if its bundle walk is complete; otherwise manual.
 
-### API-2 Core is guarded as a library but never shipped as one
-
-**Who found it:** API design expert. **Where:** `packages/core/package.json`, `scripts/public-api.mjs`, `.github/workflows/release.yml`.
-
-**Risk:** The release archive carries graph-spec and the Python library, not @thoughtknot/core. Yet core's 639 exports are held to semver, and its package exports raw .ts with no built types. Library users cannot install what the guard protects. The surfaces a VS Code or Tauri host would really depend on (display/*, hosts/*) are left out of the guard on purpose.
-
-**Fix:** In the wave that adds the second host, decide core's publish story. Either build and ship core (d.ts + ESM) and add display/host entries to LIBRARY, or narrow the guard to what is shipped.
-
-**Check:** test/lib-public-api.test.js asserts every package in LIBRARY is also a file in the release archive's `git archive` list.
-
 ### API-6 Python library is loose files, not an installable package
 
 **Who found it:** API design expert. **Where:** `python/graph_spec/pyproject.toml`, `.github/workflows/release.yml`.
@@ -716,7 +683,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (68)
+## Done or accepted (71)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -739,9 +706,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
 | CODE-10 | Live Preview hands a hand-made context to the block renderer | done | #1542 |
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | done | #1542 |
+| ARCH-3 | Layering is not held across packages; hosts reach into core internals | done | #1544 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
 | ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | done | #1543 |
 | ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
+| ARCH-9 | The JavaScript library is private TypeScript sources in an archive | done | #1544 |
 | ARCH-10 | Three decisions that cost most if left after their wave | done | #1542 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
@@ -755,6 +724,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
+| API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-4 | Local server has two error formats and no shared schema | done | #1546 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |

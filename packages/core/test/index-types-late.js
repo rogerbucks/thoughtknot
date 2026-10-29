@@ -327,4 +327,6 @@ export const TYPES_LATE = [
   'ExportedData',
   'Guarded',
   'Redaction',
+  // the model a host offers, so a host imports it by the package name (ARCH-3), 29 Oct 2026
+  'HostModel',
 ];

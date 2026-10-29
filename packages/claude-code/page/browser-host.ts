@@ -3,7 +3,7 @@
 // is a span the stylesheet fills from an image file the server holds (`/icons/<name>.svg`). So no icon library ships,
 // and no icon is ever shown as its name. A name with no file shows a plain dashed square. Everything the page says is
 // set as text.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 import type { DisplayHost, MenuEntry } from '@thoughtknot/core/display/host';
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

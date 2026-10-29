@@ -3,7 +3,7 @@
 // page last had. It uses the page's own token, which is the only key that writes. The server compares the version under
 // its lock and refuses a stale one (409), keeping what was sent as a draft. Claude's key reaches no route this file
 // calls.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 import { whyOf } from '../src/api-types.ts';
 import type { FollowLine, StaleWrite, WriteReply } from '../src/api-types.ts';
 

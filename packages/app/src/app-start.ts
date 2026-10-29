@@ -4,8 +4,8 @@
 // the system's language, as the editor's page speaks the browser's (language_follows_host).
 // On a phone or tablet (spec §40, android_app and ios_app) the app keeps its own folder. It is open from the start, so
 // there is nothing to pick. The page lists its notes, and a button makes a new one and opens it.
-import { setLocale } from '../../core/src/locale-formats.ts';
-import { directionOf, setDirection, setLanguage, SOURCE_LANGUAGE, word } from '../../core/src/words.ts';
+import { setLocale } from '@thoughtknot/core';
+import { directionOf, setDirection, setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
 
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */

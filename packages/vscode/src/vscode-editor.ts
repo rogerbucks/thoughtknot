@@ -6,9 +6,9 @@
 // - the page reads VS Code's display language as the browser's (language_follows_host);
 // - a worker starts from a `blob:` that loads the extension's own worker file, as a webview's workers must. The blob
 //   holds one line naming that file, never text the page made.
-import { appFetch } from '../../app/src/app-api.ts';
-import { tauriFiles, tauriSaveNew, type Invoke } from '../../app/src/tauri-files.ts';
-import { workspaceStorage } from '../../core/src/workspace-storage.ts';
+import { appFetch } from '@thoughtknot/app/app-api';
+import { tauriFiles, tauriSaveNew, type Invoke } from '@thoughtknot/app/tauri-files';
+import { workspaceStorage } from '@thoughtknot/core';
 import type { FolderReply } from './folder-calls.ts';
 import type { WebviewSettings } from './webview-html.ts';
 

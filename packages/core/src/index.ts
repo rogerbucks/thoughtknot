@@ -285,6 +285,7 @@ export { sha256 } from './ai-digest.ts';
 export { AI_PURPOSES, endpointProblem, modelChoices, purposeWords } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
+export type { HostModel } from './ai-host.ts';
 export {
   classMapFrom,
   classMapProblems,

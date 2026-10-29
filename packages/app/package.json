@@ -5,6 +5,11 @@
   "description": "The desktop app: the browser editor in a Tauri window, over a plain folder of notes, offline.",
   "license": "MPL-2.0",
   "type": "module",
+  "exports": {
+    "./app-api": "./src/app-api.ts",
+    "./tauri-files": "./src/tauri-files.ts",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "node esbuild.config.mjs"
   },

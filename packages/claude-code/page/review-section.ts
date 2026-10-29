@@ -7,9 +7,9 @@
 // GitHub's titles and texts are shown as text, never as markup.
 import { changesFigure } from './changes-section.ts';
 import type { ChangesDeps } from './changes-section.ts';
-import { groupSaid, outsideSaid, reviewLevels, workstreamsFrom } from '../../core/src/github-review-items.ts';
-import type { ReviewItem, ReviewLevels, SummaryGroup } from '../../core/src/github-review-items.ts';
-import { word } from '../../core/src/words.ts';
+import { groupSaid, outsideSaid, reviewLevels, workstreamsFrom } from '@thoughtknot/core';
+import type { ReviewItem, ReviewLevels, SummaryGroup } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 import type { PageItemFiles } from '../src/api-types.ts';
 
 export type { PageItemFiles };

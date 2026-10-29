@@ -4,9 +4,9 @@
 // calls the function itself where no worker can run.
 // The core's two modules the worker needs, by their own paths rather than through the core's entry. The entry would
 // bring in the whole graph library. That is written as CommonJS, so it cannot be shaken out, and main.js would carry it twice.
-import { serveLayouts } from '../../../core/src/layout-worker.ts';
-import type { LayoutScope } from '../../../core/src/layout-worker.ts';
-import { loadEngine } from '../../../core/src/engine.ts';
+import { serveLayouts } from '@thoughtknot/core';
+import type { LayoutScope } from '@thoughtknot/core';
+import { loadEngine } from '@thoughtknot/core';
 
 /** The worker's own scope, handed in by the function wrapped round this bundle: `self` in a worker; none on the page. */
 declare const scope: LayoutScope | undefined;
