@@ -108,6 +108,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.tilt-down': 'Tilt down',
   'space.reset': 'Reset view',
   'space.help': 'How to move',
+  'space.headset': 'View in headset',
+  'space.headset.failed': 'The headset could not be opened.',
   'space.help-drag': 'Drag: turn',
   'space.help-move': 'Shift-drag or right-drag: move',
   'space.help-zoom': 'Scroll or pinch: zoom',
