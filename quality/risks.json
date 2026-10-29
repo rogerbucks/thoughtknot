@@ -85,8 +85,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/settings-check.test.js",
+        ".github/workflows/settings-check.yml"
+      ]
     },
     {
       "id": "SEC-3",
@@ -178,8 +183,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/nightly-workflow.test.js",
+        ".github/workflows/nightly.yml"
+      ]
     },
     {
       "id": "SEC-6",
@@ -209,8 +219,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/reproducible-build.test.js",
+        "scripts/reproducible-build.mjs"
+      ]
     },
     {
       "id": "SEC-7",
@@ -270,8 +285,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/secrets-recorded.test.js",
+        "RELEASING.md"
+      ]
     },
     {
       "id": "SEC-9",
@@ -330,8 +350,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/python-audit.test.js",
+        ".github/workflows/ci.yml"
+      ]
     },
     {
       "id": "OPS-1",
@@ -3492,8 +3517,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/release-split.test.js",
+        ".github/workflows/release.yml"
+      ]
     },
     {
       "id": "TRUST-4",

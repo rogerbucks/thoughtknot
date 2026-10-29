@@ -185,11 +185,11 @@ Wave 6.
   wave one reads the project board with the project token, then calls the nightly. The idea one uses the project
   token to add a labelled issue to the board, and checks out nothing.
 - **Gaps:**
-  - The stable release builds and publishes in one job that holds the signing permissions (TRUST-3).
+  - The stable release built and published in one job that held the signing permissions. Fixed in #1535 (TRUST-3).
   - Any commenter could wake the working-group agent, which could write the script that checks it. Fixed in #836
     (TRUST-5).
-  - Two personal tokens have unverified scope (SEC-8).
-  - The nightly is not attested, and releases are not rebuilt and compared (SEC-5, SEC-6).
+  - Two personal tokens had no recorded scope. Fixed in #1535 (SEC-8).
+  - The nightly was not attested, and releases were not rebuilt and compared. Fixed in #1535 (SEC-5, SEC-6).
   - Security settings and Python dependencies are not checked in CI (SEC-2, SEC-10).
   - The desktop app's signing keys sit in its build step on `main`, where a crate's build script could read them. A
     pull request build never gets them (SEC-17).
