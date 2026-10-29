@@ -35,7 +35,7 @@ describe('the wave nightly workflow', () => {
     const call = jobs(text)['wave-nightly'].join('\n');
     assert.match(call, /needs: gate/);
     assert.match(call, /uses: \.\/\.github\/workflows\/nightly\.yml/);
-    assert.match(call, /contents: write\s*\n\s*security-events: read/);
+    assert.match(call, /contents: write\s*\n\s*security-events: read\s*\n\s*id-token: write\s*\n\s*attestations: write/);
   });
 
   test('tells the nightly it is a wave build, which leaves the draft check to the night', () => {
