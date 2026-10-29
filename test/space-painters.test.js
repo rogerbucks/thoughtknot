@@ -549,8 +549,10 @@ describe("the 3D view's painters, in a real browser", () => {
     const { path } = await mini();
     const [first, last] = [path[0], path.at(-1)];
     assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
-    const between = path.filter((x) => x > first + 1 && x < last - 1);
-    assert.ok(between.length >= 3, `it passed through the spots between, a frame at a time: ${path}`);
+    // Two spots between, each its own frame, show a glide and not a jump. A slow machine draws fewer frames in the same
+    // glide: the macOS runner, painting in software, drew two (Other systems run, 29 Oct 2026).
+    const between = new Set(path.filter((x) => x > first + 1 && x < last - 1));
+    assert.ok(between.size >= 2, `it passed through the spots between, a frame at a time: ${path}`);
   });
 
   // proves: focus_space
