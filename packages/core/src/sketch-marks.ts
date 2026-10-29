@@ -255,12 +255,39 @@ export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): stri
   return `<g class="tk-sketch" role="group" aria-label="${escaped(word('sketch.layer'))}">${groups.join('')}</g>`;
 }
 
+/** A thing as drawn: its key and the words on its box. */
+type Drawn = { key: string; text: string };
+
+/** The marks drawings are placed on, read from a drawing's SVG text (drawnMarks), each thing by the words on its box. */
+export const marksOver = (svg: string, boxes: readonly Drawn[]): DrawMark[] =>
+  drawnMarks(
+    svg,
+    boxes.map((b) => b.key),
+    new Map(boxes.map((b) => [b.key, b.text])),
+  );
+
+/**
+ * A drawing's SVG text with the drawings over it laid on top, as the card lays them. It is for an export or a picture,
+ * so a reader without the plug-in sees them too (sketch_reader_picture). `boxes` are the things in the order drawn.
+ */
+export function withSketchSvg(
+  svg: string,
+  sketch: Sketch | null | undefined,
+  boxes: readonly Drawn[],
+  palette: Palette,
+): string {
+  if (!sketch?.items.length) return svg;
+  const { pieces } = sketchMarks(sketch, marksOver(svg, boxes));
+  const end = svg.lastIndexOf('</svg>');
+  return end < 0 || !pieces.length ? svg : svg.slice(0, end) + sketchSvg(pieces, palette) + svg.slice(end);
+}
+
 /**
  * The boxes and groups of a drawing as Graphviz wrote it, as marks in the units of its viewBox. They are what a
  * drawing on it is pinned to and placed from. `keys` are the things' keys in the order drawn, node1 the first. Read from the SVG's text,
  * so it needs no screen.
  */
-export function drawnMarks(svg: string, keys: readonly string[]): DrawMark[] {
+export function drawnMarks(svg: string, keys: readonly string[], names?: ReadonlyMap<string, string>): DrawMark[] {
   const areas = hitAreas(svg),
     vb = areas.viewBox;
   const marks: DrawMark[] = [];
@@ -273,7 +300,9 @@ export function drawnMarks(svg: string, keys: readonly string[]): DrawMark[] {
   for (const s of areas.shapes) {
     const key = s.kind === 'node' ? keys[Number(/^node(\d+)$/.exec(s.id)?.[1]) - 1] : undefined;
     const b = key === undefined ? null : boundsOf(areas, s.id);
-    if (key !== undefined && b) marks.push({ id: s.id, kind: 'box', style: 'thing', of: key, ...placed(b) });
+    const name = key === undefined ? undefined : names?.get(key);
+    if (key !== undefined && b)
+      marks.push({ id: s.id, kind: 'box', style: 'thing', of: key, ...placed(b), ...(name ? { name } : {}) });
   }
   // a group's box: its title names it, and its outline is a polygon, placed as hits.ts places a box's
   const graph = /<g\b[^>]*class="graph"[^>]*>/.exec(svg)?.[0] ?? '';
