@@ -8,8 +8,7 @@
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
 //   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
-//   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
-//   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
+//   node scripts/public-readiness.mjs --settings [--apply]  check GitHub's settings; --apply sets each that differs.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
 // A pull request's run uses --setup-since. Main and the release run everything. The nightly adds --no-tests (no npm test).
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
@@ -21,7 +20,7 @@ import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
 import { privateLinkProblems } from './private-links.mjs';
 import { signOffProblems } from './sign-off.mjs';
-import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
+import { DESCRIPTION, HOMEPAGE, graphRead, topicsSetting } from './repo-profile.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -138,11 +137,12 @@ const repoJSON = (repo, fresh = false) => {
 
 /** The repository's name now. GitHub reads an old name after a rename, but will not write to it (HTTP 307). */
 export const canonicalRepo = (repo, read = repoJSON) => read(repo).full_name ?? repo;
-const repoField = (field, want) => ({
+const graphField = graphRead(gh, quiet);
+const repoField = (field, want, graph) => ({
   name: field,
   phase: 'always',
   want,
-  read: (repo, fresh) => repoJSON(repo, fresh)[field],
+  read: (repo, fresh, rest = repoJSON, query = graphField) => rest(repo, fresh)[field] ?? (graph && query(repo, graph)),
   write: (repo) => gh(['-X', 'PATCH', `repos/${repo}`], { [field]: want }),
 });
 const security = (feature) => ({
@@ -204,8 +204,8 @@ export const WANTED = [
   repoField('has_projects', true),
   repoField('has_wiki', true),
   repoField('has_discussions', true),
-  repoField('delete_branch_on_merge', true),
-  repoField('allow_auto_merge', true),
+  repoField('delete_branch_on_merge', true, 'deleteBranchOnMerge'),
+  repoField('allow_auto_merge', true, 'autoMergeAllowed'),
   // Every commit is signed off (the DCO), so a commit made on the website asks for it too.
   repoField('web_commit_signoff_required', true),
   // How the project shows to a stranger: what it is, where its home page is, and the topics it is found by.
