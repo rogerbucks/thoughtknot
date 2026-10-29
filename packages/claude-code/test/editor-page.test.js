@@ -502,7 +502,9 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       [],
       'every call is to the server’s /api/',
     );
-    const { serverCalls, takeFragment } = await import(pathToFileURL(`${at('packages/claude-code/page')}/server-calls.ts`).href);
+    const { serverCalls, takeFragment } = await import(
+      pathToFileURL(`${at('packages/claude-code/page')}/server-calls.ts`).href
+    );
     const asked = [];
     const calls = serverCalls(
       'tok',
@@ -528,7 +530,9 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
 
   test('cc_settings_shared: the page is told the mod’s settings, read only', async () => {
     const { settingsFrom } = await import('@thoughtknot/core');
-    const { settingsEnvironment } = await import(pathToFileURL(at('packages/claude-code/src/editor-settings-env.ts')).href);
+    const { settingsEnvironment } = await import(
+      pathToFileURL(at('packages/claude-code/src/editor-settings-env.ts')).href
+    );
     const saved = {
       classifications: ['Public', 'Secret'],
       aiUnlabelled: 'Public',

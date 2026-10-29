@@ -52,7 +52,8 @@ export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
       return { x: { ...base, ...over }, log };
     }
     const ASK = { path: 'Trips/Trip.md', graph: 'trip', format: 'svg', theme: 'light' };
-    const run = async (x, ask) => (await import(pathToFileURL(`${at('packages/claude-code/page')}/export-run.ts`).href)).runExport(x, ask);
+    const run = async (x, ask) =>
+      (await import(pathToFileURL(`${at('packages/claude-code/page')}/export-run.ts`).href)).runExport(x, ask);
     const reading = async (text) => {
       const { readNote } = await core('drawing');
       const { gqlBlocks } = await core('blocks');
