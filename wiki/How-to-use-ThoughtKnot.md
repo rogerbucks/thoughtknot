@@ -7,7 +7,7 @@ time it changes, so they show what you will see.
 
 You write a few lines in a note that say what things there are and how they are linked. ThoughtKnot turns them into a
 drawing right inside the note. You can move around the drawing, change how it is laid out, and edit it, either by typing
-or by working with the drawing itself.
+or by working with the drawing itself. <!-- wiki:needs -->
 
 <!-- wiki:shot card -->
 
