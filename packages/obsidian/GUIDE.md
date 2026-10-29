@@ -76,6 +76,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `style-block.ts` — a style block (§2). It is never drawn, and is folded away until opened. It says whose style it is,
   what it holds (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its
   nudges, and its problems listed, by `block.ts`.
+- `sketch-block.ts` — a drawings block (§70). It is never drawn as a graph, and is folded away, saying how many drawings
+  it holds. `sketchingFor` gives the graph's card its drawings, and writes each change there to the note (`sketchEdit`).
 - `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code.
   A very long one is shown plain.
 

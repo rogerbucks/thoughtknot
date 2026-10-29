@@ -2991,3 +2991,23 @@ body.thoughtknot-reading .thoughtknot-view,
   margin-inline-start: auto;
   color: var(--gn-text-muted);
 }
+/* drawings on the graph (§70): the tools on the card's bar, and a drawing chosen or being drawn */
+.thoughtknot-sketch-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  align-items: center;
+}
+svg.thoughtknot-svg.is-sketching {
+  cursor: crosshair;
+  touch-action: none;
+}
+.thoughtknot-svg .tk-sketch .is-selected {
+  filter: drop-shadow(0 0 3px var(--gn-accent));
+}
+.thoughtknot-svg .tk-sketch-preview {
+  fill: none;
+  stroke: var(--gn-accent);
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}

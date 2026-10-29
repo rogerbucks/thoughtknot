@@ -61,8 +61,6 @@ export interface Sketch {
 
 const KINDS = new Set<string>(SKETCH_KINDS);
 const SHAPES = new Set<string>(SKETCH_SHAPES);
-// the properties a drawing has beyond a board item's own, in the order they are written
-const OWN = ['pin', 'shape', 'points'] as const;
 
 /** Points read from their text, whole numbers in pairs, `'0 0 12 4'`, at least two pairs; null when they are not. */
 function pointsOf(v: Value | undefined): MarkPoint[] | null {
@@ -115,6 +113,8 @@ export function readSketch(text: string, things?: Set<string>, block = 0): { ske
     if (it.h !== undefined) item.h = it.h;
     if (it.text !== undefined) item.text = it.text;
     if (it.style !== undefined) item.style = it.style;
+    // a pin, shape or points this drawing cannot use is kept as written, so a write never loses it
+    if (pin !== undefined && typeof pin !== 'string') item.more = { pin, ...item.more };
     if (typeof pin === 'string') {
       item.pin = pin;
       if (things && !things.has(pin))
@@ -127,7 +127,8 @@ export function readSketch(text: string, things?: Set<string>, block = 0): { ske
     }
     if (item.kind === 'Shape') {
       if (typeof shape === 'string' && SHAPES.has(shape)) item.shape = shape as SketchShape;
-      else if (shape !== undefined)
+      else if (shape !== undefined) {
+        item.more = { shape, ...item.more };
         problem(
           it.id,
           'GN907',
@@ -138,6 +139,7 @@ export function readSketch(text: string, things?: Set<string>, block = 0): { ske
           }),
           word('sketch.shape-unknown.fix', { shapes: SKETCH_SHAPES.join(', ') }),
         );
+      }
     } else if (shape !== undefined) item.more = { shape, ...item.more };
     if (throughPoints(item)) {
       const read = pointsOf(points);
@@ -159,7 +161,7 @@ export function sketchItemGql(item: SketchItem): string {
   if (item.pin !== undefined) more.pin = item.pin;
   if (item.shape !== undefined) more.shape = item.shape;
   if (item.points) more.points = item.points.flat().join(' ');
-  for (const [key, v] of Object.entries(item.more)) if (!(OWN as readonly string[]).includes(key)) more[key] = v;
+  for (const [key, v] of Object.entries(item.more)) if (!(key in more)) more[key] = v;
   const { w, h, text, style } = item;
   const board: BoardItem = { id: item.id, kind: item.kind, x: item.x, y: item.y, w, h, text, style, more };
   return itemGql(board);
