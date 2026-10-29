@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (66)
+## Open (61)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -31,18 +31,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| UX-5 | A drag on the card writes outside the note's editor undo path | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| UX-7 | Landing page and guide state no system requirements or AI data flow | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | UX-8 | First-run syntax help is only in the wiki, not in the app | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
-| NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | NEURO-6 | Every notice vanishes after five seconds and cannot be read again | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
@@ -298,16 +293,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** release.yml installs the archive into an empty project and imports @thoughtknot/core and @thoughtknot/graph-spec with plain Node.
 
-### UX-2 Half the manual walk-through could run on the existing Chrome harness
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `test/a11y-targets-reflow.test.js`, `scripts/targets-reflow.mjs`, `scripts/chrome.mjs`, `RELEASING.md`.
-
-**Risk:** The person-run list is 21 checks times 3 hosts times 2 themes. The device checklist has 3 of 163 ticked and was last marked at 0.3.0. With 429 commits in four days, a list that long is skipped, so regressions in focus, reflow, 44-point targets and pseudo-locale overflow reach users.
-
-**Fix:** On the Chrome harness add: 44-point sheet buttons, focus ring visible after Tab (screenshot diff), Escape returns focus, reduced-motion emulation, 200% text and spacing overlap, and en-XA/ar-XB overflow. That moves AX-01, 02, 05, 14, 15, 16, 17, 20, 21 and most of 13 out of the manual list. It leaves the screen-reader items and Obsidian-on-phone.
-
-**Check:** Extend test/a11y-targets-reflow.test.js (or a sibling) with those measures; keep RELEASING.md listing only what still needs a person.
-
 ### UX-3 Many user-facing sentences bypass the word catalogue and its checks
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/**`, `packages/obsidian/src/**`, `packages/graph-spec/src/reader/parser.js`, `test/pseudo-locales.test.js`.
@@ -328,26 +313,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test with a fake clock holds a layout for 400 ms and asserts the status text. Another test asserts a visible banner after TIMEOUTS_BEFORE_STOPPING failures.
 
-### UX-5 A drag on the card writes outside the note's editor undo path
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/obsidian/src/view-block.ts`, `packages/obsidian/src/block.ts`, `packages/obsidian/src/block-editor/note-writing.ts`.
-
-**Risk:** Typed edits go through CodeMirror so Cmd+Z works, but a drag on the card writes the nudge with vault.process. Whether the host's undo takes a drag back is untested, and a wrong drop may be hard to reverse.
-
-**Fix:** Route writeStyle through the same editor-first writer as note-writing.ts, so a nudge is one editor change. Add a checklist item 'Cmd+Z takes back a drag'.
-
-**Check:** A host test drags a box with the note open in the editing view and asserts one undoable transaction. Add a device checklist line under P.
-
-### UX-7 Landing page and guide state no system requirements or AI data flow
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `site/words.json`, `scripts/site.mjs`, `wiki/Home.md`.
-
-**Risk:** The plugin needs Obsidian 1.13.0. Neither the site, the wiki nor the README says so. So a user on an older app installs and sees nothing. The site says 'everything runs on your device' without saying what leaves it once an AI model is set up.
-
-**Fix:** Add 'Needs Obsidian {minAppVersion} or newer, desktop or mobile', filled from manifest.json by scripts/site.mjs. Add one sentence on what is sent to an AI model and when.
-
-**Check:** test/site.test.js asserts the rendered page contains manifest.json's minAppVersion.
-
 ### UX-8 First-run syntax help is only in the wiki, not in the app
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/editor/pane-drawing.ts`, `packages/obsidian/src/main.ts`, `packages/graph-spec/src/reader/parser.js`, `wiki/How-to-use-ThoughtKnot.md`.
@@ -357,16 +322,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Give the empty states a one-line example and a 'Read the guide' link. Add an 'Insert the example graph' command. Map parser errors to catalogue words with a hint ('Close the bracket after …').
 
 **Check:** test/ux-journey.test.js gains a stage that opens an empty block and asserts an example and guide link. test/ux-copy.test.js covers parser messages.
-
-### UX-9 Focus on a drawing box is a thicker stroke, measured by nobody
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `styles.css`, `packages/claude-code/page/page.css`, `test/a11y-targets-reflow.test.js`.
-
-**Risk:** `g.node:focus` removes the outline and relies on stroke-width 3 under :focus-visible. The keyboard tests run without layout. So whether that change meets the 3:1 and 2-pixel rule (AX-02, SC 2.4.11) in both themes is judged only by hand. UX-1 shows this does not happen.
-
-**Fix:** Draw a separate focus ring (accent stroke, 2px, offset) on the focused box. Have the Chrome harness compare a focused and unfocused box screenshot for a visible change in both themes.
-
-**Check:** A case in test/a11y-targets-reflow.test.js (real Chrome) that tabs to a box and asserts pixel change above a threshold in light and dark.
 
 ### UX-10 Design screenshots show the old 'Graph Note' brand and version
 
@@ -407,16 +362,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Give each bar button a tooltip in the host's style (the aria-label as title or setTooltip). Add a setting that folds the less used buttons (filter, view, export, source) behind one More button.
 
 **Check:** Extend the host contract or wcag test: every button in the bar has a visible tooltip text equal to its aria-label.
-
-### NEURO-5 Colour-never-alone rule has no test, yet ethos says it is checked
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `test/colour-alone.test.js`, `requirements/ethos.gql`, `scripts/ethos.mjs`.
-
-**Risk:** The code marks estimates, changes and kinds by line and word as well as colour today. But nothing stops a new feature carrying meaning by colour alone. A colour-blind or dyslexic reader who scans by shape would then miss it, and the ethos page would still claim the rule is held.
-
-**Fix:** Write test/colour-alone.test.js: for every mark, kind and state the drawing colours, assert a line style, icon or word is also present. Until then mark r_sight in ethos.gql as 'not yet' for this part.
-
-**Check:** The test itself, in the full suite; scripts/ethos.mjs refusing a rule whose named test is still planned.
 
 ### NEURO-6 Every notice vanishes after five seconds and cannot be read again
 
@@ -738,7 +683,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (66)
+## Done or accepted (71)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -767,8 +712,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
+| UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1547 |
+| UX-5 | A drag on the card writes outside the note's editor undo path | done | #1547 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
+| UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1547 |
+| UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1547 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
+| NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1547 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
