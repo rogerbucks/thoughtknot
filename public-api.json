@@ -432,6 +432,9 @@
         "claudeGate": [
           "value: (text: string, settings: GateSettings, confirmed?: string | null) => Gate"
         ],
+        "cleanSvg": [
+          "value: (svg: string) => string"
+        ],
         "Clear": [
           "interface",
           "bottom: number",
@@ -4157,6 +4160,9 @@
           "keys: Array<string>",
           "name: string",
           "remove: number"
+        ],
+        "SVG_ELEMENTS": [
+          "value: ReadonlySet<string>"
         ],
         "SWITCH_SETTINGS": [
           "value: { readonly labels: 'labelsByZoom'; readonly hubs: 'foldHubs'; readonly groups: 'foldGroups'; readonly merge: 'mergeLinks'; readonly engine: 'ownLayout'; readonly lanes: 'kindLanes'; }"
