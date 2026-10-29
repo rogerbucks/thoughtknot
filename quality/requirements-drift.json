@@ -1,8 +1,7 @@
 {
   "about": "Drift between requirements/editor-requirements.md and the tests. Each list only shrinks: see scripts/requirements-drift.mjs.",
   "no-test": [
-    "ideas_on_board",
-    "projection_spatial"
+    "ideas_on_board"
   ],
   "not-written": [
     "android_app",
