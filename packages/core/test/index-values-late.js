@@ -195,4 +195,7 @@ export const VALUES_LATE = [
   'lensOf',
   'spaceSeen',
   'unbent',
+  // a card dragged to another column of the grid view (§68, projection_grid), 29 Oct 2026
+  'gridDrop',
+  'gridMoved',
 ];

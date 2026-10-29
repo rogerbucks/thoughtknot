@@ -312,4 +312,6 @@ export const TYPES_LATE = [
   'ViewLayers',
   'Lens',
   'Radial',
+  // where a grid's card dragged goes (§68, projection_grid), 29 Oct 2026
+  'GridDrop',
 ];
