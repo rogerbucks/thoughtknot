@@ -5,13 +5,12 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (83)
+## Open (79)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| SEC-7 | SCXML parsed with lxml's default entity handling | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | OPS-5 | The release waits on live OSV and NVD, with no retry | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -82,11 +81,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 24 · Held: text to graph with AI) | days |
 | TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| TRUST-6 | Python fill recipes read outside the folder and inject into the query | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| TRUST-9 | The Python class reader is looser than the core gate | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
-| TRUST-10 | git log still reads the repository's own settings | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
@@ -114,16 +110,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Have the mod open the browser itself, or draw a button whose target is held outside pane text. Then the token never appears in any text Claude can read.
 
 **Check:** A test asserts no pane text and no transcript line ever contains `token=`.
-
-### SEC-7 SCXML parsed with lxml's default entity handling
-
-**Who found it:** Senior security engineer. **Where:** `python/graph_spec/src/graphspec/engine/process/scxml.py`.
-
-**Risk:** The library parses SCXML text with etree.fromstring and no parser settings. A crafted file with an external entity can read a local file into the document. Only someone handed an untrusted SCXML file is exposed.
-
-**Fix:** Parse with `etree.XMLParser(resolve_entities=False, no_network=True, huge_tree=False)` in both places.
-
-**Check:** A unit test parses a document with an external entity and asserts the entity is not expanded; ruff rule S320 flags a bare lxml parse.
 
 ### SEC-9 Export accepts any text under an .svg name
 
@@ -825,16 +811,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.
 
-### TRUST-6 Python fill recipes read outside the folder and inject into the query
-
-**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/fill.py`.
-
-**Risk:** A recipe in a note names files joined onto the vault or the standards folder with no containment check. Its basis id is pasted into the query text. So a note can read or hash any file, and add query syntax.
-
-**Fix:** Resolve each recipe path by real path and refuse one outside its folder. Check the basis id against the id rule, or pass it as a query parameter.
-
-**Check:** python/graph_spec/tests/test_fill.py: a recipe naming ../ or an id with a quote is refused with the reason.
-
 ### TRUST-7 Nothing cleans the drawing before it enters the page
 
 **Who found it:** Trust model review. **Where:** `packages/core/src/display/graph-view/drawing-svg.ts`, `packages/claude-code/mod/hooks/register.tsx`.
@@ -854,26 +830,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Refuse a file above the read limit and stop a query after a time limit. Stop reading at the row limit, and scan the values for credentials.
 
 **Check:** packages/obsidian/test/databases.test.js refuses a file over the limit, a looping query and a credential in a value.
-
-### TRUST-9 The Python class reader is looser than the core gate
-
-**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/classification.py`.
-
-**Risk:** The Python reader takes the first classification line anywhere in the file, not only in front matter, and has no unknown case. So the two readers can give one note different classes.
-
-**Fix:** Read the class only from front matter and refuse an unknown or doubled one, as the core does. Share the fixtures.
-
-**Check:** python/graph_spec/tests/test_classification.py runs the core gate's classification fixtures and agrees on each.
-
-### TRUST-10 git log still reads the repository's own settings
-
-**Who found it:** Trust model review. **Where:** `packages/claude-code/server/note-history.ts`.
-
-**Risk:** The server turns off hooks and fsmonitor, but still reads the vault repository's config. A setting such as log.showSignature with gpg.program could start a program when the history is listed. Untested.
-
-**Fix:** Add -c log.showSignature=false and -c gpg.program= to each git call, or set GIT_CONFIG_GLOBAL and pass only the settings needed.
-
-**Check:** packages/claude-code/test/note-history.test.js: a repository whose gpg.program writes a file lists its history. The file is never written.
 
 ### TRUST-11 /graph checks the note, then reads it again to draw
 
@@ -925,7 +881,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (49)
+## Done or accepted (53)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -933,6 +889,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-2 | SECURITY.md promises rest on settings nothing in CI checks | done | #1535; kept out by `test/settings-check.test.js`, `.github/workflows/settings-check.yml` |
 | SEC-5 | Nightly pre-release is not attested | done | #1535; kept out by `test/nightly-workflow.test.js`, `.github/workflows/nightly.yml` |
 | SEC-6 | Store assets are never rebuilt and compared | done | #1535; kept out by `test/reproducible-build.test.js`, `scripts/reproducible-build.mjs` |
+| SEC-7 | SCXML parsed with lxml's default entity handling | done | #1537; kept out by `python/graph_spec/tests/test_optional_imports_safe_parser.py`, `python/graph_spec/src/graphspec/engine/optional_imports.py` |
 | SEC-8 | Two personal tokens live in workflows with unverified scope | done | #1535; kept out by `test/secrets-recorded.test.js`, `RELEASING.md` |
 | SEC-10 | No advisory audit for the Python dependencies in CI | done | #1535; kept out by `test/python-audit.test.js`, `.github/workflows/ci.yml` |
 | OPS-1 | One person holds every key, with no written recovery | done | #614, #620 |
@@ -963,6 +920,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
 | TRUST-3 | The stable release builds and publishes in one job | done | #1535; kept out by `test/release-split.test.js`, `.github/workflows/release.yml` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
+| TRUST-6 | Python fill recipes read outside the folder and inject into the query | done | #1537; kept out by `python/graph_spec/tests/test_fill_contained.py`, `python/graph_spec/src/graphspec/engine/documents/fill.py` |
+| TRUST-9 | The Python class reader is looser than the core gate | done | #1537; kept out by `python/graph_spec/tests/test_classification.py`, `packages/core/test/classification-cases.json` |
+| TRUST-10 | git log still reads the repository's own settings | done | #1537; kept out by `packages/claude-code/test/note-history.test.js`, `packages/claude-code/server/note-history.ts` |
 | TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
 | TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
