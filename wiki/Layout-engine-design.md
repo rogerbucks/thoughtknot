@@ -51,7 +51,9 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
    bends whatever a view drew round a focus, so one lens works on every view. The lenses are fisheye (built),
    semantic zoom (built), hyperbolic, sphere and spatial (VR). A placement is a view of its own: arc (built),
    matrix (built), hive (built), grid (kanban, built) and map. Dragging a card between grid columns comes next.
-4. **Semantic zoom** steps the ladder of detail as a person zooms. It counts the things that fit on screen at the zoom.
+4. **Every view answers clicks.** A view is the card's own drawing, not a still picture. A thing in any view is chosen
+   and opened as in a network.
+5. **Semantic zoom** steps the ladder of detail as a person zooms. It counts the things that fit on screen at the zoom.
    Over 80, each group is a box with its count. Over 25, the things show with their links bundled. Then every link
    shows apart, and at 12 or fewer every property too. It steps only the way the person zoomed, a quarter past each edge.
 

@@ -133,6 +133,8 @@ export interface PluginPicture {
   plugin: string;
   width: number;
   height: number;
+  /** Drawn as the card's own drawing, its things chosen as in a network (`viewDrawn`), not shown as a picture. */
+  live?: boolean;
 }
 
 /** A type's name as a sentence says it, with its article: "a tree". */
@@ -226,13 +228,15 @@ export function renderPicture(viewport: HTMLElement, p: PluginPicture): HTMLElem
   return wrap;
 }
 
+export { viewDrawn } from './view-drawn';
+
 /** The drawing a card shows in `viewport` that is not Graphviz's: the table, or a plug-in's picture; else null. */
 export function drawnApart(
   viewport: HTMLElement,
   d: Pick<DiagramShown, 'table' | 'picture'> | undefined,
 ): HTMLElement | null {
   if (d?.table) return renderTable(viewport, d.table);
-  return d?.picture ? renderPicture(viewport, d.picture) : null;
+  return d?.picture && !d.picture.live ? renderPicture(viewport, d.picture) : null;
 }
 
 /** What a card is given for a graph drawn as a table: no SVG, and the table's own size, for the zoom to fit. */
