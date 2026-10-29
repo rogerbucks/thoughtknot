@@ -22,6 +22,12 @@ describe('the user guide', () => {
     for (const s of SHOTS) assert.ok(s.alt.length > 15, s.name);
   });
 
+  // proves: landing_page
+  test('says which Obsidian it needs, filled from versions.json by the wiki build', () => {
+    assert.match(guide, /<!-- wiki:needs -->/);
+    assert.match(read('scripts/wiki.mjs'), /needs: `Needs Obsidian \$\{versions\[version\]\} or newer/);
+  });
+
   test('lists every setting of the editor, from its own list of options', () => {
     assert.match(guide, /<!-- wiki:settings -->/);
     const tables = settingsTables(OPTIONS);

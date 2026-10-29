@@ -154,10 +154,21 @@ function llmsText({ words, url }) {
  * `template` is site/index.html, `privacy` site/privacy.html and `demo` site/demo.html. `catalogue` is site/words.json;
  * `image` is {file, alt, width, height} or null.
  */
-export function renderSite({ template, privacy, demo, catalogue, version, sha, today, url = SITE_URL, image = null }) {
+export function renderSite({
+  template,
+  privacy,
+  demo,
+  catalogue,
+  version,
+  sha,
+  today,
+  minApp,
+  url = SITE_URL,
+  image = null,
+}) {
   const lang = catalogue.language;
   const words = Object.fromEntries(
-    Object.entries(catalogue.words).map(([k, w]) => [k, withPlaceholders(w, { version, sha, date: today })]),
+    Object.entries(catalogue.words).map(([k, w]) => [k, withPlaceholders(w, { version, sha, date: today, minApp })]),
   );
   const description = words['page.description'];
   const values = {
@@ -214,6 +225,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     demo: readFileSync(join(ROOT, 'site/demo.html'), 'utf8'),
     catalogue: json('site/words.json'),
     version: latestVersion(releases, json('manifest.json').version),
+    minApp: json('manifest.json').minAppVersion,
     sha: (flag(args, '--sha') ?? 'main').slice(0, 7),
     today: flag(args, '--date') ?? new Date().toISOString().slice(0, 10),
     url: flag(args, '--url') ?? SITE_URL,
