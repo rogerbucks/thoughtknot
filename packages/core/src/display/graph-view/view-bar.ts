@@ -3,6 +3,7 @@
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
+import { setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options';
 
@@ -187,4 +188,12 @@ export function overDrawing(
     card.register(() => watch.disconnect());
   }
   return viewport;
+}
+
+/** The edit button as the card stands: a pencil to edit here, or, while edited (`on`), a view icon to finish (§4). */
+export function editButtonAs(b: HTMLElement, on: boolean): void {
+  b.empty();
+  setIcon(b, on ? 'book-open' : 'pencil');
+  b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
+  b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
 }

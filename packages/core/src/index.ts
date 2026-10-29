@@ -17,7 +17,7 @@ export type { StorageCheck } from './storage-contract.ts';
 export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
 export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';
-export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
+export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote, DiagramPlan } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
@@ -82,7 +82,6 @@ export { TIMELINE_ORDERS, TIMELINE_SHOWS, pluginTypeOf, shapeOf, suggestType, ty
 export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
 export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
 export type { DiagramTable } from './types-table.ts';
-export type { DiagramPlan } from './note-reading.ts';
 export type { Diagram } from './style-graph.ts';
 export type {
   ArrowsWrite,
@@ -134,10 +133,11 @@ export { DEFAULT_PACE, PATH_PACES, PathAutoplay, paceSaid } from './path-play.ts
 export type { Scheduler } from './path-play.ts';
 export { ANIMATION_LIMITS, animationFits } from './path-animation.ts';
 export type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
-export { viewsOf, readingOf } from './views.ts';
-export type { NamedView } from './views.ts';
+export { viewsOf, readingOf, type NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view-profile.ts';
 export { addView, makeView } from './view-write.ts';
+export { readSketch, sketchOf, writeSketch, type Sketch, type SketchItem } from './sketch.ts';
+export { sketchEdit, sketchInNote, type NewSketchItem, type SketchChange } from './sketch-edit.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';

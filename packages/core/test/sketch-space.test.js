@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { drawMarksOf } from '../src/drawing-marks.ts';
 import { PALETTES } from '../src/palette.ts';
 import { readSketch } from '../src/sketch.ts';
-import { sketchInSpace, sketchMarks, sketchSvg, SKETCH_Z } from '../src/sketch-marks.ts';
+import { drawnMarks, sketchInSpace, sketchMarks, sketchSvg, SKETCH_Z } from '../src/sketch-marks.ts';
 import { spaceOf } from '../src/space-view.ts';
 
 const SKETCH = readSketch(`// graph: trip_ink · SKETCH ON trip
@@ -103,5 +103,39 @@ describe('drawings in 2.5D and 3D', () => {
     const head = lifted.arrows.find((a) => a.id === 'sketch:d:head');
     assert.deepEqual(head.tip.slice(0, 2), [160, -100]);
     assert.ok(head.back[0] < head.tip[0]);
+  });
+});
+
+describe('drawings placed on a drawing as Graphviz wrote it', () => {
+  const SVG = `<svg width="300pt" height="200pt" viewBox="0 0 300 200"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 196)">
+<g id="clust1" class="cluster"><title>cluster_team</title><polygon points="0,-190 280,-190 280,-10 0,-10 0,-190"/></g>
+<g id="node1" class="node"><title>ann</title><polygon points="20,-150 120,-150 120,-110 20,-110 20,-150"/></g>
+</g></svg>`;
+
+  test('reads each box by its thing’s key, and each group by its title, in the viewBox’s units', () => {
+    const marks = drawnMarks(SVG, ['ann']);
+    const ann = marks.find((m) => m.of === 'ann');
+    assert.deepEqual([ann.x, ann.y, ann.width, ann.height], [24, 46, 100, 40]);
+    const team = marks.find((m) => m.id === 'g:cluster_team');
+    assert.deepEqual([team.x, team.y, team.width, team.height], [4, 6, 280, 180]);
+  });
+
+  test('a drawing pinned to a thing is placed from its box as drawn', () => {
+    const sketch = readSketch(`// graph: t_ink · SKETCH ON t\n(a:Text {x: 0, y: 0, pin: 'ann', text: 'hi'})`).sketch;
+    const [note] = sketchMarks(sketch, drawnMarks(SVG, ['ann'])).pieces;
+    assert.deepEqual([note.mark.x, note.mark.y], [74, 66]);
+  });
+});
+
+describe('drawings in a space that spreads its things afresh', () => {
+  test('a pinned drawing follows its block to where it stands now', () => {
+    const space = spaceOf(MARKS, { by: 'group' });
+    const moved = { ...space, blocks: space.blocks.map((b) => (b.id === 'n1' ? { ...b, x: b.x + 500 } : b)) };
+    const before = sketchInSpace(pieces, space).lines.find((l) => l.id === 'sketch:a');
+    const after = sketchInSpace(pieces, moved).lines.find((l) => l.id === 'sketch:a');
+    assert.deepEqual(
+      after.points.map((p) => p[0]),
+      before.points.map((p) => p[0] + 500),
+    );
   });
 });
