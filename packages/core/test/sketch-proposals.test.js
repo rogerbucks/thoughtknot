@@ -50,6 +50,19 @@ describe('drawings offered as things and links', () => {
   });
 
   // proves: sketch_to_graph
+  test('a note of odd words gives a plain id, quickly however long its words', () => {
+    const odd = sketched(`(d1:Text {x: 400, y: 100, text: '9 Tea -- break!'}),
+(d2:Text {x: 400, y: 300, text: 'a${'_'.repeat(20000)}!'})`);
+    const started = Date.now();
+    const r = sketchProposal(note(TEAM), odd, MARKS);
+    assert.ok(Date.now() - started < 1000, 'no pattern that backtracks over the words');
+    assert.deepEqual(
+      r.proposal.changes.map((c) => c.gql.split(':')[0]),
+      ['(tea_break', '(a'],
+    );
+  });
+
+  // proves: sketch_to_graph
   test('what the graph holds already, a pinned note and a line to nowhere offer nothing, and say so', () => {
     const sketch = sketched(`(d1:Shape {x: 30, y: 15, shape: 'arrow', points: '0 0 200 0'}),
 (d2:Text {x: 0, y: -30, pin: 'ann', text: 'Ask first'}),

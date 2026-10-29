@@ -37,11 +37,16 @@ function most(values: readonly string[]): string | undefined {
 }
 
 /** A plain word from a drawing's words, for an id: `Tea break` is `tea_break`. Empty when they hold no letter. */
-const idWord = (text: string) =>
-  text
+function idWord(text: string): string {
+  // split into words, never trimmed with a pattern that backtracks: a note's words are a person's, of any length
+  const words = text
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^[_0-9]+|_+$/g, '');
+    .split(/[^a-z0-9]/)
+    .filter(Boolean);
+  let id = words.join('_');
+  while (id && !/[a-z]/.test(id.charAt(0))) id = id.slice(1);
+  return id;
+}
 
 /** A link's type from a drawing's words, `works with` is `WORKS_WITH`; undefined when they are not plain words. */
 const typeWord = (text: string | undefined) =>
