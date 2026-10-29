@@ -17,6 +17,7 @@ import type {
   DiagramWrite,
   Drawn,
   GraphDrawing,
+  GraphShape,
   NoteReading,
   Diagram,
   StyleGraph,
@@ -135,6 +136,8 @@ export interface PluginPicture {
   height: number;
   /** Drawn as the card's own drawing, its things chosen as in a network (`viewDrawn`), not shown as a picture. */
   live?: boolean;
+  /** The shape it was drawn from, so a grid's card is moved by the columns it was drawn in (grid-drag.ts). */
+  shape?: GraphShape;
 }
 
 /** A type's name as a sentence says it, with its article: "a tree". */
