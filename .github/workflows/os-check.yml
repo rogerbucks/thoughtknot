@@ -48,7 +48,9 @@ jobs:
       - if: failure()
         run: |
           (cd packages/obsidian && node esbuild.config.mjs) 2>&1 | tail -40 || true
-          grep -n -B40 -A5 '^✖ \(test\|packages\)/[^ ]*\.m\?js ' test-report.txt | head -600 || true
+          files=$(grep -o '^✖ [^ ]*\.test\.m\?js' test-report.txt | cut -c5- | sort -u)
+          echo "files that failed whole: $files"
+          [ -z "$files" ] || npm test -- --test-reporter=tap $files 2>&1 | grep -v '^ *ok \|^# Subtest' | tail -200 || true
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
