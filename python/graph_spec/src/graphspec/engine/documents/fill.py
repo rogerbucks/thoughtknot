@@ -45,11 +45,40 @@ def fill_recipes(text: str) -> dict[str, dict[str, Any]]:
     return rs
 
 
+# What a recipe may name as a graph, a basis, a judgement or a state: an id, such as ev:L3/grace.
+# It holds no quote, backslash, brace, backtick or space, so it cannot end the query's text.
+PLAIN_ID = re.compile(r"[^\s'\"\\`{}]+")
+
+
+def _inside(folder: str, name: str) -> str:
+    """The real path of a file a recipe names in folder; refused when it, or a link on the way,
+    leads out of the folder (TRUST-6)."""
+    base = os.path.realpath(folder)
+    path = os.path.realpath(os.path.join(base, name))
+    if os.path.commonpath([base, path]) != base:
+        raise ValueError(
+            f"refused: {name!r} is outside its folder — a recipe reads only inside it"
+        )
+    return path
+
+
+def _plain_ids(recipe: dict[str, Any]) -> None:
+    """Refuses a recipe whose graph, basis, judgement or state is not a plain id, so nothing it
+    names is read as query text (TRUST-6)."""
+    for key in ("graph", "basis", "judgement", "state_of"):
+        v = recipe.get(key)
+        if v is not None and not (isinstance(v, str) and PLAIN_ID.fullmatch(v)):
+            raise ValueError(
+                f"refused: the recipe's {key} {v!r} is not a plain id — "
+                "no quote, backslash, brace, backtick or space"
+            )
+
+
 def _block_of(text, ref, std_dir):
     """'#Heading' is a block of this document; 'Name#Heading' or 'Name' one of another document in
     std_dir."""
     name, _, heading = ref.partition("#")
-    t = text if not name else open(os.path.join(std_dir, name + ".md"), encoding="utf-8").read()
+    t = text if not name else open(_inside(std_dir, name + ".md"), encoding="utf-8").read()
     if heading:
         t = t[t.index("## " + heading) :]
     return re.search(r"```gql\n(.*?)\n```", t, re.S).group(1)
@@ -86,7 +115,8 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
     (req:3.engine-reads-first); Grafeo is given each block as the reader corrected it
     (req:3.engine-gets-corrected)."""
     if "ni" in recipe:
-        return ni_uri(open(os.path.join(vault_dir, recipe["ni"]), "rb").read())
+        return ni_uri(open(_inside(vault_dir, recipe["ni"]), "rb").read())
+    _plain_ids(recipe)
     blocks = [require_graph_line(_block_of(text, ref, std_dir), ref) for ref in recipe["load"]]
     st = Store()
     for block in blocks:

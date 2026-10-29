@@ -237,8 +237,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_optional_imports_safe_parser.py",
+        "python/graph_spec/src/graphspec/engine/optional_imports.py"
+      ]
     },
     {
       "id": "SEC-8",
@@ -3583,8 +3588,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_fill_contained.py",
+        "python/graph_spec/src/graphspec/engine/documents/fill.py"
+      ]
     },
     {
       "id": "TRUST-7",
@@ -3667,8 +3677,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_classification.py",
+        "packages/core/test/classification-cases.json"
+      ]
     },
     {
       "id": "TRUST-10",
@@ -3694,8 +3709,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "packages/claude-code/test/note-history.test.js",
+        "packages/claude-code/server/note-history.ts"
+      ]
     },
     {
       "id": "TRUST-11",
