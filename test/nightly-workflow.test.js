@@ -52,7 +52,7 @@ describe('the nightly workflow', () => {
     assert.doesNotMatch(on, /pull_request|push:|workflow_run/);
   });
 
-  test('reads only, but for the publish job and the draft check, which may write contents alone', () => {
+  test('reads only, but for the publish job, which may write contents and attest, and the draft check', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
     assert.deepEqual(Object.keys(jobs(text)), [
       'check',
@@ -68,7 +68,18 @@ describe('the nightly workflow', () => {
     assert.equal(block(jobs(text)['public-readiness'], 'permissions', 4), null);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);
     assert.equal(block(jobs(text).build, 'permissions', 4), null);
-    assert.deepEqual(given('publish'), ['contents: write']);
+    assert.deepEqual(given('publish'), ['contents: write', 'id-token: write', 'attestations: write']);
+  });
+
+  // SEC-5: a nightly carries the same build provenance as the stable release
+  test('attests the files it publishes, after checking they are the ones the build made', () => {
+    const publish = jobs(text).publish.join('\n');
+    const at = (re) => jobs(text).publish.findIndex((l) => re.test(l));
+    assert.match(publish, /uses: actions\/attest-build-provenance@[0-9a-f]{40}/);
+    for (const file of ['main.js', 'manifest.json', 'styles.css']) assert.match(publish, new RegExp(`nightly/${file}`));
+    assert.ok(at(/sha256sum --check --strict SHA256SUMS/) > 0);
+    assert.ok(at(/sha256sum --check/) < at(/attest-build-provenance/));
+    assert.ok(at(/attest-build-provenance/) < at(/gh release create/));
   });
 
   test('builds only after no high or critical security alert is open, read by a job that installs nothing', () => {
@@ -176,7 +187,10 @@ describe('the nightly workflow', () => {
 
   test('runs no code of the repository in the job that writes: no checkout, no install, no Node', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.deepEqual([...new Set(usesRefs(publish).map((r) => r.split('@')[0]))], ['actions/download-artifact']);
+    assert.deepEqual(
+      [...new Set(usesRefs(publish).map((r) => r.split('@')[0]))],
+      ['actions/download-artifact', 'actions/attest-build-provenance'],
+    );
     const runs = jobs(text).publish.map(stripComment).join('\n');
     assert.doesNotMatch(runs, /\b(node|npm|npx)\b|scripts\/|actions\/checkout|\.\/\S+\.sh/);
   });
