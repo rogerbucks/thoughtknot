@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (79)
+## Open (77)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -80,8 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 28 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 24 · Held: text to graph with AI) | days |
-| TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
@@ -801,26 +799,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
 
-### TRUST-4 GitHub titles and messages reach Claude's pane unfenced
-
-**Who found it:** Trust model review. **Where:** `packages/claude-code/server/editor-changes.ts`, `packages/claude-code/server/github-reader.ts`, `packages/claude-code/server/editor-gate.ts`.
-
-**Risk:** Pull request titles, authors and commit messages are third-party text. They go to the changes view, which Claude reads, with no credential scan and no data fence. Files with no class count as the lowest, so outside files reach Claude too.
-
-**Fix:** Scan item text for credentials and mark it as outside data in the pane, inside the fence of spec_secrets_and_fences. Let the settings give repository files with no class a stricter default.
-
-**Check:** packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.
-
-### TRUST-7 Nothing cleans the drawing before it enters the page
-
-**Who found it:** Trust model review. **Where:** `packages/core/src/display/graph-view/drawing-svg.ts`, `packages/claude-code/mod/hooks/register.tsx`.
-
-**Risk:** The engine escapes labels, and that is the only guard. The SVG is put into the live page in Obsidian, which has no content policy, and handed raw to the pane. One escaping bug would run script with full access.
-
-**Fix:** Pass the SVG through an allowlist before it is shown: SVG elements and attributes only, no script, foreignObject, event attributes or links other than in-page.
-
-**Check:** packages/core/test/drawing-svg.test.js: an SVG holding script, an on attribute or a javascript: link is drawn without them.
-
 ### TRUST-8 A database import has no size or time limit
 
 **Who found it:** Trust model review. **Where:** `packages/obsidian/src/databases/**`.
@@ -881,7 +859,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (53)
+## Done or accepted (55)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -919,8 +897,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-1 | Claude can loosen its own gate by editing vault files | done | #836; kept out by `packages/claude-code/test/gate-guard.test.js` |
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
 | TRUST-3 | The stable release builds and publishes in one job | done | #1535; kept out by `test/release-split.test.js`, `.github/workflows/release.yml` |
+| TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | done | #1539; kept out by `packages/claude-code/test/editor-changes.test.js`, `packages/claude-code/test/editor-gate.test.js`, `packages/core/src/github-review-items.ts` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
 | TRUST-6 | Python fill recipes read outside the folder and inject into the query | done | #1537; kept out by `python/graph_spec/tests/test_fill_contained.py`, `python/graph_spec/src/graphspec/engine/documents/fill.py` |
+| TRUST-7 | Nothing cleans the drawing before it enters the page | done | #1539; kept out by `packages/core/test/svg-allowlist.test.js`, `packages/core/src/svg-allowlist.ts` |
 | TRUST-9 | The Python class reader is looser than the core gate | done | #1537; kept out by `python/graph_spec/tests/test_classification.py`, `packages/core/test/classification-cases.json` |
 | TRUST-10 | git log still reads the repository's own settings | done | #1537; kept out by `packages/claude-code/test/note-history.test.js`, `packages/claude-code/server/note-history.ts` |
 | TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
