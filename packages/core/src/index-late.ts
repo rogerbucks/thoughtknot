@@ -74,3 +74,9 @@ export {
   type Lens,
   type Radial,
 } from './lenses.ts';
+// what the work/personal boundary builds on (§40, packages/boundary): a setting's rules, a block written back, and
+// the explicit grants
+export { applyBoundary, type Bounded, type CorporateSetting, type Redaction } from './export-boundary.ts';
+export { gqlBlock } from './export-data-gql.ts';
+export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
+export { Permissions, readable, type Guarded } from './permissions.ts';

@@ -1,0 +1,15 @@
+{
+  "name": "@thoughtknot/boundary",
+  "version": "0.7.1",
+  "private": true,
+  "description": "The line between an owner's personal layer and a corporate one: what may cross, as plain text, with no key and with AI-made content handled by the setting's rule.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@thoughtknot/core": "0.7.1",
+    "@thoughtknot/graph-spec": "0.7.1"
+  }
+}
