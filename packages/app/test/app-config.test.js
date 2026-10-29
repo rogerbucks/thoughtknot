@@ -126,7 +126,7 @@ test('the folder dialog is a computer’s only: a phone build carries no dialog 
 test('CI builds the Android app and the iPhone simulator app, with no key of Roger’s (mobile_checked)', () => {
   const workflow = readFileSync(new URL('../../../.github/workflows/mobile-app.yml', import.meta.url), 'utf8');
   assert.match(workflow, /cargo tauri android build --ci --debug --apk --target aarch64\n/);
-  assert.match(workflow, /-sdk iphonesimulator .*\n.*CODE_SIGNING_ALLOWED=NO build\n/);
+  assert.match(workflow, /cargo tauri ios build --ci --debug --target aarch64-sim --no-sign\n/);
   assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
   assert.doesNotMatch(workflow, /secrets\./, 'no secret reaches a phone build');
   for (const name of ['thoughtknot-app-android', 'thoughtknot-app-ios-simulator'])
