@@ -1006,6 +1006,9 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
   furthest out, and each link is a curve between axes (projection_hive).
 - `grid-view.ts` — cards in columns by the word most things carry, such as status, and rows by kind. Steps of work,
   such as todo, doing and done, go in that order (projection_grid).
+- `grid-move.ts` — a card dragged to another column lands in the column of the card nearest it across. That value is
+  written as its property where the thing is written; the column of things with no value takes it out. The card's
+  drag is `grid-drag.ts`, beside the drag of a box (`box-drag-view.ts`).
 
 #### The other views
 

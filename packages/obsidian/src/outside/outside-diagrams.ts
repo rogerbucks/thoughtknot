@@ -22,8 +22,9 @@ export async function withPicture(
 ): Promise<DiagramShown> {
   const wanted = diagram.choice.plugin;
   if (!wanted) return diagram;
-  const drawn = await outside.drawDiagram(wanted.type, shapeOf(drawing, g, nudges), PICTURE_SPACE);
+  const shape = shapeOf(drawing, g, nudges);
+  const drawn = await outside.drawDiagram(wanted.type, shape, PICTURE_SPACE);
   if (!drawn) return diagram;
   if ('why' in drawn) return { ...diagram, choice: { ...diagram.choice, plugin: { ...wanted, why: drawn.why } } };
-  return { ...diagram, picture: { svg: drawn.svg, type: wanted.type, plugin: wanted.plugin, ...PICTURE_SPACE } };
+  return { ...diagram, picture: { svg: drawn.svg, type: wanted.type, plugin: wanted.plugin, shape, ...PICTURE_SPACE } };
 }
