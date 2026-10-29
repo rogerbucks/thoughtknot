@@ -13,6 +13,8 @@ import { ENTRY, FIXTURE, alive, ask, pause, reachable, startProcess } from './ed
 import { TEST_NOTE as NOTE } from './fixtures/editor-server-test.ts';
 
 /** A node process that starts the test-only server with `stdio` and then runs `then`; it says its child's pid first. */
+const WINDOWS = process.platform === 'win32';
+
 function parentOf(stdio, then) {
   const code = [
     "const { spawn } = require('node:child_process');",
@@ -66,7 +68,8 @@ describe('the token is never kept (cc_token_unkept, cc_one_server)', () => {
     ];
     assert.equal(answers[0].text, NOTE);
     run.child.kill('SIGTERM');
-    assert.deepEqual(await run.exited, { code: 0, signal: null });
+    // Windows ends a process at once on a signal: it has none to catch
+    assert.deepEqual(await run.exited, WINDOWS ? { code: null, signal: 'SIGTERM' } : { code: 0, signal: null });
     for (const a of answers) assert.ok(!JSON.stringify(a).includes(token), 'no answer repeats it');
     assert.equal(run.out.stdout, `${JSON.stringify({ url })}\n`, 'the one line, and nothing more');
     assert.ok(!run.out.stderr.includes(token), 'never in what it says on stderr');
@@ -85,12 +88,15 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('on a stop signal', async () => {
-    for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+    // Windows sends no SIGHUP, and ends a process at once on the others, with nothing to catch: there it is gone, its
+    // port closed, but says nothing
+    for (const signal of WINDOWS ? ['SIGTERM', 'SIGINT'] : ['SIGTERM', 'SIGINT', 'SIGHUP']) {
       const run = startProcess();
-      await run.ready;
+      const port = Number(new URL((await run.ready).url).port);
       run.child.kill(signal);
-      assert.deepEqual(await run.exited, { code: 0, signal: null }, signal);
-      assert.match(run.out.stderr, new RegExp(`stopped: ${signal}`));
+      assert.deepEqual(await run.exited, WINDOWS ? { code: null, signal } : { code: 0, signal: null }, signal);
+      if (!WINDOWS) assert.match(run.out.stderr, new RegExp(`stopped: ${signal}`));
+      assert.equal(await reachable('127.0.0.1', port), false, signal);
     }
   });
 

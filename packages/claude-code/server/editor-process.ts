@@ -9,7 +9,7 @@
 import { word } from '@thoughtknot/core';
 import type { PageAssets } from './page-assets.ts';
 import { startEditorServer, type ApiHandler } from './start-server.ts';
-import { watchSession } from './session-watch.ts';
+import { parentGone, watchSession } from './session-watch.ts';
 
 /** What a process may be handed by the code that runs it, never by its arguments. */
 export interface EditorProcessOptions {
@@ -37,7 +37,7 @@ function refuse(why: string): never {
 export async function runEditorProcess(args: string[], options: EditorProcessOptions = {}): Promise<void> {
   process.stdout.on('error', () => {});
   process.stderr.on('error', () => {});
-  if (process.ppid === 1) refuse(word('server.orphaned'));
+  if (process.ppid === 1 || parentGone(process.ppid)) refuse(word('server.orphaned'));
   if (args.length) refuse(word('server.takes-no-argument', { argument: args[0] as string }));
   const server = await startEditorServer({
     ...(options.api ? { api: options.api } : {}),
