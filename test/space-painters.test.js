@@ -315,21 +315,19 @@ window.oneBar = async () => {
   const steps = [];
   for (let i = 0; i < 4; i++) {
     b.click();
-    for (let n = 0; n < 20 && !frame.querySelector('.thoughtknot-space-pad') !== !spaces.mode(); n++) await frames();
-    const view = frame.querySelector(':scope > .thoughtknot-space-view');
-    steps.push({
-      said: b.textContent,
-      inFrame: !!view,
-      cards: !!view?.querySelector('.thoughtknot-space-pad button[hidden]'),
-    });
+    // until the view is as its mode says: a slow machine takes more frames to show the cards
+    const view = () => frame.querySelector(':scope > .thoughtknot-space-view');
+    const cards = () => !!view()?.querySelector('.thoughtknot-space-pad button[hidden]');
+    for (let n = 0; n < 100 && (!view() !== !spaces.mode() || cards() !== (spaces.mode() === 'cards')); n++) await frames();
+    steps.push({ said: b.textContent, inFrame: !!view(), cards: cards() });
     if (spaces.mode() !== 'cards') continue;
     // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
     zoom.zoomIn();
-    const at = view.getBoundingClientRect();
+    const at = view().getBoundingClientRect();
     for (let y = 4; y < at.height && !told.length; y += 6)
       for (let x = 4; x < at.width && !told.length; x += 6)
         for (const type of ['pointerdown', 'pointerup'])
-          view.dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
+          view().dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
   }
   await spaces.show(null);
   zoom.zoomIn();
@@ -549,10 +547,10 @@ describe("the 3D view's painters, in a real browser", () => {
     const { path } = await mini();
     const [first, last] = [path[0], path.at(-1)];
     assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
-    // Two spots between, each its own frame, show a glide and not a jump. A slow machine draws fewer frames in the same
-    // glide: the macOS runner, painting in software, drew two (Other systems run, 29 Oct 2026).
+    // A spot between, in a frame of its own, shows a glide and not a jump. A slow machine draws fewer frames in the
+    // same glide: the macOS runner, painting in software, drew only one (Other systems run, 29 Oct 2026).
     const between = new Set(path.filter((x) => x > first + 1 && x < last - 1));
-    assert.ok(between.size >= 2, `it passed through the spots between, a frame at a time: ${path}`);
+    assert.ok(between.size >= 1, `it passed through the spots between, a frame at a time: ${path}`);
   });
 
   // proves: focus_space
