@@ -48,7 +48,8 @@ const LINED = 'g.edge, g.cluster';
 
 /** A drawing's top group's scale and shift: a point inside it is at `scale × (p + shift)` in the drawing's units. */
 type Frame = { s: number; tx: number; ty: number };
-function frameOf(svg: SVGSVGElement): Frame {
+/** The scale and shift of `svg`'s top group, read from its transform. */
+export function frameOf(svg: SVGSVGElement): Frame {
   const t = svg.querySelector('g.graph')?.getAttribute('transform') ?? '';
   const [s = 1] = (/scale\(([^()]*)\)/.exec(t)?.[1] ?? '1').split(/[\s,]+/).map(Number);
   const [tx = 0, ty = 0] = (/translate\(([^()]*)\)/.exec(t)?.[1] ?? '0 0').split(/[\s,]+/).map(Number);
@@ -56,7 +57,7 @@ function frameOf(svg: SVGSVGElement): Frame {
 }
 
 /** The middle of box `g` as drawn, in its top group's units: of its outline, a path, polygon or ellipse. */
-function middleOf(g: Element): number[] | null {
+export function middleOf(g: Element): number[] | null {
   const shape = g.querySelector('path, polygon, ellipse');
   if (!shape) return null;
   const cx = shape.getAttribute('cx');
@@ -131,7 +132,7 @@ export class LensSvg {
 
   /** The view moved or zoomed, or the selection changed: the lens reaches as far on the screen, and may follow. */
   changed(): void {
-    if (this.lens !== 'none') this.again();
+    if (this.lens === 'fisheye') this.again();
   }
 
   /** Whether the drawing is too big to bend at the speed of a mouse: it follows the selection only. */
@@ -196,7 +197,7 @@ export class LensSvg {
     const origin = this.host.taps.toDrawing({ x: 0, y: 0 }, v),
       room = Math.min(this.host.viewport.clientWidth || Infinity, this.host.viewport.clientHeight || Infinity),
       across = this.host.taps.toDrawing({ x: Math.min(FISHEYE_PX, room * FISHEYE_SHARE), y: 0 }, v);
-    const focus = this.lens === 'none' ? null : this.focusNow(v, svg, frame);
+    const focus = this.lens !== 'fisheye' ? null : this.focusNow(v, svg, frame);
     // the lens is worked in the units of the drawing's top group, where its parts are written
     const reach = origin && across ? (across.x - origin.x) / s : 0;
     const lens = lensOf(this.lens, focus && [focus.x / s - tx, focus.y / s - ty], reach);
@@ -267,9 +268,14 @@ export class LensSvg {
 
 /**
  * The View menu's Lens list, added to `menu` above its status line. Picking a lens bends the drawing at once, and the
- * open view in space too. Nothing is written to the note.
+ * open view in space too, and `picked` is told. Nothing is written to the note.
  */
-export function renderLensChoice(menu: HTMLElement, lens: LensSvg, svg: () => SVGSVGElement | null): HTMLSelectElement {
+export function renderLensChoice(
+  menu: HTMLElement,
+  lens: LensSvg,
+  svg: () => SVGSVGElement | null,
+  picked?: () => void,
+): HTMLSelectElement {
   const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens') }),
     input = row.createEl('select');
   for (const l of LENSES) input.createEl('option', { text: word(`view.lens.${l}` as WordKey), attr: { value: l } });
@@ -278,6 +284,7 @@ export function renderLensChoice(menu: HTMLElement, lens: LensSvg, svg: () => SV
   input.addEventListener('change', () => {
     lens.pick(input.value as Lens);
     svg()?.dispatchEvent(new Event(MARKED)); // the view in space, if open, bends with it
+    picked?.();
   });
   const status = Array.from(menu.children).find((el) => el.getAttribute('role') === 'status');
   if (status) menu.insertBefore(row, status);

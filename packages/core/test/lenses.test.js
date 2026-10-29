@@ -145,7 +145,7 @@ describe('a Render line chooses the lens, for the whole graph or a view (project
     assert.deepEqual(style.renders, []);
     assert.deepEqual(
       problems.map((p) => p.message),
-      ['lens must be none or fisheye'],
+      ['lens must be none, fisheye or semantic'],
     );
   });
 });
