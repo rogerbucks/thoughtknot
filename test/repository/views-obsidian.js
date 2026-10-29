@@ -242,6 +242,8 @@ export const OBSIDIAN = {
     assert.ok(el.querySelector('.thoughtknot-untangle'), 'the banner');
     // laid out again with only them (untangle_regroup): tablet is no neighbour, so it goes
     await until(() => !el.querySelector('g.node[data-key="tablet"]'));
+    // and drawn once its boxes have glided to their spots (layout_glide)
+    await until(() => el.querySelectorAll('g.node').every((g) => !g.getAttribute('transform')));
     return { env, el };
   },
   'a card in full screen': async () => {

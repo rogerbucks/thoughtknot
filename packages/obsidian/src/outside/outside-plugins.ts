@@ -13,7 +13,8 @@
 // Its other points join as the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
-import { coreDiagrams, outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
+import { coreDiagrams, offerLayouts, offerOf, outsidePlugin, outsideProblem, pluginRegistry } from '@thoughtknot/core';
+import { READ_LIMITS, word } from '@thoughtknot/core';
 import type {
   DiagramSpace,
   GraphShape,
@@ -85,6 +86,8 @@ export class OutsidePlugins {
     private readonly store: TurnedOnStore,
     private readonly start: (body: string) => PluginPort = blobWorker,
   ) {
+    // the layouts of each plug-in running are offered in the View menu (layout_plugins)
+    offerLayouts(offerOf(() => [...this.running.values()].map((r) => r.registry)));
     // a pop-out window opened gets the colours of each plug-in running; one closed is forgotten
     const workspace = owner.app.workspace;
     owner.registerEvent(

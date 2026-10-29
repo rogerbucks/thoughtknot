@@ -21,6 +21,7 @@ const SHOWN = [
   'foldGroups',
   'mergeLinks',
   'ownLayout',
+  'kindLanes',
   'noteCallouts',
   'miniMap',
   'detailsOpen',

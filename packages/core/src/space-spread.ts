@@ -15,7 +15,7 @@ import type { DrawMark } from './drawing-marks.ts';
 import { FORCE_3D } from './layouts/layouts.ts';
 import { layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
-import type { Spots } from './layouts/layouts.ts';
+import type { Spot, Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
 import { isCluster } from './space-cards.ts';
@@ -36,6 +36,20 @@ export const ROOM = 70;
 export const SPACE_SPACING = 1.4;
 /** `options` as the 3D view lays out with them: spaced SPACE_SPACING times as far. */
 const roomier = (options: LayoutOptions): LayoutOptions => ({ ...options, spacing: options.spacing * SPACE_SPACING });
+/** How far apart two planes of kinds are, in units of the layout: about two links. */
+const PLANE_STEP = 2;
+
+/** `spots` with each thing of `planes` moved in depth to its lane's plane, the middle plane at no depth. */
+function onPlanes(spots: Spots<3>, planes: ReadonlyMap<string, number>): Map<string, Spot<3>> {
+  const middle = Math.max(...planes.values()) / 2;
+  return new Map(
+    [...spots].map(([k, [x, y, z]]) => [
+      k,
+      [x, y, planes.has(k) ? ((planes.get(k) as number) - middle) * PLANE_STEP : z],
+    ]),
+  );
+}
+
 /** The most rounds of pushing apart things that sit too close. */
 const APART_ROUNDS = 40;
 /** A sphere's radius with no links, and how much it grows by the square root of its count of links. */
@@ -132,6 +146,8 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
  * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
  * With `asDrawn`, each thing stays where the drawing put it, across and down, and only its depth is laid out
  * (space_follows_type). The View menu's `layout` spaces it, as it spaces the flat drawing (layout_saved_with_view).
+ * `planes` puts kinds in order each on a plane of their own, by each thing's lane (layout_kind_lanes). A layout the
+ * person chose in rows, or a plug-in's, keeps its places too, so the same choice shows in every view (layout_plugins).
  */
 export function spreadSpace(
   marks: readonly DrawMark[],
@@ -139,9 +155,11 @@ export function spreadSpace(
   cards = false,
   asDrawn = false,
   layout?: Partial<LayoutOptions>,
+  planes: ReadonlyMap<string, number> = new Map(),
 ): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
-  const middles = asDrawn ? middlesOf(marks) : null;
+  const strategy = layoutOptions(layout).strategy;
+  const middles = asDrawn || (strategy !== 'auto' && strategy !== 'spread') ? middlesOf(marks) : null;
   const drawn = middles && drawnSpots(shape, middles);
   // space is roomier than a page. Things laid out afresh sit further apart there, so how they link shows (Roger, 25 Oct
   // 2026: "give more spacing between the blocks")
@@ -150,7 +168,8 @@ export function spreadSpace(
   const things = drawn ? shape : withoutJoints(shape);
   const laid = FORCE_3D.place(things, drawn?.seeds ?? previous, drawn ? options : roomier(options));
   // laid out again from last time's spots, each part stays where it was (cluster_in_place); afresh, they are packed
-  const spots = drawn ? laid : jointsBetween(shape, previous ? laid : partsNear(things, laid));
+  const packed = drawn ? laid : jointsBetween(shape, previous ? laid : partsNear(things, laid));
+  const spots = planes.size ? onPlanes(packed, planes) : packed;
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);

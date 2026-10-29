@@ -236,8 +236,27 @@ function markOpened(svg: SVGSVGElement, plan: Folding | undefined): void {
 
 /** The drawing as sentences, for screen readers (spec §11), named as the viewport's description. */
 export function describeDrawing(root: HTMLElement, viewport: HTMLElement, d: GraphDrawing): void {
-  const sr = root.createDiv({ cls: 'thoughtknot-sr', attr: { id: `thoughtknot-sr-${++described}` } });
+  const sr = root.createDiv({
+    cls: ['thoughtknot-sr', 'thoughtknot-outline'],
+    attr: { id: `thoughtknot-sr-${++described}`, 'aria-label': word('outline.of', { graph: d.graph }) },
+  });
   const ul = sr.createEl('ul');
   for (const line of textVersion(d)) ul.createEl('li', { text: line });
   viewport.setAttribute('aria-describedby', sr.getAttribute('id') ?? '');
+}
+
+/** The class that shows the drawing's sentences as an outline beside it, for every reader, not only a screen reader. */
+export const OUTLINE_SHOWN = 'is-shown';
+
+/**
+ * Shows or hides the outline of the card `root`: the drawing's sentences, beside it (§69, view_reading_support). It is
+ * one key away, O, in every view, as the same sentences say what 2D, 2.5D and 3D draw. Says whether it is shown now,
+ * or null for a card with no outline, such as a table.
+ */
+export function toggleOutline(root: HTMLElement): boolean | null {
+  const outline = Array.from(root.children).find((c) => c.classList.contains('thoughtknot-outline')) as
+    HTMLElement | undefined;
+  if (!outline) return null;
+  outline.toggleClass(OUTLINE_SHOWN, !outline.hasClass(OUTLINE_SHOWN));
+  return outline.hasClass(OUTLINE_SHOWN);
 }

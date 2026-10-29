@@ -12,6 +12,10 @@ import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
 import type { LayoutLimits, Refusal } from './layout-limits.ts';
 import type { ExportTheme } from './settings.ts';
+import { nextStep } from './layouts/cheaper.ts';
+import { LayoutFailure } from './layout-port.ts';
+export { LayoutFailure, inThreadPort } from './layout-port.ts';
+import { needsPlacing, placedFor } from './layouts/offered.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
@@ -26,12 +30,14 @@ export interface LayoutRequest {
 
 /**
  * What the worker says. Once, as it starts, it says that its engine is ready or why it failed. Then, to each request,
- * it sends the drawing, the source limit it was over, or what went wrong.
+ * it sends the drawing, the source limit it was over, or what went wrong. For a live drawing it may first send a
+ * quick, early picture (layout_live_loop).
  */
 export type LayoutReply =
   | { ready: true }
   | { ready: false; error: string }
   | { id: number; drawn: Drawn }
+  | { id: number; early: Drawn }
   | { id: number; refusal: Refusal }
   | { id: number; error: string };
 
@@ -73,6 +79,9 @@ export interface RunnerOptions {
   told?: (what: Told, why?: unknown) => void;
 }
 
+/** The fewest things a live drawing has for a quick first picture to be drawn before its settled layout. */
+export const LIVE_LEAST = 100;
+
 /** How many layouts in a row may time out before no more workers are started. */
 export const TIMEOUTS_BEFORE_STOPPING = 3;
 
@@ -89,17 +98,17 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       const refusal = measured(asked, sourceBytes);
       if (refusal) return { id, refusal };
       const e = await engine;
-      // a large graph's curves are kept, so one opened again is drawn curved at once (curves_saved)
+      // a large graph's drawing is kept, so one opened again is drawn at once (curves_saved)
       const large = drawing.boxes.length > QUICK_LAYOUT;
-      const laid = asked.map((d) =>
-        d.curved !== undefined && saved.get(d.curved) !== undefined ? { ...d, dot: d.curved, straight: false } : d,
-      );
-      // direct links are drawn again from Graphviz's marks (untangle_direct); any other routing is Graphviz's own
-      const drawnOf = (d: (typeof laid)[number]): string => svgOf(e, d.dot, drawing.routing, d.own);
-      const svgs = laid.map((d) =>
-        !large || d.straight ? drawnOf(d) : (saved.get(d.dot) ?? saved.keep(d.dot, drawnOf(d))),
-      );
-      return { id, drawn: chosen(laid, svgs, theme && PALETTES[theme]) };
+      // a big live drawing not kept is shown first in rows, one pass over it, then as it settles (layout_live_loop)
+      const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
+      const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept;
+      const rows = quick ? directions({ ...drawing, step: 'rows' })[0] : undefined;
+      if (rows?.own) scope.postMessage({ id, early: chosen([rows], [svgOf(e, rows.dot, drawing.routing, true)]) });
+      // direct and curved links are drawn again from Graphviz's marks (untangle_direct); any other routing is its own
+      const drawnOf = (d: (typeof asked)[number]): string => svgOf(e, d.dot, drawing.routing, d.own);
+      const svgs = asked.map((d) => (!large ? drawnOf(d) : (saved.get(d.dot) ?? saved.keep(d.dot, drawnOf(d)))));
+      return { id, drawn: chosen(asked, svgs, theme && PALETTES[theme]) };
     };
     void answer().then(
       (reply) => scope.postMessage(reply),
@@ -114,44 +123,8 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
 
 const said = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/**
- * A layout that failed: its worker failed while laying out (`worker`), or its engine could not start (`start`). `why`
- * is the cause's own words, and `slow` marks an engine that took too long to start. Its message is for a developer; a
- * host says it from the catalogue by its stage (hosts/refusal-words.ts).
- */
-export class LayoutFailure extends Error {
-  readonly stage: 'worker' | 'start';
-  readonly why: string;
-  readonly slow: boolean;
-  constructor(stage: 'worker' | 'start', why: string, slow = false) {
-    super(stage === 'worker' ? `the layout worker failed: ${why}` : `the layout engine could not start: ${why}`);
-    this.stage = stage;
-    this.why = why;
-    this.slow = slow;
-    this.name = 'LayoutFailure';
-  }
-}
-
 /** Why an engine is given up on that did not say it was ready in time: its message is for a developer. */
 const SLOW_START = new Error('the layout engine took too long to start');
-
-/** A port to a worker served on this thread, for where no worker can run: the same talk, with no time limit possible. */
-export function inThreadPort(serve: (scope: LayoutScope) => void): LayoutPort {
-  let open = true;
-  const later = (run: () => void) => void Promise.resolve().then(() => open && run());
-  const scope: LayoutScope = {
-    onmessage: null,
-    postMessage: (reply) => later(() => port.onmessage?.({ data: reply })),
-  };
-  const port: LayoutPort = {
-    onmessage: null,
-    onerror: null,
-    postMessage: (request) => later(() => scope.onmessage?.({ data: request })),
-    terminate: () => (open = false),
-  };
-  serve(scope);
-  return port;
-}
 
 interface Job {
   drawing: GraphDrawing;
@@ -165,8 +138,9 @@ interface Job {
 /**
  * The page's side: lays drawings out in one worker, reused, one layout at a time. A worker says when its engine is
  * ready. Only then is a layout handed to it, given the time limit from that moment. So neither a cold start nor a wait
- * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh
- * one. After TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Layouts move to the page's own thread only when
+ * behind a stuck layout is charged to it. A worker past the limit is terminated. Its layout goes first again, by the
+ * next cheaper step, in a fresh worker. Only one past the last step times out. After TIMEOUTS_BEFORE_STOPPING in a
+ * row, none is started again. Layouts move to the page's own thread only when
  * the first worker cannot start, or its engine fails. One already handed to a worker never moves. Those queued by then
  * are held again to the page's lower limits, as the ones asked for afterwards are.
  */
@@ -182,6 +156,8 @@ export class LayoutRunner {
   private busy: Job | null = null;
   private readonly queue: Job[] = [];
   private next = 1;
+  /** The drawing each owner asked for last, while a plug-in's layout places it, so an older one placed late is dropped. */
+  private readonly placing = new WeakMap<object, GraphDrawing>();
 
   constructor(options: RunnerOptions) {
     this.o = options;
@@ -196,9 +172,15 @@ export class LayoutRunner {
    * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted. It is no longer
    * wanted when the runner closed, or a newer drawing for the same `owner` superseded it before its layout started.
    * Rejects when the engine fails. With a `theme` it is themed in that fixed palette, as an export is. That runs under
-   * the same limits and in the same worker.
+   * the same limits and in the same worker. A drawing that chooses a plug-in's layout is placed by it here, where the
+   * plug-in runs. Its spots go to the worker with it (layouts/offered.ts, layout_plugins).
    */
   draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
+    if (owner) this.placing.set(owner, drawing);
+    if (needsPlacing(drawing))
+      return placedFor(drawing).then((placed) =>
+        owner && this.placing.get(owner) !== drawing ? null : this.draw(placed, owner, theme),
+      );
     if (owner)
       for (const old of this.queue.filter((j) => j.owner === owner)) {
         this.queue.splice(this.queue.indexOf(old), 1);
@@ -248,7 +230,12 @@ export class LayoutRunner {
     job.id = this.next++;
     job.timer = this.o.clock.setTimeout(() => {
       this.drop(); // the worker may be stuck for ever: stop it, and start afresh for the next layout
-      this.failed(job, { reason: 'timed-out', ms });
+      // never shown as text for being slow: it is laid out again first, by the next cheaper step (layout_never_text)
+      const step = nextStep(job.drawing);
+      if (!step) return this.failed(job, { reason: 'timed-out', ms });
+      this.busy = null;
+      this.queue.unshift({ drawing: { ...job.drawing, step }, owner: job.owner, theme: job.theme, done: job.done });
+      this.pump();
     }, ms);
     const request: LayoutRequest = { id: job.id, drawing: job.drawing, sourceBytes };
     if (job.theme) request.theme = job.theme;
@@ -281,6 +268,7 @@ export class LayoutRunner {
       }
       const job = this.busy;
       if (!job || data.id !== job.id) return;
+      if ('early' in data) return this.early(job, data.early);
       this.failures = 0;
       this.settle(
         job,
@@ -354,6 +342,16 @@ export class LayoutRunner {
     job.done(result);
     this.o.told?.('stopped', this.failures);
     for (const waiting of this.queue.splice(0)) waiting.done(this.stopped());
+  }
+
+  /**
+   * A quick first picture of `job`, given at once with its settled layout still coming as `better`. The settled one
+   * answers `better`; a refusal, a failure or no longer being wanted answers it with null (layout_live_loop).
+   */
+  private early(job: Job, drawn: Drawn): void {
+    const first = job.done;
+    const better = new Promise<Drawn | null>((r) => (job.done = (x) => r(x && 'svg' in x ? x : null)));
+    first({ ...drawn, better });
   }
 
   private settle(job: Job, result: Drawn | Refusal | Error | null): void {

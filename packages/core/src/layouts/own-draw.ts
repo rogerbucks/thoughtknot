@@ -7,10 +7,15 @@ import { directLinks } from '../direct-links.ts';
 import type { LaidMarks } from '../graphviz-marks.ts';
 import { layoutSvg } from '../graphviz-svg.ts';
 import { colourToken } from '../graphviz-json.ts';
-import { MARGIN, ownSpots } from './own-engine.ts';
+import { MARGIN, marksShape, ownSpots } from './own-engine.ts';
+import { PICK_ATTRIBUTE, kindsOf } from './fingerprint.ts';
+import type { PickShown } from './fingerprint.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
+import { LAYOUT_STEPS } from './cheaper.ts';
+import type { LayoutStep } from './cheaper.ts';
+import type { Pick as LayoutPick } from './pick.ts';
 
 /** A box line of the layout source: its indent and its key, before its attributes. */
 const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
@@ -67,6 +72,49 @@ export const ownable = (dot: string): boolean =>
 /** The line of a layout source that carries the options our engine lays it out by. */
 const OPTIONS_LINE = /^\s*\/\/ layout options (\{.*\})$/m;
 
+/** The line of a layout source that carries each thing's kind, by its key. */
+const KINDS_LINE = /^\s*\/\/ layout kinds (\{.*\})$/m;
+
+/** The line of a layout source that says kinds are to get no lane each. */
+const NO_LANES_LINE = /^\s*\/\/ layout lanes off$/m;
+
+/** The line of a layout source that carries each thing's spot, as a plug-in's layout gave it. */
+const PLACED_LINE = /^\s*\/\/ layout spots (\{.*\})$/m;
+
+/** Each thing's spot as a plug-in's layout gave it, as `ownSource` wrote them into the source `dot` (layout_plugins). */
+export function placedIn(dot: string): Map<string, [number, number]> {
+  try {
+    const placed = JSON.parse(PLACED_LINE.exec(dot)?.[1] ?? '{}') as Record<string, unknown>;
+    const pair = (v: unknown): v is [number, number] =>
+      Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === 'number' && Number.isFinite(n));
+    return new Map(Object.entries(placed).flatMap(([k, v]) => (pair(v) ? [[k, v] as const] : [])));
+  } catch {
+    return new Map();
+  }
+}
+
+/** The line of a layout source that says the cheaper step it is laid out by, after a layout that was slow. */
+const STEP_LINE = /^\s*\/\/ layout step (\w+)$/m;
+
+/** The cheaper step `ownSource` wrote into the source `dot`, after a layout that ran out of time (layout_never_text). */
+export function stepIn(dot: string): LayoutStep | undefined {
+  const step = STEP_LINE.exec(dot)?.[1];
+  return LAYOUT_STEPS.find((s) => s === step);
+}
+
+/** Whether kinds that link in order get a lane each, as `ownSource` wrote into the source `dot` (layout_kind_lanes). */
+export const lanesIn = (dot: string): boolean => !NO_LANES_LINE.test(dot);
+
+/** Each thing's kind, by its key, as `ownSource` wrote them into the source `dot`. */
+export function kindsIn(dot: string): Map<string, string> {
+  try {
+    const kinds = JSON.parse(KINDS_LINE.exec(dot)?.[1] ?? '{}') as Record<string, unknown>;
+    return new Map(Object.entries(kinds).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v] as const] : [])));
+  } catch {
+    return new Map();
+  }
+}
+
 /** The options our engine lays out the source `dot` by: those `ownSource` wrote in, each kept in its range. */
 export function optionsIn(dot: string): LayoutOptions {
   try {
@@ -78,9 +126,17 @@ export function optionsIn(dot: string): LayoutOptions {
 
 /**
  * `dot` with each box at a stand-in spot in a grid, and links drawn straight, for Graphviz only to measure. `options`
- * are written in as a comment, so a source laid out another way is another source, never one kept from before.
+ * and each thing's `kinds` are written in as comments, so a source laid out another way is another source. So is
+ * the cheaper `step` it is laid out by, and each thing's spot `placed` by a plug-in's layout.
  */
-export function ownSource(dot: string, options?: Partial<LayoutOptions>): string {
+export function ownSource(
+  dot: string,
+  options?: Partial<LayoutOptions>,
+  kinds: ReadonlyMap<string, string> = new Map(),
+  lanes = true,
+  step?: LayoutStep,
+  placed: Readonly<Record<string, readonly [number, number]>> = {},
+): string {
   let i = 0;
   const lines = dot.split('\n').map((line) =>
     line.includes('->') || line.includes(' -- ')
@@ -92,6 +148,11 @@ export function ownSource(dot: string, options?: Partial<LayoutOptions>): string
         }),
   );
   lines.splice(1, 0, '  graph [splines=false];', `  // layout options ${JSON.stringify(layoutOptions(options))}`);
+  // each thing's kind, for the engine to read how kinds link (fingerprint.ts)
+  if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);
+  if (!lanes) lines.splice(3, 0, '  // layout lanes off');
+  if (step) lines.splice(3, 0, `  // layout step ${step}`);
+  if (Object.keys(placed).length) lines.splice(3, 0, `  // layout spots ${JSON.stringify(placed)}`);
   return lines.join('\n');
 }
 
@@ -162,26 +223,50 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
 
 /**
  * The drawing Graphviz measured in `laid` as marks, its boxes placed by our own engine, its links direct. `groups`
- * are the layout source's groups (`groupsIn`), each drawn as a box round its things.
+ * are the layout source's groups (`groupsIn`), each drawn as a box round its things. `kinds` are each thing's kind.
+ * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
+ * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes). A `step` is said with it, and a
+ * step of rows or a grid lays it out that way (layout_never_text). `placed` is each thing's spot from a plug-in's
+ * layout, where the options choose one. Where it gave too few, the pick says the layout was missed.
  */
-export function ownMarks(
+export function ownLaid(
   laid: LaidMarks,
   rankdir: string,
   groups: readonly SourceGroup[] = [],
   options: Partial<LayoutOptions> = {},
-): LaidMarks {
+  kinds: ReadonlyMap<string, string> = new Map(),
+  lanes = true,
+  step?: LayoutStep,
+  placed?: ReadonlyMap<string, [number, number]>,
+): { marks: LaidMarks; shown: PickShown } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
-  const { spots, via, boxes, rankdir: way } = ownSpots(laid, asked, undefined, groups, options);
-  return directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way);
+  const cheaper = step === 'own' ? undefined : step;
+  const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined, cheaper, placed);
+  const { spots, via, boxes, rankdir: way, pick, parts, loose, bands } = drawn;
+  const seen = kindsOf(marksShape(laid.marks).shape, kinds);
+  return {
+    marks: directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way),
+    shown: {
+      ...{ why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose, lanes: bands.size > 0 },
+      ...(bands.size ? { bands: Object.fromEntries(bands) } : {}),
+      ...(step ? { step } : {}),
+      ...chosenShown(layoutOptions(options).strategy, pick),
+    },
+  };
 }
 
-/** The SVG of the drawing Graphviz measured in `laid`, its boxes placed by our own engine, its links direct. */
-export function ownSvg(
-  laid: LaidMarks,
-  rankdir: string,
-  groups: readonly SourceGroup[] = [],
-  options: Partial<LayoutOptions> = {},
-): string {
-  return layoutSvg(ownMarks(laid, rankdir, groups, options));
+/** The layout the person chose, `strategy`, as the pick says it; and whether it was missed, so the shape picked. */
+const chosenShown = (strategy: string, pick: LayoutPick): Pick<PickShown, 'chosen' | 'missed'> =>
+  strategy === 'auto' ? {} : { chosen: strategy, ...(pick.why === 'chosen' ? {} : { missed: true }) };
+
+/** The drawing Graphviz measured in `laid`, as `ownLaid` draws it, as marks. */
+export const ownMarks = (...args: Parameters<typeof ownLaid>): LaidMarks => ownLaid(...args).marks;
+
+/** The SVG of the drawing Graphviz measured in `laid`, as `ownLaid` draws it, carrying what the engine picked. */
+export function ownSvg(...args: Parameters<typeof ownLaid>): string {
+  const { marks, shown } = ownLaid(...args);
+  const said = encodeURIComponent(JSON.stringify(shown));
+  // last in the tag: the page reads `<svg width=` from its start (theme.ts)
+  return layoutSvg(marks).replace(/<svg\b[^>]*/, (open) => `${open} ${PICK_ATTRIBUTE}="${said}"`);
 }

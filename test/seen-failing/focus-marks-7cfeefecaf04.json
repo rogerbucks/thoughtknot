@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/focus-marks.test.js",
+  "test": "what is faded stays readable, and focus is shown by more than colour > fading is never done by colour, by hiding or by moving: only the outline, the fill and the words’ strength",
+  "seen_failing_first": false,
+  "evidence": "The test was widened, not newly written: it now lets the Focus support preset blur what is faded, so it passed on the code it checks."
+}

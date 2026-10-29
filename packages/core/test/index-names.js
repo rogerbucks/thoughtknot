@@ -593,4 +593,4 @@ export const TYPES = [
   'GroupRow',
   'GuardTried',
   ...TYPES_LATE,
-];
+].sort();

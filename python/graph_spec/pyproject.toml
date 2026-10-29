@@ -25,7 +25,7 @@ default-groups = ["dev", "reference"]
 
 [dependency-groups]
 # Ruff checks the library against PEP 8 and formats it (CONTRIBUTING.md). Pinned, as every tool is.
-dev = ["ruff==0.16.9"]
+dev = ["ruff==0.17.1"]
 # The reference engine the tests prove the reader against (req:17.engine-agreement), a test
 # dependency only; CI's python-no-engine job runs without it.
 reference = ["grafeo==0.5.43"]

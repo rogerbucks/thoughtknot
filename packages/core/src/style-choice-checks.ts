@@ -3,9 +3,12 @@
 // whether they are merged into trunks (Links). What is sound is kept. Each fault is a problem on its line with its fix,
 // and the thing is left out.
 import type { Problem } from './note-reading.ts';
-import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
+import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, PRESET_IDS, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
 import { TIMELINE_ORDERS, TIMELINE_SHOWS } from './timeline.ts';
-import type { Arrows, Diagram, Links } from './style-graph.ts';
+import type { Arrows, Diagram, Links, PresetChoice } from './style-graph.ts';
+import { PAINTERS, SPACES } from './render-choice.ts';
+import { LENSES } from './lenses.ts';
+import type { Render } from './render-choice.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
 import { word } from './words.ts';
@@ -131,6 +134,39 @@ export function linksOf(raw: RawThing, names: StyledNames, out: Problem[]): Link
   return {
     ...(routing === undefined ? {} : { routing }),
     ...(merge === undefined ? {} : { merge }),
+    ...inView(view),
+    at: raw.at,
+  };
+}
+
+/** A graph's own view preset, checked (§69, view_presets_scoped): one of the starters, by its id. */
+export function presetOf(raw: RawThing, names: StyledNames, out: Problem[]): PresetChoice | null {
+  const r = reader(raw, names, out);
+  if (raw.props.preset === undefined) {
+    r.missing(word('styling.preset.missing'), word('styling.preset.add', { among: quoted(PRESET_IDS) }));
+    return null;
+  }
+  const preset = r.word('preset', PRESET_IDS, mustBe('preset', PRESET_IDS));
+  return preset ? { preset, at: raw.at } : null;
+}
+
+/** The space, painter and lens of the whole graph or a view, checked (§68, layout_concept_layers): one or more. */
+export function renderOf(raw: RawThing, names: StyledNames, out: Problem[]): Render | null {
+  const r = reader(raw, names, out),
+    before = out.length;
+  if (raw.props.space === undefined && raw.props.painter === undefined && raw.props.lens === undefined) {
+    r.missing(word('styling.render.missing'), word('styling.render.add', { among: quoted(SPACES) }));
+    return null;
+  }
+  const space = r.word('space', SPACES, mustBe('space', SPACES)),
+    painter = r.word('painter', PAINTERS, mustBe('painter', PAINTERS)),
+    lens = r.word('lens', LENSES, mustBe('lens', LENSES)),
+    view = r.text('view');
+  if (out.length !== before) return null;
+  return {
+    ...(space === undefined ? {} : { space }),
+    ...(painter === undefined ? {} : { painter }),
+    ...(lens === undefined ? {} : { lens }),
     ...inView(view),
     at: raw.at,
   };

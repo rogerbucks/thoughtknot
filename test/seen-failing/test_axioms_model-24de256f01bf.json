@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_axioms_model.py",
+  "test": "AxiomsConsistent.test_each_axiom_one_graph_can_break_is_broken_alone_by_some_graph",
+  "seen_failing_first": false,
+  "evidence": "It holds on generated graphs the axioms the checker of part 1 already finds (GS8), so it passes on the code before it."
+}

@@ -34,6 +34,10 @@ const row = (el, name, heading = false) =>
         r.classList.contains('setting-item-heading') === heading &&
         r.querySelector('.setting-item-name')?.textContent === name,
     );
+/** Picks a view preset on the page, which only shows what it would change. */
+const pickPreset = (env, id) => choose(row(page(env), 'View preset'), id);
+/** Presses the button of a row of the page, by the row's name. */
+const press = (env, name) => row(page(env), name).querySelector('button').click();
 const choose = (r, value) => {
   const sel = r.querySelector('select');
   sel.value = value;
@@ -419,10 +423,11 @@ describe('formatting and drawing defaults', () => {
   });
 
   // proves: view_presets_saved
-  test('a view preset picked on the page sets every Drawing setting it turns, and Calm keeps everything still', async () => {
+  test('a view preset used on the page sets every Drawing setting it turns, and Calm keeps everything still', async () => {
     const env = await load();
     try {
-      choose(row(page(env), 'View preset'), 'calm');
+      pickPreset(env, 'calm');
+      press(env, 'Use this preset');
       await until(() => env.state.data?.settings?.viewPreset === 'calm');
       const saved = env.state.data.settings;
       assert.equal(saved.viewPreset, 'calm');
@@ -433,10 +438,77 @@ describe('formatting and drawing defaults', () => {
       choose(row(page(env), 'Bundle links between groups'), 'off');
       await until(() => env.state.data.settings.mergeLinks === 'off');
       assert.equal(env.state.data.settings.mergeLinks, 'off', 'each still a setting of its own');
-      choose(row(page(env), 'View preset'), 'big-picture');
+      pickPreset(env, 'big-picture');
+      press(env, 'Use this preset');
       await until(() => env.state.data.settings.viewPreset === 'big-picture');
       assert.equal(env.state.data.settings.foldGroups, 'on');
       assert.equal(globalThis.document.body.classList.contains('thoughtknot-still'), false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_presets_portable
+  test('a preset moves as one file: Export writes the one in use as set, and its text pasted in is Your own', async () => {
+    const env = await load({ data: { settings: { viewPreset: 'focus', mergeLinks: 'on' } } });
+    try {
+      const offered = () =>
+        row(page(env), 'View preset')
+          .querySelectorAll('option')
+          .map((o) => o.getAttribute('value'));
+      assert.ok(!offered().includes('own'), 'no Your own until one is read in');
+      press(env, 'Export the preset in use');
+      await until(() => [...env.state.files.keys()].some((k) => k.endsWith('View preset.json')));
+      const [path] = [...env.state.files.keys()].filter((k) => k.endsWith('View preset.json'));
+      const text = env.state.files.get(path);
+      assert.match(text, /"format": "thoughtknot-view-preset@1"/);
+      assert.match(text, /"mergeLinks": "on"/, 'as it is set now, not as the starter came');
+      const field = row(page(env), 'Your own view preset').querySelector('textarea');
+      field.value = text.replace('Focus support', 'Mine');
+      field.dispatch('input');
+      await until(() => !!env.state.data.settings.ownPreset);
+      assert.ok(row(page(env), 'Your own view preset'), 'read in');
+      assert.match(page(env).textContent, /Read in: Mine\./);
+      assert.ok(offered().includes('own'), 'Your own can be picked now');
+      pickPreset(env, 'own');
+      press(env, 'Use this preset');
+      await until(() => env.state.data.settings.viewPreset === 'own');
+      assert.equal(env.state.data.settings.mergeLinks, 'on');
+      // a file that is not a preset is never used, and says why
+      field.value = '{"format": "something else"}';
+      field.dispatch('input');
+      await until(() => env.state.data.settings.ownPreset === '');
+      assert.equal(env.state.data.settings.viewPreset, 'default', 'Your own goes with it');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_presets_predictable
+  test('a view preset picked first says what it would change, is used only when asked, and is undone in one step', async () => {
+    const env = await load();
+    try {
+      pickPreset(env, 'calm');
+      const preview = row(page(env), 'Before you use Calm and predictable');
+      assert.ok(preview, 'what it would change, before it changes anything');
+      const said = preview.querySelector('.setting-item-description').textContent;
+      assert.match(said, /Direction: [^.]+ becomes [^.]+\./);
+      assert.equal(env.state.data?.settings?.viewPreset ?? 'default', 'default', 'nothing saved yet');
+      // keeping it as it was drops the pick, and nothing changed
+      press(env, 'Keep as it was');
+      assert.equal(row(page(env), 'Before you use Calm and predictable'), undefined);
+      assert.equal(env.state.data?.settings?.viewPreset ?? 'default', 'default');
+      pickPreset(env, 'calm');
+      press(env, 'Use this preset');
+      await until(() => env.state.data?.settings?.viewPreset === 'calm');
+      assert.equal(env.state.data.settings.direction, 'LR');
+      press(env, 'Undo the preset change');
+      await until(() => env.state.data.settings.viewPreset === 'default');
+      const back = env.state.data.settings;
+      assert.equal(back.direction, 'best', 'every setting it turned is put back');
+      assert.equal(back.labelsByZoom, 'on');
+      assert.equal(back.mergeLinks, 'off');
+      assert.equal(row(page(env), 'Undo the preset change'), undefined, 'one step');
     } finally {
       env.uninstall();
     }

@@ -51,7 +51,7 @@ def _counted(n):
 
 def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[str, list]:
     """The shape a type is judged on, from graph_parts: each thing {key, text, kinds, date (the
-    first date it carries, said as inline, if any), dates and numbers (each it carries, by
+    first date it carries, said as inline, if any), dates, numbers and texts (each it carries, by
     property, if any)}, each written link {from, type, to}, and, when any are written, the groups
     `nudges` (read_style's) draw, [label, keys of things drawn], in the order first written — the
     core's types-shape.ts shapeOf."""
@@ -59,10 +59,13 @@ def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[s
     for (key, kind, text), (_, _, props) in zip(parts["nodes"], parts["boxes"], strict=True):
         dates = {k: value_text(v) for k, v in props.items() if isinstance(v, dt.date)}
         numbers = {k: v for k, v in props.items() if is_number(v)}
+        texts = {k: v for k, v in props.items() if isinstance(v, str)}
         thing = {"key": key, "text": text, "kinds": kind.split(" · ") if kind else []}
         if dates:
             thing = {**thing, "date": next(iter(dates.values())), "dates": dates}
-        things.append({**thing, "numbers": numbers} if numbers else thing)
+        if numbers:
+            thing = {**thing, "numbers": numbers}
+        things.append({**thing, "texts": texts} if texts else thing)
     links = [
         {"from": s, "type": t, "to": d}
         for (s, _, d), (t, _) in zip(parts["edges"], parts["links"], strict=True)

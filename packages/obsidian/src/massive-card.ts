@@ -4,7 +4,7 @@
 //
 // It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
 // in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
-import { PALETTES, storedStyle, word } from '@thoughtknot/core';
+import { PALETTES, renderFor, storedStyle, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
 import type { MassiveOptions } from '@thoughtknot/core/display/graph-view/massive-view';
@@ -32,6 +32,7 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
     props: (key) => reading.world[graph]?.p(key) ?? {},
     // the Filter for the whole graph: a view's own is for when views are drawn as overviews
     chosen: c.styling.style.filters.find((f) => f.view === undefined)?.keep,
+    painter: renderFor(c.styling.style).painter, // as its Render says (§68, layout_concept_layers)
     chose: (keep) => {
       if (!c.readOnly(root)) void writeStyle(plugin, path, graph, { filter: { keep } }, word('massive.filter-saved'));
     },
@@ -60,6 +61,7 @@ export function showStoredMassive(
     layout: (part, by) => plugin.layout(part, by),
     props: stored.props,
     ...(saved ? { chosen: saved } : {}),
+    ...(read ? { painter: renderFor(read.style).painter } : {}),
     ...(at
       ? {
           picked: (key: string) => showStoredThing(plugin, root, at, key, stored.props(key)),

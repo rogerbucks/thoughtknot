@@ -124,6 +124,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
+#### Many places, and what time can undo
+
+- `connectors.ts` — one graph from many places (editor spec §63). A FROM list names several places. Each is read by a
+  connector that gives its version and its statements, each citing its line. The places are joined as the mesh joins
+  documents, in the order of their names, so a disagreement is contested. A missing place is named, and the rest draw.
+
+- `temporal.ts` — what time can undo, and the rules that stop it (editor spec §65, risk SEC-19). Erasing a thing
+  reaches every earlier moment, the log, the edit inbox and the layout cache. A hybrid clock orders edits, and a clock
+  far ahead is never taken up. An edit sent again changes nothing, and a revoked key stops new ones. Links, tokens,
+  caches and grants are checked at the moment of use.
+
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
@@ -795,8 +806,42 @@ never data.
   - `savedFilterFor` gives the Filter for the whole graph or a view. `filterText` writes one; `filterRefusal` says why
     a choice cannot be written.
   - A host saves it only where the note is edited. In reading view a filter is only tried.
+
+#### A graph's own view preset
+
+- A `Preset` in the style graph, `(p1:Preset {preset: 'focus'})`, is the graph's own view preset (§69,
+  view_presets_scoped). It is one of `PRESET_IDS`, the starters of `view-presets.ts`; `presetOf` checks it.
+- `aidsOf(settings, style)` gives a card the first one written, else the settings' preset. `presetClasses` gives the
+  card its classes: blurred rest, still links and plain words.
+
+#### A view's six layers
+
+- A view is six layers (§68, layout_concept_layers): dimensions, filters, strategy, projection, formatting, painter.
+  `viewLayers(style, view)` reads each from its own lines of the style graph, so each changes alone.
+- A `Render` line, `(r1:Render {view: 'plan', space: '3d', painter: 'canvas'})`, sets the space and the painter
+  (`render-choice.ts`). `renderFor` gives a view's own first, key by key, then the whole graph's.
+- `aidsOf(settings, style, view)` hands both to the card. It opens in its space (`spaceMode`), and `paintersFrom` keeps
+  the painter named and those slower than it, in space and in an overview.
   - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
     `python/graph_spec/tests/style_cases.json`.
+
+#### Lenses
+
+- A lens bends whatever a view drew round a focus (§68, projections_all_on), so it works on every view type and layout.
+  `lenses.ts` holds the sums: `fisheye` (projection_fisheye), and `bent` and `unbent` for a point. `bentPoints` bends
+  SVG path data, and `bentSpace` and `spaceSeen` a drawing in space. Each lens is radial, the same in 2D and 3D.
+- `(r1:Render {lens: 'fisheye'})` picks it for the whole graph or a view; the View menu's Lens list picks another, held
+  in `ViewState.lens`. Flat, `display/graph-view/lens-svg.ts` bends the card's SVG round the mouse, else the selection.
+  In space the view bends round the picked thing. The mini-map stays the drawing as laid out.
+- `hyperbolic` (projection_hyperbolic) and `sphere` (projection_sphere) reach the whole drawing (`WHOLE_LENSES`). Its
+  farthest box sits just inside the edge (`DISC_ROOM`). Flat, the disc is round the middle of the view, so a drag
+  brings a new part there. In space it is a ball round the picked thing, else the drawing's middle.
+- Semantic zoom (`lens: 'semantic'`, projection_semantic_zoom) bends nothing. `semantic-zoom.ts` counts the things on
+  screen and picks a rung: the ladder of detail, then every property (`everyProperty`, shown by `ViewState.toRung`).
+  `display/graph-view/semantic-zoom-view.ts` steps it once the zoom rests, only the way the person zoomed.
+- A headset (projection_spatial): where the device has one (WebXR), the view in space offers View in headset.
+  `space-xr.ts` stands the drawing on a table at arm's length (`ARM`, `xrModel`) and finds what a ray points at
+  (`xrPick`). `display/graph-view/space-xr-view.ts` paints each eye with the WebGL 2 painter and picks on a press.
 
 #### Writing a style
 
@@ -958,7 +1003,31 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 `thoughtknot.diagrams.<view>` (workstream V2).
 
 - `view-types.ts` — the list, `VIEW_TYPES`, and what draws each, `VIEW_DRAWERS`.
-- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked.
+
+#### Projections laid out as views (editor spec §68)
+
+- `view-parts.ts` — a view's marks written as Graphviz writes a drawing: each thing a node, each link an edge, numbered
+  as the graph writes them. A card draws every view as its own drawing (`viewDrawn` in the display). So a thing is
+  chosen, opened and centred by the same clicks in every view (projections_all_on).
+
+- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked. Each group is an
+  outlined block on the diagonal (projection_matrix).
+- `arc-view.ts` — each thing on one line, each link an arc: above it from left to right, below it back (projection_arc).
+- `block-order.ts` — the order an arc and a matrix share. A group's things sit side by side: the groups written, else
+  those the links make (`louvain.ts`), else the kinds. Linked groups sit next to each other, and within a group linked
+  things sit close (reverse Cuthill–McKee).
+- `hive-view.ts` — two to five axes from the middle, by kind, else by what each thing's links do. The most linked sit
+  furthest out, and each link is a curve between axes (projection_hive).
+- `grid-view.ts` — cards in columns by the word most things carry, such as status, and rows by kind. Steps of work,
+  such as todo, doing and done, go in that order (projection_grid).
+- `map-view.ts` — a thing with a latitude and longitude (`lat`/`latitude`, `lon`/`lng`/`longitude`) on a map, north
+  up. The rest are listed beside it. The map has lines of latitude and longitude; no tiles are fetched (projection_map).
+- `grid-move.ts` — a card dragged to another column lands in the column of the card nearest it across. That value is
+  written as its property where the thing is written; the column of things with no value takes it out. The card's
+  drag is `grid-drag.ts`, beside the drag of a box (`box-drag-view.ts`).
+
+#### The other views
+
 - `treemap-view.ts` — a rectangle for each group, else each kind, and one for each thing in it, sized by its links.
   The rectangles are laid out squarified (`squarified`), so they stay near square.
 - `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.

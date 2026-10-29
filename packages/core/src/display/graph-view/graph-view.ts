@@ -3,7 +3,7 @@
 // tapped or opened by keyboard. This ties together its folder's parts: bar, drawing, taps, details, where it is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
+import { AcrossZoom, Zoom, presetClasses, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -22,17 +22,19 @@ import { editButtonAs, overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
-import { markFlow, renderFlowLegend } from './flow-marks';
+import { markFlow } from './flow-marks';
+import { renderBesideFor } from './layout-step-line';
 import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
-import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip';
+import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt, viewDrawn } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
 import { showProfile } from './profile-shown';
 import { Measuring, viewportSize, zoomSize } from './viewport-size';
+import { LayoutGlide } from './layout-glide-svg';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -43,8 +45,7 @@ export class GraphView extends Lifecycle {
   private viewport!: HTMLElement;
   private svg: SVGSVGElement | null = null; // the drawing: Graphviz's SVG; a graph drawn as a table has `table` (§15)
   private table: HTMLElement | null = null;
-  /** Whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15). */
-  private across = false;
+  private across = false; // whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15)
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
@@ -52,27 +53,23 @@ export class GraphView extends Lifecycle {
   private adder: AddThing | null = null;
   private sketcher: SketchTool | null = null;
   private readonly fullscreen: FullScreen;
-  /** The selection and so the focus, the highlight, and untangling the drawing (§25). */
-  private sel!: Selection;
-  /** The mini-map, the quick-info tooltip and where the kept-open details go (§24). */
-  private aids!: Aids;
+  private sel!: Selection; // the selection and so the focus, the highlight, and untangling the drawing (§25)
+  private aids!: Aids; // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
   private editButton: HTMLButtonElement | null = null;
   private readonly taps: Taps;
   private readonly source: SourceToggle;
   private readonly readOnly: () => boolean;
-  /** The drawing as laid out now: the one given, or the one a View menu switch laid out since (§25). */
-  private drawn: Drawn;
-  /** The View menu and what its switches do (§25); none for a graph drawn as a table. */
-  private switching: ViewSwitching | null = null;
+  private drawn: Drawn; // as laid out now: the one given, or one laid out since (§25)
+  private switching: ViewSwitching | null = null; // the View menu and its switches (§25); none for a table
   private unloaded = false;
   private legendSlot!: HTMLElement; // where the legend of moving links is (§7)
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
+  private readonly glide = new LayoutGlide(() => this.viewport); // laid out again, it glides there (layout_glide)
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
-    () => this.o.diagram?.choice,
-    () => this.o.switches?.state.layout,
+    () => this.o,
     () => this.sketcher?.shownSketch() ?? null, // the drawings over it, drawn in space too (§70)
   );
 
@@ -82,9 +79,9 @@ export class GraphView extends Lifecycle {
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
     // every write goes through that one check, as do the card's parts: none is offered where the card is read-only
-    this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
-    this.taps = new Taps(options.drawn.svg);
-    this.drawn = options.drawn;
+    this.o = gateWrites(viewDrawn({ ...options, readOnly: this.readOnly }), this.readOnly); // a view drawn live (§68)
+    this.taps = new Taps(this.o.drawn.svg);
+    this.drawn = this.o.drawn;
     this.source = new SourceToggle(containerEl, {
       viewport: () => this.viewport,
       details: () => this.detailsEl,
@@ -113,7 +110,7 @@ export class GraphView extends Lifecycle {
   override onload(): void {
     const { problems, mode } = this.o,
       root = this.containerEl;
-    readInHostDirection(root).addClass('thoughtknot-view', `is-${mode}`);
+    readInHostDirection(root).addClass('thoughtknot-view', `is-${mode}`, ...presetClasses(this.o.aids?.preset)); // §69
 
     let list: HTMLElement | null = null;
     const placed = renderBar(root, this.o, {
@@ -185,7 +182,7 @@ export class GraphView extends Lifecycle {
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
     // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
-    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
+    renderBesideFor(this.legendSlot, this.o, this.drawn.svg); // and the device's lines (§69)
     this.viewport = root.createDiv({
       cls: 'thoughtknot-viewport',
       attr: {
@@ -198,6 +195,7 @@ export class GraphView extends Lifecycle {
     this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram); // the bar's panels over it (§25)
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
+    this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
     // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
     this.aids = new Aids(this, {
       o: this.o,
@@ -209,6 +207,7 @@ export class GraphView extends Lifecycle {
       drawn: () => this.drawn,
       taps: this.taps,
       byKeyboard: () => this.sel.byKeyboard(),
+      lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
     });
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
@@ -276,11 +275,10 @@ export class GraphView extends Lifecycle {
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show());
-        void this.spaces.show(this.place.space() ?? this.o.inSpace ?? null); // in space still, as the last card (§53)
+        void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },
       () => !gone,
     );
-    this.switching?.curveLater(this.drawn); // a drawing shown with straight links first gets its curves next (§11)
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
@@ -324,28 +322,31 @@ export class GraphView extends Lifecycle {
   }
 
   /**
-   * The graph laid out again, as a View menu switch, a stub or a box asks (§25). It goes in the same SVG element,
-   * marked as a view or a proposal marks it, and sized and tapped afresh. The selection, its focus and its details are
-   * kept. The keyboard goes back on the box or link it was on (view_switch_view_only).
+   * The graph laid out again, as a View menu switch, a stub, a box or a settled layout asks (§25, layout_live_loop). It
+   * goes in the same SVG element, marked, sized and tapped afresh, keeping the selection, its details and the keyboard.
    */
   private relaid(drawn: Drawn): void {
     const svg = this.svg;
     if (!svg || this.unloaded) return; // a card gone while its layout ran has nothing to put it in
     const was = activeDocument.activeElement,
       on = was && svg.contains(was) ? was.getAttribute('id') : null;
+    const seen = this.spaces.mode() ? null : this.glide.before(svg, this.taps, this.zoom.view()); // in space it glides there
     this.drawn = drawn;
     this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
     if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
-    renderFlowLegend(this.legendSlot, this.o.motion?.flow ?? [], this.o.switches?.state.plan?.folded);
+    renderBesideFor(this.legendSlot, this.o, this.drawn.svg); // and the device's lines (§69)
     if (this.o.view) markView(svg, this.o.view);
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
     this.sketcher?.layer(); // the drawings follow what they are pinned to (§70)
     this.aids.redrawn(drawn);
     this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
+    const pinned = this.o.switches?.state.layout.pinned; // as the View menu pins it (layout_strategy_variables)
+    if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey(), pinned); // r_keep_place
     this.sel.redrawn();
+    this.glide.follow(drawn, (d) => this.drawn === drawn && this.relaid(d)); // a quick picture's settled layout
     this.details.reselect();
     if (on) svg.querySelector<SVGElement>(`#${on}`)?.focus({ preventScroll: true });
     this.apply(this.zoom.view());

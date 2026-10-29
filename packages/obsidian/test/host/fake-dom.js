@@ -424,6 +424,8 @@ export function fakeDocument(width = 700) {
     );
   doc.defaultView = {
     innerHeight: 800,
+    // a window's own document, as a browser's: the display reads its body's classes, such as a still view preset
+    document: doc,
     // the window's own listeners, such as resize: a test tells them with `tell`
     listeners: new Map(),
     addEventListener(type, fn) {

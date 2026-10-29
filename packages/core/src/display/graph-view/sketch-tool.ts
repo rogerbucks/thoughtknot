@@ -29,7 +29,7 @@ export interface SketchHost {
   write: (change: SketchChange) => Promise<{ sketch: Sketch } | { refused: string }>;
 }
 
-/** What the drawing tools take of the pointer and keys: each says whether it took the event. */
+/** What the drawing tools take of the pointer and keys: each says whether it took the event, kept from the rest. */
 export interface SketchPointer {
   down: (e: PointerEvent, p: { x: number; y: number }) => boolean;
   move: (e: PointerEvent, p: { x: number; y: number }) => boolean;
@@ -172,13 +172,19 @@ export class SketchTool {
     if (e.button !== 0) return false;
     if (this.tool) {
       const at = this.at(p);
-      if (!at) return true;
-      this.stroke = { id: e.pointerId, points: [at], from: p };
-      return true;
+      if (at) this.stroke = { id: e.pointerId, points: [at], from: p };
+      return this.took(e);
     }
     const on = (e.target as Element | null)?.closest?.('[data-sketch]')?.getAttribute('data-sketch');
     if (!on) return false;
     this.tap = { id: e.pointerId, ...p, on };
+    return this.took(e);
+  }
+
+  /** A press the tool takes: the pointer kept to the viewport until let go, and nothing else done with it. */
+  private took(e: PointerEvent): true {
+    this.card.svg()?.closest('.thoughtknot-viewport')?.setPointerCapture(e.pointerId);
+    e.preventDefault();
     return true;
   }
 
@@ -189,6 +195,7 @@ export class SketchTool {
     const at = this.at(p);
     if (at) s.points.push(at);
     this.preview(s.points);
+    e.preventDefault();
     return true;
   }
 

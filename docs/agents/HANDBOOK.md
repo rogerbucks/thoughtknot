@@ -34,6 +34,8 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 
 - **Merge commits only**, never squash or rebase. `pr-checks.yml` checks the rest: a `Requirements:` line, your
   `agent:` label, no `Claude-Session:` link, and each test in one commit with its code.
+- **Never disorient the user.** In every view, keep the person's place, glide instead of jumping, move nothing
+  unasked and give a way back. The rules are principle 8 in `requirements/ethos.gql`, shown on the wiki's Ethos page.
 - **Sign off as Roger, never as an AI:** CONTRIBUTING.md, "Signing off your work", gives the exact line. CI checks it.
 - **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
   for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
@@ -46,6 +48,7 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — how a change is made (spec, then test, then code), the conventions, the naming.
 - [packages/core/GUIDE.md](../../packages/core/GUIDE.md) — the host-free core: reading, drawing, edits.
 - [packages/graph-spec/GUIDE.md](../../packages/graph-spec/GUIDE.md) — the graph format library in plain JavaScript.
+- [packages/sync/GUIDE.md](../../packages/sync/GUIDE.md) — sync between devices: the five layers and the keys.
 - The hosts: [packages/obsidian/GUIDE.md](../../packages/obsidian/GUIDE.md),
   [packages/claude-code/GUIDE.md](../../packages/claude-code/GUIDE.md), [packages/app/GUIDE.md](../../packages/app/GUIDE.md),
   [packages/vscode/GUIDE.md](../../packages/vscode/GUIDE.md).

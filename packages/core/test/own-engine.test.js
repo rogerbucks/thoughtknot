@@ -10,6 +10,8 @@ import { ownable, ownSource } from '../src/layouts/own-draw.ts';
 import { readNote } from '../src/drawing.ts';
 import { directions, draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
+import { DEFAULT_SETTINGS } from '../src/settings.ts';
+import { ViewState, startingSwitches } from '../src/view-switches.ts';
 
 /** A shape of things by key and links `[from, to]`. */
 const shapeOf = (keys, links = []) => ({
@@ -284,5 +286,14 @@ describe('a graph drawn by our own engine', () => {
 
   test('is left to Graphviz when switched off', () => {
     assert.equal(directions(tree)[0].own, undefined);
+  });
+
+  // proves: layout_own_default
+  test('is the default, and Graphviz stays for the routed curves a person chooses', () => {
+    assert.equal(DEFAULT_SETTINGS.ownLayout, 'on');
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS));
+    assert.equal(state.folded(tree).engine, 'own', 'a graph starts laid out by our engine');
+    assert.ok(directions(state.folded(tree)).every((d) => d.own));
+    assert.equal(directions({ ...tree, engine: 'own', routing: 'curved' })[0].own, undefined, 'curves: Graphviz');
   });
 });

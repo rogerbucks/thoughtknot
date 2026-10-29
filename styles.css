@@ -225,6 +225,11 @@
 .thoughtknot-svg g.thoughtknot-kept > :is(path, polygon) {
   stroke-width: 2;
 }
+/* Focus support (spec §69, view_focus_support) blurs what focus fades, rather than hiding it, so the rest stays as
+   context. It is soft enough to see where things are. A box under the pointer is never blurred. */
+.thoughtknot-blur-rest .thoughtknot-svg g.thoughtknot-dim {
+  filter: blur(1.5px);
+}
 .thoughtknot-svg g.thoughtknot-hidden {
   display: none;
 }
@@ -474,6 +479,13 @@
 }
 .thoughtknot-view-menu > .thoughtknot-quiet:empty {
   display: none;
+}
+/* what the engine picked for the drawing, and why, in a quiet line across the menu (layout_pick_said) */
+.thoughtknot-view-menu > .thoughtknot-layout-said {
+  grid-column: 1 / -1;
+  padding: 0 var(--gn-space-2);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 /* the switches the ladder turns, and the layout sliders, folded away under More (cluster_menu_plain) */
 .thoughtknot-view-menu > .thoughtknot-view-more {
@@ -896,6 +908,30 @@
   border-top: none;
   padding-top: 0;
 }
+/* the rarer views, folded under More views across the whole panel: their tiles a grid of their own (Q-12, option B) */
+.thoughtknot-view-list li.thoughtknot-view-more {
+  grid-column: 1 / -1;
+  border: none;
+  background: none;
+  padding: 0;
+  min-height: 0;
+}
+.thoughtknot-view-list li.thoughtknot-view-more:hover {
+  background: none;
+}
+.thoughtknot-view-more summary {
+  cursor: pointer;
+  padding: var(--gn-space-2) 0;
+  min-height: 44px;
+}
+.thoughtknot-view-more ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
+  gap: var(--gn-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 /* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
    across the panel with why beside its name */
 .thoughtknot-type-list li.thoughtknot-type-unfit {
@@ -1131,6 +1167,29 @@ details.thoughtknot-style > summary {
     display: none;
   }
 }
+/* A view preset that keeps everything still (spec §69, view_motion_safe) stops the same, whatever the device says */
+body.thoughtknot-still .thoughtknot-svg .thoughtknot-flow-dashes > path,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+body.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon),
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg .thoughtknot-flow-dashes > path,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+  animation: none;
+}
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+body.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-view.thoughtknot-still .thoughtknot-svg path.thoughtknot-path-runner {
+  display: none;
+}
+/* Moving links paused by the legend's button hold where they are, and play on from there */
+.thoughtknot-motion-paused .thoughtknot-svg .thoughtknot-flow-dashes > path,
+.thoughtknot-motion-paused .thoughtknot-svg path.thoughtknot-flow-runner,
+.thoughtknot-motion-paused .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
+  animation-play-state: paused;
+}
 /* Animated images (spec §18). A thing's images sit in its details, each a figure with its pause and play button and
    what it says. A picture on a box sits in the square Graphviz kept for it, its control drawn in the corner. Whether
    one moves is the plugin's to say, image by image (animated-images.ts), never a style's, so nothing here moves. */
@@ -1213,6 +1272,14 @@ details.thoughtknot-style > summary {
   stroke: var(--gn-text-muted);
   stroke-dasharray: 3 3;
 }
+/* The one line that says a drawing was laid out by a cheaper step, as its layout was slow (spec §68, layout_never_text).
+   A line that says the device's own setting won over the view preset looks the same (spec §69). */
+.thoughtknot-layout-step,
+.thoughtknot-device-line {
+  padding: var(--gn-space-1) var(--gn-space-2);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
 /* What the moving links mean, in words beside their icons (spec §7, motion_not_alone). */
 .thoughtknot-flow-legend {
   display: flex;
@@ -1227,6 +1294,11 @@ details.thoughtknot-style > summary {
 .thoughtknot-flow-legend .thoughtknot-flow-icon {
   color: var(--gn-text-normal);
   font-weight: var(--gn-font-weight-bold);
+}
+/* Its pause for the card's moving links, so nothing runs past five seconds without one (spec §69, WCAG 2.2.2) */
+.thoughtknot-flow-pause {
+  align-self: flex-start;
+  margin: 0 var(--gn-space-2);
 }
 .thoughtknot-walk-pace {
   display: flex;
@@ -1665,6 +1737,30 @@ pre.thoughtknot-code {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+/* The outline beside the drawing, shown by O (spec §69, view_reading_support): the same sentences a screen reader
+   hears, for every reader. It is in the card's flow, under the drawing, in every view. */
+.thoughtknot-outline.is-shown {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: var(--gn-space-2) 0 0;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+}
+/* A view preset for reading (spec §69). Every panel, list and outline of the card gets plain sans words, wider word
+   spacing and a line height of 1.5. A box's words are cut short before it is laid out, so the drawing needs no change here.
+   No special font: fonts made for dyslexia do not help, wider word spacing does a little (wiki: View presets design). */
+body.thoughtknot-reading .thoughtknot-view,
+.thoughtknot-view.thoughtknot-reading {
+  font-family: var(--gn-font-ui);
+  font-style: normal;
+  word-spacing: 0.25em;
+  line-height: 1.5;
 }
 
 /* Hidden means hidden, whatever display a rule gives the element. */
@@ -2573,6 +2669,18 @@ pre.thoughtknot-code {
   stroke: var(--gn-accent);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
+}
+/* in 2.5D and 3D (space_mini_map): the plan from above, in the corner the buttons leave free, the picked thing marked */
+.thoughtknot-mini-map.is-space {
+  inset-inline-start: var(--gn-space-2);
+  inset-inline-end: auto;
+  touch-action: none;
+  cursor: pointer;
+}
+.thoughtknot-mini-box.is-picked {
+  fill: var(--gn-accent);
+  stroke: var(--gn-text-normal);
+  stroke-width: 2;
 }
 
 /* The details kept open (§24, details_always_visible, details_narrow): the panel beside the drawing. It wraps below it

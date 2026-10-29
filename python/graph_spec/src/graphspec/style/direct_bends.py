@@ -7,7 +7,7 @@ a little apart from the middle of the drawing. A group moves whole, so
 it keeps its boxes. Then each lone link is tried at a few bends, each way, the slightest first,
 toward the middle of the drawing. A bend scores the boxes it runs through, the links it crosses,
 and how far it bends. Each link takes the bend that scores least, given the rest. A second round
-tries each again. Within a budget, so a big graph stays quick."""
+tries each again. Each pass counts its work and stops at its budget (work.py), so it is quick."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from collections.abc import Iterable
 import re
 
 from graphspec.style.direct_curve import Placed, curve_of, hypot
+from graphspec.style.work import CROSSINGS_PLANNED, WORK_MOST, Work
 
 # How much room a link keeps from a box it passes, in pixels.
 CLEARANCE = 10
@@ -31,8 +32,6 @@ WIDE = (0.75, 1)
 THROUGH, CROSSED, BENT = 4, 1, 2
 # How many pieces a curve is cut into, to find what it runs through and crosses.
 PIECES = 16
-# The most looks at a piece of a curve in all, so a big graph stays quick.
-WORK_MOST = 40_000_000
 
 
 def _sign(x: float) -> float:
@@ -78,12 +77,15 @@ def spread(
     return moved
 
 
-def crowded(pairs: list[tuple[Placed, Placed]], boxes: list[Placed]) -> bool:
+def crowded(
+    pairs: list[tuple[Placed, Placed]], boxes: list[Placed], work: Work | None = None
+) -> bool:
     """Whether some link of `pairs`, drawn straight from middle to middle, runs through a box or
-    crosses another. Then the boxes are given room. A big graph is taken to need it."""
-    if len(pairs) * (len(pairs) + len(boxes)) * PIECES > WORK_MOST:
-        return True
+    crosses another. Then the boxes are given room. A graph that spends its budget needs room."""
+    work = work or Work(WORK_MOST["crowded"])
     for i, (a, b) in enumerate(pairs):
+        if not work.take(len(boxes) * PIECES + len(pairs) - i - 1):
+            return True
         for o in boxes:
             if o is a or o is b:
                 continue
@@ -136,25 +138,36 @@ def toward_middle(a: Placed, b: Placed, side: int, middle: tuple[float, float]) 
     return side if abs(across) < 1e-6 * (dx * dx + dy * dy) else _sign(across)
 
 
-def bends(links: list[ToBend], boxes: list[Placed]) -> list[float]:
+def bends(
+    links: list[ToBend],
+    boxes: list[Placed],
+    work: Work | None = None,
+    crossings: Work | None = None,
+) -> list[float]:
     """How far each link of `links` bows, as a share of its length: the bend that scores least,
-    given the rest."""
+    given the rest. Looks at boxes count on `work`, links compared on `crossings`: once that is
+    spent, boxes alone score, and once `work` is, each link left keeps its first bend."""
+    work, crossings = work or Work(WORK_MOST["bends"]), crossings or Work(WORK_MOST["crossings"])
     tries = []
     for link in links:
         if link.fixed is not None:
             tries.append([link.fixed])
             continue
-        away = aside(link.a, link.b, boxes + link.avoid if link.avoid else boxes)
+        pool = boxes + link.avoid if link.avoid else boxes
+        away = aside(link.a, link.b, pool) if work.take(len(pool)) else 0
         widths = BENDS + WIDE if link.avoid else BENDS
         each = [v for s in widths for v in (link.toward * s, -link.toward * s)]
         tries.append(([away] if away else []) + each)
     n = len(links)
-    cost = n * n * PIECES + n * len(boxes) * len(BENDS) * 2 * PIECES
-    crossing = cost <= WORK_MOST
+    crossing = n * (n + len(boxes) * len(BENDS) * 2) * PIECES <= CROSSINGS_PLANNED
     lines = [_path_of(link.a, link.b, t[0]) for link, t in zip(links, tries)]
     bows = [t[0] for t in tries]
-    for rnd in range(2 if crossing else 1):
+    for rnd in range(2):
         for i, link in enumerate(links):
+            pool = boxes + link.avoid if link.avoid else boxes
+            crossing = crossing and crossings.take(len(lines))
+            if rnd > 0 and not crossing:
+                return bows
             others = (
                 [
                     lines[j]
@@ -164,11 +177,15 @@ def bends(links: list[ToBend], boxes: list[Placed]) -> list[float]:
                 if crossing
                 else []
             )
+            crossing = crossing and crossings.take(len(tries[i]) * len(others))
+            others = others if crossing else []
+            if not work.take(len(tries[i]) * len(pool)):
+                return bows
             best = float("inf")
             for bow in tries[i]:
                 path = _path_of(link.a, link.b, bow)
                 score = (
-                    THROUGH * _through(path, link, boxes + link.avoid if link.avoid else boxes)
+                    THROUGH * _through(path, link, pool)
                     + CROSSED * sum(1 for o in others if _crosses(path, o))
                     + BENT * abs(bow)
                 )

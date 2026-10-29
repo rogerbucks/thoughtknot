@@ -18,7 +18,7 @@ GS8 does three things:
 ```mermaid
 flowchart LR
   A["About 10 axioms<br/>one list in the spec"] --> R["209 rules<br/>each names its axiom"]
-  A --> G["Generated graphs<br/>fast-check, hypothesis"]
+  A --> G["Generated graphs<br/>fast-check, seeded Python"]
   G --> J["JavaScript reader"]
   G --> P["Python reader"]
   J --> C{"Same answers?<br/>Every axiom kept?"}
@@ -41,7 +41,28 @@ flowchart LR
 | A9 | Derived equals recompute | Every cache, snapshot and derived element equals a fresh recompute from source | `derive(source(g)) = derived(g)` | §11, §17 c-caches |
 | A10 | Conflicts are kept | A real clash becomes contested claims; neither side is asserted | `¬(assert p ∧ assert ¬p)` | §21 contested |
 
-The list is a draft. GS8 settles it with Roger before it goes into the graph spec.
+The list is now §28 of the graph spec (28 October 2026), in `Graph spec model.md`. In `requirements/graph-spec.gql`
+each rule names the axioms it `rests_on`, or is marked `stands_alone`: 110 rest on one or more, 102 stand alone. They
+are properties, not links, so the requirements drawing stays as it was. Roger can still change the list.
+
+## The check
+
+`axioms(world, graph)` in the library, and `axioms(w, name)` in `graphspec/rules/axioms.py`, report every axiom one
+graph breaks: A1, A2, A3, A4, A7 and A8. Each problem has its place, the axiom in its words, a fix and a code from
+GA01 to GA10. The other four (A5, A6, A9, A10) are laws of an operation, such as a join. Tests on generated graphs
+hold those.
+
+## The generated graphs
+
+fast-check (JavaScript) and a seeded generator (Python) each make thousands of graphs from a fixed seed. So CI checks
+the same ones every run. The Python one uses only the standard library: Hypothesis is MPL-2.0, which the library's
+licence list leaves out. It shrinks a failing graph a thing at a time.
+
+- every graph keeps every axiom, and a break planted in one is found and shrinks to two things at most;
+- switched off, each check makes its test fail (`axioms_safeguards`);
+- both readers give the same answers on the same graphs (`axioms_readers_agree`);
+- two devices fed the same changes, in any order and some twice, end with the plain join (`axioms_before_sync`);
+- a search finds a graph keeping every axiom, and one breaking each axiom alone (`axioms_consistent`).
 
 ## Why before sync (Wave 13)
 

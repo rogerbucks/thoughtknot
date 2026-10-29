@@ -47,8 +47,28 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
 2. **LE2: the live loop.** A first picture in 0.1 s, readable in 1 s, settled in 5 s. Things glide from as-is to
    to-be, aligned so the drawing never spins. A view is six layers: dimensions, filters, strategy, projection,
    formatting, painter.
-3. **PJ1: projections, all on.** Fisheye, hyperbolic, sphere, arc, matrix, hive, map, grid (kanban), semantic
-   zoom and spatial (VR). Each is in the View menu, in 2D and 3D where it has a 3D form.
+3. **PJ1: projections, all on.** Each projection is in the View menu, in 2D and 3D where it has a 3D form. A lens
+   bends whatever a view drew round a focus, so one lens works on every view. The lenses are fisheye (built),
+   semantic zoom (built), hyperbolic (built), sphere (built) and spatial (built).
+   - **Spatial.** The view in space, in a headset where the device has one.
+   - **Placements.** A placement is a view of its own: arc, matrix, hive, grid (kanban) and map (no tiles fetched), all
+     built.
+   - **Kanban drag.** A card dragged to another grid column has its status written in the text.
+4. **Every view answers clicks.** A view is the card's own drawing, not a still picture. A thing in any view is chosen
+   and opened as in a network.
+5. **Semantic zoom** steps the ladder of detail as a person zooms. It counts the things that fit on screen at the zoom.
+   Over 80, each group is a box with its count. Over 25, the things show with their links bundled. Then every link
+   shows apart, and at 12 or fewer every property too. It steps only the way the person zoomed, a quarter past each edge.
+
+## Links
+
+Our engine draws its links through lanes it keeps between the boxes (`layouts/routed-curve.ts`). A drawing Graphviz
+lays out has its links routed by our own router (`layouts/rows-route.ts`, #1232). Graphviz lays the links out
+straight, so it routes nothing.
+
+Past 300 things, each link then runs through a gap in each row it crosses, and bends
+as one smooth curve between rows. Curved links a person chose are routed this way at any size. They are drawn at once.
+No box moves, and no link runs over a box. The Python library routes them the same way.
 
 ## Plug-ins
 
