@@ -184,6 +184,8 @@ Wave 6.
   The settings check, `.github/workflows/settings-check.yml`, reads the repository's settings with the alerts token. The
   wave one reads the project board with the project token, then calls the nightly. The idea one uses the project
   token to add a labelled issue to the board, and checks out nothing.
+
+  The token watch, `.github/workflows/token-watch.yml`, asks once a day if the project token works.
 - **Gaps:**
   - The stable release built and published in one job that held the signing permissions. Fixed in #1535 (TRUST-3).
   - Any commenter could wake the working-group agent, which could write the script that checks it. Fixed in #836
