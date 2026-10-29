@@ -249,6 +249,9 @@ export const DRAWING_SOURCE_WORDS = {
   'sketch.selected': 'Selected: {said}. Tap it again to centre it.',
   'sketch.delete': 'Delete drawing',
   'sketch.deleted': 'Drawing deleted.',
+  'sketch.on-selected': 'Draw on the selected thing',
+  'sketch.select-first': 'Select a thing first, then draw on it.',
+  'sketch.next': 'Next drawing',
   'sketch.refused': 'Not kept: {why}',
   // the drawings block, folded away (the plug-in's sketch-block.ts)
   'sketch.summary': {

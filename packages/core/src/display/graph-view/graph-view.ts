@@ -51,7 +51,7 @@ export class GraphView extends Lifecycle {
   private walk: Walk | null = null;
   private maker: ViewMaker | null = null;
   private adder: AddThing | null = null;
-  private sketcher: SketchTool | null = null;
+  private sketcher: SketchTool | null = null; // the drawings over the graph: drawn, hidden and made (§70)
   private readonly fullscreen: FullScreen;
   private sel!: Selection; // the selection and so the focus, the highlight, and untangling the drawing (§25)
   private aids!: Aids; // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
@@ -171,7 +171,7 @@ export class GraphView extends Lifecycle {
     if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
     if (this.o.editing) this.adder = new AddThing(tools, this.o); // a thing added from its text, while edited (§5)
     const card = { svg: () => this.svg, drawn: () => this.drawn, taps: this.taps, zoom: () => this.zoom };
-    this.sketcher = sketchOn(tools, this.o, { ...card, readOnly: this.readOnly }); // drawings over the graph (§70)
+    this.sketcher = sketchOn(tools, this.o, { ...card, readOnly: this.readOnly, details: () => this.details });
     const view = this.o.view;
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
