@@ -54,6 +54,10 @@ below the hosts as it is.
   [packages/core/GUIDE.md](packages/core/GUIDE.md).
 - `packages/sync`: sync between an owner's devices, beside the core. Each note is one Automerge text, sealed on disk and
   copied by Syncthing. Guide: [packages/sync/GUIDE.md](packages/sync/GUIDE.md).
+- `packages/boundary`: the line between the owner's personal layer and a corporate one. What crosses is plain text,
+  with no key, and AI-made content labelled. Guide: [packages/boundary/GUIDE.md](packages/boundary/GUIDE.md).
+- `packages/web`: the web layer, a read-only site of static files built from what crossed. No server. Guide:
+  [packages/web/GUIDE.md](packages/web/GUIDE.md).
 - `packages/obsidian`: the Obsidian plugin. It puts the core's drawings and edits on Obsidian's page. Guide:
   [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md).
 - `packages/claude-code`: the Claude Code host. Its `/graph <note>` command draws a note's graph in a pane. It also

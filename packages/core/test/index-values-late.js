@@ -198,4 +198,9 @@ export const VALUES_LATE = [
   // a card dragged to another column of the grid view (§68, projection_grid), 29 Oct 2026
   'gridDrop',
   'gridMoved',
+  // what the work/personal boundary builds on (§40, packages/boundary), 29 Oct 2026
+  'Permissions',
+  'applyBoundary',
+  'gqlBlock',
+  'readable',
 ];

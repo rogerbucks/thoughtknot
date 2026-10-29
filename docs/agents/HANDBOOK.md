@@ -49,6 +49,8 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 - [packages/core/GUIDE.md](../../packages/core/GUIDE.md) — the host-free core: reading, drawing, edits.
 - [packages/graph-spec/GUIDE.md](../../packages/graph-spec/GUIDE.md) — the graph format library in plain JavaScript.
 - [packages/sync/GUIDE.md](../../packages/sync/GUIDE.md) — sync between devices: the five layers and the keys.
+- [packages/boundary/GUIDE.md](../../packages/boundary/GUIDE.md) and [packages/web/GUIDE.md](../../packages/web/GUIDE.md)
+  — what crosses to work, and the web layer.
 - The hosts: [packages/obsidian/GUIDE.md](../../packages/obsidian/GUIDE.md),
   [packages/claude-code/GUIDE.md](../../packages/claude-code/GUIDE.md), [packages/app/GUIDE.md](../../packages/app/GUIDE.md),
   [packages/vscode/GUIDE.md](../../packages/vscode/GUIDE.md).
