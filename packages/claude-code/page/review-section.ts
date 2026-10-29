@@ -8,16 +8,11 @@
 import { changesFigure } from './changes-section.ts';
 import type { ChangesDeps } from './changes-section.ts';
 import { groupSaid, outsideSaid, reviewLevels, workstreamsFrom } from '@thoughtknot/core';
-import type { ChangedFile, ReviewItem, ReviewLevels, SummaryGroup } from '@thoughtknot/core';
+import type { ReviewItem, ReviewLevels, SummaryGroup } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
+import type { PageItemFiles } from '../src/api-types.ts';
 
-/** One item's files as the server sends them: those the gate let through, those it held and why, and the rest. */
-export interface PageItemFiles {
-  files: ChangedFile[];
-  withheld: { path: string; why: string }[];
-  workstreams: string | null;
-  unread: number;
-}
+export type { PageItemFiles };
 
 /** What the section needs: the server's two calls, and a layout in a fixed theme and the scheme for the drawings. */
 export interface ReviewDeps extends Pick<ChangesDeps, 'layout' | 'dark'> {
