@@ -183,6 +183,8 @@ export const DRAWING_SOURCE_WORDS = {
   'view.lens': 'Lens',
   'view.lens.none': 'None',
   'view.lens.fisheye': 'Fisheye',
+  'view.lens.hyperbolic': 'Hyperbolic',
+  'view.lens.sphere': 'Sphere',
   'view.lens.semantic': 'Semantic zoom',
   // the arc view, a view type drawn as marks (view-types/arc-view.ts, projection_arc)
   'view.arc': 'Arc',
@@ -201,7 +203,7 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hive.unlinked': 'Not linked',
   'view.hive.other': { one: '{count} other kind', other: '{count} other kinds' },
   'view.hint.lens':
-    'A fisheye enlarges what is round the pointer, or the selection. Semantic zoom shows more detail as you zoom in.',
+    'A fisheye enlarges what is round the pointer, or the selection. Hyperbolic and sphere lay the whole graph on a disc round the middle of the view: drag to bring a part there. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
   'view.more': 'More choices',
