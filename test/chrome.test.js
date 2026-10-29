@@ -2,7 +2,7 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { firstPage, portOf, removeProfile, startAgainIfStuck } from '../scripts/chrome.mjs';
+import { findChrome, firstPage, INSTALLED, portOf, removeProfile, startAgainIfStuck } from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
 
@@ -79,5 +79,33 @@ describe('a Chrome that does not come up', () => {
     const start = () => (starts++, Promise.reject(new Error('no Chrome found')));
     await assert.rejects(startAgainIfStuck(start), /no Chrome found/);
     assert.equal(starts, 1);
+  });
+});
+
+describe('the Chrome to run', () => {
+  const none = () => {
+    throw new Error('which: not found');
+  };
+
+  test('is found where a Mac or a Windows PC installs it, as neither puts it on the PATH', () => {
+    for (const platform of ['darwin', 'win32']) {
+      const [first, second] = INSTALLED[platform];
+      assert.equal(findChrome(undefined, none, { platform, exists: (p) => p === second }), second, platform);
+      assert.equal(findChrome(undefined, none, { platform, exists: () => true }), first, platform);
+    }
+  });
+
+  test('is the one given, then the one on the PATH, before an installed one', () => {
+    const all = { platform: 'darwin', exists: () => true };
+    assert.equal(findChrome('/my/chrome', none, all), '/my/chrome');
+    assert.equal(
+      findChrome(undefined, (n) => (n === 'chromium' ? '/usr/bin/chromium' : ''), all),
+      '/usr/bin/chromium',
+    );
+  });
+
+  test('is said to be missing when none is on the PATH or installed', () => {
+    assert.throws(() => findChrome(undefined, none, { platform: 'linux', exists: () => true }), /no Chrome found/);
+    assert.throws(() => findChrome(undefined, none, { platform: 'win32', exists: () => false }), /no Chrome found/);
   });
 });
