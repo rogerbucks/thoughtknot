@@ -253,16 +253,9 @@ export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from './changes-view.ts';
 export type { ChangeLine, ChangesShown } from './changes-view.ts';
 export { REVIEW_LEVELS, ReviewItems, asNote, groupSaid, reviewLevels, workstreamsFrom } from './github-review-items.ts';
-export type {
-  ChangedFile,
-  FileLines,
-  GraphChanges,
-  ReviewItem,
-  ReviewLevels,
-  ReviewSource,
-  SummaryGroup,
-  Workstreams,
-} from './github-review-items.ts';
+export { heldItem, outsideSaid } from './github-review-items.ts';
+export type { ChangedFile, FileLines, GraphChanges, ReviewItem, ReviewLevels } from './github-review-items.ts';
+export type { ReviewSource, SummaryGroup, Workstreams } from './github-review-items.ts';
 export { DIFF_LIMIT, lineDiff } from './line-diff.ts';
 export type { DiffLine } from './line-diff.ts';
 export { THRESHOLDS, thresholdValue } from './thresholds.ts';
