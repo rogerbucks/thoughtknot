@@ -13,6 +13,7 @@ import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
 import { gridMarks } from './grid-view.ts';
 import { hiveMarks } from './hive-view.ts';
+import { mapMarks } from './map-view.ts';
 import { matrixMarks } from './matrix-view.ts';
 import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
@@ -33,6 +34,7 @@ export const VIEW_TYPES = [
   'arc',
   'hive',
   'grid',
+  'map',
 ] as const;
 /**
  * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
@@ -58,4 +60,5 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   arc: arcMarks,
   hive: hiveMarks,
   grid: gridMarks,
+  map: mapMarks,
 };
