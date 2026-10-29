@@ -48,7 +48,7 @@ jobs:
       - if: failure()
         run: |
           (cd packages/obsidian && node esbuild.config.mjs) 2>&1 | tail -40 || true
-          grep -n -A25 'build.test.mjs\|sources.test.js\|editor-page.test.js:312\|commas.test.mjs:167\|layout-bin\|run-ceiling.test\|tests-first-run.test\|editor-threats-process' test-report.txt | head -400 || true
+          grep -n -A25 'build.test.mjs\|sources.test.js\|editor-page.test.js:312\|commas.test.mjs:167\|layout-bin\|run-ceiling.test\|tests-first-run.test\|editor-threats-process\|proposal-block\|view-switches-flow\|a11y-keyboard-devices\|could not run' test-report.txt | head -400 || true
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
