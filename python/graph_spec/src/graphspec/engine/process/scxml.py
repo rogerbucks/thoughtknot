@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine import guards
-from graphspec.engine.optional_imports import etree
+from graphspec.engine.optional_imports import etree, safe_parser
 from graphspec.engine.process.machine import Machine
 from graphspec.engine.queries import Q
 from graphspec.reader.lexer import header
@@ -225,7 +225,7 @@ class ScxmlReader:
     done.state.<parent>."""
 
     def __init__(self, xml):
-        self.doc = etree.fromstring(xml.encode())
+        self.doc = etree.fromstring(xml.encode(), safe_parser())
         self.by = {e.get("id"): e for e in self.doc.iter() if e.get("id")}
         self.root_initial = self.doc.get("initial")
 
@@ -322,8 +322,8 @@ def scxml_valid(xml: str, xsd_dir: str) -> tuple[bool, str]:
     """The export validated against the W3C SCXML schema (§18)."""
     import os
 
-    schema = etree.XMLSchema(etree.parse(os.path.join(xsd_dir, "scxml.xsd")))
-    ok = schema.validate(etree.fromstring(xml.encode()))
+    schema = etree.XMLSchema(etree.parse(os.path.join(xsd_dir, "scxml.xsd"), safe_parser()))
+    ok = schema.validate(etree.fromstring(xml.encode(), safe_parser()))
     return ok, (str(schema.error_log.last_error) if not ok else "")
 
 
