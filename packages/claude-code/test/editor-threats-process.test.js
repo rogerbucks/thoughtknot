@@ -16,14 +16,14 @@ const WINDOWS = process.platform === 'win32';
 
 /**
  * A node process that runs `before`, starts the test-only server with `stdio` and then runs `then`. `stdio` is a list,
- * or the code of one.
+ * or the code of one. A `detached` server outlives its parent on Windows too.
  */
-function parentOf(stdio, then, before = '') {
+function parentOf(stdio, then, before = '', detached = false) {
   const given = typeof stdio === 'string' ? stdio : JSON.stringify(stdio);
   const code = [
     "const { spawn } = require('node:child_process');",
     before,
-    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${given} });`,
+    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${given}, detached: ${detached} });`,
     then,
   ].join('\n');
   return spawn(process.execPath, ['-e', code], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -133,12 +133,13 @@ describe('the server stops (cc_server_stops)', () => {
 
   test('it will not start when the process that started it has already gone', async () => {
     // the parent says its child's pid and exits at once, before the child has loaded. The child writes its errors to a
-    // file, since Windows may close a pipe when the parent exits
+    // file, since Windows may close a pipe when the parent exits. Windows ends a child with its parent unless detached
     const errors = join(mkdtempSync(join(tmpdir(), 'orphan-')), 'stderr.txt');
     const parent = parentOf(
       "['ignore', 'inherit', err]",
       'process.stdout.write(c.pid + "\\n", () => process.exit(0));',
       `const err = require('node:fs').openSync(${JSON.stringify(errors)}, 'w');`,
+      WINDOWS,
     );
     const lines = linesOf(parent);
     for (let i = 0; i < 300 && !lines.length; i++) await pause(100);
