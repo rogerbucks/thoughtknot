@@ -65,7 +65,7 @@ describe('Open in ThoughtKnot, in VS Code', () => {
     assert.equal(tab.options.enableScripts, true);
     assert.deepEqual(
       tab.options.localResourceRoots.map((u) => u.path),
-      [join(vs.extension, 'dist/webview')],
+      [Uri.file(join(vs.extension, 'dist/webview')).path],
       'the page reaches only the extension’s own page files',
     );
     const settings = JSON.parse(/<script id="thoughtknot-vscode"[^>]*>([^<]*)<\/script>/.exec(tab.webview.html)[1]);
