@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, sep } from 'node:path';
 import { gqlBlocks, gqlSpans, styleOf } from '../packages/core/src/blocks.ts';
 import { readNote } from '../packages/core/src/drawing.ts';
 import { readStyle } from '../packages/core/src/style.ts';
@@ -233,7 +233,7 @@ describe('what each note holds, in the order it is read', () => {
       assert.ok(back.includes(`](${CHECKLIST_URL})`), `${file} links the checklist`);
       assert.ok(back.includes(`[${numberOf(file)} in the device checklist]`), `${file} names its number`);
     }
-    assert.ok(read(CHECKLIST) && path(CHECKLIST).endsWith(CHECKLIST_URL.split('/blob/main/')[1]));
+    assert.ok(read(CHECKLIST) && path(CHECKLIST).replaceAll(sep, '/').endsWith(CHECKLIST_URL.split('/blob/main/')[1]));
   });
 });
 
@@ -421,7 +421,13 @@ describe('the notes are committed, and a clean session keeps them', () => {
 
   test('reset-test-vault restores a note changed in a session and removes what the session added, in the folder too', () => {
     const files = Object.fromEntries([...noteFiles(), INDEX].map((f) => [f, readFileSync(path(f), 'utf8')]));
-    const repo = repository([{ '.gitignore': readFileSync(path('.gitignore'), 'utf8'), ...files }]);
+    const repo = repository([
+      {
+        '.gitignore': readFileSync(path('.gitignore'), 'utf8'),
+        '.gitattributes': readFileSync(path('.gitattributes'), 'utf8'),
+        ...files,
+      },
+    ]);
     try {
       const [note] = noteFiles();
       const at = (f) => join(repo.dir, f);
