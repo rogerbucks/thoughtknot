@@ -134,14 +134,13 @@ jobs:
           SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
         run: node scripts/security-alerts.mjs --release
 
+  # TRUST-3: the release is built apart from where it is published. This job installs, tests and builds with read
+  # access only, so no install script or test can ask for a signing token or change main.js before it is attested. It
+  # hands the files on as an artifact, and `publish` alone may write.
   release:
     needs: [quality, public-readiness, release-notes, security]
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -171,23 +170,55 @@ jobs:
         run: node scripts/library-release.mjs --out .
       - name: Checksums for every asset
         run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" > SHA256SUMS
-      # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        if: ${{ !github.event.repository.private }}
-        with:
-          subject-path: |
-            main.js
-            manifest.json
-            styles.css
-            graph-spec-libraries-*.tar.gz
-            thoughtknot-*.tgz
       - name: The Graphviz version inside the engine, for the release notes
         run: node scripts/engine-version.mjs --notes engine-notes.md
       - name: The changelog since the last release, at the top of the release notes
         run: node scripts/changelog.mjs --out release-notes.md && cat engine-notes.md >> release-notes.md
       - name: The release notes tell users what the library changed, and the version rule
         run: node scripts/changelog.mjs --check release-notes.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: |
+            main.js
+            manifest.json
+            styles.css
+            THIRD_PARTY_NOTICES.md
+            graph-spec-libraries-*.tar.gz
+            thoughtknot-*.tgz
+            SHA256SUMS
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 1
+
+  # The one job that may write. It runs no code of the repository: no checkout, no install, no Node. It checks the files
+  # are the ones `release` built, attests them and drafts the release with gh alone (TRUST-3).
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+      - name: The files are the ones the release job built
+        run: cd release && sha256sum --check --strict SHA256SUMS
+      # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-path: |
+            release/main.js
+            release/manifest.json
+            release/styles.css
+            release/graph-spec-libraries-*.tar.gz
+            release/thoughtknot-*.tgz
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes
+        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes
