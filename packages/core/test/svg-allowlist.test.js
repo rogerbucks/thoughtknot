@@ -8,6 +8,8 @@ import { readNote } from '../src/drawing.ts';
 import { draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 
+// Read once, a long drawing is cleaned too quickly to notice. Read square, it took minutes (js/polynomial-redos).
+const LIMIT = { timeout: 10_000 };
 const svg = (inner) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">${inner}</svg>`;
 
 describe('a drawing’s SVG', () => {
@@ -68,15 +70,18 @@ describe('a drawing’s SVG', () => {
     assert.equal(got, svg('<g><text>&amp;</text></g><text>a &lt; b</text>'));
   });
 
-  test('is cleaned in time that grows with its length, whatever runs of spaces or tags it holds', () => {
+  test('is cleaned in time that grows with its length, whatever runs of spaces or tags it holds', LIMIT, () => {
     // a pattern tried at every place took time growing with the square of a run of spaces (CodeQL js/polynomial-redos)
-    const many = 200_000;
-    const started = performance.now();
+    const many = 100_000;
     cleanSvg(svg(`<rect${'\t'.repeat(many)}`));
     cleanSvg(svg(`<rect${' x="1"'.repeat(many / 8)}${'\t'.repeat(many)}/>`));
     cleanSvg(svg('<g>'.repeat(many / 4)));
-    assert.ok(performance.now() - started < 2000, 'cleaning a long drawing took too long');
+    // tags that never close, each starting another (the shapes CodeQL named)
+    for (const run of ['<A\t', '\t<A\t', '<A\t!=""\t', '<A\t!="', "<A\t!='", '<!x'])
+      cleanSvg(`<A${run.repeat(many / run.length)}`);
     assert.equal(cleanSvg(svg('<rect \t x="1"\t\ty="2" />')), svg('<rect \t x="1"\t\ty="2"/>'));
+    assert.equal(cleanSvg('<a <b x="1">'), '&lt;a ', 'text that is not a tag is escaped');
+    assert.equal(cleanSvg('<rect x="1 <script>'), '&lt;rect x="1 &lt;script>', 'a value left open holds no tag');
   });
 });
 
