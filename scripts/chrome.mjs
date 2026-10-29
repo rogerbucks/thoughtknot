@@ -1,13 +1,30 @@
 // A headless Chrome driven over the DevTools protocol with Node's own WebSocket, so no browser library is installed.
 // The user guide's screenshots (wiki-screens.mjs) and the checks run in a real browser (spec §41:
-// a11y_targets_reflow_auto) share it. Chrome is the one given, or the first of the usual names on the PATH.
+// a11y_targets_reflow_auto) share it. Chrome is the one given, the first of the usual names on the PATH, or where a Mac
+// or a Windows PC installs it.
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-/** The Chrome to run: the one given, or the first of the usual names found on the PATH. */
-export function findChrome(given, which = (n) => execFileSync('which', [n], { encoding: 'utf8' }).trim()) {
+/** Where a Mac or a Windows PC installs Chrome. Neither puts it on the PATH. */
+export const INSTALLED = {
+  darwin: [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  ],
+  win32: [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ],
+};
+
+/** The Chrome to run: the one given, the first of the usual names found on the PATH, or the first one installed. */
+export function findChrome(
+  given,
+  which = (n) => execFileSync('which', [n], { encoding: 'utf8' }).trim(),
+  { platform = process.platform, exists = existsSync } = {},
+) {
   if (given) return given;
   for (const name of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser'])
     try {
@@ -16,6 +33,8 @@ export function findChrome(given, which = (n) => execFileSync('which', [n], { en
     } catch {
       // not this one
     }
+  const installed = (INSTALLED[platform] ?? []).find((path) => exists(path));
+  if (installed) return installed;
   throw new Error('no Chrome found: give one with --chrome PATH');
 }
 
