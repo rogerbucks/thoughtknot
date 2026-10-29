@@ -432,6 +432,15 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
       assert.doesNotMatch(text, /(?<![.\w])app\.|window\.app\b/, `${f}: this.app, never the global app`);
     }
   });
+
+  test('no Obsidian type is made by a double cast: a hand-made object is checked against the fields it fills', () => {
+    // CODE-10: Live Preview's card once cast a hand-made context to Obsidian's, so a field the drawing read was unchecked
+    const casts = pluginSource()
+      .filter(({ f }) => f.startsWith('packages/obsidian/'))
+      .filter(({ text }) => /\bas unknown as\b/.test(text))
+      .map(({ f }) => f);
+    assert.deepEqual(casts, []);
+  });
 });
 
 describe('the conventions, written down', () => {

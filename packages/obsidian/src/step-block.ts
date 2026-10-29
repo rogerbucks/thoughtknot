@@ -6,7 +6,7 @@
 // A person accepts or rejects it. A step that cannot be one says why, with no Run.
 // Reading view, which never changes a note, offers no Run. A step a plug-in adds is run by that plug-in (runOutside).
 import { Notice, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from './block-context';
 import {
   formatList,
   givenLabel,
@@ -138,7 +138,7 @@ export function renderStepBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   step: GraphStep | StepFault,
 ): void {
   const root = readInHostDirection(el.createDiv({ cls: 'thoughtknot thoughtknot-step' }));
