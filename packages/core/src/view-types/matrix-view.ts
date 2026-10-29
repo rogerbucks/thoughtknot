@@ -1,29 +1,55 @@
-// The matrix view (editor spec §36, view_types_offered): a graph as a grid, a row and a column for each thing. A cell
-// is filled where a link runs from its row's thing to its column's thing. A matrix shows a dense graph that a network
-// draws as a tangle. It is drawn as marks (drawing-marks.ts), so every painter draws it the same way.
+// The matrix view (editor spec §36, view_types_offered; §68, projection_matrix): a graph as a grid, a row and a column
+// for each thing. A cell is filled where a link runs from its row's thing to its column's thing. A matrix shows a dense
+// graph that a network draws as a tangle. The things are ordered so each group is a block on the diagonal, outlined
+// (block-order.ts). It reads the same shape the network beside it draws. It is drawn as marks (drawing-marks.ts), so
+// every painter draws it the same way.
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
+import { blockName, blockOrder } from './block-order.ts';
 
 /** The share of the space's shorter side kept for the things' names, along the top and down the left. */
 const NAMES_SHARE = 0.25;
 
-/** The marks of `shape` drawn as a matrix in `space`: names along the top and down the left, and a cell per link. */
+/**
+ * The marks of `shape` drawn as a matrix in `space`. Names run along the top and down the left, with a cell per link.
+ * Each group's block is outlined.
+ */
 export function matrixMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const n = shape.things.length;
   if (!n) return [];
   const names = Math.min(space.width, space.height) * NAMES_SHARE;
   const cell = Math.min((space.width - names) / n, (space.height - names) / n);
-  const place = new Map(shape.things.map((t, i) => [t.key, i]));
+  const { order, blocks } = blockOrder(shape);
+  const place = new Map(order.map((k, i) => [k, i]));
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const size = Math.min(cell * 0.6, names / 4);
-  const marks: DrawMark[] = shape.things.flatMap((t, i): DrawMark[] => {
-    const mid = names + i * cell + cell / 2;
-    const common = { kind: 'label' as const, of: t.key, style: 'text', text: t.text, size, role: 'thing' as const };
+  const marks: DrawMark[] = order.flatMap((key, i): DrawMark[] => {
+    const mid = names + i * cell + cell / 2,
+      t = text.get(key) ?? key;
+    const common = { kind: 'label' as const, of: key, style: 'text', text: t, size, role: 'thing' as const };
     return [
-      { ...common, id: `${t.key}.row`, x: names - 4, y: mid + size / 3, anchor: 'end', maxWidth: names - 8 },
-      { ...common, id: `${t.key}.column`, x: mid, y: names - 4, anchor: 'middle', maxWidth: cell },
+      { ...common, id: `${key}.row`, x: names - 4, y: mid + size / 3, anchor: 'end', maxWidth: names - 8 },
+      { ...common, id: `${key}.column`, x: mid, y: names - 4, anchor: 'middle', maxWidth: cell },
     ];
   });
+  if (blocks.length > 1)
+    for (const b of blocks) {
+      const at = names + b.from * cell,
+        side = (b.to - b.from) * cell;
+      const name = blockName(b, order, (k) => text.get(k) ?? k);
+      marks.push({
+        kind: 'group',
+        id: `group\n${b.from}`,
+        style: 'group',
+        x: at,
+        y: at,
+        width: side,
+        height: side,
+        role: 'group',
+        name,
+        z: -1,
+      });
+    }
   // one cell for each pair of things linked, saying every type of link between them
   const cells = new Map<string, { from: string; to: string; types: string[] }>();
   for (const l of shape.links) {

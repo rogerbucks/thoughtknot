@@ -184,6 +184,8 @@ export const DRAWING_SOURCE_WORDS = {
   'view.lens.none': 'None',
   'view.lens.fisheye': 'Fisheye',
   'view.lens.semantic': 'Semantic zoom',
+  // the arc view, a view type drawn as marks (view-types/arc-view.ts, projection_arc)
+  'view.arc': 'Arc',
   'view.hint.lens':
     'A fisheye enlarges what is round the pointer, or the selection. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
