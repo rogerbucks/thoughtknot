@@ -121,15 +121,17 @@ export async function openSpaceView(
     held = new Map('marks' in from ? [] : heldIn(from));
   const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
-    if (by !== 'cards' && by) return sketchedSpace(spaceOf(marks, by), from, more.sketch, marks);
+    if (by !== 'cards' && by) return spaceOf(marks, by);
     const kept = spots && spotsKept(spots, held);
     const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
     spots = laid.spots;
-    return sketchedSpace(stackedPlanes(laid.space), from, more.sketch, marks);
+    return stackedPlanes(laid.space);
   };
+  // the drawings over it laid on where the page puts them, once it is laid out and lined up (§70)
+  const sketched = (laid: SpaceMarks) => sketchedSpace(laid, from, more.sketch, marks);
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
-  let space: SpaceMarks = spaceBy(depths[depth] ?? null);
+  let space: SpaceMarks = sketched(spaceBy(depths[depth] ?? null));
   let width = 1,
     height = 1;
   let orbit: Orbit = orbitFit(space, 1);
@@ -172,7 +174,6 @@ export async function openSpaceView(
   };
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(el);
-
   // the card marked its drawing again. The things it shows now are laid out, faded as it fades them. The view is
   // fitted to them when they are other things than before
   const marked = () => {
@@ -187,6 +188,7 @@ export async function openSpaceView(
     const warm = !!spots && !more.asDrawn;
     space = spaceBy(depths[depth] ?? null);
     if (warm) [space, spots] = linedUpLayout(shown, space, spots, more.layout?.()?.pinned, before?.of); // not to spin
+    space = sketched(space);
     // what the card selects now is picked here too: a thing found, or none once its details close
     const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
@@ -210,7 +212,6 @@ export async function openSpaceView(
     el.remove();
     closed();
   };
-
   const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target); // what the view turns round
   const move = (m: SpaceMove) => {
     // one move, from a key or a button, painted
@@ -254,7 +255,7 @@ export async function openSpaceView(
   const showAs = (next: number) => {
     const [shown, shownOrbit] = [glide.settle(), orbit];
     depth = next;
-    space = spaceBy(depths[depth] ?? null);
+    space = sketched(spaceBy(depths[depth] ?? null));
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
     orbit = centredOn(orbit, picked);
     const label = depthWords();
@@ -376,7 +377,6 @@ export async function openSpaceView(
     else return;
     e.preventDefault();
   });
-
   opened.set(root, close);
   resize();
   orbit = orbitFit(space, width / height);
