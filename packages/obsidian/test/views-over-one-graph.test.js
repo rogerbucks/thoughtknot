@@ -24,7 +24,11 @@ const STYLE = "// graph: trip_style · STYLE trip\n(d1:Diagram {type: 'thoughtkn
 const noteOf = (...blocks) => ['# Trip', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
 const NOTE = noteOf(DATA, ALL, GRID, STYLE);
 const keys = (el) => el.querySelectorAll('g.node').map((g) => g.getAttribute('data-key'));
-const picture = (el) => el.querySelector('.thoughtknot-plugin-picture svg');
+/** The card's drawing once it is drawn as a view of the core's own, such as a matrix; else null. */
+const picture = (el) =>
+  /Drawn as Matrix|Drawn as Treemap/.test(el.querySelector('.thoughtknot-type-drawn')?.textContent ?? '')
+    ? el.querySelector('svg g.node')?.closest('svg')
+    : null;
 
 async function both(env) {
   const all = await show(env, NOTE, 1),
@@ -40,7 +44,7 @@ describe('two views of one graph, stacked in one note', () => {
     try {
       const { all, grid } = await both(env);
       assert.deepEqual(keys(all).sort(), ['cafe', 'home', 'park']);
-      assert.equal(picture(all), null, 'the first is drawn as boxes and links');
+      assert.ok(!picture(all), 'the first is drawn as boxes and links');
       assert.match(grid.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as Matrix/);
       assert.match(picture(grid).textContent, /The park/);
       assert.equal(env.state.writes, undefined, 'drawing them writes nothing');

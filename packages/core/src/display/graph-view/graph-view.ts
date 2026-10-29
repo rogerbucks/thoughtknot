@@ -27,7 +27,7 @@ import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
-import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip';
+import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt, viewDrawn } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
@@ -76,9 +76,9 @@ export class GraphView extends Lifecycle {
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
     // every write goes through that one check, as do the card's parts: none is offered where the card is read-only
-    this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
-    this.taps = new Taps(options.drawn.svg);
-    this.drawn = options.drawn;
+    this.o = gateWrites(viewDrawn({ ...options, readOnly: this.readOnly }), this.readOnly); // a view drawn live (§68)
+    this.taps = new Taps(this.o.drawn.svg);
+    this.drawn = this.o.drawn;
     this.source = new SourceToggle(containerEl, {
       viewport: () => this.viewport,
       details: () => this.detailsEl,

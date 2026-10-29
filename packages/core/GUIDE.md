@@ -992,6 +992,10 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 
 #### Projections laid out as views (editor spec §68)
 
+- `view-parts.ts` — a view's marks written as Graphviz writes a drawing: each thing a node, each link an edge, numbered
+  as the graph writes them. A card draws every view as its own drawing (`viewDrawn` in the display). So a thing is
+  chosen, opened and centred by the same clicks in every view (projections_all_on).
+
 - `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked. Each group is an
   outlined block on the diagonal (projection_matrix).
 - `arc-view.ts` — each thing on one line, each link an arc: above it from left to right, below it back (projection_arc).
