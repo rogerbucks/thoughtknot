@@ -541,6 +541,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/fixed-sleeps.test.js` — no new fixed sleep in the tests. An awaited `wait(20)` or the like outside a polling
   loop is held, file by file, to the allowance in `test/fixed-sleeps.json`. That allowance only goes down
   (`node scripts/fixed-sleeps.mjs --tighten`).
+- `test/long-functions.test.js` — no new function over 100 lines in the code that ships. Those already longer are held,
+  each to its lines, by `test/long-functions.json`, which only goes down (`node scripts/long-functions.mjs --tighten`).
+- `test/unnamed-modules.test.js` — no new core module over 100 lines without a test named after it. Those already
+  without one are listed in `test/unnamed-modules.json`, which only shrinks (`node scripts/unnamed-modules.mjs --tighten`).
 
 ## The GitHub mirror of the requirements
 
