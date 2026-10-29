@@ -65,6 +65,16 @@ describe('a drawings block', () => {
     assert.deepEqual(readSketch(written).sketch, sketch);
   });
 
+  test('keeps a pin, shape or points it cannot use, as written, so a write never loses them', () => {
+    const block = `// graph: g_ink · SKETCH ON g
+(a:Text {x: 0, y: 0, text: 'hi', shape: 'box', points: '1 2 3 4'}),
+(b:Shape {x: 0, y: 0, w: 9, h: 9, pin: 7, shape: 'star'})`;
+    const written = writeSketch(readSketch(block).sketch);
+    assert.match(written, /\(a:Text \{[^}]*shape: 'box'[^}]*points: '1 2 3 4'/);
+    assert.match(written, /\(b:Shape \{[^}]*pin: 7/);
+    assert.match(written, /\(b:Shape \{[^}]*shape: 'star'/);
+  });
+
   test('keeps a property it does not know, as written', () => {
     const { sketch } = readSketch(`// graph: g_ink · SKETCH ON g\n(a:Text {x: 0, y: 0, text: 'hi', by: 'Roger'})`);
     assert.deepEqual(sketch.items[0].more, { by: 'Roger' });

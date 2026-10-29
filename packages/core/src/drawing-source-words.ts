@@ -226,4 +226,37 @@ export const DRAWING_SOURCE_WORDS = {
   'sketch.kind.note': 'Note',
   'sketch.said': '{kind}: {text}',
   'sketch.pinned': '{said}, pinned to {pin}',
+  // a drawing that could not be written to the note (sketch-edit.ts)
+  'sketch.write.graph-gone': 'the graph {graph} is not in this note any more, so the drawing was not kept',
+  'sketch.write.gone': 'the drawing {id} is not in the note any more, so it was left as it is',
+  // drawing on the graph with the card's tools (sketch-tool.ts)
+  'sketch.group': 'Drawings',
+  'sketch.start': 'Draw',
+  'sketch.stop': 'Done drawing',
+  'sketch.show': 'Show drawings',
+  'sketch.hide': 'Hide drawings',
+  'sketch.tool.pen': 'Pen',
+  'sketch.tool.box': 'Box',
+  'sketch.tool.ellipse': 'Ellipse',
+  'sketch.tool.line': 'Line',
+  'sketch.tool.arrow': 'Arrow',
+  'sketch.tool.note': 'Note',
+  'sketch.note-text': 'Note text',
+  'sketch.hint.drag': 'Drag on the drawing to draw. A drawing begun on a thing moves with it.',
+  'sketch.hint.note': 'Type the note, then tap where it goes.',
+  'sketch.note-empty': 'Type the note first.',
+  'sketch.drawn': 'Drawn: {said}.',
+  'sketch.selected': 'Selected: {said}. Tap it again to centre it.',
+  'sketch.delete': 'Delete drawing',
+  'sketch.deleted': 'Drawing deleted.',
+  'sketch.refused': 'Not kept: {why}',
+  // the drawings block, folded away (the plug-in's sketch-block.ts)
+  'sketch.summary': {
+    one: 'Drawings over {graph}: {count} drawing, shown on its drawing',
+    other: 'Drawings over {graph}: {count} drawings, shown on its drawing',
+  },
+  'sketch.summary-problems': {
+    one: 'Drawings over {graph}, with {count} problem',
+    other: 'Drawings over {graph}, with {count} problems',
+  },
 } as const;

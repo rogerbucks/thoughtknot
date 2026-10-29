@@ -9,6 +9,7 @@ import { spaceMode, word } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
+import type { Sketch } from '../../sketch.ts';
 import { openSpaceView } from './space-view-panel';
 import { fadeOut } from './space-view-pad.ts';
 import { flatAgain } from './lens-svg';
@@ -45,6 +46,7 @@ export class SpaceSwitch {
   constructor(
     private readonly svg: () => SVGSVGElement | null,
     private readonly says: () => SpaceSays = () => ({}),
+    private readonly sketch: () => Sketch | null = () => null,
   ) {}
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
@@ -94,6 +96,7 @@ export class SpaceSwitch {
       miniMap: () => this.says().aids?.miniMap ?? 'off',
       painter: this.says().aids?.painter,
       lens: () => this.says().switches?.state.lens ?? this.says().aids?.lens, // as the View menu picks it (§68)
+      sketch: this.sketch,
     });
     if (turn !== this.turn) return view?.close();
     this.view = view;
