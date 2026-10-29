@@ -76,7 +76,7 @@ const reversing = (inner) => {
 const folders = [];
 /** A new, empty folder with no link along its path. */
 function emptyFolder() {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-store-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-store-')));
   folders.push(dir);
   return dir;
 }

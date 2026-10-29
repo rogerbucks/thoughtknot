@@ -52,8 +52,13 @@ const OUTSIDE = [
   '',
 ];
 
-/** A note named as people name them: a `+`, a `?` and dots that end the name. Mac and Linux hold it, and so must we. */
-const ODD_NAME = '+Contacts as a single source of truth/Best Contact manager for gmail? I want to get con....md';
+/**
+ * A note named as people name them: a `+`, a `?` and dots that end the name. Mac and Linux hold it, and so must we.
+ * Windows holds no `?` in a file's name, nor does a note made there have one, so there it is the rest of the name.
+ */
+const ODD_NAME = `+Contacts as a single source of truth/Best Contact manager for gmail${
+  (globalThis as { process?: { platform?: string } }).process?.platform === 'win32' ? '' : '?'
+} I want to get con....md`;
 
 /** Every check of the contract, each run on a fresh, empty backend from `make`. */
 export function storageContract(make: () => NoteStorage | Promise<NoteStorage>): StorageCheck[] {

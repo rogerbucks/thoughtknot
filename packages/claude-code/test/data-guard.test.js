@@ -247,7 +247,7 @@ describe('what the first review found', () => {
     const missing = Object.assign(new Error('no such file'), { code: 'ENOENT' });
     const absent = {
       ...w.ports,
-      realPath: async (path) => (path.includes('elsewhere') ? realpathSync(path) : Promise.reject(missing)),
+      realPath: async (path) => (path.includes('elsewhere') ? realpathSync.native(path) : Promise.reject(missing)),
     };
     allowed(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'new.md') }, absent));
   });
