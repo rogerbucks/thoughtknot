@@ -3,7 +3,19 @@
 // nor does the focus. It bends a flat drawing's points and a drawing in space alike, and is chosen by a Render line.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { bent, bentPoints, bentSpace, fisheye, lensOf, spaceSeen, unbent } from '../src/lenses.ts';
+import {
+  LENSES,
+  WHOLE_LENSES,
+  bent,
+  bentPoints,
+  bentSpace,
+  fisheye,
+  hyperbolic,
+  lensOf,
+  spaceSeen,
+  sphere,
+  unbent,
+} from '../src/lenses.ts';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
 import { renderFor } from '../src/render-choice.ts';
@@ -145,7 +157,73 @@ describe('a Render line chooses the lens, for the whole graph or a view (project
     assert.deepEqual(style.renders, []);
     assert.deepEqual(
       problems.map((p) => p.message),
-      ['lens must be none, fisheye or semantic'],
+      ['lens must be none, fisheye, hyperbolic, sphere or semantic'],
     );
   });
+});
+
+// The lenses that lay the whole drawing on a disc (projection_hyperbolic, projection_sphere). Each keeps its focus,
+// enlarges round it and draws the rest nearer its edge, in order. In space each makes a ball.
+const REACH = 1000;
+const distance = (p) => Math.hypot(...p);
+
+for (const [name, make] of [
+  ['hyperbolic', hyperbolic],
+  ['sphere', sphere],
+]) {
+  // proves: projection_hyperbolic, projection_sphere
+  test(`a ${name} lens keeps its focus, enlarges round it, and draws the rest nearer its edge in order`, () => {
+    const lens = make([0, 0], REACH);
+    assert.deepEqual(bent(lens, [0, 0]).at, [0, 0], 'the focus stays put');
+    assert.ok(bent(lens, [0, 0]).times > 1.2, 'and is drawn larger');
+    const near = distance(bent(lens, [50, 0]).at),
+      far = distance(bent(lens, [800, 0]).at);
+    assert.ok(near > 50, 'near the focus things are pushed apart');
+    assert.ok(far > near && far < REACH, 'further out they are drawn nearer the edge, in the same order, inside it');
+    assert.ok(bent(lens, [900, 0]).times < 1, 'near the edge things are drawn smaller');
+    assert.ok(bent(lens, [990, 0]).times >= 0.25, 'but none vanishes');
+    for (const p of [
+      [120, -40],
+      [600, 300],
+    ]) {
+      const back = unbent(lens, bent(lens, p).at);
+      assert.ok(Math.abs(back[0] - p[0]) < 1e-6 && Math.abs(back[1] - p[1]) < 1e-6, `found where ${p} was drawn`);
+    }
+  });
+}
+
+// proves: projection_hyperbolic, projection_sphere
+test('both are offered as lenses, reach the whole drawing, and lensOf makes each', () => {
+  assert.deepEqual([...LENSES], ['none', 'fisheye', 'hyperbolic', 'sphere', 'semantic']);
+  assert.deepEqual([...WHOLE_LENSES], ['hyperbolic', 'sphere']);
+  const h = lensOf('hyperbolic', [0, 0], REACH),
+    s = lensOf('sphere', [0, 0], REACH);
+  assert.equal(h.reach, REACH);
+  assert.notEqual(distance(bent(h, [500, 0]).at), distance(bent(s, [500, 0]).at), 'two different discs');
+});
+
+/** A drawing in space of two blocks: one at the middle, one far off in a corner. */
+const block = (key, x, y) => ({ key, x, y, floor: 0, width: 10, depth: 10, tall: 10 });
+const SPACE = {
+  blocks: [block('a', 495, 495), block('b', 0, 0)],
+  lines: [],
+  labels: [],
+  arrows: [],
+  least: [0, 0, 0],
+  most: [1000, 1000, 10],
+};
+
+// proves: projection_hyperbolic
+test('in space each lays the drawing in a ball: round the picked thing, else round its middle', () => {
+  const seen = spaceSeen(SPACE, 'hyperbolic', null);
+  const [a, b] = seen.blocks;
+  assert.ok(a.width > 10, 'the middle is enlarged though nothing is picked');
+  assert.ok(Math.abs(a.x + a.width / 2 - 500) < 1e-6, 'and stays where it is');
+  assert.ok(b.width < 10, 'the far corner is drawn smaller');
+  assert.ok(
+    Math.hypot(b.x + b.width / 2 - 500, b.y + b.depth / 2 - 500) < 1.15 * Math.hypot(495, 495),
+    'inside the edge',
+  );
+  const picked = spaceSeen(SPACE, 'sphere', SPACE.blocks[1]).blocks[1];
+  assert.ok(picked.width > 10, 'a picked thing is the middle of a globe');
 });

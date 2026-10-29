@@ -825,6 +825,9 @@ never data.
 - `(r1:Render {lens: 'fisheye'})` picks it for the whole graph or a view; the View menu's Lens list picks another, held
   in `ViewState.lens`. Flat, `display/graph-view/lens-svg.ts` bends the card's SVG round the mouse, else the selection.
   In space the view bends round the picked thing. The mini-map stays the drawing as laid out.
+- `hyperbolic` (projection_hyperbolic) and `sphere` (projection_sphere) reach the whole drawing (`WHOLE_LENSES`). Its
+  farthest box sits just inside the edge (`DISC_ROOM`). Flat, the disc is round the middle of the view, so a drag
+  brings a new part there. In space it is a ball round the picked thing, else the drawing's middle.
 - Semantic zoom (`lens: 'semantic'`, projection_semantic_zoom) bends nothing. `semantic-zoom.ts` counts the things on
   screen and picks a rung: the ladder of detail, then every property (`everyProperty`, shown by `ViewState.toRung`).
   `display/graph-view/semantic-zoom-view.ts` steps it once the zoom rests, only the way the person zoomed.

@@ -112,3 +112,16 @@ test("the style graph's lens holds until the View menu picks another; the view i
   lens.changed();
   assert.equal(d.a.getAttribute('transform'), null);
 });
+
+// proves: projection_hyperbolic, projection_sphere
+test('a hyperbolic or sphere lens lays the whole drawing on a disc round the middle of the view', () => {
+  for (const name of ['hyperbolic', 'sphere']) {
+    const d = drawingOf(),
+      lens = lensOf(d);
+    lens.pick(name);
+    assert.ok(scaleOf(d.a) > 1.2, `${name}: the box at the middle of the view is enlarged`);
+    assert.match(d.a.getAttribute('transform'), /^translate\(200 200\) scale/, 'and stays where it is');
+    assert.ok(scaleOf(d.b) < 1, 'the far box is drawn smaller, inside the edge');
+    assert.ok(d.b.getAttribute('transform'), 'nothing in the drawing lies beyond its reach');
+  }
+});
