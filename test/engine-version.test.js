@@ -530,7 +530,10 @@ describe('the workflows', () => {
   });
 
   test('the release names the engine in its notes, and the notes are attached', () => {
-    const rel = runCommands(jobs(release()).release.join('\n'));
+    // the release job writes the notes and the publish job, which runs no code, attaches them (TRUST-3)
+    const all = jobs(release());
+    const rel = runCommands([...all.release, ...all.publish].join('\n'));
+    assert.match(all.release.join('\n'), /release-notes\.md/, 'the notes are handed to the publish job');
     const notes = rel.findIndex((r) => /^node scripts\/engine-version\.mjs --notes [\w./-]+$/.test(r));
     const create = rel.findIndex((r) => /gh release create/.test(r));
     assert.ok(notes >= 0 && notes < create, 'the notes are written before the release is made');

@@ -259,8 +259,8 @@ describe('the release check, run by hand before a release is tagged', () => {
       dry = jobs(read(f));
     const waited = block(release.release, 'needs', 4).join('\n');
     // on-main checks the tag itself (policy.test.js), so the dry run, which has no tag, leaves it out, and the jobs'
-    // wait for it
-    const checks = Object.keys(release).filter((name) => !['release', 'on-main'].includes(name));
+    // wait for it; publish only writes what the release job built (test/release-split.test.js)
+    const checks = Object.keys(release).filter((name) => !['release', 'publish', 'on-main'].includes(name));
     const ownSteps = (lines) => steps(lines).filter((l) => l !== '    needs: on-main');
     for (const name of checks) assert.match(waited, new RegExp(`\\b${name}\\b`), `the release waits on ${name}`);
     assert.deepEqual(Object.keys(dry), checks);
