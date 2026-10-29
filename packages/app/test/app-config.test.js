@@ -163,4 +163,8 @@ test('the vault key is made on the device and kept in its secure store, and the 
     /\.\/gradlew --no-daemon :tauri-plugin-keeper:connectedDebugAndroidTest\n/,
     'run on an emulator',
   );
+  // the first run made its phone where the emulator did not look, then waited 25 minutes for it to start
+  assert.match(workflow, /export ANDROID_AVD_HOME=/, 'avdmanager and the emulator share one folder of phones');
+  assert.match(workflow, /emulator" -list-avds \| grep -qx keeper/, 'the phone is found before it is started');
+  assert.match(workflow, /timeout \d+ "\$adb" wait-for-device/, 'a phone that never starts fails soon');
 });
