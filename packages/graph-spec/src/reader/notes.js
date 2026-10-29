@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The notes on things and links (graph spec §26; editor spec §24, note_comment, note_text, note_one_owner), as notes.py
 // reads them:
 // - each run of /// lines owned by the one element directly below it, as text for the host to render as CommonMark;

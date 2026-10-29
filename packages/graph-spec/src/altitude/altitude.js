@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Altitude and audience profiles (editor spec §32). Its Python twin is graphspec/engine/altitude/altitude.py, and
 // test/altitude-cases.json holds both to the same answers.
 //

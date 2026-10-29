@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // W3C PROV is normative for provenance (graph spec §11, §12, §24):
 // - a derivation links to its rule with HAD_PLAN, and only to a Rule (req:11.had-plan);
 // - who proposed, decided or wrote a thing is WAS_ATTRIBUTED_TO an agent (req:24.prov-attributed);

@@ -32,7 +32,8 @@ Each folder holds one feature; each file opens with a line saying what it does. 
 and no module requires one that requires it back.
 
 - **`src/values/`** — the values the profile reads and how they order: `times.js` (DATE and DATETIME, and comparing
-  values), `order.js` (the shared sort orders).
+  values) and `order.js` (the shared sort orders). `refusal.js` and `refusal-codes.json` give the stable code every
+  refusal outside the reader carries (API-8).
 - **`src/hashing/`** — `sha256.js` (SHA-256, synchronous, no platform crypto), `canonical-json.js` (RFC 8785 JSON,
   `hash16`, `basisHash`) and `named.js` (a hash written with its algorithm's name, `requirements/hashes.md`).
 

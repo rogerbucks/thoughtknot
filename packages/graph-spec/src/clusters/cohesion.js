@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // How tightly each cluster holds together, and the certainty its centroid states because of it (editor spec §31). Its
 // Python twin is graphspec/engine/clusters/cohesion.py, and the shared cases in test/cohesion-cases.json prove both give
 // the same answers.

@@ -15,6 +15,7 @@ const LIMITS = Object.freeze({
 });
 
 // A text's length in characters (code points), as the Python reader counts it. A pair of UTF-16 units is one.
+/** @param {string} text */
 function chars(text) {
   let pairs = 0;
   for (let i = 0; i < text.length; i++) {
@@ -24,6 +25,7 @@ function chars(text) {
   return text.length - pairs;
 }
 // Refuses a block longer than the limit. It is measured, never read, so a huge block costs no more than its length.
+/** @param {string} block */
 function withinSize(block) {
   if (block.length <= LIMITS.block_chars) return;
   const size = chars(block);
@@ -37,6 +39,7 @@ function withinSize(block) {
     );
 }
 // Refuses a graph holding more things and links than the limit.
+/** @param {string} graph @param {number} count */
 function withinItems(graph, count) {
   if (count > LIMITS.items)
     throw new ProfileError(
@@ -48,6 +51,7 @@ function withinItems(graph, count) {
     );
 }
 // Refuses paths opened deeper than the limit, before the stack runs out.
+/** @param {number} depth */
 function withinNesting(depth) {
   if (depth > LIMITS.nesting)
     throw new ProfileError(
@@ -59,6 +63,7 @@ function withinNesting(depth) {
     );
 }
 // Refuses a join of more documents than the limit, before any is read.
+/** @param {number} count */
 function withinJoinDocuments(count) {
   if (count > LIMITS.join_documents)
     throw new ProfileError(
@@ -70,6 +75,7 @@ function withinJoinDocuments(count) {
     );
 }
 // Refuses a join whose documents hold more things and links in all than the limit, before they are joined.
+/** @param {number} count */
 function withinJoinItems(count) {
   if (count > LIMITS.join_items)
     throw new ProfileError(

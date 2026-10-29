@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The graph spec's axioms (editor spec §64, axioms_checker; GS8): the few laws every valid graph obeys, and one check
 // that finds each one a graph breaks. A broken axiom is reported with its place, the axiom in its words and a fix,
 // under its stable code. It never stops a graph being read or drawn. The laws of an operation, such as a join, cannot

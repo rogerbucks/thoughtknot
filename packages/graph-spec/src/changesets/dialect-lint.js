@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §24 H1 the dialect linter: the traps in GQL written by a model, found as graph_spec.lint finds them.
 'use strict';
 

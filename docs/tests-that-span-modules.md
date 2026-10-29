@@ -305,8 +305,16 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
+## The graph format library: its types
+
+- `packages/graph-spec/test/typed.test.mjs` — the library's JavaScript is type-checked in strict mode. A file not typed
+  yet is held in `untyped.json`, a list that only shrinks (one_code_style; CODE-1).
+
 ## The Python library
 
+- `python/graph_spec/tests/test_readers_agree.py` — both readers give the same answer to blocks made at random from one
+  grammar, `statement-grammar.json`. A pull request reads a few hundred; the nightly readers-agree workflow reads 20000
+  (spec_grammar; ARCH-5).
 - `python/graph_spec/tests/test_changeset_header.py` — a change set's first line is read as the reader reads a
   block's, in the engine's copy and the rules'. Lines end at LF only, and whitespace is GQL's set.
 - `python/graph_spec/tests/test_engine_gets_corrected.py` — every route to the engine gives Grafeo the reader's

@@ -98,6 +98,7 @@ async function stageGraphSpec(stage, version) {
     join(ROOT, 'packages/graph-spec/esbuild.check.mjs'),
     join(stage, 'graph-spec-check.js'),
   ]);
+  // the build writes graph-spec-check.mjs beside it, the same library as an ES module (API-8)
   for (const file of ['graph-layout.js', 'graph-spec.d.ts', 'graph-layout-types.d.ts'])
     copyFileSync(join(src, file), join(stage, file));
   common(stage, pkg, version);
@@ -106,7 +107,7 @@ async function stageGraphSpec(stage, version) {
     main: 'graph-spec-check.js',
     types: 'graph-spec.d.ts',
     exports: {
-      '.': { types: './graph-spec.d.ts', default: './graph-spec-check.js' },
+      '.': { types: './graph-spec.d.ts', import: './graph-spec-check.mjs', default: './graph-spec-check.js' },
       './graph-layout.js': { types: './graph-layout-types.d.ts', default: './graph-layout.js' },
       './package.json': './package.json',
     },

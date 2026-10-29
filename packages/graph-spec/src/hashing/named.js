@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Named hashes (editor spec §51, spec_hashes_named; requirements/hashes.md). A hash is written with its algorithm's
 // name, from the IANA registry RFC 6920 uses. That is `sha-256-64:` then 16 hex digits, or `sha-256:` then 64. An
 // `ni:` id names its algorithm already. A bare string of digits does not say how it was made, so it is refused.

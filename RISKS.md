@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (72)
+## Open (66)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -20,18 +20,14 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-10 | A runner change or one flaky test blocks the release | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-11 | Wiki and Pages depend on Chrome being on the runner image | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-12 | Docs disagree with the workflows on schedules and write access | ●●● | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-1 | The graph-spec library is not type-checked at all | ●●○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | ●●○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-5 | No test runs vault.process with a real interleaving | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
-| CODE-8 | Reader parity rests on a small, snapshot-shaped case set | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
@@ -59,12 +55,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-1 | Half the shipped graph-spec exports sit outside the break check | ●●○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -194,26 +188,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A case in test/policy.test.js that every job with a write permission is named in that table.
 
-### CODE-1 The graph-spec library is not type-checked at all
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/graph-spec/src/**`, `packages/graph-spec/tsconfig.json`.
-
-**Risk:** The 5,185-line JavaScript library that reads, checks and lays out every graph runs with checkJs off. No file of its 42 has @ts-check. A wrong argument or a renamed field is found only by a test or a user, while CONTRIBUTING says TypeScript is strict in every package.
-
-**Fix:** Turn on checkJs with JSDoc types file by file. Start with reader/store.js, joins/merge3.js and graph-layout.js. Keep the tsconfig at checkJs true once they pass.
-
-**Check:** A conventions test that fails when any package tsconfig under typecheck has checkJs false or allowJs without checkJs.
-
-### CODE-2 merge3, 306 untyped lines, is proved by one snapshot case
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/graph-spec/src/joins/**`, `packages/graph-spec/test/**`.
-
-**Risk:** The three-way join of two documents over a base is the longest function in the repository. Its only tests are one characterisation case replayed against expected.json and a check that the name is exported. A wrong merge that still matches the old recorded answer, or any new branch of the function, passes unseen.
-
-**Fix:** Add a joins test file with behaviour cases written as inputs and expected rows. Write one for each branch merge3 takes (agree, one side changed, both changed, hold on and off). Share them with the Python tests through cases.mjs.
-
-**Check:** Line coverage of packages/graph-spec/src/joins/** added to quality-suite.mjs with a floor in quality/baseline.json.
-
 ### CODE-3 Coverage is measured for the core only, and only at release
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `scripts/quality-suite.mjs`, `quality/baseline.json`, `.github/workflows/ci.yml`.
@@ -254,16 +228,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.
 
-### CODE-8 Reader parity rests on a small, snapshot-shaped case set
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/graph-spec/test/**`, `python/graph_spec/tests/**`.
-
-**Risk:** The JavaScript and Python readers are held to each other through cases.mjs and 25 recorded answers in expected.json. The test says these were recorded before the code moved here. The shared behaviour files are thin, two reading cases and two problem-code cases. So both readers can agree and still be wrong on a shape neither case holds.
-
-**Fix:** Grow reading-cases.json and problem-code-cases.json with one case per reader rule. Write each with its intended answer rather than a recorded one. Have both readers run them.
-
-**Check:** A test that every problem code in reader/problem-codes.json has at least one case in problem-code-cases.json.
-
 ### CODE-11 A running layout is never cancelled when the user keeps typing
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/layout-worker.ts`, `packages/core/src/display/editor/pane-drawing.ts`.
@@ -303,16 +267,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add test/layers.test.js now: every import outside packages/core that names core must go through @thoughtknot/core, its display/* or hosts/* paths. Export what the page needs from the entry. Replace the relative imports.
 
 **Check:** test/layers.test.js in the suite, built on scripts/import-graph.mjs, failing any ../core/src or ../graph-spec/src import from a host package.
-
-### ARCH-5 Two hand-kept parsers, no grammar; drift caught only on listed cases
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/graph-spec/src/reader/**`, `python/graph_spec/src/graphspec/reader/**`, `python/graph_spec/tests/test_parity.py`, `.github/workflows/nightly.yml`.
-
-**Risk:** The JavaScript and Python readers are written separately (parser.js 235 lines, grammar.py 268 lines). They agree only on the case tables and the parity runs. A syntax added to one and not the other ships unnoticed. So does an edge the tables miss. It shows only when a Python tool and the editor read one note differently.
-
-**Fix:** Add a nightly differential test that generates random statements from one small grammar description. It compares both readers' canonical output. So a divergence is found without a hand-written case.
-
-**Check:** nightly.yml runs the differential test; a failure writes its failing block to the case table.
 
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
@@ -584,16 +538,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** Already held by test/licences.test.js if its bundle walk is complete; otherwise manual.
 
-### API-1 Half the shipped graph-spec exports sit outside the break check
-
-**Who found it:** API design expert. **Where:** `packages/graph-spec/src/graph-spec.d.ts`, `packages/graph-spec/src/graph-spec-check.js`, `public-api.json`.
-
-**Risk:** The JS entry point exports 60 names, but the d.ts declares only what the core calls. So about 27 shipped exports (read, parseDoc, merge, union, project, review, legend, mermaidGraph, jcs, sha, views and more) are not in public-api.json. A vault or page that vendors the archive can lose or see a changed signature with no major version and no CI failure. Only the bare names are held.
-
-**Fix:** Declare every exported name in graph-spec.d.ts, or generate the d.ts from JSDoc with tsc allowJs+declaration. Then public-api.json covers the whole module.exports object.
-
-**Check:** A test that Object.keys(require('graph-spec-check.js')) equals the names in public-api.json's graph-spec '.' entry.
-
 ### API-2 Core is guarded as a library but never shipped as one
 
 **Who found it:** API design expert. **Where:** `packages/core/package.json`, `scripts/public-api.mjs`, `.github/workflows/release.yml`.
@@ -633,16 +577,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Declare __all__ in each entry point as the public set. Move the vault's private uses onto public names. Add a parity table (JS export to Python name) that test_parity.py reads.
 
 **Check:** A test that every name in public-api.json's graph-spec entry has a row in the parity table, and every row's Python name is in __all__.
-
-### API-8 graph-spec is CommonJS-only with a partial d.ts and mixed errors
-
-**Who found it:** API design expert. **Where:** `packages/graph-spec/package.json`, `packages/graph-spec/esbuild.check.mjs`, `packages/graph-spec/src/graph-layout.js`.
-
-**Risk:** The package is type commonjs, and the built file is an IIFE global with a CJS footer. So an ESM or bundling consumer gets no tree shaking, and TypeScript users of the undeclared exports get compile errors. Error style is mixed. The reader throws ProfileError with a code, check() returns tuples, and the layout throws plain Error whose text imitates Python's KeyError.
-
-**Fix:** Add an ESM build target beside the IIFE (esbuild format esm) under an exports 'import' condition. Give the layout's refusals a named error class with a code like the reader's.
-
-**Check:** graph-spec-check-built.test.mjs also imports the ESM build and asserts the same names. A test holds that every thrown error from the package has a `code`.
 
 ### API-9 AI transport is hard-wired to the OpenAI chat shape
 
@@ -804,7 +738,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (60)
+## Done or accepted (66)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -819,11 +753,15 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
+| CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
+| CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
+| CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
 | CODE-10 | Live Preview hands a hand-made context to the block renderer | done | #1542 |
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | done | #1542 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
+| ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | done | #1543 |
 | ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
 | ARCH-10 | Three decisions that cost most if left after their wave | done | #1542 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
@@ -837,8 +775,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
+| API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
+| API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | done | #1543 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
 | API-12 | No runnable examples for either library, none in CI | done | #1083 |
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |

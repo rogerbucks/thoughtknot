@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A lens as graph data (editor spec §33, lens_is_saved_query). Its Python twin is graphspec/engine/lenses/
 // saved_lenses.py, and test/saved-lens-cases.json holds both to the same answers.
 //
@@ -13,6 +14,7 @@
 // version of one, the lens is flagged, never changed.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { guardHolds } = require('../rules/guards.js');
 
 /** The properties a lens may have. Any other is data, which a lens never holds. */
@@ -82,7 +84,7 @@ function lensesOf(graph, options = {}) {
  */
 function runLens(graph, lensId, options = {}) {
   const lens = lensesOf(graph, options).find((l) => l.id === lensId);
-  if (!lens) throw new Error(`refused: ${lensId} is not a lens (editor spec §33)`);
+  if (!lens) throw refused('GR03', `refused: ${lensId} is not a lens (editor spec §33)`);
   const query = queryOf(lens.query);
   const things = [];
   if (query)

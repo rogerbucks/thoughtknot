@@ -1,6 +1,8 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §18 the flat projection, and the check that it reads back through the reader to the same graph.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { isTime } = require('../values/times.js');
 const { byKey } = require('../values/order.js');
 const { jcs } = require('../hashing/canonical-json.js');
@@ -39,9 +41,10 @@ function project(g) {
     const [labels, p] = g.nodes.get(i);
     const b = { id: i, type: [...labels].sort() };
     for (const k of Object.keys(p).sort()) {
-      if (Array.isArray(p[k])) throw new Error(`refused: §18 — ${i}.${k} is a list`);
+      if (Array.isArray(p[k])) throw refused('GR14', `refused: §18 — ${i}.${k} is a list`);
       if (k === 'type')
-        throw new Error(
+        throw refused(
+          'GR15',
           `refused: §18 — ${i}.type is reserved: the flat projection uses type for a node's labels; rename the property`,
         );
       if (k !== 'id' && p[k] !== null && p[k] !== undefined) put(b, k, iso(p[k]));
