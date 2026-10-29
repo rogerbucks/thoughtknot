@@ -55,13 +55,8 @@ jobs:
       - run: npm run build --workspace packages/app
       # the runner carries the Android SDK, its NDK and Java 17; Rust needs only the phone's target
       - run: rustup target add aarch64-linux-android
-      - id: tauri-cli
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cargo/bin/cargo-tauri*
-          key: tauri-cli-2.12.4-${{ runner.os }}
-      - if: steps.tauri-cli.outputs.cache-hit != 'true'
-        run: cargo install tauri-cli --locked --version 2.12.4
+      # built fresh each run: a cache restored here could be poisoned by an earlier run (CodeQL, cache-poisoning)
+      - run: cargo install tauri-cli --locked --version 2.12.4
       # the runner's own Java 17 and newest NDK, named as Tauri reads them
       - working-directory: packages/app/src-tauri
         run: |
@@ -89,13 +84,8 @@ jobs:
       - run: npm ci
       - run: npm run build --workspace packages/app
       - run: rustup target add aarch64-apple-ios-sim
-      - id: tauri-cli
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cargo/bin/cargo-tauri*
-          key: tauri-cli-2.12.4-${{ runner.os }}
-      - if: steps.tauri-cli.outputs.cache-hit != 'true'
-        run: cargo install tauri-cli --locked --version 2.12.4
+      # built fresh each run: a cache restored here could be poisoned by an earlier run (CodeQL, cache-poisoning)
+      - run: cargo install tauri-cli --locked --version 2.12.4
       # built for the simulator with signing skipped: no Apple account, team or key is asked for
       - working-directory: packages/app/src-tauri
         run: |
@@ -106,4 +96,4 @@ jobs:
         with:
           name: thoughtknot-app-ios-simulator
           if-no-files-found: error
-          path: packages/app/src-tauri/gen/apple/build/arm64/*.app
+          path: packages/app/src-tauri/gen/apple/build/arm64-sim/*.app

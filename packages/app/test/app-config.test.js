@@ -129,6 +129,7 @@ test('CI builds the Android app and the iPhone simulator app, with no key of Rog
   assert.match(workflow, /cargo tauri ios build --ci --debug --target aarch64-sim --no-sign\n/);
   assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
   assert.doesNotMatch(workflow, /secrets\./, 'no secret reaches a phone build');
+  assert.doesNotMatch(workflow, /actions\/cache@/, 'nothing restored from a cache an earlier run could have poisoned');
   for (const name of ['thoughtknot-app-android', 'thoughtknot-app-ios-simulator'])
     assert.match(workflow, new RegExp(`name: ${name}\\n\\s+if-no-files-found: error`), `${name} is kept`);
 });
