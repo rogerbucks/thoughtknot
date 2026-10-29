@@ -179,3 +179,42 @@ export function drawnItem(
   }
   return item;
 }
+
+/**
+ * A drawing made by keyboard on the thing `pin`, as the tool `how` draws one there (sketch_keyboard). A box or ellipse
+ * wraps it. A note sits above it. A line or arrow points at it from above and to the left. A stroke underlines it.
+ * Null when the thing is not drawn.
+ */
+export function drawnOn(
+  how: { kind: SketchKind; shape?: SketchShape; text?: string; style?: string },
+  pin: string,
+  marks: readonly DrawMark[],
+): NewSketchItem | null {
+  const box = marks.find((m) => m.kind === 'box' && m.of === pin);
+  if (box?.kind !== 'box') return null;
+  const [w, h] = [Math.round(box.width / 2), Math.round(box.height / 2)];
+  const item: NewSketchItem = { kind: how.kind, pin, x: 0, y: 0 };
+  if (how.shape) item.shape = how.shape;
+  if (how.text !== undefined) item.text = how.text;
+  if (how.style !== undefined) item.style = how.style;
+  if (how.kind === 'Text') [item.x, item.y] = [-w, -h - 8];
+  else if (how.kind === 'Ink')
+    [item.x, item.y, item.points] = [
+      -w,
+      h + 6,
+      [
+        [0, 0],
+        [2 * w, 0],
+      ],
+    ];
+  else if (how.shape === 'line' || how.shape === 'arrow')
+    [item.x, item.y, item.points] = [
+      -w - 40,
+      -h - 40,
+      [
+        [0, 0],
+        [40, 40],
+      ],
+    ];
+  return item;
+}

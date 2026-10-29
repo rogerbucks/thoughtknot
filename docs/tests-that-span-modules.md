@@ -97,6 +97,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/core/test/notes-export.test.js` — each data export keeps the `///` notes where its format has comments: a
   GQL block's `///` lines and GraphML's XML comments. They are read back as written however hostile. CSV has no
   comments, so it leaves them out. The text an engine is given keeps them too (editor spec §24, note_standard).
+- `packages/core/test/sketch-picture.test.js` — an exported image shows the drawings over its graph, pinned where the
+  card draws them, in the export's fixed colours. A graph with no drawings exports as before (editor spec §70,
+  sketch_reader_picture). It spans export.ts and sketch-marks.ts.
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/core/test/hosts-boundary.test.js` — the host-side modules of the core (`src/hosts/`, reached as
   `@thoughtknot/core/hosts/<module>`) are imported by no gate or other core module. They are not exported by the entry,

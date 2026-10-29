@@ -3,7 +3,7 @@
 // only its own text. A stroke is thinned before it is written, and a drawing made over a thing is pinned to it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { drawnItem, pinAt, sketchEdit, sketchInNote, thinned } from '../src/sketch-edit.ts';
+import { drawnItem, drawnOn, pinAt, sketchEdit, sketchInNote, thinned } from '../src/sketch-edit.ts';
 
 const NOTE = `# Trip
 
@@ -175,5 +175,46 @@ describe('a drawing made on the card', () => {
         ],
       ],
     );
+  });
+});
+
+describe('a drawing made by keyboard on the selected thing', () => {
+  // proves: sketch_keyboard
+  test('each tool draws on the thing: a shape round it, a note above, an arrow at it, a stroke under it', () => {
+    const round = drawnOn({ kind: 'Shape', shape: 'ellipse' }, 'ann', MARKS);
+    assert.deepEqual(round, { kind: 'Shape', shape: 'ellipse', pin: 'ann', x: 0, y: 0 }, 'no size: it wraps the thing');
+    const note = drawnOn({ kind: 'Text', text: 'Ask first' }, 'ann', MARKS);
+    assert.deepEqual([note.pin, note.text, note.x, note.y], ['ann', 'Ask first', -50, -28], 'above, from its left');
+    const arrow = drawnOn({ kind: 'Shape', shape: 'arrow' }, 'ann', MARKS);
+    assert.deepEqual(
+      [arrow.x, arrow.y, arrow.points],
+      [
+        -90,
+        -60,
+        [
+          [0, 0],
+          [40, 40],
+        ],
+      ],
+      'ends at its top left corner',
+    );
+    const ink = drawnOn({ kind: 'Ink' }, 'ann', MARKS);
+    assert.deepEqual(
+      [ink.x, ink.y, ink.points],
+      [
+        -50,
+        26,
+        [
+          [0, 0],
+          [100, 0],
+        ],
+      ],
+      'under it, as wide',
+    );
+  });
+
+  // proves: sketch_keyboard
+  test('a thing that is not drawn gets nothing', () => {
+    assert.equal(drawnOn({ kind: 'Shape', shape: 'box' }, 'bob', MARKS), null);
   });
 });

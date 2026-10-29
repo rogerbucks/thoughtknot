@@ -8,9 +8,9 @@
 // The drawings are a layer of the drawing's own SVG, drawn from the shared marks (sketch-marks.ts), in its viewBox units.
 import { word } from '@thoughtknot/core';
 import type { View, Zoom } from '@thoughtknot/core';
-import { drawnMarks, sketchMarks, sketchSvg } from '../../sketch-marks.ts';
-import { drawnItem } from '../../sketch-edit.ts';
-import type { SketchChange } from '../../sketch-edit.ts';
+import { marksOver, sketchMarks, sketchSvg } from '../../sketch-marks.ts';
+import { drawnItem, drawnOn } from '../../sketch-edit.ts';
+import type { NewSketchItem, SketchChange } from '../../sketch-edit.ts';
 import type { Sketch, SketchKind, SketchShape } from '../../sketch.ts';
 import type { Palette } from '../../palette.ts';
 import type { MarkPoint } from '../../plugin-diagrams.ts';
@@ -42,11 +42,13 @@ export interface SketchCard {
   sketching: SketchHost;
   svg: () => SVGSVGElement | null;
   drawn: () => Drawn;
-  /** The things' keys in the order drawn: node1 is the first. */
-  keys: () => string[];
+  /** The things in the order drawn, node1 first, each with the words on its box. */
+  boxes: () => readonly { key: string; text: string }[];
   taps: Taps;
   zoom: () => Zoom;
   readOnly: () => boolean;
+  /** The card's details, for the thing selected there: a drawing made by keyboard goes on it. */
+  details: () => { selectedKey(): string | null };
 }
 
 type Tool = 'pen' | 'box' | 'ellipse' | 'line' | 'arrow' | 'note';
@@ -74,11 +76,11 @@ const ownChild = (svg: SVGSVGElement, selector: string): Element | null =>
 export function sketchOn(
   tools: HTMLElement,
   o: ViewOptions,
-  card: Omit<SketchCard, 'sketching' | 'keys'>,
+  card: Omit<SketchCard, 'sketching' | 'boxes'>,
 ): SketchTool | null {
   if (!o.sketching) return null;
-  const keys = () => o.reading.graphs.get(o.graph)?.boxes.map((b) => b.key) ?? [];
-  return new SketchTool(tools, { ...card, sketching: o.sketching, keys });
+  const boxes = () => o.reading.graphs.get(o.graph)?.boxes ?? [];
+  return new SketchTool(tools, { ...card, sketching: o.sketching, boxes });
 }
 
 /** The drawing tools of one card, and the layer they draw on. */
@@ -128,6 +130,9 @@ export class SketchTool {
         const b = button(this.el, label, this.shown ? 'eye-off' : 'eye', () => this.toggle(), label);
         b.setAttribute('aria-pressed', String(!this.shown));
       }
+      // by keyboard: each drawing in turn, said, then centred when pressed again on it (sketch_keyboard)
+      if (some && this.shown)
+        button(this.el, word('sketch.next'), 'chevron-right', () => this.next(), word('sketch.next'));
       if (this.selected && writes)
         button(this.el, word('sketch.delete'), 'trash', () => void this.remove(), word('sketch.delete'));
       this.el.hidden = !writes && !some;
@@ -140,6 +145,9 @@ export class SketchTool {
       const b = button(this.el, name, icon, () => this.choose(tool), name);
       b.setAttribute('aria-pressed', String(this.tool === tool));
     }
+    // by keyboard: the tool's drawing made on the thing selected on the card (sketch_keyboard)
+    const on = word('sketch.on-selected');
+    button(this.el, on, 'crosshair', () => void this.onSelected(), on);
     if (this.tool === 'note')
       this.note = this.el.createEl('input', {
         attr: { type: 'text', 'aria-label': word('sketch.note-text'), placeholder: word('sketch.note-text') },
@@ -155,7 +163,7 @@ export class SketchTool {
     if (!svg) return;
     ownChild(svg, 'g.tk-sketch')?.remove();
     if (this.shown && this.sketch?.items.length) {
-      const marks = drawnMarks(this.card.drawn().svg, this.card.keys());
+      const marks = marksOver(this.card.drawn().svg, this.card.boxes());
       const { pieces } = sketchMarks(this.sketch, marks);
       const text = `<svg xmlns="${SVG}">${sketchSvg(pieces, this.card.sketching.palette)}</svg>`;
       const g = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement.children[0];
@@ -291,9 +299,32 @@ export class SketchTool {
       text = this.note?.value.trim();
       if (!text) return this.say(word('sketch.note-empty'));
     } else if (s.points.length < 2) return; // a tap with a pen draws nothing
-    const marks = drawnMarks(this.card.drawn().svg, this.card.keys());
+    const marks = marksOver(this.card.drawn().svg, this.card.boxes());
     const item = drawnItem(text === undefined ? how : { ...how, text }, s.points, marks);
-    if (!item) return;
+    if (item) await this.add(item);
+  }
+
+  /** The tool's drawing made on the thing selected on the card, as a keyboard makes one; none selected, says so. */
+  private async onSelected(): Promise<void> {
+    const how = TOOLS.find(([t]) => t === this.tool)?.[2],
+      key = this.card.details().selectedKey(),
+      text = this.note?.value.trim();
+    if (how?.kind === 'Text' && !text) return this.say(word('sketch.note-empty'));
+    const marks = marksOver(this.card.drawn().svg, this.card.boxes());
+    const item = how && key ? drawnOn(text ? { ...how, text } : how, key, marks) : null;
+    if (item) await this.add(item);
+    else this.say(word('sketch.select-first'));
+  }
+
+  /** The drawings one after another: the next is selected and said; the one selected again, when it is the only one. */
+  private next(): void {
+    const ids = this.sketch?.items.map((i) => i.id) ?? [];
+    const id = ids.length === 1 ? ids[0] : ids[(ids.indexOf(this.selected ?? '') + 1) % ids.length];
+    if (id) this.pick(id);
+  }
+
+  /** Adds a drawing to the note, and says what was drawn. */
+  private async add(item: NewSketchItem): Promise<void> {
     if (await this.write({ add: item })) {
       if (this.note) this.note.value = '';
       // a drawing added goes last in the block, so it is the last one drawn
