@@ -171,6 +171,12 @@ jobs:
       - run: uv sync --locked
       - run: uv run --locked ruff check
       - run: uv run --locked ruff format --check
+      # SEC-10: every Python dependency the lock pins, extras included, held to the published advisories (PyPI and OSV),
+      # as npm audit holds the JavaScript ones. Read by hash from the lock, never resolved again.
+      - name: No Python dependency has a published advisory
+        run: |
+          uv export --locked --all-extras --no-emit-project --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit@2.9.0 --strict --require-hashes --disable-pip --progress-spinner off -r "$RUNNER_TEMP/requirements.txt"
       # a working copy has the reference engine, Grafeo: every test that needs it runs here, and fails if it is missing
       - run: node ../../scripts/run-ceiling.mjs uv run --locked python -m unittest discover -s tests
         env:
