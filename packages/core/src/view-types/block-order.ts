@@ -24,7 +24,12 @@ export interface BlockOrder {
 function groupsOf(shape: GraphShape): [string, string[]][] | null {
   const keys = shape.things.map((t) => t.key);
   const drawn = new Set(keys);
-  const given = (shape.groups ?? []).map(([l, ks]): [string, string[]] => [l, ks.filter((k) => drawn.has(k))]);
+  // a thing written in two groups sits in the first, so each thing is in the order once
+  const seen = new Set<string>();
+  const given = (shape.groups ?? []).map(([l, ks]): [string, string[]] => [
+    l,
+    ks.filter((k) => drawn.has(k) && !seen.has(k) && !!seen.add(k)),
+  ]);
   if (given.some(([, ks]) => ks.length)) {
     const placed = new Set(given.flatMap(([, ks]) => ks));
     const rest = keys.filter((k) => !placed.has(k));
