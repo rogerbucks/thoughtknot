@@ -4,8 +4,8 @@
 // hundreds of gigabytes of swap in minutes, and the machine stopped dozens of other processes to survive it.
 //
 // The command runs in its own process group. About every 500 ms the resident memory of every process in the group is
-// added up (`ps -A -o pgid=,rss=`, on macOS and Linux). Windows has no process groups: there the working set of the
-// command and every process under it is added up (PowerShell's list of processes, as often as it answers), and the
+// added up (`ps -A -o pgid=,rss=`, on macOS and Linux). Windows has no process groups. There the working set of the
+// command and every process under it is added up, from PowerShell's list of processes, as often as it answers. And the
 // tree is killed by `taskkill /T`. Over the memory ceiling, or past the time ceiling, the whole group is killed. One
 // line is written to stderr, and the exit status is 1. Otherwise the command's output and exit status pass through
 // unchanged. The command also gets a JavaScript heap limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is

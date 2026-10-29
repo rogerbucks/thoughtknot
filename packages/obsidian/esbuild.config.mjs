@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Renames `from` over `to`. Windows refuses a rename over a file another process has open or is renaming over at that
- * moment (EPERM, EACCES, EBUSY), such as a test reading main.js while another builds it; then it is tried again, for a
+ * Renames `from` over `to`. Windows refuses a rename over a file another process has open or is renaming over just
+ * then (EPERM, EACCES, EBUSY). A test may read main.js while another builds it. Then the rename is tried again, for a
  * second at most.
  */
 function renameOver(from, to) {
