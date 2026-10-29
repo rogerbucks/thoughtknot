@@ -31,48 +31,60 @@ const IN_PAGE = /^#[\w.:-]*$/;
 const RASTER = /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/=\s]*$/;
 /** A url() to anything but the drawing's own parts, or a style sheet brought in from elsewhere. */
 const OUTSIDE = /url\s*\(\s*(?!['"]?#)|@import|expression\s*\(|javascript:/i;
-/** A start or end tag where the scan stands (sticky, so it never copies or rescans the rest of the drawing). */
-const TAG = /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/y;
+const ELEMENT = /[A-Za-z][\w:.-]*/y;
 const SPACE = /\s/;
 
+type Attribute = { whole: string; name: string; quoted?: string };
+/** A start or end tag as read: its attributes each as written, with the space before it. */
+type Tag = { end: number; closing: boolean; element: string; attributes: Attribute[]; selfClosing: boolean };
+
 /**
- * The attributes of a start tag the tag pattern has passed, each as written with the space before it. A scan by hand,
- * one pass over the text: a pattern over every place could take time growing with the square of a run of spaces.
+ * The tag that opens at `at`, or where its reading stopped when it is not one. It is read by hand, each character once.
+ * A pattern tried at every `<` could take time growing with the square of the text (CodeQL js/polynomial-redos). A
+ * reading stops at a `<` outside a quoted value, so text that is not a tag is never read twice.
  */
-function attributesOf(written: string): { whole: string; name: string; quoted?: string }[] {
-  const out: { whole: string; name: string; quoted?: string }[] = [];
+function tagAt(svg: string, at: number): Tag | { stop: number } {
   const skip = (i: number) => {
-    while (i < written.length && SPACE.test(written.charAt(i))) i += 1;
+    while (i < svg.length && SPACE.test(svg.charAt(i))) i += 1;
     return i;
   };
-  let i = 0;
-  while (i < written.length) {
-    const start = i;
-    i = skip(i);
-    const from = i;
-    while (i < written.length && !SPACE.test(written.charAt(i)) && !'=/>'.includes(written.charAt(i))) i += 1;
-    if (i === from) break;
-    const name = written.slice(from, i);
-    const eq = skip(i);
+  let i = at + 1;
+  const closing = svg.charAt(i) === '/';
+  if (closing) i += 1;
+  ELEMENT.lastIndex = i;
+  const element = ELEMENT.exec(svg)?.[0];
+  if (!element) return { stop: i };
+  i += element.length;
+  const attributes: Attribute[] = [];
+  for (;;) {
+    const j = skip(i);
+    if (svg.charAt(j) === '>') return { end: j + 1, closing, element, attributes, selfClosing: false };
+    if (svg.startsWith('/>', j)) return { end: j + 2, closing, element, attributes, selfClosing: true };
+    if (j === i || j >= svg.length) return { stop: j };
+    let k = j;
+    while (k < svg.length && !SPACE.test(svg.charAt(k)) && !'=/><'.includes(svg.charAt(k))) k += 1;
+    if (k === j) return { stop: k };
+    const name = svg.slice(j, k);
     let quoted: string | undefined;
-    if (written.charAt(eq) === '=') {
+    const eq = skip(k);
+    if (svg.charAt(eq) === '=') {
       const open = skip(eq + 1);
-      const mark = written.charAt(open);
-      const close = written.indexOf(mark, open + 1);
-      if ((mark === '"' || mark === "'") && close > open) {
-        quoted = written.slice(open, close + 1);
-        i = close + 1;
-      }
+      const mark = svg.charAt(open);
+      if (mark !== '"' && mark !== "'") return { stop: open };
+      const close = svg.indexOf(mark, open + 1);
+      if (close < 0) return { stop: svg.length };
+      quoted = svg.slice(open, close + 1);
+      k = close + 1;
     }
-    out.push({ whole: written.slice(start, i), name, quoted });
+    attributes.push({ whole: svg.slice(i, k), name, quoted });
+    i = k;
   }
-  return out;
 }
 
 /** The attributes of one start tag that may stay, as they were written; null when the element must go. */
-function keptAttributes(element: string, written: string): string | null {
+function keptAttributes(element: string, attributes: Attribute[]): string | null {
   const kept: string[] = [];
-  for (const { whole, name, quoted } of attributesOf(written)) {
+  for (const { whole, name, quoted } of attributes) {
     const value = quoted === undefined ? '' : quoted.slice(1, -1);
     if (!NAME.test(name) || /^on/i.test(name)) continue;
     if (/^xmlns(:|$)/i.test(name) && value !== SVG_NS && value !== XLINK_NS) continue;
@@ -113,21 +125,21 @@ export function cleanSvg(svg: string): string {
       if (!dropped) out += svg.slice(at, close);
       at = close;
     } else if (svg.startsWith('<!', at)) {
-      // a doctype, with any entities it declares
-      const bracket = svg.indexOf('[', at);
-      const gt = svg.indexOf('>', at);
-      at = end('>', bracket >= 0 && (gt < 0 || bracket < gt) ? end(']', bracket) : at);
+      // a doctype, with any entities it declares; the search for `[` stops at the doctype's first `>`
+      const gt = end('>', at);
+      const bracket = svg.slice(at, gt).indexOf('[');
+      at = bracket < 0 ? gt : end('>', end(']', at + bracket));
     } else if (svg.startsWith('<?', at)) at = end('?>', at);
     else {
-      TAG.lastIndex = at;
-      const m = TAG.exec(svg);
-      if (!m) {
-        if (!dropped) out += '&lt;';
-        at += 1;
+      const tag = tagAt(svg, at);
+      if ('stop' in tag) {
+        // not a tag: its text is kept with each `<` escaped, and the scan goes on where the reading stopped
+        if (!dropped) out += svg.slice(at, tag.stop).replaceAll('<', '&lt;');
+        at = tag.stop;
         continue;
       }
-      at += m[0].length;
-      const [, closing, element = '', written = '', selfClosing] = m;
+      at = tag.end;
+      const { closing, element, attributes, selfClosing } = tag;
       if (dropped) {
         if (closing) dropped -= 1;
         else if (!selfClosing) dropped += 1;
@@ -142,7 +154,7 @@ export function cleanSvg(svg: string): string {
         if (SVG_ELEMENTS.has(element)) out += `</${element}>`;
         continue;
       }
-      const kept = SVG_ELEMENTS.has(element) ? keptAttributes(element, written) : null;
+      const kept = SVG_ELEMENTS.has(element) ? keptAttributes(element, attributes) : null;
       if (kept === null) {
         if (!selfClosing) dropped = 1;
         continue;
