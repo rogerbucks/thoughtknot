@@ -44,13 +44,6 @@ jobs:
           # the parity tests read what Python prints as UTF-8, as the python job below does
           PYTHONUTF8: '1'
         run: npm test -- --test-concurrency=4 --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt
-      # TEMPORARY (Windows port): the builds' own errors, which the quiet report cuts to a first line
-      - if: failure()
-        run: |
-          (cd packages/obsidian && node esbuild.config.mjs) 2>&1 | tail -40 || true
-          files=$(grep -o '^✖ [^ ]*\.test\.m\?js' test-report.txt | cut -c5- | sort -u)
-          echo "files that failed whole: $files"
-          [ -z "$files" ] || npm test -- --test-reporter=tap $files 2>&1 | grep -v '^ *ok \|^# Subtest' | tail -200 || true
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
