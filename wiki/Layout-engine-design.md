@@ -50,7 +50,8 @@ No box sits on another. Long rows wrap, so a shallow graph is not one long strip
 3. **PJ1: projections, all on.** Each projection is in the View menu, in 2D and 3D where it has a 3D form. A lens
    bends whatever a view drew round a focus, so one lens works on every view. The lenses are fisheye (built),
    semantic zoom (built), hyperbolic, sphere and spatial (VR). A placement is a view of its own: arc (built),
-   matrix (built), hive (built), grid (kanban, built) and map. Dragging a card between grid columns comes next.
+   matrix (built), hive (built), grid (kanban, built) and map.
+   - **Kanban drag.** A card dragged to another grid column has its status written in the text.
 4. **Every view answers clicks.** A view is the card's own drawing, not a still picture. A thing in any view is chosen
    and opened as in a network.
 5. **Semantic zoom** steps the ladder of detail as a person zooms. It counts the things that fit on screen at the zoom.
