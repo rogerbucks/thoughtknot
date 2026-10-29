@@ -11,7 +11,7 @@ import type { LaidMarks } from './graphviz-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
 
 /** Graphviz's points in one CSS pixel. */
-const PT = 3 / 4;
+export const PT = 3 / 4;
 /** How round a rounded box's corners are, in points, when a mark gives no outline. */
 const CORNER = 6;
 /** How wide an arrowhead is beside its length, when a mark gives no outline. */

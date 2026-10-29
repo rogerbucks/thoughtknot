@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
+import { tapKey } from './host/inspector-steps.js';
 
 before(() => build());
 
@@ -77,7 +78,7 @@ describe('the view picker', () => {
   test('opens More views when the view drawn now is one of them, so it is never hidden', async () => {
     const { env, el } = await card(noteOf(ORG, styled("(d1:Diagram {type: 'thoughtknot.diagrams.chord'})")));
     try {
-      await until(() => el.querySelector('.thoughtknot-plugin-picture svg'));
+      await until(() => el.querySelector('svg g.node[data-key]'));
       labelled(el, 'Diagram type').click();
       assert.equal(el.querySelector('.thoughtknot-view-more details').open, true);
     } finally {
@@ -105,10 +106,11 @@ describe('the view picker', () => {
   });
 
   // proves: view_types_offered
-  test('a view saved is drawn as a picture of its marks, said by its title and marked as drawn now', async () => {
+  test('a view saved is drawn as the card’s own drawing of its marks, said by its title and marked as drawn now', async () => {
     const { env, el } = await card(noteOf(ORG, styled("(d1:Diagram {type: 'thoughtknot.diagrams.treemap'})")));
     try {
-      await until(() => el.querySelector('.thoughtknot-plugin-picture svg'));
+      await until(() => el.querySelector('svg g.node[data-key]'));
+      assert.equal(el.querySelector('.thoughtknot-plugin-picture'), null, 'not a picture to look at');
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as Treemap/);
       labelled(el, 'Diagram type').click();
       const pressed = el
@@ -116,6 +118,23 @@ describe('the view picker', () => {
         .filter((b) => b.getAttribute('aria-pressed') === 'true')
         .map((b) => b.textContent);
       assert.deepEqual(pressed, ['Treemap']);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: projections_all_on
+  test('in a view, a thing is chosen and its details opened as in a network', async () => {
+    const { env, el } = await card(noteOf(ORG, styled("(d1:Diagram {type: 'thoughtknot.diagrams.hive'})")));
+    try {
+      await until(() => el.querySelector('svg g.node[data-key]'));
+      const keys = el.querySelectorAll('svg g.node[data-key]').map((g) => g.getAttribute('data-key'));
+      assert.deepEqual([...keys].sort(), ['ada', 'bea', 'cy']);
+      tapKey(el, 'bea');
+      const bea = el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'bea');
+      assert.ok(bea.hasClass('is-selected'));
+      assert.equal(bea.getAttribute('aria-pressed'), 'true');
+      assert.ok(el.querySelectorAll('svg g.edge[data-link]').length >= 2, 'its links too');
     } finally {
       env.uninstall();
     }
