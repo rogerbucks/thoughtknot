@@ -508,6 +508,9 @@ after a module nor listed here, and on a listed file that is missing.
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
   reply time (security_policy).
+- `test/community-listing.test.js` — the plug-in follows Obsidian's community review rules (editor spec §41,
+  community_listing). It reads the manifest, `versions.json`, the release assets, the README and the licence. It holds
+  that the review lint rules run in CI. RELEASING.md holds the entry Roger files with Obsidian, held to the manifest.
 ## Community rules, Apple's terms and the working group
 
 - `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
