@@ -186,6 +186,15 @@ export const DRAWING_SOURCE_WORDS = {
   'view.lens.semantic': 'Semantic zoom',
   // the arc view, a view type drawn as marks (view-types/arc-view.ts, projection_arc)
   'view.arc': 'Arc',
+  // the hive and grid views (view-types/hive-view.ts, projection_hive; grid-view.ts, projection_grid)
+  'view.hive': 'Hive',
+  'view.grid': 'Grid',
+  // a hive's axes, with one kind of thing: what each thing's links do; with many kinds, the smallest share the last
+  'view.hive.sends': 'Sends',
+  'view.hive.both': 'Sends and receives',
+  'view.hive.receives': 'Receives',
+  'view.hive.unlinked': 'Not linked',
+  'view.hive.other': { one: '{count} other kind', other: '{count} other kinds' },
   'view.hint.lens':
     'A fisheye enlarges what is round the pointer, or the selection. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)

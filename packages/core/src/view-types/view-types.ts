@@ -11,6 +11,8 @@ import { containmentMarks } from './containment-view.ts';
 import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
+import { gridMarks } from './grid-view.ts';
+import { hiveMarks } from './hive-view.ts';
 import { matrixMarks } from './matrix-view.ts';
 import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
@@ -29,6 +31,8 @@ export const VIEW_TYPES = [
   'centroid',
   'containment',
   'arc',
+  'hive',
+  'grid',
 ] as const;
 /**
  * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
@@ -52,4 +56,6 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   centroid: centroidMarks,
   containment: containmentMarks,
   arc: arcMarks,
+  hive: hiveMarks,
+  grid: gridMarks,
 };
