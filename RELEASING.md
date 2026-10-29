@@ -64,7 +64,8 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
 
 ## Listing in the community directory
 
-Roger files this, once, after the first stable release is published. Obsidian reviews the listing by hand, then
+**On hold (Roger, 29 Oct 2026): R2 stays private until he says it is ready.** Do not file this listing, and do not
+plan a public release, until he does. When he does, he files it, once, after the first stable release is published. Obsidian reviews the listing by hand, then
 lists the plug-in. Claude cannot file it.
 
 1. Check the release is published (not a draft), its tag is the bare version in `manifest.json`, and it holds `main.js`,
