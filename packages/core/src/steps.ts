@@ -187,7 +187,7 @@ function said(links: readonly [string, string, string][], m: StepMatch): string 
 }
 
 /** The proposal's id: the step's name and the next number its change sets in the note have not used. */
-function proposalId(name: string, texts: readonly string[]): string {
+export function proposalId(name: string, texts: readonly string[]): string {
   const own = new RegExp(`^${name}_(\\d+)$`);
   const used = texts.map((t) => Number(own.exec(changeSetId(t)?.id ?? '')?.[1] ?? 0));
   return `${name}_${Math.max(0, ...used) + 1}`;

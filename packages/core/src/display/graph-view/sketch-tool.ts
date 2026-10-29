@@ -5,6 +5,7 @@
 // - A note takes its words from the strip, and goes where the drawing is tapped next.
 // - Not drawing, a tap on a drawing selects it and says what it is, with Delete. A second tap centres it.
 // - Hide drawings hides them all, flat and in space, and Show drawings brings them back.
+// - Offer as things and links hands the drawings to the host to propose as changes to the graph (sketch-proposals.ts).
 // The drawings are a layer of the drawing's own SVG, drawn from the shared marks (sketch-marks.ts), in its viewBox units.
 import { word } from '@thoughtknot/core';
 import type { View, Zoom } from '@thoughtknot/core';
@@ -14,6 +15,8 @@ import type { NewSketchItem, SketchChange } from '../../sketch-edit.ts';
 import type { Sketch, SketchKind, SketchShape } from '../../sketch.ts';
 import type { Palette } from '../../palette.ts';
 import type { MarkPoint } from '../../plugin-diagrams.ts';
+import type { DrawMark } from '../../drawing-marks.ts';
+import { sketchPreview } from './sketch-preview';
 import type { Drawn } from '@thoughtknot/core';
 import { MARKED } from './focus-marks';
 import { button } from '../button';
@@ -27,6 +30,8 @@ export interface SketchHost {
   palette: Palette;
   /** Writes one change to the note: resolves to the drawings as the note now holds them, or why not, in words. */
   write: (change: SketchChange) => Promise<{ sketch: Sketch } | { refused: string }>;
+  /** Offers the drawings as things and links, written beside the graph as a proposal; resolves to what came of it. */
+  propose?: (marks: readonly DrawMark[]) => Promise<string>;
 }
 
 /** What the drawing tools take of the pointer and keys: each says whether it took the event, kept from the rest. */
@@ -133,6 +138,9 @@ export class SketchTool {
       // by keyboard: each drawing in turn, said, then centred when pressed again on it (sketch_keyboard)
       if (some && this.shown)
         button(this.el, word('sketch.next'), 'chevron-right', () => this.next(), word('sketch.next'));
+      const offer = word('sketch.propose');
+      if (some && writes && this.card.sketching.propose)
+        button(this.el, offer, 'network', () => void this.propose(), offer);
       if (this.selected && writes)
         button(this.el, word('sketch.delete'), 'trash', () => void this.remove(), word('sketch.delete'));
       this.el.hidden = !writes && !some;
@@ -360,27 +368,16 @@ export class SketchTool {
 
   /** The drawing under way, drawn as a thin line over the rest; none once it is let go. */
   private preview(points: MarkPoint[] | null): void {
-    const svg = this.card.svg();
-    if (!svg) return;
-    let line = ownChild(svg, 'polyline.tk-sketch-preview') as SVGPolylineElement | null;
-    if (!points) return line?.remove();
-    if (!line) {
-      line = svg.appendChild(activeDocument.createElementNS(SVG, 'polyline'));
-      line.setAttribute('class', 'tk-sketch-preview');
-      line.setAttribute('fill', 'none');
-      line.setAttribute('stroke', this.card.sketching.palette.text);
-      line.setAttribute('stroke-width', '2');
-    }
-    const a: MarkPoint = points[0] ?? [0, 0],
-      b: MarkPoint = points[points.length - 1] ?? a;
-    // a pen draws as it goes; a line or an arrow runs end to end; a box or ellipse is shown by its box
-    const shown: MarkPoint[] =
-      this.tool === 'pen'
-        ? points
-        : this.tool === 'box' || this.tool === 'ellipse'
-          ? [a, [b[0], a[1]], b, [a[0], b[1]], a]
-          : [a, b];
-    line.setAttribute('points', shown.map((q) => `${q[0]},${q[1]}`).join(' '));
+    const svg = this.card.svg(),
+      t = this.tool;
+    const shape = t === 'pen' ? 'pen' : t === 'box' || t === 'ellipse' ? 'box' : 'line';
+    if (svg) sketchPreview(svg, points, shape, this.card.sketching.palette.text);
+  }
+
+  /** The drawings offered as things and links, through the host: a proposal under the graph (sketch_to_graph). */
+  private async propose(): Promise<void> {
+    const propose = this.card.sketching.propose;
+    if (propose) this.say(await propose(marksOver(this.card.drawn().svg, this.card.boxes())));
   }
 
   private say(text: string): void {
