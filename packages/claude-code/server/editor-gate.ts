@@ -17,9 +17,9 @@ export interface NoteGate {
   draft: (text: string) => string | null;
   /**
    * For a file of the note's repository read from GitHub for a review (github_review_items). It is refused as any text
-   * is for a credential or a classification it gives. One that gives none counts as the lowest classification. That is
-   * because the user asked for their own repository's change. Where a gate has no word on files, every file is
-   * withheld.
+   * is for a credential or a classification it gives. One that gives none counts as the level the settings set for
+   * unlabelled repository files. That is the lowest until the user chooses a stricter one, since they asked for their
+   * own repository's change (TRUST-4). Where a gate has no word on files, every file is withheld.
    */
   file?: (text: string) => string | null;
 }
@@ -39,6 +39,13 @@ export function storeGate(settings: GateSettings, confirmed: string | null): Not
       return said(claudeGate(text, settings, vouched));
     },
     draft: (text) => said(claudeGate(text, settings, sha256(text))),
-    file: (text) => said(claudeGate(text, { ...settings, aiUnlabelled: settings.classifications[0] ?? '' }, null)),
+    file: (text) =>
+      said(
+        claudeGate(
+          text,
+          { ...settings, aiUnlabelled: settings.aiRepoUnlabelled ?? settings.classifications[0] ?? '' },
+          null,
+        ),
+      ),
   };
 }
