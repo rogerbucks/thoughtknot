@@ -136,7 +136,7 @@ fn own_documents<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<PathBuf, Strin
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let app = tauri::Builder::default();
+    let app = tauri::Builder::default().plugin(tauri_plugin_keeper::init());
     #[cfg(desktop)]
     let app = app
         .plugin(tauri_plugin_dialog::init())

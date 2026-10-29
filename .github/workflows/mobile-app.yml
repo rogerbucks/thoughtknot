@@ -59,6 +59,25 @@ jobs:
           cargo tauri android init --ci
           cargo tauri icon icons/icon.png
           cargo tauri android build --ci --debug --apk --target aarch64
+      # The keeper's tests (keeper/android/src/androidTest) on an Android emulator: the vault key is made at first launch,
+      # kept sealed by a key in the Android Keystore, and never written out. KVM lets the emulator run at speed.
+      - name: The vault key on an Android emulator
+        timeout-minutes: 25
+        working-directory: packages/app/src-tauri
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          tools="$ANDROID_HOME/cmdline-tools/latest/bin"
+          image='system-images;android-34;google_apis;x86_64'
+          yes | "$tools/sdkmanager" --install emulator "$image" > /dev/null
+          echo no | "$tools/avdmanager" create avd --force --name keeper --package "$image"
+          "$ANDROID_HOME/emulator/emulator" -avd keeper -no-window -no-audio -no-boot-anim -no-snapshot \
+            -gpu swiftshader_indirect &
+          adb="$ANDROID_HOME/platform-tools/adb"
+          "$adb" wait-for-device shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 2; done'
+          cd gen/android && ./gradlew --no-daemon :tauri-plugin-keeper:connectedDebugAndroidTest
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: thoughtknot-app-android
