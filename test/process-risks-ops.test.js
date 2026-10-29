@@ -1,3 +1,4 @@
+// Requirement: security_policy (spec §13).
 // OPS-9, OPS-11 and OPS-12. What Dependabot watches, and the release's SBOM. The wiki that survives a missing Chrome.
 // The docs that tell the truth about schedules and write access. Read as text, by indentation, as policy.test.js does.
 import { test, describe } from 'node:test';

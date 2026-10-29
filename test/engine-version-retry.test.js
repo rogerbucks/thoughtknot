@@ -1,3 +1,4 @@
+// Requirement: engine_version_watched (spec §13).
 // OPS-5: the release does not fail on one slow answer from OSV or NVD. Each call is asked up to three times, and a
 // recent committed cache stands in for a service that stays down. Proved with a fetch made for the purpose.
 import { test, describe } from 'node:test';

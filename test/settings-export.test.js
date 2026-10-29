@@ -1,3 +1,4 @@
+// Requirement: security_policy (spec §13).
 // OPS-8: the repository's ruleset and Pages settings are exported to .github/settings/, and held whole against GitHub's.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';

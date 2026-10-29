@@ -1,3 +1,4 @@
+// Requirement: quality_ratchet (spec §12).
 // OPS-10: the spread between runs is put into the metrics, and so into the baseline committed from them.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
