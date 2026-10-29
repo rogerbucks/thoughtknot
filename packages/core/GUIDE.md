@@ -831,6 +831,9 @@ never data.
 - Semantic zoom (`lens: 'semantic'`, projection_semantic_zoom) bends nothing. `semantic-zoom.ts` counts the things on
   screen and picks a rung: the ladder of detail, then every property (`everyProperty`, shown by `ViewState.toRung`).
   `display/graph-view/semantic-zoom-view.ts` steps it once the zoom rests, only the way the person zoomed.
+- A headset (projection_spatial): where the device has one (WebXR), the view in space offers View in headset.
+  `space-xr.ts` stands the drawing on a table at arm's length (`ARM`, `xrModel`) and finds what a ray points at
+  (`xrPick`). `display/graph-view/space-xr-view.ts` paints each eye with the WebGL 2 painter and picks on a press.
 
 #### Writing a style
 
