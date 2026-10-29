@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (59)
+## Open (58)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -25,7 +25,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
@@ -230,16 +229,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Before the rename, copy the note's current bytes into the drafts folder under its digest name as a one-deep 'before' record. Offer it in the changes view when git has no history.
 
 **Check:** manual
-
-### ARCH-1 Host contract covers display only; files and settings copied per host
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/host*.ts`, `packages/obsidian/src/**`, `packages/claude-code/page/**`, `packages/claude-code/server/**`, `wiki/Adding-a-host.md`.
-
-**Risk:** The Tauri app (Wave 7) and VS Code (Wave 8) will each hand-copy about 600 lines of glue. This covers notes, drafts, settings and the layout worker. No shared test holds it. Every later change to how a note is read or written then has to be made three or four times, and drifts.
-
-**Fix:** Before H1 (Wave 7), widen the published host interface to what the requirement names: note store, drafts, settings, secrets and the layout runner. Give each one a contract check in host-contract.ts. Make the Obsidian and page adapters pass it in test/host-adapters.test.js.
-
-**Check:** test/host-adapters.test.js runs every adapter against every contract check. A conventions rule fails a host package that defines its own note read or write outside the adapter.
 
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
@@ -661,7 +650,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (73)
+## Done or accepted (74)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -683,6 +672,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
 | CODE-10 | Live Preview hands a hand-made context to the block renderer | done | #1542 |
+| ARCH-1 | Host contract covers display only; files and settings copied per host | done | #1548 |
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | done | #1542 |
 | ARCH-3 | Layering is not held across packages; hosts reach into core internals | done | #1544 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
