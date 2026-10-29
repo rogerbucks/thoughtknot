@@ -13,6 +13,7 @@ import type { ReviewItem } from '@thoughtknot/core';
 import type { GitHubReader } from './github-reader.ts';
 import type { NoteHistory } from './note-history.ts';
 import type { ApiAnswer } from './start-server.ts';
+import type { PageItemFiles, PageVersion } from '../src/api-types.ts';
 
 /** The tail of a review route: the list, or one item by its kind and id. */
 export const REVIEW_ROUTE = /^\/reviews(?:\/(pull|merge|commit)\/([1-9][0-9]{0,8}|[0-9a-f]{40}))?$/;
@@ -50,7 +51,7 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
   if (tail === '/versions') {
     const v = await a.history.versions(real);
     a.listed.versions = new Set(v.ok ? v.versions.map((x) => x.commit) : []);
-    return v.ok ? json(200, { versions: v.versions }) : json(404, { why: v.why });
+    return v.ok ? json(200, { versions: v.versions satisfies PageVersion[] }) : json(404, { why: v.why });
   }
   if (at) {
     const t = await a.history.textAt(real, at);
@@ -75,5 +76,5 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
     return why === null;
   });
   const workstreams = r.value.workstreams !== null && a.held(r.value.workstreams) === null ? r.value.workstreams : null;
-  return json(200, { files, withheld, workstreams, unread: r.value.unread });
+  return json(200, { files, withheld, workstreams, unread: r.value.unread } satisfies PageItemFiles);
 }

@@ -13,13 +13,9 @@ import { PALETTES } from '../../core/src/palette.ts';
 import { word } from '../../core/src/words.ts';
 import type { Drawn } from '../../core/src/render.ts';
 import type { Refusal } from '../../core/src/layout-limits.ts';
+import type { PageVersion } from '../src/api-types.ts';
 
-/** One earlier version, as the server lists it. */
-export interface PageVersion {
-  commit: string;
-  kind: 'commit' | 'branch';
-  label: string;
-}
+export type { PageVersion };
 
 /** What the section needs: the note now, the server's two calls, a layout in a fixed theme and the scheme. */
 export interface ChangesDeps {
