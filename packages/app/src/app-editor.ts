@@ -1,7 +1,7 @@
 // Runs before the browser editor's page in the app's window (spec §41, standalone_app). It answers the page's
 // `/api/` calls from the picked folder (app-api.ts), so the page itself runs unchanged. It also adds a link back to
 // the list of notes.
-import { setLanguage, SOURCE_LANGUAGE, word } from '../../core/src/words.ts';
+import { setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import { appFetch } from './app-api.ts';
 import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
 

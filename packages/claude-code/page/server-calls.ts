@@ -3,13 +3,13 @@
 // (cc_token_unkept). The token is kept in memory, in this closure, and nowhere else. Every call is to a path from the
 // server's own root. So the page reaches no other origin (cc_no_remote, cc_offline). And the page only reads. Settings
 // are the mod's (cc_settings_shared). The session writes a note in a later workstream, never here.
-import { settingsFrom } from '../../core/src/settings.ts';
-import type { Settings } from '../../core/src/settings.ts';
+import { settingsFrom } from '@thoughtknot/core';
+import type { Settings } from '@thoughtknot/core';
 import type { PageVersion } from './changes-section.ts';
 import type { ListedPlugin } from './page-plugins.ts';
 import type { PageItemFiles } from './review-section.ts';
-import type { ReviewItem } from '../../core/src/github-review-items.ts';
-import { word } from '../../core/src/words.ts';
+import type { ReviewItem } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
 export interface NoteReply {

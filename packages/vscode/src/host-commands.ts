@@ -2,8 +2,8 @@
 // plugin_interface). Each is a command of the built-in plug-in `thoughtknot.vscode`. The registry gives it back to VS
 // Code under the id it always had, which menus and keys name. A command that fails is named in a message.
 import * as vscode from 'vscode';
-import { PLUGIN_API, pluginRegistry } from '../../core/src/plugins.ts';
-import type { PluginCommand, PluginRegistry, ThoughtKnotPlugin } from '../../core/src/plugins.ts';
+import { PLUGIN_API, pluginRegistry } from '@thoughtknot/core';
+import type { PluginCommand, PluginRegistry, ThoughtKnotPlugin } from '@thoughtknot/core';
 
 /** The id of the built-in plug-in whose commands are the extension's own. */
 export const VSCODE_COMMANDS_ID = 'thoughtknot.vscode';

@@ -2,8 +2,8 @@
 // only through these eight commands, each checked in Rust to stay inside the folder (src-tauri/src/place.rs). They are
 // called through Tauri's `invoke`, handed in, so nothing here imports Tauri and the tests hand in their own.
 import type { NewFile } from './app-api.ts';
-import type { NoteStorage } from '../../core/src/note-storage.ts';
-import { DIRECTORY, workspaceStorage, type WorkspaceFiles } from '../../core/src/workspace-storage.ts';
+import type { NoteStorage } from '@thoughtknot/core';
+import { DIRECTORY, workspaceStorage, type WorkspaceFiles } from '@thoughtknot/core';
 
 /** Tauri's call into the app: a command by name, with its arguments. It rejects with the command's error text. */
 export type Invoke = (command: string, args?: Record<string, unknown>) => Promise<unknown>;

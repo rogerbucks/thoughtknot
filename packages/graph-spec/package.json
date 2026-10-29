@@ -19,6 +19,7 @@
       "types": "./src/graph-layout-types.d.ts",
       "default": "./src/graph-layout.js"
     },
+    "./problem-codes.json": "./src/reader/problem-codes.json",
     "./package.json": "./package.json"
   }
 }
