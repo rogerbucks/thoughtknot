@@ -5,18 +5,13 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (85)
+## Open (79)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
-| SEC-2 | SECURITY.md promises rest on settings nothing in CI checks | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| SEC-5 | Nightly pre-release is not attested | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| SEC-6 | Store assets are never rebuilt and compared | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| SEC-8 | Two personal tokens live in workflows with unverified scope | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| SEC-10 | No advisory audit for the Python dependencies in CI | ●○○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-5 | The release waits on live OSV and NVD, with no retry | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-7 | Timed workflows pause and tokens expire without notice | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -85,7 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 28 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 24 · Held: text to graph with AI) | days |
-| TRUST-3 | The stable release builds and publishes in one job | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -96,16 +90,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 
 ## Each open risk
-
-### SEC-2 SECURITY.md promises rest on settings nothing in CI checks
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/release.yml`, `.github/workflows/release-check.yml`, `scripts/public-readiness.mjs`, `SECURITY.md`.
-
-**Risk:** SECURITY.md says CodeQL runs on each pull request and secret push protection blocks leaks. Both are GitHub settings with no workflow in the repository. The script that checks them (--settings) runs only by hand, so the promises can silently stop being true after the repository went public.
-
-**Fix:** Run `public-readiness.mjs --settings` in release.yml and in a weekly job. Use a token that can read repository security settings. Fail the run when any wanted setting differs.
-
-**Check:** That job itself; release-check.yml runs it too so a drift is seen before the tag.
 
 ### SEC-3 Claude's data-folder guard admits a bypass by shell paths
 
@@ -127,36 +111,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test asserts no pane text and no transcript line ever contains `token=`.
 
-### SEC-5 Nightly pre-release is not attested
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/nightly.yml`.
-
-**Risk:** The stable release carries a build provenance attestation, but the nightly only ships a SHA256SUMS made by the same job. A BRAT user following nightlies cannot tell a genuine build from a tampered one.
-
-**Fix:** Add the same attest-build-provenance step (with id-token and attestations write) to the nightly build job for main.js, manifest.json and styles.css.
-
-**Check:** A workflow test (as test/build-status-run.test.js does for its script) asserts nightly.yml names the attest action.
-
-### SEC-6 Store assets are never rebuilt and compared
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/release.yml`, `.github/workflows/release-check.yml`, `RELEASING.md`.
-
-**Risk:** Nothing builds main.js twice or rebuilds a tag and diffs it against the released file. A reviewer or user cannot confirm the Obsidian store asset matches the source, and a non-deterministic build would go unnoticed.
-
-**Fix:** In release-check.yml build twice in separate clean checkouts and fail when the sha256 of main.js, styles.css or the tarball differs.
-
-**Check:** That release-check step, and a documented `npm run build && sha256sum main.js` line in RELEASING.md for anyone to repeat.
-
-### SEC-8 Two personal tokens live in workflows with unverified scope
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/build-status.yml`, `.github/workflows/project-mirror.yml`, `.github/workflows/claude-review.yml`, `RELEASING.md`.
-
-**Risk:** PROJECT_TOKEN and CLAUDE_CODE_OAUTH_TOKEN are the maintainer's own tokens, used by jobs with issues or pull-requests write. Their scopes, expiry and rotation are not recorded anywhere in the repository. A leak through a future action change would not be bounded by design.
-
-**Fix:** Make PROJECT_TOKEN a fine-grained token limited to the project and this repository, with an expiry. Note each secret's scope, owner and renewal date in RELEASING.md.
-
-**Check:** manual
-
 ### SEC-9 Export accepts any text under an .svg name
 
 **Who found it:** Senior security engineer. **Where:** `packages/claude-code/server/export-api.ts`.
@@ -166,16 +120,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** If wanted: refuse an .svg whose text holds <script, on* attributes, <foreignObject or a javascript: address, as a second line behind the page's CSP.
 
 **Check:** A test PUTs an SVG with a script element and asserts 400.
-
-### SEC-10 No advisory audit for the Python dependencies in CI
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `python/graph_spec/pyproject.toml`.
-
-**Risk:** npm audit signatures and dependency-review cover JavaScript, but nothing audits pyyaml, lxml and rfc8785 against published advisories except Dependabot's weekly alert. A known hole in lxml would stay in a shipped tarball until the next Dependabot pass.
-
-**Fix:** Add `uvx pip-audit --locked` (or osv-scanner on uv.lock) to the Python job in ci.yml and release.yml.
-
-**Check:** That CI step.
 
 ### OPS-5 The release waits on live OSV and NVD, with no retry
 
@@ -857,16 +801,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
 
-### TRUST-3 The stable release builds and publishes in one job
-
-**Who found it:** Trust model review. **Where:** `.github/workflows/release.yml`.
-
-**Risk:** The release job runs npm ci and npm test while it holds contents, id-token and attestations write. An install script or test could ask for a signing token or change main.js before it is attested. The nightly already builds apart from publishing.
-
-**Fix:** Split the release in two. A job with read access builds and uploads the files. A second job with the write permissions attests and publishes them, running no npm.
-
-**Check:** test/workflows.test.js: no job that runs npm ci or npm test holds id-token, attestations or contents write.
-
 ### TRUST-4 GitHub titles and messages reach Claude's pane unfenced
 
 **Who found it:** Trust model review. **Where:** `packages/claude-code/server/editor-changes.ts`, `packages/claude-code/server/github-reader.ts`, `packages/claude-code/server/editor-gate.ts`.
@@ -947,12 +881,17 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (47)
+## Done or accepted (53)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
 | SEC-1 | Python library runs note guards through eval | done | #614 |
+| SEC-2 | SECURITY.md promises rest on settings nothing in CI checks | done | #1535; kept out by `test/settings-check.test.js`, `.github/workflows/settings-check.yml` |
+| SEC-5 | Nightly pre-release is not attested | done | #1535; kept out by `test/nightly-workflow.test.js`, `.github/workflows/nightly.yml` |
+| SEC-6 | Store assets are never rebuilt and compared | done | #1535; kept out by `test/reproducible-build.test.js`, `scripts/reproducible-build.mjs` |
 | SEC-7 | SCXML parsed with lxml's default entity handling | done | #1537; kept out by `python/graph_spec/tests/test_optional_imports_safe_parser.py`, `python/graph_spec/src/graphspec/engine/optional_imports.py` |
+| SEC-8 | Two personal tokens live in workflows with unverified scope | done | #1535; kept out by `test/secrets-recorded.test.js`, `RELEASING.md` |
+| SEC-10 | No advisory audit for the Python dependencies in CI | done | #1535; kept out by `test/python-audit.test.js`, `.github/workflows/ci.yml` |
 | OPS-1 | One person holds every key, with no written recovery | done | #614, #620 |
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
@@ -979,6 +918,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
 | TRUST-1 | Claude can loosen its own gate by editing vault files | done | #836; kept out by `packages/claude-code/test/gate-guard.test.js` |
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
+| TRUST-3 | The stable release builds and publishes in one job | done | #1535; kept out by `test/release-split.test.js`, `.github/workflows/release.yml` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
 | TRUST-6 | Python fill recipes read outside the folder and inject into the query | done | #1537; kept out by `python/graph_spec/tests/test_fill_contained.py`, `python/graph_spec/src/graphspec/engine/documents/fill.py` |
 | TRUST-9 | The Python class reader is looser than the core gate | done | #1537; kept out by `python/graph_spec/tests/test_classification.py`, `packages/core/test/classification-cases.json` |

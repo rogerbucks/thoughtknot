@@ -3,7 +3,7 @@
 // - --history: nothing secret, confidential or personal in this branch's history; no-reply authors; signed off.
 // - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
 // - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
-// CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
+// CI runs the first two; the release all three, and settings-check.yml the third weekly, with SECURITY_ALERTS_TOKEN.
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.

@@ -21,10 +21,10 @@ describe('dependencies nobody bumped (OPS-9)', () => {
       /thoughtknot-sbom-\$GITHUB_REF_NAME\.cdx\.json/,
     );
     assert.match(
-      runs.find((r) => r.startsWith('gh release create')),
+      runs.find((r) => /gh release create/.test(r)),
       /thoughtknot-sbom-\$GITHUB_REF_NAME\.cdx\.json/,
     );
-    assert.match(text, /subject-path: \|(?:\n +\S+)*\n +thoughtknot-sbom-\*\.cdx\.json/);
+    assert.match(text, /subject-path: \|(?:\n +\S+)*\n +release\/thoughtknot-sbom-\*\.cdx\.json/);
   });
 
   test('CONTRIBUTING.md says which pins are bumped by hand, with a new baseline', () => {

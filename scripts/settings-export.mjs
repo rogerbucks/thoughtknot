@@ -46,36 +46,39 @@ export function exportSettings({ ruleset, pages }, root = ROOT) {
 }
 
 /**
- * The two whole-setting entries for `WANTED`: each wants the committed copy (null until one is exported, which is a
- * difference) and reads GitHub's. `gh` and `defaultRuleset` come from the caller, which owns the GitHub CLI.
+ * The two whole-setting entries for `WANTED`: each wants the committed copy and reads GitHub's. Until a copy is exported,
+ * the entry has nothing to hold GitHub against, and reads as what it wants (the release and the weekly settings check
+ * must not fail for a file nobody has made yet). Pages that cannot be read (no site, or a token that may not see it) are
+ * not compared either. `gh` and `defaultRuleset` come from the caller, which owns the GitHub CLI.
  */
 export function wholeSettings({ gh, quiet, defaultRuleset, root = ROOT }) {
-  const entry = (name, file, read, write) => ({
-    name,
-    phase: 'always',
-    want: committed(file, root),
-    read: (repo) => {
-      const live = read(repo);
-      return live ? (file === 'pages.json' ? plainPages(live) : plainRuleset(live)) : null;
-    },
-    write,
-  });
+  const entry = (name, file, plain, read, write) => {
+    const want = committed(file, root);
+    return {
+      name,
+      phase: 'always',
+      want,
+      read: (repo) => {
+        const live = want && read(repo);
+        return want && (live ? plain(live) : file === 'pages.json' ? want : null);
+      },
+      write: (repo) => {
+        if (!want) throw new Error(`export the settings first: ${SETTINGS_DIR}/${file} is not there`);
+        write(repo, want);
+      },
+    };
+  };
   return [
-    entry('default branch ruleset: the whole ruleset', 'ruleset.json', defaultRuleset, (repo) => {
-      const want = committed('ruleset.json', root);
-      const live = defaultRuleset(repo);
-      if (!want || !live) throw new Error(`export the settings first: ${SETTINGS_DIR}/ruleset.json is not there`);
-      gh(['-X', 'PUT', `repos/${repo}/rulesets/${live.id}`], want);
-    }),
+    entry('default branch ruleset: the whole ruleset', 'ruleset.json', plainRuleset, defaultRuleset, (repo, want) =>
+      gh(['-X', 'PUT', `repos/${repo}/rulesets/${defaultRuleset(repo).id}`], want),
+    ),
     entry(
       'pages settings',
       'pages.json',
+      plainPages,
       (repo) => quiet(() => gh([`repos/${repo}/pages`])),
-      (repo) => {
-        const want = committed('pages.json', root);
-        if (!want) throw new Error(`export the settings first: ${SETTINGS_DIR}/pages.json is not there`);
-        gh(['-X', 'PUT', `repos/${repo}/pages`], { build_type: want.build_type, https_enforced: want.https_enforced });
-      },
+      (repo, want) =>
+        gh(['-X', 'PUT', `repos/${repo}/pages`], { build_type: want.build_type, https_enforced: want.https_enforced }),
     ),
   ];
 }

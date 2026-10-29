@@ -85,10 +85,12 @@ describe('holding GitHub against the committed copy', () => {
   const entries = (root) => wholeSettings({ gh: () => null, quiet: (f) => f(), defaultRuleset: () => live, root });
   const named = (list, name) => list.find((s) => s.name === name);
 
-  test('a repository nobody has exported yet differs, so --settings says to export', () => {
-    const [ruleset] = entries(folder());
-    assert.equal(ruleset.want, null);
-    assert.notDeepEqual(ruleset.read('o/r'), ruleset.want);
+  test('before anything is exported there is nothing to hold GitHub against, so the release is not failed for it', () => {
+    for (const setting of entries(folder())) {
+      assert.equal(setting.want, null, setting.name);
+      assert.deepEqual(setting.read('o/r'), setting.want, setting.name);
+      assert.throws(() => setting.write('o/r'), /export the settings first/);
+    }
   });
 
   test('a ruleset loosened by hand differs from the committed one in a rule other than the checks', () => {
@@ -110,7 +112,14 @@ describe('holding GitHub against the committed copy', () => {
     for (const name of ['default branch ruleset: the whole ruleset', 'pages settings']) {
       assert.equal(named(WANTED, name).phase, 'always', name);
     }
-    assert.equal(named(entries(folder()), 'pages settings').read('o/r'), null);
+    const root = folder();
+    mkdirSync(join(root, '.github/settings'), { recursive: true });
+    writeFileSync(join(root, '.github/settings/pages.json'), JSON.stringify(plainPages(pages)));
+    assert.deepEqual(
+      named(entries(root), 'pages settings').read('o/r'),
+      plainPages(pages),
+      'unreadable Pages are not compared',
+    );
   });
 
   test('RELEASING.md makes the export a step before each release', () => {

@@ -53,12 +53,11 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
    `manifest.json`, `versions.json`, every `package.json`, the mod's `plugin.json`, `pyproject.toml` and both lockfiles.
    Open a pull request with the change.
 2. **Export the settings, then run the dry run.** An admin runs `node scripts/public-readiness.mjs --settings --export`
-   with the GitHub CLI, then `node scripts/public-readiness.mjs --settings`. The first writes the default branch's
-   whole ruleset and the Pages settings to `.github/settings/`; the second fails if GitHub differs from the committed
-   copy. A difference is a change someone made by hand: commit it if it was meant (OPS-8). Then run the "Release check
-   (dry run)" workflow on main by hand. It runs every check the release waits on. A failure here costs no version
-   number. If the instruction counts fail because the runner changed, or one flaky benchmark moved, recover in this
-   order: run "Quality baseline" with "count every benchmark" and "spread" ticked, commit its `metrics.json` as
+   with the GitHub CLI. It writes the default branch's whole ruleset and the Pages settings to `.github/settings/`. A
+   difference from the committed copy is a change someone made by hand: commit it if it was meant (OPS-8). Then run the
+   "Release check (dry run)" workflow on main by hand. It runs every check the release waits on. A failure here costs
+   no version number. If the instruction counts fail because the runner changed, or one flaky benchmark moved, recover
+   in this order: run "Quality baseline" with "count every benchmark" and "spread" ticked, commit its `metrics.json` as
    `quality/baseline.json` (it carries `largest_spread`, and `quality-check.mjs` refuses a tolerance under twice it),
    re-run the dry run, and only then tag (OPS-10).
 3. **Merge the bump.** Merge the latest main into the bump's pull request first, then merge it once CI is green.
@@ -112,9 +111,9 @@ Everything a successor would need if Roger could not act. None of the values are
 
 | Key or account | What it does | Where it is made | Expires | If it is lost |
 | --- | --- | --- | --- | --- |
-| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | 15 Oct 2027. Renew by 1 Oct 2027, with a calendar reminder set two weeks before. The Token watch workflow asks GitHub once a day and opens an issue on the third refusal in a row. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
-| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not known. Rotate it if the review starts failing to authenticate. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
-| `SECURITY_ALERTS_TOKEN` (repository secret, optional) | Lets the release and the daily Security workflow read Dependabot and secret scanning alerts, which the workflow's own token may not. A fine-grained token for this repository alone, read only: "Dependabot alerts", "Secret scanning alerts" and "Code scanning alerts". | Roger's GitHub account, Settings, Developer settings, Fine-grained tokens. | 24 Oct 2027 (a year at most). Renew by 10 Oct 2027, with a calendar reminder set two weeks before. | Make a new one with the same access, and set it as the secret. While it is missing, both name the lists as not read, and npm audit and OSV still check the lock files. |
+| `PROJECT_TOKEN` (repository secret) | Lets the project mirror, the build status and the wave gate read and write the "ThoughtKnot requirements" board, and nothing else. A classic token with the `project` scope alone: GitHub's fine-grained tokens cannot reach a project a person owns, so it cannot be narrowed to the one board (SEC-8). Owner: Roger. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic), with an expiry date. | 15 Oct 2027. Renew by 1 Oct 2027, with a calendar reminder set two weeks before. The Token watch workflow asks GitHub once a day and opens an issue on the third refusal in a row. | Make a new token with the `project` scope alone, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
+| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets Claude review pull requests, run the risk panel, reply in the working group and push the daily security fixes, as Roger's Claude subscription. It reaches no GitHub permission of its own: each job's GitHub token is the workflow's, given only what that job needs. Owner: Roger. | `claude setup-token`, by Roger, on his machine. | A year after it is made. Roger notes the date here when he next makes it, and renews it two weeks before. | Run `claude setup-token` again and set the secret. Each job passes with a notice while it is missing. |
+| `SECURITY_ALERTS_TOKEN` (repository secret) | Lets the release and the daily Security workflow read Dependabot and secret scanning alerts, which the workflow's own token may not. The release and the weekly Settings check also read the repository's settings with it (SEC-2). A fine-grained token for this repository alone, read only: "Administration", "Pages", "Dependabot alerts", "Secret scanning alerts" and "Code scanning alerts". Owner: Roger. | Roger's GitHub account, Settings, Developer settings, Fine-grained tokens. | 24 Oct 2027. Renew by 10 Oct 2027, with a calendar reminder set two weeks before. | Make a new one with the same access, and set it as the secret. While it is missing, the security checks name the lists as not read (npm audit and OSV still check the lock files), and the settings check fails. |
 | `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` (repository secrets) | Sign the macOS desktop app with Roger's Developer ID certificate. Only off pull requests (docs/app-signing.md). | Xcode, then Keychain Access, on Roger's Mac, under his Apple Developer membership. | The certificate after 5 years; the membership every year. | Make a new Developer ID certificate and set the three secrets again. The app builds unsigned, with a warning, while any is missing. |
 | `APPLE_API_ISSUER`, `APPLE_API_KEY`, `APPLE_API_PRIVATE_KEY` (repository secrets) | Send the signed macOS app to Apple to be notarised, with an App Store Connect API key, never Roger's Apple ID (LEGAL-4). The private key is the `.p8` file's text. | App Store Connect, Users and Access, Integrations, App Store Connect API. A copy is in his password manager. | When Roger revokes it. | Revoke it, make a new key and set the three secrets. The app is signed but not notarised while one is missing. |
 | `LINUX_GPG_PRIVATE_KEY`, `LINUX_GPG_PASSPHRASE` (repository secrets) | Sign the Linux `.deb` with a `.asc` file beside it. | `gpg` on Roger's Mac (docs/app-signing.md). A copy is in his password manager. | The date set when it is made. | Make a new key, set both secrets, and publish the new public key. The `.deb` has no signature while one is missing. |
@@ -122,8 +121,18 @@ Everything a successor would need if Roger could not act. None of the values are
 | The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
 | The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Cloudflare, in Roger's account. | Every year on 18 October. | Renew at Cloudflare. Pages reads the domain from the repository's Pages settings. |
 
+Every secret a workflow reads has a row here, with its owner, its scope and when it is renewed. A test
+(`test/secrets-recorded.test.js`) fails on one that has none.
+
 **The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
-settings with the wanted ones. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
+settings with the wanted ones. The release and the weekly Settings check (`settings-check.yml`) run it, and fail when one
+differs. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI. Beside the single
+settings it holds the default branch's whole ruleset and the Pages settings against the copies in `.github/settings/`
+(`--settings --export` writes them), so a rule loosened by hand shows as a difference (OPS-8).
+
+**Anyone can rebuild a release and compare it.** Check out the tag, then run `node scripts/reproducible-build.mjs`: it
+builds twice in clean checkouts and prints each asset's SHA-256, to compare with the release's `SHA256SUMS`. The release
+runs it too, and stops when two builds differ (SEC-6).
 
 **There is one admin, by choice** (Roger, 19 Oct 2026). Until a second is named, nobody else can publish a release,
 change the ruleset or rotate a key. Roger will add a second admin, or move the repository to an organisation with two
