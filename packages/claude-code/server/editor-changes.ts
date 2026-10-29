@@ -2,12 +2,13 @@
 // - a note's earlier versions for the changes view, read from its git repository (changes_view);
 // - the pull requests, merges and commits of that repository, read from GitHub for a review (github_review_items).
 // Each is read only when the page asks. A version or an item is opened only once it was listed for the note. So the
-// page never names a commit or an address. And every text is held to the gate first.
+// page never names a commit or an address. And every text is held to the gate first. A title or name holding a
+// credential is held back; the page shows the rest fenced, as outside text.
 //   GET notes/<id>/versions                  {versions: [{commit, kind, label}]}, or 404 {why}
 //   GET notes/<id>/at/<commit>               {text} at a commit just listed for it
 //   GET notes/<id>/reviews                   {items: [{kind, id, title, author, when, url}]}, or 404 {why}
 //   GET notes/<id>/reviews/<kind>/<item id>  {files: [{path, before, after}], withheld: [{path, why}], workstreams, unread}
-import { word } from '@thoughtknot/core';
+import { heldItem, word } from '@thoughtknot/core';
 import type { ReviewItem } from '@thoughtknot/core';
 import type { GitHubReader } from './github-reader.ts';
 import type { NoteHistory } from './note-history.ts';
@@ -62,7 +63,8 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
     a.listed.items.clear();
     if (!r.ok) return json(404, { why: r.why });
     for (const item of r.value) a.listed.items.set(`${item.kind}/${item.id}`, item);
-    return json(200, { items: r.value });
+    // GitHub's titles and names are a third party's text: one holding a credential never reaches the pane (TRUST-4)
+    return json(200, { items: r.value.map(heldItem) });
   }
   const r = await a.github.files(real, a.listed.items.get(`${m[1]}/${m[2]}`) as ReviewItem);
   if (!r.ok) return json(404, { why: r.why });

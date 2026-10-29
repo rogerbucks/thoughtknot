@@ -65,14 +65,14 @@ describe('reviewing a change from GitHub in the browser editor', () => {
       await until(() => !!page.doc.querySelector('#gn-review-pick'), 8000);
       assert.equal(page.doc.querySelector('label[for="gn-review-pick"]')?.textContent, 'Change to review');
       assert.deepEqual(texts(page.doc.querySelectorAll('#gn-review-pick option')), [
-        'Pull request #7: Review items (roger)',
-        'Commit aaaaaaa: Tidy (Ann)',
+        'Pull request #7: ` Review items ` (` roger `)',
+        'Commit aaaaaaa: ` Tidy ` (` Ann `)',
       ]);
       assert.equal(asked.files, 0);
       named(page.doc, 'Review').click();
       await until(() => !!page.doc.querySelector('.gn-review-result h2'), 8000);
       const result = page.doc.querySelector('.gn-review-result');
-      assert.equal(result.querySelector('h2').textContent, 'Pull request #7: Review items (roger)');
+      assert.equal(result.querySelector('h2').textContent, 'Pull request #7: ` Review items ` (` roger `)');
       // level 1: by section, by workstream and requirement
       assert.deepEqual(texts(result.querySelectorAll('.gn-review-summary li')), [
         '41 · Every surface: 1 added, 1 changed',

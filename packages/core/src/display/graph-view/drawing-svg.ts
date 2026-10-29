@@ -5,7 +5,7 @@
 // to a note, a file or an address are drawn as a link. A thing's attachments are counted (§18, links/link-marks.ts).
 // Laid out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new
 // drawing.
-import { edgesOf, textVersion, trunksOf, withoutColorMix, word } from '@thoughtknot/core';
+import { cleanSvg, edgesOf, textVersion, trunksOf, withoutColorMix, word } from '@thoughtknot/core';
 import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
 import { markCertainty } from './certainty';
@@ -17,11 +17,15 @@ import type { ViewOptions } from './view-options';
 
 let described = 0;
 
-/** The SVG text parsed into an element of the page, its blends plain where the browser cannot mix colours. */
+/**
+ * The SVG text parsed into an element of the page, its blends plain where the browser cannot mix colours. It passes the
+ * allowlist first, so no script, event or outside link reaches the live page whatever the labels held (TRUST-7).
+ */
 export function parsedSvg(drawn: Drawn): SVGSVGElement {
   // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
   const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
-  const text = mixes ? drawn.svg : withoutColorMix(drawn.svg);
+  const clean = cleanSvg(drawn.svg);
+  const text = mixes ? clean : withoutColorMix(clean);
   // where inline styles are forbidden (host.ts), no style attribute may be parsed from markup. That holds even in a
   // parser's own document, which keeps the page's policy. Each is renamed in the text, and its declarations set through
   // the CSSOM
