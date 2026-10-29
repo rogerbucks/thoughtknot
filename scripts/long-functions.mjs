@@ -7,8 +7,8 @@
 // package's src, server and page folders. A function is named by its file and the path of names down to it, such as
 // `packages/obsidian/src/block.ts#renderBlock` or `…#BlockView.draw`. One with no name is named by what holds it and its
 // place there: `…#bindViewportEvents>2` is the second nameless function inside it. A function that wraps a whole module,
-// `(function (root) { … })(this)`, is read as the file: the file's cap holds it, and each function in it is named as if
-// at the top.
+// `(function (root) { … })(this)`, is read as the file. The file's cap holds it. Each function in it is named as if at
+// the top.
 //
 // Those already there are held in test/long-functions.json, a ratchet: each one's lines may only go down. A new long
 // function fails, and so does one on the list that grew. One that shrank, or now has 100 lines or fewer, fails too until
