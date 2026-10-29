@@ -989,7 +989,12 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 `thoughtknot.diagrams.<view>` (workstream V2).
 
 - `view-types.ts` — the list, `VIEW_TYPES`, and what draws each, `VIEW_DRAWERS`.
-- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked.
+- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked. Each group is an
+  outlined block on the diagonal (projection_matrix).
+- `arc-view.ts` — each thing on one line, each link an arc: above it from left to right, below it back (projection_arc).
+- `block-order.ts` — the order an arc and a matrix share. A group's things sit side by side: the groups written, else
+  those the links make (`louvain.ts`), else the kinds. Linked groups sit next to each other, and within a group linked
+  things sit close (reverse Cuthill–McKee).
 - `treemap-view.ts` — a rectangle for each group, else each kind, and one for each thing in it, sized by its links.
   The rectangles are laid out squarified (`squarified`), so they stay near square.
 - `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.

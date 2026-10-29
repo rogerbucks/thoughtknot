@@ -20,7 +20,7 @@ const styled = (...lines) => ['// graph: org_style · STYLE org', ...lines].join
 const noteOf = (...blocks) => ['# Org', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
 /** The views shown at first, then those under More views (Q-12, option B). */
 const FIRST = ['Force', 'Matrix', 'Treemap', 'Ego'];
-const MORE = ['Chord', 'Density', 'Block', 'Plan', 'Centroid', 'Containment'];
+const MORE = ['Chord', 'Density', 'Block', 'Plan', 'Centroid', 'Containment', 'Arc'];
 const VIEWS = [...FIRST, ...MORE];
 
 async function card(note) {

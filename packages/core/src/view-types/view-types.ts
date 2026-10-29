@@ -3,6 +3,7 @@
 // style graph's diagram type (style-graph.ts). The core adds each through the plug-in interface (core-diagrams.ts).
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
+import { arcMarks } from './arc-view.ts';
 import { blockMarks } from './block-view.ts';
 import { centroidMarks } from './centroid-view.ts';
 import { chordMarks } from './chord-view.ts';
@@ -27,6 +28,7 @@ export const VIEW_TYPES = [
   'plan',
   'centroid',
   'containment',
+  'arc',
 ] as const;
 /**
  * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
@@ -49,4 +51,5 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   plan: (given) => scaffoldMarks(given, planMarks(given), VIEW_NEEDS.plan ?? []),
   centroid: centroidMarks,
   containment: containmentMarks,
+  arc: arcMarks,
 };
