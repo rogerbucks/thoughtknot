@@ -65,6 +65,7 @@ from graphspec.rules.projection import (
     _cnorm,
     _gql,
     _iso,
+    iso,
     canon,
     project,
     projects_back,
@@ -150,6 +151,7 @@ from graphspec.rules.views import (
     SCHEMA_LABELS,
     _caption,
     _word,
+    word,
     legend,
     mermaid_graph,
     mermaid_path,
@@ -173,3 +175,19 @@ from graphspec.rules.guessed_readings import (
     guess_readings,
     reverse_reading,
 )
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+band_rank basis basis_hash below both calibration canon CARD_NEEDS changeset_header check
+check_changeset claim_status clip_shown completeness CONFIDENCE confidence_from_evidence
+corroborate corroboration COV_NEEDS current_decisions declared_in derived_ranges drafted Graph
+guess_readings hash16 is_draft is_judgement_graph is_named iso jcs JUDGEMENT_EDGES
+judgement_hash judgements_rules latest_assessment legend LENS lens_buckets lift LIKELIHOOD
+may_serve mermaid_graph mermaid_path NAME_KEYS named near_duplicates norm path_steps
+paths_rules project PROJECTION_TZ projects_back proposer_warnings RANGE readings rebuild
+refresh_section20 reliability resolve reverse_reading review SCHEMA_LABELS section20
+served_rules settled SHOWN_LIMIT shown_text span SPEC_EDGES SPEC_MARKERS SPEC_NODES SPEC_SCHEMA
+tops typed types untyped UTC verdict view_at views why_layer wilson word WORDING_KEYS words
+World
+""".split()

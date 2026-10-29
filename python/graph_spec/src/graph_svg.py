@@ -234,7 +234,7 @@ def drawn_source(
     return quick_source(src, len(nodes)), kinds, readings
 
 
-def _themed(svg, kinds, readings=()):
+def themed(svg: str, kinds: list, readings: tuple | list = ()) -> str:
     """Swap the placeholder colours for Obsidian theme variables, as inline styles, and make the
     SVG fit a note."""
     style = STYLE
@@ -308,6 +308,9 @@ def _themed(svg, kinds, readings=()):
     return "\n".join(line.strip() for line in svg.splitlines() if line.strip())
 
 
+_themed = themed  # the old private name, which tests and the vault used (entry_points.json)
+
+
 def _layout(nodes, edges, rankdir, **drawn):
     src, kinds, readings = drawn_source(nodes, edges, rankdir, **drawn)
     svg = drawn_svg(DOT, src, drawn.get("routing"))
@@ -372,7 +375,7 @@ def render(
         )
         if best is None or fit > best[0] + 0.02:
             best = (fit, svg, kinds, readings)
-    return _themed(*best[1:])
+    return themed(*best[1:])
 
 
 if __name__ == "__main__":
@@ -386,3 +389,11 @@ if __name__ == "__main__":
             [("o", "answers", "q"), ("r", "favours", "o")],
         )
     )
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+arrowless_source available directions DOT dot_source drawn_source drawn_svg flow_source
+folded_source HERE inline_source nudged_source picture_source QUICK_SETTINGS quick_source
+render render_args routed_source STYLE themed typed_source
+""".split()
