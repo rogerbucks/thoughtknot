@@ -81,16 +81,17 @@ export interface GuardPorts {
 const DRIVE = /^[A-Za-z]:\//;
 
 /**
- * Whether the host is Windows: its folders start with a drive. There a path is written with backslashes, so the guard
- * reads each as a slash; elsewhere a backslash is part of a name and is left as it is.
+ * Whether the host is Windows: its folders start with a drive. There a path is written with backslashes. So the guard
+ * reads each as a slash. Elsewhere a backslash is part of a name and is left as it is.
  */
-const onWindows = (ports: GuardPorts): boolean => [ports.cwd, ports.data].some((path) => /^[A-Za-z]:[\\/]/.test(path));
+export const onWindows = (ports: GuardPorts): boolean =>
+  [ports.cwd, ports.data].some((path) => /^[A-Za-z]:[\\/]/.test(path));
 
 /** `path` with Windows' backslashes as slashes. */
-const slashed = (path: string): string => path.replace(/\\/g, '/');
+export const slashed = (path: string): string => path.replace(/\\/g, '/');
 
 /** The ports with every path in slashes, the real-path and link calls' answers too, so one path reads one way. */
-function slashedPorts(ports: GuardPorts): GuardPorts {
+export function slashedPorts(ports: GuardPorts): GuardPorts {
   const { readLink } = ports;
   return {
     ...ports,
@@ -336,9 +337,11 @@ async function guardCall(tool: string, input: ToolInput, kept: Kept, given: Guar
   try {
     if (tool === 'Bash') {
       const command = input.command;
-      return typeof command === 'string' && command
-        ? await guardCommand(as(command), { ...kept, target: as(kept.target) }, ports)
-        : null;
+      if (typeof command !== 'string' || !command) return null;
+      const target = { ...kept, target: as(kept.target) };
+      // on Windows a backslash may still be the shell's escape, as in plug\ins: the command is read both ways
+      const read = await guardCommand(as(command), target, ports);
+      return read ?? (windows ? guardCommand(command, target, ports) : null);
     }
     return path === null ? null : await guardFile(as(path), { ...kept, target: as(kept.target) }, ports);
   } catch {
