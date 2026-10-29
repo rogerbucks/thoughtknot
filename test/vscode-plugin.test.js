@@ -157,7 +157,7 @@ describe('notes in a VS Code workspace, read and written through the tab’s cal
       }),
     );
   };
-  for (const check of storageContract(storage)) test(check.name, check.run);
+  for (const check of storageContract(storage, { windows: process.platform === 'win32' })) test(check.name, check.run);
 });
 
 describe('the tab’s page, in a real browser', () => {
