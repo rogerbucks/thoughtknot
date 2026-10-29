@@ -25,6 +25,8 @@ function renamedRepo() {
   git(repo, 'init', '-q');
   git(repo, 'config', 'user.email', 'test@example.com');
   git(repo, 'config', 'user.name', 'Test');
+  // files come back as they were written: Git on Windows would check them out with CRLF
+  git(repo, 'config', 'core.autocrlf', 'false');
   const write = (path, text) => {
     mkdirSync(join(repo, path, '..'), { recursive: true });
     writeFileSync(join(repo, path), text);

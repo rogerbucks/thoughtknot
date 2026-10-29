@@ -20,6 +20,8 @@ export function repository(commits) {
   git('config', 'user.email', 'test@example.com');
   git('config', 'user.name', 'Test');
   git('config', 'commit.gpgsign', 'false');
+  // files come back as they were written: Git on Windows would check them out with CRLF
+  git('config', 'core.autocrlf', 'false');
   const commit = (files, message) => {
     for (const [file, text] of Object.entries(files)) {
       if (text === null) {
