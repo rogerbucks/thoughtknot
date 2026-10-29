@@ -108,3 +108,40 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
         run: node scripts/security-alerts.mjs --release
+
+  # SECURITY.md's promises rest on GitHub settings (SEC-2): secret scanning and push protection, CodeQL on each pull
+  # request, Dependabot, the ruleset and the Actions token. They are read with SECURITY_ALERTS_TOKEN, which may see
+  # them, and the run fails when one differs from the wanted, or the token is missing. settings-check.yml runs the same
+  # each week. It only reads.
+  settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: GitHub's settings are the ones SECURITY.md promises
+        env:
+          GH_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::error::SECURITY_ALERTS_TOKEN is not set, so the settings cannot be read (RELEASING.md, Keys and recovery)"; exit 1; }
+          node scripts/public-readiness.mjs --settings
+
+  # The store assets are the same however often they are built (SEC-6): two clean checkouts of this commit, each
+  # installed and built as the release builds, give main.js, styles.css and the libraries' archive byte for byte alike.
+  # So anyone can rebuild a tag and compare it with what the store serves (RELEASING.md). It only reads.
+  reproducible:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Two clean builds of this commit give the same store assets and archive
+        run: node scripts/reproducible-build.mjs

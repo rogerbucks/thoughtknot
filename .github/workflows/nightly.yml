@@ -12,8 +12,8 @@ name: Nightly
 # installers at the same commit, by the Desktop app workflow: a .dmg, an NSIS .exe and a .deb. Each is signed where
 # its keys are set, and unsigned where they are not (Roger, 23 Oct 2026: private nightlies only, unsigned if there is
 # no signature). A night the installers fail still publishes the plugin, without them. `publish` may write the
-# repository's contents, which a release needs, and so runs no code of the repository at all: no checkout, no install,
-# no Node. It creates the pre-release with gh alone, and keeps the last seven nightlies. A pre-release never counts as a
+# repository's contents, which a release needs, and attest the build (SEC-5), and so runs no code of the repository
+# at all: no checkout, no install, no Node. It creates the pre-release with gh alone, and keeps the last seven nightlies. A pre-release never counts as a
 # release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
 # `drafts` runs every night, moved or not, and fails while a stable release has waited as a draft for over a day, so its
 # owner hears of it (risk OPS-3; RELEASING.md, "Cutting a release").
@@ -252,13 +252,30 @@ jobs:
     if: ${{ !cancelled() && needs.build.result == 'success' && needs['tests-passed'].result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # contents to publish; id-token and attestations to attest the build's provenance, as the stable release does (SEC-5)
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: nightly
           path: nightly
+      - name: The files are the ones the build job made
+        run: cd nightly && sha256sum --check --strict SHA256SUMS
+      # So a BRAT user can tell a genuine nightly from a tampered one: `gh attestation verify main.js -R <repo>`.
+      # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-path: |
+            nightly/main.js
+            nightly/manifest.json
+            nightly/styles.css
+            nightly/graph-spec-libraries-*.tar.gz
+            nightly/thoughtknot-*.tgz
+            nightly/thoughtknot-vscode-*.vsix
       - if: needs.desktop.result == 'success' && needs.check.outputs.sha == needs.build.outputs.sha
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
