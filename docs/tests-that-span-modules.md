@@ -629,6 +629,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
   runner for hours (editor spec §13, ci_jobs_time_limited).
+- `test/os-check-workflow.test.js` — the tests on macOS and Windows read as on Linux. Every text file is checked out
+  with LF line ends, and Python reads Node's output as UTF-8.
 - `test/workflow-keys.test.js` — no workflow names a key twice in one map. GitHub can't read such a file, and shows a
   failed run on every push with no job run (#847).
 - `packages/app/test/app-config.test.js` — the desktop app is shut by default. Its window loads only its own pages,
