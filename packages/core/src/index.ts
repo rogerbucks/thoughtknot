@@ -23,6 +23,7 @@ export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
 export { estimateFix, type EstimateFix } from './estimate-fix.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
+export { SVG_ELEMENTS, cleanSvg } from './svg-allowlist.ts';
 export { draw, directions, chosen, details, linkDetails } from './render.ts';
 export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.ts';
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
