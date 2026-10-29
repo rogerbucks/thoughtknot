@@ -23,15 +23,14 @@ import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
 import { keyMove, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
-import { pickPainter } from './mark-painter.ts';
-import type { Paints } from './mark-painter.ts';
-import { webgl2SpacePainter } from './space-painter.ts';
+import { pickPainter, type Paints } from './mark-painter.ts';
+import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
-import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
 import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
-import { heldIn, marksOfSvg } from './svg-marks.ts';
+import { heldIn } from './svg-marks.ts';
+import { sketchedSpace, sketchPainted, type Sketch } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
 import { SpaceGlide } from './space-view-glide.ts';
 import { SpaceMiniMap } from './space-mini-map.ts';
@@ -60,6 +59,7 @@ export interface SpaceOptions {
   cards?: boolean;
   asDrawn?: boolean;
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
+  sketch?: () => Sketch | null; // the drawings over the graph as shown now, none while hidden (§70)
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
   lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
@@ -92,7 +92,7 @@ export async function openSpaceView(
     already();
     return null;
   }
-  let { marks, paints } = 'marks' in from ? from : marksOfSvg(from);
+  let { marks, paints } = 'marks' in from ? from : sketchPainted(from); // the drawings in their own colours (§70)
   const el = root.createDiv({
     cls: 'thoughtknot-space-view',
     attr: { tabindex: '0', role: 'img', 'aria-label': word('space.name', { graph }) },
@@ -121,11 +121,11 @@ export async function openSpaceView(
     held = new Map('marks' in from ? [] : heldIn(from));
   const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
-    if (by !== 'cards' && by) return spaceOf(marks, by);
+    if (by !== 'cards' && by) return sketchedSpace(spaceOf(marks, by), from, more.sketch, marks);
     const kept = spots && spotsKept(spots, held);
     const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
     spots = laid.spots;
-    return stackedPlanes(laid.space);
+    return sketchedSpace(stackedPlanes(laid.space), from, more.sketch, marks);
   };
   // a drawing opens as cards, or in 3D; an overview's groups (massive-paints.ts) are no things to lay out: it is lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.cards === false ? 1 : 0;
@@ -180,7 +180,7 @@ export async function openSpaceView(
     const was = space.blocks.map((b) => b.of).join(),
       before = picked && { of: picked.of, at: middleOf(picked) };
     const [shown, shownOrbit] = [glide.settle(), orbit];
-    ({ marks, paints } = marksOfSvg(from));
+    ({ marks, paints } = sketchPainted(from));
     depths = depthsOf();
     // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
     held = new Map([...held, ...heldIn(from)]);

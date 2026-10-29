@@ -665,7 +665,15 @@ never data.
   - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
     wraps it. A drawing pinned to a thing the view leaves out is not drawn.
   - `sketchSvg` lays them over a 2D drawing as one layer, each part tagged `data-sketch` for a tap.
-  - `sketchInSpace` lays them on the top of their block in 2.5D and 3D, or on the ground.
+  - `sketchInSpace` lays them on the top of their block in 2.5D and 3D, where it stands there, or on the ground.
+  - `drawnMarks` reads a Graphviz drawing's boxes and groups from its SVG text, for the drawings to be placed on.
+- `sketch-edit.ts` — a drawing made on the card, written to the note.
+  - `sketchEdit` adds, moves or takes away one drawing, changing only its own text. The first writes the block.
+  - `drawnItem` makes a drawing from what was drawn, pinned to what it began over (`pinAt`). `thinned` thins a stroke.
+- `display/graph-view/sketch-tool.ts` — Draw on the card's tools row, with the pen, box, ellipse, line, arrow and note.
+  - A drag draws, and letting go writes the drawing through the host (`ViewOptions.sketching`).
+  - A first tap on a drawing selects it and says what it is, with Delete. A second tap centres it.
+  - Hide drawings hides them flat and in space. The view in space draws them with `sketchInSpace`.
 
 #### Reading and checking a style
 
