@@ -1,5 +1,9 @@
 {
-  "about": "Editor spec §42, problem_codes: small blocks each reader refuses, and the stable code it refuses each with (src/reader/problem-codes.json). One table for the JavaScript and the Python reader, so they give the same code: read by problem-codes.test.mjs and python/graph_spec/tests/test_problem_codes.py. via says how a case is read: store, applied to a new Store; change, one change set statement read by readChange (read_change); to_gql, written as standard GQL by the Python library's to_gql. A case read by to_gql, or whose code the table gives to Python alone, is run by Python alone.",
+  "about": "Editor spec §42, problem_codes: small blocks each reader refuses, and the stable code it refuses each with (src/reader/problem-codes.json). One table for the JavaScript and the Python reader, so they give the same code: read by problem-codes.test.mjs and python/graph_spec/tests/test_problem_codes.py. via says how a case is read: store, applied to a new Store; change, one change set statement read by readChange (read_change); to_gql, written as standard GQL by the Python library's to_gql. A case read by to_gql, or whose code the table gives to Python alone, is run by Python alone. A code of the limits on reading has its case in limit-cases.json. no_block names each code no block can be refused with, and why.",
+  "no_block": {
+    "GN416": "Raised only by the Python change-set check when its caller hands a base text under a graph other than the one its first line names: a fault of the call, which no block alone can make.",
+    "GN502": "Raised only when the Python library's standard GQL writer cannot find a node the parser read: a fault in the writer, never in the block."
+  },
   "cases": [
     { "name": "no graph line", "via": "store", "block": "(a:T {id: 'a'})", "code": "GN101" },
     { "name": "a graph name of two words", "via": "store", "block": "// graph: reader-choice\n(a:T)", "code": "GN102" },
@@ -24,6 +28,42 @@
       "via": "store",
       "block": "// graph: g\n(a:T {d: DATE '2026-13-01'})",
       "code": "GN203"
+    },
+    {
+      "name": "a date on 30 February, never read as 2 March",
+      "via": "store",
+      "block": "// graph: g\n(a:T {d: DATE '2026-02-30'})",
+      "code": "GN203"
+    },
+    {
+      "name": "a date in year 0",
+      "via": "store",
+      "block": "// graph: g\n(a:T {d: DATE '0000-01-01'})",
+      "code": "GN203"
+    },
+    {
+      "name": "an instant at 25 o'clock, never read as the next day",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME '2026-10-07T25:00:00Z'})",
+      "code": "GN204"
+    },
+    {
+      "name": "an instant that is a date alone",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME '2026-10-07'})",
+      "code": "GN204"
+    },
+    {
+      "name": "an instant a whole day off UTC",
+      "via": "store",
+      "block": "// graph: g\n(a:T {t: DATETIME '2026-10-07T09:30:00+24:00'})",
+      "code": "GN204"
+    },
+    {
+      "name": "a whole number past 2^53, never rounded",
+      "via": "store",
+      "block": "// graph: g\n(a:T {n: 9007199254740993})",
+      "code": "GN211"
     },
     {
       "name": "an instant that is no instant",

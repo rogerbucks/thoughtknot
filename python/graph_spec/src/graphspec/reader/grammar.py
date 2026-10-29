@@ -8,6 +8,13 @@ import re
 
 from graphspec.reader.lexer import ProfileError, UTC, unquote
 
+# A DATETIME's text, as the JavaScript reader matches it (tokens.js, utcNaive). It is a date, a
+# time to the minute or second with up to six decimals, and its offset, if any.
+INSTANT = re.compile(
+    r"(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?",
+    re.ASCII,
+)
+
 
 class IdNotTextError(ProfileError):
     """A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's
@@ -82,7 +89,17 @@ class Parser:
             return unquote(t)
         if k == "num":
             self.i += 1
-            return float(t) if re.search(r"[.eE]", t) else int(t)
+            if re.search(r"[.eE]", t):
+                return float(t)
+            # past 2^53 the JavaScript reader cannot hold a whole number exactly: both refuse it
+            if abs(int(t)) > 2**53 - 1:
+                raise ProfileError(
+                    n,
+                    f"'{t}' is too big to hold exactly",
+                    "write it as text, in quotes",
+                    code="GN211",
+                )
+            return int(t)
         if k == "kw" and t in ("TRUE", "FALSE"):
             self.i += 1
             return t == "TRUE"
@@ -99,6 +116,9 @@ class Parser:
             self.i += 1
             s = unquote(self.take("str")[1])
             try:
+                # the one form the JavaScript reader reads, never the others fromisoformat takes
+                if not INSTANT.fullmatch(s):
+                    raise ValueError(s)
                 v = dt.datetime.fromisoformat(s)
             except ValueError:
                 raise ProfileError(

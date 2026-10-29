@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §21 joins: the few places a join's result depends on Python's printing, reproduced (pyrepr and kin).
 'use strict';
 

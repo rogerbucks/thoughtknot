@@ -1,0 +1,25 @@
+{
+  "about": "The stable code of every refusal the graph-spec library gives outside the reader (API-8): a call handed what it cannot work on. The reader's own problems have their codes in src/reader/problem-codes.json. A code is GR and two digits, or GL and two digits for the layout, never reused and never renumbered. Each raise passes its code as a literal; packages/graph-spec/test/refusal.test.mjs holds every throw of the library to a code here.",
+  "codes": {
+    "GR01": "an axis of time that is neither recorded nor real (as-at.js)",
+    "GR02": "a number RFC 8785 cannot write: NaN or an infinity (canonical-json.js)",
+    "GR03": "a lens asked for by an id that is no lens (saved-lenses.js)",
+    "GR04": "a transition to promote that is not there (process/core.js)",
+    "GR05": "a promoted transition's id that is already a thing (process/core.js)",
+    "GR06": "a guard function at a version that is not given (process/core.js)",
+    "GR07": "a running rule that is none of the rules (process/core.js)",
+    "GR08": "a run asked for that is no run (process/core.js)",
+    "GR09": "states that contain each other in a loop (process/runs.js)",
+    "GR10": "a cluster kind that is none of the kinds (clusters.js)",
+    "GR11": "a way of showing cycles that is none of the ways (cycles.js)",
+    "GR12": "a guard that is more than comparisons, or too long or deep (guards.js)",
+    "GR13": "a guard naming a value its context does not hold (guards.js)",
+    "GR14": "a thing with a list as a value, which the flat projection cannot hold (projection.js)",
+    "GR15": "a thing with a property named type, which the flat projection cannot hold (projection.js)",
+    "GR16": "a lens rule that needs an engine to run (lenses.js)",
+    "GR17": "a constraint written in GQL with no named twin, which needs an engine (validate.js)",
+    "GR18": "a document's trust that is not own, trusted or untrusted (trust.js)",
+    "GL01": "the layout handed one key as text where a collection of keys goes (graph-layout.js)",
+    "GL02": "the layout handed no direction, and a style that sets none (graph-layout.js)"
+  }
+}

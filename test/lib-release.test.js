@@ -110,7 +110,7 @@ describe('the two packages, built and installed from their files', () => {
     const program = (typed) =>
       [
         "import { readNote, History, layoutSource } from '@thoughtknot/core';",
-        "import spec from '@thoughtknot/graph-spec';",
+        "import spec, { check } from '@thoughtknot/graph-spec';",
         // risk API-2: the host interface ships as the break check declares it, each entry its own
         "import { HOST_CONTRACT_VERSION } from '@thoughtknot/core/display/host-contract';",
         "import * as host from '@thoughtknot/core/display/host';",
@@ -127,6 +127,8 @@ describe('the two packages, built and installed from their files', () => {
         '  checked: checks.length > 0,',
         "  layout: layoutSource(drawing, 'LR').source.startsWith('digraph'),",
         "  host: typeof host === 'object' && rows.length === 0 && HOST_CONTRACT_VERSION > 0,",
+        // graph-spec as an ES module: a name imported by name is the module's own (API-8)
+        '  named: check === spec.check,',
         '}));',
       ].join('\n');
     writeFileSync(join(app, 'use.ts'), program(true));
@@ -141,7 +143,7 @@ describe('the two packages, built and installed from their files', () => {
     );
     writeFileSync(join(app, 'use.mjs'), program(false));
     const said = JSON.parse(execFileSync(process.execPath, ['use.mjs'], { cwd: app, encoding: 'utf8' }));
-    assert.deepEqual(said, { graphs: 1, undo: true, checked: true, layout: true, host: true });
+    assert.deepEqual(said, { graphs: 1, undo: true, checked: true, layout: true, host: true, named: true });
   });
 });
 

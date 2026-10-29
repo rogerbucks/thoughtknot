@@ -12,29 +12,47 @@ const SHARED = new RegExp(`·${S}*SCHEMA${S}+(${N}+)`),
 
 /** A table keyed by names the writer chooses, with nothing in it but what is put there. It has no `constructor`,
  * `toString` or `__proto__` from JavaScript's own objects. So a graph, schema or thing of that name is read as any
- * other (§3). Copies `from`'s own entries, if given. */
+ * other (§3). Copies `from`'s own entries, if given.
+ * @template T
+ * @param {Record<string, T>} [from]
+ * @returns {Record<string, T>} */
 const names = (from) => Object.assign(Object.create(null), from);
 
 // Graphs built from data blocks, in the order they are applied: {graph: {nodes: Map key -> {labels, props}, edges}},
 // with the shared schemas, the schema each graph's header names, and the missing commas and colons read in (§3).
+/** @typedef {import('./parser.js').Value} Value */
+/** @typedef {import('./parser.js').PatternRel} PatternRel */
+/** @typedef {import('./parser.js').PatternNode} PatternNode */
+/** @typedef {{ labels: Set<string>, props: Record<string, Value> }} StoredNode A thing as stored: its labels, its properties. */
+/** @typedef {[from: string, type: string, to: string, props: Record<string, Value>]} StoredEdge A link, by its ends' keys. */
+/** @typedef {{ nodes: Map<string, StoredNode>, edges: StoredEdge[] }} StoredGraph One graph: its things by key, its links. */
 class Store {
   constructor() {
+    /** @type {Record<string, StoredGraph>} */
     this.graphs = names();
     this.k = 0;
+    /** @type {Record<string, string>} */
     this.schemas = names();
+    /** @type {Record<string, string>} */
     this.named = names();
     // schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing
     // comma was read in (§3); commaPlaces: where each is written in, by block text
+    /** @type {{ graph: string, line: number }[]} */
     this.commas = [];
+    /** @type {Map<string, number[]>} */
     this.commaPlaces = new Map();
     // bares: [{graph, line, written, type}] where a type written without its colon was read as the graph's one type
     // of that name, ignoring case (§3); fixes: [[at, written, type]], where each begins in its block, by block text
+    /** @type {{ graph: string, line: number, written: string, type: string }[]} */
     this.bares = [];
+    /** @type {Map<string, [at: number, written: string, type: string][]>} */
     this.fixes = new Map();
   }
   /** The relationship types graph g knows so far: written with their colon, declared by an ElementType, or in the
-   * shared schema it names. */
+   * shared schema it names.
+   * @param {string} g */
   edgeTypes(g) {
+    /** @type {Set<string>} */
     const out = new Set();
     const names = [g, ...(this.named[g] in this.schemas ? [this.schemas[this.named[g]]] : [])];
     for (const name of names) {
@@ -46,7 +64,8 @@ class Store {
     }
     return out;
   }
-  /** A bare type read as the graph's one type of that name, ignoring case — or refused. */
+  /** A bare type read as the graph's one type of that name, ignoring case — or refused.
+   * @param {string} g @param {PatternRel} r @param {string} block @returns {string} */
   resolve(g, r, block) {
     const written = r.type;
     const found = [...this.edgeTypes(g)].filter((t) => t.toLowerCase() === written.toLowerCase()).sort();
@@ -68,7 +87,7 @@ class Store {
       );
     this.bares.push({ graph: g, line: r.line, written, type: found[0] });
     if (!this.fixes.has(block)) this.fixes.set(block, []);
-    this.fixes.get(block).push([r.at, written, found[0]]);
+    this.fixes.get(block)?.push([r.at, written, found[0]]);
     return found[0];
   }
   /** The block as an engine may be given it (req:3.engine-gets-corrected, req:3.engine-gets-commas):
@@ -76,27 +95,34 @@ class Store {
    * - each missing comma it read in is written at the end of the code on its line.
    * It is the same text the Python reader gives. No line is added (req:3.engine-text-keeps-lines). Each is put where
    * the reader read it: a bare type where its token begins, a comma where the code on its line ends. Neither is found
-   * by searching the text. */
+   * by searching the text.
+   * @param {string} block */
   corrected(block) {
+    /** @type {(readonly [at: number, cut: number, text: string])[]} */
     const edits = [
-      ...(this.fixes.get(block) ?? []).map(([at, written, type]) => [at, written.length, ':' + type]),
-      ...(this.commaPlaces.get(block) ?? []).map((at) => [at, 0, ',']),
+      ...(this.fixes.get(block) ?? []).map(
+        ([at, written, type]) => /** @type {const} */ ([at, written.length, ':' + type]),
+      ),
+      ...(this.commaPlaces.get(block) ?? []).map((at) => /** @type {const} */ ([at, 0, ','])),
     ].sort((a, b) => b[0] - a[0]);
     let out = block;
     for (const [at, cut, text] of edits) out = out.slice(0, at) + text + out.slice(at + cut);
     return out;
   }
+  /** @param {string} g @returns {StoredGraph} */
   graph(g) {
     return this.graphs[g] || (this.graphs[g] = { nodes: new Map(), edges: [] });
   }
+  /** @param {string} g @param {unknown} id @returns {string | null} */
   find(g, id) {
     for (const [k, n] of this.graph(g).nodes) if (n.props.id === id) return k;
     return null;
   }
   /** Applies a data block whole, or not at all (req:3.engine-gets-corrected). A block that cannot be read leaves the
-   * store as it was, however far its reading got. */
+   * store as it was, however far its reading got.
+   * @param {string} block */
   apply(block) {
-    const copy = (graph) => ({
+    const copy = (/** @type {StoredGraph} */ graph) => ({
       nodes: new Map([...graph.nodes].map(([k, n]) => [k, { labels: new Set(n.labels), props: { ...n.props } }])),
       edges: graph.edges.slice(),
     });
@@ -118,8 +144,9 @@ class Store {
     }
   }
 
+  /** @param {string} block @returns {string | null} */
   applyWhole(block) {
-    let [g, kind] = header(block);
+    let [g, kind] = /** @type {[string, string]} */ (header(block)); // only an excerpt names none, refused below
     if (kind === 'query')
       throw new ProfileError(
         1,
@@ -138,7 +165,7 @@ class Store {
       );
     const first = block.split('\n').find((line) => trim(line)) || '';
     if (kind === 'schema') {
-      const name = SHARED.exec(first)[1];
+      const name = /** @type {RegExpExecArray} */ (SHARED.exec(first))[1];
       g = 'schema ' + name;
       this.schemas[name] = g;
       delete this.graphs[g];
@@ -164,13 +191,13 @@ class Store {
       bound = names();
     // each id's node, the first in order, as find() gives it. It is indexed once for the block, not searched for
     // each thing. So a block of thousands of things is read in time linear in them (editor spec §9: never freeze)
-    let ids = null;
-    const found = (id) => {
+    let ids = /** @type {Map<unknown, string> | null} */ (null);
+    const found = (/** @type {unknown} */ id) => {
       if (!ids) {
         ids = new Map();
         for (const [k, n] of graph.nodes) if (!ids.has(n.props.id)) ids.set(n.props.id, k);
       }
-      return ids.has(id) ? ids.get(id) : null;
+      return ids.get(id) ?? null;
     };
     for (const m of matches) {
       const keys = Object.keys(m.props);
@@ -183,7 +210,7 @@ class Store {
           'GN305',
         );
       const k = found(m.props.id);
-      if (k === null || !m.labels.every((label) => graph.nodes.get(k).labels.has(label)))
+      if (k === null || !m.labels.every((label) => graph.nodes.get(k)?.labels.has(label)))
         throw new ProfileError(
           m.line,
           `MATCH finds no ${m.labels.join(':')} with id '${m.props.id}' in graph ${g}`,
@@ -193,7 +220,7 @@ class Store {
         );
       bound[m.v] = k;
     }
-    const writes = (n) => n.labels.length || Object.keys(n.props).length;
+    const writes = (/** @type {PatternNode} */ n) => n.labels.length || Object.keys(n.props).length;
     for (const [nodes, rels] of paths) {
       // left to right, as Grafeo binds them. A name is reused only once its node is written (§3): earlier in the block,
       // earlier in this path, or found by MATCH
@@ -262,16 +289,17 @@ class Store {
           'GN311',
         );
       // never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index stays good
-      graph.nodes.get(bound[v]).props[key] = val;
+      /** @type {StoredNode} */ (graph.nodes.get(bound[v])).props[key] = val;
     }
     withinItems(g, graph.nodes.size + graph.edges.length);
     return g;
   }
 }
 // A document's blocks applied, in turn, to a fresh store; the first that cannot be read throws its ProfileError.
+/** @param {readonly string[]} blocks */
 function read(blocks) {
   const s = new Store();
-  blocks.forEach((b) => s.apply(b));
+  blocks.forEach((/** @type {string} */ b) => s.apply(b));
   return s;
 }
 

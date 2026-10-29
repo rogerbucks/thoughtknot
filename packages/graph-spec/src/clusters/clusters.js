@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The clusters of a graph (editor spec §31): the ones a person wrote, and the ones found by how things link. Each
 // membership says which kind it is, and each counts 1/N for a thing in N clusters (cluster_kind_recorded,
 // multiple_membership). See wiki/Clusters-design.md, step 3. Its Python twin is graphspec/engine/clusters/clusters.py,
@@ -11,6 +12,7 @@
 // that stay inside it.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { louvain } = require('./louvain.js');
 
 /** The label of a written cluster. */
@@ -65,7 +67,8 @@ function foundClusters(graph) {
  * view filtered by kind shows them. A thing's weight in each of its clusters is 1/N, where N counts the clusters shown.
  */
 function clustersOf(graph, kind) {
-  if (kind !== undefined && !KINDS.includes(kind)) throw new Error(`a cluster kind is one of ${KINDS.join(', ')}`);
+  if (kind !== undefined && !KINDS.includes(kind))
+    throw refused('GR10', `a cluster kind is one of ${KINDS.join(', ')}`);
   const clusters = [
     ...(kind === 'found' ? [] : writtenClusters(graph)),
     ...(kind === 'asserted' ? [] : foundClusters(graph)),
