@@ -208,5 +208,6 @@ export const VALUES_LATE = [
   'sketchEdit',
   'sketchInNote',
   'sketchOf',
+  'sketchProposal',
   'writeSketch',
 ];

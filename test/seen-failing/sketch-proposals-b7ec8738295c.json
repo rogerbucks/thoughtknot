@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/sketch-proposals.test.js",
+  "test": "drawings offered as things and links > a note of odd words gives a plain id, quickly however long its words",
+  "seen_failing_first": false,
+  "evidence": "A refactor for a CodeQL finding: the ids are the same before and after; the test keeps them so and bounds the time."
+}
