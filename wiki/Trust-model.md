@@ -84,7 +84,7 @@ Wave 6.
 - **Code:** `packages/claude-code/server/note-history.ts`, with `note-place.ts` and `export-files.ts` beside it.
 - **Gaps:**
   - Any text is written under an `.svg` name (SEC-9).
-  - git still reads the repository's own settings, so a signing program could run (TRUST-10).
+  - git read the repository's own settings, so a signing program could run. Fixed in #1537 (TRUST-10).
 
 ### B5. The editor server and GitHub
 
@@ -165,9 +165,9 @@ Wave 6.
   timeout. Labels are escaped.
 - **Code:** `python/graph_spec/src/graph_svg.py`, with `fill.py`, `classification.py` and `scxml.py`.
 - **Gaps:**
-  - Fill recipes can read outside the folder and add query syntax (TRUST-6).
-  - The Python class reader is looser than the core gate (TRUST-9).
-  - SCXML is parsed with entity handling on (SEC-7).
+  - Fill recipes could read outside the folder and add query syntax. Fixed in #1537 (TRUST-6).
+  - The Python class reader was looser than the core gate. Fixed in #1537 (TRUST-9).
+  - SCXML was parsed with entity handling on. Fixed in #1537 (SEC-7).
 
 ### B11. GitHub and the CI and release pipeline
 
