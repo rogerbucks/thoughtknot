@@ -5,7 +5,7 @@
 // - A source that is missing, moved or unreadable, or holds no such graph, is said in a sentence naming it.
 //   The block shows as text, never a blank drawing. A source too large to read is shown under the banner a note's own blocks get. Views of the graph in
 // the note draw from the same source (view-block.ts, `sourcedView`).
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from '../block-context';
 import {
   depthOf,
   lineInSource,
@@ -38,7 +38,7 @@ export async function sourcedView(
   texts: string[],
   graph: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   redraw?: () => void,
 ): Promise<{ read: SourceRead } | { refused: string } | null> {
   const s = sourceFor(texts, graph);
@@ -54,7 +54,7 @@ export async function renderSourceBlock(
   plugin: ThoughtKnotPlugin,
   text: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
   redraw?: () => void,
 ): Promise<void> {

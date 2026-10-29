@@ -3,7 +3,8 @@
 // can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
 // with its problems or a banner.
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
-import type { Component, MarkdownPostProcessorContext } from 'obsidian';
+import type { Component } from 'obsidian';
+import type { BlockContext } from './block-context';
 import {
   brokenLinks,
   changeSetId,
@@ -110,14 +111,17 @@ export async function renderShown(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
 ): Promise<void> {
   const mine: Component[] = [];
-  const local = Object.create(ctx) as MarkdownPostProcessorContext;
-  local.addChild = (child: Component) => {
-    mine.push(child);
-    ctx.addChild(child as MarkdownRenderChild);
+  const local: BlockContext = {
+    sourcePath: ctx.sourcePath,
+    getSectionInfo: (at) => ctx.getSectionInfo(at),
+    addChild: (child) => {
+      mine.push(child);
+      ctx.addChild(child);
+    },
   };
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
@@ -146,7 +150,7 @@ export async function renderBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
   redraw?: () => void,
 ): Promise<void> {

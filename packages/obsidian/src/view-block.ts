@@ -6,7 +6,7 @@
 // - Its looks are drawn with their legend.
 // - How it is shown is saved in the style graph when asked (view_saved_as_shown).
 import { Notice, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from './block-context';
 import {
   addView,
   depthOf,
@@ -99,7 +99,7 @@ export async function renderViewBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   v: NamedView,
   owner?: object,
   redraw?: () => void,

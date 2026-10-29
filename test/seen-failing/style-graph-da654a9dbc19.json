@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-graph.test.js",
+  "test": "the words > a kind is said with `an` before a vowel and `a` before anything else",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}
