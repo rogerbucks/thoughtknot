@@ -5,7 +5,8 @@ direct-links.ts, step for step, so both libraries draw the same links for the sa
 
 Graphviz places the boxes. In place of its routing, each link is one curve from box to box. A box
 a link would pass through moves aside, just clear of it, and boxes moved into each other are
-pushed apart again, a few rounds within a budget. Two links between the same two boxes bow apart.
+pushed apart again, a few rounds, each pass counting its work against its budget (work.py). Two
+links between the same two boxes bow apart.
 A lone link bows a little toward the middle of the drawing. Each arrowhead lands on its box edge,
 and the words sit by the curve (direct_words.py). First the boxes are given a little more room,
 and each link takes the slight bend that crosses fewest boxes and links (direct_bends.py). It
@@ -22,7 +23,6 @@ from graphspec.style.direct_bends import (
     CLEARANCE,
     HUG,
     ToBend,
-    bends,
     crowded,
     hug,
     hugged,
@@ -30,8 +30,11 @@ from graphspec.style.direct_bends import (
     toward_middle,
     trunk_ends,
 )
-from graphspec.style.direct_curve import Curve, Placed, curve_of, hypot
+from graphspec.style.direct_curve import Placed, hypot
 from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
+from graphspec.style.rows_route import in_rows as rows_fit
+from graphspec.style.rows_route import routed_curves
+from graphspec.style.work import WORK_MOST, Work
 
 # The room kept round a line or words at the edge of the drawing, in pixels.
 EDGE = 2
@@ -39,17 +42,18 @@ EDGE = 2
 BOX_GAP = 12
 # The most rounds of moving boxes off links and apart again.
 ROUNDS = 6
-# The most box and link pairs looked at in all, so a big graph stays quick.
-WORK_MOST = 4_000_000
 # How far two links between the same boxes bow apart at their middle, as a share of their length.
 BOW = 0.16
 
 Mark = dict[str, Any]
 
 
-def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
+def direct_links(
+    laid: dict[str, Any], rankdir: str = "LR", in_rows: bool = False
+) -> dict[str, Any]:
     """`laid` with its links drawn directly and its boxes moved off them. A self link keeps its
-    loop, moved with its box."""
+    loop, moved with its box. With `in_rows`, the boxes stay where Graphviz put them and each link
+    is routed between them, on its rows (rows_route.py)."""
     marks: list[Mark] = laid["marks"]
     boxes: dict[str, Placed] = {}
     groups = {
@@ -64,6 +68,8 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
             # its group as marked, else the smallest one round it, as Graphviz drew it
             g = _group_round(groups, m) if m.get("group") is None else groups.get(m["group"])
             boxes[of] = Placed(of, m["x"] + hw, m["y"] + hh, hw, hh, g)
+    # routed on its rows only where Graphviz laid it out in rows
+    rowed = in_rows and rows_fit(list(boxes.values()), 1 if rankdir == "TB" else 0)
     links = [
         m for m in marks if m["kind"] == "link" and m.get("from") in boxes and m.get("to") in boxes
     ]
@@ -72,9 +78,12 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
     ends = [(boxes[x["from"]], boxes[x["to"]]) for x in links if x["from"] != x["to"]]
     every_box = list(boxes.values())
     group_moved = (
-        spread(every_box, groups, _middle_of(every_box)) if crowded(ends, every_box) else {}
+        spread(every_box, groups, _middle_of(every_box))
+        if not rowed and crowded(ends, every_box)
+        else {}
     )
-    _settle(list(boxes.values()), links)
+    if not rowed:
+        _settle(list(boxes.values()), links)
     # each group drawn just round its things, its name above them. Then each bundle runs from
     # beside the group its links leave to beside the group they reach
     drawn_as: dict[str, list[float]] = {}
@@ -160,8 +169,8 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
         trunk = a.key.startswith("trunk: ") and b.key.startswith("trunk: ")
         toward = toward_middle(a, b, side, middle)
         to_bend.append(ToBend(key, a, b, toward, fixed, walls if trunk else None))
-    bows = bends(to_bend, every)
-    curves: dict[str, Curve] = {t.key: curve_of(t.a, t.b, bow) for t, bow in zip(to_bend, bows)}
+    # routed on Graphviz's rows, a link bends only where nothing is in its way: no box moves
+    curves = routed_curves(to_bend, every, rankdir, rowed)
     spots = word_spots(marks, boxes, curves)
 
     out: list[Mark] = []
@@ -197,17 +206,20 @@ def direct_links(laid: dict[str, Any]) -> dict[str, Any]:
     return _grown({**laid, "marks": out})
 
 
-def _settle(boxes: list[Placed], links: list[Mark]) -> None:
-    """Moves boxes off links they do not join and apart from each other, a few rounds, within the
-    budget."""
+def _settle(boxes: list[Placed], links: list[Mark], work: Work | None = None) -> None:
+    """Moves boxes off links they do not join and apart from each other, a few rounds. Each box
+    looked at by a link counts against `work`, as does each pair pushed apart. It stops where the
+    next would go past the budget."""
+    work = work or Work(WORK_MOST["settle"])
     by_key = {b.key: b for b in boxes}
-    rounds = max(1, min(ROUNDS, math.floor(WORK_MOST / max(1, len(boxes) * len(links)))))
-    for _ in range(rounds):
+    for _ in range(ROUNDS):
         moves = 0
         for link in links:
             a, b = by_key.get(link["from"]), by_key.get(link["to"])
             if not a or not b or a is b:
                 continue
+            if not work.take(len(boxes)):
+                return
             dx, dy = b.x - a.x, b.y - a.y
             long = hypot(dx, dy)
             if long < 1e-6:
@@ -228,18 +240,20 @@ def _settle(boxes: list[Placed], links: list[Mark]) -> None:
                 push = (1 if off >= 0 else -1) * (reach - abs(off))
                 _move_to(c, c.x + nx * push, c.y + ny * push)
                 moves += 1
-        moves += _apart(boxes)
+        moves += _apart(boxes, work)
         if not moves:
             break
 
 
-def _apart(boxes: list[Placed]) -> int:
+def _apart(boxes: list[Placed], work: Work) -> int:
     """Pushes apart boxes that overlap, along the way that parts them least, and says how many
-    moved."""
+    moved. Each pair looked at counts against `work`; it stops where the next would go past it."""
     moves = 0
     ordered = sorted(boxes, key=lambda b: b.x - b.hw)
     for i, p in enumerate(ordered):
         for q in ordered[i + 1 :]:
+            if not work.take(1):
+                return moves
             if q.x - q.hw >= p.x + p.hw + BOX_GAP:
                 break
             ox = p.hw + q.hw + BOX_GAP - abs(q.x - p.x)

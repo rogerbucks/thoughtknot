@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/large-drawing.test.js",
+  "test": "a large graph drawn whole at once > of 300 things or fewer, or routed straight or right-angled, is drawn as before",
+  "seen_failing_first": false,
+  "evidence": "Guards that small and non-curved drawings are unchanged by removing the curves-later steps."
+}

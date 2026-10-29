@@ -171,27 +171,27 @@
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "02a1c2d37d7ebfbb7f43f6a833dfb4573229b837d62a39441a5d270db0d3b62d",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "7fe73935b19d7665b34054303dfc02faaee6aeaa3c97eac13c0c68409d3f74e9",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "db5834b6acf627b3d5fdf0f11fad65d2384bc8a1a86178a959fc217e165c1cd9",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "9908799d8477895faa229adcf6af8773eb3f6bedb1658a178ce93e921bfaabdb",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "8a9b4d059c3a6021b49a7cc1d08c9784bebfaa3158e3d9e85fa7facfdc07c0b1",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "e453a7830c98eb282e3f04c28edd0a9c48a5a61fcdf695138fa985631b547711",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "f9f2b68b4960d79fff1b490632aef73a116ca63c8d8d5e5dc2173947d98ad864",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "bd8f497e342f8426cdfb71cab7120d43926278083d21b261b1a1c090376949ac",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -219,15 +219,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "024e7501f5148067a2e0021d49e40104bb687b0e78a5da70d18cd3413f3af06d",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "f597b4e47aa179e19db2085a5e71dee6303685fb13c02ebdb47693771aeae232",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "d047c0e6b82309f51003726a385790b317f7d74a12b7d0b285a93827524bb18c",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "2a07679989c9f7651b98598462b61fb5a3c7df5ceaa331bcea8be1df66abb5c6",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
@@ -267,39 +267,39 @@
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "bc1e1cad2c6911c8c2bb6cbca4a917c9676d4fc456c35c6929f996e50f85e8bb",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "a683f0c665f27f29af36718dd7151efc3f1d1dfd75a94a1871de02f70bf28209",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "c4bd064b7928d50e519fed5b1c3a72310b510a1339912233ef896ce214f2213d",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "bd8aa2943cd0cfab52457017abc15ba5f555568273923ab4a60399d7373a45f3",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "59562dacbcaa6e736ea0a522fd5707a06bf421011daa89e028d4db3e8c4b3a36",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "f54ed8302327b0ef7f10a00bc6e2d2ea11eac5bd5696711d2f00b0fe539f01e9",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "987cb5d91b3737379c75e6780cfb26f9440b3c4e2c1796efae590e0206e71203",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "f46c164ec35215b83c987aec50cbd815b675f1fbc7e9651cdf589926ff7a9bcf",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "03f78590b464f2799163cdb00dc2c2df4d6f462cbe316f84d03db8c27e300646",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "57043b0fd84085f95723ceb20bf9ec52a05801c304193f58231e5e81ea040452",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "8b31f896d0a9b5d84b18ea02cf705d9006a9e867423a8a7e50e021de1aa03981",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "52eb63336c48e99901b12553c87a950293f3c5c8deaa36609369833f0309414a",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
@@ -339,27 +339,27 @@
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "8a9b4d059c3a6021b49a7cc1d08c9784bebfaa3158e3d9e85fa7facfdc07c0b1",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "e453a7830c98eb282e3f04c28edd0a9c48a5a61fcdf695138fa985631b547711",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "f9f2b68b4960d79fff1b490632aef73a116ca63c8d8d5e5dc2173947d98ad864",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "bd8f497e342f8426cdfb71cab7120d43926278083d21b261b1a1c090376949ac",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "97e2f74e4cf52fb5d57a81f4389904c89144b1c2a2f589f224347695a9320c2b",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "e1f88d8ed94fb62d03de1784eb568d11b6ed2b7bd19906121b44aa16abbc7a93",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "38dbfa86dd49e58fa5eff48e0c2a936e1c3f146ab0fd57e80ab719fc3fba3661",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "db4dba51533bccd175d089c5124a8f7f9e5aea71eb5ba53f85941d2318923b87",
+      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
+      "day": "2026-10-28"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",

@@ -3,10 +3,10 @@
 //
 // Graphviz places the boxes, ordering each row to cut crossings. Then, in place of its routing, each link here is one
 // gentle curve from box to box. Where a link would pass through a box it does not join, that box moves aside, just
-// clear of it. Boxes moved into each other are pushed apart again. A few rounds of this settle, within a budget, so a
-// big graph stays quick. Two links between the same two boxes bow apart, so both show. A link's arrowhead lands on the
-// box it points to, and its words sit at its middle. First the boxes are given a little more room, and each link takes the
-// slight bend that crosses fewest boxes and links (direct-bends.ts).
+// clear of it. Boxes moved into each other are pushed apart again. A few rounds of this settle, each pass within its
+// budget (layout-work.ts), so a big graph stays quick. Two links between the same two boxes bow apart, so both show. A
+// link's arrowhead lands on the box it points to, and its words sit at its middle. First the boxes are given a little
+// more room, and each link takes the slight bend that crosses fewest boxes and links (direct-bends.ts).
 //
 // It works on the marks Graphviz's layout gives (graphviz-marks.ts). The SVG is written from them (graphviz-svg.ts), so
 // every part keeps its id, class and title. Host-free and pure.
@@ -17,8 +17,10 @@ import { WORDS_OFF, fans, wordSpots } from './direct-words.ts';
 import { curveOf } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
+import { inRows as inRowsOf, rowsRoute } from './layouts/rows-route.ts';
 import { CLEARANCE, HUG, bends, crowded, hug, hugged, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
+import { type LinkWork, type Work, linkWork } from './layout-work.ts';
 export type { Curve, Placed } from './direct-curve.ts';
 export { CLEARANCE, GENTLE } from './direct-bends.ts';
 
@@ -28,20 +30,21 @@ const EDGE = 2;
 const BOX_GAP = 12;
 /** The most rounds of moving boxes off links and apart again. */
 const ROUNDS = 6;
-/** The most box and link pairs looked at in all, so a big graph stays quick. */
-const WORK_MOST = 4_000_000;
 /** How far two links between the same boxes bow apart at their middle, as a share of their length. */
 const BOW = 0.16;
 
 /**
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
- * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts).
+ * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts). With
+ * `inRows`, the boxes stay where Graphviz put them and each link is routed between them, on its rows (rows-route.ts).
  */
 export function directLinks(
   laid: LaidMarks,
   at?: ReadonlyMap<string, readonly [number, number]>,
   via?: ReadonlyMap<string, readonly MarkPoint[]>,
   rankdir: 'LR' | 'TB' = 'LR',
+  inRows = false,
+  work: LinkWork = linkWork(), // each pass's work, against its own budget
 ): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
@@ -55,6 +58,8 @@ export function directLinks(
       if (g) p.inside = g;
       boxes.set(m.of, p);
     }
+  // routed on its rows only where Graphviz laid it out in rows
+  const rowed = inRows && !at && !via && inRowsOf([...boxes.values()], rankdir === 'TB' ? 1 : 0);
   const links = laid.marks.filter(
     (m): m is DrawMark & { kind: 'link' } =>
       m.kind === 'link' && m.from !== undefined && m.to !== undefined && boxes.has(m.from) && boxes.has(m.to),
@@ -74,12 +79,12 @@ export function directLinks(
     else delete p.inside;
   }
   const groupMoved =
-    !at && crowded(ends, [...boxes.values()])
+    !at && !rowed && crowded(ends, [...boxes.values()], work.crowded)
       ? spread([...boxes.values()], groups, middleOf([...boxes.values()]))
       : new Map<string, MarkPoint>();
   // boxes our own engine placed stay where it put them, its links bent round boxes; only overlaps are pushed apart
-  if (!at) settle([...boxes.values()], links);
-  else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()]); r++);
+  if (!at && !rowed) settle([...boxes.values()], links, work.settle);
+  else for (let r = 0; r < ROUNDS * 4 && apart([...boxes.values()], work.settle); r++);
   // each group drawn just round its things, its name above them. Then each bundle runs from beside the group its links
   // leave to beside the group they reach
   const drawnAs = new Map<string, Edges>(),
@@ -118,11 +123,14 @@ export function directLinks(
     const by = part.marks.map((id) => groupMoved.get(id)).find(Boolean);
     if (by && (by[0] || by[1])) for (const id of part.marks) shiftOf.set(id, by);
   }
-  // a self link's loop, its arrowheads and its words go with its box
-  for (const l of links) {
-    const by = l.from === l.to ? moved.get(l.from ?? '') : undefined;
-    if (by)
-      for (const m of laid.marks) if (m.id === l.id || (l.of !== undefined && m.of === l.of)) shiftOf.set(m.id, by);
+  // a self link's loop, its arrowheads and its words go with its box: each mark looked at once
+  const loops = new Map<string, [number, number]>();
+  for (const l of links.filter((l) => l.from === l.to && moved.has(l.from ?? '')))
+    for (const k of [l.id, l.of === undefined ? '' : `of:${l.of}`])
+      loops.set(k, moved.get(l.from ?? '') as [number, number]);
+  for (const m of loops.size ? laid.marks : []) {
+    const by = loops.get(m.id) ?? loops.get(`of:${m.of}`);
+    if (by) shiftOf.set(m.id, by);
   }
 
   // links between the same two boxes, either way round: how many, and each one's place among them
@@ -157,28 +165,37 @@ export function directLinks(
     const trunk = a.key.startsWith('trunk: ') && b.key.startsWith('trunk: ') ? { avoid: walls } : {};
     toBend.push({ id: l.of ?? l.id, a, b, toward: towardMiddle(a, b, side, middle), ...fixed, ...trunk });
   }
-  const bows = bends(toBend, all);
+  // routed on Graphviz's rows, a link bends only where nothing is in its way: no box moves (links_routed_in_rows)
+  const across = rankdir === 'TB' ? 0 : 1;
+  const inRow = rowed
+    ? rowsRoute(
+        all,
+        toBend.map((l) => [l.a, l.b] as const),
+        across ? 0 : 1,
+      )
+    : [];
+  const free = rowed ? toBend.filter((_, i) => !inRow[i]?.length) : toBend;
+  const bowOf = new Map(bends(free, all, work).map((bow, i) => [free[i] as ToBend, bow]));
   // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes
   // take the same bends, moved apart across the drawing's way
-  const across = rankdir === 'TB' ? 0 : 1;
-  const routed = (l: ToBend) =>
-    via
-      ?.get(`${l.a.key}\n${l.b.key}`)
-      ?.map((p): MarkPoint => (across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]]));
+  const routed = (l: ToBend, i: number) =>
+    (rowed ? inRow[i] : via?.get(`${l.a.key}\n${l.b.key}`))?.map((p): MarkPoint =>
+      across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]],
+    );
   const curves = new Map<string, Curve>(
     toBend.map((l, i) => {
-      const bendsAt = routed(l);
+      const bendsAt = routed(l, i);
       return [
         l.id,
         bendsAt?.length
           ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0)
-          : curveOf(l.a, l.b, bows[i] as number),
+          : curveOf(l.a, l.b, bowOf.get(l) ?? 0),
       ];
     }),
   );
   // our own engine labels each fan of links once, near the end its links share
   const fan = at ? fans(laid.marks) : undefined;
-  const spots = wordSpots(laid.marks, boxes, curves, fan);
+  const spots = wordSpots(laid.marks, boxes, curves, fan, work.words);
   // each link's arrowheads, and the first line drawn for it, found by what it is of: looked up once, not per mark
   const headsBy = new Map<string, (DrawMark & { kind: 'arrowhead' })[]>(),
     lineBy = new Map<string, DrawMark & { kind: 'link' }>();
@@ -237,16 +254,16 @@ const middleOf = (boxes: readonly Placed[]): MarkPoint => [
   boxes.reduce((n, b) => n + b.y, 0) / Math.max(1, boxes.length),
 ];
 
-/** Moves boxes off links they do not join and apart from each other, a few rounds, within the budget. */
-function settle(boxes: Placed[], links: readonly (DrawMark & { kind: 'link' })[]): void {
+/** Moves boxes off links they do not join and apart from each other, a few rounds, each look counted in `work`. */
+function settle(boxes: Placed[], links: readonly (DrawMark & { kind: 'link' })[], work: Work): void {
   const byKey = new Map(boxes.map((b) => [b.key, b]));
-  const rounds = Math.max(1, Math.min(ROUNDS, Math.floor(WORK_MOST / Math.max(1, boxes.length * links.length))));
-  for (let r = 0; r < rounds; r++) {
+  for (let r = 0; r < ROUNDS; r++) {
     let moves = 0;
     for (const l of links) {
       const a = byKey.get(l.from ?? ''),
         b = byKey.get(l.to ?? '');
       if (!a || !b || a === b) continue;
+      if (!work.take(boxes.length)) return;
       const dx = b.x - a.x,
         dy = b.y - a.y,
         long = Math.hypot(dx, dy);
@@ -267,18 +284,19 @@ function settle(boxes: Placed[], links: readonly (DrawMark & { kind: 'link' })[]
         moves++;
       }
     }
-    moves += apart(boxes);
+    moves += apart(boxes, work);
     if (!moves) break;
   }
 }
 
-/** Pushes apart boxes that overlap, along the way that parts them least, and says how many moved. */
-function apart(boxes: Placed[]): number {
+/** Pushes apart boxes that overlap, the way that parts them least, each pair counted in `work`: says how many moved. */
+function apart(boxes: Placed[], work: Work): number {
   let moves = 0;
   const sorted = [...boxes].sort((p, q) => p.x - p.hw - (q.x - q.hw));
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i] as Placed;
     for (let j = i + 1; j < sorted.length; j++) {
+      if (!work.take(1)) return moves;
       const q = sorted[j] as Placed;
       if (q.x - q.hw >= p.x + p.hw + BOX_GAP) break;
       const ox = p.hw + q.hw + BOX_GAP - Math.abs(q.x - p.x),

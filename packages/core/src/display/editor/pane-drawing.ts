@@ -12,6 +12,7 @@ import {
   memoryBackend,
   parked,
   readStyle,
+  renderFor,
   setInParts,
   startingSwitches,
   storedGraphs,
@@ -146,6 +147,7 @@ export class PaneDrawing extends Lifecycle {
       layout: (part, by) => this.host.layout(part, by),
       props: (key) => reading.world[d.graph]?.p(key) ?? {},
       chosen: style.filters.find((f) => f.view === undefined)?.keep,
+      painter: renderFor(style).painter, // as its Render says (§68, layout_concept_layers)
       ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
     });
   }
@@ -183,6 +185,7 @@ export class PaneDrawing extends Lifecycle {
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
         ...(saved ? { chosen: saved } : {}),
+        ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
         picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
       });
@@ -204,9 +207,7 @@ export class PaneDrawing extends Lifecycle {
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
     const state = (this.state ??= new ViewState(startingSwitches(this.host.settings())));
-    // straight links first past 300 things, then the curves (§11, curves_after_drawing)
-    const laidOut = (by: object, curved = false) =>
-      d ? this.host.layout({ ...state.folded(d, by), straightFirst: !curved }, by) : Promise.resolve(null);
+    const laidOut = (by: object) => (d ? this.host.layout(state.folded(d, by), by) : Promise.resolve(null));
     // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
     const laid = reading.tooLarge
       ? Promise.resolve(reading.tooLarge)
@@ -225,9 +226,9 @@ export class PaneDrawing extends Lifecycle {
           s,
           on,
           depth,
-          { state, relayout: (by: object) => laidOut(by), curved: (by: object) => laidOut(by, true) },
+          { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
-          aidsOf(this.host.settings()),
+          aidsOf(this.host.settings(), readStyle(reading.texts, s.graph, reading).style), // its own preset first (§69)
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

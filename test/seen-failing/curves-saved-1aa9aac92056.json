@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/curves-saved.test.js",
+  "test": "curves kept by what was laid out > a changed graph is laid out again, and small graphs are laid out each time",
+  "seen_failing_first": false,
+  "evidence": "Guards cache behaviour unchanged by this commit; written to keep it once the curved variant left the cache."
+}

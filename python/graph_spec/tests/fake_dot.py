@@ -12,3 +12,14 @@ LAYOUT = json.dumps({"name": "G", "directed": True, "bb": "0,0,292,92", "objects
 def answer(args) -> str:
     """What Graphviz writes for its arguments `args`: JSON for -Tjson, else SVG."""
     return LAYOUT if "-Tjson" in args else SVG
+
+
+# The line drawing direct adds to the source it lays out, so Graphviz routes no curves
+# (drawn_svg.py, curves_not_routed).
+STRAIGHT = "\n  graph [splines=line];"
+
+
+def as_written(source: str) -> str:
+    """The source handed to Graphviz as the drawing wrote it: without the line drawing direct
+    adds to lay its links out straight."""
+    return source.replace(STRAIGHT, "", 1)

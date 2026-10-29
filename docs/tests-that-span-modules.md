@@ -5,6 +5,19 @@ modules, or the repository itself. They are named after their subject and listed
 proves. A new one goes in the group of its subject. `test/conventions.test.js` fails on a test file that is neither named
 after a module nor listed here, and on a listed file that is missing.
 
+## Sync between devices
+
+- `packages/sync/test/local-encrypted-store.test.js` — devices apart then together agree, and what each keeps is sealed
+  (editor spec §40, local_encrypted_store). It spans the stores, the keys and the CRDT.
+- `packages/sync/test/five-layers.test.js` — each layer holds only the one below. The engine refuses a bad edit before
+  it replicates, and a store is swapped with no change above it (five_layer_stack).
+- `packages/sync/test/encrypted-everywhere.test.js` — no key in any file, log or sealed copy, and a device's private key
+  cannot be exported (encrypted_everywhere).
+- `packages/sync/test/mesh-vpn.test.js` — two devices sync through a real TCP relay, which carries ciphertext only. A
+  device that is not the owner's gets nothing (mesh_vpn_sync). It spans the peer, the keys and the stores.
+- `packages/sync/test/connector-sync.test.js` — a graph from a file, a note and a plug-in's place, kept in step between
+  devices (§63, CN3). It spans the core's connectors and the sync layers.
+
 ## The core: test runs
 
 - `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
@@ -16,7 +29,11 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The core
 
+- `packages/core/test/connector-contract.test.js` — every connector meets one contract: statements that cite the
+  place, its version and line. The join is the same for every kind of place (editor spec §63, connector_contract).
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/kind-lanes.test.js` — kinds that link in order each get a lane in rows and a plane in space. The
+  View menu says so, and its switch turns it off (editor spec §68, layout_kind_lanes).
 - `packages/core/test/progressive-draw.test.js` — a massive graph is drawn in steps. The overview comes first. Then
   come the chosen group and those nearest the middle, each added to the picture (editor spec §53, scale_progressive).
 - `packages/core/test/level-of-detail.test.js` — a massive graph opens as one box for each group. A group shows its
@@ -175,6 +192,10 @@ after a module nor listed here, and on a listed file that is missing.
 ## The Obsidian plugin
 
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
+- `packages/obsidian/test/focus-support.test.js` — the Focus support view preset (editor spec §69). The rest is
+  blurred, not hidden, and a trail of picks is kept to go back along (view_focus_support).
+- `packages/obsidian/test/reading-support.test.js` — the Reading support view preset (editor spec §69). It gives short
+  labels, plain spaced words, the full words read aloud, and the outline on O (view_reading_support).
 - `packages/obsidian/test/matrix-send.test.js` — the send dialog and the destination matrix note. The note is read each
   time what will be sent is shown. A note that cannot be read refuses plainly, with nothing ready to send. A read that
   finishes after the model or the question changed makes nothing ready (editor spec §19, model_ceiling).
@@ -189,8 +210,13 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Obsidian plugin: the View menu and views
 
+- `test/orientation-cues.test.js` — every projection keeps the cues to where the person is (editor spec §25,
+  orientation_cues; ethos rule r_cues). In 2D the mini-map and the marked selection, also laid out again. The rest
+  glide there round the selected thing, which stays put. In 2.5D and 3D the picked card or ball, marked and named.
 - `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
+- `packages/obsidian/test/layout-said.test.js` — the View menu says how the drawing was laid out, and why. It says
+  where its loose things went. In the built plugin (editor spec §68, layout_pick_said).
 - `packages/obsidian/test/cluster-open.test.js` — a folded group opened by zooming in on it, or picked again in 3D, in
   the built plugin (editor spec §53, cluster_opens).
 - `packages/obsidian/test/cluster-fold-back.test.js` — a group opened from its box folds back by its button. Its name
@@ -606,7 +632,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/workflow-keys.test.js` — no workflow names a key twice in one map. GitHub can't read such a file, and shows a
   failed run on every push with no job run (#847).
 - `packages/app/test/app-config.test.js` — the desktop app is shut by default. Its window loads only its own pages,
-  reaches no other origin, and calls only the app's seven folder commands (spec §41, standalone_app).
+  reaches no other origin, and calls only the app's eight folder commands (spec §41, standalone_app). The phone app
+  builds with no key, and its vault key is kept in the phone's secure store (spec §40, android_app, ios_app).
+- `test/mobile-checked.test.js` — the plug-in loads and draws a graph as on Obsidian mobile, asking for nothing from
+  Node or Electron. The nightly builds the Android app and the iPhone and iPad app (spec §40, mobile_checked).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
   notes. Its window refuses any other address (spec §41, standalone_app).
 - `test/vscode-plugin.test.js` — the built VS Code extension, against a stand-in for VS Code. Its tab draws a note
@@ -669,6 +698,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/requirements-note.test.js` — the requirements kept as a graph note. The graph as the one block of a Markdown
   note is read by every tool that reads the requirements. It passes the same audit as the graph file
   (requirements_as_graph_note).
+- `test/requirements-drift.test.js` — the requirements and the tests may not drift further apart: each list in
+  `quality/requirements-drift.json` only shrinks (editor spec §12, requirements_drift_ratcheted).
 - `test/check-requirements-flips.test.js` — the requirements graph is edited here, in pull requests (Roger, 16 Oct
   2026: no vault holds it any more).
   - Records, links and comments may be added, changed and removed.
@@ -847,6 +878,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Speed and plain words
 
+- `packages/core/test/slow-notes.test.js` — the slowest real notes are kept as fixtures. Each is laid out within a work
+  limit, every thing drawn by our own engine (editor spec §68, layout_real_fixtures).
 - `test/speed-budgets.test.js` — each host held, in CPU instructions, to a budget (editor spec §41, speed_budgets).
   - The budgets are for drawing 50 things and 500, and a cold start of each host. There is one too for a query over a
     10 000-thing mesh: 100 notes of 100 things, until slice 6 builds the mesh.
@@ -928,5 +961,9 @@ after a module nor listed here, and on a listed file that is missing.
   must paint with no error.
 - `test/space-painters.test.js` — the 3D view's painters in headless Chrome (editor spec §53, scale_space_painters).
   WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
+  The view's mini-map must copy each thing and move the view when pressed (space_mini_map). A thing moved by a new
+  layout must glide there, a frame at a time (layout_glide).
+- `test/space-xr-view.test.js` — the view in space in a stand-in headset, in headless Chrome (editor spec §68,
+  projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
   scale_massive_card). Its search must find a thing in any group and fly there.

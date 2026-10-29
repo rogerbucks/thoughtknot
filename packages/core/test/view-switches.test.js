@@ -47,8 +47,8 @@ function styledOf(...texts) {
 }
 
 describe('the switches', () => {
-  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged and the new engine, in that order', () => {
-    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine']);
+  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged, the new engine and lanes by kind, in that order', () => {
+    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes']);
     assert.deepEqual(
       VIEW_SWITCHES.map((s) => switchName(s)),
       [
@@ -57,6 +57,7 @@ describe('the switches', () => {
         'Fold groups',
         'Bundle links between groups',
         'Lay out with ThoughtKnot',
+        'Lanes by kind',
       ],
     );
   });
@@ -69,6 +70,7 @@ describe('the switches', () => {
       groups: false,
       merge: false,
       engine: true,
+      lanes: true,
     });
     const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on', foldHubs: 'on' };
     assert.deepEqual(startingSwitches(changed), {
@@ -77,6 +79,7 @@ describe('the switches', () => {
       groups: true,
       merge: false,
       engine: true,
+      lanes: true,
     });
     assert.deepEqual(SWITCH_SETTINGS, {
       labels: 'labelsByZoom',
@@ -84,6 +87,7 @@ describe('the switches', () => {
       groups: 'foldGroups',
       merge: 'mergeLinks',
       engine: 'ownLayout',
+      lanes: 'kindLanes',
     });
   });
 
@@ -98,6 +102,7 @@ describe('the switches', () => {
       groups: false,
       merge: true,
       engine: true,
+      lanes: true,
     });
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style, 'near'), {
       labels: false,
@@ -105,6 +110,7 @@ describe('the switches', () => {
       groups: true,
       merge: false,
       engine: true,
+      lanes: true,
     });
   });
 });
@@ -126,7 +132,14 @@ describe('a card’s state of the switches', () => {
     assert.equal(state.turn('labels', false), false);
     assert.equal(state.turn('groups', true), true);
     assert.equal(state.turn('groups', true), false, 'turned to what it was: nothing to do');
-    assert.deepEqual(state.switches, { labels: false, hubs: false, groups: true, merge: false, engine: true });
+    assert.deepEqual(state.switches, {
+      labels: false,
+      hubs: false,
+      groups: true,
+      merge: false,
+      engine: true,
+      lanes: true,
+    });
     assert.deepEqual(state.saved(), { labels: 'off', hubs: 'off', groups: 'on', merge: 'off' });
   });
 

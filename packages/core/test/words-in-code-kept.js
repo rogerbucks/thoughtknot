@@ -16,9 +16,12 @@ const CATALOGUE = Object.fromEntries(
 /** The strings kept in the rest of the core, by file, each with why. `*` keeps every string of the file. */
 export const CORE_KEPT = {
   ...CATALOGUE,
+  // the header each place's block is joined under, read by the join and never by a person (connectors.ts)
+  'packages/core/src/connectors.ts': ['// graph: {} · document {} · schema {} · as of 1970-01-01\n{}'],
   // the settings in UK English, held equal to their catalogue words by settings-words.test.js, which says them
   'packages/core/src/settings.ts': '*',
   'packages/core/src/settings-aids.ts': '*',
+  'packages/core/src/settings-switches.ts': '*',
   'packages/core/src/settings-matrix.ts': '*',
   'packages/core/src/settings-language.ts': '*',
   // what each open number governs, for a developer reading the register: no host shows it
@@ -57,6 +60,18 @@ export const CORE_KEPT = {
     'its manifest names host abilities that do not exist: {}',
     'the theme token {} is already added by {}',
     'it failed while registering: {}',
+  ],
+  // why a layout is refused, and what is wrong with the spots it gave back: faults of its code, for its developer
+  'packages/core/src/plugin-layouts.ts': [
+    'the layout "{}" is not named {}.<word>',
+    'the layout "{}" is added already',
+    'the layout "{}" has no title on one line',
+    'the layout "{}" does not place things in two dimensions',
+    'the layout "{}" places nothing',
+    'it gave back no spots',
+    'it gave a spot to {}, which it was not given',
+    'the spot of {} is not two numbers',
+    'it gave no spot to {}',
   ],
   // why a diagram type is refused, and what is wrong with the marks it gave back: faults of its code, for its developer
   'packages/core/src/plugin-diagrams.ts': [
@@ -111,11 +126,8 @@ export const CORE_KEPT = {
     "not a note's path in the store: {}",
   ],
   // a layout's failure as an error's message, for a developer: a host says it from the catalogue by its stage
-  'packages/core/src/layout-worker.ts': [
-    'the layout worker failed: {}',
-    'the layout engine could not start: {}',
-    'the layout engine took too long to start',
-  ],
+  'packages/core/src/layout-worker.ts': ['the layout engine took too long to start'],
+  'packages/core/src/layout-port.ts': ['the layout worker failed: {}', 'the layout engine could not start: {}'],
   // a developer's errors, for a palette, a theme or a drawing the code itself got wrong
   'packages/core/src/palette.ts': ['the theme has no {}', 'the style blends at {} only, not {}', ' and '],
   'packages/core/src/theme.ts': ['nothing was laid out'],

@@ -6,7 +6,9 @@
 // A preset is one choice for each link of a view's chain: ordering, layout, projection, detail, formatting, motion,
 // text and keys. It also gives the settings it turns, so picking it sets them all at once. Each stays a setting of
 // its own after. Starters are named by need, never by diagnosis: the research is on wiki/View-presets-design.md.
-// WCAG 2.2 AA is a floor no preset goes below, and the device's own settings win. Host-free and pure.
+// WCAG 2.2 AA is a floor no preset goes below, and the device's own settings win. Host-free; pure but for the
+// person's own preset, which the settings set as they are read in.
+import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
@@ -126,12 +128,71 @@ export const STARTERS: readonly ViewPreset[] = [
   ),
 ];
 
-/** The starter of `id`, else the default. */
-export const starterOf = (id: string): ViewPreset => STARTERS.find((p) => p.id === id) ?? (STARTERS[0] as ViewPreset);
+/** The id the person's own preset goes by, once read in from its file (view_presets_portable). */
+export const OWN_PRESET = 'own';
+// the person's own preset, as last read in with the settings: one for the whole host, as the settings are
+let own: ViewPreset | null = null;
+
+/** Takes the preset in the file text `text` as the person's own, or none when it is empty or not a preset file. */
+export function adoptOwn(text: string): ViewPreset | null {
+  const read = text ? presetFrom(text) : null;
+  own = read && !('problems' in read) ? { ...read, id: OWN_PRESET } : null;
+  return own;
+}
+
+/** The starter of `id`, or the person's own; else the default. */
+export const starterOf = (id: string): ViewPreset =>
+  (id === OWN_PRESET && own) || STARTERS.find((p) => p.id === id) || (STARTERS[0] as ViewPreset);
+
+/** The preset `s` uses, as its file to take to another host: its Drawing settings as they are set now. */
+export const presetToShare = (s: Settings): string =>
+  presetFile({
+    ...starterOf(s.viewPreset),
+    settings: Object.fromEntries(PRESET_SETTINGS.map((k) => [k, s[k]])),
+  });
 
 /** Whether the view preset of `s` keeps everything still: nothing glides or plays, whatever the device says. */
 export const holdsStill = (s: Pick<Settings, 'viewPreset'>): boolean =>
   starterOf(s.viewPreset).chain.motion.mode === 'off';
+
+/**
+ * The classes a card takes from its view preset `id` (§69): `thoughtknot-blur-rest` blurs what focus fades. A graph's
+ * own preset stills its card's moving links and plainens its words as the body's classes do the page's.
+ */
+export const presetClasses = (id = 'default'): string[] => [
+  ...(starterOf(id).chain.detail.rest === 'blurred' ? ['thoughtknot-blur-rest'] : []),
+  ...(holdsStill({ viewPreset: id }) ? ['thoughtknot-still'] : []),
+  ...(readsPlain({ viewPreset: id }) ? [READING_CLASS] : []),
+];
+
+/** Whether the view preset `id` keeps a trail of recent picks in the drawing, to go back along (view_focus_support). */
+export const keepsTrail = (id = 'default'): boolean => starterOf(id).chain.keys.trail;
+
+/** The class the host puts on the page's body while the view preset is for reading: plain words, spaced wider (§69). */
+export const READING_CLASS = 'thoughtknot-reading';
+
+/** Whether the view preset of `s` is for reading: its words spaced wider than the floor, so the host marks the page. */
+export const readsPlain = (s: Pick<Settings, 'viewPreset'>): boolean =>
+  starterOf(s.viewPreset).chain.text.wordSpacing > PLAIN_TEXT.wordSpacing;
+
+/** `text` cut to at most `most` characters, at a word where one is near, and marked as cut; else as it is. */
+export function shortLabel(text: string, most: number): string {
+  if (text.length <= most) return text;
+  const cut = text.slice(0, most - 1),
+    space = cut.lastIndexOf(' ');
+  return `${(space > most / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+/**
+ * `d` as the view preset of `s` draws it (view_reading_support). A box's words are cut short where the preset's labels
+ * are shorter than the default's. The full words stay in the details, the outline and what is read aloud, which
+ * read the graph, not the drawing. The default keeps every word. Every layout and every view draws the same boxes.
+ */
+export function labelsFor(d: GraphDrawing, s: Pick<Settings, 'viewPreset'>): GraphDrawing {
+  const most = floored(starterOf(s.viewPreset).chain).text.mostLabel;
+  if (most >= PLAIN_TEXT.mostLabel || !d.boxes.some((b) => b.text.length > most)) return d;
+  return { ...d, boxes: d.boxes.map((b) => (b.text.length > most ? { ...b, text: shortLabel(b.text, most) } : b)) };
+}
 
 /** The settings picking `id` sets: the preset's name, and every setting it turns. */
 export const presetChange = (id: string): Partial<Settings> => {

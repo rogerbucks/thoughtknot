@@ -6,11 +6,13 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag } from './box-drag-view';
+import { BoxDrag, nudgeDrops } from './box-drag-view';
 import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
+import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
+import { toggleOutline } from './drawing-svg';
 import { showTour } from '../tour';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
@@ -59,8 +61,7 @@ export interface ViewportHost {
   full: { show: () => void };
   /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
   space?: { move: (m: SpaceMove) => boolean };
-  /** The drawing tools (§70): a press, move and lift they take draws or picks a drawing, never pans or selects. */
-  sketch?: SketchPointer | null;
+  sketch?: SketchPointer | null; // the drawing tools: what they take draws or picks a drawing, never pans (§70)
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -135,13 +136,8 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
     if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
     lastPointer = e.pointerType || 'mouse';
-    if (e.button === 2) return; // a right-click opens a menu: it neither selects nor pans
-    // with a drawing tool chosen, a drag draws; a press on a drawing picks it (§70)
-    if (host.sketch?.down(e, point(e))) {
-      vp.setPointerCapture(e.pointerId);
-      e.preventDefault();
-      return;
-    }
+    // a right-click opens a menu: it neither selects nor pans. A drawing tool takes a press of its own (§70)
+    if (e.button === 2 || host.sketch?.down(e, point(e))) return;
     const target = targetAt(e.target),
       p = point(e),
       near = nearTo(p);
@@ -169,12 +165,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     }
   });
   card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
-    if (onMiniMap(e.target)) return; // the mini-map moves the view by itself (§24)
+    if (onMiniMap(e.target) || host.sketch?.move(e, point(e))) return; // the mini-map, a drawing: their own (§24, §70)
     host.info.moved(e);
-    if (host.sketch?.move(e, point(e))) {
-      e.preventDefault();
-      return;
-    }
     if (drag?.move(e.pointerId, point(e))) {
       host.info.hide(); // the box is moving from under it
       e.preventDefault();
@@ -183,9 +175,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     use(e, { kind: 'move', id: e.pointerId, ...point(e) });
   });
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
-    if (ownButton(e.target) || e.button === 2) return;
+    if (ownButton(e.target) || e.button === 2 || host.sketch?.up(e, point(e))) return;
     const p = point(e);
-    if (host.sketch?.up(e, p)) return;
     use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
     // a box dragged and let go is moved, never opened as a tap (§6)
     if (drag?.up(e.pointerId)) {
@@ -324,6 +315,11 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
+    // O shows or hides the outline beside the drawing, in every view (§69, view_reading_support)
+    if (plain && !e.shiftKey && (e.key === 'o' || e.key === 'O') && toggleOutline(host.root) !== null) {
+      e.preventDefault();
+      return;
+    }
     // C on a box puts it in the centre of a radial drawing (§15, radial_centre_pick)
     const c = e.key === 'c' || e.key === 'C';
     if (target && 'key' in target && plain && c && host.o?.diagram?.putCentre?.(target.key)) {
@@ -361,29 +357,33 @@ export function bindViewportEvents(host: ViewportHost): void {
 /**
  * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
  * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
- * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
+ * On a grid, a card is dragged to another column instead, and no keys move it (§68). None when the card was given no
+ * way to write a nudge, or draws a table. Nothing moves while the card is only read.
  */
 function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
   host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): { drag: BoxDrag; keys: BoxMoveKeys } | null {
-  const moving = o.moving;
-  if (!moving || !svg) return null;
-  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+): { drag: BoxDrag; keys: BoxMoveKeys | null } | null {
+  const grid = svg ? gridDrops(o, host.viewport) : null;
   const shared = {
     viewport: host.viewport,
     taps: host.taps,
-    moving,
-    textOf: (key: string) => boxes.find((b) => b.key === key)?.text ?? key,
+    view: () => host.zoom.view(),
     readOnly: () => !!o.readOnly?.(),
   };
+  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null };
+  const moving = o.moving;
+  if (!moving || !svg) return null;
+  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+  const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
+  const rankdir = () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir);
   return {
     drag: new BoxDrag({
       ...shared,
-      view: () => host.zoom.view(),
-      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+      textOf,
+      ...nudgeDrops(moving, textOf, rankdir),
     }),
-    keys: new BoxMoveKeys(shared),
+    keys: new BoxMoveKeys({ ...shared, moving, textOf }),
   };
 }

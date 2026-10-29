@@ -1,6 +1,230 @@
 {
   "about": "What each bundled package carries inside it, and under which licence, keyed by its exact version. When a version changes, the tests fail until the new version's contents are checked and recorded here. THIRD_PARTY_NOTICES.md is generated from this file by scripts/notices.mjs.",
   "packages": {
+    "@automerge/automerge@3.5.0": {
+      "licence": "MIT",
+      "licenceText": "texts/automerge.MIT.txt",
+      "source": "https://github.com/automerge/automerge",
+      "checked": "2026-10-28, from the crate paths and toolchain stamped in dist/automerge.wasm, Automerge's Cargo.toml files, and each crate's own licence on crates.io (no npm dependencies, no install script; published 2026-09-16)",
+      "inside": [
+        {
+          "name": "dlmalloc",
+          "version": "0.2.11",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/dlmalloc.MIT.txt",
+          "provenance": "https://static.crates.io/crates/dlmalloc/dlmalloc-0.2.11.crate",
+          "source": "https://crates.io/crates/dlmalloc/0.2.11",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "hashbrown",
+          "version": "0.17.0",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/hashbrown.MIT.txt",
+          "provenance": "https://static.crates.io/crates/hashbrown/hashbrown-0.17.0.crate",
+          "source": "https://crates.io/crates/hashbrown/0.17.0",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "hex",
+          "version": "0.4.3",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/hex.MIT.txt",
+          "provenance": "https://static.crates.io/crates/hex/hex-0.4.3.crate",
+          "source": "https://crates.io/crates/hex/0.4.3",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "itertools",
+          "version": "0.15.0",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/itertools.MIT.txt",
+          "provenance": "https://static.crates.io/crates/itertools/itertools-0.15.0.crate",
+          "source": "https://crates.io/crates/itertools/0.15.0",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "js-sys",
+          "version": "0.3.104",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/js-sys.MIT.txt",
+          "provenance": "https://static.crates.io/crates/js-sys/js-sys-0.3.104.crate",
+          "source": "https://crates.io/crates/js-sys/0.3.104",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "once_cell",
+          "version": "1.21.4",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/once_cell.MIT.txt",
+          "provenance": "https://static.crates.io/crates/once_cell/once_cell-1.21.4.crate",
+          "source": "https://crates.io/crates/once_cell/1.21.4",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "rand",
+          "version": "0.10.2",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/rand.MIT.txt",
+          "provenance": "https://static.crates.io/crates/rand/rand-0.10.2.crate",
+          "source": "https://crates.io/crates/rand/0.10.2",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "serde-wasm-bindgen",
+          "version": "0.6.5",
+          "licence": "MIT",
+          "licenceText": "texts/automerge/serde-wasm-bindgen.MIT.txt",
+          "provenance": "https://static.crates.io/crates/serde-wasm-bindgen/serde-wasm-bindgen-0.6.5.crate",
+          "source": "https://crates.io/crates/serde-wasm-bindgen/0.6.5",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "serde_core",
+          "version": "1.0.229",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/serde_core.MIT.txt",
+          "provenance": "https://static.crates.io/crates/serde_core/serde_core-1.0.229.crate",
+          "source": "https://crates.io/crates/serde_core/1.0.229",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "serde_json",
+          "version": "1.0.151",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/serde_json.MIT.txt",
+          "provenance": "https://static.crates.io/crates/serde_json/serde_json-1.0.151.crate",
+          "source": "https://crates.io/crates/serde_json/1.0.151",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "smol_str",
+          "version": "0.3.6",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/smol_str.MIT.txt",
+          "provenance": "https://static.crates.io/crates/smol_str/smol_str-0.3.6.crate",
+          "source": "https://crates.io/crates/smol_str/0.3.6",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "tinyvec",
+          "version": "1.13.3",
+          "licence": "Zlib OR Apache-2.0 OR MIT",
+          "licenceText": "texts/automerge/tinyvec.MIT.txt",
+          "provenance": "https://static.crates.io/crates/tinyvec/tinyvec-1.13.3.crate",
+          "source": "https://crates.io/crates/tinyvec/1.13.3",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "tracing-core",
+          "version": "0.1.36",
+          "licence": "MIT",
+          "licenceText": "texts/automerge/tracing-core.MIT.txt",
+          "provenance": "https://static.crates.io/crates/tracing-core/tracing-core-0.1.36.crate",
+          "source": "https://crates.io/crates/tracing-core/0.1.36",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "unicode-segmentation",
+          "version": "1.13.3",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/unicode-segmentation.MIT.txt",
+          "provenance": "https://static.crates.io/crates/unicode-segmentation/unicode-segmentation-1.13.3.crate",
+          "source": "https://crates.io/crates/unicode-segmentation/1.13.3",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "wasm-bindgen",
+          "version": "0.2.127",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/wasm-bindgen.MIT.txt",
+          "provenance": "https://static.crates.io/crates/wasm-bindgen/wasm-bindgen-0.2.127.crate",
+          "source": "https://crates.io/crates/wasm-bindgen/0.2.127",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "zlib-rs",
+          "version": "0.6.8",
+          "licence": "Zlib",
+          "licenceText": "texts/automerge/zlib-rs.Zlib.txt",
+          "provenance": "https://static.crates.io/crates/zlib-rs/zlib-rs-0.6.8.crate",
+          "source": "https://crates.io/crates/zlib-rs/0.6.8",
+          "note": "A Rust crate compiled into the WebAssembly: its version is stamped there."
+        },
+        {
+          "name": "rustc-hash",
+          "version": "^2.1.1",
+          "licence": "Apache-2.0 OR MIT",
+          "licenceText": "texts/automerge/rustc-hash.MIT.txt",
+          "provenance": "https://crates.io/crates/rustc-hash",
+          "source": "https://crates.io/crates/rustc-hash",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for ^2.1.1. Its licence was read from rustc-hash 2.1.1."
+        },
+        {
+          "name": "leb128",
+          "version": "^0.2.5",
+          "licence": "Apache-2.0 OR MIT",
+          "licenceText": "texts/automerge/leb128.MIT.txt",
+          "provenance": "https://crates.io/crates/leb128",
+          "source": "https://crates.io/crates/leb128",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for ^0.2.5. Its licence was read from leb128 0.2.5."
+        },
+        {
+          "name": "flate2",
+          "version": "^1.0.22",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/flate2.MIT.txt",
+          "provenance": "https://crates.io/crates/flate2",
+          "source": "https://crates.io/crates/flate2",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for ^1.0.22. Its licence was read from flate2 1.1.2."
+        },
+        {
+          "name": "getrandom",
+          "version": "0.4",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/getrandom.MIT.txt",
+          "provenance": "https://crates.io/crates/getrandom",
+          "source": "https://crates.io/crates/getrandom",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for 0.4. Its licence was read from getrandom 0.4.0."
+        },
+        {
+          "name": "web-sys",
+          "version": "^0.3.55",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/web-sys.MIT.txt",
+          "provenance": "https://crates.io/crates/web-sys",
+          "source": "https://crates.io/crates/web-sys",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for ^0.3.55. Its licence was read from web-sys 0.3.104."
+        },
+        {
+          "name": "sha2",
+          "version": "^0.11.0-rc.5",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/sha2.MIT.txt",
+          "provenance": "https://crates.io/crates/sha2",
+          "source": "https://crates.io/crates/sha2",
+          "note": "A Rust crate compiled into the WebAssembly. Its exact version is not stamped there: Automerge asks for ^0.11.0-rc.5. Its licence was read from sha2 0.11.0."
+        },
+        {
+          "name": "hexane",
+          "version": "1.0.0-alpha.5",
+          "licence": "MIT",
+          "licenceText": "texts/automerge.MIT.txt",
+          "provenance": "https://static.crates.io/crates/hexane/hexane-1.0.0-alpha.5.crate",
+          "source": "https://github.com/automerge/automerge/tree/main/rust/hexane",
+          "note": "Automerge's own column storage, from the same repository and under its licence."
+        },
+        {
+          "name": "Rust standard library",
+          "version": "1.97.0-nightly-2026-04-25",
+          "licence": "MIT OR Apache-2.0",
+          "licenceText": "texts/automerge/rust.MIT.txt",
+          "provenance": "pkg:rust/rust-minimal@1.97.0-nightly-2026-04-25",
+          "source": "https://github.com/rust-lang/rust",
+          "note": "The compiler's core, alloc and std, linked into the WebAssembly; the toolchain is stamped there."
+        }
+      ]
+    },
     "@viz-js/viz@3.31.0": {
       "licence": "MIT",
       "licenceText": "texts/viz-js.MIT.txt",
@@ -35,35 +259,35 @@
         }
       ]
     },
-    "marked@18.1.0": {
+    "marked@18.1.1": {
       "licence": "MIT",
       "licenceText": "texts/marked.MIT.txt",
       "source": "https://github.com/markedjs/marked",
-      "checked": "2026-10-16, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.0, published 2026-10-05",
+      "checked": "2026-10-28, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.1, published 2026-10-12",
       "inside": []
     },
-    "sql.js@1.14.2": {
+    "sql.js@1.15.1": {
       "licence": "MIT",
       "licenceText": "texts/sql-js.MIT.txt",
       "source": "https://github.com/sql-js/sql.js",
-      "checked": "2026-10-20, from the Makefile and .devcontainer/Dockerfile at v1.14.2 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
+      "checked": "2026-10-28, from the Makefile and .devcontainer/Dockerfile at v1.15.1 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
       "inside": [
         {
           "name": "SQLite",
-          "version": "3.49.1",
+          "version": "3.54.0",
           "licence": "blessing",
           "licenceText": "texts/sqlite.blessing.txt",
-          "provenance": "https://sqlite.org/2025/sqlite-amalgamation-3490100.zip",
-          "source": "https://www.sqlite.org/src/timeline?t=version-3.49.1",
+          "provenance": "https://sqlite.org/2026/sqlite-amalgamation-3540000.zip",
+          "source": "https://www.sqlite.org/src/timeline?t=version-3.54.0",
           "note": "Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20)."
         },
         {
           "name": "Emscripten",
-          "version": "5.0.0",
+          "version": "6.0.12",
           "licence": "MIT OR NCSA",
           "licenceText": "texts/emscripten.MIT-NCSA.txt",
-          "provenance": "pkg:docker/emscripten/emsdk@5.0.0",
-          "source": "https://github.com/emscripten-core/emscripten/tree/5.0.0",
+          "provenance": "pkg:docker/emscripten/emsdk@6.0.12",
+          "source": "https://github.com/emscripten-core/emscripten/tree/6.0.12",
           "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
         }
       ]

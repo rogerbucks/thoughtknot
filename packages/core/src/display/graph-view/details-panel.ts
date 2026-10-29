@@ -12,13 +12,14 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from '../button';
-import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton } from './details-nav';
+import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton, trailKept } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
 import { renderSummary } from './details-summary';
 import { relabelShowOnly, untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
+import { readAloudButton } from './read-aloud';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import { markTouching } from './focus-marks';
@@ -133,9 +134,9 @@ export class DetailsPanel {
     }
   }
 
-  /** The trail at a new set of details: started again by a thing or link chosen in the drawing; then back and forward. */
+  /** The trail at new details: started again by a pick in the drawing, or gone on from under Focus support (§69). */
   private retrace(body: HTMLElement, at: TrailStep): void {
-    if (!this.walking) this.trail.start(at);
+    if (!this.walking && !(trailKept(this.o) && this.trail.go(at))) this.trail.start(at);
     renderTrail(
       body,
       this.trail,
@@ -212,8 +213,9 @@ export class DetailsPanel {
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'thoughtknot-kind', text: kind });
     this.sheet.head(head);
-    button(head, word('details.close'), 'x', () => this.close());
     const body = el.createDiv({ cls: 'thoughtknot-details-body' });
+    readAloudButton(head, kind ? `${title}, ${kind}` : title, body); // under a preset for reading (§69)
+    button(head, word('details.close'), 'x', () => this.close());
     this.sheet.opened(body);
     return body;
   }
@@ -234,7 +236,7 @@ export class DetailsPanel {
     this.el.hidden = true;
     this.images.release('details');
     this.shown = null;
-    this.trail.clear();
+    if (!trailKept(this.o)) this.trail.clear(); // Focus support keeps it, to go back along (§69)
     this.sheet.closed();
     this.rich.end();
     this.select(null);

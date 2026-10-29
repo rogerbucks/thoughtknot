@@ -1,0 +1,6 @@
+{
+  "file": "test/mobile-checked.test.js",
+  "test": "the nightly builds each phone and tablet app",
+  "seen_failing_first": false,
+  "evidence": "a guard: the nightly's phone job came with the phone app PR (#1525)"
+}

@@ -2,10 +2,11 @@
 // up as it is pressed. A finger picks it up only once held there for a moment (as a long press opens its tooltip, §24).
 // So a swipe still scrolls or pans. Once the pointer has moved past a tap's slop the box follows it. The box it would
 // land by is marked, and a line says the nudge it would write. Letting go writes that nudge to the style graph, through
-// the card's host. Escape, or letting go where no place is shown, puts the box back and writes nothing. The core
-// decides where it lands (box-drag.ts); this draws it.
+// the card's host. In a grid, letting go writes the column's value as the card's property instead (grid-drag.ts).
+// Escape, or letting go where no place is shown, puts the box back and writes nothing. The core decides where it
+// lands (box-drag.ts, grid-move.ts); this draws it.
 import { landingFor, landingSaid, word } from '@thoughtknot/core';
-import type { Landing, NudgeWrite, View, WrittenNudge } from '@thoughtknot/core';
+import type { NudgeWrite, PlacedBox, View, WrittenNudge } from '@thoughtknot/core';
 import { moveHint } from './box-move-keys';
 import type { Taps } from './taps';
 
@@ -24,18 +25,43 @@ export interface BoxMoving {
   move: (nudge: NudgeWrite, done: string) => void;
 }
 
+/** Where a box let go goes: the box it lands by, if one is marked, what that says, and how to write it. */
+export interface Drop {
+  other: string | null;
+  said: string;
+  write: () => void;
+}
+
 /** What a drag reads of the card as it goes. */
 export interface DragHost {
   viewport: HTMLElement;
   taps: Taps;
   view: () => View;
-  /** The direction the drawing is laid out in now: LR or TB. */
-  rankdir: () => string;
   /** The text drawn on a thing's box, by its key. */
   textOf: (key: string) => string;
-  moving: BoxMoving;
+  /** Where thing `key` goes, let go at `at` in the drawing among `boxes`: beside one as a nudge, or a grid's column. */
+  drop: (key: string, at: { x: number; y: number }, boxes: PlacedBox[]) => Drop | null;
+  /** What is said where letting go of thing `key` here places it nowhere. */
+  nowhere: (key: string) => string;
   /** Whether the card is only read here, where no box moves. */
   readOnly: () => boolean;
+}
+
+/** Where a box let go lands beside another, written as a nudge (§6), in a drawing laid out along `rankdir`. */
+export function nudgeDrops(
+  moving: BoxMoving,
+  textOf: (key: string) => string,
+  rankdir: () => string,
+): Pick<DragHost, 'drop' | 'nowhere'> {
+  return {
+    nowhere: (key) => word('move.nowhere', { thing: textOf(key) }),
+    drop: (key, at, boxes) => {
+      const l = landingFor(key, at, boxes, rankdir(), moving.written, moving.centre);
+      if (!l) return null;
+      const said = landingSaid(l, key, textOf);
+      return { other: l.other, said, write: () => moving.move(l.nudge, word('move.done', { said })) };
+    },
+  };
 }
 
 interface Press {
@@ -47,7 +73,9 @@ interface Press {
   /** Whether the box is picked up: at once for a mouse or pen, after a moment held for a finger. */
   held: boolean;
   dragging: boolean;
-  landing: Landing | null;
+  landing: Drop | null;
+  /** How the box was moved before it was pressed, such as by a lens (lenses.ts): it moves on from there. */
+  was: string | null;
 }
 
 /** A box being moved by a mouse or pen: pressed, dragged past the slop, then let go or put back. */
@@ -70,7 +98,8 @@ export class BoxDrag {
   down(id: number, key: string, box: SVGElement, p: { x: number; y: number }, touch = false): void {
     this.cancel();
     if (this.host.readOnly()) return;
-    const press: Press = { id, key, box, ...p, held: !touch, dragging: false, landing: null };
+    const was = box.getAttribute('transform');
+    const press: Press = { id, key, box, ...p, held: !touch, dragging: false, landing: null, was };
     this.press = press;
     if (touch)
       this.timer = window.setTimeout(() => {
@@ -102,16 +131,9 @@ export class BoxDrag {
     if (!per || !origin || !at) return true;
     const dx = (p.x - press.x) * (per.x - origin.x),
       dy = (p.y - press.y) * (per.y - origin.y);
-    press.box.setAttribute('transform', `translate(${dx} ${dy})`);
+    press.box.setAttribute('transform', `translate(${dx} ${dy})${press.was ? ` ${press.was}` : ''}`);
     const keyOf = (id: string) => this.host.viewport.querySelector(`#${id}`)?.getAttribute('data-key') ?? null;
-    press.landing = landingFor(
-      press.key,
-      at,
-      this.host.taps.boxes(keyOf),
-      this.host.rankdir(),
-      this.host.moving.written,
-      this.host.moving.centre,
-    );
+    press.landing = this.host.drop(press.key, at, this.host.taps.boxes(keyOf));
     this.mark(press);
     return true;
   }
@@ -123,8 +145,7 @@ export class BoxDrag {
     this.press = null;
     this.putBack(press);
     if (!press.dragging) return false;
-    const l = press.landing;
-    if (l) this.host.moving.move(l.nudge, word('move.done', { said: landingSaid(l, press.key, this.host.textOf) }));
+    press.landing?.write();
     return true;
   }
 
@@ -146,21 +167,20 @@ export class BoxDrag {
   private mark(press: Press): void {
     this.host.viewport.querySelectorAll('g.node.is-landing').forEach((g) => g.removeClass('is-landing'));
     const l = press.landing;
-    if (l)
+    if (l?.other)
       Array.from(this.host.viewport.querySelectorAll<SVGElement>('g.node'))
         .find((g) => g.getAttribute('data-key') === l.other)
         ?.addClass('is-landing');
     this.hint ??= moveHint(this.host.viewport);
     this.hint.hidden = false;
-    this.hint.textContent = l
-      ? landingSaid(l, press.key, this.host.textOf)
-      : word('move.nowhere', { thing: this.host.textOf(press.key) });
+    this.hint.textContent = l ? l.said : this.host.nowhere(press.key);
   }
 
   private putBack(press: Press): void {
     if (this.timer !== null) window.clearTimeout(this.timer);
     this.timer = null;
-    press.box.removeAttribute('transform');
+    if (press.was) press.box.setAttribute('transform', press.was);
+    else press.box.removeAttribute('transform');
     press.box.removeClass('is-dragged', 'is-held');
     this.host.viewport.querySelectorAll('g.node.is-landing').forEach((g) => g.removeClass('is-landing'));
     if (this.hint) this.hint.hidden = true;

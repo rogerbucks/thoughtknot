@@ -1,16 +1,13 @@
 // The 3D view of a card's drawing (editor spec §53, scale_space_view), switched to from the bar (Roger, 22 Oct 2026).
 // It lies over the drawing, under the bar, and goes by the bar's button or Escape. It only looks: nothing reaches the
 // note. It reads each box, group and link on screen, in the theme's colours. The sums are in space-view.ts and
-// space-spread.ts. The painters are in space-painter.ts and space-gpu-painter.ts.
-//
-// It shows cards in space (2.5D, space-cards.ts), or 3D in one of three ways. Things are laid out again as balls sized
-// by their links (space-spread.ts). Or each group is a floor its things stand on. Or each thing is as tall as its links.
-// How to move it is on screen (space-controls.ts): drag turns, Shift-drag or right-drag moves, scroll zooms.
-// 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing and opens its details on the
-// card (SPACE_OPEN, viewport-events.ts). Another turns the view to it (orbitAround). A bundle picked opens (SPACE_UNFOLD).
-// So does a folded group picked again, or zoomed into until it fills the screen. A thing the card selects is picked
-// here too. What the card hides, fades or brings forward, the 3D view shows too (focus_space).
-import { word } from '@thoughtknot/core';
+// space-spread.ts, the painters in space-painter.ts and space-gpu-painter.ts. It shows cards in space (2.5D), or 3D:
+// balls sized by their links, floors by group, or things as tall as their links. Moves are on screen
+// (space-controls.ts). 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing, its
+// details on the card (SPACE_OPEN); another turns to it. A bundle, or a folded group picked again or filling the view,
+// opens (SPACE_UNFOLD). What the card selects or fades is so here (focus_space), and its lens bends it here (lenses.ts).
+import { paintersFrom, word } from '@thoughtknot/core';
+import type { Lens, MiniMapSetting, Painter } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
@@ -18,21 +15,25 @@ import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
+import { spaceSeen } from '../../lenses.ts';
+import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
 import { spotsKept } from '../../space-parts.ts';
 import { stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
 import { keyMove, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
-import { pickPainter } from './mark-painter.ts';
-import type { Paints } from './mark-painter.ts';
-import { webgl2SpacePainter } from './space-painter.ts';
+import { pickPainter, type Paints } from './mark-painter.ts';
+import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
-import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
+import { offerHeadset } from './space-xr-view.ts';
 import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
 import { heldIn } from './svg-marks.ts';
 import { sketchedSpace, sketchPainted, type Sketch } from './space-sketch.ts';
+import { linedUpLayout } from '../../space-glide.ts';
+import { SpaceGlide } from './space-view-glide.ts';
+import { SpaceMiniMap } from './space-mini-map.ts';
 import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
@@ -45,13 +46,10 @@ export const SPACE_UNFOLD = 'thoughtknot-space-unfold';
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
 
-/** What a line's key is when it is a fold to open, not a link: a bundle, a hub's stub or a group's box (§25). */
-const FOLD = /^(bundle|hub|group):/;
+const FOLD = /^(bundle|hub|group):/; // a line's key that is a fold to open, not a link: a bundle, a stub, a group's box
 
-/** How far a pointer may move, in pixels, and still be a click or tap rather than a drag. */
-const TAP_SLOP = 6;
-/** How soon a second click or tap must follow the first to fly, in milliseconds. */
-const DOUBLE_TAP = 350;
+const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
+const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
 
 /** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
 type Depth = DepthBy | 'cards' | null;
@@ -61,8 +59,10 @@ export interface SpaceOptions {
   cards?: boolean;
   asDrawn?: boolean;
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
-  /** The drawings over the graph as shown now, laid on what they are pinned to in space (§70); none while hidden. */
-  sketch?: () => Sketch | null;
+  sketch?: () => Sketch | null; // the drawings over the graph as shown now, none while hidden (§70)
+  miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
+  painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
+  lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -99,17 +99,17 @@ export async function openSpaceView(
   });
   const shapes = el.createEl('canvas', { cls: 'thoughtknot-space-canvas' }),
     words = el.createEl('canvas', { cls: 'thoughtknot-space-canvas' });
-  const painter = await pickPainter<SpacePainter>(shapes, [webgpuSpacePainter, webgl2SpacePainter, canvasSpacePainter]);
+  const makers = [webgpuSpacePainter, webgl2SpacePainter, canvasSpacePainter];
+  const painter = await pickPainter<SpacePainter>(shapes, paintersFrom(more.painter, makers));
   const ctx = words.getContext('2d');
   if (!painter || !ctx) {
     el.remove();
     return null;
   }
   for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
-  const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
-  const win = el.win;
-  // the label halo is the colour behind the view: the first painted one up from it, as the theme sets it. The system's
-  // page colour is the last resort: a phone in light mode has a white one under a dark theme (Roger, 25 Oct 2026)
+  const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } }),
+    win = el.win;
+  // the label halo is the colour behind the view: the first painted one up from it, else the system's page colour
   const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
@@ -119,9 +119,11 @@ export async function openSpaceView(
   // laid out again, each thing starts where it was, so a group opens or folds in place (cluster_in_place)
   let spots: Spots<3> | undefined,
     held = new Map('marks' in from ? [] : heldIn(from));
+  const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
     if (by !== 'cards' && by) return sketchedSpace(spaceOf(marks, by), from, more.sketch, marks);
-    const laid = spreadSpace(marks, spots && spotsKept(spots, held), by === 'cards', more.asDrawn, more.layout?.());
+    const kept = spots && spotsKept(spots, held);
+    const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
     spots = laid.spots;
     return sketchedSpace(stackedPlanes(laid.space), from, more.sketch, marks);
   };
@@ -140,19 +142,23 @@ export async function openSpaceView(
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
+  const seen = () => spaceSeen(glide.shown, more.lens?.(), glide.match(picked)); // painted and picked, through its lens
   const paint = () => {
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    const frame = frameOf(space, matrix, width, height, picked, pickedLine?.id);
+    const frame = frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
+    map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
   };
   const again = () => {
     if (asked) return;
     asked = true;
     win.requestAnimationFrame(paint);
   };
+  const glide = new SpaceGlide(el, space, again, (o) => (orbit = o)); // laid out again, it glides there (layout_glide)
+  const map = new SpaceMiniMap(el, more.miniMap ?? (() => 'off'), (by) => ((orbit = by(orbit)), again()));
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the view goes with it, and frees the graphics chip
     if (!el.isConnected) return close();
@@ -173,12 +179,14 @@ export async function openSpaceView(
     if ('marks' in from || !open) return;
     const was = space.blocks.map((b) => b.of).join(),
       before = picked && { of: picked.of, at: middleOf(picked) };
+    const [shown, shownOrbit] = [glide.settle(), orbit];
     ({ marks, paints } = sketchPainted(from));
     depths = depthsOf();
     // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
     held = new Map([...held, ...heldIn(from)]);
     const warm = !!spots && !more.asDrawn;
     space = spaceBy(depths[depth] ?? null);
+    if (warm) [space, spots] = linedUpLayout(shown, space, spots, more.layout?.()?.pinned, before?.of); // not to spin
     // what the card selects now is picked here too: a thing found, or none once its details close
     const key = from.querySelector('g.node.is-selected[data-key]')?.getAttribute('data-key');
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
@@ -189,7 +197,7 @@ export async function openSpaceView(
     const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
     const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);
     if (other || moved) orbit = centredOn(orbit, picked);
-    again();
+    glide.to(space, shown, shownOrbit, orbit);
   };
   if (!('marks' in from)) from.addEventListener(MARKED, marked);
   const close = () => {
@@ -203,10 +211,9 @@ export async function openSpaceView(
     closed();
   };
 
-  /** What the view turns round: the picked thing, else the drawing's middle (Roger, 25 Oct 2026). */
-  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target);
-  /** Makes one move, from a key or a button, and paints it. */
+  const pivot = (): Vec3 => (picked ? middleOf(picked) : orbitFit(space).target); // what the view turns round
   const move = (m: SpaceMove) => {
+    // one move, from a key or a button, painted
     if ('back' in m) return close();
     if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
@@ -215,16 +222,14 @@ export async function openSpaceView(
     else if ('help' in m) showHelp(help.hidden !== false);
     again();
   };
-  /** Picks `block`, or none: its name shows and is said aloud. */
   const pick = (block: Block | null) => {
-    picked = block;
+    picked = block; // or none: its name shows and is said aloud
     pickedLine = null;
     said.setText(block ? (block.name ?? block.of ?? '') : '');
     again();
   };
-  /** Picks the link `line`: its words show and are said aloud. */
   const pickLine = (line: SpaceLine) => {
-    picked = null;
+    picked = null; // a link picked: its words show and are said aloud
     pickedLine = line;
     said.setText(line.words ?? '');
     again();
@@ -237,18 +242,17 @@ export async function openSpaceView(
       going = () => run === turning && open;
     turnToward(win, orbit, point, (o) => ((orbit = o), paint()), going);
   };
-  /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
-    // a ball is looked at from its middle, a block from its top
+    // flies to it: the camera looks at a ball's middle, or a block's top, from near
     const top = block.floor + (space.round ? block.tall / 2 : block.tall);
     const near = Math.max(block.width, block.depth, block.tall) * 4;
     orbit = focusOn(orbit, [block.x + block.width / 2, block.y + block.depth / 2, top], near);
     pick(block);
   };
-
   const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
   /** Shows it the `next` way, the picked thing kept and the view centred on it, and says how. */
   const showAs = (next: number) => {
+    const [shown, shownOrbit] = [glide.settle(), orbit];
     depth = next;
     space = spaceBy(depths[depth] ?? null);
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
@@ -257,14 +261,14 @@ export async function openSpaceView(
     depthButton.setAttribute('aria-label', label);
     depthButton.hidden = depth === 0;
     said.setText(label);
-    again();
+    glide.to(space, shown, shownOrbit, orbit);
   };
   // the buttons that move the view, and how it is shown in 3D: in space, or lifted by groups or by links
   const { depthButton, showHelp, help } = spacePad(el, depthWords(), move, () =>
     showAs((depth % (depths.length - 1)) + 1),
   );
   depthButton.hidden = depth === 0;
-
+  offerHeadset(el, depthButton.parentElement, seen, () => paints, tell); // in a headset (projection_spatial)
   // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
@@ -315,12 +319,12 @@ export async function openSpaceView(
     const x = e.clientX - at.left,
       y = e.clientY - at.top;
     const hit = space.cards
-      ? (cardAt(cardsOnScreen(space, matrixNow(), width, height), x, y)?.block ?? null)
-      : blockAt(space, matrixNow(), width, height, x, y);
+      ? (cardAt(cardsOnScreen(seen(), matrixNow(), width, height), x, y)?.block ?? null)
+      : blockAt(seen(), matrixNow(), width, height, x, y);
     // an open group's name zooms to it, and the button beside folds it back (cluster_fold_back)
     const strip = stripTap(space, matrixNow(), width, height, x, y);
     if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = orbitFit(strip.fit, width / height)), again());
-    const link = hit ? null : lineAt(space, matrixNow(), width, height, x, y);
+    const link = hit ? null : lineAt(seen(), matrixNow(), width, height, x, y);
     const twice =
       lastTap &&
       e.timeStamp - lastTap.at < DOUBLE_TAP &&
@@ -364,16 +368,12 @@ export async function openSpaceView(
     { passive: false },
   );
   el.addEventListener('keydown', (e) => {
-    if ((e.target as Element | null)?.closest('button')) {
-      // a button keeps Enter and Space for itself
-      if (e.key === 'Enter' || e.key === ' ') return;
-    }
+    // a button keeps Enter and Space for itself
+    if ((e.target as Element | null)?.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
+    const m = keyMove(e.key, e.shiftKey);
     if (e.key === 'Enter' && picked) flyTo(picked);
-    else {
-      const m = keyMove(e.key, e.shiftKey);
-      if (!m) return;
-      move(m);
-    }
+    else if (m) move(m);
+    else return;
     e.preventDefault();
   });
 

@@ -16,8 +16,14 @@ import {
   orList,
 } from './style-graph.ts';
 import { legendRefusal } from './untangle-saved.ts';
-import { LAYOUT_OPTION_RANGE, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
-import type { LayoutOptions } from './layouts/layout-options.ts';
+import {
+  LAYOUT_CHOICES,
+  LAYOUT_OPTION_RANGE,
+  choiceFits,
+  SHOWN_LAYOUT_CHOICES,
+  SHOWN_LAYOUT_KEYS,
+} from './layouts/layout-options.ts';
+import type { LayoutChoice, LayoutShare } from './layouts/layout-options.ts';
 import { word } from './words.ts';
 
 /** The switches a view saved as shown keeps, in the order they are written. */
@@ -64,10 +70,14 @@ export function shownRefusal(s: ShownWrite): string | null {
   );
   if (wrong) return mustBe(wrong, ON_OFF);
   // how the layout spaces it: each option in its range (§53, layout_saved_with_view)
-  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]) {
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [LayoutShare, string][]) {
     const v = s.layout?.[k],
       [least, most] = LAYOUT_OPTION_RANGE[k];
     if (v !== undefined && !(v >= least && v <= most)) return word('styling.shown.layout-range', { key, least, most });
+  }
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_CHOICES) as [LayoutChoice, string][]) {
+    const v = s.layout?.[k];
+    if (v !== undefined && !choiceFits(k, v)) return mustBe(key, LAYOUT_CHOICES[k]);
   }
   return legendRefusal(s.legend ?? []);
 }

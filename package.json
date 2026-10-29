@@ -14,7 +14,7 @@
   "scripts": {
     "build": "npm run build --workspace packages/graph-spec && npm run build --workspace packages/obsidian && npm run build --workspace packages/claude-code && npm run build --workspace packages/app && npm run build --workspace packages/vscode",
     "dev": "npm run dev --workspace packages/obsidian",
-    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/core/src/display --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit && tsc -p packages/claude-code/page --noEmit && tsc -p packages/app --noEmit && tsc -p packages/vscode --noEmit",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/core/src/display --noEmit && tsc -p packages/obsidian --noEmit && tsc -p packages/graph-spec --noEmit && tsc -p packages/claude-code --noEmit && tsc -p packages/claude-code/page --noEmit && tsc -p packages/app --noEmit && tsc -p packages/vscode --noEmit && tsc -p packages/sync --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "node scripts/run-ceiling.mjs node --test --test-timeout=300000",
     "test:ai": "node scripts/run-ceiling.mjs node --test --test-timeout=300000 --test-reporter=./scripts/quiet-reporter.mjs",
@@ -36,11 +36,12 @@
     "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-plugin-obsidianmd": "0.4.2",
-    "jsdom": "30.1.2",
-    "obsidian": "1.13.1",
-    "prettier": "3.9.9",
+    "fast-check": "4.10.2",
+    "jsdom": "30.1.3",
+    "obsidian": "1.14.4",
+    "prettier": "3.9.10",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.71.0"
+    "typescript-eslint": "8.72.0"
   },
   "overrides": {
     "moment": "2.31.0"

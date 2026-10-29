@@ -1,13 +1,22 @@
 // The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages,
-// reach no other origin and call only the app's seven folder commands. The Rust, the build script and the window's
-// capability must name the same seven commands. So a new command is never let through unseen.
+// reach no other origin and call only the app's eight folder commands. The Rust, the build script and the window's
+// capability must name the same eight commands. So a new command is never let through unseen.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const config = JSON.parse(read('src-tauri/tauri.conf.json'));
-const COMMANDS = ['pick_folder', 'read_dir', 'read_text', 'write_text', 'remove_file', 'make_dir', 'write_new'];
+const COMMANDS = [
+  'pick_folder',
+  'own_folder',
+  'read_dir',
+  'read_text',
+  'write_text',
+  'remove_file',
+  'make_dir',
+  'write_new',
+];
 
 test("the window's policy allows its own pages and Tauri's calls, and no other origin", () => {
   const policy = Object.fromEntries(
@@ -25,7 +34,7 @@ test("the window's policy allows its own pages and Tauri's calls, and no other o
   assert.equal(config.app.security.freezePrototype, true);
 });
 
-test('the commands in the Rust, the build script and the capability are the same seven', () => {
+test('the commands in the Rust, the build script and the capability are the same eight', () => {
   const handled = /generate_handler!\[([^\]]*)\]/
     .exec(read('src-tauri/src/lib.rs'))[1]
     .split(',')
@@ -54,7 +63,12 @@ test('the app takes no plug-in that reaches the disk, the network or a shell on 
     ([, name, a, b]) => [name, a ?? b],
   );
   const plugins = crates.map(([n]) => n).filter((n) => n.startsWith('tauri-plugin-'));
-  assert.deepEqual(plugins, ['tauri-plugin-dialog']);
+  assert.deepEqual(plugins, ['tauri-plugin-keeper', 'tauri-plugin-dialog']);
+  assert.match(
+    cargo,
+    /^tauri-plugin-keeper = \{ version = "=[\d.]+", path = "keeper" \}$/m,
+    'the keeper is the app’s own',
+  );
   for (const [name, version] of crates.filter(([n]) => n.startsWith('tauri')))
     assert.match(version, /^=\d+\.\d+\.\d+$/, `${name} is pinned to one version`);
 });
@@ -94,4 +108,59 @@ test('the app is built before its Rust tests, so no packed window file is half-w
     rust = workflow.indexOf('run: cargo test --locked');
   assert.ok(build > 0 && rust > 0, 'both steps are there');
   assert.ok(build < rust, 'the build comes first: cargo test compiles the library twice at once');
+});
+
+test('the phone and tablet app has an id of its own under thoughtknot.app, and its notes show in the Files app', () => {
+  const android = JSON.parse(read('src-tauri/tauri.android.conf.json'));
+  const ios = JSON.parse(read('src-tauri/tauri.ios.conf.json'));
+  assert.equal(android.identifier, 'app.thoughtknot.mobile');
+  assert.equal(ios.identifier, android.identifier, 'one id on both, as one app');
+  const plist = read('src-tauri/Info.ios.plist');
+  for (const key of ['UIFileSharingEnabled', 'LSSupportsOpeningDocumentsInPlace'])
+    assert.match(plist, new RegExp(`<key>${key}</key>\\s*<true/>`), `${key} is on`);
+});
+
+test('the folder dialog is a computer’s only: a phone build carries no dialog plug-in', () => {
+  const cargo = read('src-tauri/Cargo.toml');
+  const desktopOnly = cargo.indexOf(`[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]`);
+  assert.ok(desktopOnly > 0, 'a section for computers only');
+  assert.ok(cargo.indexOf('tauri-plugin-dialog') > desktopOnly, 'the dialog sits in it');
+  assert.match(read('src-tauri/src/lib.rs'), /#\[cfg_attr\(mobile, tauri::mobile_entry_point\)\]\npub fn run\(\)/);
+});
+
+test('CI builds the Android app and the iPhone simulator app, with no key of Roger’s (mobile_checked)', () => {
+  const workflow = readFileSync(new URL('../../../.github/workflows/mobile-app.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /cargo tauri android build --ci --debug --apk --target aarch64\n/);
+  assert.match(workflow, /cargo tauri ios build --ci --debug --target aarch64-sim --no-sign\n/);
+  assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
+  assert.doesNotMatch(workflow, /secrets\./, 'no secret reaches a phone build');
+  assert.doesNotMatch(workflow, /actions\/cache@/, 'nothing restored from a cache an earlier run could have poisoned');
+  for (const name of ['thoughtknot-app-android', 'thoughtknot-app-ios-simulator'])
+    assert.match(workflow, new RegExp(`name: ${name}\\n\\s+if-no-files-found: error`), `${name} is kept`);
+});
+
+test('the vault key is made on the device and kept in its secure store, and the window may not ask for it yet', () => {
+  const keeper = (path) => read(`src-tauri/keeper/${path}`);
+  const kotlin = keeper('android/src/main/java/Keeper.kt');
+  assert.match(kotlin, /KeyStore\.getInstance\(STORE\)/);
+  assert.match(kotlin, /STORE = "AndroidKeyStore"/, 'the sealing key lives in the Android Keystore');
+  assert.match(kotlin, /context\.noBackupFilesDir/, 'the sealed copy is never backed up');
+  assert.match(kotlin, /SecureRandom\(\)\.nextBytes/, 'made on the device');
+  const swift = keeper('ios/Sources/KeeperPlugin.swift');
+  assert.match(swift, /kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly/, 'in the Keychain, for this device only');
+  assert.match(swift, /SecRandomCopyBytes/, 'made on the device');
+  // no key is carried in the app: no run of 16 or more bytes or hex digits is written in the keeper's code
+  for (const path of ['src/lib.rs', 'android/src/main/java/Keeper.kt', 'ios/Sources/KeeperPlugin.swift']) {
+    assert.doesNotMatch(keeper(path), /(?:0x[0-9a-f]{2}\s*,\s*){16}/i, `${path} holds no key bytes`);
+    assert.doesNotMatch(keeper(path), /[0-9a-f]{32}/i, `${path} holds no key written out`);
+  }
+  assert.match(read('src-tauri/src/lib.rs'), /\.plugin\(tauri_plugin_keeper::init\(\)\)/);
+  const capability = JSON.parse(read('src-tauri/capabilities/default.json'));
+  assert.ok(!capability.permissions.some((p) => p.startsWith('keeper:')), 'sync allows it when it joins the app (W30)');
+  const workflow = readFileSync(new URL('../../../.github/workflows/mobile-app.yml', import.meta.url), 'utf8');
+  assert.match(
+    workflow,
+    /\.\/gradlew --no-daemon :tauri-plugin-keeper:connectedDebugAndroidTest\n/,
+    'run on an emulator',
+  );
 });

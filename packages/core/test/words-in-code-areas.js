@@ -72,6 +72,7 @@ export const REST_AREA = [
   'packages/core/src/plugin-calls.ts',
   'packages/core/src/plugin-sources.ts',
   'packages/core/src/plugin-diagrams.ts',
+  'packages/core/src/plugin-layouts.ts',
   'packages/core/src/plugin-ai.ts',
   'packages/core/src/plugin-isolated.ts',
   'packages/core/src/core-storage.ts',
@@ -98,8 +99,17 @@ export const KEPT = {
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
   'packages/core/src/display/host-contract.ts': '*',
   'packages/core/src/display/panel-contract.ts': '*',
-  // the comment carrying the layout options in the source our engine is given, read by the engine, never by a person
-  'packages/core/src/layouts/own-draw.ts': ['  // layout options {}'],
+  // the comments carrying the layout options and the kinds in the source our engine is given, read by the engine,
+  // never by a person
+  'packages/core/src/layouts/own-draw.ts': [
+    '  // layout options {}',
+    '  // layout kinds {}',
+    '  // layout lanes off',
+    '  // layout step {}',
+    '  // layout spots {}',
+  ],
+  // the steps of work a grid matches a note's values against, to order its columns; never shown, the note's own are
+  'packages/core/src/view-types/grid-view.ts': ['to do', 'in progress', 'in review'],
   // the SQL the local store runs, read by SQLite and never by a person (mesh-index-backends.ts)
   'packages/core/src/mesh-index-backends.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app

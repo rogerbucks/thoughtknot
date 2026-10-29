@@ -1218,7 +1218,12 @@
       "layout_strategy_variables",
       "layout_pick_said",
       "layout_own_default",
-      "layout_parts_packed"
+      "layout_parts_packed",
+      "layout_kinds_read",
+      "layout_pick_tried",
+      "layout_checks_gated",
+      "layout_kind_lanes",
+      "layout_tidy_tree"
     ]
   },
   "LE2": {
@@ -1227,6 +1232,8 @@
     "requirements": [
       "layout_live_loop",
       "layout_glide",
+      "orientation_cues",
+      "space_mini_map",
       "layout_concept_layers",
       "layout_plugins"
     ]

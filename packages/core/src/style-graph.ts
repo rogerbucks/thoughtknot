@@ -1,13 +1,13 @@
-// The style graph's shape (editor spec §2, §6, §7, §14, §15). It is what a style block holds once read, and the words
-// each part may use. It holds nudges, the properties shown inline, and looks for views and paths. It holds whether a
-// view fades or hides what is outside it, and how a view was shown. It holds where arrowheads are hidden, the diagram
-// type chosen, how links move and the pictures on boxes (§18). A style graph is written in the same notation as the
-// data, in its own block, and never in the data.
+// The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read, and its words. It
+// holds nudges, properties shown inline, looks for views and paths, and whether a view fades or hides what is outside.
+// It holds how a view was shown, hidden arrowheads, the diagram type, how links move and pictures on boxes (§18). It is
+// written in the same notation as the data, in its own block, never in the data.
 import type { TimelineChoice } from './timeline.ts';
 import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
+import type { Render } from './render-choice.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -53,20 +53,6 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
 /**
- * The plug-in a diagram type is named under, and the type's own word, or null when it is not one (§15,
- * plugin_diagram_type_named). A plug-in's type is its id, dotted lower-case words, then a dot and a word:
- * `acme.charts.sankey` is `sankey` of the plug-in `acme.charts`.
- */
-export function pluginTypeOf(name: string): { plugin: string; word: string } | null {
-  const at = name.lastIndexOf('.');
-  const plugin = name.slice(0, at),
-    own = name.slice(at + 1);
-  return at > 0 && /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(plugin) && /^[a-z][a-z0-9-]*$/.test(own)
-    ? { plugin, word: own }
-    : null;
-}
-
-/**
  * How a link moves to show flow (§7, links_show_flow). Dashes run along its arrow, a dot travels along it, or it is
  * still. Still takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
  */
@@ -101,6 +87,8 @@ export const STYLE_KINDS = [
   'Links',
   'Picture',
   'Filter',
+  'Preset',
+  'Render',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
@@ -129,6 +117,11 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
     'spacing',
     'link_length',
     'group_pull',
+    'rounds',
+    'layout_direction',
+    'shape',
+    'pinned',
+    'layout_strategy',
   ],
   Arrows: ['arrowheads', 'view', 'type'],
   Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show', 'centre'],
@@ -136,7 +129,17 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
   Filter: ['keep', 'view'],
+  Preset: ['preset'],
+  Render: ['space', 'painter', 'lens', 'view'],
 };
+
+/** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
+export const PRESET_IDS = ['default', 'focus', 'calm', 'detail', 'big-picture', 'reading'] as const;
+/** A graph's own view preset, by its id, which wins over the one the settings pick (§69). */
+export interface PresetChoice {
+  preset: (typeof PRESET_IDS)[number];
+  at: StyleAt;
+}
 
 /** A word as a sentence says it before a kind's name: `an Arrows`, `a Show`. */
 export const article = (word: string): string => (/^[AEIOU]/i.test(word) ? 'an' : 'a');
@@ -327,6 +330,10 @@ export interface StyleGraph {
   pictures: Picture[];
   /** The filters saved for a graph too large to draw (§53), in the order written; the first for a view is used. */
   filters: SavedFilter[];
+  /** The graph's own view preset (§69), in the order written; the first is used. */
+  presets: PresetChoice[];
+  /** The space and painter of the whole graph or a view (§68, render-choice.ts), in the order written. */
+  renders: Render[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -365,8 +372,12 @@ export function emptyStyle(): StyleGraph {
     links: [],
     pictures: [],
     filters: [],
+    presets: [],
+    renders: [],
   };
 }
 
+// a plug-in's diagram type, by its name: plugin-type.ts
+export { pluginTypeOf } from './plugin-type.ts';
 // how a fault in the style graph is said, and its fix: style-fix.ts
 export { orList, styleProblem, wordFix } from './style-fix.ts';

@@ -142,14 +142,11 @@ export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.t
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
 export { isSourceBlock, isStepBlock } from './blocks.ts';
-export { lineInSource, readSource, sourceFor, sourceOf } from './sources.ts';
-export type {
-  Fetched as SourceFetched,
-  Source as GraphSource,
-  SourceFault,
-  SourceRead,
-  SourceRefusal,
-} from './sources.ts';
+export { lineInSource, placeKey, readSource, sourceFor, sourceOf } from './sources.ts';
+export { CONNECTORS, connect, connectorFor, gqlConnector, joinPlaces } from './connectors.ts';
+export type { Citation, Connected, Connector, JoinedRead, JoinOptions, Statement } from './connectors.ts';
+export type { Fetched as SourceFetched, Source as GraphSource, SourceFault, SourceRead } from './sources.ts';
+export type { SourceRefusal } from './sources.ts';
 export { runStep, stepOf } from './steps.ts';
 export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
 export { givenLabel } from './steps-input.ts';
@@ -308,6 +305,8 @@ export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
 export { landingFor, landingSaid, placesFor } from './box-drag.ts';
+export { gridDrop, gridMoved } from './view-types/grid-move.ts';
+export type { GridDrop } from './view-types/grid-move.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
 export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {

@@ -61,6 +61,7 @@ describe('the nightly workflow', () => {
       'tests-passed',
       'build',
       'desktop',
+      'mobile',
       'publish',
       'drafts',
     ]);
@@ -191,6 +192,16 @@ describe('the nightly workflow', () => {
     const called = read('.github/workflows/desktop-app.yml');
     assert.match(block(called.split('\n'), 'on', 0).join('\n'), /workflow_call:\s*\n\s*inputs:\s*\n\s*ref:/);
     assert.match(jobs(called).build.join('\n'), /ref: \$\{\{ inputs\.ref \}\}/);
+  });
+
+  // mobile_checked: a phone or tablet build is never first tried by a person
+  test('builds the phone and tablet app by its own workflow, reading only, with no key', () => {
+    const mobile = jobs(text).mobile.join('\n');
+    assert.match(mobile, /^ {4}needs: \[check, security\]$/m);
+    assert.match(mobile, /^ {4}if: needs\.check\.outputs\.moved == 'true'$/m);
+    assert.match(mobile, /^ {4}uses: \.\/\.github\/workflows\/mobile-app\.yml$/m);
+    assert.deepEqual(given('mobile'), ['contents: read']);
+    assert.doesNotMatch(mobile, /secrets|with:/, 'no key, and no ref handed in to check out');
   });
 
   test('hands the app build only its signing keys, each under its own name, never all of them', () => {
