@@ -78,11 +78,16 @@ def one_line(n):
 
 
 def seconds(f, arg):
-    """The processor time f(arg) takes: time spent waiting for the processor, which a loaded
-    machine adds more of to a longer run, is not counted."""
-    start = time.process_time()
-    f(arg)
-    return time.process_time() - start
+    """The processor time one f(arg) takes: time spent waiting for the processor, which a loaded
+    machine adds more of to a longer run, is not counted. It runs again until a tenth of a second
+    has passed. Windows counts processor time in steps of about 16 ms, too coarse for one run."""
+    runs, start = 0, time.process_time()
+    while True:
+        f(arg)
+        runs += 1
+        spent = time.process_time() - start
+        if spent >= 0.1:
+            return spent / runs
 
 
 class OneLongLine(unittest.TestCase):

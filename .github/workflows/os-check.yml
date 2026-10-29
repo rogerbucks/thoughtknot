@@ -57,6 +57,10 @@ jobs:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # Python reads what Node writes as UTF-8 here, as it does on Linux and macOS. Windows would read it in its own code
+    # page, and turn each · and — into another letter. Python 3.15 makes this the default (PEP 686).
+    env:
+      PYTHONUTF8: '1'
     defaults:
       run:
         shell: bash
