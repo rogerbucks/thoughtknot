@@ -22,7 +22,7 @@ import { currentLanguage, word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
-import { readBody, bodyLimitOf, BODY_LIMIT } from './request-body.ts';
+import { readBody, bodyLimitOf, drained, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
 
 /** How long the server waits with no page before it stops: 30 minutes. */
@@ -216,7 +216,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     const limit = bodyLimitOf(url);
     const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
-      req.resume();
+      await drained(req);
       return send(
         res,
         413,

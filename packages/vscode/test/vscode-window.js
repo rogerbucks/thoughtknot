@@ -18,7 +18,7 @@ let building;
 
 /** A new empty folder, real path, put away by `cleanUpVscode`. */
 export function emptyFolder() {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
   folders.push(dir);
   return dir;
 }

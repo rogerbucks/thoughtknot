@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
+import { npmCommand } from '../../../scripts/npm-command.mjs';
 
 const BIN = fileURLToPath(new URL('../bin/layout-source-node.mjs', import.meta.url));
 const run = (request) => {
@@ -51,7 +52,7 @@ test('a note that cannot be read says so, and the others are still answered', ()
 
 test('bundled into one file, it runs with nothing beside it — as the vault runs its vendored copy', () => {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
-  const b = spawnSync('npm', ['run', 'build:layout'], { cwd: root, encoding: 'utf8' });
+  const b = spawnSync(...npmCommand(['run', 'build:layout']), { cwd: root, encoding: 'utf8' });
   assert.equal(b.status, 0, b.stderr);
   const dir = mkdtempSync(join(tmpdir(), 'layout-')),
     alone = join(dir, 'layout-source-node.cjs');

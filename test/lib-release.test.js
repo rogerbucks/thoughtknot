@@ -13,14 +13,13 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
-import { buildLibrary, PACKAGES, assetName, releaseUrl } from '../scripts/library-release.mjs';
+import { buildLibrary, PACKAGES, assetName, releaseUrl, runNpm } from '../scripts/library-release.mjs';
 import { changelogText, pullRequests } from '../scripts/changelog.mjs';
 import { read, readJSON, jsPackages, workflowFiles } from './repository/repo.js';
 import { repository } from './repository/scratch-repository.js';
 
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const NOTE = "// graph: g\n(tea:Drink {name: 'Tea'}),\n(me:Person {name: 'Me'}),\n(tea)-[:WARMS]->(me)";
 
 describe('the release and the nightly attach the library', () => {
@@ -81,10 +80,16 @@ describe('the two packages, built and installed from their files', () => {
 
   test('each package is private, at the version given, and carries the licence and notices', () => {
     for (const { name, file } of built) {
-      const listed = execFileSync('tar', ['-tzf', file], { encoding: 'utf8' });
+      // tar is handed the file's name from its own folder: GNU tar, as Git's on Windows, reads `D:` as another computer
+      const tar = (...args) =>
+        execFileSync('tar', [...args.slice(0, 1), basename(file), ...args.slice(1)], {
+          cwd: dirname(file),
+          encoding: 'utf8',
+        });
+      const listed = tar('-tzf');
       for (const want of ['package/package.json', 'package/LICENSE', 'package/THIRD_PARTY_NOTICES.md'])
         assert.ok(listed.includes(want), `${name} has ${want}`);
-      const manifest = JSON.parse(execFileSync('tar', ['-xOzf', file, 'package/package.json'], { encoding: 'utf8' }));
+      const manifest = JSON.parse(tar('-xOzf', 'package/package.json'));
       assert.equal(manifest.version, '0.9.0');
       assert.equal(manifest.private, true, `${name} can never be published`);
       assert.equal(manifest.scripts, undefined, `${name} runs nothing when installed`);
@@ -97,11 +102,11 @@ describe('the two packages, built and installed from their files', () => {
     writeFileSync(join(app, 'package.json'), JSON.stringify({ name: 'app', private: true, type: 'module' }));
     const env = { ...process.env };
     delete env.npm_config_allow_scripts;
-    execFileSync(
-      NPM,
-      ['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', ...built.map(({ file }) => file)],
-      { cwd: app, env, stdio: 'pipe' },
-    );
+    runNpm(['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', ...built.map(({ file }) => file)], {
+      cwd: app,
+      env,
+      stdio: 'pipe',
+    });
     const program = (typed) =>
       [
         "import { readNote, History, layoutSource } from '@thoughtknot/core';",
