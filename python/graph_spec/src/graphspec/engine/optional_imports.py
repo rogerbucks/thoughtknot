@@ -3,6 +3,8 @@ use, so the library imports with Python's standard library alone."""
 
 from __future__ import annotations
 
+from typing import Any
+
 
 class _Lazy:
     """A module loaded on first use — so this library imports with Python's standard library alone,
@@ -38,3 +40,11 @@ grafeo, yaml, etree, rfc8785 = (
     _Lazy("lxml.etree"),
     _Lazy("rfc8785"),
 )
+
+
+def safe_parser() -> Any:
+    """An XML parser that expands no entity, fetches nothing over the network and keeps lxml's size
+    limits, so a crafted file cannot read a local file into the document (SEC-7). Every XML parse
+    in this library goes through it; tests/test_optional_imports_safe_parser.py refuses a
+    bare one."""
+    return etree.XMLParser(resolve_entities=False, no_network=True, huge_tree=False)
