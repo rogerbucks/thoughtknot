@@ -45,10 +45,10 @@ def gql_block(path: str, straighten: bool = True) -> str:
     control tagged spec:gql in Word, with Word's curly quotes straightened."""
     if path.endswith(".docx"):
         import zipfile
-        from lxml import etree as _et
+        from graphspec.engine.optional_imports import etree as _et, safe_parser
 
         wml = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
-        root = _et.fromstring(zipfile.ZipFile(path).read("word/document.xml"))
+        root = _et.fromstring(zipfile.ZipFile(path).read("word/document.xml"), safe_parser())
         for sdt in root.iter(wml + "sdt"):
             tag = sdt.find(f"{wml}sdtPr/{wml}tag")
             if tag is not None and tag.get(wml + "val") == "spec:gql":
