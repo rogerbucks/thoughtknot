@@ -108,6 +108,8 @@ export const KEPT = {
     '  // layout step {}',
     '  // layout spots {}',
   ],
+  // the steps of work a grid matches a note's values against, to order its columns; never shown, the note's own are
+  'packages/core/src/view-types/grid-view.ts': ['to do', 'in progress', 'in review'],
   // the SQL the local store runs, read by SQLite and never by a person (mesh-index-backends.ts)
   'packages/core/src/mesh-index-backends.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app
