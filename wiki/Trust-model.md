@@ -95,7 +95,7 @@ Wave 6.
   paths are checked. Items open only if they were listed. Each file is held to the note gate.
 - **Code:** `packages/claude-code/server/github-reader.ts`.
 - **Gaps:**
-  - Titles, authors and messages reach Claude's pane with no credential scan or data fence (TRUST-4).
+  - Titles, authors and messages reached Claude's pane with no credential scan or data fence. Fixed in #1539 (TRUST-4).
 
 ### B6. Note text and the drawing
 
@@ -108,7 +108,7 @@ Wave 6.
   `packages/core/src/display/graph-view/drawing-svg.ts`. The Python library runs Graphviz in
   `python/graph_spec/src/graphspec/style/drawn_svg.py`, and writes the SVG with its labels escaped in `marks_svg.py`.
 - **Gaps:**
-  - Nothing cleans the SVG before it enters the live page, so one escaping bug would run script (TRUST-7).
+  - Nothing cleaned the SVG before it entered the live page, so one escaping bug would run script. Fixed in #1539 (TRUST-7).
 
 ### B7. Obsidian and AI models
 

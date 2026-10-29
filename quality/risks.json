@@ -3527,8 +3527,14 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1539",
+      "prevented_by": [
+        "packages/claude-code/test/editor-changes.test.js",
+        "packages/claude-code/test/editor-gate.test.js",
+        "packages/core/src/github-review-items.ts"
+      ]
     },
     {
       "id": "TRUST-5",
@@ -3622,8 +3628,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1539",
+      "prevented_by": [
+        "packages/core/test/svg-allowlist.test.js",
+        "packages/core/src/svg-allowlist.ts"
+      ]
     },
     {
       "id": "TRUST-8",
