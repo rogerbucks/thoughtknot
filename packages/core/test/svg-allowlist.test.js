@@ -67,6 +67,17 @@ describe('a drawing’s SVG', () => {
     );
     assert.equal(got, svg('<g><text>&amp;</text></g><text>a &lt; b</text>'));
   });
+
+  test('is cleaned in time that grows with its length, whatever runs of spaces or tags it holds', () => {
+    // a pattern tried at every place took time growing with the square of a run of spaces (CodeQL js/polynomial-redos)
+    const many = 200_000;
+    const started = performance.now();
+    cleanSvg(svg(`<rect${'\t'.repeat(many)}`));
+    cleanSvg(svg(`<rect${' x="1"'.repeat(many / 8)}${'\t'.repeat(many)}/>`));
+    cleanSvg(svg('<g>'.repeat(many / 4)));
+    assert.ok(performance.now() - started < 2000, 'cleaning a long drawing took too long');
+    assert.equal(cleanSvg(svg('<rect \t x="1"\t\ty="2" />')), svg('<rect \t x="1"\t\ty="2"/>'));
+  });
 });
 
 test('every drawing the engine makes of the repository’s own graphs passes through unchanged', async () => {
