@@ -290,3 +290,12 @@ describe('the release check, run by hand before a release is tagged', () => {
     assert.deepEqual(permissionValues(block(text.split('\n'), 'permissions', 0)), ['read']);
   });
 });
+
+describe('a baseline that carries the spread between runs (OPS-10)', () => {
+  test('is refused when the instruction tolerance is under twice the largest spread', () => {
+    assert.deepEqual(baselineProblems({ ...baseline(), largest_spread: 0.02 }), []);
+    assert.deepEqual(baselineProblems({ ...baseline(), largest_spread: 0.025 }), [], 'exactly twice is enough');
+    const [found] = baselineProblems({ ...baseline(), largest_spread: 0.044 });
+    assert.match(found, /largest_spread.*under twice/);
+  });
+});

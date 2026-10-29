@@ -24,7 +24,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { METRICS } from './quality-spec.mjs';
+import { INSTRUCTION_TOLERANCE, METRICS } from './quality-spec.mjs';
 
 export { METRICS };
 
@@ -81,6 +81,11 @@ export function baselineProblems(baseline) {
   }
   if (baseline.details?.left_out?.length)
     found.push(`${BASELINE} was measured with test files left out (${baseline.details.left_out.join(', ')})`);
+  // OPS-10: a tolerance under twice the noise between runs lets one flaky run block a release
+  if (has(baseline.largest_spread) && INSTRUCTION_TOLERANCE < 2 * baseline.largest_spread)
+    found.push(
+      `${BASELINE} says a count moved ${baseline.largest_spread} between runs (largest_spread), where the instruction tolerance ${INSTRUCTION_TOLERANCE} is under twice that: widen the tolerance, or find the noise`,
+    );
   if (typeof baseline.machine?.os !== 'string' || !has(baseline.machine?.node_major))
     found.push(`${BASELINE} does not say which machine (os and node_major) it was measured on`);
   return found;

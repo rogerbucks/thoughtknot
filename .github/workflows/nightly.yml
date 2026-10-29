@@ -313,3 +313,11 @@ jobs:
             echo "::error::A draft release has waited more than a day: $waiting. Publish it, or delete it, as RELEASING.md says."
             exit 1
           fi
+
+  # A failure here tells nobody otherwise (OPS-6): this keeps one open issue, labelled workflow-failure.
+  report-failure:
+    needs: [check, security, public-readiness, tests-passed, build, desktop, mobile, publish, drafts]
+    if: failure()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/report-failure.yml

@@ -64,6 +64,7 @@ describe('the nightly workflow', () => {
       'mobile',
       'publish',
       'drafts',
+      'report-failure',
     ]);
     assert.equal(block(jobs(text)['public-readiness'], 'permissions', 4), null);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);

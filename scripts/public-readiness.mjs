@@ -10,6 +10,7 @@
 //   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
 //   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
+//   node scripts/public-readiness.mjs --settings --export  write the ruleset and the Pages settings to .github/settings/.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
 // A pull request's run uses --setup-since. Main and the release run everything. The nightly adds --no-tests (no npm test).
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
@@ -22,6 +23,7 @@ import { messageProblems, problemsIn } from './history-text-problems.mjs';
 import { privateLinkProblems } from './private-links.mjs';
 import { signOffProblems } from './sign-off.mjs';
 import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
+import { defaultRulesetOf, exportFrom, wholeSettings } from './settings-export.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -178,11 +180,7 @@ export function ciJobs(root = ROOT) {
 /** The checks a change to the default branch must pass: every CI job, this script's among them, and the dependency review. */
 export const REQUIRED_CHECKS = [...ciJobs(), 'dependency-review'].sort();
 
-// the list gives each ruleset without its rules; the one on the default branch is read whole
-const defaultRuleset = (repo) => {
-  const found = gh([`repos/${repo}/rulesets`]).find((r) => r.target === 'branch' && r.enforcement === 'active');
-  return found && gh([`repos/${repo}/rulesets/${found.id}`]);
-};
+const defaultRuleset = (repo) => defaultRulesetOf(gh, repo);
 // a member of a language group, read as the group it is set by
 const asGroup = (l) => (l === 'javascript' || l === 'typescript' ? 'javascript-typescript' : l);
 
@@ -303,6 +301,7 @@ export const WANTED = [
       });
     },
   },
+  ...wholeSettings({ gh, quiet, defaultRuleset }),
 ];
 
 const canon = (v) => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? sorted(x) : x));
@@ -367,6 +366,7 @@ function main(argv) {
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');
   if (flag('--settings')) {
     const repo = canonicalRepo(repoOf());
+    if (flag('--export')) return exportFrom(gh, repo, console.log);
     const differing = settingsReport(repo, { apply: flag('--apply') });
     if (differing.length) {
       console.error(`${differing.length} setting${differing.length === 1 ? '' : 's'} differ on ${repo}`);

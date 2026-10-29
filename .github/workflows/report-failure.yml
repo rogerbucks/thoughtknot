@@ -1,0 +1,37 @@
+name: Report a workflow failure
+
+# A scheduled or background workflow that fails tells nobody: no person is waiting on its run. The nightly, the wiki,
+# Pages and the engine advisories each call this when a job fails (OPS-6). It keeps one open issue per workflow,
+# labelled workflow-failure: the first failure opens it, each later one adds a line, and a person closes it once the
+# cause is fixed. It runs no code of the repository, only the GitHub CLI, so it may write issues and nothing else.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open the issue for this workflow, or add this failure to it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Workflow failed: $WORKFLOW"
+          note="$(date -u +%F): $WORKFLOW failed on ${GITHUB_REF_NAME:-main}: $RUN"
+          gh label create workflow-failure --description "A scheduled or background workflow failed" --color d93f0b 2>/dev/null || true
+          number=$(gh issue list --label workflow-failure --state open --search "\"$title\" in:title" --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -z "$number" ]; then
+            gh issue create --title "$title" --label workflow-failure --body "$note
+
+          Close this issue once the cause is fixed. The next failure opens it again."
+          else
+            gh issue comment "$number" --body "$note"
+          fi

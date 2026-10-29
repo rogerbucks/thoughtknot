@@ -649,6 +649,11 @@ after a module nor listed here, and on a listed file that is missing.
   an event.
 ## Workflows and the desktop app
 
+- `test/report-failure-workflow.test.js` — the nightly, wiki, Pages and engine advisories each report a failed job through
+  one reusable workflow that writes an issue and nothing else, and a daily token probe opens an issue on the third
+  refusal in a row (OPS-6, OPS-7).
+- `test/process-risks-ops.test.js` — Dependabot watches the Docker image, the release writes and attests an SBOM, the wiki
+  survives a missing Chrome, and the docs name every job that writes (OPS-9, OPS-11, OPS-12).
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
   runner for hours (editor spec §13, ci_jobs_time_limited).
 - `test/os-check-workflow.test.js` — the tests on macOS and Windows read as on Linux. Every text file is checked out
@@ -675,6 +680,8 @@ after a module nor listed here, and on a listed file that is missing.
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
 ## Being public, and pull requests
 
+- `test/settings-export.test.js` — the default branch's whole ruleset and the Pages settings are exported to
+  `.github/settings/` and held whole against GitHub's (OPS-8).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
 - `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
@@ -693,6 +700,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The quality ratchet and the test runner
 
+- `test/record-spread.test.js` — the spread between runs is put in the metrics, so the baseline committed from them
+  carries it (OPS-10).
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quality-instructions.test.js` — the instruction counts in the ratchet.

@@ -44,9 +44,10 @@ jobs:
 
   wave-nightly:
     needs: gate
-    # the most the nightly's own jobs ask for: publish writes contents, security reads alerts
+    # the most the nightly's own jobs ask for: publish writes contents, security reads alerts, a failure report writes issues
     permissions:
       contents: write
+      issues: write
       security-events: read
     uses: ./.github/workflows/nightly.yml
     with:

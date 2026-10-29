@@ -48,3 +48,14 @@ updates:
       actions-version-updates:
         applies-to: version-updates
         patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      docker-version-updates:
+        applies-to: version-updates
+        patterns: ['*']

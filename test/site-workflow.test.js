@@ -27,7 +27,7 @@ describe('the workflow that publishes the home page', () => {
 
   test('makes the page with read access only, from main, keeping no credentials', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['make', 'publish']);
+    assert.deepEqual(Object.keys(jobs(text)), ['make', 'publish', 'report-failure']);
     assert.deepEqual(given('make'), ['contents: read']);
     const make = jobs(text).make.join('\n');
     assert.match(make, /ref: main\s*\n\s*persist-credentials: false/);

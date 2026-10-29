@@ -14,6 +14,8 @@ import {
   checkEngine,
   affects,
   refresh,
+  refreshOrKeep,
+  retrying,
   releaseNotes,
   staleness,
   watch,
@@ -207,8 +209,9 @@ describe('refreshing from the published advisories (with a fetch made for the pu
     },
   });
   const ENGINE = { graphviz: '16.1.0', wrapper: '3.31.0' };
+  const noWait = async () => {};
   const run = (answers, extra = {}) =>
-    refresh({ ...ENGINE, fetch: answers.fetch, today: '2026-10-10', previous: undefined, ...extra });
+    refresh({ ...ENGINE, fetch: answers.fetch, sleep: noWait, today: '2026-10-10', previous: undefined, ...extra });
 
   test('Graphviz is asked of OSV by its repository and of NVD, and the wrapper of OSV as an npm package', async () => {
     const f = fetching(clean);
@@ -373,7 +376,44 @@ describe('refreshing from the published advisories (with a fetch made for the pu
     const fetch = async () => {
       throw new Error('offline');
     };
-    await assert.rejects(refresh({ ...ENGINE, fetch, today: '2026-10-10' }), /offline|OSV/);
+    await assert.rejects(refresh({ ...ENGINE, fetch, sleep: noWait, today: '2026-10-10' }), /offline|OSV/);
+  });
+
+  test('OPS-5: a call that answers 503 once is asked again, after a pause that doubles, and at most three times', async () => {
+    let calls = 0;
+    const pauses = [];
+    const flaky = retrying(
+      async () => reply({}, ++calls < 2 ? 503 : 200),
+      async (ms) => pauses.push(ms),
+    );
+    assert.equal((await flaky('x')).status, 200);
+    assert.deepEqual([calls, pauses], [2, [1000]]);
+    calls = -10;
+    pauses.length = 0;
+    assert.equal((await flaky('x')).status, 503, 'the third answer stands');
+    assert.deepEqual([calls, pauses], [-7, [1000, 2000]]);
+    const refused = retrying(
+      async () => reply({}, 404),
+      async (ms) => pauses.push(ms),
+    );
+    assert.equal((await refused('x')).status, 404, 'a refusal that will not change is not asked again');
+  });
+
+  test('OPS-5: an NVD outage after the retries leaves a recent committed cache standing, with a warning', async () => {
+    const committed = (await run(fetching(clean))).cache;
+    const down = fetching([
+      { at: OSV, reply: reply({}) },
+      { at: NVD, reply: reply({}, 503) },
+    ]);
+    const held = (when, previous = committed) =>
+      refreshOrKeep({ ...ENGINE, fetch: down.fetch, sleep: noWait, today: when, previous });
+    const kept = await held('2026-10-20');
+    assert.equal(kept.cache, committed);
+    assert.match(kept.warning, /NVD answered 503.*checked 2026-10-10/s);
+    await assert.rejects(held('2026-10-30'), /NVD answered 503/, 'a cache over 14 days old is not trusted');
+    const other = { ...committed, queried: { ...committed.queried, graphviz: '15.0.0' } };
+    await assert.rejects(held('2026-10-20', other), /NVD answered 503/, 'nor one made for another engine');
+    await assert.rejects(held('2026-10-20', null), /NVD answered 503/, 'nor none at all');
   });
 
   test('the day of the check is always the day of the refresh; whether the answer changed is said apart from it', async () => {
@@ -551,9 +591,13 @@ describe('the workflows', () => {
     assert.match(on, /schedule:\n\s+- cron: '\d+ \d+ \* \* [0-6]'/, 'it runs weekly, on a set morning');
     assert.doesNotMatch(on, /pull_request|push:/, 'never on a change: the release does its own live check');
     const job = jobs(text);
-    assert.deepEqual(Object.keys(job), ['watch']);
+    assert.deepEqual(Object.keys(job), ['watch', 'report-failure']);
     assert.equal(block(job.watch, 'permissions', 4), null, 'the job keeps the read-only default');
-    assert.doesNotMatch(text, /:\s*write\b|gh pr create|git push/, 'it opens no pull request and pushes nothing');
+    assert.doesNotMatch(
+      text.replace('issues: write', ''),
+      /:\s*write\b|gh pr create|git push/,
+      'it opens no pull request and pushes nothing; only its failure report writes an issue',
+    );
     const runs = runCommands(text);
     assert.ok(runs.includes('node scripts/engine-version.mjs --watch --write advisories-fresh.json'));
     assert.ok(runs.includes('npm ci') && runs.includes('npm audit signatures'));

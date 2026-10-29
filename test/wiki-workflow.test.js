@@ -27,7 +27,7 @@ describe('the workflow that makes the wiki', () => {
 
   test('makes the pages with read access only, from main, keeping no credentials', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['make', 'review', 'report', 'publish']);
+    assert.deepEqual(Object.keys(jobs(text)), ['make', 'review', 'report', 'publish', 'report-failure']);
     assert.deepEqual(given('make'), ['contents: read']);
     assert.deepEqual(given('review'), ['contents: read']);
     assert.match(jobs(text).make.join('\n'), /ref: main\s*\n\s*persist-credentials: false/);
