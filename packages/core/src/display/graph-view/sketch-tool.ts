@@ -15,7 +15,7 @@ import type { NewSketchItem, SketchChange } from '../../sketch-edit.ts';
 import type { Sketch, SketchKind, SketchShape } from '../../sketch.ts';
 import type { Palette } from '../../palette.ts';
 import type { MarkPoint } from '../../plugin-diagrams.ts';
-import type { DrawMark } from '../../drawing-marks.ts';
+import { marksBounds, type DrawMark } from '../../drawing-marks.ts';
 import { sketchPreview } from './sketch-preview';
 import type { Drawn } from '@thoughtknot/core';
 import { MARKED } from './focus-marks';
@@ -261,10 +261,7 @@ export class SketchTool {
   private pick(id: string): void {
     const svg = this.card.svg();
     const g = svg ? partOf(svg, id) : null;
-    if (this.selected === id && svg && g) {
-      this.centre(svg, g as SVGGraphicsElement);
-      return;
-    }
+    if (this.selected === id && svg && g) return this.centre(svg, id);
     this.selected = id;
     svg?.querySelectorAll('.is-selected[data-sketch]').forEach((x) => x.classList.remove('is-selected'));
     g?.classList.add('is-selected');
@@ -272,11 +269,15 @@ export class SketchTool {
     this.say(word('sketch.selected', { said: g?.querySelector('title')?.textContent ?? id }));
   }
 
-  /** Brings a drawing to the middle of the view, at the same scale. */
-  private centre(svg: SVGSVGElement, g: SVGGraphicsElement): void {
-    const vb = svg.viewBox?.baseVal;
-    const box = typeof g.getBBox === 'function' ? g.getBBox() : null;
-    if (!vb?.width || !vb.height || !box) return;
+  /** Brings a drawing to the middle of the view, at the same scale: where its marks lie, in the viewBox's units. */
+  private centre(svg: SVGSVGElement, id: string): void {
+    const [x = 0, y = 0, width = 0, height = 0] = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
+    const vb = { x, y, width, height };
+    const over = marksOver(this.card.drawn().svg, this.card.boxes());
+    const { pieces } = this.sketch ? sketchMarks(this.sketch, over) : { pieces: [] };
+    const mine = (m: DrawMark) => m.id === `sketch:${id}` || m.id.startsWith(`sketch:${id}:`); // and its arrowhead
+    const box = marksBounds(pieces.map((p) => p.mark).filter(mine));
+    if (!vb.width || !vb.height || !box) return;
     const zoom = this.card.zoom();
     const to = zoom.aim(
       {
