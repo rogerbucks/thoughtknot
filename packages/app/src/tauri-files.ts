@@ -1,5 +1,5 @@
 // The picked folder's files, through the app's own commands (spec §41, standalone_app). The window reaches the disk
-// only through these seven commands, each checked in Rust to stay inside the folder (src-tauri/src/place.rs). They are
+// only through these eight commands, each checked in Rust to stay inside the folder (src-tauri/src/place.rs). They are
 // called through Tauri's `invoke`, handed in, so nothing here imports Tauri and the tests hand in their own.
 import type { NewFile } from './app-api.ts';
 import type { NoteStorage } from '../../core/src/note-storage.ts';

@@ -236,6 +236,16 @@ jobs:
       LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
       LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
 
+  # The phone and tablet app, by its workflow, read only: the Android app and the iPhone and iPad app for the simulator,
+  # so a phone build is never first tried by a person (mobile_checked). No key reaches it. It builds the commit this
+  # run woke at; nothing of it goes into the pre-release.
+  mobile:
+    needs: [check, security]
+    if: needs.check.outputs.moved == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/mobile-app.yml
+
   publish:
     needs: [check, build, tests-passed, desktop]
     # the plugin is published when it built and every test passed, with the installers when they built too
