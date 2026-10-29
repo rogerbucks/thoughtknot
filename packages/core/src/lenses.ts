@@ -2,7 +2,10 @@
 // "I want all views on". A lens lays nothing out. It moves each spot a view drew round a focus. So the same lens works
 // on every view type and layout, flat and in space. A fisheye (projection_fisheye) enlarges the things round the focus.
 // It shrinks those nearer its rim, so a person sees detail and the whole at once. What lies beyond its reach does not
-// move at all, and nor does the focus: it is never disorienting (ethos principle 8).
+// move at all, and nor does the focus: it is never disorienting (ethos principle 8). A hyperbolic lens
+// (projection_hyperbolic) and a sphere (projection_sphere) reach the whole drawing. They lay it on a disc, a ball in
+// space. Its middle is large, and everything else lies towards its edge. The hyperbolic disc is Lamping and Rao's
+// (1995). The sphere is a globe seen from the front. Each is round the middle of the view: a drag brings a part there.
 //
 // A lens is radial: a point at a distance from the focus goes to another distance, the same way. So it bends and
 // unbends alike in two dimensions and in three. A tap on a bent drawing is found where it was drawn. Host-free, pure.
@@ -13,7 +16,7 @@ import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
  * The lenses a view may be seen through, the first being none. Semantic zoom bends nothing: it steps the detail drawn
  * as the person zooms (semantic-zoom.ts).
  */
-export const LENSES = ['none', 'fisheye', 'semantic'] as const;
+export const LENSES = ['none', 'fisheye', 'hyperbolic', 'sphere', 'semantic'] as const;
 /** One of the lenses. */
 export type Lens = (typeof LENSES)[number];
 
@@ -45,10 +48,58 @@ export function fisheye(focus: readonly number[], reach: number, bend = FISHEYE_
   return { focus, reach, out, times: (r) => Math.sqrt(spread(r)) };
 }
 
-/** `lens` round `focus`, reaching `reach`; none for a lens that bends nothing, or a reach of nothing. */
+/** How strongly a hyperbolic lens bends: the middle is drawn about twice its size, the edge about a seventh. */
+export const HYPERBOLIC_BEND = 2;
+/** The smallest a thing is drawn near the edge of a disc, so none vanishes. */
+const LEAST = 0.25;
+
+/**
+ * A lens that lays everything `reach` from `focus` on a disc by `out`, whose slope is `slope`. A thing grows less than
+ * the room round it: by the square root of its least stretch, across or along. It is never below a quarter.
+ */
+function disc(
+  focus: readonly number[],
+  reach: number,
+  out: (r: number) => number,
+  slope: (r: number) => number,
+): Radial {
+  const inside = (r: number) => (r >= reach ? r : out(r));
+  const stretch = (r: number) => (r >= reach ? 1 : r > 0 ? Math.min(slope(r), out(r) / r) : slope(0));
+  return { focus, reach, out: inside, times: (r) => Math.max(LEAST, Math.sqrt(stretch(r))) };
+}
+
+/** A hyperbolic disc round `focus` (Lamping and Rao, 1995): `reach` away, at its edge, the drawing is as drawn. */
+export function hyperbolic(focus: readonly number[], reach: number, bend = HYPERBOLIC_BEND): Radial {
+  const t = Math.tanh(bend);
+  const out = (r: number) => (reach * Math.tanh((bend * r) / reach)) / t,
+    slope = (r: number) => (bend * (1 - Math.tanh((bend * r) / reach) ** 2)) / t;
+  return disc(focus, reach, out, slope);
+}
+
+/** A globe round `focus`, seen from the front: the drawing `reach` across is wrapped on its near half. */
+export function sphere(focus: readonly number[], reach: number): Radial {
+  const angle = (r: number) => (r / reach) * (Math.PI / 2);
+  return disc(
+    focus,
+    reach,
+    (r) => reach * Math.sin(angle(r)),
+    (r) => (Math.PI / 2) * Math.cos(angle(r)),
+  );
+}
+
+/** The lenses that reach the whole drawing, round the middle of the view: none of it lies beyond them. */
+export const WHOLE_LENSES: ReadonlySet<Lens> = new Set(['hyperbolic', 'sphere']);
+
+/**
+ * `lens` round `focus`, reaching `reach`; none for a lens that bends nothing, or a reach of nothing. A lens that
+ * reaches the whole drawing is given how far from its focus the drawing's farthest part lies.
+ */
 export function lensOf(lens: Lens | undefined, focus: readonly number[] | null, reach: number): Radial | null {
-  if (lens !== 'fisheye' || !focus || !(reach > 0)) return null;
-  return fisheye(focus, reach);
+  if (!focus || !(reach > 0)) return null;
+  if (lens === 'fisheye') return fisheye(focus, reach);
+  if (lens === 'hyperbolic') return hyperbolic(focus, reach);
+  if (lens === 'sphere') return sphere(focus, reach);
+  return null;
 }
 
 /** Where `p` is seen through `lens`, and how much larger a thing there is drawn. */
@@ -164,11 +215,23 @@ export function bentSpace(space: SpaceMarks, lens: Radial | null): SpaceMarks {
   return { ...space, blocks, lines, labels, arrows };
 }
 
+/** How far a disc reaches past the farthest thing from its focus, as a share of that distance: all sit inside its edge. */
+export const DISC_ROOM = 1.15;
+
 /** How far a lens reaches in space, as a share of the drawing's size across. */
 const SPACE_REACH = 1 / 3;
 
-/** `space` seen through `lens` round `picked`, the thing picked in it; as laid out, with no lens or nothing picked. */
+/**
+ * `space` seen through `lens` round `picked`, the thing picked in it; as laid out, with no lens or nothing picked. A
+ * lens that reaches the whole drawing makes a ball of it, round the picked thing, else round the drawing's middle.
+ */
 export function spaceSeen(space: SpaceMarks, lens: Lens | undefined, picked: Block | null): SpaceMarks {
   const across = Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
+  if (lens && WHOLE_LENSES.has(lens)) {
+    const middle: Vec3 = [0, 1, 2].map((i) => ((space.most[i] ?? 0) + (space.least[i] ?? 0)) / 2) as Vec3;
+    const focus = picked ? middleOf(picked) : middle;
+    const far = Math.max(0, ...space.blocks.map((b) => Math.hypot(...middleOf(b).map((v, i) => v - (focus[i] ?? 0)))));
+    return bentSpace(space, lensOf(lens, focus, far * DISC_ROOM));
+  }
   return bentSpace(space, lensOf(lens, picked && middleOf(picked), across * SPACE_REACH));
 }

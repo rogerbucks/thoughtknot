@@ -6,7 +6,17 @@
 // always in view (ethos principle 8). The sums are in lenses.ts.
 //
 // Nothing moves while the drawing is held, or while it glides to a new layout: a box under a finger stays put.
-import { FISHEYE_PX, FISHEYE_SHARE, LENSES, bent, bentPoints, lensOf, pointsMiddle } from '../../lenses.ts';
+import {
+  DISC_ROOM,
+  FISHEYE_PX,
+  FISHEYE_SHARE,
+  LENSES,
+  WHOLE_LENSES,
+  bent,
+  bentPoints,
+  lensOf,
+  pointsMiddle,
+} from '../../lenses.ts';
 import type { Lens, Radial } from '../../lenses.ts';
 import { GLIDE_MOST, LAYOUT_GLIDE_MS, easeGlide } from '../../layout-glide.ts';
 import type { ViewState } from '../../view-switches.ts';
@@ -99,6 +109,7 @@ export class LensSvg {
     card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
       // a mouse leads the lens; a finger or pen picks, and the lens follows what is picked
       if (e.pointerType !== 'mouse' || e.buttons || this.held || reducedMotion(vp.win) || this.big()) return;
+      if (WHOLE_LENSES.has(this.lens)) return; // a disc stays round the middle of the view: a drag moves it there
       const r = vp.getBoundingClientRect(),
         at = host.taps.toDrawing({ x: e.clientX - r.left, y: e.clientY - r.top }, host.zoom().view());
       if (!at) return;
@@ -132,7 +143,7 @@ export class LensSvg {
 
   /** The view moved or zoomed, or the selection changed: the lens reaches as far on the screen, and may follow. */
   changed(): void {
-    if (this.lens === 'fisheye') this.again();
+    if (this.lens === 'fisheye' || WHOLE_LENSES.has(this.lens)) this.again();
   }
 
   /** Whether the drawing is too big to bend at the speed of a mouse: it follows the selection only. */
@@ -197,21 +208,38 @@ export class LensSvg {
     const origin = this.host.taps.toDrawing({ x: 0, y: 0 }, v),
       room = Math.min(this.host.viewport.clientWidth || Infinity, this.host.viewport.clientHeight || Infinity),
       across = this.host.taps.toDrawing({ x: Math.min(FISHEYE_PX, room * FISHEYE_SHARE), y: 0 }, v);
-    const focus = this.lens !== 'fisheye' ? null : this.focusNow(v, svg, frame);
+    const whole = WHOLE_LENSES.has(this.lens);
+    const middle = whole ? this.host.taps.toDrawing({ x: v.x + v.width / 2, y: v.y + v.height / 2 }, v) : null;
+    const focus = whole ? middle : this.lens !== 'fisheye' ? null : this.focusNow(v, svg, frame);
     // the lens is worked in the units of the drawing's top group, where its parts are written
-    const reach = origin && across ? (across.x - origin.x) / s : 0;
-    const lens = lensOf(this.lens, focus && [focus.x / s - tx, focus.y / s - ty], reach);
+    const at = focus && [focus.x / s - tx, focus.y / s - ty];
+    const boxes = Array.from(svg.querySelectorAll<SVGGElement>('g.node'));
+    if (at && whole) for (const g of boxes) if (!this.middles.has(g)) this.middles.set(g, middleOf(g));
+    const reach = whole ? this.farthest(boxes, at) : origin && across ? (across.x - origin.x) / s : 0;
+    const lens = lensOf(this.lens, at, reach);
     const now = new Set<Element>();
-    for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.node'))) {
+    for (const g of boxes) {
       if (lens && !this.middles.has(g)) this.middles.set(g, middleOf(g));
-      const at = lens && this.middles.get(g);
-      if (lens && at) this.boxBent(g, lens, at, now);
+      const c = lens && this.middles.get(g);
+      if (lens && c) this.boxBent(g, lens, c, now);
     }
     if (lens)
       for (const part of Array.from(svg.querySelectorAll<SVGElement>(LINED)))
         for (const el of [part, ...Array.from(part.querySelectorAll<SVGElement>('*'))]) this.pointsBent(el, lens, now);
     for (const el of this.bentLast) if (!now.has(el)) this.putBack(el);
     this.bentLast = now;
+  }
+
+  /** How far past the farthest box from `at` a disc reaches, so every box lies inside its edge. */
+  private farthest(boxes: readonly Element[], at: readonly number[] | null): number {
+    if (!at) return 0;
+    const [ax = 0, ay = 0] = at;
+    let far = 0;
+    for (const g of boxes) {
+      const [x = ax, y = ay] = this.middles.get(g) ?? [];
+      far = Math.max(far, Math.hypot(x - ax, y - ay));
+    }
+    return far * DISC_ROOM;
   }
 
   /** A box moved to where `lens` sees its middle `c`, enlarged as the lens enlarges there; left alone beyond its reach. */

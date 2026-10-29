@@ -13,7 +13,7 @@ from graphspec.style.words import or_list
 # (render-choice.ts) and LENSES (lenses.ts).
 SPACES = ("2d", "2.5d", "3d")
 PAINTERS = ("auto", "webgpu", "webgl2", "canvas")
-LENSES = ("none", "fisheye", "semantic")
+LENSES = ("none", "fisheye", "hyperbolic", "sphere", "semantic")
 
 
 def render_of(r: Any, raw: dict) -> dict | None:
