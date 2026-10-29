@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (71)
+## Open (69)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -62,8 +62,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -613,26 +611,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test that starts the real server and runs serverCalls/noteCalls/exportCalls against it. It asserts each reply satisfies the shared types and each refusal is JSON with why.
 
-### API-6 Python library is loose files, not an installable package
-
-**Who found it:** API design expert. **Where:** `python/graph_spec/pyproject.toml`, `.github/workflows/release.yml`.
-
-**Risk:** pyproject sets package = false. Hosts put src/ on sys.path and import four flat modules. There is no build-system, no py.typed and nothing goes to PyPI. Anyone outside the vault who wants the Python side gets no pip install. They also get no type checking of the library and no version pin a resolver can read.
-
-**Fix:** In the library-release wave, give the Python side a build-system table, a py.typed marker and `uv build` in release.yml. Attach the wheel to the release beside the tar.gz.
-
-**Check:** CI job installs the built wheel into a clean venv and imports the four entry points.
-
-### API-7 Python public surface is everything, private names included
-
-**Who found it:** API design expert. **Where:** `python/graph_spec/src/*.py`, `python/graph_spec/tests/entry_points.json`.
-
-**Risk:** The entry-point contract freezes every top-level name the four modules ever had, because the vault's scripts use private names. The Python API therefore has no boundary: nothing may ever be renamed. The JS and Python surfaces drift in naming, with no check that a JS export has a Python twin.
-
-**Fix:** Declare __all__ in each entry point as the public set. Move the vault's private uses onto public names. Add a parity table (JS export to Python name) that test_parity.py reads.
-
-**Check:** A test that every name in public-api.json's graph-spec entry has a row in the parity table, and every row's Python name is in __all__.
-
 ### API-9 AI transport is hard-wired to the OpenAI chat shape
 
 **Who found it:** API design expert. **Where:** `packages/core/src/ai-request.ts`, `packages/core/src/ai-choice.ts`, `packages/core/src/plugins.ts`.
@@ -793,7 +771,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (61)
+## Done or accepted (63)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -828,6 +806,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
+| API-6 | Python library is loose files, not an installable package | done | #1545 |
+| API-7 | Python public surface is everything, private names included | done | #1545 |
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | done | #1543 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
 | API-12 | No runnable examples for either library, none in CI | done | #1083 |
