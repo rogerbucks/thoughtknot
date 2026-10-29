@@ -595,6 +595,7 @@
       "keyboard_any_device",
       "a11y_semantics_auto",
       "a11y_targets_reflow_auto",
+      "a11y_states_auto",
       "ux_journey_auto",
       "ux_copy_auto",
       "visual_regression_auto",

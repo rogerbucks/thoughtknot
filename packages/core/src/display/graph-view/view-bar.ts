@@ -90,7 +90,10 @@ function moreMenu(bar: HTMLElement): HTMLElement {
   };
   shut();
   list.addEventListener('click', (e: Event) => {
-    if ((e.target as Element | null)?.closest?.('button')) shut();
+    if (!(e.target as Element | null)?.closest?.('button')) return;
+    shut();
+    // the button chosen is hidden now: the focus goes to More, unless what it opened took the focus into itself
+    if (list.contains(list.ownerDocument.activeElement)) toggle.focus();
   });
   wrap.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key !== 'Escape' || list.hidden) return;
