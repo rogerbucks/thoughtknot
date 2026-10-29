@@ -27,6 +27,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
 import { npmCommand } from './npm-command.mjs';
+import { LIBRARY } from './public-api.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'rogerbucks/thoughtknot';
@@ -136,19 +137,28 @@ const filesUnder = (dir) =>
 function coreTypes(typesDir) {
   const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   const core = join(ROOT, 'packages/core');
-  execFileSync(process.execPath, [
-    tsc,
-    '-p',
-    core,
-    '--declaration',
-    '--emitDeclarationOnly',
-    '--noEmit',
-    'false',
-    '--rootDir',
-    join(core, 'src'),
-    '--outDir',
-    typesDir,
-  ]);
+  // the display layer has a tsconfig of its own, with the DOM: its entries the package ships are typed by it (API-2)
+  const display = join(typesDir, '..', 'display-entries.json');
+  const entries = CORE_ENTRIES.filter(([out]) => out.startsWith('display/')).map(([, from]) => join(core, from));
+  writeFileSync(
+    display,
+    JSON.stringify({ extends: join(core, 'src/display/tsconfig.json'), files: entries, include: [] }),
+  );
+  for (const project of [core, display])
+    execFileSync(process.execPath, [
+      tsc,
+      '-p',
+      project,
+      '--declaration',
+      '--emitDeclarationOnly',
+      '--noEmit',
+      'false',
+      '--rootDir',
+      join(core, 'src'),
+      '--outDir',
+      typesDir,
+    ]);
+  rmSync(display);
   for (const file of filesUnder(typesDir)) {
     const source = join(core, 'src', relative(typesDir, file).replace(/\.d\.ts$/, '.ts'));
     const text = readFileSync(file, 'utf8')
@@ -156,17 +166,28 @@ function coreTypes(typesDir) {
         const json = JSON.parse(readFileSync(resolve(dirname(source), path), 'utf8'));
         return `declare const ${name}: ${typeOfJson(json)};`;
       })
-      .replace(/(from '\.{1,2}\/[^']*)\.ts'/g, "$1.js'");
+      // each relative path names its .js file, as Node's ESM resolution asks: './a.ts' and './a' alike
+      .replace(/(from '\.{1,2}\/[^']*?)(\.ts)?'/g, (whole, path) =>
+        /\.(m?js|json)$/.test(path) ? whole : `${path}.js'`,
+      );
     writeFileSync(file, text);
   }
 }
+
+// The core's entries in its package: [where it is built, its source]. Each is one of the entries public-api.mjs checks.
+const CORE_ENTRIES = Object.entries(LIBRARY['@thoughtknot/core'].entries).map(([entry, from]) => [
+  entry === '.' ? 'index' : entry.slice(2),
+  from,
+]);
 
 async function stageCore(stage, version, graphSpec) {
   const pkg = PACKAGES[1];
   await esbuild.build({
     absWorkingDir: join(ROOT, 'packages/core'),
-    entryPoints: ['src/index.ts'],
-    outfile: join(stage, 'index.mjs'),
+    // the entry and the host interface, each an entry of its own, as public-api.mjs's LIBRARY names them (API-2)
+    entryPoints: CORE_ENTRIES.map(([out, from]) => ({ in: from, out })),
+    outdir: stage,
+    outExtension: { '.js': '.mjs' },
     bundle: true,
     platform: 'neutral',
     format: 'esm',
@@ -181,7 +202,15 @@ async function stageCore(stage, version, graphSpec) {
   const fields = {
     type: 'module',
     types: './types/index.d.ts',
-    exports: { '.': { types: './types/index.d.ts', default: './index.mjs' }, './package.json': './package.json' },
+    exports: {
+      ...Object.fromEntries(
+        CORE_ENTRIES.map(([out]) => [
+          out === 'index' ? '.' : `./${out}`,
+          { types: `./types/${out}.d.ts`, default: `./${out}.mjs` },
+        ]),
+      ),
+      './package.json': './package.json',
+    },
     dependencies: { [PACKAGES[0].name]: graphSpec },
   };
   writeFileSync(join(stage, 'package.json'), `${JSON.stringify(manifest(pkg, version, fields), null, 2)}\n`);

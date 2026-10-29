@@ -6,13 +6,13 @@
 //   colours.
 // - The same changes are listed in words beside it.
 // The repository's commit subjects are shown as text, never as markup.
-import { changesView, markedChanges, noChanges } from '../../core/src/changes-view.ts';
-import type { ChangesShown } from '../../core/src/changes-view.ts';
-import type { GraphDrawing } from '../../core/src/note-reading.ts';
-import { PALETTES } from '../../core/src/palette.ts';
-import { word } from '../../core/src/words.ts';
-import type { Drawn } from '../../core/src/render.ts';
-import type { Refusal } from '../../core/src/layout-limits.ts';
+import { changesView, markedChanges, noChanges } from '@thoughtknot/core';
+import type { ChangesShown } from '@thoughtknot/core';
+import type { GraphDrawing } from '@thoughtknot/core';
+import { PALETTES } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
+import type { Drawn } from '@thoughtknot/core';
+import type { Refusal } from '@thoughtknot/core';
 
 /** One earlier version, as the server lists it. */
 export interface PageVersion {

@@ -7,24 +7,24 @@
 // The files are then handed to the server. It writes them only as new files in the export folder (cc_exports_new_only).
 // A companion note, when set, follows the image under the name it was saved as. Each outcome is said once. The page has
 // no vault images, so a picture on a box is a frame.
-import { gqlBlocks } from '../../core/src/blocks.ts';
-import { classificationOf } from '../../core/src/claude-gate.ts';
-import { readNote } from '../../core/src/drawing.ts';
-import { dataText, exportedData, isDataFormat } from '../../core/src/export-data.ts';
-import { companionNote } from '../../core/src/export-note.ts';
-import type { CompanionInfo } from '../../core/src/export-note.ts';
-import { pageSvg, pngPages } from '../../core/src/export-pages.ts';
-import { exportPlan } from '../../core/src/export-plan.ts';
-import { exportScope } from '../../core/src/export-scope.ts';
-import { exportWithLayout, pngSize } from '../../core/src/export.ts';
-import type { ExportInfo, ExportLayout, PngSize } from '../../core/src/export.ts';
-import { exportFailureWords, exportRefusalWords } from '../../core/src/hosts/refusal-words.ts';
-import type { Settings } from '../../core/src/settings.ts';
-import { word } from '../../core/src/words.ts';
-import { formatCount, formatSize } from '../../core/src/locale-formats.ts';
-import { readStyle } from '../../core/src/style.ts';
-import type { Exporting } from '../../core/src/display/export/export-form.ts';
-import type { ExportAsk, ExportOutcome } from '../../core/src/display/export/export-types.ts';
+import { gqlBlocks } from '@thoughtknot/core';
+import { classificationOf } from '@thoughtknot/core';
+import { readNote } from '@thoughtknot/core';
+import { dataText, exportedData, isDataFormat } from '@thoughtknot/core';
+import { companionNote } from '@thoughtknot/core';
+import type { CompanionInfo } from '@thoughtknot/core';
+import { pageSvg, pngPages } from '@thoughtknot/core';
+import { exportPlan } from '@thoughtknot/core';
+import { exportScope } from '@thoughtknot/core';
+import { exportWithLayout, pngSize } from '@thoughtknot/core';
+import type { ExportInfo, ExportLayout, PngSize } from '@thoughtknot/core';
+import { exportFailureWords, exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
+import type { Settings } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
+import { formatCount, formatSize } from '@thoughtknot/core';
+import { readStyle } from '@thoughtknot/core';
+import type { Exporting } from '@thoughtknot/core/display/export/export-form';
+import type { ExportAsk, ExportOutcome } from '@thoughtknot/core/display/export/export-types';
 import type { Saved, SavedFile } from './export-calls.ts';
 
 /** How the refusals are said: the core's words and numbers, in the reader's language. */
