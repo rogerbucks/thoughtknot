@@ -34,7 +34,7 @@
   "packages/core/src/plugin-serve.ts#servePlugin": 101,
   "packages/core/src/plugins.ts#pluginRegistry": 197,
   "packages/core/src/space-spread.ts#spreadSpace": 166,
-  "packages/core/src/storage-contract.ts#storageContract": 116,
+  "packages/core/src/storage-contract.ts#storageContract": 120,
   "packages/core/src/view-types/centroid-view.ts#centroidMarks": 135,
   "packages/core/src/view-types/hive-view.ts#hiveMarks": 103,
   "packages/core/src/view-types/map-view.ts#mapMarks": 154,
