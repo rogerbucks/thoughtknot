@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { HOST_CONTRACT_VERSION, hostContract, hostServicesContract } from '../src/display/host-contract.ts';
-import { memoryStorage } from '../src/index.ts';
+import { LayoutRunner, inThreadPort, loadEngine, memoryStorage, serveLayouts } from '../src/index.ts';
 
 /** A host made from the interface alone, with no host behind it: its notices and menus kept where its probe reads them. */
 function plainHost(overrides = {}) {
@@ -41,15 +41,19 @@ function plainHost(overrides = {}) {
   return { host, probe };
 }
 
+/** Timers for the layouts, as a page's are. */
+const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
+
 /**
- * A whole host made from the interface alone. It has the display above, and keeps its settings, secrets and notes in
- * memory. Its links are found among those notes. Its probe also reads the links it opened, and keeps a secret.
+ * A whole host made from the interface alone. It has the display above, and keeps its settings, secrets, notes and
+ * drafts in memory. It lays out on its own thread. Its links are found among those notes. Its probe also reads the links it opened, and keeps a secret.
  */
 function wholeHost(overrides = {}) {
   const { host: display, probe } = plainHost();
   const files = memoryStorage();
   const known = new Set();
   const secrets = new Map();
+  const drafts = new Map();
   const opened = [];
   let saved;
   const host = {
@@ -74,6 +78,12 @@ function wholeHost(overrides = {}) {
     },
     secrets: { get: (name) => secrets.get(name) ?? null },
     files,
+    drafts: {
+      read: async (key) => drafts.get(key) ?? null,
+      keep: async (key, text) => void drafts.set(key, text),
+      clear: async (key) => void drafts.delete(key),
+    },
+    layout: new LayoutRunner({ page: () => inThreadPort((s) => serveLayouts(s, loadEngine)), clock: CLOCK }),
     ...overrides,
   };
   return {
@@ -100,7 +110,7 @@ describe('the host contract', () => {
   });
 
   test('it is versioned, and holds a host to each of its promises by name', () => {
-    assert.equal(HOST_CONTRACT_VERSION, 5);
+    assert.equal(HOST_CONTRACT_VERSION, 6);
     const names = hostContract(() => plainHost()).map((c) => c.name);
     assert.equal(names.length, 8);
     for (const promise of [
@@ -164,10 +174,10 @@ describe('the host contract', () => {
     assert.ok(failed[0].startsWith('choosing a menu row'), failed[0]);
   });
 
-  test('a whole host built from the published interface alone passes every check: display, links, settings, secrets, notes', async () => {
+  test('a whole host built from the published interface alone passes every check: display, links, settings, secrets, notes, drafts, layouts', async () => {
     assert.deepEqual(await failures(() => wholeHost(), hostServicesContract), []);
     const names = hostServicesContract(() => wholeHost()).map((c) => c.name);
-    for (const part of ['icon', 'settings', 'secret', 'links', 'opening a link', 'notes: '])
+    for (const part of ['icon', 'settings', 'secret', 'links', 'opening a link', 'notes: ', 'drafts: ', 'layouts: '])
       assert.ok(
         names.some((n) => n.includes(part)),
         part,
@@ -181,6 +191,20 @@ describe('the host contract', () => {
       'settings',
     ],
     ['secrets that answer an empty text for a name held nowhere', { secrets: { get: () => '' } }, 'a secret'],
+    [
+      'drafts that clear every key, not the one asked',
+      {
+        drafts: (() => {
+          const kept = new Map();
+          return {
+            read: async (key) => kept.get(key) ?? null,
+            keep: async (key, text) => void kept.set(key, text),
+            clear: async () => kept.clear(),
+          };
+        })(),
+      },
+      'drafts: keeping again',
+    ],
     [
       'links that open nothing',
       { links: (path) => ({ ...wholeHost().host.links(path), open: () => {} }) },
@@ -196,6 +220,19 @@ describe('the host contract', () => {
       assert.equal(failed.length, 1, failed.join('\n'));
       assert.ok(failed[0].startsWith(check), failed[0]);
     });
+
+  test('a whole host whose layouts draw nothing fails the layouts’ checks', async () => {
+    const failed = await failures(() => {
+      const made = wholeHost();
+      made.host.layout = { draw: async () => null };
+      return made;
+    }, hostServicesContract);
+    assert.ok(failed.length > 0);
+    assert.ok(
+      failed.every((f) => f.startsWith('layouts: ')),
+      failed.join('\n'),
+    );
+  });
 
   test('a whole host whose notes break the storage contract fails the notes’ checks', async () => {
     const failed = await failures(() => {

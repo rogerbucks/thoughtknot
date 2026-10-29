@@ -4786,10 +4786,18 @@
           "notice: (message: string) => void",
           "sidePane?: SidePane | undefined"
         ],
+        "DraftStore": [
+          "interface",
+          "clear: (key: string) => Promise<void>",
+          "keep: (key: string, text: string) => Promise<void>",
+          "read: (key: string) => Promise<string | null>"
+        ],
         "Host": [
           "interface",
           "display: DisplayHost",
+          "drafts: DraftStore",
           "files: NoteStorage",
+          "layout: LayoutHost",
           "links: (path: string, graph: string) => LinkHost",
           "secrets: SecretStore",
           "settings: SettingsStore"
@@ -4805,6 +4813,10 @@
         ],
         "keptLayout": [
           "value: () => DisplayHost['detailsLayout'] | null"
+        ],
+        "LayoutHost": [
+          "interface",
+          "draw: (drawing: GraphDrawing, owner?: object) => Promise<Drawn | Refusal | null>"
         ],
         "MenuEntry": [
           "type = MenuRow | 'separator'"
@@ -4839,6 +4851,7 @@
         "SettingsStore": [
           "interface",
           "load: () => Promise<unknown>",
+          "readOnly?: true | undefined",
           "save: (value: unknown) => Promise<void>"
         ],
         "sidePane": [
@@ -4873,8 +4886,12 @@
           "lastMenu: () => MenuRowSeen[] | null",
           "notices: () => string[]"
         ],
+        "HostServes": [
+          "interface",
+          "links?: false | undefined"
+        ],
         "hostServicesContract": [
-          "value: (make: () => ServicesUnderTest) => ContractCheck[]"
+          "value: (make: () => ServicesUnderTest, serves?: HostServes) => ContractCheck[]"
         ],
         "HostUnderTest": [
           "interface",
@@ -4889,7 +4906,7 @@
           "choose: (title: string) => void",
           "doc: Document",
           "element: () => HTMLElement",
-          "keepSecret: (name: string, secret: string) => void",
+          "keepSecret?: ((name: string, secret: string) => void) | undefined",
           "lastMenu: () => MenuRowSeen[] | null",
           "notices: () => string[]",
           "opened: () => string[]"

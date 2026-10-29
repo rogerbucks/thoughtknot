@@ -34,6 +34,19 @@ Obsidian's adapter is the shortest example:
 The browser editor's is
 [`packages/claude-code/page/browser-host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/page/browser-host.ts).
 
+## The whole host
+
+`Host` is everything a host gives the core: its display, links, settings, secrets, notes, drafts and layouts. Build it
+from your app's own parts, as Obsidian's
+[`obsidian-host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/src/obsidian-host.ts) and
+the browser editor's
+[`editor-host.ts`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/page/editor-host.ts) do.
+Then run `hostServicesContract(make)` against it. A host that follows no links yet passes `{ links: false }`. Settings
+another program owns are marked `readOnly`, and a save is refused, saying why.
+
+Only your storage adapter writes a file. `test/host-adapters.test.js` fails a host package that writes one anywhere
+else, so no host keeps a note writer of its own.
+
 ## Check your host
 
 `hostContract(make)` gives every check. `make` returns a fresh adapter and a probe, which lets the checks see the

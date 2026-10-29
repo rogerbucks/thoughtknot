@@ -12,7 +12,7 @@ import {
   setLocale,
   SOURCE_LANGUAGE,
 } from '@thoughtknot/core';
-import type { NoteStorage } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, NoteStorage, Refusal } from '@thoughtknot/core';
 import type { LinkHost } from './link-host';
 
 /** A row of a menu the layer asks the host to show. */
@@ -87,8 +87,35 @@ export interface DisplayHost {
 export interface SettingsStore {
   /** The settings last saved, or undefined when none were. */
   load: () => Promise<unknown>;
-  /** Saves `value`, a plain JSON value, in place of what was saved before. */
+  /** Saves `value`, the settings as the core reads them, in place of what was saved before. */
   save: (value: unknown) => Promise<void>;
+  /**
+   * Set where the settings are another program's, only read here. The browser editor's are the mod's (cc_settings_shared).
+   * Then `save` refuses, saying why.
+   */
+  readOnly?: true;
+}
+
+/**
+ * A host's drafts (spec §9, nothing_typed_lost): what was typed and could not be written, kept outside the note. Each is
+ * kept by its key, such as a note's path and its graph, until it is cleared.
+ */
+export interface DraftStore {
+  /** The draft kept under `key`, or null when none is. */
+  read: (key: string) => Promise<string | null>;
+  /** Keeps `text` under `key`, in place of the draft kept there before. */
+  keep: (key: string, text: string) => Promise<void>;
+  /** Forgets the draft kept under `key`, and no other. */
+  clear: (key: string) => Promise<void>;
+}
+
+/**
+ * Where a host lays its drawings out (spec §9, layout_contained): one worker of its own, under the core's limits. It
+ * gives the drawing laid out, or why it is shown as text. It gives null once a newer drawing for the same `owner` was
+ * asked.
+ */
+export interface LayoutHost {
+  draw: (drawing: GraphDrawing, owner?: object) => Promise<Drawn | Refusal | null>;
 }
 
 /**
@@ -102,7 +129,8 @@ export interface SecretStore {
 
 /**
  * Everything a host gives the core (editor spec §41, host_contract_published). That is its display, its links, its
- * settings, its secrets and its notes. A new host is built from this alone, with no change to the core.
+ * settings, its secrets, its notes, its drafts and its layouts (risk ARCH-1). A new host is built from this alone, with
+ * no change to the core.
  */
 export interface Host {
   display: DisplayHost;
@@ -112,6 +140,8 @@ export interface Host {
   secrets: SecretStore;
   /** Where the host's notes are read and written. */
   files: NoteStorage;
+  drafts: DraftStore;
+  layout: LayoutHost;
 }
 
 /** What is said when the layer is used before any host was installed. */
