@@ -11,16 +11,28 @@
 // Usage:
 //   node scripts/library-release.mjs --out DIR   builds both packages into DIR, at the manifest's version.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
+import { npmCommand } from './npm-command.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'rogerbucks/thoughtknot';
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+/** Runs npm with `args`, as execFileSync runs a program. */
+export const runNpm = (args, options) => execFileSync(...npmCommand(args), options);
 
 // The two packages: their short name, their package name and the start of their asset's file name.
 export const PACKAGES = [
@@ -66,7 +78,7 @@ const manifest = (pkg, version, fields) => ({
 // Packs a staged folder into DIR as the package's asset, and gives back its path.
 function pack(stage, out, short, version) {
   const [{ filename }] = JSON.parse(
-    execFileSync(NPM, ['pack', stage, '--pack-destination', out, '--json', '--ignore-scripts'], {
+    runNpm(['pack', stage, '--pack-destination', out, '--json', '--ignore-scripts'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     }),

@@ -8,6 +8,22 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Renames `from` over `to`. Windows refuses a rename over a file another process has open or is renaming over just
+ * then (EPERM, EACCES, EBUSY). A test may read main.js while another builds it. Then the rename is tried again, for a
+ * second at most.
+ */
+function renameOver(from, to) {
+  for (let tries = 0; ; tries += 1) {
+    try {
+      return renameSync(from, to);
+    } catch (e) {
+      if (tries >= 50 || !['EPERM', 'EACCES', 'EBUSY'].includes(e.code)) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20);
+    }
+  }
+}
+
 // Writes each output to a file of its own, then renames it into place. So whatever reads main.js sees the old build or
 // the new one, never half of one. Readers include tests building in parallel, or Obsidian while `npm run dev` rebuilds.
 const swapIn = {
@@ -17,7 +33,7 @@ const swapIn = {
       for (const f of result.outputFiles ?? []) {
         const part = `${f.path}.${process.pid}.part`;
         writeFileSync(part, f.contents);
-        renameSync(part, f.path);
+        renameOver(part, f.path);
       }
     });
   },

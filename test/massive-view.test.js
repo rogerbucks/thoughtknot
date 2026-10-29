@@ -352,7 +352,7 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     const css = `<link rel="stylesheet" href="${pathToFileURL(join(ROOT, 'styles.css')).href}">`;
     writeFileSync(
       join(folder, 'page.html'),
-      `<!doctype html><title>Overview</title>${css}<body><script>${CAUGHT}</script><script>${script}</script>`,
+      `<!doctype html><meta charset="utf-8"><title>Overview</title>${css}<body><script>${CAUGHT}</script><script>${script}</script>`,
     );
     await browser.send('Page.navigate', { url: pathToFileURL(join(folder, 'page.html')).href });
     for (let i = 0; i < 50 && (await browser.run('document.readyState')) !== 'complete'; i++)

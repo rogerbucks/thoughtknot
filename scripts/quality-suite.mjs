@@ -9,7 +9,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RUN_MS = 20 * 60 * 1000;
@@ -34,7 +34,8 @@ export function parseJunit(xml, root) {
       if (close) suites.pop();
       else if (!selfClose) suites.push(attr('name'));
     } else if (!close) {
-      const file = attr('file') ? relative(root, attr('file')) : '';
+      // named in slashes, as git names it, on Windows too
+      const file = attr('file') ? relative(root, attr('file')).replaceAll(sep, '/') : '';
       tests.set(
         [file, ...suites, attr('name')].filter(Boolean).join(' > '),
         /\sfailure="/.test(attrs) ? 'fail' : 'pass',

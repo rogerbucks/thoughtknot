@@ -17,7 +17,7 @@ const NOTE = '---\ntitle: Plan\nclassification: secret\n---\n\nThe plan.\n';
 
 /** A vault with a matrix note and a classified note, and the ports the guard takes. */
 function vault({ read = true } = {}) {
-  const top = realpathSync(mkdtempSync(join(tmpdir(), 'tk-gate-')));
+  const top = realpathSync.native(mkdtempSync(join(tmpdir(), 'tk-gate-')));
   made.push(top);
   mkdirSync(join(top, 'Settings'), { recursive: true });
   const matrix = join(top, 'Settings', 'AI matrix.md');
@@ -61,6 +61,24 @@ describe('the matrix note named in the settings', () => {
     const v = vault();
     allowed(await guardGateFiles('Write', { file_path: v.matrix, content: 'x' }, { ...v.ports, matrixNote: null }));
     allowed(await guardGateFiles('Read', { file_path: v.matrix }, v.ports));
+  });
+
+  test('on Windows, a path in backslashes or by a link to it is refused the same', async () => {
+    const real = { 'C:\\Vault\\Settings\\AI matrix.md': true, 'C:\\Vault\\harmless.md': 'matrix' };
+    const ports = {
+      cwd: 'C:\\Vault',
+      home: 'C:\\Profiles\\Ann',
+      matrixNote: 'Settings\\AI matrix.md',
+      realPath: async (path) => {
+        const at = path.replace(/\//g, '\\');
+        if (real[at] === 'matrix') return 'C:\\Vault\\Settings\\AI matrix.md';
+        if (real[at] || /^C:\\(Vault(\\Settings)?)?$/.test(at)) return at;
+        throw Object.assign(new Error('not there'), { code: 'ENOENT' });
+      },
+    };
+    for (const file_path of ['C:\\Vault\\Settings\\AI matrix.md', 'Settings\\AI matrix.md', 'C:\\Vault\\harmless.md'])
+      refusedWith(await guardGateFiles('Write', { file_path, content: '' }, ports), matrixNoteRefusal());
+    allowed(await guardGateFiles('Write', { file_path: 'C:\\Vault\\plan.md', content: 'x' }, ports));
   });
 });
 

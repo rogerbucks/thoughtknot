@@ -8,7 +8,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { KEYS, gpgSign, signingPlan } from '../scripts/desktop-build.mjs';
@@ -90,28 +90,34 @@ describe('what the desktop build signs', () => {
   });
 });
 
-test('a .deb gets a GPG signature that checks out against the key', { skip: !hasGpg() && 'no gpg' }, () => {
-  const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-gpg-test-'));
-  try {
-    const home = join(dir, 'maker');
-    const gpg = (args, input) =>
-      spawnSync('gpg', ['--homedir', home, '--batch', '--pinentry-mode', 'loopback', ...args], {
-        input,
-        encoding: 'utf8',
-      });
-    spawnSync('mkdir', ['-m', '700', home]);
-    assert.equal(gpg(['--passphrase', 'pw', '--quick-gen-key', 'Test <t@example.org>', 'ed25519', 'sign']).status, 0);
-    const key = gpg(['--passphrase', 'pw', '--armor', '--export-secret-keys']).stdout;
-    const deb = join(dir, 'app.deb');
-    writeFileSync(deb, 'pretend package');
-    assert.deepEqual(gpgSign([deb], key, 'pw'), [`${deb}.asc`]);
-    assert.match(readFileSync(`${deb}.asc`, 'utf8'), /BEGIN PGP SIGNATURE/);
-    assert.equal(gpg(['--verify', `${deb}.asc`, deb]).status, 0, 'the signature checks out');
-    assert.throws(() => gpgSign([deb], key, 'wrong'), /gpg/, 'a wrong passphrase fails loudly');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+const ON_WINDOWS = process.platform === 'win32' && 'a .deb is only signed on Linux';
+
+test(
+  'a .deb gets a GPG signature that checks out against the key',
+  { skip: ON_WINDOWS || (!hasGpg() && 'no gpg') },
+  () => {
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-gpg-test-'));
+    try {
+      const home = join(dir, 'maker');
+      const gpg = (args, input) =>
+        spawnSync('gpg', ['--homedir', home, '--batch', '--pinentry-mode', 'loopback', ...args], {
+          input,
+          encoding: 'utf8',
+        });
+      mkdirSync(home, { mode: 0o700 });
+      assert.equal(gpg(['--passphrase', 'pw', '--quick-gen-key', 'Test <t@example.org>', 'ed25519', 'sign']).status, 0);
+      const key = gpg(['--passphrase', 'pw', '--armor', '--export-secret-keys']).stdout;
+      const deb = join(dir, 'app.deb');
+      writeFileSync(deb, 'pretend package');
+      assert.deepEqual(gpgSign([deb], key, 'pw'), [`${deb}.asc`]);
+      assert.match(readFileSync(`${deb}.asc`, 'utf8'), /BEGIN PGP SIGNATURE/);
+      assert.equal(gpg(['--verify', `${deb}.asc`, deb]).status, 0, 'the signature checks out');
+      assert.throws(() => gpgSign([deb], key, 'wrong'), /gpg/, 'a wrong passphrase fails loudly');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+);
 
 test('the workflow hands signing keys to the build only off pull requests', () => {
   const build = jobs(read('.github/workflows/desktop-app.yml')).build.join('\n');

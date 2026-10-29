@@ -22,6 +22,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { build, load, until } from '../packages/obsidian/test/host/load-plugin.js';
 import { styles } from '../packages/obsidian/test/host/view-notes.js';
 import { editing, row, tapKey } from '../packages/obsidian/test/host/inspector-steps.js';
@@ -42,7 +43,7 @@ import {
 import { OBSIDIAN } from './repository/views-obsidian.js';
 import { pageStates } from './repository/views-page.js';
 
-const here = new URL('../', import.meta.url).pathname;
+const here = fileURLToPath(new URL('../', import.meta.url));
 
 /** What a check found, as text for a failure message: nothing is the pass. */
 const found = (r) => r.problems;
