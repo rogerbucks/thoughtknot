@@ -1,5 +1,5 @@
 // The tests on macOS and Windows (.github/workflows/os-check.yml). A checkout and a test run there read files, and
-// the output of other programs, as on Linux.
+// the output of other programs, as on Linux. Spec §41, standalone_app: it is tested on Linux, macOS and Windows.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
