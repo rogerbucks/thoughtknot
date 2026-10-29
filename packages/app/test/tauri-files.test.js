@@ -1,5 +1,5 @@
 // The desktop app's notes pass the one storage contract (spec §41, standalone_app; storage_contract). The app reaches
-// the disk only through its seven commands (src-tauri/src/place.rs). Here a stand-in answers them over a real folder.
+// the disk only through its eight commands (src-tauri/src/place.rs). Here a stand-in answers them over a real folder.
 // It answers as the Rust does: entries as [name, is a folder], and the text `ENOENT` when there is no file
 // (app-window.js).
 import { test, describe } from 'node:test';
