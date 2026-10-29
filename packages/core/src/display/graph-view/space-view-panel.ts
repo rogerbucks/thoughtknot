@@ -29,6 +29,7 @@ import { webgl2SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
+import { offerHeadset } from './space-xr-view.ts';
 import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
 import { heldIn, marksOfSvg } from './svg-marks.ts';
 import { linedUpLayout } from '../../space-glide.ts';
@@ -248,7 +249,6 @@ export async function openSpaceView(
     orbit = focusOn(orbit, [block.x + block.width / 2, block.y + block.depth / 2, top], near);
     pick(block);
   };
-
   const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
   /** Shows it the `next` way, the picked thing kept and the view centred on it, and says how. */
   const showAs = (next: number) => {
@@ -268,7 +268,7 @@ export async function openSpaceView(
     showAs((depth % (depths.length - 1)) + 1),
   );
   depthButton.hidden = depth === 0;
-
+  offerHeadset(el, depthButton.parentElement, seen, () => paints, tell); // in a headset (projection_spatial)
   // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
