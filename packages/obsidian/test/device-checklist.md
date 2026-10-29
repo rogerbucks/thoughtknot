@@ -268,7 +268,8 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 - [ ] **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is
       outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a
       beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is
-      written. A short click still opens the box (nudge_preview, drag_moves_box).
+      written. A short click still opens the box (nudge_preview, drag_moves_box). With the note open in the editing view, press
+      Cmd+Z (Ctrl+Z): one press takes the drag back and the box returns to where it was.
 - [ ] **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just
       below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A
       swipe begun at once still scrolls the note, and a hold lifted without moving opens no details (hold_to_drag_touch).
