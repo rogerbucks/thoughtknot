@@ -9,8 +9,11 @@
 import { middleOf } from './space-view.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 
-/** The lenses a view may be seen through, the first being none. */
-export const LENSES = ['none', 'fisheye'] as const;
+/**
+ * The lenses a view may be seen through, the first being none. Semantic zoom bends nothing: it steps the detail drawn
+ * as the person zooms (semantic-zoom.ts).
+ */
+export const LENSES = ['none', 'fisheye', 'semantic'] as const;
 /** One of the lenses. */
 export type Lens = (typeof LENSES)[number];
 
@@ -42,9 +45,9 @@ export function fisheye(focus: readonly number[], reach: number, bend = FISHEYE_
   return { focus, reach, out, times: (r) => Math.sqrt(spread(r)) };
 }
 
-/** `lens` round `focus`, reaching `reach`; none for no lens, or a reach of nothing. */
+/** `lens` round `focus`, reaching `reach`; none for a lens that bends nothing, or a reach of nothing. */
 export function lensOf(lens: Lens | undefined, focus: readonly number[] | null, reach: number): Radial | null {
-  if (!lens || lens === 'none' || !focus || !(reach > 0)) return null;
+  if (lens !== 'fisheye' || !focus || !(reach > 0)) return null;
   return fisheye(focus, reach);
 }
 

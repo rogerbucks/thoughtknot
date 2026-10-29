@@ -33,6 +33,7 @@ import type {
 } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
+import type { SemanticRung } from '../../semantic-zoom.ts';
 import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
@@ -270,9 +271,9 @@ export class ViewSwitching {
     }
   }
 
-  /** Steps to the rung `level` of the ladder of detail, and lays the graph out again (cluster_detail_ladder). */
-  step(level: DetailLevel): void {
-    if (!this.o.state.toDetail(level)) return;
+  /** Steps to the rung `level` of the ladder, or of semantic zoom, and lays the graph out again (cluster_detail_ladder). */
+  step(level: SemanticRung): void {
+    if (!this.o.state.toRung(level)) return;
     this.menu.refresh();
     void this.redraw();
   }

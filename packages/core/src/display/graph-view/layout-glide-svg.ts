@@ -9,6 +9,7 @@ import { GLIDE_MOST, LAYOUT_GLIDE_MS, easeGlide, offsetAt, offsetsOf, placeKept 
 import type { Offsets, Pt } from '../../layout-glide.ts';
 import type { Drawn, View, Zoom } from '@thoughtknot/core';
 import { reducedMotion } from './details-nav.ts';
+import { frameOf, middleOf } from './lens-svg.ts';
 import { LiveHold } from './live-hold.ts';
 import type { Taps } from './taps.ts';
 
@@ -18,7 +19,7 @@ const REACHES = ['pointerdown', 'wheel', 'keydown'] as const;
 /** What fades in as the boxes arrive: the links, with their labels, and the boxes round groups. */
 const FADED = 'g.edge, g.cluster';
 
-/** Each box of the drawing whose taps are `taps`, by its key, where it is on the screen with the drawing shown at `v`. */
+/** Each thing of the drawing whose taps are `taps`, by its key, where it is on screen with the drawing shown at `v`. */
 export function onScreen(svg: SVGSVGElement, taps: Taps, v: View): Map<string, Pt> {
   const out = new Map<string, Pt>();
   const vb = svg.viewBox?.baseVal,
@@ -28,6 +29,15 @@ export function onScreen(svg: SVGSVGElement, taps: Taps, v: View): Map<string, P
     ky = v.height / box.height;
   const keyOf = (id: string) => svg.querySelector(`#${id}`)?.getAttribute('data-key') ?? null;
   for (const [key, at] of taps.places(keyOf)) out.set(key, [v.x + (at.x - box.x) * kx, v.y + (at.y - box.y) * ky]);
+  // a folded group's box stands for its things: a new layout that opens or folds it keeps them where it was (§68)
+  const f = frameOf(svg);
+  for (const g of Array.from(svg.querySelectorAll('g.node[data-keys]'))) {
+    const things = g.getAttribute('data-keys'),
+      [mx, my] = (things && middleOf(g)) || [];
+    if (mx === undefined || my === undefined) continue;
+    const p: Pt = [v.x + (f.s * (mx + f.tx) - box.x) * kx, v.y + (f.s * (my + f.ty) - box.y) * ky];
+    for (const k of (things ?? '').split(' ')) if (k && !out.has(k)) out.set(k, p);
+  }
   return out;
 }
 

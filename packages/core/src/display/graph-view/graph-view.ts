@@ -202,7 +202,7 @@ export class GraphView extends Lifecycle {
       drawn: () => this.drawn,
       taps: this.taps,
       byKeyboard: () => this.sel.byKeyboard(),
-      lens: { selected: () => this.details.selectedKey(), menu: () => this.switching?.menu.el }, // §68
+      lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
     });
     if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
     if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
