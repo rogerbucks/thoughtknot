@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (77)
+## Open (72)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -26,20 +26,15 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-5 | No test runs vault.process with a real interleaving | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
-| CODE-7 | 139 of 249 core modules have no test named after them | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| CODE-10 | Live Preview hands a hand-made context to the block renderer | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| ARCH-10 | Three decisions that cost most if left after their wave | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
@@ -259,16 +254,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.
 
-### CODE-7 139 of 249 core modules have no test named after them
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/**`, `packages/core/test/**`, `test/conventions.test.js`.
-
-**Risk:** Files up to 389 lines, such as proposals-review.ts, style-graph.ts, link-scan.ts and style-checks.ts, are reached only through other modules' tests. Line coverage says those lines ran, not that their answers were asserted, so a wrong branch in one can pass while the suite stays green.
-
-**Fix:** Add a ratchet file of core modules with no named test. Require a new module over 100 lines to have one. Work the list down, starting with the four named.
-
-**Check:** A conventions test that fails when the list of unnamed modules grows, in the style of test/fixed-sleeps.json.
-
 ### CODE-8 Reader parity rests on a small, snapshot-shaped case set
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `packages/graph-spec/test/**`, `python/graph_spec/tests/**`.
@@ -278,26 +263,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Grow reading-cases.json and problem-code-cases.json with one case per reader rule. Write each with its intended answer rather than a recorded one. Have both readers run them.
 
 **Check:** A test that every problem code in reader/problem-codes.json has at least one case in problem-code-cases.json.
-
-### CODE-9 28 functions over 100 lines; the 400-line cap is on files
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/display/**`, `packages/obsidian/src/*.ts`, `test/conventions.test.js`.
-
-**Risk:** No module passes 400 lines. But renderProperties (272 lines), renderBlock (221), renderViewBlock (217) and bindViewportEvents (203) are single functions that nobody can hold in their head. A change in one is hard to review, and its branches are hard to test one by one.
-
-**Fix:** Add a function-length rule to the conventions test with a ratchet of the functions now over 100 lines. Split the four named when they are next touched.
-
-**Check:** A conventions test over the TypeScript AST that fails when a function over 100 lines is added or one on the list grows.
-
-### CODE-10 Live Preview hands a hand-made context to the block renderer
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/src/live-preview.ts`, `packages/obsidian/src/block.ts`.
-
-**Risk:** The editing view builds a five-field object and casts it to MarkdownPostProcessorContext, the plugin's one unchecked cast of an Obsidian type. When Obsidian adds a field the renderer or a child reads, the card in Live Preview fails. The reading view keeps working, and the compiler cannot say so.
-
-**Fix:** Give renderShown a narrow interface of the fields it uses (sourcePath, getSectionInfo, addChild). Pass Obsidian's context or the hand-made one to that type, without a cast.
-
-**Check:** The typecheck, once the cast is gone; a conventions test that counts `as unknown as` in packages/obsidian/src and holds it at zero.
 
 ### CODE-11 A running layout is never cancelled when the user keeps typing
 
@@ -328,16 +293,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Before H1 (Wave 7), widen the published host interface to what the requirement names: note store, drafts, settings, secrets and the layout runner. Give each one a contract check in host-contract.ts. Make the Obsidian and page adapters pass it in test/host-adapters.test.js.
 
 **Check:** test/host-adapters.test.js runs every adapter against every contract check. A conventions rule fails a host package that defines its own note read or write outside the adapter.
-
-### ARCH-2 Storage interface exists only as EditorNote, with no contract suite
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
-
-**Risk:** Sync (Wave 13), the encrypted store (W30) and the GitHub backend (Wave 27) are all planned as 'one more backend of the storage interface'. But that interface has no file and no contract test. It has two hand-written implementations. Whoever adds the third backend inherits the differences between the first two.
-
-**Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
-
-**Check:** storage-contract.test.js in the suite, listed in CONTRIBUTING.md, with every backend registered; the requirement flips to written only with all three.
 
 ### ARCH-3 Layering is not held across packages; hosts reach into core internals
 
@@ -388,16 +343,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Before Wave 8, build core to ESM plus .d.ts in the release archive alongside graph-spec's dist. Add a LICENSE copy to each package. Keep the one lockstep version (0.x minor as major, as public-api.mjs already reads it).
 
 **Check:** release.yml installs the archive into an empty project and imports @thoughtknot/core and @thoughtknot/graph-spec with plain Node.
-
-### ARCH-10 Three decisions that cost most if left after their wave
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `requirements/waves.json`, `requirements/editor-requirements.gql`, `scripts/public-api.mjs`.
-
-**Risk:** Twenty-five two-week waves for one maintainer with AI sessions, with 193 planned tests against 142 written, leave no slack. Three choices get many times dearer once the next wave builds on them.
-
-**Fix:** Decide before: (1) the storage and full host contract before Wave 7 H1. Give L1 its own wave rather than sharing Wave 6 with T1 and P1. (2) Format version and identity (ARCH-4, ARCH-6) before Wave 9, and certainly before Wave 13 CRDT. (3) A published, versioned surface for the display layer (today excluded from public-api.json) before Wave 8 VS Code consumes it from a webview.
-
-**Check:** Each decision is a written requirement with a test flipped to written before the named wave starts; scripts/check-requirements.mjs --done lists them.
 
 ### UX-2 Half the manual walk-through could run on the existing Chrome harness
 
@@ -859,7 +804,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (55)
+## Done or accepted (60)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -874,8 +819,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
+| CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
+| CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
+| CODE-10 | Live Preview hands a hand-made context to the block renderer | done | #1542 |
+| ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | done | #1542 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
 | ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
+| ARCH-10 | Three decisions that cost most if left after their wave | done | #1542 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
