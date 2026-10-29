@@ -190,6 +190,9 @@ async function stageCore(stage, version, graphSpec) {
     outdir: stage,
     outExtension: { '.js': '.mjs' },
     bundle: true,
+    // what the entries share is one chunk beside them, so a host using two entries has one copy of the core's state
+    splitting: true,
+    chunkNames: 'chunks/[name]-[hash]',
     platform: 'neutral',
     format: 'esm',
     target: 'es2022',
