@@ -109,9 +109,17 @@ export function fakeObsidian(state = {}) {
       const bytes = typeof held === 'string' ? new TextEncoder().encode(held) : held;
       return bytes.slice().buffer;
     },
+    // As Obsidian's: an awaited read, then the edit and an awaited write. A test changes the note between them by setting
+    // state.inProcess, which runs once in that gap (risk CODE-5). The edit is given the note as it stands after the gap.
     process: async (f, fn) => {
-      const next = fn(files.get(f.path));
-      if (next !== files.get(f.path)) {
+      await vault.read(f);
+      const gap = state.inProcess;
+      state.inProcess = null;
+      if (gap) await gap(f);
+      const was = files.get(f.path),
+        next = fn(was);
+      await Promise.resolve();
+      if (next !== was) {
         files.set(f.path, next);
         (state.writes ??= []).push(f.path);
         listeners.forEach((l) => l(file(f.path)));

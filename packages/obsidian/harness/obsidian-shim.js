@@ -140,9 +140,18 @@ const vault = {
   getFileByPath: (p) => (files.has(p) ? new TFile(p) : null),
   getResourcePath: (f) => `app://local/${f.path}`,
   read: async (f) => files.get(f.path),
+  // As Obsidian's: an awaited read, then the edit and an awaited write. A test may change the note between them: it
+  // sets inProcess, which runs once in that gap (risk CODE-5). The edit is given the note as it stands after the gap.
+  inProcess: null,
   process: async (f, fn) => {
-    const next = fn(files.get(f.path));
-    if (next !== files.get(f.path)) {
+    await vault.read(f);
+    const gap = vault.inProcess;
+    vault.inProcess = null;
+    if (gap) await gap(f);
+    const was = files.get(f.path),
+      next = fn(was);
+    await Promise.resolve();
+    if (next !== was) {
       files.set(f.path, next);
       listeners.forEach((l) => l(new TFile(f.path)));
     }
