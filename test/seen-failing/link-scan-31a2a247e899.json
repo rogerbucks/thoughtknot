@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/link-scan.test.js",
+  "test": "only notes, files, web and mail addresses are opened (safe_to_click) > a Markdown destination whose scheme is percent-encoded is refused once decoded",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}
