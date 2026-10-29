@@ -1,5 +1,5 @@
-// TRUST-3: the stable release is built apart from where it is published. No job that installs or tests may write or
-// sign. The job that publishes and attests runs no code of the repository.
+// TRUST-3 (security_fix_rule): the stable release is built apart from where it is published. No job that installs or
+// tests may write or sign. The job that publishes and attests runs no code of the repository.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, stripComment, usesRefs, workflowFiles } from './repository/repo.js';

@@ -1,5 +1,6 @@
-// SEC-10: every CI run holds the Python dependencies to the published advisories, as npm audit does the JavaScript
-// ones. They are read by hash from the lock file. The release reads OSV over the same lock (security-alerts.mjs).
+// SEC-10 (security_release_gate): every CI run holds the Python dependencies to the published advisories, as npm
+// audit does the JavaScript ones. They are read by hash from the lock file. The release reads OSV over the same lock
+// (security-alerts.mjs).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { jobs, read, runCommands } from './repository/repo.js';

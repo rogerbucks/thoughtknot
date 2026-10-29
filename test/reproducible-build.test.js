@@ -1,5 +1,6 @@
-// SEC-6: the store assets are the same however often they are built. The release and its dry run build twice, in clean
-// checkouts. They fail when main.js, styles.css or the libraries' archive differ. The archive is the release's own step. The builds themselves run in the workflows, with the network npm ci needs.
+// SEC-6 (security_fix_rule): the store assets are the same however often they are built. The release and its dry run
+// build twice, in clean checkouts. They fail when main.js, styles.css or the libraries' archive differ. The archive is
+// the release's own step. The builds themselves run in the workflows, with the network npm ci needs.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ASSETS, archiveCommand, differing } from '../scripts/reproducible-build.mjs';

@@ -1,5 +1,6 @@
-// SEC-2: SECURITY.md's promises rest on GitHub settings, so they are checked before every release and each week. The
-// job reads with a token that may see them, and fails without it. It is the same in all three workflows.
+// SEC-2 (security_policy): SECURITY.md's promises rest on GitHub settings. So they are checked before every release
+// and each week. The job reads with a token that may see them, and fails without it. It is the same in all three
+// workflows.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, runCommands, stripComment } from './repository/repo.js';
