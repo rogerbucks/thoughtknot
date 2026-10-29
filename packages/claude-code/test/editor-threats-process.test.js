@@ -6,19 +6,24 @@
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ENTRY, FIXTURE, alive, ask, pause, reachable, startProcess } from './editor-threats-support.js';
 import { TEST_NOTE as NOTE } from './fixtures/editor-server-test.ts';
 
-/** A node process that starts the test-only server with `stdio` and then runs `then`; it says its child's pid first. */
 const WINDOWS = process.platform === 'win32';
 
-function parentOf(stdio, then) {
+/**
+ * A node process that runs `before`, starts the test-only server with `stdio` and then runs `then`. `stdio` is a list,
+ * or the code of one.
+ */
+function parentOf(stdio, then, before = '') {
+  const given = typeof stdio === 'string' ? stdio : JSON.stringify(stdio);
   const code = [
     "const { spawn } = require('node:child_process');",
-    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${JSON.stringify(stdio)} });`,
+    before,
+    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${given} });`,
     then,
   ].join('\n');
   return spawn(process.execPath, ['-e', code], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -88,7 +93,7 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('on a stop signal', async () => {
-    // Windows sends no SIGHUP, and ends a process at once on the others, with nothing to catch: there it is gone, its
+    // Windows sends no SIGHUP. On the others it ends a process at once, with nothing to catch. There it is gone, its
     // port closed, but says nothing
     for (const signal of WINDOWS ? ['SIGTERM', 'SIGINT'] : ['SIGTERM', 'SIGINT', 'SIGHUP']) {
       const run = startProcess();
@@ -127,25 +132,21 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('it will not start when the process that started it has already gone', async () => {
-    // the parent says its child's pid and exits at once, before the child has loaded. The child's output comes on the
-    // same pipes, so they close only when it has exited too
+    // the parent says its child's pid and exits at once, before the child has loaded. The child writes its errors to a
+    // file, since Windows may close a pipe when the parent exits
+    const errors = join(mkdtempSync(join(tmpdir(), 'orphan-')), 'stderr.txt');
     const parent = parentOf(
-      ['ignore', 'inherit', 'inherit'],
+      "['ignore', 'inherit', err]",
       'process.stdout.write(c.pid + "\\n", () => process.exit(0));',
+      `const err = require('node:fs').openSync(${JSON.stringify(errors)}, 'w');`,
     );
-    let stderr = '';
-    parent.stderr.setEncoding('utf8');
-    parent.stderr.on('data', (d) => (stderr += d));
     const lines = linesOf(parent);
-    const closed = new Promise((r) => parent.on('close', r));
     for (let i = 0; i < 300 && !lines.length; i++) await pause(100);
     const pid = Number(lines[0]);
     after(() => alive(pid) && process.kill(pid, 'SIGKILL'));
-    let done = false;
-    void closed.then(() => (done = true));
-    for (let i = 0; i < 300 && !done && lines.length < 2; i++) await pause(100);
-    assert.deepEqual(lines.slice(1), [], 'it handed over no address');
-    assert.ok(done, 'and it exited');
-    assert.match(stderr, /the process that started it has already exited/);
+    for (let i = 0; i < 300 && alive(pid); i++) await pause(100);
+    assert.equal(alive(pid), false, 'it exited');
+    assert.deepEqual(lines.slice(1), [], 'and handed over no address');
+    assert.match(readFileSync(errors, 'utf8'), /the process that started it has already exited/);
   });
 });

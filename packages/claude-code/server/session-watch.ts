@@ -5,7 +5,6 @@
 // It keeps no file to be found by, so nothing is left behind.
 import { word } from '@thoughtknot/core';
 import { fstatSync } from 'node:fs';
-import { Socket } from 'node:net';
 
 /** How often the process checks that the one that started it is still there. */
 export const PARENT_CHECK_MS = 1000;
@@ -22,7 +21,7 @@ function inputIsHeld(): boolean {
     /* no input to stat */
   }
   // Windows' stat does not name a pipe as one; Node's own stream for the input does: a socket that is no terminal
-  return process.platform === 'win32' && process.stdin instanceof Socket && !process.stdin.isTTY;
+  return process.platform === 'win32' && process.stdin.constructor.name === 'Socket' && !process.stdin.isTTY;
 }
 
 /**
