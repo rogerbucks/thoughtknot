@@ -8,6 +8,7 @@ Usage:
 """
 
 import os
+import pathlib
 import re
 import sys
 import tempfile
@@ -27,7 +28,9 @@ WML = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 def entity_doc(outside_path, body):
     """An XML document whose DTD names a local file as an external entity, used in its body."""
-    return f'<?xml version="1.0"?>\n<!DOCTYPE x [<!ENTITY leak SYSTEM "file://{outside_path}">]>\n{body}'
+    # as a file URI, so that a Windows path, with its drive and backslashes, is one too
+    uri = pathlib.Path(outside_path).as_uri()
+    return f'<?xml version="1.0"?>\n<!DOCTYPE x [<!ENTITY leak SYSTEM "{uri}">]>\n{body}'
 
 
 class SafeXml(unittest.TestCase):
