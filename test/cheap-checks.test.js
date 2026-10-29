@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { exists, path, read, readJSON, walk } from './repository/repo.js';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { ignoreEntries, missingIgnoreEntries } from '../scripts/ignore-entries.mjs';
@@ -17,7 +18,8 @@ const { NODE_TEST_CONTEXT: _context, ...CLEAN_ENV } = process.env;
 const run = (command, args, cwd) => spawnSync(command, args, { cwd, env: CLEAN_ENV, encoding: 'utf8', timeout: 60000 });
 
 const REPORTER = path('scripts/quiet-reporter.mjs');
-const quietNode = (cwd, ...files) => run(process.execPath, ['--test', `--test-reporter=${REPORTER}`, ...files], cwd);
+const quietNode = (cwd, ...files) =>
+  run(process.execPath, ['--test', `--test-reporter=${pathToFileURL(REPORTER).href}`, ...files], cwd);
 
 const made = [];
 /** A temporary folder holding these files; removed when the file's tests are done. */
