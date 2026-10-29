@@ -67,7 +67,7 @@ export function storageContract(
   make: () => NoteStorage | Promise<NoteStorage>,
   { windows = false }: { windows?: boolean } = {},
 ): StorageCheck[] {
-  const ODD_NAME = oddName(windows);
+  const oddNote = oddName(windows);
   return [
     {
       name: 'an empty store lists no note, and reads none',
@@ -155,11 +155,11 @@ export function storageContract(
       name: 'a note named with a `+`, a `?` and dots before `.md` is written, listed, read and removed',
       run: async () => {
         const s = await make();
-        made('write', await s.write(ODD_NAME, 'odd'));
-        if ((await s.list()).join() !== ODD_NAME) fail('list', ODD_NAME, await s.list());
-        const read = await s.read(ODD_NAME);
+        made('write', await s.write(oddNote, 'odd'));
+        if ((await s.list()).join() !== oddNote) fail('list', oddNote, await s.list());
+        const read = await s.read(oddNote);
         if (read?.text !== 'odd') fail('read', '"odd"', read);
-        made('remove', await s.remove(ODD_NAME));
+        made('remove', await s.remove(oddNote));
         if ((await s.list()).length) fail('list', 'no notes', await s.list());
       },
     },
