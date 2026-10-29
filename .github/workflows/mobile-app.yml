@@ -69,14 +69,19 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           export JAVA_HOME="$JAVA_HOME_17_X64"
+          # avdmanager and the emulator look for phones in different folders unless told one
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
           tools="$ANDROID_HOME/cmdline-tools/latest/bin"
           image='system-images;android-34;google_apis;x86_64'
           yes | "$tools/sdkmanager" --install emulator "$image" > /dev/null
           echo no | "$tools/avdmanager" create avd --force --name keeper --package "$image"
+          "$ANDROID_HOME/emulator/emulator" -list-avds | grep -qx keeper
           "$ANDROID_HOME/emulator/emulator" -avd keeper -no-window -no-audio -no-boot-anim -no-snapshot \
             -gpu swiftshader_indirect &
           adb="$ANDROID_HOME/platform-tools/adb"
-          "$adb" wait-for-device shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 2; done'
+          # an emulator that never starts fails here in 10 minutes, not at the step's limit
+          timeout 600 "$adb" wait-for-device shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 2; done'
           cd gen/android && ./gradlew --no-daemon :tauri-plugin-keeper:connectedDebugAndroidTest
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
