@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { arcMarks } from '../src/view-types/arc-view.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
+import { VIEW_DRAWERS, VIEW_TYPES } from '../src/view-types/view-types.ts';
 
 const SPACE = { width: 600, height: 300 };
 /** A shape of things `[key, kind]` and links `[from, to]`. */
@@ -62,4 +63,11 @@ test('groups show as runs on the line, and a long arc is lowered to stay in the 
   const many = shapeOf([...Array(70).keys()].map((i) => [`m${i}`]));
   assert.equal(arcMarks({ shape: many, space: SPACE }).filter((m) => m.kind === 'label').length, 0, 'too many to name');
   assert.deepEqual(arcMarks({ shape: shapeOf([]), space: SPACE }), []);
+});
+
+// proves: projections_all_on
+test('the arc is offered among the views, and the View menu draws it', () => {
+  assert.ok(VIEW_TYPES.includes('arc'));
+  const shape = shapeOf([['a'], ['b']], [['a', 'b']]);
+  assert.deepEqual(VIEW_DRAWERS.arc({ shape, space: SPACE }), arcMarks({ shape, space: SPACE }));
 });

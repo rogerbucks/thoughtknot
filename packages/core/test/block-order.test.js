@@ -57,6 +57,24 @@ test('with no groups written, the groups the links make sit side by side, each t
   assert.deepEqual(blockOrder(knots()), { order, blocks }, 'the same graph, the same order');
 });
 
+// proves: projection_matrix
+test('a thing written in two groups sits once, in the first', () => {
+  const { order, blocks } = blockOrder(
+    knots([
+      ['A', ['a1', 'a2', 'a3', 'a4', 'b1']],
+      ['B', ['b1', 'b2', 'b3', 'b4']],
+    ]),
+  );
+  assert.equal(order.length, 8, order.join());
+  assert.deepEqual(
+    blocks.map((b) => [b.label, b.to - b.from]),
+    [
+      ['A', 5],
+      ['B', 3],
+    ],
+  );
+});
+
 // proves: projection_arc
 test('groups written win, the rest a block of their own; with no links, the kinds', () => {
   const { order, blocks } = blockOrder(knots([['Odd', ['a1', 'a3', 'b1', 'b3']]]));
