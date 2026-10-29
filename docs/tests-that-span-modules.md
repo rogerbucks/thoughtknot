@@ -987,6 +987,8 @@ after a module nor listed here, and on a listed file that is missing.
   WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
   The view's mini-map must copy each thing and move the view when pressed (space_mini_map). A thing moved by a new
   layout must glide there, a frame at a time (layout_glide).
+- `test/space-sketch.test.js` — the drawings over a graph in the view in space, in headless Chrome (editor spec §70,
+  sketch_toggle, sketch_click_rule). It spans `space-sketch.ts`, the view in space and its painter.
 - `test/space-xr-view.test.js` — the view in space in a stand-in headset, in headless Chrome (editor spec §68,
   projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,

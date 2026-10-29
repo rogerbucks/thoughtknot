@@ -2,14 +2,14 @@
 // - Draw offers the tools. A drag with the pen writes a drawings block after the graph, and the stroke is drawn
 //   (sketch_drawn). A stroke begun on a thing is pinned to it.
 // - Hide drawings hides them all, and Show drawings brings them back (sketch_toggle).
-// - A first tap on a drawing selects it and says what it is, with Delete. A second tap keeps it selected
-//   (sketch_click_rule). Delete takes it out of the note.
+// - A first tap on a drawing selects it and says what it is, with Delete, and leaves the view where it was. A second
+//   tap keeps it selected and brings it to the middle of the view (sketch_click_rule). Delete takes it out of the note.
 // - Offer as things and links writes what the drawings say as a proposal under the graph, the graph untouched
 //   (sketch_to_graph).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, settled, until } from './host/load-plugin.js';
-import { fence } from './host/notes.js';
+import { fence, labelled } from './host/notes.js';
 import { PATH, TEAM, card, mouse, noteOf } from './host/drag-steps.js';
 
 before(() => build());
@@ -96,20 +96,26 @@ describe('the drawings already in the note', () => {
   });
 
   // proves: sketch_click_rule
-  test('a first tap selects a drawing and says what it is; a second keeps it; Delete takes it out', async () => {
-    const { env, el, vp, at } = await card(noteOf(TEAM, INKED));
+  test('a first tap selects a drawing and says what it is; a second centres it; Delete takes it out', async () => {
+    const { env, el, vp, at, placeOf } = await card(noteOf(TEAM, INKED));
     try {
       const ink = layerOf(el).querySelector('[data-sketch]');
       const tap = (id) => {
         vp.dispatch('pointerdown', mouse(id, ink, at(0, 0)));
         vp.dispatch('pointerup', mouse(id, ink, at(0, 0)));
       };
+      // the drawing's middle, on the screen, from the viewport's middle across
+      const offMiddle = () => Math.abs(at(placeOf('ann').x + 15, placeOf('ann').y + 5).clientX - vp.clientWidth / 2);
+      for (let i = 0; i < 6; i++) labelled(el, 'Zoom in').click(); // so the drawing is larger than the view
+      const was = offMiddle();
       tap(3);
+      assert.equal(offMiddle(), was, 'the first tap leaves the view where it was');
       assert.ok(layerOf(el).querySelector('[data-sketch]').classList.contains('is-selected'), 'selected');
       assert.match(el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent, /^Selected: /);
       assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'a drawing is not a thing: nothing opens');
       tap(4);
       assert.ok(layerOf(el).querySelector('[data-sketch]').classList.contains('is-selected'), 'still selected');
+      assert.ok(offMiddle() < 2 && was > 2, `in the middle: ${offMiddle()} from it, ${was} before`);
       buttonOf(el, 'Delete drawing').click();
       await until(() => !/\(d1:Ink/.test(env.state.files.get(PATH)));
       await settled();
