@@ -104,7 +104,7 @@ def parts(world, name, problems):
         (i, " · ".join(sorted(x for x in g.nodes[i][0] if x not in gr.SCHEMA_LABELS)), text(i))
         for i in ids
     ]
-    edges = [(s, gr._word(words, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
+    edges = [(s, gr.word(words, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
     suggested = {p["suggested"] for p in problems if p.get("suggested") and p["graph"] == name}
     return nodes, edges, suggested
 
