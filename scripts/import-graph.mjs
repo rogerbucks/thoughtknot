@@ -8,7 +8,10 @@
 // Imports are read from the text: `import … from`, `export … from`, a bare `import '…'` and `import('…')`. Each is
 // relative, or by a workspace package's name and the paths its `exports` map. A folder built from several pieces is not
 // seen: the full suite, which runs before every merge and in CI, covers it.
-import { dirname, join, normalize } from 'node:path';
+import { posix } from 'node:path';
+
+// the repository's paths, as git names them: in slashes on Windows too
+const { dirname, join, normalize } = posix;
 
 const JS_TEST = /\.test\.(js|mjs)$/;
 const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
