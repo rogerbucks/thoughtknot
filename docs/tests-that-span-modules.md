@@ -780,6 +780,18 @@ after a module nor listed here, and on a listed file that is missing.
   nightly when it merges. A gate first checks the board: every item of that wave must be Done and proved.
 - `test/workflow-writers.test.js` — which workflow jobs may write to the repository, and what else each may touch.
 
+## The release's supply chain
+
+- `test/release-split.test.js` — the stable release is built with read access. A job that runs no code of the
+  repository publishes and attests it (TRUST-3, security_fix_rule). No job that installs may write or sign.
+- `test/reproducible-build.test.js` — two clean builds give the same store assets and archive (SEC-6,
+  security_fix_rule). It reads `scripts/reproducible-build.mjs` and the release's workflows.
+- `test/settings-check.test.js` — GitHub's settings are checked before each release and each week (SEC-2,
+  security_policy). The job is the same in all three workflows.
+- `test/secrets-recorded.test.js` — every secret a workflow reads has a row in RELEASING.md, with its owner and renewal
+  (SEC-8, security_fix_rule).
+- `test/python-audit.test.js` — CI audits the locked Python dependencies by hash (SEC-10, security_release_gate).
+
 ## The nightly build, the home page and test files
 
 - `test/nightly-workflow.test.js` — the nightly pre-release, run each night and by hand. It is built only when main
