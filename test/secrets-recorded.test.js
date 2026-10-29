@@ -1,5 +1,6 @@
-// SEC-8: every secret a workflow reads has a row in RELEASING.md's "Keys and recovery" table. The row gives its owner,
-// its scope and when it is renewed. So a token's reach is never known only to the person who made it.
+// SEC-8 (security_fix_rule): every secret a workflow reads has a row in RELEASING.md's "Keys and recovery" table. The
+// row gives its owner, its scope and when it is renewed. So a token's reach is never known only to the person who made
+// it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { read, workflowFiles } from './repository/repo.js';
