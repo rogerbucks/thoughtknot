@@ -273,17 +273,17 @@ function settingsChecks(make: () => ServicesUnderTest): ContractCheck[] {
 
 /** The drafts' checks: each kept by its key, read back, replaced, and cleared alone. */
 function draftChecks(make: () => ServicesUnderTest): ContractCheck[] {
-  const A = 'Plans/Today.md#g',
-    B = 'Plans/Today.md#other';
+  const mine = 'Plans/Today.md#g',
+    theirs = 'Plans/Today.md#other';
   return [
     {
       name: 'drafts: a draft kept is read back by its key, and a key with none reads null',
       run: async () => {
         const { host } = make();
-        const none: unknown = await host.drafts.read(A);
+        const none: unknown = await host.drafts.read(mine);
         if (none !== null) fail('drafts', 'null', none);
-        await host.drafts.keep(A, '(a:Thing)');
-        const kept: unknown = await host.drafts.read(A);
+        await host.drafts.keep(mine, '(a:Thing)');
+        const kept: unknown = await host.drafts.read(mine);
         if (kept !== '(a:Thing)') fail('drafts', '"(a:Thing)"', kept);
       },
     },
@@ -291,13 +291,13 @@ function draftChecks(make: () => ServicesUnderTest): ContractCheck[] {
       name: 'drafts: keeping again replaces the draft, and clearing one key leaves another',
       run: async () => {
         const { host } = make();
-        await host.drafts.keep(A, 'first');
-        await host.drafts.keep(A, 'second');
-        await host.drafts.keep(B, 'theirs');
-        const got = [await host.drafts.read(A), await host.drafts.read(B)];
+        await host.drafts.keep(mine, 'first');
+        await host.drafts.keep(mine, 'second');
+        await host.drafts.keep(theirs, 'theirs');
+        const got = [await host.drafts.read(mine), await host.drafts.read(theirs)];
         if (JSON.stringify(got) !== '["second","theirs"]') fail('drafts', '["second","theirs"]', got);
-        await host.drafts.clear(A);
-        const after = [await host.drafts.read(A), await host.drafts.read(B)];
+        await host.drafts.clear(mine);
+        const after = [await host.drafts.read(mine), await host.drafts.read(theirs)];
         if (JSON.stringify(after) !== '[null,"theirs"]') fail('drafts', '[null,"theirs"]', after);
       },
     },
