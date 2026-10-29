@@ -2,6 +2,7 @@
 fn main() {
     let commands = &[
         "pick_folder",
+        "own_folder",
         "read_dir",
         "read_text",
         "write_text",

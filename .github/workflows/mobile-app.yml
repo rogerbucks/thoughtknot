@@ -1,0 +1,113 @@
+name: Phone and tablet app
+
+# The phone and tablet app (spec §40, android_app and ios_app): the desktop app's Tauri shell, built for Android and for
+# the iPhone and iPad simulator, so a phone build is never first tried by a person (mobile_checked).
+# - Android: a debug APK for 64-bit ARM phones and tablets, kept as a download of the run. It is signed with the
+#   build's own throwaway debug key, as every Android debug build is. No key of Roger's is used or needed.
+# - iPhone and iPad: built for the simulator only, with signing switched off. A build for a real device needs Roger's
+#   Apple account, which waits for Apple to fix his developer name (docs/app-signing.md). No Apple key is used here.
+# Tauri writes the Android Studio and Xcode projects (src-tauri/gen/, never committed) at the start of each run.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/app/**'
+      - 'packages/claude-code/page/**'
+      - 'packages/claude-code/esbuild.page.mjs'
+      - 'packages/core/src/**'
+      - '.github/workflows/mobile-app.yml'
+  pull_request:
+    paths:
+      - 'packages/app/**'
+      - 'packages/claude-code/page/**'
+      - 'packages/claude-code/esbuild.page.mjs'
+      - 'packages/core/src/**'
+      - '.github/workflows/mobile-app.yml'
+  workflow_dispatch:
+  # the nightly, at the commit it built
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit to build
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-app-${{ github.event.pull_request.number || inputs.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/app
+      # the runner carries the Android SDK, its NDK and Java 17; Rust needs only the phone's target
+      - run: rustup target add aarch64-linux-android
+      - id: tauri-cli
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/cargo-tauri*
+          key: tauri-cli-2.12.4-${{ runner.os }}
+      - if: steps.tauri-cli.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --locked --version 2.12.4
+      - working-directory: packages/app/src-tauri
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
+          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          cargo tauri android init --ci
+          cargo tauri icon icons/icon.png
+          cargo tauri android build --ci --debug --apk --target aarch64
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thoughtknot-app-android
+          if-no-files-found: error
+          path: packages/app/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+
+  ios-simulator:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/app
+      - run: rustup target add aarch64-apple-ios-sim
+      - id: tauri-cli
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/cargo-tauri*
+          key: tauri-cli-2.12.4-${{ runner.os }}
+      - if: steps.tauri-cli.outputs.cache-hit != 'true'
+        run: cargo install tauri-cli --locked --version 2.12.4
+      # Xcode builds for the simulator with signing switched off: no Apple account, team or key is asked for
+      - working-directory: packages/app/src-tauri
+        run: |
+          cargo tauri ios init --ci
+          cargo tauri icon icons/icon.png
+          project=$(ls -d gen/apple/*.xcodeproj)
+          scheme=$(basename "$project" .xcodeproj)_iOS
+          xcodebuild -project "$project" -scheme "$scheme" -configuration debug -sdk iphonesimulator -arch arm64 \
+            -derivedDataPath target/ios-simulator CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thoughtknot-app-ios-simulator
+          if-no-files-found: error
+          path: packages/app/src-tauri/target/ios-simulator/Build/Products/*-iphonesimulator/*.app

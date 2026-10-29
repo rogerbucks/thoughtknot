@@ -1,6 +1,6 @@
 // The desktop app's window run in a DOM (jsdom), for the journey and the WCAG check (spec §41, standalone_app). The
 // window's files are built as the app is built (esbuild.config.mjs). Tauri's `invoke` is a stand-in that answers the
-// app's seven commands over a real folder, as the Rust does (src-tauri/src/place.rs). So what runs is the app's own
+// app's eight commands over a real folder, as the Rust does (src-tauri/src/place.rs). So what runs is the app's own
 // script and the browser editor's page, unchanged. Test code only: `cleanUpApp` puts away what was built and opened.
 import { promises as fs, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -39,12 +39,16 @@ export function builtApp() {
 /** `name` with `n` before its ending, as the Rust numbers a name taken. */
 const numbered = (name, n) => (n === 1 ? name : name.replace(/(\.[^.]+)$/, `-${n}$1`));
 
-/** Tauri's invoke, answered as the app's commands answer, over `root`: `picked` is what the folder dialog gives. */
-export function fakeInvoke(root, picked = null) {
+/**
+ * Tauri's invoke, answered as the app's commands answer, over `root`. `picked` is what the folder dialog gives. `own`
+ * is the name of the app's own folder on a phone, and none on a computer.
+ */
+export function fakeInvoke(root, picked = null, own = null) {
   const at = (path) => join(root, ...path.split('/').filter(Boolean));
   const said = (e) => Promise.reject(e?.code === 'ENOENT' ? 'ENOENT' : String(e?.message ?? e));
   const commands = {
     pick_folder: async () => picked,
+    own_folder: async () => own,
     read_dir: async ({ path }) =>
       (await fs.readdir(at(path), { withFileTypes: true })).map((d) => [d.name, d.isDirectory()]),
     read_text: async ({ path }) => fs.readFile(at(path), 'utf8'),
