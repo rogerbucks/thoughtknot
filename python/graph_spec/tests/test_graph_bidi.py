@@ -34,7 +34,7 @@ class BidiLabels(unittest.TestCase):
     def test_the_themed_drawing_sets_apart_a_right_to_left_label(self):
         svg = '<svg width="10pt" height="10pt">'
         svg += '<text fill="#0000fd">مرحبا</text><text>Ann</text></svg>'
-        out = graph_svg._themed(svg, [])
+        out = graph_svg.themed(svg, [])
         self.assertIn(">&#x2068;مرحبا&#x2069;</text>", out)
         self.assertIn(">Ann</text>", out)
 

@@ -17,7 +17,7 @@ from typing import Any
 from graphspec.reader.drawing import read_for_drawing
 from graphspec.rules.plain_graph import World
 from graphspec.rules.shown_text import shown_text
-from graphspec.rules.views import SCHEMA_LABELS, _word, readings
+from graphspec.rules.views import SCHEMA_LABELS, readings, word
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
 from graphspec.style.flow import flow_links
@@ -56,7 +56,7 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     links = [(s, t, d, p) for s, t, d, p in g.edges if s in drawn and d in drawn]
     return {
         "nodes": [(i, kind(i), text(i)) for i in ids],
-        "edges": [(s, _word(words, t), d) for s, t, d, _ in links],
+        "edges": [(s, word(words, t), d) for s, t, d, _ in links],
         "suggested": {
             p["suggested"] for p in problems if p.get("suggested") and p["graph"] == graph
         },

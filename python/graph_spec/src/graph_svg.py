@@ -13,8 +13,7 @@ Why Graphviz: a diagram whose relationships get a little complex was almost impo
 Mermaid's flowchart layout, which leaves crossings in and drops edge labels on top of each other.
 Graphviz's dot is built for layered graphs: it minimises crossings and gives every edge label its
 own space. So the layout is Graphviz's, and the drawing is designed around it:
-- things of one kind stand in one column when no link joins two of them, so the eye reads kind by
-  kind;
+- things of one kind stand in one column when no link joins two of them, so the eye reads by kind;
 - each box says its kind in small capitals above its text, and its kind's colour repeats that —
   colour is never the only cue;
 - long text wraps at about 22 characters, so columns stay narrow and the drawing fits a note with
@@ -234,7 +233,7 @@ def drawn_source(
     return quick_source(src, len(nodes)), kinds, readings
 
 
-def _themed(svg, kinds, readings=()):
+def themed(svg: str, kinds: list, readings: tuple | list = ()) -> str:
     """Swap the placeholder colours for Obsidian theme variables, as inline styles, and make the
     SVG fit a note."""
     style = STYLE
@@ -372,17 +371,19 @@ def render(
         )
         if best is None or fit > best[0] + 0.02:
             best = (fit, svg, kinds, readings)
-    return _themed(*best[1:])
+    return themed(*best[1:])
 
 
 if __name__ == "__main__":
-    print(
-        render(
-            [
-                ("q", "Question", "Which device?"),
-                ("o", "Option", "A tablet"),
-                ("r", "Reason", "It costs nothing extra"),
-            ],
-            [("o", "answers", "q"), ("r", "favours", "o")],
-        )
-    )
+    nodes = [("q", "Question", "Which device?"), ("o", "Option", "A tablet")]
+    nodes.append(("r", "Reason", "It costs nothing extra"))
+    print(render(nodes, [("o", "answers", "q"), ("r", "favours", "o")]))
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+arrowless_source available directions DOT dot_source drawn_source drawn_svg flow_source
+folded_source HERE inline_source nudged_source picture_source QUICK_SETTINGS quick_source
+render render_args routed_source STYLE themed typed_source
+""".split()
+_themed = themed  # the old private name, which tests and the vault used (entry_points.json)

@@ -87,14 +87,14 @@ class Settings(unittest.TestCase):
 
     def test_instants_are_projected_at_utc_plus_ten(self):
         instant = dt.datetime(2026, 10, 7, 8, 30)  # UTC, as the reader keeps it
-        self.assertEqual(gr._iso(instant), "2026-10-07T18:30:00+10:00")
+        self.assertEqual(gr.iso(instant), "2026-10-07T18:30:00+10:00")
         self.assertEqual(gs.iso(instant), "2026-10-07T18:30:00+10:00")
 
     def test_old_instants_too_with_no_summer_time(self):
         instant = dt.datetime(
             1990, 1, 15, 0, 0
         )  # a summer when one zone at UTC+10 kept daylight saving
-        self.assertEqual(gr._iso(instant), "1990-01-15T10:00:00+10:00")
+        self.assertEqual(gr.iso(instant), "1990-01-15T10:00:00+10:00")
         self.assertEqual(gs.iso(instant), "1990-01-15T10:00:00+10:00")
 
 

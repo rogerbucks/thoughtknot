@@ -17,8 +17,22 @@ dependencies = [
 # 0.5.43 is the GQL dialect the graph spec names, and the reference the reader is proved against.
 grafeo = ["grafeo==0.5.43"]
 
+# A wheel for the release (risk API-6): the flat modules of src/ and the graphspec package, at the top level as the
+# library imports them. Hatchling is pinned, as every tool is.
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+only-include = ["src"]
+exclude = ["__pycache__"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src", "pyproject.toml"]
+
 [tool.uv]
-# The modules are flat files in src/, imported by path, so there is nothing to build.
+# A working copy imports the modules from src/ by path, so it installs nothing of its own; `uv build` makes the wheel.
 package = false
 # a working copy has the tools and the reference engine; --no-default-groups is a plain install
 default-groups = ["dev", "reference"]
