@@ -16,7 +16,7 @@ import { pageSources } from './editor-page-support.js';
 /** Registers the cases; `at` makes a repository path absolute, `importsOf` lists the modules a source file imports. */
 export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
   describe('C6: the page’s export is the shared export (cc_export_same)', () => {
-    const core = (m) => import(at(`packages/core/src/${m}.ts`));
+    const core = (m) => import(pathToFileURL(at(`packages/core/src/${m}.ts`)).href);
     const DATE = '2026-10-16';
     const NOTE = "// graph: trip\n(a:Place {name: 'Home'}),\n(b:Place {name: 'Park'}),\n(a)-[:NEAR]->(b)";
     const fenced = (body, front = '') => `${front}# Trip\n\n\`\`\`gql\n${body}\n\`\`\`\n`;
@@ -52,7 +52,7 @@ export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
       return { x: { ...base, ...over }, log };
     }
     const ASK = { path: 'Trips/Trip.md', graph: 'trip', format: 'svg', theme: 'light' };
-    const run = async (x, ask) => (await import(`${at('packages/claude-code/page')}/export-run.ts`)).runExport(x, ask);
+    const run = async (x, ask) => (await import(pathToFileURL(`${at('packages/claude-code/page')}/export-run.ts`).href)).runExport(x, ask);
     const reading = async (text) => {
       const { readNote } = await core('drawing');
       const { gqlBlocks } = await core('blocks');

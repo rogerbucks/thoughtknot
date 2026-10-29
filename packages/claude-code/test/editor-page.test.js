@@ -121,7 +121,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
   });
 
   test('no host is installed until the page or the plugin installs one, and a missing one is said', async () => {
-    const { installHost, displayHost, NO_HOST } = await import(`${at(LAYER)}/host.ts`);
+    const { installHost, displayHost, NO_HOST } = await import(pathToFileURL(`${at(LAYER)}/host.ts`).href);
     assert.throws(
       () => displayHost(),
       (e) => e.message === NO_HOST,
@@ -132,7 +132,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
   });
 
   test('the layer’s own lifecycle loads, unloads and takes back every listener and child', async () => {
-    const { Lifecycle } = await import(`${at(LAYER)}/lifecycle.ts`);
+    const { Lifecycle } = await import(pathToFileURL(`${at(LAYER)}/lifecycle.ts`).href);
     const said = [];
     class Card extends Lifecycle {
       onload() {
@@ -171,7 +171,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
   });
 
   test('the DOM helpers the layer draws with are put on a plain window, and only where they are missing', async () => {
-    const { installDomHelpers } = await import(`${at(LAYER)}/dom-helpers.ts`);
+    const { installDomHelpers } = await import(pathToFileURL(`${at(LAYER)}/dom-helpers.ts`).href);
     class Node_ {
       constructor(tag) {
         this.tag = tag;
@@ -301,7 +301,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
   const sources = () => pageSources();
   const allSource = () => Object.values(sources()).join('\n');
   const hostWith = async () => {
-    const { browserHost } = await import(`${at('packages/claude-code/page')}/browser-host.ts`);
+    const { browserHost } = await import(pathToFileURL(`${at('packages/claude-code/page')}/browser-host.ts`).href);
     const doc = fakeDocument(700);
     doc.getElementById = () => null;
     Object.defineProperty(FakeElement.prototype, 'style', { get: () => ({}), configurable: true });
@@ -338,7 +338,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
   });
 
   test('cc_text_not_html: raw HTML is shown as text, a link only to a web or mail address, an image never loaded', async () => {
-    const { markdownHtml } = await import(`${at('packages/claude-code/page')}/markdown.ts`);
+    const { markdownHtml } = await import(pathToFileURL(`${at('packages/claude-code/page')}/markdown.ts`).href);
     const html = markdownHtml(
       '**ok** <script>alert(1)</script> <img src=x onerror=alert(1)> [a](javascript:alert(1)) [b](  JaVaScRiPt:x) ' +
         '[c](https://example.com "t") ![i](https://evil.example/p.png)\n\n<div onclick="x">block</div>\n\n<!-- c -->',
@@ -407,8 +407,8 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
   });
 
   test('cc_theme_follows: the core’s light and dark colours, under the scheme the system is in, at the locked contrast', async () => {
-    const { themeCss } = await import(`${at('packages/claude-code/page')}/theme-css.ts`);
-    const { THEME_COLOURS } = await import(at('packages/core/src/palette.ts'));
+    const { themeCss } = await import(pathToFileURL(`${at('packages/claude-code/page')}/theme-css.ts`).href);
+    const { THEME_COLOURS } = await import(pathToFileURL(at('packages/core/src/palette.ts')).href);
     const [light, dark] = themeCss().split('@media (prefers-color-scheme: dark)');
     const luminance = (hex) =>
       [1, 3, 5]
@@ -431,7 +431,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       assert.ok(ratio(t.text, t.page) >= 4.5 && ratio(t.muted, t.page) >= 4.5, 'text and muted text reach 4.5:1');
     }
     const doc = fakeDocument(700);
-    const { showGraph } = await import(`${at('packages/claude-code/page')}/graph-section.ts`);
+    const { showGraph } = await import(pathToFileURL(`${at('packages/claude-code/page')}/graph-section.ts`).href);
     const themes = [];
     let change;
     const query = { matches: true, addEventListener: (_t, f) => (change = f) };
@@ -502,7 +502,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       [],
       'every call is to the server’s /api/',
     );
-    const { serverCalls, takeFragment } = await import(`${at('packages/claude-code/page')}/server-calls.ts`);
+    const { serverCalls, takeFragment } = await import(pathToFileURL(`${at('packages/claude-code/page')}/server-calls.ts`).href);
     const asked = [];
     const calls = serverCalls(
       'tok',
@@ -528,7 +528,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
 
   test('cc_settings_shared: the page is told the mod’s settings, read only', async () => {
     const { settingsFrom } = await import('@thoughtknot/core');
-    const { settingsEnvironment } = await import(at('packages/claude-code/src/editor-settings-env.ts'));
+    const { settingsEnvironment } = await import(pathToFileURL(at('packages/claude-code/src/editor-settings-env.ts')).href);
     const saved = {
       classifications: ['Public', 'Secret'],
       aiUnlabelled: 'Public',
@@ -536,7 +536,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       direction: 'LR',
       aiModels: [{ name: 'Claude', ceiling: 'Public', endpoint: 'https://x.example/v1', model: 'm' }],
     };
-    const { settingsForServer } = await import(at('packages/claude-code/src/editor-launch.ts'));
+    const { settingsForServer } = await import(pathToFileURL(at('packages/claude-code/src/editor-launch.ts')).href);
     const sent = settingsEnvironment(saved, settingsForServer(saved));
     const keys = Object.keys(JSON.parse(sent));
     for (const k of ['aiModels', 'aiUnlabelled', 'classifications', 'direction', 'indent'])
@@ -559,7 +559,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
     assert.doesNotMatch(sources()['server-calls.ts'], /PUT|method:/);
   });
   test('the note’s id is encoded in the address’s fragment, so no character in it can add or end a field', async () => {
-    const { pageAddress } = await import(at('packages/claude-code/server/editor-process.ts'));
+    const { pageAddress } = await import(pathToFileURL(at('packages/claude-code/server/editor-process.ts')).href);
     const url = new URL(pageAddress('http://127.0.0.1:1', 'tok', 'a%b+c&d#e'));
     const fields = new URLSearchParams(url.hash.slice(1));
     assert.deepEqual([...fields.keys()], ['token', 'note']);
@@ -568,7 +568,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
   });
 
   test('a start with no built page fails in plain words, and never serves the page’s source folder', async () => {
-    const { pageFiles } = await import(at('packages/claude-code/server/editor-main.ts'));
+    const { pageFiles } = await import(pathToFileURL(at('packages/claude-code/server/editor-main.ts')).href);
     const here = mkdtempSync(join(tmpdir(), 'thoughtknot-nopage-'));
     try {
       await assert.rejects(() => pageFiles(join(here, 'bin')), /not built/);
