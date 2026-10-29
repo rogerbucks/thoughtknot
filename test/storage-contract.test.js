@@ -92,7 +92,7 @@ const BACKENDS = {
 
 for (const [name, make] of Object.entries(BACKENDS)) {
   describe(`notes kept in ${name} pass the storage contract`, () => {
-    for (const check of storageContract(make)) test(check.name, check.run);
+    for (const check of storageContract(make, { windows: process.platform === 'win32' })) test(check.name, check.run);
   });
 }
 
