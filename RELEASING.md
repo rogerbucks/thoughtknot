@@ -62,6 +62,32 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
 6. **Publish the draft.** `release.yml` makes a draft release with the assets and the notes. Read the notes, then
    publish it. The nightly fails while a draft has waited more than a day, so a forgotten draft is seen.
 
+## Listing in the community directory
+
+Roger files this, once, after the first stable release is published. Obsidian reviews the listing by hand, then
+lists the plug-in. Claude cannot file it.
+
+1. Check the release is published (not a draft), its tag is the bare version in `manifest.json`, and it holds `main.js`,
+   `manifest.json` and `styles.css`.
+2. Fork `obsidianmd/obsidian-releases`. Add this entry to the end of `community-plugins.json`, and open a pull request
+   with the title `Add plugin: ThoughtKnot`:
+
+```json
+{
+  "id": "thoughtknot",
+  "name": "ThoughtKnot",
+  "author": "Roger Bucks",
+  "description": "Draw the graphs written in your notes, and edit them as text, in place or beside the note.",
+  "repo": "rogerbucks/thoughtknot"
+}
+```
+
+3. Fill in the pull request's checklist as it asks. Answer review comments there. A later version needs no new
+   listing: Obsidian reads each new release's `manifest.json`.
+
+`test/community-listing.test.js` holds this entry to the manifest, so a change to the name or the description
+fails CI until the entry here is changed too.
+
 ## Going back
 
 A release is never taken back by rewriting history. A bad release is followed by a patch release with the fix, cut as
