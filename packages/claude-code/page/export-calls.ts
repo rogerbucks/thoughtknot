@@ -5,7 +5,7 @@
 // The page names no folder or path of its own. The server writes the files only as new ones in the export folder. It
 // answers the names they were given (a number is added to one that was taken). The token is the one the page holds,
 // passed in. Every address is from the server's root.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 
 /** One file of an export: its name alone, with its text or its bytes. */
 export interface SavedFile {

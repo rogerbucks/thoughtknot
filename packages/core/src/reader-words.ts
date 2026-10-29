@@ -5,7 +5,7 @@
 // words against its own code's template. Then it says the catalogue's words for that code, with the same values.
 // Matching a code's own template is safe: the template never changes, unlike other English text. A code it does not
 // know, or words that do not fit their template, are said as the reader gave them, so nothing is lost.
-import TABLE from '../../graph-spec/src/reader/problem-codes.json' with { type: 'json' };
+import TABLE from '@thoughtknot/graph-spec/problem-codes.json' with { type: 'json' };
 import { formatCount, formatSeries } from './locale-formats.ts';
 import { READER_KEYS } from './reader-source-words.ts';
 import { word } from './words.ts';

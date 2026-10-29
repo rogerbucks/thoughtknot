@@ -1479,6 +1479,13 @@
           "interface",
           "name: string"
         ],
+        "HostModel": [
+          "interface",
+          "address: string",
+          "ceiling: string",
+          "model: string",
+          "name: string"
+        ],
         "HostOffer": [
           "interface",
           "files?: FilesOffer | undefined",

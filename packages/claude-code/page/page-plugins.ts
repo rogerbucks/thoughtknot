@@ -7,18 +7,18 @@
 // - A diagram type it adds draws the note's graph when the graph's style graph chooses that type. The page shows the
 //   core's picture of the marks it gave, as an image that runs nothing. Otherwise it says why in words.
 // - A plug-in left out, or one that could not start, is said by its name, with why.
-import { gqlBlocks } from '../../core/src/blocks.ts';
-import { adoptTokens } from '../../core/src/display/plugin-tokens.ts';
-import { readNote } from '../../core/src/drawing.ts';
-import { isolatedPlugin } from '../../core/src/plugin-isolated.ts';
-import type { PluginPort } from '../../core/src/plugin-isolated.ts';
-import { pluginRegistry } from '../../core/src/plugins.ts';
-import { offerLayouts, offerOf } from '../../core/src/layouts/offered.ts';
-import type { PluginRegistry } from '../../core/src/plugins.ts';
-import { readStyle } from '../../core/src/style.ts';
-import { diagramFor, shapeOf } from '../../core/src/types.ts';
-import { PICTURE_SPACE } from '../../core/src/display/graph-view/type-strip.ts';
-import { word } from '../../core/src/words.ts';
+import { gqlBlocks } from '@thoughtknot/core';
+import { adoptTokens } from '@thoughtknot/core/display/plugin-tokens';
+import { readNote } from '@thoughtknot/core';
+import { isolatedPlugin } from '@thoughtknot/core';
+import type { PluginPort } from '@thoughtknot/core';
+import { pluginRegistry } from '@thoughtknot/core';
+import { offerLayouts, offerOf } from '@thoughtknot/core';
+import type { PluginRegistry } from '@thoughtknot/core';
+import { readStyle } from '@thoughtknot/core';
+import { diagramFor, shapeOf } from '@thoughtknot/core';
+import { PICTURE_SPACE } from '@thoughtknot/core/display/graph-view/type-strip';
+import { word } from '@thoughtknot/core';
 
 /** A plug-in as the server lists it: one it serves, by its SHA-256, or one it left out, and why. */
 export type ListedPlugin = { name: string; sha: string } | { name: string; why: string };

@@ -5,12 +5,12 @@
 // - `decide` is the user's accept or reject. It gives back the note's new text. The page sends it through its own,
 //   version-checked write.
 // The decider is the name set in the settings, else "you". What proposed a change, Claude among it, cannot decide it.
-import { gqlSpans } from '../../core/src/blocks.ts';
-import { deciderName } from '../../core/src/proposals-judgement.ts';
-import { ProposalReview } from '../../core/src/proposals-review.ts';
-import type { ProposalShown, Reviewed, Which } from '../../core/src/proposals-shown.ts';
-import { changeSetId } from '../../core/src/proposals-text.ts';
-import { word } from '../../core/src/words.ts';
+import { gqlSpans } from '@thoughtknot/core';
+import { deciderName } from '@thoughtknot/core';
+import { ProposalReview } from '@thoughtknot/core';
+import type { ProposalShown, Reviewed, Which } from '@thoughtknot/core';
+import { changeSetId } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** One proposal as the card shows it. */
 export interface Card {
