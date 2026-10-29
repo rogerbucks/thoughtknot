@@ -67,6 +67,9 @@ const ANSWERS = {
 
 let log = '';
 
+// The stand-in is a script. The server runs gh as a program, without a shell, and Windows starts only an .exe so
+const NO_STAND_IN = process.platform === 'win32' && 'Windows runs the stand-in gh, a script, only through a shell';
+
 /** The stand-in gh, first on the PATH, with a token in the environment the server must not hand on. */
 before(() => {
   const bin = mkdtempSync(join(tmpdir(), 'gh-stand-in-'));
@@ -122,76 +125,92 @@ const json = (r) => JSON.parse(r.text);
 
 describe('the repository’s changes, read from GitHub by the user’s gh', () => {
   // proves: github_review_items
-  test('are read only when asked: pull requests first, then commits and merges, each named as an item', async () => {
-    const v = repoVault();
-    const { s, id } = await opened(v);
-    const already = asked().length;
-    const got = await get(s, id, '/reviews');
-    assert.equal(got.status, 200);
-    assert.deepEqual(
-      json(got).items.map((i) => [i.kind, i.id, i.title, i.author]),
-      [
-        ['pull', '7', 'Finish is Done', 'roger'],
-        ['merge', MERGE, 'Merge pull request #7', 'roger'],
-        ['commit', COMMIT, 'Tidy', 'Ann'],
-      ],
-    );
-    assert.equal(asked().length - already, 2);
-  });
+  test(
+    'are read only when asked: pull requests first, then commits and merges, each named as an item',
+    { skip: NO_STAND_IN },
+    async () => {
+      const v = repoVault();
+      const { s, id } = await opened(v);
+      const already = asked().length;
+      const got = await get(s, id, '/reviews');
+      assert.equal(got.status, 200);
+      assert.deepEqual(
+        json(got).items.map((i) => [i.kind, i.id, i.title, i.author]),
+        [
+          ['pull', '7', 'Finish is Done', 'roger'],
+          ['merge', MERGE, 'Merge pull request #7', 'roger'],
+          ['commit', COMMIT, 'Tidy', 'Ann'],
+        ],
+      );
+      assert.equal(asked().length - already, 2);
+    },
+  );
 
   // proves: github_review_items
-  test('read only: GET on github.com alone, through gh’s own sign-in, never handed a token', async () => {
-    const v = repoVault();
-    const { s, id } = await opened(v);
-    await get(s, id, '/reviews');
-    await get(s, id, '/reviews/pull/7');
-    const all = asked();
-    assert.ok(all.length > 0);
-    for (const { args, env } of all) {
-      assert.deepEqual(args.slice(0, 5), ['api', '--method', 'GET', '--hostname', 'github.com']);
-      assert.ok(args.at(-1).startsWith('repos/acme/notes/'), args.at(-1));
-      assert.ok(!env.includes('GH_TOKEN') && !env.includes('GITHUB_TOKEN'), env.join(' '));
-      assert.ok(env.includes('GH_PROMPT_DISABLED'));
-    }
-  });
+  test(
+    'read only: GET on github.com alone, through gh’s own sign-in, never handed a token',
+    { skip: NO_STAND_IN },
+    async () => {
+      const v = repoVault();
+      const { s, id } = await opened(v);
+      await get(s, id, '/reviews');
+      await get(s, id, '/reviews/pull/7');
+      const all = asked();
+      assert.ok(all.length > 0);
+      for (const { args, env } of all) {
+        assert.deepEqual(args.slice(0, 5), ['api', '--method', 'GET', '--hostname', 'github.com']);
+        assert.ok(args.at(-1).startsWith('repos/acme/notes/'), args.at(-1));
+        assert.ok(!env.includes('GH_TOKEN') && !env.includes('GITHUB_TOKEN'), env.join(' '));
+        assert.ok(env.includes('GH_PROMPT_DISABLED'));
+      }
+    },
+  );
 
   // proves: github_review_items
-  test('a pull request opens with its files before and after, from where it left its base', async () => {
-    const v = repoVault('https://github.com/acme/notes');
-    const { s, id } = await opened(v);
-    await get(s, id, '/reviews');
-    const got = await get(s, id, '/reviews/pull/7');
-    assert.equal(got.status, 200);
-    const { files, withheld, workstreams, unread } = json(got);
-    assert.deepEqual(files, [
-      { path: 'Notes/plan.md', before: PLAN, after: PLAN_THEIRS },
-      { path: 'old.md', before: 'Gone.\n', after: null },
-      { path: '../escape.md', before: null, after: null },
-    ]);
-    // a credential and a classification above the ceiling are named, never sent
-    assert.deepEqual(
-      withheld.map((w) => w.path),
-      ['keys.md', 'board.md'],
-    );
-    assert.match(withheld[0].why, /access key/);
-    assert.doesNotMatch(got.text, new RegExp(KEY));
-    assert.doesNotMatch(got.text, /board’s plan/);
-    assert.match(workstreams, /Plans/);
-    assert.equal(unread, 0);
-    assert.equal(FILES_READ, 50);
-  });
+  test(
+    'a pull request opens with its files before and after, from where it left its base',
+    { skip: NO_STAND_IN },
+    async () => {
+      const v = repoVault('https://github.com/acme/notes');
+      const { s, id } = await opened(v);
+      await get(s, id, '/reviews');
+      const got = await get(s, id, '/reviews/pull/7');
+      assert.equal(got.status, 200);
+      const { files, withheld, workstreams, unread } = json(got);
+      assert.deepEqual(files, [
+        { path: 'Notes/plan.md', before: PLAN, after: PLAN_THEIRS },
+        { path: 'old.md', before: 'Gone.\n', after: null },
+        { path: '../escape.md', before: null, after: null },
+      ]);
+      // a credential and a classification above the ceiling are named, never sent
+      assert.deepEqual(
+        withheld.map((w) => w.path),
+        ['keys.md', 'board.md'],
+      );
+      assert.match(withheld[0].why, /access key/);
+      assert.doesNotMatch(got.text, new RegExp(KEY));
+      assert.doesNotMatch(got.text, /board’s plan/);
+      assert.match(workstreams, /Plans/);
+      assert.equal(unread, 0);
+      assert.equal(FILES_READ, 50);
+    },
+  );
 
   // proves: github_review_items
-  test('a commit opens against its parent; nothing is opened that was not listed, and no address is taken', async () => {
-    const v = repoVault();
-    const { s, id } = await opened(v);
-    assert.equal((await get(s, id, `/reviews/commit/${COMMIT}`)).status, 404);
-    await get(s, id, '/reviews');
-    const got = await get(s, id, `/reviews/commit/${COMMIT}`);
-    assert.deepEqual(json(got).files, [{ path: 'Notes/plan.md', before: PLAN, after: PLAN_THEIRS }]);
-    for (const tail of ['/reviews/pull/8', `/reviews/pull/${COMMIT}`, '/reviews/issue/7', '/reviews/pull/7/files'])
-      assert.equal((await get(s, id, tail)).status, 404, tail);
-  });
+  test(
+    'a commit opens against its parent; nothing is opened that was not listed, and no address is taken',
+    { skip: NO_STAND_IN },
+    async () => {
+      const v = repoVault();
+      const { s, id } = await opened(v);
+      assert.equal((await get(s, id, `/reviews/commit/${COMMIT}`)).status, 404);
+      await get(s, id, '/reviews');
+      const got = await get(s, id, `/reviews/commit/${COMMIT}`);
+      assert.deepEqual(json(got).files, [{ path: 'Notes/plan.md', before: PLAN, after: PLAN_THEIRS }]);
+      for (const tail of ['/reviews/pull/8', `/reviews/pull/${COMMIT}`, '/reviews/issue/7', '/reviews/pull/7/files'])
+        assert.equal((await get(s, id, tail)).status, 404, tail);
+    },
+  );
 
   // proves: github_review_items
   test('a repository not on github.com, or a note held by the gate, reads nothing and says why', async () => {
