@@ -55,9 +55,14 @@ describe('finding Chrome', () => {
     );
     assert.throws(
       () =>
-        findChrome(undefined, () => {
-          throw new Error('not found');
-        }),
+        findChrome(
+          undefined,
+          () => {
+            throw new Error('not found');
+          },
+          // a Mac or a Windows PC would find its installed one
+          { exists: () => false },
+        ),
       /no Chrome found/,
     );
   });
