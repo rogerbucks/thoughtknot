@@ -5,17 +5,10 @@
   ],
   "not-written": [
     "android_app",
-    "boundary_contract",
     "community_listing",
-    "corporate_filtered_views",
-    "corporate_personal_split",
     "developer_site",
     "ios_app",
-    "mobile_checked",
-    "open_no_lock_in",
-    "platform_security_first",
-    "portable_no_servers",
-    "web_layer_separate"
+    "mobile_checked"
   ],
   "uncited": [
     "test_abuse",

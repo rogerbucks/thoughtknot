@@ -1,0 +1,14 @@
+{
+  "name": "@thoughtknot/web",
+  "version": "0.7.1",
+  "private": true,
+  "description": "The web layer: a read-only site of static files, built from a parcel that crossed the boundary, to host anywhere the owner controls. No server, and no device's store.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@thoughtknot/boundary": "0.7.1"
+  }
+}

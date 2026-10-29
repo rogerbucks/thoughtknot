@@ -117,6 +117,9 @@
         "animationSaid": [
           "value: (said: readonly string[], say?: Say) => string"
         ],
+        "applyBoundary": [
+          "value: (g: Pick<Graph, 'nodes' | 'edges'>, setting: CorporateSetting) => Bounded"
+        ],
         "applyChanges": [
           "value: (text: string, changes: TextChange[]) => string"
         ],
@@ -198,6 +201,12 @@
           "interface",
           "line: number",
           "text: string"
+        ],
+        "Bounded": [
+          "interface",
+          "aiAssisted: Array<string>",
+          "gaps: Array<{ kind: 'redacted'; thing: string; key?: string; }>",
+          "graph: Pick<Graph, 'nodes' | 'edges'>"
         ],
         "Bounds": [
           "interface",
@@ -553,6 +562,11 @@
         "coreDiagramType": [
           "value: (type: DiagramType) => string"
         ],
+        "CorporateSetting": [
+          "interface",
+          "aiLabel: string",
+          "redact: ReadonlyArray<Redaction>"
+        ],
         "corporateView": [
           "value: (world: World) => World"
         ],
@@ -593,8 +607,14 @@
           "date: string",
           "note: string"
         ],
+        "DataLink": [
+          "type = [from: string, type: string, to: string, properties: Record<string, Value>]"
+        ],
         "dataText": [
           "value: (data: ExportedData, format: DataFormat, info: DataInfo) => string"
+        ],
+        "DataThing": [
+          "type = [id: string, kinds: Array<string>, properties: Record<string, Value>]"
         ],
         "DbImported": [
           "type = { block: string; } | { refused: string; }"
@@ -1274,6 +1294,9 @@
         "glideAt": [
           "value: (from: Place, to: Place, t: number) => Place"
         ],
+        "gqlBlock": [
+          "value: (data: ExportedData, info: DataInfo) => string"
+        ],
         "gqlBlocks": [
           "value: (note: string) => Block[]"
         ],
@@ -1383,6 +1406,13 @@
         ],
         "groupValues": [
           "value: (reading: NoteReading, d: GraphDrawing, by: string) => Map<string, string>"
+        ],
+        "Guarded": [
+          "interface",
+          "id?: string | undefined",
+          "likelihood?: string | undefined",
+          "path: string",
+          "tags?: ReadonlyArray<string> | undefined"
         ],
         "GuardTried": [
           "interface",
@@ -2695,6 +2725,20 @@
         "pathWords": [
           "value: (text: (key: string) => string, from: string, to: string, found: PathFound | null) => string"
         ],
+        "Permissions": [
+          "class",
+          "static new (graph: PermissionGraph, now?: () => string): Permissions",
+          "allows: (person: string, access: Access, thing: Guarded) => boolean",
+          "allRules: () => GrantRule[]",
+          "check: (person: string, access: Access, thing: Guarded) => Answer",
+          "gives: (grant: GrantView, access: Access, thing: Guarded) => Answer",
+          "grants: (person?: string) => GrantView[]",
+          "readonly graph: PermissionGraph",
+          "readonly owner: string | null",
+          "people: () => string[]",
+          "rolesOf: (person: string) => string[]",
+          "rulesOf: (role: string) => GrantRule[]"
+        ],
         "Person": [
           "interface",
           "name: string"
@@ -3252,6 +3296,9 @@
         "READ_LIMITS": [
           "value: ReadLimits"
         ],
+        "readable": [
+          "value: (permissions: Permissions, person: string, things: readonly Guarded[]) => Guarded[]"
+        ],
         "READABLE_SCALE": [
           "value: number"
         ],
@@ -3289,6 +3336,12 @@
         ],
         "recentLenses": [
           "value: (runs: readonly LensRun[], now: string, count?: number) => LensFreshness[]"
+        ],
+        "Redaction": [
+          "interface",
+          "key?: string | undefined",
+          "label?: string | undefined",
+          "tag?: string | undefined"
         ],
         "reducedWords": [
           "value: () => string"
