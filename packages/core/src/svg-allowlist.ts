@@ -31,13 +31,48 @@ const IN_PAGE = /^#[\w.:-]*$/;
 const RASTER = /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/=\s]*$/;
 /** A url() to anything but the drawing's own parts, or a style sheet brought in from elsewhere. */
 const OUTSIDE = /url\s*\(\s*(?!['"]?#)|@import|expression\s*\(|javascript:/i;
-const ATTRIBUTE = /\s+([^\s=/>]+)(?:\s*=\s*("[^"]*"|'[^']*'))?/g;
-const TAG = /^<(\/?)([A-Za-z][\w:.-]*)((?:\s+[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/;
+/** A start or end tag where the scan stands (sticky, so it never copies or rescans the rest of the drawing). */
+const TAG = /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/y;
+const SPACE = /\s/;
+
+/**
+ * The attributes of a start tag the tag pattern has passed, each as written with the space before it. A scan by hand,
+ * one pass over the text: a pattern over every place could take time growing with the square of a run of spaces.
+ */
+function attributesOf(written: string): { whole: string; name: string; quoted?: string }[] {
+  const out: { whole: string; name: string; quoted?: string }[] = [];
+  const skip = (i: number) => {
+    while (i < written.length && SPACE.test(written.charAt(i))) i += 1;
+    return i;
+  };
+  let i = 0;
+  while (i < written.length) {
+    const start = i;
+    i = skip(i);
+    const from = i;
+    while (i < written.length && !SPACE.test(written.charAt(i)) && !'=/>'.includes(written.charAt(i))) i += 1;
+    if (i === from) break;
+    const name = written.slice(from, i);
+    const eq = skip(i);
+    let quoted: string | undefined;
+    if (written.charAt(eq) === '=') {
+      const open = skip(eq + 1);
+      const mark = written.charAt(open);
+      const close = written.indexOf(mark, open + 1);
+      if ((mark === '"' || mark === "'") && close > open) {
+        quoted = written.slice(open, close + 1);
+        i = close + 1;
+      }
+    }
+    out.push({ whole: written.slice(start, i), name, quoted });
+  }
+  return out;
+}
 
 /** The attributes of one start tag that may stay, as they were written; null when the element must go. */
 function keptAttributes(element: string, written: string): string | null {
   const kept: string[] = [];
-  for (const [whole, name = '', quoted] of written.matchAll(ATTRIBUTE)) {
+  for (const { whole, name, quoted } of attributesOf(written)) {
     const value = quoted === undefined ? '' : quoted.slice(1, -1);
     if (!NAME.test(name) || /^on/i.test(name)) continue;
     if (/^xmlns(:|$)/i.test(name) && value !== SVG_NS && value !== XLINK_NS) continue;
@@ -84,7 +119,8 @@ export function cleanSvg(svg: string): string {
       at = end('>', bracket >= 0 && (gt < 0 || bracket < gt) ? end(']', bracket) : at);
     } else if (svg.startsWith('<?', at)) at = end('?>', at);
     else {
-      const m = TAG.exec(svg.slice(at));
+      TAG.lastIndex = at;
+      const m = TAG.exec(svg);
       if (!m) {
         if (!dropped) out += '&lt;';
         at += 1;
