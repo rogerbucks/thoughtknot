@@ -29,6 +29,7 @@ import {
   pathsOf,
   readNote,
   readStyle,
+  sketchInNote,
   word,
   writeSafely,
 } from '@thoughtknot/core';
@@ -178,6 +179,7 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
       theme: ask.theme,
       ...styling,
       ...(walk ? { walk } : {}),
+      sketch: sketchInNote(text, ask.graph)?.sketch ?? null, // the drawings over it, so the file shows them (§70)
       note: ask.path,
       date,
       go,

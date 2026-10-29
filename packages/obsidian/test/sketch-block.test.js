@@ -118,3 +118,48 @@ describe('the drawings already in the note', () => {
     }
   });
 });
+
+describe('drawing by keyboard', () => {
+  // proves: sketch_keyboard
+  test('a tool draws on the thing selected on the card, and says to select one first', async () => {
+    const { env, el, vp, at, boxOf, placeOf } = await card(noteOf(TEAM));
+    try {
+      buttonOf(el, 'Draw').click();
+      buttonOf(el, 'Ellipse').click();
+      buttonOf(el, 'Draw on the selected thing').click();
+      assert.equal(
+        el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent,
+        'Select a thing first, then draw on it.',
+      );
+      buttonOf(el, 'Done drawing').click();
+      const p = at(placeOf('bob').x, placeOf('bob').y);
+      vp.dispatch('pointerdown', mouse(5, boxOf('bob'), p));
+      vp.dispatch('pointerup', mouse(5, boxOf('bob'), p));
+      buttonOf(el, 'Draw').click();
+      buttonOf(el, 'Ellipse').click();
+      buttonOf(el, 'Draw on the selected thing').click();
+      await until(() => /SKETCH ON team/.test(env.state.files.get(PATH)));
+      await settled();
+      assert.match(env.state.files.get(PATH), /\(d1:Shape \{x: 0, y: 0, pin: 'bob', shape: 'ellipse'\}\)/);
+      assert.match(el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent, /^Drawn: /);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: sketch_keyboard
+  test('Next drawing selects each drawing in turn and says what it is', async () => {
+    const { env, el } = await card(noteOf(TEAM, INKED));
+    try {
+      buttonOf(el, 'Next drawing').click();
+      assert.ok(layerOf(el).querySelector('[data-sketch]').classList.contains('is-selected'));
+      assert.match(
+        el.querySelector('.thoughtknot-sketch-tools .thoughtknot-walk-said').textContent,
+        /^Selected: .*Ann/,
+      );
+      assert.ok(buttonOf(el, 'Delete drawing'), 'and it can be deleted from there');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
