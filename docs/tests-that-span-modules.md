@@ -682,6 +682,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/settings-export.test.js` — the default branch's whole ruleset and the Pages settings are exported to
   `.github/settings/` and held whole against GitHub's (OPS-8).
+- `test/engine-version-retry.test.js` — a slow or failing advisory service is asked three times, and a recent committed
+  cache stands in for one that stays down (OPS-5).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
 - `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
