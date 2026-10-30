@@ -63,6 +63,13 @@ export function fakeFileManager(state) {
       gone(state, f);
     },
     getNewFileParent: () => ({ path: '/' }),
+    // where a new attachment goes, as Obsidian's default puts it: a folder of attachments, a number added when taken
+    getAvailablePathForAttachment: async (name) => {
+      const dot = name.lastIndexOf('.');
+      let path = `attachments/${name}`;
+      for (let n = 1; state.files.has(path); n++) path = `attachments/${name.slice(0, dot)} ${n}${name.slice(dot)}`;
+      return path;
+    },
   };
 }
 

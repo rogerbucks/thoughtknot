@@ -184,7 +184,14 @@ describe('the View menu’s defaults (editor spec §25)', () => {
 });
 
 describe('the export options (editor spec §16)', () => {
-  const exports = ['exportTheme', 'companionNote', 'exportFolder', 'exportAsksAbove'];
+  const exports = [
+    'exportTheme',
+    'companionNote',
+    'exportFolder',
+    'exportAsksAbove',
+    'pictureFolders',
+    'pictureFolder',
+  ];
 
   // proves: export_fixed_theme
   test('each is an option in the Export section, with a sentence, and a setting with a default', () => {

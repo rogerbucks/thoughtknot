@@ -175,6 +175,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.export-asks-above.name': 'Ask before exporting above',
   'settings.export-asks-above.sentence':
     'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
+  'settings.picture-folders.name': 'Pictures for readers without ThoughtKnot',
+  'settings.picture-folders.sentence':
+    'Notes in these folders get a picture after each graph, so GitHub and other Markdown apps show it. Part folders with commas; write / for the whole vault. Left empty, a note gets pictures only once you turn them on for it.',
+  'settings.picture-folder.name': 'Picture folder',
+  'settings.picture-folder.sentence':
+    'The vault folder the pictures are kept in. Left empty, they go where Obsidian keeps new attachments.',
   'settings.decider.name': 'Your name on decisions',
   'settings.decider.sentence':
     'The name recorded when you accept or reject a change in a proposal. It is kept exactly as you type it. Left empty, it is recorded as “you”.',
