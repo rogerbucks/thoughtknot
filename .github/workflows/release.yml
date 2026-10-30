@@ -74,6 +74,24 @@ jobs:
 
   # Fit to be public, as CI checks on every pull request: the whole history clean, and a fresh clone set up from the
   # README's steps alone. A release is the moment it matters most, so it is checked again here.
+  mod:
+    # CODE-4: only the Claude Code CLI can load the /graph mod's hooks, so it is installed here and the mod is checked
+    needs: on-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.20.0
+      - run: npm ci
+      - name: Install the Claude Code CLI, at the version the mod was last checked with
+        run: npm ci --prefix tools/claude-cli && npm audit signatures --prefix tools/claude-cli
+      - name: The mod builds, validates and passes its own test, and a missing CLI fails
+        run: node scripts/mod-check.mjs --require --claude tools/claude-cli/node_modules/.bin/claude
+
   public-readiness:
     needs: on-main
     runs-on: ubuntu-latest
@@ -177,7 +195,7 @@ jobs:
   # access only, so no install script or test can ask for a signing token or change main.js before it is attested. It
   # hands the files on as an artifact, and `publish` alone may write.
   release:
-    needs: [quality, public-readiness, release-notes, security, settings, reproducible]
+    needs: [quality, mod, public-readiness, release-notes, security, settings, reproducible]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

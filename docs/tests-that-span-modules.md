@@ -183,6 +183,9 @@ after a module nor listed here, and on a listed file that is missing.
   names and rows. Both gates give the same answer on the same inputs. They fail closed alike when the note cannot be
   read (editor spec §26, cc_classified_asks; §19, model_ceiling).
 
+- `test/mod-check.test.js` — CODE-4: the mod is built, validated and tested by the Claude Code CLI, and a missing CLI
+  fails the release check.
+
 ## The Claude Code editor: Claude's proposals and the gates
 
 - `packages/claude-code/test/editor-mod-claude.test.js` — Claude is the only AI the browser editor offers. What it
