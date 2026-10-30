@@ -8,8 +8,7 @@
 //   node scripts/quality-check.mjs quality/metrics.json    compare a full run (the release's quality job).
 //   node scripts/quality-check.mjs --fast                  measure the quick metrics now (file sizes, secrets) and
 //                                                          compare.
-//   node scripts/quality-check.mjs --coverage              run the suite once with coverage and compare each package's
-//                                                          share of lines run (a pull request that touches a package).
+//   node scripts/quality-check.mjs --coverage              run the suite with coverage; compare each package's share.
 //   node scripts/quality-check.mjs --baseline-since <ref>  compare the committed baseline with the one at this commit.
 //
 // Exits 1 and names each metric that is worse, with the baseline value, the new one and what would let it through. Test

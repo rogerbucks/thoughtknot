@@ -72,7 +72,7 @@ export function unexplainedFailure(which, stderr = '') {
   return why ? `${said} ${why.slice(0, 300)}` : said;
 }
 
-/** The line coverage of the files under a folder (or any of several), from an lcov report: the files, their lines, those hit, and the share. */
+/** The line coverage under a folder (or several) from an lcov report: files, lines, lines hit, and the share. */
 export function parseLcov(lcov, folder) {
   const folders = [].concat(folder);
   const total = { files: 0, lines: 0, hit: 0, percent: 0 };
