@@ -5,9 +5,7 @@
   "conditions": {
     "ref_name": {
       "exclude": [],
-      "include": [
-        "~DEFAULT_BRANCH"
-      ]
+      "include": ["~DEFAULT_BRANCH"]
     }
   },
   "rules": [
@@ -69,9 +67,7 @@
         "require_last_push_approval": false,
         "required_review_thread_resolution": false,
         "require_extra_approval_for_unattributed_changes": true,
-        "allowed_merge_methods": [
-          "merge"
-        ]
+        "allowed_merge_methods": ["merge"]
       }
     },
     {
