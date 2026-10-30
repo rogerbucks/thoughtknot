@@ -66,6 +66,15 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
   else openExportForm(parent, x);
 }
 
+/** The focus goes to the bar's Export button; behind More, which has closed by now, the button cannot take it, so More does. */
+function focusOpener(parent: HTMLElement): void {
+  const opener = Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-bar button')).find(
+    (b) => b.getAttribute('aria-label') === word('bar.export'),
+  );
+  const list = opener?.closest<HTMLElement>('.thoughtknot-bar-more-list');
+  (list?.hidden ? parent.querySelector('.thoughtknot-bar-more')?.querySelector('button') : opener)?.focus();
+}
+
 /**
  * Shows the Export form in `parent` as `x` asks, in place of one already shown, never taking it away. A played path's
  * Export as an animated SVG opens it like this, on that path. The focus goes to its first choice.
@@ -118,23 +127,14 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   scoped();
   // what the form says beyond the notices: a question, or the image ready to share — never the same words twice
   const said = el.createDiv({ cls: 'thoughtknot-export-said', attr: { role: 'alert' } });
-  // closed: the focus goes back to the bar's Export button, never lost to the page. Behind More, which has closed by now,
-  // the button cannot take it, so More does
+  // closed: the focus goes back to the bar, never lost to the page
   const close = () => {
     el.remove();
-    const opener = Array.from(parent.querySelectorAll<HTMLElement>('.thoughtknot-bar button')).find(
-      (b) => b.getAttribute('aria-label') === word('bar.export'),
-    );
-    const list = opener?.closest<HTMLElement>('.thoughtknot-bar-more-list');
-    (list?.hidden ? parent.querySelector('.thoughtknot-bar-more')?.querySelector('button') : opener)?.focus();
+    focusOpener(parent);
   };
   let busy = false;
   // Escape closes the form, unless an export is under way, which has its own way to stop
-  el.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key !== 'Escape' || busy) return;
-    e.preventDefault();
-    close();
-  });
+  el.addEventListener('keydown', (e: KeyboardEvent) => e.key === 'Escape' && !busy && (e.preventDefault(), close()));
   const show = (outcome: ExportOutcome) => {
     said.empty();
     if ('ask' in outcome) {

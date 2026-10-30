@@ -233,7 +233,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     host.info.released(e.pointerId);
     zoom.handle({ kind: 'cancel', id: e.pointerId });
   });
-  // the highlight under the pointer, for as long as it stays, and the quick-info tooltip after a moment (§24, §25)
+  // the highlight under the pointer, or at the keyboard's focus (with a ring, which a click's is not), and the tooltip (§24, §25)
   card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => {
     sel.over(e);
     host.info.over(e);
@@ -242,7 +242,6 @@ export function bindViewportEvents(host: ViewportHost): void {
     sel.out(e);
     host.info.out(e);
   });
-  // and the same, with a ring, for the keyboard's focus, which a click's is not
   card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => {
     ringFocus(e, sel.byKeyboard());
     sel.focusIn(e);
