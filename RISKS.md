@@ -5,14 +5,13 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (40)
+## Open (39)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
@@ -81,16 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** If wanted: refuse an .svg whose text holds <script, on* attributes, <foreignObject or a javascript: address, as a second line behind the page's CSP.
 
 **Check:** A test PUTs an SVG with a script element and asserts 400.
-
-### CODE-6 77 fixed sleeps remain in 26 plugin test files
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/test/**`, `packages/core/test/layout-worker.test.js`, `test/fixed-sleeps.json`.
-
-**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.
-
-**Fix:** Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.
-
-**Check:** The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.
 
 ### CODE-11 A running layout is never cancelled when the user keeps typing
 
@@ -452,7 +441,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (92)
+## Done or accepted (93)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -480,6 +469,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-3 | Coverage is measured for the core only, and only at release | done | #1567; kept out by `test/quality-metrics.test.js`, `scripts/quality-check.mjs` |
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1560; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
 | CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
+| CODE-6 | 77 fixed sleeps remain in 26 plugin test files | done | #1568; kept out by `test/fixed-sleeps.test.js`, `scripts/fixed-sleeps.mjs` |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |

@@ -1011,7 +1011,7 @@
       "likelihood": "medium",
       "impact": "low",
       "decision": "fix-later",
-      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.",
+      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each. Done in #1568 for every sleep that waits for a state. The 43 left wait for something that must not happen, so they stay as sleeps; Roger accepted that on 30 Oct 2026, and the ratchet keeps them from growing.",
       "check": "The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.",
       "paths": [
         "packages/obsidian/test/**",
@@ -1024,8 +1024,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1568",
+      "prevented_by": [
+        "test/fixed-sleeps.test.js",
+        "scripts/fixed-sleeps.mjs"
+      ]
     },
     {
       "id": "CODE-7",
