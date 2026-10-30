@@ -11,8 +11,9 @@ import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { COVERAGE_PACKAGES } from './quality-spec.mjs';
 
-const RUN_MS = 20 * 60 * 1000;
+const RUN_MS = Number(process.env.THOUGHTKNOT_RUN_MINUTES ?? 20) * 60 * 1000;
 
 const unescape = (s) =>
   s
@@ -71,18 +72,33 @@ export function unexplainedFailure(which, stderr = '') {
   return why ? `${said} ${why.slice(0, 300)}` : said;
 }
 
-/** The line coverage of the files under a folder, from an lcov report: the files, their lines, those hit, and the share. */
+/** The line coverage under a folder (or several) from an lcov report: files, lines, lines hit, and the share. */
 export function parseLcov(lcov, folder) {
+  const folders = [].concat(folder);
   const total = { files: 0, lines: 0, hit: 0, percent: 0 };
   for (const record of lcov.split('end_of_record')) {
     const file = /^SF:(.*)$/m.exec(record)?.[1];
-    if (!file?.startsWith(folder)) continue;
+    if (!file || !folders.some((f) => file.startsWith(f))) continue;
     total.files++;
     total.lines += Number(/^LF:(\d+)$/m.exec(record)?.[1] ?? 0);
     total.hit += Number(/^LH:(\d+)$/m.exec(record)?.[1] ?? 0);
   }
   if (total.lines) total.percent = Math.round((total.hit / total.lines) * 1000) / 10;
   return total;
+}
+
+/** The `--test-coverage-include` arguments for every package held, and each package's metric from an lcov report. */
+export const COVERAGE_INCLUDE = Object.values(COVERAGE_PACKAGES)
+  .flat()
+  .map((folder) => `--test-coverage-include=${folder}**`);
+
+export function coverageMetrics(lcov) {
+  return Object.fromEntries(
+    Object.entries(COVERAGE_PACKAGES).map(([name, folders]) => {
+      const c = parseLcov(lcov, folders);
+      return [name, c.files ? c.percent : null];
+    }),
+  );
 }
 
 const CEILING = join(dirname(fileURLToPath(import.meta.url)), 'run-ceiling.mjs');
@@ -110,7 +126,7 @@ export function nodeTest(root, args) {
  * Measures the suite:
  * - `suite_seconds` and `quiet_run_bytes` from a plain run;
  * - `flaky_tests` from comparing it with a second run;
- * - `coverage_percent` for packages/core/src from that second run.
+ * - the coverage of each package (COVERAGE_PACKAGES) from that second run.
  * The bytes are null if the plain run did not pass: a failing run's output is not the figure being kept down.
  * `details` names the flaky and failing tests. The runs are `node --test` as `npm test` runs it, under the ceiling,
  * with the test discovery a developer's and CI's runs have.
@@ -130,7 +146,7 @@ export function measureSuite(root) {
     ]);
     const second = nodeTest(root, [
       '--experimental-test-coverage',
-      '--test-coverage-include=packages/core/src/**',
+      ...COVERAGE_INCLUDE,
       '--test-reporter=junit',
       `--test-reporter-destination=${two}`,
       '--test-reporter=lcov',
@@ -141,13 +157,14 @@ export function measureSuite(root) {
     const failing = [...a].filter(([, r]) => r === 'fail').map(([name]) => name);
     if (!first.passed && !failing.length) failing.push(unexplainedFailure('first', first.stderr));
     const flaky = flakyBetween(a, b, second.passed, second.stderr);
-    const coverage = parseLcov(readFileSync(lcov, 'utf8'), 'packages/core/src/');
+    const lcovText = readFileSync(lcov, 'utf8');
+    const coverage = parseLcov(lcovText, COVERAGE_PACKAGES.coverage_percent);
     return {
       metrics: {
         suite_seconds: Math.round(first.seconds * 10) / 10,
         flaky_tests: flaky.length,
         quiet_run_bytes: first.passed ? statSync(quiet).size : null,
-        coverage_percent: coverage.files ? coverage.percent : null,
+        ...coverageMetrics(lcovText),
       },
       details: {
         tests: a.size,
@@ -157,6 +174,32 @@ export function measureSuite(root) {
         coverage_lines: coverage.lines,
         second_run_passed: second.passed,
       },
+    };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * The coverage of each package from one run of the suite, as a pull request that touches a package makes it (CODE-3).
+ * `passed` is false if the run failed, and then its figures mean nothing.
+ */
+export function measureCoverage(root) {
+  const dir = mkdtempSync(join(tmpdir(), 'quality-coverage-'));
+  try {
+    const lcov = join(dir, 'lcov.info');
+    const run = nodeTest(root, [
+      '--experimental-test-coverage',
+      ...COVERAGE_INCLUDE,
+      '--test-reporter=./scripts/quiet-reporter.mjs',
+      `--test-reporter-destination=${join(dir, 'quiet.txt')}`,
+      '--test-reporter=lcov',
+      `--test-reporter-destination=${lcov}`,
+    ]);
+    return {
+      passed: run.passed,
+      stderr: run.stderr,
+      metrics: run.passed ? coverageMetrics(readFileSync(lcov, 'utf8')) : {},
     };
   } finally {
     rmSync(dir, { recursive: true, force: true });

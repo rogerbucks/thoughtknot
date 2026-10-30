@@ -5,14 +5,13 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (42)
+## Open (41)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
@@ -83,16 +82,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** If wanted: refuse an .svg whose text holds <script, on* attributes, <foreignObject or a javascript: address, as a second line behind the page's CSP.
 
 **Check:** A test PUTs an SVG with a script element and asserts 400.
-
-### CODE-3 Coverage is measured for the core only, and only at release
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `scripts/quality-suite.mjs`, `quality/baseline.json`, `.github/workflows/ci.yml`.
-
-**Risk:** The 99.2% figure in quality/baseline.json covers packages/core/src alone. The Obsidian plugin, the server and the page have no coverage number at any time. CI runs quality-check with --fast, so a pull request that drops the core's coverage is seen only when a release is cut.
-
-**Fix:** Widen --test-coverage-include to packages/*/src, packages/claude-code/server and page. Record one baseline per package. Run the coverage step in CI on pull requests that touch a package.
-
-**Check:** quality-check.mjs holds each package's coverage_percent against its baseline on every pull request, not only at release.
 
 ### CODE-6 77 fixed sleeps remain in 26 plugin test files
 
@@ -474,7 +463,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (90)
+## Done or accepted (91)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -499,6 +488,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-12 | Docs disagree with the workflows on schedules and write access | done | #1540; kept out by `test/process-risks-ops.test.js`, `CONTRIBUTING.md` |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
+| CODE-3 | Coverage is measured for the core only, and only at release | done | #1567; kept out by `test/quality-metrics.test.js`, `scripts/quality-check.mjs` |
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1560; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
 | CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
