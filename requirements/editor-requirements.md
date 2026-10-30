@@ -1801,6 +1801,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (q_13_unrecovered_decisions:Question {num: 'Q-13', slice: 7, text: 'Some original design decisions were not recovered and others survive only as paraphrase: do the requirements resting on them stand?', answer: 'Review each of the four requirements before slice 7 starts, and until then they stand as written.', answered: '2026-10-16'}),
 (q_14_roles_auto_apply:Question {num: 'Q-14', slice: 6, text: 'Are permission-bearing types excluded from automatic apply? The recommended answer is yes, always reviewed.', answer: 'Yes, and more: no AI write applies by itself. A person always applies it, and the score only sorts the review queue (ai_write_scoring).', answered: '2026-10-19'}),
 (q_15_stubbing_revisit:Question {num: 'Q-15', slice: 8, text: 'Should side-effect stubbing be revisited if the graph ever drives real applications directly?'}),
+(q_16_requirements_source:Question {num: 'Q-16', slice: 1, text: 'Where are the requirements edited: in a vault, or in this repository?', answer: 'In this repository: requirements/editor-requirements.md is the one source, changed in a pull request like any file, and no vault holds them. Once graph notes can hold it, the graph moves into one.', answered: '2026-10-16'}),
 // ── Links ──
 (wiki_generated)-[:PART_OF]->(section_41),
 (wiki_generated)-[:PROVED_BY]->(test_wiki_generated),

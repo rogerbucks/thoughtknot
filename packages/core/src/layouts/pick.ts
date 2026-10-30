@@ -45,10 +45,12 @@ const DENSE_MOST = 3;
 export function pickLayout(shape: GraphShape): Pick {
   const n = shape.things.length,
     m = shape.links.length;
+  // for the tree rule, links count by the pair they join: two between the same things, or a loop, make no cycle
+  const pairs = new Set(shape.links.filter((l) => l.from !== l.to).map((l) => [l.from, l.to].sort().join('\n'))).size;
   if (!n) return { layout: 'stress', why: 'network' };
   // with groups folded, each group is one box: the overview reads best in rows, its links kept off the boxes
   if (shape.things.some((t) => t.key.startsWith(FOLDED_GROUP))) return { layout: 'layered', why: 'overview' };
-  if (m <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
+  if (pairs <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
   if (m / n > DENSE_MOST) return { layout: 'stress', why: 'dense' };
   return backShare(shape) <= BACK_MOST ? { layout: 'layered', why: 'flow' } : { layout: 'stress', why: 'network' };
 }
