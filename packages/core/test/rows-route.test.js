@@ -140,3 +140,25 @@ test('past 300 things, curved links laid out in no rows are drawn direct, so Gra
   const direct = layoutSvg(directLinks(engine.marks(routedSource(dot, 'direct')), undefined, undefined, 'LR'));
   assert.equal(svgOf(engine, dot, 'curved'), direct);
 });
+
+test('links through a gap too narrow for its margins run down its middle, not along its far edge', () => {
+  // two boxes in the middle row four pixels apart, less than the clearance kept on each side of a gap
+  const a = box('a', 0, 0),
+    b = box('b', 200, 0),
+    w1 = box('w1', 100, -12),
+    w2 = box('w2', 100, 12),
+    c = box('c', 0, 60),
+    d = box('d', 200, 60);
+  const [one, two] = rowsRoute(
+    [a, b, w1, w2, c, d],
+    [
+      [a, b],
+      [a, b],
+    ],
+    0,
+  );
+  for (const bends of [one, two]) {
+    assert.ok(bends.length, 'the link bends through the middle row');
+    for (const p of bends) assert.equal(p[1], 0, 'at the middle of the gap');
+  }
+});

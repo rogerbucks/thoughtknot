@@ -947,8 +947,14 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1560",
+      "prevented_by": [
+        "test/mod-check.test.js",
+        "scripts/mod-check.mjs",
+        "packages/claude-code/mod/tests/graph.test.tsx"
+      ]
     },
     {
       "id": "CODE-5",
@@ -2524,8 +2530,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1564",
+      "prevented_by": [
+        "test/check-requirements-reworded.test.js",
+        "scripts/check-requirements-flips.mjs"
+      ]
     },
     {
       "id": "FLOW-6",

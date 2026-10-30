@@ -212,7 +212,8 @@ def _spread_lanes(rows: list[Row], passes, axis: int) -> None:
         # side by side, LANE apart, round where they would like to be, kept inside the gap
         width = min(LANE * (len(found) - 1), max(0, hi - lo))
         step = width / (len(found) - 1)
-        start = min(max(mid - width / 2, lo), hi - width)
+        # a gap too narrow for its margins has them cross: its middle, not its far edge
+        start = (lo + hi) / 2 if hi < lo else min(max(mid - width / 2, lo), hi - width)
         for k, p in enumerate(found):
             for point in p[4]:
                 point[across] = start + step * k
@@ -229,13 +230,8 @@ def routed_curves(
     bow_of = dict(zip(free, bends([to_bend[i] for i in free], every), strict=True))
     curves: dict[str, Curve | RoutedCurve] = {}
     for i, t in enumerate(to_bend):
-        # links between the same two boxes take the same bends, moved apart across the way
-        off = t.fixed or 0
-        at = (
-            [[p[0], p[1] + off] if across else [p[0] + off, p[1]] for p in in_row[i]]
-            if rowed
-            else []
-        )
+        # links through one gap are spread side by side there already (_spread_lanes)
+        at = [[p[0], p[1]] for p in in_row[i]] if rowed else []
         curves[t.key] = (
             RoutedCurve(t.a, t.b, at, 1 - across) if at else curve_of(t.a, t.b, bow_of.get(i, 0))
         )

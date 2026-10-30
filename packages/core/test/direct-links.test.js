@@ -469,3 +469,120 @@ test('a link bows round a box in its way just far enough, however far off the li
   assert.equal(Math.abs(clearance(15)[1]), GENTLE);
   assert.equal(clearance(40)[1], 0);
 });
+
+// proves: untangle_group_hug
+test("a group's name of two lines sits whole above its things once the group hugs them", () => {
+  // as graphviz-marks.ts writes a name of two lines: the first `l:`, the second `l1:`
+  const label = (id, y, text) => ({ id, kind: 'label', style: 'group', x: 200, y, text, size: 14, anchor: 'middle' });
+  const thing = (key, x) => ({
+    id: `t:${key}`,
+    kind: 'box',
+    style: 'thing',
+    of: key,
+    role: 'thing',
+    x,
+    y: 150,
+    width: 100,
+    height: 40,
+    group: 'g:team',
+  });
+  const laid = {
+    space: { width: 400, height: 300 },
+    marks: [
+      { id: 'g:team', kind: 'group', style: 'group', x: 0, y: 0, width: 400, height: 300 },
+      label('l:g:team', 20, 'Team'),
+      label('l1:g:team', 38, 'second line'),
+      thing('a', 100),
+      thing('b', 250),
+      {
+        id: 'e:1',
+        kind: 'link',
+        style: 'link',
+        of: 'e:1',
+        from: 'a',
+        to: 'b',
+        points: [
+          [200, 170],
+          [250, 170],
+        ],
+      },
+    ],
+  };
+  const { marks } = directLinks(laid);
+  const top = Math.min(...marks.filter((m) => m.kind === 'box').map((m) => m.y));
+  for (const line of marks.filter((m) => m.kind === 'label'))
+    assert.ok(line.y <= top - 7.5, `${line.text} (${line.y}) sits above the things (${top})`);
+  const g = marks.find((m) => m.kind === 'group');
+  assert.ok(g.y < top - 30, 'the group keeps room for both lines');
+});
+
+test('two links between the same boxes that our own engine routed run side by side, not as one line', () => {
+  // the engine gives both the same way (layouts/layered.ts); drawn, they are moved apart across the drawing's way
+  const thing = (key, x, y) => ({
+    id: `t:${key}`,
+    kind: 'box',
+    style: 'thing',
+    of: key,
+    role: 'thing',
+    x,
+    y,
+    width: 100,
+    height: 40,
+  });
+  const laid = {
+    space: { width: 400, height: 300 },
+    marks: [
+      thing('a', 50, 0),
+      thing('b', 50, 200),
+      {
+        id: 'e:1',
+        kind: 'link',
+        style: 'link',
+        of: 'e:1',
+        from: 'a',
+        to: 'b',
+        points: [
+          [100, 40],
+          [100, 200],
+        ],
+      },
+      {
+        id: 'e:2',
+        kind: 'link',
+        style: 'link',
+        of: 'e:2',
+        from: 'b',
+        to: 'a',
+        points: [
+          [100, 200],
+          [100, 40],
+        ],
+      },
+    ],
+  };
+  const at = new Map([
+    ['a', [100, 20]],
+    ['b', [100, 220]],
+  ]);
+  const via = new Map([
+    [
+      'a\nb',
+      [
+        [100, 40],
+        [100, 200],
+      ],
+    ],
+    [
+      'b\na',
+      [
+        [100, 200],
+        [100, 40],
+      ],
+    ],
+  ]);
+  const { marks } = directLinks(laid, at, via, 'TB');
+  const [ab, ba] = marks.filter((m) => m.kind === 'link');
+  const middle = (l) => along(l)[Math.floor(along(l).length / 2)];
+  assert.ok(Math.abs(middle(ab)[0] - middle(ba)[0]) >= 5, `${middle(ab)[0]} and ${middle(ba)[0]} are apart`);
+  assert.ok(Math.abs(middle(ab)[0] - 100) <= 4 && Math.abs(middle(ba)[0] - 100) <= 4, 'each stays by its way');
+});

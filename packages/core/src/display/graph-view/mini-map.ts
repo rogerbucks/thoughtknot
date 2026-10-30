@@ -164,17 +164,12 @@ export class MiniMap {
     const r = this.svg?.getBoundingClientRect(),
       vb = this.areas?.viewBox;
     if (!r?.width || !r.height || !vb?.width || !vb.height) return;
-    const zoom = this.host.zoom(),
-      v = zoom.view(),
-      size = this.host.size();
+    const zoom = this.host.zoom();
     const fx = clamp((e.clientX - r.left) / r.width),
       fy = clamp((e.clientY - r.top) / r.height);
-    // a drag on the drawing pans freely (pan_freely), but a tap here goes to a part of it, so it shows no empty space
-    const edged = (to: number, length: number, room: number) =>
-      length <= room ? (room - length) / 2 : Math.min(0, Math.max(room - length, to));
-    zoom.panBy(
-      edged(size.width / 2 - fx * v.width, v.width, size.width) - v.x,
-      edged(size.height / 2 - fy * v.height, v.height, size.height) - v.y,
-    );
+    // a drag on the drawing pans freely (pan_freely), but a tap here goes to a part of it, so it shows no empty space.
+    // The point tapped is centred in the part of the view a docked sheet leaves clear, as far as the edges allow
+    const to = zoom.aim({ x: fx, y: fy, width: 0, height: 0 }, 0, true);
+    if (to) zoom.place(to.scale, to.x, to.y);
   }
 }

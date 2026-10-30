@@ -202,7 +202,8 @@ function spreadLanes(rows: readonly Row[], passes: readonly Pass[], axis: 0 | 1)
     // side by side, LANE apart, round where they would like to be, kept inside the gap; squeezed to fit a narrow one
     const width = Math.min(LANE * (list.length - 1), Math.max(0, hi - lo));
     const step = list.length > 1 ? width / (list.length - 1) : 0;
-    const start = Math.min(Math.max(mid - width / 2, lo), hi - width);
+    // a gap too narrow for its margins has them cross: its middle, as nearestGap gives it, not its far edge
+    const start = hi < lo ? (lo + hi) / 2 : Math.min(Math.max(mid - width / 2, lo), hi - width);
     list.forEach((p, k) => {
       const at = start + step * k;
       for (const point of p.points) point[across] = at;

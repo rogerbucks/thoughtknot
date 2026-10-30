@@ -115,7 +115,8 @@ export function sketchMarks(
       const tip = points[points.length - 1],
         back = points[points.length - 2];
       if (item.shape === 'arrow' && tip && back) {
-        const angle = Math.atan2(tip[1] - back[1], tip[0] - back[0]);
+        // in degrees, as every arrowhead mark's angle is (drawing-marks.ts)
+        const angle = (Math.atan2(tip[1] - back[1], tip[0] - back[0]) * 180) / Math.PI;
         const head: DrawMark = {
           ...common,
           id: `${common.id}:head`,
@@ -198,7 +199,8 @@ export function sketchInSpace(
         size: m.size,
       });
     else if (m.kind === 'arrowhead') {
-      const back: MarkPoint = [m.x - Math.cos(m.angle) * m.size, m.y - Math.sin(m.angle) * m.size];
+      const a = (m.angle * Math.PI) / 180;
+      const back: MarkPoint = [m.x - Math.cos(a) * m.size, m.y - Math.sin(a) * m.size];
       arrows.push({ id: m.id, style: m.style, tip: lift([m.x, m.y]), back: lift(back), size: m.size });
     }
   }
@@ -236,7 +238,7 @@ export function sketchSvg(pieces: readonly SketchMark[], palette: Palette): stri
           ? `<ellipse cx="${num(m.x + m.width / 2)}" cy="${num(m.y + m.height / 2)}" rx="${num(m.width / 2)}" ry="${num(m.height / 2)}" fill="none" stroke="${ink}" stroke-width="2"/>`
           : `<rect x="${num(m.x)}" y="${num(m.y)}" width="${num(m.width)}" height="${num(m.height)}" rx="6" fill="none" stroke="${ink}" stroke-width="2"/>`;
     else if (m.kind === 'arrowhead') {
-      const [c, s] = [Math.cos(m.angle), Math.sin(m.angle)];
+      const [c, s] = [Math.cos((m.angle * Math.PI) / 180), Math.sin((m.angle * Math.PI) / 180)];
       const back = [m.x - c * m.size, m.y - s * m.size];
       const side = [-s * (m.size / 2), c * (m.size / 2)];
       svg = `<path d="M${num(m.x)} ${num(m.y)}L${num((back[0] ?? 0) + (side[0] ?? 0))} ${num((back[1] ?? 0) + (side[1] ?? 0))}L${num((back[0] ?? 0) - (side[0] ?? 0))} ${num((back[1] ?? 0) - (side[1] ?? 0))}z" fill="${ink}"/>`;

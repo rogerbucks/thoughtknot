@@ -139,8 +139,10 @@ jobs:
       - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          # the body may name a reworded requirement (FLOW-5); it is only ever text to match ids against
+          BODY: ${{ github.event.pull_request.body }}
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
-        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
+        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE" --named "$BODY"
       # the requirements and the tests may not drift further apart: each list in quality/requirements-drift.json only shrinks
       - run: node scripts/requirements-drift.mjs
       - run: npm run build

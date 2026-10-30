@@ -183,6 +183,9 @@ after a module nor listed here, and on a listed file that is missing.
   names and rows. Both gates give the same answer on the same inputs. They fail closed alike when the note cannot be
   read (editor spec §26, cc_classified_asks; §19, model_ceiling).
 
+- `test/mod-check.test.js` — CODE-4: the mod is built, validated and tested by the Claude Code CLI, and a missing CLI
+  fails the release check.
+
 ## The Claude Code editor: Claude's proposals and the gates
 
 - `packages/claude-code/test/editor-mod-claude.test.js` — Claude is the only AI the browser editor offers. What it
@@ -503,6 +506,9 @@ after a module nor listed here, and on a listed file that is missing.
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
 
 ## The graph spec
+
+- `test/check-requirements-reworded.test.js` — FLOW-5: a proved requirement's rule is reworded only when a commit message
+  or the pull request body names its id.
 
 - `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
   graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
