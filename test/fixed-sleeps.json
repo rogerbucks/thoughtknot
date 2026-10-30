@@ -16,6 +16,7 @@
   "packages/obsidian/test/layout-worker.test.js": 1,
   "packages/obsidian/test/live-preview.test.js": 2,
   "packages/obsidian/test/main-inline.test.js": 1,
+  "packages/obsidian/test/pane-writing.test.js": 1,
   "packages/obsidian/test/pane.test.js": 1,
   "packages/obsidian/test/placement-embeds.test.js": 1,
   "packages/obsidian/test/read-only.test.js": 2,

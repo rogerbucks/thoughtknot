@@ -3,7 +3,7 @@
 // in its words.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { READER, NOTE, PATH, open, textarea, type, note } from './host/pane-notes.js';
 
@@ -45,6 +45,8 @@ describe('writing to the note', () => {
       const theirs = NOTE.replace(READER, READER + ',\n(theirs:Reason)');
       await env.app.vault.modify({ path: PATH }, theirs);
       await until(() => textarea(env.el).value === READER + ',\n(theirs:Reason)');
+      // a late autosave of the stale draft would land after the reload: nothing shows it has not, so this waits
+      await wait(400);
       assert.equal(note(env), theirs, 'not overwritten');
       assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)', 'reloaded');
       const banner = env.el.querySelector('.thoughtknot-draft');
