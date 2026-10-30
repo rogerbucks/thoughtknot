@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Every view of a graph at once: its flat projection, relationships, legend, and each top path at each altitude.
 'use strict';
 

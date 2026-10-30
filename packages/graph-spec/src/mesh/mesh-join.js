@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The graph mesh's join (editor spec §28 and editor spec §30): graphs from many notes joined, with what the join found. It is
 // built on the §21 join (joins/), which already keeps both sides of a clash as contested claims. This adds:
 // - each conflict with both sides and who states each (conflicts_flagged_kept);

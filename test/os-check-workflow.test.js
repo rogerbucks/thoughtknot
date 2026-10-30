@@ -19,4 +19,11 @@ describe('the tests on macOS and Windows', () => {
     assert.ok(python, 'the python job');
     assert.match(python, /^ {6}PYTHONUTF8: '1'$/m);
   });
+
+  test("the suite's parity tests read Python's output as UTF-8 too", () => {
+    const suite = read('.github/workflows/os-check.yml')
+      .split(/^ {2}suite:$/m)[1]
+      .split(/^ {2}python:$/m)[0];
+    assert.match(suite, /^ {10}PYTHONUTF8: '1'$/m);
+  });
 });

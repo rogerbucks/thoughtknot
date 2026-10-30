@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Dates and instants as the document profile reads them, and how two read values compare.
 'use strict';
 

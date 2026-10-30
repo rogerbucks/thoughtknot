@@ -65,7 +65,9 @@ describe('one code style', () => {
 
   test('the test vault settings, which Obsidian rewrites in its own layout, are not format-checked', () => {
     for (const f of ['test-vault/.obsidian/app.json', 'test-vault/.obsidian/community-plugins.json']) {
-      const r = spawnSync(path('node_modules/.bin/prettier'), ['--file-info', f], { cwd: ROOT, encoding: 'utf8' });
+      // prettier's own script, run by node: node_modules/.bin holds a .cmd on Windows, which needs a shell
+      const prettier = path('node_modules/prettier/bin/prettier.cjs');
+      const r = spawnSync(process.execPath, [prettier, '--file-info', f], { cwd: ROOT, encoding: 'utf8' });
       assert.equal(JSON.parse(r.stdout).ignored, true, f);
     }
   });
@@ -429,6 +431,15 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
       assert.doesNotMatch(text, /vault\.modify\(/, `${f}: vault.process, not vault.modify`);
       assert.doesNotMatch(text, /(?<![.\w])app\.|window\.app\b/, `${f}: this.app, never the global app`);
     }
+  });
+
+  test('no Obsidian type is made by a double cast: a hand-made object is checked against the fields it fills', () => {
+    // CODE-10: Live Preview's card once cast a hand-made context to Obsidian's, so a field the drawing read was unchecked
+    const casts = pluginSource()
+      .filter(({ f }) => f.startsWith('packages/obsidian/'))
+      .filter(({ text }) => /\bas unknown as\b/.test(text))
+      .map(({ f }) => f);
+    assert.deepEqual(casts, []);
   });
 });
 

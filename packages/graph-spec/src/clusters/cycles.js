@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Clusters inside each other in a cycle (editor spec §31, cycles_allowed_flagged). See wiki/Clusters-design.md, step 5.
 // Its Python twin is graphspec/engine/clusters/cycles.py, held to the same shared cases in test/cycle-cases.json.
 //
@@ -5,6 +6,7 @@
 // It is flagged instead, so a view can hide or highlight the clusters in it.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { CLUSTER, MEMBER_OF } = require('./clusters.js');
 
 /** The ways a view can show the clusters in a cycle. */
@@ -57,7 +59,7 @@ function clusterCycles(graph) {
  */
 function cycleView(graph, how) {
   if (!CYCLE_VIEWS.includes(how))
-    throw new Error(`a view shows cycles in one of these ways: ${CYCLE_VIEWS.join(', ')}`);
+    throw refused('GR11', `a view shows cycles in one of these ways: ${CYCLE_VIEWS.join(', ')}`);
   const cycled = new Set(clusterCycles(graph).flat());
   const all = [...graph.nodes.keys()];
   return how === 'hide'

@@ -5,8 +5,11 @@
 //   editor page (packages/app);
 // - VS Code's: its tab is the browser page too. So the page's adapter runs in the tab's page, made from the built
 //   extension (packages/vscode).
-import { test, describe, after } from 'node:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+// Each whole host passes the services contract too (risk ARCH-1): its settings, secrets, links, notes, drafts and
+// layouts. Obsidian's is made from the built plugin, by the `obsidianHost` it exports. The browser editor's puts its page's parts and its server's
+// together (page/editor-host.ts). And only a host's storage adapter writes a file, so no host keeps its own note writer.
+import { test, describe, before, after } from 'node:test';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
@@ -14,9 +17,16 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
-import { hostContract } from '../packages/core/src/display/host-contract.ts';
+import { execFileSync } from 'node:child_process';
+import { hostContract, hostServicesContract } from '../packages/core/src/display/host-contract.ts';
+import { inThreadPort, loadEngine, serveLayouts } from '../packages/core/src/index.ts';
 import { browserHost } from '../packages/claude-code/page/browser-host.ts';
+import { editorHost } from '../packages/claude-code/page/editor-host.ts';
+import { folderStorage } from '../packages/claude-code/server/folder-storage.ts';
+import { DraftShelf } from '../packages/claude-code/server/note-drafts.ts';
+import { pageSettings } from '../packages/claude-code/server/page-settings.ts';
 import { fakeObsidian } from '../packages/obsidian/test/host/fake-obsidian.js';
+import { build as buildPlugin, load } from '../packages/obsidian/test/host/load-plugin.js';
 import { builtApp, cleanUpApp } from '../packages/app/test/app-window.js';
 import { buildExtension } from '../packages/vscode/esbuild.config.mjs';
 import { webviewHtml } from '../packages/vscode/src/webview-html.ts';
@@ -153,4 +163,113 @@ describe('every host’s adapter passes the one host contract', () => {
           await check.run();
         });
     });
+});
+
+/** A worker that lays drawings out on this thread, with the engine, as the page's worker file does in a browser. */
+class InThreadWorker {
+  constructor() {
+    this.port = inThreadPort((scope) => serveLayouts(scope, loadEngine));
+    this.port.onmessage = (e) => this.onmessage?.(e);
+    this.port.onerror = (e) => this.onerror?.(e);
+  }
+  postMessage(request) {
+    this.port.postMessage(request);
+  }
+  terminate() {
+    this.port.terminate();
+  }
+}
+
+let loaded = null;
+/** The built plugin's whole host, loaded fresh against the stand-in, with its probe; the last one loaded is unloaded. */
+async function wholeObsidian() {
+  loaded?.uninstall();
+  loaded = await load();
+  const { state } = loaded;
+  const { probe } = makeBrowser();
+  const last = () => state.menus[state.menus.length - 1];
+  return {
+    host: loaded.exports.obsidianHost(loaded.plugin),
+    probe: {
+      ...probe,
+      notices: () => state.notices,
+      lastMenu: () =>
+        last()?.rows.map((r) =>
+          r === 'separator' ? r : row(r.title, r.checkable ? r.checked : undefined, r.warning),
+        ) ?? null,
+      choose: (title) =>
+        last()
+          .items.find((i) => i.title === title)
+          .click(),
+      opened: () => (state.opened ? [state.opened.link] : []),
+      keepSecret: (name, secret) => loaded.app.secretStorage.setSecret(name, secret),
+    },
+  };
+}
+
+const folders = [];
+/** The browser editor's whole host: the page's parts in a DOM, over a fresh vault folder and a drafts folder beside it. */
+async function wholeEditor() {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-editor-host-')));
+  folders.push(dir);
+  const vault = join(dir, 'vault');
+  mkdirSync(vault);
+  const shelf = await DraftShelf.open(join(dir, 'drafts'), { real: vault, named: vault });
+  const { host, probe } = makeBrowser();
+  const win = {
+    document: probe.doc,
+    setTimeout: () => 0,
+    clearTimeout: () => {},
+    matchMedia: () => ({ matches: false }),
+    Worker: InThreadWorker,
+  };
+  const settings = pageSettings(JSON.stringify({ direction: 'LR' }));
+  const whole = editorHost({ win, files: folderStorage(vault), drafts: shelf, settings });
+  return { host: { ...whole, display: host }, probe: { ...probe, opened: () => [] } };
+}
+
+describe('every host’s whole interface passes the services contract', () => {
+  before(() => buildPlugin());
+  after(() => loaded?.uninstall());
+  after(() => folders.forEach((f) => rmSync(f, { recursive: true, force: true })));
+  for (const [name, make, serves] of [
+    ['Obsidian', wholeObsidian, {}],
+    ['the browser editor', wholeEditor, { links: false }],
+  ])
+    describe(name, () => {
+      for (const check of hostServicesContract(() => made, serves))
+        test(check.name, async () => {
+          made = await make();
+          await check.run();
+        });
+    });
+});
+
+/**
+ * The files in host packages that write a file. Each is a storage adapter, or writes what is not a note: an export's
+ * picture, or a plug-in kept outside the vault's notes.
+ */
+const WRITERS = [
+  'packages/claude-code/server/note-file.ts',
+  'packages/obsidian/src/export/vault-write.ts',
+  'packages/obsidian/src/outside/outside-plugins.ts',
+  'packages/obsidian/src/storage/vault-storage.ts',
+  'packages/vscode/src/vscode-disk.ts',
+];
+
+test('in a host package, only its storage adapter writes a file, so no host keeps a note writer of its own', () => {
+  const write =
+    /vault\.(modify|process|create|append|createBinary|modifyBinary|rename)\(|\.adapter\.(write|append)|\b(writeFile|writeFileSync|appendFile|appendFileSync|rename|renameSync)\(/;
+  const shipped = execFileSync(
+    'git',
+    ['ls-files', 'packages/*/src/**.ts', 'packages/*/page/**.ts', 'packages/*/server/**.ts'],
+    {
+      cwd: ROOT,
+      encoding: 'utf8',
+    },
+  )
+    .split('\n')
+    .filter((f) => f && !/^packages\/(core|graph-spec)\//.test(f));
+  const writers = shipped.filter((f) => write.test(readFileSync(join(ROOT, f), 'utf8')));
+  assert.deepEqual(writers.sort(), WRITERS);
 });

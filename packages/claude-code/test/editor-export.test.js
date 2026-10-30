@@ -72,7 +72,9 @@ describe('cc_exports_new_only: where an export goes', () => {
     assert.deepEqual(listing(dir), ['plan.csv', 'plan.png', 'plan.svg']);
     assert.equal(readFileSync(join(dir, 'plan.svg'), 'utf8'), SVG);
     assert.deepEqual(readFileSync(join(dir, 'plan.png')), PNG);
-    assert.equal(lstatSync(join(dir, 'plan.png')).mode & 0o777 & ~0o644, 0, 'no wider than the usual mode');
+    // Windows keeps no such mode: it reports every file it may write as 0o666
+    if (process.platform !== 'win32')
+      assert.equal(lstatSync(join(dir, 'plan.png')).mode & 0o777 & ~0o644, 0, 'no wider than the usual mode');
     assert.equal(existsSync(join(v.vault, 'Notes/plan.svg')), false, 'not beside the note');
   });
 

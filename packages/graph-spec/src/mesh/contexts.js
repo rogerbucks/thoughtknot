@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Contexts: where links may join (editor spec §61). A context is a named boundary, written as graph data: a note, a
 // folder, a vault or a client.
 // - Every graph belongs to exactly one context (context_named). A client context names its graphs. A note or folder

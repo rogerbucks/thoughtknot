@@ -25,6 +25,7 @@ import { METRICS } from './quality-spec.mjs';
 import { scanRepo, scannedFiles } from './quality-secrets.mjs';
 import { measureSuite } from './quality-suite.mjs';
 import { speedIndex } from './speed-index.mjs';
+import { npmCommand } from './npm-command.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ABOUT =
@@ -59,7 +60,7 @@ export function measureFast() {
 
 /** Vulnerabilities in the dependencies, by severity, from `npm audit`. Fails if the registry cannot be asked. */
 function measureAudit() {
-  const r = spawnSync('npm', ['audit', '--json'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
+  const r = spawnSync(...npmCommand(['audit', '--json']), { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28 });
   let report;
   try {
     report = JSON.parse(r.stdout);

@@ -8,7 +8,7 @@ import esbuild from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildPage } from './esbuild.page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,7 +53,7 @@ await esbuild.build({
 // the browser editor's page, which that server serves from its own origin (esbuild.page.mjs)
 await buildPage(join(mod, 'page'));
 
-const graph = await import(`${join(mod, 'hooks/graph.js')}?${Date.now()}`);
+const graph = await import(`${pathToFileURL(join(mod, 'hooks/graph.js')).href}?${Date.now()}`);
 const note = readFileSync(join(here, '../../test-vault/Sample graph note.md'), 'utf8');
 const dots = [];
 await graph.viewOf(note, async (d) => (dots.push(...d), { why: 'only the sources were wanted' }), graph.PANE_PALETTE);

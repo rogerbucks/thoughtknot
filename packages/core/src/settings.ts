@@ -45,6 +45,11 @@ export interface Settings extends StrictnessSettings {
   classifications: string[];
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
+  /**
+   * The level a file of a note's repository with no classification counts as, when its change is reviewed with Claude
+   * (§41, github_review_items; TRUST-4). The lowest until chosen, as the user asked for their own repository's change.
+   */
+  aiRepoUnlabelled: string;
   aiModels: AiModel[];
   /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
   aiMatrixNote: string;
@@ -99,6 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   classifications: CLASSIFICATIONS,
   // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
   aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
+  aiRepoUnlabelled: CLASSIFICATIONS[0] ?? '',
   aiModels: [],
   aiMatrixNote: '',
   aiClassMap: {},
@@ -200,6 +206,13 @@ export const OPTIONS: Option[] = [
     name: 'Unlabelled notes count as',
     sentence:
       'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.',
+  },
+  {
+    key: 'aiRepoUnlabelled',
+    section: 'AI models',
+    name: 'Unlabelled repository files count as',
+    sentence:
+      'The classification a file of a note’s repository with no classification counts as, when you review its change with Claude. The lowest until you choose a stricter one.',
   },
   {
     key: 'aiModels',
@@ -324,6 +337,11 @@ export function settingsFrom(saved: unknown): Settings {
       typeof s.aiUnlabelled === 'string' && classifications.includes(s.aiUnlabelled)
         ? s.aiUnlabelled
         : (classifications.at(-1) ?? ''),
+    // one of the classifications set, else the lowest of them, as before the setting was there
+    aiRepoUnlabelled:
+      typeof s.aiRepoUnlabelled === 'string' && classifications.includes(s.aiRepoUnlabelled)
+        ? s.aiRepoUnlabelled
+        : (classifications[0] ?? ''),
     aiModels: Array.isArray(s.aiModels)
       ? s.aiModels
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')

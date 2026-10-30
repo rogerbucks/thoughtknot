@@ -45,6 +45,8 @@ async function relay() {
 async function channelTo(port) {
   const socket = createConnection({ port, host: '127.0.0.1' });
   await new Promise((done) => socket.once('connect', done));
+  // a device that refuses hangs up, and the other may still be sending: that write is lost, as on a real network
+  socket.on('error', () => socket.destroy());
   let buffered = new Uint8Array();
   return {
     send: (message) => socket.write(framed([message])),

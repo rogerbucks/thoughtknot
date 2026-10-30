@@ -207,11 +207,18 @@ jobs:
       # The JavaScript library as two packages, installed from the release and never published to npm (Q-02)
       - name: Build the library's packages, the reader, checker and layout, and the core
         run: node scripts/library-release.mjs --out .
+      # The Python library as a wheel, installed with pip from the release (risk API-6)
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - name: Build the Python library's wheel
+        run: uv build --wheel --directory python/graph_spec --out-dir "$GITHUB_WORKSPACE"
       # what is inside main.js, as a list a scanner reads (OPS-9)
       - name: The software bill of materials
         run: npm sbom --sbom-format cyclonedx > "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json"
       - name: Checksums for every asset
-        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" > SHA256SUMS
       - name: The Graphviz version inside the engine, for the release notes
         run: node scripts/engine-version.mjs --notes engine-notes.md
       - name: The changelog since the last release, at the top of the release notes
@@ -228,6 +235,7 @@ jobs:
             THIRD_PARTY_NOTICES.md
             graph-spec-libraries-*.tar.gz
             thoughtknot-*.tgz
+            graph_spec-*.whl
             thoughtknot-sbom-*.cdx.json
             SHA256SUMS
             release-notes.md
@@ -261,8 +269,9 @@ jobs:
             release/styles.css
             release/graph-spec-libraries-*.tar.gz
             release/thoughtknot-*.tgz
+            release/graph_spec-*.whl
             release/thoughtknot-sbom-*.cdx.json
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes
+        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes

@@ -10,19 +10,35 @@ const { unquote, utcNaive } = require('./tokens.js');
 class IdNotTextError extends ProfileError {}
 
 // What to write, said for a kind of token wanted with no one text: a value in quotes, or an arrow.
+/** Whether YYYY-MM-DD is a day from year 1: 30 February is none, never 2 March (as in Python). @param {string} s */
+const isDate = (s) => {
+  const t = new Date(`${s}T00:00:00Z`);
+  return s >= '0001' && !isNaN(t.getTime()) && t.toISOString().slice(0, 10) === s;
+};
+
+/** @type {Record<string, string>} */
 const WANTED = { str: '…', arrow: '->' };
+
+/** @typedef {import('./tokens.js').Token} Token */
+/** @typedef {string | number | boolean | GTime} Value A value the profile reads: text, a number, TRUE or FALSE, a time. */
+/** @typedef {{ v: string, labels: string[], props: Record<string, Value>, line: number }} PatternNode A node as written. */
+/** @typedef {{ type: string, props: Record<string, Value>, bare: boolean, line: number, at: number }} PatternRel */
+/** @typedef {[variable: string, key: string, value: Value, line: number]} SetStatement One `SET variable.key = value`. */
 
 // Parses a data block's tokens into its MATCHes, paths and SETs, as the document profile (§3) writes them. A
 // missing comma is read in. Its place is kept in commas, so the store can write it in.
 class Parser {
+  /** @param {Token[]} t */
   constructor(t) {
     this.t = t;
     this.i = 0;
     // commas: [line, at] for each missing comma read in (§3).
     // - line: the line it is missing from.
     // - at: where in the block the code on that line ends. That is where it is written in.
+    /** @type {[line: number, at: number][]} */
     this.commas = [];
   }
+  /** @returns {Token} */
   peek(k = 0) {
     const last = this.t[this.t.length - 1];
     return this.t[this.i + k] || ['end', '', last ? last[2] : 1, '', last ? last[4] : 0];
@@ -30,19 +46,21 @@ class Parser {
   line() {
     return this.peek()[2];
   }
+  /** @param {string} [kind] @param {string} [text] */
   take(kind, text) {
     const tok = this.peek();
     if ((kind && tok[0] !== kind) || (text && tok[1] !== text))
       throw new ProfileError(
         tok[2],
-        `expected '${text || WANTED[kind] || kind}', found '${tok[1] || 'the end'}'`,
-        `write '${text || WANTED[kind] || kind}' here`,
+        `expected '${text || (kind && WANTED[kind]) || kind}', found '${tok[1] || 'the end'}'`,
+        `write '${text || (kind && WANTED[kind]) || kind}' here`,
         undefined,
         'GN201',
       );
     this.i++;
     return tok;
   }
+  /** @param {string} [kind] @param {string} [text] */
   at(kind, text) {
     const tok = this.peek();
     return (!kind || tok[0] === kind) && (!text || tok[1] === text);
@@ -61,6 +79,7 @@ class Parser {
       'GN202',
     );
   }
+  /** @returns {Value} */
   value() {
     const [k, t, n] = this.peek();
     if (k === 'str') {
@@ -69,6 +88,15 @@ class Parser {
     }
     if (k === 'num') {
       this.i++;
+      // a whole number past 2^53 cannot be held exactly here, so it is refused, never rounded (as in Python)
+      if (!/[.eE]/.test(t) && !Number.isSafeInteger(Number(t)))
+        throw new ProfileError(
+          n,
+          `'${t}' is too big to hold exactly`,
+          'write it as text, in quotes',
+          undefined,
+          'GN211',
+        );
       return Number(t);
     }
     if (k === 'kw' && (t === 'TRUE' || t === 'FALSE')) {
@@ -78,7 +106,7 @@ class Parser {
     if (k === 'kw' && t === 'DATE') {
       this.i++;
       const s = unquote(this.take('str')[1]);
-      if (!/^\d{4}-\d\d-\d\d$/.test(s) || isNaN(Date.parse(s + 'T00:00:00Z')))
+      if (!/^\d{4}-\d\d-\d\d$/.test(s) || !isDate(s))
         throw new ProfileError(n, `'${s}' is not a date`, "write DATE 'YYYY-MM-DD'", undefined, 'GN203');
       return new GTime('date', s);
     }
@@ -114,6 +142,7 @@ class Parser {
     );
   }
   props(node = false) {
+    /** @type {Record<string, Value>} */
     const out = {};
     if (!this.at('p', '{')) return out;
     this.take('p', '{');
@@ -127,9 +156,11 @@ class Parser {
     this.take('p', '}');
     return out;
   }
+  /** @returns {PatternNode} */
   node() {
     const n = this.take('p', '(')[2],
       v = this.name(),
+      /** @type {string[]} */
       labels = [];
     while (this.at('p', ':')) {
       this.take('p', ':');
@@ -139,8 +170,10 @@ class Parser {
     this.take('p', ')');
     return { v, labels, props, line: n };
   }
+  /** @returns {[PatternNode[], PatternRel[]]} */
   path() {
     const nodes = [this.node()],
+      /** @type {PatternRel[]} */
       rels = [];
     while (this.at('p', '-')) {
       this.take('p', '-');
@@ -160,9 +193,13 @@ class Parser {
     }
     return [nodes, rels];
   }
+  /** @returns {[PatternNode[], [PatternNode[], PatternRel[]][], SetStatement[]]} */
   statement() {
+    /** @type {PatternNode[]} */
     const matches = [],
+      /** @type {[PatternNode[], PatternRel[]][]} */
       paths = [],
+      /** @type {SetStatement[]} */
       sets = [];
     while (this.at('kw', 'MATCH')) {
       this.take('kw', 'MATCH');

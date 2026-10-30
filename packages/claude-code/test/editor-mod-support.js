@@ -171,7 +171,7 @@ export function launcherFor(where, over = {}) {
     read: async (path) => readFileSync(path, 'utf8'),
     settings: async () => gateSettings(over.settings),
     exists: async (path) => existsSync(path),
-    realPath: async (path) => realpathSync(path),
+    realPath: async (path) => realpathSync.native(path),
     cwd: where.top,
     server: [process.execPath, ENTRY],
     drafts: where.data,

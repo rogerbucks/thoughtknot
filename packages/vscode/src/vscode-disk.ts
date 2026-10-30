@@ -2,7 +2,7 @@
 // and written through VS Code's file system, as folder-calls.ts asks. A note open in a text editor is read from there,
 // unsaved typing too. An edit goes in as a change to that text, then is saved, so VS Code's undo stays true.
 import * as vscode from 'vscode';
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 import type { FolderDisk } from './folder-calls.ts';
 
 /** VS Code's word for "no file there", as the core and folder-calls.ts read it. */

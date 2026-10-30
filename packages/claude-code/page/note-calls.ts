@@ -3,10 +3,11 @@
 // page last had. It uses the page's own token, which is the only key that writes. The server compares the version under
 // its lock and refuses a stale one (409), keeping what was sent as a draft. Claude's key reaches no route this file
 // calls.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
+import { whyOf } from '../src/api-types.ts';
+import type { FollowLine, StaleWrite, WriteReply } from '../src/api-types.ts';
 
-/** A line of the change stream: the note as it is now, or why it is no longer sent. */
-export type FollowLine = { version: string; text: string } | { gone: string };
+export type { FollowLine };
 
 /**
  * What a write came to: the note's new version, or why nothing was written. That is the server's status. For a stale
@@ -27,19 +28,18 @@ export function noteCalls(token: string, fetcher: typeof fetch) {
         headers: { authorization, 'if-match': version, 'content-type': 'text/plain; charset=utf-8' },
         body: text,
       });
-      if (reply.ok) return { ok: true, version: ((await reply.json()) as { version: string }).version };
-      const theirs =
-        reply.status === 409
-          ? ((await reply.json().catch(() => null)) as { text: string; version: string } | null)
-          : null;
+      if (reply.ok) return { ok: true, version: ((await reply.json()) as WriteReply).version };
+      // every refusal is JSON with the server's why; a stale write (409) also holds the note as it now is
+      const body = (await reply.json().catch(() => null)) as Partial<StaleWrite> | null;
+      const theirs = reply.status === 409 && body?.text !== undefined && body.version !== undefined ? body : null;
       return {
         ok: false,
         status: reply.status,
-        ...(theirs ? { theirs: { text: theirs.text, version: theirs.version } } : {}),
+        ...(theirs ? { theirs: { text: theirs.text as string, version: theirs.version as string } } : {}),
         why:
           reply.status === 409
             ? word('page.changed-while-deciding')
-            : word('page.write-refused', { status: reply.status }),
+            : (whyOf(body) ?? word('page.write-refused', { status: reply.status })),
       };
     },
     /** Keeps what was typed as the note's draft, outside the vault; an empty text clears it. Resolves to whether it was kept. */

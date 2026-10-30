@@ -77,7 +77,7 @@ describe('notes by id only (cc_open_notes_only)', () => {
     for (const path of tries) {
       const read = await ask(s.port, { path, headers: bearer(s) });
       assert.equal(read.status, 404, path);
-      assert.equal(read.text, 'No such note is open.', path);
+      assert.deepEqual(json(read), { why: 'No such note is open.' }, path);
       const write = await ask(s.port, { method: 'PUT', path, headers: writing(s, version), body: 'escaped' });
       assert.equal(write.status, 404, path);
     }
@@ -142,7 +142,7 @@ describe('no escape (cc_no_escape)', () => {
   test('the store’s vault is its real path, and a drafts folder inside the vault is refused', async () => {
     const v = tempVault();
     const store = await NoteStore.create({ vault: v.vault, drafts: v.data, watch: handWatch().watch });
-    assert.equal(store.vault, realpathSync(v.vault));
+    assert.equal(store.vault, realpathSync.native(v.vault));
     await store.stop();
     for (const drafts of [join(v.vault, 'drafts'), v.vault, join(v.vault, '.obsidian')])
       await assert.rejects(NoteStore.create({ vault: v.vault, drafts }), /outside the vault/);
@@ -156,7 +156,7 @@ describe('atomic writes (cc_atomic_write)', () => {
     const before = folderOf(v.plan);
     const pending = put(s, id, PLAN_THEIRS, version);
     const [temp, target] = await hold.at;
-    assert.equal(target, realpathSync(v.plan));
+    assert.equal(target, realpathSync.native(v.plan));
     assert.equal(dirname(temp), dirname(target));
     assert.notEqual(temp, target);
     assert.equal(readFileSync(temp, 'utf8'), PLAN_THEIRS);
@@ -213,7 +213,12 @@ describe('a write only against the version it names (cc_write_if_unchanged)', ()
     writeFileSync(v.plan, PLAN_THEIRS);
     const r = await put(s, id, `${PLAN}Typed.\n`, version);
     assert.equal(r.status, 409);
-    assert.deepEqual(json(r), { text: PLAN_THEIRS, version: sha(PLAN_THEIRS), draft: true });
+    assert.deepEqual(json(r), {
+      why: 'The note changed after the page read it, so nothing was written. What was sent is kept as a draft.',
+      text: PLAN_THEIRS,
+      version: sha(PLAN_THEIRS),
+      draft: true,
+    });
     assert.equal(r.headers.etag, sha(PLAN_THEIRS));
     assert.equal(readFileSync(v.plan, 'utf8'), PLAN_THEIRS);
     const back = json(await ask(s.port, { path: at(id), headers: bearer(s) }));
@@ -235,7 +240,7 @@ describe('drawn again on a change on disk (cc_redrawn_on_change)', () => {
     const { v, s, id, version } = await opened({ watch: w.watch });
     assert.deepEqual(
       w.watched.map((e) => [e.folder, e.file]),
-      [[dirname(realpathSync(v.plan)), 'plan.md']],
+      [[dirname(realpathSync.native(v.plan)), 'plan.md']],
     );
     const stream = follow(s, id);
     assert.equal(await stream.status, 200);

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-review.test.js",
+  "test": "a review from the change set a note holds > a block that is no change set is refused, with why",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

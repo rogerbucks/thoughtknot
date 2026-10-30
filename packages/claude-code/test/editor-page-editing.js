@@ -9,6 +9,7 @@ import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { until } from '../../obsidian/test/host/load-plugin.js';
 import { NOTE, READER } from '../../obsidian/test/host/pane-notes.js';
 import { cleanUp } from './editor-page-support.js';
@@ -208,8 +209,8 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
     });
 
     test('nothing is written while the note is above the gate: the page shows why, with no editor, and the note is as it was', async () => {
-      const { storeGate } = await import(at('packages/claude-code/server/editor-gate.ts'));
-      const { settingsFrom } = await import(at('packages/core/src/settings.ts'));
+      const { storeGate } = await import(pathToFileURL(at('packages/claude-code/server/editor-gate.ts')).href);
+      const { settingsFrom } = await import(pathToFileURL(at('packages/core/src/settings.ts')).href);
       const s = settingsFrom(null);
       const gate = storeGate(
         { classifications: s.classifications, aiUnlabelled: s.aiUnlabelled, aiModels: s.aiModels },

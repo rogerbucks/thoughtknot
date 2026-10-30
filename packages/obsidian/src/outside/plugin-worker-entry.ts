@@ -3,8 +3,8 @@
 // worker's script is that function, run on `self`, and then the plug-in's file. So the worker is sealed before the
 // file's first line runs: no network, and no way to make code from text.
 // The core's module by its own path, not through the core's entry, so the worker carries only what it needs.
-import { sealOutside } from '../../../core/src/plugin-outside.ts';
-import type { PluginScope } from '../../../core/src/plugin-serve.ts';
+import { sealOutside } from '@thoughtknot/core';
+import type { PluginScope } from '@thoughtknot/core';
 
 /** The worker's own scope, handed in by the function wrapped round this bundle: `self`. */
 declare const scope: PluginScope & object;

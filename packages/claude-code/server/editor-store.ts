@@ -7,7 +7,7 @@
 // the page (cc_redrawn_on_change). Once stopped it starts no write. Its stop waits for those under way, so the process
 // never exits half way through one (C0 review).
 //   GET notes/<id>          {text, version, draft}, the version also as the ETag.
-//   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {text, version, draft} when stale.
+//   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {why, text, version, draft} when stale.
 //   PUT notes/<id>/draft    what was typed, kept as the note's draft. An empty one clears it.
 //   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}.
 //   GET notes/<id>/versions, /at/<commit>, /reviews…  its earlier versions and its repository's changes (editor-changes.ts)
@@ -29,6 +29,7 @@ import { proposalInto } from './editor-proposals.ts';
 import { GIT_HISTORY, type NoteHistory } from './note-history.ts';
 import { GH_READER, type GitHubReader } from './github-reader.ts';
 import { changesAnswer, type ChangesAsked } from './editor-changes.ts';
+import type { NoteReply, StaleWrite, UnwrittenReply, WriteReply } from '../src/api-types.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
 export interface NoteStoreOptions {
@@ -219,7 +220,7 @@ export class NoteStore {
     const taken = await this.drafts.take(note.inVault);
     // a draft is typed text too: one the gate refuses (a credential, say) is withheld, and stays on the shelf unsent
     const draft = taken && this.gate?.draft(taken.text) ? null : taken;
-    return answer(200, { text: r.text, version: r.version, draft }, { etag: r.version });
+    return answer(200, { text: r.text, version: r.version, draft } satisfies NoteReply, { etag: r.version });
   }
 
   /** The note's earlier versions and its repository's changes, each read only when asked and held to the gate. */
@@ -269,27 +270,28 @@ export class NoteStore {
         const now = await this.load(note);
         if (!now.ok) {
           const kept = await keep();
-          return answer(410, { why: now.why, draft: kept.ok });
+          return answer(410, { why: now.why, draft: kept.ok } satisfies UnwrittenReply);
         }
         const refused = this.refusal(note, now.text);
-        if (refused !== null) return answer(410, { why: refused, draft: false });
+        if (refused !== null) return answer(410, { why: refused, draft: false } satisfies UnwrittenReply);
         if (now.version !== ifMatch) {
           const kept = await keep();
-          return answer(409, { text: now.text, version: now.version, draft: kept.ok }, { etag: now.version });
+          const stale = { why: word('server.note-changed'), text: now.text, version: now.version, draft: kept.ok };
+          return answer(409, stale satisfies StaleWrite, { etag: now.version });
         }
         if (this.stopped) return stopped();
         const w =
           text === now.text ? { ok: true as const, version: now.version } : await writeNote(this.kept, now, text);
         if (!w.ok) {
           const kept = await keep();
-          return answer(500, { why: w.why, draft: kept.ok });
+          return answer(500, { why: w.why, draft: kept.ok } satisfies UnwrittenReply);
         }
         note.version = w.version;
         note.vouched = sha256(text);
         // the draft this write makes good is cleared; one typed on top of what was just written is newer, and kept
         const draft = await this.drafts.take(note.inVault);
         if (draft && (draft.text === text || draft.against !== w.version)) await this.drafts.clear(note.inVault);
-        return answer(200, { version: w.version }, { etag: w.version });
+        return answer(200, { version: w.version } satisfies WriteReply, { etag: w.version });
       }),
     );
   }

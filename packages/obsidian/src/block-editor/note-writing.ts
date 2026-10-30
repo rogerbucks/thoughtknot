@@ -27,6 +27,22 @@ const refusal = (r: Refused): Refused => ({
 type Keep = (note: string) => void;
 
 /**
+ * Makes the editor's note read `next` as one change of just what differs, which the editor's own undo takes back at once.
+ * It is a change to the editor itself, never to the file behind it, so Cmd+Z reaches it.
+ */
+export function replaceInEditor(cm: EditorView, next: string): void {
+  const data = cm.state.doc.toString();
+  let a = 0;
+  while (a < data.length && a < next.length && data[a] === next[a]) a++;
+  let b = 0;
+  while (b < data.length - a && b < next.length - a && data[data.length - 1 - b] === next[next.length - 1 - b]) b++;
+  cm.dispatch({
+    changes: { from: a, to: data.length - b, insert: next.slice(a, next.length - b) },
+    userEvent: 'input.thoughtknot',
+  });
+}
+
+/**
  * Writes what is typed into a note open in the editing view, through its editor. It is one change of just what differs.
  * Never behind its back: Obsidian would apply the file to the editor, and the page would move (§4). Straight through CodeMirror,
  * so neither the editor's own cursor nor its scroll moves: Obsidian's Editor would scroll to that cursor.
@@ -38,15 +54,7 @@ export function writeThroughEditor(cm: EditorView, s: PaneSession, keep: Keep): 
     keep(data);
     return refusal(r);
   }
-  let a = 0;
-  while (a < data.length && a < r.note.length && data[a] === r.note[a]) a++;
-  let b = 0;
-  while (b < data.length - a && b < r.note.length - a && data[data.length - 1 - b] === r.note[r.note.length - 1 - b])
-    b++;
-  cm.dispatch({
-    changes: { from: a, to: data.length - b, insert: r.note.slice(a, r.note.length - b) },
-    userEvent: 'input.thoughtknot',
-  });
+  replaceInEditor(cm, r.note);
   keep(r.note);
   return null;
 }

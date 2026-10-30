@@ -83,7 +83,7 @@
       "section": null,
       "message": "'{text}' is not an instant: in UTC it falls outside years 1 to 9999",
       "fix": "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM' within years 1 to 9999",
-      "libraries": ["py"]
+      "libraries": ["js", "py"]
     },
     {
       "code": "GN207",
@@ -111,6 +111,13 @@
       "section": "3",
       "message": "unexpected '{token}'",
       "fix": "a data block ends after its INSERT and SET",
+      "libraries": ["js", "py"]
+    },
+    {
+      "code": "GN211",
+      "section": "9",
+      "message": "'{text}' is too big to hold exactly",
+      "fix": "write it as text, in quotes",
       "libraries": ["js", "py"]
     },
     {

@@ -23,6 +23,7 @@ const FORMAT_READ = 1;
 // A block's graph and its kind, 'data', 'schema', 'query', 'changeset' or 'excerpt', read from its first line (§3);
 // an excerpt need name no graph. Throws a ProfileError when the line names no graph, or a graph name that is not one
 // word.
+/** @param {string} block @returns {[string | null, 'data' | 'schema' | 'query' | 'changeset' | 'excerpt']} */
 function header(block) {
   const first = block.split('\n').find((line) => trim(line)) || '';
   if (EXCERPT.test(first)) return [null, 'excerpt']; // an illustration, said to be one (§3)
@@ -62,13 +63,17 @@ const COMMENT_RULE = 'a comment must be on a line of its own: // also occurs ins
 // The fix COMMENT_RULE's refusal gives, exported with it so a host that warns of the same comment says the same.
 const COMMENT_FIX = 'put the comment on its own line';
 // the start of a text, cut at n UTF-16 units and never inside an emoji, as Python's reader cuts it too
+/** @param {string} s */
 function excerpt(s, n = 20) {
   return s.slice(0, s.length > n && /[\uD800-\uDBFF]/.test(s[n - 1]) ? n - 1 : n);
 }
-// [kind, text, line, raw, end] for every token, whole-line comments removed: raw is the token as written, end is where
-// it ends in the block
+// [kind, text, line, raw, end] for every token, whole-line comments removed. raw is the token as written. end is where
+// it ends in the block.
+/** @typedef {[kind: string, text: string, line: number, raw: string, end: number]} Token */
+/** @param {string} block @returns {Token[]} */
 function tokens(block) {
   withinSize(block);
+  /** @type {Token[]} */
   const out = [];
   // offsets count UTF-16 units, as JavaScript strings index; the Python reader counts code points. Each is used only on
   // the text it was counted in (Store.corrected), so both write the same corrected text
@@ -129,11 +134,14 @@ function tokens(block) {
   });
   return out;
 }
-// req:3.gql-escapes: the escapes ISO GQL names — each character after a backslash, and \uXXXX and \UXXXXXX for a
-// character by its code point
+// req:3.gql-escapes: the escapes ISO GQL names. Each is a character after a backslash, or \uXXXX and \UXXXXXX for a
+// character by its code point.
+/** @type {Record<string, string>} */
 const ESCAPES = { '\\': '\\', "'": "'", '"': '"', '`': '`', t: '\t', b: '\b', n: '\n', r: '\r', f: '\f' };
+/** @type {Record<string, number>} */
 const HEX = { u: 4, U: 6 };
 /** The character a \u or \U escape at s[i] names, or null when it names none. */
+/** @param {string} s @param {number} i */
 function codePoint(s, i) {
   const n = HEX[s[i + 1]],
     digits = s.slice(i + 2, i + 2 + n);
@@ -144,6 +152,8 @@ function codePoint(s, i) {
 /**
  * The first escape GQL does not name in a quoted text (quotes off). It gives where its backslash is, and the escape
  * as written. For \u and \U, that includes the digits that follow. null when every escape is one GQL names.
+ * @param {string} s
+ * @returns {[number, string] | null}
  */
 function badEscape(s) {
   let i = s.indexOf('\\');
@@ -157,23 +167,51 @@ function badEscape(s) {
   }
   return null;
 }
+/** @type {Record<string, string>} */
 const WRITTEN = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\t': '\\t', '\r': '\\r', '\b': '\\b', '\f': '\\f' };
 // a text quoted as the profile writes it. A backslash, a quote and each control character GQL has an escape for are
 // written as that escape. So the text reads back on one line, as itself
-const quote = (s) => "'" + [...s].map((c) => WRITTEN[c] ?? c).join('') + "'";
+const quote = (/** @type {string} */ s) => "'" + [...s].map((c) => WRITTEN[c] ?? c).join('') + "'";
 // a quoted text's text, its escapes read as GQL reads them (tokens has refused any GQL does not name)
-const unquote = (s) =>
+const unquote = (/** @type {string} */ s) =>
   s
     .slice(1, -1)
-    .replace(/\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|[^])/g, (_, e) =>
+    .replace(/\\(u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{6}|[^])/g, (_, /** @type {string} */ e) =>
       e[0] in HEX && e.length > 1 ? String.fromCodePoint(parseInt(e.slice(1), 16)) : ESCAPES[e],
     );
+// A time in UTC from its parts, the month from 0. Date.UTC would read a year below 100 as one in the 1900s.
+/** @param {number} y @param {number} mo @param {number} d @param {number} [h] @param {number} [mi] @param {number} [s] */
+function utc(y, mo, d, h = 0, mi = 0, s = 0) {
+  const t = new Date(0);
+  t.setUTCFullYear(y, mo, d);
+  t.setUTCHours(h, mi, s, 0);
+  return t;
+}
+/** The days of a month (1 to 12) of a year. @param {number} y @param {number} mo */
+const daysIn = (y, mo) => utc(y, mo, 0).getUTCDate();
+
 // A DATETIME's text as its UTC time, YYYY-MM-DDTHH:MM:SS, as Python's isoformat() writes it and Grafeo returns it.
 // Microseconds are written only when they are not 0. Throws a ProfileError for a text that is no instant, or one
 // without its offset (§9, principle 11).
+/** @param {string} s @param {number} line */
 function utcNaive(s, line) {
   const m = /^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d{1,6}))?)?(Z|[+-]\d\d:?\d\d)?$/.exec(s);
-  if (!m)
+  const [y, mo, d, h, mi, sec] = m ? m.slice(1, 7).map((x) => +(x || 0)) : [];
+  const offset = m && m[8] && m[8] !== 'Z' ? m[8].slice(1).replace(':', '') : '0000';
+  // each part in its range, as Python's datetime holds it: 25:00 or 30 February is no instant, never the next day
+  if (
+    !m ||
+    y < 1 ||
+    mo < 1 ||
+    mo > 12 ||
+    d < 1 ||
+    d > daysIn(y, mo) ||
+    h > 23 ||
+    mi > 59 ||
+    sec > 59 ||
+    +offset.slice(0, 2) > 23 ||
+    +offset.slice(2) > 59
+  )
     throw new ProfileError(
       line,
       `'${s}' is not an instant`,
@@ -183,14 +221,18 @@ function utcNaive(s, line) {
     );
   if (!m[8])
     throw new ProfileError(line, `'${s}' has no offset`, 'add its offset from UTC, such as +10:00', undefined, 'GN205');
-  let off = 0;
-  if (m[8] !== 'Z') {
-    const sg = m[8][0] === '-' ? -1 : 1,
-      d = m[8].slice(1).replace(':', '');
-    off = sg * (Number(d.slice(0, 2)) * 60 + Number(d.slice(2)));
-  }
-  const t = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) - off * 60000);
-  const p = (x) => String(x).padStart(2, '0');
+  const off = (m[8][0] === '-' ? -1 : 1) * (Number(offset.slice(0, 2)) * 60 + Number(offset.slice(2)));
+  const t = utc(y, mo - 1, d, h, mi, sec);
+  t.setTime(t.getTime() - off * 60000);
+  if (t.getUTCFullYear() < 1 || t.getUTCFullYear() > 9999)
+    throw new ProfileError(
+      line,
+      `'${s}' is not an instant: in UTC it falls outside years 1 to 9999`,
+      "write DATETIME 'YYYY-MM-DDTHH:MM:SS+HH:MM' within years 1 to 9999",
+      undefined,
+      'GN206',
+    );
+  const p = (/** @type {number} */ x) => String(x).padStart(2, '0');
   const micro = m[7] ? m[7].padEnd(6, '0') : '';
   return (
     `${t.getUTCFullYear().toString().padStart(4, '0')}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())}T${p(t.getUTCHours())}:${p(t.getUTCMinutes())}:${p(t.getUTCSeconds())}` +

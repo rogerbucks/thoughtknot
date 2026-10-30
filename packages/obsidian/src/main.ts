@@ -1,7 +1,6 @@
 // ThoughtKnot: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
-import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
+import { Notice, Plugin, TFile, editorInfoField, type MarkdownPostProcessorContext } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
-import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
   gqlBlocks,
   holdsStill,
@@ -47,6 +46,7 @@ import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-i
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { ThoughtKnotSettingTab } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
+export { obsidianHost } from './obsidian-host';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { TriedTypes } from './tried-types';

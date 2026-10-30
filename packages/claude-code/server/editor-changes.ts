@@ -2,16 +2,18 @@
 // - a note's earlier versions for the changes view, read from its git repository (changes_view);
 // - the pull requests, merges and commits of that repository, read from GitHub for a review (github_review_items).
 // Each is read only when the page asks. A version or an item is opened only once it was listed for the note. So the
-// page never names a commit or an address. And every text is held to the gate first.
+// page never names a commit or an address. And every text is held to the gate first. A title or name holding a
+// credential is held back; the page shows the rest fenced, as outside text.
 //   GET notes/<id>/versions                  {versions: [{commit, kind, label}]}, or 404 {why}
 //   GET notes/<id>/at/<commit>               {text} at a commit just listed for it
 //   GET notes/<id>/reviews                   {items: [{kind, id, title, author, when, url}]}, or 404 {why}
 //   GET notes/<id>/reviews/<kind>/<item id>  {files: [{path, before, after}], withheld: [{path, why}], workstreams, unread}
-import { word } from '@thoughtknot/core';
+import { heldItem, word } from '@thoughtknot/core';
 import type { ReviewItem } from '@thoughtknot/core';
 import type { GitHubReader } from './github-reader.ts';
 import type { NoteHistory } from './note-history.ts';
 import type { ApiAnswer } from './start-server.ts';
+import type { PageItemFiles, PageVersion } from '../src/api-types.ts';
 
 /** The tail of a review route: the list, or one item by its kind and id. */
 export const REVIEW_ROUTE = /^\/reviews(?:\/(pull|merge|commit)\/([1-9][0-9]{0,8}|[0-9a-f]{40}))?$/;
@@ -49,7 +51,7 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
   if (tail === '/versions') {
     const v = await a.history.versions(real);
     a.listed.versions = new Set(v.ok ? v.versions.map((x) => x.commit) : []);
-    return v.ok ? json(200, { versions: v.versions }) : json(404, { why: v.why });
+    return v.ok ? json(200, { versions: v.versions satisfies PageVersion[] }) : json(404, { why: v.why });
   }
   if (at) {
     const t = await a.history.textAt(real, at);
@@ -62,7 +64,8 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
     a.listed.items.clear();
     if (!r.ok) return json(404, { why: r.why });
     for (const item of r.value) a.listed.items.set(`${item.kind}/${item.id}`, item);
-    return json(200, { items: r.value });
+    // GitHub's titles and names are a third party's text: one holding a credential never reaches the pane (TRUST-4)
+    return json(200, { items: r.value.map(heldItem) });
   }
   const r = await a.github.files(real, a.listed.items.get(`${m[1]}/${m[2]}`) as ReviewItem);
   if (!r.ok) return json(404, { why: r.why });
@@ -73,5 +76,5 @@ export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiA
     return why === null;
   });
   const workstreams = r.value.workstreams !== null && a.held(r.value.workstreams) === null ? r.value.workstreams : null;
-  return json(200, { files, withheld, workstreams, unread: r.value.unread });
+  return json(200, { files, withheld, workstreams, unread: r.value.unread } satisfies PageItemFiles);
 }

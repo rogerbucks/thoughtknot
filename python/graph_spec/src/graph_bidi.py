@@ -30,3 +30,9 @@ def isolate_labels(svg: str) -> str:
         lambda m: m.group(1) + isolated(m.group(2)),
         svg,
     )
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+isolate_labels isolated
+""".split()

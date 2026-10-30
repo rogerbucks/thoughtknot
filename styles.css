@@ -1477,6 +1477,15 @@ pre.thoughtknot-code {
 .thoughtknot-svg g.node:focus {
   outline: none;
 }
+/* The ring on the box the keyboard has reached (UX-9, SC 2.4.11), drawn apart from the box's own outline.
+   It is the text colour, 2 pixels wide, standing off the box. That colour shows against the page and against the
+   accent glow of a highlight, where the accent itself would fade into it. */
+.thoughtknot-svg .thoughtknot-focus-ring {
+  fill: none;
+  stroke: var(--gn-text-normal);
+  stroke-width: 2;
+  pointer-events: none;
+}
 /* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch). A box being dragged follows the pointer,
    faded so the drawing under it still shows. The box it would land by is outlined in the accent. A line at the top of
    the drawing says where it would go (drag_moves_box). */

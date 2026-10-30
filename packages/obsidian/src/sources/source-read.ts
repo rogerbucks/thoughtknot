@@ -6,7 +6,8 @@
 // And a card drawn from a source is drawn again whenever that source changes, moves, or comes back.
 // A plug-in's source (`· FROM sample:trip`) is asked of the plug-in turned on that adds it (outside-plugins.ts).
 import { MarkdownRenderChild, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
+import type { TAbstractFile } from 'obsidian';
+import type { BlockContext } from '../block-context';
 import { connect, joinPlaces, namesSharedSchema, placeKey, READ_LIMITS, readSource } from '@thoughtknot/core';
 import type { GraphSource, JoinedRead, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
 import type { PluginRegistry } from '@thoughtknot/core';
@@ -121,7 +122,7 @@ async function readPlaces(
 export function watchSource(
   plugin: ThoughtKnotPlugin,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   source: GraphSource,
   read: SourceRead | SourceRefusal,
   redraw?: () => void,

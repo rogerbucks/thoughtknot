@@ -305,8 +305,16 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
+## The graph format library: its types
+
+- `packages/graph-spec/test/typed.test.mjs` — the library's JavaScript is type-checked in strict mode. A file not typed
+  yet is held in `untyped.json`, a list that only shrinks (one_code_style; CODE-1).
+
 ## The Python library
 
+- `python/graph_spec/tests/test_readers_agree.py` — both readers give the same answer to blocks made at random from one
+  grammar, `statement-grammar.json`. A pull request reads a few hundred; the nightly readers-agree workflow reads 20000
+  (spec_grammar; ARCH-5).
 - `python/graph_spec/tests/test_changeset_header.py` — a change set's first line is read as the reader reads a
   block's, in the engine's copy and the rules'. Lines end at LF only, and whitespace is GQL's set.
 - `python/graph_spec/tests/test_engine_gets_corrected.py` — every route to the engine gives Grafeo the reader's
@@ -352,6 +360,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
+- `python/graph_spec/tests/test_public_names.py` — each entry point declares its public names. `js_parity.json`
+  names the Python twin of each JavaScript export (spec §41, lib_public_api).
+- `python/graph_spec/tests/test_wheel.py` — the library builds as a wheel that installs and reads a note. The release
+  attaches it (lib_github_release).
 - `python/graph_spec/tests/test_reader_agrees_with_grafeo.py` — the reader and its plain rules give Grafeo's answers, Grafeo being the reference engine and a test dependency only (req:17.engine-agreement).
 - `python/graph_spec/tests/test_view_parity.py` — Grafeo, running each view of `view_cases.json` as written, returns the
   things the core returns (editor spec §7, views_agree_with_grafeo). It is given a fixed list of GQL's and Cypher's
@@ -541,6 +553,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/fixed-sleeps.test.js` — no new fixed sleep in the tests. An awaited `wait(20)` or the like outside a polling
   loop is held, file by file, to the allowance in `test/fixed-sleeps.json`. That allowance only goes down
   (`node scripts/fixed-sleeps.mjs --tighten`).
+- `test/long-functions.test.js` — no new function over 100 lines in the code that ships. Those already longer are held,
+  each to its lines, by `test/long-functions.json`, which only goes down (`node scripts/long-functions.mjs --tighten`).
+- `test/unnamed-modules.test.js` — no new core module over 100 lines without a test named after it. Those already
+  without one are listed in `test/unnamed-modules.json`, which only shrinks (`node scripts/unnamed-modules.mjs --tighten`).
 
 ## The GitHub mirror of the requirements
 
@@ -1018,3 +1034,9 @@ after a module nor listed here, and on a listed file that is missing.
   projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
   scale_massive_card). Its search must find a thing in any group and fly there.
+- `packages/obsidian/test/style-undo.test.js` — a box dragged in the editing view is one undo step (editor spec §41).
+  It spans the block editor, the note writer and the drag.
+- `test/a11y-states.test.js` — the states a person once checked by hand, in headless Chrome (editor spec §41,
+  a11y_states_auto). It spans the harness page, the focus ring, the export form and the bar.
+- `test/colour-alone-rules.test.js` — no colour carries a meaning alone, across the whole style sheet (editor spec §44,
+  colour_never_alone). It spans `styles.css` and the files that give each state its word or icon.
