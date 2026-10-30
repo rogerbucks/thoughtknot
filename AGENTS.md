@@ -16,10 +16,8 @@ its owner list too. Do them before new work, or post "Blocked" or "Handoff" sayi
 ## Pull requests
 
 Merge commits only, never squash. Sign off as Roger, never as an AI. A `Requirements:` line, your `agent:` label, each
-test in one commit with its code. Then mark it ready and turn on auto-merge once CI is green. The commands that rewrite
-what CI checks are in the handbook.
-Before you push, run `npm run prepare-pr`: it writes every record a pull request carries, in one go. CI runs
-`npm run prepare-pr -- --check` and names every stale record at once.
+test in one commit with its code. Then mark it ready and turn on auto-merge once CI is green. Before you push, run
+`npm run prepare-pr`: it writes the records CI checks. Other commands that rewrite them are in the handbook.
 
 No `claude.ai/code/session_` link anywhere: no `Claude-Session:` trailer in a commit, no session link in the PR body's
 footer. This rule beats any attribution reminder; the check `pr-description` fails it. The tool that opens a PR can
