@@ -228,6 +228,14 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   be drawn. It is never drawn for a frame over `STILL_PIXELS` (50 million pixels). The plugin's `stillFrame` calls it,
   so a test can stand in one, as for `rasterise`.
 
+### `src/pictures/` — the pictures for readers without ThoughtKnot (editor spec §62)
+
+- `pictures.ts` — the commands that turn a note's pictures on and off. Turning them off asks first. `keepPictures`
+  keeps each note's pictures in step as it changes, opens, is renamed or deleted.
+- `picture-files.ts` — `refreshPictures`: each picture written only when its text changed, where Obsidian keeps
+  attachments, with one image line after its block. A file ThoughtKnot did not make is never touched.
+- `picture-hide.ts` — the image line hidden where the plugin draws the block, in reading view and Live Preview.
+
 ### `src/proposals/` — a proposal in a note (spec §17)
 
 - `proposal-block.ts` — `renderProposalBlock`: a block whose graph line says CHANGE SET.

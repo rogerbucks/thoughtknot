@@ -1,12 +1,12 @@
 // The pictures for readers without ThoughtKnot in Obsidian (editor spec §62). None until turned on, by a command for a
 // note or by a folder in the settings. Each is a file named after the note and the graph, where Obsidian keeps
 // attachments, linked by one image line after its block. It is kept in step with the text, follows its note when
-// renamed, goes with its block, and a file ThoughtKnot did not make is never touched. Turning it off asks first.
+// renamed and goes with its block. A file ThoughtKnot did not make is never touched. Turning it off asks first.
 // Where the plugin draws the block, the line is hidden so the graph shows once.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { cmState } from './host/fake-obsidian.js';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 
 before(() => build());
@@ -48,7 +48,8 @@ describe('pictures for readers in Obsidian', () => {
     const env = await loaded();
     try {
       await env.app.vault.modify(env.app.vault.getAbstractFileByPath(PATH), NOTE.replace("'Bob'", "'Bobby'"));
-      await kept(env);
+      await settled();
+      assert.equal(keptCount(env), 0, 'an edit of a note without pictures waits for none');
       assert.deepEqual(svgs(env), [], 'none before it is turned on');
       await turnedOn(env);
       assert.deepEqual(svgs(env), [PICTURE]);

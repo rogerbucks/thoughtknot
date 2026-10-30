@@ -8,6 +8,7 @@ import { pictureLinkOf, pictureTarget, picturesOnFor, word } from '@thoughtknot/
 import type { PluginCommand } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
+import { noteText } from '../storage/plugin-notes';
 import { followNote, refreshPictures, removePictures, trashOurs } from './picture-files';
 import { hideInLivePreview, hideInReadingView } from './picture-hide';
 
@@ -54,7 +55,7 @@ async function turnOn(plugin: ThoughtKnotPlugin, confirmed = false): Promise<voi
     return;
   }
   for (const failed of run?.failed ?? []) new Notice(failed);
-  const has = (await plugin.app.vault.read(note.file)).includes('.thoughtknot.svg');
+  const has = ((await noteText(plugin.app, note.file.path)) ?? '').includes('.thoughtknot.svg');
   new Notice(has ? word('pictures.drawn', { count: run?.drawn ?? 0 }) : word('pictures.none'));
 }
 
@@ -89,8 +90,7 @@ export function keepPictures(plugin: ThoughtKnotPlugin): void {
   const refresh = (path: string) =>
     void refreshPictures(plugin, path)
       .then(async () => {
-        const f = plugin.app.vault.getAbstractFileByPath(path);
-        const text = f instanceof TFile ? await plugin.app.vault.read(f) : '';
+        const text = (await noteText(plugin.app, path)) ?? '';
         linked.set(
           path,
           text.split('\n').flatMap((l) => pictureLinkOf(l.replace(/\r$/, '')) ?? []),
@@ -109,8 +109,18 @@ export function keepPictures(plugin: ThoughtKnotPlugin): void {
       }, PICTURE_REST_MS),
     );
   };
+  // a note waits for its pictures only when they are on for it, so most notes set no timer
+  const onFor = async (path: string) =>
+    picturesOnFor(plugin.settings, path) ||
+    ((await noteText(plugin.app, path, { shown: true })) ?? '')
+      .split('\n')
+      .some((l) => pictureLinkOf(l.replace(/\r$/, '')) !== null);
   const { vault, workspace } = plugin.app;
-  plugin.registerEvent(vault.on('modify', (f) => f instanceof TFile && f.extension === 'md' && later(f.path)));
+  plugin.registerEvent(
+    vault.on('modify', (f) => {
+      if (f instanceof TFile && f.extension === 'md') void onFor(f.path).then((on) => on && later(f.path));
+    }),
+  );
   plugin.registerEvent(workspace.on('file-open', (f) => f && f.extension === 'md' && refresh(f.path)));
   plugin.registerEvent(
     vault.on('rename', (f, old) => {

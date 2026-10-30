@@ -25,6 +25,8 @@ import {
 } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { classificationOf } from '../export/classification';
+import { exportText, moveExport, vaultOps } from '../export/vault-write';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** What a refresh did: the pictures written, the question a classified note asks first, and what was not written. */
 export interface PictureRun {
@@ -44,15 +46,9 @@ function today(): string {
   return `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
 }
 
-/** The text of the file at `path`, or null when there is none. */
-async function textAt(plugin: ThoughtKnotPlugin, path: string): Promise<string | null> {
-  const f = plugin.app.vault.getAbstractFileByPath(path);
-  return f instanceof TFile ? plugin.app.vault.read(f) : null;
-}
-
 /** Whether the file at `path` is a picture ThoughtKnot made, which it may write over or remove. */
 export async function oursAt(plugin: ThoughtKnotPlugin, path: string): Promise<boolean> {
-  const text = isPictureFile(path) ? await textAt(plugin, path) : null;
+  const text = isPictureFile(path) ? await exportText(plugin, path) : null;
   return text !== null && madeByThoughtKnot(text);
 }
 
@@ -71,16 +67,6 @@ async function placeFor(plugin: ThoughtKnotPlugin, note: string, name: string): 
   }
 }
 
-/** Writes `text` to `path`, its folder made first. */
-async function write(plugin: ThoughtKnotPlugin, path: string, text: string): Promise<void> {
-  const { vault } = plugin.app;
-  const folder = folderOf(path);
-  if (folder && !vault.getFolderByPath(folder)) await vault.createFolder(folder);
-  const was = vault.getAbstractFileByPath(path);
-  if (was instanceof TFile) await vault.modify(was, text);
-  else await vault.create(path, text);
-}
-
 /** Puts the picture at `path` in the trash, only when ThoughtKnot made it. */
 export async function trashOurs(plugin: ThoughtKnotPlugin, path: string): Promise<void> {
   const f = plugin.app.vault.getAbstractFileByPath(path);
@@ -88,8 +74,8 @@ export async function trashOurs(plugin: ThoughtKnotPlugin, path: string): Promis
 }
 
 /**
- * The picture lines of `text` that belong to no picture block any more, with their files: a line after a block that is
- * not drawn as a graph, and a line left alone where its block was, linking a picture of this note's name.
+ * The picture lines of `text` that belong to no picture block any more, with their files. One is a line after a block
+ * not drawn as a graph. Another is a line left where its block was, linking a picture of this note's name.
  */
 function leftOver(text: string, path: string): { line: number; target: string }[] {
   const drawn = new Set(pictureBlocks(text).map((b) => b.block));
@@ -106,8 +92,8 @@ function leftOver(text: string, path: string): { line: number; target: string }[
 
 /**
  * Brings the pictures of the note at `path` up to date, when they are on for it (or `turnOn` turns them on). Each
- * picture is written only when its fingerprint changed; the note gets each image line it lacks, and loses each line,
- * with its file, whose block is gone. Null when pictures are not on for the note.
+ * picture is written only when its fingerprint changed. The note gets each image line it lacks. It loses each line
+ * whose block is gone, with its file. Null when pictures are not on for the note.
  */
 export async function refreshPictures(
   plugin: ThoughtKnotPlugin,
@@ -115,8 +101,8 @@ export async function refreshPictures(
   { turnOn = false, confirmed = false } = {},
 ): Promise<PictureRun | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile) || file.extension !== 'md') return null;
-  const text = await plugin.app.vault.read(file);
+  const text = file instanceof TFile && file.extension === 'md' ? await noteText(plugin.app, path) : null;
+  if (!(file instanceof TFile) || text === null) return null;
   // on by a line it has, even one left where its block was, which then goes
   const lined = text.split('\n').some((l) => pictureLinkOf(l.replace(/\r$/, '')) !== null);
   if (!turnOn && !lined && !picturesOnFor(plugin.settings, path)) return null;
@@ -143,13 +129,13 @@ export async function refreshPictures(
     const { picture } = decision;
     const at = lines.get(block);
     const target = at ? pictureTarget(path, at.href) : await placeFor(plugin, path, picture.fileName);
-    const state = pictureState(await textAt(plugin, target), picture.fingerprint);
+    const state = pictureState(await exportText(plugin, target), picture.fingerprint);
     if (state === 'not-ours') {
       run.failed.push(word('pictures.not-written', { graph, why: word('pictures.not-ours', { path: target }) }));
       continue;
     }
     if (state !== 'current') {
-      await write(plugin, target, picture.svg);
+      await vaultOps(plugin).write(target, picture.svg);
       run.drawn++;
     }
     const href = pictureHref(path, target);
@@ -158,7 +144,7 @@ export async function refreshPictures(
   const gone = leftOver(text, path);
   for (const g of gone) await trashOurs(plugin, g.target);
   if (wanted.size || gone.length)
-    await plugin.app.vault.process(file, (now) => {
+    await changeVaultNote(plugin.app, path, (now) => {
       // the lines left over taken out, from the foot up, then each line wanted put after its block
       const kept = leftOver(now, path).map((g) => g.line);
       let next = now
@@ -173,15 +159,14 @@ export async function refreshPictures(
 
 /** The note at `path` with every picture line taken away, and each picture file ThoughtKnot made for them in the trash. */
 export async function removePictures(plugin: ThoughtKnotPlugin, path: string): Promise<void> {
-  const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile)) return;
-  const text = await plugin.app.vault.read(file);
+  const text = await noteText(plugin.app, path);
+  if (text === null) return;
   const targets = [
     ...pictureLines(text).map((p) => pictureTarget(path, p.href)),
     ...leftOver(text, path).map((g) => g.target),
   ];
   for (const t of new Set(targets)) await trashOurs(plugin, t);
-  await plugin.app.vault.process(file, (now) => {
+  await changeVaultNote(plugin.app, path, (now) => {
     const after = new Set(pictureLines(now).map((p) => p.line));
     for (const g of leftOver(now, path)) after.add(g.line);
     return now
@@ -192,13 +177,12 @@ export async function removePictures(plugin: ThoughtKnotPlugin, path: string): P
 }
 
 /**
- * A note renamed or moved from `old` to `path`: each picture of ThoughtKnot's it links is renamed after it, beside where
- * it was, and its line links it again from the note's new place. The pictures are then redrawn, naming the new note.
+ * A note renamed or moved from `old` to `path`. Each picture of ThoughtKnot's it links is renamed after it, beside
+ * where it was. Its line links it again from the note's new place. The pictures are then redrawn, naming the new note.
  */
 export async function followNote(plugin: ThoughtKnotPlugin, path: string, old: string): Promise<void> {
-  const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile) || file.extension !== 'md') return;
-  const text = await plugin.app.vault.read(file);
+  const text = path.endsWith('.md') ? await noteText(plugin.app, path) : null;
+  if (text === null) return;
   const graphs = new Map(pictureBlocks(text).map((b) => [b.block, b.graph]));
   const moved = new Map<number, string>();
   for (const at of pictureLines(text)) {
@@ -207,20 +191,18 @@ export async function followNote(plugin: ThoughtKnotPlugin, path: string, old: s
     const now = pictureTarget(path, at.href),
       was = pictureTarget(old, at.href);
     const from = (await oursAt(plugin, now)) ? now : was;
-    const f = plugin.app.vault.getAbstractFileByPath(from);
-    if (!graph || !(f instanceof TFile) || !(await oursAt(plugin, from))) continue;
+    if (!graph || !(await oursAt(plugin, from))) continue;
     const to = joined(folderOf(from), pictureFileName(path, graph));
-    if (to !== from && !plugin.app.vault.getAbstractFileByPath(to)) await plugin.app.vault.rename(f, to);
+    if (to !== from && !plugin.app.vault.getAbstractFileByPath(to)) await moveExport(plugin, from, to);
     moved.set(at.block, pictureHref(path, plugin.app.vault.getAbstractFileByPath(to) ? to : from));
   }
   if (moved.size)
-    await plugin.app.vault.process(file, (now) => {
+    await changeVaultNote(plugin.app, path, (now) => {
       let next = now;
       for (const at of pictureLines(now)) {
         const href = moved.get(at.block);
         const line = href ? next.split('\n')[at.line] : undefined;
-        if (href && line)
-          next = withPictureLine(next, at.block, line.replace(/\]\((?:<[^>]*>|[^)\s]*)\)\s*$/, `](${href})`));
+        if (href && line) next = withPictureLine(next, at.block, `${line.slice(0, line.lastIndexOf(']('))}](${href})`);
       }
       return next;
     });

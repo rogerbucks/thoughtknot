@@ -243,8 +243,9 @@ export class Plugin extends Component {
   registerEditorExtension(ext) {
     editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
   }
-  // the browser view has no settings page, no command palette and no Page preview
+  // the browser view has no settings page, no command palette, no Page preview and no reading view
   addSettingTab() {}
+  registerMarkdownPostProcessor() {}
   registerHoverLinkSource() {}
   addCommand(c) {
     return c;
