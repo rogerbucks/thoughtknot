@@ -56,6 +56,44 @@ export const runnerOf = (pathTag: string, cls: string): string =>
     .replace(/\s(?:class|pathLength|stroke-dasharray)="[^"]*"/g, '')
     .replace(/^<path\b/, `<path class="${cls}" pathLength="100"`);
 
+/** Whether a character code is an ASCII digit. */
+const isDigit = (code: number): boolean => code >= 48 && code <= 57;
+
+/**
+ * The SVG with each group `<g id="<kind><n>" …>…</g>` of one of `kinds` replaced by what `swap` gives. A group ends at
+ * the first `</g>` after its opening, as Graphviz writes them. It is found by plain search, so it stays quick
+ * on any text (risk SEC-21). A pattern over the body took time with the square of a long group left open.
+ */
+export function replaceGroups(
+  svg: string,
+  kinds: readonly string[],
+  swap: (all: string, open: string, kind: string, n: string, body: string, close: string) => string,
+): string {
+  const parts: string[] = [];
+  let from = 0;
+  for (let at = svg.indexOf('<g id="'); at >= 0; at = svg.indexOf('<g id="', at + 1)) {
+    if (at < from) continue;
+    const name = at + 7;
+    const kind = kinds.find((k) => svg.startsWith(k, name));
+    if (kind === undefined) continue;
+    let end = name + kind.length;
+    while (end < svg.length && isDigit(svg.charCodeAt(end))) end++;
+    if (end === name + kind.length || svg[end] !== '"') continue;
+    const tagEnd = svg.indexOf('>', end);
+    if (tagEnd < 0) break;
+    const closeAt = svg.indexOf('</g>', tagEnd + 1);
+    if (closeAt < 0) break;
+    const open = svg.slice(at, tagEnd + 1),
+      body = svg.slice(tagEnd + 1, closeAt);
+    parts.push(
+      svg.slice(from, at),
+      swap(svg.slice(at, closeAt + 4), open, kind, svg.slice(name + kind.length, end), body, '</g>'),
+    );
+    from = closeAt + 4;
+  }
+  return parts.join('') + svg.slice(from);
+}
+
 /**
  * A drawn SVG (themed, before its frame) with a dot's runner on each link a dot moves along. The runner is a copy of
  * the link's line after it, in its group (`edge<n>`, Graphviz's numbering). With no dot, the SVG as it was.
@@ -63,16 +101,13 @@ export const runnerOf = (pathTag: string, cls: string): string =>
 export function withRunners(svg: string, flow: readonly FlowLink[]): string {
   const dots = new Set(flow.filter((f) => f.motion === 'dot').map((f) => f.index + 1));
   if (!dots.size) return svg;
-  return svg.replace(
-    /(<g id="edge(\d+)"[^>]*>)([\s\S]*?)(<\/g>)/g,
-    (all, open: string, n: string, body: string, close: string) => {
-      if (!dots.has(Number(n))) return all;
-      const line = /<path\b[^>]*\/>/.exec(body)?.[0];
-      return line
-        ? `${open}${body.replace(line, () => `${line}${runnerOf(line, 'thoughtknot-flow-runner')}`)}${close}`
-        : all;
-    },
-  );
+  return replaceGroups(svg, ['edge'], (all, open, _kind, n, body, close) => {
+    if (!dots.has(Number(n))) return all;
+    const line = /<path\b[^>]*\/>/.exec(body)?.[0];
+    return line
+      ? `${open}${body.replace(line, () => `${line}${runnerOf(line, 'thoughtknot-flow-runner')}`)}${close}`
+      : all;
+  });
 }
 
 /** The framed image with its links moving: the style sheet that moves them, when any link moves; else as it was. */
