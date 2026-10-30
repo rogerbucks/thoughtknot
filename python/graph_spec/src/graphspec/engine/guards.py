@@ -145,3 +145,26 @@ def holds(guard: str, ctx: dict[str, Any]) -> bool:
     if i != len(toks):
         raise _refusal(guard, f"has {toks[i][1]!r} after its end")
     return bool(out)
+
+
+class _AnyName(dict):
+    """A context holding every name, each as None: a guard read without its names looked up."""
+
+    def __contains__(self, name: object) -> bool:
+        return True
+
+    def __missing__(self, name: str) -> None:
+        return None
+
+
+def guard_problem(guard: str) -> str | None:
+    """What is wrong with a guard as written, or None when it reads. Its names are not looked up,
+    so a guard is checked before the things it will test are known, as a rule's `when` is
+    (editor spec §56, rule_look_when)."""
+    try:
+        holds(guard, _AnyName())
+    except TypeError:
+        return None  # a comparison of values it has not got: it reads
+    except ValueError as e:
+        return str(e)
+    return None

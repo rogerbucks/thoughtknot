@@ -61,7 +61,8 @@ const { clusterCertainty } = require('./clusters/cohesion.js');
 const processCore = require('./process/core.js');
 const runs = require('./process/runs.js');
 const altitude = require('./altitude/altitude.js');
-const { lensesOf, runLens } = require('./lenses/saved-lenses.js');
+const { lensesOf, runLens, queryThings, queryLinks } = require('./lenses/saved-lenses.js');
+const { guardProblem } = require('./rules/guards.js');
 const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
@@ -192,6 +193,9 @@ module.exports = {
   byAxes: altitude.byAxes,
   lensesOf,
   runLens,
+  queryThings,
+  queryLinks,
+  guardProblem,
   altitudeIndex,
   searchIndex,
   contextsOf,

@@ -8,6 +8,8 @@ import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Render } from './render-choice.ts';
+import { RULE_KEYS } from './rule-words.ts';
+import type { RuleParts } from './rule-words.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -100,7 +102,7 @@ export type StyleKind = (typeof STYLE_KINDS)[number];
 export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Nudge: ['word', 'thing', 'other', 'group', 'direction'],
   Show: ['property', 'kind', 'thing', 'type', 'view', 'inline'],
-  Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means'],
+  Look: ['view', 'path', 'thing', 'kind', 'from', 'type', 'to', 'colour', 'line', 'format', 'means', ...RULE_KEYS],
   ViewStyle: ['view', 'outside'],
   Shown: [
     'view',
@@ -258,8 +260,11 @@ export interface LinkTarget {
   to: string;
 }
 
-/** A look (§7, styled_paths_and_views): within one view or one path, the colour, line and format of a thing, kind or link. */
-export interface Look {
+/**
+ * A look (§7, styled_paths_and_views): within one view or one path, the colour, line and format of a thing, kind or
+ * link. A rule's look (§56, rule-words.ts) has a `when` or a `lens` instead, and finds its own things.
+ */
+export interface Look extends RuleParts {
   view?: string;
   path?: string;
   thing?: string;

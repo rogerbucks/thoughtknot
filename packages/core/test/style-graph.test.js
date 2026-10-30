@@ -20,6 +20,7 @@ const NAMES = {
   kinds: new Set(['Drink']),
   types: new Set(['WARMS']),
   paths: new Set(),
+  lenses: new Set(),
   properties: () => new Set(['name']),
 };
 /** The problem code of a key a kind does not use. */
