@@ -147,6 +147,33 @@ jobs:
       - run: node scripts/requirements-drift.mjs
       - run: npm run build
 
+  # Each package's share of lines the tests run, held to its baseline on a pull request that touches a package (CODE-3).
+  # It always reports, so it can be required; a change outside packages/ skips the run.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - id: touched
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -z "$BASE" ] || git diff --name-only "$BASE" HEAD | grep -q '^packages/'; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "::notice::No package changed, so its coverage was not measured."; fi
+      - if: steps.touched.outputs.run == 'true'
+        run: npm ci
+      # the whole suite at once, as the release's quality job runs it, so it gets the same 8 GB ceiling
+      - if: steps.touched.outputs.run == 'true'
+        env:
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
+          THOUGHTKNOT_RUN_MINUTES: 40
+        run: node scripts/quality-check.mjs --coverage
+
   python:
     runs-on: ubuntu-latest
     timeout-minutes: 30
