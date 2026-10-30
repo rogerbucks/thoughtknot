@@ -4,7 +4,7 @@
 // (picture-hide.ts).
 import { Modal, Notice, TFile } from 'obsidian';
 import type { App } from 'obsidian';
-import { pictureTarget, picturesOnFor, word } from '@thoughtknot/core';
+import { pictureLinkOf, pictureTarget, picturesOnFor, word } from '@thoughtknot/core';
 import type { PluginCommand } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
@@ -93,7 +93,7 @@ export function keepPictures(plugin: ThoughtKnotPlugin): void {
         const text = f instanceof TFile ? await plugin.app.vault.read(f) : '';
         linked.set(
           path,
-          [...text.matchAll(/\]\(([^)\s]*\.thoughtknot\.svg)\)/gi)].map((m) => m[1] ?? ''),
+          text.split('\n').flatMap((l) => pictureLinkOf(l.replace(/\r$/, '')) ?? []),
         );
         // said once the note's pictures are in step, for whatever waits on them
         plugin.app.workspace.trigger(PICTURES_KEPT, path);

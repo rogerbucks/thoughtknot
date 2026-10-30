@@ -7,7 +7,7 @@ import type { EditorState, Extension, Range } from '@codemirror/state';
 import { Decoration, EditorView } from '@codemirror/view';
 import type { DecorationSet } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { pictureBlocks, pictureLines } from '@thoughtknot/core';
+import { pictureBlocks, pictureLines, pictureLinkOf } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 
 /** The class that hides a picture the plugin draws live. */
@@ -33,7 +33,7 @@ export function hideInReadingView(plugin: ThoughtKnotPlugin): void {
     const info = ctx.getSectionInfo(el);
     if (!info || !hiddenLines(info.text).includes(info.lineStart)) return;
     const line = info.text.split('\n')[info.lineStart] ?? '';
-    const name = fileOf(/\]\((?:<([^>]*)>|([^)\s]*))\)\s*$/.exec(line)?.slice(1).find(Boolean) ?? '');
+    const name = fileOf(pictureLinkOf(line.replace(/\r$/, '')) ?? '');
     for (const pic of Array.from(el.querySelectorAll<HTMLElement>('img, .internal-embed'))) {
       const src = pic.getAttribute('src') ?? '';
       if (name && fileOf(src.replace(/^app:\/\/[^/]*\//, '')) === name) pic.addClass(HIDDEN_PICTURE);
