@@ -1,10 +1,10 @@
 // States a person once checked by hand, measured in a real browser (editor spec §41, a11y_states_auto; risks UX-2 and
 // UX-9). The Obsidian host's harness is opened in a headless Chrome and brought to each state with real key presses:
-// - the focused box has a ring that shows against what is behind it, in the light and the dark theme (SC 2.4.7, 2.4.11);
+// - the focused box has a ring that shows against what is behind it, in light and dark (SC 2.4.7, 2.4.11);
 // - Escape closes a panel and gives the focus back (SC 2.4.3);
 // - nothing runs on for ever once reduced motion is asked for (SC 2.3.3);
 // - every button of the sheet is 44 points at a phone's width (AX-14);
-// - at twice the text size with the spacing WCAG allows, no control covers another and no word is cut off (SC 1.4.4, 1.4.12);
+// - at twice the text size, no control covers another and no word is cut off (SC 1.4.4, 1.4.12);
 // - in the test languages en-XA and ar-XB the views still reflow and keep every control (pseudo_locales_checked).
 // What it judges is tried first on measures made up here. Then each check is tried on a fault planted in a real page,
 // so a pass means it looked. Chrome is the one THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH.

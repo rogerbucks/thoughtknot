@@ -1,7 +1,7 @@
 // No meaning is carried by colour alone (editor spec §44, colour_never_alone; WCAG 1.4.1), held across the whole style
-// sheet. test/colour-alone.test.js checks the places a colour once stood alone. This one stops a new one: each rule of a
-// style sheet that sets a colour for a state (an `.is-…` class) must set a line, a weight or a sign too, or be listed
-// below with the word or icon that carries the same meaning and the file that makes it.
+// sheet. test/colour-alone.test.js checks the places a colour once stood alone. This one stops a new one.
+// Each rule that sets a colour for a state (an `.is-…` class) must set a line, a weight or a sign too.
+// Otherwise it is listed below, with the word or icon that carries the same meaning and the file that makes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { CHANGE_LOOKS } from '../packages/core/src/changes-view.ts';

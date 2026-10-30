@@ -1,14 +1,14 @@
-// The states of the Obsidian host's page that a person once had to check by hand, measured in a real browser (editor
-// spec §41, a11y_states_auto; risks UX-2 and UX-9). The harness page (packages/obsidian/harness) is opened in a headless
-// Chrome (chrome.mjs), each check brings it to a state with real key presses, and what it measured is judged:
-// - the focused box has a ring that shows against what is behind it, in the light and the dark theme (SC 2.4.7, 2.4.11);
+// States of the Obsidian host's page that a person once checked by hand, measured in a real browser.
+// (Editor spec §41, a11y_states_auto; risks UX-2 and UX-9.) The harness page (packages/obsidian/harness) is opened in a headless
+// Chrome (chrome.mjs). Each check brings it to a state with real key presses, and what it measured is judged:
+// - the focused box has a ring that shows in the light and the dark theme (SC 2.4.7, 2.4.11);
 // - Escape closes a panel and returns the focus to the button that opened it (SC 2.1.2, 3.2.1);
 // - with reduced motion asked for, nothing runs on for ever (SC 2.3.3);
 // - every button of the sheet is 44 points at a phone's width (AX-14);
-// - at twice the text size with the spacing WCAG allows, no control covers another and no word is cut off (SC 1.4.4, 1.4.12);
+// - at twice the text size, no control covers another and no word is cut off (SC 1.4.4, 1.4.12);
 // - in the test languages en-XA and ar-XB, the views still reflow and keep every control (pseudo_locales_checked).
-// Run by test/a11y-states.test.js. Each check takes an optional `plant`: a line of script run once the page is ready, so
-// the test can plant a fault and see it found.
+// Run by test/a11y-states.test.js. A check may be given a `plant`: a line of script run once the page is ready. The
+// test plants a fault with it and sees it found.
 import { startChrome, SETTLED_MEDIA } from './chrome.mjs';
 import { SHOTS, open, serve } from './wiki-screens.mjs';
 import { MEASURE, NARROW, SETTLE, WIDE, findings, jsText } from './targets-reflow.mjs';
@@ -62,8 +62,8 @@ async function ready(page, { theme = 'light', plant } = {}) {
 
 /**
  * Run in the page: two screenshots (base64 PNGs of the same clip) compared round a box. `box` is the box in the clip's own
- * pixels. Gives how many pixels in the band 1 to 6 pixels outside the box changed, and the contrast against the pixels
- * before of the middle one of them.
+ * pixels. Gives how many pixels in the band 1 to 6 pixels outside the box changed.
+ * It also gives the contrast against the pixels before, for the middle one of them.
  */
 const RING_DIFF = (after, before, box) => `(async () => {
   const load = (data) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = 'data:image/png;base64,' + data; });
@@ -96,8 +96,8 @@ const NO_RING = `(() => { const s = document.createElement('style'); s.id = 'no-
 
 /**
  * What is wrong with a ring, as measured by RING_DIFF. `without` is against the same box with the ring switched off and
- * `blurred` against the box with no focus. Each must show the ring along the box (its width and height in pixels, at least:
- * the ring is two pixels wide, and a tooltip may hide a side), and the ring must contrast with what is behind it.
+ * `blurred` against the box with no focus. Each must show the ring along the box, at least its width and height in pixels.
+ * The ring is two pixels wide, and a tooltip may hide a side. The ring must also contrast with what is behind it.
  */
 export function ringFindings(theme, box, without, blurred) {
   const need = Math.round(box.w + box.h);
@@ -312,8 +312,8 @@ async function testLanguages(page, { plant } = {}) {
 export const CHECKS = { focusRing, escapeReturns, reducedMotion, sheetTargets, bigText, testLanguages };
 
 /**
- * The Obsidian host's harness, built into `built`, brought to each state and judged. `checks` names which to run, and
- * `plant` is a line of script a check runs once the page is ready, for the test of a planted fault.
+ * The Obsidian host's harness, built into `built`, brought to each state and judged. `checks` names which to run.
+ * `plant` is a line of script a check runs once the page is ready, to test a planted fault.
  */
 export async function checkStates(built, { chrome, checks = Object.keys(CHECKS), plant } = {}) {
   const server = await serve(built);

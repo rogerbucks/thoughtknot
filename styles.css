@@ -1477,9 +1477,9 @@ pre.thoughtknot-code {
 .thoughtknot-svg g.node:focus {
   outline: none;
 }
-/* The ring on the box the keyboard has reached (UX-9, SC 2.4.11), drawn apart from the box's own outline: the text colour,
-   2 pixels wide, standing off the box. The text colour shows against the page and against the accent glow of a
-   highlight, where the accent itself would fade into it. */
+/* The ring on the box the keyboard has reached (UX-9, SC 2.4.11), drawn apart from the box's own outline.
+   It is the text colour, 2 pixels wide, standing off the box. That colour shows against the page and against the
+   accent glow of a highlight, where the accent itself would fade into it. */
 .thoughtknot-svg .thoughtknot-focus-ring {
   fill: none;
   stroke: var(--gn-text-normal);
