@@ -39,6 +39,11 @@ export const EXPORT_SOURCE_WORDS = {
   'export.graphml.link-property': 'The link {from} {type} {to}’s {name}',
   // what an image's frame says, in UK English as its bytes (sourceWord), and the same in the notice (export.ts)
   'export.footer': 'From {note}, exported {date}',
+  // what a reader picture's frame says (reader-picture.ts, §62)
+  'picture.footer': 'Drawn by ThoughtKnot from {note}, {date}',
+  'picture.overview': '{things} left out of this picture, too many to read one by one: it shows them as {groups}',
+  'picture.things': { one: '{count} thing', other: '{count} things' },
+  'picture.groups': { one: '{count} group', other: '{count} groups' },
   'export.reading-faded': '{reading} (the rest of the graph is faded)',
   // what was done with each picture on a box (export-pictures.ts)
   'export.picture.not-drawn': '{thing}: not drawn, as {why}',
