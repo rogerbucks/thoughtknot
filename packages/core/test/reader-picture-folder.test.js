@@ -1,6 +1,6 @@
 // The pictures of every note in a folder, brought up to date at once (editor spec §62, picture_outside_tools). A
-// tool outside the apps does this. A note with a picture line is kept in step; one without gets none unless asked. An unchanged
-// graph changes no file. A file ThoughtKnot did not make is never written over or removed.
+// tool outside the apps does this. A note with a picture line is kept in step; one without gets none unless asked. An
+// unchanged graph changes no file. A file ThoughtKnot did not make is never written over or removed.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';

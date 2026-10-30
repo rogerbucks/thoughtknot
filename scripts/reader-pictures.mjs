@@ -1,6 +1,6 @@
 // The command line that brings the pictures for readers up to date in a folder or a repository (editor spec §62,
-// picture_outside_tools). Graphs edited by hand, or kept on GitHub, then stay in step with their
-// pictures. It draws as the apps do, with the core's own Graphviz, so the files it writes match theirs.
+// picture_outside_tools). Graphs edited by hand, or kept on GitHub, then stay in step with their pictures. It
+// draws as the apps do, with the core's own Graphviz, so the files it writes match theirs.
 // - A note with a picture line is kept in step. `--add` gives every note with a graph its pictures.
 // - `--check` writes nothing. It lists each file out of date and fails, for a check in CI.
 // - Only a file that names itself as ThoughtKnot's is written over or removed.
@@ -39,7 +39,7 @@ function today() {
   return `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
 }
 
-/** Brings the pictures under `root` up to date, or with `check` only says which are not. The exit code it should end with. */
+/** Brings the pictures under `root` up to date, or with `check` only says which are not. It gives the exit code. */
 export async function readerPictures(root, { add = false, check = false, say = console.log } = {}) {
   const engine = await loadEngine();
   const at = (path) => join(root, ...path.split('/'));
