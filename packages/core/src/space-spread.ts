@@ -295,8 +295,8 @@ export function spreadSpace(
     const head = m.headless
       ? 0
       : Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
-    const t0 = Math.min(0.45, ra / length),
-      tTip = Math.max(0.55, 1 - rb / length),
+    const t0 = Math.min(0.45, bow === 0 ? ra / length : onSphere(curve, a, ra, 0, 0.5)),
+      tTip = Math.max(0.55, bow === 0 ? 1 - rb / length : onSphere(curve, b, rb, 0.5, 1)),
       tEnd = Math.max(0.5, tTip - head / length);
     const steps = bow === 0 ? 1 : BOW_STEPS;
     const points = Array.from({ length: steps + 1 }, (_, i) => curve(t0 + ((tEnd - t0) * i) / steps));
@@ -365,6 +365,20 @@ export function keepApart(centre: Map<string, Vec3>, radius: ReadonlyMap<string,
 function sideOf(v: Vec3): Vec3 {
   const level: Vec3 = [-v[1], v[0], 0];
   return Math.hypot(...level) > 1e-9 * Math.hypot(...v) ? level : [1, 0, 0];
+}
+
+/**
+ * Where `curve`, between `lo` and `hi`, crosses the sphere of radius `r` round `c`. A straight link crosses where its
+ * length says. A bowed one is found on the curve itself, so an arrowhead's tip sits on the ball it points at.
+ */
+function onSphere(curve: (t: number) => Vec3, c: Vec3, r: number, lo: number, hi: number): number {
+  const outside = (t: number) => Math.hypot(...sub(curve(t), c)) > r;
+  for (let i = 0; i < 24; i++) {
+    const t = (lo + hi) / 2;
+    if (outside(t) === outside(hi)) hi = t;
+    else lo = t;
+  }
+  return (lo + hi) / 2;
 }
 
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
