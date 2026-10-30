@@ -10,6 +10,7 @@ import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { RECOVER_COMMAND, recoverDrafts } from './drafts';
 import { tourCommand } from './first-run';
 import { shortcutCommands } from './shortcuts';
+import { keepPictures, pictureCommands } from './pictures/pictures';
 import type ThoughtKnotPlugin from './main';
 
 /** The id of the built-in plug-in whose commands are Obsidian's own. */
@@ -28,6 +29,7 @@ export function hostCommands(plugin: ThoughtKnotPlugin): HostCommand[] {
     { id: AI_COMMAND.id, title: AI_COMMAND.name, run: () => askAi(plugin) },
     { id: CLEAR_SENDS_COMMAND.id, title: CLEAR_SENDS_COMMAND.name, run: () => clearAiSends(plugin) },
     { id: IMPORT_COMMAND.id, title: IMPORT_COMMAND.name, run: () => importFromDatabase(plugin) },
+    ...pictureCommands(plugin),
   ];
 }
 
@@ -67,9 +69,10 @@ export function offerCommands(plugin: ThoughtKnotPlugin, registry: PluginRegistr
   }
 }
 
-/** Adds the plugin's commands, all through the plug-in interface. */
+/** Adds the plugin's commands, all through the plug-in interface, and keeps the pictures its commands turn on (§62). */
 export function addCommands(plugin: ThoughtKnotPlugin): void {
   const registry = pluginRegistry({ timeLimit: Infinity });
   registry.register(obsidianCommands(plugin));
   offerCommands(plugin, registry);
+  keepPictures(plugin);
 }

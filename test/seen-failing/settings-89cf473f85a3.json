@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/settings.test.js",
+  "test": "the export options (editor spec §16) > each is an option in the Export section, with a sentence, and a setting with a default",
+  "seen_failing_first": false,
+  "evidence": "the picture options were added with their own test earlier on this branch; this commit only brings the list of Export options up to date"
+}

@@ -343,4 +343,7 @@ export const TYPES_LATE = [
   'PictureLineAt',
   'PictureState',
   'ReaderPicture',
+  'NotePicturesInput',
+  'PictureBlock',
+  'PictureSettings',
 ];

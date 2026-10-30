@@ -244,4 +244,9 @@ export const VALUES_LATE = [
   'readerPicture',
   'withPictureLine',
   'withoutPictureLines',
+  // the pictures kept beside a note, and the settings that turn them on (§62, RP1), 30 Oct 2026
+  'notePictures',
+  'pictureBlocks',
+  'pictureLinkOf',
+  'picturesOnFor',
 ];
