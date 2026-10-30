@@ -377,7 +377,7 @@ export class Zoom {
 
   protected edgeBound?(): boolean;
   /** Puts the view there: centred, or within the edges where `edgeBound` says, or anywhere with some drawing in sight. */
-  private place(scale: number, x: number, y: number, centre = false): void {
+  place(scale: number, x: number, y: number, centre = false): void {
     const room = { content: this.content, viewport: this.viewport, clear: this.clear };
     const [cx, cy] = centre || this.edgeBound?.() ? clampPan(room, scale, x, y, centre) : inSight(room, scale, x, y);
     if (scale === this.scale && cx === this.x && cy === this.y) return;

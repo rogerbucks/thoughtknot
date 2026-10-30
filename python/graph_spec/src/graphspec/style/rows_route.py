@@ -212,7 +212,8 @@ def _spread_lanes(rows: list[Row], passes, axis: int) -> None:
         # side by side, LANE apart, round where they would like to be, kept inside the gap
         width = min(LANE * (len(found) - 1), max(0, hi - lo))
         step = width / (len(found) - 1)
-        start = min(max(mid - width / 2, lo), hi - width)
+        # a gap too narrow for its margins has them cross: its middle, not its far edge
+        start = (lo + hi) / 2 if hi < lo else min(max(mid - width / 2, lo), hi - width)
         for k, p in enumerate(found):
             for point in p[4]:
                 point[across] = start + step * k
