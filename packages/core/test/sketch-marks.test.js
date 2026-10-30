@@ -94,3 +94,14 @@ describe('a drawing said to a screen reader', () => {
     assert.equal(marks.get('sketch:c').name, 'Note: Ask Bob');
   });
 });
+
+describe('an arrow drawn on the graph', () => {
+  test('has its head at its last point, turned in degrees as every arrowhead mark is', () => {
+    // an arrow drawn straight down: its head points at 90 degrees, as drawing-marks.ts has every arrowhead angle
+    const sketch = readSketch(`// graph: trip_ink · SKETCH ON trip
+(a:Shape {x: 30, y: 15, shape: 'arrow', points: '0 0 0 200'})`).sketch;
+    const head = byId(sketchMarks(sketch, laidOut(0, 0)).pieces).get('sketch:a:head');
+    assert.equal(head.kind, 'arrowhead');
+    assert.deepEqual([head.x, head.y, head.angle], [30, 215, 90]);
+  });
+});

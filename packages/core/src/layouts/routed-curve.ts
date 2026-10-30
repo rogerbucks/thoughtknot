@@ -64,8 +64,12 @@ function drawnAlong(c: readonly MarkPoint[]): MarkPoint[] {
   return out;
 }
 
-/** The curve from the edge of box `a` through each of `via` to the edge of box `b`. */
-export function routedCurve(a: Placed, b: Placed, via: readonly MarkPoint[], axis: 0 | 1 = 0): Curve {
+/**
+ * The curve from the edge of box `a` through each of `given` to the edge of box `b`, moved `apart` pixels across the
+ * way. Links between the same two boxes take the same way, so each is moved by its place among them.
+ */
+export function routedCurve(a: Placed, b: Placed, given: readonly MarkPoint[], axis: 0 | 1 = 0, apart = 0): Curve {
+  const via = apart ? given.map((p): MarkPoint => (axis === 0 ? [p[0], p[1] + apart] : [p[0] + apart, p[1]])) : given;
   // each end leaves its box on the side facing its first bend, level with the box's middle
   const side = (box: Placed, toward: MarkPoint): MarkPoint =>
     axis === 0
