@@ -1,0 +1,178 @@
+{
+  "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![Graph team](Team.team.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n",
+  "fileNames": [
+    {
+      "note": "Work/Team.md",
+      "graph": "team",
+      "name": "Team.team.thoughtknot.svg"
+    },
+    {
+      "note": "My Notes/Ünïcødé  note.md",
+      "graph": "a b/c",
+      "name": "Ünïcødé-note.a-b-c.thoughtknot.svg"
+    },
+    {
+      "note": "x.md",
+      "graph": "",
+      "name": "x.graph.thoughtknot.svg"
+    },
+    {
+      "note": ".md",
+      "graph": "#^[]",
+      "name": "note.graph.thoughtknot.svg"
+    },
+    {
+      "note": "Deep/a/b/C (1).MD",
+      "graph": "g.h",
+      "name": "C-(1).g.h.thoughtknot.svg"
+    }
+  ],
+  "links": [
+    {
+      "note": "Work/Team.md",
+      "picture": "Work/Team.team.thoughtknot.svg",
+      "href": "Team.team.thoughtknot.svg",
+      "back": "Work/Team.team.thoughtknot.svg"
+    },
+    {
+      "note": "Work/Team.md",
+      "picture": "attachments/Team.team.thoughtknot.svg",
+      "href": "../attachments/Team.team.thoughtknot.svg",
+      "back": "attachments/Team.team.thoughtknot.svg"
+    },
+    {
+      "note": "A/B/C.md",
+      "picture": "A/D/x y (2).thoughtknot.svg",
+      "href": "../D/x%20y%20%282%29.thoughtknot.svg",
+      "back": "A/D/x y (2).thoughtknot.svg"
+    },
+    {
+      "note": "Top.md",
+      "picture": "Top.g.thoughtknot.svg",
+      "href": "Top.g.thoughtknot.svg",
+      "back": "Top.g.thoughtknot.svg"
+    }
+  ],
+  "texts": [
+    {
+      "graph": "team",
+      "texts": ["// graph: team\n(ann:Person {name: 'Ann'})", "// graph: team_look · STYLE ON team\n(:Look)"],
+      "fingerprint": "f51d495f6369c8ec"
+    },
+    {
+      "graph": "other",
+      "texts": ["// graph: other\n(b:B)"],
+      "fingerprint": "4d57fb4c0a403404"
+    },
+    {
+      "graph": "look",
+      "texts": [],
+      "fingerprint": "b751633d3b484408"
+    }
+  ],
+  "states": [
+    {
+      "existing": null,
+      "fingerprint": "0123456789abcdef",
+      "state": "missing"
+    },
+    {
+      "existing": "<svg><metadata>thoughtknot reader picture 0123456789abcdef</metadata></svg>",
+      "fingerprint": "0123456789abcdef",
+      "state": "current"
+    },
+    {
+      "existing": "<svg><metadata>thoughtknot reader picture 0123456789abcdef</metadata></svg>",
+      "fingerprint": "fedcba9876543210",
+      "state": "stale"
+    },
+    {
+      "existing": "<svg>mine</svg>",
+      "fingerprint": "0123456789abcdef",
+      "state": "not-ours"
+    }
+  ],
+  "linesOf": [
+    {
+      "line": "![a](x.thoughtknot.svg)",
+      "href": "x.thoughtknot.svg"
+    },
+    {
+      "line": "   ![a \\] b](<a b.thoughtknot.svg>)  ",
+      "href": "a b.thoughtknot.svg"
+    },
+    {
+      "line": "    ![a](x.thoughtknot.svg)",
+      "href": null
+    },
+    {
+      "line": "![a](x.svg)",
+      "href": null
+    },
+    {
+      "line": "![a](x.thoughtknot.svg?v=1)",
+      "href": "x.thoughtknot.svg?v=1"
+    },
+    {
+      "line": "text ![a](x.thoughtknot.svg)",
+      "href": null
+    },
+    {
+      "line": "![a](x.THOUGHTKNOT.SVG)",
+      "href": "x.THOUGHTKNOT.SVG"
+    }
+  ],
+  "alts": [
+    {
+      "sentences": ["Short."],
+      "most": 300,
+      "alt": "Short."
+    },
+    {
+      "sentences": ["One two three four five six seven eight nine ten."],
+      "most": 20,
+      "alt": "One two three four…"
+    },
+    {
+      "sentences": ["Averyveryverylongwordwithoutspaces"],
+      "most": 10,
+      "alt": "Averyvery…"
+    },
+    {
+      "sentences": ["  spaced   out  ", "two"],
+      "most": 300,
+      "alt": "spaced out two"
+    }
+  ],
+  "pictureLine": {
+    "alt": "A [b] \\ c\n d",
+    "href": "x.thoughtknot.svg",
+    "line": "![A \\[b\\] \\\\ c d](x.thoughtknot.svg)"
+  },
+  "pictureLines": [
+    {
+      "block": 0,
+      "line": 6,
+      "href": "Team.team.thoughtknot.svg"
+    }
+  ],
+  "withLine": [
+    {
+      "block": 0,
+      "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![new](n.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
+    },
+    {
+      "block": 1,
+      "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![Graph team](Team.team.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n![new](n.thoughtknot.svg)\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
+    },
+    {
+      "block": 2,
+      "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![Graph team](Team.team.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n![new](n.thoughtknot.svg)\n"
+    },
+    {
+      "block": 5,
+      "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![Graph team](Team.team.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
+    }
+  ],
+  "without": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
+}

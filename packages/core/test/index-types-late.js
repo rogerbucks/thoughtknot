@@ -346,4 +346,7 @@ export const TYPES_LATE = [
   'NotePicturesInput',
   'PictureBlock',
   'PictureSettings',
+  'FolderPicturesInput',
+  'FolderPicturesRun',
+  'PictureChange',
 ];

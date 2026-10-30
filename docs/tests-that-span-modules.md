@@ -116,6 +116,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/core/test/sketch-picture.test.js` — an exported image shows the drawings over its graph, pinned where the
   card draws them, in the export's fixed colours. A graph with no drawings exports as before (editor spec §70,
   sketch_reader_picture). It spans export.ts and sketch-marks.ts.
+- `test/reader-pictures.test.js` — the command line `scripts/reader-pictures.mjs` brings every picture for readers in a
+  folder up to date. Its check fails while one is out of date (editor spec §62, picture_outside_tools). It runs the
+  core's folder refresh and its Graphviz.
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/core/test/hosts-boundary.test.js` — the host-side modules of the core (`src/hosts/`, reached as
   `@thoughtknot/core/hosts/<module>`) are imported by no gate or other core module. They are not exported by the entry,
