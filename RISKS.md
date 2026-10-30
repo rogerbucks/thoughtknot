@@ -540,7 +540,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-5 | A requirement's text can be rewritten to fit the code | done | #1564; kept out by `test/check-requirements-reworded.test.js`, `scripts/check-requirements-flips.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
-| FLOW-11 | Decisions live in two places with different forms | done | #1565; kept out by `test/decision-remarks.test.js`, `scripts/decision-remarks.mjs` |
+| FLOW-11 | Decisions live in two places with different forms | done | #1566; kept out by `test/decision-remarks.test.js`, `scripts/decision-remarks.mjs` |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |

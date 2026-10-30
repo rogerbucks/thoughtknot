@@ -2729,7 +2729,7 @@
       },
       "status": "done",
       "wave": "Wave 5 · Automated quality and releases",
-      "done_in": "#1565",
+      "done_in": "#1566",
       "prevented_by": [
         "test/decision-remarks.test.js",
         "scripts/decision-remarks.mjs"
