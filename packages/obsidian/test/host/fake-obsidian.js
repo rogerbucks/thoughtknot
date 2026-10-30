@@ -167,7 +167,7 @@ export function fakeObsidian(state = {}) {
     handlers: new Map(),
     on(name, fn) {
       const ref = { name, fn, e: workspace };
-      if (name === 'window-open' || name === 'window-close') workspace.handlers.set(ref, ref);
+      if (['window-open', 'window-close', 'file-open'].includes(name)) workspace.handlers.set(ref, ref);
       return ref;
     },
     offref: (ref) => workspace.handlers.delete(ref),
@@ -182,6 +182,7 @@ export function fakeObsidian(state = {}) {
     },
     // an event told to the workspace: a hover over a link, which Page preview answers with its preview, is kept
     trigger: (name, data) => {
+      (state.triggered ??= []).push([name, data]);
       if (name === 'hover-link') state.hovered = data;
     },
   };
@@ -276,6 +277,9 @@ export function fakeObsidian(state = {}) {
     }
     registerEditorExtension(ext) {
       (state.editorExtensions ??= []).push(ext);
+    }
+    registerMarkdownPostProcessor(fn) {
+      (state.postProcessors ??= []).push(fn);
     }
     addSettingTab(tab) {
       state.settingTabs.push(tab);

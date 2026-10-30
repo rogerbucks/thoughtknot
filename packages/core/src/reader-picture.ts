@@ -15,6 +15,13 @@ import type { ExportLayout } from './export.ts';
 import { framed, saidDate } from './export-frame.ts';
 import { exportPlan } from './export-plan.ts';
 import { exportScope } from './export-scope.ts';
+import { gqlBlocks } from './fences.ts';
+import { graphOfBlock, isSourceBlock, isStepBlock } from './blocks.ts';
+import { readNote } from './drawing.ts';
+import { changeSetId } from './proposals-text.ts';
+import { sketchInNote } from './sketch-edit.ts';
+import { readStyle } from './style.ts';
+import { viewsOf } from './views.ts';
 import { textVersion } from './help.ts';
 import type { NoteReading } from './note-reading.ts';
 import { overviewPicture } from './overview-svg.ts';
@@ -145,4 +152,57 @@ export async function readerPicture(input: PictureInput): Promise<PictureDecisio
       overview,
     },
   };
+}
+
+/** A block of a note that gets a picture: its index among the note's gql blocks, and the graph it draws. */
+export interface PictureBlock {
+  block: number;
+  graph: string;
+}
+
+/**
+ * The blocks of `note` that get a picture: the first block of each graph that ThoughtKnot draws as that graph. A view,
+ * a block drawn from elsewhere, a step, a proposal, a style, a drawings block and a schema alone get none.
+ */
+export function pictureBlocks(note: string): PictureBlock[] {
+  const seen = new Set<string>();
+  return gqlBlocks(note).flatMap((b, block) => {
+    const t = b.text,
+      graph = graphOfBlock(t);
+    if (!graph || seen.has(graph) || viewsOf([t]).length || isSourceBlock(t) || isStepBlock(t) || changeSetId(t))
+      return [];
+    seen.add(graph);
+    return [{ block, graph }];
+  });
+}
+
+/** What the pictures of a whole note are made from: `PictureInput` but the graph, reading and drawings, read here. */
+export type NotePicturesInput = Omit<PictureInput, 'reading' | 'graph' | 'sketch' | 'styled'> & {
+  /** The shared schemas of the vault (§5), as the note's drawing reads them. */
+  shared?: string[];
+};
+
+/**
+ * The picture of each block of the note that gets one, each with its decision, in the note's order. Its style, values
+ * and drawings are read from the note as its card reads them. A note too large to read gets none.
+ */
+export async function notePictures(
+  input: NotePicturesInput,
+): Promise<(PictureBlock & { decision: PictureDecision })[]> {
+  const texts = gqlBlocks(input.text).map((b) => b.text);
+  const reading = readNote(texts, texts.length - 1, input.shared ?? []);
+  if (reading.tooLarge) return [];
+  const out: (PictureBlock & { decision: PictureDecision })[] = [];
+  for (const at of pictureBlocks(input.text)) {
+    const data = reading.world[at.graph];
+    const decision = await readerPicture({
+      ...input,
+      reading,
+      graph: at.graph,
+      sketch: sketchInNote(input.text, at.graph)?.sketch ?? null,
+      ...(data ? { styled: { style: readStyle(texts, at.graph, reading).style, data } } : {}),
+    });
+    out.push({ ...at, decision });
+  }
+  return out;
 }

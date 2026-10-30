@@ -3020,3 +3020,10 @@ svg.thoughtknot-svg.is-sketching {
   stroke-dasharray: 4 3;
   pointer-events: none;
 }
+/* a reader picture's image line, hidden where the plugin draws its graph live (§62) */
+img.thoughtknot-picture-hidden,
+.internal-embed.thoughtknot-picture-hidden,
+.thoughtknot-picture-hidden .image-embed,
+.thoughtknot-picture-hidden .internal-embed {
+  display: none;
+}

@@ -44,6 +44,25 @@ export const EXPORT_SOURCE_WORDS = {
   'picture.overview': '{things} left out of this picture, too many to read one by one: it shows them as {groups}',
   'picture.things': { one: '{count} thing', other: '{count} things' },
   'picture.groups': { one: '{count} group', other: '{count} groups' },
+  // turning the pictures for readers on and off in a note (§62, the Obsidian plugin's pictures/)
+  'pictures.command.on': 'Add pictures for readers without ThoughtKnot to this note',
+  'pictures.command.off': 'Remove the pictures for readers from this note',
+  'pictures.drawn': {
+    one: '{count} picture drawn for readers without ThoughtKnot',
+    other: '{count} pictures drawn for readers without ThoughtKnot',
+  },
+  'pictures.none': 'This note has no graph to draw a picture of',
+  'pictures.ask-title': 'Pictures for readers',
+  'pictures.ask-off':
+    'Remove the picture line after each graph in {note}, and each picture file ThoughtKnot made for it? A file ThoughtKnot did not make is kept.',
+  'pictures.remove': 'Remove',
+  'pictures.make': 'Make the pictures',
+  'pictures.cancel': 'Cancel',
+  'pictures.removed': 'The pictures for readers are gone from {note}',
+  'pictures.folder-on':
+    'This note is in a folder that gets pictures by the settings, so they come back with its next edit. Take the folder out of Pictures for readers to stop them.',
+  'pictures.not-written': 'The picture of {graph} was not written: {why}',
+  'pictures.not-ours': 'a file ThoughtKnot did not make is at {path}, and is kept',
   'export.reading-faded': '{reading} (the rest of the graph is faded)',
   // what was done with each picture on a box (export-pictures.ts)
   'export.picture.not-drawn': '{thing}: not drawn, as {why}',

@@ -10,11 +10,11 @@ import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
+import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
 import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
 export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
-
 export { aiModel, type AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
@@ -36,7 +36,7 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings {
+export interface Settings extends StrictnessSettings, PictureSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -129,6 +129,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // the lowest, so anything above it asks
   exportAsksAbove: CLASSIFICATIONS[0] ?? '',
   decider: '',
+  ...DEFAULT_PICTURES,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -302,6 +303,7 @@ export const OPTIONS: Option[] = [
     name: 'Ask before exporting above',
     sentence: 'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
   },
+  ...PICTURE_OPTIONS, // the pictures for readers (§62)
   {
     key: 'decider',
     section: 'Proposals',
@@ -379,6 +381,7 @@ export function settingsFrom(saved: unknown): Settings {
         : (classifications[0] ?? ''),
     // as typed, spaces and capitals kept; a name is one line, and not an essay
     decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
+    ...picturesFrom(s),
   };
 }
 

@@ -8,7 +8,7 @@ import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
 import { PALETTES } from '../src/palette.ts';
 import { chosen, directions, svgOf } from '../src/render.ts';
-import { PICTURE_MOST_THINGS, readerPicture } from '../src/reader-picture.ts';
+import { PICTURE_MOST_THINGS, notePictures, pictureBlocks, readerPicture } from '../src/reader-picture.ts';
 import {
   ALT_MOST,
   madeByThoughtKnot,
@@ -172,3 +172,47 @@ describe('a reader picture', () => {
     assert.match(nothing, /nothing/i);
   });
 });
+
+describe('the pictures of a whole note', () => {
+  const NOTE = [
+    '```gql',
+    BLOCK,
+    '```',
+    '```gql',
+    '// graph: team_look · STYLE ON team',
+    '```',
+    '```gql',
+    '// graph: team_ink · SKETCH ON team',
+    "(d1:Text {x: 5, y: 5, text: 'Ask Bob first'})",
+    '```',
+    '```gql',
+    '// graph: team · MORE',
+    "(cat:Pet {name: 'Cat'})",
+    '```',
+  ].join('\n');
+
+  // proves: picture_for_readers
+  test('go after the first block of each graph drawn as a graph, never after a style or a drawings block', () => {
+    assert.deepEqual(pictureBlocks(NOTE), [{ block: 0, graph: 'team' }]);
+    assert.deepEqual(pictureBlocks('```gql\n// graph: g\n```\n```gql\n// graph: h\n(a)\n```'), [
+      { block: 0, graph: 'g' },
+      { block: 1, graph: 'h' },
+    ]);
+  });
+
+  // proves: picture_for_readers, picture_self_explaining, sketch_reader_picture
+  test('are each drawn with the note’s drawings over them', async () => {
+    const [one, ...rest] = await notePictures({
+      text: NOTE,
+      note: 'Team.md',
+      date: '2026-10-30',
+      layout,
+      noteClassification: null,
+      settings: SETTINGS,
+    });
+    assert.equal(rest.length, 0);
+    assert.equal(one.block, 0);
+    assert.match(one.decision.picture.svg, /Ask Bob first/, 'the drawings are on it (§70)');
+  });
+});
+
