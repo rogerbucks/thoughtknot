@@ -143,6 +143,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.no-more': '{name} has no more neighbours to show',
   'massive.grow-too-large': 'Too many things near {name} to draw at once',
   'massive.filter': 'Filter',
+  'massive.by-look': 'By look',
+  'massive.look-count': '{look} {n}',
   'massive.back': 'Back',
   'massive.forward': 'Forward',
   'massive.kept': { one: '{count} thing kept', other: '{count} things kept' },
