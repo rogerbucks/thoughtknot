@@ -32,6 +32,7 @@ const BOX_GAP = 12;
 const ROUNDS = 6;
 /** How far two links between the same boxes bow apart at their middle, as a share of their length. */
 const BOW = 0.16;
+const LANE = 6; // how far apart links between the same two boxes run where our own engine routed them, in pixels
 
 /**
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
@@ -178,19 +179,16 @@ export function directLinks(
     : [];
   const free = rowed ? toBend.filter((_, i) => !inRow[i]?.length) : toBend;
   const bowOf = new Map(bends(free, all, work).map((bow, i) => [free[i] as ToBend, bow]));
-  // a link our own engine routed bends through its lanes (layouts/routed-curve.ts). Links between the same two boxes
-  // take the same bends, moved apart across the drawing's way
-  const routed = (l: ToBend, i: number) =>
-    (rowed ? inRow[i] : via?.get(`${l.a.key}\n${l.b.key}`))?.map((p): MarkPoint =>
-      across ? [p[0], p[1] + (l.fixed ?? 0)] : [p[0] + (l.fixed ?? 0), p[1]],
-    );
+  // a link our own engine routed bends through its lanes (layouts/routed-curve.ts), LANE apart from its pair's
+  const routed = (l: ToBend, i: number) => (rowed ? inRow[i] : via?.get(`${l.a.key}\n${l.b.key}`));
+  const spaced = (l: ToBend) => (rowed ? 0 : (((l.fixed ?? 0) * LANE) / BOW) * (l.a.key < l.b.key ? 1 : -1));
   const curves = new Map<string, Curve>(
     toBend.map((l, i) => {
       const bendsAt = routed(l, i);
       return [
         l.id,
         bendsAt?.length
-          ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0)
+          ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0, spaced(l))
           : curveOf(l.a, l.b, bowOf.get(l) ?? 0),
       ];
     }),

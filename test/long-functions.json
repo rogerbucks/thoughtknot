@@ -4,7 +4,7 @@
   "packages/claude-code/page/review-section.ts#reviewSection": 136,
   "packages/claude-code/server/start-server.ts#startEditorServer": 137,
   "packages/core/src/connectors.ts#joinPlaces": 102,
-  "packages/core/src/direct-links.ts#directLinks": 200,
+  "packages/core/src/direct-links.ts#directLinks": 199,
   "packages/core/src/display/export/export-form.ts#openExportForm": 111,
   "packages/core/src/display/graph-view/gl-painter.ts#webgl2Painter": 136,
   "packages/core/src/display/graph-view/gpu-painter.ts#webgpuPainter": 193,
