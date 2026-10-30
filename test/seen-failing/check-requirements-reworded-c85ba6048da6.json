@@ -1,0 +1,6 @@
+{
+  "file": "test/check-requirements-reworded.test.js",
+  "test": "a reworded requirement > is accepted when its rule is the same and only its other fields change",
+  "seen_failing_first": false,
+  "evidence": "a case the old check also accepted: it guards that the new refusal does not over-reach"
+}
