@@ -1,6 +1,6 @@
 [package]
 name = "thoughtknot-app"
-version = "0.7.1"
+version = "0.8.0"
 description = "ThoughtKnot: draw, edit and keep graph notes in a plain folder, offline."
 license = "MPL-2.0"
 edition = "2021"
@@ -17,7 +17,7 @@ tauri-build = { version = "=2.7.1", features = [] }
 tauri = { version = "=2.12.1", features = [] }
 serde = { version = "1", features = ["derive"] }
 # the vault key in the phone's own secure store: this app's own plug-in, in keeper/
-tauri-plugin-keeper = { version = "=0.7.1", path = "keeper" }
+tauri-plugin-keeper = { version = "=0.8.0", path = "keeper" }
 
 # the folder dialog, on a computer only: a phone keeps its notes in the app's own folder (src/lib.rs, own_documents)
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
