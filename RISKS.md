@@ -595,7 +595,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (79)
+## Done or accepted (80)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -678,3 +678,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-18 | Tests that read a drawing with patterns that run slow | done | #1110; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-19 | Time-related attacks on history, sync and shared links are not yet reviewed | done | #1489; kept out by `packages/core/test/temporal-security.test.js`, `packages/core/src/temporal.ts` |
 | SEC-20 | The code scan read only the code, not the Python library or the workflows | done | #1367; kept out by `test/code-scan.test.js`, `scripts/code-scan.mjs`, `python/graph_spec/tests/test_graph_bidi.py` |
+| SEC-21 | The animated exports found each group of a drawing with a pattern that ran slow | done | #1552; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
