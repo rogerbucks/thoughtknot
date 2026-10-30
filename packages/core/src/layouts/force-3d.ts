@@ -81,7 +81,7 @@ export function forceLayout3d(
     p[1][i] = y;
     p[2][i] = z;
   });
-  const warm = keys.some((key) => previous?.has(key));
+  const warm = keys.filter((key) => previous?.has(key)).length >= n / 2; // half remembered, as stress.ts decides
   // on a warm start a new thing starts beside the placed things it links to, so it does not drag them from afar
   if (warm) {
     const placed = (j: number) => previous?.has(keys[j] ?? '') === true;
