@@ -336,4 +336,10 @@ export const TYPES_LATE = [
   'Redaction',
   // the model a host offers, so a host imports it by the package name (ARCH-3), 29 Oct 2026
   'HostModel',
+  // a picture for readers without ThoughtKnot (§62, RP1), 30 Oct 2026
+  'PictureDecision',
+  'PictureInput',
+  'PictureLineAt',
+  'PictureState',
+  'ReaderPicture',
 ];

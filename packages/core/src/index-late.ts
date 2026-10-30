@@ -80,3 +80,4 @@ export { applyBoundary, type Bounded, type CorporateSetting, type Redaction } fr
 export { gqlBlock } from './export-data-gql.ts';
 export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 export { Permissions, readable, type Guarded } from './permissions.ts';
+export * from './index-pictures.ts';

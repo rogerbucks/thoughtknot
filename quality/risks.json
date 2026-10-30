@@ -4493,6 +4493,43 @@
         "scripts/code-scan.mjs",
         "python/graph_spec/tests/test_graph_bidi.py"
       ]
+    },
+    {
+      "id": "SEC-21",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "The animated exports found each group of a drawing with a pattern that ran slow",
+      "risk": "Two patterns in the animated exports read each group of a drawing. On a long group with no end, their time grew with the square of its length, so the code scan counted each as high.",
+      "evidence": [
+        "packages/core/src/export-motion.ts",
+        "packages/core/src/path-animation.ts"
+      ],
+      "alerts": [
+        "code-scanning/114",
+        "code-scanning/115"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Find each group by plain search with replaceGroups in packages/core/src/export-motion.ts.",
+      "check": "test/code-scanning-fixes.test.js holds replaceGroups to the pattern’s result, under a time limit. CI’s code-scan job fails on any such pattern.",
+      "paths": [
+        "packages/core/src/export-motion.ts",
+        "packages/core/src/path-animation.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-30",
+      "reviewed": {
+        "date": "2026-10-30",
+        "commit": "be90575041133e781a5c4ce789da3d6cc78e7814"
+      },
+      "status": "done",
+      "done_in": "#1553",
+      "prevented_by": [
+        "packages/core/test/export-motion-groups.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
     }
   ]
 }

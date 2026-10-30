@@ -76,7 +76,7 @@ function cut(text: string, most: number): string {
 }
 
 /** One part of a file name: unsafe characters and spaces made hyphens, no leading or trailing dot or hyphen, cut short. */
-function part(text: string, most: number): string {
+export function part(text: string, most: number): string {
   const tidy = (s: string) => trimChars(s.replace(/-{2,}/g, '-'), '-.');
   const safe = [...text].map((c) => (c.charCodeAt(0) < 32 || UNSAFE_IN_A_NAME.includes(c) || /\s/.test(c) ? '-' : c));
   return tidy(cut(tidy(safe.join('')), most));
