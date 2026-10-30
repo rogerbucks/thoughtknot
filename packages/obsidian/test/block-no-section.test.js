@@ -92,7 +92,7 @@ describe('a graph shown as text, or with nothing drawable while edited, is read-
     const env = await editedAtTop();
     try {
       const el = await drawnWithNoSection(env, `${GRAPH}\n${'// padding\n'.repeat(20_000)}`);
-      await wait(50);
+      await until(() => /too large to read/i.test(el.querySelector('.thoughtknot-banner')?.textContent ?? ''));
       assert.match(el.querySelector('.thoughtknot-banner')?.textContent ?? '', /too large to read/i);
       assertReadOnly(env, el, 'too large');
     } finally {

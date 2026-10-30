@@ -187,7 +187,7 @@ describe('Park for later, while the card is edited', () => {
       await until(() => !!labelled(el, 'Park for later'));
       labelled(el, 'Park for later').click();
       labelled(el, 'Park it').click();
-      await wait(50);
+      await until(() => !!el.querySelector('.thoughtknot-park [role="alert"]'));
       assert.doesNotMatch(text(el), /Deferred/);
       assert.match(el.querySelector('.thoughtknot-park [role="alert"]').textContent, /what is needed/i);
     } finally {
@@ -205,7 +205,7 @@ describe('Park for later, while the card is edited', () => {
       await until(() => !!labelled(el, 'Park for later'));
       labelled(el, 'Park for later').click();
       labelled(el, 'Park it').click();
-      await wait(50);
+      await until(() => !!el.querySelector('.thoughtknot-park [role="alert"]'));
       assert.equal(labelled(el, DECLARE), undefined);
     } finally {
       env.uninstall();
@@ -240,7 +240,7 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
     input(el, 'Why it waits').value = 'the shop has not said';
     input(el, 'Revisit by').value = '2999-01-01';
     labelled(el, 'Park it').click();
-    await wait(50);
+    await until(() => !!el.querySelector('.thoughtknot-park [role="alert"]'));
   }
   const alertOf = (el) => el.querySelector('.thoughtknot-park [role="alert"]').textContent;
   /** The card of the note's first block drawn again, as Obsidian does once the note has changed: its badge. */
@@ -317,6 +317,7 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
         await wait(5);
         fix.click();
         await until(() => /later_small:Deferred/.test(text(el)));
+        // a second press that was let through would write after the first: nothing shows it has not, so this waits
         await wait(150);
         assert.doesNotMatch(text(el), /later_small_2/, 'parked once');
         assert.equal(text(el).split('DEFERS]->(small)').length, 2, 'one DEFERS link to the thing');
@@ -336,7 +337,7 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
         await parkIt(el);
         input(el, 'What is needed').value = '';
         labelled(el, DECLARE).click();
-        await wait(100);
+        await until(() => /what is needed/i.test(alertOf(el)));
         assert.match(alertOf(el), /what is needed/i);
         assert.doesNotMatch(text(el), /Deferred/, 'nothing parked');
         assert.equal(env.state.files.get(PATH), note, 'and nothing declared: the note is as it was');
@@ -355,7 +356,7 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
       const el = await show(env);
       await parkIt(el);
       labelled(el, DECLARE).click();
-      await wait(50);
+      await until(() => /SET or MATCH/.test(alertOf(el)));
       assert.match(alertOf(el), /SET or MATCH/);
       assert.doesNotMatch(text(el), /Deferred/);
       assert.equal(env.state.files.get(PATH), note, 'the note is as it was');
