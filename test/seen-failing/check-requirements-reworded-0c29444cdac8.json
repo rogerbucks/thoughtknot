@@ -1,0 +1,6 @@
+{
+  "file": "test/check-requirements-reworded.test.js",
+  "test": "a reworded requirement > is accepted when no written test proves it yet",
+  "seen_failing_first": false,
+  "evidence": "a case the old check also accepted: it guards that the new refusal does not over-reach"
+}
