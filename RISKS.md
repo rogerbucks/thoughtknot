@@ -628,13 +628,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
-| UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1549 |
-| UX-5 | A drag on the card writes outside the note's editor undo path | done | #1549 |
+| UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1550 |
+| UX-5 | A drag on the card writes outside the note's editor undo path | done | #1550 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
-| UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1549 |
-| UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1549 |
+| UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1550 |
+| UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
-| NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1549 |
+| NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
