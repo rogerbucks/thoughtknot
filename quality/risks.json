@@ -2521,7 +2521,7 @@
       },
       "status": "done",
       "wave": "Wave 5 · Automated quality and releases",
-      "done_in": "#NEXT",
+      "done_in": "#1564",
       "prevented_by": [
         "test/check-requirements-reworded.test.js",
         "scripts/check-requirements-flips.mjs"
