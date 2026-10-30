@@ -91,10 +91,12 @@ export function directLinks(
     heads = new Map<string, [number, number]>();
   for (const m of laid.marks) {
     if (m.kind === 'group') drawnAs.set(m.id, { x0: m.x, y0: m.y, x1: m.x + m.width, y1: m.y + m.height });
-    const owner = m.kind === 'label' ? /^l:(.*)$/s.exec(m.id)?.[1] : undefined;
-    const was = owner === undefined ? undefined : drawnAs.get(owner);
+    // the room a group's name takes, down to its last line: each line is a label of its own (graphviz-marks.ts)
+    const owner = m.kind === 'label' ? /^l\d*:(.*)$/s.exec(m.id)?.[1] : undefined;
+    const was = owner === undefined ? undefined : drawnAs.get(owner),
+      [top, least] = heads.get(owner ?? '') ?? [0, 0];
     if (m.kind === 'label' && owner !== undefined && was)
-      heads.set(owner, [m.y - was.y0 + HUG, (m.maxWidth ?? 0) + 2 * HUG]);
+      heads.set(owner, [Math.max(top, m.y - was.y0 + HUG), Math.max(least, (m.maxWidth ?? 0) + 2 * HUG)]);
   }
   hug(boxes.values(), groups, heads);
   // our own engine placed each trunk's ends in its rows and routed their links round boxes: kept where it put them
