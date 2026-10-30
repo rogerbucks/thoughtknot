@@ -271,6 +271,9 @@ jobs:
       # every commit since the baseline that changed a test has its record, written on its own branch
       - name: Every commit that changed a test is recorded
         run: node scripts/tests-first.mjs --complete
+      # FLOW-4: the other records too, named together, so a forgotten one is a single message
+      - name: Every record the pull request carries is up to date
+        run: npm run prepare-pr -- --check
 
   # The code scan's security problems, checked on every change before it merges (#849, scripts/code-scan.mjs). GitHub's
   # code scanning stops a pull request only for a problem it adds. This fails on any in the code at all, as the release

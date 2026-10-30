@@ -15,6 +15,11 @@ name: Claude review
 on:
   pull_request:
     types: [opened, ready_for_review]
+    # a change to words alone (FLOW-4) is not worth a review that costs the owner's Claude use
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'wiki/**'
 
 permissions:
   contents: read

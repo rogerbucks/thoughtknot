@@ -435,6 +435,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Test tooling and the build status's parts
 
+- `test/prepare-pr.test.js` — FLOW-4: `npm run prepare-pr` writes every record a pull request carries. CI runs it in check
+  mode and names every stale record at once. A change to words alone gets no Claude review.
+
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
