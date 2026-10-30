@@ -4455,7 +4455,7 @@
       "status": "done",
       "done_in": "#1553",
       "prevented_by": [
-        "test/code-scanning-fixes.test.js",
+        "packages/core/test/export-motion-groups.test.js",
         "test/code-scan.test.js",
         "scripts/code-scan.mjs"
       ]

@@ -10,7 +10,6 @@ import { imageLink } from '../packages/core/src/image-links.ts';
 import { parseView } from '../packages/core/src/view-profile.ts';
 import { cutAtFirst, removeAll, trimChars } from '../packages/core/src/text-cuts.ts';
 import { withSuggestion } from '../packages/core/src/type-suggestion.ts';
-import { replaceGroups } from '../packages/core/src/export-motion.ts';
 import { fromJunit } from '../scripts/tests-first-run.mjs';
 import { jsText } from '../scripts/targets-reflow.mjs';
 import { between, cssRules, inOrder, pieces, withoutBlocks, withoutOpenings } from '../packages/core/test/text-find.js';
@@ -156,35 +155,5 @@ describe('the tests read a drawing by plain search, as their patterns did (js/po
     assert.equal(cssRules(many('a{b}')).length, 60000);
     assert.equal(withoutBlocks(many('@keyframes{a{}}x'), '@keyframes'), 'x'.repeat(60000));
     assert.equal(withoutOpenings(many('@media{'), '@media'), '');
-  });
-});
-
-describe('the groups of a drawing are found by plain search, as their pattern found them (js/polynomial-redos)', () => {
-  const tag = (all, open, kind, n, body, close) => `${open}[${kind} ${n}:${body}]${close}`;
-  const old = (svg) =>
-    svg.replace(/(<g id="(node|edge)(\d+)"[^>]*>)([\s\S]*?)(<\/g>)/g, (all, open, kind, n, body, close) =>
-      tag(all, open, kind, n, body, close),
-    );
-
-  test('each group gives what the pattern gave', () => {
-    for (const svg of [
-      '<svg><g id="graph0"><g id="node1" class="node"><text>A</text></g><g id="edge12"><path d="M0"/></g></g></svg>',
-      '<g id="node"></g><g id="nodex1"></g><g id="node1></g><g id="edge2" a="b">x</g>',
-      '<g id="node1"><g id="node2">inner</g>rest</g><g id="node3">',
-      '<g id="edge1"',
-      '',
-    ])
-      assert.equal(replaceGroups(svg, ['node', 'edge'], tag), old(svg), svg);
-    assert.equal(
-      replaceGroups('<g id="node1">a</g><g id="edge2">b</g>', ['edge'], tag),
-      '<g id="node1">a</g><g id="edge2">[edge 2:b]</g>',
-    );
-  });
-
-  test('it keeps its time on text made to slow the pattern', LIMIT, () => {
-    const many = (piece) => piece.repeat(60000);
-    assert.equal(replaceGroups(many('<g id="edge1">'), ['edge'], tag), many('<g id="edge1">'));
-    assert.equal(replaceGroups(many('<g id="node1"'), ['node', 'edge'], tag), many('<g id="node1"'));
-    assert.equal(replaceGroups(many('<g id="edge1">a</g>'), ['edge'], tag).length, 60000 * 28);
   });
 });
