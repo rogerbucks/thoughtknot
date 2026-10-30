@@ -96,6 +96,10 @@ jobs:
     needs: on-main
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The fresh clone's `npm test` runs the whole suite at once, as ci.yml's public-readiness job does. That passed the
+    # default 4 GB ceiling (4.2 GB, 30 Oct 2026), so it gets CI's ceiling too: 8 GB.
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
