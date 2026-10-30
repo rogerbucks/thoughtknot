@@ -39,7 +39,8 @@ const DATA = [
  * So is a timeline's order or what it shows (timeline_choice_card), and a radial drawing's centre (radial_centre_pick).
  * So looking and going back are open; keeping it, and choosing, are not. Where a card was as its type changed is held in memory
  * alone, so keeping and taking it up are open too. The viewer's profile (§39) is kept with the plugin, never in the note.
- * Its show-as-shared and pace last the session alone, so it is open whole.
+ * Its show-as-shared and pace last the session alone, so it is open whole. A rule tried is drawn, never written
+ * (§56, rule_look_try_save): trying it and going back are open, saving it is not.
  */
 export const READS = [
   'lineOf',
@@ -63,6 +64,8 @@ export const READS = [
   'diagram.textOf',
   'diagram.leave',
   'diagram.kept',
+  'ruleAsk.tryOut',
+  'ruleAsk.back',
   'profile',
 ] as const;
 

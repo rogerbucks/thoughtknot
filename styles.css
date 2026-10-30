@@ -299,6 +299,39 @@
 .thoughtknot-rule-line.is-dotted {
   border-top-style: dotted;
 }
+/* Adding a rule from the card (§56, rule_look_try_save): a Rule button beside the legend opens a short form. In
+   reading view a rule is only tried, and the card says so with a Back to saved button. A rule that cannot be read
+   says why under the form. */
+.thoughtknot-rule-maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-rule-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--gn-space-1);
+  flex-basis: 100%;
+}
+.thoughtknot-rule-field {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-rule-refused {
+  flex-basis: 100%;
+  color: var(--gn-text-error);
+}
+.thoughtknot-rule-refused:empty {
+  display: none;
+}
+.thoughtknot-rule-tried {
+  color: var(--gn-text-muted);
+  font-style: italic;
+}
 /* A view (spec §7):
    - what is outside it is faded, and said so to screen readers;
    - each look's hue is on the outline only, in the locked line blend;

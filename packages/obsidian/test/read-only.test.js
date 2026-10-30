@@ -241,8 +241,10 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
       // the one field is the search box, which finds a thing and writes nothing (§25). The View menu's sliders only
-      // space this card's layout (layout_saved_with_view)
-      const fields = full.querySelectorAll('input').filter((i) => i.getAttribute('type') !== 'range');
+      // space this card's layout (layout_saved_with_view). A rule's form only tries a rule here (rule_look_try_save)
+      const fields = full
+        .querySelectorAll('input')
+        .filter((i) => i.getAttribute('type') !== 'range' && !i.closest('.thoughtknot-rule-form'));
       assert.equal(fields.length, 1, 'no field to type a thing in, but the one');
       assert.equal(fields[0].getAttribute('type'), 'search');
       assert.ok(fields[0].closest('.thoughtknot-find'), 'it is the search box');

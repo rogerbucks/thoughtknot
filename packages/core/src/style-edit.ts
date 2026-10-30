@@ -1,10 +1,10 @@
 // Writing to the style graph (editor spec §2, §6, §7, §14, §15). It writes a nudge, a look, and whether a view fades
 // or hides what is outside it. It writes how a view was shown, a property switched on or off inline, and arrowheads
-// hidden or shown. It writes the diagram type chosen, and a huge graph's filter (§53). Each is written as text into the
-// graph's style block, never a data block. A
-// note with no style block for the graph gets one after its last block. It has its graph line and a comment saying
-// whose style it is. A view's setting and how it was shown are changed in place when already written for the same
-// place. So is a choice of properties, arrowheads, diagram type or filter. None is ever written twice.
+// hidden or shown. It writes the diagram type chosen, a huge graph's filter (§53), and a rule (§56). Each is written as
+// text into the graph's style block, never a data block. A note with no style block for the graph gets one after its
+// last block. It has its graph line and a comment saying whose style it is. A view's setting and how it was shown are
+// changed in place when already written for the same place. So is a choice of properties, arrowheads, diagram type or
+// filter, and a rule with the same meaning. None is ever written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
@@ -32,6 +32,8 @@ import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
+import { ruleProps, ruleRefusal } from './rule-write.ts';
+import type { RuleWrite } from './rule-write.ts';
 
 /** A nudge to write: its word, and the parts that word needs. */
 export interface NudgeWrite {
@@ -114,7 +116,8 @@ export type StyleChange =
   | { show: ShowWrite }
   | { arrows: ArrowsWrite }
   | { diagram: DiagramWrite }
-  | { filter: FilterWrite };
+  | { filter: FilterWrite }
+  | { rule: RuleWrite };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -206,6 +209,21 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
     if (l.link) props.push(['from', l.link.from], ['type', l.link.type], ['to', l.link.to]);
     props.push(['colour', l.colour], ['line', l.line], ['format', l.format], ['means', l.means]);
     return { kind: 'Look', props };
+  }
+  if ('rule' in change) {
+    // a rule with the same meaning in the same view is changed in place (§56, rule_look_try_save)
+    const r = change.rule,
+      why = ruleRefusal(r);
+    return why
+      ? { refused: why }
+      : {
+          kind: 'Look',
+          props: ruleProps(r),
+          match: [
+            ['means', r.means],
+            ['view', r.view],
+          ],
+        };
   }
   if ('filter' in change) {
     const { keep, view } = change.filter,

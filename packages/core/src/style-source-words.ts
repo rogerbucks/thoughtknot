@@ -74,6 +74,7 @@ export const STYLE_SOURCE_WORDS = {
   'styling.look.means.fix': "add means: '<what {colour} means here>'",
   // a rule's look (style-checks.ts, §56)
   'styling.rule.when-and-lens': 'a rule has a when or names a lens, not both',
+  'editing.style.rule-test': 'a rule needs a test of its things, such as status == "late", or a lens',
   'styling.rule.target': 'a rule finds its own things: it may name a kind, or a type for links, and nothing else',
   'styling.rule.target.fix': 'take out thing, from and to, and keep kind or type',
   'styling.rule.when-unread': 'this when cannot be read: {why}',

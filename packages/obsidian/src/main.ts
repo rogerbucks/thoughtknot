@@ -191,7 +191,7 @@ export default class ThoughtKnotPlugin extends Plugin {
   /** Each graph's View menu state (§25), by note, graph and view: kept while the plugin runs, never saved. */
   private readonly viewStates = new Map<string, ViewState>();
   /** The diagram types looked at in reading view (§15, type_try_reading): kept while the plugin runs, never saved. */
-  readonly tried = new TriedTypes();
+  readonly tried = new TriedTypes(this);
 
   /**
    * The View menu's state of a graph, or of one of its views, in a note (§25). It is the same for every card that draws
