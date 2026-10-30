@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadEngine } from '../src/engine.ts';
 import { directLinks } from '../src/direct-links.ts';
+import { CLEARANCE, GENTLE, aside } from '../src/direct-bends.ts';
+import { curveOf } from '../src/direct-curve.ts';
 import { directions, svgOf } from '../src/render.ts';
 import { readNote } from '../src/drawing.ts';
 
@@ -445,4 +447,25 @@ test('drawn direct, each group hugs its things, its name just above them', () =>
   }
   const before = laid.marks.filter((m) => m.kind === 'group').reduce((n, g) => n + area(g), 0);
   assert.ok(groups.reduce((n, g) => n + area(g), 0) < before, 'the groups take less room than Graphviz gave them');
+});
+
+test('a link bows round a box in its way just far enough, however far off the line the box sits', () => {
+  // a box across the middle of a link: the curve's middle clears its near edge by about CLEARANCE, no more
+  const a = { key: 'a', x: 0, y: 0, hw: 20, hh: 10 },
+    b = { key: 'b', x: 200, y: 0, hw: 20, hh: 10 };
+  const clearance = (off) => {
+    const c = { key: 'c', x: 100, y: off, hw: 20, hh: 10 };
+    const bow = aside(a, b, [c]);
+    const mid = curveOf(a, b, bow).at(0.5);
+    // bowed away from the box, so past the edge of the box on the other side from where its middle sits
+    const edge = off - Math.sign(off || 1) * c.hh;
+    return [Math.sign(off || 1) * (edge - mid[1]), bow];
+  };
+  for (const off of [0, 5, -5]) {
+    const [clear] = clearance(off);
+    assert.ok(clear >= CLEARANCE - 0.5 && clear < CLEARANCE + 6, `off ${off}: clears the box by ${clear}`);
+  }
+  // a box only just in the way asks for less than the gentle bow: the link takes the gentle bow, no less
+  assert.equal(Math.abs(clearance(15)[1]), GENTLE);
+  assert.equal(clearance(40)[1], 0);
 });
