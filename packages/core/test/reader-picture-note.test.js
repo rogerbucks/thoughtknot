@@ -4,6 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { THEME_COLOURS, fixedPalette } from '../src/palette.ts';
+import { pictureBlocks } from '../src/reader-picture.ts';
 import {
   ALT_MOST,
   isPictureFile,
@@ -180,5 +182,14 @@ describe('the shared cases, which the Python reader runs too', () => {
     for (const c of cases.withLine)
       assert.equal(withPictureLine(cases.note, c.block, '![new](n.thoughtknot.svg)'), c.note, `block ${c.block}`);
     assert.equal(withoutPictureLines(cases.note), cases.without);
+  });
+
+  // proves: picture_same_everywhere
+  test('choose the same blocks to draw, in the same fixed light colours', () => {
+    assert.deepEqual(pictureBlocks(cases.blocksNote), cases.blocks);
+    assert.deepEqual(THEME_COLOURS.light, cases.lightColours);
+    const light = fixedPalette(THEME_COLOURS.light);
+    for (const c of cases.mixes)
+      assert.equal(c.fill ? light.fill(c.fill) : light.blend(c.blend, c.pct), c.colour, c.fill ?? c.blend);
   });
 });

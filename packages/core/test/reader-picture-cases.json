@@ -174,5 +174,45 @@
       "note": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\n![Graph team](Team.team.thoughtknot.svg)\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
     }
   ],
-  "without": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n"
+  "without": "# Team\n\n```gql\n// graph: team\n(ann:Person {name: 'Ann'})\n```\nText.\n\n~~~~ GQL\n// graph: team_look · STYLE ON team\n(:Look)\n~~~~\r\n\n```gql\n// graph: other\n(b:B)\n```\n",
+  "blocksNote": "```gql\n// graph: team\n(a:P)\n```\n\n```gql\n// graph: team · QUERY view v\nMATCH (n) RETURN n\n```\n\n```gql\n// graph: team · QUERY step s\nMATCH (n) RETURN n\n```\n\n```gql\n// graph: ideas · BOARD ON trip\n(a)\n```\n\n```gql\n// graph: ink · SKETCH ON team\n(a)\n```\n\n```gql\n// graph: t2 · FROM x.gql\n```\n\n```gql\n// graph: s · STYLE team\n(a)\n```\n\n```gql\n// graph: cs · CHANGE SET c1 · against 0123456789abcdef · by ann\n(a)\n```\n\n```gql\n(a:P)\n```\n\n```gql\n// graph: team\n(b:P)\n```\n\n```gql\n// graph: other\n(c:Q)\n```\n",
+  "blocks": [
+    {
+      "block": 0,
+      "graph": "team"
+    },
+    {
+      "block": 10,
+      "graph": "other"
+    }
+  ],
+  "lightColours": {
+    "page": "#ffffff",
+    "text": "#222222",
+    "muted": "#5c5c5c",
+    "red": "#e93147",
+    "orange": "#ec7500",
+    "yellow": "#e0ac00",
+    "green": "#08b94e",
+    "cyan": "#00bfbc",
+    "blue": "#086ddd",
+    "purple": "#7852ee",
+    "pink": "#d53984"
+  },
+  "mixes": [
+    {
+      "fill": "blue",
+      "colour": "#d7e8fa"
+    },
+    {
+      "blend": "pink",
+      "pct": 75,
+      "colour": "#a8336c"
+    },
+    {
+      "blend": "cyan",
+      "pct": 50,
+      "colour": "#11716f"
+    }
+  ]
 }
