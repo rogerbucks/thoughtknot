@@ -719,6 +719,15 @@ never data.
     for the whole graph or a view.
   - `style.ts`'s `linksOf` says how a graph's or a view's links are drawn, a view's own over the whole graph's.
 
+#### Rules and looks
+
+- `rule-looks.ts` — rules and looks (§56). A Look with a `when`, or naming a lens, is a rule: it finds its own things.
+  - `ruleThings` and `ruleLinks` run the rule as a lens, through the graph library, so both engines agree.
+  - `ruleLooks` gives each thing and link its parts from the first rule that sets each. A later rule setting the same
+    part is a clash, a warning naming both.
+  - Each mark gets a style token per rule, `look.<id>`, and a badge or a line: never colour alone.
+  - `ruleLegend` is each rule's look and meaning, made from the style graph alone.
+
 #### Checking the words of a style
 
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses.

@@ -12,6 +12,7 @@ const NAMES = {
   kinds: new Set(['Drink', 'Person']),
   types: new Set(['WARMS']),
   paths: new Set(),
+  lenses: new Set(),
   properties: (of) => new Set(of.kind === 'Drink' || of.thing === 'tea' ? ['name', 'price'] : ['name']),
 };
 

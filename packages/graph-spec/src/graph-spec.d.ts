@@ -361,6 +361,12 @@ declare namespace GraphSpecCheck {
     lens: string,
     options?: { schemas?: Record<string, string> },
   ): { lens: string; things: string[]; altitude: unknown; flags: [string, string][] };
+  /** The things a lens query finds, in the graph's order; none when it cannot be read (editor spec §56). */
+  function queryThings(graph: Graph, query: string): string[];
+  /** The links of `type`, or every type, passing `where`, by their place in the edges (editor spec §56). */
+  function queryLinks(graph: Graph, type: string | null, where: string | null): number[];
+  /** What is wrong with a guard as written, or null when it reads; its names are not looked up (editor spec §56). */
+  function guardProblem(guard: string): string | null;
   /** One thing in the altitude and topic index (editor spec §32). */
   interface AltitudeEntry {
     id: string;
