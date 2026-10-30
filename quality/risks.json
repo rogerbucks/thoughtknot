@@ -534,8 +534,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/engine-version-retry.test.js",
+        "scripts/engine-version.mjs"
+      ]
     },
     {
       "id": "OPS-6",
@@ -569,8 +574,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/report-failure.yml"
+      ]
     },
     {
       "id": "OPS-7",
@@ -605,8 +615,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/token-watch.yml"
+      ]
     },
     {
       "id": "OPS-8",
@@ -638,8 +653,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/settings-export.test.js",
+        "scripts/settings-export.mjs"
+      ]
     },
     {
       "id": "OPS-9",
@@ -675,8 +695,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/dependabot.yml"
+      ]
     },
     {
       "id": "OPS-10",
@@ -714,8 +739,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/record-spread.test.js",
+        "scripts/record-spread.mjs"
+      ]
     },
     {
       "id": "OPS-11",
@@ -743,8 +773,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/workflows/wiki.yml"
+      ]
     },
     {
       "id": "OPS-12",
@@ -778,8 +813,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        "CONTRIBUTING.md"
+      ]
     },
     {
       "id": "CODE-1",

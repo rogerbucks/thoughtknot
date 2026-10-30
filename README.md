@@ -185,8 +185,8 @@ read until one is set.
 - **Verified.** CI runs `npm audit signatures` before every build.
 - **Slow to adopt, quick to patch.** Dependabot proposes version updates each week, after a seven-day wait. Security
   updates come at once.
-- **Pinned actions.** Every GitHub Action is pinned to a full commit hash. CI runs with read-only permissions, and only
-  the release job may write.
+- **Pinned actions.** Every GitHub Action is pinned to a full commit hash. CI runs with read-only permissions. The few jobs that
+  write, and why, are in the table "Who may write what" in CONTRIBUTING.md.
 - **Built by CI.** Releases are built from a version tag, with no `v` in front. Each has `SHA256SUMS` for every file.
   Once the repository is public, each also gets a build provenance attestation. GitHub keeps those only for public
   repositories owned by a person.

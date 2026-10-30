@@ -663,6 +663,13 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+## Failure reports and process docs
+
+- `test/report-failure-workflow.test.js` — four workflows report a failed job through one reusable workflow. It writes
+  an issue and nothing else. A daily token probe opens an issue on the third refusal in a row (OPS-6, OPS-7).
+- `test/process-risks-ops.test.js` — Dependabot watches the Docker image, and the release writes an SBOM. The wiki
+  survives a missing Chrome. The docs name every job that writes (OPS-9, OPS-11, OPS-12).
+
 ## Workflows and the desktop app
 
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
@@ -691,6 +698,10 @@ after a module nor listed here, and on a listed file that is missing.
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
 ## Being public, and pull requests
 
+- `test/settings-export.test.js` — the default branch's whole ruleset and the Pages settings are exported to
+  `.github/settings/` and held whole against GitHub's (OPS-8).
+- `test/engine-version-retry.test.js` — a slow or failing advisory service is asked three times, and a recent committed
+  cache stands in for one that stays down (OPS-5).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
 - `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
@@ -709,6 +720,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The quality ratchet and the test runner
 
+- `test/record-spread.test.js` — the spread between runs is put in the metrics, so the baseline committed from them
+  carries it (OPS-10).
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quality-instructions.test.js` — the instruction counts in the ratchet.

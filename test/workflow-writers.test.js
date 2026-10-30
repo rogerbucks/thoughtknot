@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, stripComment, workflowFiles } from './repository/repo.js';
 
 describe('GitHub Actions writers', () => {
-  test('only seventeen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the stuck pull request flag, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only these jobs may write: the failure reports and the token watch, the release, the nightly, its draft check and its wave-end call, the lock, the stuck pull request flag, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -45,14 +45,30 @@ describe('GitHub Actions writers', () => {
           only(
             '/wave-nightly.yml',
             'wave-nightly',
-            'attestations: write,contents: write,id-token: write,security-events: read',
+            'attestations: write,contents: write,id-token: write,issues: write,security-events: read',
           );
         // the risk panel's issue, the security issue and Claude's security branches: security-workflow.test.js
         const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
+        // a failed scheduled workflow opens or updates one issue (test/report-failure-workflow.test.js)
+        const failure =
+          (name === 'report-failure' && given.join() === 'issues: write') ||
+          only('/report-failure.yml', 'report', 'issues: write') ||
+          only('/token-watch.yml', 'probe', 'actions: read,issues: write');
         const security = f.endsWith('/security.yml') && ['report', 'fix'].includes(name);
         assert.ok(
-          release || lock || stuck || comment || mirror || review || wiki || nightly || panel || pages || security,
+          release ||
+            lock ||
+            stuck ||
+            comment ||
+            mirror ||
+            review ||
+            wiki ||
+            nightly ||
+            panel ||
+            pages ||
+            security ||
+            failure,
           f,
         );
       }

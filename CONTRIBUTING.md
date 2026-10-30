@@ -539,7 +539,8 @@ latest stable release. To look at the wiki before a merge:
   only the benchmarks a change reaches are counted again.
 - **Counting them all.** Tick "count every benchmark" to count them all; a release always does. Ticked, "spread" also
   writes `instruction-spread.json`, every benchmark counted three times. Its `largest_spread` is how far a count moved
-  between runs there, which the tolerance must stay well above.
+  between runs there, which the tolerance must stay well above. The metrics record it, so the baseline carries it.
+  `quality-check.mjs` refuses a baseline whose instruction tolerance is under twice it.
 
 ### Tests and time
 
@@ -567,6 +568,50 @@ latest stable release. To look at the wiki before a merge:
   last checked over 14 days ago.
 - **Only `--refresh` and `--watch` ask:** OSV and NVD for Graphviz, merged, and OSV for the package that wraps it. The
   release's quality job refreshes and checks.
-- **The "Engine advisories" workflow** is run by hand; its weekly schedule is off until the public release. It is
-  read-only: it fails when the published advisories differ from the committed cache. Then someone runs `--refresh` and
-  opens a pull request. The plugin never asks.
+- **The "Engine advisories" workflow** runs every Monday at 06:17 UTC, and by hand. It is read-only: it fails when the
+  published advisories differ from the committed cache. Then someone runs `--refresh` and opens a pull request. The
+  plugin never asks.
+- **A slow or failing service does not spend a version number** (OPS-5). `--refresh` asks each service up to three times,
+  after 1 s and then 2 s. Say one still fails. If the committed cache is for this engine and was checked within 14
+  days, the release goes on with that cache and a warning. Otherwise it fails as before. `--watch` never falls back.
+
+### Who may write what
+
+Every workflow runs with a read-only token. These jobs ask for more, each for one reason (OPS-12). A job that writes runs
+no code of the repository where it can be avoided. `test/policy.test.js` fails when a job with a write permission is not
+in this table.
+
+| Workflow | Job | Writes | Why |
+| --- | --- | --- | --- |
+| build-status | `update` | pull requests | Posts the comment on each pull request that says which requirements it proves. |
+| claude-review | `review` | pull requests | Posts the Claude review's comments. |
+| engine-advisories | `report-failure` | issues | Opens an issue when the weekly advisory watch fails. |
+| lock-conversations | `lock` | pull requests | Locks each pull request's conversation, as only a collaborator contributes. |
+| nightly | `publish` | contents, id-token, attestations | Makes the nightly pre-release, attests it and removes old ones. |
+| nightly | `drafts` | contents | Reads draft releases, which GitHub lists only to a token that may write. It changes none. |
+| nightly | `report-failure` | issues | Opens an issue when the nightly fails. |
+| pages | `publish` | pages, id-token | Deploys the home page to GitHub Pages. |
+| pages | `report-failure` | issues | Opens an issue when Pages fails. |
+| project-mirror | `mirror` | issues | Mirrors the requirements as issues and labels. |
+| release | `publish` | contents, id-token, attestations | Checks the files the build job made, attests them and drafts the release. |
+| report-failure | `report` | issues | Keeps one open issue per failing workflow, labelled `workflow-failure`. |
+| risk-panel | `report` | issues | Opens the issue that carries the panel's findings. |
+| security | `report` | issues | Keeps the issue that lists open security alerts. |
+| security | `fix` | id-token | Lets the Claude action push its branches as the Claude app, so CI runs on them. |
+| stuck-prs | `flag` | pull requests | Labels a pull request whose auto-merge is stuck on a conflict. |
+| token-watch | `probe` | issues | Opens an issue when `PROJECT_TOKEN` has been refused three times in a row. |
+| wave-nightly | `wave-nightly` | contents, issues, id-token, attestations | Passes the nightly the most its own jobs ask for. |
+| wiki | `publish` | contents | Pushes the generated pages to the wiki's own repository. |
+| wiki | `report` | issues | Keeps the wiki-review issue. |
+| wiki | `report-failure` | issues | Opens an issue when the wiki fails. |
+| working-group | `post` | discussions | Posts the working group's daily comment on #825. |
+| working-group-reply | `post` | discussions | Posts a reply to a comment on #825. |
+
+### Pins that are bumped by hand
+
+Dependabot proposes the npm, uv, Docker base image and GitHub Actions updates (OPS-9). It cannot bump two pins, so
+they move only on purpose. These are the Node patch (`24.20.0`) in the quality workflows and `setup-uv`'s `version:`.
+Each changes with a new quality baseline, as a Node patch can move the instruction counts.
+
+The release writes `npm sbom --sbom-format cyclonedx` as an asset. It has a checksum, and once the repository is public
+an attestation. A user can list what is inside `main.js`.

@@ -37,7 +37,7 @@ describe('the wave nightly workflow', () => {
     assert.match(call, /uses: \.\/\.github\/workflows\/nightly\.yml/);
     assert.match(
       call,
-      /contents: write\s*\n\s*security-events: read\s*\n\s*id-token: write\s*\n\s*attestations: write/,
+      /contents: write\s*\n\s*issues: write\s*\n\s*security-events: read\s*\n\s*id-token: write\s*\n\s*attestations: write/,
     );
   });
 
