@@ -262,7 +262,7 @@ describe('an empty graph block', () => {
         if (option) option.click();
         assert.match(textarea(el).value, /^\/\/ graph: empty_trial · SOURCE\n\(/, typed);
       }
-      await wait(400);
+      await until(() => /```gql\n\/\/ graph: empty_trial · SOURCE\n\(/.test(note(env)));
       assert.match(note(env), /```gql\n\/\/ graph: empty_trial · SOURCE\n\(/);
     } finally {
       env.uninstall();

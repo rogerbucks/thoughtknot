@@ -3,7 +3,7 @@
 // in its words.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './host/load-plugin.js';
+import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { READER, NOTE, PATH, open, textarea, type, note } from './host/pane-notes.js';
 
@@ -44,7 +44,7 @@ describe('writing to the note', () => {
       type(env.el, READER + ',\n(mine:Reason)');
       const theirs = NOTE.replace(READER, READER + ',\n(theirs:Reason)');
       await env.app.vault.modify({ path: PATH }, theirs);
-      await wait(400);
+      await until(() => textarea(env.el).value === READER + ',\n(theirs:Reason)');
       assert.equal(note(env), theirs, 'not overwritten');
       assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)', 'reloaded');
       const banner = env.el.querySelector('.thoughtknot-draft');
@@ -90,9 +90,9 @@ describe('writing to the note', () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(one:Reason)');
-      await wait(400);
+      await until(() => note(env) === NOTE.replace(READER, READER + ',\n(one:Reason)'));
       type(env.el, READER + ',\n(one:Reason),\n(two:Reason)');
-      await wait(400);
+      await until(() => note(env) === NOTE.replace(READER, READER + ',\n(one:Reason),\n(two:Reason)'));
       // each step writes the note, then puts its text in the field: both are waited for before the next press
       const one = READER + ',\n(one:Reason)',
         stepped = (block) => note(env) === NOTE.replace(READER, block) && textarea(env.el).value === block;
@@ -115,7 +115,7 @@ describe('Lock the graph', () => {
       const lock = labelled(env.el, 'Lock the graph');
       assert.ok(lock);
       lock.click();
-      await wait(50);
+      await until(() => /The schema: locked/.test(note(env)));
       assert.match(
         note(env),
         /```\n\n```gql\n\/\/ graph: reader\n\/\/ ── The schema: locked \d{4}-\d\d-\d\d from the data above ──/,
