@@ -6,8 +6,7 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag, nudgeDrops } from './box-drag-view';
-import type { DragHost } from './box-drag-view';
+import { BoxDrag, nudgeDrops, type DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
 import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
