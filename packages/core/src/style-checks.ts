@@ -40,6 +40,7 @@ import type {
   ViewStyle,
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
+import { ruleLookOf } from './rule-look-checks.ts';
 import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_CHOICES, LAYOUT_OPTION_RANGE, choiceFits } from './layouts/layout-options.ts';
 import { SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
 import type { LayoutChoice, LayoutShare } from './layouts/layout-options.ts';
@@ -69,6 +70,8 @@ export interface StyledNames {
   kinds: Set<string>;
   types: Set<string>;
   paths: Set<string>;
+  /** The Lens things of the graph, which a rule's look may name (§56). */
+  lenses: Set<string>;
   /** The property names of a kind's things, of one thing, or of a relationship type's links. */
   properties(of: { kind?: string; thing?: string; type?: string }): Set<string>;
 }
@@ -177,6 +180,11 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
 function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null {
   const r = reader(raw, names, out),
     has = (k: string) => raw.props[k] !== undefined;
+  if (has('when') || has('lens') || has('bands') || has('steps')) return ruleLookOf(raw, names, out);
+  if (has('badge')) {
+    r.report(say('styling.rule.badge-needs-rule'), say('styling.rule.badge-needs-rule.fix'));
+    return null;
+  }
   if (has('view') === has('path')) {
     if (has('view')) r.report(say('styling.look.view-and-path'), say('styling.remove-one'));
     else r.missing(say('styling.look.view-or-path'), say('styling.look.view-or-path.fix'));

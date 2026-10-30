@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/saved-lenses.test.mjs",
+  "test": "lens_is_saved_query > a query is read by plain search, the same as before, however long its runs of spaces (js/polynomial-redos)",
+  "seen_failing_first": false,
+  "evidence": "The change makes reading a query faster on a crafted text, not different: each query reads the same before and after. The code scan (CodeQL js/polynomial-redos) holds the speed, as a test may not assert elapsed time."
+}

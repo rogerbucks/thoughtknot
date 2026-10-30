@@ -5,6 +5,7 @@
 // - What is outside it is faded or hidden as its style graph says (fade_or_hide_in_style).
 // - Its looks are drawn with their legend.
 // - How it is shown is saved in the style graph when asked (view_saved_as_shown).
+import { rulesOn } from './rule-card';
 import { Notice, TFile } from 'obsidian';
 import type { BlockContext } from './block-context';
 import {
@@ -323,11 +324,11 @@ export async function renderViewBlock(
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
+      ...rulesOn(looked.style, g, styled, { view: v.name }), // its rules' looks (§56); a clash shows on the graph's card
       diagram,
       ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
-      // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
-      links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },
+      links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] }, // as the graph's (§18); broken, on its card
       images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from

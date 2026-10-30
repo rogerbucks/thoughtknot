@@ -124,4 +124,22 @@ function guardHolds(guard, ctx) {
   return truthy(out);
 }
 
-module.exports = { GUARD_LIMITS, guardHolds };
+// What is wrong with a guard as written, or null when it reads. Its names are not looked up. So a guard is checked
+// before the things it tests are known, as a rule's `when` is (editor spec §56, rule_look_when).
+function guardProblem(guard) {
+  const any = new Proxy(
+    {},
+    {
+      getOwnPropertyDescriptor: () => ({ value: null, writable: true, enumerable: true, configurable: true }),
+      get: () => null,
+    },
+  );
+  try {
+    guardHolds(guard, any);
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+module.exports = { GUARD_LIMITS, guardHolds, guardProblem };

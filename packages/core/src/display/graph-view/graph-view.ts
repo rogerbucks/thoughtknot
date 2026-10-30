@@ -15,14 +15,14 @@ import { ViewMaker } from './view-maker';
 import { AddThing } from './add-thing';
 import { sketchOn, type SketchTool } from './sketch-tool';
 import { toggleExportForm } from '../export/export-form';
-import { markView, renderViewStrip } from './view-strip';
+import { renderViewStrip } from './view-strip';
+import { markLooks } from './rule-marks';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { editButtonAs, overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
-import { markFlow } from './flow-marks';
 import { renderBesideFor } from './layout-step-line';
 import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
@@ -209,8 +209,7 @@ export class GraphView extends Lifecycle {
       byKeyboard: () => this.sel.byKeyboard(),
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
     });
-    if (this.svg && this.o.motion) markFlow(this.svg, this.o.motion.flow); // the links its style moves (§7)
-    if (view && this.svg) markView(this.svg, view); // a view: what is outside it faded, its looks drawn (§7)
+    if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
     if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     this.sketcher?.layer(); // the drawings over it, on top (§70)
@@ -335,9 +334,8 @@ export class GraphView extends Lifecycle {
     this.walk?.stop(); // a path playing marks the drawing it began on: it stops, and is played again on this one
     swapSvg(svg, drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.details.pictures(svg); // the pictures went with the drawing: each box drawn now gets its own, by its key (§18)
-    if (this.o.motion) markFlow(svg, this.o.motion.flow); // the links its style moves, on both lines of a trunk (§7)
     renderBesideFor(this.legendSlot, this.o, this.drawn.svg); // and the device's lines (§69)
-    if (this.o.view) markView(svg, this.o.view);
+    markLooks(svg, this.o); // the links its style moves, on both lines of a trunk (§7), and its looks
     if (this.o.proposal) markProposal(svg, this.o.proposal.shown.marks);
     this.taps.reset(drawn.svg);
     this.sketcher?.layer(); // the drawings follow what they are pinned to (§70)

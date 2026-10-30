@@ -9,8 +9,12 @@ worked out each time it runs, from the graph as it is then, so a lens opened aft
 fresh.
 
 A query names a kind, or * for every thing, and may add WHERE and a guard-language test of each
-thing's properties. A thing lacking a property the test names does not match. A lens may name the
-schemas it depends on. When the graph now names another version of one, the lens is flagged.
+thing's properties. A thing lacking a property the test names does not match. The test may also
+count a thing's links: links_out, links_in and links, both ways. A property of that name wins. A
+rule's look (editor spec §56, rule_look_when) runs its `when` here too, as a query, so both engines
+give it the same things. A rule on links tests each link's own properties, and may name its
+relationship type. A lens may name the schemas it depends on. When the graph now names another
+version of one, the lens is flagged.
 """
 
 from __future__ import annotations
@@ -89,28 +93,65 @@ def lenses_of(graph: Graph, schemas: dict | None = None) -> list:
     return out
 
 
+def _holds(where, ctx) -> bool:
+    """Whether a test holds for a context: one that cannot be run, or that names what is not
+    there, does not."""
+    if where is None:
+        return True
+    try:
+        return guards.holds(where, ctx)
+    except (NameError, ValueError, TypeError):
+        return False
+
+
+def _found(graph: Graph, query: dict | None) -> list:
+    """The things a query read by query_of finds, in the graph's order. A Lens thing is never
+    found."""
+    things: list = []
+    if not query:
+        return things
+    out: dict = {}
+    inc: dict = {}
+    if query["where"] is not None:
+        for s, _t, d, *_ in graph.edges:
+            out[s] = out.get(s, 0) + 1
+            inc[d] = inc.get(d, 0) + 1
+    for i, (labels, props) in graph.nodes.items():
+        if "Lens" in labels or (query["kind"] is not None and query["kind"] not in labels):
+            continue
+        ctx = None
+        if query["where"] is not None:
+            o, n = out.get(i, 0), inc.get(i, 0)
+            ctx = {"links_out": o, "links_in": n, "links": o + n, **props}
+        if _holds(query["where"], ctx):
+            things.append(i)
+    return things
+
+
 def run_lens(graph: Graph, lens_id: str, schemas: dict | None = None) -> dict:
     """A lens run on the graph as it is now: the things it finds, its altitude and its flags."""
     lens = next((x for x in lenses_of(graph, schemas) if x["id"] == lens_id), None)
     if lens is None:
         raise ValueError(f"refused: {lens_id} is not a lens (editor spec §33)")
-    query = query_of(lens["query"])
-    things = []
-    if query:
-        for i, (labels, props) in graph.nodes.items():
-            if "Lens" in labels or (query["kind"] is not None and query["kind"] not in labels):
-                continue
-            hit = True
-            if query["where"] is not None:
-                try:
-                    hit = guards.holds(query["where"], props)
-                except (NameError, ValueError, TypeError):
-                    hit = False
-            if hit:
-                things.append(i)
     return {
         "lens": lens["id"],
-        "things": things,
+        "things": _found(graph, query_of(lens["query"])),
         "altitude": lens["altitude"],
         "flags": lens["flags"],
     }
+
+
+def query_things(graph: Graph, query: str) -> list:
+    """The things a query finds, as a lens would, in the graph's order. None when it cannot be
+    read."""
+    return _found(graph, query_of(query))
+
+
+def query_links(graph: Graph, typ: str | None, where: str | None) -> list:
+    """The links a rule finds, by their place in the graph's edges: those of `typ`, or of every
+    type when it is None, whose own properties pass `where`, or every one when it is None."""
+    return [
+        n
+        for n, (_s, t, _d, *rest) in enumerate(graph.edges)
+        if (typ is None or t == typ) and _holds(where, dict(rest[0] if rest and rest[0] else {}))
+    ]

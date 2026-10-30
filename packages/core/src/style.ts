@@ -14,6 +14,7 @@ import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
 import { checkThings } from './style-checks.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { settle } from './style-conflicts.ts';
+import { isRule } from './rule-words.ts';
 import { emptyStyle } from './style-graph.ts';
 import type { LegendEntry, Outside, Routing, StyleGraph, StyleScope, StyleTarget, ThingLook } from './style-graph.ts';
 import { isSpace, S } from './whitespace.ts';
@@ -37,6 +38,7 @@ function namesOf(reading: Pick<NoteReading, 'whole'>, graph: string, g: Graph): 
     kinds: new Set(things.flatMap(kindsOf)),
     types: new Set([...g.edges.map(([, t]) => t), ...declared.keys()]),
     paths: new Set(g.labelled('Path')),
+    lenses: new Set(g.labelled('Lens')),
     properties: ({ kind, thing, type }) =>
       type !== undefined
         ? new Set(g.edges.filter(([, t]) => t === type).flatMap(([, , , props]) => Object.keys(props)))
@@ -204,9 +206,12 @@ export function linksOf(style: Pick<StyleGraph, 'links'>, view?: string): { rout
   return { routing: chosen('routing') ?? 'curved', merge: chosen('merge') === 'on' };
 }
 
+// a rule's look finds its own things (rule-looks.ts), so it is never one of these
 const inScope = (style: StyleGraph, scope: StyleScope) =>
   style.looks.filter(
-    (l) => (scope.view !== undefined && l.view === scope.view) || (scope.path !== undefined && l.path === scope.path),
+    (l) =>
+      !isRule(l) &&
+      ((scope.view !== undefined && l.view === scope.view) || (scope.path !== undefined && l.path === scope.path)),
   );
 
 /**

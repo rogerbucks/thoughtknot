@@ -1,10 +1,10 @@
 // A graph too large to draw, shown in its Obsidian card as its overview (editor spec §53, scale_massive_card). The
 // overview is the display layer's (massive-view.ts). Obsidian gives it its colours, its layouts and each thing's
-// properties, for the filters.
+// properties, for the filters. It gives the style graph's rules too, so each group counts its looks (§56).
 //
 // It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
 // in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
-import { PALETTES, renderFor, storedStyle, word } from '@thoughtknot/core';
+import { PALETTES, renderFor, rulesFor, storedStyle, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
 import type { MassiveOptions } from '@thoughtknot/core/display/graph-view/massive-view';
@@ -24,12 +24,15 @@ export interface MassiveCard {
 
 /** Shows `drawing` as its overview at the end of `root`. */
 export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawing: GraphDrawing, c: MassiveCard): void {
-  const { path, graph, reading } = c;
+  const { path, graph, reading } = c,
+    g = reading.world[graph];
   massiveView(root, drawing, {
     graph,
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
-    props: (key) => reading.world[graph]?.p(key) ?? {},
+    props: (key) => g?.p(key) ?? {},
+    // each group box counts its looks, and the filters offer them (§56, rule_look_massive)
+    ...(g && c.styling.style.looks.length ? { rules: rulesFor(c.styling.style, g, drawing) } : {}),
     // the Filter for the whole graph: a view's own is for when views are drawn as overviews
     chosen: c.styling.style.filters.find((f) => f.view === undefined)?.keep,
     painter: renderFor(c.styling.style).painter, // as its Render says (§68, layout_concept_layers)

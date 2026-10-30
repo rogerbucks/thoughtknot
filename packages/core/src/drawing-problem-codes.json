@@ -182,7 +182,8 @@
         "styling.conflict.type-along",
         "styling.conflict.flow-meaning",
         "styling.conflict.view",
-        "styling.conflict.shown-twice"
+        "styling.conflict.shown-twice",
+        "styling.rule.clash"
       ],
       "libraries": ["core", "py"]
     },

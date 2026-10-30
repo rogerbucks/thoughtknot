@@ -719,6 +719,24 @@ never data.
     for the whole graph or a view.
   - `style.ts`'s `linksOf` says how a graph's or a view's links are drawn, a view's own over the whole graph's.
 
+#### Rules and looks
+
+- `rule-looks.ts` — rules and looks (§56). A Look with a `when`, or naming a lens, is a rule: it finds its own things.
+  - `ruleThings` and `ruleLinks` run the rule as a lens, through the graph library, so both engines agree.
+  - `ruleLooks` gives each thing and link its parts from the first rule that sets each. A later rule setting the same
+    part is a clash, a warning naming both.
+  - Each mark gets a style token per rule, `look.<id>`, and a badge or a line: never colour alone.
+  - `ruleLegend` is each rule's look and meaning, made from the style graph alone.
+  - A bands rule (`bands`, `steps`) shades a number in steps. `bandSteps` gives each step a test, a numbered tag and a
+    colour of `BAND_HUES`, in order. `rulesFor` gives a card what it draws, links by their place on the card.
+- `rule-words.ts` — the words of a rule: its keys, the badges, the band colours and `isRule`.
+- `rule-look-checks.ts` — a rule's look and a bands rule, checked, each fault a problem with its fix.
+- `display/graph-view/rule-marks.ts` — a card marks each thing and link a rule finds: its token, line, hue and badge. Its
+  legend lists each rule drawn. The 2.5D and 3D views read the badge before each name (`svg-marks.ts`).
+- `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
+  overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
+  "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
+
 #### Checking the words of a style
 
 - `style-checks.ts` — each style thing checked on its own: its kind, its words, its values, and every name it uses.

@@ -113,6 +113,8 @@ and no module requires one that requires it back.
 - **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
   - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
     time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
+    `queryThings` and `queryLinks` run a rule's `when` as a query of things or links (editor spec §56,
+    `test/rule-look-cases.json`). A test may count a thing's links: `links_out`, `links_in` and `links`.
 
 ### The process core
 

@@ -382,3 +382,4 @@ export { transitionAltitude, walkTransition } from './phase-altitude.ts';
 export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
 export * from './index-process.ts';
 export * from './index-profiles.ts';
+export * from './index-rules.ts';
