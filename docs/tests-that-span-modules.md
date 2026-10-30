@@ -1059,3 +1059,5 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `python/graph_spec/tests/test_rule_looks.py` — a rule's look, run as a lens, finds what the JavaScript library finds.
   The shared cases are `packages/graph-spec/test/rule-look-cases.json` (editor spec §56, rule_look_when).
+- `packages/core/test/rule-bands.test.js` — a bands rule shades a number in steps. It spans `rule-looks.ts`, which
+  runs each step as a lens query, and `rule-words.ts`, which gives the colours in order (rule_look_bands).

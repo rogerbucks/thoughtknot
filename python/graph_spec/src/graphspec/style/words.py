@@ -93,6 +93,8 @@ STYLE_KEYS = {
         "line",
         "format",
         "badge",
+        "bands",
+        "steps",
         "means",
     ),
     "ViewStyle": ("view", "outside"),

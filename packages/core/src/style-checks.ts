@@ -180,7 +180,7 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
 function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null {
   const r = reader(raw, names, out),
     has = (k: string) => raw.props[k] !== undefined;
-  if (has('when') || has('lens')) return ruleLookOf(raw, names, out);
+  if (has('when') || has('lens') || has('bands') || has('steps')) return ruleLookOf(raw, names, out);
   if (has('badge')) {
     r.report(say('styling.rule.badge-needs-rule'), say('styling.rule.badge-needs-rule.fix'));
     return null;

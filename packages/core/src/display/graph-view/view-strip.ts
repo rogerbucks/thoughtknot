@@ -5,7 +5,7 @@
 // style's own blend of its hue (styled_paths_and_views).
 import { hueColour, lookTags, word } from '@thoughtknot/core';
 import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@thoughtknot/core';
-import { button } from '../button';
+import { button } from '../button.ts';
 
 /** What a drawing shown as a view is given, beyond a plain drawing's options. */
 export interface ViewShown {
@@ -65,7 +65,7 @@ export function renderViewStrip(
 }
 
 /** Adds words to what a screen reader hears of a box or link: never said by colour or fading alone. */
-const say = (g: SVGElement, words: string) => {
+export const say = (g: SVGElement, words: string) => {
   const label = g.getAttribute('aria-label');
   if (label && words) g.setAttribute('aria-label', `${label}, ${words}`);
 };
@@ -73,7 +73,7 @@ const say = (g: SVGElement, words: string) => {
 const SVG = 'http://www.w3.org/2000/svg';
 
 /** Puts the tag of a look's colour on a box, at its top left, or over a link's label, else by its arrowhead. */
-function putTag(g: SVGElement, tag: string, edge: boolean) {
+export function putTag(g: SVGElement, tag: string, edge: boolean, cls = 'thoughtknot-look-tag') {
   const nums = (el: Element | null, name: string) =>
     (el?.getAttribute(name) ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
   let x: number | undefined, y: number | undefined;
@@ -92,7 +92,7 @@ function putTag(g: SVGElement, tag: string, edge: boolean) {
   }
   if (x === undefined || y === undefined) return;
   const mark = g.appendChild(activeDocument.createElementNS(SVG, 'text'));
-  mark.setAttribute('class', 'thoughtknot-look-tag');
+  mark.setAttribute('class', cls);
   mark.setAttribute('x', String(x));
   mark.setAttribute('y', String(y));
   mark.setAttribute('aria-hidden', 'true');

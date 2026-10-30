@@ -8,6 +8,7 @@ export const TYPES_LATE = [
   'RuleLooks',
   'RuleMark',
   'RuleParts',
+  'RulesShown',
   'Citation',
   'Connected',
   'Connector',
