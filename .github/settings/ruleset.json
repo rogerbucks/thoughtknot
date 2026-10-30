@@ -91,6 +91,13 @@
           }
         ]
       }
+    },
+    {
+      "type": "code_coverage",
+      "parameters": {
+        "max_coverage_drop": null,
+        "minimum_coverage": null
+      }
     }
   ],
   "bypass_actors": [
