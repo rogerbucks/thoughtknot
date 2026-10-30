@@ -7,7 +7,7 @@
 # node:24.20.0-trixie-slim, pinned by its digest on 2026-10-12. The digest's own images were created by
 # 2026-08-27T17:10:35Z (the latest of its platforms, read with `docker buildx imagetools inspect <image@digest>`), over
 # 7 days before it was pinned.
-FROM node:24.20.0-trixie-slim@sha256:50c3b2f6988dfc307b86e5301d69611af31f4789bdf232863b07d3b02fe55ae0
+FROM node:26.12.0-trixie-slim@sha256:e556a144463cc8dc53afe8de6d2fa0db5c132fd39ffa232c17641bd40df2bf11
 
 # Valgrind, GPL-3.0, a tool run here alone and never shipped (licences/bundled.json, ciOnlyTools), at trixie's version
 RUN apt-get update \
