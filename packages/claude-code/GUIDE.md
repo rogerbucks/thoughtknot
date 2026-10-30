@@ -376,10 +376,11 @@ limits) are the server's and not the store's.
 
 ## The mod, `mod/`
 
-The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not by the repository's linter: run
-`claude plugin validate packages/claude-code/mod` and `claude plugin test packages/claude-code/mod` before a merge
-that touches it. CI has no Claude Code, so it runs neither: what the pane shows is decided in `src/`, which CI tests,
-and `register.tsx` stays thin.
+The folder Claude Code loads (`--plugin-dir`). Claude Code checks it, not the repository's linter. Run
+`node scripts/mod-check.mjs` before a merge that touches it. It builds the mod, then runs `claude plugin validate` and
+`claude plugin test` on it. The release check runs it with `--require`, in a job that installs the CLI, so a broken hook
+fails the release. What the pane shows is decided in `src/`, which every pull request's tests cover, and `register.tsx`
+stays thin.
 
 - `.claude-plugin/plugin.json` — the manifest, named `thoughtknot`.
 - `hooks/register.tsx` — the hooks module.
@@ -582,5 +583,5 @@ with in the same environment variable as the gate's (`src/editor-settings-env.ts
     the host starts one, with standard input closed at once. Its support is `editor-mod-support.js`.
   - The other workstreams' cases for `test_cc_mod`: C3's, the gate, are in `editor-mod.test.js`. C7's, Claude's
     proposals, are in `editor-mod-claude.test.js`.
-- The mod's wiring (`register.tsx`) is checked by `claude plugin validate` and a type check. `claude plugin test` needs
-  a Claude Code signed in and online, so no test of it is in the repository yet.
+- The mod's wiring (`register.tsx`) is checked by `claude plugin validate` and `claude plugin test`, run by
+  `scripts/mod-check.mjs`. The CLI makes the mod's types itself, so `tsc` cannot check it apart from the CLI.

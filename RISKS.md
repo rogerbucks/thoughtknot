@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (45)
+## Open (44)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -13,7 +13,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
@@ -32,7 +31,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
-| FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -96,16 +94,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Widen --test-coverage-include to packages/*/src, packages/claude-code/server and page. Record one baseline per package. Run the coverage step in CI on pull requests that touch a package.
 
 **Check:** quality-check.mjs holds each package's coverage_percent against its baseline on every pull request, not only at release.
-
-### CODE-4 The Claude Code mod is outside typecheck, lint and CI
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/claude-code/mod/**`, `package.json`, `.github/workflows/release-check.yml`.
-
-**Risk:** register.tsx (265 lines) starts the server, runs Graphviz and refuses Claude's own writes into the data folder. Yet CI never type-checks, lints or runs its test. The guide asks for a manual `claude plugin test` before a merge, so a broken hook ships when someone forgets.
-
-**Fix:** Add `tsc -p packages/claude-code/mod --noEmit` to the typecheck script. Add a release-check step that runs `claude plugin validate` and `claude plugin test` where the CLI is installed. Make it fail when the CLI is not installed.
-
-**Check:** A CI job with the Claude Code CLI that runs the mod's test. Until then, a conventions test that register.tsx imports nothing but src/ modules already under test.
 
 ### CODE-6 77 fixed sleeps remain in 26 plugin test files
 
@@ -286,16 +274,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add one script, `npm run prepare-pr`, that runs tests-first --update, plain-docs --update, public-api --update and notices.mjs in order, and name it in AGENTS.md. Skip the Claude review and public-readiness setup check for docs-only changes by path filter.
 
 **Check:** A CI step that runs prepare-pr and fails on a dirty tree, so a forgotten record is one message, not four.
-
-### FLOW-5 A requirement's text can be rewritten to fit the code
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `scripts/check-requirements-flips.mjs`, `scripts/build-status.mjs`, `requirements/editor-requirements.gql`.
-
-**Risk:** The flip check guards only a test's status, by design: records, links and comments may change freely. So a proved requirement's rule can be softened after the fact and the test stays 'written'. No one is told the proof no longer matches the words.
-
-**Fix:** Make the flip check list every proved requirement whose `rule` text changed, and require the pull request body to name each one. The build status then shows the requirement as 'reworded' until its test's commit is newer than the wording.
-
-**Check:** check-requirements-flips.mjs --merge-base-of prints 'reworded' lines and exits 1 unless the commit message names the id.
 
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
@@ -507,7 +485,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (87)
+## Done or accepted (88)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -532,6 +510,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-12 | Docs disagree with the workflows on schedules and write access | done | #1540; kept out by `test/process-risks-ops.test.js`, `CONTRIBUTING.md` |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
+| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1560; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
 | CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
@@ -559,6 +538,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
+| FLOW-5 | A requirement's text can be rewritten to fit the code | done | #1564; kept out by `test/check-requirements-reworded.test.js`, `scripts/check-requirements-flips.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
