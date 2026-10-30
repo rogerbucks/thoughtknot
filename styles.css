@@ -274,6 +274,31 @@
   font-size: 10px;
   fill: var(--gn-text-normal);
 }
+/* A rule's badge (§56, rule_look_not_colour_alone) is a small sign on each thing or link the rule finds. So its look
+   is never told by colour alone. The legend shows the same badge, a sample of the rule's line, and what it means. */
+.thoughtknot-svg .thoughtknot-rule-badge {
+  font-size: 11px;
+  fill: var(--gn-text-normal);
+}
+.thoughtknot-rule-glyph {
+  margin-inline-end: var(--gn-space-1);
+}
+.thoughtknot-rule-line {
+  display: inline-block;
+  width: 1.5em;
+  margin-inline-end: var(--gn-space-1);
+  vertical-align: middle;
+  border-top: 2px solid var(--thoughtknot-swatch, var(--gn-text-muted));
+}
+.thoughtknot-rule-line.is-bold {
+  border-top-width: 4px;
+}
+.thoughtknot-rule-line.is-dashed {
+  border-top-style: dashed;
+}
+.thoughtknot-rule-line.is-dotted {
+  border-top-style: dotted;
+}
 /* A view (spec §7):
    - what is outside it is faded, and said so to screen readers;
    - each look's hue is on the outline only, in the locked line blend;

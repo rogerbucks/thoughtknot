@@ -9,8 +9,9 @@
 // Host-free and pure: it reads the style graph and the graph, and gives what each thing and link is drawn with.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { Problem } from './note-reading.ts';
-import { isRule } from './rule-words.ts';
+import type { GraphDrawing, Problem } from './note-reading.ts';
+import { bandHues, isRule } from './rule-words.ts';
+import { lookTag } from './look-tags.ts';
 import type { Badge } from './rule-words.ts';
 import { styleProblem } from './style-graph.ts';
 import type { LineStyle, Look, StyleGraph, StyleScope, TextFormat } from './style-graph.ts';
@@ -44,6 +45,8 @@ export interface RuleMark {
   line?: LineStyle;
   format?: TextFormat;
   badge?: Badge;
+  /** A bands rule's numbered tag for the step it falls in, such as ②, in place of a badge. */
+  tag?: string;
   /** What each of those rules means, in the order written, so a screen reader says it. */
   means: string[];
 }
@@ -63,6 +66,7 @@ export interface RuleLegendEntry {
   line?: LineStyle;
   format?: TextFormat;
   badge?: Badge;
+  tag?: string;
   means: string;
 }
 
@@ -89,9 +93,41 @@ export function rulesIn(style: Pick<StyleGraph, 'looks'>, scope: StyleScope = {}
   );
 }
 
+/** A rule as it gives its look: a bands rule gives one of these for each step, with its own token and tag. */
+type Step = Look & { token?: string; tag?: string };
+
+/**
+ * The steps of a bands rule (rule_look_bands), each a rule of its own. Each has a test of the number and a colour of
+ * the palette, in order. It has a numbered tag, a token `look.<id>.<n>`, and its name for the legend. Other rules
+ * have none.
+ */
+export function bandSteps(rule: Look): (Step & { when: string })[] {
+  const { bands, steps } = rule;
+  if (bands === undefined || !steps?.length) return [];
+  const hues = bandHues(steps.length + 1),
+    means = rule.means ?? bands;
+  return hues.map((colour, i) => {
+    const from = steps[i - 1],
+      to = steps[i];
+    const when =
+      from === undefined
+        ? `${bands} < ${to}`
+        : to === undefined
+          ? `${bands} >= ${from}`
+          : `${bands} >= ${from} and ${bands} < ${to}`;
+    const said =
+      from === undefined
+        ? word('styling.bands.below', { means, to: String(to) })
+        : to === undefined
+          ? word('styling.bands.above', { means, from: String(from) })
+          : word('styling.bands.between', { means, from: String(from), to: String(to) });
+    return { ...rule, colour, when, tag: lookTag(i), token: `${lookToken(rule)}.${i + 1}`, means: said };
+  });
+}
+
 /** The things a rule finds, run as a lens: its lens, or its `when` as a query of its kind or of every thing. */
 export function ruleThings(graph: Graph, rule: Look): string[] {
-  if (rule.type !== undefined) return [];
+  if (rule.type !== undefined || rule.bands !== undefined) return [];
   if (rule.lens !== undefined) {
     const lens = gs.lensesOf(graph).find((l) => l.id === rule.lens);
     if (!lens) return [];
@@ -121,16 +157,17 @@ export function ruleLooks(
   const said = new Set<string>(),
     // which rule gave each part of a mark, to name it in a clash
     setBy = new WeakMap<RuleMark, Partial<Record<LookPart, string>>>();
-  const give = <K>(marks: Map<K, RuleMark>, key: K, rule: Look, shownAs: string) => {
+  const give = <K>(marks: Map<K, RuleMark>, key: K, rule: Step, shownAs: string) => {
     const mark = marks.get(key) ?? { tokens: [], means: [] },
       by = setBy.get(mark) ?? {};
     let gave = false;
     for (const part of LOOK_PARTS) {
-      const value = part === 'colour' ? rule.colour : rule[part];
+      const value = part === 'colour' ? rule.colour : part === 'badge' ? (rule.badge ?? rule.tag) : rule[part];
       if (value === undefined) continue;
       const first = by[part];
       if (first === undefined) {
-        Object.assign(mark, { [part === 'colour' ? 'hue' : part]: value });
+        const own = part === 'colour' ? 'hue' : part === 'badge' && rule.badge === undefined ? 'tag' : part;
+        Object.assign(mark, { [own]: value });
         by[part] = rule.at.id;
         gave = true;
         continue;
@@ -151,12 +188,15 @@ export function ruleLooks(
       });
     }
     if (!gave) return;
-    mark.tokens.push(lookToken(rule));
+    mark.tokens.push(rule.token ?? lookToken(rule));
     mark.means.push(rule.means ?? '');
     setBy.set(mark, by);
     marks.set(key, mark);
   };
   for (const rule of rulesIn(style, scope)) {
+    for (const step of bandSteps(rule))
+      for (const key of gs.queryThings(graph, `${rule.kind ?? '*'} WHERE ${step.when}`))
+        give(out.things, key, step, key);
     for (const key of ruleThings(graph, rule)) give(out.things, key, rule, key);
     for (const n of ruleLinks(graph, rule)) {
       const [from, type, to] = graph.edges[n] ?? [];
@@ -171,12 +211,53 @@ export function ruleLooks(
  * from the style graph alone. Adding, changing or taking out a rule changes it with no other edit.
  */
 export function ruleLegend(style: Pick<StyleGraph, 'looks'>, scope: StyleScope = {}): RuleLegendEntry[] {
-  return rulesIn(style, scope).map((l) => ({
-    token: lookToken(l),
-    ...(l.colour !== undefined ? { hue: l.colour } : {}),
-    ...(l.line !== undefined ? { line: l.line } : {}),
-    ...(l.format !== undefined ? { format: l.format } : {}),
-    ...(l.badge !== undefined ? { badge: l.badge } : {}),
-    means: l.means ?? '',
-  }));
+  return rulesIn(style, scope).flatMap((rule) =>
+    (rule.bands === undefined ? [rule as Step] : bandSteps(rule)).map((l) => ({
+      token: l.token ?? lookToken(l),
+      ...(l.tag !== undefined ? { tag: l.tag } : {}),
+      ...(l.colour !== undefined ? { hue: l.colour } : {}),
+      ...(l.line !== undefined ? { line: l.line } : {}),
+      ...(l.format !== undefined ? { format: l.format } : {}),
+      ...(l.badge !== undefined ? { badge: l.badge } : {}),
+      means: l.means ?? '',
+    })),
+  );
+}
+
+/** What a card draws with the rules of its scope: each drawn thing's and link's look, the legend, and the clashes. */
+export interface RulesShown {
+  things: Map<string, RuleMark>;
+  /** Each drawn link's look, by its place in the drawing's links, as the card numbers them (`data-link`). */
+  links: Map<number, RuleMark>;
+  /** The rules that gave a look to something drawn, in the order written. */
+  legend: RuleLegendEntry[];
+  clashes: Problem[];
+}
+
+/**
+ * The rules of `scope` as `drawing` shows them. A link drawn is matched to the link written by its two ends and type,
+ * the n-th drawn to the n-th written. Only the rules that gave something drawn a look are in its legend.
+ */
+export function rulesFor(
+  style: Pick<StyleGraph, 'looks'>,
+  graph: Graph,
+  drawing: Pick<GraphDrawing, 'graph' | 'boxes' | 'links'>,
+  scope: StyleScope = {},
+): RulesShown {
+  const looks = ruleLooks(style, graph, drawing.graph, scope);
+  const drawn = new Set(drawing.boxes.map((b) => b.key));
+  const things = new Map([...looks.things].filter(([key]) => drawn.has(key)));
+  const written = new Map<string, number[]>();
+  graph.edges.forEach(([from, type, to], n) => {
+    const key = `${from}\u0000${type}\u0000${to}`;
+    written.set(key, [...(written.get(key) ?? []), n]);
+  });
+  const links = new Map<number, RuleMark>();
+  drawing.links.forEach((l, i) => {
+    const n = written.get(`${l.from}\u0000${l.type}\u0000${l.to}`)?.shift();
+    const mark = n === undefined ? undefined : looks.links.get(n);
+    if (mark) links.set(i, mark);
+  });
+  const used = new Set([...things.values(), ...links.values()].flatMap((m) => m.tokens));
+  return { things, links, legend: ruleLegend(style, scope).filter((e) => used.has(e.token)), clashes: looks.clashes };
 }

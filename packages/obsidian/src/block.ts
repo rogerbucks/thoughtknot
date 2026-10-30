@@ -2,6 +2,7 @@
 // shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed. Sometimes nothing
 // can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
 // with its problems or a banner.
+import { rulesOn } from './rule-card';
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component } from 'obsidian';
 import type { BlockContext } from './block-context';
@@ -335,8 +336,8 @@ export async function renderBlock(
               move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
             },
           }),
-      // the links its style graph moves, and the lines laid out backwards (§7)
-      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
+      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
+      ...rulesOn(looked ? looked.style : styling.style, reading.world[graph], drawing, {}, problems, shown), // §56
       links,
       // its things' images, found from this note, and the pictures its style draws on boxes (§18)
       images: plugin.cardImages(target.path, drawing.pictures),
