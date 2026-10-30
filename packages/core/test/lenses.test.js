@@ -127,6 +127,29 @@ describe('a lens bends a flat drawing and a drawing in space (projections_all_on
     assert.deepEqual([seen.least, seen.most], [space.least, space.most], 'the box round it all stays, for the camera');
   });
 
+  test('how far a lens reaches in space is the drawing’s size, the same wherever in space the drawing sits', () => {
+    // a third ball, nearer than a third of the drawing: just past the lens’s reach, so left as it is
+    const c = { ...space.blocks[0], of: 'c', x: 390 };
+    const moved = (s, dz) => ({
+      ...s,
+      blocks: s.blocks.map((b) => ({ ...b, floor: b.floor + dz })),
+      lines: s.lines.map((l) => ({ ...l, points: l.points.map(([x, y, z]) => [x, y, z + dz]) })),
+      labels: s.labels.map((l) => ({ ...l, at: [l.at[0], l.at[1], l.at[2] + dz] })),
+      arrows: s.arrows.map((a) => ({
+        ...a,
+        tip: [a.tip[0], a.tip[1], a.tip[2] + dz],
+        back: [a.back[0], a.back[1], a.back[2] + dz],
+      })),
+      least: [s.least[0], s.least[1], s.least[2] + dz],
+      most: [s.most[0], s.most[1], s.most[2] + dz],
+    });
+    const here = { ...space, blocks: [...space.blocks, c] },
+      far = moved(here, 1000);
+    const widthOf = (s) => spaceSeen(s, 'fisheye', s.blocks[0]).blocks.find((b) => b.of === 'c').width;
+    assert.equal(widthOf(far), widthOf(here));
+    assert.equal(widthOf(here), c.width, 'past the reach, it is as laid out');
+  });
+
   // proves: projections_all_on
   test('in space the lens follows the picked thing: with nothing picked, or no lens, it is as laid out', () => {
     assert.equal(spaceSeen(space, 'fisheye', null), space);
