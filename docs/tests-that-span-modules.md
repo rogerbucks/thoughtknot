@@ -501,6 +501,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The graph spec
 
+- `test/check-requirements-reworded.test.js` — FLOW-5: a proved requirement's rule is reworded only when a commit message
+  or the pull request body names its id.
+
 - `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
   graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
 - `test/graph-spec-index.test.js` — the graph spec file is true to itself (spec §51, spec_index_true; GS1): its counts,
