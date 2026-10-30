@@ -1054,3 +1054,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/decision-remarks.test.js` — FLOW-11: every `(Roger, <date>)` remark in the requirements and docs has a Question
   answered that day. Older remarks are held to an allowance in `quality/decision-remarks.json` that only goes down.
+
+## Rules and looks
+
+- `python/graph_spec/tests/test_rule_looks.py` — a rule's look, run as a lens, finds what the JavaScript library finds.
+  The shared cases are `packages/graph-spec/test/rule-look-cases.json` (editor spec §56, rule_look_when).

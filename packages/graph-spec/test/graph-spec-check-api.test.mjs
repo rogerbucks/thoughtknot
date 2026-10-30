@@ -136,6 +136,10 @@ const NAMES = [
   // lenses as graph data: saved queries that answer fresh (editor spec §33)
   'lensesOf',
   'runLens',
+  // a rule's look runs its when as a query, things or links (editor spec §56)
+  'queryThings',
+  'queryLinks',
+  'guardProblem',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',

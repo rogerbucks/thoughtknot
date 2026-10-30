@@ -7,7 +7,11 @@
 // the graph as it is then, so a lens opened after an edit answers fresh.
 //
 // A query names a kind, or * for every thing, and may add WHERE and a guard-language test of each thing's
-// properties: `Decision WHERE status == 'open'`. A thing lacking a property the test names does not match.
+// properties: `Decision WHERE status == 'open'`. A thing lacking a property the test names does not match. The test
+// may also count a thing's links: `links_out`, `links_in` and `links`, both ways. A property of that name wins.
+//
+// A rule's look (editor spec §56, rule_look_when) runs its `when` here too, as a query, so both engines give it the
+// same things. A rule on links tests each link's own properties, and may name its relationship type.
 //
 // A lens may name the schemas it depends on, written as comma-separated text such as
 // `schemas: 'decision@1, risk@2'`. When the graph now names another
@@ -29,14 +33,25 @@ const LENS_PROPS = [
   'confidence',
   'status',
 ];
-const QUERY = /^\s*(\*|[A-Za-z_]\w*)(?:\s+WHERE\s+([\s\S]+?))?\s*$/;
+const KIND = /^(?:\*|[A-Za-z_]\w*)/;
 const base = (schema) => String(schema).replace(/@[^@]*$/, '');
 
-/** A saved query read: the kind it asks for, or null for every thing, and its test. Null when it cannot be read. */
+/**
+ * A saved query read, `Kind WHERE test` or `* WHERE test`: the kind it asks for, or null for every thing, and its
+ * test. Null when it cannot be read. It is cut by plain search, not one pattern, which ran slow on a long run of
+ * spaces (js/polynomial-redos).
+ */
 function queryOf(text) {
-  const m = typeof text === 'string' ? QUERY.exec(text) : null;
-  if (!m) return null;
-  return { kind: m[1] === '*' ? null : m[1], where: m[2] ?? null };
+  const t = typeof text === 'string' ? text.trim() : '',
+    head = KIND.exec(t);
+  if (!head) return null;
+  const kind = head[0] === '*' ? null : head[0],
+    rest = t.slice(head[0].length);
+  if (!rest) return { kind, where: null };
+  const word = rest.trimStart();
+  if (word === rest || !word.startsWith('WHERE')) return null;
+  const where = word.slice('WHERE'.length).trimStart();
+  return where && where !== word.slice('WHERE'.length) ? { kind, where } : null;
 }
 
 /** The lens things of a graph, each with what it asks and what is flagged on it, by id. */
@@ -78,6 +93,45 @@ function lensesOf(graph, options = {}) {
     });
 }
 
+/** How many links each thing has going out and coming in, counted once for a whole query. */
+function linkCounts(graph) {
+  const out = new Map(),
+    inc = new Map();
+  for (const [s, , t] of graph.edges) {
+    out.set(s, (out.get(s) ?? 0) + 1);
+    inc.set(t, (inc.get(t) ?? 0) + 1);
+  }
+  return { out, inc };
+}
+
+/** Whether a test holds for a context; a test that cannot be run, or names what is not there, does not hold. */
+function holds(where, ctx) {
+  if (where === null) return true;
+  try {
+    return guardHolds(where, ctx);
+  } catch {
+    return false;
+  }
+}
+
+/** The things a query read by `queryOf` finds, in the graph's order. A Lens thing is never found. */
+function found(graph, query) {
+  const things = [];
+  if (!query) return things;
+  const counts = query.where === null ? null : linkCounts(graph);
+  for (const [id, [labels, props]] of graph.nodes) {
+    if (labels.has('Lens') || (query.kind !== null && !labels.has(query.kind))) continue;
+    const ctx = counts && {
+      links_out: counts.out.get(id) ?? 0,
+      links_in: counts.inc.get(id) ?? 0,
+      links: (counts.out.get(id) ?? 0) + (counts.inc.get(id) ?? 0),
+      ...props,
+    };
+    if (holds(query.where, ctx)) things.push(id);
+  }
+  return things;
+}
+
 /**
  * A lens run on the graph as it is now: the things its query finds, in the graph's order, its default altitude and its
  * flags. `schemas` gives the version the graph now names for each schema, by name without its version.
@@ -85,21 +139,24 @@ function lensesOf(graph, options = {}) {
 function runLens(graph, lensId, options = {}) {
   const lens = lensesOf(graph, options).find((l) => l.id === lensId);
   if (!lens) throw refused('GR03', `refused: ${lensId} is not a lens (editor spec §33)`);
-  const query = queryOf(lens.query);
-  const things = [];
-  if (query)
-    for (const [id, [labels, props]] of graph.nodes) {
-      if (labels.has('Lens') || (query.kind !== null && !labels.has(query.kind))) continue;
-      let hit = true;
-      if (query.where !== null)
-        try {
-          hit = guardHolds(query.where, props);
-        } catch {
-          hit = false;
-        }
-      if (hit) things.push(id);
-    }
-  return { lens: lens.id, things, altitude: lens.altitude, flags: lens.flags };
+  return { lens: lens.id, things: found(graph, queryOf(lens.query)), altitude: lens.altitude, flags: lens.flags };
 }
 
-module.exports = { lensesOf, runLens };
+/** The things a query finds, as a lens would, in the graph's order. None when the query cannot be read. */
+function queryThings(graph, text) {
+  return found(graph, queryOf(text));
+}
+
+/**
+ * The links a rule finds, by their place in the graph's edges. They are those of `type`, or of every type when it is
+ * null. Their own properties must pass `where`, unless it is null.
+ */
+function queryLinks(graph, type, where) {
+  const links = [];
+  graph.edges.forEach(([, t, , props], n) => {
+    if ((type === null || t === type) && holds(where, { ...(props || {}) })) links.push(n);
+  });
+  return links;
+}
+
+module.exports = { lensesOf, runLens, queryThings, queryLinks };
