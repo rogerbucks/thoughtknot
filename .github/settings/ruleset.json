@@ -53,6 +53,10 @@
           {
             "context": "plan",
             "integration_id": 15368
+          },
+          {
+            "context": "coverage",
+            "integration_id": 15368
           }
         ]
       }
@@ -86,6 +90,13 @@
             "alerts_threshold": "errors"
           }
         ]
+      }
+    },
+    {
+      "type": "code_coverage",
+      "parameters": {
+        "max_coverage_drop": null,
+        "minimum_coverage": null
       }
     }
   ],
