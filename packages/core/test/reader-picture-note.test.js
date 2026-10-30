@@ -3,6 +3,7 @@
 // .thoughtknot.svg. It names itself as ThoughtKnot's with the fingerprint of the text drawn. Only that is read from it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   ALT_MOST,
   isPictureFile,
@@ -154,5 +155,30 @@ describe('the alt text', () => {
     assert.ok(long.length <= ALT_MOST, `${long.length} characters`);
     assert.ok(long.endsWith('…'));
     assert.doesNotMatch(long, / …$/, 'no space before the ellipsis');
+  });
+});
+
+describe('the shared cases, which the Python reader runs too', () => {
+  const cases = JSON.parse(readFileSync(new URL('./reader-picture-cases.json', import.meta.url), 'utf8'));
+
+  // proves: picture_same_everywhere
+  test('give the same names, links, fingerprints, states and lines as the table says', () => {
+    for (const c of cases.fileNames) assert.equal(pictureFileName(c.note, c.graph), c.name, c.note);
+    for (const c of cases.links) {
+      assert.equal(pictureHref(c.note, c.picture), c.href, c.picture);
+      assert.equal(pictureTarget(c.note, c.href), c.back, c.href);
+    }
+    for (const c of cases.texts) {
+      assert.deepEqual(pictureTexts(cases.note, c.graph), c.texts, c.graph);
+      assert.equal(pictureFingerprint('Work/Team.md', c.texts), c.fingerprint, c.graph);
+    }
+    for (const c of cases.states) assert.equal(pictureState(c.existing, c.fingerprint), c.state);
+    for (const c of cases.linesOf) assert.equal(pictureLinkOf(c.line), c.href, c.line);
+    for (const c of cases.alts) assert.equal(pictureAlt(c.sentences, c.most), c.alt);
+    assert.equal(pictureLine(cases.pictureLine.alt, cases.pictureLine.href), cases.pictureLine.line);
+    assert.deepEqual(pictureLines(cases.note), cases.pictureLines);
+    for (const c of cases.withLine)
+      assert.equal(withPictureLine(cases.note, c.block, '![new](n.thoughtknot.svg)'), c.note, `block ${c.block}`);
+    assert.equal(withoutPictureLines(cases.note), cases.without);
   });
 });
