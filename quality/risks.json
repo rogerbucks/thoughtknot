@@ -2498,8 +2498,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1563",
+      "prevented_by": [
+        "test/prepare-pr.test.js",
+        "scripts/prepare-pr.mjs"
+      ]
     },
     {
       "id": "FLOW-5",

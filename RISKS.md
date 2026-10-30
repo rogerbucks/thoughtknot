@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (41)
+## Open (40)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -29,7 +29,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
-| FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -253,16 +252,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test in packages/obsidian/test that opens two graphs and asserts the summary lists both, newest first.
 
-### FLOW-4 A one-line fix pays eleven gates and may touch four records
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `package.json`, `AGENTS.md`, `.github/workflows/ci.yml`, `.github/workflows/claude-review.yml`, `scripts/**`.
-
-**Risk:** One pull request runs 6 test shards, lint, python, python-no-engine, tests-first and public-readiness. It also runs a Claude review of up to 30 minutes, the project mirror and the build status. A test or doc change must also carry a tests-first record, a plain-docs record, public-api.json or a quality baseline. Each is written by a script the author must know to run.
-
-**Fix:** Add one script, `npm run prepare-pr`, that runs tests-first --update, plain-docs --update, public-api --update and notices.mjs in order, and name it in AGENTS.md. Skip the Claude review and public-readiness setup check for docs-only changes by path filter.
-
-**Check:** A CI step that runs prepare-pr and fails on a dirty tree, so a forgotten record is one message, not four.
-
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `manifest.json`, `versions.json`, `.github/workflows/release.yml`, `requirements/waves.json`, `packages/obsidian/**`.
@@ -463,7 +452,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (91)
+## Done or accepted (92)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -517,6 +506,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
+| FLOW-4 | A one-line fix pays eleven gates and may touch four records | done | #1563; kept out by `test/prepare-pr.test.js`, `scripts/prepare-pr.mjs` |
 | FLOW-5 | A requirement's text can be rewritten to fit the code | done | #1564; kept out by `test/check-requirements-reworded.test.js`, `scripts/check-requirements-flips.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
