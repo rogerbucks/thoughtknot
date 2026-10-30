@@ -90,6 +90,8 @@ export type ExportInfo = {
   pictures?: PictureLoad;
   /** The drawings over the graph (§70), drawn on top as the card draws them (sketch_reader_picture). */
   sketch?: Sketch | null;
+  /** The line at its foot in place of the export's, as a reader picture says who drew it (§62, reader-picture.ts). */
+  footer?: string;
 } & (
   | { style?: undefined; data?: undefined }
   | {
@@ -284,7 +286,7 @@ function framedImage(
       title: walk ? `${title} · path ${walk.path.title}` : title,
       ...(subtitle ? { subtitle } : {}),
       legend: legendItems(scope, drawing, info, palette),
-      footer: footerText(info.note, info.date),
+      footer: info.footer ?? footerText(info.note, info.date),
     },
     palette,
   );
