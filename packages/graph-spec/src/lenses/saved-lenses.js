@@ -33,14 +33,25 @@ const LENS_PROPS = [
   'confidence',
   'status',
 ];
-const QUERY = /^\s*(\*|[A-Za-z_]\w*)(?:\s+WHERE\s+([\s\S]+?))?\s*$/;
+const KIND = /^(?:\*|[A-Za-z_]\w*)/;
 const base = (schema) => String(schema).replace(/@[^@]*$/, '');
 
-/** A saved query read: the kind it asks for, or null for every thing, and its test. Null when it cannot be read. */
+/**
+ * A saved query read, `Kind WHERE test` or `* WHERE test`: the kind it asks for, or null for every thing, and its
+ * test. Null when it cannot be read. It is cut by plain search, not one pattern, which ran slow on a long run of
+ * spaces (js/polynomial-redos).
+ */
 function queryOf(text) {
-  const m = typeof text === 'string' ? QUERY.exec(text) : null;
-  if (!m) return null;
-  return { kind: m[1] === '*' ? null : m[1], where: m[2] ?? null };
+  const t = typeof text === 'string' ? text.trim() : '',
+    head = KIND.exec(t);
+  if (!head) return null;
+  const kind = head[0] === '*' ? null : head[0],
+    rest = t.slice(head[0].length);
+  if (!rest) return { kind, where: null };
+  const word = rest.trimStart();
+  if (word === rest || !word.startsWith('WHERE')) return null;
+  const where = word.slice('WHERE'.length).trimStart();
+  return where && where !== word.slice('WHERE'.length) ? { kind, where } : null;
 }
 
 /** The lens things of a graph, each with what it asks and what is flagged on it, by id. */
