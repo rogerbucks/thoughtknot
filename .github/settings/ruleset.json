@@ -53,6 +53,10 @@
           {
             "context": "plan",
             "integration_id": 15368
+          },
+          {
+            "context": "coverage",
+            "integration_id": 15368
           }
         ]
       }
