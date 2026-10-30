@@ -184,7 +184,7 @@ export function overviewOf(
         ...label,
         x: cx,
         y: cy + big * 1.6,
-        text: held,
+        text: short(held),
         size: big / 2,
       });
   });

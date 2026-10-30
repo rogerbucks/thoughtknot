@@ -84,6 +84,15 @@ describe('rule_look_massive', () => {
     assert.ok(said.length && said.every((t) => t.startsWith('⏱ Late ')), 'each kept group counts what it keeps');
   });
 
+  test('a group box that holds many looks says them cut short, as its name is', () => {
+    const { drawing } = read();
+    const grouping = groupsOf(drawing);
+    const long = '⏱ Late 12 · '.repeat(80);
+    const laid = overviewOf(grouping, undefined, () => long);
+    const said = laid.marks.find((m) => m.id === `${grouping.groups[0].id}:looks`)?.text ?? '';
+    assert.ok(said.length < long.length && said.endsWith('…'), 'a long legend never runs off the box');
+  });
+
   test('a graph whose rules find nothing offers no By look filter', () => {
     const { drawing } = read();
     const keys = drawing.boxes.map((b) => b.key);
