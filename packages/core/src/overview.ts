@@ -113,11 +113,13 @@ export function overviewOrder(grouping: Grouping): string[][] {
 /**
  * The overview of `grouping` as marks: a box for each group with its name and count, and a line for each link between.
  * The groups are laid out in `order` (`overviewOrder`). A filter gives the whole graph's order, so the groups it keeps
- * stay in the same order. A group `order` does not name is put last.
+ * stay in the same order. A group `order` does not name is put last. `looks`, given a group's keys, says how many of
+ * them each rule's look holds, under its count (§56, rule_look_massive).
  */
 export function overviewOf(
   grouping: Grouping,
   order: readonly (readonly string[])[] = overviewOrder(grouping),
+  looks?: (keys: readonly string[]) => string,
 ): LaidMarks {
   const { groups, between } = grouping;
   const things = groups.reduce((n, g) => n + g.keys.length, 0);
@@ -147,7 +149,8 @@ export function overviewOf(
     const r = place[i] as Rect;
     const gap = Math.min(GAP, r.width / 4, r.height / 4);
     const box = { x: r.x + gap, y: r.y + gap, width: r.width - gap * 2, height: r.height - gap * 2 };
-    const count = `${g.keys.length} ${g.keys.length === 1 ? 'thing' : 'things'}`;
+    const count = `${g.keys.length} ${g.keys.length === 1 ? 'thing' : 'things'}`,
+      held = looks?.(g.keys) ?? '';
     centre[i] = [box.x + box.width / 2, box.y + box.height / 2];
     marks.push({
       id: g.id,
@@ -155,7 +158,7 @@ export function overviewOf(
       style: 'overview.group',
       ...box,
       role: 'group',
-      name: short(`${g.label}, ${count}`),
+      name: short([g.label, count, held].filter(Boolean).join(', ')),
     });
     // the name is as large as fits its box: about two thirds of a size per character
     const big = Math.max(
@@ -174,6 +177,16 @@ export function overviewOf(
       text: count,
       size: big / 2,
     });
+    if (held)
+      marks.push({
+        id: `${g.id}:looks`,
+        style: 'overview.count',
+        ...label,
+        x: cx,
+        y: cy + big * 1.6,
+        text: held,
+        size: big / 2,
+      });
   });
   for (const l of between) {
     const a = centre[l.from],

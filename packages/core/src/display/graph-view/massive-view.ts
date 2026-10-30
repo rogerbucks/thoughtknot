@@ -9,16 +9,14 @@
 // picture again, exactly as it was. Moving about is massive-moves.ts. 3D view lifts the groups into blocks. Nothing is
 // edited here. A filter chosen goes to the host, which saves it where the note is edited; one it gives is the first.
 import { formatCount, paintersFrom, word } from '@thoughtknot/core';
-import type { Drawn, GraphDrawing, Painter, Refusal } from '@thoughtknot/core';
+import type { GraphDrawing } from '@thoughtknot/core';
 import type { LaidMarks } from '../../graphviz-marks.ts';
 import { partOf } from '../../expand-on-demand.ts';
 import { FacetIndex, facetsOf } from '../../facet-counts.ts';
 import type { Chosen } from '../../facet-counts.ts';
-import type { FilterKeep } from '../../filter-saved.ts';
 import { GLIDE_MS, LiveFilter, glide } from '../../filter-live.ts';
 import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
-import type { Palette } from '../../palette.ts';
 import { groupsOf, type Grouping } from '../../scale-groups.ts';
 import { Trail } from '../../explore-trail.ts';
 import { FLY_MS, ThingSearch, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
@@ -27,7 +25,7 @@ import { reducedMotion } from './details-nav';
 import { webgl2Painter } from './gl-painter.ts';
 import { webgpuPainter } from './gpu-painter.ts';
 import { canvasPainter, paintsOf, pickPainter } from './mark-painter.ts';
-import type { MarkPainter, Paint, PainterKind, Paints } from './mark-painter.ts';
+import type { MarkPainter, Paint, Paints } from './mark-painter.ts';
 import { filterPanel } from './massive-filter.ts';
 import { detailFiller, thingAt } from './massive-detail.ts';
 import { laidInside } from './massive-lay.ts';
@@ -38,33 +36,10 @@ import { plainPaints, spaceButton } from './massive-paints.ts';
 import { placesKept } from './massive-places.ts';
 import { LISTED, searchBox } from './massive-search.ts';
 import { button } from '../button';
+import type { MassiveOptions, MassiveView } from './massive-options.ts';
+import { groupLooks, lookFacet } from '../../rule-looks-massive.ts';
 
-/** What the overview needs from its host. */
-export interface MassiveOptions {
-  graph: string;
-  /** The host's colours, as its drawings name them. */
-  palette: Palette;
-  /** Lays out a part of the graph, as the card's drawings are laid out: in the worker, under the same limits. */
-  layout: (part: GraphDrawing, owner: object) => Promise<Drawn | Refusal | null>;
-  /** A thing's properties by its key, for the filters. Not set: things filter by kind alone. */
-  props?: (key: string) => Readonly<Record<string, unknown>>;
-  /** The filter the overview starts with, as saved. Not set: everything is kept. */
-  chosen?: FilterKeep;
-  /** Told each filter the user chooses, to save it. Going back or forward is not a choice. */
-  chose?: (keep: FilterKeep) => void;
-  /** Told the thing chosen: found by search, even in a group too large to draw, or clicked in an opened group. */
-  picked?: (key: string) => void;
-  painter?: Painter; // the fastest that may paint it, as the style graph's Render says (layout_concept_layers)
-}
-
-/** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */
-export interface MassiveView {
-  close(): void;
-  painter(): PainterKind | null;
-  view(): FlyView;
-  find(query: string): Match[];
-  flyTo(match: Match): Promise<void>;
-}
+export type { MassiveOptions, MassiveView } from './massive-options.ts';
 
 /** One picture of the overview, kept whole on the trail, so going back draws it exactly as it was. */
 interface Picture {
@@ -84,20 +59,19 @@ let made = 0;
 
 /** Shows `drawing`, too large to draw whole, as its overview at the end of `parent`, the card. */
 export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: MassiveOptions): MassiveView {
-  const whole = groupsOf(drawing);
-  const live = new LiveFilter(
-    whole,
-    new FacetIndex(
-      drawing.boxes.map((b) => b.key),
-      facetsOf(drawing.boxes, o.props),
-    ),
-  );
+  const whole = groupsOf(drawing),
+    keys = drawing.boxes.map((b) => b.key);
+  // each group box counts its things' looks, and the looks are a filter (§56, rule_look_massive)
+  const looks = o.rules && groupLooks(o.rules),
+    byLook = o.rules && lookFacet(keys, o.rules);
+  const facets = [...facetsOf(drawing.boxes, o.props), ...(byLook ? [byLook] : [])];
+  const live = new LiveFilter(whole, new FacetIndex(keys, facets), looks);
   let grouping = whole;
   let search = new ThingSearch(drawing.boxes, grouping);
   let names = new Map(grouping.groups.map((g) => [g.id, g.label]));
   let keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
   const owner = {};
-  let laid: LaidMarks = placesKept(o.graph, overviewOf(grouping, live.order));
+  let laid: LaidMarks = placesKept(o.graph, overviewOf(grouping, live.order, looks));
   /** The marks while groups glide after a filter, painted without an index; null when still. */
   let gliding: LaidMarks | null = null;
   let index = new MarkIndex(laid);

@@ -733,6 +733,9 @@ never data.
 - `rule-look-checks.ts` — a rule's look and a bands rule, checked, each fault a problem with its fix.
 - `display/graph-view/rule-marks.ts` — a card marks each thing and link a rule finds: its token, line, hue and badge. Its
   legend lists each rule drawn. The 2.5D and 3D views read the badge before each name (`svg-marks.ts`).
+- `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
+  overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
+  "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
 
 #### Checking the words of a style
 
