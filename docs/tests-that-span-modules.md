@@ -1043,3 +1043,8 @@ after a module nor listed here, and on a listed file that is missing.
   a11y_states_auto). It spans the harness page, the focus ring, the export form and the bar.
 - `test/colour-alone-rules.test.js` — no colour carries a meaning alone, across the whole style sheet (editor spec §44,
   colour_never_alone). It spans `styles.css` and the files that give each state its word or icon.
+
+## Decisions
+
+- `test/decision-remarks.test.js` — FLOW-11: every `(Roger, <date>)` remark in the requirements and docs has a Question
+  answered that day. Older remarks are held to an allowance in `quality/decision-remarks.json` that only goes down.

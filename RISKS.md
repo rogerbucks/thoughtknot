@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (44)
+## Open (43)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -35,7 +35,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
-| FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
@@ -316,16 +315,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/community-files.test.js asserts the conduct file names an address, and that issue templates exist only when public-readiness wants issues open to all.
 
-### FLOW-11 Decisions live in two places with different forms
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `requirements/editor-requirements.gql`, `scripts/wiki.mjs`, `CONTRIBUTING.md`.
-
-**Risk:** The wiki's Decisions page is made only from answered Question nodes in the requirements. Decisions written as '(Roger, 16 Oct 2026)' remarks sit in comments and CONTRIBUTING.md. One example is dropping the vault as the requirements source. They never reach that page, so a reader cannot find why things are as they are.
-
-**Fix:** Record each '(Roger, date)' decision as a Question node with its answer and date, starting with the vault decision. Then the Decisions page lists them all. Say in CONTRIBUTING.md that a dated remark must have its Question.
-
-**Check:** A test that finds every '(Roger, <date>)' remark in requirements and docs and requires a Question node answered on that date.
-
 ### FLOW-12 Third-party notices depend on a hand-kept record
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `licences/bundled.json`, `scripts/notices.mjs`, `test/licences.test.js`, `TRADEMARKS.md`.
@@ -496,7 +485,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (88)
+## Done or accepted (89)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -551,6 +540,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-5 | A requirement's text can be rewritten to fit the code | done | #1564; kept out by `test/check-requirements-reworded.test.js`, `scripts/check-requirements-flips.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
+| FLOW-11 | Decisions live in two places with different forms | done | #1565; kept out by `test/decision-remarks.test.js`, `scripts/decision-remarks.mjs` |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |

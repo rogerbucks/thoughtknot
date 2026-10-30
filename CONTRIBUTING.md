@@ -15,6 +15,10 @@ CI. A change that breaks one fails before it is merged.
 - **The requirements are edited here.** `requirements/editor-requirements.md` is the one source of the requirements,
   changed in a pull request like any file; no vault holds them (Roger, 16 Oct 2026). Once graph notes can hold it, the
   graph moves into one.
+- **A decision has one home: a Question.** A dated remark such as "(Roger, 16 Oct 2026)" must have a Question in the
+  requirements, answered that day. Then the wiki's Decisions page lists it. `test/decision-remarks.test.js` checks it;
+  older remarks are allowed in `quality/decision-remarks.json`, which only goes down
+  (`node scripts/decision-remarks.mjs --tighten`).
 
 ### The status of a test
 
