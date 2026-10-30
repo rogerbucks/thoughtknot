@@ -215,4 +215,3 @@ describe('the pictures of a whole note', () => {
     assert.match(one.decision.picture.svg, /Ask Bob first/, 'the drawings are on it (§70)');
   });
 });
-
