@@ -40,6 +40,7 @@ import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { replaceInEditor } from './block-editor/note-writing';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
@@ -52,12 +53,19 @@ export async function writeStyle(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return;
   let refused = '';
-  await changeVaultNote(plugin.app, file.path, (note) => {
-    // a thing only suggested in the note as it is now is not styled until its name is written (§4)
+  // a thing only suggested in the note as it is now is not styled until its name is written (§4)
+  const edit = (note: string) => {
     const r = styleEdit(note, graph, change);
     if ('refused' in r) refused = r.refused;
     return 'note' in r ? r.note : note;
-  });
+  };
+  // a note open in the editing view is changed through its editor, so one Cmd+Z takes the change back (UX-5)
+  const cm = plugin.editorFor(file.path);
+  if (cm) {
+    const now = cm.state.doc.toString(),
+      next = edit(now);
+    if (next !== now) replaceInEditor(cm, next);
+  } else await changeVaultNote(plugin.app, file.path, edit);
   // each write is confirmed in words, as is each refusal
   new Notice(refused ? word('blocks.style-failed', { why: refused }) : done);
 }

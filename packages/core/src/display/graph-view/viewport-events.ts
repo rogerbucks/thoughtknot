@@ -6,13 +6,13 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag, nudgeDrops } from './box-drag-view';
-import type { DragHost } from './box-drag-view';
+import { BoxDrag, nudgeDrops, type DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
 import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
 import { toggleOutline } from './drawing-svg';
+import { ringFocus, unringFocus } from './focus-ring';
 import { showTour } from '../tour';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
@@ -21,11 +21,10 @@ import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
 import type { QuickInfo } from './quick-info';
-import { boxIn, foldAt, targetAt, targetOf } from './taps';
+import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
 import type { MenuItem } from './thing-menu';
 import { word } from '@thoughtknot/core';
-import type { Taps, Target } from './taps';
 import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { fills } from '../../space-cards.ts';
@@ -234,8 +233,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     host.info.released(e.pointerId);
     zoom.handle({ kind: 'cancel', id: e.pointerId });
   });
-  // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
-  // and the quick-info tooltip after a moment (§24)
+  // the highlight under the pointer, or at the keyboard's focus (with a ring, which a click's is not), and the tooltip (§24, §25)
   card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => {
     sel.over(e);
     host.info.over(e);
@@ -244,12 +242,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     sel.out(e);
     host.info.out(e);
   });
-  // and the same highlight, and tooltip, with the keyboard focus, which a click's focus is not
   card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => {
+    ringFocus(e, sel.byKeyboard());
     sel.focusIn(e);
     host.info.focusIn(e);
   });
   card.registerDomEvent(vp, 'focusout', (e: FocusEvent) => {
+    unringFocus(e);
     sel.focusOut(e);
     host.info.focusOut();
   });

@@ -1021,3 +1021,9 @@ after a module nor listed here, and on a listed file that is missing.
   projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
   scale_massive_card). Its search must find a thing in any group and fly there.
+- `packages/obsidian/test/style-undo.test.js` — a box dragged in the editing view is one undo step (editor spec §41).
+  It spans the block editor, the note writer and the drag.
+- `test/a11y-states.test.js` — the states a person once checked by hand, in headless Chrome (editor spec §41,
+  a11y_states_auto). It spans the harness page, the focus ring, the export form and the bar.
+- `test/colour-alone-rules.test.js` — no colour carries a meaning alone, across the whole style sheet (editor spec §44,
+  colour_never_alone). It spans `styles.css` and the files that give each state its word or icon.
