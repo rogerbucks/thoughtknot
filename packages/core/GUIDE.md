@@ -727,6 +727,15 @@ never data.
     part is a clash, a warning naming both.
   - Each mark gets a style token per rule, `look.<id>`, and a badge or a line: never colour alone.
   - `ruleLegend` is each rule's look and meaning, made from the style graph alone.
+  - A bands rule (`bands`, `steps`) shades a number in steps. `bandSteps` gives each step a test, a numbered tag and a
+    colour of `BAND_HUES`, in order. `rulesFor` gives a card what it draws, links by their place on the card.
+- `rule-words.ts` — the words of a rule: its keys, the badges, the band colours and `isRule`.
+- `rule-look-checks.ts` — a rule's look and a bands rule, checked, each fault a problem with its fix.
+- `display/graph-view/rule-marks.ts` — a card marks each thing and link a rule finds: its token, line, hue and badge. Its
+  legend lists each rule drawn. The 2.5D and 3D views read the badge before each name (`svg-marks.ts`).
+- `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
+  overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
+  "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
 
 #### Checking the words of a style
 

@@ -124,6 +124,9 @@ window.readSvg = (marked = false) => {
   if (marked) {
     holder.querySelector('#node1').classList.add('thoughtknot-dim');
     for (const id of ['#node2', '#edge1']) holder.querySelector(id).classList.add('thoughtknot-hidden');
+    const cy = holder.querySelector('#node3'); // and a rule gave Cy its badge (rule_look_not_colour_alone)
+    cy.setAttribute('data-badge', '⏱');
+    cy.insertAdjacentHTML('beforeend', '<text class="thoughtknot-rule-badge" x="252" y="30">⏱</text>');
   }
   const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
   holder.remove();
@@ -560,7 +563,7 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(link, null, 'the hidden link is not drawn');
   });
 
-  // proves: focus_space
+  // proves: focus_space, rule_look_not_colour_alone
   test('what the focus fades is read see-through, and what it hides is not read at all', options, async () => {
     const marks = JSON.parse(await browser.run('JSON.stringify(readSvg(true))'));
     const ids = new Set(marks.map((m) => m.id));
@@ -576,6 +579,7 @@ describe("the 3D view's painters, in a real browser", () => {
       'rgb(200, 240, 200)',
       'a thing the focus keeps is as it was',
     );
+    assert.equal(marks.find((m) => m.id === 'l:cy').text, '⏱ Cy Young', "a rule's badge is read before the name");
   });
 
   test('WebGPU builds its shaders and paints the city with no error', options, async (t) => {

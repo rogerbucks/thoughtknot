@@ -51,6 +51,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   the graph's overview from there, above the text and why (§53, scale_in_parts).
 - `stored-edit.ts` — a thing chosen in that overview, by search or a click, shows its properties. A change is written
   to the note's text first, on the lines that wrote the thing. Then the store reads the note again.
+- `rule-card.ts` — the style rules a graph card or a view card draws (§56): what each finds, its look and the legend.
+  A clash of two rules is listed with the graph card's problems.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph.
   - Outside the view profile it is refused, saying what is allowed.
   - When its note is too large to read, it is shown as its query under the banner.

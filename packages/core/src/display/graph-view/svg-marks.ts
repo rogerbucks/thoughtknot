@@ -116,7 +116,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: isCluster(key) ? clusterName(g, text) : wholeName(g, text),
+        text: labelOf(g, key, text),
         size,
         anchor: 'middle',
       });
@@ -214,13 +214,19 @@ function touching(
 /** The size of `text`'s letters, as Graphviz writes them; 14 when it says none. */
 const sizeOf = (text: Element) => Number.parseFloat(text.getAttribute('font-size') ?? '') || 14;
 
+/** A box's name as drawn, with a rule's badge before it, so the look is told apart in space too (§56). */
+function labelOf(g: Element, key: string, text: Element): string {
+  const name = isCluster(key) ? clusterName(g, text) : wholeName(g, text);
+  return `${g.getAttribute('data-badge') ?? ''} ${name}`.trim();
+}
+
 /**
  * The words naming a thing: the largest in its box. A thing may show its kind in small letters above its name, and
  * the name is what a label should say (Roger, 23 Oct 2026). The first of the largest wins.
  */
 function nameOf(g: Element): Element | null {
   let best: Element | null = null;
-  for (const t of Array.from(g.querySelectorAll('text')))
+  for (const t of Array.from(g.querySelectorAll('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')))
     if (t.textContent?.trim() && (!best || sizeOf(t) > sizeOf(best))) best = t;
   return best;
 }
@@ -230,7 +236,7 @@ function nameOf(g: Element): Element | null {
  * another, and each row after it is joined on. Roger, 24 Oct 2026: a name in 3D was cut after its first row.
  */
 function wholeName(g: Element, first: Element): string {
-  const texts = Array.from(g.querySelectorAll<Element>('text')),
+  const texts = Array.from(g.querySelectorAll<Element>('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')),
     rows: string[] = [];
   for (const t of texts.slice(texts.indexOf(first))) {
     if (sizeOf(t) !== sizeOf(first)) break;

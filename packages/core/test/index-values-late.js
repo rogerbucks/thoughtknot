@@ -6,10 +6,12 @@
 // index-names.js sorts the whole list. BY_KIND, groupChoices and groupValues (untangle_group_by) came on 25 Oct 2026.
 // DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE and startingLayout (layout_saved_with_view) came on 25 Oct 2026.
 // SVG_ELEMENTS and cleanSvg (TRUST-7), with heldItem and outsideSaid (TRUST-4), came on 29 Oct 2026.
-// BADGES, BADGE_GLYPHS, LOOK_PARTS, isRule, lookToken and the rule functions (§56, rules and looks) came on 30 Oct 2026.
+// BADGES, BADGE_GLYPHS, LOOK_PARTS, BAND_HUES, isRule, lookToken and the rule functions (§56, rules and looks) came on 30 Oct 2026.
 export const VALUES_LATE = [
   'BADGES',
   'BADGE_GLYPHS',
+  'BAND_HUES',
+  'bandSteps',
   'LOOK_PARTS',
   'isRule',
   'lookToken',
@@ -17,6 +19,7 @@ export const VALUES_LATE = [
   'ruleLinks',
   'ruleLooks',
   'ruleThings',
+  'rulesFor',
   'rulesIn',
   'BY_KIND',
   'CORE_AI',

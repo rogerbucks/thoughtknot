@@ -250,6 +250,7 @@ const CLIPS = {
 /** The rules with a fixed width that hold no words, each with why. */
 const HOLDS_NO_WORDS = {
   '.thoughtknot-swatch': 'a line in a colour of the drawing',
+  '.thoughtknot-rule-line': 'a sample of a rule’s line; its words sit beside it',
   '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
   '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',
