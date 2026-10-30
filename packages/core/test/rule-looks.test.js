@@ -207,4 +207,11 @@ describe('rule_look_legend', () => {
       ['Done', 'Late'],
     );
   });
+
+  test("a rule's token is its id in plain letters, cut by plain search however long the id (js/polynomial-redos)", () => {
+    const token = (id) => lookToken({ at: { id } });
+    assert.equal(token('Late_Work'), 'look.late-work');
+    assert.equal(token('__a__b__'), 'look.a-b');
+    assert.equal(token(`${'-'.repeat(100000)}x`), 'look.x');
+  });
 });

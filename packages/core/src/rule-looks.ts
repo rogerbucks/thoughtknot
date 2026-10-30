@@ -66,12 +66,14 @@ export interface RuleLegendEntry {
   means: string;
 }
 
-/** A rule's style token: `look.` and its id in the style graph, in the letters a token may hold. */
+/** A rule's style token: `look.` and its id in the style graph, in the letters a token may hold. It is cut by plain
+ * search, not a pattern that runs slow on a long run of odd letters (js/polynomial-redos). */
 export const lookToken = (l: Look): string =>
   `look.${l.at.id
     .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')}`;
+    .split(/[^a-z0-9]/)
+    .filter(Boolean)
+    .join('-')}`;
 
 /**
  * The rules' looks that hold in `scope`, in the order written: those for every drawing of the graph, and those for
