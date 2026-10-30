@@ -949,7 +949,7 @@
       },
       "status": "done",
       "wave": "Wave 5 · Automated quality and releases",
-      "done_in": "#1557",
+      "done_in": "#1560",
       "prevented_by": [
         "test/mod-check.test.js",
         "scripts/mod-check.mjs",

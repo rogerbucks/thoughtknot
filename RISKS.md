@@ -521,7 +521,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-12 | Docs disagree with the workflows on schedules and write access | done | #1540; kept out by `test/process-risks-ops.test.js`, `CONTRIBUTING.md` |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
-| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1557; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
+| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1560; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
 | CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
