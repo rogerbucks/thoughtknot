@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (61)
+## Open (53)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -22,15 +22,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-12 | Docs disagree with the workflows on schedules and write access | ●●● | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-5 | No test runs vault.process with a real interleaving | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-8 | First-run syntax help is only in the wiki, not in the app | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
@@ -50,10 +46,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -203,16 +195,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A CI job with the Claude Code CLI that runs the mod's test. Until then, a conventions test that register.tsx imports nothing but src/ modules already under test.
 
-### CODE-5 No test runs vault.process with a real interleaving
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/harness/obsidian-shim.js`, `packages/obsidian/test/**`, `packages/obsidian/src/block-editor/**`.
-
-**Risk:** The code defends against a stale write well. Every write passes through vault.process and is refused when the block text differs from the one last read. But the test shim applies the process callback synchronously. So no test can place a keystroke or a vault change between the read and the write, where Obsidian's asynchronous process really runs.
-
-**Fix:** Give the shim's process an awaited read and an awaited write with a hook between them. Add one test for each writer that changes the note in that gap. It expects a refusal and a kept draft.
-
-**Check:** A test in pane-writing.test.js and block tests that uses the gap hook. The conventions test lists the shim as a file the plugin's tests load.
-
 ### CODE-6 77 fixed sleeps remain in 26 plugin test files
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/test/**`, `packages/core/test/layout-worker.test.js`, `test/fixed-sleeps.json`.
@@ -243,26 +225,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** manual
 
-### ARCH-1 Host contract covers display only; files and settings copied per host
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/host*.ts`, `packages/obsidian/src/**`, `packages/claude-code/page/**`, `packages/claude-code/server/**`, `wiki/Adding-a-host.md`.
-
-**Risk:** The Tauri app (Wave 7) and VS Code (Wave 8) will each hand-copy about 600 lines of glue. This covers notes, drafts, settings and the layout worker. No shared test holds it. Every later change to how a note is read or written then has to be made three or four times, and drifts.
-
-**Fix:** Before H1 (Wave 7), widen the published host interface to what the requirement names: note store, drafts, settings, secrets and the layout runner. Give each one a contract check in host-contract.ts. Make the Obsidian and page adapters pass it in test/host-adapters.test.js.
-
-**Check:** test/host-adapters.test.js runs every adapter against every contract check. A conventions rule fails a host package that defines its own note read or write outside the adapter.
-
-### ARCH-3 Layering is not held across packages; hosts reach into core internals
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `test/layers.test.js`, `packages/claude-code/page/**`, `packages/obsidian/src/layout-worker/**`, `packages/core/src/index.ts`.
-
-**Risk:** The page imports 55 core modules by relative path in 15 files, bypassing the package's exports map and the public-api check. A core refactor that keeps the public surface still breaks the Claude Code host, and the planned layers test does not exist.
-
-**Fix:** Add test/layers.test.js now: every import outside packages/core that names core must go through @thoughtknot/core, its display/* or hosts/* paths. Export what the page needs from the entry. Replace the relative imports.
-
-**Check:** test/layers.test.js in the suite, built on scripts/import-graph.mjs, failing any ../core/src or ../graph-spec/src import from a host package.
-
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/src/hosts/vault-folder.ts`, `scripts/instruction-counts.mjs`.
@@ -282,16 +244,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** In W27 (Wave 11), add CSV and GraphML as sources through the plug-in interface. Or state in the user guide that export is one way.
 
 **Check:** The exporter contract gains a read-back check once an importer exists; until then, manual.
-
-### ARCH-9 The JavaScript library is private TypeScript sources in an archive
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/package.json`, `packages/core/esbuild.layout.mjs`, `.github/workflows/release.yml`, `packages/*/LICENSE`.
-
-**Risk:** Every package is private, core exports raw .ts files, graph-spec is CommonJS beside ESM packages, and no package folder carries a LICENSE. A VS Code or Tauri project outside this repository cannot install the library; it must vendor sources and compile them.
-
-**Fix:** Before Wave 8, build core to ESM plus .d.ts in the release archive alongside graph-spec's dist. Add a LICENSE copy to each package. Keep the one lockstep version (0.x minor as major, as public-api.mjs already reads it).
-
-**Check:** release.yml installs the archive into an empty project and imports @thoughtknot/core and @thoughtknot/graph-spec with plain Node.
 
 ### UX-3 Many user-facing sentences bypass the word catalogue and its checks
 
@@ -483,46 +435,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** Already held by test/licences.test.js if its bundle walk is complete; otherwise manual.
 
-### API-2 Core is guarded as a library but never shipped as one
-
-**Who found it:** API design expert. **Where:** `packages/core/package.json`, `scripts/public-api.mjs`, `.github/workflows/release.yml`.
-
-**Risk:** The release archive carries graph-spec and the Python library, not @thoughtknot/core. Yet core's 639 exports are held to semver, and its package exports raw .ts with no built types. Library users cannot install what the guard protects. The surfaces a VS Code or Tauri host would really depend on (display/*, hosts/*) are left out of the guard on purpose.
-
-**Fix:** In the wave that adds the second host, decide core's publish story. Either build and ship core (d.ts + ESM) and add display/host entries to LIBRARY, or narrow the guard to what is shipped.
-
-**Check:** test/lib-public-api.test.js asserts every package in LIBRARY is also a file in the release archive's `git archive` list.
-
-### API-4 Local server has two error formats and no shared schema
-
-**Who found it:** API design expert. **Where:** `packages/claude-code/server/**`, `packages/claude-code/page/*-calls.ts`.
-
-**Risk:** start-server answers 401, 404, 405 and 413 as text/plain, while every route answers JSON {why}. The page's write() throws away the server's why for all statuses but 409. So a 410 'note gone' or a 403 refusal reaches the person as 'The editor server said 410'. Reply shapes (NoteReply, PageVersion, PageItemFiles) are typed once in the page and once, untyped, in the server. The page tests use a fake fetcher, so a drift is caught by nobody.
-
-**Fix:** Put the route reply and error types in one module (packages/claude-code/src/api-types.ts) imported by both page and server. Send every refusal as JSON {why}. Read why on every non-ok status in note-calls.ts.
-
-**Check:** A test that starts the real server and runs serverCalls/noteCalls/exportCalls against it. It asserts each reply satisfies the shared types and each refusal is JSON with why.
-
-### API-6 Python library is loose files, not an installable package
-
-**Who found it:** API design expert. **Where:** `python/graph_spec/pyproject.toml`, `.github/workflows/release.yml`.
-
-**Risk:** pyproject sets package = false. Hosts put src/ on sys.path and import four flat modules. There is no build-system, no py.typed and nothing goes to PyPI. Anyone outside the vault who wants the Python side gets no pip install. They also get no type checking of the library and no version pin a resolver can read.
-
-**Fix:** In the library-release wave, give the Python side a build-system table, a py.typed marker and `uv build` in release.yml. Attach the wheel to the release beside the tar.gz.
-
-**Check:** CI job installs the built wheel into a clean venv and imports the four entry points.
-
-### API-7 Python public surface is everything, private names included
-
-**Who found it:** API design expert. **Where:** `python/graph_spec/src/*.py`, `python/graph_spec/tests/entry_points.json`.
-
-**Risk:** The entry-point contract freezes every top-level name the four modules ever had, because the vault's scripts use private names. The Python API therefore has no boundary: nothing may ever be renamed. The JS and Python surfaces drift in naming, with no check that a JS export has a Python twin.
-
-**Fix:** Declare __all__ in each entry point as the public set. Move the vault's private uses onto public names. Add a parity table (JS export to Python name) that test_parity.py reads.
-
-**Check:** A test that every name in public-api.json's graph-spec entry has a row in the parity table, and every row's Python name is in __all__.
-
 ### API-9 AI transport is hard-wired to the OpenAI chat shape
 
 **Who found it:** API design expert. **Where:** `packages/core/src/ai-request.ts`, `packages/core/src/ai-choice.ts`, `packages/core/src/plugins.ts`.
@@ -683,7 +595,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (71)
+## Done or accepted (79)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -700,14 +612,18 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
+| CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
 | CODE-10 | Live Preview hands a hand-made context to the block renderer | done | #1542 |
+| ARCH-1 | Host contract covers display only; files and settings copied per host | done | #1548 |
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | done | #1542 |
+| ARCH-3 | Layering is not held across packages; hosts reach into core internals | done | #1544 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
 | ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | done | #1543 |
 | ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
+| ARCH-9 | The JavaScript library is private TypeScript sources in an archive | done | #1544 |
 | ARCH-10 | Three decisions that cost most if left after their wave | done | #1542 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
@@ -726,8 +642,12 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
+| API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
+| API-4 | Local server has two error formats and no shared schema | done | #1546 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
+| API-6 | Python library is loose files, not an installable package | done | #1545 |
+| API-7 | Python public surface is everything, private names included | done | #1545 |
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | done | #1543 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
 | API-12 | No runnable examples for either library, none in CI | done | #1083 |

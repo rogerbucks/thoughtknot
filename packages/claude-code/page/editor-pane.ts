@@ -16,9 +16,9 @@ import { notice } from '@thoughtknot/core/display/host';
 import { BlockEditor } from '@thoughtknot/core/display/editor/block-editor';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { PaneHost } from '@thoughtknot/core/display/editor/pane-drawing';
-import type { LayoutRunner } from '../../core/src/layout-worker.ts';
+import type { LayoutRunner } from '@thoughtknot/core';
 import type { PageNote } from './page-note.ts';
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 
 /**
  * The pane's host: the settings as they are, read only, and a graph laid out by the page's worker under the core's

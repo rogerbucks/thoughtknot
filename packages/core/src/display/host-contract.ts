@@ -4,7 +4,7 @@
 // one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
 import type { FoundLink } from '@thoughtknot/core';
-import { storageContract } from '@thoughtknot/core';
+import { readNote, settingsFrom, storageContract } from '@thoughtknot/core';
 import type { DisplayHost, Host, MenuEntry } from './host.ts';
 
 /**
@@ -16,6 +16,7 @@ export const HOST_CONTRACT_VERSIONS: readonly (readonly [version: number, digest
   [3, 'efae3cb1b2853709'],
   [4, 'd1cb2bc16a374f29'],
   [5, 'c866c45ac5687bd0'],
+  [6, '95a256edc7b311b7'],
 ];
 
 /** The version of the host interface these checks hold a host to: the last one recorded above. */
@@ -170,8 +171,17 @@ export function hostContract(make: () => HostUnderTest): ContractCheck[] {
 export interface ServicesProbe extends HostProbe {
   /** The target of each link the host opened, in order. */
   opened: () => string[];
-  /** Keeps `secret` under `name`, as the person would in the host's own secret storage. */
-  keepSecret: (name: string, secret: string) => void;
+  /**
+   * Keeps `secret` under `name`, as the person would in the host's own secret storage. Not set: the host keeps no
+   * secret, and every name reads null.
+   */
+  keepSecret?: (name: string, secret: string) => void;
+}
+
+/** What a host serves of the interface: all of it unless it says otherwise. */
+export interface HostServes {
+  /** False where the host follows no links of a card's note yet, such as the browser editor's page. */
+  links?: false;
 }
 
 /** A whole host for one check: a fresh one, and its probe. */
@@ -201,7 +211,7 @@ const linkTo = (target: string): FoundLink => {
  * Every check of the whole host interface, each run on a fresh host from `make`: the display's, then its links,
  * settings, secrets and notes. The notes are held to the storage contract (storage-contract.ts).
  */
-export function hostServicesContract(make: () => ServicesUnderTest): ContractCheck[] {
+export function hostServicesContract(make: () => ServicesUnderTest, serves: HostServes = {}): ContractCheck[] {
   const display = hostContract(() => {
     const { host, probe } = make();
     return { host: host.display, probe };
@@ -209,30 +219,131 @@ export function hostServicesContract(make: () => ServicesUnderTest): ContractChe
   const notes = storageContract(() => make().host.files).map((check) => ({ ...check, name: `notes: ${check.name}` }));
   return [
     ...display,
-    {
-      name: 'settings saved are loaded back as they were saved, and a second save replaces the first',
-      run: async () => {
-        const { host } = make();
-        const first = { language: 'en-GB', models: [{ name: 'a', keyName: 'key-a' }], wrap: 30, on: true };
-        await host.settings.save(first);
-        if (JSON.stringify(await host.settings.load()) !== JSON.stringify(first))
-          fail('settings', JSON.stringify(first), await host.settings.load());
-        await host.settings.save({ wrap: 40 });
-        if (JSON.stringify(await host.settings.load()) !== '{"wrap":40}')
-          fail('settings', '{"wrap":40}', await host.settings.load());
-      },
-    },
+    ...settingsChecks(make),
     {
       name: 'a secret is read by its name, and a name the host holds nothing for reads null',
       run: async () => {
         const { host, probe } = make();
         const none: unknown = await host.secrets.get('no-such-secret-anywhere');
         if (none !== null) fail('secrets', 'null', none);
+        if (!probe.keepSecret) return;
         probe.keepSecret('ai-key', 'sk-test-0001');
         const kept: unknown = await host.secrets.get('ai-key');
         if (kept !== 'sk-test-0001') fail('secrets', '"sk-test-0001"', kept);
       },
     },
+    ...(serves.links === false ? [] : linkChecks(make)),
+    ...notes,
+    ...draftChecks(make),
+    ...layoutChecks(make),
+  ];
+}
+
+/** The settings' checks: saved and loaded back, or, read only, loaded and a save refused. */
+function settingsChecks(make: () => ServicesUnderTest): ContractCheck[] {
+  return [
+    {
+      name: 'settings saved are loaded back as they were saved, and a second save replaces the first',
+      run: async () => {
+        const { host } = make();
+        if (host.settings.readOnly) return;
+        for (const value of [settingsFrom({}), settingsFrom({ aiMatrixNote: 'Matrix.md', direction: 'LR' })]) {
+          await host.settings.save(value);
+          const back = JSON.stringify(settingsFrom(await host.settings.load()));
+          if (back !== JSON.stringify(value)) fail('settings', JSON.stringify(value), back);
+        }
+      },
+    },
+    {
+      name: 'settings that are only read here are loaded, and a save is refused, saying why',
+      run: async () => {
+        const { host } = make();
+        if (!host.settings.readOnly) return;
+        const now: unknown = await host.settings.load();
+        if (!now || typeof now !== 'object') fail('settings', 'the settings loaded', now);
+        const why = await host.settings.save(now).then(
+          () => null,
+          (e: unknown) => (e instanceof Error ? e.message : String(e)),
+        );
+        if (!why) fail('settings', 'a save refused, saying why', why);
+      },
+    },
+  ];
+}
+
+/** The drafts' checks: each kept by its key, read back, replaced, and cleared alone. */
+function draftChecks(make: () => ServicesUnderTest): ContractCheck[] {
+  const mine = 'Plans/Today.md#g',
+    theirs = 'Plans/Today.md#other';
+  return [
+    {
+      name: 'drafts: a draft kept is read back by its key, and a key with none reads null',
+      run: async () => {
+        const { host } = make();
+        const none: unknown = await host.drafts.read(mine);
+        if (none !== null) fail('drafts', 'null', none);
+        await host.drafts.keep(mine, '(a:Thing)');
+        const kept: unknown = await host.drafts.read(mine);
+        if (kept !== '(a:Thing)') fail('drafts', '"(a:Thing)"', kept);
+      },
+    },
+    {
+      name: 'drafts: keeping again replaces the draft, and clearing one key leaves another',
+      run: async () => {
+        const { host } = make();
+        await host.drafts.keep(mine, 'first');
+        await host.drafts.keep(mine, 'second');
+        await host.drafts.keep(theirs, 'theirs');
+        const got = [await host.drafts.read(mine), await host.drafts.read(theirs)];
+        if (JSON.stringify(got) !== '["second","theirs"]') fail('drafts', '["second","theirs"]', got);
+        await host.drafts.clear(mine);
+        const after = [await host.drafts.read(mine), await host.drafts.read(theirs)];
+        if (JSON.stringify(after) !== '[null,"theirs"]') fail('drafts', '[null,"theirs"]', after);
+      },
+    },
+  ];
+}
+
+/** A drawing of `things` things, read from a block as any host reads one. */
+function drawingOf(things: number) {
+  const block = ['// graph: g', ...Array.from({ length: things }, (_, i) => `(t${i}:Thing {name: 'T${i}'}),`)].join(
+    '\n',
+  );
+  const drawing = readNote([block.replace(/,$/, '')]).graphs.get('g');
+  if (!drawing) throw new Error('layout: the contract’s own block gave no drawing');
+  return drawing;
+}
+
+/** The layouts' checks: a small drawing is laid out as an SVG; a newer drawing for one owner supersedes the older. */
+function layoutChecks(make: () => ServicesUnderTest): ContractCheck[] {
+  return [
+    {
+      name: 'layouts: a small drawing is laid out as an SVG picture',
+      run: async () => {
+        const { host } = make();
+        const laid = await host.layout.draw(drawingOf(3));
+        if (!laid || !('svg' in laid) || !laid.svg.includes('<svg')) fail('layout', 'an SVG picture', laid);
+      },
+    },
+    {
+      name: 'layouts: a newer drawing for the same owner answers the older with null, or both are laid out',
+      run: async () => {
+        const { host } = make();
+        const owner = {};
+        const [older, newer] = await Promise.all([
+          host.layout.draw(drawingOf(2), owner),
+          host.layout.draw(drawingOf(4), owner),
+        ]);
+        if (!newer || !('svg' in newer)) fail('layout', 'the newer drawing laid out', newer);
+        if (older !== null && !('svg' in older)) fail('layout', 'the older null or laid out', older);
+      },
+    },
+  ];
+}
+
+/** The links' checks: found from the card's note, created, and opened once. */
+function linkChecks(make: () => ServicesUnderTest): ContractCheck[] {
+  return [
     {
       name: 'a card’s links are found from its note, and a note a link creates is found after',
       run: async () => {
@@ -253,6 +364,5 @@ export function hostServicesContract(make: () => ServicesUnderTest): ContractChe
         if (JSON.stringify(probe.opened()) !== '["Budget"]') fail('links', '["Budget"]', probe.opened());
       },
     },
-    ...notes,
   ];
 }

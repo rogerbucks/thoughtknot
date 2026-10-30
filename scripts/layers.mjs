@@ -3,10 +3,14 @@
 // closely, so the display layer's folder inside the core is the display layer's. A layer may use itself and every layer
 // it USES, directly or through others. Test folders and built files are left out: they are not the shipped code.
 //
-//   node scripts/layers.mjs   lists each import that crosses a layer the wrong way, and fails when there is one
+// A package is used by its name, never reached into by a relative path (risk ARCH-3).
+//
+//   node scripts/layers.mjs   lists each import that crosses a layer the wrong way, or reaches into another package,
+//                             and fails when there is one
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { importGraph } from './import-graph.mjs';
 
@@ -61,6 +65,31 @@ export function layerProblems(files, read, architecture) {
   return out.sort((a, b) => a.file.localeCompare(b.file) || a.imports.localeCompare(b.imports));
 }
 
+// a specifier that climbs out of its folder, as written in an import, an export, import() or require()
+const RELATIVE = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)['"](\.\.?\/[^'"]+)['"]/gm;
+// the code a package ships: its src, server and page folders. Its build scripts may reach its neighbours' build files
+const SHIPPED = /^packages\/[^/]+\/(src|server|page)\/.*\.(ts|tsx|js|mjs|cjs)$/;
+const packageOf = (file) => /^packages\/[^/]+/.exec(file)?.[0] ?? null;
+
+/**
+ * The imports among `files` that reach into another package by a relative path, each read through `read`: {file,
+ * imports}. A package is used by its name (risk ARCH-3), such as `@thoughtknot/core` or `@thoughtknot/core/display/…`,
+ * so it keeps to what that package exports, never its insides.
+ */
+export function deepImports(files, read) {
+  const out = [];
+  for (const file of files.filter((f) => !LEFT_OUT.test(f) && SHIPPED.test(f))) {
+    const own = packageOf(file);
+    if (!own) continue;
+    for (const [, spec] of read(file).matchAll(RELATIVE)) {
+      const to = posix.normalize(posix.join(posix.dirname(file), spec));
+      const into = packageOf(to);
+      if (into && into !== own) out.push({ file, imports: to });
+    }
+  }
+  return out.sort((a, b) => a.file.localeCompare(b.file) || a.imports.localeCompare(b.imports));
+}
+
 /** The repository's own files, as git lists them. */
 export const repoFiles = () =>
   execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -69,10 +98,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
   const problems = layerProblems(repoFiles(), read, read('requirements/architecture.gql'));
   for (const p of problems) console.log(`${p.file} imports ${p.imports}: ${p.from} may not use ${p.to}`);
+  const deep = deepImports(repoFiles(), read);
+  for (const d of deep) console.log(`${d.file} imports ${d.imports}: use the package by its name`);
   console.log(
     problems.length
       ? `layers: ${problems.length} imports cross a layer the wrong way`
       : 'layers: each layer imports only the layers below it',
   );
-  process.exitCode = problems.length ? 1 : 0;
+  process.exitCode = problems.length || deep.length ? 1 : 0;
 }
