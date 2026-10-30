@@ -90,7 +90,11 @@ const escaped = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 function marked(svg: string, fingerprint: string, alt: string): string {
   const open = svg.indexOf('>') + 1;
   const withMark = `${svg.slice(0, open)}\n${pictureMark(fingerprint)}${svg.slice(open)}`;
-  return withMark.replace(/<desc>[\s\S]*?<\/desc>/, `<desc>${escaped(alt)}</desc>`);
+  // found by its tags, never a pattern that could take a long time over a large drawing
+  const from = withMark.indexOf('<desc>'),
+    close = withMark.indexOf('</desc>', from);
+  if (from < 0 || close < 0) return withMark;
+  return `${withMark.slice(0, from)}<desc>${escaped(alt)}${withMark.slice(close)}`;
 }
 
 /** The overview of a graph too large to draw, framed as an export is, with a line counting what it leaves out. */
