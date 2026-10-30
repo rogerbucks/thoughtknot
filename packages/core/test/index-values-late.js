@@ -235,4 +235,6 @@ export const VALUES_LATE = [
   'pictureBlocks',
   'pictureLinkOf',
   'picturesOnFor',
+  // the pictures of a whole folder, for the command line (§62, RP1), 30 Oct 2026
+  'folderPictures',
 ];

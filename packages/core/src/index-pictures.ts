@@ -28,4 +28,10 @@ export {
   type PictureLineAt,
   type PictureState,
 } from './reader-picture-note.ts';
+export {
+  folderPictures,
+  type FolderPicturesInput,
+  type FolderPicturesRun,
+  type PictureChange,
+} from './reader-picture-folder.ts';
 export { picturesOnFor, type PictureSettings } from './settings-pictures.ts';

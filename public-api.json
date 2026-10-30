@@ -1209,6 +1209,18 @@
         "Fold": [
           "type = { hub: string; } | { group: string; } | { bundle: string; }"
         ],
+        "folderPictures": [
+          "value: (input: FolderPicturesInput) => Promise<FolderPicturesRun>"
+        ],
+        "FolderPicturesInput": [
+          "type = Omit<NotePicturesInput, 'note' | 'text'> & { notes: readonly string[]; read: (path: string) => Promise<string | null>; add?: boolean; }"
+        ],
+        "FolderPicturesRun": [
+          "interface",
+          "changes: Array<PictureChange>",
+          "outOfDate: Array<string>",
+          "problems: Array<string>"
+        ],
         "Folding": [
           "interface",
           "folded: Array<number>",
@@ -1474,7 +1486,7 @@
           "settings: { load: () => Promise<unknown>; save: (value: unknown) => Promise<void>; }"
         ],
         "HostAbility": [
-          "type = 'notice' | 'settings' | 'secrets' | 'files'"
+          "type = 'settings' | 'notice' | 'secrets' | 'files'"
         ],
         "HostAi": [
           "interface",
@@ -1715,7 +1727,7 @@
           "interface",
           "className: string",
           "id: string",
-          "kind: 'cluster' | 'graph' | 'node' | 'edge'",
+          "kind: 'graph' | 'cluster' | 'node' | 'edge'",
           "marks: Array<string>",
           "title: string"
         ],
@@ -2407,7 +2419,7 @@
           "value: (input: NotePicturesInput) => Promise<(PictureBlock & { decision: PictureDecision; })[]>"
         ],
         "NotePicturesInput": [
-          "type = Omit<PictureInput, 'graph' | 'reading' | 'sketch' | 'styled'> & { shared?: string[]; }"
+          "type = Omit<PictureInput, 'reading' | 'graph' | 'sketch' | 'styled'> & { shared?: string[]; }"
         ],
         "NoteReading": [
           "interface",
@@ -2829,6 +2841,11 @@
           "property: string",
           "value: string"
         ],
+        "PictureChange": [
+          "interface",
+          "path: string",
+          "text: string | null"
+        ],
         "PictureDecision": [
           "type = { nothing: string; } | { ask: string; } | { picture: ReaderPicture; } | null"
         ],
@@ -3119,7 +3136,7 @@
         "PresetChoice": [
           "interface",
           "at: StyleAt",
-          "preset: 'calm' | 'default' | 'reading' | 'focus' | 'detail' | 'big-picture'"
+          "preset: 'calm' | 'reading' | 'default' | 'focus' | 'detail' | 'big-picture'"
         ],
         "presetClasses": [
           "value: (id?: string) => string[]"
@@ -4432,7 +4449,7 @@
         ],
         "ThoughtKnotPlugin": [
           "interface",
-          "abilities?: Array<'notice' | 'settings' | 'secrets' | 'files'> | undefined",
+          "abilities?: Array<'settings' | 'notice' | 'secrets' | 'files'> | undefined",
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
