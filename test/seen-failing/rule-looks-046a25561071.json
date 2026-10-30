@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rule-looks.test.js",
+  "test": "rule_look_legend > a rule's token is its id in plain letters, cut by plain search however long the id (js/polynomial-redos)",
+  "seen_failing_first": false,
+  "evidence": "The change makes the token faster on a crafted id, not different: the same token is made before and after. The code scan (CodeQL js/polynomial-redos) holds the speed, as a test may not assert elapsed time."
+}
