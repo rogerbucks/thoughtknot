@@ -11,6 +11,7 @@ import type {
   NoteReading,
   Parked,
   Refusal,
+  RuleAsk,
   RulesShown,
   ViewState,
 } from '@thoughtknot/core';
@@ -110,6 +111,8 @@ export interface ViewOptions {
   view?: ViewShown;
   /** What the style graph's rules give each thing and link drawn, and their legend (§56); none, no rule draws. */
   rules?: RulesShown;
+  /** What the card may do with a rule made beside its legend: try it, or save it where the note is edited (§56). */
+  ruleAsk?: RuleAsk;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */

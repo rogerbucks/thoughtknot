@@ -8,6 +8,7 @@ import type { DeviceAsks, FlowLink } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options.ts';
 import { PICK_ATTRIBUTE, pickShownOf } from '../../layouts/fingerprint.ts';
 import { renderFlowLegend } from './flow-marks.ts';
+import { renderRuleForm } from './rule-form.ts';
 import { renderRuleLegend } from './rule-marks.ts';
 
 const PICKED = new RegExp(`<svg\\b[^>]*\\s${PICK_ATTRIBUTE}="([^"]*)"`);
@@ -53,4 +54,5 @@ export function renderBeside(
 export const renderBesideFor = (slot: HTMLElement, o: ViewOptions, svg: string) => {
   renderBeside(slot, o.motion?.flow ?? [], o.switches?.state.plan?.folded, svg, o.aids?.preset);
   renderRuleLegend(slot, o.rules); // and what its rules' looks mean (§56)
+  renderRuleForm(slot, o.ruleAsk); // with a rule to try or save
 };

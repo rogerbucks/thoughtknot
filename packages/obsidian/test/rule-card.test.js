@@ -1,11 +1,13 @@
 // Rules and looks on a card (editor spec §56). Each thing or link a style rule finds is drawn with its look: the rule's
 // style token, its line, and its badge beside its name. A screen reader hears what the rule means. The legend lists
 // each rule drawn with its badge and meaning. A view's card draws the rules for every drawing and its own. Two rules
-// that set one part of a thing are a clash, listed with the card's problems.
+// that set one part of a thing are a clash, listed with the card's problems. Beside the legend a rule can be made. In
+// reading view it is only tried, and the note is left as it was. Where the note is edited it is saved.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load } from './host/load-plugin.js';
-import { fence } from './host/notes.js';
+import { build, load, until } from './host/load-plugin.js';
+import { fence, labelled } from './host/notes.js';
+import { fakeContext } from './host/fake-obsidian.js';
 import { show } from './host/view-notes.js';
 
 before(() => build());
@@ -106,6 +108,84 @@ describe('rule_look_bands', () => {
         el.querySelector('.thoughtknot-rule-legend')?.textContent ?? '',
         /①\s*Cost: under 50.*②\s*Cost: 50 and over/s,
       );
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+/** Shows block `n` of `note` as reading view does, read-only. */
+async function readCard(env, note, n = 0) {
+  const host = env.doc.body.createDiv({ cls: 'markdown-reading-view' });
+  const el = host
+    .createDiv({ cls: 'markdown-preview-view markdown-rendered' })
+    .createDiv({ cls: 'block-language-gql' });
+  const lines = note.split('\n'),
+    fences = lines.flatMap((l, i) => (/^```gql/.test(l) ? [i] : []));
+  const source = lines.slice(fences[n] + 1, lines.indexOf('```', fences[n] + 1)).join('\n');
+  await env.state.processors.get('gql')(source, el, fakeContext(note, fences[n]));
+  await until(() => !!el.querySelector('svg'));
+  return el;
+}
+/** Opens the Rule form of the card in `el`, fills it as `rule` says, and sends it; gives what the form says. */
+function makeRule(el, rule) {
+  labelled(el, 'Rule').click();
+  const form = el.querySelector('.thoughtknot-rule-form');
+  assert.equal(form.hidden, false, 'the form opens');
+  for (const [name, value] of Object.entries(rule)) form.querySelector(`[name="${name}"]`).value = value;
+  form.dispatch('submit');
+  return form;
+}
+
+describe('rule_look_try_save', () => {
+  const DONE = { when: 'status == "done"', badge: 'check', means: 'Done' };
+
+  test('in reading view a rule is tried at once, said not saved, and the note is left byte for byte', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      assert.equal(labelled(el, 'Rule').getAttribute('aria-expanded'), 'false');
+      makeRule(el, DONE);
+      await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
+      assert.equal(node(el, 'walls').querySelector('.thoughtknot-rule-badge')?.textContent, '✓', 'drawn at once');
+      assert.match(el.querySelector('.thoughtknot-rule-legend').textContent, /✓\s*Done/, 'in the legend too');
+      assert.match(el.querySelector('.thoughtknot-rule-tried').textContent, /not saved/);
+      assert.equal(env.state.files.get(PATH), note, 'the note unchanged');
+      labelled(el, 'Back to saved').click();
+      await until(() => !el.querySelector('.thoughtknot-rule-tried') && !!el.querySelector('svg'));
+      assert.equal(node(el, 'walls').querySelector('.thoughtknot-rule-badge'), null, 'the saved rules again');
+      assert.equal(env.state.files.get(PATH), note);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('where the note is edited the same rule is saved in the style graph', async () => {
+    const note = noteOf(DATA, STYLE);
+    const { env, el } = await card(note);
+    try {
+      makeRule(el, DONE);
+      await until(() => /means: 'Done'/.test(env.state.files.get(PATH)));
+      assert.match(env.state.files.get(PATH), /:Look \{when: 'status == "done"', badge: 'check', means: 'Done'\}/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a rule told by colour alone, or with no test, says why and is neither tried nor saved', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      const form = makeRule(el, { when: 'status == "done"', means: 'Done' });
+      assert.match(form.querySelector('.thoughtknot-rule-refused').textContent, /badge or a line/);
+      form.querySelector('[name="when"]').value = '';
+      form.querySelector('[name="badge"]').value = 'check';
+      form.dispatch('submit');
+      assert.match(form.querySelector('.thoughtknot-rule-refused').textContent, /needs a test/);
+      assert.equal(el.querySelector('.thoughtknot-rule-tried'), null, 'nothing tried');
+      assert.equal(env.state.files.get(PATH), note);
     } finally {
       env.uninstall();
     }

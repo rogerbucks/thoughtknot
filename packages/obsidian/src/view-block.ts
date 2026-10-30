@@ -324,7 +324,7 @@ export async function renderViewBlock(
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
-      ...rulesOn(looked.style, g, styled, { view: v.name }), // its rules' looks (§56); a clash shows on the graph's card
+      ...rulesOn(looked, g, styled, { view: v.name }), // its rules' looks (§56); a clash shows on the graph's card
       diagram,
       ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },

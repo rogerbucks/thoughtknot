@@ -736,6 +736,10 @@ never data.
 - `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
   overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
+- `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
+  `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
+- `display/graph-view/rule-form.ts` — the Rule button beside the legend and its form. In reading view it tries a rule
+  and offers Back to saved. Where the note is edited it saves it. Trying is open in reading view (`read-only.ts`).
 
 #### Checking the words of a style
 

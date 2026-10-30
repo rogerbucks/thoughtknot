@@ -337,7 +337,7 @@ export async function renderBlock(
             },
           }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
-      ...rulesOn(looked ? looked.style : styling.style, reading.world[graph], drawing, {}, problems, shown), // §56
+      ...rulesOn(looked || styling, reading.world[graph], drawing, {}, problems, shown), // §56
       links,
       // its things' images, found from this note, and the pictures its style draws on boxes (§18)
       images: plugin.cardImages(target.path, drawing.pictures),

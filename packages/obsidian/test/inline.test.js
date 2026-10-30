@@ -59,11 +59,13 @@ describe('edit here, in the card', () => {
       ])
         assert.ok(card.querySelector(part), part);
       assert.ok(labelled(card, 'Done') && labelled(card, 'Undo') && labelled(card, 'Lock the graph'));
-      // the View menu's Group by, layout and lens choices are selects too: the picker would be any other
+      // the View menu's Group by, layout and lens choices are selects too. So are a rule's badge and line (§56). The
+      // picker would be any other
       const menu = (s) =>
         s.closest('.thoughtknot-group-by') ||
         s.closest('.thoughtknot-layout-choice') ||
-        s.closest('.thoughtknot-lens-choice');
+        s.closest('.thoughtknot-lens-choice') ||
+        s.closest('.thoughtknot-rule-form');
       const pickers = [...card.querySelectorAll('select')].filter((s) => !menu(s));
       assert.equal(pickers.length, 0, 'no picker: it edits this block');
     } finally {
