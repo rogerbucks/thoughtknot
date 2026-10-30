@@ -2489,7 +2489,7 @@
       },
       "status": "done",
       "wave": "Wave 5 · Automated quality and releases",
-      "done_in": "#NEXT",
+      "done_in": "#1563",
       "prevented_by": [
         "test/prepare-pr.test.js",
         "scripts/prepare-pr.mjs"

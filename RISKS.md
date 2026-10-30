@@ -548,7 +548,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
-| FLOW-4 | A one-line fix pays eleven gates and may touch four records | done | #NEXT; kept out by `test/prepare-pr.test.js`, `scripts/prepare-pr.mjs` |
+| FLOW-4 | A one-line fix pays eleven gates and may touch four records | done | #1563; kept out by `test/prepare-pr.test.js`, `scripts/prepare-pr.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
