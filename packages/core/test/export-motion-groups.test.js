@@ -1,6 +1,7 @@
 // The groups of a drawing, as the animated exports find them (risk SEC-21). A pattern over each group's body took time
 // with the square of a long group left open, so the code scan counted it high. Plain search gives what it gave, and
 // stays quick on text made to slow it.
+// Requirements security_daily and security_release_gate: a slow pattern found by the code scan stops the nightly.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replaceGroups } from '../src/export-motion.ts';
