@@ -6,7 +6,7 @@
 // - The language follows Obsidian's until one is chosen here (§42, language_follows_host).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './host/load-plugin.js';
+import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { open, note } from './host/pane-notes.js';
@@ -75,7 +75,7 @@ describe('the settings page', () => {
     let data;
     try {
       choose(row(page(env), 'Strictness'), 'standard');
-      await wait(10);
+      await until(() => env.state.data?.settings?.strictness === 'standard');
       data = env.state.data;
       assert.equal(data.settings.strictness, 'standard');
     } finally {
@@ -146,7 +146,7 @@ describe('strictness', () => {
       const t = r.querySelector('input');
       t.checked = true;
       t.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.allowed?.length === 1);
       assert.deepEqual(env.state.data.settings.allowed, ['missing-comma']);
       assert.deepEqual(await problemsShown(env), []);
     } finally {
@@ -179,7 +179,7 @@ describe('strictness', () => {
       const t = env.el.querySelector('textarea');
       t.value = typed;
       t.dispatch('input');
-      await wait(400);
+      await until(() => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem'));
       const mark = () => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem')?.className ?? '';
       assert.match(mark(), /is-warning/);
       choose(row(page(env), 'Strictness'), 'standard');
@@ -196,7 +196,7 @@ describe('strictness', () => {
       const t = env.el.querySelector('textarea');
       t.value = typed;
       t.dispatch('input');
-      await wait(400);
+      await until(() => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem'));
       const mark = env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem');
       assert.ok(mark, 'the pane lists the slip');
       assert.match(mark.className, /is-error/);
@@ -293,7 +293,7 @@ describe('the AI models of §19', () => {
     try {
       let el = page(env);
       labelled(el, 'Add a model').click();
-      await wait(10);
+      await until(() => row(page(env), 'Model 1'));
       el = page(env);
       const r = row(el, 'Model 1');
       assert.ok(r);
@@ -309,7 +309,7 @@ describe('the AI models of §19', () => {
       );
       ceiling.value = 'Internal';
       ceiling.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiModels?.[0]?.ceiling === 'Internal');
       assert.deepEqual(
         [
           env.state.data.settings.aiModels[0].name,
@@ -333,8 +333,8 @@ describe('the AI models of §19', () => {
       for (const v of ['Public\nInterna', 'Public\nIntern', 'Public\nInternal']) {
         field.value = v;
         field.dispatch('input');
-        await wait(5);
       }
+      await until(() => env.state.data?.settings?.classifications?.join() === 'Public,Internal');
       assert.ok(row(el, 'Classifications').querySelector('textarea') === field, 'the page is not drawn again under it');
       assert.equal(env.state.data.settings.aiModels[0].ceiling, 'Internal');
       assert.deepEqual(env.state.data.settings.classifications, ['Public', 'Internal']);
@@ -348,7 +348,7 @@ describe('the AI models of §19', () => {
     try {
       const el = page(env);
       row(el, 'Model 1').querySelector('.fake-secret').secretComponent.enter('thoughtknot-drafts', 'sk-not-in-vault');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiModels?.[0]?.keyName === 'thoughtknot-drafts');
       assert.equal(env.state.data.settings.aiModels[0].keyName, 'thoughtknot-drafts');
       assert.equal(env.app.secretStorage.getSecret('thoughtknot-drafts'), 'sk-not-in-vault');
       assert.doesNotMatch(JSON.stringify(env.state.data), /sk-not-in-vault/);
@@ -379,7 +379,7 @@ describe('the AI models of §19', () => {
       assert.equal(use.value, 'off');
       use.value = 'on';
       use.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiUse === 'on');
       assert.equal(env.state.data.settings.aiUse, 'on');
     } finally {
       env.uninstall();
@@ -392,7 +392,7 @@ describe('formatting and drawing defaults', () => {
     const env = await open({ data: { settings: { indent: 'two' } } });
     try {
       labelled(env.el, 'Lock the graph').click();
-      await wait(50);
+      await until(() => /graph: 'reader'/.test(note(env)));
       assert.match(note(env), /\n {2}graph: 'reader'/);
       assert.doesNotMatch(note(env), /\n {4}graph: 'reader'/);
     } finally {

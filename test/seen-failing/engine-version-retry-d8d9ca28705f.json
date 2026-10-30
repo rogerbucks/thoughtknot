@@ -1,0 +1,6 @@
+{
+  "file": "test/engine-version-retry.test.js",
+  "test": "a service that stays down > leaves a recent committed cache standing, with a warning",
+  "seen_failing_first": false,
+  "evidence": "A move: these tests were first written in test/engine-version.test.js in the commit before, where they failed against the old code (see its record). The code they test was already in place when the file was split off, to keep engine-version.test.js under 600 lines."
+}

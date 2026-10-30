@@ -231,15 +231,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "59a1a0ee50742a2d3be4b4df16666ade21aa93f29a8799ac484cb8f3284d2186",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "701bdfa6529f66929cfc22d3c07d409a6d83b1c3e23196488127391718590eb3",
+      "reason": "the cubic of a link cut short of its arrowhead now lies on the curve itself (code review L3)",
+      "day": "2026-10-30"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "f1e2d73ed5a4a4987c22e16b233e52b362c0a4f367d1cd49a891f6074ccfa10c",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "4fd2f5fe87f2af3f855971addb8b5497da23c3302318b285ec144a45897d501b",
+      "reason": "the cubic of a link cut short of its arrowhead now lies on the curve itself (code review L3)",
+      "day": "2026-10-30"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",

@@ -297,3 +297,15 @@ describe('a graph drawn by our own engine', () => {
     assert.equal(directions({ ...tree, engine: 'own', routing: 'curved' })[0].own, undefined, 'curves: Graphviz');
   });
 });
+
+test('a tree with two links between the same two things, or a loop, is still laid out as a tree', () => {
+  const links = [
+    ['a', 'b'],
+    ['a', 'c'],
+    ['c', 'd'],
+    ['a', 'b'],
+    ['b', 'a'],
+    ['d', 'd'],
+  ];
+  assert.deepEqual(pickLayout(shapeOf(['a', 'b', 'c', 'd'], links)), { layout: 'layered', why: 'tree' });
+});

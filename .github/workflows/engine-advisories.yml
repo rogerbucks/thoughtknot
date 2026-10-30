@@ -35,3 +35,11 @@ jobs:
           name: advisories-fresh
           path: advisories-fresh.json
           if-no-files-found: ignore
+
+  # A failure here tells nobody otherwise (OPS-6): this keeps one open issue, labelled workflow-failure.
+  report-failure:
+    needs: [watch]
+    if: failure()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/report-failure.yml

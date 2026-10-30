@@ -5,24 +5,13 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (53)
+## Open (39)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| OPS-5 | The release waits on live OSV and NVD, with no retry | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-7 | Timed workflows pause and tokens expire without notice | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-8 | Repository settings are not exported; only required checks are held | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
-| OPS-9 | Docker base, uv and Node pins are never bumped; no SBOM | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-10 | A runner change or one flaky test blocks the release | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-11 | Wiki and Pages depend on Chrome being on the runner image | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-12 | Docs disagree with the workflows on schedules and write access | ●●● | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-3 | Coverage is measured for the core only, and only at release | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| CODE-6 | 77 fixed sleeps remain in 26 plugin test files | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | CODE-11 | A running layout is never cancelled when the user keeps typing | ●●○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
@@ -39,12 +28,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
-| FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
-| FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
-| FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
@@ -94,116 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** If wanted: refuse an .svg whose text holds <script, on* attributes, <foreignObject or a javascript: address, as a second line behind the page's CSP.
 
 **Check:** A test PUTs an SVG with a script element and asserts 400.
-
-### OPS-5 The release waits on live OSV and NVD, with no retry
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `scripts/engine-version.mjs`, `.github/workflows/release.yml`, `.github/workflows/release-check.yml`.
-
-**Risk:** The release's quality job calls OSV and NVD once each and throws on any non-200 answer. An NVD outage or rate limit, which are common, fails the release after an hour of Cachegrind, and the version number is spent.
-
-**Fix:** Retry each call three times with backoff. When a source still fails, use the committed cache if it was checked within 14 days, and print a warning instead of failing. Move the refresh before the Valgrind install so a failure is cheap.
-
-**Check:** A test in test/engine-version.test.js with a fetch that answers 503 once, then 200.
-
-### OPS-6 Failures of nightly, wiki, Pages and advisories are silent
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/nightly.yml`, `.github/workflows/wiki.yml`, `.github/workflows/pages.yml`, `.github/workflows/engine-advisories.yml`.
-
-**Risk:** No workflow tells anyone when it fails; only GitHub's default e-mail to the owner does, and only if their settings allow it. The build-status board follows CI and stable releases alone, so a nightly or wiki that has failed for a month shows nowhere.
-
-**Fix:** Add a small `report` job (`if: failure()`, `issues: write`) that opens or updates one issue labelled `workflow-failure`, reusing the pattern in wiki.yml's report job.
-
-**Check:** A case in the workflow tests that every scheduled workflow has a failure-reporting job.
-
-### OPS-7 Timed workflows pause and tokens expire without notice
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `RELEASING.md`, `scripts/build-status.mjs`, `.github/workflows/build-status.yml`.
-
-**Risk:** GitHub turns off scheduled workflows after 60 days with no commit. A quiet spell then stops the nightly, the daily Pages rebuild, the lock job and the advisory watch. PROJECT_TOKEN is a classic token whose expiry is unrecorded, and an expired one only warns, so the board goes stale unseen.
-
-**Fix:** Record each secret's expiry in RELEASING.md and set a calendar reminder two weeks before. Make the build-status warning open an issue after three refused runs in a row.
-
-**Check:** A monthly scheduled job that calls the project API with PROJECT_TOKEN and fails loudly on 401.
-
-### OPS-8 Repository settings are not exported; only required checks are held
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `scripts/public-readiness.mjs`, `test/public-readiness.test.js`, `RELEASING.md`.
-
-**Risk:** The code holds the required checks list, but not the ruleset's other rules. Those are: pull request required, merge commits only, bypass actors, CodeQL as a check, Pages source and domain. A setting changed by hand or by GitHub drifts with nothing to compare against, and `--settings` runs only when an admin remembers.
-
-**Fix:** Add `--settings --export` that writes the full default-branch ruleset and the Pages settings to `.github/settings/`. Have `--settings` compare the whole ruleset, not one rule. Run it before each release as a RELEASING.md step.
-
-**Check:** A release-check step that runs `public-readiness.mjs --settings` with a fine-grained admin token stored for that job alone, or manual.
-
-### OPS-9 Docker base, uv and Node pins are never bumped; no SBOM
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/dependabot.yml`, `.github/workflows/release.yml`, `docker/benchmarks.Dockerfile`.
-
-**Risk:** Dependabot watches npm, uv and Actions, but not the Docker image digest, the setup-uv `version:` input or the exact Node 24.20.0. These age silently until a security fix or a retired image forces a hurried change. A release ships checksums and provenance but no SBOM, so a user cannot list what is inside main.js.
-
-**Fix:** Add a `docker` entry to dependabot.yml. Add a release step that writes `npm sbom --sbom-format cyclonedx` to an asset and attests it. Note in CONTRIBUTING.md that the Node patch and setup-uv version are bumped by hand with a new baseline.
-
-**Check:** A case in test/policy.test.js that dependabot.yml names docker, and that the release's asset list includes the SBOM.
-
-### OPS-10 A runner change or one flaky test blocks the release
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `quality/baseline.json`, `scripts/quality-check.mjs`, `scripts/quality-spec.mjs`, `RELEASING.md`.
-
-**Risk:** Instruction counts are held only to the same OS, processor, Node major and Valgrind, with 5% tolerance. The measured spread is never committed or compared with that tolerance. When GitHub moves ubuntu-24.04 to new hardware, the release fails. It also fails when the baseline's flaky_tests of 0 meets one flaky test in the double run. It then waits for a new baseline pull request.
-
-**Fix:** Commit `largest_spread` with each baseline and have quality-check fail a baseline whose tolerance is under twice it. Write in RELEASING.md the recovery order: run Quality baseline, commit it, re-run the dry run, then tag.
-
-**Check:** A case in test/quality-baseline.test.js that the committed baseline carries a spread and that INSTRUCTION_TOLERANCE is at least twice it.
-
-### OPS-11 Wiki and Pages depend on Chrome being on the runner image
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/wiki.yml`, `scripts/wiki-screens.mjs`.
-
-**Risk:** Both page builders call `google-chrome` from the ubuntu-latest image, which GitHub may drop or move. Pages only warns and ships without the picture, but the wiki job fails outright on every push to main, and the whole wiki stops updating.
-
-**Fix:** Give the wiki step the same `|| echo ::warning::` fallback as pages.yml, and keep the last published images when a screenshot fails.
-
-**Check:** A case in test/wiki-workflow or test/site-workflow that the screenshot step never fails the job.
-
-### OPS-12 Docs disagree with the workflows on schedules and write access
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `CONTRIBUTING.md`, `README.md`.
-
-**Risk:** CONTRIBUTING says the advisory watch's weekly schedule is off, but the workflow has a cron. The README says only the release job may write, while seven other jobs write releases, the wiki, Pages, issues or pull requests. A successor reading the docs will misjudge what runs and what can change the repository.
-
-**Fix:** Correct the two sentences, and add a one-table 'Who may write what' to CONTRIBUTING.md listing each job's write permission and why.
-
-**Check:** A case in test/policy.test.js that every job with a write permission is named in that table.
-
-### CODE-3 Coverage is measured for the core only, and only at release
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `scripts/quality-suite.mjs`, `quality/baseline.json`, `.github/workflows/ci.yml`.
-
-**Risk:** The 99.2% figure in quality/baseline.json covers packages/core/src alone. The Obsidian plugin, the server and the page have no coverage number at any time. CI runs quality-check with --fast, so a pull request that drops the core's coverage is seen only when a release is cut.
-
-**Fix:** Widen --test-coverage-include to packages/*/src, packages/claude-code/server and page. Record one baseline per package. Run the coverage step in CI on pull requests that touch a package.
-
-**Check:** quality-check.mjs holds each package's coverage_percent against its baseline on every pull request, not only at release.
-
-### CODE-4 The Claude Code mod is outside typecheck, lint and CI
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/claude-code/mod/**`, `package.json`, `.github/workflows/release-check.yml`.
-
-**Risk:** register.tsx (265 lines) starts the server, runs Graphviz and refuses Claude's own writes into the data folder. Yet CI never type-checks, lints or runs its test. The guide asks for a manual `claude plugin test` before a merge, so a broken hook ships when someone forgets.
-
-**Fix:** Add `tsc -p packages/claude-code/mod --noEmit` to the typecheck script. Add a release-check step that runs `claude plugin validate` and `claude plugin test` where the CLI is installed. Make it fail when the CLI is not installed.
-
-**Check:** A CI job with the Claude Code CLI that runs the mod's test. Until then, a conventions test that register.tsx imports nothing but src/ modules already under test.
-
-### CODE-6 77 fixed sleeps remain in 26 plugin test files
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/test/**`, `packages/core/test/layout-worker.test.js`, `test/fixed-sleeps.json`.
-
-**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.
-
-**Fix:** Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.
-
-**Check:** The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.
 
 ### CODE-11 A running layout is never cancelled when the user keeps typing
 
@@ -365,26 +241,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test in packages/obsidian/test that opens two graphs and asserts the summary lists both, newest first.
 
-### FLOW-4 A one-line fix pays eleven gates and may touch four records
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `package.json`, `AGENTS.md`, `.github/workflows/ci.yml`, `.github/workflows/claude-review.yml`, `scripts/**`.
-
-**Risk:** One pull request runs 6 test shards, lint, python, python-no-engine, tests-first and public-readiness. It also runs a Claude review of up to 30 minutes, the project mirror and the build status. A test or doc change must also carry a tests-first record, a plain-docs record, public-api.json or a quality baseline. Each is written by a script the author must know to run.
-
-**Fix:** Add one script, `npm run prepare-pr`, that runs tests-first --update, plain-docs --update, public-api --update and notices.mjs in order, and name it in AGENTS.md. Skip the Claude review and public-readiness setup check for docs-only changes by path filter.
-
-**Check:** A CI step that runs prepare-pr and fails on a dirty tree, so a forgotten record is one message, not four.
-
-### FLOW-5 A requirement's text can be rewritten to fit the code
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `scripts/check-requirements-flips.mjs`, `scripts/build-status.mjs`, `requirements/editor-requirements.gql`.
-
-**Risk:** The flip check guards only a test's status, by design: records, links and comments may change freely. So a proved requirement's rule can be softened after the fact and the test stays 'written'. No one is told the proof no longer matches the words.
-
-**Fix:** Make the flip check list every proved requirement whose `rule` text changed, and require the pull request body to name each one. The build status then shows the requirement as 'reworded' until its test's commit is newer than the wording.
-
-**Check:** check-requirements-flips.mjs --merge-base-of prints 'reworded' lines and exits 1 unless the commit message names the id.
-
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `manifest.json`, `versions.json`, `.github/workflows/release.yml`, `requirements/waves.json`, `packages/obsidian/**`.
@@ -414,16 +270,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Put a project address (a mailbox Roger owns) in CODE_OF_CONDUCT.md. Either open issue creation to everyone with the two templates, or delete the templates until then. Say in config.yml that bugs go to Discussions.
 
 **Check:** test/community-files.test.js asserts the conduct file names an address, and that issue templates exist only when public-readiness wants issues open to all.
-
-### FLOW-11 Decisions live in two places with different forms
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `requirements/editor-requirements.gql`, `scripts/wiki.mjs`, `CONTRIBUTING.md`.
-
-**Risk:** The wiki's Decisions page is made only from answered Question nodes in the requirements. Decisions written as '(Roger, 16 Oct 2026)' remarks sit in comments and CONTRIBUTING.md. One example is dropping the vault as the requirements source. They never reach that page, so a reader cannot find why things are as they are.
-
-**Fix:** Record each '(Roger, date)' decision as a Question node with its answer and date, starting with the vault decision. Then the Decisions page lists them all. Say in CONTRIBUTING.md that a dated remark must have its Question.
-
-**Check:** A test that finds every '(Roger, <date>)' remark in requirements and docs and requires a Question node answered on that date.
 
 ### FLOW-12 Third-party notices depend on a hand-kept record
 
@@ -595,7 +441,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (80)
+## Done or accepted (94)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -610,9 +456,20 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
+| OPS-5 | The release waits on live OSV and NVD, with no retry | done | #1540; kept out by `test/engine-version-retry.test.js`, `scripts/engine-version.mjs` |
+| OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | done | #1540; kept out by `test/report-failure-workflow.test.js`, `.github/workflows/report-failure.yml` |
+| OPS-7 | Timed workflows pause and tokens expire without notice | done | #1540; kept out by `test/report-failure-workflow.test.js`, `.github/workflows/token-watch.yml` |
+| OPS-8 | Repository settings are not exported; only required checks are held | done | #1540; kept out by `test/settings-export.test.js`, `scripts/settings-export.mjs` |
+| OPS-9 | Docker base, uv and Node pins are never bumped; no SBOM | done | #1540; kept out by `test/process-risks-ops.test.js`, `.github/dependabot.yml` |
+| OPS-10 | A runner change or one flaky test blocks the release | done | #1540; kept out by `test/record-spread.test.js`, `scripts/record-spread.mjs` |
+| OPS-11 | Wiki and Pages depend on Chrome being on the runner image | done | #1540; kept out by `test/process-risks-ops.test.js`, `.github/workflows/wiki.yml` |
+| OPS-12 | Docs disagree with the workflows on schedules and write access | done | #1540; kept out by `test/process-risks-ops.test.js`, `CONTRIBUTING.md` |
 | CODE-1 | The graph-spec library is not type-checked at all | done | #1543 |
 | CODE-2 | merge3, 306 untyped lines, is proved by one snapshot case | done | #1543 |
+| CODE-3 | Coverage is measured for the core only, and only at release | done | #1567; kept out by `test/quality-metrics.test.js`, `scripts/quality-check.mjs` |
+| CODE-4 | The Claude Code mod is outside typecheck, lint and CI | done | #1560; kept out by `test/mod-check.test.js`, `scripts/mod-check.mjs`, `packages/claude-code/mod/tests/graph.test.tsx` |
 | CODE-5 | No test runs vault.process with a real interleaving | done | #1546 |
+| CODE-6 | 77 fixed sleeps remain in 26 plugin test files | done | #1568; kept out by `test/fixed-sleeps.test.js`, `scripts/fixed-sleeps.mjs` |
 | CODE-7 | 139 of 249 core modules have no test named after them | done | #1542 |
 | CODE-8 | Reader parity rests on a small, snapshot-shaped case set | done | #1543 |
 | CODE-9 | 28 functions over 100 lines; the 400-line cap is on files | done | #1542 |
@@ -639,8 +496,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
+| FLOW-4 | A one-line fix pays eleven gates and may touch four records | done | #1563; kept out by `test/prepare-pr.test.js`, `scripts/prepare-pr.mjs` |
+| FLOW-5 | A requirement's text can be rewritten to fit the code | done | #1564; kept out by `test/check-requirements-reworded.test.js`, `scripts/check-requirements-flips.mjs` |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
+| FLOW-11 | Decisions live in two places with different forms | done | #1566; kept out by `test/decision-remarks.test.js`, `scripts/decision-remarks.mjs` |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | done | #1543 |
 | API-2 | Core is guarded as a library but never shipped as one | done | #1544 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |

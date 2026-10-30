@@ -59,12 +59,16 @@ class Curve:
     def cubic(self, cut_start: float, cut_end: float) -> list[list[float]]:
         """The quadratic curve written as Graphviz's cubic one, its ends drawn in where an
         arrowhead takes their place."""
-        mid = self.mid
-        s, e = _toward(self.ends[0], mid, cut_start), _toward(self.ends[1], mid, cut_end)
+        # the piece between the cuts is the same curve, so the line meets the arrowhead where
+        # `at` says it runs
+        (p0, p3), mid = self.ends, self.mid
+        u, v = _cut_at(self.at, p0, cut_start, 0, 0.5), _cut_at(self.at, p3, cut_end, 1, 0.5)
+        s, e = self.at(u), self.at(v)
+        c = _lerp(_lerp(p0, mid, u), _lerp(mid, p3, u), v)
         return [
             list(s),
-            [s[0] + (2 / 3) * (mid[0] - s[0]), s[1] + (2 / 3) * (mid[1] - s[1])],
-            [e[0] + (2 / 3) * (mid[0] - e[0]), e[1] + (2 / 3) * (mid[1] - e[1])],
+            [s[0] + (2 / 3) * (c[0] - s[0]), s[1] + (2 / 3) * (c[1] - s[1])],
+            [e[0] + (2 / 3) * (c[0] - e[0]), e[1] + (2 / 3) * (c[1] - e[1])],
             list(e),
         ]
 
@@ -86,9 +90,24 @@ def curve_of(a: Placed, b: Placed, bow: float) -> Curve:
     return Curve(a, b, bow)
 
 
-def _toward(p, q, by: float) -> tuple[float, float]:
-    d = hypot(q[0] - p[0], q[1] - p[1]) or 1
-    return (p[0] + ((q[0] - p[0]) * by) / d, p[1] + ((q[1] - p[1]) * by) / d)
+def _lerp(p, q, t: float) -> tuple[float, float]:
+    return (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+
+
+def _cut_at(at, end, cut: float, start: float, to: float) -> float:
+    """Where along the curve, from `start` toward `to`, it is `cut` from its end `end`: by halving,
+    as the core does (direct-curve.ts)."""
+    if cut <= 0:
+        return start
+    lo, hi = start, to
+    for _ in range(40):
+        t = (lo + hi) / 2
+        p = at(t)
+        if hypot(p[0] - end[0], p[1] - end[1]) < cut:
+            lo = t
+        else:
+            hi = t
+    return (lo + hi) / 2
 
 
 def _edge_of(b: Placed, p) -> tuple[float, float]:

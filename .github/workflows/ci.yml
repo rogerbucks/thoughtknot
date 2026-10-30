@@ -139,11 +139,40 @@ jobs:
       - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          # the body may name a reworded requirement (FLOW-5); it is only ever text to match ids against
+          BODY: ${{ github.event.pull_request.body }}
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
-        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
+        run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE" --named "$BODY"
       # the requirements and the tests may not drift further apart: each list in quality/requirements-drift.json only shrinks
       - run: node scripts/requirements-drift.mjs
       - run: npm run build
+
+  # Each package's share of lines the tests run, held to its baseline on a pull request that touches a package (CODE-3).
+  # It always reports, so it can be required. A change to neither packages nor the ratchet itself skips the run.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - id: touched
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -z "$BASE" ] || git diff --name-only "$BASE" HEAD | grep -qE '^(packages/|scripts/quality-|quality/baseline)'; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "::notice::No package changed, so its coverage was not measured."; fi
+      - if: steps.touched.outputs.run == 'true'
+        run: npm ci
+      # the whole suite at once, as the release's quality job runs it, so it gets the same 8 GB ceiling
+      - if: steps.touched.outputs.run == 'true'
+        env:
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
+          THOUGHTKNOT_RUN_MINUTES: 40
+        run: node scripts/quality-check.mjs --coverage
 
   python:
     runs-on: ubuntu-latest
@@ -271,6 +300,9 @@ jobs:
       # every commit since the baseline that changed a test has its record, written on its own branch
       - name: Every commit that changed a test is recorded
         run: node scripts/tests-first.mjs --complete
+      # FLOW-4: the other records too, named together, so a forgotten one is a single message
+      - name: Every record the pull request carries is up to date
+        run: npm run prepare-pr -- --check
 
   # The code scan's security problems, checked on every change before it merges (#849, scripts/code-scan.mjs). GitHub's
   # code scanning stops a pull request only for a problem it adds. This fails on any in the code at all, as the release

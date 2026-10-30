@@ -8,6 +8,7 @@
 //   node scripts/quality-check.mjs quality/metrics.json    compare a full run (the release's quality job).
 //   node scripts/quality-check.mjs --fast                  measure the quick metrics now (file sizes, secrets) and
 //                                                          compare.
+//   node scripts/quality-check.mjs --coverage              run the suite with coverage; compare each package's share.
 //   node scripts/quality-check.mjs --baseline-since <ref>  compare the committed baseline with the one at this commit.
 //
 // Exits 1 and names each metric that is worse, with the baseline value, the new one and what would let it through. Test
@@ -24,7 +25,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { METRICS } from './quality-spec.mjs';
+import { INSTRUCTION_TOLERANCE, METRICS } from './quality-spec.mjs';
 
 export { METRICS };
 
@@ -81,6 +82,11 @@ export function baselineProblems(baseline) {
   }
   if (baseline.details?.left_out?.length)
     found.push(`${BASELINE} was measured with test files left out (${baseline.details.left_out.join(', ')})`);
+  // OPS-10: a tolerance under twice the noise between runs lets one flaky run block a release
+  if (has(baseline.largest_spread) && INSTRUCTION_TOLERANCE < 2 * baseline.largest_spread)
+    found.push(
+      `${BASELINE} says a count moved ${baseline.largest_spread} between runs (largest_spread), where the instruction tolerance ${INSTRUCTION_TOLERANCE} is under twice that: widen the tolerance, or find the noise`,
+    );
   if (typeof baseline.machine?.os !== 'string' || !has(baseline.machine?.node_major))
     found.push(`${BASELINE} does not say which machine (os and node_major) it was measured on`);
   return found;
@@ -295,9 +301,12 @@ function report(r, details, passed) {
 async function main(argv) {
   const since = argv.includes('--baseline-since') ? argv[argv.indexOf('--baseline-since') + 1] : undefined;
   const fast = argv.includes('--fast');
+  const coverage = argv.includes('--coverage');
   const file = argv.find((x) => !x.startsWith('--') && x !== since);
-  if (!fast && !file && !since) {
-    console.error('usage: node scripts/quality-check.mjs <metrics.json> | --fast | --baseline-since <ref>');
+  if (!fast && !coverage && !file && !since) {
+    console.error(
+      'usage: node scripts/quality-check.mjs <metrics.json> | --fast | --coverage | --baseline-since <ref>',
+    );
     return 2;
   }
   const baseline = readJSON(BASELINE),
@@ -316,15 +325,27 @@ async function main(argv) {
     const passed = `quality: the baseline is no worse than ${since}'s, or every change has a reason`;
     return report(r.result, {}, passed) ? 0 : 1;
   }
-  const quick = fast ? (await import('./quality-metrics.mjs')).measureFast() : undefined;
+  let quick = fast ? (await import('./quality-metrics.mjs')).measureFast() : undefined;
+  if (coverage) {
+    const run = (await import('./quality-suite.mjs')).measureCoverage(ROOT);
+    if (!run.passed) {
+      console.error(`the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}`);
+      return 1;
+    }
+    console.log(`coverage: ${JSON.stringify(run.metrics)}`);
+    quick = { metrics: run.metrics, details: {} };
+  }
   const current = quick ?? readJSON(file);
   if (current.details?.left_out?.length) {
     console.error(`the suite was run with test files left out (${current.details.left_out.join(', ')}): not a measure`);
     return 1;
   }
   // in GitHub Actions, counts the baseline cannot hold fail the run, after they are printed
-  const r = compare(baseline, current, accepted, { partial: fast, ci: Boolean(process.env.GITHUB_ACTIONS) });
-  const passed = `quality: ${fast ? 'the quick metrics are' : 'every metric is'} no worse than the baseline of ${baseline.measured}`;
+  const r = compare(baseline, current, accepted, {
+    partial: fast || coverage,
+    ci: Boolean(process.env.GITHUB_ACTIONS),
+  });
+  const passed = `quality: ${fast ? 'the quick metrics are' : coverage ? "each package's coverage is" : 'every metric is'} no worse than the baseline of ${baseline.measured}`;
   return report(r, current.details, passed) ? 0 : 1;
 }
 

@@ -534,8 +534,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/engine-version-retry.test.js",
+        "scripts/engine-version.mjs"
+      ]
     },
     {
       "id": "OPS-6",
@@ -569,8 +574,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/report-failure.yml"
+      ]
     },
     {
       "id": "OPS-7",
@@ -605,8 +615,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/token-watch.yml"
+      ]
     },
     {
       "id": "OPS-8",
@@ -638,8 +653,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/settings-export.test.js",
+        "scripts/settings-export.mjs"
+      ]
     },
     {
       "id": "OPS-9",
@@ -675,8 +695,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/dependabot.yml"
+      ]
     },
     {
       "id": "OPS-10",
@@ -714,8 +739,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/record-spread.test.js",
+        "scripts/record-spread.mjs"
+      ]
     },
     {
       "id": "OPS-11",
@@ -743,8 +773,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/workflows/wiki.yml"
+      ]
     },
     {
       "id": "OPS-12",
@@ -778,8 +813,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        "CONTRIBUTING.md"
+      ]
     },
     {
       "id": "CODE-1",
@@ -874,8 +914,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1567",
+      "prevented_by": [
+        "test/quality-metrics.test.js",
+        "scripts/quality-check.mjs"
+      ]
     },
     {
       "id": "CODE-4",
@@ -907,8 +952,14 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1560",
+      "prevented_by": [
+        "test/mod-check.test.js",
+        "scripts/mod-check.mjs",
+        "packages/claude-code/mod/tests/graph.test.tsx"
+      ]
     },
     {
       "id": "CODE-5",
@@ -960,7 +1011,7 @@
       "likelihood": "medium",
       "impact": "low",
       "decision": "fix-later",
-      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.",
+      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each. Done in #1568 for every sleep that waits for a state. The 43 left wait for something that must not happen, so they stay as sleeps; Roger accepted that on 30 Oct 2026, and the ratchet keeps them from growing.",
       "check": "The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.",
       "paths": [
         "packages/obsidian/test/**",
@@ -973,8 +1024,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1568",
+      "prevented_by": [
+        "test/fixed-sleeps.test.js",
+        "scripts/fixed-sleeps.mjs"
+      ]
     },
     {
       "id": "CODE-7",
@@ -2447,8 +2503,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1563",
+      "prevented_by": [
+        "test/prepare-pr.test.js",
+        "scripts/prepare-pr.mjs"
+      ]
     },
     {
       "id": "FLOW-5",
@@ -2479,8 +2540,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1564",
+      "prevented_by": [
+        "test/check-requirements-reworded.test.js",
+        "scripts/check-requirements-flips.mjs"
+      ]
     },
     {
       "id": "FLOW-6",
@@ -2682,8 +2748,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1566",
+      "prevented_by": [
+        "test/decision-remarks.test.js",
+        "scripts/decision-remarks.mjs"
+      ]
     },
     {
       "id": "FLOW-12",

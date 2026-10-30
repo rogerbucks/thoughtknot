@@ -261,11 +261,12 @@ def aside(a: Placed, b: Placed, boxes: list[Placed]) -> float:
         reach = abs(nx) * c.hw + abs(ny) * c.hh + CLEARANCE
         if abs(off) >= reach:
             continue
-        # a curve's middle moves half as far as its bend, scaled by how near the box is to it
-        bend = (-_sign(off or 1) * 2 * (reach + abs(off))) / (4 * t * (1 - t)) / long
+        # the middle moves half the bend, scaled by how near the box is: reach less its offset
+        bend = (-_sign(off or 1) * 2 * (reach - abs(off))) / (4 * t * (1 - t)) / long
         if abs(bend) > abs(most):
             most = bend
-    return max(-0.6, min(0.6, most))
+    # at least the gentle bow every link takes, so it still reads as a curve
+    return _sign(most) * max(GENTLE, min(0.6, abs(most))) if most else 0.0
 
 
 _TRUNK_END = re.compile(r"^trunk: (\d+) (in|out)$")

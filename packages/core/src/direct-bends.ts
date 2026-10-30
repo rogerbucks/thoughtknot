@@ -254,12 +254,12 @@ export function aside(a: Placed, b: Placed, boxes: Iterable<Placed>): number {
     const off = (c.x - a.x) * nx + (c.y - a.y) * ny;
     const reach = Math.abs(nx) * c.hw + Math.abs(ny) * c.hh + CLEARANCE;
     if (Math.abs(off) >= reach) continue;
-    // a curve's middle moves half as far as its bend. So it bends twice what it must clear, away from the box. The bend
-    // is scaled by how near the box is to the middle, where the bend is widest.
-    const bend = (-Math.sign(off || 1) * 2 * (reach + Math.abs(off))) / (4 * t * (1 - t)) / long;
+    // a curve's middle moves half as far as its bend. So it bends twice what it must clear, away from the box: its
+    // reach less how far off the line it sits already. The bend is scaled by how near the box is to the middle.
+    const bend = (-Math.sign(off || 1) * 2 * (reach - Math.abs(off))) / (4 * t * (1 - t)) / long;
     if (Math.abs(bend) > Math.abs(most)) most = bend;
   }
-  return Math.max(-0.6, Math.min(0.6, most));
+  return Math.sign(most) * Math.max(GENTLE, Math.min(0.6, Math.abs(most))); // at least the gentle bow: still a curve
 }
 
 /** A trunk's two ends, as the layout source names them (fold-source.ts): its number, and which end. */

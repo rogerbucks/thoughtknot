@@ -382,3 +382,22 @@ test('keepApart pushes two things in one place apart, the same each time', () =>
   assert.deepEqual(centre.get('r'), [500, 0, 0], 'one far off is left where it is');
   assert.deepEqual(run(), centre);
 });
+
+test('with three links between two things, every arrowhead tip sits on the ball it points at', () => {
+  // the outer two bow apart, so a tip found along the straight line would float off the ball
+  const marks = [
+    ...['p', 'q'].flatMap(thing),
+    link('e:1', 'p', 'q', 'A'),
+    link('e:2', 'p', 'q', 'B'),
+    link('e:3', 'q', 'p', 'C'),
+  ];
+  const { space } = spreadSpace(marks);
+  assert.equal(space.arrows.length, 3);
+  for (const a of space.arrows) {
+    const to = a.id.startsWith('e:3') ? 'q' : 'p';
+    const ball = space.blocks.find((b) => b.of === (to === 'q' ? 'p' : 'q'));
+    const r = ball.width / 2;
+    const off = Math.abs(dist(a.tip, centreOf(ball)) - r);
+    assert.ok(off <= r * 0.01 + 0.5, `${a.id}: tip ${off} off the ball's surface of ${r}`);
+  }
+});

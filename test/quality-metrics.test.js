@@ -12,7 +12,7 @@ import { METRICS, compare, acceptedProblems } from '../scripts/quality-check.mjs
 import { findSecrets, scanRepo, scannedFiles } from '../scripts/quality-secrets.mjs';
 import { measureFast } from '../scripts/quality-metrics.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
-import { parseJunit, flakyBetween, parseLcov, unexplainedFailure } from '../scripts/quality-suite.mjs';
+import { parseJunit, flakyBetween, parseLcov, unexplainedFailure, coverageMetrics } from '../scripts/quality-suite.mjs';
 import { exists, read, readJSON, ROOT, block, jobs, runCommands } from './repository/repo.js';
 
 /** The environment of a spawned check outside CI: whatever runs this test, GITHUB_ACTIONS is not set for the child. */
@@ -480,6 +480,44 @@ describe('reading the suite’s reports', () => {
     ].join('\n');
     assert.deepEqual(parseLcov(lcov, 'packages/core/src/'), { files: 2, lines: 200, hit: 140, percent: 70 });
     assert.deepEqual(parseLcov('', 'packages/core/src/'), { files: 0, lines: 0, hit: 0, percent: 0 });
+  });
+});
+
+describe('the coverage of each package (CODE-3)', () => {
+  const lcov = (file, lines, hit) => `SF:${file}\nLF:${lines}\nLH:${hit}\nend_of_record\n`;
+
+  test('every package with code has its own metric, in the baseline, held higher-is-better', () => {
+    const named = Object.keys(METRICS).filter((n) => METRICS[n].coverage);
+    for (const pkg of ['core', 'obsidian', 'claude_code', 'app', 'boundary', 'graph_spec', 'sync', 'vscode', 'web']) {
+      const name = pkg === 'core' ? 'coverage_percent' : `coverage_percent_${pkg}`;
+      assert.ok(named.includes(name), name);
+      assert.equal(METRICS[name].better, 'higher');
+      assert.ok(name in readJSON('quality/baseline.json').metrics, `${name} has a baseline`);
+    }
+  });
+
+  test('a report gives each package its own share, the claude-code package from its source, server and page', () => {
+    const report =
+      lcov('packages/core/src/a.ts', 100, 90) +
+      lcov('packages/obsidian/src/b.ts', 100, 50) +
+      lcov('packages/claude-code/server/s.ts', 100, 20) +
+      lcov('packages/claude-code/page/p.ts', 100, 40);
+    const m = coverageMetrics(report);
+    assert.equal(m.coverage_percent, 90);
+    assert.equal(m.coverage_percent_obsidian, 50);
+    assert.equal(m.coverage_percent_claude_code, 30);
+    assert.equal(m.coverage_percent_web, null);
+  });
+
+  test('a package that drops below its baseline fails, and one that holds passes', () => {
+    const b = readJSON('quality/baseline.json');
+    const was = b.metrics.coverage_percent_obsidian;
+    const at = (v) => ({ metrics: { coverage_percent_obsidian: v }, details: {} });
+    assert.deepEqual(compare(b, at(was), [], { partial: true }).failures, []);
+    assert.deepEqual(
+      compare(b, at(was - 20), [], { partial: true }).failures.map((f) => f.metric),
+      ['coverage_percent_obsidian'],
+    );
   });
 });
 

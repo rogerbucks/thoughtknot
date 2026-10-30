@@ -183,6 +183,9 @@ after a module nor listed here, and on a listed file that is missing.
   names and rows. Both gates give the same answer on the same inputs. They fail closed alike when the note cannot be
   read (editor spec §26, cc_classified_asks; §19, model_ceiling).
 
+- `test/mod-check.test.js` — CODE-4: the mod is built, validated and tested by the Claude Code CLI, and a missing CLI
+  fails the release check.
+
 ## The Claude Code editor: Claude's proposals and the gates
 
 - `packages/claude-code/test/editor-mod-claude.test.js` — Claude is the only AI the browser editor offers. What it
@@ -435,6 +438,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Test tooling and the build status's parts
 
+- `test/prepare-pr.test.js` — FLOW-4: `npm run prepare-pr` writes every record a pull request carries. CI runs it in check
+  mode and names every stale record at once. A change to words alone gets no Claude review.
+
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
@@ -500,6 +506,9 @@ after a module nor listed here, and on a listed file that is missing.
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
 
 ## The graph spec
+
+- `test/check-requirements-reworded.test.js` — FLOW-5: a proved requirement's rule is reworded only when a commit message
+  or the pull request body names its id.
 
 - `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
   graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
@@ -663,6 +672,13 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+## Failure reports and process docs
+
+- `test/report-failure-workflow.test.js` — four workflows report a failed job through one reusable workflow. It writes
+  an issue and nothing else. A daily token probe opens an issue on the third refusal in a row (OPS-6, OPS-7).
+- `test/process-risks-ops.test.js` — Dependabot watches the Docker image, and the release writes an SBOM. The wiki
+  survives a missing Chrome. The docs name every job that writes (OPS-9, OPS-11, OPS-12).
+
 ## Workflows and the desktop app
 
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
@@ -691,6 +707,10 @@ after a module nor listed here, and on a listed file that is missing.
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
 ## Being public, and pull requests
 
+- `test/settings-export.test.js` — the default branch's whole ruleset and the Pages settings are exported to
+  `.github/settings/` and held whole against GitHub's (OPS-8).
+- `test/engine-version-retry.test.js` — a slow or failing advisory service is asked three times, and a recent committed
+  cache stands in for one that stays down (OPS-5).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
 - `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
@@ -709,6 +729,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The quality ratchet and the test runner
 
+- `test/record-spread.test.js` — the spread between runs is put in the metrics, so the baseline committed from them
+  carries it (OPS-10).
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quality-instructions.test.js` — the instruction counts in the ratchet.
@@ -1027,3 +1049,8 @@ after a module nor listed here, and on a listed file that is missing.
   a11y_states_auto). It spans the harness page, the focus ring, the export form and the bar.
 - `test/colour-alone-rules.test.js` — no colour carries a meaning alone, across the whole style sheet (editor spec §44,
   colour_never_alone). It spans `styles.css` and the files that give each state its word or icon.
+
+## Decisions
+
+- `test/decision-remarks.test.js` — FLOW-11: every `(Roger, <date>)` remark in the requirements and docs has a Question
+  answered that day. Older remarks are held to an allowance in `quality/decision-remarks.json` that only goes down.

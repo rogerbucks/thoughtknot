@@ -91,10 +91,12 @@ def direct_links(
     for m in marks:
         if m["kind"] == "group":
             drawn_as[m["id"]] = [m["x"], m["y"], m["x"] + m["width"], m["y"] + m["height"]]
-        named = re.match(r"^l:(.*)$", m["id"], re.S) if m["kind"] == "label" else None
+        named = re.match(r"^l\d*:(.*)$", m["id"], re.S) if m["kind"] == "label" else None
         was = drawn_as.get(named.group(1)) if named else None
-        if named and was:
-            heads[named.group(1)] = (m["y"] - was[1] + HUG, (m.get("maxWidth") or 0) + 2 * HUG)
+        if named and was:  # each line of a name is a label of its own: room down to the last
+            top, least = heads.get(named.group(1), (0.0, 0.0))
+            room = (m["y"] - was[1] + HUG, (m.get("maxWidth") or 0) + 2 * HUG)
+            heads[named.group(1)] = (max(top, room[0]), max(least, room[1]))
     hug(boxes.values(), groups, heads)
     trunk_ends(boxes, links)
 

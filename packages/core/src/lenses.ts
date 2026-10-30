@@ -226,7 +226,7 @@ const SPACE_REACH = 1 / 3;
  * lens that reaches the whole drawing makes a ball of it, round the picked thing, else round the drawing's middle.
  */
 export function spaceSeen(space: SpaceMarks, lens: Lens | undefined, picked: Block | null): SpaceMarks {
-  const across = Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
+  const across = Math.hypot(...[0, 1, 2].map((i) => (space.most[i] ?? 0) - (space.least[i] ?? 0)));
   if (lens && WHOLE_LENSES.has(lens)) {
     const middle: Vec3 = [0, 1, 2].map((i) => ((space.most[i] ?? 0) + (space.least[i] ?? 0)) / 2) as Vec3;
     const focus = picked ? middleOf(picked) : middle;
