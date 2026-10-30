@@ -56,6 +56,9 @@ export const runnerOf = (pathTag: string, cls: string): string =>
     .replace(/\s(?:class|pathLength|stroke-dasharray)="[^"]*"/g, '')
     .replace(/^<path\b/, `<path class="${cls}" pathLength="100"`);
 
+/** Whether a character code is an ASCII digit. */
+const isDigit = (code: number): boolean => code >= 48 && code <= 57;
+
 /**
  * The SVG with each group `<g id="<kind><n>" …>…</g>` of one of `kinds` replaced by what `swap` gives. A group ends at
  * the first `</g>` after its opening, as Graphviz writes them. It is found by plain search, so it stays quick
@@ -74,7 +77,7 @@ export function replaceGroups(
     const kind = kinds.find((k) => svg.startsWith(k, name));
     if (kind === undefined) continue;
     let end = name + kind.length;
-    while (end < svg.length && '0123456789'.includes(svg.charAt(end))) end++;
+    while (end < svg.length && isDigit(svg.charCodeAt(end))) end++;
     if (end === name + kind.length || svg[end] !== '"') continue;
     const tagEnd = svg.indexOf('>', end);
     if (tagEnd < 0) break;
