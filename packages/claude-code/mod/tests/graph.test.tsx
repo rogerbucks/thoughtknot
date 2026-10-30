@@ -14,8 +14,8 @@ const ran = (stdout: string, exitCode = 0) => ({
 // the data folder the mod keeps its files in is named by two variables the host has, and the editor starts in the
 // session's folder
 const withEnv = (on: any) => {
-  on('env.get', async (_$: any, e: any) => ({ value: e.name === 'HOME' ? '/home/test' : undefined }) as never);
-  on('session.cwd', async () => ({ value: '/home/test/vault' }) as never);
+  on('env.get', async (_$: any, e: any) => ({ value: e.name === 'HOME' ? '/work' : undefined }) as never);
+  on('session.cwd', async () => ({ value: '/work/vault' }) as never);
 };
 const SURFACES = ['desktop', 'vscode', 'mobile'] as const;
 const mount = ($: any, surface: string) =>
