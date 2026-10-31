@@ -86,16 +86,30 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - if: steps.token.outputs.set == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # The scope goes to a file, as a pipe cut it at 64 KB; and the folder exists, as the session could not make it.
+      - if: steps.token.outputs.set == 'true'
+        run: |
+          mkdir -p panel-out panel-in
+          if [ -n "$SINCE" ]; then node scripts/risk-register.mjs --stale --json --since "$SINCE" > panel-in/scope.json
+          else node scripts/risk-register.mjs --stale --json > panel-in/scope.json; fi
+        env:
+          SINCE: ${{ inputs.since }}
+      - if: steps.token.outputs.set == 'true'
         uses: anthropics/claude-code-action@e4a6faad497d33dbc7144135c75e41f82f0bf6c0 # v1.0.255
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
+          show_full_output: true
           prompt: |
             You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
             its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
 
-            SCOPE: run `node scripts/risk-register.mjs --stale --json` and read it. It is not pasted here, as the whole
-            register passed the limit on one command line (30 Oct 2026).
+            SCOPE: read panel-in/scope.json with the Read tool. It is not pasted here, as the whole register passed the
+            limit on one command line (30 Oct 2026). Use Read, Grep and Glob, and single git or register commands
+            with no pipes or redirects, as piped and compound commands are refused.
             EVERY ROLE: ${{ inputs.all_roles }}
 
             The roles: senior security engineer (also privacy), IT administrator and release engineer, senior coder
@@ -124,7 +138,7 @@ jobs:
             risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
             with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
+            --allowedTools "Read,Grep,Glob,Write(panel-out/*),Write(panel-out/**),Write(/panel-out/**),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
       - if: steps.token.outputs.set == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
