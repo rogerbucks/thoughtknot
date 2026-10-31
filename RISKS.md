@@ -454,7 +454,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Fix:** Make the temp file with create_new, so it never opens an existing name or link. Give it a random part in its name. Check the temp path inside the folder as the note's own path is checked.
 
-**Check:** A Rust test in place.rs plants a link at the temp name leading outside the folder, then asserts write_text fails and the outside file is untouched.
+**Check:** A Rust test in place.rs plants a link at the temp name that leads outside the folder. It asserts write_text fails and leaves the outside file alone.
 
 ### SEC-23 Kept drafts hold note text that Claude can read
 
