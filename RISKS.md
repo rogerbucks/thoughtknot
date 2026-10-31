@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (34)
+## Open (33)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -18,7 +18,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -135,16 +134,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add one command, Graphs in this vault, that lists each graph with its notes. Add one export choice, Every graph, that writes all graphs as GQL into one folder.
 
 **Check:** A test opens the test vault, runs the command and asserts every graph note is listed. Another test checks that the Every graph export writes one file per graph.
-
-### NEURO-2 Changes and history view exist only in the browser editor
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/obsidian/src/**`, `packages/core/src/changes-view.ts`, `requirements/editor-requirements.gql`.
-
-**Risk:** An Obsidian user who accepts a drag edit or a proposal cannot look back later. They cannot see what the tool changed in the note. If something looks wrong a week on, they must read raw text and remember.
-
-**Fix:** In Obsidian, offer Compare with on the card. Use the host's file recovery snapshots or the last written text kept in plugin data. Draw it with the same changes-view.ts.
-
-**Check:** A requirement that names Obsidian in changes_view, proved by a test in packages/obsidian/test that opens Compare with on the sample note.
 
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
@@ -386,7 +375,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (107)
+## Done or accepted (108)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -438,6 +427,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1550 |
 | UX-8 | First-run syntax help is only in the wiki, not in the app | done | #1594 |
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
+| NEURO-2 | Changes and history view exist only in the browser editor | done | #1623 |
 | NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | done | #1591 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |

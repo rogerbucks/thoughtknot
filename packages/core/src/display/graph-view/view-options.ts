@@ -134,6 +134,8 @@ export interface ViewOptions {
   moving?: BoxMoving;
   /** The View menu's switches (§25); without it, as for a graph drawn as a table, no View menu is offered. */
   switches?: SwitchesShown;
+  /** Compare with: the graph now drawn with an earlier version, its changes marked (§41); none, it is not offered. */
+  compare?: () => void;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
   /** How its links move, as its style graph says (§7); none, every link still. */

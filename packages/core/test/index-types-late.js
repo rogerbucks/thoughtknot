@@ -352,4 +352,7 @@ export const TYPES_LATE = [
   'FolderPicturesInput',
   'FolderPicturesRun',
   'PictureChange',
+  // the earlier versions of a note the plug-in keeps (§41, changes_view_obsidian), 31 Oct 2026
+  'NoteHistory',
+  'NoteVersion',
 ];

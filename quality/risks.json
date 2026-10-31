@@ -2066,8 +2066,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1623"
     },
     {
       "id": "NEURO-3",
