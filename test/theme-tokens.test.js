@@ -65,7 +65,14 @@ describe('the interface is styled through the design tokens alone', () => {
       assert.deepEqual(Object.keys(declared).sort(), [...NAMES].sort());
       // the system's forced colours and more contrast give tokens anew in a block each (test/forced-colours.test.js)
       const system = /@media \((?:forced-colors: active|prefers-contrast: more)\) \{[^{}]*\{[^{}]*\}\s*\}/g;
-      const elsewhere = [...rest.replace(system, '').matchAll(/(--gn-[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
+      // and so does Easier reading, a setting's class on the body: it raises the three text-spacing tokens (NEURO-9)
+      const easier = /body\.thoughtknot-easier-reading\s+:is\([^{}]*\)\s*\{[^{}]*\}/g;
+      const elsewhere = [
+        ...rest
+          .replace(system, '')
+          .replace(easier, '')
+          .matchAll(/(--gn-[a-z0-9-]+)\s*:/g),
+      ].map((m) => m[1]);
       assert.deepEqual(elsewhere, [], 'a token is mapped from the host’s theme in one place');
     });
   }

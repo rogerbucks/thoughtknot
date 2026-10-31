@@ -7,14 +7,12 @@ import { STYLE } from './layout.ts';
 import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
-import { AID_OPTIONS } from './settings-aids.ts';
+import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
 import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
-import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
-export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 export { aiModel, type AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
@@ -45,10 +43,7 @@ export interface Settings extends StrictnessSettings, PictureSettings {
   classifications: string[];
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
-  /**
-   * The level a file of a note's repository with no classification counts as, when its change is reviewed with Claude
-   * (§41, github_review_items; TRUST-4). The lowest until chosen, as the user asked for their own repository's change.
-   */
+  /** The level a file of a note's repository with no classification counts as, when reviewed with Claude (§41, TRUST-4): the lowest. */
   aiRepoUnlabelled: string;
   aiModels: AiModel[];
   /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
@@ -80,6 +75,7 @@ export interface Settings extends StrictnessSettings, PictureSettings {
   detailsOpen: SwitchSetting;
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
+  easierReading: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -123,6 +119,7 @@ export const DEFAULT_SETTINGS: Settings = {
   miniMap: 'auto',
   detailsOpen: 'off',
   drawingHeight: 'most',
+  easierReading: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -371,6 +368,7 @@ export function settingsFrom(saved: unknown): Settings {
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
+    easierReading: oneOf<SwitchSetting>('easierReading', s.easierReading, d.easierReading),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

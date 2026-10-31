@@ -11,6 +11,7 @@
 import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
 import { word } from './words.ts';
+import { EASIER_READING_CLASS } from './settings-aids.ts';
 import type { WordKey } from './words.ts';
 
 /** One choice for each link of a view's chain. */
@@ -167,6 +168,16 @@ export const presetClasses = (id = 'default'): string[] => [
 
 /** Whether the view preset `id` keeps a trail of recent picks in the drawing, to go back along (view_focus_support). */
 export const keepsTrail = (id = 'default'): boolean => starterOf(id).chain.keys.trail;
+
+/** Marks a page's body for the person's settings: a still view, plain words, and easier reading (§69, NEURO-9). */
+export const markBody = (
+  body: { classList: { toggle(name: string, on: boolean): unknown } },
+  s: Pick<Settings, 'viewPreset' | 'easierReading'>,
+): void => {
+  body.classList.toggle('thoughtknot-still', holdsStill(s));
+  body.classList.toggle(READING_CLASS, readsPlain(s));
+  body.classList.toggle(EASIER_READING_CLASS, s.easierReading === 'on');
+};
 
 /** The class the host puts on the page's body while the view preset is for reading: plain words, spaced wider (§69). */
 export const READING_CLASS = 'thoughtknot-reading';
