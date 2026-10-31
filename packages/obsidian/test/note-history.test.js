@@ -1,7 +1,7 @@
 // The earlier versions of the notes the plug-in changed, kept in its own data (editor spec §41, changes_view_obsidian;
-// risk NEURO-2). Loaded from source: the store each app's history is kept in, the keeper that vault-storage.ts calls
-// with a note's text just before a change, and the rename that carries a note's versions with it. The window that
-// draws a version is tested through the plug-in in compare-with.test.js.
+// risk NEURO-2). These tests load the keeper from source. It keeps each app's history in a store. vault-storage.ts
+// calls it with a note's text just before a change. A rename carries a note's versions with it. The window that draws
+// a version is tested through the plug-in in compare-with.test.js.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { followHistory, keepHistory, keeperOf, versionsOf } from '../src/storage/note-history.ts';
