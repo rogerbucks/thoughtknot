@@ -138,7 +138,7 @@ jobs:
             risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
             with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Write(panel-out/*),Write(panel-out/**),Write(/panel-out/**),Write(//home/runner/work/thoughtknot/thoughtknot/panel-out/**),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
+            --allowedTools "Read,Grep,Glob,Write,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
       - if: steps.token.outputs.set == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
