@@ -90,8 +90,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
-          # temporary, to see why the 31 Oct 2026 run wrote no panel-out/panel.md (9 denied tool calls); take it out again
-          show_full_output: true
           prompt: |
             You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
             its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
@@ -115,6 +113,11 @@ jobs:
             (security), Dot (release), Bram (coder and QA), Wren (architect), Pip (user experience), Juno
             (neurodiversity), Tam (workflow), Rory (API) and Nell (AI). Open each role's part with a few dry, kind words
             in that character's voice (humour setting 60%: often none), signed with its name. The risks table and the JSON stay plain: no jokes there.
+
+            Work in the foreground, on your own: start no subagents and no background tasks. The run ends when you
+            stop, and anything still running is lost with it (the 31 Oct 2026 run started seven reviewers, stopped
+            to wait for them, and wrote nothing). Take the roles one after another, and rewrite panel-out/panel.md
+            after each role, so a run that is cut short still leaves a report.
 
             Write your findings to panel-out/panel.md as plain language (sentences of 25 words or fewer): first a
             table of proposed new risks, each as the JSON object quality/risks.json uses (id, role, area, title,
