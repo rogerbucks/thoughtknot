@@ -316,6 +316,17 @@ export default class ThoughtKnotPlugin extends Plugin {
     return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);
   }
 
+  /** Lets layouts run again after they were stopped. */
+  resumeLayouts(): void {
+    this.layouts?.resume();
+  }
+
+  /** Try again, from a banner that says layouts stopped or ran out of time: lets them run, and draws every card anew. */
+  layoutAgain(): void {
+    this.resumeLayouts();
+    for (const changed of [...this.settingsWatchers]) changed();
+  }
+
   /** The plugin's layouts, started on first use; none once the plugin is unloaded. */
   private layoutsOf(): Layouts | null {
     if (this.unloaded) return null;

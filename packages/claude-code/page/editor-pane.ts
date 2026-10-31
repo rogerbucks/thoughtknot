@@ -29,6 +29,7 @@ export function paneHost(settings: Settings, layouts: LayoutRunner, note?: PageN
     settings: () => settings,
     layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
     palette: PALETTES.system,
+    again: () => layouts.resume(),
     ...(note && {
       noteText: () => note.text,
       saveFilter: (graph, keep) => {

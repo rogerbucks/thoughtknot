@@ -38,6 +38,7 @@ import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
 import { nothingYet } from './pane-empty';
+import { LAYOUT_WAIT, waitShown } from '../progress';
 import type { Chosen, SwitchesShown } from '../graph-view/view-options';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
@@ -53,6 +54,8 @@ export interface PaneHost {
   saveFilter?: (graph: string, keep: FilterKeep) => void;
   /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
   noteText?: () => string;
+  /** Lets layouts run again, for a drawing refused for time; the pane then draws anew (risk UX-4). Not set: no Try again. */
+  again?: () => void;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -89,6 +92,7 @@ function drawInPane(
   switches: SwitchesShown,
   callouts: boolean,
   aids: ViewerAids,
+  again?: () => void,
 ) {
   host.empty();
   if (!drawn) {
@@ -96,7 +100,7 @@ function drawInPane(
     return null;
   }
   if ('reason' in drawn) {
-    refusalBanner(host, drawn);
+    refusalBanner(host, drawn, again);
     return null;
   }
   const card = host.createDiv({ cls: 'thoughtknot' });
@@ -215,9 +219,9 @@ export class PaneDrawing extends Lifecycle {
       : d && d.boxes.length
         ? laidOut(this)
         : Promise.resolve(undefined);
-    void laid
+    void waitShown(host, word('progress.drawing'), () => laid, LAYOUT_WAIT)
       .then((drawn) => {
-        if (stale() || drawn === null) return;
+        if (stale() || drawn === null || drawn === 'stopped') return;
         this.clear();
         const depth = depthOf(this.host.settings().focusDepth);
         const view = drawInPane(
@@ -230,6 +234,11 @@ export class PaneDrawing extends Lifecycle {
           { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
           aidsOf(this.host.settings(), readStyle(reading.texts, s.graph, reading).style), // its own preset first (§69)
+          this.host.again &&
+            (() => {
+              this.host.again?.();
+              this.redraw(host, reading, s, stale, on);
+            }),
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

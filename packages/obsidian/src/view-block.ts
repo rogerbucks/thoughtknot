@@ -5,6 +5,7 @@
 // - What is outside it is faded or hidden as its style graph says (fade_or_hide_in_style).
 // - Its looks are drawn with their legend.
 // - How it is shown is saved in the style graph when asked (view_saved_as_shown).
+import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
 import { rulesOn } from './rule-card';
 import { Notice, TFile } from 'obsidian';
 import type { BlockContext } from './block-context';
@@ -101,6 +102,15 @@ function changeView(plugin: ThoughtKnotPlugin, path: string, line: number): void
   if (file instanceof TFile && typeof leaf.openFile === 'function')
     void leaf.openFile(file, { eState: { line }, active: true });
   else new Notice(word('blocks.view-edit'));
+}
+
+/** The view's drawing, laid out under a wait that is shown. Null after the person stopped it, the text shown instead. */
+async function laidShown<T>(root: HTMLElement, source: string, laidOut: () => Promise<T>): Promise<T | null> {
+  const laid = await waitShown(root, word('progress.drawing'), laidOut, LAYOUT_WAIT);
+  if (laid !== 'stopped') return laid;
+  root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
+  renderCode(root, source);
+  return null;
 }
 
 /** Draws the view `v`, written in `source`, where the note shows it. */
@@ -280,7 +290,7 @@ export async function renderViewBlock(
       ? tableDrawn(diagram.table)
       : diagram.picture
         ? pictureDrawn(diagram.picture)
-        : await laidOut(owner);
+        : await laidShown(root, source, () => laidOut(owner));
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('ThoughtKnot could not draw view', v.name, e);
@@ -305,7 +315,7 @@ export async function renderViewBlock(
         theme: plugin.settings.exportTheme,
         run: (ask) => plugin.exportGraph(ask),
       });
-    refusalBanner(root, drawn);
+    refusalBanner(root, drawn, () => plugin.layoutAgain());
     renderCode(root, source);
     return;
   }

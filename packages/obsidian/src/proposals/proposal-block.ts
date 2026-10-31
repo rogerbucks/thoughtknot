@@ -181,7 +181,7 @@ export async function renderProposalBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
-    refusalBanner(root, drawn);
+    refusalBanner(root, drawn, () => plugin.layoutAgain());
     renderCode(root, source);
     return;
   }

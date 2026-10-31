@@ -12,6 +12,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'pane.nothing-yet': 'Nothing to draw yet. Start with a thing.',
   'pane.example': "For example: (ana:Person {name: 'Ana'})",
   'pane.guide': 'Read the guide',
+  'refusal.try-again': 'Try again',
   'pane.engine-failed': 'The drawing engine could not start: {why}',
   'problems.none': 'No problems.',
   'bar.more': 'More',

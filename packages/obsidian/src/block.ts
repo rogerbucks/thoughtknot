@@ -28,7 +28,7 @@ import {
 import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
-import { waitShown } from '@thoughtknot/core/display/progress';
+import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
@@ -62,7 +62,7 @@ function asText(
   target: EditTarget,
   readOnly: (card: HTMLElement) => boolean,
 ): void {
-  refusalBanner(root, why);
+  refusalBanner(root, why, () => plugin.layoutAgain());
   if (problems.length) renderProblems(root, problems, false);
   const editing = plugin.inlineFor(target.path, target.line);
   if (!editing) {
@@ -282,7 +282,7 @@ export async function renderBlock(
       ? tableDrawn(diagram.table)
       : diagram?.picture
         ? pictureDrawn(diagram.picture)
-        : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
+        : await waitShown(root, word('progress.drawing'), () => laidOut(owner), LAYOUT_WAIT);
     if (laid === 'stopped') {
       // a layout the person stopped (§44, progress_shown): its graph is shown as text, and its result is not used
       root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
