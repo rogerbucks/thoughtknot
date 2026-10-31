@@ -342,8 +342,8 @@ export type { LayoutOptions } from './layouts/layout-options.ts';
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { DrawingHeightSetting, MiniMapSetting, SwitchSetting } from './settings.ts';
-export { tallestOf, EASIER_READING_CLASS } from './settings-aids.ts';
+export type { SwitchSetting } from './settings.ts';
+export { tallestOf, EASIER_READING_CLASS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
 export { importedBlock, isDbFile, withImport } from './db-import.ts';
 export type { DbImported, DbRow } from './db-import.ts';
 export {
