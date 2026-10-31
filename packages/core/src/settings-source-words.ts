@@ -159,6 +159,11 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.drawing-height.half': 'Half the window',
   'settings.drawing-height.most': 'Three quarters of the window',
   'settings.drawing-height.none': 'No limit',
+  'settings.easier-reading.name': 'Easier reading',
+  'settings.easier-reading.sentence':
+    'Spreads out the text of the bar and the panels: a taller line, wider letters and wider words. It helps readers who find dense text tiring. Off unless you turn it on.',
+  'settings.easier-reading.on': 'On',
+  'settings.easier-reading.off': 'Off',
   'settings.export-theme.name': 'Export theme',
   'settings.export-theme.sentence':
     'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.',

@@ -124,4 +124,17 @@ describe('the browser editor’s page: every state', () => {
         page.window.close();
       }
     });
+
+  test('every icon-only button of the bar shows its name as a tooltip, equal to its accessible name', async () => {
+    const page = await STATES['the note: words, a code block, a link, and the graph drawn with its words']();
+    try {
+      const buttons = [...page.window.document.querySelectorAll('.thoughtknot-bar button')].filter(
+        (b) => !b.querySelector('.thoughtknot-badge-text'),
+      );
+      assert.ok(buttons.length >= 4, `the bar has icon-only buttons, not ${buttons.length}`);
+      for (const b of buttons) assert.equal(b.getAttribute('title'), b.getAttribute('aria-label'), b.outerHTML);
+    } finally {
+      page.window.close();
+    }
+  });
 });

@@ -175,6 +175,7 @@ export const VALUES_LATE = [
   'presetClasses',
   'keepsTrail',
   'readsPlain',
+  'markBody',
   'shortLabel',
   'labelsFor',
   'presetChange',
