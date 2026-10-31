@@ -21,7 +21,10 @@ secret that is only half set never breaks a build: the run builds unsigned and w
 
 - `.github/workflows/desktop-app.yml` builds the installers on each system with `scripts/desktop-build.mjs`.
 - On a pull request it never gets the secrets. A pull request's code could read them, so it builds unsigned.
-- On a push to main, or when started by hand, it passes the secrets to the build.
+- On a push to main, or when started by hand, it passes the Apple keys to the bundling step alone. The step that builds
+  the app, where a crate's build script runs, has no key at all.
+- The Linux `.deb` is signed in a job of its own. It downloads the built file, builds nothing, and is the only place the
+  Linux key goes.
 - The installers are kept as downloads of the run. The run's summary says, per system, whether it signed.
 - Each nightly pre-release carries the installers too: the nightly calls this workflow at its commit, with the keys.
 - The stable release workflow does not ship them yet. For now every release is a private nightly (Roger, 23 Oct 2026).
