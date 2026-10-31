@@ -1308,7 +1308,11 @@
       "explore_controls_on_screen",
       "explore_controls_accessible",
       "explore_every_view",
-      "explore_saved"
+      "explore_saved",
+      "globe_layout",
+      "globe_view",
+      "globe_dive_detail",
+      "globe_explore_centre"
     ]
   }
 }
