@@ -4744,7 +4744,8 @@
         "https://github.com/advisories/GHSA-g3hv-75wg-m249"
       ],
       "alerts": [
-        "npm/GHSA-g3hv-75wg-m249"
+        "npm/GHSA-g3hv-75wg-m249",
+        "dependabot/10"
       ],
       "likelihood": "low",
       "impact": "low",
@@ -4764,6 +4765,276 @@
       "status": "accepted",
       "accepted_by": "Roger, 31 Oct 2026 (asked in the R2 release thread)",
       "accepted_reason": "It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later."
+    },
+    {
+      "id": "SEC-27",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Claude's file tools can turn on a browser plug-in",
+      "risk": "The server reads which plug-ins are on from the first hidden vault folder, by name, that holds plugins/thoughtknot/data.json. Claude's file tools may write there. A prompt-injected session can add a plug-in file and its hash, and the page then runs it.",
+      "evidence": [
+        "packages/claude-code/server/page-plugins.ts:42",
+        "packages/claude-code/server/page-plugins.ts:48",
+        "packages/claude-code/server/page-plugins.ts:77",
+        "packages/claude-code/src/data-guard.ts:1",
+        "packages/claude-code/page/page-plugins.ts:73"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Read the turned-on list only from the folder Obsidian names for its settings, not the first hidden folder. Refuse Claude's writes to the plug-in folder and to any data.json under a hidden folder.",
+      "check": "A test makes .a/plugins/thoughtknot/data.json beside a real .obsidian one and asserts the server ignores it. A guard test asserts a Write to ThoughtKnot plug-ins is refused.",
+      "paths": [
+        "packages/claude-code/server/page-plugins.ts",
+        "packages/claude-code/src/data-guard.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-28",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Sync accepts replayed or doubled records",
+      "risk": "Messages between two devices are sealed with a key fixed per pair, with no session number. The receiver appends any records it is sent, with no check of where its copy ends. A replayed or repeated message doubles records and breaks the counts later syncs use.",
+      "evidence": [
+        "packages/sync/src/peer.ts:63",
+        "packages/sync/src/peer.ts:77",
+        "packages/sync/src/store.ts:53",
+        "packages/sync/src/folder-store.ts:56",
+        "packages/sync/src/keys.ts:33"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Mix a fresh random value from each side into the session key. Number each message. Let copyIn accept records only from the exact end of the file it holds. Refuse a second transport on one folder.",
+      "check": "A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.",
+      "paths": [
+        "packages/sync/src/peer.ts",
+        "packages/sync/src/store.ts",
+        "packages/sync/src/folder-store.ts",
+        "packages/sync/src/keys.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "SEC-29",
+      "role": "Senior security engineer",
+      "area": "privacy",
+      "title": "The desktop app drops a note's file mode on every save",
+      "risk": "The app writes a note through File::create and a rename, so the new file has the default mode. A note set to owner-only becomes readable by others after the first save. The Node server keeps the old mode.",
+      "evidence": [
+        "packages/app/src-tauri/src/place.rs:69",
+        "packages/app/src-tauri/src/place.rs:71",
+        "packages/app/src-tauri/src/place.rs:74",
+        "packages/claude-code/server/note-file.ts:29"
+      ],
+      "likelihood": "medium",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Read the note's permissions before the write and set them on the temp file before the rename. Do it with the SEC-22 change to the same lines.",
+      "check": "A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.",
+      "paths": [
+        "packages/app/src-tauri/src/place.rs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+    },
+    {
+      "id": "CODE-14",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "A connector edit can overwrite another thing's value",
+      "risk": "homeChange looks for the key from the chosen line to the end of the document. If that statement lacks the key, it changes the next statement that has it. The key is also used unescaped in a pattern and in the GQL text.",
+      "evidence": [
+        "packages/sync/src/connected.ts:87",
+        "packages/sync/src/connected.ts:93",
+        "packages/sync/src/connected.ts:94",
+        "packages/sync/src/connected.ts:145"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Limit the search to the one statement. Return no change when the key is absent in it. Escape the key in the pattern and refuse a key that is not a plain name.",
+      "check": "A test in packages/sync/test gives two statements, sets a key only the second holds on the first, and asserts no change. Another passes a key with a comma and a bracket and asserts it is refused.",
+      "paths": [
+        "packages/sync/src/connected.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open"
+    },
+    {
+      "id": "CODE-15",
+      "role": "Senior coder and QA / test engineer",
+      "area": "code",
+      "title": "A failed headset start leaves the session open",
+      "risk": "If a step after requestSession throws, the catch removes the canvas but never ends the session. The person is left in a headset that shows nothing.",
+      "evidence": [
+        "packages/core/src/display/graph-view/space-xr-view.ts:79",
+        "packages/core/src/display/graph-view/space-xr-view.ts:80",
+        "packages/core/src/display/graph-view/space-xr-view.ts:86",
+        "packages/core/src/display/graph-view/space-xr-view.ts:116"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "Keep the session in a variable outside the try. In the catch, call session.end() when it exists.",
+      "check": "A test with a fake XR that throws in requestReferenceSpace asserts end() was called.",
+      "paths": [
+        "packages/core/src/display/graph-view/space-xr-view.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "accepted",
+      "accepted_by": "Roger, 31 Oct 2026 (go on the panel's recommendations)",
+      "accepted_reason": "Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal."
+    },
+    {
+      "id": "ARCH-14",
+      "role": "Enterprise, solution and data architect",
+      "area": "data",
+      "title": "The AI-made rule at the boundary reads a flag nothing writes",
+      "risk": "A corporate setting removes, labels or holds AI-made things by reading ai_assisted or proposer_kind on each thing. No code writes either property. Accepted AI proposals carry neither, so they cross the boundary as if a person wrote them.",
+      "evidence": [
+        "packages/boundary/src/parcel.ts:89",
+        "packages/core/src/export-boundary.ts:37",
+        "packages/core/src/proposals-author.ts:1",
+        "packages/boundary/test/helpers.js:1"
+      ],
+      "likelihood": "high",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "When a proposal from a model or step is accepted, write proposer_kind on every thing and link it adds. Or derive AI-made from the note's proposer declarations and change history. Say which in the boundary guide.",
+      "check": "A test accepts a model's proposal through the real accept path. It then makes a parcel under the remove rule. It asserts the new things are left out and listed.",
+      "paths": [
+        "packages/boundary/src/parcel.ts",
+        "packages/core/src/export-boundary.ts",
+        "packages/core/src/proposals-author.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open"
+    },
+    {
+      "id": "API-13",
+      "role": "API design expert",
+      "area": "architecture",
+      "title": "Sync records and messages carry no format version",
+      "risk": "A sealed record is a nonce and ciphertext. A file is length-framed records. A peer message is a JSON shape. None names its version or cipher. A later release cannot tell an old file from a damaged one, or change the cipher without breaking stored notes.",
+      "evidence": [
+        "packages/sync/src/keys.ts:124",
+        "packages/sync/src/store.ts:68",
+        "packages/sync/src/peer.ts:29",
+        "packages/boundary/src/parcel.ts:26"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Put a one-byte format number before every sealed record and a protocol number in the first peer message. Refuse an unknown number in words, as the parcel format does.",
+      "check": "A test opens a record with a changed first byte and asserts a refusal that names the format, not a decrypt error.",
+      "paths": [
+        "packages/sync/src/keys.ts",
+        "packages/sync/src/store.ts",
+        "packages/sync/src/peer.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "OPS-14",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "versions.json lists 0.7.1, which was never tagged",
+      "risk": "versions.json maps released versions to the Obsidian version they need. It lists 0.7.1 and 0.8.0. No 0.7.1 tag exists. Also, 0.8.0 starts a new line that needs a full panel first.",
+      "evidence": [
+        "versions.json:15",
+        "versions.json:16",
+        "manifest.json:4",
+        "RELEASING.md:162"
+      ],
+      "likelihood": "medium",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Remove the 0.7.1 line, or tag a 0.7.1 that matches it. The full panel is recorded; tag 0.8.0 only after that.",
+      "check": "A test asserts every released version in versions.json has a matching git tag, and that the newest equals manifest.json.",
+      "paths": [
+        "versions.json",
+        "manifest.json"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open"
+    },
+    {
+      "id": "UX-11",
+      "role": "User experience lead and accessibility specialist",
+      "area": "accessibility",
+      "title": "The overview card is announced as an image but takes keys",
+      "risk": "The massive overview stage has role img and tabindex 0, and a keydown handler pans and zooms it. Assistive software announces a picture, not a control. Its groups are painted on canvas, and only search reaches one by name.",
+      "evidence": [
+        "packages/core/src/display/graph-view/massive-view.ts:94",
+        "packages/core/src/display/graph-view/massive-view.ts:95",
+        "packages/core/src/display/graph-view/massive-moves.ts:54"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Give the stage a role that fits a keyboard widget. Name its keys in its label. Offer the groups as a list a screen reader can walk.",
+      "check": "test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.",
+      "paths": [
+        "packages/core/src/display/graph-view/massive-view.ts",
+        "packages/core/src/display/graph-view/massive-moves.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
     }
   ]
 }
