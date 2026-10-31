@@ -6,7 +6,9 @@
 // `shown` lists the things shown besides the centre, comma-joined. Opened again, each thing's parent is read again from
 // the centre, as a recentre reads it. An Explore with `view` is for that view; with none, for the whole graph. A shown
 // thing the graph no longer has is left out without a word, as the data may have changed since it was saved.
-import { BRANCH_FIRST } from './explore-map.ts';
+// The reader picture draws the saved exploration too, as the note opens on it, and says what it leaves out.
+import { BRANCH_FIRST, ExploreMap } from './explore-map.ts';
+import type { GraphDrawing } from './note-reading.ts';
 import type { Problem } from './note-reading.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import type { StyleAt } from './style-graph.ts';
@@ -74,4 +76,18 @@ export function exploreOf(raw: RawThing, names: StyledNames, out: Problem[]): Sa
 /** The Explore for `view`, or for the whole graph with none: the first written of those for it. */
 export function savedExploreFor(explores: readonly SavedExplore[], view?: string): ExploreSave | undefined {
   return explores.find((e) => e.view === view);
+}
+
+/**
+ * `drawing` cut to the exploration saved for the whole graph, as the note opens on it, and its centre's name. Null with
+ * none saved, or when its centre is no longer drawn. The reader picture draws it so (explore_saved).
+ */
+export function exploredDrawing(
+  drawing: GraphDrawing,
+  explores: readonly SavedExplore[],
+): { drawing: GraphDrawing; centre: string } | null {
+  const saved = savedExploreFor(explores),
+    centre = saved && drawing.boxes.find((b) => b.key === saved.centre);
+  if (!saved || !centre) return null;
+  return { drawing: ExploreMap.of(drawing, saved.centre, saved.shown, saved.perBranch).part(), centre: centre.text };
 }
