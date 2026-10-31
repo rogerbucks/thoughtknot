@@ -1,6 +1,6 @@
 // What the plugin keeps in its own data, apart from the vault. It keeps the drafts, the settings and the record of sends
 // to AI. It keeps the plug-ins from outside turned on, where the details were last put, and the person's own profile.
-import type { SendRecord } from '@thoughtknot/core';
+import type { SendRecord, RecentVisit } from '@thoughtknot/core';
 import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
 import type { TurnedOn } from './outside/outside-plugins';
 import type { KeptProfile } from './profile/profiles';
@@ -18,6 +18,8 @@ export interface Saved {
   outside?: Record<string, TurnedOn>;
   /** Where a card's details were last put, how big and whether minimised (§25, sheet_layout_kept). */
   detailsLayout?: unknown;
+  /** The graphs and things last opened, newest first (risk NEURO-11). */
+  visits?: RecentVisit[];
   /** The person's own profile, the personal layer: never in a note (§39). */
   profile?: KeptProfile;
 }

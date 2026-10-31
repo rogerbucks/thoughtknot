@@ -17,6 +17,7 @@ export const HOST_CONTRACT_VERSIONS: readonly (readonly [version: number, digest
   [4, 'd1cb2bc16a374f29'],
   [5, 'c866c45ac5687bd0'],
   [6, '95a256edc7b311b7'],
+  [7, '9c68901496cd4302'],
 ];
 
 /** The version of the host interface these checks hold a host to: the last one recorded above. */
