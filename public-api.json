@@ -921,6 +921,9 @@
         "dueThings": [
           "value: (graph: Graph, today: string) => { thing: string; says: string; due: string; }[]"
         ],
+        "EASIER_READING_CLASS": [
+          "value: 'thoughtknot-easier-reading'"
+        ],
         "edgesOf": [
           "value: (d: GraphDrawing) => FocusEdge[]"
         ],
@@ -3941,6 +3944,7 @@
           "detailsOpen: SwitchSetting",
           "direction: string",
           "drawingHeight: DrawingHeightSetting",
+          "easierReading: SwitchSetting",
           "exportAsksAbove: string",
           "exportFolder: string",
           "exportTheme: ExportTheme",
