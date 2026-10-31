@@ -193,8 +193,8 @@ function gridOf(order: readonly string[], dir: Map<string, GlobeVec>, size: numb
   const cells = new Map<number, string[]>();
   for (const k of order) {
     const c = cellOf(dir.get(k) as GlobeVec, size),
-      in_ = cells.get(c);
-    if (in_) in_.push(k);
+      here = cells.get(c);
+    if (here) here.push(k);
     else cells.set(c, [k]);
   }
   return cells;
