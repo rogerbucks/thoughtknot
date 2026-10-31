@@ -301,7 +301,7 @@ describe('the style graph is checked like any graph', () => {
       [
         [
           2,
-          'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle, Shown, Arrows, Diagram, Flow, Links, Picture, Filter, Preset or Render',
+          'Colour is not a kind of thing a style graph holds: Nudge, Show, Look, ViewStyle, Shown, Arrows, Diagram, Flow, Links, Picture, Filter, Preset, Render or Explore',
         ],
         [5, 'a link means nothing in a style graph'],
         [6, 'zoom must be a number'],

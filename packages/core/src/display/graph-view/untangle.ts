@@ -19,6 +19,7 @@ import { drawBadges, exploreRow } from './explore-controls';
 import type { ExploreActs } from './explore-controls';
 import { renderSidebar } from './explore-sidebar';
 import type { ExploreSidebar } from './explore-sidebar';
+import type { Exploring } from './view-options';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';
@@ -46,6 +47,8 @@ export interface UntangleHost {
   regroup?: (only: Kept | null) => void;
   /** The card's drawing, which an exploration puts its badges on (explore_badges). */
   svg?: () => SVGSVGElement | null;
+  /** The exploration the style graph saved, and how to save one (explore_saved). */
+  exploring?: Exploring;
 }
 
 /** How far the thing shown with its neighbours reaches (`steps`), and a step further (1) or fewer (-1) round it. */
@@ -113,6 +116,7 @@ export class UntangleView {
       ...this.acts,
       search: (q) => find(host.reading, host.graph, q),
       centre: (key) => this.exploreAt(key),
+      saving: !!host.exploring?.save,
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
@@ -152,6 +156,17 @@ export class UntangleView {
     this.changed();
   }
 
+  /**
+   * Opens the exploration the style graph saved, as the card first shows. It is laid out in its shape once the card
+   * has finished loading, as its camera is not there till then. Whether it opened one.
+   */
+  reopen(): boolean {
+    const saved = this.host.exploring?.saved;
+    if (!saved || this.core.explore || !this.core.exploreSaved(saved)) return false;
+    queueMicrotask(() => this.changed());
+    return true;
+  }
+
   /** The thing an exploration starts from now; null when the card is not exploring. */
   explored(): string | null {
     return this.core.explore?.centre ?? null;
@@ -165,6 +180,11 @@ export class UntangleView {
       this.changed();
     },
     text: (key) => this.text(key),
+    save: () => {
+      const s = this.core.explore,
+        save = this.host.exploring?.save;
+      if (s && save) save(s.save());
+    },
   };
 
   /** Opens or closes the search row (the bar's button), the cursor in its box on opening. */

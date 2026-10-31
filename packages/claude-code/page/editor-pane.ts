@@ -67,6 +67,12 @@ export function paneHost(
         if ('refused' in r) return notice(r.refused);
         void note.writeWhole(r.note).then((w) => notice(w.ok ? word('massive.filter-saved') : w.why));
       },
+      // an exploration saved as one line in the style block, so the note opens on it (§71, explore_saved)
+      saveExplore: (graph, explore) => {
+        const r = styleEdit(note.text, graph, { explore });
+        if ('refused' in r) return notice(r.refused);
+        void note.writeWhole(r.note).then((w) => notice(w.ok ? word('explore.saved') : w.why));
+      },
     }),
   };
 }

@@ -6,6 +6,7 @@ import type { TimelineChoice } from './timeline.ts';
 import { STYLE } from './layout.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
+import type { SavedExplore } from './explore-saved.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Render } from './render-choice.ts';
 import { RULE_KEYS } from './rule-words.ts';
@@ -91,6 +92,7 @@ export const STYLE_KINDS = [
   'Filter',
   'Preset',
   'Render',
+  'Explore',
 ] as const;
 /** One of the kinds of thing a style graph holds. */
 export type StyleKind = (typeof STYLE_KINDS)[number];
@@ -133,6 +135,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Filter: ['keep', 'view'],
   Preset: ['preset'],
   Render: ['space', 'painter', 'lens', 'view'],
+  Explore: ['centre', 'shown', 'shape', 'per_branch', 'view'],
 };
 
 /** The starter view presets a graph may choose as its own (§69, view_presets_scoped): view-presets.ts holds each. */
@@ -211,10 +214,7 @@ export interface Diagram extends TimelineChoice {
   at: StyleAt;
 }
 
-/**
- * How links are drawn (§25), for the whole graph or for one view. It holds their routing (untangle_routing). It holds
- * whether the links running between the same two groups are merged into shared trunks (untangle_merge).
- */
+/** How links are drawn (§25), graph-wide or in a view: routing (untangle_routing), trunks merged (untangle_merge). */
 export interface Links {
   routing?: Routing;
   merge?: OnOff;
@@ -224,10 +224,8 @@ export interface Links {
 }
 
 /**
- * How links move (§7, flow_in_style_graph). It covers every link, or the links of one relationship type. It holds in
- * the whole graph, or in one view. A moving link always says what its movement means (`means`, motion_not_alone). It
- * says so in its legend and to a screen reader, and carries an icon on its label. Still unless a Flow moves it
- * (link-flow.ts).
+ * How links move (§7, flow_in_style_graph), of every link or one type's, in the whole graph or a view. A moving link
+ * always says what its movement means (`means`, motion_not_alone): in its legend, to a screen reader, and by an icon.
  */
 export interface Flow {
   motion: FlowMotion;
@@ -339,6 +337,8 @@ export interface StyleGraph {
   presets: PresetChoice[];
   /** The space and painter of the whole graph or a view (§68, render-choice.ts), in the order written. */
   renders: Render[];
+  /** The explorations saved (§71, explore_saved), in the order written; the first for a view is used. */
+  explores: SavedExplore[];
 }
 
 /** Where styling applies: a view, or a path; with neither, the plain drawing, which keeps the locked style. */
@@ -379,6 +379,7 @@ export function emptyStyle(): StyleGraph {
     filters: [],
     presets: [],
     renders: [],
+    explores: [],
   };
 }
 

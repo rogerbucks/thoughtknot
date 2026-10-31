@@ -4,6 +4,7 @@
 import type {
   CompletenessReport,
   Drawn,
+  ExploreSave,
   FlowLink,
   FocusDepth,
   Indent,
@@ -169,6 +170,14 @@ export interface ViewOptions {
   readOnly?: () => boolean;
   /** Where the card drawn before this one was left: drawn again, as typing redraws it, it stays there (NEURO-7). */
   stay?: Stay;
+  /** The exploration its style graph saved, which it opens on, and how its sidebar saves one (§71, explore_saved). */
+  exploring?: Exploring;
+}
+
+/** A card's saved exploration, to open on, and how to save one: only where the note is edited (explore_saved). */
+export interface Exploring {
+  saved?: ExploreSave;
+  save?: (e: ExploreSave) => void;
 }
 
 /** Where a card is left as it goes, for the card drawn next in its place: its zoom, its camera in space, its boxes. */

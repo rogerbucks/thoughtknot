@@ -138,6 +138,9 @@ export const DRAWING_SOURCE_WORDS = {
   'explore.per-branch': 'Per branch',
   'explore.less': 'Less: {name}',
   'explore.more': 'More: {name}',
+  'explore.save': 'Save',
+  'explore.save.label': 'Save this exploration, so the note opens on it',
+  'explore.saved': 'Saved the exploration in the style graph. The note opens on it next time.',
   'find.explore': 'Explore from {thing}',
   'menu.thing': 'What to do with {thing}',
   // a field a view needs and a thing lacks (view-scaffold.ts)

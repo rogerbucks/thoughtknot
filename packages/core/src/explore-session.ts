@@ -6,6 +6,7 @@
 // which the card lays out as it lays out Show only. Host-free and pure: it never changes the drawing.
 import { ExploreMap } from './explore-map.ts';
 import type { ExploreState } from './explore-map.ts';
+import type { ExploreSave } from './explore-saved.ts';
 import { Trail } from './explore-trail.ts';
 import type { FocusEdge, Kept } from './focus.ts';
 import { EXPLORE_SHAPES, exploreSpots } from './layouts/explore-shapes.ts';
@@ -43,13 +44,25 @@ export class ExploreSession {
   private readonly trail = new Trail<Step>();
   private readonly drawing: GraphDrawing;
 
-  /** An exploration of `drawing` from `centre`, shown with its direct links (Roger's pick, 31 Oct 2026). */
-  constructor(drawing: GraphDrawing, centre: string, shape: ExploreShape = 'balanced') {
+  /**
+   * An exploration of `drawing` from `centre`, shown with its direct links (Roger's pick, 31 Oct 2026). One `saved`
+   * opens again as it was saved (explore_saved).
+   */
+  constructor(drawing: GraphDrawing, centre: string, shape: ExploreShape = 'balanced', saved?: ExploreSave) {
     this.drawing = drawing;
-    this.map = new ExploreMap(drawing, centre);
     this.chosen = EXPLORE_SHAPES.includes(shape) ? shape : 'balanced';
-    this.map.open(centre);
+    if (saved) this.map = ExploreMap.of(drawing, centre, saved.shown, saved.perBranch);
+    else {
+      this.map = new ExploreMap(drawing, centre);
+      this.map.open(centre);
+    }
     this.record();
+  }
+
+  /** The exploration as the style graph saves it. */
+  save(): ExploreSave {
+    const [, ...shown] = this.map.keys();
+    return { centre: this.map.centre, shown, shape: this.chosen, perBranch: this.map.perBranch };
   }
 
   /** The thing the exploration starts from. */

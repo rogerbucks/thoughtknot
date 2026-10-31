@@ -12,6 +12,8 @@ import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-v
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
+import { writeStyle } from '../view-block';
+import { word } from '@thoughtknot/core';
 
 export type { Layout };
 
@@ -29,14 +31,17 @@ export class BlockEditor extends Component {
     super();
     this.layout = layout;
     this.plugin = plugin;
+    const note = new BlockNote(plugin);
     this.editor = new SharedEditor(
       {
         settings: () => plugin.settings,
         layout: (drawing, by) => plugin.layout(drawing, by),
         again: () => plugin.resumeLayouts(),
+        // an exploration saved in the note's style block, as a card saves it (§71, explore_saved)
+        saveExplore: (graph, explore) => void writeStyle(plugin, note.path, graph, { explore }, word('explore.saved')),
       },
       layout,
-      new BlockNote(plugin),
+      note,
     );
   }
 

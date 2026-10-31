@@ -211,7 +211,7 @@ export class GraphView extends Lifecycle {
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
     });
     if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
-    if (view?.shown?.legend?.length) this.sel.refresh(); // and its legend's choices, as it was saved as shown (§25)
+    if (!this.sel.untangle.reopen() && view?.shown?.legend?.length) this.sel.refresh(); // its legend, or exploration (§25, §71)
     if (this.o.proposal && this.svg) markProposal(this.svg, this.o.proposal.shown.marks); // a proposal: what it adds, changes, removes (§17)
     this.sketcher?.layer(); // the drawings over it, on top (§70)
     const d = this.drawing();

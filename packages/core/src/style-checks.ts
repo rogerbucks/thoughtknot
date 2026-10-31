@@ -9,6 +9,8 @@ import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
 import { filterOf } from './filter-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
+import { exploreOf } from './explore-saved.ts';
+import type { SavedExplore } from './explore-saved.ts';
 import { pictureOf } from './picture.ts';
 import { arrowsOf, diagramOf, linksOf, presetOf, renderOf } from './style-choice-checks.ts';
 import type { Render } from './render-choice.ts';
@@ -91,6 +93,7 @@ export interface Checked {
   filters: SavedFilter[];
   presets: PresetChoice[];
   renders: Render[];
+  explores: SavedExplore[];
   problems: Problem[];
 }
 
@@ -316,6 +319,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     filters: [],
     presets: [],
     renders: [],
+    explores: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -355,6 +359,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Filter') push(c.filters, kept(filterOf(thing, names, p)));
     else if (kinds[0] === 'Preset') push(c.presets, kept(presetOf(thing, names, p)));
     else if (kinds[0] === 'Render') push(c.renders, kept(renderOf(thing, names, p)));
+    else if (kinds[0] === 'Explore') push(c.explores, kept(exploreOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

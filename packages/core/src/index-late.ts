@@ -82,3 +82,4 @@ export { gqlBlock } from './export-data-gql.ts';
 export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 export { Permissions, readable, type Guarded } from './permissions.ts';
 export * from './index-pictures.ts';
+export { savedExploreFor, type ExploreSave, type SavedExplore } from './explore-saved.ts';

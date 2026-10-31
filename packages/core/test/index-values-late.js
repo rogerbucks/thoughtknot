@@ -74,6 +74,7 @@ export const VALUES_LATE = [
   'saidDate',
   'sampleExports',
   'saveEdit',
+  'savedExploreFor',
   'sayWords',
   'scaledMarks',
   'scenarioText',
