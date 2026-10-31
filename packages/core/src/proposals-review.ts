@@ -10,10 +10,17 @@
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { PaneSession } from './pane.ts';
-import { applyChange, namesOf, newProblems, notTaken } from './proposals-apply.ts';
+import { namesOf, newProblems, notTaken } from './proposals-apply.ts';
 import { basisOf, staleness } from './proposals-basis.ts';
 import type { Stale } from './proposals-basis.ts';
-import { acceptedWith, declarationHeld, notAPerson, rejectedWith, withProposer } from './proposals-author.ts';
+import {
+  acceptedWith,
+  declarationHeld,
+  notAPerson,
+  rejectedWith,
+  withProposer,
+  writtenAs,
+} from './proposals-author.ts';
 import { checkProposal, checkRefusal, proposerKind } from './proposals-check.ts';
 import { decidedIn, inOrder } from './proposals-judgement.ts';
 import type { Decision, ToRecord } from './proposals-judgement.ts';
@@ -199,7 +206,7 @@ export class ProposalReview {
       if (state === 'accepted') continue;
       // a declaration of the proposer that the graph holds already is satisfied, so it neither lays over nor blocks
       if (state === 'pending' && this.satisfied(base, c)) continue;
-      const into = applyChange(laid, graph, c);
+      const into = writtenAs(laid, this.proposal, c);
       const dupe = namesOf(c).writes.find((n) => have.has(n));
       const lack = state === 'pending' ? lacking(c, have, this.waiting()) : null;
       const taken = dupe && word('proposing.review.name-taken', { name: dupe, graph });
@@ -207,7 +214,7 @@ export class ProposalReview {
       if (state === 'pending' && reason) blocked.set(c.id, reason);
       if ((c.op === 'add' || c.op === 'set') && !reason) {
         if (state === 'pending' && into.ok) laid = into.texts;
-        const also = applyChange(saying, graph, c);
+        const also = writtenAs(saying, this.proposal, c);
         if (also.ok) saying = also.texts;
       }
       if (state === 'pending' && !reason) for (const n of namesOf(c).writes) have.add(n);
@@ -286,7 +293,7 @@ export class ProposalReview {
     const satisfied = new Set(chosen.filter((c) => this.satisfied(before, c)));
     for (const c of chosen) {
       if (satisfied.has(c)) continue;
-      const r = applyChange(texts, graph, c);
+      const r = writtenAs(texts, this.proposal, c);
       if (!r.ok) return refuse(word('proposing.review.cannot-write', { id: c.id, why: r.reason }));
       texts = r.texts;
     }

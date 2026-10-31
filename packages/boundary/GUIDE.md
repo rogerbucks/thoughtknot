@@ -1,8 +1,7 @@
 # The boundary: where things live
 
-The line between the owner's personal layer and a corporate one (editor spec §40). Roger's sign-off on the contract is
-asked in the thread "Build the web layer and work/personal boundary". Until he answers, it is built as recommended:
-AI-made content crosses labelled.
+The line between the owner's personal layer and a corporate one (editor spec §40). Roger signed off the contract on 29
+Oct 2026: AI-made content crosses labelled by default, and a setting may remove or hold it instead.
 
 - **The personal layer** is the open-source engine, the profiles, sync and the keys. It works with nothing from work.
 - **The corporate layer** is a setting: plain data for one workplace. Nothing else. The same core draws content in
@@ -17,7 +16,10 @@ every host.
 
 - `redact`: things to leave out, by tag, label or property key. A thing left out is listed in the manifest.
 - `ai`: what happens to AI-made content as it crosses. `label` (the default), `remove`, or `hold` until a person
-  allows it.
+  allows it. AI-made means a thing or link marked `proposer_kind: 'model'` or `ai_assisted: true`. The core writes
+  those marks when a person accepts a model's proposal (`proposals-author.ts`, `writtenAs`): each thing and link it
+  adds gets `proposer_kind`, and a thing whose value it set gets `ai_assisted`. A mark the model wrote itself is
+  written over. The marks are in the note's text, so every host and tool reads them the same (ARCH-14).
 - `policy`: who may edit, what needs review, which graphs may be joined. It only ever narrows (see below).
 
 ## What crosses: a parcel

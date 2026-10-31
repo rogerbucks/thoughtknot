@@ -7,11 +7,16 @@
 // declare an author (`ai-request.ts`).
 import { items } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
+import { hops } from './estimates.ts';
+import { setProperty } from './inspector.ts';
+import { applyChange } from './proposals-apply.ts';
+import type { Edited } from './proposals-apply.ts';
 import { proposerKind } from './proposals-check.ts';
 import { DECIDER_DEFAULT } from './proposals-judgement.ts';
 import type { Person } from './proposals-shown.ts';
 import { makeProposal, valueGql } from './proposals.ts';
 import type { Proposal, ProposedChange } from './proposals.ts';
+import { writtenIn } from './written-things.ts';
 import { word } from './words.ts';
 
 const WORD = /^[A-Za-z_]\w*$/;
@@ -108,4 +113,46 @@ export function withProposer(note: string, p: Proposal): Proposal | { refused: s
     basis: provenance.basis,
     changes: [{ op: 'add', gql, reason: DECLARES }, ...p.changes],
   });
+}
+
+/** The mark each thing and link a model adds carries, and the one a thing whose value a model set carries (ARCH-14). */
+export const MODEL_MARK = { key: 'proposer_kind', value: valueGql('model') };
+export const HELPED_MARK = { key: 'ai_assisted', value: 'true' };
+
+/**
+ * An addition with every thing and link it writes marked as a model's, or why it cannot be marked. A corporate
+ * setting's AI rule reads that mark at the boundary (`export-boundary.ts`, the boundary's parcel). A mark the model
+ * wrote itself is written over. So nothing a model added crosses as if a person wrote it.
+ */
+function markedByModel(gql: string): string | { refused: string } {
+  let text = gql;
+  for (let link = 0; link < hops(gql).length; link++) {
+    const r = setProperty(text, '', { link }, MODEL_MARK.key, MODEL_MARK.value);
+    if (!r.ok) return { refused: r.reason };
+    text = r.text;
+  }
+  for (const w of writtenIn(gql)) {
+    if (!w.writes || w.matched || !w.variable) continue;
+    const r = setProperty(text, '', { thing: w.variable.name }, MODEL_MARK.key, MODEL_MARK.value);
+    if (!r.ok) return { refused: r.reason };
+    text = r.text;
+  }
+  return text;
+}
+
+/**
+ * The blocks' texts after an accepted change is written, as `applyChange` writes it, or why not. A change a model
+ * proposed is written with its mark: an addition marks what it adds, a set marks the thing it sets as AI-assisted.
+ * The declaration of the proposer is no content, and is written as it is. So is every change of a person or a step.
+ */
+export function writtenAs(texts: readonly string[], p: Proposal, c: ProposedChange): Edited {
+  if (p.provenance.by.kind !== 'model' || declaresProposer(p, c)) return applyChange(texts, p.graph, c);
+  if (c.op === 'add') {
+    const gql = markedByModel(c.gql);
+    if (typeof gql !== 'string') return { ok: false, reason: gql.refused };
+    return applyChange(texts, p.graph, { ...c, gql });
+  }
+  const r = applyChange(texts, p.graph, c);
+  if (!r.ok || c.op !== 'set' || c.key === HELPED_MARK.key) return r;
+  return applyChange(r.texts, p.graph, { ...c, key: HELPED_MARK.key, value: HELPED_MARK.value });
 }
