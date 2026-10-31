@@ -10,6 +10,7 @@ import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import type { Sketch } from '../../sketch.ts';
+import type { Orbit } from '../../space-view.ts';
 import { openSpaceView } from './space-view-panel';
 import { fadeOut } from './space-view-pad.ts';
 import { flatAgain } from './lens-svg';
@@ -34,6 +35,8 @@ export class SpaceSwitch {
   private button: HTMLButtonElement | null = null;
   /** Counts each change, so a view that opens after a later change is closed at once. */
   private turn = 0;
+  /** Where the camera starts as the view next opens, if the last card left it somewhere. */
+  private start: Orbit | undefined;
 
   /** The graph's name, which the view in space is named by. */
   private graph = '';
@@ -48,6 +51,16 @@ export class SpaceSwitch {
     private readonly says: () => SpaceSays = () => ({}),
     private readonly sketch: () => Sketch | null = () => null,
   ) {}
+
+  /** Where the camera starts as the view next opens: as the last card left it, drawn again in its place (NEURO-7). */
+  startAt(orbit: Orbit | undefined): void {
+    this.start = orbit;
+  }
+
+  /** Where the camera is now, while the drawing is shown in space. */
+  orbit(): Orbit | undefined {
+    return this.view?.orbit();
+  }
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
   mode(): SpaceMode | null {
@@ -89,7 +102,10 @@ export class SpaceSwitch {
       frame = svg?.parentElement;
     if (!svg || !frame) return this.closed(turn);
     flatAgain(svg); // read as drawn: in space it is bent there
+    const start = this.start;
+    this.start = undefined;
     const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
+      ...(start ? { orbit: start } : {}),
       cards: mode === 'cards',
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,

@@ -59,7 +59,11 @@ export class BlockEditor extends Lifecycle {
     this.layout = layout;
     this.note = note;
     this.rests = this.addChild(
-      new TypingRests(layout, { write: () => void this.write(true), draw: () => this.redraw() }),
+      new TypingRests(layout, {
+        write: () => void this.write(true),
+        draw: () => this.redraw(),
+        held: () => host.settings().redrawWhileTyping === 'done', // until the text is left (NEURO-7)
+      }),
     );
     this.field = this.addChild(new KeptField(() => this.el?.text));
     this.drawing = this.addChild(new PaneDrawing(host));
@@ -185,6 +189,7 @@ export class BlockEditor extends Lifecycle {
       changed: () => this.changed(),
     });
     watchTyping(this, el.text, typing);
+    this.registerDomEvent(el.text, 'blur', () => this.rests.left()); // a redraw held is made as the text is left
     this.field.watch(el.text, el.overlay);
     watchKeys(this, el.text, typing);
 
