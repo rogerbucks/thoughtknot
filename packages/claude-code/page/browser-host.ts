@@ -21,6 +21,9 @@ function drawIcon(el: HTMLElement, name: string): void {
   span.setAttribute('class', `gn-icon ${iconClass(name)}`.trim());
   span.setAttribute('aria-hidden', 'true');
   el.replaceChildren(span);
+  // the page has no tooltip of its own, as Obsidian has for a label: so a button's name is also its title (NEURO-3)
+  const label = el.getAttribute('aria-label');
+  if (label && el.tagName === 'BUTTON' && !el.hasAttribute('title')) el.setAttribute('title', label);
 }
 
 /** A menu of `entries`, a list of buttons, closed by a click anywhere else or Escape. */

@@ -63,6 +63,9 @@
   --gn-radius-m: var(--radius-m);
   --gn-radius-l: var(--radius-l);
   --gn-cursor-link: var(--cursor-link);
+  --gn-line-height: 1.5;
+  --gn-letter-spacing: 0em;
+  --gn-word-spacing: normal;
   --gn-motion-dash: 1s;
   --gn-motion-dot: 2s;
   --gn-motion-step: 1s;

@@ -3,10 +3,8 @@ import { Notice, Plugin, TFile, editorInfoField, type MarkdownPostProcessorConte
 import type { EditorView } from '@codemirror/view';
 import {
   gqlBlocks,
-  holdsStill,
   labelsFor,
-  READING_CLASS,
-  readsPlain,
+  markBody,
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
@@ -40,7 +38,6 @@ import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { chooseLanguage, installObsidianHost } from './display-host';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
-import { STILL_CLASS } from '@thoughtknot/core/display/graph-view/details-nav';
 import { vaultImages } from './images/vault-images';
 import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-images';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
@@ -93,8 +90,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
-    document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings)); // the view preset's motion (§69)
-    document.body.classList.toggle(READING_CLASS, readsPlain(this.settings)); // and its words
+    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -180,8 +176,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     chooseLanguage(this.settings.language);
-    document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings));
-    document.body.classList.toggle(READING_CLASS, readsPlain(this.settings));
+    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -325,7 +320,7 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   override onunload(): void {
     this.unloaded = true;
-    document.body.classList.remove(STILL_CLASS);
+    document.body.classList.remove('thoughtknot-still', 'thoughtknot-easier-reading');
     this.layouts?.close();
     this.layouts = null;
     this.outside.stopAll();
