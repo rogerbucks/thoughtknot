@@ -9,7 +9,7 @@
 //   Apple to be notarised. The key file is written for the build and deleted after it (Roger, 23 Oct 2026: an API key,
 //   not his Apple ID; LEGAL-4).
 // - Windows: not signed, Roger's choice (23 Oct 2026). docs/app-signing.md says how to add it later.
-// - Linux: the .deb gets a GPG signature beside it, `<name>.deb.asc`.
+// - Linux: the .deb gets a GPG signature beside it, `<name>.deb.asc`, made in a job of its own (SEC-17).
 // - The updater key (TAURI_SIGNING_PRIVATE_KEY) waits for the in-app updater: Tauri uses it only once the app has one.
 //
 // Usage: node scripts/desktop-build.mjs   from the repository root, on the system to build for.
@@ -21,7 +21,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TAURI = join(ROOT, 'packages/app/src-tauri');
-const DEB = join(TAURI, 'target/release/bundle/deb');
 
 /** The keys each kind of signing needs, by the name of the secret or variable that holds it. */
 export const KEYS = {
@@ -94,30 +93,62 @@ function withApiKey(plan, build) {
   }
 }
 
+/** The .deb files under `dir`, at any depth. */
+function debsIn(dir) {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((f) => f.isFile() && f.name.endsWith('.deb'))
+    .map((f) => join(f.parentPath, f.name));
+}
+
+/** Signs the .deb files under `dir` with the Linux GPG key. It runs in a job of its own, which builds nothing (SEC-17). */
+function signLinux(dir) {
+  const plan = signingPlan('Linux', process.env);
+  for (const w of plan.warnings) console.log(`::warning::${w}`);
+  const debs = debsIn(dir);
+  // no .deb to sign would make the summary's "Linux: yes" false, so it fails instead
+  if (plan.signed.Linux && debs.length === 0) {
+    console.log(`::error::Linux keys are set, but there is no .deb in ${dir} to sign`);
+    process.exit(1);
+  }
+  const signatures = plan.signed.Linux
+    ? gpgSign(debs, process.env.LINUX_GPG_PRIVATE_KEY, process.env.LINUX_GPG_PASSPHRASE)
+    : [];
+  if (signatures.length > 0) console.log(`Signed ${signatures.length} .deb file(s): ${signatures.join(', ')}`);
+  console.log(`::notice::Linux installer signed? Linux: ${plan.signed.Linux ? 'yes' : 'no'}`);
+  if (process.env.GITHUB_STEP_SUMMARY)
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Signed on Linux: ${plan.signed.Linux ? 'yes' : 'no'}\n`);
+}
+
+/**
+ * The build comes in two steps, so no key is in the one that runs the repository's code (SEC-17):
+ * - `compile` builds the app with every signing key taken out of its environment. A crate's build script runs here.
+ * - `bundle` makes the installers from the compiled app. Only the macOS keys are given to it, for Tauri to sign and notarise.
+ * The Linux .deb is signed apart, by `sign-linux <folder>` in a job of its own.
+ */
 function main() {
+  const [mode = 'bundle', dir] = process.argv.slice(2);
+  if (mode === 'sign-linux') return signLinux(dir);
   const os = { darwin: 'macOS', win32: 'Windows', linux: 'Linux' }[process.platform];
+  if (mode === 'compile') {
+    const keyless = signingPlan('Windows', process.env).env;
+    const built = spawnSync('cargo', ['tauri', 'build', '--ci', '--no-bundle'], {
+      cwd: TAURI,
+      env: keyless,
+      stdio: 'inherit',
+    });
+    process.exit(built.status ?? 1);
+  }
   const plan = signingPlan(os, process.env);
   for (const w of plan.warnings) console.log(`::warning::${w}`);
   const built = withApiKey(plan, () =>
-    spawnSync('cargo', ['tauri', 'build', '--ci'], { cwd: TAURI, env: plan.env, stdio: 'inherit' }),
+    spawnSync('cargo', ['tauri', 'bundle'], { cwd: TAURI, env: plan.env, stdio: 'inherit' }),
   );
   if (built.status !== 0) process.exit(built.status ?? 1);
-  if (os === 'Linux' && plan.signed.Linux) {
-    const debs = readdirSync(DEB)
-      .filter((f) => f.endsWith('.deb'))
-      .map((f) => join(DEB, f));
-    // no .deb to sign would make the summary's "Linux: yes" false, so it fails instead
-    if (debs.length === 0) {
-      console.log(`::error::Linux keys are set, but there is no .deb in ${DEB} to sign`);
-      process.exit(1);
-    }
-    const signatures = gpgSign(debs, process.env.LINUX_GPG_PRIVATE_KEY, process.env.LINUX_GPG_PASSPHRASE);
-    console.log(`Signed ${signatures.length} .deb file(s): ${signatures.join(', ')}`);
-  }
   const said = Object.entries(plan.signed)
-    .filter(([kind]) => kind === os || (os === 'macOS' && kind === 'notarise'))
+    .filter(([kind]) => (kind === os && kind !== 'Linux') || (os === 'macOS' && kind === 'notarise'))
     .map(([kind, yes]) => `${kind}: ${yes ? 'yes' : 'no'}`)
     .join(', ');
+  if (said === '') return;
   console.log(`::notice::${os} installer signed? ${said}`);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Signed on ${os}: ${said}\n`);
 }

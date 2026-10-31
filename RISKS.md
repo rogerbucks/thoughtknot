@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (38)
+## Open (37)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -41,7 +41,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
-| SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | SEC-22 | The desktop app's temp file can follow a planted link | ●○○ | ●●○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | SEC-23 | Kept drafts hold note text that Claude can read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | SEC-24 | A hand-started desktop build runs any branch with the signing keys | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
@@ -370,16 +369,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
 
-### SEC-17 The desktop app's signing keys sit in the build step on main
-
-**Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`, `scripts/desktop-build.mjs`.
-
-**Risk:** On a push to main the desktop build step holds the Apple certificate and the Linux GPG key, because Tauri signs while it builds. A crate's build script runs in that step and could read them. A pull request build never gets them.
-
-**Fix:** Sign the Linux .deb in a job of its own, which downloads the built file and runs no repository build. Give the macOS keys to the bundling step alone, after the Rust build ends in a step without them.
-
-**Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
-
 ### SEC-22 The desktop app's temp file can follow a planted link
 
 **Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
@@ -430,7 +419,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (103)
+## Done or accepted (104)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -530,6 +519,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |
 | LEGAL-2 | No privacy page the apps and the App Store can link to | done | #1062 |
 | LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |
+| SEC-17 | The desktop app's signing keys sit in the build step on main | done | #1596 |
 | SEC-18 | Tests that read a drawing with patterns that run slow | done | #1110; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-19 | Time-related attacks on history, sync and shared links are not yet reviewed | done | #1489; kept out by `packages/core/test/temporal-security.test.js`, `packages/core/src/temporal.ts` |
 | SEC-20 | The code scan read only the code, not the Python library or the workflows | done | #1367; kept out by `test/code-scan.test.js`, `scripts/code-scan.mjs`, `python/graph_spec/tests/test_graph_bidi.py` |
