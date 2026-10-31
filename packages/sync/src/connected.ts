@@ -87,7 +87,7 @@ export function overlayChange(doc: string, note: string, graph: string, o: Overl
 function statementEnd(text: string, start: number): number {
   let depth = 0;
   for (let i = start; i < text.length; i++) {
-    const ch = text[i];
+    const ch = text.charAt(i);
     if (ch === "'") {
       for (i++; i < text.length && text[i] !== "'"; i++) if (text[i] === '\\') i++;
     } else if ('([{'.includes(ch)) depth++;
