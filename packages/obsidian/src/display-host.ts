@@ -6,6 +6,7 @@ import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { installHost } from '@thoughtknot/core/display/host';
 import type { DisplayHost } from '@thoughtknot/core/display/host';
+import { noticeMs } from '@thoughtknot/core/display/notices';
 import { detailsSidePane } from './details-pane';
 
 export { chooseLanguage } from '@thoughtknot/core/display/language';
@@ -19,7 +20,7 @@ export function installObsidianHost(plugin: Plugin, layout: DisplayHost['details
     icon: (el, name) => setIcon(el, name),
     isPhone: () => Platform.isPhone,
     notice: (message) => {
-      new Notice(message);
+      new Notice(message, noticeMs(message));
     },
     menu: (entries, at, doc) => {
       const m = new Menu();

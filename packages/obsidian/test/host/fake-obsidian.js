@@ -290,8 +290,9 @@ export function fakeObsidian(state = {}) {
   }
   state.hoverSources = new Map();
   class Notice {
-    constructor(message) {
+    constructor(message, duration) {
       state.notices.push(String(message));
+      (state.noticeDurations ??= []).push(duration);
     }
     hide() {}
     setMessage() {

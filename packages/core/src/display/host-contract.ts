@@ -33,6 +33,11 @@ export interface HostProbe {
   element: () => HTMLElement;
   /** The messages its notices have shown, in order, as the person reads them. */
   notices: () => string[];
+  /**
+   * Whether the notice that said `message` can still be read once `ms` milliseconds have passed, on a clock that runs
+   * as far as that and no further.
+   */
+  stillShownAfter: (message: string, ms: number) => boolean;
   /** The rows of the last menu it showed, in order, or null when it has shown none. */
   lastMenu: () => MenuRowSeen[] | null;
   /** Chooses the row of the last menu titled `title`, as the person would. */
@@ -105,6 +110,18 @@ export function hostContract(make: () => HostUnderTest): ContractCheck[] {
         host.notice(message);
         const shown = probe.notices();
         if (shown[shown.length - 1] !== message) fail('notice', JSON.stringify(message), shown);
+      },
+    },
+    {
+      name: 'a notice of more than 80 characters is still shown after 10 seconds, and a short one is gone by a minute',
+      run: () => {
+        const { host, probe } = make();
+        const long = 'This is a long notice that takes a slow reader more than a moment to read. It must not vanish.';
+        host.notice(long);
+        if (!probe.stillShownAfter(long, 10_000)) fail('notice', 'a long notice shown after 10 s', 'gone');
+        const short = 'Saved.';
+        host.notice(short);
+        if (probe.stillShownAfter(short, 60_000)) fail('notice', 'a short notice gone by 60 s', 'still shown');
       },
     },
     {

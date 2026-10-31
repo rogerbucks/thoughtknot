@@ -242,6 +242,16 @@ textarea:focus-visible,
   margin-top: var(--gn-space-1);
 }
 
+/* a long notice stays until it is dismissed: a click, Enter or Escape (risk NEURO-6) */
+.gn-notice-sticky {
+  cursor: pointer;
+}
+
+.gn-notice-sticky::after {
+  content: ' ✕';
+  color: var(--gn-text-muted);
+}
+
 .gn-menu {
   position: fixed;
   z-index: var(--gn-layer-popover);
