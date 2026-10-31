@@ -15,7 +15,13 @@ import { button } from '../button.ts';
 import { reducedMotion } from './details-nav.ts';
 
 /** What the button that changes how it is shown says, for each way: as cards, in space, or lifted. */
-export const DEPTH_WORDS = ['space.cards', 'space.spread', 'space.height-groups', 'space.height-links'] as const;
+export const DEPTH_WORDS = [
+  'space.cards',
+  'space.spread',
+  'space.height-groups',
+  'space.height-links',
+  'space.globe',
+] as const;
 
 /** The help line's steps, with a mouse or trackpad. */
 const MOUSE_HELP = [

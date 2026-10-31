@@ -149,7 +149,7 @@ function walk(keys: readonly string[], near: Map<string, string[]>, centre?: str
 }
 
 /**
- * Rounds that pull each link's ends together and push things nearer than `room` apart, over the unit sphere. The
+ * Rounds that pull each link's ends to `room` apart and push things nearer than that apart, over the unit sphere. The
  * `fixed` things never move. Each thing is pushed only by those in its own and the next cells of a grid.
  */
 function relax(
@@ -169,7 +169,12 @@ function relax(
     for (const k of moving) {
       const p = dir.get(k) as GlobeVec;
       let move: GlobeVec = [0, 0, 0];
-      for (const o of near.get(k) ?? []) move = add(move, scale(sub(dir.get(o) as GlobeVec, p), 0.5));
+      // a link pulls its ends together only while they are further apart than the room each takes: a spring
+      for (const o of near.get(k) ?? []) {
+        const d = sub(dir.get(o) as GlobeVec, p),
+          gap = Math.sqrt(dot(d, d));
+        if (gap > room) move = add(move, scale(d, (0.5 * (gap - room)) / gap));
+      }
       for (const o of nearby(cells, p, room)) {
         if (o === k) continue;
         const d = sub(p, dir.get(o) as GlobeVec),
