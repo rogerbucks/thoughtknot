@@ -207,6 +207,11 @@ export class LayoutRunner {
     }
   }
 
+  /** Lets layouts run again after they were stopped for too many in a row (risk UX-4). */
+  resume(): void {
+    this.failures = 0;
+  }
+
   private isStopped(): boolean {
     return !this.onPage && this.failures >= TIMEOUTS_BEFORE_STOPPING;
   }

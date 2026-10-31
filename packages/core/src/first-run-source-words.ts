@@ -5,6 +5,10 @@
 export const FIRST_RUN_SOURCE_WORDS = {
   'first-run.example': 'Start from an example',
   'first-run.not-written': 'The block has changed since it was drawn, so the example was not written.',
+  'first-run.insert': 'Insert an example graph',
+  'first-run.insert-to': 'to add the example graph',
+  'first-run.inserted': 'Added an example graph at the end of the note.',
+  'first-run.insert-failed': 'The note changed while the example was added, so nothing was written.',
   'tour.title': 'A short tour',
   'tour.step': 'Step {at} of {all}',
   'tour.next': 'Next step',

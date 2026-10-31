@@ -29,6 +29,7 @@ export class BlockEditor extends Component {
       {
         settings: () => plugin.settings,
         layout: (drawing, by) => plugin.layout(drawing, by),
+        again: () => plugin.resumeLayouts(),
       },
       layout,
       new BlockNote(plugin),

@@ -8,7 +8,7 @@ import type { PluginCommand, PluginRegistry, ThoughtKnotPlugin as CorePlugin } f
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends } from './ai/ai';
 import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { RECOVER_COMMAND, recoverDrafts } from './drafts';
-import { tourCommand } from './first-run';
+import { exampleCommand, tourCommand } from './first-run';
 import { shortcutCommands } from './shortcuts';
 import { keepPictures, pictureCommands } from './pictures/pictures';
 import type ThoughtKnotPlugin from './main';
@@ -24,6 +24,7 @@ export function hostCommands(plugin: ThoughtKnotPlugin): HostCommand[] {
   return [
     { id: 'convert-to-standard', title: word('host.command.convert'), run: () => plugin.convertToStandard() },
     { id: RECOVER_COMMAND.id, title: RECOVER_COMMAND.name, run: () => recoverDrafts(plugin) },
+    exampleCommand(plugin),
     tourCommand(),
     ...shortcutCommands(plugin.app),
     { id: AI_COMMAND.id, title: AI_COMMAND.name, run: () => askAi(plugin) },
