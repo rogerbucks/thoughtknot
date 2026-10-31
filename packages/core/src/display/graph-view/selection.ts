@@ -1,8 +1,8 @@
-// What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus. The thing or link
-// chosen, its links and their other ends stay at full strength. The highlight, the untangling and the arrow keys join
-// it. It marks the drawing by class only and never reaches the note. What is chosen from the details is brought into
-// view by a brief move (details_choose_moves). It is kept clear of the sheet (sheet_keeps_thing_clear). Out of view, an
-// arrow at the edge points to it (selection_pointer).
+// What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus: the thing or link
+// chosen, its links and their other ends stay at full strength. The highlight under the pointer or keyboard focus, the
+// untangling and the arrow keys that walk the links join it. It marks the drawing by class only, never the note. What
+// is chosen from the details comes into view by a brief move (details_choose_moves, details_move_motion). It is kept
+// clear of the sheet (sheet_keeps_thing_clear). Out of view, an arrow at the edge points to it (selection_pointer).
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@thoughtknot/core';
 import type {
   Bounds,

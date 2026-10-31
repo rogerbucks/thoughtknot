@@ -100,4 +100,11 @@ test('laid out, an exploration goes to our own engine with its spots, as a plug-
   assert.deepEqual(Object.keys(d.placed).sort(), ['a', 'b', 'c', 'idea']);
   state.keepOnly(card, null);
   assert.equal(state.folded(MIND, card).placed, undefined, 'the whole graph again is laid out as before');
+  // Show only keeps a plain set, with no spots: it is laid out by the engine as before
+  const plain = { things: new Set(['idea', 'a']), edges: new Set([0]) };
+  state.keepOnly(card, plain);
+  assert.equal(state.folded(MIND, card).placed, undefined);
+  assert.notEqual(state.folded(MIND, card).layoutOptions?.strategy, EXPLORE_STRATEGY);
+  state.keepOnly(card, { ...plain, placed: { idea: [0, 0] } });
+  assert.equal(state.folded(MIND, card).placed, undefined, 'only spots an exploration gives switch the engine');
 });

@@ -309,7 +309,7 @@ export class ViewState {
     const every = this.properties && d.everyProperty,
       drawn = every ? { ...laid, inline: { boxes: every.boxes, links: d.inline?.links ?? [] } } : laid;
     // an exploration places what it shows in its shape, laid out by our own engine (explore_shapes)
-    const placed = only && 'placed' in only ? (only as ExploreKept).placed : undefined;
+    const placed = only && 'placed' in only && only.placed instanceof Map ? (only as ExploreKept).placed : undefined;
     const shaped = placed
       ? {
           ...drawn,

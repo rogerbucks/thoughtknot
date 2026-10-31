@@ -62,3 +62,21 @@ test('the banner offers a step out, the shape, and the whole graph again', async
   assert.ok(!badge(el, 'q'), 'no badge is left behind');
   assert.doesNotMatch(said(el), /Exploring/);
 });
+
+// proves: explore_from_here
+test('Explore from here is a toggle, and Show only ends the exploration', async () => {
+  tap(el, thing(el, 'large'));
+  withText(details(), 'button', 'Explore from here').click();
+  await until(() => !thing(el, 'island'));
+  withText(details(), 'button', 'Explore from here').click();
+  await until(() => !!thing(el, 'island'));
+  assert.doesNotMatch(said(el), /Exploring/, 'pressed again for the centre, the whole graph is back');
+  withText(details(), 'button', 'Explore from here').click();
+  await until(() => /Exploring/.test(said(el)));
+  withText(details(), 'button', 'Show only this and its neighbours').click();
+  await until(() => !/Exploring/.test(said(el)));
+  assert.match(said(el), /neighbours|within/i);
+  await until(() => !badge(el, 'q'));
+  withText(el.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
+  await until(() => !!thing(el, 'island'));
+});

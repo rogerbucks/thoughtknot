@@ -105,16 +105,32 @@ export function drawBadges(
   }
 }
 
-/** The middle of the right-hand edge of box `g`, in its group's units, read from its outline's points. */
+/**
+ * The middle of the right-hand edge of box `g`, in its group's units. A browser measures its outline; where none can,
+ * the outline's points are read: Graphviz draws boxes with absolute points only.
+ */
 function rightEdge(g: Element): [number, number] | null {
   const shape = g.querySelector('path, polygon, ellipse, rect');
   if (!shape) return null;
+  const box = 'getBBox' in shape ? measured(shape as SVGGraphicsElement) : null;
+  if (box && box.width > 0) return [box.x + box.width, box.y + box.height / 2];
   const n = (a: string) => Number(shape.getAttribute(a) ?? 0);
   if (shape.tagName.toLowerCase() === 'ellipse') return [n('cx') + n('rx'), n('cy')];
   if (shape.tagName.toLowerCase() === 'rect') return [n('x') + n('width'), n('y') + n('height') / 2];
-  const nums = (shape.getAttribute('d') ?? shape.getAttribute('points') ?? '').match(/-?\d+(?:\.\d+)?/g)?.map(Number);
+  const nums = (shape.getAttribute('d') ?? shape.getAttribute('points') ?? '')
+    .match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/gi)
+    ?.map(Number);
   if (!nums || nums.length < 2) return null;
   const xs = nums.filter((_v, i) => i % 2 === 0),
     ys = nums.filter((_v, i) => i % 2 === 1);
   return [Math.max(...xs), (Math.min(...ys) + Math.max(...ys)) / 2];
+}
+
+/** `shape`'s measured box, or null where it cannot be measured, as before it is on the page. */
+function measured(shape: SVGGraphicsElement): DOMRect | null {
+  try {
+    return shape.getBBox();
+  } catch {
+    return null;
+  }
 }
