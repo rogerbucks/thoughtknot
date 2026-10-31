@@ -1,5 +1,5 @@
-// What the editor pane says while there is nothing to draw (risk UX-8): one line to start with, an example of it, and a
-// link to the guide. So a new reader does not meet a blank pane and a parser error with no way to begin.
+// What the editor pane says while there is nothing to draw (risk UX-8). It gives a line to start with and an example
+// of it. It links to the guide. So a new reader never meets a blank pane with no way to begin.
 import { word } from '@thoughtknot/core';
 
 /** Where the user guide is. */
