@@ -577,10 +577,8 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     await run('flyToNeedle()');
     // the groups near the needle are opened a moment after the flight; count once they have all been laid out
     let before = -1;
-    for (let now = (await run('parts')).length; now !== before; now = (await run('parts')).length) {
-      before = now;
-      await new Promise((r) => setTimeout(r, 1500));
-    }
+    const grew = async () => before !== (before = (await run('parts')).length);
+    for (let i = 0; i < 40 && (await grew()); i++) await new Promise((r) => setTimeout(r, 1500));
     assert.equal(
       await run("redrawFly('t5')"),
       before,
