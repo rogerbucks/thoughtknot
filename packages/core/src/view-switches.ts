@@ -20,6 +20,8 @@ import type { Folding } from './untangle-fold.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
 import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
+import { EXPLORE_STRATEGY } from './explore-session.ts';
+import type { ExploreKept } from './explore-session.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Lens } from './lenses.ts';
 import type { SemanticRung } from './semantic-zoom.ts';
@@ -306,7 +308,17 @@ export class ViewState {
     // zoomed nearest, each thing shows its properties, and each link those its style shows (projection_semantic_zoom)
     const every = this.properties && d.everyProperty,
       drawn = every ? { ...laid, inline: { boxes: every.boxes, links: d.inline?.links ?? [] } } : laid;
-    return plan ? { ...drawn, folding: plan } : drawn;
+    // an exploration places what it shows in its shape, laid out by our own engine (explore_shapes)
+    const placed = only && 'placed' in only && only.placed instanceof Map ? (only as ExploreKept).placed : undefined;
+    const shaped = placed
+      ? {
+          ...drawn,
+          engine: 'own' as const,
+          placed: Object.fromEntries(placed),
+          layoutOptions: { ...layoutOptions(drawn.layoutOptions), strategy: EXPLORE_STRATEGY },
+        }
+      : drawn;
+    return plan ? { ...shaped, folding: plan } : shaped;
   }
 
   /**

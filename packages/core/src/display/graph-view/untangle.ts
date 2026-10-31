@@ -15,6 +15,8 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
+import { drawBadges, exploreRow } from './explore-controls';
+import type { ExploreActs } from './explore-controls';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';
@@ -40,6 +42,8 @@ export interface UntangleHost {
    * card that cannot lay out again, such as a table, has none: there the rest is only hidden (untangle_regroup).
    */
   regroup?: (only: Kept | null) => void;
+  /** The card's drawing, which an exploration puts its badges on (explore_badges). */
+  svg?: () => SVGSVGElement | null;
 }
 
 /** How far the thing shown with its neighbours reaches (`steps`), and a step further (1) or fewer (-1) round it. */
@@ -61,6 +65,8 @@ export interface ThingActions {
   hub?: (key: string) => { links: number; folded: boolean } | null;
   /** Folds a busy hub's links into their stub, or opens them, and draws the graph again. */
   toggleHub?: (key: string) => void;
+  /** Explores from a thing, mind-map style; pressed again for the centre, the whole graph (§71, explore_from_here). */
+  explore?: (key: string) => void;
 }
 
 /** The untangling of one card: the core's state, the banner, the legend panel and the search row. */
@@ -110,8 +116,34 @@ export class UntangleView {
 
   /** What to bring forward and what to hide, given what the selection keeps (null for no selection). */
   layers(focus: Kept | null): Layers {
+    drawBadges(this.host.svg?.() ?? null, this.core.explore, this.edges, this.acts);
     return this.core.layers(focus);
   }
+
+  /**
+   * Explores from a thing: it and its direct links are shown, each with a badge to open its branch. Asked again for the
+   * centre, it shows the whole graph again: the button is a toggle.
+   */
+  exploreFrom(key: string): void {
+    if (this.core.explore?.centre === key) this.core.showAll();
+    else this.core.exploreFrom(key);
+    this.changed();
+  }
+
+  /** The thing an exploration starts from now; null when the card is not exploring. */
+  explored(): string | null {
+    return this.core.explore?.centre ?? null;
+  }
+
+  /** What the exploration's controls ask of the card. */
+  private readonly acts: ExploreActs = {
+    changed: () => this.changed(),
+    stop: () => {
+      this.core.showAll();
+      this.changed();
+    },
+    text: (key) => this.text(key),
+  };
 
   /** Opens or closes the search row (the bar's button), the cursor in its box on opening. */
   toggleFind(b: HTMLElement): void {
@@ -217,16 +249,20 @@ export class UntangleView {
     this.host.changed();
     // a thing and its neighbours are laid out together; the whole graph, as it was (untangle_regroup)
     const only = this.core.only,
-      now = only ? `${only.steps} ${only.key}` : '';
+      explore = this.core.explore,
+      now = explore ? `explore ${explore.stamp()}` : only ? `${only.steps} ${only.key}` : '';
     if (now === this.regrouped) return;
     this.regrouped = now;
-    this.host.regroup?.(only ? neighbourhood(this.edges, only.key, only.steps) : null);
+    // an exploration is laid out in its shape, each thing shown before kept where it was (explore_stays_put)
+    if (explore) this.host.regroup?.(explore.kept(this.edges));
+    else this.host.regroup?.(only ? neighbourhood(this.edges, only.key, only.steps) : null);
   }
 
   private rows(): BannerRow[] {
     const rows: BannerRow[] = [],
       only = this.core.only,
       routed = this.core.routed;
+    if (this.core.explore) rows.push(exploreRow(this.core.explore, this.acts));
     if (only)
       rows.push({
         words: neighbourhoodWords(this.text(only.key), only.steps),
