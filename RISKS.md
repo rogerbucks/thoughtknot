@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (43)
+## Open (41)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -22,10 +22,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
-| NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -185,16 +183,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement that names Obsidian in changes_view, proved by a test in packages/obsidian/test that opens Compare with on the sample note.
 
-### NEURO-3 Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/graph-view/view-bar.ts`, `packages/core/src/settings.ts`, `packages/core/src/settings-source-words.ts`.
-
-**Risk:** Every card shows ten icons with no visible name, so a reader must recall what each glyph means each time. Nobody can hide the buttons they never use, so the load is the same on every graph.
-
-**Fix:** Give each bar button a tooltip in the host's style (the aria-label as title or setTooltip). Add a setting that folds the less used buttons (filter, view, export, source) behind one More button.
-
-**Check:** Extend the host contract or wcag test: every button in the bar has a visible tooltip text equal to its aria-label.
-
 ### NEURO-7 Drawing redraws 250 ms after typing; picture may jump
 
 **Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/editor/typing-rests.ts`, `packages/core/src/display/graph-view/**`, `packages/core/src/zoom-across.ts`.
@@ -214,16 +202,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add a command 'Insert an example graph'. Add a button on the empty-block prompt that writes the guide's example. The first drawing then appears in one press.
 
 **Check:** A test in packages/obsidian/test runs the command in an empty note and asserts a drawing with three things appears. test/wiki-guide.test.js asserts step 1 names the command.
-
-### NEURO-9 No reading options: letter spacing, line height or font
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `styles.css`, `packages/core/src/theme-tokens.ts`, `packages/claude-code/page/page.css`, `packages/core/src/settings.ts`.
-
-**Risk:** Line height and caption letter spacing are fixed in the style sheet and the settings page offers no reading choices. A dyslexic reader of the browser editor, which has no Obsidian theme, cannot loosen the text.
-
-**Fix:** Add tokens for line height and letter spacing to theme-tokens.ts. Add one setting 'Easier reading' that raises both and widens word spacing in both hosts.
-
-**Check:** test/theme-tokens or wcag test asserts the two tokens exist and the setting changes the computed style.
 
 ### NEURO-11 No recently edited or recently visited list
 
@@ -485,7 +463,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (97)
+## Done or accepted (100)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -534,9 +512,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1550 |
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
+| NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | done | #1591 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
 | NEURO-6 | Every notice vanishes after five seconds and cannot be read again | done | #1588 |
+| NEURO-9 | No reading options: letter spacing, line height or font | done | #1591 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
