@@ -172,6 +172,8 @@ jobs:
         env:
           THOUGHTKNOT_TEST_MEMORY_MB: 8192
           THOUGHTKNOT_RUN_MINUTES: 40
+          # the ceiling inside each run (scripts/run-ceiling.mjs) reads its own name, so it is given the 40 minutes too
+          THOUGHTKNOT_TEST_MINUTES: 40
         run: node scripts/quality-check.mjs --coverage
 
   python:
