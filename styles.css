@@ -1759,6 +1759,13 @@ pre.thoughtknot-code {
 .thoughtknot-empty button {
   min-height: 44px;
 }
+/* The guide link of an empty card or pane is a pointer target of its own (risk UX-8) */
+.thoughtknot-empty a,
+.thoughtknot-quiet a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
 
 /* Where a card's data comes from, when it is written in another note or a .gql file (editor spec §7, §20). */
 .thoughtknot-source {

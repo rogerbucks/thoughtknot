@@ -238,6 +238,25 @@ describe('the time limit', () => {
     assert.equal(workers.length, TIMEOUTS_BEFORE_STOPPING * each, 'none after the last step of the last');
     assert.deepEqual(told, ['stopped']);
   });
+
+  test('after layouts were stopped, resume lets the next one start a worker again (Try again)', async () => {
+    const workers = [];
+    const { r } = runner([], {
+      rest: () => {
+        const w = silent();
+        workers.push(w);
+        return w;
+      },
+      limits: { ms: 30 },
+    });
+    const d = drawingOf(READER);
+    for (let i = 0; i < TIMEOUTS_BEFORE_STOPPING; i++) await r.draw(d);
+    assert.equal((await r.draw(d)).reason, 'stopped');
+    const before = workers.length;
+    r.resume();
+    assert.equal((await r.draw(d)).reason, 'timed-out', 'it tried, and was not refused as stopped');
+    assert.ok(workers.length > before, 'a worker was started again');
+  });
 });
 
 describe('the page’s own thread, only when the first worker cannot start', () => {

@@ -294,8 +294,7 @@ export default class ThoughtKnotPlugin extends Plugin {
    * Or why it is text only, or null once a newer drawing for its `owner` is asked. Rejects if the engine can't start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read
-    // (§42). Its words are as the view preset draws them: short labels for reading (§69)
+    // direction: the graph's own (§6), its type's (§15), the settings' (§21), else best fit, as read (§42); words: §69
     const laid = this.layoutsOf()?.draw(directed(labelsFor(drawing, this.settings), this.settings.direction), owner);
     return laid?.then(shownAsRead) ?? Promise.resolve(null);
   }
@@ -306,6 +305,12 @@ export default class ThoughtKnotPlugin extends Plugin {
    */
   layoutForExport(drawing: GraphDrawing, theme: ExportTheme): Promise<Drawn | Refusal | null> {
     return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);
+  }
+
+  /** Lets stopped layouts run again; `redraw` also draws every card anew, for a Try again banner (UX-4). */
+  resumeLayouts(redraw = false): void {
+    this.layouts?.resume();
+    if (redraw) for (const changed of [...this.settingsWatchers]) changed();
   }
 
   /** The plugin's layouts, started on first use; none once the plugin is unloaded. */

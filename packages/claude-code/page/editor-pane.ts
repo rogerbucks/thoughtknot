@@ -58,6 +58,7 @@ export function paneHost(
     settings: () => settings,
     layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
     palette: PALETTES.system,
+    again: () => layouts.resume(),
     ...(pictures && { picture: (graph: string) => pagePicture(pictures, graph) }),
     ...(note && {
       noteText: () => note.text,

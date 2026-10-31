@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
+import { readNote } from '../../core/src/drawing.ts';
 
 before(() => build());
 
@@ -24,6 +25,10 @@ async function started() {
   const { el } = await show(env, EMPTY);
   const start = labelled(el, 'Start from an example');
   assert.ok(start, 'the empty graph offers an example');
+  assert.ok(
+    [...el.querySelectorAll('a')].some((a) => a.textContent === 'Read the guide'),
+    'and a link to the guide',
+  );
   start.click();
   await settle();
   const note = env.state.files.get(PATH);
@@ -75,6 +80,28 @@ describe('a first graph from an example', () => {
       assert.match(tourOf(again.el)?.textContent ?? '', /Step 1 of/, 'opened again');
       tourOf(again.el).dispatch('keydown', { key: 'Escape' });
       assert.equal(tourOf(again.el), null, 'Escape skips it too');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('Insert an example graph', () => {
+  // proves: first_run_help
+  test('the command writes a graph with three or more things into an empty note, and it is drawn', async () => {
+    const env = await load({ files: { [PATH]: '' } });
+    try {
+      env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), '', 'source');
+      const command = env.state.commands.find((c) => c.id === 'insert-example');
+      assert.equal(command?.name, 'Insert an example graph');
+      command.callback();
+      await settle();
+      const note = env.state.files.get(PATH);
+      assert.ok(note.startsWith('```gql\n// graph: my_first_graph\n('), note);
+      assert.ok(readNote([note.split('\n').slice(1, -2).join('\n')]).problems.length === 0, 'it reads clean');
+      assert.match(env.state.notices.at(-1), /Added an example graph/);
+      const { el } = await show(env, note);
+      assert.ok(el.querySelectorAll('g.node').length >= 3, 'three things are drawn');
     } finally {
       env.uninstall();
     }

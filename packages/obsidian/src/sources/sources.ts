@@ -113,7 +113,7 @@ export async function renderSourceBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
-    refusalBanner(root, drawn);
+    refusalBanner(root, drawn, () => plugin.resumeLayouts(true));
     renderCode(root, text);
     return;
   }
