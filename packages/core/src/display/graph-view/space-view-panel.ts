@@ -63,6 +63,7 @@ export interface SpaceOptions {
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
   lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
+  orbit?: Orbit; // drawn again in its card's place, the camera where the last left it (NEURO-7)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards or in 3D. */
@@ -70,6 +71,7 @@ export interface SpaceView {
   close: () => void;
   move: (m: SpaceMove) => void;
   cards: (on: boolean) => void;
+  orbit: () => Orbit; // where the camera is now, for a card drawn again in its place
 }
 
 /** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
@@ -379,11 +381,9 @@ export async function openSpaceView(
   });
   opened.set(root, close);
   resize();
-  orbit = orbitFit(space, width / height);
-  glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
-  el.focus();
-  const cards = (on: boolean) => {
-    if (on !== (depth === 0)) showAs(on ? 0 : 1);
-  };
-  return { close, move, cards };
+  orbit = more.orbit ?? orbitFit(space, width / height); // drawn again, it keeps the camera and leaves the focus be
+  if (!more.orbit) glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
+  if (!more.orbit) el.focus();
+  const cards = (on: boolean) => on !== (depth === 0) && showAs(on ? 0 : 1);
+  return { close, move, cards, orbit: () => orbit };
 }

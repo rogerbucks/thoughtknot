@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (34)
+## Open (33)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -18,7 +18,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -135,16 +134,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add one command, Graphs in this vault, that lists each graph with its notes. Add one export choice, Every graph, that writes all graphs as GQL into one folder.
 
 **Check:** A test opens the test vault, runs the command and asserts every graph note is listed. Another test checks that the Every graph export writes one file per graph.
-
-### NEURO-7 Drawing redraws 250 ms after typing; picture may jump
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/editor/typing-rests.ts`, `packages/core/src/display/graph-view/**`, `packages/core/src/zoom-across.ts`.
-
-**Risk:** Each pause in typing re-runs the Graphviz layout and can move every box, so the picture shifts while the reader is still thinking. The spec keeps the typed box still but says nothing about keeping the drawing's boxes and viewport where they were.
-
-**Fix:** Keep the viewport across a redraw. While a block is being edited, only re-lay out when a thing or link is added or removed, not on each property keystroke. add a setting 'Redraw while typing: after each pause / when I press Done'.
-
-**Check:** A test in packages/core/test types a property value. It asserts the zoom and every unchanged box's place are the same after the redraw.
 
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
@@ -386,7 +375,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (107)
+## Done or accepted (108)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -443,6 +432,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
 | NEURO-6 | Every notice vanishes after five seconds and cannot be read again | done | #1588 |
+| NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | done | #1622 |
 | NEURO-8 | No two-minute first success: no insert-example command | done | #1594 |
 | NEURO-9 | No reading options: letter spacing, line height or font | done | #1591 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |

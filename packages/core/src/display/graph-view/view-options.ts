@@ -37,6 +37,7 @@ import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
 import type { SpaceMode } from './space-switch';
 import type { SketchHost } from './sketch-tool';
+import type { StayedAt } from './type-place';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -166,4 +167,13 @@ export interface ViewOptions {
   editing?: () => Editing | undefined;
   /** For a card opened from another, as full screen is: read-only whenever the card it was opened from is (spec §3). */
   readOnly?: () => boolean;
+  /** Where the card drawn before this one was left: drawn again, as typing redraws it, it stays there (NEURO-7). */
+  stay?: Stay;
+}
+
+/** Where a card is left as it goes, for the card drawn next in its place: its zoom, its camera in space, its boxes. */
+export interface Stay {
+  leave: (at: StayedAt) => void;
+  /** Where the last card was left, once; none when it was not, or long ago. */
+  kept: () => StayedAt | undefined;
 }

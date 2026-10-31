@@ -9,6 +9,8 @@ import type ThoughtKnotPlugin from './main';
 import { writeStyle } from './view-block';
 import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Trying, TypeLeftAt } from '@thoughtknot/core/display/graph-view/type-strip';
+import type { Stay } from '@thoughtknot/core/display/graph-view/view-options';
+import type { StayedAt } from '@thoughtknot/core/display/graph-view/type-place';
 
 /** How long where a card was left waits for the card drawn as its new type: a type saved draws it once written. */
 const LEFT_FOR_MS = 10_000;
@@ -26,6 +28,8 @@ export class TriedTypes {
   private readonly watchers = new Set<(path: string) => void>();
   /** Where each card was left as its type changed, and when (§15, type_keeps_place). */
   private readonly left = new Map<string, { at: TypeLeftAt; when: number }>();
+  /** Where each card was left as it went, and when, for the card drawn again in its place (NEURO-7). */
+  private readonly stayed = new Map<string, { at: StayedAt; when: number }>();
   /** The rules tried where each card is, in the order tried (§56). */
   private readonly rules = new Map<string, RuleWrite[]>();
 
@@ -85,6 +89,27 @@ export class TriedTypes {
       left = this.left.get(key);
     this.left.delete(key);
     return left && Date.now() - left.when <= LEFT_FOR_MS ? left.at : undefined;
+  }
+
+  /**
+   * Where the card of a graph's block, its fence on `line`, is left as it goes. The card drawn again in its place, as
+   * typing redraws it, stays there: its zoom, its camera in space, its boxes (NEURO-7, redraw_keeps_place).
+   */
+  stay(at: TriedAt, line: number): Stay {
+    const key = `${TriedTypes.key(at)}\u0000${line}`;
+    return {
+      leave: (where) => this.stayed.set(key, { at: where, when: Date.now() }),
+      kept: () => {
+        const left = this.stayed.get(key);
+        this.stayed.delete(key);
+        return left && Date.now() - left.when <= LEFT_FOR_MS ? left.at : undefined;
+      },
+    };
+  }
+
+  /** Draws the cards of the note at `path` again, as a type looked at does. */
+  drawAgain(path: string): void {
+    for (const changed of [...this.watchers]) changed(path);
   }
 
   /** Calls `changed` with the note's path whenever a type is looked at or put back; gives what stops it. */
