@@ -39,7 +39,8 @@ import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
 import { nothingYet } from './pane-empty';
 import { LAYOUT_WAIT, waitShown } from '../progress';
-import type { Chosen, PictureStatus, SwitchesShown } from '../graph-view/view-options';
+import type { Chosen, PictureStatus, Stay, SwitchesShown } from '../graph-view/view-options';
+import type { StayedAt } from '../graph-view/type-place';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
 
@@ -96,6 +97,7 @@ function drawInPane(
   aids: ViewerAids,
   again?: () => void,
   picture?: PictureStatus,
+  stay?: Stay,
 ) {
   host.empty();
   if (!drawn) {
@@ -128,6 +130,7 @@ function drawInPane(
     // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
     ...(picture && { picture }),
+    ...(stay && { stay }), // drawn again as typed, it stays where the last was left (NEURO-7)
   });
 }
 
@@ -139,6 +142,16 @@ export class PaneDrawing extends Lifecycle {
   private state: ViewState | null = null;
   /** The store a block too large to read at once is read into, made when first needed. */
   private store: MeshIndex | null = null;
+  /** Where the last drawing was left as it went: the next, drawn from what is typed, stays there (NEURO-7). */
+  private left: StayedAt | undefined;
+  private readonly stay: Stay = {
+    leave: (at) => (this.left = at),
+    kept: () => {
+      const at = this.left;
+      this.left = undefined;
+      return at;
+    },
+  };
 
   constructor(host: PaneHost) {
     super();
@@ -244,6 +257,7 @@ export class PaneDrawing extends Lifecycle {
               this.redraw(host, reading, s, stale, on);
             }),
           this.host.picture?.(s.graph),
+          this.stay,
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

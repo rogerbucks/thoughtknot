@@ -1066,3 +1066,9 @@ after a module nor listed here, and on a listed file that is missing.
   The shared cases are `packages/graph-spec/test/rule-look-cases.json` (editor spec §56, rule_look_when).
 - `packages/core/test/rule-bands.test.js` — a bands rule shades a number in steps. It spans `rule-looks.ts`, which
   runs each step as a lens query, and `rule-words.ts`, which gives the colours in order (rule_look_bands).
+
+## Keeping the place as a drawing is redrawn
+
+- `packages/obsidian/test/redraw-keeps-place.test.js` — a drawing redrawn as its block is typed keeps its zoom and
+  boxes. That holds in the edit pane and in the card edited in place. It spans `type-place.ts`, `pane-drawing.ts`, `block.ts` and
+  `typing-rests.ts`, and the setting Redraw while typing (redraw_keeps_place, redraw_while_typing).

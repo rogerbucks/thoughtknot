@@ -239,7 +239,7 @@ export class GraphView extends Lifecycle {
     this.zoom.onChange = (v) => this.measuring.during(() => this.apply(v));
     this.zoom.onExit = () => this.o.onClose?.();
     // a card drawn again as a new type, as the last was left (§15); a view saved as shown (§7); a link's back step (§18)
-    const was = this.place.take(this.o.diagram, mode) ?? view?.shown ?? this.o.links?.cameBack();
+    const was = this.place.take(this.o, mode) ?? view?.shown ?? this.o.links?.cameBack();
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     const { viewport, zoom, sel, details, taps, svg, o, fullscreen: full } = this,
@@ -273,7 +273,7 @@ export class GraphView extends Lifecycle {
         // the editor's selection; else the one saved as shown, left, or kept as the type changed (reading view too)
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
-        this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show());
+        this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show(), this.spaces);
         void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },
       () => !gone,
@@ -288,6 +288,7 @@ export class GraphView extends Lifecycle {
   }
 
   override onunload(): void {
+    this.place.leave(this.o, this.svg, this.zoom, this.spaces); // for the card drawn next (NEURO-7)
     this.unloaded = true;
     // a move under way ends with the card, and the sheet's watchers with it; a card unloaded before it was built has none
     (this.sel as Selection | undefined)?.stop();

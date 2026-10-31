@@ -11,6 +11,7 @@ import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './s
 import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
+import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
 import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
@@ -34,7 +35,7 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings, PictureSettings {
+export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -88,8 +89,7 @@ export interface Settings extends StrictnessSettings, PictureSettings {
   decider: string;
 }
 
-/** The most characters a decider's name is kept to. */
-const MOST_NAME = 200;
+const MOST_NAME = 200; // the most characters a decider's name is kept to
 
 /** The settings before any is changed. */
 export const DEFAULT_SETTINGS: Settings = {
@@ -123,10 +123,10 @@ export const DEFAULT_SETTINGS: Settings = {
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
-  // the lowest, so anything above it asks
-  exportAsksAbove: CLASSIFICATIONS[0] ?? '',
+  exportAsksAbove: CLASSIFICATIONS[0] ?? '', // the lowest, so anything above it asks
   decider: '',
   ...DEFAULT_PICTURES,
+  ...DEFAULT_TYPING,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -227,6 +227,7 @@ export const OPTIONS: Option[] = [
     sentence: 'How the editor indents the later lines of a thing it writes.',
     choices: INDENTS,
   },
+  ...TYPING_OPTIONS, // when the drawing is redrawn while typing (§4, NEURO-7)
   {
     key: 'viewPreset',
     section: 'Drawing',
@@ -380,6 +381,7 @@ export function settingsFrom(saved: unknown): Settings {
     // as typed, spaces and capitals kept; a name is one line, and not an essay
     decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
     ...picturesFrom(s),
+    ...typingFrom(s),
   };
 }
 

@@ -57,6 +57,11 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.indent.two': 'Two spaces',
   'settings.indent.four': 'Four spaces',
   'settings.indent.tab': 'A tab',
+  'settings.redraw-while-typing.name': 'Redraw while typing',
+  'settings.redraw-while-typing.sentence':
+    'When the drawing changes as you type a graph. Either way it keeps its zoom, and the boxes you did not change stay where they were.',
+  'settings.redraw-while-typing.pause': 'After each pause in typing',
+  'settings.redraw-while-typing.done': 'When I press Done or leave the text',
   'settings.view-preset.name': 'View preset',
   'settings.view-preset.sentence':
     'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',

@@ -126,8 +126,11 @@ export async function renderShown(
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     el.empty();
+    // edited in place with Redraw while typing set to Done, the card is drawn as the block was when editing began (NEURO-7)
+    const line = ctx.getSectionInfo(el)?.lineStart ?? 0,
+      shown = plugin.inlineFor(ctx.sourcePath, line)?.drawnFrom(source) ?? source;
     // a card drawn from another note or a file is drawn again when that source changes (§20)
-    await renderBlock(plugin, source, el, local, owner, () => void draw());
+    await renderBlock(plugin, shown, el, local, owner, () => void draw());
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
@@ -216,8 +219,7 @@ export async function renderBlock(
     .filter((p) => p.graph === graph)
     .map(shown);
   const plain = reading.graphs.get(graph);
-  // drawn as the diagram type looked at in reading view, if one is, never saved (§15, type_try_reading)
-  const at = { path: target.path, graph };
+  const at = { path: target.path, graph }; // its type looked at in reading view, never saved (§15, type_try_reading)
   const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
   const drawing = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
@@ -324,6 +326,7 @@ export async function renderBlock(
       drawn,
       problems,
       mode: 'note',
+      stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
