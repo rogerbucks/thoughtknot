@@ -135,6 +135,96 @@ describe('a note’s classification line', () => {
     allowed(await guardGateFiles('Bash', { command: 'grep -n classification plan.md' }, v.ports));
   });
 
+  test('a command chained from steps that only read is allowed, whatever it searches for', async () => {
+    const v = vault();
+    for (const command of [
+      `cd ${v.top} && grep -n classification plan.md | head -5`,
+      `grep -rn 'title|classification' . 2>/dev/null | wc -l`,
+      `ls; grep -c "classification: secret" plan.md >/dev/null 2>&1`,
+      `find . -name '*.md' | sort; cat classification`,
+      `grep classification <<'EOF'\nnothing\nEOF`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('a chained command with a step that could write is refused when it names it', async () => {
+    const v = vault();
+    for (const command of [
+      'grep classification plan.md | tee out.md',
+      `grep -l classification *.md | xargs sed -i '' s/secret/public/`,
+      `cat classification; sed -i '' s/secret/public/ plan.md`,
+      'echo classification: public > plan.md',
+      'echo classification >& plan.md',
+      'cat classification &> plan.md',
+      'cat plan.md # classification',
+      'echo "$(sed -i s/classification:// plan.md)"',
+      'echo "`sed -i s/classification:// plan.md`"',
+      'echo `sed -i s/classification:// plan.md`',
+      `ls *(e:'sed -i s/classification:// plan.md':)`,
+      'find . -name classification -delete',
+      'find . -name classification -exec rm {} +',
+      'sort -o plan.md classification',
+      'rg --pre ./change classification',
+      'less -o plan.md classification',
+      'ls classification; X=1 sed -i s/a/b/ plan.md',
+      'if grep -q classification plan.md; then rm plan.md; fi',
+      `python3 - <<'EOF'\nopen('plan.md', 'w').write('classification: public')\nEOF`,
+      `echo 'classification`,
+      'grep "classification plan.md',
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a heredoc that makes a new note with its own classification is allowed', async () => {
+    const v = vault();
+    const text = '---\ntitle: New\nclassification: own\n---\n\nThe text; with $HOME & `ticks`.\n';
+    const made = `cat > ${v.top}/new.md <<'EOF'\n${text}EOF`;
+    allowed(await guardGateFiles('Bash', { command: made }, v.ports));
+    allowed(await guardGateFiles('Bash', { command: `mkdir -p ${v.top}/sub && ${made}` }, v.ports));
+    const spaced = `cat > "${v.top}/a new note.md" << "END"\n${text}END\n`;
+    allowed(await guardGateFiles('Bash', { command: spaced }, v.ports));
+    const home = `cat > ~/new.md <<-EOF\n\tclassification: own\n\tEOF`;
+    allowed(await guardGateFiles('Bash', { command: home }, v.ports));
+    const plain = `cat <<EOF > ${v.top}/new.md\n---\nclassification: own\n---\nEOF\ngrep -c classification plan.md`;
+    allowed(await guardGateFiles('Bash', { command: plain }, v.ports));
+  });
+
+  test('a heredoc onto a note that exists is judged by what it leaves, as a Write is', async () => {
+    const v = vault();
+    for (const content of [NOTE.replace('secret', 'public'), 'classification: public\n', 'The plan.\n'])
+      refusedWith(
+        await guardGateFiles('Bash', { command: `cat > ${v.plan} <<'EOF'\n${content}EOF` }, v.ports),
+        classificationRefusal(),
+      );
+    const same = `cat > ${v.plan} <<'EOF'\n${NOTE.replace('The plan', 'Our plan')}classification\nEOF`;
+    allowed(await guardGateFiles('Bash', { command: same }, v.ports));
+    const added = `cat >> ${v.plan} <<'EOF'\nThe word classification, in the text.\nEOF`;
+    allowed(await guardGateFiles('Bash', { command: added }, v.ports));
+  });
+
+  test('a heredoc whose target or text cannot be known is refused when it names it', async () => {
+    const v = vault();
+    const body = `<<'EOF'\nclassification: public\nEOF`;
+    for (const command of [
+      `cat > plan.md ${body}`,
+      `cat > $HOME/plan.md ${body}`,
+      `cat > ${v.top}/pla*.md ${body}`,
+      `cat > ${v.top}/a.md > ${v.plan} ${body}`,
+      `cat > ${v.top}/a.md <<EOF\nclassification: public\n$(sed -i s/a/b/ ${v.plan})\nEOF`,
+      `cat > ${v.top}/a.md <<EOF\nclassification: public\nnever closed`,
+      `cat - > ${v.top}/a.md ${body}`,
+      `tee ${v.top}/a.md ${body}`,
+      `cat > ${v.top}/a.md ${body}\nmv ${v.top}/a.md ${v.plan}`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a heredoc is refused when the note cannot be read to judge it', async () => {
+    const v = vault({ read: false });
+    const command = `cat > ${v.top}/new.md <<'EOF'\nclassification: own\nEOF`;
+    refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
   test('the refusals name no level, path or text of the call', () => {
     for (const refusal of [classificationRefusal(), matrixNoteRefusal()])
       assert.doesNotMatch(refusal, /secret|public|plan\.md|matrix\.md/);
