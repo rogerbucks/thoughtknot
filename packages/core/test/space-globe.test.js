@@ -99,5 +99,9 @@ test("the globe opens facing the viewer with an exploration's centre, and each t
   const then = globe.lay([...HUB, ...thing('new'), link('kn', 's7', 'new', 'has')], 's7');
   for (const b of first.blocks) assert.deepEqual(middle(then.blocks.find((o) => o.of === b.of)), middle(b));
   // off, it shows the space as it is
-  assert.equal(globe.facing(first, eye, false), first);
+  assert.equal(globe.facing(first, orbitFit(first, 1), false), first);
+  assert.ok(
+    globe.facing(first, orbitFit(first, 1), true).blocks.length < first.blocks.length,
+    'on, the far side hides',
+  );
 });

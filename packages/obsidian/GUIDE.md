@@ -581,6 +581,14 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     `vault.process`, so a change made in between is never written over.
   - A note removed goes where the person's deleted files go (`fileManager.trashFile`).
   - The plugin's own code still reads and writes notes directly; it moves onto this backend in a later slice.
+  - It tells `kept` each note's text just before a write or change replaces it.
+- `note-history.ts` — the earlier versions of notes the plug-in changed, kept in its data for Compare with (NEURO-2).
+  A burst of changes keeps one version; a renamed note keeps its versions.
+
+### `src/changes/` — Compare with (editor spec §41, changes_view_obsidian)
+
+- `compare-with.ts` — the window a card's Compare with opens. It lists the versions kept, newest first. The one picked is
+  drawn with the note now by the core's changes view, each change marked by line and hue and listed in words.
 
 ### `src/links/` — links and attachments (spec §18)
 

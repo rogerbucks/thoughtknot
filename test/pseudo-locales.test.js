@@ -31,7 +31,7 @@ import {
 } from '../packages/app/test/app-window.js';
 import { cleanUpVscode, emptyFolder, openVscodeTab } from '../packages/vscode/test/vscode-window.js';
 import { NOTE } from './repository/journey-note.js';
-import { writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
@@ -39,8 +39,11 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 /** The views Obsidian draws itself, from what the plugin gives it, in its own direction: the plugin sets none on them. */
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
-/** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 39, page: 13, vscode: 5, app: 5 };
+/**
+ * The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there.
+ * Most are the example graph's own names and kinds, or a sample the test page sets, which are data and not interface.
+ */
+const STILL_SAID_BY_CODE = { obsidian: 56, page: 17, vscode: 6, app: 7 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -93,7 +96,9 @@ function wordsOf(document) {
 function saidByCode(document) {
   const outside = (el) => !el.closest('svg');
   const said = new Set();
-  for (const el of document.body.querySelectorAll('button, label, option, legend, summary, th, [role="button"]'))
+  for (const el of document.body.querySelectorAll(
+    'button, label, option, legend, summary, th, p, h4, li, [role="button"], [role="status"], [role="alert"]',
+  ))
     if (outside(el) && /[a-zA-Z]{2}/.test(el.textContent) && !isPseudoWord(el.textContent))
       said.add(el.textContent.trim());
   for (const el of document.body.querySelectorAll('[aria-label], [title], [placeholder]'))
@@ -141,6 +146,23 @@ describe('the check itself', () => {
     ).window;
     assert.deepEqual(leftInSource(document), []);
     assert.deepEqual([...saidByCode(document)], ['Close']);
+  });
+
+  test('counts a sentence the code said itself in a paragraph, a list, a heading or a status', () => {
+    const { document } = openWindow(
+      '<body><p>Saved.</p><h4>Moves</h4><ul><li>Two kept.</li></ul><div role="status">Done</div><div role="alert">Stop</div></body>',
+    ).window;
+    assert.deepEqual([...saidByCode(document)].sort(), ['Done', 'Moves', 'Saved.', 'Stop', 'Two kept.']);
+  });
+});
+
+describe('the plugin’s notices', () => {
+  test('say no sentence of their own: each is a word of the catalogue', () => {
+    const dir = new URL('../packages/obsidian/src/', import.meta.url);
+    const typed = readdirSync(dir, { recursive: true })
+      .filter((f) => f.endsWith('.ts'))
+      .filter((f) => /\bnew Notice\(\s*['"`]/.test(readFileSync(new URL(f, dir), 'utf8')));
+    assert.deepEqual(typed, [], 'a notice typed in code: say it by a key of source-words.ts');
   });
 });
 

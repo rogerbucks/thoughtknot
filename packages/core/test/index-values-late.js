@@ -263,4 +263,8 @@ export const VALUES_LATE = [
   // the picture lines a host hides where it draws the block (§62, RP1), 31 Oct 2026
   'drawnPictureLines',
   'withoutDrawnPictures',
+  // the earlier versions of a note the plug-in keeps, for Compare with (§41, changes_view_obsidian), 31 Oct 2026
+  'historyFrom',
+  'historyMoved',
+  'withVersion',
 ];

@@ -3,6 +3,7 @@
 import type { Lens, MiniMapSetting, Painter } from '@thoughtknot/core';
 import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import type { SpaceMove } from '../../space-controls.ts';
+import type { Orbit } from '../../space-view.ts';
 import type { Sketch } from './space-sketch.ts';
 
 /** How the drawing is shown in space: as cards (2.5D), as balls (3D), or on a globe (§71, globe_view). */
@@ -19,6 +20,7 @@ export interface SpaceOptions {
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
   lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
+  orbit?: Orbit; // drawn again in its card's place, the camera where the last left it (NEURO-7)
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards, balls or a globe. */
@@ -26,4 +28,5 @@ export interface SpaceView {
   close: () => void;
   move: (m: SpaceMove) => void;
   as: (mode: SpaceMode) => void;
+  orbit: () => Orbit; // where the camera is now, for a card drawn again in its place
 }

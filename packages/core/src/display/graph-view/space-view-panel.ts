@@ -8,7 +8,7 @@
 // opens (SPACE_UNFOLD). What the card selects or fades is so here (focus_space), and its lens bends it here (lenses.ts).
 import { paintersFrom, word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { centredOn, eyeOf, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
+import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { GlobeLayout } from '../../space-globe.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
@@ -58,7 +58,10 @@ const depthFor = (mode: SpaceMode, now: number): number =>
 const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
 const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
 
-/** A way to show the view: as cards, balls in space (null) or a globe, or lifted, with height by what DepthBy says. */
+/**
+ * A way to show the view: as cards (the first, Roger, 24 Oct 2026), as balls in space (null), or on a globe (§71).
+ * Or lifted, with height by what DepthBy says.
+ */
 type Depth = DepthBy | 'cards' | 'globe' | null;
 
 /** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
@@ -102,7 +105,6 @@ export async function openSpaceView(
   const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
-  // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, lifted, or on a globe (§71)
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }, 'globe'];
   const globe = new GlobeLayout(); // spots kept as more opens; only the side facing the camera is seen
   let depths = depthsOf();
@@ -136,8 +138,7 @@ export async function openSpaceView(
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
-  const seen = () =>
-    globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked)), eyeOf(orbit), depth === GLOBE);
+  const seen = () => globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked)), orbit, depth === GLOBE);
   const paint = () => {
     asked = false;
     if (!open) return;
@@ -370,9 +371,9 @@ export async function openSpaceView(
   });
   opened.set(root, close);
   resize();
-  orbit = orbitFit(space, width / height);
-  glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
-  el.focus();
+  orbit = more.orbit ?? orbitFit(space, width / height); // drawn again, it keeps the camera and leaves the focus be
+  if (!more.orbit) glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
+  if (!more.orbit) el.focus();
   const as = (mode: SpaceMode) => void (depthFor(mode, depth) !== depth && showAs(depthFor(mode, depth)));
-  return { close, move, as };
+  return { close, move, as, orbit: () => orbit };
 }

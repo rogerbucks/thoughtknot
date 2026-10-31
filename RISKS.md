@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (36)
+## Open (33)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -16,11 +16,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -118,16 +115,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** The exporter contract gains a read-back check once an importer exists; until then, manual.
 
-### UX-3 Many user-facing sentences bypass the word catalogue and its checks
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/**`, `packages/obsidian/src/**`, `packages/graph-spec/src/reader/parser.js`, `test/pseudo-locales.test.js`.
-
-**Risk:** The catalogue has one language (en-GB) and no translation is loaded, yet dozens of sentences are typed straight in code: Obsidian notices, pane and card fallbacks, problem messages and parser errors. Hand-built plurals like `send${n === 1 ? '' : 's'}` will break in any future language, and the pseudo-locale test cannot see any of it.
-
-**Fix:** Move these strings into the catalogues with plural forms. Widen the pseudo-locale scan to p, h4, li, [role=status], [role=alert] text and to Obsidian notices.
-
-**Check:** test/pseudo-locales.test.js fails on any plain English in those elements. A lint rule flags `new Notice('` and `text: '` with a sentence outside *-words.ts files.
-
 ### UX-10 Design screenshots show the old 'Graph Note' brand and version
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `scripts/wiki-screens.mjs`.
@@ -147,26 +134,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add one command, Graphs in this vault, that lists each graph with its notes. Add one export choice, Every graph, that writes all graphs as GQL into one folder.
 
 **Check:** A test opens the test vault, runs the command and asserts every graph note is listed. Another test checks that the Every graph export writes one file per graph.
-
-### NEURO-2 Changes and history view exist only in the browser editor
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/obsidian/src/**`, `packages/core/src/changes-view.ts`, `requirements/editor-requirements.gql`.
-
-**Risk:** An Obsidian user who accepts a drag edit or a proposal cannot look back later. They cannot see what the tool changed in the note. If something looks wrong a week on, they must read raw text and remember.
-
-**Fix:** In Obsidian, offer Compare with on the card. Use the host's file recovery snapshots or the last written text kept in plugin data. Draw it with the same changes-view.ts.
-
-**Check:** A requirement that names Obsidian in changes_view, proved by a test in packages/obsidian/test that opens Compare with on the sample note.
-
-### NEURO-7 Drawing redraws 250 ms after typing; picture may jump
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/editor/typing-rests.ts`, `packages/core/src/display/graph-view/**`, `packages/core/src/zoom-across.ts`.
-
-**Risk:** Each pause in typing re-runs the Graphviz layout and can move every box, so the picture shifts while the reader is still thinking. The spec keeps the typed box still but says nothing about keeping the drawing's boxes and viewport where they were.
-
-**Fix:** Keep the viewport across a redraw. While a block is being edited, only re-lay out when a thing or link is added or removed, not on each property keystroke. add a setting 'Redraw while typing: after each pause / when I press Done'.
-
-**Check:** A test in packages/core/test types a property value. It asserts the zoom and every unchanged box's place are the same after the redraw.
 
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
@@ -408,7 +375,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (105)
+## Done or accepted (108)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -453,16 +420,19 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1550 |
+| UX-3 | Many user-facing sentences bypass the word catalogue and its checks | done | #1617 |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | done | #1594 |
 | UX-5 | A drag on the card writes outside the note's editor undo path | done | #1550 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1550 |
 | UX-8 | First-run syntax help is only in the wiki, not in the app | done | #1594 |
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
+| NEURO-2 | Changes and history view exist only in the browser editor | done | #1623 |
 | NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | done | #1591 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
 | NEURO-6 | Every notice vanishes after five seconds and cannot be read again | done | #1588 |
+| NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | done | #1622 |
 | NEURO-8 | No two-minute first success: no insert-example command | done | #1594 |
 | NEURO-9 | No reading options: letter spacing, line height or font | done | #1591 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |

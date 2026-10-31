@@ -9,12 +9,14 @@ import { noticeMs } from '@thoughtknot/core/display/notices';
 import { detailsSidePane } from './details-pane';
 import { recentVisits } from './recent-visits';
 import type { SavedStore } from './recent-visits';
+import { keepHistory } from './storage/note-history';
 
 export { chooseLanguage } from '@thoughtknot/core/display/language';
 
 /**
  * Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. `store` is
- * where the plugin's data is kept: the details' last place and size, and the graphs and things last opened.
+ * where the plugin's data is kept: the details' last place and size, and the graphs and things last opened. It
+ * also keeps the notes' earlier versions.
  */
 export function installObsidianHost(plugin: Plugin, store: SavedStore): void {
   installHost({
@@ -47,4 +49,6 @@ export function installObsidianHost(plugin: Plugin, store: SavedStore): void {
     },
     recent: recentVisits(plugin, store),
   });
+  // the text of each note just before the plug-in changes it, for Compare with (risk NEURO-2); it follows a rename
+  keepHistory(plugin, store);
 }

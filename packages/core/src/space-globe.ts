@@ -12,8 +12,8 @@ import { globeArc, globeSpots } from './layouts/globe.ts';
 import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
-import { boundsOf } from './space-view.ts';
-import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
+import { boundsOf, eyeOf } from './space-view.ts';
+import type { Block, Orbit, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 import type { DrawMark } from './drawing-marks.ts';
 
 /** The size of a thing's name and of a link's words, in pixels of the space. */
@@ -160,9 +160,9 @@ export class GlobeLayout {
     return laid.space;
   }
 
-  /** What of `space` a camera at `eye` sees while the globe shows (`on`): the side facing it. Else all of it. */
-  facing<S extends SpaceMarks>(space: S, eye: Vec3, on: boolean): S {
-    return on && this.globe ? facingHalf(space, eye, this.globe) : space;
+  /** What of `space` the camera `orbit` sees while the globe shows (`on`): the side facing it. Else all of it. */
+  facing<S extends SpaceMarks>(space: S, orbit: Orbit, on: boolean): S {
+    return on && this.globe ? facingHalf(space, eyeOf(orbit), this.globe) : space;
   }
 }
 
