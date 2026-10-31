@@ -12,6 +12,6 @@ export function nothingYet(host: HTMLElement): void {
   const guide = host.createEl('p', { cls: 'thoughtknot-quiet' });
   guide.createEl('a', {
     text: word('pane.guide'),
-    attr: { href: GUIDE_URL, target: '_blank', rel: 'noopener noreferrer' },
+    attr: { href: GUIDE_URL },
   });
 }

@@ -59,7 +59,7 @@ export function renderEmpty(
     attr: { 'aria-label': word('first-run.example'), type: 'button' },
   });
   example.addEventListener('click', () => void writeExample(plugin, target, source));
-  empty.createEl('a', { text: word('pane.guide'), attr: { href: GUIDE_URL, rel: 'noopener noreferrer' } });
+  empty.createEl('a', { text: word('pane.guide'), attr: { href: GUIDE_URL } });
   whenPlaced(root, () => {
     if (!readOnly(root)) return;
     edit.remove(); // reading view is read-only (spec §3)

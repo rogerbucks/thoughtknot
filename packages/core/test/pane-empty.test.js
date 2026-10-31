@@ -24,5 +24,4 @@ test('an empty pane gives a one-line example that reads clean, and a link to the
   const link = pane.querySelector('a');
   assert.equal(link.textContent, 'Read the guide');
   assert.equal(link.getAttribute('href'), GUIDE_URL);
-  assert.match(link.getAttribute('rel'), /noopener/);
 });
