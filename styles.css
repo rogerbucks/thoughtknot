@@ -491,6 +491,39 @@
 .thoughtknot-untangle-reach[hidden] {
   display: none;
 }
+/* an exploration's badge on a box (§71, explore_badges): +N opens the branch, − closes it; its own target */
+.thoughtknot-explore-badge {
+  cursor: pointer;
+}
+.thoughtknot-explore-badge circle {
+  fill: var(--gn-accent);
+  stroke: var(--gn-bg);
+  stroke-width: 2px;
+}
+.thoughtknot-explore-badge.is-open circle {
+  fill: var(--gn-bg);
+  stroke: var(--gn-accent);
+  stroke-width: 3px;
+}
+.thoughtknot-explore-badge text {
+  fill: var(--gn-text-on-accent);
+  font-size: var(--gn-font-size-xs);
+  font-weight: var(--gn-font-weight-semibold);
+  pointer-events: none;
+}
+.thoughtknot-explore-badge.is-open text {
+  fill: var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-explore-badge:focus-visible circle {
+  stroke: var(--gn-text-normal);
+  stroke-width: 3px;
+}
+/* a link between two shown things that is not a step along a branch: faint and dashed (Roger's pick, 31 Oct 2026) */
+g.edge.thoughtknot-explore-cross path {
+  stroke-dasharray: 4 4;
+  opacity: 0.45;
+}
 .thoughtknot-untangle-reach button.clickable-icon {
   justify-content: center;
   min-width: 44px;

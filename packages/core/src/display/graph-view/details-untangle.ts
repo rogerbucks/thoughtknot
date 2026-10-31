@@ -40,6 +40,9 @@ export function untangleOffers(
     sync();
   }
   offer(word('details.shortest-path'), 'route', () => on.routeFrom(key));
+  // a mind map from this thing, its branches opened one by one from badges on their boxes (§71, explore_from_here)
+  if (on.explore)
+    offer(word('details.explore'), 'git-fork', () => on.explore?.(key)).setAttribute('data-explore-from', key);
   if (move) offer(word('details.move'), 'move', () => move(key));
   // a busy hub's links, folded into one stub or open, folded or opened from its details too (§25, untangle_hubs)
   const hub = on.hub?.(key);

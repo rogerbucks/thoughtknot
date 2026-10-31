@@ -1,10 +1,8 @@
-// What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus: the thing or link
-// chosen, its links and what is at their other ends stay at full strength. It is joined with the highlight under the
-// pointer or the keyboard focus. So are the untangling (filter, legend, path, search) and the arrow keys that walk the
-// links. It marks the drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the
-// details is brought into view, readable, by a brief move (details_choose_moves, details_move_motion). The selection is
-// kept clear of the details sheet (sheet_keeps_thing_clear). It is pointed to by an arrow at the edge when it is out of
-// view (selection_pointer).
+// What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus. The thing or link
+// chosen, its links and their other ends stay at full strength. The highlight, the untangling and the arrow keys join
+// it. It marks the drawing by class only and never reaches the note. What is chosen from the details is brought into
+// view by a brief move (details_choose_moves). It is kept clear of the sheet (sheet_keeps_thing_clear). Out of view, an
+// arrow at the edge points to it (selection_pointer).
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@thoughtknot/core';
 import type {
   Bounds,
@@ -106,6 +104,7 @@ export class Selection {
       // a view saved as shown opens with its legend's choices (§25, untangle_legend)
       legend: o.view?.shown?.legend,
       regroup: (only) => this.regrouping.to(only),
+      svg: host.svg,
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
@@ -118,6 +117,7 @@ export class Selection {
       shownOnly: () => this.untangle.shownOnly(),
       reach: () => this.untangle.reach(),
       routeFrom: (k) => this.untangle.routeFrom(k),
+      explore: (k) => this.untangle.exploreFrom(k),
       choose: (step) => this.bring(step),
       sheetMoved: () => this.inSight(),
     };
