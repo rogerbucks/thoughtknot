@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (36)
+## Open (35)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -16,7 +16,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-12 | The server keeps no copy of the note it overwrites | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
@@ -117,16 +116,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** In W27 (Wave 11), add CSV and GraphML as sources through the plug-in interface. Or state in the user guide that export is one way.
 
 **Check:** The exporter contract gains a read-back check once an importer exists; until then, manual.
-
-### UX-3 Many user-facing sentences bypass the word catalogue and its checks
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/**`, `packages/obsidian/src/**`, `packages/graph-spec/src/reader/parser.js`, `test/pseudo-locales.test.js`.
-
-**Risk:** The catalogue has one language (en-GB) and no translation is loaded, yet dozens of sentences are typed straight in code: Obsidian notices, pane and card fallbacks, problem messages and parser errors. Hand-built plurals like `send${n === 1 ? '' : 's'}` will break in any future language, and the pseudo-locale test cannot see any of it.
-
-**Fix:** Move these strings into the catalogues with plural forms. Widen the pseudo-locale scan to p, h4, li, [role=status], [role=alert] text and to Obsidian notices.
-
-**Check:** test/pseudo-locales.test.js fails on any plain English in those elements. A lint rule flags `new Notice('` and `text: '` with a sentence outside *-words.ts files.
 
 ### UX-10 Design screenshots show the old 'Graph Note' brand and version
 
@@ -408,7 +397,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (105)
+## Done or accepted (106)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -453,6 +442,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1550 |
+| UX-3 | Many user-facing sentences bypass the word catalogue and its checks | done | #1617 |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | done | #1594 |
 | UX-5 | A drag on the card writes outside the note's editor undo path | done | #1550 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
