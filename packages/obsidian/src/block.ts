@@ -62,7 +62,7 @@ function asText(
   target: EditTarget,
   readOnly: (card: HTMLElement) => boolean,
 ): void {
-  refusalBanner(root, why, () => plugin.layoutAgain());
+  refusalBanner(root, why, () => plugin.resumeLayouts(true));
   if (problems.length) renderProblems(root, problems, false);
   const editing = plugin.inlineFor(target.path, target.line);
   if (!editing) {

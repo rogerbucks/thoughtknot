@@ -315,7 +315,7 @@ export async function renderViewBlock(
         theme: plugin.settings.exportTheme,
         run: (ask) => plugin.exportGraph(ask),
       });
-    refusalBanner(root, drawn, () => plugin.layoutAgain());
+    refusalBanner(root, drawn, () => plugin.resumeLayouts(true));
     renderCode(root, source);
     return;
   }

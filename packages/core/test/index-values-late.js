@@ -176,6 +176,7 @@ export const VALUES_LATE = [
   'keepsTrail',
   'readsPlain',
   'markBody',
+  'exampleBlock',
   'shortLabel',
   'labelsFor',
   'presetChange',
