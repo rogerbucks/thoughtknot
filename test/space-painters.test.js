@@ -316,13 +316,14 @@ window.oneBar = async () => {
   const zoom = spaces.zooming(() => ({ fit: () => flat++, zoomIn: () => flat++, zoomOut: () => flat++ }));
   const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const steps = [];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     b.click();
-    // until the view is as its mode says: a slow machine takes more frames to show the cards
+    // until the view is as its mode says (a slow machine takes more frames); cards and the globe have no lift button
     const view = () => frame.querySelector(':scope > .thoughtknot-space-view');
-    const cards = () => !!view()?.querySelector('.thoughtknot-space-pad button[hidden]');
-    for (let n = 0; n < 100 && (!view() !== !spaces.mode() || cards() !== (spaces.mode() === 'cards')); n++) await frames();
-    steps.push({ said: b.textContent, inFrame: !!view(), cards: cards() });
+    const unlifted = () => !!view()?.querySelector('.thoughtknot-space-pad button[hidden]');
+    const noLift = ['cards', 'globe'].includes(spaces.mode());
+    for (let n = 0; n < 100 && (!view() !== !spaces.mode() || unlifted() !== noLift); n++) await frames();
+    steps.push({ said: b.textContent, inFrame: !!view(), unlifted: unlifted() });
     if (spaces.mode() !== 'cards') continue;
     // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
     zoom.zoomIn();
@@ -501,17 +502,18 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(r.after, true, 'after another click on it, it is in the middle');
   });
 
-  // proves: space_one_bar
+  // proves: space_one_bar, globe_view
   test(
-    "one button on the card's bar goes from 2D to 2.5D to 3D and back, the view inside the drawing's frame",
+    "one button on the card's bar goes from 2D to 2.5D to 3D to the globe and back, the view inside the drawing's frame",
     options,
     async () => {
       const r = JSON.parse(await browser.run('oneBar().then(JSON.stringify)'));
       assert.deepEqual(r.steps, [
-        { said: '2.5D', inFrame: true, cards: true },
-        { said: '3D', inFrame: true, cards: false },
-        { said: '2D', inFrame: false, cards: false },
-        { said: '2.5D', inFrame: true, cards: true },
+        { said: '2.5D', inFrame: true, unlifted: true },
+        { said: '3D', inFrame: true, unlifted: false },
+        { said: 'Globe', inFrame: true, unlifted: true },
+        { said: '2D', inFrame: false, unlifted: false },
+        { said: '2.5D', inFrame: true, unlifted: true },
       ]);
       assert.ok(
         r.told && 'key' in r.told,

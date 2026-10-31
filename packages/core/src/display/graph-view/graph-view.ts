@@ -71,6 +71,7 @@ export class GraphView extends Lifecycle {
     () => this.svg,
     () => this.o,
     () => this.sketcher?.shownSketch() ?? null, // the drawings over it, drawn in space too (§70)
+    () => this.sel.untangle.explored(), // the globe faces you with an exploration's centre (§71)
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {

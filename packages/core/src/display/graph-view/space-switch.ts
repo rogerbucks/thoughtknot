@@ -1,5 +1,5 @@
-// One button on the card's bar shows the drawing flat (2D), as cards in space (2.5D) or as balls in space (3D). It is
-// editor spec §53, space_one_bar. Roger, 24 Oct 2026: "The move between 2d/2.5d and 3d should just be another
+// One button on the card's bar shows the drawing flat (2D), as cards in space (2.5D) or as balls in space (3D). It also
+// shows it on a globe (§71, globe_view; Roger, 31 Oct 2026). It is editor spec §53, space_one_bar. Roger, 24 Oct 2026: "The move between 2d/2.5d and 3d should just be another
 // toolbar button. All of the toolbar/options in the 2d view now should also be in the other views".
 //
 // So the view in space opens inside the drawing's frame, under the card's bar (space-view-panel.ts). The bar's types,
@@ -11,21 +11,20 @@ import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import type { Sketch } from '../../sketch.ts';
 import { openSpaceView } from './space-view-panel';
+import type { SpaceMode, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
 import { flatAgain } from './lens-svg';
-import type { SpaceView } from './space-view-panel';
 import type { ViewOptions } from './view-options';
 
 /** What the card's options say of the view in space: its type, its spacing, and whether its mini-map shows. */
 export type SpaceSays = Pick<ViewOptions, 'diagram' | 'switches' | 'aids'>;
 
-/** How the drawing is shown in space: as cards (2.5D) or as balls (3D). Flat is null. */
-export type SpaceMode = 'cards' | 'balls';
+export type { SpaceMode };
 
 /** Each way in the order the button goes through them, and what it says for each. */
-const MODES: (SpaceMode | null)[] = [null, 'cards', 'balls'];
+const MODES: (SpaceMode | null)[] = [null, 'cards', 'balls', 'globe'];
 
-const WORDS = ['bar.space-flat', 'bar.space-cards', 'bar.space-balls'] as const;
+const WORDS = ['bar.space-flat', 'bar.space-cards', 'bar.space-balls', 'bar.space-globe'] as const;
 
 /** A card's switch between 2D, 2.5D and 3D. */
 export class SpaceSwitch {
@@ -47,6 +46,7 @@ export class SpaceSwitch {
     private readonly svg: () => SVGSVGElement | null,
     private readonly says: () => SpaceSays = () => ({}),
     private readonly sketch: () => Sketch | null = () => null,
+    private readonly centre: () => string | null = () => null,
   ) {}
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
@@ -84,13 +84,15 @@ export class SpaceSwitch {
       if (view) el ? fadeOut(el, () => view.close()) : view.close();
       return;
     }
-    if (this.view) return this.view.cards(mode === 'cards');
+    if (this.view) return this.view.as(mode);
     const svg = this.svg(),
       frame = svg?.parentElement;
     if (!svg || !frame) return this.closed(turn);
     flatAgain(svg); // read as drawn: in space it is bent there
     const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
       cards: mode === 'cards',
+      globe: mode === 'globe',
+      centre: this.centre, // an exploration's centre faces you on the globe (globe_explore_centre)
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',

@@ -126,6 +126,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.spread': 'Layout: balls in space',
   'space.height-groups': 'Height: groups',
   'space.height-links': 'Height: links',
+  'space.globe': 'Globe',
+  'bar.space-globe': 'Globe', // the bar's button with the drawing on a globe (globe_view)
   // a graph too large to draw, as its overview (§53, massive-view.ts)
   'massive.name':
     'Overview of {graph}: {things} things in {groups} groups. Drag to move, scroll to zoom, or find a thing by name.',
