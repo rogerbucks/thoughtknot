@@ -83,15 +83,40 @@ export function overlayChange(doc: string, note: string, graph: string, o: Overl
   return { doc, from: end, to: end, text: `,\n${line}` };
 }
 
-/** The change that sets `key` of the statement on `line` (1-based) of `text` to `value`, or nothing. */
+/** `text` from `start` to the end of its statement: a comma or line end outside any bracket or quote, or the end. */
+function statementEnd(text: string, start: number): number {
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "'") {
+      for (i++; i < text.length && text[i] !== "'"; i++) if (text[i] === '\\') i++;
+    } else if ('([{'.includes(ch)) depth++;
+    else if (')]}'.includes(ch)) depth--;
+    else if (depth <= 0 && (ch === ',' || ch === '\n')) return i;
+  }
+  return text.length;
+}
+
+/**
+ * The change that sets `key` of the statement on `line` (1-based) of `text` to `value`, or nothing: nothing when `key`
+ * is not a plain name, or when that statement does not hold it. It never reaches into the next statement.
+ */
 export function homeChange(doc: string, text: string, line: number, key: string, value: string): Change | null {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return null;
   const start =
     text
       .split('\n')
       .slice(0, line - 1)
       .join('\n').length + (line > 1 ? 1 : 0);
-  const m = new RegExp(`\\b${key}\\s*:\\s*('(?:[^'\\\\]|\\\\.)*'|[^,}\\s]+)`).exec(text.slice(start));
-  return m ? { doc, from: start + m.index, to: start + m.index + m[0].length, text: `${key}: ${quoted(value)}` } : null;
+  const statement = text.slice(start, statementEnd(text, start));
+  const bare = statement.replace(/'(?:[^'\\]|\\.)*'/g, (q) => '_'.repeat(q.length));
+  const m = new RegExp(`(?<=[{,]\\s*)${key}\\s*:\\s*`).exec(bare);
+  if (!m) return null;
+  const rest = statement.slice(m.index + m[0].length);
+  const v = /^(?:'(?:[^'\\]|\\.)*'|[^,}\s]+)/.exec(rest);
+  if (!v) return null;
+  const from = start + m.index;
+  return { doc, from, to: from + m[0].length + v[0].length, text: `${key}: ${quoted(value)}` };
 }
 
 /** `c` with the thing `o` names holding its value. */
