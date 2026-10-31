@@ -204,8 +204,7 @@ function turnedTo(spots: ReadonlyMap<string, GlobeVec>, to: Vec3): Map<string, G
   if (sin < 1e-9) return new Map(spots);
   const k = scale(axis, 1 / sin);
   // Rodrigues: each spot turned by the angle between the two ways, round the line square to both
-  const turn = (v: Vec3): GlobeVec =>
-    add(add(scale(v, cos), scale(cross(k, v), sin)), scale(k, dot(k, v) * (1 - cos))) as GlobeVec;
+  const turn = (v: Vec3): GlobeVec => add(add(scale(v, cos), scale(cross(k, v), sin)), scale(k, dot(k, v) * (1 - cos)));
   return new Map([...spots].map(([key, v]) => [key, turn(v)]));
 }
 
