@@ -12,6 +12,7 @@ const compare = (a, b) =>
     .map(Number)
     .reduce((d, n, i) => d || n - Number(b.split('.')[i]), 0);
 
+// proves: community_listing
 test('the newest version in versions.json is the one in manifest.json', () => {
   const newest = Object.keys(read('versions.json')).sort(compare).at(-1);
   assert.equal(newest, read('manifest.json').version);
