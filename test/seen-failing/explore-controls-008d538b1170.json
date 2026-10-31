@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-controls.test.js",
+  "test": "Explore from here is a toggle, and Show only ends the exploration",
+  "seen_failing_first": false,
+  "evidence": "Added at review to pin behaviour the first commit already had (the toggle and the hand-off to Show only), so it passes against the code before it."
+}
