@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { connect, sourceOf } from '@thoughtknot/core';
-import { applyBundle, changesFor, overlaysOf, rejoin, undoBundle } from '../src/index.ts';
+import { applyBundle, changesFor, homeChange, overlaysOf, rejoin, undoBundle } from '../src/index.ts';
 import { copyAll, devices } from './helpers.js';
 
 const FROM = '// graph: team · FROM Graphs/people.gql, [[Roles]], sample:robots';
@@ -121,5 +121,20 @@ describe('connectors over sync', () => {
       [valueOf(r, 'ann', 'role'), valueOf(r, 'bob', 'name'), valueOf(r, 'r2', 'name')],
       ['Chief', 'Robert', 'Artoo'],
     );
+  });
+
+  test('a home edit stays inside its own statement and takes only a plain key (CODE-14)', () => {
+    const text = "(a:Person {name: 'A'}),\n(b:Person {name: 'B', role: 'Lead'})\n";
+    assert.equal(
+      homeChange('x.gql', text, 1, 'role', 'Chief'),
+      null,
+      'the first statement has no role: nothing, not the next one',
+    );
+    const change = homeChange('x.gql', text, 2, 'role', 'Chief');
+    assert.equal(text.slice(change.from, change.to), "role: 'Lead'");
+    assert.equal(change.text, "role: 'Chief'");
+    const quoted = "(a:Person {name: 'x, role: y'})\n(b:Person {role: 'Lead'})";
+    assert.equal(homeChange('x.gql', quoted, 1, 'role', 'Chief'), null, 'a key inside a quoted value is not a key');
+    for (const key of ['', 'a,b', 'x}', '.*', "a'b"]) assert.equal(homeChange('x.gql', text, 2, key, 'v'), null, key);
   });
 });

@@ -45,7 +45,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | SEC-29 | The desktop app drops a note's file mode on every save | ●●○ | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
-| CODE-14 | A connector edit can overwrite another thing's value | ●●○ | ●●● | fix-now | hours |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | ●●● | ●●● | fix-now | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
@@ -412,16 +411,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.
 
-### CODE-14 A connector edit can overwrite another thing's value
-
-**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/sync/src/connected.ts`.
-
-**Risk:** homeChange looks for the key from the chosen line to the end of the document. If that statement lacks the key, it changes the next statement that has it. The key is also used unescaped in a pattern and in the GQL text.
-
-**Fix:** Limit the search to the one statement. Return no change when the key is absent in it. Escape the key in the pattern and refuse a key that is not a plain name.
-
-**Check:** A test in packages/sync/test gives two statements, sets a key only the second holds on the first, and asserts no change. Another passes a key with a comma and a bracket and asserts it is refused.
-
 ### ARCH-14 The AI-made rule at the boundary reads a flag nothing writes
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/boundary/src/parcel.ts`, `packages/core/src/export-boundary.ts`, `packages/core/src/proposals-author.ts`.
@@ -564,5 +553,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | accepted | Roger, 31 Oct 2026 (asked in the R2 release thread): It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later. |
+| CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | OPS-14 | versions.json lists 0.7.1, which was never tagged | done | #1633; kept out by `test/versions-json.test.js` |
