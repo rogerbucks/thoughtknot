@@ -32,11 +32,13 @@ export interface ChangesAsked {
   listed: { versions: Set<string>; items: Map<string, ReviewItem> };
 }
 
-const json = (status: number, body: object): ApiAnswer => ({
+/** An answer in JSON, with any headers of its own. */
+export const answer = (status: number, body: object, headers: Record<string, string> = {}): ApiAnswer => ({
   status,
   text: JSON.stringify(body),
-  headers: { 'content-type': 'application/json; charset=utf-8' },
+  headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
 });
+const json = answer;
 
 /** Answers `tail`, a route of changes on one note: the versions, a text at one, the review items, or one item. */
 export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiAnswer> {

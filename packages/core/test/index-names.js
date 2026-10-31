@@ -107,6 +107,7 @@ export const VALUES = [
   'DRAW_MARK_LIMIT',
   'DRAW_TEXT_LIMIT',
   'DeferredNotDeclared',
+  'EASIER_READING_CLASS',
   'EXPORT_FORMATS',
   'EXTENSION_POINTS',
   'FADE',

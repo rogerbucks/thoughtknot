@@ -177,7 +177,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const pane = doc.createElement('div');
     pane.setAttribute('class', 'gn-pane');
     graph.append(pane);
-    await openEditorPane(pane, page, settings, layouts);
+    await openEditorPane(pane, page, settings, layouts, () => calls.pictures(note));
     if (!page.session) await showGraph(win, pane, page.text, layouts);
     // the changes view: the note now against an earlier version the user picks, read only when asked (changes_view)
     const shownGraph = readNote(gqlBlocks(page.text).map((b) => b.text))
