@@ -3222,3 +3222,15 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-picture-hidden .internal-embed {
   display: none;
 }
+
+/* Compare with (§41, changes_view_obsidian): the changes drawn as wide as the window allows, the list beside in words */
+.thoughtknot-compare-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  align-items: center;
+}
+.thoughtknot-compare-drawing img {
+  max-width: 100%;
+  height: auto;
+}

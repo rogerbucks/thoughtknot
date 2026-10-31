@@ -7,11 +7,14 @@ import type { NoteStorage, StoredNote, WriteOutcome } from '@thoughtknot/core';
 import { notePath, noteVersion, refusal, REFUSED } from '@thoughtknot/core';
 
 /**
- * The notes of the app's vault. Its config folder and other hidden folders are left out, as their paths are not notes.
+ * The notes of the app's vault. `kept` is told a note's text just before a write or change replaces it. Its config folder and other hidden folders are left out, as their paths are not notes.
  * A note removed goes where the person's deleted files go, as their setting says. With `cached`, a note is read from
  * Obsidian's cache, as a note only shown is. A change is still checked against the note as it is on disk.
  */
-export function vaultStorage({ vault, fileManager }: App, { cached = false } = {}): NoteStorage {
+export function vaultStorage(
+  { vault, fileManager }: App,
+  { cached = false, kept }: { cached?: boolean; kept?: ((path: string, before: string) => void) | undefined } = {},
+): NoteStorage {
   const at = async (path: string): Promise<StoredNote | null> => {
     const file = vault.getFileByPath(path);
     if (!file) return null;
@@ -40,7 +43,10 @@ export function vaultStorage({ vault, fileManager }: App, { cached = false } = {
       await vault.process(file, (was) => {
         const current = { text: was, version: noteVersion(was) };
         const reason = refusal(current, options);
-        if (!reason) return text;
+        if (!reason) {
+          if (was !== text) kept?.(file.path, was); // its text before, for Compare with (note-history.ts)
+          return text;
+        }
         outcome = { ok: false, reason, current };
         return was;
       });
@@ -49,7 +55,11 @@ export function vaultStorage({ vault, fileManager }: App, { cached = false } = {
     change: async (path, edit) => {
       const file = vault.getFileByPath(notePath(path));
       if (!file) return { ok: false, reason: REFUSED.missing, current: null };
-      const text = await vault.process(file, edit);
+      const text = await vault.process(file, (was) => {
+        const now = edit(was);
+        if (now !== was) kept?.(file.path, was); // its text before, for Compare with (note-history.ts)
+        return now;
+      });
       return { ok: true, text, version: noteVersion(text) };
     },
     remove: async (path, options) => {

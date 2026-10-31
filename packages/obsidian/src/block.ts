@@ -49,6 +49,7 @@ import { showMassive } from './massive-card';
 import { overviewInParts } from './note-store';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { compareWith } from './changes/compare-with';
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
@@ -347,6 +348,7 @@ export async function renderBlock(
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       sketching: sketchingFor(plugin, target.path, graph, info?.text),
       exporting,
+      compare: () => compareWith(plugin, target.path, graph), // an earlier version drawn with it (risk NEURO-2)
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',

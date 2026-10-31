@@ -154,6 +154,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   }
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)
   if (o.exporting) button(more, word('bar.export'), 'download', () => on.export(), word('bar.export'));
+  // Compare with only looks, so it is offered wherever the drawing is (§41, changes_view_obsidian)
+  if (o.compare) button(more, word('changes.compare'), 'history', () => o.compare?.(), word('changes.compare'));
   const editing: HTMLElement[] = [];
   let editButton: HTMLButtonElement | null = null;
   if (mode !== 'pane' && o.onEditHere) {
