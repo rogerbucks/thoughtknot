@@ -34,7 +34,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       changed: ${{ steps.scope.outputs.changed }}
-      scope: ${{ steps.scope.outputs.scope }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,12 +50,6 @@ jobs:
         run: |
           if [ -n "$SINCE" ]; then node scripts/risk-register.mjs --stale --json --since "$SINCE" > scope.json
           else node scripts/risk-register.mjs --stale --json > scope.json; fi
-          cat scope.json
-          {
-            echo "scope<<EOF"
-            cat scope.json
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
           if [ "$(node -p "const s=require('./scope.json'); s.stale.length + Object.keys(s.roles).length")" = "0" ]; then
             echo "Nothing the panel watches has changed: no session this time."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -138,7 +131,8 @@ jobs:
             with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
           claude_args: |
             --allowedTools "Read,Grep,Glob,Write,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
-      - if: steps.token.outputs.set == 'true'
+      # always(): a run that is cut short or fails still leaves what the panel wrote so far
+      - if: always() && steps.token.outputs.set == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: risk-panel
@@ -148,6 +142,7 @@ jobs:
 
   report:
     needs: panel
+    if: always() && needs.panel.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -161,8 +156,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           body=panel-out/panel.md
+          # GitHub caps an issue body at 65,536 characters: keep the head and point to the run for the rest
+          if [ -s "$body" ] && [ "$(wc -c < "$body")" -gt 60000 ]; then
+            head -c 60000 "$body" > panel-out/short.md
+            printf '\n\n(Cut to fit an issue. The whole report is in the risk-panel artifact of this run: %s)\n' "$RUN_URL" >> panel-out/short.md
+            body=panel-out/short.md
+          fi
           number=$(gh issue list --label risk-panel --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ ! -s "$body" ]; then
             [ -n "$number" ] && gh issue close "$number" --comment "The panel found nothing new to add."
