@@ -36,6 +36,7 @@ export async function waitShown<T>(
   // one timer at a time, each set by the one before, so the last is the one cleared
   const tick = (words: HTMLElement) => {
     timer = window.setTimeout(() => {
+      if (typeof window === 'undefined') return;
       seconds += 1;
       words.setText(said());
       if (seconds * 1000 === stopAfter && shown)
@@ -44,6 +45,7 @@ export async function waitShown<T>(
     }, 1000);
   };
   timer = window.setTimeout(() => {
+    if (typeof window === 'undefined') return; // the page is gone: nothing to show a wait on
     seconds = Math.floor(after / 1000);
     // the thing waited on is busy, said to a screen reader too (risk UX-4)
     parent.setAttribute('aria-busy', 'true');
