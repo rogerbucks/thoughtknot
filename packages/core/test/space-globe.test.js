@@ -3,12 +3,15 @@
 // - Each thing is a ball on the globe, its name on it; each link an arc ending in an arrowhead.
 // - Seen from outside, the far side is hidden; from inside, all of it shows.
 // - A link's words show only once the camera dives near; names show nearest first as there is room.
-// - Laid again, each thing keeps its spot, and an exploration's centre faces the camera first.
+// - Laid again, each thing keeps its spot, and an exploration's centre faces the camera first; a new centre turns it.
+// - A thing's properties show beside it only once the camera comes near it.
+// - A drag turns the globe with the pointer: its front goes the way the pointer goes.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GLOBE_FACING } from '../src/layouts/globe.ts';
 import { GlobeLayout, facingHalf, globeSpace } from '../src/space-globe.ts';
-import { eyeOf, orbitFit } from '../src/space-view.ts';
+import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
+import { turnRound } from '../src/space-controls.ts';
 
 /** A box mark for thing `key`, as svg-marks.ts reads one, with its name's label. */
 const thing = (key) => [
@@ -104,4 +107,49 @@ test("the globe opens facing the viewer with an exploration's centre, and each t
     globe.facing(first, orbitFit(first, 1), true).blocks.length < first.blocks.length,
     'on, the far side hides',
   );
+});
+
+test("a thing's properties show beside it only once the camera comes near it", () => {
+  const details = (key) => (key === 'hub' ? ['status: open', 'owner: Ada'] : []);
+  const { space } = globeSpace(HUB, undefined, 'hub', details);
+  const said = space.labels.find((l) => l.text === 'status: open · owner: Ada');
+  assert.ok(said && said.of === undefined, 'one line of properties, below the hub, not its name');
+  assert.equal(space.labels.filter((l) => l.text.includes('owner')).length, 1, 'only things with properties get one');
+  const r = space.globe.radius,
+    from = (k) =>
+      facingHalf(
+        space,
+        GLOBE_FACING.map((c) => c * r * k),
+        space.globe,
+      );
+  assert.ok(!from(3).labels.includes(said), 'far out, no properties');
+  assert.ok(!from(1.6).labels.includes(said), 'diving in, still none till near the thing');
+  assert.ok(from(1.2).labels.includes(said), 'near the hub, its properties show');
+});
+
+test('a new centre turns the whole globe to face the viewer, each thing kept where it is on it', () => {
+  const globe = new GlobeLayout();
+  const first = globe.lay(HUB, 'hub');
+  const at = (space, k) => middle(space.blocks.find((b) => b.of === k));
+  const then = globe.lay(HUB, 's7');
+  const s7 = at(then, 's7');
+  assert.ok(s7.reduce((s, c, i) => s + c * GLOBE_FACING[i], 0) / length(s7) > 0.999, 's7 now faces the viewer');
+  // turned all together: the gaps between things are as they were
+  const gap = (a, b) => Math.hypot(...a.map((c, i) => c - b[i]));
+  for (const [a, b] of [
+    ['hub', 's7'],
+    ['s1', 's12'],
+    ['s3', 's19'],
+  ])
+    assert.ok(Math.abs(gap(at(first, a), at(first, b)) - gap(at(then, a), at(then, b))) < 1e-6, `${a} to ${b} kept`);
+  assert.deepEqual(at(globe.lay(HUB, 's7'), 'hub'), at(then, 'hub'), 'the same centre again turns nothing');
+});
+
+test('a drag turns the globe with the pointer, in every 3D way of showing it', () => {
+  const orbit = { target: [0, 0, 0], distance: 600, turn: -Math.PI / 2, tilt: 0.9 };
+  const front = GLOBE_FACING.map((c) => c * 200);
+  const seen = (o) => projectPoint(spaceMatrix(o, 1, 2000), front, 800, 800);
+  const was = seen(orbit);
+  assert.ok(seen(turnRound(orbit, 50, 0, [0, 0, 0])).x > was.x + 20, 'dragged right, its front goes right');
+  assert.ok(seen(turnRound(orbit, 0, 50, [0, 0, 0])).y > was.y + 20, 'dragged down, its front goes down');
 });

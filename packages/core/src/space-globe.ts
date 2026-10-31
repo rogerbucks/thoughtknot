@@ -8,7 +8,7 @@
 // Names show as there is room, nearest first (space-labels.ts), so more show as you dive in. A link's words show only
 // once you are near enough to read them. From inside the globe nothing is hidden: you see the whole inner surface.
 // Host-free and pure.
-import { globeArc, globeSpots } from './layouts/globe.ts';
+import { GLOBE_FACING, globeArc, globeSpots } from './layouts/globe.ts';
 import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
@@ -25,6 +25,15 @@ const ARROW_MOST = 18;
 const HORIZON = 0.05;
 /** How near a link's words must be, as a share of the globe's radius, before they show: only once you dive in. */
 const WORDS_NEAR = 1.6;
+/** How near the camera must come to a thing, as a share of the globe's radius, before its properties show. */
+const DETAIL_NEAR = 0.6;
+/** How far below its ball a thing's properties sit, over the surface, as a share of the ball's radius. */
+const DETAIL_BELOW = 1.7;
+/** The end of the id of a label that holds a thing's properties. */
+const DETAIL = '\ndetail';
+
+/** A thing's properties, as lines to show beside it once the camera comes near (globe_dive_detail). */
+export type GlobeDetails = (key: string) => readonly string[];
 
 /** The globe a space is laid on: its middle and radius. Only a globe's space has one. */
 export interface GlobeOf {
@@ -37,12 +46,13 @@ export type GlobeSpace = SpaceMarks & { globe: GlobeOf };
 
 /**
  * `marks` laid on a globe, `centre` facing the viewer. Given last time's `previous` spots, each thing placed already
- * keeps its spot (explore_stays_put). It gives back the spots used too, for next time.
+ * keeps its spot (explore_stays_put). Each thing's `details` sit just below it. It gives back the spots used too.
  */
 export function globeSpace(
   marks: readonly DrawMark[],
   previous?: ReadonlyMap<string, GlobeVec>,
   centre?: string | null,
+  details?: GlobeDetails,
 ): { space: GlobeSpace; spots: Map<string, GlobeVec> } {
   const shape = shapeOfMarks(marks);
   const kept = previous && new Map([...previous].filter(([k]) => shape.things.some((t) => t.key === k)));
@@ -89,6 +99,15 @@ export function globeSpace(
         text,
         size: NAME_SIZE,
         of: m.of,
+      });
+    const said = details?.(m.of) ?? [];
+    if (said.length)
+      labels.push({
+        id: `${m.id}${DETAIL}`,
+        style: m.style,
+        at: below(c, r * DETAIL_BELOW),
+        text: said.join(' · '),
+        size: WORDS_SIZE,
       });
   }
   const lines: SpaceLine[] = [],
@@ -144,7 +163,10 @@ export function facingHalf<S extends SpaceMarks>(space: S, eye: Vec3, g: GlobeOf
     const run = longestRun(l.points, shows);
     return run.length < 2 ? [] : [{ ...l, points: run }];
   });
-  const labels = space.labels.filter((l) => shows(l.at) && (l.link === undefined || near));
+  // a link's words show once the camera dives in; a thing's properties only once it comes near that thing
+  const seen = (l: SpaceLabel) =>
+    l.id.endsWith(DETAIL) ? gap(eye, l.at) <= g.radius * DETAIL_NEAR : l.link === undefined || near;
+  const labels = space.labels.filter((l) => shows(l.at) && seen(l));
   return { ...space, blocks, lines, labels, arrows: space.arrows.filter((a) => shows(a.tip)) };
 }
 
@@ -152,10 +174,17 @@ export function facingHalf<S extends SpaceMarks>(space: S, eye: Vec3, g: GlobeOf
 export class GlobeLayout {
   private spots: Map<string, GlobeVec> | undefined;
   private globe: GlobeOf | undefined;
+  private centre: string | null | undefined;
 
-  /** `marks` laid on the globe, `centre` facing the viewer the first time; each thing laid before keeps its spot. */
-  lay(marks: readonly DrawMark[], centre?: string | null): GlobeSpace {
-    const laid = globeSpace(marks, this.spots, centre);
+  /**
+   * `marks` laid on the globe, `centre` facing the viewer; each thing laid before keeps its spot. A new centre turns the
+   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round.
+   */
+  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails): GlobeSpace {
+    const now = centre && this.spots?.get(centre);
+    if (now && centre !== this.centre) this.spots = turnedTo(this.spots as Map<string, GlobeVec>, now);
+    this.centre = centre;
+    const laid = globeSpace(marks, this.spots, centre, details);
     [this.spots, this.globe] = [laid.spots, laid.space.globe];
     return laid.space;
   }
@@ -164,6 +193,29 @@ export class GlobeLayout {
   facing<S extends SpaceMarks>(space: S, orbit: Orbit, on: boolean): S {
     return on && this.globe ? facingHalf(space, eyeOf(orbit), this.globe) : space;
   }
+}
+
+/** `spots` all turned together round the globe's middle, so the spot `to` comes to face the viewer. */
+function turnedTo(spots: ReadonlyMap<string, GlobeVec>, to: Vec3): Map<string, GlobeVec> {
+  const from = scale(to, 1 / (Math.hypot(...to) || 1)),
+    axis = cross(from, GLOBE_FACING),
+    sin = Math.hypot(...axis),
+    cos = dot(from, GLOBE_FACING);
+  if (sin < 1e-9) return new Map(spots);
+  const k = scale(axis, 1 / sin);
+  // Rodrigues: each spot turned by the angle between the two ways, round the line square to both
+  const turn = (v: Vec3): GlobeVec =>
+    add(add(scale(v, cos), scale(cross(k, v), sin)), scale(k, dot(k, v) * (1 - cos))) as GlobeVec;
+  return new Map([...spots].map(([key, v]) => [key, turn(v)]));
+}
+
+/** The point `by` below `p` over the globe: toward its south, or across where it has none, at the poles. */
+function below(p: Vec3, by: number): Vec3 {
+  const n = scale(p, 1 / (Math.hypot(...p) || 1)),
+    north = sub([0, 0, 1], scale(n, n[2])),
+    long = Math.hypot(...north);
+  const down = long > 1e-6 ? scale(north, -1 / long) : ([1, 0, 0] as Vec3);
+  return add(p, scale(down, by));
 }
 
 /** The longest run of `points` one after another that `shows` keeps. */
@@ -215,3 +267,8 @@ const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const cross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];

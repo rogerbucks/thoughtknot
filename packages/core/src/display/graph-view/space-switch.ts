@@ -5,7 +5,7 @@
 // So the view in space opens inside the drawing's frame, under the card's bar (space-view-panel.ts). The bar's types,
 // View menu, Find, filter, full screen and details all work on it as on the flat drawing. Fit and zoom move its camera.
 // It stays open as the View menu lays the drawing out again, and as the type changes (type-place.ts).
-import { spaceMode, word } from '@thoughtknot/core';
+import { propertiesOf, spaceMode, word } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
@@ -18,12 +18,15 @@ import { flatAgain } from './lens-svg';
 import type { ViewOptions } from './view-options';
 
 /** What the card's options say of the view in space: its type, its spacing, and whether its mini-map shows. */
-export type SpaceSays = Pick<ViewOptions, 'diagram' | 'switches' | 'aids'>;
+export type SpaceSays = Partial<Pick<ViewOptions, 'diagram' | 'switches' | 'aids' | 'reading' | 'graph'>>;
 
 export type { SpaceMode };
 
 /** Each way in the order the button goes through them, and what it says for each. */
 const MODES: (SpaceMode | null)[] = [null, 'cards', 'balls', 'globe'];
+
+/** How many of a thing's properties the globe shows beside it. */
+const GLOBE_PROPERTIES = 3;
 
 const WORDS = ['bar.space-flat', 'bar.space-cards', 'bar.space-balls', 'bar.space-globe'] as const;
 
@@ -109,6 +112,7 @@ export class SpaceSwitch {
       cards: mode === 'cards',
       globe: mode === 'globe',
       centre: this.centre, // an exploration's centre faces you on the globe (globe_explore_centre)
+      details: (key) => this.details(key),
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',
@@ -143,6 +147,15 @@ export class SpaceSwitch {
     this.now = null;
     this.label();
     if (this.button?.isConnected) this.svg()?.parentElement?.focus();
+  }
+
+  /** The first few properties of the thing `key`, as the card reads them: shown beside it on the globe as you near. */
+  private details(key: string): string[] {
+    const { reading, graph } = this.says();
+    if (!reading || graph === undefined) return [];
+    return propertiesOf(reading, graph, { thing: key })
+      .slice(0, GLOBE_PROPERTIES)
+      .map((p) => `${p.key}: ${p.value}`);
   }
 
   /** The button says how the drawing is shown now, and is pressed while it is in space. */
