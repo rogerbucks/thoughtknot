@@ -292,6 +292,12 @@ The note store (workstream C1), the real `api`:
     the gate's `file` word (a credential or a classification it gives; none counts as the lowest).
   - These routes live in `server/editor-changes.ts`.
 
+### Pictures for readers
+
+- `GET notes/<id>/pictures` says whether each picture for readers of the note is up to date, by graph (§62). The page's
+  bar says it. Only `current` or `stale` is sent, never anything of a picture, and the note is held to the gate (410
+  when refused). It is read in `server/note-pictures.ts`.
+
 ### History and GitHub
 
 - `server/note-history.ts` — `GIT_HISTORY` (changes_view): the open note's earlier versions in the git repository it
@@ -319,6 +325,9 @@ The note store (workstream C1), the real `api`:
   - It must have no part starting with a dot (`.obsidian`, `.git`, `.trash`, a hidden file).
   - A link that leads out of the vault, into a hidden folder or onto another kind of file is refused, each saying why.
   - So is a file with a second hard link (`nlink > 1`), which could lie outside the vault.
+- `server/note-pictures.ts` — `pictureStates` (§62): each picture's state, from its mark alone.
+  - It reads the first `PICTURE_HEAD_BYTES` of a file named `.thoughtknot.svg` inside the vault, in no hidden folder.
+  - No step of its path may be a link, and it opens with `O_NOFOLLOW`. A picture it may not read is out of date.
 - `server/note-file.ts` — `readNoteFile` and `writeAtomically`.
   - `readNoteFile` reads the whole note within the core's read limit, with `O_NOFOLLOW`. The path's real path must
     still be itself once it is open, so no folder swapped for a link is read through.

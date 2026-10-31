@@ -15,6 +15,9 @@ export interface NoteReply {
   draft: { text: string; against: string | null } | string | null;
 }
 
+/** Up to date or out of date, by graph, for each graph of a note with a picture for readers (§62). */
+export type PictureStates = Record<string, 'current' | 'stale'>;
+
 /** A write made: the note's new version. */
 export interface WriteReply {
   version: string;

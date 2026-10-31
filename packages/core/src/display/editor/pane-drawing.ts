@@ -37,7 +37,7 @@ import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
-import type { Chosen, SwitchesShown } from '../graph-view/view-options';
+import type { Chosen, PictureStatus, SwitchesShown } from '../graph-view/view-options';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
 
@@ -52,6 +52,8 @@ export interface PaneHost {
   saveFilter?: (graph: string, keep: FilterKeep) => void;
   /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
   noteText?: () => string;
+  /** Whether a graph's picture for readers is up to date, for the bar to say (§62). Not set: the bar says nothing of it. */
+  picture?: (graph: string) => PictureStatus;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -88,6 +90,7 @@ function drawInPane(
   switches: SwitchesShown,
   callouts: boolean,
   aids: ViewerAids,
+  picture?: PictureStatus,
 ) {
   host.empty();
   if (!drawn) {
@@ -119,6 +122,7 @@ function drawInPane(
     writeBlock: (_block, was, now) => Promise.resolve(fixInPane(s, on, was, now)),
     // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
+    ...(picture && { picture }),
   });
 }
 
@@ -229,6 +233,7 @@ export class PaneDrawing extends Lifecycle {
           { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
           aidsOf(this.host.settings(), readStyle(reading.texts, s.graph, reading).style), // its own preset first (§69)
+          this.host.picture?.(s.graph),
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);
