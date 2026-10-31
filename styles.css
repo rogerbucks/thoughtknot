@@ -3227,7 +3227,7 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-compare-pick {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-4-2);
+  gap: var(--gn-space-2);
   align-items: center;
 }
 .thoughtknot-compare-drawing img {
