@@ -87,7 +87,7 @@
 (core_lenses:Area {name: 'Lenses', section: '33', does: 'The lenses a person can open: the ready-made ones, the saved ones, and how often and how lately each is run.', files: 'packages/core/src/lens-library.ts packages/core/src/lens-freshness.ts'}),
 (core_claude_gate:Area {name: 'What Claude may see', section: '26', does: 'What the browser editor may show Claude, and never a credential.', files: 'packages/core/src/claude-gate.ts'}),
 (core_tools:Area {name: 'Build and command line', section: '9', does: 'The build of the layout worker, and the layout source written from the command line.', files: 'packages/core/bin/** packages/core/esbuild.layout.mjs'}),
-(core_hosts:Area {name: 'Host helpers', section: '10', does: 'Small helpers the hosts share: the matrix table, refusal words, the vault folder.', files: 'packages/core/src/hosts/**'}),
+(core_hosts:Area {name: 'Host helpers', section: '10', does: 'Small helpers the hosts share: the matrix table, refusal words, the vault folder, the graphs and things last opened.', files: 'packages/core/src/hosts/** packages/core/src/recent.ts'}),
 (core_view_types:Area {name: 'View types', section: '7', does: 'The view types drawn without Graphviz: arcs, blocks, chords, density, ego, force, grid, hive, matrix, plan, treemap.', files: 'packages/core/src/view-types/**'}),
 // The display layer, by folder. The graph view reached its ceiling of 80 files on 26 Oct 2026 and was cut by file name
 // into the huge-graph views, the space view, the details and quick info, and untangling. Its ceiling is now 60.

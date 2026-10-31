@@ -51,6 +51,7 @@ function renderRecent(body: HTMLElement, reading: NoteReading): void {
       thing === undefined
         ? word('summary.recent-graph', { graph: v.graph, note })
         : word('summary.recent-thing', { thing, graph: v.graph, note });
-    button(ul.createEl('li'), text, 'file-text', () => recent.open(v), text);
+    const row = ul.createEl('li');
+    button(row, text, 'file-text', () => recent.open(v), text);
   }
 }
