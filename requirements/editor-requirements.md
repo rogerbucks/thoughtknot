@@ -1812,8 +1812,8 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_explore_shapes:Test {proves: 'each of the six shapes lays out an exploration in 2D, 2.5D and 3D, and switching keeps what is open', file: 'packages/core/test/explore-shapes.test.js', where: 'repo', status: 'partial'}),
 (test_explore_stays_put:Test {proves: 'opening or closing a branch moves no thing already on screen', file: 'packages/core/test/explore-shapes.test.js', where: 'repo', status: 'partial'}),
 (test_explore_badges:Test {proves: 'each shown thing with hidden neighbours has a badge with their count, and a click on it only opens', file: 'packages/obsidian/test/explore-controls.test.js', where: 'repo', status: 'partial'}),
-(test_explore_controls_on_screen:Test {proves: 'the sidebar shows the dials and buttons while exploring, and a strip on narrow screens', file: 'packages/obsidian/test/explore-view.test.js', where: 'repo', status: 'planned'}),
-(test_explore_controls_accessible:Test {proves: 'every dial works by click, wheel and keys and announces its value', file: 'packages/obsidian/test/explore-view.test.js', where: 'repo', status: 'planned'}),
+(test_explore_controls_on_screen:Test {proves: 'the sidebar shows the dials and buttons while exploring, and a strip on narrow screens', file: 'packages/obsidian/test/explore-sidebar.test.js', where: 'repo', status: 'partial'}),
+(test_explore_controls_accessible:Test {proves: 'every dial works by click, wheel and keys and announces its value', file: 'packages/obsidian/test/explore-sidebar.test.js', where: 'repo', status: 'partial'}),
 (test_explore_every_view:Test {proves: 'every view shows only what is open, and lenses work on top', file: 'packages/obsidian/test/explore-view.test.js', where: 'repo', status: 'planned'}),
 (test_explore_saved:Test {proves: 'an exploration saved in edit mode opens again, and the reader picture shows it', file: 'packages/core/test/explore-saved.test.js', where: 'repo', status: 'planned'}),
 // ── Open questions ──

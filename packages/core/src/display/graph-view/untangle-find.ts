@@ -11,6 +11,8 @@ export interface FindActions {
   choose: (found: Found) => void;
   /** Escape was pressed in the box: closes the row and gives the focus back to the button that opened it. */
   close: () => void;
+  /** Explores from the thing found, mind-map style; each result offers it beside its name when given (§71). */
+  explore?: (found: Found) => void;
 }
 
 /** The search row of a card, hidden until the bar's button opens it, and how to put the cursor in its box. */
@@ -49,6 +51,16 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
         attr: { type: 'button' },
       });
       b.addEventListener('click', () => on.choose(f));
+      const explore = on.explore;
+      if (explore) {
+        const words = word('find.explore', { thing: f.text });
+        const e = b.parentElement?.createEl('button', {
+          cls: 'thoughtknot-find-explore',
+          text: word('details.explore'),
+          attr: { type: 'button', 'aria-label': words, title: words },
+        });
+        e?.addEventListener('click', () => explore(f));
+      }
     }
   };
   input.addEventListener('input', run);

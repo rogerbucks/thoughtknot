@@ -1,11 +1,10 @@
 // The controls of an exploration on the card (editor spec §71). Roger, 31 Oct 2026: the controls sit on screen, with
-// no menu to open. The banner says what is explored and holds its controls: the whole graph again, a step further out
-// or nearer, Back, Next and the shape. Each shown thing with neighbours waiting has a badge on its box, its own target,
+// no menu to open. The banner says what is explored, with the whole graph again; the sidebar holds the rest
+// (explore-sidebar.ts). Each shown thing with neighbours waiting has a badge on its box, its own target,
 // which opens its branch; an open branch's badge closes it. Cross-links are marked, to be drawn faint and dashed.
 import { word } from '@thoughtknot/core';
 import type { FocusEdge } from '@thoughtknot/core';
 import type { ExploreSession } from '../../explore-session.ts';
-import { EXPLORE_SHAPES } from '../../layouts/explore-shapes.ts';
 import type { BannerRow } from './untangle-banner';
 
 /** What the controls ask of their card. */
@@ -18,25 +17,11 @@ export interface ExploreActs {
   text: (key: string) => string;
 }
 
-/** The banner's line for `s`: what it shows, and its controls. */
+/** The banner's line for `s`: what it shows, and the whole graph again. Its other controls are in the sidebar. */
 export function exploreRow(s: ExploreSession, acts: ExploreActs): BannerRow {
-  const run = (change: () => boolean) => () => {
-    if (change()) acts.changed();
-  };
-  const next = EXPLORE_SHAPES[(EXPLORE_SHAPES.indexOf(s.shape) + 1) % EXPLORE_SHAPES.length] ?? 'balanced';
   return {
     words: word('explore.showing', { thing: acts.text(s.centre), count: s.keys().length }),
-    actions: [
-      { label: word('explore.stop'), run: acts.stop },
-      { label: word('explore.deeper'), run: run(() => s.toDepth(s.depth + 1)) },
-      ...(s.depth > 1 ? [{ label: word('explore.nearer'), run: run(() => s.toDepth(s.depth - 1)) }] : []),
-      ...(s.canBack ? [{ label: word('explore.back'), run: run(() => s.back()) }] : []),
-      ...(s.canNext ? [{ label: word('explore.next'), run: run(() => s.next()) }] : []),
-      {
-        label: word('explore.shape', { shape: word(`explore.shape.${s.shape}`) }),
-        run: run(() => s.setShape(next)),
-      },
-    ],
+    actions: [{ label: word('explore.stop'), run: acts.stop }],
   };
 }
 

@@ -175,6 +175,7 @@ const OVER = [
   'thoughtknot-problems',
   'thoughtknot-view-menu',
   'thoughtknot-find',
+  'thoughtknot-explore-sidebar',
   'thoughtknot-filter',
   'thoughtknot-type-list',
   'thoughtknot-view-list',
