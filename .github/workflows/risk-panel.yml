@@ -90,6 +90,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
+          show_full_output: true
           prompt: |
             You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
             its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
