@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (41)
+## Open (38)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -17,13 +17,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| UX-8 | First-run syntax help is only in the wiki, not in the app | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | UX-10 | Design screenshots show the old 'Graph Note' brand and version | ●●● | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -133,26 +130,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/pseudo-locales.test.js fails on any plain English in those elements. A lint rule flags `new Notice('` and `text: '` with a sentence outside *-words.ts files.
 
-### UX-4 No busy state while a layout runs, and a silent stop after failures
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/editor/pane-drawing.ts`, `packages/core/src/layout-worker.ts`, `packages/obsidian/src/layout-worker/**`, `packages/claude-code/page/layout-runner.ts`.
-
-**Risk:** A layout may take 5 seconds, and the engine 30 seconds to start. Meanwhile the pane shows nothing or the old drawing with no sign of work. After three slow layouts drawing stops until the plugin reloads, and the user is told only in the developer console.
-
-**Fix:** Show a `role=status` line such as 'Laying out…' with a Cancel after about 300 ms. Mark the drawing `aria-busy`. Show the 'stopped' and 'on-the-page' messages as a banner or Notice with a 'Try again' button.
-
-**Check:** A test with a fake clock holds a layout for 400 ms and asserts the status text. Another test asserts a visible banner after TIMEOUTS_BEFORE_STOPPING failures.
-
-### UX-8 First-run syntax help is only in the wiki, not in the app
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/editor/pane-drawing.ts`, `packages/obsidian/src/main.ts`, `packages/graph-spec/src/reader/parser.js`, `wiki/How-to-use-ThoughtKnot.md`.
-
-**Risk:** An empty pane says 'Nothing to draw yet. Start with a thing.' with no example, no link to the guide and no command to insert one. Inline completion exists but the user guide never mentions it, so a new user types blind and meets a token-level parser error.
-
-**Fix:** Give the empty states a one-line example and a 'Read the guide' link. Add an 'Insert the example graph' command. Map parser errors to catalogue words with a hint ('Close the bracket after …').
-
-**Check:** test/ux-journey.test.js gains a stage that opens an empty block and asserts an example and guide link. test/ux-copy.test.js covers parser messages.
-
 ### UX-10 Design screenshots show the old 'Graph Note' brand and version
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `scripts/wiki-screens.mjs`.
@@ -192,16 +169,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Keep the viewport across a redraw. While a block is being edited, only re-lay out when a thing or link is added or removed, not on each property keystroke. add a setting 'Redraw while typing: after each pause / when I press Done'.
 
 **Check:** A test in packages/core/test types a property value. It asserts the zoom and every unchanged box's place are the same after the redraw.
-
-### NEURO-8 No two-minute first success: no insert-example command
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/obsidian/src/main.ts`, `packages/core/src/edit-source-words.ts`, `wiki/How-to-use-ThoughtKnot.md`.
-
-**Risk:** A new reader must type a seven-line block by hand from the guide, with a graph line, kinds, quotes and arrows, before anything is drawn. The empty-block prompt also asks them to type a pattern, so the first minute is all syntax and no reward.
-
-**Fix:** Add a command 'Insert an example graph'. Add a button on the empty-block prompt that writes the guide's example. The first drawing then appears in one press.
-
-**Check:** A test in packages/obsidian/test runs the command in an empty note and asserts a drawing with three things appears. test/wiki-guide.test.js asserts step 1 names the command.
 
 ### NEURO-11 No recently edited or recently visited list
 
@@ -463,7 +430,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (100)
+## Done or accepted (103)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -508,14 +475,17 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | done | #1550 |
+| UX-4 | No busy state while a layout runs, and a silent stop after failures | done | #1594 |
 | UX-5 | A drag on the card writes outside the note's editor undo path | done | #1550 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | UX-7 | Landing page and guide state no system requirements or AI data flow | done | #1550 |
+| UX-8 | First-run syntax help is only in the wiki, not in the app | done | #1594 |
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
 | NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | done | #1591 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
 | NEURO-6 | Every notice vanishes after five seconds and cannot be read again | done | #1588 |
+| NEURO-8 | No two-minute first success: no insert-example command | done | #1594 |
 | NEURO-9 | No reading options: letter spacing, line height or font | done | #1591 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
