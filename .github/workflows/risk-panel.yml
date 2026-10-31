@@ -94,8 +94,8 @@ jobs:
             You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
             its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
 
-            SCOPE (from scripts/risk-register.mjs --stale --json):
-            ${{ needs.scope.outputs.scope }}
+            SCOPE: run `node scripts/risk-register.mjs --stale --json` and read it. It is not pasted here, as the whole
+            register passed the limit on one command line (30 Oct 2026).
             EVERY ROLE: ${{ inputs.all_roles }}
 
             The roles: senior security engineer (also privacy), IT administrator and release engineer, senior coder
