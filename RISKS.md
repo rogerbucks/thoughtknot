@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (39)
+## Open (44)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -48,6 +48,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
+| SEC-22 | The desktop app's temp file can follow a planted link | ●○○ | ●●○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
+| SEC-23 | Kept drafts hold note text that Claude can read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| SEC-24 | A hand-started desktop build runs any branch with the signing keys | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
+| SEC-25 | The panel may write anywhere in its checkout | ●○○ | ●○○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
+| ARCH-13 | The phone's vault key has no recovery path | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 
 ## Each open risk
 
@@ -441,7 +446,57 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (94)
+### SEC-22 The desktop app's temp file can follow a planted link
+
+**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
+
+**Risk:** A note is written to a temp file named after the note and the process number, made with File::create. That call follows a link and truncates what it finds. A notes folder that another device or person syncs into could hold a link at that name. The write would then go outside the folder, past the check that only looks at the note's own path.
+
+**Fix:** Make the temp file with create_new, so it never opens an existing name or link. Give it a random part in its name. Check the temp path inside the folder as the note's own path is checked.
+
+**Check:** A Rust test in place.rs plants a link at the temp name that leads outside the folder. It asserts write_text fails and leaves the outside file alone.
+
+### SEC-23 Kept drafts hold note text that Claude can read
+
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/server/note-drafts.ts`.
+
+**Risk:** The data-folder guard refuses Claude's writes there but lets reads through. A draft is the whole typed text of a note, in a file named by a hash. If the person confirmed a note above Claude's classification ceiling, its unsaved text sits in a file Claude's Read tool can open. The file name hides the note, but Glob lists the folder.
+
+**Fix:** Refuse Claude's reads of the drafts folder as well as its writes. Or keep a draft only for notes within Claude's ceiling.
+
+**Check:** A test in packages/claude-code/test asks the guard to judge a Read of a draft file and asserts a refusal.
+
+### SEC-24 A hand-started desktop build runs any branch with the signing keys
+
+**Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`.
+
+**Risk:** The workflow gives the signing keys to every run that is not a pull request. That includes workflow_dispatch, which anyone with write access can start on any branch. The branch's own build scripts then run with the keys in the environment. Whether the keys sit in a protected environment is not visible from the repository.
+
+**Fix:** Give the keys only when the run is on main, a release, or a call from the nightly. Or move them to an environment that only main may use.
+
+**Check:** test/desktop-build.test.js reads the workflow and asserts the signing step's condition names main, and not workflow_dispatch on other refs.
+
+### SEC-25 The panel may write anywhere in its checkout
+
+**Who found it:** Senior security engineer. **Where:** `.github/workflows/risk-panel.yml`.
+
+**Risk:** The panel's allowed tools list has a bare Write beside Write(panel-out/*). The bare entry lets a prompt-injected session write any file in the checkout, with the Claude token in the job. Only panel-out is uploaded, so the harm today is small. The narrow rule alone was refused in CI on 31 Oct 2026, so the bare one stays until a narrow rule is found that works.
+
+**Fix:** Find a Write rule limited to panel-out that the action accepts, then remove the bare Write.
+
+**Check:** A test reads risk-panel.yml and asserts no allowed tool is a bare Write.
+
+### ARCH-13 The phone's vault key has no recovery path
+
+**Who found it:** Enterprise, solution and data architect. **Where:** `packages/app/src-tauri/keeper/src/lib.rs`, `packages/app/src-tauri/keeper/android/src/main/java/Keeper.kt`, `packages/app/src-tauri/keeper/ios/Sources/KeeperPlugin.swift`.
+
+**Risk:** The key is made on the device and kept in the Keystore or Keychain, for this device only and never backed up. A lost, reset or replaced phone loses the key. On Android a sealed copy that cannot be opened is never replaced. So if sync or encryption ever depends on the key, the person has no way back to their notes.
+
+**Fix:** Before sync (Wave 30) uses the key, offer a written recovery phrase or an export of the key the person keeps. Say plainly in the app what a lost phone means.
+
+**Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
+
+## Done or accepted (96)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -539,3 +594,5 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-19 | Time-related attacks on history, sync and shared links are not yet reviewed | done | #1489; kept out by `packages/core/test/temporal-security.test.js`, `packages/core/src/temporal.ts` |
 | SEC-20 | The code scan read only the code, not the Python library or the workflows | done | #1367; kept out by `test/code-scan.test.js`, `scripts/code-scan.mjs`, `python/graph_spec/tests/test_graph_bidi.py` |
 | SEC-21 | The animated exports found each group of a drawing with a pattern that ran slow | done | #1553; kept out by `packages/core/test/export-motion-groups.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
+| CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
