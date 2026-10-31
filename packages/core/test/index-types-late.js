@@ -299,6 +299,7 @@ export const TYPES_LATE = [
   'ViewSwitch',
   'ViewSwitches',
   'ViewType',
+  'RecentVisit',
   'Visit',
   'WalkedPath',
   'WalkedTransition',

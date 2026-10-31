@@ -80,11 +80,8 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     // the display layer draws in Obsidian from here on, the details' layout kept with the plugin's data
     installObsidianHost(this, {
-      saved: () => this.saved.detailsLayout,
-      save: (detailsLayout) => {
-        this.saved = { ...this.saved, detailsLayout };
-        void this.saveData(this.saved);
-      },
+      get: () => this.saved,
+      set: (saved) => void this.saveData((this.saved = saved)),
     });
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());

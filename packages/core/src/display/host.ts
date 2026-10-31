@@ -12,7 +12,7 @@ import {
   setLocale,
   SOURCE_LANGUAGE,
 } from '@thoughtknot/core';
-import type { Drawn, GraphDrawing, NoteStorage, Refusal } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, NoteStorage, Refusal, RecentVisit } from '@thoughtknot/core';
 import type { LinkHost } from './link-host';
 import { rememberNotice } from './notices.ts';
 
@@ -63,6 +63,16 @@ export interface DisplayHost {
    * sheet_layout_kept). `saved` gives what was kept, or nothing; `save` keeps a plain JSON value. Not set: the session only.
    */
   detailsLayout?: { saved: () => unknown; save: (layout: unknown) => void };
+  /**
+   * The graphs and things last opened, kept in the host's own data (risk NEURO-11). `visit` notes that the graph, or the
+   * thing of it, was opened in the note in front. `list` gives the kept visits, newest first, and `open` goes to one.
+   * Not set: none are kept.
+   */
+  recent?: {
+    list: () => RecentVisit[];
+    visit: (graph: string, thing?: string) => void;
+    open: (visit: RecentVisit) => void;
+  };
   /**
    * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
    * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes.
@@ -195,6 +205,9 @@ export const sidePane = (): SidePane | null => installed?.sidePane ?? null;
 
 /** Where the host keeps the details' layout between sessions, or null where it keeps none. */
 export const keptLayout = (): DisplayHost['detailsLayout'] | null => installed?.detailsLayout ?? null;
+
+/** Where the host keeps the graphs and things last opened, or null where it keeps none. */
+export const recentVisits = (): DisplayHost['recent'] | null => installed?.recent ?? null;
 
 /** Tells the person something briefly, through the host. */
 export const notice = (message: string): void => {

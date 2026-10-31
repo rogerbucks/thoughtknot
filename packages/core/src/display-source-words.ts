@@ -183,4 +183,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'rules.try': 'Try it',
   'rules.save': 'Save in the style graph',
   'rules.saved': 'Saved the rule in the style graph.',
+  'summary.recent': 'Recently opened',
+  'summary.recent-graph': '{graph}, in {note}',
+  'summary.recent-thing': '{thing}, in {graph}, in {note}',
 } as const;

@@ -1759,7 +1759,8 @@ pre.thoughtknot-code {
 .thoughtknot-empty button {
   min-height: 44px;
 }
-/* The guide link of an empty card or pane is a pointer target of its own (risk UX-8) */
+/* The guide link of an empty card or pane, and a recent visit, are pointer targets of their own (UX-8, NEURO-11) */
+.thoughtknot-summary-recent button,
 .thoughtknot-empty a,
 .thoughtknot-quiet a {
   display: inline-flex;
