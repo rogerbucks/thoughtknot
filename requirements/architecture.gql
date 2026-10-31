@@ -4,7 +4,8 @@
 // reads it and checks every path and requirement; the wiki's developer pages draw it. A part is cut into areas, each
 // naming its files: scripts/code-structure.mjs checks that every shipped file is in exactly one area and that no area is
 // over its ceiling of files (`most`, 40 unless said). An area's `not` names the files its globs would match but that
-// belong to another area. So a new file has to be placed, and a crowded area split on purpose.
+// belong to another area. So a new file has to be placed, and a crowded area split on purpose. Two areas that import
+// each other are a cycle, recorded below as CYCLES_WITH: a new cycle fails the check until it is untangled or recorded.
 // ── Layers, top to bottom ──
 (plugins:Layer {order: 1, name: 'Plug-ins', does: 'Add exports, theme colours and, later, diagram types, steps, storage and AI providers, through one checked interface.'}),
 (apps:Layer {order: 2, name: 'Apps', does: 'Put the editor where people work, each through a small adapter of its own.'}),
@@ -204,3 +205,57 @@
 (standalone)-[:IMPLEMENTS]->(host_interface),
 (vscode)-[:IMPLEMENTS]->(host_interface),
 (built_in_exports)-[:IMPLEMENTS]->(plugin_interface)
+// ── Areas that import each other ──
+// The 51 cycles known on 26 Oct 2026 (47 in the core, 4 in the display layer), listed by the weekly review so that each
+// new one is a decision. Untangling them is the work; recording a new one needs a reason in its pull request.
+(display_details)-[:CYCLES_WITH]->(display_graph_view),
+(display_graph_view)-[:CYCLES_WITH]->(display_links),
+(display_graph_view)-[:CYCLES_WITH]->(display_proposals),
+(display_graph_view)-[:CYCLES_WITH]->(display_space),
+(core_editing)-[:CYCLES_WITH]->(core_reading),
+(core_editing)-[:CYCLES_WITH]->(core_properties),
+(core_editing)-[:CYCLES_WITH]->(core_problems),
+(core_ai)-[:CYCLES_WITH]->(core_settings),
+(core_ai)-[:CYCLES_WITH]->(core_plugins),
+(core_reading)-[:CYCLES_WITH]->(core_style),
+(core_layout)-[:CYCLES_WITH]->(core_reading),
+(core_reading)-[:CYCLES_WITH]->(core_words),
+(core_editing)-[:CYCLES_WITH]->(core_style),
+(core_problems)-[:CYCLES_WITH]->(core_reading),
+(core_diagram_types)-[:CYCLES_WITH]->(core_layout),
+(core_diagram_types)-[:CYCLES_WITH]->(core_reading),
+(core_diagram_types)-[:CYCLES_WITH]->(core_plugins),
+(core_diagram_types)-[:CYCLES_WITH]->(core_style),
+(core_diagram_types)-[:CYCLES_WITH]->(core_view_types),
+(core_layout)-[:CYCLES_WITH]->(core_plugins),
+(core_massive)-[:CYCLES_WITH]->(core_views),
+(core_export)-[:CYCLES_WITH]->(core_paths),
+(core_massive)-[:CYCLES_WITH]->(core_style),
+(core_plugins)-[:CYCLES_WITH]->(core_view_types),
+(core_entry)-[:CYCLES_WITH]->(core_reading),
+(core_entry)-[:CYCLES_WITH]->(core_storage),
+(core_entry)-[:CYCLES_WITH]->(core_layout),
+(core_entry)-[:CYCLES_WITH]->(core_problems),
+(core_entry)-[:CYCLES_WITH]->(core_first_run),
+(core_entry)-[:CYCLES_WITH]->(core_paths),
+(core_entry)-[:CYCLES_WITH]->(core_links_images),
+(core_entry)-[:CYCLES_WITH]->(core_export),
+(core_entry)-[:CYCLES_WITH]->(core_views),
+(core_entry)-[:CYCLES_WITH]->(core_massive),
+(core_entry)-[:CYCLES_WITH]->(core_mesh),
+(core_properties)-[:CYCLES_WITH]->(core_reading),
+(core_properties)-[:CYCLES_WITH]->(core_style),
+(core_layout)-[:CYCLES_WITH]->(core_settings),
+(core_layout)-[:CYCLES_WITH]->(core_view_types),
+(core_paths)-[:CYCLES_WITH]->(core_reading),
+(core_paths)-[:CYCLES_WITH]->(core_style),
+(core_links_images)-[:CYCLES_WITH]->(core_reading),
+(core_notes)-[:CYCLES_WITH]->(core_reading),
+(core_notes)-[:CYCLES_WITH]->(core_properties),
+(core_reading)-[:CYCLES_WITH]->(core_views),
+(core_editing)-[:CYCLES_WITH]->(core_settings),
+(core_links_images)-[:CYCLES_WITH]->(core_style),
+(core_plugins)-[:CYCLES_WITH]->(core_steps),
+(core_settings)-[:CYCLES_WITH]->(core_words),
+(core_massive)-[:CYCLES_WITH]->(core_mesh),
+(core_style)-[:CYCLES_WITH]->(core_views)

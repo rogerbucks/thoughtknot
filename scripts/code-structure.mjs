@@ -1,8 +1,9 @@
 // How the code is structured, from requirements/architecture.gql (editor spec §43, structure_checked). A part of the
 // architecture may be cut into areas. Each area names its files, what it does and the spec section it serves. Every
 // shipped file of such a part must sit in exactly one area, and an area holds no more files than its ceiling. So a new
-// file has to be placed, and a crowded area has to be split or its ceiling raised on purpose. The areas and the imports
-// between them are drawn on the wiki's Architecture page by scripts/wiki-developers.mjs.
+// file has to be placed, and a crowded area has to be split or its ceiling raised on purpose. Two areas that import each
+// other are a cycle. Each known one is recorded in the graph as CYCLES_WITH, so a new cycle or a stale record is a fault
+// too. The areas and the imports between them are drawn on the wiki's Architecture page by scripts/wiki-developers.mjs.
 //
 //   node scripts/code-structure.mjs   lists each fault, and fails when there is one
 import { execFileSync } from 'node:child_process';
@@ -40,8 +41,8 @@ export function globToRegExp(glob) {
 /**
  * The structure in `architecture` (the text of architecture.gql): the parts with a path, and the areas of each. An area
  * is {id, name, does, section, part, globs, nots, most}. Its files are those matching a glob of `files` and none of
- * `not`, so a folder is cut by file name without listing every file. Parts are sorted so the one with the longest path,
- * the closest folder, comes first.
+ * `not`, so a folder is cut by file name without listing every file. `cycles` holds each recorded CYCLES_WITH pair as
+ * 'a b', the two ids sorted. Parts are sorted so the one with the longest path, the closest folder, comes first.
  */
 export function readStructure(architecture) {
   const g = gs.worldFromStore(gs.read([architecture])).project_architecture;
@@ -63,7 +64,9 @@ export function readStructure(architecture) {
     most: g.p(a).most === undefined ? MOST_FILES : Number(g.p(a).most),
   }));
   for (const a of areas) if (byId.has(a.part)) byId.get(a.part).areas.push(a);
-  return { parts, areas };
+  const cycles = new Set();
+  for (const a of areas) for (const [, , b] of g.out(a.id, 'CYCLES_WITH')) cycles.add([a.id, b].sort().join(' '));
+  return { parts, areas, cycles };
 }
 
 /** The part a file belongs to: the one whose folder holds it most closely; undefined for none. */
@@ -156,6 +159,21 @@ export function structureFacts(structure, files, read) {
     });
 }
 
+/**
+ * Each fault among the cycles, given the facts from structureFacts. A fault is an unrecorded pair of areas that import
+ * each other, or a recorded pair that no longer does.
+ */
+export function cycleProblems(structure, facts) {
+  const found = new Set(facts.flatMap((f) => f.cycles.map((pair) => pair.join(' '))));
+  const problems = [];
+  for (const pair of found)
+    if (!structure.cycles.has(pair))
+      problems.push(`${pair.replace(' ', ' and ')}: import each other: untangle them, or record it with CYCLES_WITH`);
+  for (const pair of structure.cycles)
+    if (!found.has(pair)) problems.push(`${pair.replace(' ', ' and ')}: recorded as a cycle, but no longer one`);
+  return problems.sort();
+}
+
 /** A label as Mermaid reads it inside quotes: no quote, and no bracket it could take for syntax. */
 const label = (text) => String(text).replace(/"/g, "'").replace(/[<>]/g, '');
 
@@ -200,12 +218,15 @@ export const repoFiles = () =>
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
-  const problems = structureProblems(readStructure(read('requirements/architecture.gql')), repoFiles());
+  const structure = readStructure(read('requirements/architecture.gql'));
+  const files = repoFiles();
+  const problems = structureProblems(structure, files);
+  if (!problems.length) problems.push(...cycleProblems(structure, structureFacts(structure, files, read)));
   for (const p of problems) console.log(p);
   console.log(
     problems.length
       ? `structure: ${problems.length} faults`
-      : 'structure: every file is in one area, and no area is over its ceiling',
+      : 'structure: every file is in one area, no area is over its ceiling, and every cycle is a recorded one',
   );
   process.exitCode = problems.length ? 1 : 0;
 }
