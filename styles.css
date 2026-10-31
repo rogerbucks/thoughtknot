@@ -1834,7 +1834,7 @@ body.thoughtknot-reading .thoughtknot-view,
 }
 
 /* Easier reading (risk NEURO-9). The panels' and the bar's text takes the spacing tokens. The setting puts a class on
-   the body that raises them: lines 1.8 times the size, letters 0.12 em and words 0.16 em apart (WCAG 1.4.12). The
+   the body. It raises them to lines of 1.8, letters 0.12 em and words 0.16 em apart (WCAG 1.4.12). The
    drawing's own words are laid out first, so they keep their measure. */
 .thoughtknot-bar,
 .thoughtknot-problems,
