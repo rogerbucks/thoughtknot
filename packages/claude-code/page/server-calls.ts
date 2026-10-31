@@ -6,7 +6,7 @@
 import { settingsFrom } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
 import { whyOf } from '../src/api-types.ts';
-import type { NoteReply, PageVersion } from '../src/api-types.ts';
+import type { NoteReply, PageVersion, PictureStates } from '../src/api-types.ts';
 import type { ListedPlugin } from './page-plugins.ts';
 import type { PageItemFiles } from '../src/api-types.ts';
 import type { ReviewItem } from '@thoughtknot/core';
@@ -69,5 +69,8 @@ export function serverCalls(token: string, fetcher: typeof fetch) {
     settings: async (): Promise<Settings> => settingsFrom(await get('settings')),
     /** The note the session was opened for. */
     note: async (id: string): Promise<NoteReply> => (await get(`notes/${encodeURIComponent(id)}`)) as NoteReply,
+    /** Whether each picture for readers of the note is up to date, by graph (§62). Nothing of a picture is sent. */
+    pictures: async (id: string): Promise<PictureStates> =>
+      (await get(`notes/${encodeURIComponent(id)}/pictures`)) as PictureStates,
   };
 }

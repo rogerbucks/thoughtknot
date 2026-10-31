@@ -21,14 +21,14 @@ import { folderStorage } from './folder-storage.ts';
 import { loadNote, writeNote, type Loaded } from './editor-notes.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
-import { sha256, word } from '@thoughtknot/core';
-import type { NoteStorage } from '@thoughtknot/core';
+import { sha256, word, type NoteStorage } from '@thoughtknot/core';
 
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';
 import { GIT_HISTORY, type NoteHistory } from './note-history.ts';
 import { GH_READER, type GitHubReader } from './github-reader.ts';
-import { changesAnswer, type ChangesAsked } from './editor-changes.ts';
+import { answer, changesAnswer, type ChangesAsked } from './editor-changes.ts';
+import { pictureStates } from './note-pictures.ts';
 import type { NoteReply, StaleWrite, UnwrittenReply, WriteReply } from '../src/api-types.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
@@ -73,21 +73,12 @@ interface OpenNote {
 
 /** One route of the API: a note's id, and what of it is asked for. */
 const ROUTE =
-  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
+  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/pictures|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
 
 const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
 const notOpen = (): ApiAnswer => ({ status: 404, text: word('server.note-not-open') });
 const stopped = (): ApiAnswer => ({ status: 503, text: word('server.stopped-unwritten') });
-
-/** An answer in JSON. */
-function answer(status: number, body: object, headers: Record<string, string> = {}): ApiAnswer {
-  return {
-    status,
-    text: JSON.stringify(body),
-    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
-  };
-}
 
 /** The notes opened for one session of the editor, in one vault. */
 export class NoteStore {
@@ -189,6 +180,7 @@ export class NoteStore {
     if (what === 'PUT ') return this.write(id, r.body, ifMatch);
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
     if (what === 'GET /events') return this.follow(id);
+    if (what === 'GET /pictures') return this.pictures(id);
     if (/^GET \/(versions|at|reviews)/.test(what)) return this.changes(id, what.slice('GET '.length));
     return { status: 405, text: word('server.not-this-method') };
   };
@@ -221,6 +213,16 @@ export class NoteStore {
     // a draft is typed text too: one the gate refuses (a credential, say) is withheld, and stays on the shelf unsent
     const draft = taken && this.gate?.draft(taken.text) ? null : taken;
     return answer(200, { text: r.text, version: r.version, draft } satisfies NoteReply, { etag: r.version });
+  }
+
+  /** Whether each picture of the note is up to date, by graph, as its gate allows (§62). */
+  private async pictures(id: string): Promise<ApiAnswer> {
+    const note = this.notes.get(id) as OpenNote;
+    const r = await this.load(note);
+    const why = r.ok ? this.refusal(note, r.text) : r.why;
+    return why === null && r.ok
+      ? answer(200, await pictureStates(this.where.real, r.path, r.text))
+      : answer(410, { why });
   }
 
   /** The note's earlier versions and its repository's changes, each read only when asked and held to the gate. */
