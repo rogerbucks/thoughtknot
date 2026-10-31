@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (40)
+## Open (38)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -45,7 +45,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | SEC-29 | The desktop app drops a note's file mode on every save | ●●○ | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
-| ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | ●●● | ●●● | fix-now | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 
@@ -411,16 +410,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.
 
-### ARCH-14 The AI-made rule at the boundary reads a flag nothing writes
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/boundary/src/parcel.ts`, `packages/core/src/export-boundary.ts`, `packages/core/src/proposals-author.ts`.
-
-**Risk:** A corporate setting removes, labels or holds AI-made things by reading ai_assisted or proposer_kind on each thing. No code writes either property. Accepted AI proposals carry neither, so they cross the boundary as if a person wrote them.
-
-**Fix:** When a proposal from a model or step is accepted, write proposer_kind on every thing and link it adds. Or derive AI-made from the note's proposer declarations and change history. Say which in the boundary guide.
-
-**Check:** A test accepts a model's proposal through the real accept path. It then makes a parcel under the remove rule. It asserts the new things are left out and listed.
-
 ### API-13 Sync records and messages carry no format version
 
 **Who found it:** API design expert. **Where:** `packages/sync/src/keys.ts`, `packages/sync/src/store.ts`, `packages/sync/src/peer.ts`.
@@ -441,7 +430,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (110)
+## Done or accepted (112)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -555,4 +544,5 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | accepted | Roger, 31 Oct 2026 (asked in the R2 release thread): It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later. |
 | CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
+| ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |
 | OPS-14 | versions.json lists 0.7.1, which was never tagged | done | #1633; kept out by `test/versions-json.test.js` |
