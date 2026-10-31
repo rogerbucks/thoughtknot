@@ -41,6 +41,10 @@ export const EXPORT_SOURCE_WORDS = {
   'export.footer': 'From {note}, exported {date}',
   // what a reader picture's frame says (reader-picture.ts, §62)
   'picture.footer': 'Drawn by ThoughtKnot from {note}, {date}',
+  'picture.explored': {
+    one: 'explored from {thing}: {shown} of {count} thing',
+    other: 'explored from {thing}: {shown} of {count} things',
+  },
   'picture.overview': '{things} left out of this picture, too many to read one by one: it shows them as {groups}',
   'picture.things': { one: '{count} thing', other: '{count} things' },
   'picture.groups': { one: '{count} group', other: '{count} groups' },

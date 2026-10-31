@@ -15,6 +15,7 @@ import type { ExportLayout } from './export.ts';
 import { framed, saidDate } from './export-frame.ts';
 import { exportPlan } from './export-plan.ts';
 import { exportScope } from './export-scope.ts';
+import { exploredDrawing } from './explore-saved.ts';
 import { gqlBlocks } from './fences.ts';
 import { graphOfBlock, isSourceBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
@@ -124,7 +125,10 @@ function overviewImage(input: PictureInput, footer: string) {
  * layout refuses, is drawn as its overview. The same text, note and day give the same bytes on every host.
  */
 export async function readerPicture(input: PictureInput): Promise<PictureDecision> {
-  const scope = exportScope(input.reading, { graph: input.graph });
+  const whole = exportScope(input.reading, { graph: input.graph });
+  // a saved exploration is what the note opens on, so the picture shows it too (explore_saved)
+  const explored = input.styled && exploredDrawing(whole.drawing, input.styled.style.explores);
+  const scope = explored ? { ...whole, drawing: explored.drawing } : whole;
   const plan = exportPlan({
     scope,
     format: 'svg',
@@ -137,7 +141,14 @@ export async function readerPicture(input: PictureInput): Promise<PictureDecisio
   if ('nothing' in plan || 'ask' in plan) return plan;
   const fingerprint = pictureFingerprint(input.note, pictureTexts(input.text, input.graph));
   const alt = pictureAlt(textVersion(scope.drawing));
-  const footer = sourceWord('picture.footer', { note: input.note, date: saidDate(input.date) });
+  const drawnBy = sourceWord('picture.footer', { note: input.note, date: saidDate(input.date) });
+  const footer = explored
+    ? `${drawnBy} · ${sourceWord('picture.explored', {
+        thing: explored.centre,
+        shown: explored.drawing.boxes.length,
+        count: whole.drawing.boxes.length,
+      })}`
+    : drawnBy;
   let svg: string | null = null;
   if (scope.drawing.boxes.length <= PICTURE_MOST_THINGS) {
     const info = { note: input.note, date: input.date, theme: 'light', sketch: input.sketch ?? null, footer } as const;

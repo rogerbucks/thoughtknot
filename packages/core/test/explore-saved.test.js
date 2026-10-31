@@ -4,6 +4,7 @@
 // - Read back, it opens the same things round the same centre, in the same shape.
 // - A centre the graph lacks is a problem with its fix; a shown thing the graph lacks is left out without a word.
 // - A thing whose name the line cannot hold is refused, with the reason, and nothing is written.
+// - The reader picture shows the exploration saved, as the note opens on it, and says what it leaves out.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, gqlSpans, styleOf } from '../src/blocks.ts';
@@ -13,6 +14,10 @@ import { ExploreSession } from '../src/explore-session.ts';
 import { readStyle } from '../src/style.ts';
 import { styleEdit } from '../src/style-edit.ts';
 import { Untangle } from '../src/untangle.ts';
+import { loadEngine } from '../src/engine.ts';
+import { PALETTES } from '../src/palette.ts';
+import { notePictures } from '../src/reader-picture.ts';
+import { chosen, directions, svgOf } from '../src/render.ts';
 
 const MIND = `// graph: work
 (idea:Idea), (a:Idea), (b:Idea), (c:Idea), (a1:Idea), (a2:Idea), (far:Idea),
@@ -109,4 +114,43 @@ test('a thing whose name the line cannot hold is refused, and nothing is written
   assert.match(exploreRefusal(save), /holds a comma/);
   const r = styleEdit(NOTE, 'work', { explore: save });
   assert.ok('refused' in r);
+});
+
+test('the reader picture shows the exploration saved, and says what it leaves out', async () => {
+  const engine = await loadEngine();
+  const layout = async (d, theme) => {
+    const laid = directions(d);
+    return chosen(
+      laid,
+      laid.map((x) => svgOf(engine, x.dot, d.routing)),
+      PALETTES[theme],
+    );
+  };
+  const saved = styleEdit(NOTE, 'work', {
+    explore: { centre: 'a', shown: ['a1', 'a2'], shape: 'balanced', perBranch: 12 },
+  });
+  assert.ok('note' in saved, saved.refused);
+  const picture = async (text) => {
+    const settings = { classifications: ['Public'], exportAsksAbove: 'Public' };
+    const [one] = await notePictures({
+      text,
+      note: 'Work.md',
+      date: '2026-10-31',
+      layout,
+      noteClassification: null,
+      settings,
+    });
+    return one.decision.picture.svg;
+  };
+  const svg = await picture(saved.note);
+  const drawn = (key) => new RegExp(`>${key}</text>`).test(svg);
+  assert.ok(['a', 'a1', 'a2'].every(drawn), 'the centre and the things shown');
+  assert.ok(!['idea', 'b', 'c', 'far'].some(drawn), 'nothing else');
+  assert.match(svg, /explored from a: 3 of 7 things/);
+  const whole = await picture(NOTE);
+  assert.ok(
+    ['idea', 'far'].every((k) => new RegExp(`>${k}</text>`).test(whole)),
+    'with none saved, all is drawn',
+  );
+  assert.doesNotMatch(whole, /explored from/);
 });
