@@ -113,7 +113,7 @@ export async function openSpaceView(
     held = new Map('marks' in from ? [] : heldIn(from));
   const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
-    if (by === 'globe') return globe.lay(marks, more.centre?.());
+    if (by === 'globe') return globe.lay(marks, more.centre?.(), more.details);
     if (by !== 'cards' && by) return spaceOf(marks, by);
     const kept = spots && spotsKept(spots, held);
     const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
@@ -179,7 +179,7 @@ export async function openSpaceView(
     depths = depthsOf();
     // each box shown before or now, so a thing from a box just opened starts where the box was, and the view stays
     held = new Map([...held, ...heldIn(from)]);
-    const warm = !!spots && !more.asDrawn;
+    const warm = !!spots && !more.asDrawn && depth !== GLOBE; // a globe keeps its own spots, and turns to its centre
     space = spaceBy(depths[depth] ?? null);
     if (warm) [space, spots] = linedUpLayout(shown, space, spots, more.layout?.()?.pinned, before?.of); // not to spin
     space = sketched(space);
@@ -188,7 +188,7 @@ export async function openSpaceView(
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
     pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
     const other = space.blocks.map((b) => b.of).join() !== was;
-    if (other && !warm) orbit = orbitFit(space, width / height);
+    if (other && !warm && depth !== GLOBE) orbit = orbitFit(space, width / height); // a globe keeps its size and camera
     // the view follows the picked thing only where the drawing moved it; a pick, a fade or a find leaves the view still
     const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
     const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);

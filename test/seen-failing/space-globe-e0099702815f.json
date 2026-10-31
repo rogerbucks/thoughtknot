@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/space-globe.test.js",
+  "test": "a drag turns the globe with the pointer, in every 3D way of showing it",
+  "seen_failing_first": false,
+  "evidence": "Locks in drag-to-spin, which already worked; Roger asked for a guard."
+}
