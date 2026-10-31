@@ -2,9 +2,11 @@
 // from index.ts so each file stays short.
 export {
   PICTURE_MOST_THINGS,
+  drawnPictureLines,
   notePictures,
   pictureBlocks,
   readerPicture,
+  withoutDrawnPictures,
   type NotePicturesInput,
   type PictureBlock,
   type PictureDecision,

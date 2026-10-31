@@ -5,7 +5,7 @@
 // Where the plugin draws the block, the line is hidden so the graph shows once.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { cmState } from './host/fake-obsidian.js';
+import { cmState, fakeContext } from './host/fake-obsidian.js';
 import { build, load, settled, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 
@@ -179,6 +179,33 @@ describe('pictures for readers in Obsidian', () => {
         (from, _to, d) => void lines.push([state.doc.lineAt(from).number - 1, d.spec.class]),
       );
       assert.deepEqual(lines, [[at, 'thoughtknot-picture-hidden']]);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: picture_hidden_when_drawn
+  test('the card’s bar says whether the picture is up to date, in words', async () => {
+    const env = await loaded();
+    try {
+      await turnedOn(env);
+      const badgeOf = async () => {
+        const text = note(env);
+        const at = text.split('\n').findIndex((l) => l.startsWith('```gql'));
+        const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
+        await env.state.processors.get('gql')(DATA, el, { ...fakeContext(text, at), sourcePath: PATH });
+        return el.querySelector('.thoughtknot-badge');
+      };
+      const fresh = await badgeOf();
+      await until(() => /picture up to date$/.test(fresh.getAttribute('aria-label')));
+      // another machine's older picture: its fingerprint no longer matches the block
+      env.state.files.set(
+        PICTURE,
+        env.state.files.get(PICTURE).replace(/picture [0-9a-f]{16}/, 'picture 0000000000000000'),
+      );
+      const old = await badgeOf();
+      await until(() => /picture out of date$/.test(old.getAttribute('aria-label')));
+      assert.match(old.textContent, /No problems, picture out of date/, 'said in words, not by colour');
     } finally {
       env.uninstall();
     }

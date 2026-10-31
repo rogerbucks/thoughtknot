@@ -5,7 +5,7 @@
 import { button } from '../button';
 import { setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
-import type { ViewOptions } from './view-options';
+import type { PictureStatus, ViewOptions } from './view-options';
 
 /** A number of things, in words: "1 problem", "2 problems". */
 export const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? '' : 's'}`;
@@ -75,6 +75,21 @@ function badgeOf(bar: HTMLElement, o: ViewOptions, on: BarActions): void {
   const badge = button(bar, label, icon, () => on.toggleProblems(badge), label);
   badge.addClass('thoughtknot-badge', errors ? 'is-error' : 'is-calm');
   badge.setAttribute('aria-expanded', 'false');
+  if (o.picture) pictureWords(badge, label, o.picture);
+}
+
+/** The badge says whether the picture for readers is up to date, asked again each time it may have changed (§62). */
+function pictureWords(badge: HTMLButtonElement, label: string, picture: PictureStatus): void {
+  const say = async () => {
+    const state = await picture.state();
+    const said = state ? `${label}, ${word(state === 'current' ? 'bar.picture-current' : 'bar.picture-stale')}` : label;
+    badge.setAttribute('aria-label', said);
+    const text = badge.querySelector('.thoughtknot-badge-text');
+    if (text) text.textContent = said;
+  };
+  // a badge no longer on the page stops asking
+  const stop = picture.watch(() => (badge.isConnected ? void say() : stop()));
+  void say();
 }
 
 /** More in the bar, and the list it opens: hidden until pressed, closed by Escape or once a control in it is chosen. */

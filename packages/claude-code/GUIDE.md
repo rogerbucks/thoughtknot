@@ -452,6 +452,8 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   token and the note's id out of the address's fragment, and reads the settings and the note. It shows the note's
   Markdown and, beside it, the edit pane of the Obsidian host (C9). Anything that goes wrong is said in words on the
   page, never a blank.
+  - The image line of a picture for readers after a block it draws is left out of the Markdown. So the graph shows
+    once (§62).
 
 ### The editor, the drawing and the host
 

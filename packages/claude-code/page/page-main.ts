@@ -16,6 +16,7 @@ import { button } from '@thoughtknot/core/display/button';
 import { gqlBlocks } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 import { readNote } from '@thoughtknot/core';
+import { withoutDrawnPictures } from '@thoughtknot/core';
 import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
@@ -143,7 +144,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     // keyboard stays on the control it was on when a change on disk draws the page again
     const draw = () =>
       keepFocus(root, () => {
-        renderMarkdown(page.text, prose);
+        renderMarkdown(withoutDrawnPictures(page.text), prose); // the graph is drawn beside: its picture shows once (§62)
         showCards(cards, proposalsIn(page.text), decideOn, announce);
         addExportBar();
         addTextVersion();

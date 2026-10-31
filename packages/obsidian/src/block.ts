@@ -3,8 +3,7 @@
 // can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
 // with its problems or a banner.
 import { rulesOn } from './rule-card';
-import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
-import type { Component } from 'obsidian';
+import { MarkdownRenderChild, Notice, TFile, type Component } from 'obsidian';
 import type { BlockContext } from './block-context';
 import {
   brokenLinks,
@@ -37,17 +36,17 @@ import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
+import { pictureStatus } from './pictures/picture-status';
 import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { withPicture } from './outside/outside-diagrams';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
-import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
+import { renderProblems, type ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { showMassive } from './massive-card';
 import { overviewInParts } from './note-store';
-import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
 /**
@@ -301,15 +300,16 @@ export async function renderBlock(
     renderCode(root, source);
     return;
   }
+  const exporting = {
+    path: target.path,
+    graph,
+    theme: plugin.settings.exportTheme,
+    run: (ask: Parameters<typeof plugin.exportGraph>[0]) => plugin.exportGraph(ask),
+  };
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
     // too large to draw, but not to export: its data needs no layout (spec §16, export_data_formats)
-    dataExportBar(root, {
-      path: target.path,
-      graph,
-      theme: plugin.settings.exportTheme,
-      run: (ask) => plugin.exportGraph(ask),
-    });
+    dataExportBar(root, exporting);
     // too large to draw whole: its overview, to search and fly to any thing in it (§53, scale_massive_card)
     if (drawn.reason === 'too-large') showMassive(plugin, root, drawing, { ...target, reading, styling, readOnly });
     asText(plugin, root, source, drawn, problems, target, readOnly);
@@ -343,14 +343,10 @@ export async function renderBlock(
       images: plugin.cardImages(target.path, drawing.pictures),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      picture: pictureStatus(plugin, target.path, graph), // the bar says whether its picture is up to date (§62)
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       sketching: sketchingFor(plugin, target.path, graph, info?.text),
-      exporting: {
-        path: target.path,
-        graph,
-        theme: plugin.settings.exportTheme,
-        run: (ask) => plugin.exportGraph(ask),
-      },
+      exporting,
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',

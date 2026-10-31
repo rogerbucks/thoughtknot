@@ -237,6 +237,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `picture-files.ts` — `refreshPictures`: each picture written only when its text changed, where Obsidian keeps
   attachments, with one image line after its block. A file ThoughtKnot did not make is never touched.
 - `picture-hide.ts` — the image line hidden where the plugin draws the block, in reading view and Live Preview.
+- `picture-status.ts` — `pictureStatus`: whether a graph's picture is up to date, which the card's bar says.
 
 ### `src/proposals/` — a proposal in a note (spec §17)
 

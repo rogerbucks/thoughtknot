@@ -31,8 +31,10 @@ import {
   pictureFileName,
   pictureFingerprint,
   pictureLine,
+  pictureLines,
   pictureMark,
   pictureTexts,
+  withoutPictureLines,
 } from './reader-picture-note.ts';
 import type { Settings } from './settings.ts';
 import type { Sketch } from './sketch.ts';
@@ -178,6 +180,20 @@ export function pictureBlocks(note: string): PictureBlock[] {
     seen.add(graph);
     return [{ block, graph }];
   });
+}
+
+/** The 0-based lines of `note` that are picture lines after a block ThoughtKnot draws, which a host hides (§62). */
+export function drawnPictureLines(note: string): number[] {
+  const drawn = new Set(pictureBlocks(note).map((b) => b.block));
+  return pictureLines(note)
+    .filter((p) => drawn.has(p.block))
+    .map((p) => p.line);
+}
+
+/** `note` without the picture lines after the blocks ThoughtKnot draws, for a host that shows the rest as Markdown. */
+export function withoutDrawnPictures(note: string): string {
+  const drawn = new Set(pictureBlocks(note).map((b) => b.block));
+  return withoutPictureLines(note, (p) => drawn.has(p.block));
 }
 
 /** What the pictures of a whole note are made from: `PictureInput` but the graph, reading and drawings, read here. */
