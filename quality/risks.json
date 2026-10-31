@@ -4744,7 +4744,8 @@
         "https://github.com/advisories/GHSA-g3hv-75wg-m249"
       ],
       "alerts": [
-        "npm/GHSA-g3hv-75wg-m249"
+        "npm/GHSA-g3hv-75wg-m249",
+        "dependabot/10"
       ],
       "likelihood": "low",
       "impact": "low",
