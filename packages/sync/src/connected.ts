@@ -110,13 +110,14 @@ export function homeChange(doc: string, text: string, line: number, key: string,
       .join('\n').length + (line > 1 ? 1 : 0);
   const statement = text.slice(start, statementEnd(text, start));
   const bare = statement.replace(/'(?:[^'\\]|\\.)*'/g, (q) => '_'.repeat(q.length));
-  const m = new RegExp(`(?<=[{,]\\s*)${key}\\s*:\\s*`).exec(bare);
+  const m = new RegExp(`([{,]\\s*)${key}\\s*:\\s*`).exec(bare);
   if (!m) return null;
+  const at = m.index + (m[1] ?? '').length;
   const rest = statement.slice(m.index + m[0].length);
   const v = /^(?:'(?:[^'\\]|\\.)*'|[^,}\s]+)/.exec(rest);
   if (!v) return null;
-  const from = start + m.index;
-  return { doc, from, to: from + m[0].length + v[0].length, text: `${key}: ${quoted(value)}` };
+  const from = start + at;
+  return { doc, from, to: start + m.index + m[0].length + v[0].length, text: `${key}: ${quoted(value)}` };
 }
 
 /** `c` with the thing `o` names holding its value. */
