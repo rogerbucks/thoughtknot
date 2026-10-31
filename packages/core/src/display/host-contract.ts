@@ -33,10 +33,7 @@ export interface HostProbe {
   element: () => HTMLElement;
   /** The messages its notices have shown, in order, as the person reads them. */
   notices: () => string[];
-  /**
-   * Whether the notice that said `message` can still be read once `ms` milliseconds have passed, on a clock that runs
-   * as far as that and no further.
-   */
+  /** Whether the notice of `message` can still be read after `ms` milliseconds, on a clock run that far. */
   stillShownAfter: (message: string, ms: number) => boolean;
   /** The rows of the last menu it showed, in order, or null when it has shown none. */
   lastMenu: () => MenuRowSeen[] | null;
