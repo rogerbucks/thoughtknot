@@ -22,6 +22,7 @@ describe('Obsidian’s commands', () => {
         'fit',
         'full-screen',
         'import-from-database',
+        'insert-example',
         'pictures-off',
         'pictures-on',
         'recover-drafts',
@@ -35,7 +36,7 @@ describe('Obsidian’s commands', () => {
         assert.equal(typeof command.checkCallback, 'function', `${id} is offered only while a drawing is in use`);
         assert.equal(command.checkCallback(true), false, `${id} is not offered with no drawing in use`);
       }
-      for (const id of ['ask-ai-model', 'convert-to-standard', 'recover-drafts', 'shortcuts'])
+      for (const id of ['ask-ai-model', 'convert-to-standard', 'insert-example', 'recover-drafts', 'shortcuts'])
         assert.equal(typeof env.state.commands.find((c) => c.id === id).callback, 'function', id);
     } finally {
       env.uninstall();

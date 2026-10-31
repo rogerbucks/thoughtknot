@@ -10,6 +10,8 @@ export const DISPLAY_SOURCE_WORDS = {
     'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.',
   'pane.fix-closed': 'The editor is no longer open, so nothing was written.',
   'pane.nothing-yet': 'Nothing to draw yet. Start with a thing.',
+  'pane.example': "For example: (ana:Person {name: 'Ana'})",
+  'pane.guide': 'Read the guide',
   'pane.engine-failed': 'The drawing engine could not start: {why}',
   'problems.none': 'No problems.',
   'bar.more': 'More',

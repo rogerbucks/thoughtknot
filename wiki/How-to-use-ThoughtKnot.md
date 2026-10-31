@@ -17,7 +17,7 @@ In any note, start a block with three backticks and the word `gql`, then list yo
 
 ````text
 ```gql
-// graph: my-first-graph
+// graph: my_first_graph
 (question:Question {title: 'Which laptop should I buy?'}),
 (light:Option {name: 'The light one'}),
 (fast:Option {name: 'The fast one'}),
@@ -32,9 +32,13 @@ In any note, start a block with three backticks and the word `gql`, then list yo
 
 You do not need to get it perfect. If something is wrong, ThoughtKnot says what, where, and how to fix it (see step 5).
 
-Rather start from something? Write only the `// graph:` line, and press **Start from an example** on the empty drawing.
-A small example is written for you, and a short tour shows what to do next. Skip it whenever you like. The command
-**Show the tour** opens it again.
+Rather start from something? Run the command **Insert an example graph**. It adds the block above to the end of your
+note, and the drawing appears at once. Or write only the `// graph:` line, and press **Start from an example** on the
+empty drawing. A small example is written for you, and a short tour shows what to do next. Skip it whenever you like.
+The command **Show the tour** opens it again.
+
+While you type in the editor, ThoughtKnot offers the rest of a word, a kind or a closing bracket after your cursor.
+Press Tab to take it, or keep typing to ignore it.
 
 ## 2. Move around the drawing
 

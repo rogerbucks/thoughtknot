@@ -2,12 +2,14 @@
 // offers Edit and Start from an example. The example is written into the note, after the block's own lines. The
 // drawing that follows opens the tour. The command Show the tour opens it again on the drawing last used.
 import { Notice, TFile } from 'obsidian';
-import { replaceBlock, withExample, word } from '@thoughtknot/core';
+import { exampleBlock, replaceBlock, withExample, word } from '@thoughtknot/core';
+import { GUIDE_URL } from '@thoughtknot/core/display/editor/pane-empty';
 import { cardInUse } from '@thoughtknot/core/display/graph-view/card-in-use';
 import { whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import type ThoughtKnotPlugin from './main';
 import type { HostCommand } from './host-commands';
 import type { EditTarget } from './main';
+import { noteToRewrite } from './reading-view';
 import { changeVaultNote } from './storage/plugin-notes';
 
 /** Whether the next drawing opens the tour: set when an example was written, and taken by the drawing that follows. */
@@ -57,6 +59,7 @@ export function renderEmpty(
     attr: { 'aria-label': word('first-run.example'), type: 'button' },
   });
   example.addEventListener('click', () => void writeExample(plugin, target, source));
+  empty.createEl('a', { text: word('pane.guide'), attr: { href: GUIDE_URL, rel: 'noopener noreferrer' } });
   whenPlaced(root, () => {
     if (!readOnly(root)) return;
     edit.remove(); // reading view is read-only (spec §3)
@@ -67,4 +70,22 @@ export function renderEmpty(
 /** The command Show the tour, offered while a drawing has been used. */
 export function tourCommand(): HostCommand {
   return { id: 'tour', title: word('tour.command'), available: () => !!cardInUse(), run: () => cardInUse()?.tour() };
+}
+
+/** The command Insert an example graph: adds a block with the example at the end of the note in front, drawn at once (NEURO-8). */
+export function exampleCommand(plugin: ThoughtKnotPlugin): HostCommand {
+  return {
+    id: 'insert-example',
+    title: word('first-run.insert'),
+    run: async () => {
+      const target = noteToRewrite(plugin.app.workspace, word('first-run.insert-to'));
+      if (!target) return;
+      const outcome = await changeVaultNote(plugin.app, target.file.path, (note) => {
+        const gap = note === '' || note.endsWith('\n\n') ? '' : note.endsWith('\n') ? '\n' : '\n\n';
+        return `${note}${gap}${exampleBlock()}\n`;
+      });
+      tourNext = outcome.ok;
+      new Notice(word(outcome.ok ? 'first-run.inserted' : 'first-run.insert-failed'));
+    },
+  };
 }

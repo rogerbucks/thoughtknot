@@ -17,6 +17,10 @@ const EXAMPLE = [
 /** The block `source`, which has nothing in it yet, with the example after its own lines (its graph line, say). */
 export const withExample = (source: string): string => [source.trimEnd(), ...EXAMPLE].join('\n');
 
+/** A whole gql block holding the example, to be added to a note that has no graph yet (NEURO-8). */
+export const exampleBlock = (graph = 'my_first_graph'): string =>
+  ['```gql', withExample(`// graph: ${graph}`), '```'].join('\n');
+
 /** The steps of the tour, in order. Each step's words are `tour.<step>`. */
 export const TOUR_STEPS = ['boxes', 'zoom', 'edit', 'again'] as const;
 

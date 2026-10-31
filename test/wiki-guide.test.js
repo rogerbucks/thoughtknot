@@ -18,6 +18,12 @@ describe('the user guide', () => {
     assert.deepEqual(shotsOf(guide).sort(), SHOTS.map((s) => s.name).sort());
   });
 
+  test('step 1 names the command that inserts an example graph, and the inline offers while typing', () => {
+    const step1 = guide.slice(guide.indexOf('## 1.'), guide.indexOf('## 2.'));
+    assert.match(step1, /\*\*Insert an example graph\*\*/);
+    assert.match(step1, /offers the rest of a word/);
+  });
+
   test('gives every picture words that say what it shows', () => {
     for (const s of SHOTS) assert.ok(s.alt.length > 15, s.name);
   });

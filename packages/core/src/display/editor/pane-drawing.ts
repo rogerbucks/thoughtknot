@@ -37,6 +37,7 @@ import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
+import { nothingYet } from './pane-empty';
 import type { Chosen, SwitchesShown } from '../graph-view/view-options';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
@@ -91,7 +92,7 @@ function drawInPane(
 ) {
   host.empty();
   if (!drawn) {
-    host.createEl('p', { cls: 'thoughtknot-quiet', text: word('pane.nothing-yet') });
+    nothingYet(host);
     return null;
   }
   if ('reason' in drawn) {
