@@ -1078,3 +1078,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/explore-saved.test.js` — a note opens on the exploration its style block saved, and the
   sidebar's Save writes it again in edit mode only. It spans `explore-saved.ts`, `explore-sidebar.ts`, `untangle.ts`,
   `view-block.ts` and `block.ts` (explore_saved).
+
+## Release files
+
+- `test/versions-json.test.js` — `versions.json` lists only released versions, and its newest equals `manifest.json`.
+  It spans `versions.json`, `manifest.json` and the git tags (community_listing, OPS-14).

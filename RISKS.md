@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (41)
+## Open (40)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -48,7 +48,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-14 | A connector edit can overwrite another thing's value | ●●○ | ●●● | fix-now | hours |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | ●●● | ●●● | fix-now | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| OPS-14 | versions.json lists 0.7.1, which was never tagged | ●●○ | ●○○ | fix-now | hours |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 
 ## Each open risk
@@ -443,16 +442,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test opens a record with a changed first byte and asserts a refusal that names the format, not a decrypt error.
 
-### OPS-14 versions.json lists 0.7.1, which was never tagged
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `versions.json`, `manifest.json`.
-
-**Risk:** versions.json maps released versions to the Obsidian version they need. It lists 0.7.1 and 0.8.0. No 0.7.1 tag exists. Also, 0.8.0 starts a new line that needs a full panel first.
-
-**Fix:** Remove the 0.7.1 line, or tag a 0.7.1 that matches it. The full panel is recorded; tag 0.8.0 only after that.
-
-**Check:** A test asserts every released version in versions.json has a matching git tag, and that the newest equals manifest.json.
-
 ### UX-11 The overview card is announced as an image but takes keys
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/graph-view/massive-view.ts`, `packages/core/src/display/graph-view/massive-moves.ts`.
@@ -463,7 +452,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (109)
+## Done or accepted (110)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -576,3 +565,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | accepted | Roger, 31 Oct 2026 (asked in the R2 release thread): It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later. |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
+| OPS-14 | versions.json lists 0.7.1, which was never tagged | done | #1633; kept out by `test/versions-json.test.js` |

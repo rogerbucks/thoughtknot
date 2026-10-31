@@ -5005,7 +5005,11 @@
         "date": "2026-10-31",
         "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#1633",
+      "prevented_by": [
+        "test/versions-json.test.js"
+      ]
     },
     {
       "id": "UX-11",
