@@ -115,8 +115,9 @@ export function withProposer(note: string, p: Proposal): Proposal | { refused: s
   });
 }
 
-/** The mark each thing and link a model adds carries, and the one a thing whose value a model set carries (ARCH-14). */
+/** The mark each thing and link a model adds carries (ARCH-14). */
 export const MODEL_MARK = { key: 'proposer_kind', value: valueGql('model') };
+/** The mark a thing whose value a model set carries. */
 export const HELPED_MARK = { key: 'ai_assisted', value: 'true' };
 
 /**
