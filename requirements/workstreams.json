@@ -1289,5 +1289,26 @@
       "sketch_reader_picture",
       "sketch_to_graph"
     ]
+  },
+  "MM1": {
+    "title": "Exploring from one thing: mind maps in every view",
+    "size": "M",
+    "requirements": [
+      "explore_from_here",
+      "explore_branch_open",
+      "explore_branch_close",
+      "explore_tree_from_centre",
+      "explore_depth",
+      "explore_recentre",
+      "explore_back",
+      "explore_capped",
+      "explore_shapes",
+      "explore_stays_put",
+      "explore_badges",
+      "explore_controls_on_screen",
+      "explore_controls_accessible",
+      "explore_every_view",
+      "explore_saved"
+    ]
   }
 }
