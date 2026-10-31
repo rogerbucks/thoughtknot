@@ -8,7 +8,14 @@ import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
 import { PALETTES } from '../src/palette.ts';
 import { chosen, directions, svgOf } from '../src/render.ts';
-import { PICTURE_MOST_THINGS, notePictures, pictureBlocks, readerPicture } from '../src/reader-picture.ts';
+import {
+  PICTURE_MOST_THINGS,
+  drawnPictureLines,
+  notePictures,
+  pictureBlocks,
+  readerPicture,
+  withoutDrawnPictures,
+} from '../src/reader-picture.ts';
 import {
   ALT_MOST,
   madeByThoughtKnot,
@@ -198,6 +205,22 @@ describe('the pictures of a whole note', () => {
       { block: 0, graph: 'g' },
       { block: 1, graph: 'h' },
     ]);
+  });
+
+  // proves: picture_hidden_when_drawn
+  test('a host hides the picture line after a block it draws, and keeps one after a style block', () => {
+    const lined = NOTE.replace(
+      '```\n```gql\n// graph: team_look',
+      '```\n![Team](Team.team.thoughtknot.svg)\n```gql\n// graph: team_look',
+    ).replace(
+      '// graph: team_look · STYLE ON team\n```',
+      '// graph: team_look · STYLE ON team\n```\n![Look](Team.look.thoughtknot.svg)',
+    );
+    assert.deepEqual(drawnPictureLines(lined), [lined.split('\n').indexOf('![Team](Team.team.thoughtknot.svg)')]);
+    const shown = withoutDrawnPictures(lined);
+    assert.doesNotMatch(shown, /!\[Team\]/);
+    assert.match(shown, /!\[Look\]/);
+    assert.equal(withoutDrawnPictures(NOTE), NOTE, 'a note with no picture line is left as it is');
   });
 
   // proves: picture_for_readers, picture_self_explaining, sketch_reader_picture

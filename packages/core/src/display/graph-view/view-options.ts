@@ -77,6 +77,14 @@ export interface SwitchesShown {
   reading?: NoteReading;
 }
 
+/** Where a host says whether a graph's picture for readers is up to date (§62). */
+export interface PictureStatus {
+  /** Up to date, out of date, or null when the graph has no picture. */
+  state: () => Promise<'current' | 'stale' | null>;
+  /** Calls `then` each time the picture may have changed; gives back what stops it. */
+  watch: (then: () => void) => () => void;
+}
+
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
 export interface ViewOptions {
   /** The block's text, shown read-only by Source in reading view (spec §3). */
@@ -97,6 +105,8 @@ export interface ViewOptions {
   completeness?: CompletenessReport;
   /** The things parked for later, counted apart from problems behind the badge (spec §8). */
   parked?: Map<string, Parked>;
+  /** Whether the graph's picture for readers is up to date, said by the badge (§62, picture_hidden_when_drawn). */
+  picture?: PictureStatus;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
   /** How many steps along its links focus reaches from a selected thing, as the settings say (§25); one when not given. */

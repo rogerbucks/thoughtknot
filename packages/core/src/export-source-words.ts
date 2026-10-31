@@ -63,6 +63,9 @@ export const EXPORT_SOURCE_WORDS = {
     'This note is in a folder that gets pictures by the settings, so they come back with its next edit. Take the folder out of Pictures for readers to stop them.',
   'pictures.not-written': 'The picture of {graph} was not written: {why}',
   'pictures.not-ours': 'a file ThoughtKnot did not make is at {path}, and is kept',
+  // what the card's bar says of its picture, after its problems (picture_hidden_when_drawn)
+  'bar.picture-current': 'picture up to date',
+  'bar.picture-stale': 'picture out of date',
   'export.reading-faded': '{reading} (the rest of the graph is faded)',
   // what was done with each picture on a box (export-pictures.ts)
   'export.picture.not-drawn': '{thing}: not drawn, as {why}',

@@ -7,19 +7,14 @@ import type { EditorState, Extension, Range } from '@codemirror/state';
 import { Decoration, EditorView } from '@codemirror/view';
 import type { DecorationSet } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { pictureBlocks, pictureLines, pictureLinkOf } from '@thoughtknot/core';
+import { drawnPictureLines, pictureLinkOf } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 
 /** The class that hides a picture the plugin draws live. */
 export const HIDDEN_PICTURE = 'thoughtknot-picture-hidden';
 
 /** The 0-based lines of `text` that are picture lines after a block the plugin draws. */
-export function hiddenLines(text: string): number[] {
-  const drawn = new Set(pictureBlocks(text).map((b) => b.block));
-  return pictureLines(text)
-    .filter((p) => drawn.has(p.block))
-    .map((p) => p.line);
-}
+export const hiddenLines = drawnPictureLines;
 
 /** The file name a link ends in, its escapes undone. */
 const fileOf = (link: string) =>
