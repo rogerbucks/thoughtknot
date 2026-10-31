@@ -586,3 +586,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-21 | The animated exports found each group of a drawing with a pattern that ran slow | done | #1553; kept out by `packages/core/test/export-motion-groups.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
+| SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | accepted | Roger, 31 Oct 2026 (asked in the R2 release thread): It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later. |

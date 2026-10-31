@@ -1,3 +1,4 @@
+// proves: risk_panel
 // A notice stays as long as a slow reader needs, and the last few can be read again (risk NEURO-6).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
