@@ -80,6 +80,8 @@ export interface Settings extends StrictnessSettings, PictureSettings {
   detailsOpen: SwitchSetting;
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
+  /** Whether the panels' and the bar's text is spaced out: a taller line, wider letters and words (NEURO-9). */
+  easierReading: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -123,6 +125,7 @@ export const DEFAULT_SETTINGS: Settings = {
   miniMap: 'auto',
   detailsOpen: 'off',
   drawingHeight: 'most',
+  easierReading: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -371,6 +374,7 @@ export function settingsFrom(saved: unknown): Settings {
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
+    easierReading: oneOf<SwitchSetting>('easierReading', s.easierReading, d.easierReading),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

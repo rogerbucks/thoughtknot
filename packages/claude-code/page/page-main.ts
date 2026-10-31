@@ -13,6 +13,7 @@ import { installDomHelpers } from '@thoughtknot/core/display/dom-helpers';
 import { installHost, notice, readInHostDirection } from '@thoughtknot/core/display/host';
 import { toggleExportForm } from '@thoughtknot/core/display/export/export-form';
 import { button } from '@thoughtknot/core/display/button';
+import { EASIER_READING_CLASS } from '@thoughtknot/core';
 import { gqlBlocks } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 import { readNote } from '@thoughtknot/core';
@@ -66,6 +67,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       calls.plugins().catch(() => []),
     ]);
     doc.documentElement.dataset.indent = settings.indent;
+    doc.body.classList.toggle(EASIER_READING_CLASS, settings.easierReading === 'on');
     const graph = doc.createElement('section');
     graph.setAttribute('class', 'gn-graph');
     const cards = doc.createElement('div');

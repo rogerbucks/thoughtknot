@@ -26,6 +26,7 @@ const SHOWN = [
   'miniMap',
   'detailsOpen',
   'drawingHeight',
+  'easierReading',
   // who decides on the card: the name written into each Decision (proposals-judgement.ts)
   'decider',
 ] as const;

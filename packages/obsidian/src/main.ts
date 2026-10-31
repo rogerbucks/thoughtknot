@@ -6,6 +6,7 @@ import {
   holdsStill,
   labelsFor,
   READING_CLASS,
+  EASIER_READING_CLASS,
   readsPlain,
   isSharedSchema,
   LAYOUT_LIMITS,
@@ -95,6 +96,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
     document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings)); // the view preset's motion (§69)
     document.body.classList.toggle(READING_CLASS, readsPlain(this.settings)); // and its words
+    document.body.classList.toggle(EASIER_READING_CLASS, this.settings.easierReading === 'on'); // and the spacing of its text
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -182,6 +184,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     chooseLanguage(this.settings.language);
     document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings));
     document.body.classList.toggle(READING_CLASS, readsPlain(this.settings));
+    document.body.classList.toggle(EASIER_READING_CLASS, this.settings.easierReading === 'on');
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -325,7 +328,7 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   override onunload(): void {
     this.unloaded = true;
-    document.body.classList.remove(STILL_CLASS);
+    document.body.classList.remove(STILL_CLASS, EASIER_READING_CLASS);
     this.layouts?.close();
     this.layouts = null;
     this.outside.stopAll();
