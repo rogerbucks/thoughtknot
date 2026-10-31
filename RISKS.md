@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (37)
+## Open (36)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -21,7 +21,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
@@ -168,16 +167,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Keep the viewport across a redraw. While a block is being edited, only re-lay out when a thing or link is added or removed, not on each property keystroke. add a setting 'Redraw while typing: after each pause / when I press Done'.
 
 **Check:** A test in packages/core/test types a property value. It asserts the zoom and every unchanged box's place are the same after the redraw.
-
-### NEURO-11 No recently edited or recently visited list
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/graph-view/details-summary.ts`, `packages/obsidian/src/main.ts`.
-
-**Risk:** The details trail gives back and forward inside one graph. Kept drafts can be recovered. But nothing shows the graphs or things a person worked on yesterday. Someone who stops mid-task has no way back to where they were.
-
-**Fix:** Keep the last ten graphs and things opened in plugin data and show them in the details summary while nothing is chosen.
-
-**Check:** A test in packages/obsidian/test that opens two graphs and asserts the summary lists both, newest first.
 
 ### FLOW-6 Store submission is last, with no CI step for its checklist
 
@@ -419,7 +408,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A requirement and test that a new device can restore a vault from the recovery phrase alone.
 
-## Done or accepted (104)
+## Done or accepted (105)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -477,6 +466,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-8 | No two-minute first success: no insert-example command | done | #1594 |
 | NEURO-9 | No reading options: letter spacing, line height or font | done | #1591 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
+| NEURO-11 | No recently edited or recently visited list | done | #1613 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |

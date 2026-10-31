@@ -3,7 +3,7 @@
 // type and direction in words (§25). The one shown is marked as selected. While the block is edited in place, it is the
 // inspector, which changes its properties in the text. What its links reach can be chosen from it, and the walk
 // retraced (§25). In view mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
-import { isPhone } from '../host';
+import { isPhone, recentVisits } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
 import type { Clear, Estimate, TrailStep, View } from '@thoughtknot/core';
 import { renderProperties } from '../properties/properties';
@@ -65,6 +65,7 @@ export class DetailsPanel {
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
+    recentVisits()?.visit(o.graph); // the graph is opened (risk NEURO-11)
     this.rich = new RichDetails(
       o,
       () => this.view?.(),
@@ -109,10 +110,7 @@ export class DetailsPanel {
     this.images.release();
   }
 
-  /**
-   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images. Those
-   * placed on a drawing before let go first, as a drawing laid out again holds none of them.
-   */
+  /** The pictures its style draws on the boxes of `svg` (§18), counted as they move; those placed before let go first. */
   pictures(svg: Element): void {
     this.images.release('boxes');
     placePictures(svg, this.images);
@@ -289,6 +287,7 @@ export class DetailsPanel {
     if (!d) return;
     this.select(key);
     this.shown = { key };
+    recentVisits()?.visit(this.o.graph, key);
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
     // what is going on, in a sentence or two, before anything else (details_said)

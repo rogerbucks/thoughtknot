@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/host-contract.test.js",
+  "test": "the host contract > it is versioned, and holds a host to each of its promises by name",
+  "seen_failing_first": false,
+  "evidence": "The expected version number follows the host interface change made one commit earlier; the test cannot fail before its own number moves."
+}
