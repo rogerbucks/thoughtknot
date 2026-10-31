@@ -65,3 +65,50 @@ test('a note the plug-in never changed says no earlier version is kept yet', asy
     env.uninstall();
   }
 });
+
+// proves: changes_view_obsidian
+test('a version picked while the last is still read shows only the one picked last', async () => {
+  const older = {
+    text: NOTE.replace("name: 'Large reader'", "name: 'Large reader', price: 90"),
+    at: '2026-10-30T09:00:00Z',
+  };
+  const newer = { text: NOTE.replace('Large reader', 'Larger reader'), at: '2026-10-31T09:00:00Z' };
+  const env = await load({ files: { [PATH]: NOTE }, data: { history: { [PATH]: [newer, older] } } });
+  try {
+    const el = await show(env);
+    const vault = env.app.vault,
+      read = vault.read;
+    let release;
+    const held = new Promise((r) => (release = r));
+    let first = true;
+    vault.read = async (f) => {
+      if (first) {
+        first = false;
+        await held; // the newest, opened first, is read slowly
+      }
+      return read(f);
+    };
+    labelled(el, 'Compare with…').click();
+    const modal = compareOf(env);
+    const pick = modal.contentEl.querySelector('select');
+    pick.value = '1';
+    modal.contentEl.querySelector('button').click();
+    await until(() => !!modal.contentEl.querySelector('h3'), 2000);
+    release();
+    await until(() => !!modal.contentEl.querySelector('img'), 4000);
+    await new Promise((r) => setImmediate(r));
+    const headings = modal.contentEl.querySelectorAll('h3');
+    assert.equal(headings.length, 1);
+    assert.ok(
+      headings[0].textContent.includes(pick.querySelectorAll('option')[1].textContent),
+      headings[0].textContent,
+    );
+    const said = modal.contentEl.querySelectorAll('.thoughtknot-change').map((li) => li.textContent);
+    assert.ok(
+      said.some((s) => s.includes('price')),
+      said.join(' / '),
+    );
+  } finally {
+    env.uninstall();
+  }
+});

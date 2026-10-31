@@ -17,6 +17,9 @@ const whenOf = (v: NoteVersion): string =>
 
 /** The window of Compare with, on graph `graph` of the note at `path`. */
 class CompareWith extends Modal {
+  /** How many times a version was asked for: a slower, earlier ask drops what it read, so only the last is shown. */
+  private asked = 0;
+
   constructor(
     private readonly plugin: ThoughtKnotPlugin,
     private readonly path: string,
@@ -49,11 +52,14 @@ class CompareWith extends Modal {
 
   /** Draws `v` with the note as it is now into `result`, with the list of changes under it. */
   private async show(result: HTMLElement, v: NoteVersion): Promise<void> {
+    const ask = ++this.asked;
     result.empty();
     result.createEl('p', { text: word('changes.reading') });
     let shown: ChangesShown;
     try {
-      shown = changesView(v.text, (await noteText(this.plugin.app, this.path)) ?? '', this.graph);
+      const now = (await noteText(this.plugin.app, this.path)) ?? '';
+      if (ask !== this.asked) return;
+      shown = changesView(v.text, now, this.graph);
     } catch (e) {
       result.empty();
       result.createEl('p', { text: e instanceof Error ? e.message : String(e) });
@@ -72,15 +78,16 @@ class CompareWith extends Modal {
         for (const d of c.details) inner.createEl('li', { text: d });
       }
     }
-    await this.draw(picture, shown, label);
+    await this.draw(picture, shown, label, ask);
   }
 
   /** The changes drawn, each marked in the theme's fixed colours, as an image the list describes. */
-  private async draw(picture: HTMLElement, shown: ChangesShown, label: string): Promise<void> {
+  private async draw(picture: HTMLElement, shown: ChangesShown, label: string, ask: number): Promise<void> {
     const drawing = shown.reading.graphs.get(this.graph);
     if (!drawing) return;
     const theme = activeDocument.body.hasClass('theme-dark') ? 'dark' : 'light';
     const drawn = await this.plugin.layoutForExport(drawing, theme).catch(() => null);
+    if (ask !== this.asked) return;
     if (!drawn || 'reason' in drawn) {
       picture.createEl('p', { text: word('changes.not-drawn') });
       return;
