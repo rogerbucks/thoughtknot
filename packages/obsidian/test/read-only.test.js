@@ -36,7 +36,12 @@ const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
  * (radial_centre_anywhere), show the drawing filtered to it, and the shortest path to another thing. Each changes the
  * picture and nothing else, so reading view has them.
  */
-const UNTANGLING = ['Centre here', 'Show only this and its neighbours', 'Shortest path to another thing'];
+const UNTANGLING = [
+  'Centre here',
+  'Show only this and its neighbours',
+  'Shortest path to another thing',
+  'Explore from here',
+];
 const KEPT = ['Close details', ...UNTANGLING];
 
 /**
