@@ -1,3 +1,4 @@
+// proves: risk_panel
 // The graphs and things last opened (risk NEURO-11): newest first, each once, ten at most, and read back safely.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
