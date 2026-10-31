@@ -98,8 +98,8 @@ function statementEnd(text: string, start: number): number {
 }
 
 /**
- * The change that sets `key` of the statement on `line` (1-based) of `text` to `value`, or nothing: nothing when `key`
- * is not a plain name, or when that statement does not hold it. It never reaches into the next statement.
+ * The change that sets `key` of the statement on `line` (1-based) of `text` to `value`, or nothing. Nothing when `key`
+ * is not a plain name. Nothing when that statement lacks it. It never reaches into the next statement.
  */
 export function homeChange(doc: string, text: string, line: number, key: string, value: string): Change | null {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return null;
