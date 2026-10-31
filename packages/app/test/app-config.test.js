@@ -94,8 +94,9 @@ test('CI builds an installer for each system, through the signing script, and no
   assert.deepEqual([...config.bundle.targets].sort(), ['app', 'deb', 'dmg', 'nsis']);
   const workflow = readFileSync(new URL('../../../.github/workflows/desktop-app.yml', import.meta.url), 'utf8');
   assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
-  // scripts/desktop-build.mjs runs `cargo tauri build --ci`, adding the keys only off pull requests (app_signed)
-  assert.match(workflow, /run: node scripts\/desktop-build\.mjs\n/);
+  // scripts/desktop-build.mjs compiles with `cargo tauri build --ci --no-bundle`, then bundles; the keys come only off pull requests (app_signed, SEC-17)
+  assert.match(workflow, /run: node scripts\/desktop-build\.mjs compile\n/);
+  assert.match(workflow, /run: node scripts\/desktop-build\.mjs bundle\n/);
   for (const kind of ['dmg/\\*\\.dmg', 'nsis/\\*\\.exe', 'deb/\\*\\.deb'])
     assert.match(workflow, new RegExp(`target/release/bundle/${kind}\\n`), `the ${kind} installer is kept`);
   assert.doesNotMatch(workflow, /appimage/i, 'no AppImage');
