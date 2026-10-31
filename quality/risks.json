@@ -4732,6 +4732,38 @@
       "status": "accepted",
       "accepted_by": "Roger Bucks",
       "accepted_reason": "Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal."
+    },
+    {
+      "id": "SEC-26",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The lint tools carry a minimatch with a slow-matching flaw",
+      "risk": "Advisory GHSA-g3hv-75wg-m249 (medium): minimatch before 11.0.1 can be made slow by a crafted pattern. Our ESLint tools depend on it. It runs on build machines only, never in the shipped plugin, and no fixed release works with the lint tools yet.",
+      "evidence": [
+        "package-lock.json",
+        "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+      ],
+      "alerts": [
+        "npm/GHSA-g3hv-75wg-m249"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "When the lint tools accept minimatch 11.0.1 or later, update the lock file and close this risk.",
+      "check": "scripts/security-alerts.mjs lists the advisory while it is open, and the release check fails once this entry is removed and it is still there.",
+      "paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "a69f6f58baf05f384172454342424b612951b3f4"
+      },
+      "status": "accepted",
+      "accepted_by": "Roger, 31 Oct 2026 (asked in the R2 release thread)",
+      "accepted_reason": "It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later."
     }
   ]
 }
