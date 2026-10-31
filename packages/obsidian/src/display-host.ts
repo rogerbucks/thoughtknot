@@ -5,7 +5,6 @@
 import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { installHost } from '@thoughtknot/core/display/host';
-import type { DisplayHost } from '@thoughtknot/core/display/host';
 import { noticeMs } from '@thoughtknot/core/display/notices';
 import { detailsSidePane } from './details-pane';
 import { recentVisits } from './recent-visits';
