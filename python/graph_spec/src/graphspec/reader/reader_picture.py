@@ -13,6 +13,9 @@ import re
 from collections.abc import Callable, Sequence
 from typing import Literal, TypedDict
 
+from graphspec.reader.drawing import _data_kind, _first_line, _graph_of
+from graphspec.reader.whitespace import N, S
+
 # The ending of every reader picture's file name.
 PICTURE_ENDING = ".thoughtknot.svg"
 # The drawing's version: a change to how a picture is drawn changes every fingerprint.
@@ -24,6 +27,9 @@ _MARK = re.compile(r"<metadata>thoughtknot reader picture ([0-9a-f]{16})</metada
 _LINE = re.compile(r"^ {0,3}!\[((?:[^\]\\]|\\.)*)\]\((?:<([^>]*)>|([^)\s]*))\)\s*$")
 _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})\s*gql\s*$", re.IGNORECASE)
 _HEADER = re.compile(r"^\s*//\s*graph\s*:", re.IGNORECASE)
+# A board and drawings over a graph are never drawn as one (blocks.ts, boardOf and sketchOf).
+_BOARD = re.compile(rf"{S}*//{S}*graph:{S}*{N}+{S}*·{S}*BOARD(?:{S}+ON{S}+{N}+)?{S}*$")
+_SKETCH = re.compile(rf"{S}*//{S}*graph:{S}*{N}+{S}*·{S}*SKETCH{S}+ON{S}+{N}+{S}*$")
 _UNSAFE_IN_A_NAME = '/\\:*?"<>|#^[]'
 # The characters JavaScript's \s matches, so a name is cut where the core cuts it.
 _JS_SPACE = re.compile(
@@ -39,6 +45,13 @@ class Span(TypedDict):
     text: str
     open: int
     close: int
+
+
+class PictureBlock(TypedDict):
+    """A block of a note that gets a picture: its index among the note's gql blocks, its graph."""
+
+    block: int
+    graph: str
 
 
 class PictureLineAt(TypedDict):
@@ -65,6 +78,24 @@ def gql_spans(note: str) -> list[Span]:
             out.append({"text": "\n".join(lines[i + 1 : j]), "open": i, "close": j})
             i = j
         i += 1
+    return out
+
+
+def picture_blocks(note: str) -> list[PictureBlock]:
+    """The blocks of `note` that get a picture: the first data block of each graph
+    (reader-picture.ts, pictureBlocks). A view, a step, a block drawn from elsewhere, a change set,
+    a style, a board and drawings get none."""
+    seen: set[str] = set()
+    out: list[PictureBlock] = []
+    for block, span in enumerate(gql_spans(note)):
+        text = span["text"]
+        first = _first_line(text)
+        if _BOARD.match(first) or _SKETCH.match(first) or _data_kind(text) != "data":
+            continue
+        graph = _graph_of(text)
+        if graph and graph not in seen:
+            seen.add(graph)
+            out.append({"block": block, "graph": graph})
     return out
 
 

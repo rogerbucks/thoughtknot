@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/reader-picture-note.test.js",
+  "test": "the shared cases, which the Python reader runs too > choose the same blocks to draw, in the same fixed light colours",
+  "seen_failing_first": false,
+  "evidence": "The core already chose these blocks and colours; this case only writes them into the shared table so the Python reader is held to them."
+}

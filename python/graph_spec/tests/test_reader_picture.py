@@ -16,6 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
+import reader_pictures  # noqa: E402
 from graphspec.reader import reader_picture as rp  # noqa: E402
 
 with open(
@@ -54,6 +55,18 @@ class SharedCases(unittest.TestCase):
                 f"block {c['block']}",
             )
         self.assertEqual(rp.without_picture_lines(note), CASES["without"])
+
+    # proves: picture_same_everywhere
+    def test_the_same_blocks_are_drawn_in_the_same_fixed_light_colours(self):
+        self.assertEqual(rp.picture_blocks(CASES["blocksNote"]), CASES["blocks"])
+        self.assertEqual(reader_pictures.LIGHT, CASES["lightColours"])
+        light = reader_pictures.LIGHT
+        for c in CASES["mixes"]:
+            if "fill" in c:
+                got = reader_pictures.mixed(light[c["fill"]], light["page"], 0.16)
+            else:
+                got = reader_pictures.mixed(light[c["blend"]], light["text"], c["pct"] / 100)
+            self.assertEqual(got, c["colour"], c)
 
     # proves: picture_kept_in_step
     def test_a_picture_is_ours_and_current_only_by_its_own_mark(self):
