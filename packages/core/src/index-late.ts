@@ -31,6 +31,7 @@ export {
   presetClasses,
   keepsTrail,
   readsPlain,
+  markBody,
   shortLabel,
   labelsFor,
   presetChange,

@@ -13,6 +13,7 @@ import { installDomHelpers } from '@thoughtknot/core/display/dom-helpers';
 import { installHost, notice, readInHostDirection } from '@thoughtknot/core/display/host';
 import { toggleExportForm } from '@thoughtknot/core/display/export/export-form';
 import { button } from '@thoughtknot/core/display/button';
+import { EASIER_READING_CLASS } from '@thoughtknot/core';
 import { gqlBlocks } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 import { readNote } from '@thoughtknot/core';
@@ -36,6 +37,12 @@ import { focusCards, showCards } from './proposal-card.ts';
 import type { Decide } from './proposal-card.ts';
 import { decide, proposalsIn } from './proposal-review.ts';
 import { serverCalls, takeFragment } from './server-calls.ts';
+
+/** What the settings put on the page itself: the indent, and the class for Easier reading. */
+function markPage(doc: Document, settings: { indent: string; easierReading: string }): void {
+  doc.documentElement.dataset.indent = settings.indent;
+  doc.body.classList.toggle(EASIER_READING_CLASS, settings.easierReading === 'on');
+}
 
 /** Starts the page in `win`: its host, then the note. */
 export async function startPage(win: Window & typeof globalThis): Promise<void> {
@@ -65,7 +72,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       exports.target(note).catch(() => null),
       calls.plugins().catch(() => []),
     ]);
-    doc.documentElement.dataset.indent = settings.indent;
+    markPage(doc, settings);
     const graph = doc.createElement('section');
     graph.setAttribute('class', 'gn-graph');
     const cards = doc.createElement('div');
