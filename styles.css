@@ -522,6 +522,74 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
+/* the explore sidebar (§71, explore_controls_on_screen): a strip across a narrow card, a column at the start of a wide
+   one. Its dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
+.thoughtknot-over-panels > .thoughtknot-explore-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  margin: 0;
+  border-top: 1px solid var(--gn-border);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  background: var(--gn-bg);
+}
+.thoughtknot-over-panels > .thoughtknot-explore-sidebar[hidden] {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .thoughtknot-over-panels > .thoughtknot-explore-sidebar {
+    max-width: 18rem;
+    border-inline-end: 1px solid var(--gn-border);
+  }
+}
+.thoughtknot-explore-find input {
+  width: 100%;
+  min-height: 44px;
+}
+.thoughtknot-explore-find .thoughtknot-find-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.thoughtknot-explore-shapes,
+.thoughtknot-explore-moves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-explore-sidebar button,
+.thoughtknot-find-explore {
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-explore-shapes button[aria-pressed='true'] {
+  box-shadow: inset 0 -3px 0 var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-explore-dial {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-explore-dial-name {
+  flex: 1;
+}
+.thoughtknot-explore-dial-value {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  font-variant-numeric: tabular-nums;
+}
+.thoughtknot-explore-dial-value:focus-visible {
+  outline: 2px solid var(--gn-border-focus);
+}
 /* a link between two shown things that is not a step along a branch: faint and dashed (Roger's pick, 31 Oct 2026) */
 g.edge.thoughtknot-explore-cross path {
   stroke-dasharray: 4 4;

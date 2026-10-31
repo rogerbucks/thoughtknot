@@ -17,6 +17,8 @@ import {
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
 import { drawBadges, exploreRow } from './explore-controls';
 import type { ExploreActs } from './explore-controls';
+import { renderSidebar } from './explore-sidebar';
+import type { ExploreSidebar } from './explore-sidebar';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';
@@ -75,6 +77,7 @@ export class UntangleView {
   private readonly banner: Banner;
   private readonly legend: LegendPanel;
   private readonly finder: FindRow;
+  private readonly sidebar: ExploreSidebar;
   private readonly host: UntangleHost;
   private readonly names: Map<string, string>;
   private asking: string | null = null;
@@ -99,6 +102,17 @@ export class UntangleView {
         host.go(f.key);
       },
       close: () => this.closeFind(),
+      // the quick search starts a mind map from any thing found (Roger, 31 Oct 2026)
+      explore: (f) => {
+        this.finder.el.hidden = true;
+        this.findButton?.setAttribute('aria-expanded', 'false');
+        this.exploreAt(f.key);
+      },
+    });
+    this.sidebar = renderSidebar(root, {
+      ...this.acts,
+      search: (q) => find(host.reading, host.graph, q),
+      centre: (key) => this.exploreAt(key),
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
@@ -126,6 +140,14 @@ export class UntangleView {
    */
   exploreFrom(key: string): void {
     if (this.core.explore?.centre === key) this.core.showAll();
+    else this.core.exploreFrom(key);
+    this.changed();
+  }
+
+  /** Makes `key` the centre: kept with all shown when it is shown already, explored afresh from it when not. */
+  private exploreAt(key: string): void {
+    const s = this.core.explore;
+    if (s?.keys().includes(key)) s.recentre(key);
     else this.core.exploreFrom(key);
     this.changed();
   }
@@ -246,6 +268,7 @@ export class UntangleView {
 
   private changed(): void {
     this.banner.show(this.rows());
+    this.sidebar.show(this.core.explore);
     this.host.changed();
     // a thing and its neighbours are laid out together; the whole graph, as it was (untangle_regroup)
     const only = this.core.only,

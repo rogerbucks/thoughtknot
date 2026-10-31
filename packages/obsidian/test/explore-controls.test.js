@@ -32,6 +32,7 @@ before(async () => {
 });
 after(() => env.uninstall());
 const details = () => el.querySelector('.thoughtknot-details');
+const sidebar = () => el.querySelector('.thoughtknot-explore-sidebar');
 
 // proves: explore_from_here, explore_badges
 test('Explore from here shows the thing with its direct links, and a badge opens a branch', async () => {
@@ -55,8 +56,8 @@ test('Explore from here shows the thing with its direct links, and a badge opens
 });
 
 // proves: explore_from_here
-test('the banner offers a step out, the shape, and the whole graph again', async () => {
-  assert.ok(withText(el.querySelector('.thoughtknot-untangle'), 'button', 'Shape: balanced mind map'));
+test('the banner offers the whole graph again, and the sidebar the rest', async () => {
+  assert.ok(withText(sidebar(), 'button', 'balanced mind map'), 'the sidebar holds the shapes');
   withText(el.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
   await until(() => !!thing(el, 'island'));
   assert.ok(!badge(el, 'q'), 'no badge is left behind');
