@@ -51,6 +51,10 @@ const FOLD = /^(bundle|hub|group):/; // a line's key that is a fold to open, not
 /** Where the globe is among the ways to show the view: the last, after cards, balls and the two lifts. */
 const GLOBE = 4;
 
+/** The way to show the view for the bar's `mode`: as cards, a globe, or 3D balls, lifted as its own button left it. */
+const depthFor = (mode: SpaceMode, now: number): number =>
+  mode === 'cards' ? 0 : mode === 'globe' ? GLOBE : now % GLOBE === 0 ? 1 : now;
+
 const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
 const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
 
@@ -98,10 +102,9 @@ export async function openSpaceView(
   const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
-  // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, or the drawing lifted as it is.
-  // Last, on a globe seen from outside, which you dive into for detail (Roger, 31 Oct 2026; globe_view)
+  // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, lifted, or on a globe (§71)
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }, 'globe'];
-  const globe = new GlobeLayout(); // each thing keeps its spot as more opens (explore_stays_put)
+  const globe = new GlobeLayout(); // spots kept as more opens; only the side facing the camera is seen
   let depths = depthsOf();
   // laid out again, each thing starts where it was, so a group opens or folds in place (cluster_in_place)
   let spots: Spots<3> | undefined,
@@ -133,7 +136,6 @@ export async function openSpaceView(
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
-  // painted and picked, through its lens; on a globe, only the side facing the camera
   const seen = () =>
     globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked)), eyeOf(orbit), depth === GLOBE);
   const paint = () => {
@@ -203,8 +205,7 @@ export async function openSpaceView(
     el.remove();
     closed();
   };
-  // what the view turns round: the picked thing, or the whole, as a globe always spins round its middle
-  const pivot = (): Vec3 => (picked && depth !== GLOBE ? middleOf(picked) : orbitFit(space).target);
+  const pivot = (): Vec3 => (picked && depth !== GLOBE ? middleOf(picked) : orbitFit(space).target); // a globe spins
   const move = (m: SpaceMove) => {
     // one move, from a key or a button, painted
     if ('back' in m) return close();
@@ -372,10 +373,6 @@ export async function openSpaceView(
   orbit = orbitFit(space, width / height);
   glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
   el.focus();
-  // the bar's button: as cards, a globe, or 3D balls, lifted or not as the view's own button last left it
-  const as = (mode: SpaceMode) => {
-    const next = mode === 'cards' ? 0 : mode === 'globe' ? GLOBE : depth % GLOBE === 0 ? 1 : depth;
-    if (next !== depth) showAs(next);
-  };
+  const as = (mode: SpaceMode) => void (depthFor(mode, depth) !== depth && showAs(depthFor(mode, depth)));
   return { close, move, as };
 }
