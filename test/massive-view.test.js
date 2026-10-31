@@ -575,7 +575,12 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
   );
   test('drawn again after an edit, only the group the edit touched is laid out again', options, async () => {
     await run('flyToNeedle()');
-    const before = (await run('parts')).length;
+    // the groups near the needle are opened a moment after the flight; count once they have all been laid out
+    let before = -1;
+    for (let now = (await run('parts')).length; now !== before; now = (await run('parts')).length) {
+      before = now;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
     assert.equal(
       await run("redrawFly('t5')"),
       before,
