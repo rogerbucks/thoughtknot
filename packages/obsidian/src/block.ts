@@ -262,8 +262,7 @@ export async function renderBlock(
       return;
     }
     if (problems.length) {
-      // nothing could be read: the text, and why
-      renderProblems(root, problems, false);
+      renderProblems(root, problems, false); // nothing could be read: the text, and why
       renderCode(root, source);
       return;
     }
