@@ -1833,10 +1833,9 @@ body.thoughtknot-reading .thoughtknot-view,
   line-height: 1.5;
 }
 
-/* Easier reading (risk NEURO-9): the panels' and the bar's text takes the spacing tokens. The setting of that name puts
-   the class on the page's body, and raises the tokens to what WCAG 1.4.12 asks a page to bear: a line of 1.5 times
-   the size at least, letters 0.12 em and words 0.16 em apart. The drawing's own words are laid out before they are
-   drawn, so they keep their measure. */
+/* Easier reading (risk NEURO-9). The panels' and the bar's text takes the spacing tokens. The setting puts a class on
+   the body that raises them: lines 1.8 times the size, letters 0.12 em and words 0.16 em apart (WCAG 1.4.12). The
+   drawing's own words are laid out first, so they keep their measure. */
 .thoughtknot-bar,
 .thoughtknot-problems,
 .thoughtknot-details,
