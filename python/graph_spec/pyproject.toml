@@ -15,12 +15,12 @@ dependencies = [
 [project.optional-dependencies]
 # The engine, for database work only: queries, path search, a graph stored to query later. Grafeo
 # 0.5.43 is the GQL dialect the graph spec names, and the reference the reader is proved against.
-grafeo = ["grafeo==0.5.43"]
+grafeo = ["grafeo==0.5.44"]
 
 # A wheel for the release (risk API-6): the flat modules of src/ and the graphspec package, at the top level as the
 # library imports them. Hatchling is pinned, as every tool is.
 [build-system]
-requires = ["hatchling==1.27.0"]
+requires = ["hatchling==1.32.4"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -39,10 +39,10 @@ default-groups = ["dev", "reference"]
 
 [dependency-groups]
 # Ruff checks the library against PEP 8 and formats it (CONTRIBUTING.md). Pinned, as every tool is.
-dev = ["ruff==0.17.1"]
+dev = ["ruff==0.17.2"]
 # The reference engine the tests prove the reader against (req:17.engine-agreement), a test
 # dependency only; CI's python-no-engine job runs without it.
-reference = ["grafeo==0.5.43"]
+reference = ["grafeo==0.5.44"]
 
 [tool.ruff]
 # PEP 8 lets a team agree on up to 99 characters.
