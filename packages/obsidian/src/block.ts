@@ -1,7 +1,6 @@
-// One gql block in a note (spec §3). A graph block is drawn, as built by the note's blocks up to it. Anything else is
-// shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed. Sometimes nothing
-// can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
-// with its problems or a banner.
+// One gql block in a note (spec §3). A graph block is drawn, as built by the note's blocks up to it; anything else is
+// shown as coloured code. A graph is never blank: what can be read is drawn and the rest listed. Some graphs cannot be
+// read or drawn, or are over a size or time limit (spec §9). Then the text shows, with a banner saying why.
 import { rulesOn } from './rule-card';
 import { MarkdownRenderChild, Notice, TFile, type Component } from 'obsidian';
 import type { BlockContext } from './block-context';
@@ -30,7 +29,7 @@ import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
-import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
+import { exploringFor, renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
@@ -327,6 +326,7 @@ export async function renderBlock(
       problems,
       mode: 'note',
       stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
+      exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)

@@ -1,10 +1,10 @@
 // Writing to the style graph (editor spec §2, §6, §7, §14, §15). It writes a nudge, a look, and whether a view fades
 // or hides what is outside it. It writes how a view was shown, a property switched on or off inline, and arrowheads
-// hidden or shown. It writes the diagram type chosen, a huge graph's filter (§53), and a rule (§56). Each is written as
-// text into the graph's style block, never a data block. A note with no style block for the graph gets one after its
-// last block. It has its graph line and a comment saying whose style it is. A view's setting and how it was shown are
-// changed in place when already written for the same place. So is a choice of properties, arrowheads, diagram type or
-// filter, and a rule with the same meaning. None is ever written twice.
+// hidden or shown. It writes the diagram type chosen, a huge graph's filter (§53), a rule (§56) and an exploration
+// (§71). Each is written as text into the graph's style block, never a data block. A note with no style block for the
+// graph gets one after its last block. It has its graph line and a comment saying whose style it is. A view's setting
+// and how it was shown are changed in place when already written for the same place. So is a choice of properties,
+// arrowheads, diagram type, filter or exploration, and a rule with the same meaning. None is ever written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
@@ -23,6 +23,8 @@ import {
 } from './style-edit-checks.ts';
 import { filterRefusal, filterText } from './filter-saved.ts';
 import type { FilterKeep } from './filter-saved.ts';
+import { exploreRefusal, shownText } from './explore-saved.ts';
+import type { ExploreSave } from './explore-saved.ts';
 import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
@@ -117,7 +119,8 @@ export type StyleChange =
   | { arrows: ArrowsWrite }
   | { diagram: DiagramWrite }
   | { filter: FilterWrite }
-  | { rule: RuleWrite };
+  | { rule: RuleWrite }
+  | { explore: ExploreSave };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -239,6 +242,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       match: [['view', view]],
     };
   }
+  if ('explore' in change) return exploreThing(change.explore);
   if ('outside' in change) {
     const { view, outside } = change.outside;
     if (!view) return { refused: noViewName() };
@@ -276,6 +280,23 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
   };
 }
 
+/** The Explore line `e` writes, changed in place for the same view, so a graph keeps one exploration (§71). */
+function exploreThing(e: ExploreSave): ToWrite | { refused: string } {
+  const why = exploreRefusal(e) ?? (e.view === '' ? noViewName() : null);
+  if (why) return { refused: why };
+  return {
+    kind: 'Explore',
+    props: [
+      ['centre', e.centre],
+      ['shown', shownText(e.shown)],
+      ['shape', e.shape],
+      ['per_branch', e.perBranch],
+      ['view', e.view],
+    ],
+    match: [['view', e.view]],
+  };
+}
+
 /** The things a change names by their ids: what it would write into the style graph by name. */
 function namedBy(change: StyleChange): string[] {
   const named = (...ids: (string | undefined)[]) => ids.filter((id): id is string => !!id);
@@ -283,6 +304,7 @@ function namedBy(change: StyleChange): string[] {
   if ('look' in change) return named(change.look.thing, change.look.link?.from, change.look.link?.to);
   if ('shown' in change) return named(change.shown.selected);
   if ('show' in change) return named(change.show.thing);
+  if ('explore' in change) return named(change.explore.centre, ...change.explore.shown);
   return [];
 }
 
@@ -295,6 +317,7 @@ const PREFIX: Record<string, string> = {
   Arrows: 'arrows',
   Diagram: 'diagram',
   Filter: 'filter',
+  Explore: 'explore',
 };
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */

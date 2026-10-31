@@ -13,6 +13,7 @@ import {
   parked,
   readStyle,
   renderFor,
+  savedExploreFor,
   setInParts,
   startingSwitches,
   storedGraphs,
@@ -22,6 +23,7 @@ import {
 } from '@thoughtknot/core';
 import type {
   Drawn,
+  ExploreSave,
   FocusDepth,
   GraphDrawing,
   NoteReading,
@@ -29,6 +31,7 @@ import type {
   PropType,
   Refusal,
   Settings,
+  StyleGraph,
 } from '@thoughtknot/core';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
@@ -39,7 +42,7 @@ import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
 import { nothingYet } from './pane-empty';
 import { LAYOUT_WAIT, waitShown } from '../progress';
-import type { Chosen, PictureStatus, Stay, SwitchesShown } from '../graph-view/view-options';
+import type { Chosen, Exploring, PictureStatus, Stay, SwitchesShown } from '../graph-view/view-options';
 import type { StayedAt } from '../graph-view/type-place';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
@@ -53,6 +56,8 @@ export interface PaneHost {
   palette?: Palette;
   /** Saves a filter chosen on the overview in the graph's style block (scale_filter_live). Not set: only tried. */
   saveFilter?: (graph: string, keep: FilterKeep) => void;
+  /** Saves an exploration in the graph's style block (§71, explore_saved). Not set: the sidebar offers no Save. */
+  saveExplore?: (graph: string, explore: ExploreSave) => void;
   /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
   noteText?: () => string;
   /** Lets layouts run again, for a drawing refused for time; the pane then draws anew (risk UX-4). Not set: no Try again. */
@@ -98,6 +103,7 @@ function drawInPane(
   again?: () => void,
   picture?: PictureStatus,
   stay?: Stay,
+  exploring?: Exploring,
 ) {
   host.empty();
   if (!drawn) {
@@ -131,6 +137,7 @@ function drawInPane(
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
     ...(picture && { picture }),
     ...(stay && { stay }), // drawn again as typed, it stays where the last was left (NEURO-7)
+    ...(exploring && { exploring }), // opens on the exploration saved, and saves one (§71, explore_saved)
   });
 }
 
@@ -219,6 +226,13 @@ export class PaneDrawing extends Lifecycle {
     });
   }
 
+  /** The graph's saved exploration, and how its sidebar saves one into the note (§71, explore_saved). */
+  private exploring(graph: string, style: StyleGraph): Exploring {
+    const saved = savedExploreFor(style.explores),
+      save = this.host.saveExplore;
+    return { ...(saved && { saved }), ...(save && { save: (e: ExploreSave) => save(graph, e) }) };
+  }
+
   /** Takes the drawing away. */
   clear(): void {
     this.view?.unload();
@@ -241,6 +255,7 @@ export class PaneDrawing extends Lifecycle {
         if (stale() || drawn === null || drawn === 'stopped') return;
         this.clear();
         const depth = depthOf(this.host.settings().focusDepth);
+        const { style } = readStyle(reading.texts, s.graph, reading);
         const view = drawInPane(
           host,
           drawn,
@@ -250,7 +265,7 @@ export class PaneDrawing extends Lifecycle {
           depth,
           { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
-          aidsOf(this.host.settings(), readStyle(reading.texts, s.graph, reading).style), // its own preset first (§69)
+          aidsOf(this.host.settings(), style), // its own preset first (§69)
           this.host.again &&
             (() => {
               this.host.again?.();
@@ -258,6 +273,7 @@ export class PaneDrawing extends Lifecycle {
             }),
           this.host.picture?.(s.graph),
           this.stay,
+          this.exploring(s.graph, style),
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

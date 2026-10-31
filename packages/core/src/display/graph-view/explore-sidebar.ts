@@ -3,7 +3,8 @@
 // start the tree from it.
 //
 // It shows only while the card explores. At its top is the search: choosing a thing makes it the centre. Under it are
-// the six shapes, the depth and per-branch dials, and Back, Next and the whole graph again. On a wide card it is a
+// the six shapes, the depth and per-branch dials, and Back, Next and the whole graph again. Where the note is edited,
+// Save writes it into the style graph. On a wide card it is a
 // column at the start of the drawing; on a narrow one, a strip across it (styles.css).
 //
 // Each dial is one control: its minus and plus buttons, and a value the arrow keys, Home, End and the wheel change. It
@@ -22,6 +23,8 @@ export interface SidebarActs extends ExploreActs {
   search: (query: string) => Found[];
   /** Makes the thing found the centre of the exploration. */
   centre: (key: string) => void;
+  /** Whether it offers to save the exploration: only where the note is edited (explore_saved). */
+  saving: boolean;
 }
 
 /** The sidebar of one card, and how to bring it up to date with its exploration (none hides it). */
@@ -83,6 +86,16 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
   moves
     .createEl('button', { text: word('explore.stop'), attr: { type: 'button' } })
     .addEventListener('click', () => acts.stop());
+  // saved as one line in the style graph, so the note opens on it again (explore_saved)
+  if (acts.saving && acts.save) {
+    const save = acts.save;
+    moves
+      .createEl('button', {
+        text: word('explore.save'),
+        attr: { type: 'button', 'aria-label': word('explore.save.label') },
+      })
+      .addEventListener('click', () => save());
+  }
   return {
     el,
     show: (now) => {

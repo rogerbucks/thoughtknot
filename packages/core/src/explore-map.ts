@@ -61,6 +61,18 @@ export class ExploreMap {
     return map;
   }
 
+  /**
+   * An exploration of `drawing` showing `centre` and the things `shown`, as a saved one opens again (explore_saved).
+   * Each parent is read from the centre, as a recentre reads it. A thing the drawing lacks, or that no shown thing
+   * links back to the centre, is left out.
+   */
+  static of(drawing: GraphDrawing, centre: string, shown: readonly string[], perBranch?: number): ExploreMap {
+    const map = new ExploreMap(drawing, centre, perBranch);
+    for (const key of shown) if (map.order.has(key)) map.parent.set(key, centre);
+    map.recentre(centre);
+    return map;
+  }
+
   /** The thing the exploration starts from. */
   get centre(): string {
     return this.root;

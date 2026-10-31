@@ -101,8 +101,8 @@ export class Selection {
       depth: () => o.focusDepth ?? 1,
       changed: () => this.refresh(),
       go: (key) => this.goTo(key, false),
-      // a view saved as shown opens with its legend's choices (§25, untangle_legend)
-      legend: o.view?.shown?.legend,
+      legend: o.view?.shown?.legend, // a view saved as shown opens with its legend's choices (§25, untangle_legend)
+      ...(o.exploring && { exploring: o.exploring }), // and an exploration saved opens again (§71, explore_saved)
       regroup: (only) => this.regrouping.to(only),
       svg: host.svg,
     });

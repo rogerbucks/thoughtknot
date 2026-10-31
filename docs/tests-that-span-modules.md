@@ -1072,3 +1072,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/redraw-keeps-place.test.js` — a drawing redrawn as its block is typed keeps its zoom and
   boxes. That holds in the edit pane and in the card edited in place. It spans `type-place.ts`, `pane-drawing.ts`, `block.ts` and
   `typing-rests.ts`, and the setting Redraw while typing (redraw_keeps_place, redraw_while_typing).
+
+## Saving an exploration
+
+- `packages/obsidian/test/explore-saved.test.js` — a note opens on the exploration its style block saved, and the
+  sidebar's Save writes it again in edit mode only. It spans `explore-saved.ts`, `explore-sidebar.ts`, `untangle.ts`,
+  `view-block.ts` and `block.ts` (explore_saved).

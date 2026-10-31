@@ -198,6 +198,9 @@ export const TYPES_LATE = [
   'RunSource',
   'RunnerOptions',
   'SafeWrite',
+  'SavedExplore',
+  // a saved exploration (§71), 31 Oct 2026
+  'ExploreSave',
   'Scenario',
   'Scheduler',
   'SchemaMove',

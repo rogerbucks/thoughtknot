@@ -73,6 +73,7 @@ STYLE_KINDS = (
     "Filter",
     "Preset",
     "Render",
+    "Explore",
 )
 # The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
 # id is its name.
@@ -127,6 +128,8 @@ STYLE_KEYS = {
     "Preset": ("preset",),
     # a graph's or a view's space and painter (editor spec §68), checked in render.py
     "Render": ("space", "painter", "lens", "view"),
+    # an exploration saved (editor spec §71): only the plug-in opens it, so it is not checked here
+    "Explore": ("centre", "shown", "shape", "per_branch", "view"),
 }
 
 

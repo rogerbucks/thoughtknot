@@ -15,6 +15,8 @@ export interface ExploreActs {
   stop: () => void;
   /** A thing's name, by its key. */
   text: (key: string) => string;
+  /** Saves the exploration in the style graph, where the card can (explore_saved). */
+  save?: () => void;
 }
 
 /** The banner's line for `s`: what it shows, and the whole graph again. Its other controls are in the sidebar. */

@@ -7,6 +7,7 @@
 import { adjacency, edgesOf, within } from './focus.ts';
 import type { FocusEdge, Kept } from './focus.ts';
 import { ExploreSession } from './explore-session.ts';
+import type { ExploreSave } from './explore-saved.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
@@ -322,6 +323,14 @@ export class Untangle {
   exploreFrom(key: string): ExploreSession {
     this.only = null;
     this.explore = new ExploreSession(this.d, key);
+    return this.explore;
+  }
+
+  /** Opens `saved` again, as the style graph saved it (explore_saved). Null when its centre is not drawn here. */
+  exploreSaved(saved: ExploreSave): ExploreSession | null {
+    if (!this.d.boxes.some((b) => b.key === saved.centre)) return null;
+    this.only = null;
+    this.explore = new ExploreSession(this.d, saved.centre, saved.shape, saved);
     return this.explore;
   }
 

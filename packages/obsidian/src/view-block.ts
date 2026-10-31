@@ -24,11 +24,21 @@ import {
   readingOf,
   styleEdit,
   reversedLinks,
+  savedExploreFor,
   styledDrawing,
   underStrictness,
   word,
 } from '@thoughtknot/core';
-import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@thoughtknot/core';
+import type {
+  ExploreSave,
+  GraphDrawing,
+  NamedView,
+  Outside,
+  StyleChange,
+  StyleGraph,
+  ThingLook,
+} from '@thoughtknot/core';
+import type { Exploring } from '@thoughtknot/core/display/graph-view/view-options';
 import type ThoughtKnotPlugin from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
@@ -70,6 +80,22 @@ export async function writeStyle(
   } else await changeVaultNote(plugin.app, file.path, edit);
   // each write is confirmed in words, as is each refusal
   new Notice(refused ? word('blocks.style-failed', { why: refused }) : done);
+}
+
+/**
+ * A card's saved exploration, which it opens on, and how its sidebar saves one (§71, explore_saved). The sidebar
+ * offers to save only where the note is edited, never in reading view.
+ */
+export function exploringFor(
+  plugin: ThoughtKnotPlugin,
+  path: string,
+  graph: string,
+  style: StyleGraph,
+  readOnly: () => boolean,
+): Exploring {
+  const saved = savedExploreFor(style.explores);
+  const save = (explore: ExploreSave) => void writeStyle(plugin, path, graph, { explore }, word('explore.saved'));
+  return { ...(saved && { saved }), ...(readOnly() ? {} : { save }) };
 }
 
 /**
