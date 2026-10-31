@@ -5,11 +5,9 @@
 // set as text.
 import { word } from '@thoughtknot/core';
 import type { DisplayHost, MenuEntry } from '@thoughtknot/core/display/host';
+import { noticeMs } from '@thoughtknot/core/display/notices';
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/** How long a notice stays, in milliseconds. */
-export const NOTICE_MS = 5000;
 
 /** How wide a screen counts as a phone's. */
 export const PHONE_WIDTH = '(max-width: 600px)';
@@ -100,7 +98,18 @@ export function browserHost(win: Window): DisplayHost {
       note.setAttribute('class', 'gn-notice');
       note.textContent = message;
       shelf.append(note);
-      win.setTimeout(() => note.remove(), NOTICE_MS);
+      const ms = noticeMs(message);
+      if (ms > 0) {
+        win.setTimeout(() => note.remove(), ms);
+        return;
+      }
+      // a long message stays until the person dismisses it, by a click or Enter or Escape (risk NEURO-6)
+      note.classList.add('gn-notice-sticky');
+      note.setAttribute('tabindex', '0');
+      note.addEventListener('click', () => note.remove());
+      note.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') note.remove();
+      });
     },
     menu: showMenu,
     // the page's policy allows no inline style (cc_csp): a drawing's colours are set through the CSSOM instead

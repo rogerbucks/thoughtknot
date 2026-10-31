@@ -4,6 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { HOST_CONTRACT_VERSION, hostContract, hostServicesContract } from '../src/display/host-contract.ts';
+import { noticeMs } from '../src/display/notices.ts';
 import { LayoutRunner, inThreadPort, loadEngine, memoryStorage, serveLayouts } from '../src/index.ts';
 
 /** A host made from the interface alone, with no host behind it: its notices and menus kept where its probe reads them. */
@@ -26,6 +27,10 @@ function plainHost(overrides = {}) {
     doc,
     element: () => doc.body.appendChild(doc.createElement('span')),
     notices: () => notices,
+    stillShownAfter: (message, ms) => {
+      const lasts = noticeMs(notices.at(-1) ?? message);
+      return lasts === 0 || lasts > ms;
+    },
     lastMenu: () =>
       menu?.map((e) =>
         e === 'separator'
@@ -112,7 +117,7 @@ describe('the host contract', () => {
   test('it is versioned, and holds a host to each of its promises by name', () => {
     assert.equal(HOST_CONTRACT_VERSION, 6);
     const names = hostContract(() => plainHost()).map((c) => c.name);
-    assert.equal(names.length, 8);
+    assert.equal(names.length, 9);
     for (const promise of [
       'icon',
       'phone',
@@ -156,8 +161,12 @@ describe('the host contract', () => {
         return made;
       };
       const failed = await failures(make);
-      assert.equal(failed.length, 1, failed.join('\n'));
-      assert.ok(failed[0].startsWith(check), failed[0]);
+      // a notice cut to a word fails both notice checks: it is not the message, and not shown for long
+      assert.equal(failed.length, check === 'a notice' ? 2 : 1, failed.join('\n'));
+      assert.ok(
+        failed.every((f) => f.startsWith(check)),
+        failed[0],
+      );
       assert.match(failed[0], /wanted .+, got /);
     });
 

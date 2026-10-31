@@ -33,6 +33,8 @@ export interface HostProbe {
   element: () => HTMLElement;
   /** The messages its notices have shown, in order, as the person reads them. */
   notices: () => string[];
+  /** Whether the notice of `message` can still be read after `ms` milliseconds, on a clock run that far. */
+  stillShownAfter: (message: string, ms: number) => boolean;
   /** The rows of the last menu it showed, in order, or null when it has shown none. */
   lastMenu: () => MenuRowSeen[] | null;
   /** Chooses the row of the last menu titled `title`, as the person would. */
@@ -71,9 +73,26 @@ const seen = (entries: MenuEntry[]): MenuRowSeen[] =>
       : { title: e.title, ...(e.checked !== undefined && { checked: e.checked }), ...(e.warning && { warning: true }) },
   );
 
+/** The check of how long a notice stays (NEURO-6), on a fresh host from `make`. */
+function noticeLasts(make: () => HostUnderTest): ContractCheck {
+  return {
+    name: 'a notice of more than 80 characters is still shown after 10 seconds, and a short one is gone by a minute',
+    run: () => {
+      const { host, probe } = make();
+      const long = 'This is a long notice that takes a slow reader more than a moment to read. It must not vanish.';
+      host.notice(long);
+      if (!probe.stillShownAfter(long, 10_000)) fail('notice', 'a long notice shown after 10 s', 'gone');
+      const short = 'Saved.';
+      host.notice(short);
+      if (probe.stillShownAfter(short, 60_000)) fail('notice', 'a short notice gone by 60 s', 'still shown');
+    },
+  };
+}
+
 /** Every check of the contract, each run on a fresh host from `make`. */
 export function hostContract(make: () => HostUnderTest): ContractCheck[] {
   return [
+    noticeLasts(make),
     {
       name: 'an icon is drawn into its element, once, whether the host knows its name or not',
       run: () => {

@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (44)
+## Open (43)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -23,7 +23,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-1 | No vault-wide list of graphs, cross-note links or one-shot backup | ●●● | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | NEURO-2 | Changes and history view exist only in the browser editor | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-3 | Ten icon-only toolbar buttons, no visible tooltip, nothing can be hidden | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
-| NEURO-6 | Every notice vanishes after five seconds and cannot be read again | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
@@ -195,16 +194,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Give each bar button a tooltip in the host's style (the aria-label as title or setTooltip). Add a setting that folds the less used buttons (filter, view, export, source) behind one More button.
 
 **Check:** Extend the host contract or wcag test: every button in the bar has a visible tooltip text equal to its aria-label.
-
-### NEURO-6 Every notice vanishes after five seconds and cannot be read again
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/host.ts`, `packages/core/src/display/host-contract.ts`, `packages/obsidian/src/display-host.ts`, `packages/claude-code/page/browser-host.ts`.
-
-**Risk:** Long messages disappear before a slow reader finishes. Examples are 'The kept drafts could not be written into … They stay kept' and 'This drawing is not on the page yet …'. There is no setting to keep them and no list of past messages.
-
-**Fix:** Give notice() a duration that grows with the message length. Past about 80 characters, it stays until dismissed. Keep the last ten messages behind the problems badge.
-
-**Check:** A host contract case: a notice longer than 80 characters is still shown after 10 seconds in a fake clock.
 
 ### NEURO-7 Drawing redraws 250 ms after typing; picture may jump
 
@@ -547,6 +536,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | done | #1550 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | NEURO-5 | Colour-never-alone rule has no test, yet ethos says it is checked | done | #1550 |
+| NEURO-6 | Every notice vanishes after five seconds and cannot be read again | done | #1588 |
 | NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |

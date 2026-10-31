@@ -32,6 +32,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'problems.overdue': '⚠ Overdue — {what}',
   'problems.deferred': '◌ Deferred — {what}',
   'problems.completeness': 'Completeness',
+  'problems.recent': 'Recent messages',
   'images.paused': 'Paused. Press Play to move it.',
   'images.unreadable': '{name} could not be read: {why}',
   'images.no-first-frame': '{why} Its first frame cannot be drawn on this device.',

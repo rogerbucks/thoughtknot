@@ -83,6 +83,12 @@ async function makeObsidian() {
       doc,
       element: () => doc.body.appendChild(doc.createElement('span')),
       notices: () => state.notices,
+      // Obsidian keeps a notice for the duration it was given, and until it is clicked when that is 0
+      stillShownAfter: (message, ms) => {
+        const at = state.notices.lastIndexOf(message);
+        const duration = state.noticeDurations?.[at];
+        return duration === 0 || (duration ?? 4000) > ms;
+      },
       lastMenu: () =>
         last()?.rows.map((r) =>
           r === 'separator' ? r : row(r.title, r.checkable ? r.checked : undefined, r.warning),
@@ -99,7 +105,13 @@ async function makeObsidian() {
 function makeBrowser(html = '<!doctype html><body></body>') {
   const { window } = new JSDOM(html);
   const doc = window.document;
-  const win = { document: doc, setTimeout: () => 0, matchMedia: () => ({ matches: false }) };
+  // a clock that runs only as far as a check asks: the page's timers wait here, with their delays
+  const timers = [];
+  const win = {
+    document: doc,
+    setTimeout: (run, ms) => timers.push({ run, ms }),
+    matchMedia: () => ({ matches: false }),
+  };
   const menus = () => [...doc.querySelectorAll('.gn-menu')];
   return {
     host: browserHost(win),
@@ -107,6 +119,13 @@ function makeBrowser(html = '<!doctype html><body></body>') {
       doc,
       element: () => doc.body.appendChild(doc.createElement('span')),
       notices: () => [...doc.querySelectorAll('.gn-notice')].map((n) => n.textContent),
+      stillShownAfter: (message, ms) => {
+        for (const t of timers.splice(0).sort((a, b) => a.ms - b.ms)) {
+          if (t.ms <= ms) t.run();
+          else timers.push(t);
+        }
+        return [...doc.querySelectorAll('.gn-notice')].some((n) => n.textContent === message);
+      },
       lastMenu: () => {
         const menu = menus().pop();
         if (!menu) return null;
@@ -193,6 +212,11 @@ async function wholeObsidian() {
     probe: {
       ...probe,
       notices: () => state.notices,
+      stillShownAfter: (message, ms) => {
+        const at = state.notices.lastIndexOf(message);
+        const duration = state.noticeDurations?.[at];
+        return duration === 0 || (duration ?? 4000) > ms;
+      },
       lastMenu: () =>
         last()?.rows.map((r) =>
           r === 'separator' ? r : row(r.title, r.checkable ? r.checked : undefined, r.warning),

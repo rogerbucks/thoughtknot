@@ -14,6 +14,7 @@ import {
 } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, NoteStorage, Refusal } from '@thoughtknot/core';
 import type { LinkHost } from './link-host';
+import { rememberNotice } from './notices.ts';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
@@ -196,4 +197,7 @@ export const sidePane = (): SidePane | null => installed?.sidePane ?? null;
 export const keptLayout = (): DisplayHost['detailsLayout'] | null => installed?.detailsLayout ?? null;
 
 /** Tells the person something briefly, through the host. */
-export const notice = (message: string): void => displayHost().notice(message);
+export const notice = (message: string): void => {
+  rememberNotice(message);
+  displayHost().notice(message);
+};
