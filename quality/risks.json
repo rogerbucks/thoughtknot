@@ -4943,9 +4943,10 @@
       "raised": "2026-10-31",
       "reviewed": {
         "date": "2026-10-31",
-        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+        "commit": "e93b457fa53fd94c08ced9abcbb35acacdda25db"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#1635"
     },
     {
       "id": "API-13",

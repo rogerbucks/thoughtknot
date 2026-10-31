@@ -1,0 +1,6 @@
+{
+  "file": "packages/boundary/test/ai-made-accepted.test.js",
+  "test": "boundary_contract: accepted AI proposals > what a person proposed is written as proposed, and crosses as a person’s",
+  "seen_failing_first": false,
+  "evidence": "A control: a person's proposal was never marked, before or after; it proves the fix marks only a model's."
+}

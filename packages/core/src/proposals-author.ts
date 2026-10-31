@@ -145,7 +145,7 @@ function markedByModel(gql: string): string | { refused: string } {
  * proposed is written with its mark: an addition marks what it adds, a set marks the thing it sets as AI-assisted.
  * The declaration of the proposer is no content, and is written as it is. So is every change of a person or a step.
  */
-export function writtenAs(texts: readonly string[], p: Proposal, c: ProposedChange): Edited {
+export function markedIn(texts: readonly string[], p: Proposal, c: ProposedChange): Edited {
   if (p.provenance.by.kind !== 'model' || declaresProposer(p, c)) return applyChange(texts, p.graph, c);
   if (c.op === 'add') {
     const gql = markedByModel(c.gql);

@@ -16,11 +16,13 @@ every host.
 
 - `redact`: things to leave out, by tag, label or property key. A thing left out is listed in the manifest.
 - `ai`: what happens to AI-made content as it crosses. `label` (the default), `remove`, or `hold` until a person
-  allows it. AI-made means a thing or link marked `proposer_kind: 'model'` or `ai_assisted: true`. The core writes
-  those marks when a person accepts a model's proposal (`proposals-author.ts`, `writtenAs`): each thing and link it
-  adds gets `proposer_kind`, and a thing whose value it set gets `ai_assisted`. A mark the model wrote itself is
-  written over. The marks are in the note's text, so every host and tool reads them the same (ARCH-14).
+  allows it.
 - `policy`: who may edit, what needs review, which graphs may be joined. It only ever narrows (see below).
+
+AI-made means a thing or link marked `proposer_kind: 'model'` or `ai_assisted: true`. The core writes these marks when
+a person accepts a model's proposal (`markedIn` in `proposals-author.ts`). Each thing and link it adds is marked as the
+model's. A thing whose value it sets is marked AI-assisted. A mark the model wrote itself is written over. The marks are
+in the note's text, so every host reads them the same (ARCH-14).
 
 ## What crosses: a parcel
 
