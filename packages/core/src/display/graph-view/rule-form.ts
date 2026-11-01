@@ -1,48 +1,119 @@
-// Adding or changing a rule from the card (editor spec §56, rule_look_try_save). Beside the rules' legend is a Rule
-// button. It opens a short form: the test each thing must pass, a badge, a line and what the rule means. A rule with
-// the meaning of one already written changes it.
+// Highlighting things by a rule, from the card (editor spec §56, rule_look_try_save and rule_look_builder). Beside the
+// rules' legend is a Highlight things button. It opens a short form in three steps, each in plain words:
+// 1. Find: things of a kind, or links of a type, where a property is (or is more than, and so on) a value. Each list
+//    is filled from the graph itself, and what the rule finds is counted and named as it is built.
+// 2. Show them with: a colour, a badge and a line, each picked from samples, and a preview of one thing found.
+// 3. Call it: the name in the legend, written from the test until a person writes their own.
+// Quick starts from the graph's own data fill all three at once, and each rule saved can be opened to change it. A
+// person who knows the test language may still write the test themselves.
 //
 // In reading view the rule is only tried: the card draws it at once, says it is not saved, and offers Back to saved.
-// The note is left byte for byte as it was. Where the note is edited the rule is saved in the style graph instead.
-// The host does each (`RuleAsk`). A rule that cannot be read says why under the form, and nothing is tried or saved.
-import { BADGES, BADGE_GLYPHS, LINES, ruleRefusal, word } from '@thoughtknot/core';
-import type { RuleAsk, RuleWrite } from '@thoughtknot/core';
+// The form opens again on the rule tried, so it can be changed and tried again. The note is left byte for byte as it
+// was. Where the note is edited the rule is saved in the style graph instead. The host does each (`RuleAsk`). A rule
+// that cannot be read says why under the form, and nothing is tried or saved.
+import { BADGE_GLYPHS, hueColour, ruleRefusal, ruleStarts, sayDraft, testsOf, whenOf, word } from '@thoughtknot/core';
+import type { WordKey, RuleAsk, RuleChoices, RuleDraft, RuleStart, RuleWrite } from '@thoughtknot/core';
 import { button } from '../button.ts';
 import { readOnlyHere } from './placement.ts';
+import { renderFind, renderLookPicks, renderPreview, renderWritten } from './rule-form-parts.ts';
+import type { FormState } from './rule-form-parts.ts';
 
-/** A labelled field of the form: its words, then the input or list. */
-function field<K extends 'input' | 'select'>(form: HTMLElement, tag: K, name: string, text: string) {
-  const label = form.createEl('label', { cls: 'thoughtknot-rule-field' });
-  label.createSpan({ text });
-  return label.createEl(tag, { attr: { name } });
-}
-
-/** A list to choose from: none first, then each of `among`, shown as `shown` says. */
-function choices<T extends string>(select: HTMLSelectElement, among: readonly T[], shown: (v: T) => string) {
-  select.createEl('option', { value: '', text: word('rules.none') });
-  for (const v of among) select.createEl('option', { value: v, text: shown(v) });
-}
-
-/** The form's field named `name`. */
+/** The form's hidden or typed field named `name`. */
 const fieldOf = (form: HTMLElement, name: string) => form.querySelector<HTMLInputElement>(`[name="${name}"]`);
 
 /** The rule the form holds, the fields left empty left out. */
-function ruleOf(form: HTMLElement): RuleWrite {
+function ruleOf(form: HTMLElement, view?: string): RuleWrite {
   const value = (name: string) => fieldOf(form, name)?.value.trim() ?? '';
-  const given = (name: string) => value(name) || undefined;
   const rule: RuleWrite = { means: value('means') };
-  for (const [k, v] of [
-    ['when', given('when')],
-    ['badge', given('badge')],
-    ['line', given('line')],
-  ] as const)
-    if (v !== undefined) rule[k] = v;
+  for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line'] as const) if (value(k)) rule[k] = value(k);
+  if (view !== undefined) rule.view = view;
   return rule;
 }
 
+/** A field the builder writes and the rule is read from, with no box of its own. */
+const hidden = (form: HTMLElement, name: string, value = '') =>
+  form.createEl('input', { attr: { type: 'hidden', name, value } });
+
+/** The draft a rule written before is built from: its kind or type, and its tests, if simple enough to read back. */
+function draftOf(rule: RuleWrite): RuleDraft {
+  const on = rule.type ? 'links' : 'things';
+  return { on, of: rule.type ?? rule.kind ?? '', tests: (rule.when && testsOf(rule.when)) || [] };
+}
+
+/** A quick start as a whole rule: its test, its kind, its look and its name. */
+function startRule(s: RuleStart, choices: RuleChoices | undefined): RuleWrite {
+  const of = s.draft.of ? (s.draft.on === 'links' ? { type: s.draft.of } : { kind: s.draft.of }) : {};
+  return { when: whenOf(s.draft, choices), ...of, colour: s.colour, badge: s.badge, means: s.means };
+}
+
+/** A chip that fills the form with `rule`: its badge in its colour, then its name. */
+function chip(parent: HTMLElement, rule: RuleWrite, label: string, load: (r: RuleWrite) => void) {
+  const b = parent.createEl('button', { cls: 'thoughtknot-rule-chip', attr: { type: 'button', 'aria-label': label } });
+  const glyph = rule.badge ? BADGE_GLYPHS[rule.badge as keyof typeof BADGE_GLYPHS] : undefined;
+  const sign = b.createSpan({ cls: 'thoughtknot-rule-glyph', text: glyph ?? '', attr: { 'aria-hidden': 'true' } });
+  if (rule.colour) sign.setCssProps({ color: hueColour(rule.colour, 'line') });
+  b.appendText(rule.means);
+  b.addEventListener('click', () => load(rule));
+}
+
+/** A small step heading of the form. */
+const step = (form: HTMLElement, key: WordKey) => form.createDiv({ cls: 'thoughtknot-rule-step', text: word(key) });
+
+/** The fields and parts of the form, in the order a person reads them: quick starts, then the three steps. */
+function formParts(form: HTMLElement) {
+  const fields = {
+    kind: hidden(form, 'kind'),
+    type: hidden(form, 'type'),
+    colour: hidden(form, 'colour', 'red'),
+    badge: hidden(form, 'badge', 'flag'),
+    line: hidden(form, 'line'),
+  };
+  const starts = form.createDiv({ cls: 'thoughtknot-rule-starts' });
+  step(form, 'rules.step.find');
+  const find = form.createDiv({ cls: 'thoughtknot-rule-find' });
+  const written = form.createDiv();
+  const found = form.createDiv({ cls: 'thoughtknot-rule-found', attr: { role: 'status', 'aria-live': 'polite' } });
+  step(form, 'rules.step.show');
+  const looks = form.createDiv({ cls: 'thoughtknot-rule-looks' });
+  const preview = form.createDiv({ cls: 'thoughtknot-rule-preview' });
+  step(form, 'rules.step.name');
+  const means = form.createEl('label', { cls: 'thoughtknot-rule-field' }).createEl('input', {
+    attr: { name: 'means', type: 'text', placeholder: word('rules.means-hint') },
+  });
+  const refused = form.createDiv({ cls: 'thoughtknot-rule-refused', attr: { role: 'alert' } });
+  const actions = form.createDiv({ cls: 'thoughtknot-rule-actions' });
+  const submit = actions.createEl('button', { cls: 'mod-cta', attr: { type: 'submit' } });
+  return { fields, starts, find, written, found, looks, preview, means, refused, actions, submit };
+}
+
+/** Says what the rule finds as it is built: how many and which, nothing yet, or what to pick first. */
+function sayFound(found: HTMLElement, rule: RuleWrite, finds: { count: number; names: string[] } | undefined) {
+  found.setText(
+    !rule.when
+      ? word('rules.finds-start')
+      : !finds
+        ? ''
+        : finds.count
+          ? word('rules.finds', { count: finds.count, names: finds.names.join(', ') })
+          : word('rules.finds-none'),
+  );
+  found.toggleClass('is-empty', !!rule.when && finds?.count === 0);
+}
+
+/** The quick starts from the graph's own data, then each rule saved, to change it: each a chip that fills the form. */
+function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void) {
+  const choices = ask.choices;
+  const starting = choices ? ruleStarts(choices) : [];
+  if (starting.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.starts') });
+  for (const s of starting) chip(starts, startRule(s, choices), s.means, load);
+  if (ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
+  for (const r of ask.saved ?? []) chip(starts, r, word('rules.change', { means: r.means }), load);
+}
+
 /**
- * The Rule button and its form, at the end of `slot`, beside the rules' legend. In reading view a rule is tried, and
- * where the note is edited it is saved, as `ask` does each. While a rule is tried, it says so and offers Back to saved.
+ * The Highlight things button and its form, at the end of `slot`, beside the rules' legend. In reading view a rule is
+ * tried, and where the note is edited it is saved, as `ask` does each. While a rule is tried, it says so, offers Back
+ * to saved, and opens the form again on the rule tried.
  */
 export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): void {
   if (!ask) return;
@@ -53,35 +124,86 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   }
   const form = box.createEl('form', { cls: 'thoughtknot-rule-form', attr: { 'aria-label': word('rules.form') } });
   form.hidden = true;
-  const open = button(
-    box,
-    word('rules.add'),
-    'plus',
-    () => {
-      form.hidden = !form.hidden;
-      open.setAttribute('aria-expanded', form.hidden ? 'false' : 'true');
-      if (form.hidden) return;
-      // tried in reading view, saved where the note is edited: asked where the card is now
-      submit.setText(word(readOnlyHere(box) ? 'rules.try' : 'rules.save'));
-      fieldOf(form, 'when')?.focus();
-    },
-    word('rules.add'),
-  );
+  const state: FormState = {
+    draft: { on: 'things', of: '', tests: [{ field: '', op: 'is', value: '' }] },
+    meansTyped: false,
+    whenTyped: false,
+  };
+  let view: string | undefined;
+  const { fields, starts, find, written, found, looks, preview, means, refused, actions, submit } = formParts(form);
+  const when = renderWritten(written, state, () => refresh());
+  means.addEventListener('input', () => {
+    state.meansTyped = means.value.trim() !== '';
+    refresh();
+  });
+  button(actions, word('rules.close'), 'x', () => toggle(false), word('rules.close'));
+
+  /** Writes the draft into the fields, names it if no one has, and says what it finds and how it looks. */
+  function refresh(rebuild = false) {
+    const { draft } = state;
+    if (rebuild)
+      renderFind(find, state, ask?.choices, () => {
+        state.whenTyped = false; // a test picked from the lists wins over one written
+        refresh();
+      });
+    if (!state.whenTyped) when.value = whenOf(draft, ask?.choices);
+    fields.kind.value = draft.on === 'things' ? draft.of : '';
+    fields.type.value = draft.on === 'links' ? draft.of : '';
+    if (!state.meansTyped) means.value = sayDraft(draft);
+    const rule = ruleOf(form, view),
+      finds = ask?.finds?.(rule);
+    sayFound(found, rule, finds);
+    renderPreview(preview, rule, finds?.names[0]);
+    refused.setText('');
+  }
+
+  /** Fills the whole form from a rule: a quick start, a rule saved, or the rule last tried. */
+  function load(rule: RuleWrite) {
+    state.draft = draftOf(rule);
+    if (!state.draft.tests.length) state.draft.tests = [{ field: '', op: 'is', value: '' }];
+    // a test the builder cannot read back is kept as written, in the box for writing it
+    state.whenTyped = !!rule.when && !testsOf(rule.when);
+    when.value = rule.when ?? '';
+    fields.colour.value = rule.colour ?? '';
+    fields.badge.value = rule.badge ?? '';
+    fields.line.value = rule.line ?? '';
+    means.value = rule.means;
+    state.meansTyped = rule.means.trim() !== '' && rule.means !== sayDraft(state.draft);
+    view = rule.view;
+    renderLookPicks(looks, fields, () => refresh());
+    refresh(true);
+  }
+
+  // the lists, filled from the graph, are made the first time the form opens, so a closed card holds none of them
+  let built = false;
+  function build() {
+    if (built) return;
+    built = true;
+    if (ask) renderStarts(starts, ask, load);
+    renderLookPicks(looks, fields, () => refresh());
+    refresh(true);
+  }
+
+  function toggle(show: boolean) {
+    form.hidden = !show;
+    open.setAttribute('aria-expanded', show ? 'true' : 'false');
+    if (!show) return;
+    build();
+    // tried in reading view, saved where the note is edited: asked where the card is now
+    submit.setText(word(readOnlyHere(box) ? 'rules.try' : 'rules.save'));
+    form.querySelector<HTMLElement>('select')?.focus();
+  }
+  const open = button(box, word('rules.form'), 'circle-dot', () => toggle(!!form.hidden), word('rules.add'));
   open.setAttribute('aria-expanded', 'false');
   box.insertBefore(open, form);
-  field(form, 'input', 'when', word('rules.when')).setAttribute('placeholder', word('rules.when-example'));
-  choices(
-    field(form, 'select', 'badge', word('rules.badge')),
-    BADGES,
-    (b) => `${BADGE_GLYPHS[b]} ${word(`rules.badge.${b}`)}`,
-  );
-  choices(field(form, 'select', 'line', word('rules.line')), LINES, (l) => word(`rules.line.${l}`));
-  field(form, 'input', 'means', word('rules.means'));
-  const refused = form.createDiv({ cls: 'thoughtknot-rule-refused', attr: { role: 'alert' } });
-  const submit = form.createEl('button', { attr: { type: 'submit' } });
+  if (ask.tried && ask.last) {
+    build();
+    load(ask.last); // back where the person was: the rule just tried, open to change
+    toggle(true);
+  }
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const rule = ruleOf(form),
+    const rule = ruleOf(form, view),
       why = ruleRefusal(rule);
     refused.setText(why ?? '');
     if (why) return;
