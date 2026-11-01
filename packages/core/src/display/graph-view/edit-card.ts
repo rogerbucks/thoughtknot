@@ -7,11 +7,13 @@
 // - In space, where no box is on the page, it sits at the drawing's top corner (edit_every_view).
 // - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
+// - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
 import { addedNear, deleted, renamed } from '../../thing-edits.ts';
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
+import { EditLink } from './edit-link';
 import { accept } from './estimate-actions';
 import { boxIn, type Target } from './taps';
 import type { ViewOptions } from './view-options';
@@ -39,6 +41,15 @@ export class EditCard {
   private said: HTMLElement | null = null;
   /** Whether F2 in the drawing is listened for: from the first thing shown, once the drawing is built. */
   private keyed = false;
+  /** The handle and search that link the thing shown to another. */
+  private readonly linking = new EditLink({
+    o: () => this.o,
+    viewport: () => this.viewport,
+    key: () => this.key,
+    write: (r) => ('reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now)),
+    say: (text) => this.said?.setText(text),
+    hand: (key) => handed.set(this.o.graph, { key, rename: true, at: Date.now() }),
+  });
 
   /** For the card `card`, and what of it the editor needs, got as the card builds it. */
   constructor(
@@ -61,8 +72,8 @@ export class EditCard {
   }
 
   /**
-   * The keys of the drawing while a thing is shown: F2 renames, Insert adds a child, Shift+Enter a sibling, and Delete
-   * deletes. They are taken before the drawing's own keys, so Shift+Enter never opens the box again.
+   * The keys of the drawing while a thing is shown: F2 renames, Insert adds a child, Shift+Enter a sibling, Delete
+   * deletes, and L links. They are taken before the drawing's own keys, so Shift+Enter never opens the box again.
    */
   private listen(): void {
     if (this.keyed) return;
@@ -85,7 +96,9 @@ export class EditCard {
                 ? () => this.add('sibling')
                 : (e.key === 'Delete' || e.key === 'Backspace') && !alt
                   ? () => this.remove()
-                  : null;
+                  : (e.key === 'l' || e.key === 'L') && !e.shiftKey
+                    ? () => this.linking.find()
+                    : null;
         if (!act) return;
         e.preventDefault();
         e.stopPropagation();
@@ -157,6 +170,7 @@ export class EditCard {
         'title',
         word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
       );
+    this.linking.build(row);
     this.said = said;
     this.place();
     const h = handed.get(this.o.graph);
@@ -212,6 +226,7 @@ export class EditCard {
 
   /** Takes the card away. */
   hide(): void {
+    this.linking.close();
     this.el?.remove();
     this.el = this.said = null;
     this.key = null;

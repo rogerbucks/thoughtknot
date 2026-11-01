@@ -3,6 +3,7 @@
 //   title, text or label), else under name.
 // - Added (edit_quick_add): a child linked from the thing, or a sibling linked from its parent, as the graph links them.
 // - Deleted (edit_delete): the thing and every link to it, with the comma that parted each from its neighbour.
+// - Linked (edit_link_drag): a link from one thing to another, of the type the first uses most.
 import gs from '@thoughtknot/graph-spec';
 import { addThing } from './add-thing.ts';
 import { blankText, items } from './block-items.ts';
@@ -120,4 +121,21 @@ export function deleted(texts: readonly string[], graph: string, key: string): B
     now = withoutItem(now, all, it);
   }
   return { block, was, now };
+}
+
+/**
+ * The block that writes thing `from` of `graph`, with a link from it to thing `to`. The link is of type `type` if
+ * given. Else it is the type `from` uses most, else the type the graph uses most, else RELATES_TO. A link to itself, or
+ * one already there, is refused.
+ */
+export function linkedTo(reading: NoteReading, graph: string, from: string, to: string, type?: string): BlockEdit {
+  const g = reading.world[graph];
+  const ours = [...reading.texts.entries()].filter(([, t]) => graphOfBlock(t) === graph);
+  const home = ours.find(([, t]) => writtenIn(t).some((w) => w.writes && w.variable?.name === from)) ?? ours[0];
+  if (!g?.nodes.has(from) || !g.nodes.has(to) || !home) return { reason: word('edit.not-here', { thing: from }) };
+  if (from === to) return { reason: word('edit.link-self') };
+  const rel = type ?? mostUsed(g.out(from)) ?? mostUsed(g.edges) ?? 'RELATES_TO';
+  if (g.out(from, rel).some(([, , t]) => t === to)) return { reason: word('edit.link-there') };
+  const [block, was] = home;
+  return { block, was, now: appended(was, [`(${from})-[:${rel}]->(${to})`]) };
 }
