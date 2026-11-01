@@ -71,4 +71,22 @@ describe('the panels the bar opens', () => {
     assert.equal(winner(all, panels, 'overflow-y').value, 'auto');
     assert.match(winner(all, panels, 'max-height').value, /--thoughtknot-room/);
   });
+
+  // proves: panels_over_drawing
+  test('a panel floats as a card inset from the drawing’s edges, as wide as it needs and no wider', () => {
+    const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
+    const panels = {
+      tag: 'div',
+      classes: ['thoughtknot-over-panels'],
+      states: [],
+      ancestors: [
+        { tag: 'div', classes: ['thoughtknot-over'] },
+        { tag: 'div', classes: ['thoughtknot-view'] },
+      ],
+    };
+    assert.match(winner(all, panels, 'top').value, /--gn-space-2/);
+    assert.match(winner(all, panels, 'inset-inline').value, /--gn-space-2/);
+    assert.match(winner(all, panels, 'max-inline-size').value, /rem/);
+    assert.equal(winner(all, panels, 'border-radius').value, 'var(--gn-radius-m)');
+  });
 });

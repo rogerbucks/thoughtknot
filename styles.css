@@ -530,14 +530,21 @@
   z-index: 4;
   height: 0;
 }
+/* It floats as a card, inset from the drawing's edges and no wider than it needs (Zen-led refresh, Roger 1 Nov 2026).
+   An open panel shows its edge. */
 .thoughtknot-over-panels {
   position: absolute;
-  top: 0;
-  inset-inline: 0;
-  max-height: var(--thoughtknot-room, 60vh);
+  top: var(--gn-space-2);
+  inset-inline: var(--gn-space-2);
+  max-inline-size: 40rem;
+  max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   overflow-y: auto;
   background: var(--gn-bg);
+  border-radius: var(--gn-radius-m);
   box-shadow: var(--gn-shadow-l);
+}
+.thoughtknot-over-panels:has(> :not([hidden])) {
+  border: 1px solid var(--gn-border-focus);
 }
 /* Untangling (spec §25): the banner over a filtered drawing, the search row, the legend of kinds and links, and what a
    thing's details offer. Every control is a 44-point target; what a legend line does is said in words as well as shown. */
