@@ -522,24 +522,34 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
-/* the explore sidebar (§71, explore_controls_on_screen): a strip across a narrow card, a column at the start of a wide
-   one. Its dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
-.thoughtknot-over-panels > .thoughtknot-explore-sidebar {
+/* the explore sidebar (§71, explore_controls_on_screen): a card floating over the drawing, never shrinking it or
+   pushing it down. On a wide card it is a column at the top start corner; on a narrow one, a strip across the top no
+   taller than 45% of the drawing. Either scrolls inside itself. Its dials and buttons are 44-point targets, and the
+   shape in use is pressed, so said by more than colour. */
+.thoughtknot-over > .thoughtknot-explore-sidebar {
+  position: absolute;
+  top: var(--gn-space-2);
+  inset-inline: var(--gn-space-2);
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-2);
+  max-height: calc(0.45 * var(--thoughtknot-room, 60vh));
+  overflow-y: auto;
   margin: 0;
-  border-top: 1px solid var(--gn-border);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
   padding: var(--gn-space-2) var(--gn-space-3);
   background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-l);
 }
-.thoughtknot-over-panels > .thoughtknot-explore-sidebar[hidden] {
+.thoughtknot-over > .thoughtknot-explore-sidebar[hidden] {
   display: none;
 }
 @media (min-width: 1024px) {
-  .thoughtknot-over-panels > .thoughtknot-explore-sidebar {
-    max-width: 18rem;
-    border-inline-end: 1px solid var(--gn-border);
+  .thoughtknot-over > .thoughtknot-explore-sidebar {
+    inset-inline-end: auto;
+    width: 18rem;
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
 .thoughtknot-explore-find input {

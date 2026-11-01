@@ -4,8 +4,11 @@
 // - The bar's search offers Explore from beside each thing found; the sidebar shows while exploring, and only then.
 // - Its search makes a thing found the centre; its shapes say which is in use.
 // - Each dial works by its buttons, the arrow keys, Home, End and the wheel, and says its value.
+// - It floats over the drawing, in the layer over it, so it never shrinks the drawing or pushes it down.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { rules, winner } from './host/cascade.js';
 import { build, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { load, GRAPH, show } from './host/view-notes.js';
@@ -98,4 +101,23 @@ test('each dial works by its buttons, the keys and the wheel, and says its value
   withText(sidebar(), 'button', 'Show the whole graph').click();
   await until(() => !!thing(el, 'island'));
   assert.ok(sidebar().hidden);
+});
+
+// proves: explore_controls_on_screen
+test('the sidebar floats over the drawing in its own card, taking no room from it', () => {
+  const layer = sidebar().parentElement;
+  assert.ok(layer.classList.contains('thoughtknot-over'), 'in the layer over the drawing');
+  assert.ok(!layer.querySelector('.thoughtknot-over-panels').contains(sidebar()), 'not stretched across with the panels');
+  const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
+  const card = { tag: 'div', classes: ['thoughtknot-view'] };
+  const side = {
+    tag: 'div',
+    classes: ['thoughtknot-explore-sidebar'],
+    states: [],
+    ancestors: [{ tag: 'div', classes: ['thoughtknot-over'] }, card],
+  };
+  assert.equal(winner(all, side, 'position').value, 'absolute');
+  assert.equal(winner(all, side, 'overflow-y').value, 'auto');
+  assert.match(winner(all, side, 'max-height').value, /--thoughtknot-room/);
+  assert.equal(winner(all, side, 'width').value, '18rem');
 });
