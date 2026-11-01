@@ -12,6 +12,7 @@ import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } 
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { GlobeLayout } from '../../space-globe.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
+import { tellPickedAt } from './space-picked-at';
 import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
@@ -147,6 +148,7 @@ export async function openSpaceView(
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
+    tellPickedAt(root, glide.match(picked), matrix, width, height); // the editor beside it follows it (§72)
   };
   const again = () => {
     if (asked) return;
