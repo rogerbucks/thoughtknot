@@ -462,6 +462,59 @@ describe('changing the type keeps the place', () => {
     }
   });
 
+  /** A wider org, so the thing in the middle is not pressed to an edge of the drawing in either type. */
+  const WIDE = [
+    ORG,
+    ...['eve', 'fay', 'gus', 'hal', 'ian', 'jo'].map((k) => `(${k}:Person {name: '${k}'})`),
+    ...['cy-eve', 'cy-fay', 'dee-gus', 'dee-hal', 'eve-ian', 'fay-jo'].map((p) => {
+      const [a, b] = p.split('-');
+      return `(${a})-[:MANAGES]->(${b})`;
+    }),
+  ].join(',\n');
+  /** The thing whose box sits nearest the middle of the card in `el`, the drawing laid out as `svgText`. */
+  const middleOf = async (el, svgText) => {
+    const { centres, hitAreas } = await import('../../core/src/hits.ts');
+    const areas = hitAreas(svgText),
+      vb = areas.viewBox,
+      svg = el.querySelector('svg.thoughtknot-svg'),
+      vp = el.querySelector('.thoughtknot-viewport');
+    const px = (k) => parseFloat(vp.cssProps[`--thoughtknot-${k}`] ?? '0');
+    const mx = vb.x + ((vp.clientWidth / 2 - px('x')) * vb.width) / Number(svg.getAttribute('width')),
+      my = vb.y + ((vp.clientHeight / 2 - px('y')) * vb.height) / Number(svg.getAttribute('height'));
+    let best = null,
+      far = Infinity;
+    for (const [id, at] of centres(areas)) {
+      const d = (at.x - mx) ** 2 + (at.y - my) ** 2;
+      if (d < far) [best, far] = [el.querySelector(`#${id}`)?.getAttribute('data-key') ?? null, d];
+    }
+    return best;
+  };
+
+  // proves: type_keeps_centre
+  test('the thing in the middle of the card stays in the middle when the type changes', async () => {
+    const note = noteOf(WIDE);
+    const env = await load({ files: { [PATH]: note } });
+    let drawn = '';
+    const layout = env.plugin.layout.bind(env.plugin);
+    env.plugin.layout = async (d, owner) => {
+      const out = await layout(d, owner);
+      drawn = out.svg;
+      return out;
+    };
+    try {
+      const el = await readCard(env, note);
+      for (let i = 0; i < 3; i++) labelled(el, 'Zoom in').click();
+      const before = await middleOf(el, drawn);
+      assert.ok(before, 'a thing in the middle');
+      pick(el, 'Flow');
+      await until(() => !!el.querySelector('.thoughtknot-type-tried'));
+      await settled();
+      assert.equal(await middleOf(el, drawn), before, 'the same thing in the middle');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: type_keeps_place
   test('in full screen: the card stays full screen, with the thing selected', async () => {
     const note = noteOf(ORG);

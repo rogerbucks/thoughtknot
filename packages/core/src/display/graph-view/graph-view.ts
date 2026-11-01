@@ -28,7 +28,7 @@ import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
-import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt, viewDrawn } from './type-strip';
+import { drawnApart, middleThing, renderTypeStrip, TypePlace, typeLeftAt, viewDrawn } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
@@ -143,7 +143,6 @@ export class GraphView extends Lifecycle {
           }),
         );
     }
-
     // finding a thing, the legend and the banner of an untangled drawing sit under the bar (§25); they change the picture only
     this.sel = new Selection(root, this.o, {
       svg: () => this.svg,
@@ -179,7 +178,8 @@ export class GraphView extends Lifecycle {
       : [];
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
-    const at = () => typeLeftAt(this.zoom.view(), this.details.selectedKey(), mode === 'full', this.spaces.mode());
+    const at = (v = this.zoom.view(), mid = middleThing(this.taps, v, this.viewport, this.svg)) =>
+      typeLeftAt(v, this.details.selectedKey(), mode === 'full', this.spaces.mode(), mid);
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
     // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
