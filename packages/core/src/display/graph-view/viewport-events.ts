@@ -24,6 +24,7 @@ import { onTableControl, tableScrolls, tableTookKey } from './table-keys';
 import type { QuickInfo } from './quick-info';
 import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
+import { fansOut } from './radial-centre';
 import type { MenuItem } from './thing-menu';
 import { word } from '@thoughtknot/core';
 import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
@@ -193,8 +194,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
     // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
-    // (Roger, 24 Oct 2026, second_tap_centres). Near several, a tap in the same place again chooses the next (§3)
-    if (down.again && !e.shiftKey) sel.came('centre', () => host.open(down.target));
+    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3)
+    if (down.again && !e.shiftKey) sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target));
     else {
       const chosen = taps.choose(down, nearTo(down));
       host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);

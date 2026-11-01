@@ -173,7 +173,7 @@ describe('a type is offered only when the data fits it, and says why when it doe
     assert.equal(loop.flow.why, 'a flow runs one way, and this loops back: Plan → Make → Check → Plan');
     assert.equal(loop.lanes.why, 'lanes need things of two kinds or more');
     const lone = fitsOf(LONE);
-    assert.equal(lone.radial.why, 'a radial drawing needs every thing joined to the centre, A, and C is not');
+    assert.equal(lone.radial.fits, true, 'a radial drawing fits with a thing joined to nothing: it sits beside');
     for (const f of [...Object.values(loop), ...Object.values(lone)])
       assert.equal(f.fits, f.why === undefined, `${f.type}: a why exactly when it does not fit`);
   });
@@ -194,12 +194,16 @@ describe('a type is offered only when the data fits it, and says why when it doe
   });
 
   // proves: type_only_when_fits
-  test('a radial drawing needs three things or more, and a flow and a tree need links', () => {
+  test('a radial drawing needs two things or more, and a flow and a tree need links', () => {
     const pair = `// graph: pair
 (a:Thing {name: 'A'}),
 (b:Thing {name: 'B'})`;
     const f = fitsOf(pair);
-    assert.equal(f.radial.why, 'a radial drawing needs three things or more');
+    assert.equal(f.radial.fits, true, 'two things, joined or not, make a radial drawing');
+    assert.equal(
+      fitsOf(`// graph: one\n(a:Thing {name: 'A'})`).radial.why,
+      'a radial drawing needs two things or more',
+    );
     assert.equal(f.flow.why, 'a flow needs links, and there are none');
     assert.equal(f.tree.why, 'a tree needs links, and there are none');
   });
@@ -395,12 +399,12 @@ describe('groups written as nudges', () => {
     assert.match(dot, /^digraph G \{\n {2}newrank=true;/, 'ranks kept inside the boxes');
   });
 
-  // proves: type_only_when_fits
-  test('a radial drawing is not offered while groups are written, as it cannot draw their boxes', () => {
+  // proves: type_only_when_fits, radial_always_fits
+  test('a radial drawing is offered while groups are written, drawn without their boxes', () => {
     const { plain, style, g } = shown(ORG, "(n1:Nudge {word: 'group', thing: 'ada', group: 'Leads'})");
     const radial = diagramOffer(plain, style, g).fits.find((f) => f.type === 'radial');
-    assert.equal(radial.why, 'a radial drawing cannot draw the box of group Leads');
-    assert.equal(fitsOf(ORG).radial.fits, true, 'without the group, it fits');
+    assert.equal(radial.fits, true);
+    assert.equal(fitsOf(ORG).radial.fits, true, 'without the group, it fits too');
   });
 });
 
@@ -508,8 +512,8 @@ describe('when an edit makes the data stop fitting the chosen type', () => {
     );
     assert.equal(diagramFor(plain, style, g).drawn, 'flow');
     assert.equal(diagramFor(plain, style, g, 'team').drawn, 'radial');
-    const two = { ...plain, boxes: plain.boxes.slice(0, 2), links: plain.links.slice(0, 1) };
-    assert.equal(diagramFor(two, style, g, 'team').stopped?.why, 'a radial drawing needs three things or more');
+    const one = { ...plain, boxes: plain.boxes.slice(0, 1), links: [] };
+    assert.equal(diagramFor(one, style, g, 'team').stopped?.why, 'a radial drawing needs two things or more');
   });
 });
 
