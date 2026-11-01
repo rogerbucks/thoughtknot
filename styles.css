@@ -166,6 +166,7 @@
   .thoughtknot-details.is-sheet,
   .thoughtknot-viewport > .thoughtknot-pointer,
   .thoughtknot-over-panels,
+  .thoughtknot-zen-exit,
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
