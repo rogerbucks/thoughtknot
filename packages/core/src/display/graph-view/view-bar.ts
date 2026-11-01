@@ -33,7 +33,8 @@ export interface BarActions {
   legend: (b: HTMLButtonElement) => void;
   /** View: opens or closes the View menu's switches, and says which (§25). */
   view: (b: HTMLButtonElement) => void;
-  fullScreen: () => void;
+  /** Opens full screen; in zen, with every panel hidden (controls_zen). */
+  fullScreen: (zen?: boolean) => void;
   /** 2D, 2.5D or 3D: shows the drawing the next way, flat or in space (§53, space-switch.ts). */
   space: () => void;
   editHere: () => void;
@@ -145,6 +146,7 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     mode === 'full'
       ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
       : button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
+  button(bar, word('bar.zen'), 'eye-off', () => on.fullScreen(true)); // every panel hidden but one button (controls_zen)
   // the rest, used less, wait behind More, which opens over the drawing and closes once one is chosen
   const more = moreMenu(bar);
   button(more, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut(), word('bar.zoom-out'));
