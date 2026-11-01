@@ -1058,6 +1058,11 @@ after a module nor listed here, and on a listed file that is missing.
   sketch_toggle, sketch_click_rule). It spans `space-sketch.ts`, the view in space and its painter.
 - `test/space-xr-view.test.js` — the view in space in a stand-in headset, in headless Chrome (editor spec §68,
   projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
+
+### More checks in headless Chrome
+
+- `test/svg-marks.test.js` — the marks the view in space reads from the drawing, in headless Chrome (editor spec §53,
+  space_bare_names). A thing drawn as its name alone must be a pale box round its name.
 - `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
   scale_massive_card). Its search must find a thing in any group and fly there.
 - `packages/obsidian/test/style-undo.test.js` — a box dragged in the editing view is one undo step (editor spec §41).
