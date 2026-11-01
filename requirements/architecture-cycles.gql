@@ -10,7 +10,6 @@
 (display_graph_view)-[:CYCLES_WITH]->(display_space),
 (display_graph_view)-[:CYCLES_WITH]->(display_untangle),
 (display_graph_view)-[:CYCLES_WITH]->(display_table),
-(display_edit)-[:CYCLES_WITH]->(display_graph_view),
 (core_editing)-[:CYCLES_WITH]->(core_reading),
 (core_editing)-[:CYCLES_WITH]->(core_properties),
 (core_editing)-[:CYCLES_WITH]->(core_problems),
