@@ -17,7 +17,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from graphspec.style.inline import value_text
-from graphspec.style.radial import lone_thing, radial_centre
+from graphspec.style.radial import radial_centre
 from graphspec.style.timeline import is_number, timeline_fit, timeline_plan
 from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
@@ -164,22 +164,12 @@ def _tree_fit(shape, relationship, text):
     return _no("tree", f"no relationship makes a tree: along {types[0]}, {why}")
 
 
-def _radial_fit(shape, text, chosen=None):
-    # around a thing picked it always fits, given two things or more (radial_centre_anywhere)
-    if len(shape["things"]) >= 2 and any(t["key"] == chosen for t in shape["things"]):
+def _radial_fit(shape):
+    # with two things or more it always fits (radial_always_fits): drawn round the centre, things
+    # joined to nothing beside it, groups without their boxes
+    if len(shape["things"]) >= 2:
         return _yes("radial")
-    if len(shape["things"]) < 3:
-        return _no("radial", "a radial drawing needs three things or more")
-    if shape.get("groups"):
-        # Graphviz's radial layout cannot draw a group's box
-        label = shape["groups"][0][0]
-        return _no("radial", f"a radial drawing cannot draw the box of group {label}")
-    centre = radial_centre(shape, chosen)
-    lone = lone_thing(shape, centre)
-    if lone is None:
-        return _yes("radial")
-    why = f"joined to the centre, {text(centre)}, and {lone['text']} is not"
-    return _no("radial", f"a radial drawing needs every thing {why}")
+    return _no("radial", "a radial drawing needs two things or more")
 
 
 def _lanes_fit(shape):
@@ -227,7 +217,7 @@ def type_fits(
         _yes("network"),
         _tree_fit(shape, relationship, text),
         flow,
-        _radial_fit(shape, text, (timeline or {}).get("centre")),
+        _radial_fit(shape),
         _lanes_fit(shape),
         timeline_fit(shape, timeline or {}),
         _yes("table"),
