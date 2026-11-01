@@ -1294,6 +1294,7 @@ g.edge.thoughtknot-explore-cross path {
 .is-resizing .thoughtknot-col-grip,
 .is-resizing .thoughtknot-row-grip {
   background: var(--gn-accent);
+  box-shadow: 0 0 0 1px var(--gn-border-focus);
 }
 @media (pointer: coarse) {
   .thoughtknot-col-grip {

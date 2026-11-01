@@ -150,7 +150,6 @@ describe('the table scrolls and zooms as a data table does', () => {
     try {
       cellOf(el, 'park', 0).focus();
       press(cellOf(el, 'park', 0), 'c', { ctrlKey: true });
-      await new Promise((r) => setTimeout(r, 0));
       assert.equal(env.doc.clipboard, 'The park');
     } finally {
       env.uninstall();
