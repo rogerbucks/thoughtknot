@@ -1,6 +1,6 @@
 // The parts of the Highlight things form (editor spec §56, rule_look_builder), each in plain words:
-// - the Find step: things of a kind, or links of a type, where each test is a property, a comparison and a value, all
-//   picked from lists the graph fills;
+// - the Find step: things of a kind, or links of a type, and their tests. Each test is a property, a comparison and a
+//   value, all picked from lists the graph fills;
 // - the test written as text, for a person who would rather write it, out of the way until asked for;
 // - the look: a colour, a badge and a line, each a sample to pick, none of them a word to type;
 // - the preview: one thing found, drawn with the look it would take.

@@ -738,6 +738,8 @@ never data.
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
   `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
+#### Making a rule from the card
+
 - `display/graph-view/rule-form.ts` — the Highlight things button beside the legend and its form, in three plain steps
   (rule_look_builder). In reading view it tries a rule, offers Back to saved, and opens again on the rule tried. Where
   the note is edited it saves it. Trying, and counting what a rule finds, are open in reading view (`read-only.ts`).

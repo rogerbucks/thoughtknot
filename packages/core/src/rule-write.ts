@@ -94,8 +94,8 @@ export function withTriedRules(style: StyleGraph, tried: readonly RuleWrite[]): 
 
 /**
  * What a card may do with a rule: try it (reading view), or save it where the note is edited, and if any is tried.
- * With its graph it also says what a rule may be built from, what a rule being built finds, the rules saved that may
- * be changed, and the rule last tried (rule_look_builder).
+ * With its graph it also says what a rule may be built from and what a rule being built finds. It lists the rules
+ * saved that may be changed, and the rule last tried (rule_look_builder).
  */
 export interface RuleAsk {
   tried: boolean;

@@ -207,8 +207,8 @@ const START_HUES = ['red', 'orange', 'green', 'blue', 'purple', 'cyan'];
 const START_BADGES: Badge[] = ['flag', 'warning', 'check', 'star', 'dot', 'clock'];
 
 /**
- * The starting points for `choices`: one for each value of the first property of few values (such as a status), then
- * things with no links, and the most linked. At most six.
+ * The starting points for `choices`. First, one for each value of the first property of few values, such as a status.
+ * Then things with no links, and the most linked. At most six.
  */
 export function ruleStarts(choices: RuleChoices): RuleStart[] {
   const starts: RuleStart[] = [];
