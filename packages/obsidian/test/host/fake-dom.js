@@ -258,6 +258,11 @@ export class FakeElement {
     this.dispatch('blur');
     this.dispatch('focusout');
   }
+  // a field's text, all of it chosen, as a browser's select() chooses it
+  select() {
+    this.selectionStart = 0;
+    this.selectionEnd = String(this.value ?? '').length;
+  }
   setPointerCapture(id) {
     this.captured.add(id);
   }

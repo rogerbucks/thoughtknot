@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/edit-card.test.js",
+  "test": "the editor beside a selected thing > is not offered in reading view",
+  "seen_failing_first": false,
+  "evidence": "A guard: before the editor existed nothing was offered in reading view either, so it cannot fail first."
+}
