@@ -216,6 +216,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'rules.copy': 'Copy the rule {means} to make a new one',
   'rules.copy-of': '{means} (copy)',
   'rules.yours-none': 'No rules yet. Pick a quick start, or build one below.',
+  'rules.turn-off': 'Turn the rule {means} off, keeping it',
+  'rules.turn-on': 'Turn the rule {means} back on',
   'rules.start.alone': 'Not linked to anything',
   'rules.start.linked': 'Linked to 3 or more',
   'rules.on': 'Find things or links',

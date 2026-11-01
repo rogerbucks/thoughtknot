@@ -26,6 +26,8 @@ export interface RuleWrite {
   means: string;
   /** Tried as taken out: in reading view a rule removed is only tried, as any change is (rule_look_remove). */
   removed?: boolean;
+  /** Turned off: kept, but nothing drawn by it (rule_look_off). */
+  off?: boolean;
   /** The meaning it had when opened to change, so a rule renamed is changed in place, never copied (rule_look_remove). */
   was?: string;
 }
@@ -52,7 +54,7 @@ export function ruleRefusal(r: RuleWrite): string | null {
 }
 
 /** The rule's properties in the order the style graph writes them, those not given left out. */
-export function ruleProps(r: RuleWrite): [string, string | undefined][] {
+export function ruleProps(r: RuleWrite): [string, string | boolean | undefined][] {
   return [
     ['when', r.when],
     ['lens', r.lens],
@@ -63,6 +65,7 @@ export function ruleProps(r: RuleWrite): [string, string | undefined][] {
     ['line', r.line],
     ['badge', r.badge],
     ['means', r.means],
+    ['off', r.off ? true : undefined],
   ];
 }
 
@@ -88,6 +91,7 @@ export function withTriedRules(style: StyleGraph, tried: readonly RuleWrite[]): 
       ...(r.colour ? { colour: r.colour } : {}),
       ...(r.line ? { line: r.line as LineStyle } : {}),
       ...(r.badge ? { badge: r.badge as Badge } : {}),
+      ...(r.off ? { off: true } : {}),
     };
     const at = looks.findIndex((l) => sameRule(l, r));
     if (r.removed) {
@@ -130,7 +134,7 @@ export function savedRules(looks: readonly Look[]): RuleWrite[] {
   return looks
     .filter((l) => l.when !== undefined && l.bands === undefined)
     .map((l) => {
-      const r: RuleWrite = { means: l.means ?? '' };
+      const r: RuleWrite = { means: l.means ?? '', ...(l.off ? { off: true } : {}) };
       for (const k of ['when', 'kind', 'type', 'view', 'colour', 'line', 'badge'] as const) {
         const v = l[k];
         if (typeof v === 'string') r[k] = v;

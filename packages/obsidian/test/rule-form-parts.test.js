@@ -3,7 +3,7 @@
 // and previews its look as it is built, and names it for the legend. Quick starts fill a whole rule at once. A rule
 // tried in reading view opens the form again on itself, to change it. A rule saved opens to change it in place.
 // A rule saved can be taken out, and one Undo puts it back. It can be copied, renamed in place and moved up
-// (rule_look_remove).
+// (rule_look_remove). It can be turned off and on again, kept all the while (rule_look_off).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -211,6 +211,42 @@ describe('rule_look_remove', () => {
     try {
       const form = opened(await readCard(env, note));
       assert.match(form.textContent, /No rules yet/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a saved rule is turned off and on again: kept in the note, drawn only when on', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const { el } = await show(env, note, 0);
+      labelled(opened(el), 'Turn the rule Late off, keeping it').click();
+      await until(() => /off: true/.test(env.state.files.get(PATH)));
+      const off = env.state.files.get(PATH);
+      assert.match(off, /means: 'Late'/, 'kept in the style graph');
+      const { el: again } = await show(env, off, 0);
+      assert.equal(node(again, 'roof').querySelector('.thoughtknot-rule-badge'), null, 'drawn nothing while off');
+      const form = opened(again);
+      assert.ok(form.querySelector('.thoughtknot-rule-mine.is-off'), 'shown as off');
+      labelled(form, 'Turn the rule Late back on').click();
+      await until(() => !/off:/.test(env.state.files.get(PATH)));
+      assert.equal(env.state.files.get(PATH), note, 'on again, the note as it was');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('in reading view a rule turned off is only tried', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      labelled(opened(el), 'Turn the rule Late off, keeping it').click();
+      await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
+      assert.equal(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), null);
+      assert.equal(env.state.files.get(PATH), note, 'tried, never written');
+      assert.ok(labelled(el, 'Turn the rule Late back on'), 'and offered to turn on again');
     } finally {
       env.uninstall();
     }

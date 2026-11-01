@@ -1,7 +1,8 @@
 // A saved rule taken out from the card (editor spec §56, rule_look_remove). It is found by its meaning, in its view,
 // and its line is taken out of the style graph with its comma. Nothing else in the note changes, and putting the
 // note before back is the whole of Undo. A rule tried as taken out is drawn as if gone, and the note is never read.
-// A rule moved up swaps with the rule above it, so it wins a clash. A rule renamed is changed in place.
+// A rule moved up swaps with the rule above it, so it wins a clash. A rule renamed is changed in place. A rule turned
+// off is kept but draws nothing (rule_look_off).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -81,5 +82,21 @@ describe('rule_look_remove', () => {
       [{ when: 'status == "late"', badge: 'clock', means: 'Behind', was: 'Late' }],
     );
     assert.deepEqual(tried, { roof: ['Behind'] }, 'tried renamed, it is drawn in place too');
+  });
+
+  test('a rule turned off is kept but draws nothing, and turned on again draws; off is true or false', () => {
+    const rule = { when: 'status == "late"', badge: 'clock', means: 'Late' };
+    const off = styleEdit(fenced(DATA, style(LATE, DONE)), 'work', { rule: { ...rule, off: true } });
+    assert.ok('note' in off, off.refused);
+    assert.match(off.note, /means: 'Late', off: true\}/);
+    assert.deepEqual(looksOf(blocksOf(off.note)), { walls: ['Done'] }, 'kept, but drawn nothing');
+    const on = styleEdit(off.note, 'work', { rule });
+    assert.ok('note' in on, on.refused);
+    assert.doesNotMatch(on.note, /off:/);
+    assert.deepEqual(looksOf(blocksOf(on.note)), { roof: ['Late'], walls: ['Done'] });
+    const texts = [DATA, style(LATE.replace("means: 'Late'", "means: 'Late', off: 'yes'"))];
+    const { problems } = readStyle(texts, 'work', readNote(texts));
+    assert.match(problems.map((p) => p.message).join(' '), /off/);
+    assert.deepEqual(looksOf([DATA, style(LATE)], [{ ...rule, off: true }]), {}, 'tried off, drawn as off');
   });
 });

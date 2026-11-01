@@ -754,6 +754,8 @@ never data.
 - `RuleWrite.was` and `RuleWrite.removed` (rule-write.ts). A rule opened to change keeps `was`, its old meaning, so a
   rename changes it in place. In reading view a rule is only tried as gone, with `removed`. The Obsidian host keeps
   the note as it was, for one Undo (`rule-removal.ts`).
+- `off: true` on a rule's Look turns it off (rule_look_off). It stays in the style graph and draws nothing. `rulesIn`
+  leaves it out unless asked `withOff`, as the form does to offer turning it on.
 
 #### Checking the words of a style
 

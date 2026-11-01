@@ -30,6 +30,7 @@ function ruleOf(form: HTMLElement, view?: string): RuleWrite {
   const rule: RuleWrite = { means: value('means') };
   for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line', 'was'] as const) if (value(k)) rule[k] = value(k);
   if (view !== undefined) rule.view = view;
+  if (value('off') === 'true') rule.off = true; // a rule turned off stays off as it is changed
   return rule;
 }
 
@@ -59,6 +60,15 @@ function chip(parent: HTMLElement, rule: RuleWrite, label: string, load: (r: Rul
   b.addEventListener('click', () => load(rule));
 }
 
+/** The hidden fields filled from a rule: its look, the meaning it had, and whether it is off. */
+function fillFields(fields: Record<'colour' | 'badge' | 'line' | 'was' | 'off', HTMLInputElement>, rule: RuleWrite) {
+  fields.colour.value = rule.colour ?? '';
+  fields.badge.value = rule.badge ?? '';
+  fields.line.value = rule.line ?? '';
+  fields.was.value = rule.was ?? '';
+  fields.off.value = rule.off ? 'true' : '';
+}
+
 /** A small step heading of the form. */
 const step = (form: HTMLElement, key: WordKey) => form.createDiv({ cls: 'thoughtknot-rule-step', text: word(key) });
 
@@ -71,6 +81,7 @@ function formParts(form: HTMLElement) {
     badge: hidden(form, 'badge', 'flag'),
     line: hidden(form, 'line'),
     was: hidden(form, 'was'),
+    off: hidden(form, 'off'),
   };
   const starts = form.createDiv({ cls: 'thoughtknot-rule-starts' });
   step(form, 'rules.step.find');
@@ -109,6 +120,8 @@ interface SavedActs {
   load: (r: RuleWrite) => void;
   remove: (r: RuleWrite) => void;
   moveUp?: (r: RuleWrite) => void;
+  /** Turns a rule saved off, or on again (rule_look_off). */
+  flip: (r: RuleWrite) => void;
 }
 
 /**
@@ -126,6 +139,14 @@ function renderStarts(starts: HTMLElement, ask: RuleAsk, acts: SavedActs) {
   (ask.saved ?? []).forEach((r, i) => {
     const mine = starts.createSpan({ cls: 'thoughtknot-rule-mine' }),
       means = r.means;
+    mine.toggleClass('is-off', !!r.off);
+    const flip = button(
+      mine,
+      word(r.off ? 'rules.turn-on' : 'rules.turn-off', { means }),
+      r.off ? 'eye-off' : 'eye',
+      () => acts.flip(r),
+    );
+    flip.setAttribute('aria-pressed', r.off ? 'false' : 'true');
     // opened to change, a rule keeps the meaning it had, so renaming it changes it in place
     chip(mine, { ...r, was: means }, word('rules.change', { means }), load);
     button(mine, word('rules.copy', { means }), 'copy', () => load({ ...r, means: word('rules.copy-of', { means }) }));
@@ -145,6 +166,13 @@ function savedActs(box: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void)
   return {
     load,
     remove: (r) => (reading ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r)),
+    // turned off or on: tried in reading view, saved in place where the note is edited
+    flip: (r) => {
+      const { off, ...on } = r,
+        next: RuleWrite = off ? on : { ...on, off: true };
+      if (reading) ask.tryOut(next);
+      else ask.save({ ...next, was: r.means });
+    },
     ...(reading || !up ? {} : { moveUp: (r: RuleWrite) => up(r) }),
   };
 }
@@ -215,10 +243,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     // a test the builder cannot read back is kept as written, in the box for writing it
     state.whenTyped = !!rule.when && !testsOf(rule.when);
     when.value = rule.when ?? '';
-    fields.colour.value = rule.colour ?? '';
-    fields.badge.value = rule.badge ?? '';
-    fields.line.value = rule.line ?? '';
-    fields.was.value = rule.was ?? '';
+    fillFields(fields, rule);
     means.value = rule.means;
     state.meansTyped = rule.means.trim() !== '' && rule.means !== sayDraft(state.draft);
     view = rule.view;

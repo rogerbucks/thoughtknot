@@ -360,6 +360,11 @@
   align-items: center;
   gap: 2px;
 }
+.thoughtknot-rule-mine.is-off .thoughtknot-rule-chip {
+  /* a rule turned off: kept, drawn nothing, shown faded and struck through (rule_look_off) */
+  opacity: 0.6;
+  text-decoration: line-through;
+}
 .thoughtknot-rule-chip {
   border-radius: 999px;
   padding: 2px 10px;

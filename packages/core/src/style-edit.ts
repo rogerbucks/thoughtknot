@@ -125,11 +125,11 @@ export type StyleChange =
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
 
-type Value = string | number | undefined;
+type Value = string | number | boolean | undefined;
 
 /** A thing written as GQL writes it: its id and kind, then each property given, strings quoted, comma-joined. */
 function thingText(id: string, kind: string, props: [string, Value][]): string {
-  const given = props.filter((p): p is [string, string | number] => p[1] !== undefined);
+  const given = props.filter((p): p is [string, string | number | boolean] => p[1] !== undefined);
   return `(${id}:${kind} {${given.map(([k, v]) => `${k}: ${typeof v === 'string' ? quoted(v) : String(v)}`).join(', ')}})`;
 }
 
