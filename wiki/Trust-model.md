@@ -51,9 +51,10 @@ Wave 6.
 - **Crosses:** fixed arguments, the environment, the proposer key on stdin, and the URL on stdout.
 - **Trusted:** the mod trusts only a URL that starts with `http://127.0.0.1:`. The server trusts the key on stdin.
 - **Controls:** No shell. The key goes on stdin, never in arguments or the environment. Model endpoints and keys are
-  left out of the settings. A slow start is stopped.
+  left out of the settings. A slow start is stopped. On Windows, the server asks PowerShell when its parent's
+  number was taken, with fixed arguments and no shell. A newer process there means the parent has gone.
 - **Code:** `packages/claude-code/src/editor-launch.ts`, `packages/claude-code/src/editor-realpath.ts`,
-  `packages/claude-code/bin/propose-process.ts`.
+  `packages/claude-code/bin/propose-process.ts`, `packages/claude-code/server/session-watch.ts`.
 - **Gaps:**
   - The gate settings and a confirmed note's digest travel in the environment (TRUST-12).
 
