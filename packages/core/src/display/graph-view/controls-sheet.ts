@@ -47,7 +47,7 @@ export interface ControlSheet {
  */
 export function renderSheet(layer: HTMLElement, root: HTMLElement, corner: HTMLElement): ControlSheet {
   const el = layer.createDiv({ cls: SHEET, attr: { role: 'region', 'aria-label': word('sheet.name') } });
-  const handle = el.createEl('button', { cls: 'thoughtknot-phone-sheet-handle', attr: { type: 'button' } });
+  const handle = el.createEl('button', { cls: 'thoughtknot-phone-sheet-handle', text: '━━', attr: { type: 'button' } });
   const strip = el.createDiv({ cls: 'thoughtknot-phone-sheet-tabs', attr: { role: 'tablist' } });
   const panes = { controls: el.createDiv(), details: el.createDiv() };
   const tabs = {} as Record<SheetTab, HTMLButtonElement>;

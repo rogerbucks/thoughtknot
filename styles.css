@@ -167,7 +167,7 @@
   .thoughtknot-viewport > .thoughtknot-pointer,
   .thoughtknot-over-panels,
   .thoughtknot-zen-exit,
-  .thoughtknot-phone-sheet,
+  .thoughtknot-over > .thoughtknot-phone-sheet,
   .thoughtknot-phone-sheet-tab[aria-selected='true'],
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
@@ -620,18 +620,11 @@
 .thoughtknot-phone-sheet-handle {
   align-self: center;
   min-width: 44px;
-  min-height: 24px;
+  min-height: 44px;
   border: 0;
   background: none;
   box-shadow: none;
-}
-.thoughtknot-phone-sheet-handle::after {
-  content: '';
-  display: block;
-  width: 2.5rem;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--gn-text-muted);
+  color: var(--gn-text-muted);
 }
 .thoughtknot-phone-sheet-tabs {
   display: flex;
@@ -666,11 +659,6 @@
   margin: 0;
   border: 0;
   padding: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .thoughtknot-over > .thoughtknot-phone-sheet {
-    transition: none;
-  }
 }
 .thoughtknot-dock-head {
   display: flex;
@@ -1472,6 +1460,9 @@ details.thoughtknot-style > summary {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .thoughtknot-over > .thoughtknot-phone-sheet {
+    transition: none;
+  }
   .thoughtknot-svg .thoughtknot-flow-dashes > path,
   .thoughtknot-svg path.thoughtknot-flow-runner,
   .thoughtknot-svg path.thoughtknot-path-runner,
