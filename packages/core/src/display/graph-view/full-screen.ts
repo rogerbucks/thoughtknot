@@ -4,7 +4,7 @@
 // leaves on Escape from any control in it, and gives the keyboard back to what had it.
 //
 // Zen view (controls_zen, Roger, 1 Nov 2026) is full screen with every panel hidden. It hides the bar, the chip,
-// the docks, the details and the mini-map. One button stays, to bring them back. From a card, Zen opens full screen
+// the docks and the details. The mini-map stays. One button stays, to bring them back. From a card, Zen opens full screen
 // so, and the button closes it again. In full screen, Zen hides the panels and the button shows them again.
 import { word } from '@thoughtknot/core';
 import { readInHostDirection } from '../host.ts';

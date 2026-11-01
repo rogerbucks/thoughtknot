@@ -2,7 +2,7 @@
 // until the button is pressed again. The built plugin, loaded against the stand-ins for the page.
 // - From a card, Zen view opens full screen with every panel hidden and one button left, which closes it again.
 // - In full screen, Zen view hides the panels, and the one button shows them again, staying in full screen.
-// - Hidden means the bar, the chip and docks, the details, the mini-map and the hints: all but the drawing.
+// - Hidden means the bar, the chip and docks, the details and the hints. The drawing and its mini-map stay.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -49,13 +49,14 @@ test('in full screen, Zen view hides the panels, and its button shows them again
 });
 
 // proves: controls_zen
-test('in zen, all but the drawing is hidden: the bar, chip, docks, details, mini-map and hints', () => {
+test('in zen the bar, chip, docks, details and hints are hidden, and the mini-map stays', () => {
   const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
   assert.match(
     css,
     /\.thoughtknot-fullscreen\.is-zen \.thoughtknot-view > :not\(\.thoughtknot-viewport, \.thoughtknot-sr\) \{\s*display: none;/,
   );
   const hidden = /\.thoughtknot-fullscreen\.is-zen\s*:is\(([^)]*)\)\s*\{\s*display: none;/.exec(css)?.[1] ?? '';
-  for (const cls of ['mini-map', 'pointer', 'space-pad', 'hint'])
+  for (const cls of ['pointer', 'space-pad', 'hint'])
     assert.match(hidden, new RegExp(`\\.thoughtknot-${cls}\\b`), `${cls} hidden`);
+  assert.doesNotMatch(css, /is-zen[^{]*\.thoughtknot-mini-map/, 'the mini-map stays, so the person keeps their place');
 });
