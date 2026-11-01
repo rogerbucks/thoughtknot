@@ -1,8 +1,7 @@
 // What is selected in a card and how it shows (editor spec §25, slice 3). The selection is the focus: the thing or link
-// chosen, its links and their other ends stay at full strength. The highlight under the pointer or keyboard focus, the
-// untangling and the arrow keys that walk the links join it. It marks the drawing by class only, never the note. What
-// is chosen from the details comes into view by a brief move (details_choose_moves, details_move_motion). It is kept
-// clear of the sheet (sheet_keeps_thing_clear). Out of view, an arrow at the edge points to it (selection_pointer).
+// chosen, its links and their other ends stay at full strength. Hover, keyboard focus, untangling and the arrow keys
+// join it, marking the drawing by class only. What is chosen glides into view, clear of the sheet and the floating
+// controls (details_choose_moves, sheet_keeps_thing_clear, controls_uncover). An arrow points to it off screen.
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@thoughtknot/core';
 import type {
   Bounds,
@@ -17,6 +16,7 @@ import type {
   View,
   Zoom,
 } from '@thoughtknot/core';
+import { overCover, widest } from './controls-cover.ts';
 import type { DetailsPanel } from './details-panel';
 import { Glide, stepName } from './details-nav';
 import type { NavActions } from './details-nav';
@@ -177,8 +177,8 @@ export class Selection {
   }
 
   /**
-   * Brings the selection into sight as it came (`How`), clear of the details sheet, wherever it sits. The drawing pans
-   * into the part the sheet covers, never more. Where a sheet at the foot covers the whole drawing, the note scrolls
+   * Brings the selection into sight as it came (`How`), clear of the details sheet, wherever it sits, and of the cards
+   * floating over the drawing. The drawing pans into the part they cover, never more. Where a sheet at the foot covers the whole drawing, the note scrolls
    * instead. A tap moves the view only for the sheet; from the details the thing is also made readable. The move is
    * brief, or at once (§25).
    */
@@ -189,7 +189,7 @@ export class Selection {
       top = details.sheetTop();
     if (!box) return this.pointAt();
     const r = this.host.viewport().getBoundingClientRect(),
-      c = details.sheetCover(r),
+      c = widest(details.sheetCover(r), overCover(this.host.viewport(), r)),
       cover = top === null ? 0 : coverOf(r, top);
     // an edge the sheet covers wholly is no strip to pan into
     this.kept = {
