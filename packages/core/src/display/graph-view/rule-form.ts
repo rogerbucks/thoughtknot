@@ -28,7 +28,7 @@ const fieldOf = (form: HTMLElement, name: string) => form.querySelector<HTMLInpu
 function ruleOf(form: HTMLElement, view?: string): RuleWrite {
   const value = (name: string) => fieldOf(form, name)?.value.trim() ?? '';
   const rule: RuleWrite = { means: value('means') };
-  for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line'] as const) if (value(k)) rule[k] = value(k);
+  for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line', 'was'] as const) if (value(k)) rule[k] = value(k);
   if (view !== undefined) rule.view = view;
   return rule;
 }
@@ -70,6 +70,7 @@ function formParts(form: HTMLElement) {
     colour: hidden(form, 'colour', 'red'),
     badge: hidden(form, 'badge', 'flag'),
     line: hidden(form, 'line'),
+    was: hidden(form, 'was'),
   };
   const starts = form.createDiv({ cls: 'thoughtknot-rule-starts' });
   step(form, 'rules.step.find');
@@ -103,26 +104,54 @@ function sayFound(found: HTMLElement, rule: RuleWrite, finds: { count: number; n
   found.toggleClass('is-empty', !!rule.when && finds?.count === 0);
 }
 
-/**
- * The quick starts from the graph's own data, then each rule saved: each a chip that fills the form. Beside each rule
- * saved is a button that takes it out (rule_look_remove).
- */
-function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void, remove: (r: RuleWrite) => void) {
-  const choices = ask.choices;
-  const starting = choices ? ruleStarts(choices) : [];
-  if (starting.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.starts') });
-  for (const s of starting) chip(starts, startRule(s, choices), s.means, load);
-  if (ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
-  for (const r of ask.saved ?? []) {
-    const mine = starts.createSpan({ cls: 'thoughtknot-rule-mine' });
-    chip(mine, r, word('rules.change', { means: r.means }), load);
-    button(mine, word('rules.remove', { means: r.means }), 'trash-2', () => remove(r));
-  }
+/** What may be done with a rule saved, from its row: open it, copy it, move it up and take it out. */
+interface SavedActs {
+  load: (r: RuleWrite) => void;
+  remove: (r: RuleWrite) => void;
+  moveUp?: (r: RuleWrite) => void;
 }
 
 /**
- * What the card says above the form: that a rule is only tried, with Back to saved; and that a rule was just taken
- * out, with one Undo to put it back.
+ * The quick starts from the graph's own data, then each rule saved: each a chip that fills the form. Beside each rule
+ * saved are buttons to copy it as a new rule, move it up, and take it out (rule_look_remove).
+ */
+function renderStarts(starts: HTMLElement, ask: RuleAsk, acts: SavedActs) {
+  const choices = ask.choices,
+    { load } = acts;
+  const starting = choices ? ruleStarts(choices) : [];
+  if (starting.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.starts') });
+  for (const s of starting) chip(starts, startRule(s, choices), s.means, load);
+  starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
+  if (!ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-word', text: word('rules.yours-none') });
+  (ask.saved ?? []).forEach((r, i) => {
+    const mine = starts.createSpan({ cls: 'thoughtknot-rule-mine' }),
+      means = r.means;
+    // opened to change, a rule keeps the meaning it had, so renaming it changes it in place
+    chip(mine, { ...r, was: means }, word('rules.change', { means }), load);
+    button(mine, word('rules.copy', { means }), 'copy', () => load({ ...r, means: word('rules.copy-of', { means }) }));
+    const up = acts.moveUp;
+    if (up && i > 0) button(mine, word('rules.move-up', { means }), 'chevron-up', () => up(r));
+    button(mine, word('rules.remove', { means }), 'trash-2', () => acts.remove(r));
+  });
+}
+
+/**
+ * What a rule saved may do where the card is. In reading view it is only tried as taken out, and Back to saved puts it
+ * back, and nothing is moved. Where the note is edited it is taken out, or moved up.
+ */
+function savedActs(box: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void): SavedActs {
+  const reading = readOnlyHere(box),
+    up = ask.moveUp;
+  return {
+    load,
+    remove: (r) => (reading ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r)),
+    ...(reading || !up ? {} : { moveUp: (r: RuleWrite) => up(r) }),
+  };
+}
+
+/**
+ * What the card says above the form. A rule only tried says so, with Back to saved. A rule just taken out says so,
+ * with one Undo to put it back.
  */
 function renderStatus(box: HTMLElement, ask: RuleAsk) {
   if (ask.tried) {
@@ -189,6 +218,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     fields.colour.value = rule.colour ?? '';
     fields.badge.value = rule.badge ?? '';
     fields.line.value = rule.line ?? '';
+    fields.was.value = rule.was ?? '';
     means.value = rule.means;
     state.meansTyped = rule.means.trim() !== '' && rule.means !== sayDraft(state.draft);
     view = rule.view;
@@ -201,11 +231,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   function build() {
     if (built) return;
     built = true;
-    // in reading view a rule is only tried as taken out, and Back to saved puts it back; where edited it is taken out
-    if (ask)
-      renderStarts(starts, ask, load, (r) =>
-        readOnlyHere(box) ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r),
-      );
+    if (ask) renderStarts(starts, ask, savedActs(box, ask, load));
     renderLookPicks(looks, fields, () => refresh());
     refresh(true);
   }
@@ -227,6 +253,12 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     if (ask.last) load(ask.last); // back where the person was: the rule just tried, open to change
     toggle(true);
   }
+  // Escape closes the form, back on the button that opened it
+  form.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key !== 'Escape') return;
+    toggle(false);
+    open.focus();
+  });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const rule = ruleOf(form, view),

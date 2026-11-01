@@ -7,7 +7,7 @@ import { diagramFor, withTriedRules, word } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, RuleAsk, RuleWrite, StyleGraph } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { writeStyle } from './view-block';
-import { putBack, removeRule } from './rule-removal';
+import { moveRuleUp, putBack, removeRule } from './rule-removal';
 import type { Removal } from './rule-removal';
 import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Trying, TypeLeftAt } from '@thoughtknot/core/display/graph-view/type-strip';
@@ -59,7 +59,7 @@ export class TriedTypes {
   tryRule(at: TriedAt, rule: RuleWrite | null): void {
     const key = TriedTypes.key(at),
       now = this.rules.get(key) ?? [];
-    if (rule) this.rules.set(key, [...now.filter((r) => r.means !== rule.means), rule]);
+    if (rule) this.rules.set(key, [...now.filter((r) => r.means !== rule.means && r.means !== rule.was), rule]);
     else if (!this.rules.delete(key)) return;
     for (const changed of [...this.watchers]) changed(at.path);
   }
@@ -92,6 +92,14 @@ export class TriedTypes {
           else this.removals.delete(key);
           this.drawAgain(at.path);
         });
+      },
+      moveUp: (rule) => {
+        this.removals.delete(key); // the note changed, so a removal is no longer undone
+        if (this.plugin)
+          void moveRuleUp(this.plugin, at.path, at.graph, {
+            means: rule.means,
+            ...(rule.view !== undefined ? { view: rule.view } : {}),
+          });
       },
       undo: () => {
         const held = this.removals.get(key);

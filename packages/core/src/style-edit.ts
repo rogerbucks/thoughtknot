@@ -223,7 +223,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
           kind: 'Look',
           props: ruleProps(r),
           match: [
-            ['means', r.means],
+            ['means', r.was ?? r.means], // a rule renamed is changed in place
             ['view', r.view],
           ],
         };

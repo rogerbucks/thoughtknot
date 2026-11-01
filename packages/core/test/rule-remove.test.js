@@ -1,13 +1,15 @@
 // A saved rule taken out from the card (editor spec §56, rule_look_remove). It is found by its meaning, in its view,
 // and its line is taken out of the style graph with its comma. Nothing else in the note changes, and putting the
 // note before back is the whole of Undo. A rule tried as taken out is drawn as if gone, and the note is never read.
+// A rule moved up swaps with the rule above it, so it wins a clash. A rule renamed is changed in place.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
 import { rulesFor } from '../src/rule-looks.ts';
 import { withTriedRules } from '../src/rule-write.ts';
-import { ruleRemoved } from '../src/rule-remove.ts';
+import { ruleMovedUp, ruleRemoved } from '../src/rule-remove.ts';
+import { styleEdit } from '../src/style-edit.ts';
 
 const DATA = `// graph: work
 (roof:Task {name: 'Roof', status: 'late'}),
@@ -55,5 +57,29 @@ describe('rule_look_remove', () => {
     assert.deepEqual(looksOf(texts, [{ means: 'Late', when: 'status == "late"', removed: true }]), {
       walls: ['Done'],
     });
+  });
+
+  test('a rule moved up swaps with the rule above it, so it wins a clash; the first one is refused', () => {
+    const CLOCK = `(due:Look {when: 'status == "late"', badge: 'warning', means: 'Due'})`;
+    const note = fenced(DATA, style(LATE, CLOCK));
+    const r = ruleMovedUp(note, 'work', { means: 'Due' });
+    assert.ok('note' in r, r.refused);
+    assert.equal(r.note, fenced(DATA, style(CLOCK, LATE)));
+    assert.match(ruleMovedUp(r.note, 'work', { means: 'Due' }).refused ?? '', /first already/);
+  });
+
+  test('a saved rule renamed is changed in place, never copied', () => {
+    const r = styleEdit(fenced(DATA, style(LATE)), 'work', {
+      rule: { when: 'status == "late"', badge: 'clock', means: 'Behind', was: 'Late' },
+    });
+    assert.ok('note' in r, r.refused);
+    assert.doesNotMatch(r.note, /means: 'Late'/);
+    assert.equal(r.note.match(/:Look/g)?.length, 1);
+    assert.deepEqual(looksOf(blocksOf(r.note)), { roof: ['Behind'] });
+    const tried = looksOf(
+      [DATA, style(LATE)],
+      [{ when: 'status == "late"', badge: 'clock', means: 'Behind', was: 'Late' }],
+    );
+    assert.deepEqual(tried, { roof: ['Behind'] }, 'tried renamed, it is drawn in place too');
   });
 });

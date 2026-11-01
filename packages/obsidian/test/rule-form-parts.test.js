@@ -2,7 +2,8 @@
 // picks a property and a value from lists the graph fills, never typing a test. The form counts what the rule finds
 // and previews its look as it is built, and names it for the legend. Quick starts fill a whole rule at once. A rule
 // tried in reading view opens the form again on itself, to change it. A rule saved opens to change it in place.
-// A rule saved can be taken out, and one Undo puts it back (rule_look_remove).
+// A rule saved can be taken out, and one Undo puts it back. It can be copied, renamed in place and moved up
+// (rule_look_remove).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -169,6 +170,47 @@ describe('rule_look_remove', () => {
       assert.equal(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), null, 'drawn as if it were gone');
       assert.equal(env.state.files.get(PATH), note, 'tried, never written');
       assert.ok(!labelled(el, 'Remove the rule Late'), 'no longer listed among the rules saved');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('a saved rule is copied as a new rule, renamed in place, and moved up; Escape closes the form', async () => {
+    const DUE = `(due:Look {when: 'status == "late"', colour: 'orange', badge: 'warning', means: 'Due'})`;
+    const note = noteOf(DATA, `${STYLE},\n${DUE}`);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const { el } = await show(env, note, 0);
+      const form = opened(el);
+      assert.ok(!labelled(form, 'Move the rule Late up, so it wins a clash'), 'the first rule has no Up');
+      labelled(form, 'Copy the rule Late to make a new one').click();
+      assert.equal(field(form, 'means'), 'Late (copy)', 'a copy, named apart');
+      assert.equal(field(form, 'was'), '', 'saved as a new rule');
+      labelled(form, 'Change the rule Late').click();
+      assert.equal(field(form, 'was'), 'Late');
+      type(form, 'Value', 'done');
+      const means = form.querySelector('[name="means"]');
+      means.value = 'Finished';
+      means.dispatch('input');
+      form.dispatch('submit');
+      await until(() => /means: 'Finished'/.test(env.state.files.get(PATH)));
+      const renamed = env.state.files.get(PATH);
+      assert.doesNotMatch(renamed, /means: 'Late'/, 'renamed in place, not copied');
+      labelled(form, 'Move the rule Due up, so it wins a clash').click();
+      await until(() => env.state.files.get(PATH).indexOf("'Due'") < env.state.files.get(PATH).indexOf("'Finished'"));
+      form.dispatch('keydown', { key: 'Escape' });
+      assert.equal(form.hidden, true, 'Escape closes the form');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('with no rules saved, the form says so', async () => {
+    const note = noteOf(DATA);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const form = opened(await readCard(env, note));
+      assert.match(form.textContent, /No rules yet/);
     } finally {
       env.uninstall();
     }

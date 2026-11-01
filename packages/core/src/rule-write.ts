@@ -26,6 +26,8 @@ export interface RuleWrite {
   means: string;
   /** Tried as taken out: in reading view a rule removed is only tried, as any change is (rule_look_remove). */
   removed?: boolean;
+  /** The meaning it had when opened to change, so a rule renamed is changed in place, never copied (rule_look_remove). */
+  was?: string;
 }
 
 /** That `key` must be one of `among`. */
@@ -66,7 +68,7 @@ export function ruleProps(r: RuleWrite): [string, string | undefined][] {
 
 /** Whether a look is the rule `r` changes: a rule with the same meaning, in the same view. */
 const sameRule = (l: Look, r: RuleWrite) =>
-  (l.when !== undefined || l.lens !== undefined) && l.means === r.means && l.view === r.view;
+  (l.when !== undefined || l.lens !== undefined) && l.means === (r.was ?? r.means) && l.view === r.view;
 
 /**
  * `style` with the rules tried drawn as if saved. Each changes the rule with its meaning in its view, or is added after
@@ -115,6 +117,8 @@ export interface RuleAsk {
   removed?: string;
   /** Puts the rule just taken out back where it was. */
   undo?(): void;
+  /** Moves a saved rule before the one above it, so it wins where two set one part (rule_look_order). */
+  moveUp?(rule: RuleWrite): void;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */

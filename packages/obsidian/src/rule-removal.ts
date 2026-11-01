@@ -1,9 +1,9 @@
-// Taking a saved rule out of the note, and putting it back with one Undo (editor spec §56, rule_look_remove). The
-// note is changed as a rule is saved: through its editor when open, so Cmd+Z works too, else in the vault. The note as
-// it was, and as it was left, are kept. Undo puts the first back only while the note is still the second, so an edit
+// Taking a saved rule out of the note, and putting it back with one Undo (editor spec §56, rule_look_remove). A rule
+// is moved up the same way, so it wins a clash (rule_look_order). The note is changed as a rule is saved: through its
+// editor when open, so Cmd+Z works too, else in the vault. The note as it was, and as it was left, are kept. Undo puts the first back only while the note is still the second, so an edit
 // made since is never lost.
 import { Notice, TFile } from 'obsidian';
-import { ruleRemoved, word } from '@thoughtknot/core';
+import { ruleMovedUp, ruleRemoved, word } from '@thoughtknot/core';
 import type { RuleRemove } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -62,5 +62,13 @@ export async function putBack(plugin: ThoughtKnotPlugin, path: string, removal: 
   const done = await changeNote(plugin, path, (note) =>
     note === removal.after ? { note: removal.before } : { refused: word('rules.undo-changed') },
   );
-  new Notice('refused' in done ? done.refused : word('rules.put-back', { means: removal.means }));
+  const said = 'refused' in done ? done.refused : word('rules.put-back', { means: removal.means });
+  new Notice(said);
+}
+
+/** Moves the rule `r` of `graph` up in the note at `path`, before the rule above it, and says so. */
+export async function moveRuleUp(plugin: ThoughtKnotPlugin, path: string, graph: string, r: RuleRemove): Promise<void> {
+  const done = await changeNote(plugin, path, (note) => ruleMovedUp(note, graph, r));
+  const said = 'refused' in done ? done.refused : word('rules.moved', { means: r.means });
+  new Notice(said);
 }
