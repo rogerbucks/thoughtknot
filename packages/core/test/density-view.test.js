@@ -50,7 +50,13 @@ test('a big graph still fits the space, and a graph with nothing draws nothing',
 // proves: view_types_offered
 test('a key at the top says what the shades mean, from fewer things to more, clear of the squares', () => {
   const keys = Array.from({ length: 60 }, (_, i) => `t${i}`);
-  const marks = densityMarks({ shape: shapeOf(keys, keys.slice(1).map((k, i) => [keys[i], k])), space: SPACE });
+  const marks = densityMarks({
+    shape: shapeOf(
+      keys,
+      keys.slice(1).map((k, i) => [keys[i], k]),
+    ),
+    space: SPACE,
+  });
   assert.ok(Array.isArray(drawMarksOf(marks, SPACE)), 'every mark is taken');
   const key = marks.filter((m) => m.id.startsWith('key'));
   const swatches = key.filter((m) => m.kind === 'box');
