@@ -495,7 +495,12 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz.
   - It has a row for each thing (its kind and properties) and each link. Each row is reached, named and opened as a box
     or a link is. `taps.ts` and the details take a row as its thing or link.
-  - It is moved and scaled as a whole by the card's zoom.
+  - It works as a data table. It scrolls by itself, and its heads and row numbers stay in sight. The card's zoom only
+    sizes its words. A click or Enter on a head sorts by it.
+- `table-keys.ts` — the table's keys and focus: one cell at a time, arrows, Home, End, Page Up and Down, copy.
+  - With a row's details open, moving to another row opens its details.
+- `table-sizing.ts` — the grips that resize its columns and rows, and the bar above it: striped rows, row height,
+  Fit columns. The look is kept on the device.
   - On a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (`graph-view.ts`, the
     core's `Zoom` with `across`).
 

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/table-view.test.js",
+  "test": "the selection on a graph drawn as a table > with a row selected, an arrow key along the row walks no links: the selection stays on the row",
+  "seen_failing_first": false,
+  "evidence": "It guards behaviour kept from before: an arrow along a row must still never walk links or drop the selection. Renamed from the old arrow-key test, it passed first on purpose."
+}

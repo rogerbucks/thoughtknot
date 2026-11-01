@@ -156,6 +156,7 @@ export class DetailsPanel {
         (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);
       if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
+      if (g.hasAttribute('aria-selected')) g.setAttribute('aria-selected', String(on)); // a table's row (§15)
     }
   }
 
