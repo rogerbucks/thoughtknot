@@ -548,7 +548,7 @@
 @media (min-width: 1024px) {
   .thoughtknot-over > .thoughtknot-explore-sidebar {
     inset-inline-end: auto;
-    width: 18rem;
+    max-width: 18rem;
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
