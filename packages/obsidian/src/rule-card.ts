@@ -1,9 +1,9 @@
 // What a card draws with its style graph's rules (editor spec §56). Each thing and link a rule finds gets its look,
 // and the rules have a legend. Two rules that set one part of a thing are a clash, listed with the card's problems.
 // Beside the legend a rule can be made: tried in reading view, saved where the note is edited (tried-types.ts).
-import { rulesFor } from '@thoughtknot/core';
+import { ruleChoices, ruleFinds, rulesFor, rulesIn, savedRules } from '@thoughtknot/core';
 import type { Graph } from '@thoughtknot/graph-spec';
-import type { GraphDrawing, Problem, RuleAsk, RulesShown, StyleGraph, StyleScope } from '@thoughtknot/core';
+import type { GraphDrawing, Problem, RuleAsk, RuleWrite, RulesShown, StyleGraph, StyleScope } from '@thoughtknot/core';
 
 /**
  * The rules of `scope` as `drawing` shows them, as a card's option. Their clashes are added to `problems`, each as
@@ -19,8 +19,16 @@ export function rulesOn<P>(
   problems: P[] = [],
   shown: (p: Problem) => P = (p) => p as P,
 ): { rules?: RulesShown; ruleAsk?: RuleAsk } {
-  const { style, ask } = looked,
-    asked = ask ? { ruleAsk: ask } : {};
+  const { style, ask } = looked;
+  // with its graph, the form is built from lists the graph fills, and counts what a rule finds (rule_look_builder)
+  const built = graph
+    ? {
+        choices: ruleChoices(graph),
+        finds: (r: RuleWrite) => ruleFinds(graph, r),
+        saved: savedRules(rulesIn(style, scope)),
+      }
+    : {};
+  const asked = ask ? { ruleAsk: { ...ask, ...built } } : {};
   if (!graph || !drawing || !style.looks.length) return asked;
   const rules = rulesFor(style, graph, drawing, scope);
   problems.push(...rules.clashes.filter((p) => p.graph === drawing.graph).map(shown));
