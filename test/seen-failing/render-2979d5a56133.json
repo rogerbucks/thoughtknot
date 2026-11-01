@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render.test.js",
+  "test": "long types fit a screen (§68, layout_types_screen_shaped) > a drawing Graphviz already lays out near a screen's shape is its drawing, as before",
+  "seen_failing_first": false,
+  "evidence": "It guards that a drawing already near a screen's shape is unchanged, so it passes on the old code by design."
+}

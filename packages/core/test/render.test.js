@@ -10,6 +10,9 @@ import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, sizeOf, choose } from '../src/theme.ts';
 import { foldedSource, routedSource } from '../src/fold-source.ts';
+import { readStyle } from '../src/style.ts';
+import { styledDrawing } from '../src/style-source.ts';
+import { SCREEN } from '../src/layouts/folded-rows.ts';
 
 const WIDE = `// graph: g
 (q:Question {title: 'Which device?'}),
@@ -199,5 +202,46 @@ describe('what tapping a link shows', () => {
   test('a link that is not there has no details', async () => {
     const { linkDetails } = await import('../src/render.ts');
     assert.equal(linkDetails(readNote([block]), 'reader', 9), null);
+  });
+});
+
+/** A hub with forty-five leaves, each part of it, drawn as diagram `type`: Graphviz stacks the leaves in one rank. */
+const fanned = (type) => {
+  const leaves = Array.from(
+    { length: 45 },
+    (_, i) => `(a${i}:Area {name: 'Area number ${i}'}), (a${i})-[:PART_OF]->(hub)`,
+  );
+  const texts = [
+    `// graph: g\n(hub:Part {name: 'The hub'}), (top:Layer {name: 'Top'}), (hub)-[:IN_LAYER]->(top),\n${leaves.join(',\n')}`,
+    `// graph: g_style · STYLE g\n(d1:Diagram {type: '${type}'})`,
+  ];
+  const reading = readNote(texts);
+  return styledDrawing(reading.graphs.get('g'), readStyle(texts, 'g', reading).style, reading.world.g);
+};
+
+describe('long types fit a screen (§68, layout_types_screen_shaped)', () => {
+  // proves: layout_types_screen_shaped
+  test("a flow, a tree and lanes of a hub with many leaves are drawn near a screen's shape, not a thin strip", async () => {
+    const engine = await loadEngine();
+    for (const type of ['flow', 'tree', 'lanes']) {
+      const drawn = draw(fanned(type), engine);
+      const off = Math.abs(Math.log(drawn.width / drawn.height / SCREEN));
+      assert.ok(off <= Math.log(2.5), `${type} is ${(drawn.width / drawn.height).toFixed(2)} wide for each 1 tall`);
+      // the same drawing each time, so nothing moves when it is drawn again (things_stay_put)
+      assert.equal(draw(fanned(type), engine).svg, drawn.svg);
+    }
+  });
+
+  test("a drawing Graphviz already lays out near a screen's shape is its drawing, as before", async () => {
+    const engine = await loadEngine();
+    const drawing = readNote([CHAIN]).graphs.get('g');
+    const laid = directions(drawing);
+    assert.equal(
+      draw(drawing, engine).svg,
+      chosen(
+        laid,
+        laid.map((d) => svgOf(engine, d.dot, drawing.routing, d.own)),
+      ).svg,
+    );
   });
 });

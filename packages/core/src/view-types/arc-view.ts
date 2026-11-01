@@ -25,10 +25,9 @@ export function arcMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const size = Math.max(Math.min(step * 0.6, space.height * 0.03), 1),
     nameSize = Math.min(12, Math.max(size, 6));
-  // an arc rises half as high as it is long, all lowered as one where the tallest's handles would leave the space
-  const spans = shape.links.map((l) => Math.abs((x.get(l.from) ?? 0) - (x.get(l.to) ?? 0)) / 2);
-  const room = line - nameSize * 3,
-    lower = Math.min(1, room / (Math.max(0, ...spans) * HANDLE || 1));
+  // an arc rises half as high as it is long, up to the room above or below the line. A long arc is flattened alone. So
+  // one link across the whole line no longer squashes the rest into a strip (layout_types_screen_shaped)
+  const room = line - nameSize * 3;
   const marks: DrawMark[] = [];
   if (blocks.length > 1)
     for (const b of blocks) {
@@ -82,7 +81,7 @@ export function arcMarks({ shape, space }: DiagramGiven): DrawMark[] {
     if (a === undefined || b === undefined || a === b) return;
     // left to right above the line, right to left below it
     const up = b > a ? -1 : 1,
-      h = (Math.abs(b - a) / 2) * HANDLE * lower * up,
+      h = Math.min((Math.abs(b - a) / 2) * HANDLE, room) * up,
       y = line + (up * size) / 2;
     marks.push({
       kind: 'link',
