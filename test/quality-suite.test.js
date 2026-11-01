@@ -1,4 +1,4 @@
-// The coverage of a suite split over machines (CODE-3): the reports of the shares merge into one the ratchet reads.
+// The coverage of a suite split over machines (quality_ratchet, CODE-3): the reports of the shares merge into one the ratchet reads.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeLcov, parseLcov } from '../scripts/quality-suite.mjs';
