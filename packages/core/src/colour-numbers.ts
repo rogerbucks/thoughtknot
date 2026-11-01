@@ -41,13 +41,13 @@ const unshown = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) 
 
 /** An OKLab colour, as red, green and blue without the screen's curve. */
 function fromOklab(l: number, a: number, b: number): [number, number, number] {
-  const L = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3,
-    M = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3,
-    S = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const long = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3,
+    middle = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3,
+    short = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
   return [
-    4.0767416621 * L - 3.3077115913 * M + 0.2309699292 * S,
-    -1.2684380046 * L + 2.6097574011 * M - 0.3413193965 * S,
-    -0.0041960863 * L - 0.7034186147 * M + 1.707614701 * S,
+    4.0767416621 * long - 3.3077115913 * middle + 0.2309699292 * short,
+    -1.2684380046 * long + 2.6097574011 * middle - 0.3413193965 * short,
+    -0.0041960863 * long - 0.7034186147 * middle + 1.707614701 * short,
   ];
 }
 
