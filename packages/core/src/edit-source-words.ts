@@ -59,6 +59,7 @@ export const EDIT_SOURCE_WORDS = {
   'edit.add-sibling': 'Add a sibling',
   'edit.delete': 'Delete',
   'edit.keys': '{label}: {keys}',
+  'edit.cell': '{column}, being typed in. Enter saves, Escape cancels.',
   'edit.deleted': '{thing} deleted. Undo puts it back.',
   'edit.many-blocks': '{thing} is written in more than one block: change it in the text',
   'edit.together': '{thing} is written together with other things: change it in the text',
