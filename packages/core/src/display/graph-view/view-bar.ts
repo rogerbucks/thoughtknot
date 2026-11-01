@@ -4,7 +4,8 @@
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
 import { CHIP_LINES, renderChip } from './controls-chip';
-import { setIcon } from '../host';
+import { renderSheet } from './controls-sheet';
+import { isPhone, setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { PictureStatus, ViewOptions } from './view-options';
 
@@ -33,7 +34,8 @@ export interface BarActions {
   legend: (b: HTMLButtonElement) => void;
   /** View: opens or closes the View menu's switches, and says which (§25). */
   view: (b: HTMLButtonElement) => void;
-  fullScreen: () => void;
+  /** Opens full screen; in zen, with every panel hidden (controls_zen). */
+  fullScreen: (zen?: boolean) => void;
   /** 2D, 2.5D or 3D: shows the drawing the next way, flat or in space (§53, space-switch.ts). */
   space: () => void;
   editHere: () => void;
@@ -145,6 +147,7 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     mode === 'full'
       ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
       : button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
+  button(bar, word('bar.zen'), 'eye-off', () => on.fullScreen(true)); // every panel hidden but one button (controls_zen)
   // the rest, used less, wait behind More, which opens over the drawing and closes once one is chosen
   const more = moreMenu(bar);
   button(more, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut(), word('bar.zoom-out'));
@@ -199,6 +202,7 @@ export function overDrawing(
   // the top start corner: the chip of what the drawing shows, then the docks, under any panel opened (§25)
   const corner = layer.createDiv({ cls: 'thoughtknot-corner' }),
     chip = renderChip(corner);
+  if (isPhone()) renderSheet(layer, root, corner); // on a phone, in a sheet at the foot of the drawing (controls_sheet)
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
   const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))

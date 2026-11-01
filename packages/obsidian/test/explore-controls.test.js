@@ -4,6 +4,9 @@
 // - Explore from here in a thing's details shows it with its direct links alone, and says so in the banner.
 // - Each thing shown with neighbours waiting has a badge; pressed, it opens that branch and selects nothing.
 // - The banner's Show the whole graph ends the exploration.
+// - An open branch always has a − that folds it, with + more beside it while some wait.
+// - Each sits at the branch's outer end, as in a classic mind map (Roger, 1 Nov 2026).
+// - Each step along a branch is a curve with no arrowhead, in its main branch's colour; ended, the lines are as drawn.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
@@ -80,4 +83,78 @@ test('Explore from here is a toggle, and Show only ends the exploration', async 
   await until(() => !badge(el, 'q'));
   withText(el.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
   await until(() => !!thing(el, 'island'));
+});
+
+const HUB = [
+  '// graph: hub',
+  "(hub:Idea {name: 'Hub'}),",
+  ...['w', 'e', 'n', 's'].map((k) => `(${k}:Idea {name: '${k}'}), (hub)-[:LINKS]->(${k}),`),
+  ...Array.from({ length: 8 }, (_, i) => `(l${i}:Idea {name: 'l${i}'}), (w)-[:LINKS]->(l${i}),`),
+  '(e)-[:LINKS]->(l0)',
+].join('\n');
+const xsOf = (g) =>
+  (g.querySelector('path, polygon')?.getAttribute('d') ?? g.querySelector('polygon')?.getAttribute('points') ?? '')
+    .match(/-?\d+(?:\.\d+)?/g)
+    .map(Number)
+    .filter((_v, i) => i % 2 === 0);
+
+// proves: explore_badges
+test('an open branch always folds with its −, + more waits beside it, and each sits at the outer end', async () => {
+  const card = (await show(env, fence(HUB))).el;
+  tap(card, thing(card, 'hub'));
+  withText(card.querySelector('.thoughtknot-details'), 'button', 'Explore from here').click();
+  await until(() => !!thing(card, 'w') && !thing(card, 'l0'));
+  const per = card
+    .querySelector('.thoughtknot-explore-sidebar')
+    .querySelectorAll('.thoughtknot-explore-dial')
+    .find((d) => /Per branch/.test(d.textContent));
+  per.querySelector('[role="spinbutton"]').dispatch('keydown', { key: 'Home' });
+  const of = (key, fold) =>
+    card.querySelector(`.thoughtknot-explore-badge[data-explore="${key}"][data-fold="${fold}"]`);
+  await until(() => !!of('w', 'more'));
+  of('w', 'more').click();
+  await until(() => !!thing(card, 'l0') && !!of('w', 'close'));
+  assert.equal(of('w', 'more').querySelector('text').textContent, '+2', 'six shown, two still waiting');
+  assert.equal(of('w', 'close').querySelector('text').textContent, '−', 'and it folds all the same');
+  for (const fold of ['close', 'more']) {
+    const cx = Number(of('w', fold).querySelector('circle').getAttribute('cx')),
+      xs = xsOf(thing(card, 'w'));
+    const outer = Math.abs(cx - Math.min(...xs)) < Math.abs(cx - Math.max(...xs)) ? 'left' : 'right';
+    const left = Math.max(...xs) < Math.min(...xsOf(thing(card, 'hub')));
+    assert.equal(outer, left ? 'left' : 'right', `the ${fold} badge sits at the outer end`);
+  }
+  of('w', 'close').click();
+  await until(() => !thing(card, 'l0'));
+  assert.ok(!of('w', 'close'), 'folded, it offers only +');
+  assert.equal(of('w', 'more').querySelector('text').textContent, '+8');
+});
+
+// proves: explore_tree_from_centre
+test('each step along a branch is a curve with no arrowhead, in its main branch colour, and ended they are as drawn', async () => {
+  const card = (await show(env, fence(HUB))).el;
+  tap(card, thing(card, 'hub'));
+  withText(card.querySelector('.thoughtknot-details'), 'button', 'Explore from here').click();
+  await until(() => !!thing(card, 'w') && !thing(card, 'l0'));
+  const more = () => card.querySelector('.thoughtknot-explore-badge[data-explore="w"][data-fold="more"]');
+  await until(() => !!more());
+  more().click();
+  const steps = () => card.querySelectorAll('g.edge.thoughtknot-explore-step');
+  await until(() => !!thing(card, 'l7') && steps().length === 12);
+  assert.ok(
+    steps().every(
+      (g) => !g.querySelector('polygon') && /^M[-\d.]+,[-\d.]+ C/.test(g.querySelector('path').getAttribute('d')),
+    ),
+    'each a curve with no arrowhead',
+  );
+  assert.deepEqual([...new Set(steps().map((g) => g.getAttribute('data-branch')))].sort(), ['0', '1', '2', '3']);
+  const counts = new Map();
+  for (const g of steps())
+    counts.set(g.getAttribute('data-branch'), (counts.get(g.getAttribute('data-branch')) ?? 0) + 1);
+  assert.ok([...counts.values()].includes(9), 'the main branch to w and its eight things share a colour');
+  withText(card.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
+  await until(() => !steps().length);
+  assert.ok(
+    card.querySelectorAll('g.edge').some((g) => g.querySelector('polygon')),
+    'the whole graph has its arrowheads again',
+  );
 });

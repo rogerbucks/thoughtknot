@@ -49,7 +49,7 @@ test('a note opens on the exploration its style block saved, and Save writes it 
     saveButton(el).click();
     await until(() => env.state.files.get(PATH) !== NOTE);
     const now = env.state.files.get(PATH);
-    assert.match(now, /\(explore_1:Explore \{centre: 'tablet', shown: 'q', shape: 'rings', per_branch: 12\}\)/);
+    assert.match(now, /\(explore_1:Explore \{centre: 'tablet', shown: 'q', shape: 'rings', per_branch: 40\}\)/);
     assert.equal(now.match(/:Explore/g).length, 1, 'never written twice');
   } finally {
     env.plugin.onunload();

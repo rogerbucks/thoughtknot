@@ -61,7 +61,12 @@ class Wheel(unittest.TestCase):
     def test_installed_alone_it_reads_a_note(self):
         venv = os.path.join(self.dir, "venv")
         subprocess.run(["uv", "venv", "--quiet", venv], check=True, capture_output=True)
-        python = os.path.join(venv, "bin", "python")
+        # a Windows venv keeps its python in Scripts, as python.exe
+        python = (
+            os.path.join(venv, "Scripts", "python.exe")
+            if os.name == "nt"
+            else os.path.join(venv, "bin", "python")
+        )
         subprocess.run(
             ["uv", "pip", "install", "--quiet", "--python", python, self.wheel],
             check=True,

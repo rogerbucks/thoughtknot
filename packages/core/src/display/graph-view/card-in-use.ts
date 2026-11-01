@@ -9,7 +9,7 @@ export interface CardActions {
   zoomOut: () => void;
   fit: () => void;
   /** Opens the card full screen, or, for a full-screen card, closes it. */
-  fullScreen: () => void;
+  fullScreen: (zen?: boolean) => void;
   /** Shows every keyboard shortcut in the card, or closes the list. */
   shortcuts: () => void;
   /** Opens the short tour of a first graph in the card (§44, first_run_help). */
