@@ -132,6 +132,7 @@ export const DRAWING_SOURCE_WORDS = {
   'explore.close': 'Close the branch from {thing}',
   'explore.sidebar': 'Explore',
   'dock.more': 'More',
+  'chip.name': 'View',
   'dock.fold': 'Fold {name} away',
   'dock.open': 'Open {name}',
   'explore.shapes': 'Shape',

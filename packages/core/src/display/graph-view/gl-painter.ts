@@ -85,7 +85,10 @@ void main() {
  * forms (colour-numbers.ts). Each colour is read once.
  */
 export function colourReader(): (css: string | undefined) => Rgba {
-  const probe = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(1, 1).getContext('2d') : null;
+  const probe =
+    typeof OffscreenCanvas === 'function'
+      ? new OffscreenCanvas(1, 1).getContext('2d', { willReadFrequently: true })
+      : null;
   const colours = new Map<string, Rgba>();
   return (css) => {
     if (!css) return [0, 0, 0, 0];
@@ -95,11 +98,23 @@ export function colourReader(): (css: string | undefined) => Rgba {
         probe.fillStyle = 'transparent';
         probe.fillStyle = css;
       }
-      c = rgbaOf(probe && typeof probe.fillStyle === 'string' ? probe.fillStyle : css);
+      const written = probe && typeof probe.fillStyle === 'string' ? probe.fillStyle : css;
+      c = rgbaOf(written);
+      // a form not read yet is painted on the probe's one pixel and read back, never left black (Roger, 1 Nov 2026)
+      if (probe && c[3] === 0 && !/^(?:rgba\(0, 0, 0, 0\)|transparent)$/.test(written)) c = pixelOf(probe, written);
       colours.set(css, c);
     }
     return c;
   };
+}
+
+/** The colour `css` as `probe` paints its one pixel, as four numbers. */
+function pixelOf(probe: OffscreenCanvasRenderingContext2D, css: string): Rgba {
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = css;
+  probe.fillRect(0, 0, 1, 1);
+  const [r = 0, g = 0, b = 0, a = 0] = probe.getImageData(0, 0, 1, 1).data;
+  return [r / 255, g / 255, b / 255, a / 255];
 }
 
 /** How many points a curve's every part is painted with. */

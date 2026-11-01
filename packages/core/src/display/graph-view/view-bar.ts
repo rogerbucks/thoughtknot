@@ -3,6 +3,7 @@
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
+import { CHIP_LINES, renderChip } from './controls-chip';
 import { setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { PictureStatus, ViewOptions } from './view-options';
@@ -195,11 +196,16 @@ export function overDrawing(
 ): HTMLElement {
   const layer = root.createDiv({ cls: 'thoughtknot-over' });
   root.insertBefore(layer, viewport);
+  // the top start corner: the chip of what the drawing shows, then the docks, under any panel opened (§25)
+  const corner = layer.createDiv({ cls: 'thoughtknot-corner' }),
+    chip = renderChip(corner);
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
+  const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))
-    if (OVER.some((cls) => el.classList.contains(cls))) panels.appendChild(el);
-    // a control dock floats over a corner of the drawing on its own, under any panel opened (controls_dock)
-    else if (el.classList.contains('thoughtknot-dock')) layer.insertBefore(el, panels);
+    if (is(el, OVER)) panels.appendChild(el);
+    else if (is(el, ['thoughtknot-dock']))
+      corner.appendChild(el); // controls_dock
+    else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });
