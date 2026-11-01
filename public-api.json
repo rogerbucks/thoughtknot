@@ -835,6 +835,7 @@
           "dot: string",
           "own?: boolean | undefined",
           "rankdir: string",
+          "shaped?: string | undefined",
           "src: LayoutSource"
         ],
         "directionOf": [
