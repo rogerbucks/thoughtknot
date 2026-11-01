@@ -2,7 +2,7 @@
 // finds its own things, and gives each its look. Its badge is a second sign, so a look is never colour alone.
 
 /** The keys a rule adds to a Look. */
-export const RULE_KEYS = ['when', 'lens', 'badge', 'bands', 'steps'] as const;
+export const RULE_KEYS = ['when', 'lens', 'badge', 'bands', 'steps', 'off'] as const;
 
 /** The badges a rule's look may put on what it matches: a small sign beside a name (rule_look_not_colour_alone). */
 export const BADGES = ['clock', 'flag', 'star', 'warning', 'check', 'cross', 'question', 'dot', 'up', 'down'] as const;
@@ -23,6 +23,8 @@ export interface RuleParts {
   bands?: string;
   /** Where each step after the first starts, in rising order. */
   steps?: number[];
+  /** Turned off: kept in the style graph, but nothing drawn by it (rule_look_off). */
+  off?: boolean;
 }
 
 /**

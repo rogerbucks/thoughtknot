@@ -1037,7 +1037,9 @@
       "rule_look_bands",
       "rule_look_massive",
       "rule_look_try_save",
-      "rule_look_builder"
+      "rule_look_builder",
+      "rule_look_remove",
+      "rule_look_off"
     ]
   },
   "CV1": {
@@ -1318,6 +1320,23 @@
       "globe_view",
       "globe_dive_detail",
       "globe_explore_centre"
+    ]
+  },
+  "ED1": {
+    "title": "Editing in every view",
+    "size": "L",
+    "requirements": [
+      "edit_card",
+      "edit_rename",
+      "edit_click_rule",
+      "edit_read_only",
+      "edit_quick_add",
+      "edit_delete",
+      "edit_link_drag",
+      "edit_cells",
+      "edit_every_view",
+      "edit_quick_line",
+      "edit_ai_expand"
     ]
   }
 }

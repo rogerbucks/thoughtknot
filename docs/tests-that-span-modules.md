@@ -263,6 +263,11 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
+## The Obsidian plugin: editing in the drawing
+
+- `packages/obsidian/test/edit-add.test.js` — Tab, Shift+Enter and Delete on a selected thing, and the editor's buttons
+  (editor spec §72, edit_quick_add, edit_delete). It spans the editor beside the thing and the core's thing edits.
+
 ## The Obsidian plugin: the process debugger
 
 - `packages/obsidian/test/process-debugger.test.js` — the process debugger in a drawing's walk strip (editor spec
@@ -1042,6 +1047,11 @@ after a module nor listed here, and on a listed file that is missing.
   WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
   The view's mini-map must copy each thing and move the view when pressed (space_mini_map). A thing moved by a new
   layout must glide there, a frame at a time (layout_glide).
+
+### The 2D, 2.5D and 3D button
+
+- `test/space-switch.test.js` — the 2D, 2.5D and 3D button in headless Chrome (editor spec §53, space_press_kept).
+  Escape must leave it saying 2D, and fast presses must end as the last one said.
 - `test/space-sketch.test.js` — the drawings over a graph in the view in space, in headless Chrome (editor spec §70,
   sketch_toggle, sketch_click_rule). It spans `space-sketch.ts`, the view in space and its painter.
 - `test/space-xr-view.test.js` — the view in space in a stand-in headset, in headless Chrome (editor spec §68,

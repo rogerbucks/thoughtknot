@@ -13,6 +13,7 @@ import { Walk } from './walk';
 import { playablePaths } from './path-play';
 import { ViewMaker } from './view-maker';
 import { AddThing } from './add-thing';
+import { EditCard } from './edit-card';
 import { sketchOn, type SketchTool } from './sketch-tool';
 import { toggleExportForm } from '../export/export-form';
 import { renderViewStrip } from './view-strip';
@@ -36,6 +37,9 @@ import { showProfile } from './profile-shown';
 import { Measuring, viewportSize, zoomSize } from './viewport-size';
 import { LayoutGlide } from './layout-glide-svg';
 import type { ViewOptions } from './view-options';
+
+/** The paths that can be played, which the Export form offers as animated SVGs (§7). */
+const played = (o: ViewOptions) => playablePaths(o.reading, o.graph);
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
 export class GraphView extends Lifecycle {
@@ -66,6 +70,8 @@ export class GraphView extends Lifecycle {
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
   private readonly glide = new LayoutGlide(() => this.viewport); // laid out again, it glides there (layout_glide)
+  private readonly edits = new EditCard(this, () => ({ viewport: this.viewport, o: this.o, svg: this.svg })); // §72
+  private readonly tableHands = () => ({ open: (t: Target) => this.open(t, false, true), edit: this.edits.cells() });
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
@@ -128,7 +134,7 @@ export class GraphView extends Lifecycle {
       space: () => this.spaces.pressed(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.source.toggle(b),
-      export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: this.playable() }),
+      export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: played(this.o) }),
     });
     const { editing, source } = placed;
     this.spaces.bar(placed.space, this.o.graph);
@@ -152,7 +158,7 @@ export class GraphView extends Lifecycle {
       taps: this.taps,
       drawing: () => this.drawing(),
       viewport: () => this.viewport,
-      size: () => this.viewportSize(),
+      size: () => this.size(),
       switching: () => this.switching,
     });
     // the View menu's switches, under the bar with the rest that change the picture only (§25)
@@ -192,7 +198,7 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
-    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram, (t) => this.open(t, false, true));
+    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram, this.tableHands());
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
@@ -203,7 +209,7 @@ export class GraphView extends Lifecycle {
       viewport: this.viewport,
       svg: () => this.svg,
       zoom: () => this.zoom,
-      size: () => this.zoomSize(),
+      size: () => this.size(zoomSize),
       drawn: () => this.drawn,
       taps: this.taps,
       byKeyboard: () => this.sel.byKeyboard(),
@@ -226,7 +232,7 @@ export class GraphView extends Lifecycle {
     if (this.svg) this.details.pictures(this.svg); // the pictures its style draws on boxes (§18)
     this.aids.openDetails(this.details); // kept open, if the setting says (§24)
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
-    this.details.onClosed = () => this.sel.closed();
+    this.details.onClosed = () => (this.sel.closed(), this.edits.hide());
     this.details.view = () => this.zoom.view(); // where a link that takes the card's tab leaves it (§18)
     const slot = mode === 'note' ? root.createDiv({ cls: 'thoughtknot-edit-slot' }) : null;
 
@@ -235,7 +241,7 @@ export class GraphView extends Lifecycle {
     const type = this.o.diagram?.choice.drawn ?? 'network';
     this.across = !!this.table || (mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room));
     const size = { width: this.o.drawn.width, height: this.o.drawn.height, fromRight: !!this.o.drawn.mirrored };
-    this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
+    this.zoom = new (this.across ? AcrossZoom : Zoom)(size, this.size(zoomSize), mode);
     this.zoom.onChange = (v) => this.measuring.during(() => this.apply(v));
     this.zoom.onExit = () => this.o.onClose?.();
     // a card drawn again as a new type, as the last was left (§15); a view saved as shown (§7); a link's back step (§18)
@@ -250,7 +256,7 @@ export class GraphView extends Lifecycle {
         foldInPlace(this.svg, this.zoom, fold, this.switching, byKey && focus);
     const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
     bindViewportEvents({ ...host, space: this.spaces, sketch: this.sketcher });
-    const observer = new ResizeObserver(() => (this.zoom.resize(this.zoomSize()), this.aids.placeDetails()));
+    const observer = new ResizeObserver(() => (this.zoom.resize(this.size(zoomSize)), this.aids.placeDetails()));
     observer.observe(this.viewport);
     if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)
     this.register(() => observer.disconnect());
@@ -269,10 +275,11 @@ export class GraphView extends Lifecycle {
         } else {
           source?.remove();
           if (slot) this.o.onReady?.(slot);
+          this.edits.columns(); // a button to add a card to each column of a board (§72)
         }
-        // the editor's selection; else the one saved as shown, left, or kept as the type changed (reading view too)
-        const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
-        if (reopen) this.open(reopen);
+        const reopen =
+          this.edits.handedOn() ?? this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
+        if (reopen) this.open(reopen); // handed on by an edit in place (§72), else the editor's or the saved selection
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show(), this.spaces);
         void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },
@@ -306,19 +313,9 @@ export class GraphView extends Lifecycle {
     return this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];
   }
 
-  /** The paths that can be played, which the Export form offers as animated SVGs (§7). */
-  private playable() {
-    return playablePaths(this.o.reading, this.o.graph);
-  }
-
-  /** The viewport's size to draw it at (viewport-size.ts), kept as tall while regrouped. */
-  private viewportSize() {
-    return this.sel.held(viewportSize(this.measuring.box, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
-  }
-
-  /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
-  private zoomSize() {
-    return this.sel.held(zoomSize(this.measuring.box, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
+  /** The viewport's size to draw it at, or by `zoomSize` to tell the zoom, kept as tall while regrouped (viewport-size.ts). */
+  private size(of: typeof viewportSize = viewportSize) {
+    return this.sel.held(of(this.measuring.box, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /**
@@ -341,7 +338,7 @@ export class GraphView extends Lifecycle {
     this.taps.reset(drawn.svg);
     this.sketcher?.layer(); // the drawings follow what they are pinned to (§70)
     this.aids.redrawn(drawn);
-    this.zoom.resize(this.zoomSize(), { width: drawn.width, height: drawn.height });
+    this.zoom.resize(this.size(zoomSize), { width: drawn.width, height: drawn.height });
     const pinned = this.o.switches?.state.layout.pinned; // as the View menu pins it (layout_strategy_variables)
     if (seen) this.glide.after(svg, this.taps, this.zoom, seen, this.details.selectedKey(), pinned); // r_keep_place
     this.sel.redrawn();
@@ -360,13 +357,14 @@ export class GraphView extends Lifecycle {
     this.viewport.setCssProps({
       '--thoughtknot-x': `${v.x}px`,
       '--thoughtknot-y': `${v.y}px`,
-      '--thoughtknot-height': `${this.viewportSize().height}px`,
+      '--thoughtknot-height': `${this.size().height}px`,
       '--thoughtknot-touch': this.zoom.touchAction(),
       '--thoughtknot-text-scale': String(v.scale / (this.zoom.fitScale() || 1)), // a table's words, fitted at 1 (§15)
     });
     this.viewport.toggleClass('is-zoomed', this.zoom.zoomedIn());
     this.aids.viewChanged(v);
     this.sel.viewChanged(); // the arrow to a selection out of view follows (§25)
+    this.edits.place(); // and the editor beside it (§72)
   }
 
   /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25).
@@ -383,6 +381,7 @@ export class GraphView extends Lifecycle {
     }
     // the selection is the focus: it, its links and what is at their other ends stay at full strength (§25)
     this.sel.select(t);
+    this.edits.show(t); // and the editor beside it, where the note can be written (edit_card)
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);
   }
