@@ -6,20 +6,12 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { blockName, blockOrder } from './block-order.ts';
+import { LETTER, fitText } from './fit-text.ts';
 
 /** The share of the space's shorter side kept for the things' names, along the top and down the left. */
 const NAMES_SHARE = 0.25;
 /** The largest a name is drawn, in CSS pixels: the drawing's own words, never larger. */
 const NAME_MOST = 12;
-/** A letter's width, as a share of its size: Helvetica's average. */
-const LETTER = 0.56;
-
-/** `text` cut to fit `room` at `size`, with an ellipsis where it was cut. */
-function fitted(text: string, room: number, size: number): string {
-  const most = Math.floor(room / (size * LETTER));
-  const letters = [...text];
-  return letters.length <= most ? text : `${letters.slice(0, Math.max(most - 1, 0)).join('')}…`;
-}
 
 /**
  * The marks of `shape` drawn as a matrix in `space`. Names run along the top and down the left, with a cell per link.
@@ -44,7 +36,7 @@ export function matrixMarks({ shape, space }: DiagramGiven): DrawMark[] {
       t = text.get(key) ?? key;
     const common = { kind: 'label' as const, of: key, style: 'text', size, role: 'thing' as const, name: t };
     const number = `${i + 1}`;
-    const rowText = `${number}  ${fitted(t, left - 8 - (digits + 2) * size * LETTER, size)}`;
+    const rowText = `${number}  ${fitText(t, left - 8 - (digits + 2) * size * LETTER, size)}`;
     return [
       {
         ...common,

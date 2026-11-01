@@ -65,3 +65,13 @@ test('deep nesting and a big graph still fit the space with every id its own; no
   assert.equal(new Set(ids).size, ids.length);
   assert.deepEqual(containmentMarks({ shape: shapeOf([]), space: SPACE }), []);
 });
+
+test('a long name is cut to its box with an ellipsis, so no name spills over its box', () => {
+  const long = 'a whole with a very long name indeed';
+  const keys = Array.from({ length: 12 }, (_, i) => `${long} ${i}`);
+  const links = keys.slice(1).map((k) => [k, 'PART_OF', keys[0]]);
+  const labels = containmentMarks({ shape: shapeOf(keys, links), space: SPACE }).filter((m) => m.kind === 'label');
+  assert.ok(labels.some((m) => m.text.endsWith('…')));
+  // a letter is about 0.56 of its size wide
+  for (const m of labels) assert.ok([...m.text].length * m.size * 0.56 <= m.maxWidth + 1e-9, m.text);
+});
