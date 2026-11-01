@@ -196,7 +196,8 @@ async function reducedMotion(page, { plant } = {}) {
   }
 }
 
-/** Opens the details sheet of the first box at a phone's width, and measures every button on it. */
+/** Opens the details of the first box at a phone's width, and measures every button on its sheet. On a touch screen the
+ * phone's control sheet holds them; otherwise the details sheet does. */
 async function sheetTargets(page, { plant } = {}) {
   const { browser } = page;
   // a phone has a touch screen. A Mac's Chrome says it has a mouse, which gives a line its compact 28 pixels
@@ -208,7 +209,7 @@ async function sheetTargets(page, { plant } = {}) {
       g.dispatchEvent(new PointerEvent('pointerdown', at)); g.dispatchEvent(new PointerEvent('pointerup', at)); g.dispatchEvent(new MouseEvent('click', { bubbles: true })); })()`);
     await pause(600);
     const buttons =
-      await browser.run(`[...document.querySelectorAll('.thoughtknot-sheet button')].filter((b) => b.getClientRects().length).map((b) => {
+      await browser.run(`[...document.querySelectorAll('.thoughtknot-sheet button, .thoughtknot-phone-sheet button')].filter((b) => b.getClientRects().length).map((b) => {
       const r = b.getBoundingClientRect();
       return { name: (b.getAttribute('aria-label') ?? b.textContent).trim().replace(/\\s+/g, ' ').slice(0, 40), width: r.width, height: r.height };
     })`);

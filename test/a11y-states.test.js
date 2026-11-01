@@ -107,7 +107,9 @@ describe('in a real browser, the Obsidian host’s harness', () => {
       /still runs on for ever/,
     ],
     sheetTargets: [
-      style('.thoughtknot-sheet button { height: 30px !important; min-height: 0 !important }'),
+      style(
+        ':is(.thoughtknot-sheet, .thoughtknot-phone-sheet) button { height: 30px !important; min-height: 0 !important }',
+      ),
       /the sheet: button .* is \d+ by 30/,
     ],
     bigText: [style('#note .thoughtknot-bar > button { margin-inline-end: -30px !important }'), /overlap by/],

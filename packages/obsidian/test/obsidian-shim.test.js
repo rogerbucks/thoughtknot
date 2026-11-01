@@ -59,3 +59,17 @@ test('the plugin loads on the shim, and reads the vault as it does in Obsidian',
   assert.ok(Array.isArray(await plugin.sharedSchemas()), 'the vault is read for shared schemas');
   assert.equal(plugin.app.workspace.getActiveFile(), null, 'no note is open in an Obsidian editor');
 });
+
+test('the shim says whether it is a phone, so a narrow touch screen gets the phone layout', async (t) => {
+  t.after(installGlobals(fakeDocument(700)));
+  const at = pathToFileURL(`${harness}/obsidian-shim.js`).href;
+  const was = globalThis.matchMedia;
+  try {
+    globalThis.matchMedia = (q) => ({ matches: q.includes('max-width: 599px') && q.includes('pointer: coarse') });
+    assert.equal((await import(`${at}?phone`)).Platform.isPhone, true);
+    globalThis.matchMedia = () => ({ matches: false });
+    assert.equal((await import(`${at}?desktop`)).Platform.isPhone, false);
+  } finally {
+    globalThis.matchMedia = was;
+  }
+});

@@ -172,8 +172,14 @@ def _added(boxes: list, hubs: list, trunks: list[int]) -> list[str]:
             'color="#0000fe"];'
         )
     for t, count in enumerate(trunks, start=1):
-        out.append(f'  "trunk: {t} in" [id="trunk_{t}_in", shape=point, width=0.08, label=""];')
-        out.append(f'  "trunk: {t} out" [id="trunk_{t}_out", shape=point, width=0.08, label=""];')
+        out.append(
+            f'  "trunk: {t} in" [id="trunk_{t}_in", shape=point, width=0.08, label="", '
+            'color="#0000fe"];'
+        )
+        out.append(
+            f'  "trunk: {t} out" [id="trunk_{t}_out", shape=point, width=0.08, label="", '
+            'color="#0000fe"];'
+        )
         out.append(
             f'  "trunk: {t} in" -> "trunk: {t} out" [id="trunk_{t}", dir=none, penwidth=2.5, '
             f'label="{count} links", fontsize={size}, fontcolor="#0000fe"];'

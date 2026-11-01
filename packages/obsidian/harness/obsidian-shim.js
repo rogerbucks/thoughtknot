@@ -479,7 +479,9 @@ export function parseYaml(text) {
   }
   return out;
 }
-export const Platform = { isMobile: false, isDesktop: true };
+/** Obsidian's Platform: a phone when the screen is narrow and touched, so the page lays out as the phone app does. */
+const phone = typeof matchMedia === 'function' && matchMedia('(max-width: 599px) and (pointer: coarse)').matches;
+export const Platform = { isMobile: false, isDesktop: true, isPhone: phone };
 /** Obsidian's interface language: the browser's, as the harness runs in one. */
 export const getLanguage = () => globalThis.navigator?.language || 'en';
 /** Obsidian's Markdown renderer (§18): the browser view has none, so a detail's Markdown is shown as its text. */

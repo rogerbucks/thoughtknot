@@ -102,6 +102,16 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
       'no fixed colour',
     );
   });
+
+  // design review, 1 Nov 2026: on a phone the control sheet covered the mini-map in the corner
+  test('on a phone it rides above the control sheet, folded down or half up, so it is never hidden', () => {
+    const css = readFileSync(`${root}styles.css`, 'utf8');
+    for (const height of ['is-peek', 'is-half']) {
+      const sel = `.thoughtknot-view:has(.thoughtknot-phone-sheet.${height}) .thoughtknot-mini-map`;
+      const rule = new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+      assert.match(rule, /inset-block-end:\s*calc\(/, height);
+    }
+  });
 });
 
 describe('mini_map: tapped or dragged, it moves the view', () => {
