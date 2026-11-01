@@ -3,13 +3,15 @@
 // reached and named as a box or a link of a drawing is. So tapping, the details and the inspector work as in every
 // other type (type_one_way_to_work). It works as a data table does (table_grid_navigation). It scrolls by itself, by
 // wheel, trackpad and finger. Its headings and first column stay in sight. The keys move from cell to cell
-// (table-keys.ts). Its columns and rows can be resized, and its look is set on screen (table-sizing.ts). The card's zoom
-// makes its words larger or smaller.
+// (table-keys.ts). Its columns and rows can be resized, and its look is set on screen (table-sizing.ts). The card's zoom,
+// or two fingers (table-pinch.ts), makes its words larger or smaller. Drawn again, it keeps its place (table-place.ts).
 import { word } from '@thoughtknot/core';
 import type { DiagramTable } from '@thoughtknot/core';
 import type { Target } from './taps';
 import { bindTableKeys } from './table-keys';
 import { bindSizing, renderTableBar } from './table-sizing';
+import { bindPinch } from './table-pinch';
+import { keepPlace } from './table-place';
 
 /** The heads of the links' table. */
 const linkHeads = (): string[] => [word('table.from'), word('table.link'), word('table.to'), word('table.properties')];
@@ -125,5 +127,7 @@ export function renderTable(viewport: HTMLElement, t: DiagramTable, open?: (t: T
   things.querySelector<HTMLElement>('tbody td')?.setAttribute('tabindex', '0');
   bindSizing(scroll, tables);
   bindTableKeys(scroll, tables, open);
+  bindPinch(scroll);
+  keepPlace(scroll); // after sorting, so the row with the focus is found where it now is
   return wrap;
 }
