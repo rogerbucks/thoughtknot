@@ -2173,7 +2173,7 @@ pre.thoughtknot-code {
 }
 
 /* Zen view (§25, controls_zen): full screen with every panel hidden, the drawing alone and edge to edge. One button
-   stays in the top end corner to bring the panels back. The mini-map hides too, as Roger asked for all panels. */
+   stays in the top end corner to bring the panels back. The mini-map stays, so the person knows where they are. */
 .thoughtknot-fullscreen.is-zen {
   padding: 0;
 }
@@ -2186,7 +2186,6 @@ pre.thoughtknot-code {
 }
 .thoughtknot-fullscreen.is-zen
   :is(
-    .thoughtknot-mini-map,
     .thoughtknot-pointer,
     .thoughtknot-space-pad,
     .thoughtknot-hint,
