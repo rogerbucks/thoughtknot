@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/core-diagrams.test.js",
+  "test": "the built-in diagram types, through the plug-in interface (plugin_interface) > a region or a thing in a token the theme does not know is outlined, never filled over the things",
+  "seen_failing_first": false,
+  "evidence": "A guard for a review finding: the first commit already drew regions and loose boxes as outlines in the link colour; this pins it so a later change cannot fill them."
+}

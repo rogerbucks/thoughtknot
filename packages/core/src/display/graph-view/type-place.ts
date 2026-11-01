@@ -4,7 +4,7 @@
 // A card drawn again in its place, as typing redraws it, stays where the last was left (NEURO-7, redraw_keeps_place).
 // It keeps the zoom and pan, unless the last was fitted, so this one fits. It keeps the camera in space, and each box
 // glides from where it was. A layout of the same things puts them where they were, so they do not move at all.
-import type { View, Zoom } from '@thoughtknot/core';
+import type { Size, View, Zoom } from '@thoughtknot/core';
 import type { Orbit } from '../../space-view.ts';
 import { glideBoxes } from './regroup.ts';
 import { boxIn } from './taps.ts';
@@ -123,8 +123,11 @@ export class TypePlace {
   /**
    * Once the card is placed, the thing that was in the middle is centred at the zoom kept (type_keeps_centre). Then
    * the thing selected is brought into view. Full screen opens again if it was open. In space, its camera is kept.
+   * The zoom is told the viewport's `size` first. A card drawn off the page, as Live Preview does, had none. Aimed for
+   * none, it lands off the frame (centre_here_fits).
    */
-  takeUp(svg: SVGSVGElement | null, taps: Taps, zoom: Zoom, full: () => void, spaces?: SpaceSwitch): void {
+  takeUp(svg: SVGSVGElement | null, taps: Taps, zoom: Zoom, full: () => void, spaces?: SpaceSwitch, size?: Size): void {
+    if (size) zoom.resize(size);
     spaces?.startAt(this.kept?.orbit);
     const boxOf = (key?: string) => {
       const g = key && svg ? boxIn(svg, key) : null;

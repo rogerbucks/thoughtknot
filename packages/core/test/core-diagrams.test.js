@@ -2,7 +2,7 @@
 // one registers as a plug-in's type does, holds to the same contract, and gives back drawing marks for a graph's shape.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { pluginRegistry } from '../src/plugins.ts';
+import { PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
 import { diagramContract } from '../src/plugins-contract.ts';
 import { CORE_DIAGRAMS_ID, coreDiagramType, coreDiagrams } from '../src/core-diagrams.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
@@ -104,5 +104,40 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
     assert.match(r.value, /<svg /);
     assert.doesNotMatch(r.value, /#000[0-5][0-9a-f]{2}/);
     assert.match(r.value, />ANN</);
+  });
+
+  // proves: view_types_themed
+  test('every type drawn as SVG paints its things in their kind’s colour, never black, in the drawing’s font', async () => {
+    for (const d of registry().diagramTypes()) {
+      const r = await registry().drawDiagram(d.type, FAMILY, SPACE);
+      assert.ok(r.ok, `${d.type}: ${r.message}`);
+      assert.doesNotMatch(r.value, /(?:fill|stroke)="(?:black|#000000)"/, `${d.type} paints something black`);
+      assert.doesNotMatch(r.value, /Times/, `${d.type} writes its words in Times`);
+      // Roger, 1 Nov 2026: "The backgrounds of the items are all black" (the Ego view)
+      const things = r.value.match(/<g id="node\d+" class="node">[^]*?<\/g>/g) ?? [];
+      for (const t of things)
+        if (/<(?:ellipse|polygon|path)\b/.test(t))
+          assert.match(t, /fill:rgba\(var\(--color-|fill="none"/, `${d.type}: a thing not in its kind’s colour: ${t}`);
+    }
+  });
+
+  test('a region or a thing in a token the theme does not know is outlined, never filled over the things', async () => {
+    const r = pluginRegistry({ timeLimit: Infinity });
+    const region = { id: 'zone', style: 'ring.1', kind: 'group', x: 0, y: 0, width: 200, height: 200 };
+    const box = { id: 'ann', of: 'ann', style: 'ring.0', kind: 'box', x: 10, y: 10, width: 40, height: 20 };
+    const loose = { id: 'note', style: 'ring.2', kind: 'box', x: 60, y: 10, width: 40, height: 20 };
+    r.register({
+      id: 'acme.zones',
+      version: '1.0.0',
+      api: PLUGIN_API,
+      uses: ['diagrams'],
+      register: (points) =>
+        points.diagrams?.add({ type: 'acme.zones.map', title: 'Zones', draw: () => [region, box, loose] }),
+    });
+    const drawn = await r.drawDiagram('acme.zones.map', FAMILY, SPACE);
+    assert.ok(drawn.ok, drawn.message);
+    assert.doesNotMatch(drawn.value, /(?:fill|stroke)="(?:black|#000000)"/);
+    const shapes = drawn.value.match(/<(?:polygon|path|ellipse)\b[^>]*>/g) ?? [];
+    assert.equal(shapes.filter((t) => /fill:rgba\(var\(--color-/.test(t)).length, 1, 'only the thing is filled');
   });
 });
