@@ -59,13 +59,16 @@ const OUTSIDE = [
 const oddName = (windows: boolean) =>
   `+Contacts as a single source of truth/Best Contact manager for gmail${windows ? '' : '?'} I want to get con....md`;
 
-/**
- * Every check of the contract, each run on a fresh, empty backend from `make`. Pass `windows` for a backend that keeps
- * its files on Windows.
- */
+/** Where the backend under the contract keeps its files. */
+export interface StorageContractOptions {
+  /** True for a backend that keeps its files on Windows, whose file names cannot hold a `?`. */
+  windows?: boolean;
+}
+
+/** Every check of the contract, each run on a fresh, empty backend from `make`. */
 export function storageContract(
   make: () => NoteStorage | Promise<NoteStorage>,
-  { windows = false }: { windows?: boolean } = {},
+  { windows = false }: StorageContractOptions = {},
 ): StorageCheck[] {
   const oddNote = oddName(windows);
   return [

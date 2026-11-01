@@ -12,10 +12,14 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 const UNTYPED = JSON.parse(read('test/untyped.json'));
 
-/** Every JavaScript file of the library's sources, from the package's folder. */
+/** Every JavaScript file of the library's sources, from the package's folder, with slashes as on every system. */
 const sources = (dir = join(ROOT, 'src')) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-    e.isDirectory() ? sources(join(dir, e.name)) : e.name.endsWith('.js') ? [relative(ROOT, join(dir, e.name))] : [],
+    e.isDirectory()
+      ? sources(join(dir, e.name))
+      : e.name.endsWith('.js')
+        ? [relative(ROOT, join(dir, e.name)).replaceAll('\\', '/')]
+        : [],
   );
 
 /** Whether a file opts out of the check: a `@ts-nocheck` line before its code. */
