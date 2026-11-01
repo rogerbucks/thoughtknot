@@ -21,6 +21,7 @@ const PLACED = {
     '.thoughtknot-viewport > .thoughtknot-pointer': 'set at the point the pointer is',
     '.thoughtknot-quick-info': 'set beside the thing pointed at, measured on the screen',
     '.thoughtknot-thing-menu': 'opened at the point right-clicked, measured on the screen',
+    '.thoughtknot-edit-card': 'set beside the selected thing, measured on the screen',
   },
   'packages/claude-code/page/page.css': {},
 };
