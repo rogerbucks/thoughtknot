@@ -6,7 +6,8 @@
     <title>ThoughtKnot harness</title>
     <link rel="stylesheet" href="styles.css" />
     <style>
-      /* A few of Obsidian's default theme variables, light and dark, so the drawing is coloured as in a note. */
+      /* Obsidian's default theme variables that the plugin reads, light and dark, so the drawing is coloured as in a note.
+         Its menus need the stacking levels, and its cards the shadows, or a menu opens under the drawing. */
       :root {
         --text-normal: #222;
         --text-muted: #6b6b6b;
@@ -20,13 +21,45 @@
         --background-modifier-border-hover: #d0d0d0;
         --background-modifier-hover: rgba(0, 0, 0, 0.075);
         --interactive-accent: #7b6cd9;
+        --layer-popover: 30;
         --layer-modal: 50;
+        --layer-tooltip: 70;
         --radius-s: 4px;
         --radius-m: 8px;
+        --radius-l: 12px;
+        --shadow-s:
+          0 1px 2px rgba(0, 0, 0, 0.028), 0 3.4px 6.7px rgba(0, 0, 0, 0.042), 0 15px 30px rgba(0, 0, 0, 0.07);
+        --shadow-l:
+          0 1.8px 7.3px rgba(0, 0, 0, 0.071), 0 6.3px 24.7px rgba(0, 0, 0, 0.112), 0 30px 90px rgba(0, 0, 0, 0.2);
+        --font-semibold: 600;
+        --font-bold: 700;
+        --link-color: #7b6cd9;
+        --link-unresolved-color: #7b6cd9;
+        --font-smaller: 0.875em;
+        --font-ui-large: 20px;
+        --icon-xs: 14px;
+        --cursor-link: pointer;
+        --code-background: var(--background-secondary);
+        --code-normal: var(--text-normal);
+        --code-size: var(--font-smaller);
+        --code-function: var(--color-yellow);
+        --code-important: var(--color-orange);
+        --code-keyword: var(--color-pink);
+        --code-operator: var(--color-red);
+        --code-property: var(--color-cyan);
+        --code-string: var(--color-green);
+        --code-tag: var(--color-red);
+        --code-value: var(--color-purple);
+        --size-2-1: 2px;
+        --size-2-2: 4px;
         --size-4-1: 4px;
         --size-4-2: 8px;
         --size-4-3: 12px;
+        --size-4-4: 16px;
+        --size-4-5: 20px;
         --size-4-6: 24px;
+        --size-4-9: 36px;
+        --anim-motion-smooth: cubic-bezier(0.45, 0.05, 0.55, 0.95);
         --font-ui-small: 13px;
         --font-ui-smaller: 12px;
         --color-red: #e93147;
@@ -56,6 +89,10 @@
         --background-modifier-border-focus: #555555;
         --background-modifier-border-hover: #444;
         --background-modifier-hover: rgba(255, 255, 255, 0.075);
+        --shadow-s:
+          0 1px 2px rgba(0, 0, 0, 0.121), 0 3.4px 6.7px rgba(0, 0, 0, 0.179), 0 15px 30px rgba(0, 0, 0, 0.3);
+        --shadow-l:
+          0 1.8px 7.3px rgba(0, 0, 0, 0.3), 0 6.3px 24.7px rgba(0, 0, 0, 0.4), 0 30px 90px rgba(0, 0, 0, 0.5);
         --color-red: #fb464c;
         --color-red-rgb: 251, 70, 76;
         --color-green: #44cf6e;

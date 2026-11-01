@@ -64,6 +64,14 @@ describe('the demo draws the project’s own graphs', () => {
     assert.match(icons, /\.demo-icon-undo-2 \{ --demo-icon: url\('icons\/undo-2\.svg'\); \}/);
     assert.match(icons, /mask: var\(--demo-icon, url\('icons\/unknown\.svg'\)\)/);
   });
+
+  test('sets every Obsidian variable the plugin’s styles read, so a menu opens over the drawing and cards cast shadows', () => {
+    const css = harnessCss(read('packages/obsidian/harness/index.html'));
+    const read_ = new Set([...read('styles.css').matchAll(/var\((--[\w-]+)/g)].map((m) => m[1]));
+    const ours = /^--(?:gn|thoughtknot|demo)-/;
+    const missing = [...read_].filter((name) => !ours.test(name) && !css.includes(`${name}:`));
+    assert.deepEqual(missing, []);
+  });
 });
 
 describe('the demo page loads its own files only', () => {
