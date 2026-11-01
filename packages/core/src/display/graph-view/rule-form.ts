@@ -11,6 +11,9 @@
 // The form opens again on the rule tried, so it can be changed and tried again. The note is left byte for byte as it
 // was. Where the note is edited the rule is saved in the style graph instead. The host does each (`RuleAsk`). A rule
 // that cannot be read says why under the form, and nothing is tried or saved.
+//
+// Each rule saved has a bin beside it, to take it out (rule_look_remove). Where the note is edited it is taken out of
+// the style graph, and the card says so with one Undo. In reading view it is only tried as gone, as any change is.
 import { BADGE_GLYPHS, hueColour, ruleRefusal, ruleStarts, sayDraft, testsOf, whenOf, word } from '@thoughtknot/core';
 import type { WordKey, RuleAsk, RuleChoices, RuleDraft, RuleStart, RuleWrite } from '@thoughtknot/core';
 import { button } from '../button.ts';
@@ -25,8 +28,9 @@ const fieldOf = (form: HTMLElement, name: string) => form.querySelector<HTMLInpu
 function ruleOf(form: HTMLElement, view?: string): RuleWrite {
   const value = (name: string) => fieldOf(form, name)?.value.trim() ?? '';
   const rule: RuleWrite = { means: value('means') };
-  for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line'] as const) if (value(k)) rule[k] = value(k);
+  for (const k of ['when', 'kind', 'type', 'colour', 'badge', 'line', 'was'] as const) if (value(k)) rule[k] = value(k);
   if (view !== undefined) rule.view = view;
+  if (value('off') === 'true') rule.off = true; // a rule turned off stays off as it is changed
   return rule;
 }
 
@@ -56,6 +60,15 @@ function chip(parent: HTMLElement, rule: RuleWrite, label: string, load: (r: Rul
   b.addEventListener('click', () => load(rule));
 }
 
+/** The hidden fields filled from a rule: its look, the meaning it had, and whether it is off. */
+function fillFields(fields: Record<'colour' | 'badge' | 'line' | 'was' | 'off', HTMLInputElement>, rule: RuleWrite) {
+  fields.colour.value = rule.colour ?? '';
+  fields.badge.value = rule.badge ?? '';
+  fields.line.value = rule.line ?? '';
+  fields.was.value = rule.was ?? '';
+  fields.off.value = rule.off ? 'true' : '';
+}
+
 /** A small step heading of the form. */
 const step = (form: HTMLElement, key: WordKey) => form.createDiv({ cls: 'thoughtknot-rule-step', text: word(key) });
 
@@ -67,6 +80,8 @@ function formParts(form: HTMLElement) {
     colour: hidden(form, 'colour', 'red'),
     badge: hidden(form, 'badge', 'flag'),
     line: hidden(form, 'line'),
+    was: hidden(form, 'was'),
+    off: hidden(form, 'off'),
   };
   const starts = form.createDiv({ cls: 'thoughtknot-rule-starts' });
   step(form, 'rules.step.find');
@@ -100,14 +115,80 @@ function sayFound(found: HTMLElement, rule: RuleWrite, finds: { count: number; n
   found.toggleClass('is-empty', !!rule.when && finds?.count === 0);
 }
 
-/** The quick starts from the graph's own data, then each rule saved, to change it: each a chip that fills the form. */
-function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void) {
-  const choices = ask.choices;
+/** What may be done with a rule saved, from its row: open it, copy it, move it up and take it out. */
+interface SavedActs {
+  load: (r: RuleWrite) => void;
+  remove: (r: RuleWrite) => void;
+  moveUp?: (r: RuleWrite) => void;
+  /** Turns a rule saved off, or on again (rule_look_off). */
+  flip: (r: RuleWrite) => void;
+}
+
+/**
+ * The quick starts from the graph's own data, then each rule saved: each a chip that fills the form. Beside each rule
+ * saved are buttons to copy it as a new rule, move it up, and take it out (rule_look_remove).
+ */
+function renderStarts(starts: HTMLElement, ask: RuleAsk, acts: SavedActs) {
+  const choices = ask.choices,
+    { load } = acts;
   const starting = choices ? ruleStarts(choices) : [];
   if (starting.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.starts') });
   for (const s of starting) chip(starts, startRule(s, choices), s.means, load);
-  if (ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
-  for (const r of ask.saved ?? []) chip(starts, r, word('rules.change', { means: r.means }), load);
+  starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
+  if (!ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-word', text: word('rules.yours-none') });
+  (ask.saved ?? []).forEach((r, i) => {
+    const mine = starts.createSpan({ cls: 'thoughtknot-rule-mine' }),
+      means = r.means;
+    mine.toggleClass('is-off', !!r.off);
+    const flip = button(
+      mine,
+      word(r.off ? 'rules.turn-on' : 'rules.turn-off', { means }),
+      r.off ? 'eye-off' : 'eye',
+      () => acts.flip(r),
+    );
+    flip.setAttribute('aria-pressed', r.off ? 'false' : 'true');
+    // opened to change, a rule keeps the meaning it had, so renaming it changes it in place
+    chip(mine, { ...r, was: means }, word('rules.change', { means }), load);
+    button(mine, word('rules.copy', { means }), 'copy', () => load({ ...r, means: word('rules.copy-of', { means }) }));
+    const up = acts.moveUp;
+    if (up && i > 0) button(mine, word('rules.move-up', { means }), 'chevron-up', () => up(r));
+    button(mine, word('rules.remove', { means }), 'trash-2', () => acts.remove(r));
+  });
+}
+
+/**
+ * What a rule saved may do where the card is. In reading view it is only tried as taken out, and Back to saved puts it
+ * back, and nothing is moved. Where the note is edited it is taken out, or moved up.
+ */
+function savedActs(box: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void): SavedActs {
+  const reading = readOnlyHere(box);
+  return {
+    load,
+    remove: (r) => (reading ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r)),
+    // turned off or on: tried in reading view, saved in place where the note is edited
+    flip: (r) => {
+      const { off, ...on } = r,
+        next: RuleWrite = off ? on : { ...on, off: true };
+      if (reading) ask.tryOut(next);
+      else ask.save({ ...next, was: r.means });
+    },
+    ...(reading || !ask.moveUp ? {} : { moveUp: (r: RuleWrite) => ask.moveUp?.(r) }),
+  };
+}
+
+/**
+ * What the card says above the form. A rule only tried says so, with Back to saved. A rule just taken out says so,
+ * with one Undo to put it back.
+ */
+function renderStatus(box: HTMLElement, ask: RuleAsk) {
+  if (ask.tried) {
+    box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('type.tried') });
+    button(box, word('type.back'), 'undo-2', () => ask.back(), word('type.back'));
+  }
+  const means = ask.removed;
+  if (means === undefined) return;
+  box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('rules.removed', { means }) });
+  button(box, word('rules.undo-said', { means }), 'undo-2', () => ask.undo?.(), word('rules.undo'));
 }
 
 /**
@@ -118,10 +199,7 @@ function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) =>
 export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): void {
   if (!ask) return;
   const box = slot.createDiv({ cls: 'thoughtknot-rule-maker' });
-  if (ask.tried) {
-    box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('type.tried') });
-    button(box, word('type.back'), 'undo-2', () => ask.back(), word('type.back'));
-  }
+  renderStatus(box, ask);
   const form = box.createEl('form', { cls: 'thoughtknot-rule-form', attr: { 'aria-label': word('rules.form') } });
   form.hidden = true;
   const state: FormState = {
@@ -164,9 +242,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     // a test the builder cannot read back is kept as written, in the box for writing it
     state.whenTyped = !!rule.when && !testsOf(rule.when);
     when.value = rule.when ?? '';
-    fields.colour.value = rule.colour ?? '';
-    fields.badge.value = rule.badge ?? '';
-    fields.line.value = rule.line ?? '';
+    fillFields(fields, rule);
     means.value = rule.means;
     state.meansTyped = rule.means.trim() !== '' && rule.means !== sayDraft(state.draft);
     view = rule.view;
@@ -179,7 +255,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   function build() {
     if (built) return;
     built = true;
-    if (ask) renderStarts(starts, ask, load);
+    if (ask) renderStarts(starts, ask, savedActs(box, ask, load));
     renderLookPicks(looks, fields, () => refresh());
     refresh(true);
   }
@@ -196,11 +272,17 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   const open = button(box, word('rules.form'), 'circle-dot', () => toggle(!!form.hidden), word('rules.add'));
   open.setAttribute('aria-expanded', 'false');
   box.insertBefore(open, form);
-  if (ask.tried && ask.last) {
+  if (ask.tried || ask.removed !== undefined) {
     build();
-    load(ask.last); // back where the person was: the rule just tried, open to change
+    if (ask.last) load(ask.last); // back where the person was: the rule just tried, open to change
     toggle(true);
   }
+  // Escape closes the form, back on the button that opened it
+  form.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    toggle(false);
+    open.focus();
+  });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const rule = ruleOf(form, view),

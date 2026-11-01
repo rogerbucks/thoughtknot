@@ -430,7 +430,8 @@ describe('no outgoing request (cc_no_remote)', () => {
     // of git, with every transport refused and no lazy fetch (changes_view, Roger, 17 Oct 2026). It also runs the user's
     // own gh, the one request that leaves the machine. It is made only when the user asks to review their repository's
     // changes. That is one execFile of gh, for GET alone on github.com, handed no token (github_review_items, Roger,
-    // 17 Oct 2026).
+    // 17 Oct 2026). On Windows alone it runs PowerShell, to ask when the process holding its parent's number started.
+    // That is one execFile, of a fixed line that reads one process and makes no request (cc_server_stops).
     assert.deepEqual(external, [
       'node:child_process',
       'node:crypto',
@@ -443,10 +444,10 @@ describe('no outgoing request (cc_no_remote)', () => {
     const text = built.outputFiles[0].text;
     // a name esbuild gives a second import of execFile (execFile2) is counted too
     assert.deepEqual(
-      text.match(/\bexecFile\d*\(\s*"\w+"/g)?.map((c) => c.replace(/^execFile\d*\(\s*/, '')),
-      ['"git"', '"gh"'],
+      text.match(/\bexecFile\d*\(\s*"[\w.]+"/g)?.map((c) => c.replace(/^execFile\d*\(\s*/, '')),
+      ['"powershell.exe"', '"git"', '"gh"'],
     );
-    assert.equal(text.match(/\bexecFile\d*\s*\(/g)?.length, 2);
+    assert.equal(text.match(/\bexecFile\d*\s*\(/g)?.length, 3);
     assert.ok(text.includes('["api", "--method", "GET", "--hostname", "github.com"]'));
     assert.equal(text.match(/"--method"/g)?.length, 1);
     for (const writing of [/"(-X|-f|-F|--field|--raw-field|--input)"/, /\bGH_TOKEN\b/, /\bGITHUB_TOKEN\b/])

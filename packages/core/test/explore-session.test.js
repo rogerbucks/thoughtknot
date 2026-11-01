@@ -83,6 +83,17 @@ test('the card keeps what is shown, each thing at its spot, and nothing already 
   assert.ok(down.placed.get('a')[1] > 0, 'a new shape lays the map out afresh');
 });
 
+test("each thing shown is on one of the centre's branches, counted in the order written: its colour", () => {
+  const s = new ExploreSession(MIND, 'idea');
+  s.open('a');
+  assert.deepEqual(
+    ['idea', 'a', 'a1', 'b', 'c', 'far'].map((k) => s.branchIndex(k)),
+    [-1, 0, 0, 1, 2, -1],
+  );
+  assert.equal(s.parentOf('a1'), 'a');
+  assert.ok(s.has('a1') && !s.has('far'));
+});
+
 test("the core's untangling hides what an exploration does not show, and Show only ends it", () => {
   const u = new Untangle(MIND);
   u.exploreFrom('idea');
