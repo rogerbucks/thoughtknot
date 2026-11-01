@@ -24,6 +24,8 @@ export interface RuleWrite {
   line?: string;
   badge?: string;
   means: string;
+  /** Tried as taken out: in reading view a rule removed is only tried, as any change is (rule_look_remove). */
+  removed?: boolean;
 }
 
 /** That `key` must be one of `among`. */
@@ -86,6 +88,10 @@ export function withTriedRules(style: StyleGraph, tried: readonly RuleWrite[]): 
       ...(r.badge ? { badge: r.badge as Badge } : {}),
     };
     const at = looks.findIndex((l) => sameRule(l, r));
+    if (r.removed) {
+      if (at >= 0) looks.splice(at, 1); // tried as taken out: drawn as if it were gone
+      return;
+    }
     if (at >= 0) looks[at] = look;
     else looks.push(look);
   });
@@ -103,6 +109,12 @@ export interface RuleAsk {
   finds?(rule: RuleWrite): { count: number; names: string[] };
   saved?: RuleWrite[];
   last?: RuleWrite;
+  /** Takes a saved rule out of the style graph, where the note is edited (rule_look_remove). */
+  remove?(rule: RuleWrite): void;
+  /** The meaning of the rule just taken out, while one Undo can put it back. */
+  removed?: string;
+  /** Puts the rule just taken out back where it was. */
+  undo?(): void;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */

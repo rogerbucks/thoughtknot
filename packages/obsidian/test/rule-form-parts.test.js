@@ -2,6 +2,7 @@
 // picks a property and a value from lists the graph fills, never typing a test. The form counts what the rule finds
 // and previews its look as it is built, and names it for the legend. Quick starts fill a whole rule at once. A rule
 // tried in reading view opens the form again on itself, to change it. A rule saved opens to change it in place.
+// A rule saved can be taken out, and one Undo puts it back (rule_look_remove).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -129,6 +130,45 @@ describe('rule_look_builder', () => {
       const text = env.state.files.get(PATH);
       assert.equal(text.match(/means: 'Late'/g)?.length, 1, 'changed in place, not written twice');
       assert.match(text, /when: 'status == "late"'/);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('rule_look_remove', () => {
+  test('a saved rule is taken out where the note is edited, and Undo puts the note back byte for byte', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const { el } = await show(env, note, 0);
+      labelled(opened(el), 'Remove the rule Late').click();
+      await until(() => !/means: 'Late'/.test(env.state.files.get(PATH)));
+      const removed = env.state.files.get(PATH);
+      assert.ok(!removed.includes(':Look'), 'the rule is gone, and nothing else');
+      const { el: again } = await show(env, removed, 0);
+      assert.match(again.querySelector('.thoughtknot-rule-tried')?.textContent ?? '', /Removed the rule Late/);
+      assert.equal(again.querySelector('.thoughtknot-rule-form').hidden, false, 'the form stays open where it was');
+      labelled(again, 'Put back the rule Late').click();
+      await until(() => env.state.files.get(PATH) === note);
+      const { el: back } = await show(env, note, 0);
+      assert.equal(back.querySelector('.thoughtknot-rule-tried'), null, 'one Undo, then nothing more to put back');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('in reading view a rule taken out is only tried, the note left as it was', async () => {
+    const note = noteOf(DATA, STYLE);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      assert.ok(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), 'drawn with the rule at first');
+      labelled(opened(el), 'Remove the rule Late').click();
+      await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
+      assert.equal(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), null, 'drawn as if it were gone');
+      assert.equal(env.state.files.get(PATH), note, 'tried, never written');
+      assert.ok(!labelled(el, 'Remove the rule Late'), 'no longer listed among the rules saved');
     } finally {
       env.uninstall();
     }

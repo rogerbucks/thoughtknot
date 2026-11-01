@@ -353,6 +353,12 @@
   align-items: flex-start;
   gap: var(--gn-space-1);
 }
+.thoughtknot-rule-mine {
+  /* a rule saved, with the button beside it that takes it out (rule_look_remove) */
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
 .thoughtknot-rule-chip {
   border-radius: 999px;
   padding: 2px 10px;

@@ -18,6 +18,7 @@ export const TYPES_LATE = [
   'RuleOp',
   'RuleStart',
   'RuleTest',
+  'RuleRemove',
   'Citation',
   'Connected',
   'Connector',

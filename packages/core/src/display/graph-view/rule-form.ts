@@ -11,6 +11,9 @@
 // The form opens again on the rule tried, so it can be changed and tried again. The note is left byte for byte as it
 // was. Where the note is edited the rule is saved in the style graph instead. The host does each (`RuleAsk`). A rule
 // that cannot be read says why under the form, and nothing is tried or saved.
+//
+// Each rule saved has a bin beside it, to take it out (rule_look_remove). Where the note is edited it is taken out of
+// the style graph, and the card says so with one Undo. In reading view it is only tried as gone, as any change is.
 import { BADGE_GLYPHS, hueColour, ruleRefusal, ruleStarts, sayDraft, testsOf, whenOf, word } from '@thoughtknot/core';
 import type { WordKey, RuleAsk, RuleChoices, RuleDraft, RuleStart, RuleWrite } from '@thoughtknot/core';
 import { button } from '../button.ts';
@@ -100,14 +103,36 @@ function sayFound(found: HTMLElement, rule: RuleWrite, finds: { count: number; n
   found.toggleClass('is-empty', !!rule.when && finds?.count === 0);
 }
 
-/** The quick starts from the graph's own data, then each rule saved, to change it: each a chip that fills the form. */
-function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void) {
+/**
+ * The quick starts from the graph's own data, then each rule saved: each a chip that fills the form. Beside each rule
+ * saved is a button that takes it out (rule_look_remove).
+ */
+function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void, remove: (r: RuleWrite) => void) {
   const choices = ask.choices;
   const starting = choices ? ruleStarts(choices) : [];
   if (starting.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.starts') });
   for (const s of starting) chip(starts, startRule(s, choices), s.means, load);
   if (ask.saved?.length) starts.createSpan({ cls: 'thoughtknot-rule-step', text: word('rules.yours') });
-  for (const r of ask.saved ?? []) chip(starts, r, word('rules.change', { means: r.means }), load);
+  for (const r of ask.saved ?? []) {
+    const mine = starts.createSpan({ cls: 'thoughtknot-rule-mine' });
+    chip(mine, r, word('rules.change', { means: r.means }), load);
+    button(mine, word('rules.remove', { means: r.means }), 'trash-2', () => remove(r));
+  }
+}
+
+/**
+ * What the card says above the form: that a rule is only tried, with Back to saved; and that a rule was just taken
+ * out, with one Undo to put it back.
+ */
+function renderStatus(box: HTMLElement, ask: RuleAsk) {
+  if (ask.tried) {
+    box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('type.tried') });
+    button(box, word('type.back'), 'undo-2', () => ask.back(), word('type.back'));
+  }
+  const means = ask.removed;
+  if (means === undefined) return;
+  box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('rules.removed', { means }) });
+  button(box, word('rules.undo-said', { means }), 'undo-2', () => ask.undo?.(), word('rules.undo'));
 }
 
 /**
@@ -118,10 +143,7 @@ function renderStarts(starts: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) =>
 export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): void {
   if (!ask) return;
   const box = slot.createDiv({ cls: 'thoughtknot-rule-maker' });
-  if (ask.tried) {
-    box.createDiv({ cls: 'thoughtknot-rule-tried', attr: { role: 'status' }, text: word('type.tried') });
-    button(box, word('type.back'), 'undo-2', () => ask.back(), word('type.back'));
-  }
+  renderStatus(box, ask);
   const form = box.createEl('form', { cls: 'thoughtknot-rule-form', attr: { 'aria-label': word('rules.form') } });
   form.hidden = true;
   const state: FormState = {
@@ -179,7 +201,11 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   function build() {
     if (built) return;
     built = true;
-    if (ask) renderStarts(starts, ask, load);
+    // in reading view a rule is only tried as taken out, and Back to saved puts it back; where edited it is taken out
+    if (ask)
+      renderStarts(starts, ask, load, (r) =>
+        readOnlyHere(box) ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r),
+      );
     renderLookPicks(looks, fields, () => refresh());
     refresh(true);
   }
@@ -196,9 +222,9 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   const open = button(box, word('rules.form'), 'circle-dot', () => toggle(!!form.hidden), word('rules.add'));
   open.setAttribute('aria-expanded', 'false');
   box.insertBefore(open, form);
-  if (ask.tried && ask.last) {
+  if (ask.tried || ask.removed !== undefined) {
     build();
-    load(ask.last); // back where the person was: the rule just tried, open to change
+    if (ask.last) load(ask.last); // back where the person was: the rule just tried, open to change
     toggle(true);
   }
   form.addEventListener('submit', (e) => {

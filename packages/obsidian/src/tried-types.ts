@@ -7,6 +7,8 @@ import { diagramFor, withTriedRules, word } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, RuleAsk, RuleWrite, StyleGraph } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { writeStyle } from './view-block';
+import { putBack, removeRule } from './rule-removal';
+import type { Removal } from './rule-removal';
 import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Trying, TypeLeftAt } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Stay } from '@thoughtknot/core/display/graph-view/view-options';
@@ -32,6 +34,8 @@ export class TriedTypes {
   private readonly stayed = new Map<string, { at: StayedAt; when: number }>();
   /** The rules tried where each card is, in the order tried (§56). */
   private readonly rules = new Map<string, RuleWrite[]>();
+  /** The rule last taken out where each card is, while one Undo can put it back (rule_look_remove). */
+  private readonly removals = new Map<string, Removal>();
 
   constructor(private readonly plugin?: ThoughtKnotPlugin) {}
 
@@ -62,14 +66,37 @@ export class TriedTypes {
 
   /** What a card at `at` may do with a rule: try it, save it where the note is edited, or go back to those saved. */
   private ruleAsk(at: TriedAt): RuleAsk {
+    const key = TriedTypes.key(at),
+      // the rule to open the form on again: the last tried, never one only tried as taken out
+      last = this.rules
+        .get(key)
+        ?.filter((r) => !r.removed)
+        .at(-1),
+      removal = this.removals.get(key);
     return {
-      tried: this.rules.has(TriedTypes.key(at)),
-      ...(this.rules.get(TriedTypes.key(at))?.at(-1) ? { last: this.rules.get(TriedTypes.key(at))?.at(-1) } : {}),
+      tried: this.rules.has(key),
+      ...(last ? { last } : {}),
+      ...(removal ? { removed: removal.means } : {}),
       tryOut: (rule) => this.tryRule(at, rule),
       back: () => this.tryRule(at, null),
       save: (rule) => {
-        this.rules.delete(TriedTypes.key(at)); // saved: no longer only tried
+        this.rules.delete(key); // saved: no longer only tried
+        this.removals.delete(key); // and the note changed, so a removal is no longer undone
         if (this.plugin) void writeStyle(this.plugin, at.path, at.graph, { rule }, word('rules.saved'));
+      },
+      remove: (rule) => {
+        if (!this.plugin) return;
+        const r = { means: rule.means, ...(rule.view !== undefined ? { view: rule.view } : {}) };
+        void removeRule(this.plugin, at.path, at.graph, r).then((done) => {
+          if (done) this.removals.set(key, done);
+          else this.removals.delete(key);
+          this.drawAgain(at.path);
+        });
+      },
+      undo: () => {
+        const held = this.removals.get(key);
+        this.removals.delete(key); // one Undo: asked once, whether or not the note let it
+        if (this.plugin && held) void putBack(this.plugin, at.path, held).then(() => this.drawAgain(at.path));
       },
     };
   }
