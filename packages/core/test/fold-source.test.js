@@ -133,8 +133,8 @@ describe('links between two groups merged', () => {
     assert.ok(lines.includes(`  "trunk: 1 out" -> "cy" [id="edge2", ${/\[(.*)\];$/.exec(ask)[1]}];`));
     assert.ok(lines.includes('  "bob" -> "trunk: 1 in" [id="edge3_tail", color="' + colour + '", dir=none];'));
     assert.deepEqual(lines.slice(-4), [
-      '  "trunk: 1 in" [id="trunk_1_in", shape=point, width=0.08, label=""];',
-      '  "trunk: 1 out" [id="trunk_1_out", shape=point, width=0.08, label=""];',
+      '  "trunk: 1 in" [id="trunk_1_in", shape=point, width=0.08, label="", color="#0000fe"];',
+      '  "trunk: 1 out" [id="trunk_1_out", shape=point, width=0.08, label="", color="#0000fe"];',
       '  "trunk: 1 in" -> "trunk: 1 out" [id="trunk_1", dir=none, penwidth=2.5, label="2 links", fontsize=9, fontcolor="#0000fe"];',
       '}',
     ]);
