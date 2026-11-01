@@ -3479,6 +3479,15 @@ body.thoughtknot-easier-reading
 .thoughtknot-mini-map[hidden] {
   display: none;
 }
+/* On a phone the control sheet lies over the foot of the drawing, so the mini-map rides just above it at each of its
+   heights and is never hidden (Roger, 1 Nov 2026: the mini-map is always visible). The sheet's heights are shares of
+   the drawing's room; here they are the same shares of the drawing, which is that room. */
+.thoughtknot-view:has(.thoughtknot-phone-sheet.is-peek) .thoughtknot-mini-map {
+  inset-block-end: calc(max(7.5rem, 18%) + var(--gn-space-2));
+}
+.thoughtknot-view:has(.thoughtknot-phone-sheet.is-half) .thoughtknot-mini-map {
+  inset-block-end: calc(50% + var(--gn-space-2));
+}
 .thoughtknot-mini-svg {
   display: block;
   max-width: none;
