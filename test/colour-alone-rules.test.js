@@ -47,6 +47,9 @@ const CARRIED = {
   '.thoughtknot-line-sign.is-error': [
     ['packages/core/src/display/editor/text-picture.ts', "sign === '✖' ? ' is-error'"],
   ],
+  '.thoughtknot-table .is-striped tbody tr:nth-child(even) > *': [
+    ['packages/core/src/display-source-words.ts', "'table.stripes': 'Striped rows'"],
+  ],
   '.thoughtknot-fixbar .is-error': [
     ['test/colour-alone.test.js', 'by the sign in the fix bar: ✖ for an error, ⚠ for a warning'],
   ],
