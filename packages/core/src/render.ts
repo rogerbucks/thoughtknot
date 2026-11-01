@@ -28,6 +28,7 @@ import {
   ownSvg,
   stepIn,
 } from './layouts/own-draw.ts';
+import { SCREEN } from './layouts/folded-rows.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -61,6 +62,11 @@ export interface Direction {
   src: LayoutSource;
   /** Laid out by our own engine (layout_own_engine): Graphviz only measures it (layouts/own-draw.ts). */
   own?: boolean;
+  /**
+   * The same drawing as our own engine lays it out (layout_types_screen_shaped). Graphviz may lay a long diagram type
+   * out as a thin strip. This is drawn instead when Graphviz's drawing is far from a screen's shape.
+   */
+  shaped?: string;
 }
 
 /**
@@ -144,8 +150,40 @@ export function directions(drawing: GraphDrawing): Direction[] {
         src,
         own: true,
       };
-    return { rankdir, dot: quick ? quickSource(dot) : dot, src };
+    // a hub's many leaves stack in one rank, and Graphviz's drawing of a long type is then a thin strip. Our own
+    // engine folds them into bands, so that drawing is offered too. A timeline keeps Graphviz, which keeps its days
+    // in order
+    const shaped =
+      !quick && !step && shapeable(drawing) && ownable(dot)
+        ? ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false)
+        : undefined;
+    return { rankdir, dot: quick ? quickSource(dot) : dot, src, ...(shaped ? { shaped } : {}) };
   });
+}
+
+/** The diagram types laid out in ranks, which a hub with many leaves stretches into a strip. */
+const RANKED = new Set(['flow', 'tree', 'lanes']);
+/** Whether `d` is drawn in a ranked type, with links our own engine can draw. */
+const shapeable = (d: GraphDrawing): boolean =>
+  !!d.diagram && RANKED.has(d.diagram.type) && (!d.routing || d.routing === 'direct' || d.routing === 'curved');
+
+/** How far a drawing's shape is from a screen's, as the size of the log of their ratio. */
+const offScreen = (svg: string): number => {
+  const { width, height } = sizeOf(svg);
+  return width > 0 && height > 0 ? Math.abs(Math.log(width / height / SCREEN)) : 0;
+};
+
+/**
+ * The SVG of one direction (svgOf). Graphviz may draw a ranked diagram type more than twice as long as a screen's
+ * shape. Then our own engine draws it instead, if that comes nearer a screen's shape (layout_types_screen_shaped). So
+ * Fit shows readable names, not a sliver. The choice is made where the drawing is first placed, the same each time.
+ */
+export function drawnSvg(engine: Engine, d: Direction, routing?: string): string {
+  const svg = svgOf(engine, d.dot, routing, d.own);
+  const off = offScreen(svg);
+  if (!d.shaped || off <= Math.log(2)) return svg;
+  const other = svgOf(engine, d.shaped, routing, true);
+  return offScreen(other) < off ? other : svg;
 }
 
 /**
@@ -175,7 +213,7 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
   const laid = directions(drawing);
   return chosen(
     laid,
-    laid.map((d) => svgOf(engine, d.dot, drawing.routing, d.own)),
+    laid.map((d) => drawnSvg(engine, d, drawing.routing)),
   );
 }
 
