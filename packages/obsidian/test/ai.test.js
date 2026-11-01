@@ -5,11 +5,14 @@
 // - The answer is written into the note as a change set beside the graph.
 // - Every send is recorded in the plugin's data, by digest. Obsidian's request
 // function is the fake host's, which never reaches the network.
+// - Expand with AI, from the editor beside a thing, opens the dialog with the thing chosen. A model unsure what is meant
+//   asks one question back, which the person answers before anything is sent again (edit_ai_expand).
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { build, load, until } from './host/load-plugin.js';
 import { show } from './host/view-notes.js';
+import { showIn } from './host/card-notes.js';
 
 before(() => build());
 
@@ -292,5 +295,66 @@ describe('asking an AI model to propose changes (§19)', () => {
     } finally {
       env.uninstall();
     }
+  });
+
+  describe('Expand with AI, from the editor beside a thing (§72)', () => {
+    const CARD = 'Some note.md';
+    /** The card of the note, its thing `question` tapped, with AI as `options` set it. */
+    async function tapped(options) {
+      const env = await load({ files: { [CARD]: NOTE }, ...options });
+      const el = await showIn(env, 'live', { note: NOTE });
+      const box = () => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'question');
+      await until(() => !!box());
+      const vp = el.querySelector('.thoughtknot-viewport');
+      const init = { target: box(), pointerId: 3, pointerType: 'mouse', clientX: 20, clientY: 20, button: 0 };
+      vp.dispatch('pointerdown', init);
+      vp.dispatch('pointerup', { ...init, clientX: 21 });
+      await until(() => !!el.querySelector('.thoughtknot-edit-card'));
+      const card = el.querySelector('.thoughtknot-edit-card');
+      const expand = card.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === 'Expand with AI');
+      return { env, card, expand };
+    }
+
+    // proves: edit_ai_expand
+    test('is not offered while AI is off', async () => {
+      const { env, expand } = await tapped();
+      try {
+        assert.equal(expand, undefined);
+      } finally {
+        env.uninstall();
+      }
+    });
+
+    // proves: edit_ai_expand
+    test('opens the dialog with the thing chosen; a question back is answered before anything is written', async () => {
+      const { env, card, expand } = await tapped(ON);
+      try {
+        card.querySelector('input.thoughtknot-edit-line-input').value = 'phones and tablets';
+        expand.click();
+        await until(() => !!dialog(env));
+        const m = dialog(env);
+        assert.equal(row(m, 'What to send').querySelector('select').value, 'things');
+        assert.ok(row(m, 'Which device?').querySelector('input').checked, 'the thing is ticked');
+        const field = () => row(m, 'Your question').querySelector('textarea');
+        assert.match(field().value, /Expand the thing named Which device\?.*I typed: phones and tablets\./s);
+        assert.match(field().value, /ask one question first/);
+        env.state.reply = async () => ({
+          status: 200,
+          text: JSON.stringify({
+            choices: [{ message: { content: '{"question": "Phones you own, or ones to buy?"}' } }],
+          }),
+        });
+        choose(m, 'Model', 'Local');
+        button(m, 'Show what will be sent').click();
+        button(m, 'Send').click();
+        await until(() => /asks a question first/.test(env.state.notices.at(-1) ?? ''));
+        assert.equal(env.state.files.get(CARD), NOTE, 'nothing is written');
+        assert.match(field().value, /You asked: Phones you own, or ones to buy\?\nMy answer: $/);
+        assert.ok(button(m, 'Send').disabled, 'to be shown again before it goes');
+        assert.equal(env.state.data.aiSends.length, 1, 'the send is recorded');
+      } finally {
+        env.uninstall();
+      }
+    });
   });
 });

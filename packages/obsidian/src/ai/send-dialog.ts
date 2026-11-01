@@ -5,6 +5,9 @@
 // - Only Send, pressed on exactly that, sends it, once. Any change takes the yes away until it is shown again.
 // - The answer is written into the note as a change set beside the graph.
 // - Every send is recorded in the plugin's data, whatever came of it.
+// - A model unsure what is meant asks one question back. It is put under the question, for the person to answer there;
+//   then Show and Send again, as for any change (edit_ai_expand).
+// - Opened from Expand with AI, the thing's graph, the thing and the expand question are chosen already.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
@@ -63,6 +66,8 @@ export class SendDialog extends Modal {
     /** The note's classification, read each time it is asked, against the classifications as they are then. */
     private readonly levelOf: () => string | null,
     private readonly shared: string[],
+    /** What is chosen as the dialog opens, if anything: a graph, the things of it ticked, and the question. */
+    start?: { graph: string; things: string[]; question: string },
   ) {
     super(plugin.app);
     const reading = readNote(
@@ -80,6 +85,12 @@ export class SendDialog extends Modal {
       if (!v.fault) this.views.set(v.graph, [...(this.views.get(v.graph) ?? []), v.name]);
     this.graph = [...this.things.keys()][0] ?? '';
     this.model = modelChoices(plugin.settings, PURPOSE)[0]?.name ?? '';
+    if (start && this.things.has(start.graph)) {
+      this.graph = start.graph;
+      this.what = 'things';
+      for (const k of start.things) this.ticked.add(k);
+      this.question = start.question;
+    }
   }
 
   override onOpen(): void {
@@ -321,6 +332,13 @@ export class SendDialog extends Modal {
       return;
     }
     await this.plugin.recordAiSend(result.record);
+    if ('asks' in result) {
+      // its question goes under the person's, to be answered there; nothing is written until a proposal comes
+      this.question = `${this.question.trimEnd()}\n\n${word('ai.asked', { question: result.asks })}`;
+      new Notice(word('ai.asks', { model: p.model.name }));
+      this.changed(true);
+      return;
+    }
     if ('failed' in result) {
       new Notice(result.failed);
       this.refusal = result.failed;

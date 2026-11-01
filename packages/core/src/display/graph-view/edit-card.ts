@@ -10,6 +10,8 @@
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
 // - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
 // - A quick line writes the things and links a short sentence names, such as -> Plan, Risk (edit_quick_line).
+// - While AI is on, Expand with AI asks a model to expand the thing, with the words in the quick line. Its answer is a
+//   proposal, accepted one change at a time. The send dialog shows what goes first (edit_ai_expand).
 // - On a kanban board, each column has a button that adds a card there, its name open (grid-drag.ts, edit_cells).
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
@@ -223,7 +225,14 @@ export class EditCard {
         word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
       );
     this.linking.build(row);
-    this.lineIn(this.el, d.text);
+    const card = this.el;
+    this.lineIn(card, d.text);
+    const expand = this.o.expand,
+      key = t.key;
+    if (expand?.ready()) {
+      const typed = () => card.querySelector<HTMLInputElement>('.thoughtknot-edit-line-input')?.value ?? '';
+      button(row, word('edit.expand'), 'expand', () => expand.open(key, d.text, typed()), word('edit.expand'));
+    }
     this.said = said;
     this.place();
     const h = handed.get(this.o.graph);

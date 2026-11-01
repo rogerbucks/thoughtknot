@@ -23,6 +23,7 @@ export const INSTRUCTIONS = [
   '{"op": "remove-thing", "thing": "a_name", "reason": "why"}',
   '{"op": "remove-link", "from": "a_name", "type": "TYPE", "to": "b_name", "reason": "why"}',
   'A name is one word of letters, digits and underscores. Nothing you propose is written until a person accepts it.',
+  'If you are unsure what the user means, answer {"question": "your one question"} instead, and propose nothing yet.',
 ].join('\n');
 
 /** A fence of backticks longer than any run of them in `text`, so no text of the note can close it (AI-3). */
@@ -62,7 +63,7 @@ export function requestBody(model: AiModel, scope: AiScope, question: string): s
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
-const cut = (s: string) => (s.length > 200 ? `${s.slice(0, 200)}…` : s);
+const cut = (s: string, most = 200) => (s.length > most ? `${s.slice(0, most)}…` : s);
 
 /** The message a reply's body gives, when it is JSON: an error's message, else nothing. */
 function errorMessage(text: string): string {
@@ -168,11 +169,15 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
   }
 }
 
+/** The longest question a model may ask back, in characters: one question, never a page. */
+const QUESTION_MOST = 500;
+
 /**
  * The changes an answer proposes, read from the JSON in it (fenced or not); or why it cannot be read, in words. The
- * whole answer is refused if one change cannot be, so nothing is taken from an answer only partly understood.
+ * whole answer is refused if one change cannot be, so nothing is taken from an answer only partly understood. A model
+ * unsure what is meant asks one question back instead (edit_ai_expand), which the person answers before anything more.
  */
-export function changesIn(content: string): ChangeInput[] | { unread: string } {
+export function changesIn(content: string): ChangeInput[] | { unread: string } | { asks: string } {
   const from = content.indexOf('{'),
     to = content.lastIndexOf('}');
   if (from === -1 || to < from) return { unread: word('ai.reply.no-json') };
@@ -183,6 +188,8 @@ export function changesIn(content: string): ChangeInput[] | { unread: string } {
     return { unread: word('ai.reply.bad-json') };
   }
   const list = isRecord(body) ? body.changes : undefined;
+  const asked = isRecord(body) && typeof body.question === 'string' ? body.question.trim() : '';
+  if (asked && (!Array.isArray(list) || !list.length)) return { asks: cut(asked, QUESTION_MOST) };
   if (!Array.isArray(list)) return { unread: word('ai.reply.no-list') };
   if (!list.length) return { unread: word('ai.reply.no-changes') };
   const changes = list.map((c, i) => changeOf(c, i + 1));

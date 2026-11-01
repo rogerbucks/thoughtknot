@@ -104,7 +104,8 @@ export function proposalInto(note: string, body: string, proposer: string, at: s
   if (openIn(note) >= MOST_OPEN)
     return no(409, `${MOST_OPEN} proposals are waiting for a decision: they need to be accepted or rejected first.`);
   const changes = changesIn(JSON.stringify({ changes: given.changes }));
-  if ('unread' in changes) return no(422, `The changes could not be read: ${changes.unread}.`);
+  if (!Array.isArray(changes))
+    return no(422, `The changes could not be read: ${'unread' in changes ? changes.unread : changes.asks}.`);
   const graph = gqlSpans(note)
     .map((s) => graphOfBlock(s.text))
     .find((g) => g !== null);

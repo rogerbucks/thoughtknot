@@ -8,6 +8,11 @@ export const AI_SOURCE_WORDS = {
   'ai.graph': 'Graph',
   'ai.title': 'Ask an AI model to propose changes',
   'ai.question': 'Propose the changes that would make this graph more complete and correct.',
+  'ai.asks': '{model} asks a question first. Answer it at the end of your question, then show and send again.',
+  'ai.asked': 'You asked: {question}\nMy answer: ',
+  'ai.expand':
+    'Expand the thing named {thing} into the things and links it needs. {typed}Link them to the things already in the graph where they fit. If you are unsure what is meant, ask one question first.',
+  'ai.expand-typed': 'I typed: {typed}. ',
   'ai.nothing': 'This note has no graph with things in it, so there is nothing to send.',
   'ai.what': 'What to send',
   'ai.what.sentence': 'Only this is sent, with your question: nothing else of the note or the vault.',
