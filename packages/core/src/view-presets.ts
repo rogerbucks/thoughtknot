@@ -68,7 +68,7 @@ const DEFAULT_TURNS: Partial<Settings> = {
   foldGroups: 'off',
   mergeLinks: 'off',
   detailsOpen: 'off',
-  miniMap: 'auto',
+  miniMap: 'always',
 };
 
 /** A starter: its words from the catalogue, the default chain and settings changed where it says. */

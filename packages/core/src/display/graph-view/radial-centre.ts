@@ -143,3 +143,11 @@ export function centreStrip(
   );
   return d.centreLook ? [] : [back];
 }
+
+/**
+ * A tap again on thing `t`, already selected, in a radial drawing: it becomes the centre (radial_fan_out). Roger, 1 Nov
+ * 2026: "I want radial view to allow me to fan out on the currently selected node". Says whether it did; elsewhere a
+ * tap again brings the thing to the middle (second_tap_centres).
+ */
+export const fansOut = (o: { diagram?: DiagramShown } | undefined, t: { key: string } | object): boolean =>
+  'key' in t && typeof t.key === 'string' && o?.diagram?.centre !== undefined && !!o.diagram.putCentre?.(t.key);

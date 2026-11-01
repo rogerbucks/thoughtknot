@@ -177,12 +177,12 @@ class Types(unittest.TestCase):
         self.assertEqual(set(drawn), set(DIAGRAM_TYPES))
         self.assertIsNone(drawn["table"])
         self.assertTrue(any("stopped" in c for a in self.core for c in a["choice"].values()))
-        # and the groups: drawn inside lanes, refused by lanes when of two kinds, and by radial
+        # groups: drawn inside lanes, refused by lanes when of two kinds; radial always fits
         plans = [c.get("plan") or {} for a in self.core for c in a["choice"].values()]
         self.assertTrue(any(p.get("groups") for p in plans))
         whys = [f.get("why", "") for a in self.core for fs in a["fits"].values() for f in fs]
         self.assertTrue(any("holds things of two kinds" in w for w in whys))
-        self.assertTrue(any("cannot draw the box of group" in w for w in whys))
+        self.assertFalse(any("radial drawing needs every thing" in w for w in whys))
         self.assertTrue(any(p for a in self.core for ps in a["styles"].values() for p in ps))
 
     def test_render_lays_out_the_typed_source_in_the_types_direction(self):

@@ -10,7 +10,9 @@ import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { KEY_STEP, between, fromAbove, orbitAround } from '../../space-controls.ts';
 import type { SpaceMove } from '../../space-controls.ts';
-import type { Orbit, Vec3 } from '../../space-view.ts';
+import { middleOf, orbitFit } from '../../space-view.ts';
+import type { Block, Orbit, SpaceMarks, Vec3 } from '../../space-view.ts';
+import { globeFacing, globeOf } from '../../space-globe.ts';
 import { button } from '../button.ts';
 import { reducedMotion } from './details-nav.ts';
 
@@ -126,15 +128,35 @@ export function fadeOut(el: HTMLElement, gone: () => void): void {
 /** How long the view takes to turn to face what was picked, in milliseconds. */
 const TURN_TIME = 280;
 
-/** Turns the view from `from` to face `point`, gliding unless motion is to be still, while `going` says so. */
-export function turnToward(win: Window, from: Orbit, point: Vec3, set: (o: Orbit) => void, going: () => boolean): void {
-  if (reducedMotion(win)) return set(orbitAround(from, point));
+/**
+ * Turns the view from `from` to face `to`: a point, which it then turns round and zooms to, or a camera to glide to.
+ * It glides, unless motion is to be still, while `going` says so.
+ */
+export function turnToward(
+  win: Window,
+  from: Orbit,
+  to: Vec3 | Orbit,
+  set: (o: Orbit) => void,
+  going: () => boolean,
+): void {
+  const at = (t: number) => ('target' in to ? between(from, to, t) : orbitAround(from, to, t));
+  if (reducedMotion(win)) return set(at(1));
   const start = win.performance.now();
   const step = (now: number) => {
     if (!going()) return;
     const t = Math.min(1, (now - start) / TURN_TIME);
-    set(orbitAround(from, point, 1 - (1 - t) * (1 - t)));
+    set(at('target' in to ? t : 1 - (1 - t) * (1 - t)));
     if (t < 1) win.requestAnimationFrame(step);
   };
   win.requestAnimationFrame(step);
+}
+
+/** Where the view turns round: the picked thing, else a globe's middle or the middle of all (globe_face_picked). */
+export const pivotOf = (space: SpaceMarks, picked: Block | null, onGlobe: boolean): Vec3 =>
+  picked && !onGlobe ? middleOf(picked) : (globeOf(space)?.middle ?? orbitFit(space).target);
+
+/** What turning to `point` aims at: the point, or on a globe the camera square on to it, near it with `dive`. */
+export function aimOf(onGlobe: SpaceMarks | false, orbit: Orbit, point: Vec3, dive: boolean): Vec3 | Orbit {
+  const globe = onGlobe && globeOf(onGlobe);
+  return globe ? globeFacing(orbit, globe, point, dive) : point;
 }
