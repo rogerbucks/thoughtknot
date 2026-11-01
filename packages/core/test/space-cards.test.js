@@ -13,10 +13,11 @@ import {
   isCluster,
   rowsOf,
 } from '../src/space-cards.ts';
+import { NAME_TINY, READABLE_LEAST } from '../src/space-labels.ts';
 import { spreadSpace } from '../src/space-spread.ts';
 import { OUTLINE_FOLD, outlinesOf, stripTap } from '../src/space-outlines.ts';
 import { spotsKept } from '../src/space-parts.ts';
-import { middleOf, orbitFit, spaceMatrix } from '../src/space-view.ts';
+import { middleOf, orbitFit, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
 /** Two things in a row and a link from the first to the second, as the 2D drawing marks them. */
@@ -64,7 +65,7 @@ test('each card holds the whole name, wrapped to fit, and the picked card is mar
   for (let i = 1; i < rest.length; i++) assert.ok(rest[i - 1].far >= rest[i].far, 'far ones first');
 });
 
-test('far off, a card still shows its name where that covers no nearer name, else it is plain', () => {
+test('far off, a card shows its name readably where that covers no nearer name, else tiny inside it', () => {
   // the two things far apart, so seen whole their words are too small to be painted whatever they cover
   const { space } = spreadSpace(MARKS, undefined, true);
   const apart = { ...space, blocks: space.blocks.map((b, i) => ({ ...b, x: i ? 3000 : -3000, y: 0 })) };
@@ -80,8 +81,17 @@ test('far off, a card still shows its name where that covers no nearer name, els
   );
   // the same two things one before the other: only the nearer one is named
   const stacked = { ...apart, blocks: apart.blocks.map((b, i) => ({ ...b, x: 0, floor: b.floor + i * 5 })) };
-  const named = cardsOnScreen(stacked, matrix, W, H).filter((c) => c.rows.length);
-  assert.equal(named.length, 1, 'one name, never one over another');
+  const cards = cardsOnScreen(stacked, matrix, W, H);
+  const named = cards.filter((c) => c.rows.length && c.size >= READABLE_LEAST);
+  assert.equal(named.length, 1, 'one readable name, never one over another');
+  // proves: space_names_always
+  const nearer = zoomBy(orbit, 3.5),
+    closer = cardsOnScreen(stacked, spaceMatrix(nearer, W / H, nearer.distance * 4), W, H);
+  const [behind] = closer.filter((c) => !(c.rows.length && c.size >= READABLE_LEAST));
+  assert.equal(behind?.rows.join(' '), LONG, 'nearer, the other still wears its whole name, tiny, inside its card');
+  assert.ok(behind.size >= NAME_TINY && behind.size < READABLE_LEAST, `${behind.size}px`);
+  assert.equal(behind.height, Math.min(...closer.map((c) => c.height)), 'its card is not grown to hold it');
+  assert.equal(closer.indexOf(behind), 0, 'painted first, so the readable name covers it');
 });
 
 test('a click picks the nearest card under it', () => {

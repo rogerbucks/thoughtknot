@@ -4,12 +4,13 @@
 // So a thing's name is painted on it, never beside it:
 // - on a box, on the face the camera sees most of, lying on that face, turned so it reads as near upright as it can;
 // - on a ball, on the disc it shows the camera, inside the square that fits in its circle.
-// The name wraps at its spaces and shrinks to fit inside the face. Where even the smallest readable size will not fit,
-// the face is left plain, and zooming in shows it. A thing hidden by a nearer one shows no name. Cards (2.5D) hold
+// The name wraps at its spaces and shrinks to fit inside the face. Where a readable size will not fit, it goes down to
+// a tiny one (Roger, 1 Nov 2026: "even if the text is ridiculously small"). Where even that will not fit, the name
+// floats beside its thing (space_names_always). A thing hidden by a nearer one shows no name. Cards (2.5D) hold
 // their names already (space-cards.ts). Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
-import { READABLE_LEAST, largestName } from './space-labels.ts';
+import { NAME_TINY, READABLE_LEAST, largestName } from './space-labels.ts';
 
 /**
  * A name on a face: its rows, their size and the widest a row may be, in steps of the face. The face's middle is at
@@ -229,14 +230,15 @@ function covers(o: Outline, x: number, y: number, far: number): boolean {
 
 /**
  * The names of `space`'s things painted on their faces, as the camera's `matrix` sees them, at most `most`. The picked
- * thing comes first, then those nearest the middle of the screen and the camera. Each fits wholly inside its face.
+ * thing comes first, then those nearest the middle of the screen and the camera. Each fits wholly inside its face. The
+ * id of each name of a thing in view that fits on no face, even tiny, is added to `beside`, to float beside it.
  */
 export function facesOnScreen(
   space: SpaceMarks,
   matrix: Float32Array,
   width: number,
   height: number,
-  { most = FACES_MOST, picked }: { most?: number; picked?: string } = {},
+  { most = FACES_MOST, picked, beside }: { most?: number; picked?: string; beside?: Set<string> } = {},
 ): FaceText[] {
   const outlines = outlinesOf(space, matrix, width, height),
     largest = largestName(width, height),
@@ -260,8 +262,12 @@ export function facesOnScreen(
     // its size on the screen: one step of the face is this many pixels, as its area says
     const scale = Math.sqrt(face.across[0] * face.down[1] - face.across[1] * face.down[0]);
     const natural = space.round ? largest : Math.min(largest, name.size * scale);
-    const fit = fitWords(name.text, face.wide, face.high, natural / scale, READABLE_LEAST / scale);
-    if (!fit) continue;
+    // the picked name is never tiny: with no room to read it on its face, it floats beside it at a readable size
+    const fit = fitWords(name.text, face.wide, face.high, natural / scale, (mine ? READABLE_LEAST : NAME_TINY) / scale);
+    if (!fit) {
+      beside?.add(name.id);
+      continue;
+    }
     const { wide: _w, high: _h, area: _a, ...at } = face;
     const text: FaceText = { id: name.id, style: name.style, ground: o.b.style, ...fit, ...at };
     if (mine) text.picked = true;
