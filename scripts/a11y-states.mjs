@@ -245,8 +245,8 @@ export function crowdFindings(view, controls) {
   controls.forEach((a, i) => {
     if (a.cuts) found.push(`${view}: ${a.name} cuts its words off`);
     for (const b of controls.slice(i + 1)) {
-      // a panel lies over the drawing on purpose, and over the corner's chip and docks (controls_chip): so only
-      // controls of the same layer are held apart
+      // A panel lies over the drawing on purpose. It also lies over the corner's chip and docks (controls_chip).
+      // So only controls of the same layer are held apart.
       if (a.layer !== b.layer || inside(a, b) || inside(b, a)) continue;
       const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
       const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
