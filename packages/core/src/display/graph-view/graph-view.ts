@@ -45,7 +45,7 @@ export class GraphView extends Lifecycle {
   private viewport!: HTMLElement;
   private svg: SVGSVGElement | null = null; // the drawing: Graphviz's SVG; a graph drawn as a table has `table` (§15)
   private table: HTMLElement | null = null;
-  private across = false; // whether the drawing scrolls across only: a wide tree, flow or timeline on a phone (§15)
+  private across = false; // a wide tree, flow or timeline on a phone, scrolled across only; a table, by itself (§15)
   private detailsEl!: HTMLElement;
   private details!: DetailsPanel;
   private walk: Walk | null = null;
@@ -192,8 +192,7 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
-    // a graph drawn as a table is the plugin's own table; by a plug-in's type, its picture; else Graphviz's SVG (§15)
-    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram); // the bar's panels over it (§25)
+    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram, (t) => this.open(t, false, true));
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
@@ -234,7 +233,7 @@ export class GraphView extends Lifecycle {
     // on a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (wide_types_phone)
     const room = Math.min(this.viewport.clientWidth || Infinity, activeWindow.innerWidth || Infinity);
     const type = this.o.diagram?.choice.drawn ?? 'network';
-    this.across = mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room);
+    this.across = !!this.table || (mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room));
     const size = { width: this.o.drawn.width, height: this.o.drawn.height, fromRight: !!this.o.drawn.mirrored };
     this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
     this.zoom.onChange = (v) => this.measuring.during(() => this.apply(v));
@@ -363,6 +362,7 @@ export class GraphView extends Lifecycle {
       '--thoughtknot-y': `${v.y}px`,
       '--thoughtknot-height': `${this.viewportSize().height}px`,
       '--thoughtknot-touch': this.zoom.touchAction(),
+      '--thoughtknot-text-scale': String(v.scale / (this.zoom.fitScale() || 1)), // a table's words, fitted at 1 (§15)
     });
     this.viewport.toggleClass('is-zoomed', this.zoom.zoomedIn());
     this.aids.viewChanged(v);

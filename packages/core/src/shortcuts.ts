@@ -2,11 +2,11 @@
 // key the drawing and the editor answer, by the place it works. The drawing's own commands are marked. A host offers
 // them as its own commands too, so a person can give them keys of their own.
 
-/** Where a shortcut works: on a drawing, while a box is picked up to move, or in the editor. */
-export type ShortcutPlace = 'drawing' | 'moving' | 'editor';
+/** Where a shortcut works: on a drawing, while a box is picked up to move, in a table, or in the editor. */
+export type ShortcutPlace = 'drawing' | 'moving' | 'table' | 'editor';
 
 /** The places, in the order the list shows them. */
-export const SHORTCUT_PLACES: readonly ShortcutPlace[] = ['drawing', 'moving', 'editor'];
+export const SHORTCUT_PLACES: readonly ShortcutPlace[] = ['drawing', 'moving', 'table', 'editor'];
 
 /** One row of the list. Its words are `shortcut.<id>`, what it does, and `shortcut.<id>.keys`, its keys. */
 export interface Shortcut {
@@ -38,6 +38,12 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'move-choose', place: 'moving', keys: ARROWS },
   { id: 'move-put', place: 'moving', keys: ['Enter'] },
   { id: 'move-back', place: 'moving', keys: ['Escape'] },
+  { id: 'table-move', place: 'table', keys: ARROWS },
+  { id: 'table-edge', place: 'table', keys: ['Home', 'End'] },
+  { id: 'table-page', place: 'table', keys: ['PageUp', 'PageDown'] },
+  { id: 'table-sort', place: 'table', keys: ['Enter', ' '] },
+  { id: 'table-resize', place: 'table', keys: ARROWS },
+  { id: 'table-copy', place: 'table', keys: ['c'] },
   { id: 'suggest', place: 'editor', keys: [' '] },
   { id: 'suggest-choose', place: 'editor', keys: ['ArrowUp', 'ArrowDown'] },
   { id: 'suggest-take', place: 'editor', keys: ['Enter', 'Tab'] },
