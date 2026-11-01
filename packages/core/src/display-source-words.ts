@@ -238,7 +238,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'rules.preview-means': 'in the legend: {means}',
   'rules.sample': 'A thing',
   'rules.means-hint': 'The name shown in the legend',
-  'rules.close': 'Close',
+  'rules.close': 'Close the rule',
   'summary.recent': 'Recently opened',
   'summary.recent-graph': '{graph}, in {note}',
   'summary.recent-thing': '{thing}, in {graph}, in {note}',
