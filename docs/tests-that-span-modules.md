@@ -234,6 +234,8 @@ after a module nor listed here, and on a listed file that is missing.
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+- `packages/obsidian/test/placed-fits.test.js` — a card drawn off the page, as Live Preview draws it, fits its frame
+  once placed. Centre here leaves no zoom or pan for the card drawn next (editor spec §15).
 
 ## The Obsidian plugin: the View menu and views
 

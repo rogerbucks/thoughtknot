@@ -81,8 +81,8 @@ export interface DiagramShown extends DiagramOffer {
   lookTimeline?: (p: TimelinePick) => void;
 }
 
-/** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
-export interface TypeLeftAt extends LeftAt {
+/** Where a card was when its type changed: its zoom (none: the next fits), the thing selected, if full screen. */
+export interface TypeLeftAt extends Omit<LeftAt, 'zoom' | 'x' | 'y'>, Partial<Pick<LeftAt, 'zoom' | 'x' | 'y'>> {
   full?: boolean;
   /** Shown in space, as cards or balls (space-switch.ts), so the card drawn next is shown so too. */
   space?: SpaceMode;
