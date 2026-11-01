@@ -23,7 +23,7 @@ const PINCH_RATE = 1.4;
  * pinch sends small steps as the wheel with Ctrl, so it is as much quicker as a pinch on touch. So is the wheel, with
  * Ctrl or Command in a note. Alone, it is too in full screen and the pane, which cannot be told from it.
  */
-const WHEEL_RATE = 0.002 * PINCH_RATE;
+export const WHEEL_RATE = 0.002 * PINCH_RATE;
 
 /** The drawing's scale, its top-left corner in the viewport, and its size there — set as its size, so text stays sharp. */
 export interface View {

@@ -3,7 +3,7 @@
 // start the tree from it.
 //
 // It shows only while the card explores. At its top is the search: choosing a thing makes it the centre. Under it are
-// the six shapes, the depth and per-branch dials, and Back, Next and the whole graph again. Where the note is edited,
+// the six shapes, the depth and per-branch dials, Back, Next, Other links and the whole graph again. Where the note is edited,
 // Save writes it into the style graph. It is a control dock (controls-dock.ts): a card over the drawing that
 // folds away. The search, shapes, dials, Back and Next are its key controls; the whole graph again and Save are under
 // More.
@@ -89,6 +89,15 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
     'click',
     run((s) => s.next()),
   );
+  // the links that loop back between branches stay hidden, as in a classic mind map, until this is pressed
+  const others = moves.createEl('button', {
+    text: word('explore.other-links'),
+    attr: { type: 'button', 'aria-label': word('explore.other-links.label') },
+  });
+  others.addEventListener(
+    'click',
+    run((s) => s.setOtherLinks(!s.otherLinks)),
+  );
   rare
     .createEl('button', { text: word('explore.stop'), attr: { type: 'button' } })
     .addEventListener('click', () => acts.stop());
@@ -113,6 +122,7 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
       branch(now.perBranch);
       back.disabled = !now.canBack;
       next.disabled = !now.canNext;
+      others.setAttribute('aria-pressed', String(now.otherLinks));
     },
   };
 }
