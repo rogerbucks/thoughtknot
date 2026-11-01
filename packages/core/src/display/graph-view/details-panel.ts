@@ -75,8 +75,7 @@ export class DetailsPanel {
     // still under reduced motion, as the system asks when the card is drawn (§11)
     this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
-      // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
-      // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
+      // only in view mode, in a note's card: full screen, the pane and a panel kept open place them themselves (§24)
       on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen && !inPhoneSheet(el),
       paneable: () => o.mode === 'note' && !o.aids?.detailsOpen,
       close: () => this.close(),
