@@ -281,8 +281,8 @@ export const touchesStay = (
 
 /**
  * The camera as the view changes to another way of showing it, `space`, on a screen `aspect` wide to each unit high.
- * Each way is laid out to its own size, so with nothing picked the whole graph fits the view again: never a small knot
- * left in the last way's frame (Roger, 1 Nov 2026). With something `picked`, the view stays on it.
+ * Each way is laid out to its own size. So with nothing picked the whole graph fits the view again. It is never a small
+ * knot in the last way's frame (Roger, 1 Nov 2026). With something `picked`, the view stays on it.
  */
 export const orbitSwitched = (orbit: Orbit, space: SpaceMarks, picked: Block | null, aspect: number): Orbit =>
   picked ? centredOn(orbit, picked) : orbitFit(space, aspect);

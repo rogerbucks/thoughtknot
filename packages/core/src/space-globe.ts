@@ -278,11 +278,11 @@ export const GLOBE_DIVE = 1.4;
 const GLOBE_OUTSIDE = 1.15;
 
 /**
- * The camera on the line from the globe's middle out through `point`, looking straight down at it: the thing in the
- * middle of the screen, square to the camera, the globe round it (Roger, 1 Nov 2026: "selecting a node should move the
- * camera orientation to be perpendicular to the node in relation to the globe"). It stays as far away as it is, never
- * inside the globe; with `dive`, it comes near, so the thing's details show (globe_dive_detail). Its turn is the one
- * nearest the camera's own, so gliding there takes the short way round.
+ * The camera on the line from the globe's middle out through `point`, looking straight down at it. The thing is in the
+ * middle of the screen, square to the camera (Roger, 1 Nov 2026: "selecting a node should move the camera orientation
+ * to be perpendicular to the node in relation to the globe"). It stays as far away as it is, never inside the globe.
+ * With `dive`, it comes near, so the thing's details show (globe_dive_detail). Its turn is the one nearest the camera's
+ * own, so gliding there takes the short way round.
  */
 export function globeFacing(orbit: Orbit, g: GlobeOf, point: Vec3, dive = false): Orbit {
   const out = [0, 1, 2].map((k) => (point[k] ?? 0) - (g.middle[k] ?? 0)),
