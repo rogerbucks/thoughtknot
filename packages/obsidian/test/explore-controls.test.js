@@ -6,6 +6,7 @@
 // - The banner's Show the whole graph ends the exploration.
 // - An open branch always has a − that folds it, with + more beside it while some wait.
 // - Each sits at the branch's outer end, as in a classic mind map (Roger, 1 Nov 2026).
+// - Each step along a branch is a curve with no arrowhead, in its main branch's colour; ended, the lines are as drawn.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
@@ -126,4 +127,34 @@ test('an open branch always folds with its −, + more waits beside it, and each
   await until(() => !thing(card, 'l0'));
   assert.ok(!of('w', 'close'), 'folded, it offers only +');
   assert.equal(of('w', 'more').querySelector('text').textContent, '+8');
+});
+
+// proves: explore_tree_from_centre
+test('each step along a branch is a curve with no arrowhead, in its main branch colour, and ended they are as drawn', async () => {
+  const card = (await show(env, fence(HUB))).el;
+  tap(card, thing(card, 'hub'));
+  withText(card.querySelector('.thoughtknot-details'), 'button', 'Explore from here').click();
+  await until(() => !!thing(card, 'w') && !thing(card, 'l0'));
+  const more = () => card.querySelector('.thoughtknot-explore-badge[data-explore="w"][data-fold="more"]');
+  await until(() => !!more());
+  more().click();
+  const steps = () => card.querySelectorAll('g.edge.thoughtknot-explore-step');
+  await until(() => !!thing(card, 'l7') && steps().length === 12);
+  assert.ok(
+    steps().every(
+      (g) => !g.querySelector('polygon') && /^M[-\d.]+,[-\d.]+ C/.test(g.querySelector('path').getAttribute('d')),
+    ),
+    'each a curve with no arrowhead',
+  );
+  assert.deepEqual([...new Set(steps().map((g) => g.getAttribute('data-branch')))].sort(), ['0', '1', '2', '3']);
+  const counts = new Map();
+  for (const g of steps())
+    counts.set(g.getAttribute('data-branch'), (counts.get(g.getAttribute('data-branch')) ?? 0) + 1);
+  assert.ok([...counts.values()].includes(9), 'the main branch to w and its eight things share a colour');
+  withText(card.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
+  await until(() => !steps().length);
+  assert.ok(
+    card.querySelectorAll('g.edge').some((g) => g.querySelector('polygon')),
+    'the whole graph has its arrowheads again',
+  );
 });

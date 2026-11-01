@@ -25,6 +25,12 @@
   --gn-hue-red: var(--color-red);
   --gn-hue-orange: var(--color-orange);
   --gn-hue-green: var(--color-green);
+  --gn-branch-0: var(--color-blue);
+  --gn-branch-1: var(--color-orange);
+  --gn-branch-2: var(--color-green);
+  --gn-branch-3: var(--color-purple);
+  --gn-branch-4: var(--color-pink);
+  --gn-branch-5: var(--color-cyan);
   --gn-code-background: var(--code-background);
   --gn-code-normal: var(--code-normal);
   --gn-code-keyword: var(--code-keyword);
@@ -98,6 +104,12 @@
     --gn-hue-red: CanvasText;
     --gn-hue-orange: CanvasText;
     --gn-hue-green: CanvasText;
+    --gn-branch-0: CanvasText;
+    --gn-branch-1: CanvasText;
+    --gn-branch-2: CanvasText;
+    --gn-branch-3: CanvasText;
+    --gn-branch-4: CanvasText;
+    --gn-branch-5: CanvasText;
     --gn-code-background: Canvas;
     --gn-code-normal: CanvasText;
     --gn-code-keyword: CanvasText;
