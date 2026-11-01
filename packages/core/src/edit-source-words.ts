@@ -45,4 +45,13 @@ export const EDIT_SOURCE_WORDS = {
   'editor.draft-kept': 'A draft of this block, kept on {when}, can be restored.',
   'editor.restore': 'Restore draft',
   'editor.discard': 'Discard draft',
+  'edit.card': 'Edit {thing}',
+  'edit.name': 'Name of {thing}',
+  'edit.name-hint': 'Press F2 to rename. Enter saves, Escape cancels.',
+  'edit.kind': 'Kind: {kind}',
+  'edit.no-kind': 'No kind',
+  'edit.renamed': 'Renamed to {name}',
+  'edit.name-empty': 'A name cannot be empty',
+  'edit.name-same': 'The name is as it was',
+  'edit.not-here': '{thing} is not written in a block this card can change',
 } as const;
