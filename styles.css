@@ -700,8 +700,11 @@
 .thoughtknot-corner > .thoughtknot-dock[hidden] {
   display: none;
 }
-/* the chip folded keeps what must not be missed: an exploration's or a filter's banner, and each status or alert */
-.thoughtknot-chip.is-folded > .thoughtknot-chip-body > :not(.thoughtknot-untangle, [role='status'], [role='alert']) {
+/* The chip folded keeps what must not be missed: an exploration's or a filter's banner, and each status or alert. It
+   also keeps why a chosen type was not drawn, so a fall back to a network is never silent. */
+.thoughtknot-chip.is-folded
+  > .thoughtknot-chip-body
+  > :not(.thoughtknot-untangle, .thoughtknot-type-plugin, [role='status'], [role='alert']) {
   display: none;
 }
 .thoughtknot-chip-body {

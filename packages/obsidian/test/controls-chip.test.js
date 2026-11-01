@@ -58,11 +58,11 @@ test('folded at first, its button opens it and folds it again, kept for the sess
 });
 
 // proves: controls_chip
-test('folded, it keeps the banner and each status or alert, and hides the rest', () => {
+test('folded, it keeps the banner, each status or alert, and why a type was not drawn, and hides the rest', () => {
   const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
   assert.match(
     css,
-    /\.thoughtknot-chip\.is-folded > \.thoughtknot-chip-body > :not\(\.thoughtknot-untangle, \[role='status'\], \[role='alert'\]\) \{\s*display: none;/,
+    /\.thoughtknot-chip\.is-folded\s+>\s+\.thoughtknot-chip-body\s+>\s+:not\(\.thoughtknot-untangle, \.thoughtknot-type-plugin, \[role='status'\], \[role='alert'\]\) \{\s*display: none;/,
   );
   const all = rules(css, 'thoughtknot');
   const over = { tag: 'div', classes: ['thoughtknot-over'] };
