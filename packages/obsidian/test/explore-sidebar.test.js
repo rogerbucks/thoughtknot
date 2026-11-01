@@ -107,7 +107,10 @@ test('each dial works by its buttons, the keys and the wheel, and says its value
 test('the sidebar floats over the drawing in its own card, taking no room from it', () => {
   const layer = sidebar().parentElement;
   assert.ok(layer.classList.contains('thoughtknot-over'), 'in the layer over the drawing');
-  assert.ok(!layer.querySelector('.thoughtknot-over-panels').contains(sidebar()), 'not stretched across with the panels');
+  assert.ok(
+    !layer.querySelector('.thoughtknot-over-panels').contains(sidebar()),
+    'not stretched across with the panels',
+  );
   const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
   const card = { tag: 'div', classes: ['thoughtknot-view'] };
   const side = {
