@@ -5281,7 +5281,8 @@
         ],
         "HostServes": [
           "interface",
-          "links?: false | undefined"
+          "links?: false | undefined",
+          "windows?: boolean | undefined"
         ],
         "hostServicesContract": [
           "value: (make: () => ServicesUnderTest, serves?: HostServes) => ContractCheck[]"

@@ -202,6 +202,8 @@ export interface ServicesProbe extends HostProbe {
 export interface HostServes {
   /** False where the host follows no links of a card's note yet, such as the browser editor's page. */
   links?: false;
+  /** True on Windows, whose file names cannot hold a `?` (the storage contract's `windows`). */
+  windows?: boolean;
 }
 
 /** A whole host for one check: a fresh one, and its probe. */
@@ -236,7 +238,10 @@ export function hostServicesContract(make: () => ServicesUnderTest, serves: Host
     const { host, probe } = make();
     return { host: host.display, probe };
   });
-  const notes = storageContract(() => make().host.files).map((check) => ({ ...check, name: `notes: ${check.name}` }));
+  const notes = storageContract(() => make().host.files, { windows: serves.windows ?? false }).map((check) => ({
+    ...check,
+    name: `notes: ${check.name}`,
+  }));
   return [
     ...display,
     ...settingsChecks(make),
