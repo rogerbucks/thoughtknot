@@ -105,22 +105,20 @@ test('each dial works by its buttons, the keys and the wheel, and says its value
 
 // proves: explore_controls_on_screen
 test('the sidebar floats over the drawing in its own card, taking no room from it', () => {
-  const layer = sidebar().parentElement;
-  assert.ok(layer.classList.contains('thoughtknot-over'), 'in the layer over the drawing');
-  assert.ok(
-    !layer.querySelector('.thoughtknot-over-panels').contains(sidebar()),
-    'not stretched across with the panels',
-  );
+  const corner = sidebar().parentElement;
+  assert.ok(corner.classList.contains('thoughtknot-corner'), 'in the corner over the drawing');
+  assert.ok(corner.parentElement.classList.contains('thoughtknot-over'), 'in the layer over the drawing');
+  assert.ok(!corner.parentElement.querySelector('.thoughtknot-over-panels').contains(sidebar()), 'not with the panels');
   const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
   const card = { tag: 'div', classes: ['thoughtknot-view'] };
-  const side = {
+  const at = {
     tag: 'div',
-    classes: ['thoughtknot-dock', 'thoughtknot-explore-sidebar'],
+    classes: ['thoughtknot-corner'],
     states: [],
     ancestors: [{ tag: 'div', classes: ['thoughtknot-over'] }, card],
   };
-  assert.equal(winner(all, side, 'position').value, 'absolute');
-  assert.equal(winner(all, side, 'overflow-y').value, 'auto');
-  assert.match(winner(all, side, 'max-height').value, /--thoughtknot-room/);
-  assert.equal(winner(all, side, 'max-width').value, '18rem', 'a column on a wide card, as wide as its words need');
+  assert.equal(winner(all, at, 'position').value, 'absolute');
+  assert.equal(winner(all, at, 'overflow-y').value, 'auto');
+  assert.match(winner(all, at, 'max-height').value, /--thoughtknot-room/);
+  assert.equal(winner(all, at, 'max-width').value, '20rem', 'a column on a wide card, as wide as its words need');
 });

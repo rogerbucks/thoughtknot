@@ -41,7 +41,8 @@ async function explore(text) {
 test('the explore dock floats over the drawing, its key controls shown and the rest under More', async () => {
   assert.ok(dock().hidden, 'no dock while nothing is explored');
   await explore('Tablet');
-  assert.ok(dock().parentElement.classList.contains('thoughtknot-over'), 'in the layer over the drawing');
+  assert.ok(dock().parentElement.classList.contains('thoughtknot-corner'), 'in the corner over the drawing');
+  assert.ok(dock().parentElement.parentElement.classList.contains('thoughtknot-over'), 'in the layer over it');
   const body = dock().querySelector('.thoughtknot-dock-body'),
     more = dock().querySelector('.thoughtknot-dock-more');
   assert.ok(named(body, 'Back') && named(body, 'Next'), 'Back and Next are key controls');
@@ -80,8 +81,9 @@ test('the fold is kept for the session: a card drawn again opens its dock folded
 test('folded, only its head shows, so the drawing is whole again', () => {
   const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
   const over = { tag: 'div', classes: ['thoughtknot-over'] };
-  const folded = { tag: 'div', classes: ['thoughtknot-dock', 'is-folded'], states: [], ancestors: [over] };
-  const body = { tag: 'div', classes: ['thoughtknot-dock-body'], states: [], ancestors: [folded, over] };
-  assert.equal(winner(all, folded, 'position').value, 'absolute');
+  const corner = { tag: 'div', classes: ['thoughtknot-corner'], states: [], ancestors: [over] };
+  const folded = { tag: 'div', classes: ['thoughtknot-dock', 'is-folded'], states: [], ancestors: [corner, over] };
+  const body = { tag: 'div', classes: ['thoughtknot-dock-body'], states: [], ancestors: [folded, corner, over] };
+  assert.equal(winner(all, corner, 'position').value, 'absolute');
   assert.equal(winner(all, body, 'display').value, 'none');
 });
