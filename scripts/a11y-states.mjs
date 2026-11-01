@@ -196,8 +196,8 @@ async function reducedMotion(page, { plant } = {}) {
   }
 }
 
-/** Opens the details of the first box at a phone's width, and measures every button on its sheet: the details sheet, or
- * the phone's control sheet that holds them on a touch screen. */
+/** Opens the details of the first box at a phone's width, and measures every button on its sheet. On a touch screen the
+ * phone's control sheet holds them; otherwise the details sheet does. */
 async function sheetTargets(page, { plant } = {}) {
   const { browser } = page;
   // a phone has a touch screen. A Mac's Chrome says it has a mouse, which gives a line its compact 28 pixels
