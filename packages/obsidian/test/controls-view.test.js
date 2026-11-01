@@ -31,6 +31,7 @@ test('a 2D card has a View dock in the corner: less detail, more detail and smal
   assert.match(names[0], /^Less detail/);
   assert.match(names[1], /^More detail/);
   assert.ok(keys()[2].hasAttribute('aria-pressed'), 'the labels switch says if it is on');
+  assert.ok(dock().querySelector('.thoughtknot-dock-more').hidden, 'no More with nothing under it');
 });
 
 // proves: controls_keys

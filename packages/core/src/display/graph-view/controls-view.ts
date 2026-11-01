@@ -24,9 +24,9 @@ export function viewDock(root: HTMLElement, state: ViewState, menu: ViewMenu, ac
   };
   const dock = renderDock(root, word('controls.view'), ['thoughtknot-view-dock']);
   const [less, more, labels] = fillDock(dock, [
-    { name: word('controls.less'), icon: 'minus-circle', run: () => step(-1) },
-    { name: word('controls.more'), icon: 'plus-circle', run: () => step(1) },
-    { name: switchName('labels'), icon: 'tag', run: () => act.turn('labels', !state.switches.labels) },
+    { name: word('controls.less'), icon: 'fold-vertical', run: () => step(-1) },
+    { name: word('controls.more'), icon: 'unfold-vertical', run: () => step(1) },
+    { name: switchName('labels'), icon: 'text', run: () => act.turn('labels', !state.switches.labels) },
   ]);
   // each says the rung it goes to, and is off at the end of the ladder; the labels switch says if it is on
   const show = () => {
