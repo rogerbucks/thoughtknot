@@ -7,6 +7,8 @@ import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { load, GRAPH, show } from './host/view-notes.js';
+import { readFileSync } from 'node:fs';
+import { rules, winner } from './host/cascade.js';
 
 before(() => build());
 
@@ -46,4 +48,24 @@ test('its buttons step the ladder and turn the switch, and the menu agrees', asy
   keys()[2].click();
   await until(() => keys()[2].getAttribute('aria-pressed') !== pressed);
   assert.notEqual(keys()[2].getAttribute('aria-pressed'), pressed);
+});
+
+// proves: controls_dock
+// Roger chose the Zen-led refresh on 1 Nov 2026: the two "View" cards become one card with labelled tiles.
+test('the chip and the docks make one card, each key control a tile with its name', () => {
+  const chipName = el.querySelector('.thoughtknot-chip-fold').textContent;
+  const dockName = dock().querySelector('.thoughtknot-dock-name').textContent;
+  assert.notEqual(chipName.replace(/[▾▴]/, '').trim(), dockName, 'not two cards both called View');
+  assert.equal(dockName, 'Detail');
+  const words = keys().map((b) => b.querySelector('.thoughtknot-badge-text')?.textContent);
+  assert.deepEqual(words.slice(0, 2), ['Less detail', 'More detail']);
+  assert.ok(words[2], 'the labels switch has its name too');
+  const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
+  const over = { tag: 'div', classes: ['thoughtknot-over'] };
+  const corner = { tag: 'div', classes: ['thoughtknot-corner'], states: [], ancestors: [over] };
+  const inner = { tag: 'div', classes: ['thoughtknot-dock'], states: [], ancestors: [corner, over] };
+  assert.match(winner(all, corner, 'border').value, /1px solid var\(--gn-border-focus\)/, 'the corner is the card');
+  assert.equal(winner(all, corner, 'box-shadow').value, 'var(--gn-shadow-s)');
+  assert.equal(winner(all, inner, 'border')?.value ?? 'none', 'none', 'no card inside the card');
+  assert.equal(winner(all, inner, 'box-shadow')?.value ?? 'none', 'none');
 });

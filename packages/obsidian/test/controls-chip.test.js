@@ -67,5 +67,5 @@ test('folded, it keeps the banner and each status or alert, and hides the rest',
   const all = rules(css, 'thoughtknot');
   const over = { tag: 'div', classes: ['thoughtknot-over'] };
   const corner = { tag: 'div', classes: ['thoughtknot-corner'], states: [], ancestors: [over] };
-  assert.equal(winner(all, corner, 'pointer-events').value, 'none', 'taps pass through its gaps to the drawing');
+  assert.equal(winner(all, corner, 'width').value, 'fit-content', 'as wide as its words, leaving the drawing free');
 });

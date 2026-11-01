@@ -654,50 +654,51 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
-/* The top start corner of the drawing (§25, controls_chip, controls_dock): the chip that says what the drawing shows,
-   then the docks, stacked. It floats over the drawing, never shrinking it or pushing it down. On a wide card it is a
-   column at most 20rem wide. On a narrow one it spans the top, no taller than 45% of the drawing. It scrolls inside
-   itself. Its gaps let taps through to the drawing. */
+/* The top start corner of the drawing (§25, controls_chip, controls_dock). It holds the chip that says what the
+   drawing shows, then the docks, stacked in one card. Roger chose the Zen-led refresh on 1 Nov 2026: one controls
+   card, not two. It floats over the drawing, never shrinking it or pushing it down. It is as wide as its words need.
+   That is at most 20rem on a wide card, and the drawing's width less its margins on a narrow one. It is no taller than
+   45% of the drawing on a narrow card, and scrolls inside itself. Every card over the drawing looks the same: this,
+   the 3D view's pad and the mini-map. They share an edge, corners and a shadow, so they read as one set. */
 .thoughtknot-over > .thoughtknot-corner {
   position: absolute;
   top: var(--gn-space-2);
-  inset-inline: var(--gn-space-2);
+  inset-inline-start: var(--gn-space-2);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--gn-space-2);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--gn-space-2));
   max-height: calc(0.45 * var(--thoughtknot-room, 60vh));
   overflow-y: auto;
-  pointer-events: none;
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
 }
 @media (min-width: 1024px) {
   .thoughtknot-over > .thoughtknot-corner {
-    inset-inline-end: auto;
     max-width: 20rem;
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
-/* A control dock, or the chip: a card in the corner. Every card over the drawing looks the same: these, the 3D view's
-   pad and the mini-map. They share an edge, corners and a shadow, so they read as one set. Folded, only its head
-   shows. Its dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
+/* The chip and each dock: a part of that card, a hairline between them. Folded, only its head shows. Its dials and
+   buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
 .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-2);
   max-width: 100%;
   margin: 0;
-  border: 1px solid var(--gn-border-focus);
-  border-radius: var(--gn-radius-m);
+  border: none;
   padding: var(--gn-space-2) var(--gn-space-3);
-  background: var(--gn-bg);
-  box-shadow: var(--gn-shadow-s);
-  pointer-events: auto;
+  background: none;
+  box-shadow: none;
+}
+.thoughtknot-corner > .thoughtknot-dock:not([hidden]) {
+  border-top: 1px solid var(--gn-border);
 }
 .thoughtknot-corner > .thoughtknot-dock[hidden] {
   display: none;
-}
-.thoughtknot-corner > .thoughtknot-dock:not(.is-folded) {
-  align-self: stretch;
 }
 /* the chip folded keeps what must not be missed: an exploration's or a filter's banner, and each status or alert */
 .thoughtknot-chip.is-folded > .thoughtknot-chip-body > :not(.thoughtknot-untangle, [role='status'], [role='alert']) {
@@ -723,8 +724,37 @@
 .thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
   display: none;
 }
+/* A dock's key controls are quiet tiles: each its icon, then its name, as wide as the card (controls_keys). They
+   show a ground only under the pointer, so the card reads as one calm list. A switch turned on is marked at its start. */
+.thoughtknot-dock.has-keys > .thoughtknot-dock-body > button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gn-space-2);
+  width: 100%;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--gn-text-normal);
+}
+.thoughtknot-dock.has-keys > .thoughtknot-dock-body > button:hover:not(:disabled) {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-dock.has-keys > .thoughtknot-dock-body > button[aria-pressed='true'] {
+  box-shadow: inset 3px 0 0 var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+/* the card's folds are quiet too: words and a mark, no box */
+.thoughtknot-corner :is(.thoughtknot-chip-fold, .thoughtknot-dock-fold) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
 /* On a tablet a dock of key controls folds to a rail of their icons, so the drawing keeps the room (controls_keys) */
 @media (min-width: 600px) and (max-width: 1023px) {
+  .thoughtknot-dock.has-keys.is-folded .thoughtknot-badge-text {
+    display: none;
+  }
   .thoughtknot-dock.has-keys.is-folded > .thoughtknot-dock-body {
     display: flex;
     flex-direction: column;
@@ -3769,6 +3799,10 @@ body.thoughtknot-easier-reading
   display: grid;
   grid-template-columns: repeat(2, auto);
   gap: var(--gn-space-half-2);
+}
+/* its moves show as arrows alone, two by two: each is named on hover and to a screen reader */
+.thoughtknot-space-pad > .thoughtknot-dock-body .thoughtknot-badge-text {
+  display: none;
 }
 /* how to move it, in short steps at the foot, kept clear of the buttons */
 .thoughtknot-space-help {

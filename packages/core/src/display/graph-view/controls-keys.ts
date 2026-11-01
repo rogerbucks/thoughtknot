@@ -1,7 +1,8 @@
 // A view's key controls, as data (editor spec §25, controls_keys). Roger, 1 Nov 2026: a view's key controls stay on
 // screen without menu diving, with an expander for the rest. Each view lists its key controls, most used first. One
-// shared dock draws them: the first five as buttons in its body, the rest under More. So every view has the same
-// controls in the same place. On a tablet-sized window the dock folds to a rail of their icons (styles.css).
+// shared dock draws them: the first five as tiles in its body, each with its icon and name, the rest under More. So
+// every view has the same controls in the same place. On a tablet-sized window the dock folds to a rail of their icons
+// (styles.css).
 import { button } from '../button.ts';
 import type { ControlDock } from './controls-dock.ts';
 
@@ -19,7 +20,5 @@ export const KEYS_SHOWN = 5;
 export function fillDock(dock: ControlDock, keys: readonly KeyControl[]): HTMLButtonElement[] {
   dock.el.addClass('has-keys'); // a tablet folds it to a rail of these
   if (keys.length <= KEYS_SHOWN && dock.more.parentElement) dock.more.parentElement.hidden = true; // no empty More
-  return keys.map((k, i) =>
-    i < KEYS_SHOWN ? button(dock.body, k.name, k.icon, k.run) : button(dock.more, k.name, k.icon, k.run, k.name),
-  );
+  return keys.map((k, i) => button(i < KEYS_SHOWN ? dock.body : dock.more, k.name, k.icon, k.run, k.name));
 }
