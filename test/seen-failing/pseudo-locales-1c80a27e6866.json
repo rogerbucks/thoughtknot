@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "a longer language fits every box > styles.css fixes the width of no box that holds words",
+  "seen_failing_first": false,
+  "evidence": "Only its list of boxes that hold no words grew, for the rule builder's colour dot; the check itself did not change, so it passed before as it does now."
+}
