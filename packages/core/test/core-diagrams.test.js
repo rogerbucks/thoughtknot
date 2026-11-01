@@ -121,6 +121,28 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
     }
   });
 
+  // proves: density_shaded
+  test('the density view shades each square by how many things it holds, in the link colour', async () => {
+    // a tight star of 40 round one hub, and a loose line of 20 off it, as the density view's own test has
+    const star = Array.from({ length: 40 }, (_, i) => thing(`s${i}`));
+    const line = Array.from({ length: 20 }, (_, i) => thing(`l${i}`));
+    const links = [
+      ...star.map((t) => ({ from: 'hub', type: 'KNOWS', to: t.key })),
+      ...line.map((t, i) => ({ from: i ? `l${i - 1}` : 'hub', type: 'KNOWS', to: t.key })),
+    ];
+    const crowd = { things: [thing('hub'), ...star, ...line], links };
+    const r = await registry().drawDiagram(coreDiagramType('density'), crowd, { width: 600, height: 400 });
+    assert.ok(r.ok, r.message);
+    const squares = r.value.match(/<polygon[^>]*class="thoughtknot-tile"[^>]*>/g) ?? [];
+    assert.ok(squares.length > 1, `the squares are drawn as tiles: ${r.value.match(/<polygon[^>]*>/g)?.slice(0, 2)}`);
+    assert.ok(
+      squares.every((t) => !/fill="none"/.test(t)),
+      'each is filled, not an outline',
+    );
+    const shades = new Set(squares.map((t) => /fill-opacity="([\d.]+)"/.exec(t)?.[1]));
+    assert.ok(shades.size > 1, `squares differ in shade: ${[...shades]}`);
+  });
+
   test('a region or a thing in a token the theme does not know is outlined, never filled over the things', async () => {
     const r = pluginRegistry({ timeLimit: Infinity });
     const region = { id: 'zone', style: 'ring.1', kind: 'group', x: 0, y: 0, width: 200, height: 200 };

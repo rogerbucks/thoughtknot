@@ -4,7 +4,8 @@
 // A group holds the things inside its box. A link names its two ends by its title, as Graphviz writes `a->b`. The
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
-import { FADED, seeThrough } from '../../colour-numbers.ts';
+import { FADED, rgbaOf, seeThrough, solidOver } from '../../colour-numbers.ts';
+import { backgroundOf } from './space-canvas-painter.ts';
 import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
@@ -33,14 +34,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     if (faded)
       for (const part of ['fill', 'line', 'text'] as const)
         if (paint[part]) paint[part] = seeThrough(paint[part], FADED);
-    const key = `${paint.fill ?? ''}|${paint.line ?? ''}|${paint.text ?? ''}`;
-    let token = tokens.get(key);
-    if (!token) {
-      token = `svg.${tokens.size}`;
-      tokens.set(key, token);
-      table.set(token, paint);
-    }
-    return token;
+    return tokenOf(tokens, table, paint);
   };
   const marks: DrawMark[] = [];
   const titleOf = (g: Element) => g.querySelector(':scope > title')?.textContent?.trim() ?? '';
@@ -80,6 +74,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     const around = holding(m.x, m.y, m.width, m.height, m.id);
     if (around) m.group = around;
   }
+  marks.push(...tilesOf(svg, (paint) => tokenOf(tokens, table, paint)));
   const keys = new Set<string>();
   const boxes: Placed[] = [];
   // what the card hides (thoughtknot-hidden) is not drawn in 3D either; what it fades is faded (focus-marks.ts)
@@ -161,6 +156,34 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
+}
+
+/**
+ * The shaded squares of `svg`, as a density view draws them, each a box of its own shade, kept by `intern`. They are no
+ * things, so they are lifted as they lie (space_density_tiles). Before, the view in space was blank. A square is solid:
+ * its shade is mixed with the page behind, so its sides in space do not pile up darker.
+ */
+function tilesOf(svg: SVGSVGElement, intern: (paint: Paint) => string): DrawMark[] {
+  const view = svg.ownerDocument.defaultView,
+    behind = rgbaOf(backgroundOf(svg));
+  return Array.from(svg.querySelectorAll('polygon.thoughtknot-tile'), (shape, i): DrawMark => {
+    const { x, y, width, height } = boxOf(shape);
+    const look = view?.getComputedStyle(shape),
+      fill = look && look.fill !== 'none' ? solidOver(look.fill, Number(look.fillOpacity), behind) : undefined;
+    return { id: `f:${i}`, kind: 'box', style: intern(fill ? { fill } : {}), x, y, width, height };
+  });
+}
+
+/** The token `paint` is kept under in `table`: one for each paint, by what it paints in `tokens`. */
+function tokenOf(tokens: Map<string, string>, table: Map<string, Paint>, paint: Paint): string {
+  const key = `${paint.fill ?? ''}|${paint.line ?? ''}|${paint.text ?? ''}`;
+  let token = tokens.get(key);
+  if (!token) {
+    token = `svg.${tokens.size}`;
+    tokens.set(key, token);
+    table.set(token, paint);
+  }
+  return token;
 }
 
 /** Whether the arrowhead of the link drawn in `g` sits nearer its first point than its last. */

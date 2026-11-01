@@ -9,6 +9,7 @@ import type { DrawMark } from './drawing-marks.ts';
 import { COLOUR_TOKENS, impliedLine } from './graphviz-json.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
+import { SHADES } from './view-types/density-view.ts';
 
 /** Graphviz's points in one CSS pixel. */
 export const PT = 3 / 4;
@@ -68,14 +69,25 @@ function colourOf(token: string, line: boolean): string {
  * as `ring.1` or `thing`, are not known: written as they are, they would be painted black.
  */
 export function knownStyle(style: string): boolean {
+  if (shadeOf(style) !== undefined) return true;
   const base = style.replace(/\.dashed$/, '').replace(/\.outline$/, '');
   return base
     .split('.line.')
     .every((t) => t === 'none' || /^kind\.\d+$|^reading\.\d+(?:\.label)?$/.test(t) || (t !== 'line' && t in HEX));
 }
 
+/**
+ * How see-through a density view's square is, `density.0` to the most crowded (density_shaded): it is drawn in the link
+ * colour, paler with fewer things. None for any other token.
+ */
+function shadeOf(style: string): number | undefined {
+  const m = /^density\.(\d+)$/.exec(style);
+  return m ? Math.min(1, (Number(m[1]) + 1) / SHADES) : undefined;
+}
+
 /** How a style token paints: its fill (none for an outline) and line, and whether the line is dashed. */
 function paintOf(style: string): { fill: string; line: string; dashed: boolean } {
+  if (shadeOf(style) !== undefined) return { fill: colourOf('link', false), line: 'none', dashed: false };
   let s = style;
   const dashed = s.endsWith('.dashed');
   if (dashed) s = s.slice(0, -'.dashed'.length);
@@ -129,8 +141,11 @@ export function layoutSvg(laid: LaidMarks): string {
       const d = `M${pt(first ?? [0, 0])}${m.curve ? 'C' : 'L'}${rest.map(pt).join(' ')}`;
       return `<path fill="none" stroke="${p.line}"${lineAttrs(m, p.dashed)} d="${d}"/>`;
     }
-    const fill = m.kind === 'group' ? 'none' : p.fill;
-    const paint = ` fill="${fill}" stroke="${m.kind === 'group' ? colourOf(m.style.replace(/\.dashed$/, ''), true) : p.line}"${lineAttrs(m, p.dashed)}`;
+    const fill = m.kind === 'group' ? 'none' : p.fill,
+      shade = shadeOf(m.style);
+    // a shaded square is a tile, which the view in space reads too (space_density_tiles)
+    const tile = shade === undefined ? ['', ''] : [' class="thoughtknot-tile"', ` fill-opacity="${num(shade)}"`];
+    const paint = `${tile[0]} fill="${fill}" stroke="${m.kind === 'group' ? colourOf(m.style.replace(/\.dashed$/, ''), true) : p.line}"${lineAttrs(m, p.dashed)}${tile[1]}`;
     const outline = 'outline' in m ? m.outline : undefined;
     if (outline) {
       const ps = outline.points;

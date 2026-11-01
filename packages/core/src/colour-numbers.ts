@@ -105,3 +105,12 @@ export function seeThrough(written: string, alpha: number): string {
   const [r, g, b, a] = rgbaOf(written).map((n, i) => (i < 3 ? Math.round(n * 255) : n));
   return `rgb(${r} ${g} ${b} / ${+((a ?? 0) * alpha).toFixed(3)})`;
 }
+
+/** `fill`, `alpha` of it seen over `behind`, as one solid colour; see-through where nothing is painted behind. */
+export function solidOver(fill: string, alpha: number, behind: Rgba): string {
+  if (!(alpha < 1)) return fill;
+  if (!behind[3]) return seeThrough(fill, alpha);
+  const f = rgbaOf(fill),
+    mix = (i: number) => Math.round(255 * ((f[i] ?? 0) * alpha + (behind[i] ?? 0) * (1 - alpha)));
+  return `rgb(${mix(0)}, ${mix(1)}, ${mix(2)})`;
+}
