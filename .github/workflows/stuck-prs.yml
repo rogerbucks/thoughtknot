@@ -4,6 +4,12 @@ name: Stuck pull requests
 # tells its owner: on 24 Oct 2026 seven sat that way for hours. After each push to main, and each half hour, this
 # labels such a pull request merge-conflict and comments once, which wakes the session watching it. When the conflict is
 # gone, the label comes off. It checks nothing out and runs no code from a pull request.
+#
+# A pull request can also wait with every job green: a required check never ran on its head. GitHub's CodeQL scans
+# only a pull request against main, so one stacked on another branch gets no CodeQL check, and when its base merges and
+# it moves to main nothing runs it (1 Nov 2026: #1430, #1671). Only a push starts the checks, and a push made with the
+# workflow's own token starts nothing, so this labels it checks-missing and comments once, asking the owner to merge main
+# in and push. It waits until the head is 20 minutes old and no check is still running, so a fresh push is not flagged.
 on:
   push:
     branches: [main]
@@ -24,17 +30,31 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - name: Label and comment on each auto-merge pull request that conflicts with main
+      - name: Label and comment on each auto-merge pull request that conflicts with main, or waits on a check that never ran
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
         run: |
           # GitHub works out mergeability after a push, so give it a moment, then ask twice
           sleep 30
+          now=$(date -u +%s)
           for n in $(gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate --jq '.[] | select(.auto_merge != null and (.draft | not)) | .number'); do
             state=$(gh api "repos/$REPO/pulls/$n" --jq '.mergeable_state')
             if [ "$state" = unknown ]; then sleep 10; state=$(gh api "repos/$REPO/pulls/$n" --jq '.mergeable_state'); fi
             labelled=$(gh api "repos/$REPO/issues/$n/labels" --jq 'any(.[]; .name == "merge-conflict")')
+            flagged=$(gh api "repos/$REPO/issues/$n/labels" --jq 'any(.[]; .name == "checks-missing")')
+            sha=$(gh api "repos/$REPO/pulls/$n" --jq '.head.sha')
+            # the checks the head has: "missing" when a required one never ran and none is still running
+            checks=$(gh api "repos/$REPO/commits/$sha/check-runs?per_page=100" --jq 'if any(.check_runs[]; .status != "completed") then "running" elif ([.check_runs[].name] | index("CodeQL") and index("dependency-review")) then "complete" else "missing" end')
+            pushed=$(gh api "repos/$REPO/commits/$sha" --jq '.commit.committer.date | fromdateiso8601')
+            if [ "$state" = blocked ] && [ "$checks" = missing ] && [ $((now - pushed)) -gt 1200 ] && [ "$flagged" = false ]; then
+              gh api -X POST "repos/$REPO/issues/$n/labels" -f 'labels[]=checks-missing' --silent
+              gh api -X POST "repos/$REPO/issues/$n/comments" --silent -f body="This pull request has auto-merge on and every job is green, but a required check (CodeQL or dependency-review) never ran on its head, so it cannot merge. This happens to a pull request that moved to main when the branch it was stacked on merged. Owner: merge main into the branch and push; the push starts the checks."
+              echo "flagged #$n: checks missing"
+            elif [ "$checks" != missing ] && [ "$flagged" = true ]; then
+              gh api -X DELETE "repos/$REPO/issues/$n/labels/checks-missing" --silent
+              echo "cleared #$n: checks ran"
+            fi
             if [ "$state" = dirty ] && [ "$labelled" = false ]; then
               gh api -X POST "repos/$REPO/issues/$n/labels" -f 'labels[]=merge-conflict' --silent
               gh api -X POST "repos/$REPO/issues/$n/comments" --silent -f body="This pull request has auto-merge on, but it conflicts with main, so it cannot merge. Owner: merge main into the branch, resolve the conflict and push."
