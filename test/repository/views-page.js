@@ -99,7 +99,7 @@ export function pageStates(open) {
         [
           { title: 'Export as SVG', icon: 'download', onClick() {} },
           'separator',
-          { title: 'Delete', icon: 'trash', warning: true, onClick() {} },
+          { title: 'Delete the page', icon: 'trash', warning: true, onClick() {} },
         ],
         { x: 20, y: 20 },
         page.window.document,

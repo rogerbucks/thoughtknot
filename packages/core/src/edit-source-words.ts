@@ -54,4 +54,11 @@ export const EDIT_SOURCE_WORDS = {
   'edit.name-empty': 'A name cannot be empty',
   'edit.name-same': 'The name is as it was',
   'edit.not-here': '{thing} is not written in a block this card can change',
+  'edit.new-thing': 'New thing',
+  'edit.add-child': 'Add a child',
+  'edit.add-sibling': 'Add a sibling',
+  'edit.delete': 'Delete',
+  'edit.deleted': '{thing} deleted. Undo puts it back.',
+  'edit.many-blocks': '{thing} is written in more than one block: change it in the text',
+  'edit.together': '{thing} is written together with other things: change it in the text',
 } as const;
