@@ -285,16 +285,21 @@ export const touchesStay = (
  * It is never a small knot in the last way's frame (Roger, 1 Nov 2026). With something `picked`, the view stays on it.
  */
 export const orbitSwitched = (orbit: Orbit, space: SpaceMarks, picked: Block | null, width: number, height: number) =>
-  picked ? centredOn(orbit, picked) : orbitFit(space, width / height, nameRoom(width, height));
+  picked ? centredOn(orbit, picked) : orbitFit(space, width / height, nameRoom(space, width, height));
 
 /** Half a name's width and a name's height, in pixels: a fitted view keeps them clear at its edges. */
 const NAME_HALF = 56,
   NAME_TALL = 16;
 /**
- * How much of a screen `width` by `height` pixels a fitted view fills, across and up. The names beside the outmost
- * things then show whole (space_names_fit). Roger, 1 Nov 2026: names ran off the frame. It always fills half.
+ * How much of a screen `width` by `height` pixels a fitted view of `space` fills, across and up. Balls have their
+ * names beside them, so the outmost names then show whole (space_names_fit). Roger, 1 Nov 2026: names ran off the
+ * frame. It always fills half. Cards and blocks hold their names, so they fill it all.
  */
-export const nameRoom = (width: number, height: number): [number, number] => [
-  Math.max(0.5, 1 - (2 * NAME_HALF) / width),
-  Math.max(0.5, 1 - (2 * NAME_TALL) / height),
-];
+export const nameRoom = (
+  space: Pick<SpaceMarks, 'round' | 'cards'>,
+  width: number,
+  height: number,
+): [number, number] =>
+  space.round && !space.cards
+    ? [Math.max(0.5, 1 - (2 * NAME_HALF) / width), Math.max(0.5, 1 - (2 * NAME_TALL) / height)]
+    : [1, 1];

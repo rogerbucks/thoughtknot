@@ -166,4 +166,4 @@ export function aimOf(onGlobe: SpaceMarks | false, orbit: Orbit, point: Vec3, di
 
 /** The camera that shows all of `space` on a screen `width` by `height` pixels, its outmost names whole. */
 export const fitIn = (space: SpaceMarks, width: number, height: number): Orbit =>
-  orbitFit(space, width / height, nameRoom(width, height));
+  orbitFit(space, width / height, nameRoom(space, width, height));

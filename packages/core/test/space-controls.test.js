@@ -299,7 +299,7 @@ test('changing how the view shows the graph fits the whole of it again, unless a
   const now = orbitSwitched(was, small, null, 600, 400);
   assert.deepEqual(
     now,
-    orbitFit(small, 1.5, nameRoom(600, 400)),
+    orbitFit(small, 1.5, nameRoom(small, 600, 400)),
     "the smaller way fills the view, not a knot in the wider way's frame",
   );
   assert.ok(now.distance < was.distance / 4);
@@ -313,9 +313,9 @@ test('a fitted view leaves room at its edges for the names, so the outmost ones 
   const block = (of, x, y) => ({ id: of, style: 's', of, x, y, width: 20, depth: 20, floor: 0, tall: 20 });
   const blocks = [];
   for (let i = 0; i < 12; i++) blocks.push(block(`t${i}`, i * 200, (i % 3) * 300));
-  const space = { blocks, lines: [], labels: [], arrows: [], least: [0, 0, 0], most: [2220, 620, 20] };
+  const space = { blocks, lines: [], labels: [], arrows: [], least: [0, 0, 0], most: [2220, 620, 20], round: true };
   const [w, h] = [600, 400],
-    room = nameRoom(w, h);
+    room = nameRoom(space, w, h);
   for (const orbit of [orbitFit(space, w / h, room), orbitSwitched(orbitFit(space), space, null, w, h)]) {
     const m = spaceMatrix(orbit, w / h, 100000);
     for (const b of blocks) {
@@ -327,5 +327,7 @@ test('a fitted view leaves room at its edges for the names, so the outmost ones 
       );
     }
   }
-  assert.deepEqual(nameRoom(80, 40), [0.5, 0.5], 'on a tiny screen it still fills half');
+  assert.deepEqual(nameRoom(space, 80, 40), [0.5, 0.5], 'on a tiny screen it still fills half');
+  for (const holds of [{}, { round: true, cards: true }])
+    assert.deepEqual(nameRoom(holds, w, h), [1, 1], 'cards and blocks hold their names, so they fill the screen');
 });
