@@ -4,7 +4,8 @@
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
 import { CHIP_LINES, renderChip } from './controls-chip';
-import { setIcon } from '../host';
+import { renderSheet } from './controls-sheet';
+import { isPhone, setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { PictureStatus, ViewOptions } from './view-options';
 
@@ -201,6 +202,7 @@ export function overDrawing(
   // the top start corner: the chip of what the drawing shows, then the docks, under any panel opened (§25)
   const corner = layer.createDiv({ cls: 'thoughtknot-corner' }),
     chip = renderChip(corner);
+  if (isPhone()) renderSheet(layer, root, corner); // on a phone, in a sheet at the foot of the drawing (controls_sheet)
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
   const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))
