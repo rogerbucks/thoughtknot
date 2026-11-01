@@ -792,6 +792,15 @@
   flex-direction: column;
   gap: var(--gn-space-1);
 }
+/* A table's cell being typed in (§72, edit_cells): the field fills the cell, and a value refused says why under it. */
+.thoughtknot-cell-input {
+  width: 100%;
+  min-height: 2rem;
+}
+.thoughtknot-cell-said {
+  color: var(--gn-text-error);
+  font-size: var(--gn-font-size-s);
+}
 /* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
    It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */
 .thoughtknot-over > .thoughtknot-phone-sheet {

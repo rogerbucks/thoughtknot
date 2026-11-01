@@ -2,7 +2,7 @@
 // the key the thing already uses, as one change to the one block that writes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addedNear, deleted, linkedTo, renamed } from '../src/thing-edits.ts';
+import { addedNear, deleted, linkedTo, propertySet, renamed } from '../src/thing-edits.ts';
 import { readNote } from '../src/drawing.ts';
 
 const BLOCK = `// graph: reader
@@ -112,5 +112,25 @@ describe('a link drawn from one thing to another', () => {
     });
     assert.deepEqual(linkedTo(reading, 'reader', 'large_reader', 'question'), { reason: 'That link is already there' });
     assert.ok('reason' in linkedTo(reading, 'reader', 'bare', 'nobody'));
+  });
+});
+
+describe('a value typed in a cell', () => {
+  const reading = readNote([BLOCK]);
+
+  // proves: edit_cells
+  test('is written as the type the property holds, and empty words take it away', () => {
+    const r = propertySet(reading, 'reader', 'large_reader', 'price', '4');
+    assert.equal(r.now, BLOCK.replace('price: 3', 'price: 4'), 'a number stays a number');
+    const t = propertySet(reading, 'reader', 'bare', 'price', '2');
+    assert.equal(t.now, BLOCK.replace('(bare:Option)', '(bare:Option {price: 2})'), 'as other things hold it');
+    const gone = propertySet(reading, 'reader', 'large_reader', 'price', ' ');
+    assert.equal(gone.now, BLOCK.replace(', price: 3', ''));
+  });
+
+  // proves: edit_cells
+  test('is refused, with why, where its type cannot read it', () => {
+    const r = propertySet(reading, 'reader', 'large_reader', 'price', 'cheap');
+    assert.ok('reason' in r && /number/i.test(r.reason), JSON.stringify(r));
   });
 });

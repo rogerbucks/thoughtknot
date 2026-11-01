@@ -4,11 +4,12 @@
 // - Added (edit_quick_add): a child linked from the thing, or a sibling linked from its parent, as the graph links them.
 // - Deleted (edit_delete): the thing and every link to it, with the comma that parted each from its neighbour.
 // - Linked (edit_link_drag): a link from one thing to another, of the type the first uses most.
+// - A property set (edit_cells): a value typed in a table's cell, read as the type the property holds.
 import gs from '@thoughtknot/graph-spec';
 import { addThing } from './add-thing.ts';
 import { blankText, items } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
-import { setProperty } from './inspector.ts';
+import { parseValue, propertiesOf, setProperty, type PropType } from './inspector.ts';
 import { appended, withoutItem } from './linked-list.ts';
 import { quoted } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -138,4 +139,33 @@ export function linkedTo(reading: NoteReading, graph: string, from: string, to: 
   if (g.out(from, rel).some(([, , t]) => t === to)) return { reason: word('edit.link-there') };
   const [block, was] = home;
   return { block, was, now: appended(was, [`(${from})-[:${rel}]->(${to})`]) };
+}
+
+/** The type property `prop` holds in `graph`: on thing `key`, else on any other thing; else as `words` reads. */
+function typeIn(reading: NoteReading, graph: string, key: string, prop: string, words: string): PropType {
+  const own = propertiesOf(reading, graph, { thing: key }).find((p) => p.key === prop);
+  if (own) return own.type;
+  for (const k of reading.world[graph]?.nodes.keys() ?? []) {
+    const p = propertiesOf(reading, graph, { thing: k }).find((x) => x.key === prop);
+    if (p) return p.type;
+  }
+  const v = words.trim();
+  return /^-?\d+(\.\d+)?$/.test(v) ? 'number' : /^(true|false)$/i.test(v) ? 'boolean' : 'text';
+}
+
+/**
+ * The block that writes thing `key` of `graph`, with property `prop` now `words`, read as the type the property
+ * holds. Empty words take the property away. A value its type cannot read is refused, with why.
+ */
+export function propertySet(reading: NoteReading, graph: string, key: string, prop: string, words: string): BlockEdit {
+  const parsed = words.trim() ? parseValue(typeIn(reading, graph, key, prop, words), words) : null;
+  if (parsed && !parsed.ok) return { reason: parsed.error };
+  const ours = [...reading.texts.entries()].filter(([, t]) => graphOfBlock(t) === graph);
+  let reason: string | null = null;
+  for (const [block, was] of ours) {
+    const r = setProperty(was, graph, { thing: key }, prop, parsed ? parsed.gql : null);
+    if (r.ok && r.text !== was) return { block, was, now: r.text };
+    if (!r.ok) reason ??= r.reason;
+  }
+  return { reason: reason ?? word('edit.name-same') };
 }

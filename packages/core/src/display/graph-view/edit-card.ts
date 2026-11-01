@@ -10,11 +10,12 @@
 // - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
-import { addedNear, deleted, renamed } from '../../thing-edits.ts';
+import { addedNear, deleted, propertySet, renamed } from '../../thing-edits.ts';
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
 import { accept } from './estimate-actions';
+import type { CellWrite } from './table-edit';
 import { boxIn, type Target } from './taps';
 import type { ViewOptions } from './view-options';
 
@@ -85,16 +86,18 @@ export class EditCard {
         if (!this.el || e.ctrlKey || e.metaKey) return;
         // Insert adds a child, or Option+Enter on a Mac with no Insert key. Never Tab: it moves the focus on, so the keys
         // never trap it. Backspace deletes too, as a Mac's delete key sends it.
+        // in a table's cell, F2 and the delete keys are the cell's own (table-edit.ts)
         const alt = e.altKey,
-          enter = e.key === 'Enter';
+          enter = e.key === 'Enter',
+          cell = !!(e.target as Element | null)?.closest?.('.thoughtknot-grid tbody td');
         const act =
-          e.key === 'F2' && !alt
+          e.key === 'F2' && !alt && !cell
             ? () => this.rename()
             : (e.key === 'Insert' && !alt) || (enter && alt && !e.shiftKey)
               ? () => this.add('child')
               : enter && e.shiftKey && !alt
                 ? () => this.add('sibling')
-                : (e.key === 'Delete' || e.key === 'Backspace') && !alt
+                : (e.key === 'Delete' || e.key === 'Backspace') && !alt && !cell
                   ? () => this.remove()
                   : (e.key === 'l' || e.key === 'L') && !e.shiftKey
                     ? () => this.linking.find()
@@ -113,6 +116,18 @@ export class EditCard {
     const h = handed.get(this.o.graph);
     if (!h || Date.now() - h.at > HAND_ON_MS || !this.o.reading.world[this.o.graph]?.nodes.has(h.key)) return null;
     return { key: h.key };
+  }
+
+  /** How a table's cell is written: its Thing column as the name, else as the property; none where nothing is written. */
+  cells(): CellWrite | undefined {
+    if (!this.writable()) return undefined;
+    return (key, column, prop, words) => {
+      const r =
+        column === 0
+          ? renamed(this.o.reading.texts, this.o.graph, key, words)
+          : propertySet(this.o.reading, this.o.graph, key, prop, words);
+      return 'reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now);
+    };
   }
 
   /** Whether a thing can be edited here: never where the card is read-only, nor with nowhere to write. */
