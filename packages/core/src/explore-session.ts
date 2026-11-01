@@ -41,6 +41,8 @@ export class ExploreSession {
   private map: ExploreMap;
   private chosen: ExploreShape;
   private spots: Map<string, ExploreSpot> | undefined;
+  /** Whether the links that loop back between branches are shown; off, as in a classic mind map. */
+  private others = false;
   private readonly trail = new Trail<Step>();
   private readonly drawing: GraphDrawing;
 
@@ -85,6 +87,29 @@ export class ExploreSession {
     return this.map.perBranch;
   }
 
+  /** Whether `key` is shown. */
+  has(key: string): boolean {
+    return this.map.has(key);
+  }
+
+  /** The thing `key`'s branch was opened from; undefined for the centre or a thing not shown. */
+  parentOf(key: string): string | undefined {
+    return this.map.parentOf(key);
+  }
+
+  /**
+   * Which of the centre's branches `key` is on, counted from 0 in the order they are written: its colour. -1 for the
+   * centre or a thing not shown.
+   */
+  branchIndex(key: string): number {
+    let at = key;
+    for (let up = this.map.parentOf(at); up !== undefined; up = this.map.parentOf(at)) {
+      if (up === this.map.centre) return this.map.childrenOf(up).indexOf(at);
+      at = up;
+    }
+    return -1;
+  }
+
   /** Every thing shown, the centre first. */
   keys(): string[] {
     return this.map.keys();
@@ -92,7 +117,19 @@ export class ExploreSession {
 
   /** What is shown, round which centre and in which shape, in one line: it changes when the picture does. */
   stamp(): string {
-    return `${this.chosen} ${this.map.centre} ${this.map.keys().join('\n')}`;
+    return `${this.chosen} ${this.others ? 'others ' : ''}${this.map.centre} ${this.map.keys().join('\n')}`;
+  }
+
+  /** Whether the cross-links are shown, faint and dashed. Off, only the steps along the branches are drawn. */
+  get otherLinks(): boolean {
+    return this.others;
+  }
+
+  /** Shows or hides the cross-links (Roger, 1 Nov 2026: no loop-back lines by default). False when unchanged. */
+  setOtherLinks(on: boolean): boolean {
+    if (on === this.others) return false;
+    this.others = on;
+    return true;
   }
 
   /** Whether there is a step to go back to, or one to go forward to again. */
@@ -161,12 +198,16 @@ export class ExploreSession {
       .filter((b) => b.hidden > 0 || (b.open && b.key !== this.map.centre));
   }
 
-  /** The things shown and the links between them, numbered as `edges` numbers the links: what the card hides the rest by. */
+  /**
+   * The things shown and the links drawn between them, numbered as `edges` numbers the links: what the card hides the
+   * rest by. Cross-links are left out unless Other links is on (explore_tree_from_centre).
+   */
   shown(edges: readonly FocusEdge[]): Kept {
     const things = new Set(this.map.keys());
     const kept = new Set<number>();
+    const cross = this.others ? new Set<number>() : this.cross(edges);
     edges.forEach((e, i) => {
-      if (things.has(e.from) && things.has(e.to)) kept.add(i);
+      if (things.has(e.from) && things.has(e.to) && !cross.has(i)) kept.add(i);
     });
     return { things, edges: kept };
   }

@@ -1037,7 +1037,9 @@
       "rule_look_bands",
       "rule_look_massive",
       "rule_look_try_save",
-      "rule_look_builder"
+      "rule_look_builder",
+      "rule_look_remove",
+      "rule_look_off"
     ]
   },
   "CV1": {

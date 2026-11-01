@@ -748,6 +748,14 @@ never data.
   properties a graph holds. `whenOf` writes the test from a property, a comparison and a value, and `sayDraft` says it.
   `testsOf` reads a simple test back. `ruleFinds` counts what a rule finds. `ruleStarts` gives quick starts from the
   graph's own data. `savedRules` (rule-write.ts) lists the rules a card may change.
+- `rule-remove.ts` — taking a saved rule out, or moving it up (rule_look_remove). `ruleRemoved` finds it by its
+  meaning and view, and takes its line out with its comma. `ruleMovedUp` swaps it with the rule above, so it wins a
+  clash. The form puts Copy, Up and a bin beside each saved rule.
+- `RuleWrite.was` and `RuleWrite.removed` (rule-write.ts). A rule opened to change keeps `was`, its old meaning, so a
+  rename changes it in place. In reading view a rule is only tried as gone, with `removed`. The Obsidian host keeps
+  the note as it was, for one Undo (`rule-removal.ts`).
+- `off: true` on a rule's Look turns it off (rule_look_off). It stays in the style graph and draws nothing. `rulesIn`
+  leaves it out unless asked `withOff`, as the form does to offer turning it on.
 
 #### Checking the words of a style
 

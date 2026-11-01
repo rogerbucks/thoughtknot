@@ -9,7 +9,7 @@
 // BADGES, BADGE_GLYPHS, LOOK_PARTS, BAND_HUES, isRule, lookToken and the rule functions (§56, rules and looks) came on 30 Oct 2026.
 // So did ruleProps, ruleRefusal and withTriedRules (rule_look_try_save). The rule built in plain words came on 1 Nov
 // 2026 (rule_look_builder). That is LINKS_FIELD, NUMBER_OPS, RULE_OPS and savedRules. It is also ruleChoices,
-// ruleFinds, ruleStarts, sayDraft, testsOf and whenOf.
+// ruleFinds, ruleStarts, sayDraft, testsOf and whenOf. ruleRemoved and ruleMovedUp (rule_look_remove) came the same day.
 export const VALUES_LATE = [
   'LINKS_FIELD',
   'NUMBER_OPS',
@@ -21,6 +21,8 @@ export const VALUES_LATE = [
   'testsOf',
   'whenOf',
   'savedRules',
+  'ruleRemoved',
+  'ruleMovedUp',
   'BADGES',
   'BADGE_GLYPHS',
   'BAND_HUES',

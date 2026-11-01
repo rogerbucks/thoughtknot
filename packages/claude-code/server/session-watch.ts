@@ -1,13 +1,17 @@
 // What stops the editor server's process besides an idle period (spec §26, cc_server_stops):
 // - its input closing, as it does when the session that started it ends;
-// - the process that started it exiting, seen as the parent changing;
+// - the process that started it exiting, seen as the parent changing, or on Windows its number gone or reused;
 // - a stop signal, which is how `/graph stop` ends it.
 // It keeps no file to be found by, so nothing is left behind.
 import { word } from '@thoughtknot/core';
+import { execFile } from 'node:child_process';
 import { fstatSync } from 'node:fs';
 
 /** How often the process checks that the one that started it is still there. */
 export const PARENT_CHECK_MS = 1000;
+
+/** How often, on Windows, it checks that the process with its parent's number is its parent, and not a newer one. */
+export const PARENT_START_CHECK_MS = 5000;
 
 /** The signals that stop the server at once. */
 export const STOP_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'] as const;
@@ -39,6 +43,28 @@ export function parentGone(parent: number): boolean {
   }
 }
 
+/**
+ * Whether the process now holding the parent's number started after this one, from its start time as PowerShell
+ * says it. Windows soon gives a gone process's number to a new one. Only a newer process can hold it then.
+ */
+export function numberReused(started: string, since: number = performance.timeOrigin): boolean {
+  const at = Date.parse(started.trim());
+  return Number.isFinite(at) && at > since;
+}
+
+/** Asks, on Windows, when the process with the number `parent` started; `then` gets PowerShell's answer. */
+function askStart(parent: number, then: (started: string) => void): void {
+  const line = `[System.Diagnostics.Process]::GetProcessById(${parent}).StartTime.ToUniversalTime().ToString('o')`;
+  execFile(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', line],
+    { windowsHide: true, timeout: PARENT_START_CHECK_MS },
+    (error, stdout) => {
+      if (!error) then(String(stdout));
+    },
+  );
+}
+
 /** Calls `stop` with why when the session ends, the parent exits or a stop signal comes; once. */
 export function watchSession(stop: (reason: string) => void, watch: { input: boolean } = { input: true }): void {
   let done = false;
@@ -57,4 +83,10 @@ export function watchSession(stop: (reason: string) => void, watch: { input: boo
   setInterval(() => {
     if (parentGone(parent)) once(word('server.parent-exited'));
   }, PARENT_CHECK_MS).unref();
+  if (process.platform === 'win32')
+    setInterval(() => {
+      askStart(parent, (started) => {
+        if (numberReused(started)) once(word('server.parent-exited'));
+      });
+    }, PARENT_START_CHECK_MS).unref();
 }

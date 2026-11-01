@@ -229,7 +229,8 @@ export class FakeElement {
   }
   // an event made by new Event or new CustomEvent, sent as dispatch sends one
   dispatchEvent(ev) {
-    this.dispatch(ev.type, ev.detail === undefined ? {} : { detail: ev.detail });
+    const { type, ...fields } = ev; // a made event's own fields, as a WheelEvent's are in the fake
+    this.dispatch(type ?? ev.type, ev.detail === undefined ? fields : { ...fields, detail: ev.detail });
     return true;
   }
   click() {
@@ -530,6 +531,14 @@ export function installGlobals(doc) {
       }
       takeRecords() {
         return [];
+      }
+    },
+  );
+  set(
+    'WheelEvent',
+    class {
+      constructor(type, init = {}) {
+        Object.assign(this, init, { type });
       }
     },
   );

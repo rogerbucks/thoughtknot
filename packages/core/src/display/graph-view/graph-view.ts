@@ -129,7 +129,7 @@ export class GraphView extends Lifecycle {
       find: (b) => this.sel.untangle.toggleFind(b),
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),
-      fullScreen: () => this.fullscreen.show(),
+      fullScreen: (zen) => this.fullscreen.show(zen, root),
       space: () => this.spaces.pressed(),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.source.toggle(b),

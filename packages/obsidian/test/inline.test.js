@@ -423,7 +423,8 @@ describe('edit here, in the card', () => {
       const el = await show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
-      assert.equal(el.querySelector('[role="tablist"]'), null);
+      // the editor's own tabs; the phone's control sheet has tabs of its own (controls_sheet)
+      assert.ok(el.querySelector('.thoughtknot-tabs[role="tablist"]') === null);
     } finally {
       env.uninstall();
     }
