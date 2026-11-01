@@ -5,10 +5,19 @@
 // - The name is written as the thing's text, into the text being edited or else into the note (thing-edits.ts).
 // - Where the card is read-only, or there is nowhere to write, it is never shown (edit_read_only).
 // - In space, where no box is on the page, it sits at the drawing's top corner (edit_every_view).
+// - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
+//   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
+// - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
+// - On a kanban board, each column has a button that adds a card there, its name open (grid-drag.ts, edit_cells).
+// Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
-import { renamed } from '../../thing-edits.ts';
+import { addedInColumn, addedNear, deleted, propertySet, renamed } from '../../thing-edits.ts';
+import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
+import { EditLink } from './edit-link';
 import { accept } from './estimate-actions';
+import { gridAdds } from './grid-drag';
+import type { CellWrite } from './table-edit';
 import { boxIn, type Target } from './taps';
 import type { ViewOptions } from './view-options';
 
@@ -22,12 +31,28 @@ export interface EditParts {
   svg: SVGSVGElement | null;
 }
 
+/** What a write hands on to the card drawn next, by graph: the thing to select, and whether to open its name. */
+const handed = new Map<string, { key: string; rename: boolean; at: number }>();
+/** How long a hand-on waits for the card drawn next, in milliseconds. */
+const HAND_ON_MS = 5000;
+
 /** The editor beside the selected thing of one card, shown for one thing at a time. */
 export class EditCard {
   private el: HTMLElement | null = null;
   private key: string | null = null;
+  /** Where the card says what a write did, or why it wrote nothing. */
+  private said: HTMLElement | null = null;
   /** Whether F2 in the drawing is listened for: from the first thing shown, once the drawing is built. */
   private keyed = false;
+  /** The handle and search that link the thing shown to another. */
+  private readonly linking = new EditLink({
+    o: () => this.o,
+    viewport: () => this.viewport,
+    key: () => this.key,
+    write: (r) => ('reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now)),
+    say: (text) => this.said?.setText(text),
+    hand: (key) => handed.set(this.o.graph, { key, rename: true, at: Date.now() }),
+  });
 
   /** For the card `card`, and what of it the editor needs, got as the card builds it. */
   constructor(
@@ -49,14 +74,84 @@ export class EditCard {
     return this.parts().svg;
   }
 
-  /** F2 in the drawing opens the name of the thing shown for typing. */
+  /**
+   * The keys of the drawing while a thing is shown: F2 renames, Insert adds a child, Shift+Enter a sibling, Delete
+   * deletes, and L links. They are taken before the drawing's own keys, so Shift+Enter never opens the box again.
+   */
   private listen(): void {
     if (this.keyed) return;
     this.keyed = true;
-    this.card.registerDomEvent(this.viewport, 'keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'F2' || !this.rename()) return;
-      e.preventDefault();
+    this.card.registerDomEvent(
+      this.viewport,
+      'keydown',
+      (e: KeyboardEvent) => {
+        if (!this.el || e.ctrlKey || e.metaKey) return;
+        // Insert adds a child, or Option+Enter on a Mac with no Insert key. Never Tab: it moves the focus on, so the keys
+        // never trap it. Backspace deletes too, as a Mac's delete key sends it.
+        // in a table's cell, F2 and the delete keys are the cell's own (table-edit.ts)
+        const alt = e.altKey,
+          enter = e.key === 'Enter',
+          cell = !!(e.target as Element | null)?.closest?.('.thoughtknot-grid tbody td');
+        const act =
+          e.key === 'F2' && !alt && !cell
+            ? () => this.rename()
+            : (e.key === 'Insert' && !alt) || (enter && alt && !e.shiftKey)
+              ? () => this.add('child')
+              : enter && e.shiftKey && !alt
+                ? () => this.add('sibling')
+                : (e.key === 'Delete' || e.key === 'Backspace') && !alt && !cell
+                  ? () => this.remove()
+                  : (e.key === 'l' || e.key === 'L') && !e.shiftKey
+                    ? () => this.linking.find()
+                    : null;
+        if (!act) return;
+        e.preventDefault();
+        e.stopPropagation();
+        void act();
+      },
+      { capture: true },
+    );
+  }
+
+  /** The thing the card drawn last handed on to this one, once and soon after: to select, its name maybe opened. */
+  handedOn(): { key: string } | null {
+    const h = handed.get(this.o.graph);
+    if (!h || Date.now() - h.at > HAND_ON_MS || !this.o.reading.world[this.o.graph]?.nodes.has(h.key)) return null;
+    return { key: h.key };
+  }
+
+  /** How a table's cell is written: its Thing column as the name, else as the property; none where nothing is written. */
+  cells(): CellWrite | undefined {
+    if (!this.writable()) return undefined;
+    return (key, column, prop, words) => {
+      const r =
+        column === 0
+          ? renamed(this.o.reading.texts, this.o.graph, key, words)
+          : propertySet(this.o.reading, this.o.graph, key, prop, words);
+      return 'reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now);
+    };
+  }
+
+  /** Offers a button per column of a kanban board drawn on the card, each adding a card there, ready to name. */
+  columns(): void {
+    const layer = this.layer();
+    if (!layer || !this.writable()) return;
+    gridAdds(this.o, layer, this.viewport, async (column) => {
+      const r = addedInColumn(this.o.reading, this.o.graph, column, word('edit.new-thing'));
+      if ('reason' in r) return r.reason;
+      handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
+      const why = await accept(this.o, r.block, r.was, r.now);
+      if (why) handed.delete(this.o.graph);
+      return why;
     });
+  }
+
+  /** The layer over the drawing, the editor's and the board's buttons' place; none on a card without one. */
+  private layer(): HTMLElement | null {
+    const layer = Array.from(this.viewport.parentElement?.children ?? []).find((c) =>
+      c.classList.contains('thoughtknot-over'),
+    );
+    return (layer as HTMLElement | undefined) ?? null;
   }
 
   /** Whether a thing can be edited here: never where the card is read-only, nor with nowhere to write. */
@@ -71,11 +166,9 @@ export class EditCard {
     if (!d || !('key' in t)) return;
     this.listen();
     this.key = t.key;
-    const layer = Array.from(this.viewport.parentElement?.children ?? []).find((c) =>
-      c.classList.contains('thoughtknot-over'),
-    );
+    const layer = this.layer();
     // only over the drawing, where no key typed reaches the drawing's own keys; a card with no such layer shows none
-    if (!(layer instanceof HTMLElement)) return;
+    if (!layer) return;
     this.el = layer.createDiv({
       cls: 'thoughtknot-edit-card',
       attr: { role: 'group', 'aria-label': word('edit.card', { thing: d.text }) },
@@ -96,6 +189,7 @@ export class EditCard {
       if (e.key === 'Enter') {
         e.preventDefault();
         void this.write(name.value).then((why) => said.setText(why ?? word('edit.renamed', { name: name.value })));
+        if (this.key) handed.set(this.o.graph, { key: this.key, rename: false, at: Date.now() });
       } else if (e.key === 'Escape') {
         e.preventDefault();
         name.value = d.text;
@@ -103,7 +197,43 @@ export class EditCard {
         this.backToBox();
       }
     });
+    const row = this.el.createDiv({ cls: 'thoughtknot-edit-actions' });
+    for (const [label, icon, run, keys] of [
+      [word('edit.add-child'), 'plus', () => void this.add('child'), 'add-child'],
+      [word('edit.add-sibling'), 'list-plus', () => void this.add('sibling'), 'add-sibling'],
+      [word('edit.delete'), 'trash-2', () => void this.remove(), 'delete'],
+    ] as const)
+      button(row, label, icon, run, label).setAttribute(
+        'title',
+        word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
+      );
+    this.linking.build(row);
+    this.said = said;
     this.place();
+    const h = handed.get(this.o.graph);
+    if (h?.key === t.key) {
+      handed.delete(this.o.graph);
+      if (h.rename) this.rename();
+    }
+  }
+
+  /** Adds a child or a sibling of the thing shown, ready to name, and hands it on to be selected in the card drawn next. */
+  private async add(as: 'child' | 'sibling'): Promise<void> {
+    if (!this.key) return;
+    const r = addedNear(this.o.reading, this.o.graph, this.key, as, word('edit.new-thing'));
+    if ('name' in r) handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
+    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
+    if (why) handed.delete(this.o.graph);
+    this.said?.setText(why ?? '');
+  }
+
+  /** Deletes the thing shown and its links, as one edit. */
+  private async remove(): Promise<void> {
+    if (!this.key) return;
+    const thing = details(this.o.reading, this.o.graph, this.key)?.text ?? this.key;
+    const r = deleted(this.o.reading.texts, this.o.graph, this.key);
+    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
+    this.said?.setText(why ?? word('edit.deleted', { thing }));
   }
 
   /** Opens the name of the thing shown for typing, all of it selected. Whether there was one to open. */
@@ -133,8 +263,9 @@ export class EditCard {
 
   /** Takes the card away. */
   hide(): void {
+    this.linking.close();
     this.el?.remove();
-    this.el = null;
+    this.el = this.said = null;
     this.key = null;
   }
 

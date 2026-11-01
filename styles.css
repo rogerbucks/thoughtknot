@@ -728,6 +728,27 @@
 }
 /* The editor beside a selected thing (§72, edit_card): a small card floating over the drawing next to the thing's box,
    never shrinking the drawing. Its name field is a 44-point target. It keeps inside the drawing on any screen. */
+/* A board's add buttons (spec §72, edit_cells): one per column, in the columns' order, at the drawing's top end corner,
+   over it. Each is a 44-point target named by its column. */
+.thoughtknot-over > .thoughtknot-grid-adds {
+  position: absolute;
+  top: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--gn-space-1);
+  max-width: 50%;
+}
+.thoughtknot-grid-adds > button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
 .thoughtknot-edit-card {
   position: absolute;
   top: var(--thoughtknot-edit-y, var(--gn-space-2));
@@ -754,6 +775,63 @@
 }
 .thoughtknot-edit-said:empty {
   display: none;
+}
+/* The editor's buttons are 44-point targets, for a finger as much as a pointer. */
+.thoughtknot-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-edit-actions > button {
+  min-width: 44px;
+  min-height: 44px;
+}
+/* Linking where things are drawn (§72, edit_link_drag). The handle is dragged to another box, and a line follows the
+   pointer. The search finds a thing by name. */
+.thoughtknot-edit-handle {
+  min-width: 44px;
+  min-height: 44px;
+  cursor: grab;
+  touch-action: none;
+}
+.thoughtknot-edit-handle::after {
+  content: '';
+  padding: 0.375rem;
+  border: 2px solid var(--gn-border-focus);
+  border-radius: 50%;
+}
+.thoughtknot-edit-line {
+  position: absolute;
+  top: var(--thoughtknot-edit-y, 0);
+  left: var(--thoughtknot-edit-x, 0);
+  z-index: 6;
+  width: var(--thoughtknot-edit-length, 0);
+  border-top: 2px dashed var(--gn-border-focus);
+  transform: rotate(var(--thoughtknot-edit-angle, 0));
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+.thoughtknot-edit-find {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-edit-find-input {
+  min-height: 44px;
+}
+.thoughtknot-edit-found {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+/* A table's cell being typed in (§72, edit_cells): the field fills the cell, and a value refused says why under it. */
+.thoughtknot-cell-input {
+  width: 100%;
+  min-height: 2rem;
+}
+.thoughtknot-cell-said {
+  color: var(--gn-text-error);
+  font-size: var(--gn-font-size-s);
 }
 /* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
    It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */

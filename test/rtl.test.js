@@ -22,6 +22,7 @@ const PLACED = {
     '.thoughtknot-quick-info': 'set beside the thing pointed at, measured on the screen',
     '.thoughtknot-thing-menu': 'opened at the point right-clicked, measured on the screen',
     '.thoughtknot-edit-card': 'set beside the selected thing, measured on the screen',
+    '.thoughtknot-edit-line': 'drawn from the link handle to the pointer, measured on the screen',
   },
   'packages/claude-code/page/page.css': {},
 };
