@@ -74,6 +74,32 @@ describe('adding and deleting where things are drawn', () => {
     }
   });
 
+  // proves: edit_quick_add
+  test('on a Mac with no Insert key, Option+Enter adds a child; the buttons say their keys', async () => {
+    const { env, el } = await tapped('q');
+    try {
+      const child = card(el)
+        .querySelectorAll('button')
+        .find((b) => b.getAttribute('aria-label') === 'Add a child');
+      assert.equal(child.getAttribute('title'), 'Add a child: Insert, or Option+Enter (Alt+Enter)');
+      assert.ok(press(el, 'Enter', { altKey: true }).defaultPrevented, 'Option+Enter is taken');
+      await until(() => note(env).includes('(q)-[:ANSWERS]->(new_thing)'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_delete
+  test('Backspace, a Mac’s delete key, deletes too', async () => {
+    const { env, el } = await tapped('large');
+    try {
+      press(el, 'Backspace', { target: thing(el, 'large') });
+      await until(() => !note(env).includes('large'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: edit_delete
   test('Delete, or the editor’s button, takes the thing and its links out as one edit', async () => {
     const { env, el } = await tapped('large');

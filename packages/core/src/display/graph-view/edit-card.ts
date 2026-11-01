@@ -71,16 +71,19 @@ export class EditCard {
       this.viewport,
       'keydown',
       (e: KeyboardEvent) => {
-        if (!this.el || e.ctrlKey || e.metaKey || e.altKey) return;
-        // Insert adds a child, never Tab: Tab always moves the focus on, so the keys never trap it
+        if (!this.el || e.ctrlKey || e.metaKey) return;
+        // Insert adds a child, or Option+Enter on a Mac with no Insert key. Never Tab: it moves the focus on, so the keys
+        // never trap it. Backspace deletes too, as a Mac's delete key sends it.
+        const alt = e.altKey,
+          enter = e.key === 'Enter';
         const act =
-          e.key === 'F2'
+          e.key === 'F2' && !alt
             ? () => this.rename()
-            : e.key === 'Insert'
+            : (e.key === 'Insert' && !alt) || (enter && alt && !e.shiftKey)
               ? () => this.add('child')
-              : e.key === 'Enter' && e.shiftKey
+              : enter && e.shiftKey && !alt
                 ? () => this.add('sibling')
-                : e.key === 'Delete'
+                : (e.key === 'Delete' || e.key === 'Backspace') && !alt
                   ? () => this.remove()
                   : null;
         if (!act) return;
@@ -145,12 +148,15 @@ export class EditCard {
       }
     });
     const row = this.el.createDiv({ cls: 'thoughtknot-edit-actions' });
-    for (const [label, icon, run] of [
-      [word('edit.add-child'), 'plus', () => void this.add('child')],
-      [word('edit.add-sibling'), 'list-plus', () => void this.add('sibling')],
-      [word('edit.delete'), 'trash-2', () => void this.remove()],
+    for (const [label, icon, run, keys] of [
+      [word('edit.add-child'), 'plus', () => void this.add('child'), 'add-child'],
+      [word('edit.add-sibling'), 'list-plus', () => void this.add('sibling'), 'add-sibling'],
+      [word('edit.delete'), 'trash-2', () => void this.remove(), 'delete'],
     ] as const)
-      button(row, label, icon, run, label);
+      button(row, label, icon, run, label).setAttribute(
+        'title',
+        word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
+      );
     this.said = said;
     this.place();
     const h = handed.get(this.o.graph);
