@@ -746,6 +746,7 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
 - `test/quality-baseline.test.js` — the baseline cannot be loosened without a reason, is whole, and says which machine measured it.
 - `test/quality-instructions.test.js` — the instruction counts in the ratchet.
+- `test/quality-suite.test.js` — the coverage reports of a suite split over machines merge into one, a line hit by any share counting as hit.
   - There is one metric for each benchmark, with a small tolerance. It is held only against counts from the same
     machine.
   - It is not measured where Valgrind cannot run, which fails only on Linux. The counts are recorded and printed until
