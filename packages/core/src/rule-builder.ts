@@ -141,12 +141,18 @@ export function sayDraft(draft: RuleDraft): string {
     .join(word('rules.say.and'));
 }
 
-const TEST = /^\s*([A-Za-z_]\w*)\s*(==|!=|>=|<=|>|<)\s*(?:"([^"]*)"|'([^']*)'|(-?\d+(?:\.\d+)?)|(true|false))\s*$/;
+// one test, its spaces already trimmed, so no part of the pattern can run slow on a long run of spaces
+const TEST = /^([A-Za-z_]\w*) ?(==|!=|>=|<=|>|<) ?(?:"([^"]*)"|'([^']*)'|(-?\d+(?:\.\d+)?)|(true|false))$/;
+/** The longest test read back, as long as a guard may be (graph-spec GUARD_LIMITS). */
+const MOST_CHARS = 1000;
 
 /** The tests of a rule's `when`, read back for the builder; null when it holds more than simple tests joined by and. */
 export function testsOf(when: string): RuleTest[] | null {
+  if (when.length > MOST_CHARS) return null;
   const tests: RuleTest[] = [];
-  for (const part of when.split(/\s+and\s+/)) {
+  // each run of spaces made one, by plain search, then split on the joining word
+  const plain = when.split(/\s/).filter(Boolean).join(' ');
+  for (const part of plain.split(' and ')) {
     const m = TEST.exec(part);
     const op = m && RULE_OPS.find((o) => OP_SIGNS[o] === m[2]);
     if (!m?.[1] || !op) return null;
