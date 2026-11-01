@@ -10,6 +10,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven, MarkPoint } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { fitText } from './fit-text.ts';
 
 /** The share of a column's width a block takes; the rest is room for links. */
 const BLOCK_SHARE = 0.6;
@@ -138,7 +139,7 @@ export function blockMarks({ shape, space }: DiagramGiven): DrawMark[] {
           style: 'text',
           x: x + bw / 2,
           y: y + bh / 2 + size / 3,
-          text: text.get(k) ?? k,
+          text: fitText(text.get(k) ?? k, Math.max(bw - 4, 1), size),
           size,
           anchor: 'middle',
           maxWidth: Math.max(bw - 4, 1),

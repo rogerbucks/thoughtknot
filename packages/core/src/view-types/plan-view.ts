@@ -11,6 +11,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven, MarkPoint } from '../plugin-diagrams.ts';
 import { dayOf, type ShapeThing } from '../types-shape.ts';
+import { fitText } from './fit-text.ts';
 
 /** The share of the width kept for names on the left. */
 const NAMES_SHARE = 0.25;
@@ -69,7 +70,7 @@ export function planMarks({ shape, space }: DiagramGiven): DrawMark[] {
         style: 'text',
         x: names - 4,
         y: r * rh + rh / 2 + size / 3,
-        text: t.text,
+        text: fitText(t.text, Math.max(names - 8, 1), size),
         size,
         anchor: 'end',
         maxWidth: Math.max(names - 8, 1),

@@ -5,6 +5,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { fitText } from './fit-text.ts';
 
 /** The fewest and most values a property may have to make the columns. */
 const FEWEST_COLUMNS = 2;
@@ -117,7 +118,7 @@ export function gridMarks({ shape, space }: DiagramGiven): DrawMark[] {
       style: 'text',
       x: x + width / 2,
       y: head / 2 + nameSize / 3,
-      text: value,
+      text: fitText(value, width * (1 - 2 * PAD_SHARE), nameSize),
       size: nameSize,
       anchor: 'middle',
       maxWidth: width * (1 - 2 * PAD_SHARE),
@@ -131,7 +132,7 @@ export function gridMarks({ shape, space }: DiagramGiven): DrawMark[] {
         style: 'text',
         x: side - nameSize / 2,
         y: (top[r] ?? 0) + card / 2 + nameSize / 3,
-        text: kind,
+        text: fitText(kind, side - nameSize, nameSize),
         size: nameSize,
         anchor: 'end',
         maxWidth: side - nameSize,
@@ -166,7 +167,7 @@ export function gridMarks({ shape, space }: DiagramGiven): DrawMark[] {
       style: 'text',
       x: x + w / 2,
       y: y + h / 2 + Math.min(nameSize, h * 0.6) / 3,
-      text: t.text,
+      text: fitText(t.text, w * 0.9, Math.min(nameSize, h * 0.6)),
       size: Math.min(nameSize, h * 0.6),
       anchor: 'middle',
       maxWidth: w * 0.9,

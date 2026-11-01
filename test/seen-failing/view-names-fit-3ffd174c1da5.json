@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-names-fit.test.js",
+  "test": "the containment view cuts a long name to its room",
+  "seen_failing_first": false,
+  "evidence": "Guards the fix already merged in #1731, so it passes against the code before."
+}
