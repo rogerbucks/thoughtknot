@@ -127,12 +127,17 @@ async function readCard(env, note, n = 0) {
   await until(() => !!el.querySelector('svg'));
   return el;
 }
-/** Opens the Rule form of the card in `el`, fills it as `rule` says, and sends it; gives what the form says. */
+const OPEN = 'Highlight things that match a rule';
+/**
+ * Opens the Highlight things form of the card in `el`, fills it as `rule` says, and sends it; gives what the form
+ * says. The colour, badge and line it does not give are left as None, not as the form's own first picks.
+ */
 function makeRule(el, rule) {
-  labelled(el, 'Rule').click();
+  labelled(el, OPEN).click();
   const form = el.querySelector('.thoughtknot-rule-form');
   assert.equal(form.hidden, false, 'the form opens');
-  for (const [name, value] of Object.entries(rule)) form.querySelector(`[name="${name}"]`).value = value;
+  const given = { colour: '', badge: '', line: '', ...rule };
+  for (const [name, value] of Object.entries(given)) form.querySelector(`[name="${name}"]`).value = value;
   form.dispatch('submit');
   return form;
 }
@@ -145,7 +150,7 @@ describe('rule_look_try_save', () => {
     const env = await load({ files: { [PATH]: note } });
     try {
       const el = await readCard(env, note);
-      assert.equal(labelled(el, 'Rule').getAttribute('aria-expanded'), 'false');
+      assert.equal(labelled(el, OPEN).getAttribute('aria-expanded'), 'false');
       makeRule(el, DONE);
       await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
       assert.equal(node(el, 'walls').querySelector('.thoughtknot-rule-badge')?.textContent, '✓', 'drawn at once');

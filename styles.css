@@ -302,9 +302,10 @@
 .thoughtknot-rule-line.is-dotted {
   border-top-style: dotted;
 }
-/* Adding a rule from the card (§56, rule_look_try_save): a Rule button beside the legend opens a short form. In
-   reading view a rule is only tried, and the card says so with a Back to saved button. A rule that cannot be read
-   says why under the form. */
+/* Highlighting things by a rule, from the card (§56, rule_look_try_save, rule_look_builder). A Highlight things button
+   beside the legend opens a form in three plain steps: find, show them with, call it. Quick starts and the rules saved
+   sit above as chips. Each step is a row that wraps on a narrow screen. In reading view a rule is only tried, and the
+   card says so with a Back to saved button. A rule that cannot be read says why under the form. */
 .thoughtknot-rule-maker {
   display: flex;
   flex-wrap: wrap;
@@ -313,19 +314,117 @@
 }
 .thoughtknot-rule-form {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--gn-space-1);
+  flex-direction: column;
+  gap: var(--gn-space-2);
   flex-basis: 100%;
+  max-width: 44rem;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+}
+.thoughtknot-rule-step {
+  font-size: var(--gn-font-size-xs);
+  font-weight: var(--gn-font-weight-semibold);
+  color: var(--gn-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.thoughtknot-rule-starts,
+.thoughtknot-rule-test,
+.thoughtknot-rule-picks,
+.thoughtknot-rule-preview,
+.thoughtknot-rule-actions,
+.thoughtknot-rule-written {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-rule-starts:empty {
+  display: none;
+}
+.thoughtknot-rule-starts .thoughtknot-rule-step {
+  flex-basis: 100%;
+}
+.thoughtknot-rule-find {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-rule-chip {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: var(--gn-font-size-xs);
+}
+.thoughtknot-rule-word {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-muted);
+  min-width: 3.5em;
+}
+.thoughtknot-rule-found {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-normal);
+}
+.thoughtknot-rule-found.is-empty {
+  color: var(--gn-text-muted);
+  font-style: italic;
+}
+.thoughtknot-rule-pick {
+  min-width: 2.2em;
+  min-height: 2em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.thoughtknot-rule-pick[aria-pressed='true'] {
+  border-color: var(--gn-accent);
+  box-shadow: 0 0 0 1px var(--gn-accent);
+}
+.thoughtknot-rule-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: var(--thoughtknot-swatch);
+  vertical-align: middle;
+}
+.thoughtknot-rule-pick .thoughtknot-rule-line {
+  margin: 0;
+}
+.thoughtknot-rule-sample {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 2px solid var(--thoughtknot-swatch, var(--gn-text-muted));
+  background: var(--gn-bg);
+}
+.thoughtknot-rule-sample.is-bold {
+  border-width: 4px;
+}
+.thoughtknot-rule-sample.is-dashed {
+  border-style: dashed;
+}
+.thoughtknot-rule-sample.is-dotted {
+  border-style: dotted;
+}
+.thoughtknot-rule-means {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-muted);
 }
 .thoughtknot-rule-field {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   font-size: var(--gn-font-size-xs);
   color: var(--gn-text-muted);
 }
+.thoughtknot-rule-field input {
+  max-width: 24rem;
+}
 .thoughtknot-rule-refused {
-  flex-basis: 100%;
   color: var(--gn-text-error);
 }
 .thoughtknot-rule-refused:empty {
