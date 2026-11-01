@@ -273,6 +273,7 @@ const CLIPS = {
 const HOLDS_NO_WORDS = {
   '.thoughtknot-swatch': 'a line in a colour of the drawing',
   '.thoughtknot-rule-line': 'a sample of a rule’s line; its words sit beside it',
+  '.thoughtknot-rule-swatch': 'a dot in a colour a rule may take; its name is the button’s label',
   '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
   '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',

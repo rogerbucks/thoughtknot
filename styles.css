@@ -302,9 +302,10 @@
 .thoughtknot-rule-line.is-dotted {
   border-top-style: dotted;
 }
-/* Adding a rule from the card (§56, rule_look_try_save): a Rule button beside the legend opens a short form. In
-   reading view a rule is only tried, and the card says so with a Back to saved button. A rule that cannot be read
-   says why under the form. */
+/* Highlighting things by a rule, from the card (§56, rule_look_try_save, rule_look_builder). A Highlight things button
+   beside the legend opens a form in three plain steps: find, show them with, call it. Quick starts and the rules saved
+   sit above as chips. Each step is a row that wraps on a narrow screen. In reading view a rule is only tried, and the
+   card says so with a Back to saved button. A rule that cannot be read says why under the form. */
 .thoughtknot-rule-maker {
   display: flex;
   flex-wrap: wrap;
@@ -313,19 +314,117 @@
 }
 .thoughtknot-rule-form {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: var(--gn-space-1);
+  flex-direction: column;
+  gap: var(--gn-space-2);
   flex-basis: 100%;
+  max-width: 44rem;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+}
+.thoughtknot-rule-step {
+  font-size: var(--gn-font-size-xs);
+  font-weight: var(--gn-font-weight-semibold);
+  color: var(--gn-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.thoughtknot-rule-starts,
+.thoughtknot-rule-test,
+.thoughtknot-rule-picks,
+.thoughtknot-rule-preview,
+.thoughtknot-rule-actions,
+.thoughtknot-rule-written {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-rule-starts:empty {
+  display: none;
+}
+.thoughtknot-rule-starts .thoughtknot-rule-step {
+  flex-basis: 100%;
+}
+.thoughtknot-rule-find {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-rule-chip {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: var(--gn-font-size-xs);
+}
+.thoughtknot-rule-word {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-muted);
+  min-width: 3.5em;
+}
+.thoughtknot-rule-found {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-normal);
+}
+.thoughtknot-rule-found.is-empty {
+  color: var(--gn-text-muted);
+  font-style: italic;
+}
+.thoughtknot-rule-pick {
+  min-width: 2.2em;
+  min-height: 2em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.thoughtknot-rule-pick[aria-pressed='true'] {
+  border-color: var(--gn-accent);
+  box-shadow: 0 0 0 1px var(--gn-accent);
+}
+.thoughtknot-rule-swatch {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: var(--thoughtknot-swatch);
+  vertical-align: middle;
+}
+.thoughtknot-rule-pick .thoughtknot-rule-line {
+  margin: 0;
+}
+.thoughtknot-rule-sample {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 2px solid var(--thoughtknot-swatch, var(--gn-text-muted));
+  background: var(--gn-bg);
+}
+.thoughtknot-rule-sample.is-bold {
+  border-width: 4px;
+}
+.thoughtknot-rule-sample.is-dashed {
+  border-style: dashed;
+}
+.thoughtknot-rule-sample.is-dotted {
+  border-style: dotted;
+}
+.thoughtknot-rule-means {
+  font-size: var(--gn-font-size-xs);
+  color: var(--gn-text-muted);
 }
 .thoughtknot-rule-field {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   font-size: var(--gn-font-size-xs);
   color: var(--gn-text-muted);
 }
+.thoughtknot-rule-field input {
+  max-width: 24rem;
+}
 .thoughtknot-rule-refused {
-  flex-basis: 100%;
   color: var(--gn-text-error);
 }
 .thoughtknot-rule-refused:empty {
@@ -522,38 +621,69 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
-/* A control dock (§25, controls_dock), as the explore sidebar is: a card floating over the drawing, never shrinking it
-   or pushing it down. On a wide card it is a column at the top start corner. On a narrow one it is a strip across the
-   top, no taller than 45% of the drawing. Either scrolls inside itself. Folded, only its head shows, as a tab. Its
-   dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
-.thoughtknot-over > .thoughtknot-dock {
+/* The top start corner of the drawing (§25, controls_chip, controls_dock): the chip that says what the drawing shows,
+   then the docks, stacked. It floats over the drawing, never shrinking it or pushing it down. On a wide card it is a
+   column at most 20rem wide. On a narrow one it spans the top, no taller than 45% of the drawing. It scrolls inside
+   itself. Its gaps let taps through to the drawing. */
+.thoughtknot-over > .thoughtknot-corner {
   position: absolute;
   top: var(--gn-space-2);
   inset-inline: var(--gn-space-2);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--gn-space-2);
   max-height: calc(0.45 * var(--thoughtknot-room, 60vh));
   overflow-y: auto;
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .thoughtknot-over > .thoughtknot-corner {
+    inset-inline-end: auto;
+    max-width: 20rem;
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+  }
+}
+/* A control dock, or the chip: a card in the corner. Folded, only its head shows. Its dials and buttons are 44-point
+   targets, and the shape in use is pressed, so said by more than colour. */
+.thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  max-width: 100%;
   margin: 0;
   border: 1px solid var(--gn-border);
   border-radius: var(--gn-radius-m);
   padding: var(--gn-space-2) var(--gn-space-3);
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-l);
+  pointer-events: auto;
 }
-.thoughtknot-over > .thoughtknot-dock[hidden] {
+.thoughtknot-corner > .thoughtknot-dock[hidden] {
   display: none;
 }
-@media (min-width: 1024px) {
-  .thoughtknot-over > .thoughtknot-dock {
-    inset-inline-end: auto;
-    max-width: 18rem;
-    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
-  }
+.thoughtknot-corner > .thoughtknot-dock:not(.is-folded) {
+  align-self: stretch;
 }
-.thoughtknot-over > .thoughtknot-dock.is-folded {
-  inset-inline-end: auto;
+/* the chip folded keeps what must not be missed: an exploration's or a filter's banner, and each status or alert */
+.thoughtknot-chip.is-folded > .thoughtknot-chip-body > :not(.thoughtknot-untangle, [role='status'], [role='alert']) {
+  display: none;
+}
+.thoughtknot-chip-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-chip-body > * {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.thoughtknot-chip-fold {
+  align-self: flex-start;
+  min-height: 44px;
+}
+.thoughtknot-corner > .thoughtknot-dock.is-folded {
   padding: var(--gn-space-1);
 }
 .thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
