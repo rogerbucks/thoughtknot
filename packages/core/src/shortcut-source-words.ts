@@ -39,7 +39,7 @@ export const SHORTCUT_SOURCE_WORDS = {
   'shortcut.rename': 'Rename the selected thing where it is shown',
   'shortcut.rename.keys': 'F2',
   'shortcut.add-child': 'Add a child linked from the selected thing',
-  'shortcut.add-child.keys': 'Tab',
+  'shortcut.add-child.keys': 'Insert',
   'shortcut.add-sibling': 'Add a sibling beside the selected thing',
   'shortcut.add-sibling.keys': 'Shift+Enter',
   'shortcut.delete': 'Delete the selected thing and its links',

@@ -5,7 +5,7 @@
 // - The name is written as the thing's text, into the text being edited or else into the note (thing-edits.ts).
 // - Where the card is read-only, or there is nowhere to write, it is never shown (edit_read_only).
 // - In space, where no box is on the page, it sits at the drawing's top corner (edit_every_view).
-// - Tab adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
+// - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
@@ -61,7 +61,7 @@ export class EditCard {
   }
 
   /**
-   * The keys of the drawing while a thing is shown: F2 renames, Tab adds a child, Shift+Enter a sibling, and Delete
+   * The keys of the drawing while a thing is shown: F2 renames, Insert adds a child, Shift+Enter a sibling, and Delete
    * deletes. They are taken before the drawing's own keys, so Shift+Enter never opens the box again.
    */
   private listen(): void {
@@ -72,12 +72,11 @@ export class EditCard {
       'keydown',
       (e: KeyboardEvent) => {
         if (!this.el || e.ctrlKey || e.metaKey || e.altKey) return;
-        // Tab only on the selected thing's own box: elsewhere it moves the focus on, so the keys never trap it
-        const onBox = (e.target as Element | null)?.closest?.('[data-key]')?.getAttribute('data-key') === this.key;
+        // Insert adds a child, never Tab: Tab always moves the focus on, so the keys never trap it
         const act =
           e.key === 'F2'
             ? () => this.rename()
-            : e.key === 'Tab' && !e.shiftKey && onBox
+            : e.key === 'Insert'
               ? () => this.add('child')
               : e.key === 'Enter' && e.shiftKey
                 ? () => this.add('sibling')

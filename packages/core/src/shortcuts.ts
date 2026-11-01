@@ -35,7 +35,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'outline', place: 'drawing', keys: ['o'] },
   { id: 'menu', place: 'drawing', keys: ['ContextMenu', 'F10'] },
   { id: 'rename', place: 'drawing', keys: ['F2'] },
-  { id: 'add-child', place: 'drawing', keys: ['Tab'] },
+  { id: 'add-child', place: 'drawing', keys: ['Insert'] },
   { id: 'add-sibling', place: 'drawing', keys: ['Enter'] },
   { id: 'delete', place: 'drawing', keys: ['Delete'] },
   { id: 'shortcuts', place: 'drawing', keys: ['?'], command: true },

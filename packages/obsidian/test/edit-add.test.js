@@ -1,6 +1,6 @@
 // Adding and deleting things where they are drawn (editor spec §72, edit_quick_add, edit_delete). The built plugin,
 // loaded against the stand-ins for the page.
-// - Tab on a selected thing adds a child linked from it; Shift+Enter a sibling linked from its parent. Each is selected
+// - Insert on a selected thing adds a child linked from it; Shift+Enter a sibling linked from its parent. Each is selected
 //   in the card drawn next, its name open for typing.
 // - Delete takes the thing and its links out of the note, as one edit.
 // - The editor's buttons do the same.
@@ -40,13 +40,12 @@ const redrawn = (env) => showIn(env, 'live');
 
 describe('adding and deleting where things are drawn', () => {
   // proves: edit_quick_add
-  test('Tab adds a child linked from the thing, selected next with its name open for typing', async () => {
+  test('Insert adds a child linked from the thing, selected next with its name open for typing', async () => {
     const { env, el } = await tapped('q');
     try {
-      const away = press(el, 'Tab', { target: el.querySelector('.thoughtknot-viewport') });
-      assert.ok(!away.defaultPrevented, 'Tab off the selected box moves the focus on, as ever');
-      const ev = press(el, 'Tab');
-      assert.ok(ev.defaultPrevented, 'Tab is taken on the selected box');
+      assert.ok(!press(el, 'Tab').defaultPrevented, 'Tab moves the focus on, as ever: it never traps it');
+      const ev = press(el, 'Insert');
+      assert.ok(ev.defaultPrevented, 'Insert is taken while a thing is selected');
       await until(() => note(env).includes("(new_thing {name: 'New thing'})"));
       assert.equal(
         note(env),
