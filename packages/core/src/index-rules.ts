@@ -15,5 +15,17 @@ export {
   rulesIn,
 } from './rule-looks.ts';
 export type { LookPart, RuleLegendEntry, RuleLooks, RuleMark, RulesShown } from './rule-looks.ts';
-export { ruleProps, ruleRefusal, withTriedRules } from './rule-write.ts';
+export { ruleProps, ruleRefusal, savedRules, withTriedRules } from './rule-write.ts';
+export {
+  LINKS_FIELD,
+  NUMBER_OPS,
+  RULE_OPS,
+  ruleChoices,
+  ruleFinds,
+  ruleStarts,
+  sayDraft,
+  testsOf,
+  whenOf,
+} from './rule-builder.ts';
+export type { RuleChoices, RuleDraft, RuleField, RuleOp, RuleStart, RuleTest } from './rule-builder.ts';
 export type { RuleAsk, RuleWrite } from './rule-write.ts';

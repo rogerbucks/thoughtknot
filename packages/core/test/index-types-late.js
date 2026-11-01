@@ -11,6 +11,13 @@ export const TYPES_LATE = [
   'RulesShown',
   'RuleAsk',
   'RuleWrite',
+  // a rule built in plain words (rule_look_builder), 1 Nov 2026
+  'RuleChoices',
+  'RuleDraft',
+  'RuleField',
+  'RuleOp',
+  'RuleStart',
+  'RuleTest',
   'Citation',
   'Connected',
   'Connector',
