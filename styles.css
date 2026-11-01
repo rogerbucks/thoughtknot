@@ -670,7 +670,8 @@
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
-/* A control dock, or the chip: a card in the corner. Folded, only its head shows. Its dials and buttons are 44-point
+/* A control dock, or the chip: a card in the corner. Every card that floats over the drawing (these, the 3D view's
+   pad and the mini-map) has the same edge, corners and shadow, so they read as one set. Folded, only its head shows. Its dials and buttons are 44-point
    targets, and the shape in use is pressed, so said by more than colour. */
 .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
   display: flex;
@@ -678,11 +679,11 @@
   gap: var(--gn-space-2);
   max-width: 100%;
   margin: 0;
-  border: 1px solid var(--gn-border);
+  border: 1px solid var(--gn-border-focus);
   border-radius: var(--gn-radius-m);
   padding: var(--gn-space-2) var(--gn-space-3);
   background: var(--gn-bg);
-  box-shadow: var(--gn-shadow-l);
+  box-shadow: var(--gn-shadow-s);
   pointer-events: auto;
 }
 .thoughtknot-corner > .thoughtknot-dock[hidden] {
@@ -3467,9 +3468,10 @@ body.thoughtknot-easier-reading
   z-index: 1;
   padding: 0;
   line-height: 0;
+  overflow: hidden;
   background: var(--gn-bg);
   border: 1px solid var(--gn-border-focus);
-  border-radius: var(--gn-radius-s);
+  border-radius: var(--gn-radius-m);
   box-shadow: var(--gn-shadow-s);
   touch-action: none;
   cursor: crosshair;
@@ -3494,7 +3496,7 @@ body.thoughtknot-easier-reading
 }
 .thoughtknot-mini-frame {
   fill: var(--gn-accent);
-  fill-opacity: 0.15;
+  fill-opacity: 0.08;
   stroke: var(--gn-accent);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
@@ -3700,10 +3702,15 @@ body.thoughtknot-easier-reading
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-half-2);
-  padding: var(--gn-space-half-2);
+  padding: var(--gn-space-2);
   background: var(--gn-bg);
-  border-radius: var(--gn-radius-s);
+  border-radius: var(--gn-radius-m);
   border: 1px solid var(--gn-border-focus);
+  box-shadow: var(--gn-shadow-s);
+}
+/* its More sits in from the card's edge, as its buttons do */
+.thoughtknot-space-pad > .thoughtknot-dock-more > summary {
+  padding-inline: var(--gn-space-2);
 }
 .thoughtknot-space-pad > .thoughtknot-dock-body {
   display: grid;

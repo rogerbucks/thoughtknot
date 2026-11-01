@@ -139,6 +139,21 @@ describe('each bar and its details belong to their own drawing', () => {
       );
     }
   });
+
+  // design review, 1 Nov 2026: the corner cards, the 3D view's pad and the mini-map were three different looks
+  test('every card floating over the drawing has the same edge, corners and shadow, so they read as one set', () => {
+    const cards = [
+      '.thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip)',
+      '.thoughtknot-space-pad',
+      '.thoughtknot-mini-map',
+    ];
+    for (const sel of cards) {
+      const r = rule(sel);
+      assert.match(r, /border:\s*1px solid var\(--gn-border-focus\)/, sel);
+      assert.match(r, /border-radius:\s*var\(--gn-radius-m\)/, sel);
+      assert.match(r, /box-shadow:\s*var\(--gn-shadow-s\)/, sel);
+    }
+  });
 });
 
 describe('help behind the badge', () => {
