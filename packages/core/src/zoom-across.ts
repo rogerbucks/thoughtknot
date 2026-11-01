@@ -58,7 +58,7 @@ export class AcrossZoom extends Zoom {
   override handle(e: ZoomEvent): boolean {
     const used = super.handle(e);
     if (e.kind === 'down') {
-      if (e.pointer === 'touch' && !e.onBox && this.scrollsAcross()) this.fingers.set(e.id, e.x);
+      if (e.pointer === 'touch' && this.scrollsAcross()) this.fingers.set(e.id, e.x);
       return used || this.fingers.has(e.id);
     }
     if (e.kind === 'up' || e.kind === 'cancel') return this.fingers.delete(e.id) || used;

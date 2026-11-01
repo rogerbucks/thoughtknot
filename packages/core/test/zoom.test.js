@@ -238,6 +238,16 @@ describe('dragging', () => {
     assert.deepEqual(z.view(), before);
   });
 
+  // proves: hold_to_drag_touch
+  test('on touch, a swipe that starts on a box or link pans a zoomed-in drawing', () => {
+    const z = make();
+    z.zoomAt(2, 0, 0);
+    const x0 = z.view().x;
+    assert.equal(z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 200, y: 100, onBox: true }), true);
+    assert.equal(z.handle({ kind: 'move', id: 1, x: 150, y: 90 }), true);
+    close(z.view().x, x0 - 50);
+  });
+
   test('on touch, a fitted drawing leaves one finger to scroll the note', () => {
     const z = make();
     assert.equal(z.touchAction(), 'pan-x pan-y');
@@ -464,7 +474,7 @@ describe('a wide tree, flow or timeline on a phone scrolls one way only', () => 
     drag(z, 9000, 40);
     assert.deepEqual([z.view().x, z.view().y], [0, 0], 'and at its start');
     z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 50, y: 50, onBox: true });
-    assert.equal(z.handle({ kind: 'move', id: 2, x: 10, y: 50 }), false, 'a drag from a box is the host’s, as ever');
+    assert.equal(z.handle({ kind: 'move', id: 2, x: 10, y: 50 }), true, 'a swipe from a box scrolls it across too');
   });
 
   // proves: wide_types_phone
