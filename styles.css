@@ -1582,6 +1582,9 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
 .thoughtknot-viewport:has(.thoughtknot-grid) {
   touch-action: pan-x pan-y;
 }
+/* The table's own bar leaves room at its start for the card in the corner (the View chip), and is as tall as it. So
+   the chip sits in the bar and never covers the column heads or the first row (design review, 1 Nov 2026). On a phone
+   the chip is in the control sheet instead, so the bar keeps its room. */
 .thoughtknot-table-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1589,6 +1592,10 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   gap: var(--gn-space-2);
   padding-block: var(--gn-space-1);
   font-size: var(--gn-font-size-s);
+}
+.thoughtknot-view:has(> .thoughtknot-over > .thoughtknot-corner) .thoughtknot-table-bar {
+  min-block-size: calc(44px + 4 * var(--gn-space-2) + 2px);
+  padding-inline-start: calc(7rem + var(--gn-space-2));
 }
 .thoughtknot-table-heights {
   display: flex;

@@ -3,7 +3,8 @@
 // (table_look). How it scrolls and is worked by keys: table-keys.test.js.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load } from './host/load-plugin.js';
+import { readFileSync } from 'node:fs';
+import { build, load, root } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
@@ -167,5 +168,16 @@ describe('the look of the table, set on screen', () => {
     } finally {
       env.uninstall();
     }
+  });
+});
+
+// design review, 1 Nov 2026: the View chip in the corner covered the column heads and the first row's name
+describe('the table keeps clear of the card in the corner', () => {
+  test('its bar leaves room at its start for the View chip and is as tall as it, except on a phone', () => {
+    const css = readFileSync(`${root}styles.css`, 'utf8');
+    const sel = '.thoughtknot-view:has(> .thoughtknot-over > .thoughtknot-corner) .thoughtknot-table-bar';
+    const rule = new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+    assert.match(rule, /padding-inline-start:\s*calc\(/);
+    assert.match(rule, /min-block-size:\s*calc\(44px/);
   });
 });
