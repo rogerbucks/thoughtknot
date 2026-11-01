@@ -261,10 +261,10 @@ export async function openSpaceView(
     said.setText(label);
     glide.to(space, shown, shownOrbit, orbit);
   };
-  // the buttons that move the view, and how it is shown in 3D: in space, or lifted by groups or by links
-  const { depthButton, showHelp, help } = spacePad(el, depthWords(), move, () => showAs((depth % (GLOBE - 1)) + 1));
+  const pad = spacePad(el, depthWords(), move, () => showAs((depth % (GLOBE - 1)) + 1)), // its key controls (§25)
+    { depthButton, showHelp, help, rare } = pad;
   depthButton.hidden = depth % GLOBE === 0;
-  offerHeadset(el, depthButton.parentElement, seen, () => paints, tell); // in a headset (projection_spatial)
+  offerHeadset(el, rare, seen, () => paints, tell); // in a headset (projection_spatial)
   // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();

@@ -13,7 +13,8 @@ import type { SpaceMove } from '../../space-controls.ts';
 import { middleOf, orbitFit } from '../../space-view.ts';
 import type { Block, Orbit, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { globeFacing, globeOf } from '../../space-globe.ts';
-import { button } from '../button.ts';
+import { dockKey, renderDock } from './controls-dock.ts';
+import { fillDock } from './controls-keys.ts';
 import { reducedMotion } from './details-nav.ts';
 
 /** What the button that changes how it is shown says, for each way: as cards, in space, or lifted. */
@@ -57,31 +58,33 @@ export function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
 }
 
 /**
- * Builds the view's buttons and help line in `el`. Each button makes its `move`; the one named `shown` calls `next`,
- * to show it the next way. Gives back that button, the help line, and how to show or hide it.
+ * Builds the view's dock and help line in `el`. Each button makes its `move`; the one named `shown` calls `next`, to
+ * show it the next way. Its [ key folds the dock. Gives back that button, the help line, how to show or hide it, and
+ * where the controls used less go.
  */
 export function spacePad(el: HTMLElement, shown: string, move: (m: SpaceMove) => void, next: () => void) {
-  const pad = el.createDiv({
-    cls: 'thoughtknot-space-pad',
-    attr: { role: 'toolbar', 'aria-label': word('space.moves') },
-  });
-  button(pad, word('space.turn-left'), 'rotate-ccw', () => move({ turn: [-KEY_STEP * 2, 0] }));
-  button(pad, word('space.turn-right'), 'rotate-cw', () => move({ turn: [KEY_STEP * 2, 0] }));
-  button(pad, word('space.tilt-up'), 'chevron-up', () => move({ turn: [0, -KEY_STEP] }));
-  button(pad, word('space.tilt-down'), 'chevron-down', () => move({ turn: [0, KEY_STEP] }));
-  const depthButton = button(pad, shown, 'bar-chart-3', next);
-  const helpButton = button(pad, word('space.help'), 'help-circle', () => move({ help: true }));
+  // its key controls, in the dock every view shares (controls_keys): help waits under More
+  const dock = renderDock(el, word('space.moves'), ['thoughtknot-space-pad']);
+  const [, , , , depthButton, helpButton] = fillDock(dock, [
+    { name: word('space.turn-left'), icon: 'rotate-ccw', run: () => move({ turn: [-KEY_STEP * 2, 0] }) },
+    { name: word('space.turn-right'), icon: 'rotate-cw', run: () => move({ turn: [KEY_STEP * 2, 0] }) },
+    { name: word('space.tilt-up'), icon: 'chevron-up', run: () => move({ turn: [0, -KEY_STEP] }) },
+    { name: word('space.tilt-down'), icon: 'chevron-down', run: () => move({ turn: [0, KEY_STEP] }) },
+    { name: shown, icon: 'bar-chart-3', run: next },
+    { name: word('space.help'), icon: 'help-circle', run: () => move({ help: true }) },
+  ]);
+  el.addEventListener('keydown', (e: KeyboardEvent) => dockKey(e) && dock.fold(!dock.folded()));
   const help = el.createEl('ul', { cls: 'thoughtknot-space-help' });
   const touch = el.win.matchMedia?.('(pointer: coarse)').matches ?? false;
   for (const key of touch ? TOUCH_HELP : MOUSE_HELP) help.createEl('li', { text: word(key) });
   const showHelp = (show: boolean) => {
     help.hidden = !show;
-    helpButton.setAttribute('aria-pressed', String(show));
+    helpButton?.setAttribute('aria-pressed', String(show));
   };
   // the hints show the first time, then only behind the ? button (Roger, 25 Oct 2026: a crowded strip)
   const seen = hintsSeen(el.win);
   showHelp(!seen);
-  return { depthButton, showHelp, help };
+  return { depthButton: depthButton as HTMLButtonElement, showHelp, help, rare: dock.more };
 }
 
 /** How long the camera takes to glide from above to its slant, in milliseconds. */
