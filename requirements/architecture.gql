@@ -210,12 +210,16 @@
 (vscode)-[:IMPLEMENTS]->(host_interface),
 (built_in_exports)-[:IMPLEMENTS]->(plugin_interface)
 // ── Areas that import each other ──
-// The 51 cycles known on 26 Oct 2026 (47 in the core, 4 in the display layer), listed by the weekly review so that each
+// The 59 cycles known on 1 Nov 2026 (51 in the core, 8 in the display layer), listed by the weekly review so that each
 // new one is a decision. Untangling them is the work; recording a new one needs a reason in its pull request.
 (display_details)-[:CYCLES_WITH]->(display_graph_view),
 (display_graph_view)-[:CYCLES_WITH]->(display_links),
+(display_graph_view)-[:CYCLES_WITH]->(display_sketch),
+(display_graph_view)-[:CYCLES_WITH]->(display_rules),
 (display_graph_view)-[:CYCLES_WITH]->(display_proposals),
 (display_graph_view)-[:CYCLES_WITH]->(display_space),
+(display_graph_view)-[:CYCLES_WITH]->(display_untangle),
+(display_graph_view)-[:CYCLES_WITH]->(display_table),
 (core_editing)-[:CYCLES_WITH]->(core_reading),
 (core_editing)-[:CYCLES_WITH]->(core_properties),
 (core_editing)-[:CYCLES_WITH]->(core_problems),
@@ -235,6 +239,8 @@
 (core_massive)-[:CYCLES_WITH]->(core_views),
 (core_export)-[:CYCLES_WITH]->(core_paths),
 (core_massive)-[:CYCLES_WITH]->(core_style),
+(core_entry)-[:CYCLES_WITH]->(core_export),
+(core_entry)-[:CYCLES_WITH]->(core_views),
 (core_plugins)-[:CYCLES_WITH]->(core_view_types),
 (core_entry)-[:CYCLES_WITH]->(core_reading),
 (core_entry)-[:CYCLES_WITH]->(core_storage),
@@ -243,13 +249,13 @@
 (core_entry)-[:CYCLES_WITH]->(core_first_run),
 (core_entry)-[:CYCLES_WITH]->(core_paths),
 (core_entry)-[:CYCLES_WITH]->(core_links_images),
-(core_entry)-[:CYCLES_WITH]->(core_export),
-(core_entry)-[:CYCLES_WITH]->(core_views),
 (core_entry)-[:CYCLES_WITH]->(core_massive),
+(core_entry)-[:CYCLES_WITH]->(core_sketch),
 (core_entry)-[:CYCLES_WITH]->(core_mesh),
 (core_properties)-[:CYCLES_WITH]->(core_reading),
 (core_properties)-[:CYCLES_WITH]->(core_style),
 (core_layout)-[:CYCLES_WITH]->(core_settings),
+(core_layout)-[:CYCLES_WITH]->(core_views),
 (core_layout)-[:CYCLES_WITH]->(core_view_types),
 (core_paths)-[:CYCLES_WITH]->(core_reading),
 (core_paths)-[:CYCLES_WITH]->(core_style),
@@ -259,7 +265,9 @@
 (core_reading)-[:CYCLES_WITH]->(core_views),
 (core_editing)-[:CYCLES_WITH]->(core_settings),
 (core_links_images)-[:CYCLES_WITH]->(core_style),
+(core_plugins)-[:CYCLES_WITH]->(core_style),
 (core_plugins)-[:CYCLES_WITH]->(core_steps),
+(core_export)-[:CYCLES_WITH]->(core_proposals),
+(core_style)-[:CYCLES_WITH]->(core_views),
 (core_settings)-[:CYCLES_WITH]->(core_words),
-(core_massive)-[:CYCLES_WITH]->(core_mesh),
-(core_style)-[:CYCLES_WITH]->(core_views)
+(core_massive)-[:CYCLES_WITH]->(core_mesh)
