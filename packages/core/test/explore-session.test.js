@@ -1,8 +1,10 @@
 // One card's exploration as its controls drive it (editor spec §71): explore-session.ts, and how a card lays it out.
-// Requirements: explore_from_here, explore_badges, explore_back, explore_shapes and explore_stays_put.
+// Requirements: explore_from_here, explore_badges, explore_back, explore_shapes, explore_stays_put and
+// explore_tree_from_centre.
 // - Exploring starts from one thing with its direct links; each thing with neighbours waiting has a badge.
 // - Every change is one step on the trail, so Back and Next reach it again; a new shape lays the map out afresh.
 // - The card is given what to keep and each thing's spot, and the core's Untangle hides the rest.
+// - A link looping back between branches is hidden until Other links is on, as in a classic mind map.
 // - Laid out, the given spots go to our own engine, as a plug-in's would.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -65,10 +67,17 @@ test('the card keeps what is shown, each thing at its spot, and nothing already 
   s.open('a');
   const then = s.kept(edges);
   for (const k of first.things) assert.deepEqual(then.placed.get(k), first.placed.get(k), `${k} stays put`);
-  // a1 to b is not a step along a branch: it is a cross-link, drawn faint and dashed
+  // a1 to b is not a step along a branch: it is a cross-link, hidden as in a classic mind map
   const cross = edges.findIndex((e) => e.from === 'a1' && e.to === 'b');
   assert.deepEqual([...then.cross], [cross]);
-  assert.ok(then.edges.has(cross), 'a cross-link is still shown');
+  assert.ok(!then.edges.has(cross), 'no line loops back between branches');
+  assert.ok(!s.otherLinks);
+  const was = s.stamp();
+  assert.ok(s.setOtherLinks(true));
+  assert.notEqual(s.stamp(), was, 'the card lays it out again');
+  assert.ok(s.kept(edges).edges.has(cross), 'with Other links on, it is drawn faint and dashed');
+  assert.ok(!s.setOtherLinks(true), 'on already is no change');
+  s.setOtherLinks(false);
   assert.ok(s.setShape('top-down'));
   const down = s.kept(edges);
   assert.ok(down.placed.get('a')[1] > 0, 'a new shape lays the map out afresh');
