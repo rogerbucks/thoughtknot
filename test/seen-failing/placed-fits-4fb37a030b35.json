@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/placed-fits.test.js",
+  "test": "a card drawn off the page > Centre here leaves no zoom, pan or selection for the card drawn next, only its new centre in the middle",
+  "seen_failing_first": false,
+  "evidence": "Added at review after the fix was committed in f9224ba5; seen failing with centreLeft reverted (zoom 2.56 and the moon selected were left)."
+}

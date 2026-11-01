@@ -982,6 +982,22 @@
 .thoughtknot-explore-dial-value:focus-visible {
   outline: 2px solid var(--gn-border-focus);
 }
+/* A plug-in's diagram drawn from plain boxes, lines and text (§54): in the theme's colours, never the SVG's black
+   (view_types_themed). */
+.thoughtknot .gn-plugin-diagram .gn-mark-box {
+  fill: var(--gn-bg-alt);
+  stroke: var(--gn-text-muted);
+}
+.thoughtknot .gn-plugin-diagram .gn-mark-line {
+  stroke: var(--gn-text-muted);
+}
+.thoughtknot .gn-plugin-diagram marker path {
+  fill: var(--gn-text-muted);
+}
+.thoughtknot .gn-plugin-diagram :is(.gn-mark-label, .gn-mark-text) {
+  fill: var(--gn-text-normal);
+  font-family: var(--gn-font-ui);
+}
 /* a link between two shown things that is not a step along a branch: faint and dashed (Roger's pick, 31 Oct 2026) */
 g.edge.thoughtknot-explore-cross path {
   stroke-dasharray: 4 4;

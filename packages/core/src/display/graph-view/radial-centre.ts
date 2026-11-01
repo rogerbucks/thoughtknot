@@ -104,6 +104,18 @@ export function aroundSelected(
 }
 
 /**
+ * What a card leaves for the card drawn around a new centre, `key` (none: the usual centre), from where it is now,
+ * `at`. The new card fits, its centre in the middle. The last layout's zoom and pan do not fit the new one. Kept,
+ * they put the drawing off the frame (Roger, 1 Nov 2026: "centre here seems to always cause the drawing to fail
+ * completely"). Nor is the thing selected opened again, which would zoom in on it. Full screen, space and each
+ * box's place, to glide from, are kept.
+ */
+export function centreLeft(at: TypeLeftAt, key: string | null, places: Map<string, DOMRect>): TypeLeftAt {
+  const { zoom: _zoom, x: _x, y: _y, middle: _middle, selected: _selected, ...kept } = at;
+  return { ...kept, ...(key ? { middle: key } : {}), places };
+}
+
+/**
  * Gives `d` its way to put a thing in the centre, as `putCentre`, and says a centre picked under the strip in `root`.
  * Looked at while the card is read-only (`readOnly`), where it can be; else saved. Where the card is (`where`) and its
  * boxes are kept first, so the card drawn next takes up its place and glides its boxes. Returns the control that
@@ -123,7 +135,7 @@ export function centreStrip(
   d.putCentre = (key) => {
     if (!can() || (key === null ? !centre?.picked : key === centre?.key)) return false;
     const places = boxPlaces(root.querySelector<SVGSVGElement>('svg.thoughtknot-svg'));
-    if (where) d.leave?.({ ...where(), places });
+    if (where) d.leave?.(centreLeft(where(), key, places));
     if (look()) d.centreLook?.(key);
     else centreOn(key);
     return true;

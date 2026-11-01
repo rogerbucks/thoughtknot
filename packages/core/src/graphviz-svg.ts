@@ -63,6 +63,17 @@ function colourOf(token: string, line: boolean): string {
   return NAMES[c] ?? c;
 }
 
+/**
+ * Whether the stand-in colours know `style`, so the theme colours it (view_types_themed). A view type's own tokens, such
+ * as `ring.1` or `thing`, are not known: written as they are, they would be painted black.
+ */
+export function knownStyle(style: string): boolean {
+  const base = style.replace(/\.dashed$/, '').replace(/\.outline$/, '');
+  return base
+    .split('.line.')
+    .every((t) => t === 'none' || /^kind\.\d+$|^reading\.\d+(?:\.label)?$/.test(t) || (t !== 'line' && t in HEX));
+}
+
 /** How a style token paints: its fill (none for an outline) and line, and whether the line is dashed. */
 function paintOf(style: string): { fill: string; line: string; dashed: boolean } {
   let s = style;
