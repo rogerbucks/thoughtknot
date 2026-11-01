@@ -44,6 +44,13 @@ test('a card drawn again takes up the zoom and pan the last was left at, once; a
     const next = new Zoom({ width: 800, height: 600 }, { width: 400, height: 300 }, 'note');
     next.restore(was.zoom, was.x, was.y);
     assert.deepEqual(next.view(), v);
+    // placed, the zoom is told the viewport's size (centre_here_fits): a kept zoom survives it, drawn off the page too
+    new TypePlace().takeUp(null, null, next, () => {}, undefined, { width: 400, height: 300 });
+    assert.deepEqual(next.view(), v, 'kept as placed');
+    const off = new Zoom({ width: 800, height: 600 }, { width: 0, height: 0 }, 'note');
+    off.restore(was.zoom, was.x, was.y);
+    new TypePlace().takeUp(null, null, off, () => {}, undefined, { width: 400, height: 300 });
+    assert.deepEqual(off.view(), v, 'kept, though drawn off the page with no size');
     assert.equal(new TypePlace().take(o, 'note'), undefined, 'taken once');
     // a fitted card leaves no zoom: the next is fitted too, however its size changed
     const fitted = new Zoom({ width: 800, height: 600 }, { width: 400, height: 300 }, 'note');

@@ -137,10 +137,11 @@ describe('a card placed late, in the note', () => {
   test('Edit here on a card that is not on the page says so, rather than doing nothing', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
-      const { el } = await showLate(env, 3000);
+      const { el, placed } = await showLate(env, 3000);
       labelled(el, 'Edit here').click();
       await until(() => env.state.notices.some((n) => /not on the page/i.test(n)), 1000);
       assert.equal(el.querySelector('textarea'), null);
+      await placed; // placed while the host is still there, as in Obsidian
     } finally {
       env.uninstall();
     }
