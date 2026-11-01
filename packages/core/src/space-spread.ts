@@ -20,6 +20,7 @@ import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
 import { isCluster } from './space-cards.ts';
 import { isJoint, jointsBetween, partsNear, withoutJoints } from './space-parts.ts';
+import { spreadToRoom } from './space-room.ts';
 import type { SpaceGroup } from './space-cards.ts';
 import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
@@ -194,12 +195,12 @@ export function spreadSpace(
     radius.set(m.of, flat ? Math.max(m.width, m.height) / 2 : BALL_LARGER * radiusOf(count.get(m.of) ?? 0));
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
-  // where the drawing put them are spaced as the drawing is. A trunk's joints then sit between the things kept apart
+  // where the drawing put them are spread evenly, so they stand clear. A trunk's joints sit between those kept apart
   if (!drawn) {
     const apart = new Map([...centre].filter(([k]) => !isJoint(k)));
     keepApart(apart, radius, ROOM * options.spacing);
     for (const [k, at] of jointsBetween(shape, apart)) centre.set(k, [...at]);
-  }
+  } else spreadToRoom(centre, boxes, marks, cards, radius); // larger in space, so spread apart (space_room_as_drawn)
   for (const m of boxes) {
     const c = centre.get(m.of) as Vec3,
       r = radius.get(m.of) ?? 0;
