@@ -71,6 +71,7 @@ export class GraphView extends Lifecycle {
   private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
   private readonly glide = new LayoutGlide(() => this.viewport); // laid out again, it glides there (layout_glide)
   private readonly edits = new EditCard(this, () => ({ viewport: this.viewport, o: this.o, svg: this.svg })); // §72
+  private readonly tableHands = () => ({ open: (t: Target) => this.open(t, false, true), edit: this.edits.cells() });
   // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
@@ -197,7 +198,7 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
-    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram, (t) => this.open(t, false, true));
+    this.table = drawnApart(overDrawing(root, this.viewport, this), this.o.diagram, this.tableHands());
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
@@ -274,10 +275,11 @@ export class GraphView extends Lifecycle {
         } else {
           source?.remove();
           if (slot) this.o.onReady?.(slot);
+          this.edits.columns(); // a button to add a card to each column of a board (§72)
         }
-        // the editor's selection; else the one saved as shown, left, or kept as the type changed (reading view too)
-        const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
-        if (reopen) this.open(reopen);
+        const reopen =
+          this.edits.handedOn() ?? this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
+        if (reopen) this.open(reopen); // handed on by an edit in place (§72), else the editor's or the saved selection
         this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show(), this.spaces);
         void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },

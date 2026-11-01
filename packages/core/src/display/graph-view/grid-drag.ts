@@ -2,7 +2,11 @@
 // moved as any box is (box-drag-view.ts). While it is over another column, a line says the value it would take. Let go,
 // that value is written as its property where the thing is written: into the text being edited, or else into the
 // note. The line then says it was moved, or why not. Nothing is written while the card is only read.
+// - Each column has a button that adds a card to it, ready to name (edit_cells). They sit in a row at the top of the
+//   drawing, over it, in the columns' order.
 import { CORE_DIAGRAMS_ID, gridDrop, gridMoved, word } from '@thoughtknot/core';
+import { GRID_NONE, gridSplit } from '../../view-types/grid-view.ts';
+import { button } from '../button';
 import type { DragHost } from './box-drag-view';
 import { moveHint } from './box-move-keys';
 import { accept } from './estimate-actions';
@@ -40,4 +44,46 @@ export function gridDrops(o: ViewOptions, viewport: HTMLElement): Pick<DragHost,
       };
     },
   };
+}
+
+/** Says `text` in the line of `viewport`, under the drawing. */
+function say(viewport: HTMLElement, text: string): void {
+  const line = moveHint(viewport);
+  line.hidden = false;
+  line.textContent = text;
+}
+
+/** A column of a grid, to add a card to: the property its columns are by, its value or none, and a card in it. */
+export interface GridColumn {
+  by: string;
+  value: string | null;
+  peer?: string;
+}
+
+/**
+ * Adds a row of buttons to `layer`, one per column of the grid `o` draws live, each adding a card there by `add`. Why
+ * one wrote nothing is said in the line of `viewport`. None for any other card, or a grid by kinds, where a column
+ * takes no value.
+ */
+export function gridAdds(
+  o: ViewOptions,
+  layer: HTMLElement,
+  viewport: HTMLElement,
+  add: (column: GridColumn) => Promise<string | null>,
+): HTMLElement | null {
+  const p = o.diagram?.picture;
+  if (!p?.live || p.type !== GRID_TYPE || !p.shape) return null;
+  const { by, columns, cell } = gridSplit(p.shape);
+  if (!by) return null;
+  const row = layer.createDiv({
+    cls: 'thoughtknot-grid-adds',
+    attr: { role: 'group', 'aria-label': word('view.grid.add-cards') },
+  });
+  columns.forEach((value, c) => {
+    const peer = [...cell].find(([, [at]]) => at === c)?.[0];
+    const label = word('view.grid.add', { column: value });
+    const column = { by, value: value === GRID_NONE ? null : value, ...(peer ? { peer } : {}) };
+    button(row, label, 'plus', () => void add(column).then((why) => why && say(viewport, why)), value);
+  });
+  return row;
 }

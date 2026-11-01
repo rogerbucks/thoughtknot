@@ -12,6 +12,13 @@ import { bindTableKeys } from './table-keys';
 import { bindSizing, renderTableBar } from './table-sizing';
 import { bindPinch } from './table-pinch';
 import { keepPlace } from './table-place';
+import { bindCellEdits, type CellWrite } from './table-edit';
+
+/** What a table is handed by its card. It opens a row as a tap does, and writes a cell where one can be written. */
+export interface TableHands {
+  open?: (t: Target) => void;
+  edit?: CellWrite;
+}
 
 /** The heads of the links' table. */
 const linkHeads = (): string[] => [word('table.from'), word('table.link'), word('table.to'), word('table.properties')];
@@ -93,9 +100,10 @@ function gridTable(parent: HTMLElement, label: string, heads: string[], rows: Gr
 
 /**
  * The table, put in the card's viewport: the bar of its look, then the things, then the links, in one area that
- * scrolls. `open` opens a row's thing or link as a tap does, for the keys that move the selection along the rows.
+ * scrolls. `hands.open` opens a row's thing or link as a tap does, for the keys that move the selection along the
+ * rows. With `hands.edit`, a thing's cells can be typed in.
  */
-export function renderTable(viewport: HTMLElement, t: DiagramTable, open?: (t: Target) => void): HTMLElement {
+export function renderTable(viewport: HTMLElement, t: DiagramTable, hands: TableHands = {}): HTMLElement {
   const wrap = viewport.createDiv({ cls: ['thoughtknot-table', 'thoughtknot-grid'] });
   const scroll = wrap.createDiv({ cls: 'thoughtknot-table-scroll' });
   renderTableBar(wrap, scroll); // above the area that scrolls, so it stays in sight
@@ -126,7 +134,8 @@ export function renderTable(viewport: HTMLElement, t: DiagramTable, open?: (t: T
   // the first cell of the first thing is where Tab comes in
   things.querySelector<HTMLElement>('tbody td')?.setAttribute('tabindex', '0');
   bindSizing(scroll, tables);
-  bindTableKeys(scroll, tables, open);
+  bindTableKeys(scroll, tables, hands.open);
+  if (hands.edit) bindCellEdits(scroll, t.columns, hands.edit); // its cells typed in (§72, edit_cells)
   bindPinch(scroll);
   keepPlace(scroll); // after sorting, so the row with the focus is found where it now is
   return wrap;
