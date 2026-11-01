@@ -111,3 +111,23 @@ test('many things with no place are listed in readable columns, every mark insid
   assert.ok(new Set(labels.map((m) => m.x)).size > 1, 'in more than one column');
   assert.ok(drawMarksOf(marks, SPACE), 'the marks are taken');
 });
+
+// A line between two things in the list says nothing about where they are, and a web of them hides the list.
+// proves: projection_map
+test('a link is drawn only when one of its things is on the map', () => {
+  const marks = mapMarks({
+    shape: shapeOf(
+      [['a'], ['b'], ['c', { lat: 1, lon: 2 }]],
+      [
+        ['a', 'b'],
+        ['b', 'c'],
+      ],
+    ),
+    space: SPACE,
+  });
+  const lines = marks.filter((m) => m.role === 'link');
+  assert.deepEqual(
+    lines.map((m) => `${m.from}-${m.to}`),
+    ['b-c'],
+  );
+});

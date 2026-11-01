@@ -47,7 +47,10 @@ export function mapSplit(shape: GraphShape): { placed: Map<string, { lat: number
 /** The step for lines across `span` degrees: about LINES of them. */
 const stepFor = (span: number): number => STEPS.find((s) => span / s <= LINES) ?? 45;
 
-/** The marks of `shape` drawn as a map in `space`: a dot where each thing is, the rest listed, a line per link. */
+/**
+ * The marks of `shape` drawn as a map in `space`: a dot where each thing is, the rest listed. A link is a line when one
+ * of its things is on the map. A line between two listed things says nothing of where they are.
+ */
 export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
   if (!shape.things.length) return [];
   const { placed, rest } = mapSplit(shape);
@@ -187,7 +190,7 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
   shape.links.forEach((l, i) => {
     const a = at.get(l.from),
       b = at.get(l.to);
-    if (!a || !b || l.from === l.to) return;
+    if (!a || !b || l.from === l.to || !(placed.has(l.from) || placed.has(l.to))) return;
     marks.push({
       kind: 'link',
       id: `link\n${i}`,
