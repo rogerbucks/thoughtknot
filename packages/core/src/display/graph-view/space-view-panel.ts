@@ -29,7 +29,7 @@ import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
-import { DEPTH_WORDS, aimOf, glideIn, linkCounts, pivotOf, spacePad, turnToward } from './space-view-pad.ts';
+import { DEPTH_WORDS, aimOf, glideIn, fitIn, linkCounts, pivotOf, spacePad, turnToward } from './space-view-pad.ts';
 import { heldIn } from './svg-marks.ts';
 import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
@@ -190,7 +190,7 @@ export async function openSpaceView(
     picked = key ? (space.blocks.find((b) => b.of === key) ?? picked) : null;
     pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
     const other = space.blocks.map((b) => b.of).join() !== was;
-    if (other && !warm && depth !== GLOBE) orbit = orbitFit(space, width / height); // a globe keeps its size and camera
+    if (other && !warm && depth !== GLOBE) orbit = fitIn(space, width, height); // a globe keeps its size and camera
     // the view follows the picked thing only where the drawing moved it; a pick, a fade or a find leaves the view still
     const now = picked && before && picked.of === before.of ? middleOf(picked) : null;
     const moved = !!now && now.some((v, i) => Math.abs(v - (before?.at[i] ?? v)) > 0.5);
@@ -215,7 +215,7 @@ export async function openSpaceView(
     if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
     else if ('zoom' in m) orbit = zoomBy(orbit, m.zoom);
-    else if ('reset' in m) orbit = orbitFit(space, width / height);
+    else if ('reset' in m) orbit = fitIn(space, width, height);
     else if ('help' in m) showHelp(help.hidden !== false);
     again();
   };
@@ -254,7 +254,7 @@ export async function openSpaceView(
     depth = next;
     space = sketched(spaceBy(depths[depth] ?? null));
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
-    orbit = orbitSwitched(orbit, space, picked, width / height); // the whole graph fits again (space_switch_fits)
+    orbit = orbitSwitched(orbit, space, picked, width, height); // the whole graph fits again (space_switch_fits)
     const label = depthWords();
     depthButton.setAttribute('aria-label', label);
     depthButton.hidden = depth % GLOBE === 0; // none for cards or the globe
@@ -319,7 +319,7 @@ export async function openSpaceView(
       : blockAt(seen(), matrixNow(), width, height, x, y);
     // an open group's name zooms to it, and the button beside folds it back (cluster_fold_back)
     const strip = stripTap(space, matrixNow(), width, height, x, y);
-    if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = orbitFit(strip.fit, width / height)), again());
+    if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = fitIn(strip.fit, width, height)), again());
     const link = hit ? null : lineAt(seen(), matrixNow(), width, height, x, y);
     const twice =
       lastTap &&
@@ -375,7 +375,7 @@ export async function openSpaceView(
   });
   opened.set(root, close);
   resize();
-  orbit = more.orbit ?? orbitFit(space, width / height); // drawn again, it keeps the camera and leaves the focus be
+  orbit = more.orbit ?? fitIn(space, width, height); // drawn again, it keeps the camera and leaves the focus be
   if (!more.orbit) glideIn(el, orbit, (o) => ((orbit = o), again())); // it rises out of the flat drawing (space_glide)
   if (!more.orbit) el.focus();
   const as = (mode: SpaceMode) => void (depthFor(mode, depth) !== depth && showAs(depthFor(mode, depth)));

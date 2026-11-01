@@ -8,7 +8,7 @@
 // Where motion is to be still, it opens and closes at once.
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { KEY_STEP, between, fromAbove, orbitAround } from '../../space-controls.ts';
+import { KEY_STEP, between, fromAbove, nameRoom, orbitAround } from '../../space-controls.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import { middleOf, orbitFit } from '../../space-view.ts';
 import type { Block, Orbit, SpaceMarks, Vec3 } from '../../space-view.ts';
@@ -163,3 +163,7 @@ export function aimOf(onGlobe: SpaceMarks | false, orbit: Orbit, point: Vec3, di
   const globe = onGlobe && globeOf(onGlobe);
   return globe ? globeFacing(orbit, globe, point, dive) : point;
 }
+
+/** The camera that shows all of `space` on a screen `width` by `height` pixels, its outmost names whole. */
+export const fitIn = (space: SpaceMarks, width: number, height: number): Orbit =>
+  orbitFit(space, width / height, nameRoom(width, height));
