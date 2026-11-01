@@ -74,8 +74,9 @@ export class EditCard {
     const layer = Array.from(this.viewport.parentElement?.children ?? []).find((c) =>
       c.classList.contains('thoughtknot-over'),
     );
-    const el = (layer as HTMLElement | undefined) ?? this.viewport;
-    this.el = el.createDiv({
+    // only over the drawing, where no key typed reaches the drawing's own keys; a card with no such layer shows none
+    if (!(layer instanceof HTMLElement)) return;
+    this.el = layer.createDiv({
       cls: 'thoughtknot-edit-card',
       attr: { role: 'group', 'aria-label': word('edit.card', { thing: d.text }) },
     });
@@ -91,6 +92,7 @@ export class EditCard {
     });
     const said = this.el.createDiv({ cls: 'thoughtknot-edit-said', attr: { role: 'status' } });
     name.addEventListener('keydown', (e: KeyboardEvent) => {
+      e.stopPropagation(); // what is typed is the name's alone
       if (e.key === 'Enter') {
         e.preventDefault();
         void this.write(name.value).then((why) => said.setText(why ?? word('edit.renamed', { name: name.value })));
