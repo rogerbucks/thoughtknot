@@ -167,6 +167,8 @@
   .thoughtknot-viewport > .thoughtknot-pointer,
   .thoughtknot-over-panels,
   .thoughtknot-zen-exit,
+  .thoughtknot-over > .thoughtknot-phone-sheet,
+  .thoughtknot-phone-sheet-tab[aria-selected='true'],
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
@@ -700,6 +702,73 @@
 }
 .thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
   display: none;
+}
+/* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
+   It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */
+.thoughtknot-over > .thoughtknot-phone-sheet {
+  position: absolute;
+  top: var(--thoughtknot-room, 60vh);
+  inset-inline: 0;
+  transform: translateY(-100%);
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m) var(--gn-radius-m) 0 0;
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-l);
+  transition: height 0.2s ease;
+}
+.thoughtknot-phone-sheet.is-peek {
+  height: max(7.5rem, calc(0.18 * var(--thoughtknot-room, 60vh)));
+}
+.thoughtknot-phone-sheet.is-half {
+  height: calc(0.5 * var(--thoughtknot-room, 60vh));
+}
+.thoughtknot-phone-sheet.is-full {
+  height: var(--thoughtknot-room, 60vh);
+}
+.thoughtknot-phone-sheet-handle {
+  align-self: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--gn-text-muted);
+}
+.thoughtknot-phone-sheet-tabs {
+  display: flex;
+  gap: var(--gn-space-1);
+  padding: 0 var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+}
+.thoughtknot-phone-sheet-tab {
+  flex: 1;
+  min-height: 44px;
+}
+.thoughtknot-phone-sheet-tab[aria-selected='true'] {
+  font-weight: var(--gn-font-weight-semibold);
+  box-shadow: inset 0 -3px 0 var(--gn-accent);
+}
+.thoughtknot-phone-sheet-tab[hidden],
+.thoughtknot-phone-sheet-pane[hidden] {
+  display: none;
+}
+.thoughtknot-phone-sheet-pane {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--gn-space-2);
+}
+.thoughtknot-phone-sheet-pane > .thoughtknot-corner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-phone-sheet-pane > .thoughtknot-details {
+  margin: 0;
+  border: 0;
+  padding: 0;
 }
 .thoughtknot-dock-head {
   display: flex;
@@ -1653,6 +1722,9 @@ details.thoughtknot-style > summary {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .thoughtknot-over > .thoughtknot-phone-sheet {
+    transition: none;
+  }
   .thoughtknot-svg .thoughtknot-flow-dashes > path,
   .thoughtknot-svg path.thoughtknot-flow-runner,
   .thoughtknot-svg path.thoughtknot-path-runner,
