@@ -116,7 +116,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ownLayout: 'on',
   kindLanes: 'on',
   noteCallouts: 'off',
-  miniMap: 'auto',
+  miniMap: 'always',
   detailsOpen: 'off',
   drawingHeight: 'most',
   easierReading: 'off',

@@ -14,14 +14,37 @@ import type { TypeLeftAt } from './type-strip';
 import type { ViewOptions } from './view-options';
 
 /** Where a card is now, given its view, the thing selected, whether it is the full-screen card, and if in space. */
-export const typeLeftAt = (v: View, selected: string | null, full: boolean, space?: SpaceMode | null): TypeLeftAt => ({
+export const typeLeftAt = (
+  v: View,
+  selected: string | null,
+  full: boolean,
+  space?: SpaceMode | null,
+  middle?: string,
+): TypeLeftAt => ({
   zoom: v.scale,
   x: v.x,
   y: v.y,
   ...(selected ? { selected } : {}),
+  ...(middle ? { middle } : {}),
   ...(full ? { full: true } : {}),
   ...(space ? { space } : {}),
 });
+
+/**
+ * The thing nearest the middle of the card's `viewport`, with the drawing `svg` shown at `v`. The card drawn as a new
+ * type is centred on it, so what was in the middle stays there (type_keeps_centre).
+ */
+export function middleThing(taps: Taps, v: View, viewport: HTMLElement, svg: SVGSVGElement | null): string | undefined {
+  const mid = taps.toDrawing({ x: viewport.clientWidth / 2, y: viewport.clientHeight / 2 }, v);
+  if (!mid || !svg) return undefined;
+  let best: string | undefined,
+    far = Infinity;
+  for (const [key, at] of taps.places((id) => svg.querySelector(`#${id}`)?.getAttribute('data-key') ?? null)) {
+    const d = (at.x - mid.x) ** 2 + (at.y - mid.y) ** 2;
+    if (d < far) [best, far] = [key, d];
+  }
+  return best;
+}
 
 /** Where a card was left as it went, for the card drawn again in its place: as a type changed, with its camera in space. */
 export interface StayedAt extends Partial<TypeLeftAt> {
@@ -98,14 +121,19 @@ export class TypePlace {
   }
 
   /**
-   * Once the card is placed: the thing selected brought into view, and full screen opened again when it was open. In
-   * space, its camera where it was (`spaces`).
+   * Once the card is placed, the thing that was in the middle is centred at the zoom kept (type_keeps_centre). Then
+   * the thing selected is brought into view. Full screen opens again if it was open. In space, its camera is kept.
    */
   takeUp(svg: SVGSVGElement | null, taps: Taps, zoom: Zoom, full: () => void, spaces?: SpaceSwitch): void {
     spaces?.startAt(this.kept?.orbit);
-    const key = this.kept?.selected,
-      g = key && svg ? boxIn(svg, key) : null,
-      box = g ? taps.bounds(g.getAttribute('id') ?? '') : null;
+    const boxOf = (key?: string) => {
+      const g = key && svg ? boxIn(svg, key) : null;
+      return g ? taps.bounds(g.getAttribute('id') ?? '') : null;
+    };
+    const middle = boxOf(this.kept?.middle),
+      to = middle ? zoom.aim(middle, 0, true) : null;
+    if (to) zoom.restore(to.scale, to.x, to.y);
+    const box = boxOf(this.kept?.selected);
     if (box) zoom.reveal(box);
     // a radial drawing laid out around a new centre: each box glides from where it was (radial_centre_pick)
     if (this.kept?.places) glideBoxes(svg, this.kept.places);

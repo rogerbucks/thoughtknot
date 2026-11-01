@@ -3,7 +3,7 @@
 // arrowheads on the ball they point to, and words at the middle of each link.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ROOM, SPREAD_UNIT, asDrawnFor, keepApart, radiusOf, spreadSpace } from '../src/space-spread.ts';
+import { BALL_LARGER, ROOM, SPREAD_UNIT, asDrawnFor, keepApart, radiusOf, spreadSpace } from '../src/space-spread.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../src/space-labels.ts';
 import { cardArrows, cardsOnScreen } from '../src/space-cards.ts';
 import { blockAt } from '../src/space-pick.ts';
@@ -61,7 +61,9 @@ test('each thing is one ball, and a ball with more links is larger', () => {
   for (const b of space.blocks) assert.ok(b.width === b.depth && b.depth === b.tall, 'a ball fits a cube');
   const size = (key) => space.blocks.find((b) => b.of === key).width;
   assert.ok(size('hub') > size('a') && size('a') > size('b'), `${size('hub')} ${size('a')} ${size('b')}`);
-  assert.equal(size('b') / 2, radiusOf(1));
+  // proves: space_names_always
+  assert.equal(size('b') / 2, BALL_LARGER * radiusOf(1), 'larger in 3D than on the globe, so it can be seen');
+  assert.ok(BALL_LARGER > 1 && size('d') / 2 >= 19, 'even a ball with one link is easy to see');
   assert.equal(spots.size, 5);
   assert.deepEqual(spreadSpace(MARKS).space, space, 'the same each time');
 });

@@ -31,7 +31,7 @@ import { button } from '../button';
 import { FIRST_VIEW_TYPES } from '../../view-types/view-types.ts';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
 import type { TimelinePick, TimelineShown } from './timeline-choice';
-export { TypePlace, typeLeftAt } from './type-place';
+export { middleThing, TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
 export interface DiagramShown extends DiagramOffer {
@@ -88,6 +88,7 @@ export interface TypeLeftAt extends LeftAt {
   space?: SpaceMode;
   /** Where each box was on the screen, by its thing's key: the boxes of the card drawn next glide from there. */
   places?: Map<string, DOMRect>;
+  middle?: string; // the thing nearest the middle of the card, which the card drawn next centres on (type_keeps_centre)
 }
 
 /** How a host lets a card look at a type without saving it (type_try_reading). */

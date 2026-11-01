@@ -177,7 +177,6 @@ const OVER = [
   'thoughtknot-problems',
   'thoughtknot-view-menu',
   'thoughtknot-find',
-  'thoughtknot-explore-sidebar',
   'thoughtknot-filter',
   'thoughtknot-type-list',
   'thoughtknot-view-list',
@@ -199,6 +198,8 @@ export function overDrawing(
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
   for (const el of Array.from(root.children))
     if (OVER.some((cls) => el.classList.contains(cls))) panels.appendChild(el);
+    // the explore sidebar floats over a corner of the drawing on its own, under any panel opened (styles.css)
+    else if (el.classList.contains('thoughtknot-explore-sidebar')) layer.insertBefore(el, panels);
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });
