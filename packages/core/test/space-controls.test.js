@@ -20,6 +20,7 @@ import {
   touchesStay,
   twoFingers,
   orbitSwitched,
+  nameRoom,
 } from '../src/space-controls.ts';
 import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
@@ -295,10 +296,38 @@ test('changing how the view shows the graph fits the whole of it again, unless a
   };
   const small = { ...wide, blocks: [block('a', -100), block('b', 100)], least: [-100, 0, 0], most: [140, 40, 40] };
   const was = orbitFit(wide, 1.5);
-  const now = orbitSwitched(was, small, null, 1.5);
-  assert.deepEqual(now, orbitFit(small, 1.5), "the smaller way fills the view, not a knot in the wider way's frame");
+  const now = orbitSwitched(was, small, null, 600, 400);
+  assert.deepEqual(
+    now,
+    orbitFit(small, 1.5, nameRoom(small, 600, 400)),
+    "the smaller way fills the view, not a knot in the wider way's frame",
+  );
   assert.ok(now.distance < was.distance / 4);
-  const kept = orbitSwitched(was, small, small.blocks[1], 1.5);
+  const kept = orbitSwitched(was, small, small.blocks[1], 600, 400);
   assert.equal(kept.distance, was.distance, 'with b picked, the camera stays as near');
   assert.deepEqual(kept.target, [120, 20, 20], 'and looks at b');
+});
+
+// proves: space_names_fit
+test('a fitted view leaves room at its edges for the names, so the outmost ones show whole', () => {
+  const block = (of, x, y) => ({ id: of, style: 's', of, x, y, width: 20, depth: 20, floor: 0, tall: 20 });
+  const blocks = [];
+  for (let i = 0; i < 12; i++) blocks.push(block(`t${i}`, i * 200, (i % 3) * 300));
+  const space = { blocks, lines: [], labels: [], arrows: [], least: [0, 0, 0], most: [2220, 620, 20], round: true };
+  const [w, h] = [600, 400],
+    room = nameRoom(space, w, h);
+  for (const orbit of [orbitFit(space, w / h, room), orbitSwitched(orbitFit(space), space, null, w, h)]) {
+    const m = spaceMatrix(orbit, w / h, 100000);
+    for (const b of blocks) {
+      const p = projectPoint(m, [b.x + 10, b.y + 10, 10], w, h);
+      assert.ok(p.x >= 56 && p.x <= w - 56, `half a name's width clear of the sides: ${b.of} at ${Math.round(p.x)}`);
+      assert.ok(
+        p.y >= 16 && p.y <= h - 16,
+        `a name's height clear of the top and bottom: ${b.of} at ${Math.round(p.y)}`,
+      );
+    }
+  }
+  assert.deepEqual(nameRoom(space, 80, 40), [0.5, 0.5], 'on a tiny screen it still fills half');
+  for (const holds of [{}, { round: true, cards: true }])
+    assert.deepEqual(nameRoom(holds, w, h), [1, 1], 'cards and blocks hold their names, so they fill the screen');
 });

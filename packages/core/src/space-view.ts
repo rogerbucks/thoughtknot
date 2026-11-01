@@ -266,9 +266,9 @@ const FILL = 0.94,
 /**
  * The camera that shows all of `space`, from the front and above, as the drawing reads on the page. The screen is
  * `aspect` wide to each unit high. It goes as near as keeps each block corner in view, so the drawing fills the screen.
- * Of many corners, the farthest hundredth may fall outside. Roger, 25 Oct 2026: it opened as a small knot.
+ * It fills only the `room` part across and up. Of many corners, the farthest hundredth may fall outside.
  */
-export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
+export function orbitFit(space: SpaceMarks, aspect = 1, [inX, inY]: [number, number] = [1, 1]): Orbit {
   const { least, most } = space,
     target: Vec3 = [(least[0] + most[0]) / 2, (least[1] + most[1]) / 2, (least[2] + most[2]) / 2];
   const camera = { target, distance: 1, turn: -Math.PI / 2, tilt: 0.9 };
@@ -283,8 +283,8 @@ export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
   // how far back each corner needs the camera to be to land in view, the perspective counted too
   const needs = corners.map((c) => {
     const o = sub(c, target);
-    const across = Math.abs(dot(o, r)) / (FILL * half * Math.max(0.1, aspect)),
-      up = Math.abs(dot(o, u)) / (FILL * half);
+    const across = Math.abs(dot(o, r)) / (FILL * inX * half * Math.max(0.1, aspect)),
+      up = Math.abs(dot(o, u)) / (FILL * inY * half);
     return Math.max(across, up) - dot(o, f);
   });
   needs.sort((x, y) => x - y);
