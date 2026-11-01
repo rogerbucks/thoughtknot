@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stay-put.test.js",
+  "test": "an exploration opened one step further moves nothing it showed, in every shape and space",
+  "seen_failing_first": false,
+  "evidence": "It guards behaviour that already holds: things_stay_put is written down first, and the views that still move things come under it in the next PRs."
+}
