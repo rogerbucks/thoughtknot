@@ -20,7 +20,7 @@ import { spotsKept } from '../../space-parts.ts';
 import { stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
-import { keyMove, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
+import { keyMove, orbitSwitched, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import type { SpaceMode, SpaceOptions, SpaceView } from './space-view-options.ts';
 import { pickPainter, type Paints } from './mark-painter.ts';
@@ -28,7 +28,7 @@ import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
-import { DEPTH_WORDS, glideIn, linkCounts, spacePad, turnToward } from './space-view-pad.ts';
+import { DEPTH_WORDS, aimOf, glideIn, linkCounts, pivotOf, spacePad, turnToward } from './space-view-pad.ts';
 import { heldIn } from './svg-marks.ts';
 import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
@@ -206,7 +206,7 @@ export async function openSpaceView(
     el.remove();
     closed();
   };
-  const pivot = (): Vec3 => (picked && depth !== GLOBE ? middleOf(picked) : orbitFit(space).target); // a globe spins
+  const pivot = (): Vec3 => pivotOf(space, picked, depth === GLOBE);
   const move = (m: SpaceMove) => {
     // one move, from a key or a button, painted
     if ('back' in m) return close();
@@ -231,13 +231,14 @@ export async function openSpaceView(
   };
   /** Tells the card what was picked, so it opens its details as a tap in 2D does. */
   const tell = (t: Target) => root.dispatchEvent(new CustomEvent<Target>(SPACE_OPEN, { detail: t, bubbles: true }));
-  /** Turns the view to face `point`, which it then turns round and zooms to; gliding, unless motion is to be still. */
-  const turnTo = (point: Vec3) => {
+  /** Turns to face `point`, gliding; on a globe, square on to it, and near it with `dive` (globe_face_picked). */
+  const turnTo = (point: Vec3, dive = false) => {
     const run = ++turning,
       going = () => run === turning && open;
-    turnToward(win, orbit, point, (o) => ((orbit = o), paint()), going);
+    turnToward(win, orbit, aimOf(depth === GLOBE && space, orbit, point, dive), (o) => ((orbit = o), paint()), going);
   };
   const flyTo = (block: Block) => {
+    if (depth === GLOBE) return (pick(block), turnTo(middleOf(block), true));
     // flies to it: the camera looks at a ball's middle, or a block's top, from near
     const top = block.floor + (space.round ? block.tall / 2 : block.tall);
     const near = Math.max(block.width, block.depth, block.tall) * 4;
@@ -251,7 +252,7 @@ export async function openSpaceView(
     depth = next;
     space = sketched(spaceBy(depths[depth] ?? null));
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
-    orbit = centredOn(orbit, picked);
+    orbit = orbitSwitched(orbit, space, picked, width / height); // the whole graph fits again (space_switch_fits)
     const label = depthWords();
     depthButton.setAttribute('aria-label', label);
     depthButton.hidden = depth % GLOBE === 0; // none for cards or the globe
@@ -327,8 +328,9 @@ export async function openSpaceView(
     if (hit && (twice || picked?.id === hit.id) && isCluster(hit.of)) unfold(hit.of ?? '');
     else if (twice && hit) flyTo(hit);
     else if (hit) {
-      if (picked?.id === hit.id) return turnTo(middleOf(hit));
+      if (picked?.id === hit.id) return turnTo(middleOf(hit), true); // on a globe, a second click dives to it
       pick(hit);
+      if (depth === GLOBE) turnTo(middleOf(hit)); // the globe turns it to face you, square on (Roger, 1 Nov 2026)
       if (hit.of !== undefined && !isPlane(hit.of)) tell({ key: hit.of });
     } else if (link) {
       if (pickedLine?.id === link.line.id) return turnTo(link.at);

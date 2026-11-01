@@ -10,8 +10,8 @@
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
 // stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD, eyeOf, orbitBy, upOf, zoomBy } from './space-view.ts';
-import type { Orbit, Vec3 } from './space-view.ts';
+import { FIELD, centredOn, eyeOf, orbitBy, orbitFit, upOf, zoomBy } from './space-view.ts';
+import type { Block, Orbit, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
 export const KEY_STEP = 24;
@@ -278,3 +278,11 @@ export const touchesStay = (
       { passive: true },
     );
 };
+
+/**
+ * The camera as the view changes to another way of showing it, `space`, on a screen `aspect` wide to each unit high.
+ * Each way is laid out to its own size, so with nothing picked the whole graph fits the view again: never a small knot
+ * left in the last way's frame (Roger, 1 Nov 2026). With something `picked`, the view stays on it.
+ */
+export const orbitSwitched = (orbit: Orbit, space: SpaceMarks, picked: Block | null, aspect: number): Orbit =>
+  picked ? centredOn(orbit, picked) : orbitFit(space, aspect);

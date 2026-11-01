@@ -271,3 +271,28 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0],
 ];
+
+/** How far from the globe's middle the camera stops when it dives to a thing, in radii: near enough for its details. */
+export const GLOBE_DIVE = 1.4;
+/** The nearest the camera comes to the globe's middle as it turns to face a thing, in radii: always outside it. */
+const GLOBE_OUTSIDE = 1.15;
+
+/**
+ * The camera on the line from the globe's middle out through `point`, looking straight down at it: the thing in the
+ * middle of the screen, square to the camera, the globe round it (Roger, 1 Nov 2026: "selecting a node should move the
+ * camera orientation to be perpendicular to the node in relation to the globe"). It stays as far away as it is, never
+ * inside the globe; with `dive`, it comes near, so the thing's details show (globe_dive_detail). Its turn is the one
+ * nearest the camera's own, so gliding there takes the short way round.
+ */
+export function globeFacing(orbit: Orbit, g: GlobeOf, point: Vec3, dive = false): Orbit {
+  const out = [0, 1, 2].map((k) => (point[k] ?? 0) - (g.middle[k] ?? 0)),
+    length = Math.hypot(...out) || 1;
+  const [x, y, z] = out.map((n) => n / length) as Vec3;
+  const way = Math.hypot(x, y) > 1e-9 ? Math.atan2(y, x) : orbit.turn,
+    turn = way + 2 * Math.PI * Math.round((orbit.turn - way) / (2 * Math.PI));
+  const distance = dive ? g.radius * GLOBE_DIVE : Math.max(orbit.distance, g.radius * GLOBE_OUTSIDE);
+  return { target: [...g.middle], distance, turn, tilt: Math.asin(Math.max(-1, Math.min(1, z))) };
+}
+
+/** The globe `space` is laid on, if it is laid on one. */
+export const globeOf = (space: SpaceMarks): GlobeOf | undefined => (space as Partial<GlobeSpace>).globe;
