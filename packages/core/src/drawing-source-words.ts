@@ -137,7 +137,7 @@ export const DRAWING_SOURCE_WORDS = {
   'zen.leave': 'Show panels',
   'zen.leave.label': 'Show the panels again',
   'sheet.name': 'View controls',
-  'controls.view': 'View',
+  'controls.view': 'Detail',
   'controls.less': 'Less detail',
   'controls.more': 'More detail',
   'controls.properties': 'Properties',
