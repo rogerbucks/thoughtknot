@@ -19,6 +19,26 @@ const ROW_SHARE = 0.6;
 const NAME_MOST = 14;
 /** An arrowhead's size, at most. */
 const ARROW_MOST = 6;
+/** The shape a cell is kept near, as its width over its height: a block wide enough for its name. */
+const CELL_SHAPE = 3.5;
+
+/**
+ * The most things a column holds before it wraps into another beside it (layout_types_screen_shaped). Design review,
+ * 1 Nov 2026: a column of dozens of things drew slivers too thin to name. So each column of `sizes` wraps at the
+ * height that keeps a cell nearest CELL_SHAPE in `space`. A wrapped column's parts stay side by side, in order.
+ */
+export function wrapAt(sizes: readonly number[], space: { width: number; height: number }): number {
+  const tallest = Math.max(1, ...sizes);
+  let best = tallest,
+    off = Infinity;
+  for (let rows = tallest; rows >= 1; rows--) {
+    const slots = sizes.reduce((n, size) => n + Math.max(1, Math.ceil(size / rows)), 0);
+    const shape = space.width / slots / (space.height / rows);
+    const away = Math.abs(Math.log(shape / CELL_SHAPE));
+    if (away < off) [best, off] = [rows, away];
+  }
+  return best;
+}
 
 /** Each thing's column: one right of the furthest thing that links to it, leaving out links that close a cycle. */
 export function columnsOf(shape: GraphShape): Map<string, number> {
@@ -83,17 +103,27 @@ export function blockMarks({ shape, space }: DiagramGiven): DrawMark[] {
     ranked.forEach(([k], i) => row.set(k, i));
     stacks[c] = ranked.map(([k]) => k);
   });
-  const rows = Math.max(...stacks.map((s) => s.length));
-  const cw = space.width / columns,
-    rh = space.height / rows;
+  // a tall column wraps into parts side by side, each a column of the grid
+  const rows = wrapAt(
+    stacks.map((st) => st.length),
+    space,
+  );
+  const parts = stacks.flatMap((stack) =>
+    Array.from({ length: Math.max(1, Math.ceil(stack.length / rows)) }, (_, i) =>
+      stack.slice(i * rows, (i + 1) * rows),
+    ),
+  );
+  const cw = space.width / parts.length,
+    rh = space.height / Math.min(rows, Math.max(...stacks.map((st) => st.length)));
   const bw = cw * BLOCK_SHARE,
     bh = rh * ROW_SHARE;
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const box = new Map<string, { x: number; y: number }>();
   const marks: DrawMark[] = [];
-  stacks.forEach((stack, c) => {
+  const tall = Math.round(space.height / rh);
+  parts.forEach((stack, c) => {
     // a short column is centred down the space
-    const top = ((rows - stack.length) * rh) / 2;
+    const top = ((tall - stack.length) * rh) / 2;
     stack.forEach((k, r) => {
       const x = c * cw + (cw - bw) / 2,
         y = top + r * rh + (rh - bh) / 2;

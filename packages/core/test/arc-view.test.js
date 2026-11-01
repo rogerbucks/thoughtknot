@@ -71,3 +71,18 @@ test('the arc is offered among the views, and the View menu draws it', () => {
   const shape = shapeOf([['a'], ['b']], [['a', 'b']]);
   assert.deepEqual(VIEW_DRAWERS.arc({ shape, space: SPACE }), arcMarks({ shape, space: SPACE }));
 });
+
+// proves: layout_types_screen_shaped
+test('one long link does not squash the other arcs: a short arc still rises half as high as it is long', () => {
+  const keys = Array.from({ length: 12 }, (_, i) => [`k${i}`]);
+  // the link from first to last spans most of the line
+  const chain = keys.slice(1).map(([k], i) => [`k${i}`, k]);
+  const shape = shapeOf(keys, [...chain, ['k0', 'k11']]);
+  const marks = arcMarks({ shape, space: SPACE });
+  const links = marks.filter((m) => m.kind === 'link');
+  const span = (m) => Math.abs(m.points[3][0] - m.points[0][0]);
+  const short = links.reduce((a, b) => (span(b) < span(a) ? b : a));
+  const [[ax, ay], [, hy], , [bx]] = short.points;
+  assert.ok(Math.abs(Math.abs(hy - ay) - (Math.abs(bx - ax) / 2) * (4 / 3)) < 1e-6);
+  for (const m of marks) if (m.kind === 'link') for (const [, y] of m.points) assert.ok(y >= 0 && y <= SPACE.height);
+});
