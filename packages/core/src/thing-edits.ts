@@ -5,6 +5,7 @@
 // - Deleted (edit_delete): the thing and every link to it, with the comma that parted each from its neighbour.
 // - Linked (edit_link_drag): a link from one thing to another, of the type the first uses most.
 // - A property set (edit_cells): a value typed in a table's cell, read as the type the property holds.
+// - A quick line (edit_quick_line): a short sentence such as Idea -> Plan, Risk, its things and links written at once.
 import gs from '@thoughtknot/graph-spec';
 import { addThing } from './add-thing.ts';
 import { blankText, items } from './block-items.ts';
@@ -14,6 +15,7 @@ import { appended, withoutItem } from './linked-list.ts';
 import { quoted } from './lock.ts';
 import type { NoteReading } from './note-reading.ts';
 import { S, trim } from './whitespace.ts';
+import { details } from './render.ts';
 import { textKeyOf, writtenIn } from './written-things.ts';
 import { word } from './words.ts';
 
@@ -193,4 +195,70 @@ export function addedInColumn(
   if (!gql.ok) return { reason: gql.error };
   const set = setProperty(made.text, graph, { thing: made.name }, column.by, gql.gql);
   return set.ok ? { block, was, now: set.text, name: made.name } : { reason: set.reason };
+}
+
+/** What a quick line writes: its block, and the keys of the things it names, new or already there. Else, why not. */
+export type LineWritten = { block: number; was: string; now: string; things: string[] } | { reason: string };
+
+/** The arrow that parts the steps of a quick line. */
+const ARROW = /\s*(?:->|→)\s*/;
+
+/**
+ * The graph's first block with the things and links that quick line `line` names (edit_quick_line). Arrows part its
+ * steps, and commas the things in one step. Each thing of a step is linked to each of the next. A name is a thing
+ * already there when its text is the same, in any case. Else it is a new thing, of the kind of another in its step, or
+ * of the kind the graph has most. A line that starts with an arrow starts from thing `from`. Links are of the type the
+ * graph uses most, and none is written twice.
+ */
+export function quickLine(reading: NoteReading, graph: string, line: string, from?: string): LineWritten {
+  const g = reading.world[graph];
+  const home = [...reading.texts.entries()].find(([, t]) => graphOfBlock(t) === graph);
+  if (!g || !home) return { reason: word('edit.not-here', { thing: graph }) };
+  const parts = line.split(ARROW).map((p) =>
+    p
+      .split(',')
+      .map((n) => trim(n))
+      .filter(Boolean),
+  );
+  if (parts[0]?.length === 0 && from && g.nodes.has(from)) parts[0] = [from];
+  const steps = parts.filter((p) => p.length);
+  if (!steps.length) return { reason: word('edit.line-empty') };
+  const byText = new Map<string, string>();
+  for (const key of g.nodes.keys()) byText.set((details(reading, graph, key)?.text ?? key).toLowerCase(), key);
+  const count = new Map<string, number>();
+  for (const key of g.nodes.keys()) count.set(kindOf(g, key), (count.get(kindOf(g, key)) ?? 0) + 1);
+  const common = [...count].filter(([k]) => k).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+  const [block, was] = home;
+  let now = was;
+  const keys: string[][] = [];
+  for (const [i, step] of steps.entries()) {
+    const known = step.map((n) => (i === 0 && n === from ? from : byText.get(n.toLowerCase())));
+    const kind = known.map((k) => (k ? kindOf(g, k) : '')).find(Boolean) ?? common;
+    const row: string[] = [];
+    for (const [j, n] of step.entries()) {
+      const k = known[j] ?? byText.get(n.toLowerCase());
+      if (k) {
+        row.push(k);
+        continue;
+      }
+      const made = addThing(reading, graph, now, { text: n, kind });
+      if ('refused' in made) return { reason: made.refused };
+      now = made.text;
+      byText.set(n.toLowerCase(), made.name);
+      row.push(made.name);
+    }
+    keys.push(row);
+  }
+  const rel = mostUsed(g.edges) ?? 'RELATES_TO';
+  const links: string[] = [];
+  for (let i = 1; i < keys.length; i++)
+    for (const a of keys[i - 1] ?? [])
+      for (const b of keys[i] ?? []) {
+        const there = g.out(a, rel).some(([, , to]) => to === b);
+        const link = `(${a})-[:${rel}]->(${b})`;
+        if (a !== b && !there && !links.includes(link)) links.push(link);
+      }
+  if (links.length) now = appended(now, links);
+  if (now === was) return { reason: word('edit.line-there') };
+  return { block, was, now, things: [...new Set(keys.flat())] };
 }

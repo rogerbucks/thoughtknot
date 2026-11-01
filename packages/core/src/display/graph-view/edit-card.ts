@@ -9,10 +9,11 @@
 // - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
 // - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
+// - A quick line writes the things and links a short sentence names, such as -> Plan, Risk (edit_quick_line).
 // - On a kanban board, each column has a button that adds a card there, its name open (grid-drag.ts, edit_cells).
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
-import { addedInColumn, addedNear, deleted, propertySet, renamed } from '../../thing-edits.ts';
+import { addedInColumn, addedNear, deleted, propertySet, quickLine, renamed } from '../../thing-edits.ts';
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
@@ -222,6 +223,7 @@ export class EditCard {
         word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
       );
     this.linking.build(row);
+    this.lineIn(this.el, d.text);
     this.said = said;
     this.place();
     const h = handed.get(this.o.graph);
@@ -229,6 +231,26 @@ export class EditCard {
       handed.delete(this.o.graph);
       if (h.rename) this.rename();
     }
+  }
+
+  /** The quick line under the buttons: Enter writes the things and links it names; an arrow first starts from here. */
+  private lineIn(card: HTMLElement, thing: string): void {
+    const line = card.createEl('input', {
+      cls: 'thoughtknot-edit-line-input',
+      attr: { type: 'text', 'aria-label': word('edit.line', { thing }), title: word('edit.line-hint') },
+    });
+    line.addEventListener('keydown', (e: KeyboardEvent) => {
+      e.stopPropagation(); // what is typed is the line's alone
+      if (e.key === 'Escape') return void (e.preventDefault(), (line.value = ''), this.backToBox());
+      if (e.key !== 'Enter' || !this.key) return;
+      e.preventDefault();
+      const r = quickLine(this.o.reading, this.o.graph, line.value, this.key);
+      if ('reason' in r) return void this.said?.setText(r.reason);
+      handed.set(this.o.graph, { key: this.key, rename: false, at: Date.now() });
+      void accept(this.o, r.block, r.was, r.now).then((why) =>
+        this.said?.setText(why ?? word('edit.lined', { count: r.things.length })),
+      );
+    });
   }
 
   /** Adds a child or a sibling of the thing shown, ready to name, and hands it on to be selected in the card drawn next. */
