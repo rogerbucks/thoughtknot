@@ -69,3 +69,21 @@ test('a big graph still fits the space with every id its own, and a graph with n
   assert.equal(new Set(ids).size, ids.length);
   assert.deepEqual(blockMarks({ shape: shapeOf([]), space: SPACE }), []);
 });
+
+// proves: layout_types_screen_shaped
+test('a column of many things wraps into columns side by side, each block wide enough to name', () => {
+  const leaves = Array.from({ length: 45 }, (_, i) => `leaf${i}`);
+  const shape = shapeOf(
+    ['hub', ...leaves],
+    leaves.map((k) => ['hub', k]),
+  );
+  const marks = blockMarks({ shape, space: { width: 960, height: 540 } });
+  const blocks = marks.filter((m) => m.kind === 'box');
+  assert.equal(blocks.length, 46);
+  for (const b of blocks) assert.ok(b.height >= 20, `a block ${b.height.toFixed(1)} tall is too thin to name`);
+  assert.equal(marks.filter((m) => m.kind === 'label').length, 46, 'every block is named');
+  // the hub still comes first, every leaf right of it
+  const hub = blocks.find((b) => b.of === 'hub');
+  for (const b of blocks) if (b !== hub) assert.ok(b.x > hub.x);
+  assert.ok(drawMarksOf(marks, { width: 960, height: 540 }).length);
+});
