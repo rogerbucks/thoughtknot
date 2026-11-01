@@ -294,6 +294,7 @@ export function renderTypeStrip(
     toggle.setAttribute('aria-expanded', String(!list.hidden));
   };
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
+  toggle.addClass('thoughtknot-type-choose'); // its words step aside on a phone, so the bar keeps one row
   toggle.setAttribute('aria-expanded', 'false');
   inBar?.bar.insertBefore(toggle, inBar.before); // in the bar, with the rest that change how it is drawn (type_in_bar)
   const around = aroundSelected(toggle, d, where, root); // Radial with a thing selected (radial_centre_anywhere)

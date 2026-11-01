@@ -38,6 +38,33 @@ describe('the bar', () => {
     assert.match(styles, /\.cm-embed-block \.thoughtknot-bar\s*\{\s*padding-inline-end:\s*var\(--gn-space-9\);/);
   });
 
+  // Roger chose the Zen-led refresh on 1 Nov 2026 (step 4): a slim bar, not a row of boxed buttons
+  test('the bar is slim: its buttons are quiet until pointed at, and on a phone they sit edge to edge', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const type = labelled(el.querySelector('.thoughtknot-bar'), 'Diagram type');
+    assert.ok(type.classList.contains('thoughtknot-type-choose'), 'the diagram type button can be told apart');
+    const quiet = styles.match(/:is\(\.thoughtknot-bar, \.thoughtknot-bar-more\) > button \{([^}]*)\}/);
+    assert.ok(quiet, 'one rule for the bar’s own buttons');
+    assert.match(quiet[1], /border: 0;/);
+    assert.match(quiet[1], /background: none;/);
+    assert.match(quiet[1], /box-shadow: none;/);
+    assert.match(
+      styles,
+      /:is\(\.thoughtknot-bar, \.thoughtknot-bar-more\) > button:hover[^{]*\{\s*background: var\(--gn-bg-hover\);/,
+    );
+    const phone = styles.match(/@media \(max-width: 599px\) \{([\s\S]*?)\n\}/g)?.join('\n') ?? '';
+    assert.match(phone, /\.thoughtknot-view > \.thoughtknot-bar \{[^}]*gap: 0;/, 'edge to edge on a phone');
+    assert.doesNotMatch(
+      phone,
+      /\.thoughtknot-badge(\.is-[a-z]+)? \{\s*display: none;/,
+      'no button is hidden, only words',
+    );
+    assert.match(
+      phone,
+      /\.thoughtknot-bar > :is\(\.thoughtknot-type-choose, \.thoughtknot-badge\) \.thoughtknot-badge-text \{\s*display: none;/,
+    );
+  });
+
   test('touch targets are at least 44 points', () => {
     assert.match(styles, /\.thoughtknot-bar button\s*\{[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/);
   });

@@ -2219,6 +2219,31 @@ pre.thoughtknot-code {
   justify-content: center;
   gap: var(--gn-space-1);
 }
+/* A slim bar (Roger chose the Zen-led refresh, 1 Nov 2026): the bar's own buttons are quiet, with no box. A ground shows
+   under the pointer, and a button whose panel is open is underlined in the accent, so said by more than colour. */
+:is(.thoughtknot-bar, .thoughtknot-bar-more) > button {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--gn-text-normal);
+}
+:is(.thoughtknot-bar, .thoughtknot-bar-more) > button:hover:not(:disabled) {
+  background: var(--gn-bg-hover);
+}
+:is(.thoughtknot-bar, .thoughtknot-bar-more) > button[aria-expanded='true'] {
+  box-shadow: inset 0 -2px 0 var(--gn-accent);
+}
+/* On a phone the bar's buttons sit edge to edge, and the diagram type and the badge show their icons alone. Each is
+   still named to a screen reader. So the bar takes fewer rows, and wraps rather than hide a button. */
+@media (max-width: 599px) {
+  .thoughtknot-view > .thoughtknot-bar {
+    gap: 0;
+    padding-inline: var(--gn-space-1);
+  }
+  .thoughtknot-bar > :is(.thoughtknot-type-choose, .thoughtknot-badge) .thoughtknot-badge-text {
+    display: none;
+  }
+}
 /* The problems count sits at the bar's far end, quiet unless something is wrong (bar_kept_short). An error is told by
    its icon and its colour, never colour alone. */
 .thoughtknot-badge {
