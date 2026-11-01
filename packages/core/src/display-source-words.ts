@@ -5,6 +5,16 @@
 /** The words of the display layer, by key, in UK English. */
 export const DISPLAY_SOURCE_WORDS = {
   'pane.no-block': 'This note has no graph block to edit.',
+  'table.row': 'Row',
+  'table.look': 'How the table looks',
+  'table.stripes': 'Striped rows',
+  'table.row-height': 'Row height',
+  'table.rows.short': 'Short',
+  'table.rows.medium': 'Medium',
+  'table.rows.tall': 'Tall',
+  'table.fit-columns': 'Fit columns',
+  'table.resize-column': 'Drag to resize {name}. Double-click to fit it to its words.',
+  'table.resize-row': 'Drag to resize row {row}. Double-click to put it back.',
   'pane.lock-failed': 'The graph could not be locked: its block changed. Try again.',
   'pane.fix-not-as-drawn':
     'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.',

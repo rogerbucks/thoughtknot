@@ -20,6 +20,7 @@ import type { Selection } from './selection';
 import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
+import { onTableControl, tableScrolls, tableTookKey } from './table-keys';
 import type { QuickInfo } from './quick-info';
 import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
@@ -31,9 +32,9 @@ import { fills } from '../../space-cards.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import type { SketchPointer } from './sketch-tool';
 
-/** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
+/** Whether an event came from a control of the drawing's own: the arrow to the selection (§25), an image's control (§18), the mini-map (§24). Or a table's (§15). */
 const ownButton = (target: EventTarget | null): boolean =>
-  onPointer(target) || onImageControl(target) || onMiniMap(target);
+  onPointer(target) || onImageControl(target) || onMiniMap(target) || onTableControl(target);
 
 /** What the drawing's events need of their card, all built before they are bound. */
 export interface ViewportHost {
@@ -114,13 +115,11 @@ export function bindViewportEvents(host: ViewportHost): void {
   // what a tap at a point in the viewport reaches, nearest first (tap_cycles_near, §3)
   const nearTo = (p: { x: number; y: number }): string[] => taps.near(p, zoom.view());
   const use = (e: Event, ev: ZoomEvent) => {
-    if (zoom.handle(ev)) {
-      // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
-      if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') sel.stop();
-      e.preventDefault();
-      return true;
-    }
-    return false;
+    if (tableScrolls(e, ev) || !zoom.handle(ev)) return false; // a table scrolls by itself (table_grid_navigation)
+    // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
+    if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') sel.stop();
+    e.preventDefault();
+    return true;
   };
   // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
   card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
@@ -289,6 +288,7 @@ export function bindViewportEvents(host: ViewportHost): void {
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
     host.info.key(e); // Escape closes a tooltip, and goes on to do what it did (§24)
+    if (tableTookKey(e)) return; // a table's own keys: from cell to cell (§15)
     // Escape puts a box being dragged back, and writes nothing (§6)
     if (e.key === 'Escape' && (drag?.cancel() || host.sketch?.escape())) {
       e.preventDefault();

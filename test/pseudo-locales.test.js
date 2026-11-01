@@ -43,7 +43,7 @@ const DRAWN_BY_OBSIDIAN = ['the settings page'];
  * The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there.
  * Most are the example graph's own names and kinds, or a sample the test page sets, which are data and not interface.
  */
-const STILL_SAID_BY_CODE = { obsidian: 56, page: 17, vscode: 6, app: 7 };
+const STILL_SAID_BY_CODE = { obsidian: 51, page: 17, vscode: 6, app: 7 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
