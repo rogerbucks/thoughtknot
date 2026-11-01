@@ -144,13 +144,15 @@ window.filters = () =>
     name: f.querySelector('legend').textContent,
     values: [...f.querySelectorAll('label')].map((l) => l.textContent),
   }));
-// ticks or unticks a value of a facet, and gives what was said
+// ticks or unticks a value of a facet, and gives what was said. The glide it starts is read from its first frame, in
+// \`glide\`. A slow machine, as the Windows runner, can end a glide before another call reaches the page
 window.tick = (facet, value) => {
   const f = [...card.querySelectorAll('.thoughtknot-massive-facet')].find((x) => x.querySelector('legend').textContent === facet);
   const label = [...f.querySelectorAll('label')].find((l) => l.querySelector('span').textContent === value);
   const box = label.querySelector('input');
   box.checked = !box.checked;
   box.dispatchEvent(new Event('change'));
+  window.glide = scales();
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
 // the scales the view takes, a frame at a time, until it has held still for three frames
@@ -455,7 +457,7 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
       assert.deepEqual(shown[1].values, ['open2,000', 'done1,000']);
       assert.equal(await run("tick('status', 'done')"), '1,000 things kept');
       assert.deepEqual(await run('chose'), [{ status: ['done'] }], 'the host is told the filter, to save it');
-      const glided = await run('scales()');
+      const glided = await run('glide');
       assert.ok(glided.length > 2, 'the groups glide through frames between, never jumping');
       assert.ok(glided.at(-1) > glided[0], 'the view follows them in, as fewer things leave a smaller overview');
       assert.ok((await run("press('+', 4)")) > 1000, 'the groups kept are painted where they end');

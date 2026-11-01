@@ -41,6 +41,8 @@ jobs:
       - run: npm ci
       - env:
           THOUGHTKNOT_TEST_MEMORY_MB: 8192
+          # the Windows runner takes over 20 minutes for the whole suite, as main's full run does (ci.yml)
+          THOUGHTKNOT_TEST_MINUTES: 40
           # the parity tests read what Python prints as UTF-8, as the python job below does
           PYTHONUTF8: '1'
         run: npm test -- --test-concurrency=4 --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt

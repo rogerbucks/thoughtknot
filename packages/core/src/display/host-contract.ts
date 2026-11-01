@@ -4,6 +4,7 @@
 // one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
 import type { FoundLink } from '@thoughtknot/core';
+import type { StorageContractOptions } from '../storage-contract.ts';
 import { readNote, settingsFrom, storageContract } from '@thoughtknot/core';
 import type { DisplayHost, Host, MenuEntry } from './host.ts';
 
@@ -199,7 +200,7 @@ export interface ServicesProbe extends HostProbe {
 }
 
 /** What a host serves of the interface: all of it unless it says otherwise. */
-export interface HostServes {
+export interface HostServes extends StorageContractOptions {
   /** False where the host follows no links of a card's note yet, such as the browser editor's page. */
   links?: false;
 }
@@ -236,7 +237,7 @@ export function hostServicesContract(make: () => ServicesUnderTest, serves: Host
     const { host, probe } = make();
     return { host: host.display, probe };
   });
-  const notes = storageContract(() => make().host.files).map((check) => ({ ...check, name: `notes: ${check.name}` }));
+  const notes = storageContract(() => make().host.files, serves).map((c) => ({ ...c, name: `notes: ${c.name}` }));
   return [
     ...display,
     ...settingsChecks(make),

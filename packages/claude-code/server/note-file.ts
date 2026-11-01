@@ -116,6 +116,35 @@ export function tempBeside(target: string): string {
   return join(dirname(target), `.${basename(target)}.${randomBytes(6).toString('hex')}.thoughtknot`);
 }
 
+/** The causes of a rename Windows refuses while another program has the file open, as a virus scan of it does. */
+const HELD = new Set(['EPERM', 'EACCES', 'EBUSY']);
+
+/** The pauses, in milliseconds, between tries of a rename that Windows refused for a file held open. */
+export const HELD_WAITS = [20, 50, 100, 200, 400, 800];
+
+/**
+ * Renames `from` to `to`. On Windows a rename refused for a file held open is tried again, after each of `waits`. A
+ * scan of a file just written holds it for a moment. Any other refusal, or any on the others, is final at once.
+ */
+export async function renameHeld(
+  rename: (from: string, to: string) => Promise<void>,
+  from: string,
+  to: string,
+  platform: string = process.platform,
+  waits: readonly number[] = HELD_WAITS,
+): Promise<void> {
+  for (const wait of platform === 'win32' ? waits : []) {
+    try {
+      return await rename(from, to);
+    } catch (e) {
+      const code = e && typeof e === 'object' && 'code' in e ? String(e.code) : '';
+      if (!HELD.has(code)) throw e;
+    }
+    await new Promise((r) => setTimeout(r, wait));
+  }
+  return rename(from, to);
+}
+
 /** Writes `text` to `target` by way of a new file beside it; the result is the new version, or why nothing changed. */
 export async function writeAtomically(
   target: string,
@@ -128,7 +157,7 @@ export async function writeAtomically(
     await files.writeTemp(temp, text, mode);
     // the folder is still the one checked: one swapped for a link meanwhile would carry the rename out of the vault
     if ((await fs.realpath(dirname(temp)).catch(() => null)) !== dirname(target)) throw new Error(FOLDER_MOVED);
-    await files.rename(temp, target);
+    await renameHeld((a, b) => files.rename(a, b), temp, target);
     return { ok: true, version: versionOf(text) };
   } catch (e) {
     await files.remove(temp).catch(() => {});

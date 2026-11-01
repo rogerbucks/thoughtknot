@@ -234,7 +234,7 @@ async function wholeObsidian() {
 const folders = [];
 /** The browser editor's whole host: the page's parts in a DOM, over a fresh vault folder and a drafts folder beside it. */
 async function wholeEditor() {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-editor-host-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-editor-host-')));
   folders.push(dir);
   const vault = join(dir, 'vault');
   mkdirSync(vault);
@@ -258,7 +258,7 @@ describe('every host’s whole interface passes the services contract', () => {
   after(() => folders.forEach((f) => rmSync(f, { recursive: true, force: true })));
   for (const [name, make, serves] of [
     ['Obsidian', wholeObsidian, {}],
-    ['the browser editor', wholeEditor, { links: false }],
+    ['the browser editor', wholeEditor, { links: false, windows: process.platform === 'win32' }],
   ])
     describe(name, () => {
       for (const check of hostServicesContract(() => made, serves))

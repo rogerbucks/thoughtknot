@@ -4423,7 +4423,7 @@
           "run: () => Promise<void>"
         ],
         "storageContract": [
-          "value: (make: () => NoteStorage | Promise<NoteStorage>, { windows }?: { windows?: boolean; }) => StorageCheck[]"
+          "value: (make: () => NoteStorage | Promise<NoteStorage>, { windows }?: StorageContractOptions) => StorageCheck[]"
         ],
         "StorageLayer": [
           "type = (inner: NoteStorage) => NoteStorage"
@@ -5301,7 +5301,8 @@
         ],
         "HostServes": [
           "interface",
-          "links?: false | undefined"
+          "links?: false | undefined",
+          "windows?: boolean | undefined"
         ],
         "hostServicesContract": [
           "value: (make: () => ServicesUnderTest, serves?: HostServes) => ContractCheck[]"
