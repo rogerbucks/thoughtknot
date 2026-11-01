@@ -4,8 +4,9 @@
 //
 // It shows only while the card explores. At its top is the search: choosing a thing makes it the centre. Under it are
 // the six shapes, the depth and per-branch dials, and Back, Next and the whole graph again. Where the note is edited,
-// Save writes it into the style graph. On a wide card it is a
-// column at the start of the drawing; on a narrow one, a strip across it (styles.css).
+// Save writes it into the style graph. It is a control dock (controls-dock.ts): a card over the drawing that
+// folds away. The search, shapes, dials, Back and Next are its key controls; the whole graph again and Save are under
+// More.
 //
 // Each dial is one control: its minus and plus buttons, and a value the arrow keys, Home, End and the wheel change. It
 // says its value to a screen reader (explore_controls_accessible). Every target is 44 px.
@@ -15,6 +16,7 @@ import { BRANCH_RANGE, DEPTH_MOST } from '../../explore-map.ts';
 import type { ExploreSession } from '../../explore-session.ts';
 import { EXPLORE_SHAPES } from '../../layouts/explore-shapes.ts';
 import type { ExploreActs } from './explore-controls';
+import { dockKey, renderDock } from './controls-dock';
 import { renderFind } from './untangle-find';
 
 /** What the sidebar asks of its card, as well as the controls' own asks. */
@@ -38,16 +40,19 @@ const BRANCH_STEP = 2;
 
 /** Builds the sidebar in `root`, hidden until the card explores. */
 export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSidebar {
-  const el = root.createDiv({
-    cls: 'thoughtknot-explore-sidebar',
-    attr: { role: 'region', 'aria-label': word('explore.sidebar') },
-  });
+  const dock = renderDock(root, word('explore.sidebar'), ['thoughtknot-explore-sidebar']),
+    { el, body } = dock;
   el.hidden = true;
+  root.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (el.hidden || !dockKey(e)) return;
+    e.preventDefault();
+    dock.fold(!dock.folded());
+  });
   let s: ExploreSession | null = null;
   const run = (change: (s: ExploreSession) => boolean) => () => {
     if (s && change(s)) acts.changed();
   };
-  const find = renderFind(el, {
+  const find = renderFind(body, {
     search: acts.search,
     choose: (f) => acts.centre(f.key),
     close: () => undefined,
@@ -56,7 +61,7 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
   find.el.hidden = false;
   find.el.removeClass('thoughtknot-find');
   find.el.addClass('thoughtknot-explore-find');
-  const shapes = el.createDiv({
+  const shapes = body.createDiv({
     cls: 'thoughtknot-explore-shapes',
     attr: { role: 'group', 'aria-label': word('explore.shapes') },
   });
@@ -68,11 +73,12 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
     );
     return [shape, b] as const;
   });
-  const depth = dial(el, word('explore.depth'), [1, DEPTH_MOST], 1, (to) => run((s) => s.toDepth(to))());
-  const branch = dial(el, word('explore.per-branch'), BRANCH_RANGE, BRANCH_STEP, (to) =>
+  const depth = dial(body, word('explore.depth'), [1, DEPTH_MOST], 1, (to) => run((s) => s.toDepth(to))());
+  const branch = dial(body, word('explore.per-branch'), BRANCH_RANGE, BRANCH_STEP, (to) =>
     run((s) => s.setPerBranch(to))(),
   );
-  const moves = el.createDiv({ cls: 'thoughtknot-explore-moves' });
+  const moves = body.createDiv({ cls: 'thoughtknot-explore-moves' }),
+    rare = dock.more.createDiv({ cls: 'thoughtknot-explore-moves' });
   const back = moves.createEl('button', { text: word('explore.back'), attr: { type: 'button' } });
   back.addEventListener(
     'click',
@@ -83,13 +89,13 @@ export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSide
     'click',
     run((s) => s.next()),
   );
-  moves
+  rare
     .createEl('button', { text: word('explore.stop'), attr: { type: 'button' } })
     .addEventListener('click', () => acts.stop());
   // saved as one line in the style graph, so the note opens on it again (explore_saved)
   if (acts.saving && acts.save) {
     const save = acts.save;
-    moves
+    rare
       .createEl('button', {
         text: word('explore.save'),
         attr: { type: 'button', 'aria-label': word('explore.save.label') },

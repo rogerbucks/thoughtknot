@@ -28,6 +28,11 @@ export const LABELS_MOST = 80;
 /** The smallest and largest size a name is painted at, in screen pixels: always readable, never shouting. */
 export const READABLE_LEAST = 11,
   READABLE_MOST = 22;
+/**
+ * The smallest a thing's name is painted inside its ball, box or card, in screen pixels. It is tiny, but it shows: Roger,
+ * 1 Nov 2026, "the text hardly ever renders. Fix that, even if the text is ridiculously small" (space_names_always).
+ */
+export const NAME_TINY = 4;
 /** The size of the picked thing's name, at least. */
 const PICKED_LEAST = 14;
 /** The longest name painted whole, in letters, as the shown-text rule keeps it: a longer one ends in "…". */
