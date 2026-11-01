@@ -6,6 +6,8 @@ import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
 import { PATH, NOTE } from './host/card-notes.js';
+import { fence, labelled } from './host/notes.js';
+import { show } from './host/view-notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
 
 before(() => build());
@@ -33,8 +35,42 @@ describe('a card drawn off the page', () => {
       const el = await drawnOffPage(env, 300);
       const svg = () => el.querySelector('svg.thoughtknot-svg');
       await until(() => !!svg());
-      await until(() => Number(svg().getAttribute('width')) <= 300, 1000).catch(() => {});
-      assert.ok(Number(svg().getAttribute('width')) <= 300, `drawn ${svg().getAttribute('width')} wide in 300`);
+      // fitted to 300 across, as wide as that or, for a tall drawing, narrower; never wider, never nothing
+      await until(() => Number(svg().getAttribute('width')) <= 300, 1000);
+      assert.ok(Number(svg().getAttribute('width')) > 0, 'drawn, not shrunk to nothing');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: centre_here_fits
+  test('Centre here leaves no zoom, pan or selection for the card drawn next, only its new centre in the middle', async () => {
+    const SKY = `// graph: sky
+(sun:Star {name: 'Sun'}),
+(earth:Planet {name: 'Earth'}),
+(moon:Moon {name: 'The moon'}),
+(earth)-[:CIRCLES]->(sun),
+(moon)-[:CIRCLES]->(earth)`;
+    const note = ['# Sky', '', fence(SKY), ''].join('\n');
+    const env = await load({ files: { 'Sky.md': note } });
+    const left = [];
+    const leave = env.plugin.tried.leave.bind(env.plugin.tried);
+    env.plugin.tried.leave = (at, where) => (left.push(where), leave(at, where));
+    try {
+      const { el } = await show(env, note, 0);
+      labelled(el, 'Zoom in').click();
+      labelled(el, 'Zoom in').click();
+      el.querySelectorAll('g.node')
+        .find((n) => n.getAttribute('data-key') === 'moon')
+        .dispatch('keydown', { key: 'Enter' });
+      el.querySelectorAll('button')
+        .find((b) => b.textContent === 'Centre here')
+        .click();
+      await until(() => left.length > 0);
+      const at = left.at(-1);
+      assert.deepEqual([at.zoom, at.x, at.y, at.selected], [undefined, undefined, undefined, undefined]);
+      assert.equal(at.middle, 'moon', 'the new centre is put in the middle');
+      assert.ok(at.places instanceof Map, 'each box glides from where it was');
     } finally {
       env.uninstall();
     }
