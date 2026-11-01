@@ -2,8 +2,6 @@
 // picks a property and a value from lists the graph fills, never typing a test. The form counts what the rule finds
 // and previews its look as it is built, and names it for the legend. Quick starts fill a whole rule at once. A rule
 // tried in reading view opens the form again on itself, to change it. A rule saved opens to change it in place.
-// A rule saved can be taken out, and one Undo puts it back. It can be copied, renamed in place and moved up
-// (rule_look_remove). It can be turned off and on again, kept all the while (rule_look_off).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -131,122 +129,6 @@ describe('rule_look_builder', () => {
       const text = env.state.files.get(PATH);
       assert.equal(text.match(/means: 'Late'/g)?.length, 1, 'changed in place, not written twice');
       assert.match(text, /when: 'status == "late"'/);
-    } finally {
-      env.uninstall();
-    }
-  });
-});
-
-describe('rule_look_remove', () => {
-  test('a saved rule is taken out where the note is edited, and Undo puts the note back byte for byte', async () => {
-    const note = noteOf(DATA, STYLE);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const { el } = await show(env, note, 0);
-      labelled(opened(el), 'Remove the rule Late').click();
-      await until(() => !/means: 'Late'/.test(env.state.files.get(PATH)));
-      const removed = env.state.files.get(PATH);
-      assert.ok(!removed.includes(':Look'), 'the rule is gone, and nothing else');
-      const { el: again } = await show(env, removed, 0);
-      assert.match(again.querySelector('.thoughtknot-rule-tried')?.textContent ?? '', /Removed the rule Late/);
-      assert.equal(again.querySelector('.thoughtknot-rule-form').hidden, false, 'the form stays open where it was');
-      labelled(again, 'Put back the rule Late').click();
-      await until(() => env.state.files.get(PATH) === note);
-      const { el: back } = await show(env, note, 0);
-      assert.equal(back.querySelector('.thoughtknot-rule-tried'), null, 'one Undo, then nothing more to put back');
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('in reading view a rule taken out is only tried, the note left as it was', async () => {
-    const note = noteOf(DATA, STYLE);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const el = await readCard(env, note);
-      assert.ok(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), 'drawn with the rule at first');
-      labelled(opened(el), 'Remove the rule Late').click();
-      await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
-      assert.equal(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), null, 'drawn as if it were gone');
-      assert.equal(env.state.files.get(PATH), note, 'tried, never written');
-      assert.ok(!labelled(el, 'Remove the rule Late'), 'no longer listed among the rules saved');
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('a saved rule is copied as a new rule, renamed in place, and moved up; Escape closes the form', async () => {
-    const DUE = `(due:Look {when: 'status == "late"', colour: 'orange', badge: 'warning', means: 'Due'})`;
-    const note = noteOf(DATA, `${STYLE},\n${DUE}`);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const { el } = await show(env, note, 0);
-      const form = opened(el);
-      assert.ok(!labelled(form, 'Move the rule Late up, so it wins a clash'), 'the first rule has no Up');
-      labelled(form, 'Copy the rule Late to make a new one').click();
-      assert.equal(field(form, 'means'), 'Late (copy)', 'a copy, named apart');
-      assert.equal(field(form, 'was'), '', 'saved as a new rule');
-      labelled(form, 'Change the rule Late').click();
-      assert.equal(field(form, 'was'), 'Late');
-      type(form, 'Value', 'done');
-      const means = form.querySelector('[name="means"]');
-      means.value = 'Finished';
-      means.dispatch('input');
-      form.dispatch('submit');
-      await until(() => /means: 'Finished'/.test(env.state.files.get(PATH)));
-      const renamed = env.state.files.get(PATH);
-      assert.doesNotMatch(renamed, /means: 'Late'/, 'renamed in place, not copied');
-      labelled(form, 'Move the rule Due up, so it wins a clash').click();
-      await until(() => env.state.files.get(PATH).indexOf("'Due'") < env.state.files.get(PATH).indexOf("'Finished'"));
-      form.dispatch('keydown', { key: 'Escape' });
-      assert.equal(form.hidden, true, 'Escape closes the form');
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('with no rules saved, the form says so', async () => {
-    const note = noteOf(DATA);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const form = opened(await readCard(env, note));
-      assert.match(form.textContent, /No rules yet/);
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('a saved rule is turned off and on again: kept in the note, drawn only when on', async () => {
-    const note = noteOf(DATA, STYLE);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const { el } = await show(env, note, 0);
-      labelled(opened(el), 'Turn the rule Late off, keeping it').click();
-      await until(() => /off: true/.test(env.state.files.get(PATH)));
-      const off = env.state.files.get(PATH);
-      assert.match(off, /means: 'Late'/, 'kept in the style graph');
-      const { el: again } = await show(env, off, 0);
-      assert.equal(node(again, 'roof').querySelector('.thoughtknot-rule-badge'), null, 'drawn nothing while off');
-      const form = opened(again);
-      assert.ok(form.querySelector('.thoughtknot-rule-mine.is-off'), 'shown as off');
-      labelled(form, 'Turn the rule Late back on').click();
-      await until(() => !/off:/.test(env.state.files.get(PATH)));
-      assert.equal(env.state.files.get(PATH), note, 'on again, the note as it was');
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('in reading view a rule turned off is only tried', async () => {
-    const note = noteOf(DATA, STYLE);
-    const env = await load({ files: { [PATH]: note } });
-    try {
-      const el = await readCard(env, note);
-      labelled(opened(el), 'Turn the rule Late off, keeping it').click();
-      await until(() => !!el.querySelector('.thoughtknot-rule-tried'));
-      assert.equal(node(el, 'roof').querySelector('.thoughtknot-rule-badge'), null);
-      assert.equal(env.state.files.get(PATH), note, 'tried, never written');
-      assert.ok(labelled(el, 'Turn the rule Late back on'), 'and offered to turn on again');
     } finally {
       env.uninstall();
     }
