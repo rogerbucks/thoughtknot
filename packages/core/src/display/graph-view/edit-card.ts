@@ -5,8 +5,12 @@
 // - The name is written as the thing's text, into the text being edited or else into the note (thing-edits.ts).
 // - Where the card is read-only, or there is nowhere to write, it is never shown (edit_read_only).
 // - In space, where no box is on the page, it sits at the drawing's top corner (edit_every_view).
+// - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
+//   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
+// Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
-import { renamed } from '../../thing-edits.ts';
+import { addedNear, deleted, renamed } from '../../thing-edits.ts';
+import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { accept } from './estimate-actions';
 import { boxIn, type Target } from './taps';
@@ -22,10 +26,17 @@ export interface EditParts {
   svg: SVGSVGElement | null;
 }
 
+/** What a write hands on to the card drawn next, by graph: the thing to select, and whether to open its name. */
+const handed = new Map<string, { key: string; rename: boolean; at: number }>();
+/** How long a hand-on waits for the card drawn next, in milliseconds. */
+const HAND_ON_MS = 5000;
+
 /** The editor beside the selected thing of one card, shown for one thing at a time. */
 export class EditCard {
   private el: HTMLElement | null = null;
   private key: string | null = null;
+  /** Where the card says what a write did, or why it wrote nothing. */
+  private said: HTMLElement | null = null;
   /** Whether F2 in the drawing is listened for: from the first thing shown, once the drawing is built. */
   private keyed = false;
 
@@ -49,14 +60,46 @@ export class EditCard {
     return this.parts().svg;
   }
 
-  /** F2 in the drawing opens the name of the thing shown for typing. */
+  /**
+   * The keys of the drawing while a thing is shown: F2 renames, Insert adds a child, Shift+Enter a sibling, and Delete
+   * deletes. They are taken before the drawing's own keys, so Shift+Enter never opens the box again.
+   */
   private listen(): void {
     if (this.keyed) return;
     this.keyed = true;
-    this.card.registerDomEvent(this.viewport, 'keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'F2' || !this.rename()) return;
-      e.preventDefault();
-    });
+    this.card.registerDomEvent(
+      this.viewport,
+      'keydown',
+      (e: KeyboardEvent) => {
+        if (!this.el || e.ctrlKey || e.metaKey) return;
+        // Insert adds a child, or Option+Enter on a Mac with no Insert key. Never Tab: it moves the focus on, so the keys
+        // never trap it. Backspace deletes too, as a Mac's delete key sends it.
+        const alt = e.altKey,
+          enter = e.key === 'Enter';
+        const act =
+          e.key === 'F2' && !alt
+            ? () => this.rename()
+            : (e.key === 'Insert' && !alt) || (enter && alt && !e.shiftKey)
+              ? () => this.add('child')
+              : enter && e.shiftKey && !alt
+                ? () => this.add('sibling')
+                : (e.key === 'Delete' || e.key === 'Backspace') && !alt
+                  ? () => this.remove()
+                  : null;
+        if (!act) return;
+        e.preventDefault();
+        e.stopPropagation();
+        void act();
+      },
+      { capture: true },
+    );
+  }
+
+  /** The thing the card drawn last handed on to this one, once and soon after: to select, its name maybe opened. */
+  handedOn(): { key: string } | null {
+    const h = handed.get(this.o.graph);
+    if (!h || Date.now() - h.at > HAND_ON_MS || !this.o.reading.world[this.o.graph]?.nodes.has(h.key)) return null;
+    return { key: h.key };
   }
 
   /** Whether a thing can be edited here: never where the card is read-only, nor with nowhere to write. */
@@ -96,6 +139,7 @@ export class EditCard {
       if (e.key === 'Enter') {
         e.preventDefault();
         void this.write(name.value).then((why) => said.setText(why ?? word('edit.renamed', { name: name.value })));
+        if (this.key) handed.set(this.o.graph, { key: this.key, rename: false, at: Date.now() });
       } else if (e.key === 'Escape') {
         e.preventDefault();
         name.value = d.text;
@@ -103,7 +147,42 @@ export class EditCard {
         this.backToBox();
       }
     });
+    const row = this.el.createDiv({ cls: 'thoughtknot-edit-actions' });
+    for (const [label, icon, run, keys] of [
+      [word('edit.add-child'), 'plus', () => void this.add('child'), 'add-child'],
+      [word('edit.add-sibling'), 'list-plus', () => void this.add('sibling'), 'add-sibling'],
+      [word('edit.delete'), 'trash-2', () => void this.remove(), 'delete'],
+    ] as const)
+      button(row, label, icon, run, label).setAttribute(
+        'title',
+        word('edit.keys', { label, keys: word(`shortcut.${keys}.keys`) }),
+      );
+    this.said = said;
     this.place();
+    const h = handed.get(this.o.graph);
+    if (h?.key === t.key) {
+      handed.delete(this.o.graph);
+      if (h.rename) this.rename();
+    }
+  }
+
+  /** Adds a child or a sibling of the thing shown, ready to name, and hands it on to be selected in the card drawn next. */
+  private async add(as: 'child' | 'sibling'): Promise<void> {
+    if (!this.key) return;
+    const r = addedNear(this.o.reading, this.o.graph, this.key, as, word('edit.new-thing'));
+    if ('name' in r) handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
+    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
+    if (why) handed.delete(this.o.graph);
+    this.said?.setText(why ?? '');
+  }
+
+  /** Deletes the thing shown and its links, as one edit. */
+  private async remove(): Promise<void> {
+    if (!this.key) return;
+    const thing = details(this.o.reading, this.o.graph, this.key)?.text ?? this.key;
+    const r = deleted(this.o.reading.texts, this.o.graph, this.key);
+    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
+    this.said?.setText(why ?? word('edit.deleted', { thing }));
   }
 
   /** Opens the name of the thing shown for typing, all of it selected. Whether there was one to open. */
@@ -134,7 +213,7 @@ export class EditCard {
   /** Takes the card away. */
   hide(): void {
     this.el?.remove();
-    this.el = null;
+    this.el = this.said = null;
     this.key = null;
   }
 

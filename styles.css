@@ -744,6 +744,16 @@
 .thoughtknot-edit-said:empty {
   display: none;
 }
+/* The editor's buttons are 44-point targets, for a finger as much as a pointer. */
+.thoughtknot-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-edit-actions > button {
+  min-width: 44px;
+  min-height: 44px;
+}
 /* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
    It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */
 .thoughtknot-over > .thoughtknot-phone-sheet {

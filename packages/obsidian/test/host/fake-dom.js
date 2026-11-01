@@ -10,6 +10,7 @@ export class FakeElement {
     this.parentElement = null;
     this.attributes = new Map();
     this.listeners = new Map();
+    this.capturing = new Map();
     this.text = '';
     this.cssProps = {};
     this.focused = false;
@@ -201,13 +202,16 @@ export class FakeElement {
   querySelector(sel) {
     return this.querySelectorAll(sel)[0] ?? null;
   }
-  addEventListener(type, fn) {
-    (this.listeners.get(type) ?? this.listeners.set(type, []).get(type)).push(fn);
+  // a listener for the capture phase is kept apart, and heard first, from the page down, as a browser hears it
+  addEventListener(type, fn, options) {
+    const at = options === true || options?.capture ? this.capturing : this.listeners;
+    (at.get(type) ?? at.set(type, []).get(type)).push(fn);
   }
-  removeEventListener(type, fn) {
-    this.listeners.set(
+  removeEventListener(type, fn, options) {
+    const at = options === true || options?.capture ? this.capturing : this.listeners;
+    at.set(
       type,
-      (this.listeners.get(type) ?? []).filter((f) => f !== fn),
+      (at.get(type) ?? []).filter((f) => f !== fn),
     );
   }
   dispatch(type, init = {}) {
@@ -218,10 +222,17 @@ export class FakeElement {
       preventDefault() {
         this.defaultPrevented = true;
       },
-      stopPropagation() {},
+      stopped: false,
+      stopPropagation() {
+        this.stopped = true;
+      },
       ...init,
     };
-    for (let e = ev.target; e; e = e.parentElement) for (const fn of e.listeners.get(type) ?? []) fn.call(e, ev);
+    const path = [];
+    for (let e = ev.target; e; e = e.parentElement) path.push(e);
+    for (const e of [...path].reverse()) for (const fn of e.capturing?.get(type) ?? []) if (!ev.stopped) fn.call(e, ev);
+    for (const e of path) for (const fn of e.listeners.get(type) ?? []) if (!ev.stopped) fn.call(e, ev);
+    if (ev.stopped) return ev;
     // and on to the document, from anything on the page
     const doc = this.ownerDocument;
     if (ev.target.isConnected) for (const fn of doc.listeners?.get(type) ?? []) fn.call(doc, ev);

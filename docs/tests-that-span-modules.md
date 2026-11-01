@@ -263,6 +263,11 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
+## The Obsidian plugin: editing in the drawing
+
+- `packages/obsidian/test/edit-add.test.js` — Tab, Shift+Enter and Delete on a selected thing, and the editor's buttons
+  (editor spec §72, edit_quick_add, edit_delete). It spans the editor beside the thing and the core's thing edits.
+
 ## The Obsidian plugin: the process debugger
 
 - `packages/obsidian/test/process-debugger.test.js` — the process debugger in a drawing's walk strip (editor spec
