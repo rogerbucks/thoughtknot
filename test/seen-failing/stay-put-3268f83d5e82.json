@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stay-put.test.js",
+  "test": "the check fails on a shown thing that moved, and lets a gone, a new or an asked-for one pass",
+  "seen_failing_first": false,
+  "evidence": "It tests the check itself, a test helper, which has no code under it to fail first."
+}
