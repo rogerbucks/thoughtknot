@@ -1,6 +1,7 @@
 // A graph drawn as a table (editor spec §15, diagram_type_set, type_one_way_to_work). The plugin draws a plain table, not
 // Graphviz. It has a row for each thing, with its kind and properties, and one for each link. It is worked as a drawing is.
-// A row tapped, or opened from the keyboard, shows its details, and the one shown is marked. The bar's zoom scales it.
+// A row tapped, or opened from the keyboard, shows its details, and the one shown is marked. The bar's zoom sizes its
+// words. How it scrolls, moves from cell to cell, sorts and is resized: table-keys.test.js and table-sizing.test.js.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
@@ -42,7 +43,7 @@ describe('a graph drawn as a table', () => {
       assert.equal(el.querySelector('svg g.node'), null);
       const [things, links] = el.querySelectorAll('.thoughtknot-table table');
       assert.deepEqual(
-        things.querySelectorAll('th').map((th) => th.textContent),
+        things.querySelectorAll('thead th[data-col]').map((th) => th.textContent),
         ['Thing', 'Kind', 'open', 'since'],
       );
       assert.deepEqual(things.querySelectorAll('tr[data-key]').map(cells), [
@@ -72,7 +73,7 @@ describe('a graph drawn as a table', () => {
       assert.ok(!panel.hidden);
       assert.match(panel.textContent, /The park/);
       assert.ok(groupsRead(panel).includes('near this Home'), 'its link in, with no reading back');
-      assert.equal(row.getAttribute('aria-pressed'), 'true');
+      assert.equal(row.getAttribute('aria-selected'), 'true');
       assert.ok(row.classList.contains('is-selected'));
     } finally {
       env.uninstall();
@@ -84,7 +85,7 @@ describe('a graph drawn as a table', () => {
     const { env, el } = await card();
     try {
       const row = el.querySelectorAll('tr[data-key]')[0];
-      assert.equal(row.getAttribute('tabindex'), '0');
+      assert.equal(row.querySelector('td').getAttribute('tabindex'), '0', 'its first cell, where Tab comes in');
       assert.equal(row.getAttribute('aria-label'), 'Place: Home');
       const link = el.querySelectorAll('tr[data-link]')[0];
       assert.equal(link.getAttribute('aria-label'), 'Link: Home near The park');
@@ -96,15 +97,16 @@ describe('a graph drawn as a table', () => {
   });
 
   // proves: type_one_way_to_work
-  test('zooms by the bar’s buttons, as a drawing does', async () => {
+  test('zooms its words by the bar’s buttons, as a drawing is zoomed, and Fit puts them back', async () => {
     const { env, el } = await card();
     try {
-      const table = el.querySelector('.thoughtknot-table');
-      const before = Number(table.cssProps['--thoughtknot-scale']);
+      const vp = el.querySelector('.thoughtknot-viewport');
+      const words = () => Number(vp.cssProps['--thoughtknot-text-scale']); // the table inherits them
+      assert.equal(words(), 1);
       labelled(el, 'Zoom in').click();
-      assert.ok(Number(table.cssProps['--thoughtknot-scale']) > before, 'larger');
+      assert.ok(words() > 1, 'larger');
       labelled(el, 'Fit').click();
-      assert.equal(Number(table.cssProps['--thoughtknot-scale']), before);
+      assert.equal(words(), 1);
     } finally {
       env.uninstall();
     }
@@ -123,15 +125,14 @@ describe('the selection on a graph drawn as a table', () => {
       .filter((r) => ['thoughtknot-dim', 'thoughtknot-kept', 'thoughtknot-hot'].some((c) => r.classList.contains(c)));
 
   // proves: type_one_way_to_work
-  test('with a row selected, an arrow key walks nowhere: the selection stays and the key is left to the page', async () => {
+  test('with a row selected, an arrow key along the row walks no links: the selection stays on the row', async () => {
     const { env, el } = await card();
     try {
       const row = rowOf(el, 'home');
       row.dispatch('keydown', { key: 'Enter' });
       assert.ok(row.classList.contains('is-selected'));
-      for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) {
-        const e = row.dispatch('keydown', { key });
-        assert.equal(e.defaultPrevented, false, `${key} not taken`);
+      for (const key of ['ArrowRight', 'ArrowLeft']) {
+        row.querySelectorAll('td')[1].dispatch('keydown', { key });
         assert.ok(row.classList.contains('is-selected'), `${key} leaves the selection`);
       }
     } finally {
@@ -171,7 +172,7 @@ describe('the selection on a graph drawn as a table', () => {
       assert.match(el.querySelector('.thoughtknot-details').textContent, /The park/);
       assert.ok(rowOf(el, 'park').classList.contains('is-selected'));
       // compared, not printed: a failure would otherwise print the whole page
-      assert.ok(env.doc.activeElement === rowOf(el, 'park'), 'the row found has the keyboard focus');
+      assert.ok(rowOf(el, 'park').contains(env.doc.activeElement), 'the row found has the keyboard focus, in a cell');
     } finally {
       env.uninstall();
     }
@@ -187,7 +188,7 @@ describe('the selection on a graph drawn as a table', () => {
       const e = row.dispatch('keydown', { key: 'Escape' });
       assert.ok(e.defaultPrevented);
       assert.ok(!row.classList.contains('is-selected'));
-      assert.equal(row.getAttribute('aria-pressed'), 'false');
+      assert.equal(row.getAttribute('aria-selected'), 'false');
       assert.ok(el.querySelector('.thoughtknot-details').hidden);
     } finally {
       env.uninstall();
