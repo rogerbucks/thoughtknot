@@ -3,6 +3,8 @@
 // The built plugin, loaded against the stand-ins for the page.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { rules, winner } from './host/cascade.js';
 import { build } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { load, GRAPH, show } from './host/view-notes.js';
@@ -44,5 +46,22 @@ describe('choosing a thing found', () => {
     const drawn = draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()),
       width = Number(el.querySelector('svg.thoughtknot-svg').getAttribute('width'));
     assert.ok(width / drawn.width >= READABLE_SCALE - 1e-9, `readable: ${width / drawn.width}`);
+  });
+
+  // Zen-led refresh (Roger, 1 Nov 2026): one quiet row a result, its kind in small muted words
+  test('lists each result as one row: its name, its kind muted, and a small Explore at the end', () => {
+    const [first] = search('tablet');
+    assert.ok(first.hasClass('thoughtknot-find-result'));
+    assert.ok(first.querySelector('.thoughtknot-find-kind'), 'the kind in its own words');
+    const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
+    const find = { tag: 'div', classes: ['thoughtknot-find'] };
+    const list = { tag: 'ul', classes: ['thoughtknot-find-results'], states: [], ancestors: [find] };
+    const row = { tag: 'li', classes: [], states: [], ancestors: [list, find] };
+    const name = { tag: 'button', classes: ['thoughtknot-find-result'], states: [], ancestors: [row, list, find] };
+    const kind = { tag: 'span', classes: ['thoughtknot-find-kind'], states: [], ancestors: [name, row, list, find] };
+    assert.equal(winner(all, list, 'flex-direction').value, 'column');
+    assert.equal(winner(all, row, 'display').value, 'flex');
+    assert.equal(winner(all, name, 'text-align').value, 'start');
+    assert.match(winner(all, kind, 'color').value, /--gn-text-muted/);
   });
 });

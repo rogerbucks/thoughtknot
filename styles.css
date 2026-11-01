@@ -1064,6 +1064,37 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   padding: 0;
   list-style: none;
 }
+/* Find's results are a quiet list, one row a result (Zen-led refresh, Roger 1 Nov 2026). The name leads, its kind
+   follows in small muted words, and Explore sits small at the row's end. */
+.thoughtknot-find .thoughtknot-find-results {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.thoughtknot-find-results > li {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  border-top: 1px solid var(--gn-border);
+}
+.thoughtknot-find-results .thoughtknot-find-result {
+  flex: 1;
+  justify-content: flex-start;
+  text-align: start;
+  background: none;
+  box-shadow: none;
+}
+.thoughtknot-find-kind {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-find-results .thoughtknot-find-explore {
+  background: none;
+  box-shadow: none;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-normal);
+  text-decoration: underline;
+}
 .thoughtknot-filter button.is-hidden {
   text-decoration: line-through;
 }

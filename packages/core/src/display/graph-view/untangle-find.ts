@@ -46,10 +46,10 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
     shown = on.search(input.value);
     status.setText(said(input.value, shown.length));
     for (const f of shown) {
-      const b = list.createEl('li').createEl('button', {
-        text: `${f.text} · ${f.kind}${f.via === 'name' ? '' : ` — ${f.via}`}`,
-        attr: { type: 'button' },
-      });
+      // its name, then its kind in muted words: one quiet row a result
+      const b = list.createEl('li').createEl('button', { cls: 'thoughtknot-find-result', attr: { type: 'button' } });
+      b.createSpan({ text: f.text });
+      b.createSpan({ cls: 'thoughtknot-find-kind', text: ` · ${f.kind}${f.via === 'name' ? '' : ` — ${f.via}`}` });
       b.addEventListener('click', () => on.choose(f));
       const explore = on.explore;
       if (explore) {
