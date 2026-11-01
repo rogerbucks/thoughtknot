@@ -2,7 +2,7 @@
 // the key the thing already uses, as one change to the one block that writes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addedNear, deleted, renamed } from '../src/thing-edits.ts';
+import { addedNear, deleted, linkedTo, renamed } from '../src/thing-edits.ts';
 import { readNote } from '../src/drawing.ts';
 
 const BLOCK = `// graph: reader
@@ -91,5 +91,26 @@ describe('a thing deleted', () => {
     const two = ["// graph: g\n(a {name: 'A'})", '// graph: g\n(a)-[:R]->(a)'];
     assert.ok('reason' in deleted(two, 'g', 'a'));
     assert.ok('reason' in deleted([TREE], 'map', 'nobody'));
+  });
+});
+
+describe('a link drawn from one thing to another', () => {
+  const reading = readNote([BLOCK]);
+
+  // proves: edit_link_drag
+  test('is written in the block of the first, of the type it uses most', () => {
+    const r = linkedTo(reading, 'reader', 'bare', 'question');
+    assert.equal(r.now, `${BLOCK},\n(bare)-[:ANSWERS]->(question)`, 'the graph uses ANSWERS most');
+    const t = linkedTo(reading, 'reader', 'large_reader', 'bare', 'BEATS');
+    assert.equal(t.now, `${BLOCK},\n(large_reader)-[:BEATS]->(bare)`, 'a type given is kept');
+  });
+
+  // proves: edit_link_drag
+  test('is refused to itself, where it is already, or to a thing not in the graph', () => {
+    assert.deepEqual(linkedTo(reading, 'reader', 'bare', 'bare'), {
+      reason: 'A thing cannot be linked to itself here',
+    });
+    assert.deepEqual(linkedTo(reading, 'reader', 'large_reader', 'question'), { reason: 'That link is already there' });
+    assert.ok('reason' in linkedTo(reading, 'reader', 'bare', 'nobody'));
   });
 });

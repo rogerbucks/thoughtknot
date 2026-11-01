@@ -38,6 +38,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'add-child', place: 'drawing', keys: ['Insert', 'Enter'] },
   { id: 'add-sibling', place: 'drawing', keys: ['Enter'] },
   { id: 'delete', place: 'drawing', keys: ['Delete', 'Backspace'] },
+  { id: 'link', place: 'drawing', keys: ['l'] },
   { id: 'shortcuts', place: 'drawing', keys: ['?'], command: true },
   { id: 'move-choose', place: 'moving', keys: ARROWS },
   { id: 'move-put', place: 'moving', keys: ['Enter'] },

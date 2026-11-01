@@ -44,6 +44,8 @@ export const SHORTCUT_SOURCE_WORDS = {
   'shortcut.add-sibling.keys': 'Shift+Enter',
   'shortcut.delete': 'Delete the selected thing and its links',
   'shortcut.delete.keys': 'Delete or Backspace',
+  'shortcut.link': 'Link the selected thing to another, found by name',
+  'shortcut.link.keys': 'L',
   'shortcut.shortcuts': 'Show the keyboard shortcuts',
   'shortcut.shortcuts.keys': '?',
   'shortcut.move-choose': 'Choose where the box goes',

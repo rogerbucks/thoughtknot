@@ -62,4 +62,12 @@ export const EDIT_SOURCE_WORDS = {
   'edit.deleted': '{thing} deleted. Undo puts it back.',
   'edit.many-blocks': '{thing} is written in more than one block: change it in the text',
   'edit.together': '{thing} is written together with other things: change it in the text',
+  'edit.link': 'Link to…',
+  'edit.link-drag': 'Drag to another thing to link to it, or to an empty place for a new thing',
+  'edit.link-find': 'Link {thing} to',
+  'edit.link-hint': 'Type a name. Enter links to the first match, or makes a new thing. Escape closes.',
+  'edit.link-none': 'No thing matches. Enter makes {name} and links to it.',
+  'edit.linked': 'Linked to {thing}',
+  'edit.link-self': 'A thing cannot be linked to itself here',
+  'edit.link-there': 'That link is already there',
 } as const;
