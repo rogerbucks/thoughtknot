@@ -5,6 +5,9 @@
 // - the red, green and blue numbers from 0 to 255, with how opaque;
 // - `color(srgb …)`, the same numbers from 0 to 1. Chrome writes a colour a theme mixes (`color-mix`) this way, as
 //   Obsidian's link colours are. Without it, those links were painted clear (Roger, 23 Oct 2026).
+// A newer browser also writes back the wider forms a theme may use or mix in: `oklab(…)`, `oklch(…)`, `lab(…)`,
+// `lch(…)` and `color(display-p3 …)` or `color(srgb-linear …)`. Unread, a ball in one of them was painted black
+// (Roger, 1 Nov 2026: "colours are coming through wrong on some 3d views"). Each is turned into red, green and blue.
 // Host-free and pure.
 
 /** A colour as four numbers from 0 to 1: red, green, blue and how opaque. */
@@ -24,7 +27,74 @@ export function rgbaOf(written: string): Rgba {
   if (rgb) return [Number(rgb[1]) / 255, Number(rgb[2]) / 255, Number(rgb[3]) / 255, Number(rgb[4] ?? 1)];
   const srgb = /^color\(srgb\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)(?:\s*\/\s*([\d.e+-]+))?\s*\)$/.exec(written);
   if (srgb) return [Number(srgb[1]), Number(srgb[2]), Number(srgb[3]), Number(srgb[4] ?? 1)].map(clamp) as Rgba;
-  return [0, 0, 0, 0];
+  return wideOf(written) ?? [0, 0, 0, 0];
+}
+
+/** A number of a colour as written: `none` is 0, and a share in `%` is of `whole`. */
+const numberOf = (n: string, whole: number) =>
+  n === 'none' ? 0 : n.endsWith('%') ? (parseFloat(n) / 100) * whole : parseFloat(n);
+
+/** Red, green and blue without the screen's curve, as the screen shows them: with it, kept from 0 to 1. */
+const shown = (v: number) => clamp(v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+/** One of red, green or blue as the screen shows it, without its curve. */
+const unshown = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+
+/** An OKLab colour, as red, green and blue without the screen's curve. */
+function fromOklab(l: number, a: number, b: number): [number, number, number] {
+  const long = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3,
+    middle = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3,
+    short = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * long - 3.3077115913 * middle + 0.2309699292 * short,
+    -1.2684380046 * long + 2.6097574011 * middle - 0.3413193965 * short,
+    -0.0041960863 * long - 0.7034186147 * middle + 1.707614701 * short,
+  ];
+}
+
+/** A CIE Lab colour, seen in the light of D50 as CSS has it, as red, green and blue without the screen's curve. */
+function fromLab(l: number, a: number, b: number): [number, number, number] {
+  const fy = (l + 16) / 116,
+    f = (t: number) => (t > 6 / 29 ? t ** 3 : 3 * (6 / 29) ** 2 * (t - 4 / 29));
+  const [x, y, z] = [0.96422 * f(fy + a / 500), f(fy), 0.82521 * f(fy - b / 200)];
+  return [
+    3.1341359569958707 * x - 1.6173863321612538 * y - 0.4906619460083532 * z,
+    -0.978795502912089 * x + 1.916254567259524 * y + 0.03344273116131949 * z,
+    0.07195537988411677 * x - 0.2289768264158322 * y + 1.405386058324125 * z,
+  ];
+}
+
+/** Display P3's red, green and blue, without their curve, as sRGB's. */
+const fromP3 = (r: number, g: number, b: number): [number, number, number] => [
+  1.2249401 * r - 0.2249404 * g,
+  -0.0420569 * r + 1.0420571 * g,
+  -0.0196376 * r - 0.0786361 * g + 1.0982735 * b,
+];
+
+/** A colour in one of the wider forms a browser writes back, as four numbers; null when it is in none of them. */
+function wideOf(written: string): Rgba | null {
+  const m =
+    /^(oklab|oklch|lab|lch|color)\(\s*(?:(display-p3|srgb-linear)\s+)?([^)/]+?)\s*(?:\/\s*([\d.e+-]+%?)\s*)?\)$/.exec(
+      written,
+    );
+  if (!m) return null;
+  const [, form, space, body = '', alpha] = m;
+  const parts = body.split(/\s+/);
+  if (parts.length !== 3 || (form === 'color') !== (space !== undefined)) return null;
+  const [p, q, r] = parts as [string, string, string];
+  const hue = (h: string) => (numberOf(h.replace(/deg$/, ''), 360) * Math.PI) / 180;
+  let linear: [number, number, number];
+  if (form === 'oklab') linear = fromOklab(numberOf(p, 1), numberOf(q, 0.4), numberOf(r, 0.4));
+  else if (form === 'oklch')
+    linear = fromOklab(numberOf(p, 1), numberOf(q, 0.4) * Math.cos(hue(r)), numberOf(q, 0.4) * Math.sin(hue(r)));
+  else if (form === 'lab') linear = fromLab(numberOf(p, 100), numberOf(q, 125), numberOf(r, 125));
+  else if (form === 'lch')
+    linear = fromLab(numberOf(p, 100), numberOf(q, 150) * Math.cos(hue(r)), numberOf(q, 150) * Math.sin(hue(r)));
+  else {
+    const rgb = [p, q, r].map((n) => numberOf(n, 1)) as [number, number, number];
+    linear = space === 'srgb-linear' ? rgb : fromP3(...(rgb.map(unshown) as [number, number, number]));
+  }
+  const numbers = [...linear.map(shown), clamp(alpha === undefined ? 1 : numberOf(alpha, 1))];
+  return numbers.some((n) => !Number.isFinite(n)) ? null : (numbers as Rgba);
 }
 
 /** How opaque the 3D view paints a thing the focus fades (focus_space): a third, so what is brought forward stands out. */
