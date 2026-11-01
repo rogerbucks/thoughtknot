@@ -670,9 +670,9 @@
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
-/* A control dock, or the chip: a card in the corner. Every card that floats over the drawing (these, the 3D view's
-   pad and the mini-map) has the same edge, corners and shadow, so they read as one set. Folded, only its head shows. Its dials and buttons are 44-point
-   targets, and the shape in use is pressed, so said by more than colour. */
+/* A control dock, or the chip: a card in the corner. Every card over the drawing looks the same: these, the 3D view's
+   pad and the mini-map. They share an edge, corners and a shadow, so they read as one set. Folded, only its head
+   shows. Its dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
 .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
   display: flex;
   flex-direction: column;
@@ -3479,8 +3479,8 @@ body.thoughtknot-easier-reading
 .thoughtknot-mini-map[hidden] {
   display: none;
 }
-/* On a phone the control sheet lies over the foot of the drawing, so the mini-map rides just above it at each of its
-   heights and is never hidden (Roger, 1 Nov 2026: the mini-map is always visible). The sheet's heights are shares of
+/* On a phone the control sheet lies over the foot of the drawing. So the mini-map rides just above it at each of its
+   heights, never hidden (Roger, 1 Nov 2026: the mini-map is always visible). The sheet's heights are shares of
    the drawing's room; here they are the same shares of the drawing, which is that room. */
 .thoughtknot-view:has(.thoughtknot-phone-sheet.is-peek) .thoughtknot-mini-map {
   inset-block-end: calc(max(7.5rem, 18%) + var(--gn-space-2));
