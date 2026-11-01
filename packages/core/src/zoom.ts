@@ -291,7 +291,7 @@ export class Zoom {
 
   private down(e: Extract<ZoomEvent, { kind: 'down' }>): boolean {
     const touch = e.pointer === 'touch';
-    const pans = !e.onBox && (!touch || this.zoomedIn());
+    const pans = touch ? this.zoomedIn() : !e.onBox; // a finger on a box or link still pans: the box waits for a hold
     this.pointers.set(e.id, {
       touch,
       x: e.x,
