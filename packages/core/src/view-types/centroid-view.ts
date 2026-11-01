@@ -13,6 +13,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import { louvain } from '../louvain.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { fitText } from './fit-text.ts';
 
 /** The kind of a written cluster. */
 const CLUSTER = 'Cluster';
@@ -156,7 +157,7 @@ export function centroidMarks({ shape, space }: DiagramGiven): DrawMark[] {
         style: 'text',
         x,
         y: Math.min(y + ring + dot + size, space.height),
-        text: s.label,
+        text: fitText(s.label, Math.max(cw - 4, 1), size),
         size,
         anchor: 'middle',
         maxWidth: Math.max(cw - 4, 1),
