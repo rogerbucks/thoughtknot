@@ -86,3 +86,13 @@ test('keys that look like the ids of names or groups still give every mark its o
   const ids = marks.map((m) => m.id);
   assert.equal(new Set(ids).size, ids.length, ids.join(' | '));
 });
+
+test('a long name is cut to its box with an ellipsis, so no name spills over its box', () => {
+  const long = 'a very long name that will never fit a small box';
+  const things = Array.from({ length: 30 }, (_, i) => [`${long} ${i}`]);
+  const marks = treemapMarks({ shape: shapeOf(things), space: SPACE });
+  const labels = marks.filter((m) => m.kind === 'label');
+  assert.ok(labels.some((m) => m.text.endsWith('…')));
+  // a letter is about 0.56 of its size wide
+  for (const m of labels) assert.ok([...m.text].length * m.size * 0.56 <= m.maxWidth + 1e-9, m.text);
+});

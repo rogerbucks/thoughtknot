@@ -5,6 +5,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { fitText } from './fit-text.ts';
 
 /** A rectangle: its corner, width and height. */
 interface Rect {
@@ -118,7 +119,7 @@ export function treemapMarks({ shape, space }: DiagramGiven): DrawMark[] {
         group: id,
         x: box.x + 4,
         y: box.y + band * 0.75,
-        text: label,
+        text: fitText(label, Math.max(box.width - 8, 1), band * 0.6),
         size: band * 0.6,
         anchor: 'start',
         maxWidth: Math.max(box.width - 8, 1),
@@ -138,7 +139,7 @@ export function treemapMarks({ shape, space }: DiagramGiven): DrawMark[] {
           group: id,
           x: cell.x + cell.width / 2,
           y: cell.y + cell.height / 2 + size / 3,
-          text: text.get(key) ?? key,
+          text: fitText(text.get(key) ?? key, cell.width - 4, size),
           size,
           anchor: 'middle',
           maxWidth: cell.width - 4,

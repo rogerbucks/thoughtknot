@@ -13,6 +13,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { squarified } from './treemap-view.ts';
+import { fitText } from './fit-text.ts';
 
 /** The links that run from a part to its whole. */
 export const PART_LINKS: readonly string[] = ['PART_OF', 'MEMBER_OF', 'IN', 'INSIDE'];
@@ -121,7 +122,7 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
           style: 'text',
           x: held.length ? box.x + 4 : box.x + box.width / 2,
           y: held.length ? box.y + band * 0.75 : box.y + box.height / 2 + size / 3,
-          text: text.get(k) ?? k,
+          text: fitText(text.get(k) ?? k, Math.max(box.width - 8, 1), size),
           size,
           anchor: held.length ? 'start' : 'middle',
           maxWidth: Math.max(box.width - 8, 1),
