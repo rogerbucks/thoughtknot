@@ -8,6 +8,11 @@ import { FADED, seeThrough } from '../../colour-numbers.ts';
 import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
+/** How opaque the box round a thing drawn as its name alone is, of its words' colour. */
+const BARE_FILL = 0.12;
+/** The room left round the name of a thing drawn as its name alone, in pixels. */
+const BARE_ROOM = 4;
+
 /** How many points a link's curve is read at. */
 const LINK_STEPS = 16;
 
@@ -15,8 +20,9 @@ const LINK_STEPS = 16;
 export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Paints } {
   const tokens = new Map<string, string>(),
     table = new Map<string, Paint>();
-  // a thing or link the focus fades is painted see-through, as the card fades it (focus_space)
-  const styled = (shape: Element | null, text: Element | null, faded = false): string => {
+  // a thing or link the focus fades is painted see-through, as the card fades it (focus_space).
+  // One drawn as its name alone (`bare`), as a matrix row is, gets a pale box of its words colour (space_bare_names)
+  const styled = (shape: Element | null, text: Element | null, faded = false, bare = false): string => {
     const view = svg.ownerDocument.defaultView;
     const look = shape && view ? view.getComputedStyle(shape) : null,
       words = text && view ? view.getComputedStyle(text) : null;
@@ -24,6 +30,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     if (look && look.fill !== 'none') paint.fill = look.fill;
     if (look && look.stroke !== 'none') paint.line = look.stroke;
     if (words && words.fill !== 'none') paint.text = words.fill;
+    if (bare && paint.text) [paint.fill, paint.line] = [seeThrough(paint.text, BARE_FILL), paint.text];
     if (faded)
       for (const part of ['fill', 'line', 'text'] as const)
         if (paint[part]) paint[part] = seeThrough(paint[part], FADED);
@@ -85,14 +92,15 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     const shape = g.querySelector(
       ':scope > polygon, :scope > ellipse, :scope > path, :scope > a polygon, :scope > a path',
     );
-    if (!shape) continue;
+    const text = nameOf(g);
+    // a thing drawn as its name alone, as a matrix or a plan draws its rows, is the box round its name (space_bare_names)
+    if (!shape && !text) continue;
     // the plugin's own drawing names a thing by data-key and drops Graphviz's titles; a plain Graphviz SVG has titles
     const key = g.getAttribute('data-key') ?? (titleOf(g) || g.id);
     const name = g.getAttribute('aria-label');
-    const { x, y, width, height } = boxOf(shape);
-    const text = nameOf(g);
+    const { x, y, width, height } = shape ? boxOf(shape) : roomAround(boxOf(text as Element));
     const group = holding(x, y, width, height);
-    const style = styled(shape, text, dim(g));
+    const style = styled(shape, text, dim(g), !shape);
     keys.add(key);
     boxes.push({ key, x, y, width, height });
     marks.push({
@@ -116,7 +124,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: labelOf(g, key, text),
+        // a bare name is its own words: a matrix writes the same name again as its column (space_bare_names)
+        text: shape ? labelOf(g, key, text) : text.textContent.trim(),
         size,
         anchor: 'middle',
       });
@@ -171,6 +180,11 @@ function headFirst(g: Element, points: readonly (readonly [number, number])[]): 
   const x = box.x + box.width / 2,
     y = box.y + box.height / 2;
   return Math.hypot(x - first[0], y - first[1]) < Math.hypot(x - last[0], y - last[1]);
+}
+
+/** The box `b`, with BARE_ROOM all round it. */
+function roomAround(b: { x: number; y: number; width: number; height: number }) {
+  return { x: b.x - BARE_ROOM, y: b.y - BARE_ROOM, width: b.width + 2 * BARE_ROOM, height: b.height + 2 * BARE_ROOM };
 }
 
 /** A thing's box on the page, by its key. */
