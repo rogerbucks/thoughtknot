@@ -1,10 +1,10 @@
 // Writing to the style graph (editor spec §2, §6, §7, §14, §15). It writes a nudge, a look, and whether a view fades
 // or hides what is outside it. It writes how a view was shown, a property switched on or off inline, and arrowheads
-// hidden or shown. It writes the diagram type chosen, and a huge graph's filter (§53). Each is written as text into the
-// graph's style block, never a data block. A
-// note with no style block for the graph gets one after its last block. It has its graph line and a comment saying
-// whose style it is. A view's setting and how it was shown are changed in place when already written for the same
-// place. So is a choice of properties, arrowheads, diagram type or filter. None is ever written twice.
+// hidden or shown. It writes the diagram type chosen, a huge graph's filter (§53), a rule (§56) and an exploration
+// (§71). Each is written as text into the graph's style block, never a data block. A note with no style block for the
+// graph gets one after its last block. It has its graph line and a comment saying whose style it is. A view's setting
+// and how it was shown are changed in place when already written for the same place. So is a choice of properties,
+// arrowheads, diagram type, filter or exploration, and a rule with the same meaning. None is ever written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
@@ -23,15 +23,19 @@ import {
 } from './style-edit-checks.ts';
 import { filterRefusal, filterText } from './filter-saved.ts';
 import type { FilterKeep } from './filter-saved.ts';
+import { exploreRefusal, shownText } from './explore-saved.ts';
+import type { ExploreSave } from './explore-saved.ts';
 import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { legendText } from './untangle-saved.ts';
-import { isDefaultLayout, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import { isDefaultLayout, SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
+import { ruleProps, ruleRefusal } from './rule-write.ts';
+import type { RuleWrite } from './rule-write.ts';
 
 /** A nudge to write: its word, and the parts that word needs. */
 export interface NudgeWrite {
@@ -114,16 +118,18 @@ export type StyleChange =
   | { show: ShowWrite }
   | { arrows: ArrowsWrite }
   | { diagram: DiagramWrite }
-  | { filter: FilterWrite };
+  | { filter: FilterWrite }
+  | { rule: RuleWrite }
+  | { explore: ExploreSave };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
 
-type Value = string | number | undefined;
+type Value = string | number | boolean | undefined;
 
 /** A thing written as GQL writes it: its id and kind, then each property given, strings quoted, comma-joined. */
 function thingText(id: string, kind: string, props: [string, Value][]): string {
-  const given = props.filter((p): p is [string, string | number] => p[1] !== undefined);
+  const given = props.filter((p): p is [string, string | number | boolean] => p[1] !== undefined);
   return `(${id}:${kind} {${given.map(([k, v]) => `${k}: ${typeof v === 'string' ? quoted(v) : String(v)}`).join(', ')}})`;
 }
 
@@ -207,6 +213,21 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
     props.push(['colour', l.colour], ['line', l.line], ['format', l.format], ['means', l.means]);
     return { kind: 'Look', props };
   }
+  if ('rule' in change) {
+    // a rule with the same meaning in the same view is changed in place (§56, rule_look_try_save)
+    const r = change.rule,
+      why = ruleRefusal(r);
+    return why
+      ? { refused: why }
+      : {
+          kind: 'Look',
+          props: ruleProps(r),
+          match: [
+            ['means', r.was ?? r.means], // a rule renamed is changed in place
+            ['view', r.view],
+          ],
+        };
+  }
   if ('filter' in change) {
     const { keep, view } = change.filter,
       why = filterRefusal(keep) ?? (view === '' ? noViewName() : null);
@@ -221,6 +242,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       match: [['view', view]],
     };
   }
+  if ('explore' in change) return exploreThing(change.explore);
   if ('outside' in change) {
     const { view, outside } = change.outside;
     if (!view) return { refused: noViewName() };
@@ -250,12 +272,28 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       ...SWITCH_KEYS.map((k): [string, Value] => [k, s.switches?.[k]]),
       // written only when something is chosen, and only here, as the view is saved as shown (untangle_legend)
       ['legend', s.legend?.length ? legendText(s.legend) : undefined],
-      ...(Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]).map(([k, key]): [string, Value] => [
-        key,
-        s.layout && !isDefaultLayout(s.layout) ? s.layout[k] : undefined,
-      ]),
+      ...(Object.entries({ ...SHOWN_LAYOUT_KEYS, ...SHOWN_LAYOUT_CHOICES }) as [keyof LayoutOptions, string][]).map(
+        ([k, key]): [string, Value] => [key, s.layout && !isDefaultLayout(s.layout) ? s.layout[k] : undefined],
+      ),
     ],
     match: [['view', s.view]],
+  };
+}
+
+/** The Explore line `e` writes, changed in place for the same view, so a graph keeps one exploration (§71). */
+function exploreThing(e: ExploreSave): ToWrite | { refused: string } {
+  const why = exploreRefusal(e) ?? (e.view === '' ? noViewName() : null);
+  if (why) return { refused: why };
+  return {
+    kind: 'Explore',
+    props: [
+      ['centre', e.centre],
+      ['shown', shownText(e.shown)],
+      ['shape', e.shape],
+      ['per_branch', e.perBranch],
+      ['view', e.view],
+    ],
+    match: [['view', e.view]],
   };
 }
 
@@ -266,6 +304,7 @@ function namedBy(change: StyleChange): string[] {
   if ('look' in change) return named(change.look.thing, change.look.link?.from, change.look.link?.to);
   if ('shown' in change) return named(change.shown.selected);
   if ('show' in change) return named(change.show.thing);
+  if ('explore' in change) return named(change.explore.centre, ...change.explore.shown);
   return [];
 }
 
@@ -278,6 +317,7 @@ const PREFIX: Record<string, string> = {
   Arrows: 'arrows',
   Diagram: 'diagram',
   Filter: 'filter',
+  Explore: 'explore',
 };
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */

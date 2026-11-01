@@ -14,7 +14,17 @@ import {
   presetFrom,
   starterOf,
   holdsStill,
+  readsPlain,
+  shortLabel,
+  labelsFor,
+  presetClasses,
+  OWN_PRESET,
+  adoptOwn,
+  presetToShare,
 } from '../src/view-presets.ts';
+import { PRESET_IDS } from '../src/style-graph.ts';
+import { readStyle } from '../src/style.ts';
+import { readNote } from '../src/drawing.ts';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
 
 describe('the starter presets', () => {
@@ -32,7 +42,8 @@ describe('the starter presets', () => {
     assert.equal(option.section, 'Drawing');
     assert.deepEqual(
       option.choices.map((c) => c.value),
-      STARTERS.map((p) => p.id),
+      [...STARTERS.map((p) => p.id), 'own'],
+      'and Your own, once one is read in',
     );
   });
 
@@ -94,6 +105,54 @@ describe('where a preset applies, and moving it', () => {
     assert.equal(presetFor({}).id, 'default');
   });
 
+  // proves: view_presets_scoped
+  test('a graph’s own preset is a Preset line in its style graph, one of the starters, checked like any other', () => {
+    assert.deepEqual(
+      [...PRESET_IDS],
+      STARTERS.map((p) => p.id),
+      'the style graph knows every starter',
+    );
+    const texts = [
+      "// graph: work\n(a:Task {name: 'A'})",
+      "// graph: work_style · STYLE work\n(p1:Preset {preset: 'calm'}),\n(p2:Preset {preset: 'clam'}),\n(p3:Preset {})",
+    ];
+    const { style, problems } = readStyle(texts, 'work', readNote(texts));
+    assert.deepEqual(
+      style.presets.map((p) => p.preset),
+      ['calm'],
+    );
+    assert.deepEqual(
+      problems.map((p) => p.message),
+      ['preset must be default, focus, calm, detail, big-picture or reading', 'a Preset names a view preset'],
+    );
+    assert.equal(presetFor({ graph: style.presets[0].preset, everywhere: 'focus' }).id, 'calm');
+    // and its card takes what the preset asks of it, as the page's body does for the settings' preset
+    assert.deepEqual(presetClasses('calm'), ['thoughtknot-still']);
+    assert.deepEqual(presetClasses('reading'), ['thoughtknot-reading']);
+    assert.deepEqual(presetClasses('focus'), ['thoughtknot-blur-rest', 'thoughtknot-still']);
+    assert.deepEqual(presetClasses('default'), []);
+  });
+
+  // proves: view_presets_portable
+  test('the preset in use goes out as set now, and a file read back in is the person’s own, kept with the settings', () => {
+    const s = { ...DEFAULT_SETTINGS, viewPreset: 'focus', mergeLinks: 'on' };
+    const text = presetToShare(s);
+    const back = presetFrom(text);
+    assert.equal(back.name, 'Focus support');
+    assert.equal(back.settings.mergeLinks, 'on', 'the settings as they are, not as the starter came');
+    assert.deepEqual(back.chain, starterOf('focus').chain);
+    const read = settingsFrom({ ownPreset: text, viewPreset: OWN_PRESET });
+    assert.equal(read.viewPreset, OWN_PRESET);
+    assert.equal(read.ownPreset, text);
+    assert.equal(starterOf(OWN_PRESET).name, 'Focus support', 'every part of the host finds it by its id');
+    assert.ok(holdsStill(read));
+    const none = settingsFrom({ ownPreset: '{"format": "other"}', viewPreset: OWN_PRESET });
+    assert.equal(none.ownPreset, '', 'a file that is not a preset is not kept');
+    assert.equal(none.viewPreset, 'default', 'and Your own is not picked');
+    assert.equal(starterOf(OWN_PRESET).id, 'default');
+    assert.equal(adoptOwn(''), null);
+  });
+
   // proves: view_presets_portable
   test('a preset goes out as one file and comes back the same; a file read is untrusted', () => {
     for (const p of STARTERS) assert.deepEqual(presetFrom(presetFile(p)), p, p.name);
@@ -111,5 +170,62 @@ describe('where a preset applies, and moving it', () => {
     assert.equal(odd.chain.formatting.contrast, 'AA', 'raised to the floor');
     assert.ok(odd.chain.motion.glideMs <= 500);
     assert.deepEqual(odd.settings, { foldHubs: 'on' }, 'only the settings a preset may turn');
+  });
+});
+
+describe('the research behind the starters', () => {
+  // proves: view_presets_evidence
+  test('each starter cites its research with how sure it is, on the wiki, with the day it was last looked at', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const page = await readFile(new URL('../../../wiki/View-presets-design.md', import.meta.url), 'utf8');
+    const part = page.slice(page.indexOf('## Why each starter'), page.indexOf('## What the research says'));
+    assert.match(part, /\*\*Looked at again:\*\* \d{1,2} [A-Z][a-z]+\s+\d{4}/, 'when it was last looked at');
+    const rows = part
+      .split('\n')
+      .filter((l) => l.startsWith('| ') && !l.startsWith('| ---') && !l.startsWith('| Starter'))
+      .map((l) =>
+        l
+          .split('|')
+          .map((c) => c.trim())
+          .slice(1, -1),
+      );
+    for (const p of STARTERS) {
+      const mine = rows.filter((r) => r[0] === p.name);
+      assert.ok(mine.length, `${p.name} has its reasons`);
+      for (const [, choice, why, sure, source] of mine) {
+        assert.ok(choice && why, `${p.name}: a choice and why`);
+        assert.ok(['High', 'Medium', 'Low'].includes(sure), `${p.name}: how sure, not "${sure}"`);
+        assert.match(source, /\d{4}|WCAG|Association/, `${p.name}: a source`);
+      }
+    }
+  });
+});
+
+describe('reading support', () => {
+  // proves: view_reading_support
+  test('only the Reading preset spaces words wider, and cuts long labels short at a word, marked as cut', () => {
+    assert.deepEqual(
+      STARTERS.filter((p) => readsPlain({ viewPreset: p.id })).map((p) => p.id),
+      ['reading'],
+    );
+    assert.equal(shortLabel('Short', 40), 'Short');
+    const cut = shortLabel('The quarterly report on the reading habits of every reader', 40);
+    assert.equal(cut, 'The quarterly report on the reading…');
+    assert.ok(cut.length <= 40);
+    assert.equal(shortLabel('Supercalifragilisticexpialidocious', 12), 'Supercalifr…', 'cut inside a long word');
+    const d = {
+      graph: 'g',
+      boxes: [
+        { key: 'a', kind: 'Report', text: 'x'.repeat(50) },
+        { key: 'b', kind: 'Team', text: 'Team' },
+      ],
+      links: [],
+      estimates: [],
+    };
+    assert.equal(labelsFor(d, { viewPreset: 'default' }), d, 'the default keeps every word');
+    const read = labelsFor(d, { viewPreset: 'reading' });
+    assert.equal(read.boxes[0].text.length, 40);
+    assert.equal(read.boxes[1], d.boxes[1]);
+    assert.equal(d.boxes[0].text.length, 50, 'the graph itself is unchanged');
   });
 });

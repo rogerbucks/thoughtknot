@@ -13,6 +13,8 @@ import {
   LABEL_SCALE,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
+  DETAIL_LEVELS,
+  OVERVIEW_THINGS,
   ViewState,
   labelsHidden,
   startingSwitches,
@@ -45,8 +47,8 @@ function styledOf(...texts) {
 }
 
 describe('the switches', () => {
-  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged and the new engine, in that order', () => {
-    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine']);
+  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged, the new engine and lanes by kind, in that order', () => {
+    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes']);
     assert.deepEqual(
       VIEW_SWITCHES.map((s) => switchName(s)),
       [
@@ -55,6 +57,7 @@ describe('the switches', () => {
         'Fold groups',
         'Bundle links between groups',
         'Lay out with ThoughtKnot',
+        'Lanes by kind',
       ],
     );
   });
@@ -67,6 +70,7 @@ describe('the switches', () => {
       groups: false,
       merge: false,
       engine: true,
+      lanes: true,
     });
     const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on', foldHubs: 'on' };
     assert.deepEqual(startingSwitches(changed), {
@@ -75,6 +79,7 @@ describe('the switches', () => {
       groups: true,
       merge: false,
       engine: true,
+      lanes: true,
     });
     assert.deepEqual(SWITCH_SETTINGS, {
       labels: 'labelsByZoom',
@@ -82,6 +87,7 @@ describe('the switches', () => {
       groups: 'foldGroups',
       merge: 'mergeLinks',
       engine: 'ownLayout',
+      lanes: 'kindLanes',
     });
   });
 
@@ -96,6 +102,7 @@ describe('the switches', () => {
       groups: false,
       merge: true,
       engine: true,
+      lanes: true,
     });
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style, 'near'), {
       labels: false,
@@ -103,6 +110,7 @@ describe('the switches', () => {
       groups: true,
       merge: false,
       engine: true,
+      lanes: true,
     });
   });
 });
@@ -124,7 +132,14 @@ describe('a card’s state of the switches', () => {
     assert.equal(state.turn('labels', false), false);
     assert.equal(state.turn('groups', true), true);
     assert.equal(state.turn('groups', true), false, 'turned to what it was: nothing to do');
-    assert.deepEqual(state.switches, { labels: false, hubs: false, groups: true, merge: false, engine: true });
+    assert.deepEqual(state.switches, {
+      labels: false,
+      hubs: false,
+      groups: true,
+      merge: false,
+      engine: true,
+      lanes: true,
+    });
     assert.deepEqual(state.saved(), { labels: 'off', hubs: 'off', groups: 'on', merge: 'off' });
   });
 
@@ -328,6 +343,69 @@ describe('a large network with no groups written', () => {
       written.nudges.map((n) => n.group),
       ['Friends', 'Friends'],
       'groups written are drawn, none found',
+    );
+  });
+});
+
+describe('the ladder of detail (cluster_detail_ladder)', () => {
+  const OFF = { labels: true, hubs: false, groups: false, merge: false, engine: false };
+  /** A graph of `n` people in two teams, as a style graph writes their groups. */
+  const teams = (n) => {
+    const keys = Array.from({ length: n }, (_, i) => `p${i}`);
+    const graph = [
+      '// graph: g',
+      ...keys.map((k, i) => `(${k}:Person {name: 'Person ${i}'}),`),
+      ...keys.slice(1).map((k, i) => `(p${i})-[:KNOWS]->(${k})${i < n - 2 ? ',' : ''}`),
+    ].join('\n');
+    const nudges = keys.map(
+      (k, i) => `(n${i}:Nudge {word: 'group', thing: '${k}', group: '${i % 2 ? 'Odd' : 'Even'}'})`,
+    );
+    const style = `// graph: g_style · STYLE g\n${nudges.join(',\n')}`;
+    return styledOf(graph, style).drawing;
+  };
+
+  // proves: cluster_detail_ladder
+  test('has three rungs, overview, groups and all, each one setting the folds as one', () => {
+    assert.deepEqual(DETAIL_LEVELS, ['overview', 'groups', 'all']);
+    const state = new ViewState({ ...OFF, hubs: true });
+    assert.equal(state.detail, 'groups', 'busy hubs folded alone reads as groups');
+    assert.equal(state.toDetail('overview'), true);
+    assert.equal(state.detail, 'overview');
+    assert.deepEqual([state.switches.groups, state.switches.merge], [true, true]);
+    assert.equal(state.toDetail('overview'), false, 'already there: nothing to lay out');
+    state.toDetail('groups');
+    assert.deepEqual([state.detail, state.switches.groups, state.switches.merge], ['groups', false, true]);
+    state.toDetail('all');
+    assert.deepEqual(
+      [state.detail, state.switches.groups, state.switches.merge, state.switches.hubs],
+      ['all', false, false, false],
+    );
+  });
+
+  // proves: cluster_detail_ladder
+  test('a big grouped graph opens on its overview; a small one, or one the person turned, does not', () => {
+    const big = new ViewState(OFF);
+    assert.ok(big.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.every(([, , folded]) => folded));
+    assert.equal(big.detail, 'overview');
+    const small = new ViewState(OFF);
+    assert.equal(small.folded(teams(10)).folding, undefined);
+    assert.equal(small.detail, 'all');
+    const turned = new ViewState(OFF);
+    turned.toDetail('groups');
+    assert.ok(!turned.folded(teams(OVERVIEW_THINGS + 1)).folding?.groups.some(([, , folded]) => folded));
+    const kept = new ViewState(OFF);
+    assert.equal(kept.toDetail('all'), false, 'already on All: nothing to redraw');
+    assert.equal(kept.folded(teams(OVERVIEW_THINGS + 1)).folding, undefined, 'but All was chosen, so it stays');
+    const opened = new ViewState(OFF);
+    opened.folded(teams(OVERVIEW_THINGS + 1));
+    opened.open({ group: 'Odd' });
+    assert.deepEqual(
+      opened.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.map(([g, , folded]) => [g, folded]),
+      [
+        ['Even', true],
+        ['Odd', false],
+      ],
+      'a group opened stays open: the overview is chosen once',
     );
   });
 });

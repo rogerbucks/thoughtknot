@@ -3,13 +3,13 @@
 // - --history: nothing secret, confidential or personal in this branch's history; no-reply authors; signed off.
 // - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
 // - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
-// CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
+// CI runs the first two; the release all three, and settings-check.yml the third weekly, with SECURITY_ALERTS_TOKEN.
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
 //   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
 //   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
-//   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
-//   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
+//   node scripts/public-readiness.mjs --settings [--apply]  check GitHub's settings; --apply sets each that differs.
+//   node scripts/public-readiness.mjs --settings --export   write the ruleset and the Pages settings to .github/settings/.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
 // A pull request's run uses --setup-since. Main and the release run everything. The nightly adds --no-tests (no npm test).
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
@@ -21,7 +21,8 @@ import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
 import { privateLinkProblems } from './private-links.mjs';
 import { signOffProblems } from './sign-off.mjs';
-import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
+import { DESCRIPTION, HOMEPAGE, graphRead, topicsSetting } from './repo-profile.mjs';
+import { defaultRulesetOf, exportFrom, wholeSettings } from './settings-export.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args, input) => execFileSync('git', args, { cwd: root, input, maxBuffer: 2 ** 31 });
@@ -138,11 +139,12 @@ const repoJSON = (repo, fresh = false) => {
 
 /** The repository's name now. GitHub reads an old name after a rename, but will not write to it (HTTP 307). */
 export const canonicalRepo = (repo, read = repoJSON) => read(repo).full_name ?? repo;
-const repoField = (field, want) => ({
+const graphField = graphRead(gh, quiet);
+const repoField = (field, want, graph) => ({
   name: field,
   phase: 'always',
   want,
-  read: (repo, fresh) => repoJSON(repo, fresh)[field],
+  read: (repo, fresh, rest = repoJSON, query = graphField) => rest(repo, fresh)[field] ?? (graph && query(repo, graph)),
   write: (repo) => gh(['-X', 'PATCH', `repos/${repo}`], { [field]: want }),
 });
 const security = (feature) => ({
@@ -178,11 +180,7 @@ export function ciJobs(root = ROOT) {
 /** The checks a change to the default branch must pass: every CI job, this script's among them, and the dependency review. */
 export const REQUIRED_CHECKS = [...ciJobs(), 'dependency-review'].sort();
 
-// the list gives each ruleset without its rules; the one on the default branch is read whole
-const defaultRuleset = (repo) => {
-  const found = gh([`repos/${repo}/rulesets`]).find((r) => r.target === 'branch' && r.enforcement === 'active');
-  return found && gh([`repos/${repo}/rulesets/${found.id}`]);
-};
+const defaultRuleset = (repo) => defaultRulesetOf(gh, repo);
 // a member of a language group, read as the group it is set by
 const asGroup = (l) => (l === 'javascript' || l === 'typescript' ? 'javascript-typescript' : l);
 
@@ -204,8 +202,8 @@ export const WANTED = [
   repoField('has_projects', true),
   repoField('has_wiki', true),
   repoField('has_discussions', true),
-  repoField('delete_branch_on_merge', true),
-  repoField('allow_auto_merge', true),
+  repoField('delete_branch_on_merge', true, 'deleteBranchOnMerge'),
+  repoField('allow_auto_merge', true, 'autoMergeAllowed'),
   // Every commit is signed off (the DCO), so a commit made on the website asks for it too.
   repoField('web_commit_signoff_required', true),
   // How the project shows to a stranger: what it is, where its home page is, and the topics it is found by.
@@ -303,6 +301,7 @@ export const WANTED = [
       });
     },
   },
+  ...wholeSettings({ gh, quiet, defaultRuleset }),
 ];
 
 const canon = (v) => JSON.stringify(v, (_k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? sorted(x) : x));
@@ -367,6 +366,7 @@ function main(argv) {
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');
   if (flag('--settings')) {
     const repo = canonicalRepo(repoOf());
+    if (flag('--export')) return exportFrom(gh, repo, console.log);
     const differing = settingsReport(repo, { apply: flag('--apply') });
     if (differing.length) {
       console.error(`${differing.length} setting${differing.length === 1 ? '' : 's'} differ on ${repo}`);

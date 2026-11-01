@@ -6,11 +6,13 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag } from './box-drag-view';
-import type { DragHost } from './box-drag-view';
+import { BoxDrag, nudgeDrops, type DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
+import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
+import { toggleOutline } from './drawing-svg';
+import { ringFocus, unringFocus } from './focus-ring';
 import { showTour } from '../tour';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
@@ -18,19 +20,22 @@ import type { Selection } from './selection';
 import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
+import { onTableControl, tableScrolls, tableTookKey } from './table-keys';
 import type { QuickInfo } from './quick-info';
-import { boxIn, foldAt, targetAt, targetOf } from './taps';
+import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
+import { fansOut } from './radial-centre';
 import type { MenuItem } from './thing-menu';
 import { word } from '@thoughtknot/core';
-import type { Taps, Target } from './taps';
 import { SPACE_OPEN, SPACE_UNFOLD } from './space-view-panel';
 import { ZOOM_STEP } from '../../space-controls.ts';
+import { fills } from '../../space-cards.ts';
 import type { SpaceMove } from '../../space-controls.ts';
+import type { SketchPointer } from './sketch-tool';
 
-/** Whether an event came from a control of the drawing's own — the arrow to the selection (§25), an image's control (§18), the mini-map (§24). */
+/** Whether an event came from a control of the drawing's own: the arrow to the selection (§25), an image's control (§18), the mini-map (§24). Or a table's (§15). */
 const ownButton = (target: EventTarget | null): boolean =>
-  onPointer(target) || onImageControl(target) || onMiniMap(target);
+  onPointer(target) || onImageControl(target) || onMiniMap(target) || onTableControl(target);
 
 /** What the drawing's events need of their card, all built before they are bound. */
 export interface ViewportHost {
@@ -57,6 +62,7 @@ export interface ViewportHost {
   full: { show: () => void };
   /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
   space?: { move: (m: SpaceMove) => boolean };
+  sketch?: SketchPointer | null; // the drawing tools: what they take draws or picks a drawing, never pans (§70)
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -110,24 +116,27 @@ export function bindViewportEvents(host: ViewportHost): void {
   // what a tap at a point in the viewport reaches, nearest first (tap_cycles_near, §3)
   const nearTo = (p: { x: number; y: number }): string[] => taps.near(p, zoom.view());
   const use = (e: Event, ev: ZoomEvent) => {
-    if (zoom.handle(ev)) {
-      // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
-      if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') sel.stop();
-      e.preventDefault();
-      return true;
-    }
-    return false;
+    if (tableScrolls(e, ev) || !zoom.handle(ev)) return false; // a table scrolls by itself (table_grid_navigation)
+    // the wheel, a zoom key or a double click takes over from a move under way, which would fight it (§25)
+    if (ev.kind === 'wheel' || ev.kind === 'key' || ev.kind === 'dblclick') sel.stop();
+    e.preventDefault();
+    return true;
   };
   // a thing or link picked in the 3D view opens as a tap would: 2D and 3D are two views of one graph (Roger, 24 Oct 2026)
   card.registerDomEvent(host.root, SPACE_OPEN, (e: CustomEvent<Target>) => host.open(e.detail));
-  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => host.unfold(e.detail));
+  // a folded group comes from 3D by its box's id on screen, which keeps the fold it opens (cluster_opens)
+  card.registerDomEvent(host.root, SPACE_UNFOLD, (e: CustomEvent<string>) => {
+    const box = /^fold_group_\d+$/.test(e.detail) ? host.root.querySelector(`#${e.detail}`) : null;
+    host.unfold(box ? (box.getAttribute('data-fold') ?? e.detail) : e.detail);
+  });
   // the details sheet is placed again as the window changes size and the note scrolls (§25)
   card.registerDomEvent(vp.win, 'resize', () => details.moved(true));
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
   card.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
     if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
     lastPointer = e.pointerType || 'mouse';
-    if (e.button === 2) return; // a right-click opens a menu: it neither selects nor pans
+    // a right-click opens a menu: it neither selects nor pans. A drawing tool takes a press of its own (§70)
+    if (e.button === 2 || host.sketch?.down(e, point(e))) return;
     const target = targetAt(e.target),
       p = point(e),
       near = nearTo(p);
@@ -155,7 +164,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     }
   });
   card.registerDomEvent(vp, 'pointermove', (e: PointerEvent) => {
-    if (onMiniMap(e.target)) return; // the mini-map moves the view by itself (§24)
+    if (onMiniMap(e.target) || host.sketch?.move(e, point(e))) return; // the mini-map, a drawing: their own (§24, §70)
     host.info.moved(e);
     if (drag?.move(e.pointerId, point(e))) {
       host.info.hide(); // the box is moving from under it
@@ -165,7 +174,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     use(e, { kind: 'move', id: e.pointerId, ...point(e) });
   });
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
-    if (ownButton(e.target) || e.button === 2) return;
+    if (ownButton(e.target) || e.button === 2 || host.sketch?.up(e, point(e))) return;
     const p = point(e);
     use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
     // a box dragged and let go is moved, never opened as a tap (§6)
@@ -185,8 +194,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
     // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
-    // (Roger, 24 Oct 2026, second_tap_centres). Near several, a tap in the same place again chooses the next (§3)
-    if (down.again && !e.shiftKey) sel.came('centre', () => host.open(down.target));
+    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3)
+    if (down.again && !e.shiftKey) sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target));
     else {
       const chosen = taps.choose(down, nearTo(down));
       host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
@@ -215,14 +224,16 @@ export function bindViewportEvents(host: ViewportHost): void {
     },
     { passive: false },
   );
+  // the fingers really down, from the touch events, which settle what a lost pointerup left tracked (stuck_touch)
+  for (const type of ['touchstart', 'touchend', 'touchcancel'])
+    card.registerDomEvent(vp, type, (e: TouchEvent) => zoom.settle(e.touches.length), { passive: true });
   card.registerDomEvent(vp, 'pointercancel', (e: PointerEvent) => {
     boxDown = emptyDown = foldDown = null;
     drag?.cancel();
     host.info.released(e.pointerId);
     zoom.handle({ kind: 'cancel', id: e.pointerId });
   });
-  // the highlight under the pointer, for as long as it stays; a finger is not hovering (§25)
-  // and the quick-info tooltip after a moment (§24)
+  // the highlight under the pointer, or at the keyboard's focus (with a ring, which a click's is not), and the tooltip (§24, §25)
   card.registerDomEvent(vp, 'pointerover', (e: PointerEvent) => {
     sel.over(e);
     host.info.over(e);
@@ -231,12 +242,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     sel.out(e);
     host.info.out(e);
   });
-  // and the same highlight, and tooltip, with the keyboard focus, which a click's focus is not
   card.registerDomEvent(vp, 'focusin', (e: FocusEvent) => {
+    ringFocus(e, sel.byKeyboard());
     sel.focusIn(e);
     host.info.focusIn(e);
   });
   card.registerDomEvent(vp, 'focusout', (e: FocusEvent) => {
+    unringFocus(e);
     sel.focusOut(e);
     host.info.focusOut();
   });
@@ -246,7 +258,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      // zoomed in until a folded group fills the view: it opens (cluster_opens)
+      const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
+        r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),
+        v = vp.getBoundingClientRect();
+      if (fold?.startsWith('group:') && r && fills(r, v.width, v.height)) host.unfold(fold);
     },
     { passive: false },
   );
@@ -272,8 +289,9 @@ export function bindViewportEvents(host: ViewportHost): void {
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {
     host.info.key(e); // Escape closes a tooltip, and goes on to do what it did (§24)
+    if (tableTookKey(e)) return; // a table's own keys: from cell to cell (§15)
     // Escape puts a box being dragged back, and writes nothing (§6)
-    if (e.key === 'Escape' && drag?.cancel()) {
+    if (e.key === 'Escape' && (drag?.cancel() || host.sketch?.escape())) {
       e.preventDefault();
       return;
     }
@@ -294,6 +312,11 @@ export function bindViewportEvents(host: ViewportHost): void {
       fold = foldAt(e.target);
     const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
     if (keys && target && 'key' in target && plain && (e.key === 'm' || e.key === 'M') && keys.pick(target.key)) {
+      e.preventDefault();
+      return;
+    }
+    // O shows or hides the outline beside the drawing, in every view (§69, view_reading_support)
+    if (plain && !e.shiftKey && (e.key === 'o' || e.key === 'O') && toggleOutline(host.root) !== null) {
       e.preventDefault();
       return;
     }
@@ -334,29 +357,33 @@ export function bindViewportEvents(host: ViewportHost): void {
 /**
  * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
  * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
- * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
+ * On a grid, a card is dragged to another column instead, and no keys move it (§68). None when the card was given no
+ * way to write a nudge, or draws a table. Nothing moves while the card is only read.
  */
 function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
   host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): { drag: BoxDrag; keys: BoxMoveKeys } | null {
-  const moving = o.moving;
-  if (!moving || !svg) return null;
-  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+): { drag: BoxDrag; keys: BoxMoveKeys | null } | null {
+  const grid = svg ? gridDrops(o, host.viewport) : null;
   const shared = {
     viewport: host.viewport,
     taps: host.taps,
-    moving,
-    textOf: (key: string) => boxes.find((b) => b.key === key)?.text ?? key,
+    view: () => host.zoom.view(),
     readOnly: () => !!o.readOnly?.(),
   };
+  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null };
+  const moving = o.moving;
+  if (!moving || !svg) return null;
+  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
+  const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
+  const rankdir = () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir);
   return {
     drag: new BoxDrag({
       ...shared,
-      view: () => host.zoom.view(),
-      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+      textOf,
+      ...nudgeDrops(moving, textOf, rankdir),
     }),
-    keys: new BoxMoveKeys(shared),
+    keys: new BoxMoveKeys({ ...shared, moving, textOf }),
   };
 }

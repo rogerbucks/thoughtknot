@@ -1,0 +1,6 @@
+{
+  "file": "test/versions-json.test.js",
+  "test": "the newest version in versions.json is the one in manifest.json",
+  "seen_failing_first": false,
+  "evidence": "A guard that already holds: manifest.json says 0.8.0 and so does the newest entry. The test keeps it so; the tag test beside it is the one that fails without the fix."
+}

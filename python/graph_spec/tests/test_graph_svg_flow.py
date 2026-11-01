@@ -14,6 +14,7 @@ render_args(…)), the source it hands Graphviz.
 
 import json
 import os
+import pathlib
 import subprocess
 import sys
 import unittest
@@ -73,7 +74,7 @@ def core_answers():
     """The core's answer for every case, by Node."""
     cases = json.dumps([[texts_of(case), case.get("view")] for case in CASES])
     out = subprocess.run(
-        ["node", "--input-type=module", "-e", CORE_SCRIPT, CORE, cases],
+        ["node", "--input-type=module", "-e", CORE_SCRIPT, pathlib.Path(CORE).as_uri(), cases],
         capture_output=True,
         text=True,
         check=True,
@@ -91,7 +92,7 @@ def rendered(args):
     given = []
 
     def run(_args, input, **_kw):
-        given.append(input)
+        given.append(fake_dot.as_written(input))
         return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
     with (

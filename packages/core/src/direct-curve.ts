@@ -23,6 +23,21 @@ export interface Curve {
   ends: [MarkPoint, MarkPoint];
 }
 
+const lerp = (p: MarkPoint, q: MarkPoint, t: number): MarkPoint => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+
+/** Where along the curve, from `from` toward `to`, the curve is `cut` from its end `end`: by halving, as the library does. */
+function cutAt(at: (t: number) => MarkPoint, end: MarkPoint, cut: number, from: number, to: number): number {
+  if (cut <= 0) return from;
+  let lo = from,
+    hi = to;
+  for (let i = 0; i < 40; i++) {
+    const t = (lo + hi) / 2;
+    if (Math.hypot(at(t)[0] - end[0], at(t)[1] - end[1]) < cut) lo = t;
+    else hi = t;
+  }
+  return (lo + hi) / 2;
+}
+
 /** The curve from the edge of box `a` to the edge of box `b`. It bows sideways by `bow` of its length. */
 export function curveOf(a: Placed, b: Placed, bow: number): Curve {
   const dx = b.x - a.x,
@@ -36,21 +51,21 @@ export function curveOf(a: Placed, b: Placed, bow: number): Curve {
     const u = 1 - t;
     return [u * u * p0[0] + 2 * u * t * mid[0] + t * t * p3[0], u * u * p0[1] + 2 * u * t * mid[1] + t * t * p3[1]];
   };
-  const toward = (p: MarkPoint, q: MarkPoint, by: number): MarkPoint => {
-    const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
-    return [p[0] + ((q[0] - p[0]) * by) / d, p[1] + ((q[1] - p[1]) * by) / d];
-  };
   return {
     at,
     ends: [p0, p3],
     cubic(cutStart, cutEnd) {
-      // the quadratic curve written as Graphviz's cubic one, its ends drawn in where an arrowhead takes their place
-      const s = toward(p0, mid, cutStart),
-        e = toward(p3, mid, cutEnd);
+      // the quadratic curve written as Graphviz's cubic one, its ends drawn in where an arrowhead takes their place.
+      // The piece between the cuts is the same curve, so the line meets the arrowhead where `at` says it runs
+      const u = cutAt(at, p0, cutStart, 0, 0.5),
+        v = cutAt(at, p3, cutEnd, 1, 0.5);
+      const s = at(u),
+        e = at(v),
+        c = lerp(lerp(p0, mid, u), lerp(mid, p3, u), v);
       return [
         s,
-        [s[0] + (2 / 3) * (mid[0] - s[0]), s[1] + (2 / 3) * (mid[1] - s[1])],
-        [e[0] + (2 / 3) * (mid[0] - e[0]), e[1] + (2 / 3) * (mid[1] - e[1])],
+        [s[0] + (2 / 3) * (c[0] - s[0]), s[1] + (2 / 3) * (c[1] - s[1])],
+        [e[0] + (2 / 3) * (c[0] - e[0]), e[1] + (2 / 3) * (c[1] - e[1])],
         e,
       ];
     },

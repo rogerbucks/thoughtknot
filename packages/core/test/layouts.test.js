@@ -73,3 +73,38 @@ test('the 3D force layout spreads things in depth, as much as across', () => {
   const spread = (k) => Math.max(...[...at.values()].map((p) => p[k])) - Math.min(...[...at.values()].map((p) => p[k]));
   assert.ok(spread(2) > 0.5 * Math.min(spread(0), spread(1)), `${spread(0)} ${spread(1)} ${spread(2)}`);
 });
+
+test('the 3D force layout starts cold when fewer than half the things have a remembered spot', () => {
+  // a six by six mesh: every link about one long, and no two things on each other
+  const keys = [],
+    links = [];
+  for (let i = 0; i < 6; i++)
+    for (let j = 0; j < 6; j++) {
+      keys.push(`g${i}_${j}`);
+      if (i < 5) links.push([`g${i}_${j}`, `g${i + 1}_${j}`]);
+      if (j < 5) links.push([`g${i}_${j}`, `g${i}_${j + 1}`]);
+    }
+  const shape = shapeOf(keys, links);
+  const quality = (at) => {
+    const d = (p, q) => Math.hypot(...at.get(p).map((v, k) => v - at.get(q)[k]));
+    const long = links.map(([p, q]) => d(p, q)),
+      mean = long.reduce((s, v) => s + v, 0) / long.length;
+    const sd = Math.sqrt(long.reduce((s, v) => s + (v - mean) ** 2, 0) / long.length);
+    const nearest = Math.min(...keys.flatMap((p) => keys.filter((q) => p < q).map((q) => d(p, q))));
+    return { sd, nearest };
+  };
+  const layout3d = layoutById('force-3d', 3);
+  const cold = quality(layout3d.place(shape));
+  // one remembered spot, far off: a warm start from it would pile its neighbours there and barely move them
+  for (const [key, spot] of [
+    ['g0_0', [5, 5, 5]],
+    ['g2_2', [0, 0, 0]],
+  ]) {
+    const one = quality(layout3d.place(shape, new Map([[key, spot]])));
+    assert.ok(one.sd < 2 * cold.sd + 0.05, `${key}: links as even as from cold, ${one.sd} vs ${cold.sd}`);
+    assert.ok(
+      one.nearest > 0.8 * cold.nearest,
+      `${key}: things as far apart as from cold, ${one.nearest} vs ${cold.nearest}`,
+    );
+  }
+});

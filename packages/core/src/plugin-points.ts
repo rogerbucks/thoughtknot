@@ -4,6 +4,8 @@
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import type { Fetched } from './sources.ts';
+import type { FilesOffer } from './plugin-files.ts';
+import type { ExtensionPoint } from './plugins.ts';
 
 const WORD = /^[a-z][a-z0-9-]*$/;
 
@@ -177,4 +179,42 @@ export function stepProblem(s: PluginStep, pluginId: string, taken: Map<string, 
   if (!s.title.trim()) return `the step "${s.id}" has no title`;
   if (typeof s.run !== 'function') return `the step "${s.id}" does nothing`;
   return null;
+}
+
+/** The host's abilities a registry may hand out; settings are made for each plug-in, kept apart from the others'. */
+export interface HostOffer {
+  notice?: HostAbilities['notice'];
+  settingsFor?: (pluginId: string) => HostAbilities['settings'];
+  secrets?: HostAbilities['secrets'];
+  /** The notes, given to each plug-in through the note gate (plugin-files.ts, TRUST-16). */
+  files?: FilesOffer;
+}
+
+/**
+ * The host's secrets as one plug-in sees them: only those named under its own id, such as `acme.one.token`. Any other
+ * name, an AI model's key or another plug-in's, gives null, and the host is never asked for it (TRUST-15).
+ */
+export const ownSecrets = (store: HostAbilities['secrets'], pluginId: string): HostAbilities['secrets'] =>
+  Object.freeze({
+    get: (name: string) =>
+      name.startsWith(`${pluginId}.`) && name.length > pluginId.length + 1 ? store.get(name) : null,
+  });
+
+/** What a registry is made with: the host's abilities, how long a call may run, and the clock it is timed by. */
+export interface RegistryOptions {
+  /** What the host offers; a plug-in naming an ability it does not offer is refused. */
+  host?: HostOffer;
+  /** In milliseconds; `PLUGIN_TIME_LIMIT` unless set. */
+  timeLimit?: number;
+  /** The time now, in milliseconds; `Date.now` unless set. */
+  now?: () => number;
+  /** The version of each extension point this host has; `POINT_VERSIONS` unless set. */
+  pointVersions?: Partial<Record<ExtensionPoint, string>>;
+  builtIn?: boolean;
+}
+
+/** A plug-in that was stopped, and why. */
+export interface StoppedPlugin {
+  plugin: string;
+  why: string;
 }

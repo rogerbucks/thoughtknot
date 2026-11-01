@@ -47,7 +47,7 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
  * when that text is the block as drawn. Else, with no editor on the card, it is written into the note. Resolves to why
  * nothing was written, or null.
  */
-async function accept(o: ViewOptions, block: number, was: string, now: string): Promise<string | null> {
+export async function accept(o: ViewOptions, block: number, was: string, now: string): Promise<string | null> {
   const ed = o.editing?.();
   if (ed?.session) {
     if (ed.session.text !== was) return word('details.not-as-drawn');

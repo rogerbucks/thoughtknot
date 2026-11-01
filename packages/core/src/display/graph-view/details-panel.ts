@@ -3,7 +3,7 @@
 // type and direction in words (§25). The one shown is marked as selected. While the block is edited in place, it is the
 // inspector, which changes its properties in the text. What its links reach can be chosen from it, and the walk
 // retraced (§25). In view mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
-import { isPhone } from '../host';
+import { isPhone, recentVisits } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
 import type { Clear, Estimate, TrailStep, View } from '@thoughtknot/core';
 import { renderProperties } from '../properties/properties';
@@ -12,13 +12,15 @@ import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
 import { button } from '../button';
-import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton } from './details-nav';
+import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton, trailKept } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
+import { detailsShown, inPhoneSheet } from './controls-sheet';
 import { RichDetails } from './rich-details';
 import { renderSummary } from './details-summary';
 import { relabelShowOnly, untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
+import { readAloudButton } from './read-aloud';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import { markTouching } from './focus-marks';
@@ -64,6 +66,7 @@ export class DetailsPanel {
     this.viewport = viewport;
     this.o = o;
     this.actions = actions;
+    recentVisits()?.visit(o.graph); // the graph is opened (risk NEURO-11)
     this.rich = new RichDetails(
       o,
       () => this.view?.(),
@@ -72,9 +75,8 @@ export class DetailsPanel {
     // still under reduced motion, as the system asks when the card is drawn (§11)
     this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
-      // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
-      // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
-      on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
+      // only in view mode, in a note's card: full screen, the pane and a panel kept open place them themselves (§24)
+      on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen && !inPhoneSheet(el),
       paneable: () => o.mode === 'note' && !o.aids?.detailsOpen,
       close: () => this.close(),
       moved: () => this.actions?.sheetMoved(),
@@ -108,10 +110,7 @@ export class DetailsPanel {
     this.images.release();
   }
 
-  /**
-   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images. Those
-   * placed on a drawing before let go first, as a drawing laid out again holds none of them.
-   */
+  /** The pictures its style draws on the boxes of `svg` (§18), counted as they move; those placed before let go first. */
   pictures(svg: Element): void {
     this.images.release('boxes');
     placePictures(svg, this.images);
@@ -133,9 +132,9 @@ export class DetailsPanel {
     }
   }
 
-  /** The trail at a new set of details: started again by a thing or link chosen in the drawing; then back and forward. */
+  /** The trail at new details: started again by a pick in the drawing, or gone on from under Focus support (§69). */
   private retrace(body: HTMLElement, at: TrailStep): void {
-    if (!this.walking) this.trail.start(at);
+    if (!this.walking && !(trailKept(this.o) && this.trail.go(at))) this.trail.start(at);
     renderTrail(
       body,
       this.trail,
@@ -156,6 +155,7 @@ export class DetailsPanel {
         (estimate !== null && g.getAttribute('data-estimate') === String(estimate));
       g.classList.toggle('is-selected', on);
       if (g.hasAttribute('aria-pressed')) g.setAttribute('aria-pressed', String(on));
+      if (g.hasAttribute('aria-selected')) g.setAttribute('aria-selected', String(on)); // a table's row (§15)
     }
   }
 
@@ -205,15 +205,16 @@ export class DetailsPanel {
     this.rich.begin();
     this.images.release('details'); // the images of the details shown before let go
     el.empty();
-    el.hidden = false;
+    detailsShown(el, true); // and, on a phone, its sheet turns to them (controls_sheet)
     el.setAttribute('aria-label', word('details.of', { name: title }));
     el.toggleClass('is-sheet', isPhone() && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'thoughtknot-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'thoughtknot-kind', text: kind });
     this.sheet.head(head);
-    button(head, word('details.close'), 'x', () => this.close());
     const body = el.createDiv({ cls: 'thoughtknot-details-body' });
+    readAloudButton(head, kind ? `${title}, ${kind}` : title, body); // under a preset for reading (§69)
+    button(head, word('details.close'), 'x', () => this.close());
     this.sheet.opened(body);
     return body;
   }
@@ -231,10 +232,10 @@ export class DetailsPanel {
 
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
-    this.el.hidden = true;
+    detailsShown(this.el, false);
     this.images.release('details');
     this.shown = null;
-    this.trail.clear();
+    if (!trailKept(this.o)) this.trail.clear(); // Focus support keeps it, to go back along (§69)
     this.sheet.closed();
     this.rich.end();
     this.select(null);
@@ -287,6 +288,7 @@ export class DetailsPanel {
     if (!d) return;
     this.select(key);
     this.shown = { key };
+    recentVisits()?.visit(this.o.graph, key);
     const el = this.panel(d.text, d.kind);
     this.retrace(el, { key });
     // what is going on, in a sentence or two, before anything else (details_said)

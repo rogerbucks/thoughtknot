@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/inline.test.js",
+  "test": "edit here, in the card > Edit here opens the text inside the drawing’s own card, with the help the pane has, and the focus in it",
+  "seen_failing_first": false,
+  "evidence": "Only widens which View menu selects the test leaves out, to include the lens choice #1515 added; no new behaviour to fail first"
+}

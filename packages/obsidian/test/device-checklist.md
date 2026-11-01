@@ -266,9 +266,9 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
       one of four words…", and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the
       graph is drawn in the locked style and the problem listed (broken_style_block).
 - [ ] **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is
-      outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a
-      beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is
-      written. A short click still opens the box (nudge_preview, drag_moves_box).
+      outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …" and the two are drawn
+      side by side. Press Escape mid-drag: the box goes back. A short click still opens the box. In the editing view,
+      Cmd+Z (Ctrl+Z) takes the drag back in one press (nudge_preview, drag_moves_box).
 - [ ] **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just
       below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A
       swipe begun at once still scrolls the note, and a hold lifted without moving opens no details (hold_to_drag_touch).
@@ -607,10 +607,10 @@ Run these with the system's reduce-motion setting off, as it is by default, unti
 
 ## The View menu — spec §25
 
-- [ ] **M-01** Press View on a graph's bar: four switches, Hide labels too small to read, Fold busy things, Fold groups
-      and Bundle links between groups. Each has a line under it saying what it does, and says on or off. Labels and hubs are on, groups and merging off. In Settings › ThoughtKnot,
-      change a switch's default under Drawing, then open the note again. Its graphs start as the settings now say (slice
-      3, view_switches, view_switch_defaults).
+- [ ] **M-01** Press View on a graph's bar: Detail with Overview, Groups and All, then Hide labels too small to read
+      and Group by. More choices holds Fold busy things, Fold groups, Bundle links and the sliders. Each switch says
+      what it does, and on or off. Change a switch's default in Settings › ThoughtKnot › Drawing. Open the note again:
+      its graphs start as the settings say (slice 3, view_switches, view_switch_defaults, cluster_menu_plain).
 - [ ] **M-02** On the phone, a wide graph fitted to the note shows its boxes but no link labels. Pinch to zoom in, and
       the labels appear once they can be read. Tap a box: its own links keep their labels at any zoom, as does a link
       under the pointer on the Mac. Turn Hide labels too small to read off: every label shows at any zoom (slice 3,
@@ -633,6 +633,13 @@ Run these with the system's reduce-motion setting off, as it is by default, unti
       details stay open and its neighbours stay in focus. Nothing in the note changes, in reading view too. In a view,
       Save as shown writes the switches into the style block. Close the note and open it again: the view opens with them
       (slice 3, view_switch_view_only, untangle_data_untouched).
+
+### The ladder of detail, zoom and planes
+
+- [ ] **M-08** Press View, then Overview: each group is one named box with its count. Press Groups: every thing shows
+      in its group. Zoom in on a folded group until it fills half the view: it opens. Switch to 3D: each group's named
+      card floats on a plane above its things, a stalk down to them. Click a folded group twice in 3D: it opens (slice
+      10, cluster_detail_ladder, cluster_opens, cluster_planes).
 
 ## Animated images — spec §18, §11, §16
 

@@ -5,8 +5,10 @@
 // - What is outside it is faded or hidden as its style graph says (fade_or_hide_in_style).
 // - Its looks are drawn with their legend.
 // - How it is shown is saved in the style graph when asked (view_saved_as_shown).
+import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
+import { rulesOn } from './rule-card';
 import { Notice, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from './block-context';
 import {
   addView,
   depthOf,
@@ -22,11 +24,21 @@ import {
   readingOf,
   styleEdit,
   reversedLinks,
+  savedExploreFor,
   styledDrawing,
   underStrictness,
   word,
 } from '@thoughtknot/core';
-import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@thoughtknot/core';
+import type {
+  ExploreSave,
+  GraphDrawing,
+  NamedView,
+  Outside,
+  StyleChange,
+  StyleGraph,
+  ThingLook,
+} from '@thoughtknot/core';
+import type { Exploring } from '@thoughtknot/core/display/graph-view/view-options';
 import type ThoughtKnotPlugin from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
@@ -40,6 +52,7 @@ import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { replaceInEditor } from './block-editor/note-writing';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
@@ -52,14 +65,37 @@ export async function writeStyle(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return;
   let refused = '';
-  await changeVaultNote(plugin.app, file.path, (note) => {
-    // a thing only suggested in the note as it is now is not styled until its name is written (§4)
+  // a thing only suggested in the note as it is now is not styled until its name is written (§4)
+  const edit = (note: string) => {
     const r = styleEdit(note, graph, change);
     if ('refused' in r) refused = r.refused;
     return 'note' in r ? r.note : note;
-  });
+  };
+  // a note open in the editing view is changed through its editor, so one Cmd+Z takes the change back (UX-5)
+  const cm = plugin.editorFor(file.path);
+  if (cm) {
+    const now = cm.state.doc.toString(),
+      next = edit(now);
+    if (next !== now) replaceInEditor(cm, next);
+  } else await changeVaultNote(plugin.app, file.path, edit);
   // each write is confirmed in words, as is each refusal
   new Notice(refused ? word('blocks.style-failed', { why: refused }) : done);
+}
+
+/**
+ * A card's saved exploration, which it opens on, and how its sidebar saves one (§71, explore_saved). The sidebar
+ * offers to save only where the note is edited, never in reading view.
+ */
+export function exploringFor(
+  plugin: ThoughtKnotPlugin,
+  path: string,
+  graph: string,
+  style: StyleGraph,
+  readOnly: () => boolean,
+): Exploring {
+  const saved = savedExploreFor(style.explores);
+  const save = (explore: ExploreSave) => void writeStyle(plugin, path, graph, { explore }, word('explore.saved'));
+  return { ...(saved && { saved }), ...(readOnly() ? {} : { save }) };
 }
 
 /**
@@ -94,12 +130,21 @@ function changeView(plugin: ThoughtKnotPlugin, path: string, line: number): void
   else new Notice(word('blocks.view-edit'));
 }
 
+/** The view's drawing, laid out under a wait that is shown. Null after the person stopped it, the text shown instead. */
+async function laidShown<T>(root: HTMLElement, source: string, laidOut: () => Promise<T>): Promise<T | null> {
+  const laid = await waitShown(root, word('progress.drawing'), laidOut, LAYOUT_WAIT);
+  if (laid !== 'stopped') return laid;
+  root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
+  renderCode(root, source);
+  return null;
+}
+
 /** Draws the view `v`, written in `source`, where the note shows it. */
 export async function renderViewBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   v: NamedView,
   owner?: object,
   redraw?: () => void,
@@ -265,15 +310,13 @@ export async function renderViewBlock(
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, looked.style, g, v.name);
-  // straight links first past 300 things, then the curves (§11, curves_after_drawing)
-  const laidOut = (by?: object, curved = false) =>
-    plugin.layout({ ...state.folded(styled, by), straightFirst: !curved }, by);
+  const laidOut = (by?: object) => plugin.layout(state.folded(styled, by), by);
   try {
     drawn = diagram.table
       ? tableDrawn(diagram.table)
       : diagram.picture
         ? pictureDrawn(diagram.picture)
-        : await laidOut(owner);
+        : await laidShown(root, source, () => laidOut(owner));
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('ThoughtKnot could not draw view', v.name, e);
@@ -298,7 +341,7 @@ export async function renderViewBlock(
         theme: plugin.settings.exportTheme,
         run: (ask) => plugin.exportGraph(ask),
       });
-    refusalBanner(root, drawn);
+    refusalBanner(root, drawn, () => plugin.resumeLayouts(true));
     renderCode(root, source);
     return;
   }
@@ -313,17 +356,15 @@ export async function renderViewBlock(
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
       profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
-      aids: aidsOf(plugin.settings),
+      aids: aidsOf(plugin.settings, style, v.name), // its Render's space and painter too (§68)
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
+      ...rulesOn(looked, g, styled, { view: v.name }), // its rules' looks (§56); a clash shows on the graph's card
       diagram,
-      ...(diagram.table || diagram.picture
-        ? {}
-        : { switches: { state, relayout: (by: object) => laidOut(by), curved: (by: object) => laidOut(by, true) } }),
+      ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
-      // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
-      links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },
+      links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] }, // as the graph's (§18); broken, on its card
       images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
       // an export reads the note it is in: a view drawn from elsewhere is exported from where its data is written
       ...(from

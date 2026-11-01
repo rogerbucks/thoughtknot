@@ -8,7 +8,7 @@
 import type { ExtensionPoint, ThoughtKnotPlugin } from './plugins.ts';
 
 /** The version of the plug-in interface as a whole, as major.minor. */
-export const PLUGIN_API = '1.1';
+export const PLUGIN_API = '1.2';
 
 /** The version of each extension point, as major.minor. */
 export const POINT_VERSIONS: Readonly<Record<ExtensionPoint, string>> = Object.freeze({
@@ -21,6 +21,7 @@ export const POINT_VERSIONS: Readonly<Record<ExtensionPoint, string>> = Object.f
   steps: '1.0',
   ai: '1.0',
   diagrams: '1.0',
+  layouts: '1.0',
 });
 
 const VERSION = /^(\d+)(?:\.(\d+))?$/;

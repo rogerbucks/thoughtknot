@@ -1,6 +1,8 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A guard read in the guard language and never run as code (editor spec §51, spec_guard_language).
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { pyeq } = require('../joins/python-text.js');
 
 // The language is requirements/guard-language.md: names from the context, numbers, quoted text, True and False,
@@ -21,7 +23,7 @@ const WORDS = new Set(['and', 'or', 'not']);
 const GUARD_LIMITS = Object.freeze({ chars: 1000, nesting: 64 });
 
 const refusal = (guard, why) =>
-  new Error(`refused: the guard ${JSON.stringify(guard)} ${why}; a guard holds comparisons only (§13)`);
+  refused('GR12', `refused: the guard ${JSON.stringify(guard)} ${why}; a guard holds comparisons only (§13)`);
 // Python's truth of a value: false, zero, nothing and empty text are false.
 const truthy = (v) => !(v === false || v === 0 || v === null || v === undefined || v === '');
 
@@ -86,7 +88,7 @@ function guardHolds(guard, ctx) {
       if (v === 'True' || v === 'true') return true;
       if (v === 'False' || v === 'false') return false;
       // only the context's own values: nothing JavaScript gives every object, such as constructor
-      if (!Object.prototype.hasOwnProperty.call(ctx, v)) throw new Error(`name '${v}' is not defined`);
+      if (!Object.prototype.hasOwnProperty.call(ctx, v)) throw refused('GR13', `name '${v}' is not defined`);
       return ctx[v];
     }
     throw refusal(guard, `has ${JSON.stringify(v)} where a value goes`);
@@ -122,4 +124,22 @@ function guardHolds(guard, ctx) {
   return truthy(out);
 }
 
-module.exports = { GUARD_LIMITS, guardHolds };
+// What is wrong with a guard as written, or null when it reads. Its names are not looked up. So a guard is checked
+// before the things it tests are known, as a rule's `when` is (editor spec §56, rule_look_when).
+function guardProblem(guard) {
+  const any = new Proxy(
+    {},
+    {
+      getOwnPropertyDescriptor: () => ({ value: null, writable: true, enumerable: true, configurable: true }),
+      get: () => null,
+    },
+  );
+  try {
+    guardHolds(guard, any);
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+module.exports = { GUARD_LIMITS, guardHolds, guardProblem };

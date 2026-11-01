@@ -9,7 +9,7 @@ import type { ChangeDesc, EditorState, Extension, Range, Text } from '@codemirro
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import type { DecorationSet } from '@codemirror/view';
 import { Component, editorInfoField, editorLivePreviewField } from 'obsidian';
-import type { MarkdownPostProcessorContext } from 'obsidian';
+import type { BlockContext } from './block-context';
 import { changeSetId, gqlSpans, graphOfBlock, isSourceBlock, isStepBlock, styleOf, viewsOf } from '@thoughtknot/core';
 import type { Span } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
@@ -190,13 +190,11 @@ class GraphBlock extends WidgetType {
     const component = new Component();
     component.load();
     const el = createDiv({ cls: 'block-language-gql' });
-    const ctx = {
+    const ctx: BlockContext = {
       sourcePath: this.path,
-      docId: '',
-      frontmatter: undefined,
       getSectionInfo: () => ({ text: this.note, lineStart: this.open, lineEnd: this.close }),
-      addChild: (child: Component) => component.addChild(child),
-    } as unknown as MarkdownPostProcessorContext;
+      addChild: (child) => void component.addChild(child),
+    };
     void renderShown(this.plugin, this.source, el, ctx, state).then(
       () => {
         if (asked !== state.asked || !drawn.has(dom)) {

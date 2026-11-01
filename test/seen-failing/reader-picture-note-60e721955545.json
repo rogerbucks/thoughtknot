@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/reader-picture-note.test.js",
+  "test": "the shared cases, which the Python reader runs too > give the same names, links, fingerprints, states and lines as the table says",
+  "seen_failing_first": false,
+  "evidence": "the table was made from the core's own functions, so the core passes it from the start; the Python reader's test, which failed first, is what it holds to the core"
+}

@@ -40,6 +40,25 @@ describe('the ethos', () => {
     }
   });
 
+  test('the ethos says never to disorient the user, in every view, with checkable rules', () => {
+    const { principles } = readEthos(ethosText);
+    const p = principles.find((x) => /disorient/i.test(x.name));
+    assert.ok(p, 'a principle about not disorienting the user');
+    const text = p.rules.map((r) => r.text).join('\n');
+    for (const word of [
+      /place|focus/i,
+      /glide|animat/i,
+      /reduced|still/i,
+      /asked/i,
+      /way back|undo|fold/i,
+      /2D, 2\.5D and 3D/,
+    ])
+      assert.match(text, word);
+    const named = new Set(p.rules.flatMap((r) => r.requirements));
+    for (const id of ['space_glide', 'layout_glide', 'cluster_in_place', 'motion_reduced_respected'])
+      assert.ok(named.has(id), id);
+  });
+
   test('names each fault: no check, an unknown check, a missing requirement, a rule without a principle, a principle without rules', () => {
     const ethos = readEthos(
       ethosOf(

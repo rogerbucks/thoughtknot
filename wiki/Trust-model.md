@@ -51,9 +51,10 @@ Wave 6.
 - **Crosses:** fixed arguments, the environment, the proposer key on stdin, and the URL on stdout.
 - **Trusted:** the mod trusts only a URL that starts with `http://127.0.0.1:`. The server trusts the key on stdin.
 - **Controls:** No shell. The key goes on stdin, never in arguments or the environment. Model endpoints and keys are
-  left out of the settings. A slow start is stopped.
+  left out of the settings. A slow start is stopped. On Windows, the server asks PowerShell when its parent's
+  number was taken, with fixed arguments and no shell. A newer process there means the parent has gone.
 - **Code:** `packages/claude-code/src/editor-launch.ts`, `packages/claude-code/src/editor-realpath.ts`,
-  `packages/claude-code/bin/propose-process.ts`.
+  `packages/claude-code/bin/propose-process.ts`, `packages/claude-code/server/session-watch.ts`.
 - **Gaps:**
   - The gate settings and a confirmed note's digest travel in the environment (TRUST-12).
 
@@ -84,7 +85,7 @@ Wave 6.
 - **Code:** `packages/claude-code/server/note-history.ts`, with `note-place.ts` and `export-files.ts` beside it.
 - **Gaps:**
   - Any text is written under an `.svg` name (SEC-9).
-  - git still reads the repository's own settings, so a signing program could run (TRUST-10).
+  - git read the repository's own settings, so a signing program could run. Fixed in #1537 (TRUST-10).
 
 ### B5. The editor server and GitHub
 
@@ -95,7 +96,7 @@ Wave 6.
   paths are checked. Items open only if they were listed. Each file is held to the note gate.
 - **Code:** `packages/claude-code/server/github-reader.ts`.
 - **Gaps:**
-  - Titles, authors and messages reach Claude's pane with no credential scan or data fence (TRUST-4).
+  - Titles, authors and messages reached Claude's pane with no credential scan or data fence. Fixed in #1539 (TRUST-4).
 
 ### B6. Note text and the drawing
 
@@ -108,7 +109,7 @@ Wave 6.
   `packages/core/src/display/graph-view/drawing-svg.ts`. The Python library runs Graphviz in
   `python/graph_spec/src/graphspec/style/drawn_svg.py`, and writes the SVG with its labels escaped in `marks_svg.py`.
 - **Gaps:**
-  - Nothing cleans the SVG before it enters the live page, so one escaping bug would run script (TRUST-7).
+  - Nothing cleaned the SVG before it entered the live page, so one escaping bug would run script. Fixed in #1539 (TRUST-7).
 
 ### B7. Obsidian and AI models
 
@@ -165,9 +166,9 @@ Wave 6.
   timeout. Labels are escaped.
 - **Code:** `python/graph_spec/src/graph_svg.py`, with `fill.py`, `classification.py` and `scxml.py`.
 - **Gaps:**
-  - Fill recipes can read outside the folder and add query syntax (TRUST-6).
-  - The Python class reader is looser than the core gate (TRUST-9).
-  - SCXML is parsed with entity handling on (SEC-7).
+  - Fill recipes could read outside the folder and add query syntax. Fixed in #1537 (TRUST-6).
+  - The Python class reader was looser than the core gate. Fixed in #1537 (TRUST-9).
+  - SCXML was parsed with entity handling on. Fixed in #1537 (SEC-7).
 
 ### B11. GitHub and the CI and release pipeline
 
@@ -175,18 +176,23 @@ Wave 6.
 - **Crosses:** code to build, comments that wake an agent, and the files that are released.
 - **Trusted:** code on `main`, and a tag on `main` that matches the manifest.
 - **Controls:** No `pull_request_target`. Every action is pinned to a full SHA. Permissions are read only unless a job
-  needs more. Credentials are not kept after checkout. Release tags must be on `main`. Releases are attested.
+  needs more. Credentials are not kept after checkout. Release tags must be on `main`. Releases and nightlies are
+  attested by a job that runs no repository code, and a release is built twice and compared first.
 - **Code:** the workflows that hold a secret other than their own token: `.github/workflows/build-status.yml`,
-  `.github/workflows/claude-review.yml`, `.github/workflows/desktop-app.yml`, `.github/workflows/nightly.yml`, `.github/workflows/project-mirror.yml`,
+  `.github/workflows/claude-review.yml`, `.github/workflows/desktop-app.yml`, `.github/workflows/idea-to-board.yml`, `.github/workflows/nightly.yml`, `.github/workflows/project-mirror.yml`,
   `.github/workflows/release-check.yml`, `.github/workflows/release.yml`, `.github/workflows/risk-panel.yml`,
   `.github/workflows/security.yml`, `.github/workflows/wave-nightly.yml` and `.github/workflows/working-group.yml`.
-  The wave one reads the project board with the project token, then calls the nightly.
+  The settings check, `.github/workflows/settings-check.yml`, reads the repository's settings with the alerts token. The
+  wave one reads the project board with the project token, then calls the nightly. The idea one uses the project
+  token to add a labelled issue to the board, and checks out nothing.
+
+  The token watch, `.github/workflows/token-watch.yml`, asks once a day if the project token works.
 - **Gaps:**
-  - The stable release builds and publishes in one job that holds the signing permissions (TRUST-3).
+  - The stable release built and published in one job that held the signing permissions. Fixed in #1535 (TRUST-3).
   - Any commenter could wake the working-group agent, which could write the script that checks it. Fixed in #836
     (TRUST-5).
-  - Two personal tokens have unverified scope (SEC-8).
-  - The nightly is not attested, and releases are not rebuilt and compared (SEC-5, SEC-6).
+  - Two personal tokens had no recorded scope. Fixed in #1535 (SEC-8).
+  - The nightly was not attested, and releases were not rebuilt and compared. Fixed in #1535 (SEC-5, SEC-6).
   - Security settings and Python dependencies are not checked in CI (SEC-2, SEC-10).
   - The desktop app's signing keys sit in its build step on `main`, where a crate's build script could read them. A
     pull request build never gets them (SEC-17).

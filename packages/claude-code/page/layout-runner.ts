@@ -4,9 +4,9 @@
 // worker can start, a layout is refused in words (`noWorker`). It is never run on the page's thread and never left
 // blank. (the core's module by its own path, not its entry: the entry also names the engine, which the page never
 // carries)
-import { inThreadPort, LayoutRunner, serveLayouts } from '../../core/src/layout-worker.ts';
-import type { LayoutPort, LayoutReply } from '../../core/src/layout-worker.ts';
-import { word } from '../../core/src/words.ts';
+import { inThreadPort, LayoutRunner, serveLayouts } from '@thoughtknot/core';
+import type { LayoutPort, LayoutReply } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** Where the worker's file is: the server's own, by a path from its root. */
 export const WORKER_PATH = '/layout-worker.js';

@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §25 completeness, the twin of completeness() in graph_rules.py; the conformance suite requires the identical report.
 'use strict';
 

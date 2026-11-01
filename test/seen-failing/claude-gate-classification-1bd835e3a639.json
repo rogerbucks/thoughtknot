@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/claude-gate-classification.test.js",
+  "test": "the gate reads each shared classification case as the table says",
+  "seen_failing_first": false,
+  "evidence": "The core's gate already read classes this way. This test holds the shared table both readers run, and the Python reader's test failed first (TRUST-9)."
+}

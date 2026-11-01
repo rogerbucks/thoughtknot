@@ -1,0 +1,954 @@
+{
+  "about": "Shared cases for a rule's look run as a lens (editor spec §56, rule_look_when). Each case calls queryThings, queryLinks or runLens of packages/graph-spec/src/lenses/saved-lenses.js on its graph, with its args, and the Python twin (graphspec.engine.lenses.saved_lenses) must give the same answer. Made once by the JavaScript library.",
+  "cases": [
+    {
+      "name": "a when on a kind finds the things the same lens finds",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["Task WHERE status == 'late'"],
+      "expected": ["t1", "t3"]
+    },
+    {
+      "name": "the lens itself finds the same things",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "runLens",
+      "args": ["late_work", {}],
+      "expected": {
+        "lens": "late_work",
+        "things": ["t1", "t3"],
+        "altitude": null,
+        "flags": []
+      }
+    },
+    {
+      "name": "a when on every thing finds every kind that passes",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["* WHERE status == 'late'"],
+      "expected": ["t1", "t3", "p2"]
+    },
+    {
+      "name": "a when may test certainty, as a likelihood word",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["* WHERE likelihood == 'unlikely'"],
+      "expected": ["t1"]
+    },
+    {
+      "name": "a thing lacking what a when names never matches",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["Task WHERE cost > 50"],
+      "expected": ["t1"]
+    },
+    {
+      "name": "a when may count links: nothing linked",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["* WHERE links == 0"],
+      "expected": ["p2"]
+    },
+    {
+      "name": "a when may count links each way",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["* WHERE links_out >= 2 or links_in >= 2"],
+      "expected": ["t3", "p1"]
+    },
+    {
+      "name": "a property named like a count wins over the count",
+      "graph": {
+        "nodes": [
+          [
+            "a",
+            ["Person"],
+            {
+              "links": 0
+            }
+          ],
+          ["b", ["Person"], {}],
+          ["c", ["Person"], {}]
+        ],
+        "edges": [["a", "KNOWS", "b", {}]]
+      },
+      "call": "queryThings",
+      "args": ["Person WHERE links == 0"],
+      "expected": ["a", "c"]
+    },
+    {
+      "name": "a query that cannot be read finds nothing",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryThings",
+      "args": ["Task WHERE"],
+      "expected": []
+    },
+    {
+      "name": "a rule on links finds links of its type whose properties pass",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryLinks",
+      "args": ["NEEDS", "weight > 2"],
+      "expected": [0]
+    },
+    {
+      "name": "a rule on links of a type with no test finds them all",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryLinks",
+      "args": ["OWNS", null],
+      "expected": [2, 3]
+    },
+    {
+      "name": "a link lacking what a when names never matches",
+      "graph": {
+        "nodes": [
+          [
+            "late_work",
+            ["Lens"],
+            {
+              "name": "Late work",
+              "query": "Task WHERE status == 'late'"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "status": "late",
+              "cost": 120,
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "status": "done",
+              "cost": 40
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "status": "late"
+            }
+          ],
+          [
+            "p1",
+            ["Person"],
+            {
+              "name": "Ann"
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "name": "Bo",
+              "status": "late"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "t1",
+            "NEEDS",
+            "t2",
+            {
+              "weight": 3
+            }
+          ],
+          [
+            "t2",
+            "NEEDS",
+            "t3",
+            {
+              "weight": 1
+            }
+          ],
+          ["p1", "OWNS", "t1", {}],
+          [
+            "p1",
+            "OWNS",
+            "t3",
+            {
+              "weight": 5
+            }
+          ]
+        ]
+      },
+      "call": "queryLinks",
+      "args": ["OWNS", "weight > 2"],
+      "expected": [3]
+    }
+  ]
+}

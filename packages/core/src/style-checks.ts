@@ -9,8 +9,11 @@ import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
 import { filterOf } from './filter-saved.ts';
 import type { SavedFilter } from './filter-saved.ts';
+import { exploreOf } from './explore-saved.ts';
+import type { SavedExplore } from './explore-saved.ts';
 import { pictureOf } from './picture.ts';
-import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
+import { arrowsOf, diagramOf, linksOf, presetOf, renderOf } from './style-choice-checks.ts';
+import type { Render } from './render-choice.ts';
 import {
   FORMATS,
   INLINE,
@@ -31,6 +34,7 @@ import type {
   Look,
   Nudge,
   Picture,
+  PresetChoice,
   Show,
   Shown,
   StyleAt,
@@ -38,8 +42,10 @@ import type {
   ViewStyle,
 } from './style-graph.ts';
 import { reader } from './style-reader.ts';
-import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
-import type { LayoutOptions } from './layouts/layout-options.ts';
+import { ruleLookOf } from './rule-look-checks.ts';
+import { DEFAULT_LAYOUT_OPTIONS, LAYOUT_CHOICES, LAYOUT_OPTION_RANGE, choiceFits } from './layouts/layout-options.ts';
+import { SHOWN_LAYOUT_CHOICES, SHOWN_LAYOUT_KEYS } from './layouts/layout-options.ts';
+import type { LayoutChoice, LayoutShare } from './layouts/layout-options.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 import { legendChecked } from './untangle-saved.ts';
 import { word as say } from './words.ts';
@@ -66,6 +72,8 @@ export interface StyledNames {
   kinds: Set<string>;
   types: Set<string>;
   paths: Set<string>;
+  /** The Lens things of the graph, which a rule's look may name (§56). */
+  lenses: Set<string>;
   /** The property names of a kind's things, of one thing, or of a relationship type's links. */
   properties(of: { kind?: string; thing?: string; type?: string }): Set<string>;
 }
@@ -83,6 +91,9 @@ export interface Checked {
   links: Links[];
   pictures: Picture[];
   filters: SavedFilter[];
+  presets: PresetChoice[];
+  renders: Render[];
+  explores: SavedExplore[];
   problems: Problem[];
 }
 
@@ -172,6 +183,11 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
 function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null {
   const r = reader(raw, names, out),
     has = (k: string) => raw.props[k] !== undefined;
+  if (has('when') || has('lens') || has('bands') || has('steps')) return ruleLookOf(raw, names, out);
+  if (has('badge')) {
+    r.report(say('styling.rule.badge-needs-rule'), say('styling.rule.badge-needs-rule.fix'));
+    return null;
+  }
   if (has('view') === has('path')) {
     if (has('view')) r.report(say('styling.look.view-and-path'), say('styling.remove-one'));
     else r.missing(say('styling.look.view-or-path'), say('styling.look.view-or-path.fix'));
@@ -262,7 +278,7 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
     if (v !== undefined) shown[k] = v;
   }
   // how the layout spaced it (§53, layout_saved_with_view): each option in its range
-  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [keyof LayoutOptions, string][]) {
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_KEYS) as [LayoutShare, string][]) {
     const v = r.number(key),
       [least, most] = LAYOUT_OPTION_RANGE[k];
     if (v !== undefined && (v < least || v > most))
@@ -271,6 +287,15 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
         say('styling.shown.layout-range.fix', { key, usual: DEFAULT_LAYOUT_OPTIONS[k] }),
       );
     else if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
+  }
+  // a layout a plug-in adds is chosen by its id (layout_plugins)
+  for (const [k, key] of Object.entries(SHOWN_LAYOUT_CHOICES) as [LayoutChoice, string][]) {
+    const written = r.text(key);
+    const v =
+      written === undefined || choiceFits(k, written)
+        ? written
+        : r.word(key, LAYOUT_CHOICES[k], mustBe(key, LAYOUT_CHOICES[k]));
+    if (v !== undefined) shown.layout = { ...shown.layout, [k]: v };
   }
   // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept
   const legend = legendChecked(r, names);
@@ -292,6 +317,9 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     links: [],
     pictures: [],
     filters: [],
+    presets: [],
+    renders: [],
+    explores: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -329,6 +357,9 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
     else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
     else if (kinds[0] === 'Filter') push(c.filters, kept(filterOf(thing, names, p)));
+    else if (kinds[0] === 'Preset') push(c.presets, kept(presetOf(thing, names, p)));
+    else if (kinds[0] === 'Render') push(c.renders, kept(renderOf(thing, names, p)));
+    else if (kinds[0] === 'Explore') push(c.explores, kept(exploreOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

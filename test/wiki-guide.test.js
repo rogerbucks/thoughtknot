@@ -18,8 +18,20 @@ describe('the user guide', () => {
     assert.deepEqual(shotsOf(guide).sort(), SHOTS.map((s) => s.name).sort());
   });
 
+  test('step 1 names the command that inserts an example graph, and the inline offers while typing', () => {
+    const step1 = guide.slice(guide.indexOf('## 1.'), guide.indexOf('## 2.'));
+    assert.match(step1, /\*\*Insert an example graph\*\*/);
+    assert.match(step1, /offers the rest of a word/);
+  });
+
   test('gives every picture words that say what it shows', () => {
     for (const s of SHOTS) assert.ok(s.alt.length > 15, s.name);
+  });
+
+  // proves: landing_page
+  test('says which Obsidian it needs, filled from versions.json by the wiki build', () => {
+    assert.match(guide, /<!-- wiki:needs -->/);
+    assert.match(read('scripts/wiki.mjs'), /needs: `Needs Obsidian \$\{versions\[version\]\} or newer/);
   });
 
   test('lists every setting of the editor, from its own list of options', () => {
@@ -55,9 +67,14 @@ describe('finding Chrome', () => {
     );
     assert.throws(
       () =>
-        findChrome(undefined, () => {
-          throw new Error('not found');
-        }),
+        findChrome(
+          undefined,
+          () => {
+            throw new Error('not found');
+          },
+          // a Mac or a Windows PC would find its installed one
+          { exists: () => false },
+        ),
       /no Chrome found/,
     );
   });

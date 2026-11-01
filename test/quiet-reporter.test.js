@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { path } from './repository/repo.js';
 import { describeFailure } from '../scripts/quiet-reporter.mjs';
 
@@ -38,7 +39,7 @@ describe('a failure whose details the test runner could not pass on', () => {
     );
     const r = spawnSync(
       process.execPath,
-      ['--test', `--test-reporter=${path('scripts/quiet-reporter.mjs')}`, 'uncopied.test.mjs'],
+      ['--test', `--test-reporter=${pathToFileURL(path('scripts/quiet-reporter.mjs')).href}`, 'uncopied.test.mjs'],
       { cwd: folder, env: CLEAN_ENV, encoding: 'utf8', timeout: 60000 },
     );
     assert.equal(r.status, 1, r.stderr);

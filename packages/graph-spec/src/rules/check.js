@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // check(): every rule that applies to a graph, with drafts' near-duplicate names (graph_rules.py).
 'use strict';
 

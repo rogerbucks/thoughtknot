@@ -6,9 +6,9 @@
 // - A decision or a refusal is announced in the page's status region.
 // - After a decision, focus returns to the heading of the card.
 // The review itself is the core's (proposal-review.ts). The card only shows its rows and passes the user's choice on.
-import type { Which } from '../../core/src/proposals-shown.ts';
+import type { Which } from '@thoughtknot/core';
 import type { Card } from './proposal-review.ts';
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 
 /** What the card does with a choice: the page decides it and answers in words, a refusal included. */
 export type Decide = (id: string, action: 'accept' | 'reject', which: Which, staleSeen: boolean) => Promise<string>;

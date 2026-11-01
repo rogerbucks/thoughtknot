@@ -25,6 +25,6 @@
 
 **Checklist line:**
 
-> **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is written. A short click still opens the box.
+> **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …" and the two are drawn side by side. Press Escape mid-drag: the box goes back. A short click still opens the box. In the editing view, Cmd+Z (Ctrl+Z) takes the drag back in one press.
 
 **Back to the checklist:** [S-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-03 in its list.

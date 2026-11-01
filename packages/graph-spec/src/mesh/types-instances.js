@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Lasting types and the instances of them (editor spec §27, type_instance_split and instance_inherits_type). A type is a
 // thing like any other, such as a reader model. An instance, such as the reader on one desk, links to its type with
 // INSTANCE_OF. The type may be in another graph: the link then goes to a Ref naming it (§23), as SAME_AS does

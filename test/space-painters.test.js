@@ -118,11 +118,15 @@ window.readSvg = (marked = false) => {
     <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
     <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="34" font-size="14" fill="rgb(10, 10, 10)">Cy</text><text x="270" y="48" font-size="14" fill="rgb(10, 10, 10)">Young</text></g>
+    <g class="node" id="node4" data-key="group: 1"><polygon fill="none" stroke="rgb(90, 90, 90)" points="160,20 240,20 240,60 160,60"/><text x="200" y="38" font-size="14">Identity</text><text x="200" y="52" font-size="10">8 things</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   if (marked) {
     holder.querySelector('#node1').classList.add('thoughtknot-dim');
     for (const id of ['#node2', '#edge1']) holder.querySelector(id).classList.add('thoughtknot-hidden');
+    const cy = holder.querySelector('#node3'); // and a rule gave Cy its badge (rule_look_not_colour_alone)
+    cy.setAttribute('data-badge', '⏱');
+    cy.insertAdjacentHTML('beforeend', '<text class="thoughtknot-rule-badge" x="252" y="30">⏱</text>');
   }
   const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
   holder.remove();
@@ -130,8 +134,9 @@ window.readSvg = (marked = false) => {
 };
 // the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it. With
 // \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again. With \`bundle\`, the
-// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it
-window.pickInSpace = async (hideBob = false, bundle = false) => {
+// link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it.
+// With \`cluster\`, Bob is a folded group's box instead: picked again, it tells the card to open it
+window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -144,6 +149,13 @@ window.pickInSpace = async (hideBob = false, bundle = false) => {
     const g = holder.querySelector('[data-link]');
     g.removeAttribute('data-link');
     g.setAttribute('data-fold', 'bundle:Ada team\\nBob team');
+  }
+  if (cluster) {
+    const g = holder.querySelector('[data-key="bob"]');
+    g.removeAttribute('data-key');
+    g.id = 'fold_group_1';
+    g.setAttribute('data-fold', 'group:Team');
+    holder.querySelector('[data-link]').remove(); // so the only thing a click opens is the group
   }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
@@ -229,6 +241,56 @@ window.clickAgain = async () => {
   sized.remove();
   return { hit, before, first, after };
 };
+// the view's mini-map (space_mini_map), and the drawing laid out again gliding in it (layout_glide): Bob moved on the
+// page, the card marks its drawing again, and Bob's footprint passes through the spots between, a frame at a time
+window.miniInSpace = async () => {
+  const sized = document.head.appendChild(document.createElement('style'));
+  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const root = document.body.appendChild(document.createElement('div'));
+  root.style.cssText = 'position:relative;width:480px;height:360px';
+  const holder = root.appendChild(document.createElement('div'));
+  holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+  </g></svg>\`;
+  const told = [];
+  root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
+  const svg = holder.querySelector('svg');
+  const opened = await openSpaceView(root, svg, 'Team', () => {}, { cards: false, asDrawn: true, miniMap: () => 'always' });
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await frames();
+  await new Promise((r) => setTimeout(r, 450)); // past its rise out of the flat drawing
+  await frames();
+  const mini = root.querySelector('.thoughtknot-mini-map.is-space');
+  const xs = () => [...(mini?.querySelectorAll('rect.thoughtknot-mini-box') ?? [])].map((r) => Number(r.getAttribute('x')));
+  const seen = () => mini?.querySelector('polygon.thoughtknot-mini-frame')?.getAttribute('points');
+  const shown = { there: !!mini && !mini.hidden, boxes: xs().length, seen: (seen() ?? '').split(' ').length };
+  // Bob moved far across the page, and the drawing marked again
+  svg.querySelector('[data-key="bob"] polygon').setAttribute('points', '600,140 680,140 680,180 600,180');
+  svg.querySelector('[data-key="bob"] text').setAttribute('x', '640');
+  svg.dispatchEvent(new Event(MARKED));
+  const path = [];
+  for (let i = 0; i < 40; i++) {
+    path.push(Math.max(...xs()));
+    await new Promise((r) => requestAnimationFrame(r));
+  }
+  await new Promise((r) => setTimeout(r, 450));
+  await frames();
+  path.push(Math.max(...xs()));
+  // a press on the mini-map moves the view, and picks nothing under it
+  const was = seen(),
+    at = mini.querySelector('svg').getBoundingClientRect();
+  for (const type of ['pointerdown', 'pointerup'])
+    mini
+      .querySelector('svg')
+      .dispatchEvent(new PointerEvent(type, { clientX: at.left + 2, clientY: at.top + 2, pointerId: 2, bubbles: true }));
+  await frames();
+  const moved = seen() !== was;
+  opened?.close();
+  root.remove();
+  sized.remove();
+  return { shown, path, moved, told: told.length };
+};
 // a card's bar and drawing, as graph-view.ts builds them, with the one button that shows it flat or in space
 window.oneBar = async () => {
   const root = document.body.appendChild(document.createElement('div'));
@@ -254,23 +316,22 @@ window.oneBar = async () => {
   const zoom = spaces.zooming(() => ({ fit: () => flat++, zoomIn: () => flat++, zoomOut: () => flat++ }));
   const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const steps = [];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     b.click();
-    for (let n = 0; n < 20 && !frame.querySelector('.thoughtknot-space-pad') !== !spaces.mode(); n++) await frames();
-    const view = frame.querySelector(':scope > .thoughtknot-space-view');
-    steps.push({
-      said: b.textContent,
-      inFrame: !!view,
-      cards: !!view?.querySelector('.thoughtknot-space-pad button[hidden]'),
-    });
+    // until the view is as its mode says (a slow machine takes more frames); cards and the globe have no lift button
+    const view = () => frame.querySelector(':scope > .thoughtknot-space-view');
+    const unlifted = () => !!view()?.querySelector('.thoughtknot-space-pad button[hidden]');
+    const noLift = ['cards', 'globe'].includes(spaces.mode());
+    for (let n = 0; n < 100 && (!view() !== !spaces.mode() || unlifted() !== noLift); n++) await frames();
+    steps.push({ said: b.textContent, inFrame: !!view(), unlifted: unlifted() });
     if (spaces.mode() !== 'cards') continue;
     // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
     zoom.zoomIn();
-    const at = view.getBoundingClientRect();
+    const at = view().getBoundingClientRect();
     for (let y = 4; y < at.height && !told.length; y += 6)
       for (let x = 4; x < at.width && !told.length; x += 6)
         for (const type of ['pointerdown', 'pointerup'])
-          view.dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
+          view().dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
   }
   await spaces.show(null);
   zoom.zoomIn();
@@ -397,6 +458,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
     // a long name is cut into rows of the same size: the label holds the whole name (Roger, 24 Oct 2026)
     assert.equal(byId.get('l:cy').text, 'Cy Young');
+    // proves: cluster_named_everywhere
+    assert.equal(byId.get('l:group: 1').text, 'Identity · 8 things', 'a folded group keeps its count with its name');
     const untitled = byId.get('e:edge3');
     assert.deepEqual(
       [untitled.from, untitled.to],
@@ -418,6 +481,17 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.deepEqual(link, { fold: 'bundle:Ada team\nBob team' }, 'the bundle opens by its fold, not as a link');
   });
 
+  // proves: cluster_opens
+  test(
+    'a folded group clicked again in the 3D view tells the card to open it, by its box on screen',
+    options,
+    async () => {
+      // the tries across the screen come quick and close, so the second on the box is a click again
+      const { link } = JSON.parse(await browser.run('pickInSpace(false, false, true).then(JSON.stringify)'));
+      assert.deepEqual(link, { fold: 'fold_group_1' }, 'the card finds the fold its box opens (viewport-events.ts)');
+    },
+  );
+
   // proves: space_pick_opens
   test('a first click only picks a thing, and another click on it turns the view to it', options, async () => {
     // Roger, 24 Oct 2026: "change the properties first, another click changes the current orientation angle"
@@ -428,17 +502,18 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(r.after, true, 'after another click on it, it is in the middle');
   });
 
-  // proves: space_one_bar
+  // proves: space_one_bar, globe_view
   test(
-    "one button on the card's bar goes from 2D to 2.5D to 3D and back, the view inside the drawing's frame",
+    "one button on the card's bar goes from 2D to 2.5D to 3D to the globe and back, the view inside the drawing's frame",
     options,
     async () => {
       const r = JSON.parse(await browser.run('oneBar().then(JSON.stringify)'));
       assert.deepEqual(r.steps, [
-        { said: '2.5D', inFrame: true, cards: true },
-        { said: '3D', inFrame: true, cards: false },
-        { said: '2D', inFrame: false, cards: false },
-        { said: '2.5D', inFrame: true, cards: true },
+        { said: '2.5D', inFrame: true, unlifted: true },
+        { said: '3D', inFrame: true, unlifted: false },
+        { said: 'Globe', inFrame: true, unlifted: true },
+        { said: '2D', inFrame: false, unlifted: false },
+        { said: '2.5D', inFrame: true, unlifted: true },
       ]);
       assert.ok(
         r.told && 'key' in r.told,
@@ -453,6 +528,36 @@ describe("the 3D view's painters, in a real browser", () => {
     },
   );
 
+  // the mini-map and the glide in it, read once for both checks below
+  let read;
+  const mini = () => (read ??= browser.run('miniInSpace().then(JSON.stringify)').then(JSON.parse));
+  // proves: space_mini_map
+  test(
+    '2.5D and 3D have a mini-map too: every thing, the floor seen, and a press on it moves the view',
+    options,
+    async () => {
+      const r = await mini();
+      assert.deepEqual(
+        r.shown,
+        { there: true, boxes: 2, seen: 4 },
+        'shown, each thing copied, the floor seen outlined',
+      );
+      assert.equal(r.moved, true, 'a press on it moves the view');
+      assert.equal(r.told, 0, 'and picks nothing under it');
+    },
+  );
+
+  // proves: layout_glide
+  test('laid out again, each thing glides there in the view in space, through the spots between', options, async () => {
+    const { path } = await mini();
+    const [first, last] = [path[0], path.at(-1)];
+    assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
+    // A spot between, in a frame of its own, shows a glide and not a jump. A slow machine draws fewer frames in the
+    // same glide: the macOS runner, painting in software, drew only one (Other systems run, 29 Oct 2026).
+    const between = new Set(path.filter((x) => x > first + 1 && x < last - 1));
+    assert.ok(between.size >= 1, `it passed through the spots between, a frame at a time: ${path}`);
+  });
+
   // proves: focus_space
   test('what the card hides is gone from the 3D view too, once it marks its drawing again', options, async () => {
     const { keys, link } = JSON.parse(await browser.run('pickInSpace(true).then(JSON.stringify)'));
@@ -460,7 +565,7 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(link, null, 'the hidden link is not drawn');
   });
 
-  // proves: focus_space
+  // proves: focus_space, rule_look_not_colour_alone
   test('what the focus fades is read see-through, and what it hides is not read at all', options, async () => {
     const marks = JSON.parse(await browser.run('JSON.stringify(readSvg(true))'));
     const ids = new Set(marks.map((m) => m.id));
@@ -476,6 +581,7 @@ describe("the 3D view's painters, in a real browser", () => {
       'rgb(200, 240, 200)',
       'a thing the focus keeps is as it was',
     );
+    assert.equal(marks.find((m) => m.id === 'l:cy').text, '⏱ Cy Young', "a rule's badge is read before the name");
   });
 
   test('WebGPU builds its shaders and paints the city with no error', options, async (t) => {

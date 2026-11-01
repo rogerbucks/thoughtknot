@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/svg-allowlist.test.js",
+  "test": "a drawing’s SVG > is cleaned in time that grows with its length, whatever runs of spaces or tags it holds",
+  "seen_failing_first": false,
+  "evidence": "A guard: CodeQL found the slow pattern by reading it, and V8 ran the old one fast on these inputs."
+}

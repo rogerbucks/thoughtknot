@@ -80,9 +80,9 @@ describe('a short guide for AI sessions', () => {
     assert.equal(read('CLAUDE.md'), '@AGENTS.md\n');
   });
 
-  test('CONTRIBUTING.md lists this test and mentions the cheap commands', () => {
+  test('the list of spanning tests has this one, and CONTRIBUTING.md mentions the cheap commands', () => {
     const c = read('CONTRIBUTING.md');
-    assert.match(c, /^- `test\/cheap-checks\.test\.js` — /m);
+    assert.match(read('docs/tests-that-span-modules.md'), /^- `test\/cheap-checks\.test\.js` — /m);
     for (const cmd of ['test:ai', 'test:changed', 'AGENTS.md']) assert.ok(c.includes(cmd), cmd);
   });
 });

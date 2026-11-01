@@ -101,6 +101,7 @@ export class InlineEditors extends Component {
         e.detach();
         this.plugin.removeChild(e);
         this.changed();
+        if (e.held) this.plugin.tried.drawAgain(e.path); // the picture held while typing is drawn as written (NEURO-7)
       };
       const at: Placed = { path: target.path, line: target.line, card: this.cardAt(target.path, target.line) };
       this.open.set(e, at);
@@ -124,6 +125,7 @@ export class InlineEditors extends Component {
       }
       // the lists made in this session outlive this editor: Done, then Edit here again, still offers them
       (e as Editing).lists = this.plugin.declaredLists(target.path, e.session.graph);
+      e.holdDrawing(); // the text its card is drawn from until Done, if the settings say (NEURO-7)
       editor = e;
       this.changed();
     } else {

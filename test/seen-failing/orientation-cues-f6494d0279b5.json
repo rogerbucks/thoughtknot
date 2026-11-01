@@ -1,0 +1,6 @@
+{
+  "file": "test/orientation-cues.test.js",
+  "test": "orientation_cues: every view keeps the cues to where the person is > 2D: the mini-map shows the whole drawing and where the view is, the selection marked, laid out again too",
+  "seen_failing_first": false,
+  "evidence": "It checks cues already there (mini-map, marked selection, picked card and ring), so it passed first; it guards them from now on."
+}

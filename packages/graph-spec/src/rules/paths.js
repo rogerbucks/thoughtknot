@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §22 paths: their steps, the view of a path at an altitude, and the paths rules.
 'use strict';
 

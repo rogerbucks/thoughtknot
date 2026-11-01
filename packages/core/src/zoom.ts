@@ -23,7 +23,7 @@ const PINCH_RATE = 1.4;
  * pinch sends small steps as the wheel with Ctrl, so it is as much quicker as a pinch on touch. So is the wheel, with
  * Ctrl or Command in a note. Alone, it is too in full screen and the pane, which cannot be told from it.
  */
-const WHEEL_RATE = 0.002 * PINCH_RATE;
+export const WHEEL_RATE = 0.002 * PINCH_RATE;
 
 /** The drawing's scale, its top-left corner in the viewport, and its size there — set as its size, so text stays sharp. */
 export interface View {
@@ -46,23 +46,16 @@ interface Mods {
   meta?: boolean;
   alt?: boolean;
 }
+type Near = { onBox?: boolean; near?: boolean };
 /** An input the host passes in: a key, the wheel, a pointer, or a double click. */
 export type ZoomEvent =
   | ({ kind: 'key'; key: string } & Mods)
   | ({ kind: 'wheel'; x: number; y: number; dy: number } & Mods)
-  | {
-      kind: 'down';
-      id: number;
-      pointer: 'mouse' | 'touch' | 'pen';
-      x: number;
-      y: number;
-      onBox?: boolean;
-      near?: boolean;
-    }
+  | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number } & Near)
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
   | { kind: 'cancel'; id: number }
-  | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean };
+  | ({ kind: 'dblclick'; x: number; y: number } & Near);
 
 /**
  * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's). It is
@@ -279,6 +272,13 @@ export class Zoom {
     }
   }
 
+  /** The host says how many fingers are really down; a lost lift must not leave one tracked to pinch (stuck_touch). */
+  settle(fingers: number): void {
+    const touches = [...this.pointers].filter(([, p]) => p.touch);
+    for (const [id] of touches.slice(0, Math.max(0, touches.length - fingers))) this.pointers.delete(id);
+    if (fingers < 2) this.pinch = null;
+  }
+
   private key(e: Extract<ZoomEvent, { kind: 'key' }>): boolean {
     if (e.ctrl || e.meta || e.alt) return false;
     if (e.key === '+' || e.key === '=') this.zoomIn();
@@ -291,7 +291,7 @@ export class Zoom {
 
   private down(e: Extract<ZoomEvent, { kind: 'down' }>): boolean {
     const touch = e.pointer === 'touch';
-    const pans = !e.onBox && (!touch || this.zoomedIn());
+    const pans = touch ? this.zoomedIn() : !e.onBox; // a finger on a box or link still pans: the box waits for a hold
     this.pointers.set(e.id, {
       touch,
       x: e.x,
@@ -377,7 +377,7 @@ export class Zoom {
 
   protected edgeBound?(): boolean;
   /** Puts the view there: centred, or within the edges where `edgeBound` says, or anywhere with some drawing in sight. */
-  private place(scale: number, x: number, y: number, centre = false): void {
+  place(scale: number, x: number, y: number, centre = false): void {
     const room = { content: this.content, viewport: this.viewport, clear: this.clear };
     const [cx, cy] = centre || this.edgeBound?.() ? clampPan(room, scale, x, y, centre) : inSight(room, scale, x, y);
     if (scale === this.scale && cx === this.x && cy === this.y) return;

@@ -1,11 +1,12 @@
 # The desktop app: where things live
 
 The standalone app (spec §41, `standalone_app`) is the browser editor in a Tauri v2 window, over a plain folder of
-notes. It works offline on macOS, Windows and Linux. The same window will carry the iPhone app later (`ios_app`).
+notes. It works offline on macOS, Windows and Linux. The same window carries the phone and tablet app: Android now, iPhone and
+iPad once Roger's Apple account is ready (`android_app`, `ios_app`).
 
 There is no server inside. The window runs the browser editor's page from the Claude Code host unchanged. The page's
 calls are answered in the window itself, from the folder the person picked. So there is one editor page for the
-browser and the app, and nothing to port to Rust but seven small folder commands.
+browser and the app, and nothing to port to Rust but eight small folder commands.
 
 ## How it fits together
 
@@ -15,9 +16,9 @@ window (WebKit, WebView2 or WebKitGTK)
   editor.html                the browser editor's page (packages/claude-code/page)
     app-editor.js            answers the page's /api/ calls (src/app-api.ts)
       core storage           workspaceStorage (packages/core/src/workspace-storage.ts)
-        tauriFiles           the seven commands, through Tauri's invoke (src/tauri-files.ts)
+        tauriFiles           the folder commands, through Tauri's invoke (src/tauri-files.ts)
 Rust (src-tauri/)
-  lib.rs                     the window, the picked folder, the seven commands
+  lib.rs                     the window, the picked folder, the eight commands
   place.rs                   every path checked to stay inside the folder
 ```
 
@@ -38,8 +39,8 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Seven commands, and no others: `pick_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`, `make_dir`,
-  `write_new`. The same seven are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists together.
+- Eight commands, and no others: `pick_folder`, `own_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`,
+  `make_dir`, `write_new`. The same eight are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists together.
 - `place.rs` refuses any path that climbs out, starts at a root, names a hidden part (such as `.git`), or reaches
   outside through a link. A note is written to a new file beside it, then renamed over it.
 - `write_new` writes an export only as new files. A name taken gets the next number. All of the files or none.
@@ -78,6 +79,45 @@ Windows are built and tested, not driven.
 cargo install tauri-driver --locked --version 2.1.0
 cd packages/app/src-tauri && cargo build && cd ../../..
 xvfb-run -a npm run test:ai -- test/standalone-app.test.js
+```
+
+## On a phone or tablet
+
+The same shell is built for Android, and for the iPhone and iPad (spec §40). Only the folder differs.
+
+- A phone has no folder dialog. The app keeps its notes in its own Documents folder, made at first launch and open
+  from the start. `own_folder` names it; on a computer it gives none.
+- On an iPhone or iPad, the Files app shows that folder under On My iPhone (`Info.ios.plist`). On Android, it is the
+  app's own folder on the device's storage.
+- The first page lists the notes, with nothing to pick. Its button, New note, makes a note with an empty graph and
+  opens it. A name already taken gets the next number, so no note is written over.
+- The folder dialog plug-in is built for computers only (`Cargo.toml`).
+- The vault key (packages/sync/src/keys.ts) is made on the phone at first launch. It is kept in the phone's own secure
+  store, never in the app. The app's own plug-in does it, in `src-tauri/keeper/`:
+  - Android (`Keeper.kt`): 32 random bytes, sealed by a key that lives in the Android Keystore and cannot leave it. Only
+    the sealed copy is written, in the app's storage that is never backed up. A copy that cannot be opened is never
+    written over.
+  - iPhone and iPad (`KeeperPlugin.swift`): in the Keychain, for this device only. It stays through a reinstall, so a
+    signing expiry means only reinstalling.
+  - The window may not ask for the key yet: the capability does not allow `vault_key`. Sync allows it when it joins
+    the app (W30). On a computer the command says it keeps none yet.
+  - Its tests run on an Android emulator in the phone app workflow (`keeper/android/src/androidTest`).
+- The phone app's id is `app.thoughtknot.mobile` (`tauri.android.conf.json`, `tauri.ios.conf.json`).
+
+The phone and tablet app workflow (`.github/workflows/mobile-app.yml`) builds both on each change:
+
+- Android: a debug APK for 64-bit ARM phones and tablets, kept as a download of the run. Install it by hand on a phone
+  that allows apps from outside the Play Store.
+- iPhone and iPad: built for the simulator, with signing switched off. A build for a real device waits for Roger's
+  Apple account (docs/app-signing.md).
+
+Tauri writes the Android Studio and Xcode projects into `src-tauri/gen/` at the start of each build. They are never
+committed. To build on your own computer, with the Android SDK and NDK, or with Xcode:
+
+```
+npm run build --workspace packages/app
+cd packages/app/src-tauri && cargo tauri android init && cargo tauri android build --debug --apk --target aarch64
+cd packages/app/src-tauri && cargo tauri ios init && cargo tauri ios dev     # the simulator
 ```
 
 ## Installers

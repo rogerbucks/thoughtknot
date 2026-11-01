@@ -1,0 +1,105 @@
+{
+  "about": "Editor spec §64 (GS8): the graph spec's axioms, the few laws every valid graph obeys. requirements/graph-spec.gql holds them as §28, each with its plain sentence, its formal line and the rules that rest on it; this table gives the library what it needs at run time. Each axiom has a stable problem code, GA and two digits, after the axiom it names, never reused (editor spec §42, problem_codes). checked says where a break is found: 'graph' means the check (axioms.js, and graphspec/rules/axioms.py) finds it in one graph; 'generated' means it is a law of an operation, such as a join, and the generated-graph tests hold it. packages/graph-spec/test/axioms.test.mjs holds this table to the spec file.",
+  "axioms": [
+    {
+      "id": "A1",
+      "name": "Identity",
+      "plain": "Each thing has one id, and no other thing in its graph has it.",
+      "formal": "id is one-to-one on the things of a graph",
+      "code": "GA01",
+      "checked": "graph",
+      "message": "{place} is held under the name '{key}' but its id is '{id}'",
+      "fix": "keep each thing under its own id"
+    },
+    {
+      "id": "A2",
+      "name": "Links have two ends",
+      "plain": "Every link starts and ends at a thing that is in the graph.",
+      "formal": "for every link l: from(l) and to(l) are things of the graph",
+      "code": "GA02",
+      "checked": "graph",
+      "message": "{place} has no thing at its {end} end, '{id}'",
+      "fix": "write the thing it names, or take the link out"
+    },
+    {
+      "id": "A3",
+      "name": "Declared types",
+      "plain": "Every thing and every link has a type its schema declares.",
+      "formal": "for every element e: type(e) is declared in schema(g)",
+      "code": "GA03",
+      "checked": "graph",
+      "message": "{place} has the type {type}, which the schema does not declare",
+      "fix": "declare {type} in the schema, or use a type it declares"
+    },
+    {
+      "id": "A4",
+      "name": "Same text, same graph",
+      "plain": "Reading is a function: the same text gives the same graph, and writing it out and reading it back changes nothing.",
+      "formal": "read(write(g)) = g",
+      "code": "GA04",
+      "checked": "graph",
+      "message": "graph {graph} does not come back the same when it is written out and read again: {why}",
+      "fix": "keep to values the flat projection can write, such as text, numbers, dates and true or false"
+    },
+    {
+      "id": "A5",
+      "name": "SAME_AS is an equivalence",
+      "plain": "A thing is the same as itself, same-as goes both ways, and it chains.",
+      "formal": "SAME_AS is reflexive, symmetric and transitive",
+      "code": "GA05",
+      "checked": "generated",
+      "message": "the things made one by SAME_AS do not form whole sets: {why}",
+      "fix": "join SAME_AS links only through the one same-as function"
+    },
+    {
+      "id": "A6",
+      "name": "Joins are order-free",
+      "plain": "Graphs joined in any order, or joined twice, give the same graph, and the join loses and invents nothing.",
+      "formal": "join is commutative, associative and idempotent, and keeps every statement",
+      "code": "GA06",
+      "checked": "generated",
+      "message": "the join depends on the order of its graphs, or loses or invents something: {why}",
+      "fix": "merge only through the join, never by hand"
+    },
+    {
+      "id": "A7",
+      "name": "Certainty in range",
+      "plain": "A likelihood is a word on the graph's scale, and a range never runs from high to low.",
+      "formal": "0 <= low <= high <= 1",
+      "code": "GA07",
+      "checked": "graph",
+      "message": "{place} has the likelihood {why}",
+      "fix": "use a word on the scale, with the lower word first"
+    },
+    {
+      "id": "A8",
+      "name": "History is a chain",
+      "plain": "An item has at most one successor, and following successors never comes back to the start.",
+      "formal": "SUPERSEDES is a forest: at most one successor each, and no loop",
+      "code": "GA08",
+      "checked": "graph",
+      "message": "{place} {why}",
+      "fix": "give each item one successor, and supersede only something older"
+    },
+    {
+      "id": "A9",
+      "name": "Derived equals recompute",
+      "plain": "Every cache, snapshot and derived element equals a fresh recompute from the source.",
+      "formal": "derive(source(g)) = derived(g)",
+      "code": "GA09",
+      "checked": "generated",
+      "message": "a derived value differs from a fresh recompute: {why}",
+      "fix": "recompute it from the source"
+    },
+    {
+      "id": "A10",
+      "name": "Conflicts are kept",
+      "plain": "A real clash becomes contested claims, and neither side is asserted.",
+      "formal": "never assert p and assert not p",
+      "code": "GA10",
+      "checked": "generated",
+      "message": "a clash was settled instead of kept: {why}",
+      "fix": "keep both sides as contested claims"
+    }
+  ]
+}

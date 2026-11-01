@@ -85,6 +85,19 @@ export function findings(view, wide, narrow) {
 
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * A line of script that waits until the page stops changing for a moment, or a few seconds at most. A slow machine
+ * draws a view later than a fixed pause allows: the macOS runner, painting in software, did (29 Oct 2026).
+ */
+export const SETTLE = `new Promise((done) => {
+  let quiet;
+  const end = () => { watch.disconnect(); done(true); };
+  const watch = new MutationObserver(() => { clearTimeout(quiet); quiet = setTimeout(end, 300); });
+  watch.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  quiet = setTimeout(end, 300);
+  setTimeout(end, 4000);
+})`;
+
 /** Each view opened afresh by `open`, brought to its state by its steps, measured wide and narrow, and judged. */
 async function checkViews(views, { chrome, open: openView }) {
   const browser = await startChrome({ chrome, width: WIDE, scale: 1 });
@@ -97,7 +110,9 @@ async function checkViews(views, { chrome, open: openView }) {
         for (const step of [...view.steps, ...tab]) {
           await browser.run(step);
           await pause(400);
+          await browser.run(SETTLE);
         }
+        await browser.run(SETTLE);
         return browser.run(MEASURE);
       };
       const wide = await measure(WIDE);

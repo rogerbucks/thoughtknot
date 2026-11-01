@@ -4,13 +4,16 @@
 // graph's things and links added, removed or changed, then every line. The core reaches no network. The host hands in a
 // `ReviewSource` that reads GitHub with its own sign-in, read only, and nothing is asked of it until the user asks.
 import type { Value } from '@thoughtknot/graph-spec';
+import { credentialsIn } from './ai-ceiling.ts';
 import { gqlBlocks } from './blocks.ts';
 import { changesView } from './changes-view.ts';
 import type { ChangesShown } from './changes-view.ts';
 import { readNote } from './drawing.ts';
 import { lineDiff } from './line-diff.ts';
 import type { DiffLine } from './line-diff.ts';
+import { formatList } from './locale-formats.ts';
 import type { MarkKind } from './proposals-marks.ts';
+import { word } from './words.ts';
 
 /** One change in the repository, as an item: a pull request, a merge or a commit. */
 export interface ReviewItem {
@@ -177,6 +180,27 @@ export function reviewLevels(files: readonly ChangedFile[], workstreams: Workstr
     graphs,
     lines,
   };
+}
+
+/**
+ * An item as it may reach the pane, which Claude can read (TRUST-4). Its title and author are GitHub's text, a third
+ * party's. One holding a credential is held back and said in words, so the credential is never shown.
+ */
+export function heldItem(item: ReviewItem): ReviewItem {
+  const held = (text: string) => {
+    const kinds = credentialsIn(text);
+    return kinds.length ? word('review.held-text', { kinds: formatList(kinds) }) : text;
+  };
+  return { ...item, title: held(item.title), ...(item.author === undefined ? {} : { author: held(item.author) }) };
+}
+
+/**
+ * Outside text, such as GitHub's, set inside a fence of backticks longer than any run of them in it. So a title cannot
+ * close the fence and pass as the page's own words (spec_secrets_and_fences, TRUST-4).
+ */
+export function outsideSaid(text: string): string {
+  const fence = '`'.repeat(Math.max(0, ...(text.match(/`+/g) ?? []).map((run) => run.length)) + 1);
+  return `${fence} ${text} ${fence}`;
 }
 
 /** A group said in a line: "41 · Every surface…: 2 added, 1 changed". */

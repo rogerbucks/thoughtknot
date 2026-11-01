@@ -8,7 +8,7 @@
 // - The extension's own messages, and the page, are in VS Code's display language (language_follows_host).
 // One tab per note: choosing it again shows the tab already open.
 import * as vscode from 'vscode';
-import { setLanguage, word } from '../../core/src/words.ts';
+import { setLanguage, word } from '@thoughtknot/core';
 import { askAi } from './ask-ai.ts';
 import { folderCalls, isFolderCall } from './folder-calls.ts';
 import { addCommands } from './host-commands.ts';

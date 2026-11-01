@@ -6,8 +6,8 @@
 // The core colours the drawing itself in those same variables. So the page and the drawing change together and keep the
 // locked contrast (§11). The text and muted text on the page are the core's, 4.5:1 or better in both. This is made when
 // the page is built. The page holds no script for the theme.
-import { THEME_COLOURS } from '../../core/src/palette.ts';
-import type { ThemeColours } from '../../core/src/palette.ts';
+import { THEME_COLOURS } from '@thoughtknot/core';
+import type { ThemeColours } from '@thoughtknot/core';
 
 const HUES = Object.keys(THEME_COLOURS.light).filter((k) => !['page', 'text', 'muted'].includes(k));
 

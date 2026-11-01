@@ -11,15 +11,23 @@ const require = createRequire(import.meta.url);
 /** VS Code's file types, as bits. */
 export const FileType = { Unknown: 0, File: 1, Directory: 2, SymbolicLink: 64 };
 
-/** A file address, as VS Code's `Uri` for the `file` scheme. */
+/** Whether paths on this system are Windows': a drive and backslashes. */
+const WINDOWS = process.platform === 'win32';
+
+/**
+ * A file address, as VS Code's `Uri` for the `file` scheme. Its `path` is always in slashes, a Windows drive after a
+ * slash (`/c:/Users/…`), as VS Code gives it; its `fsPath` is the system's own.
+ */
 export class Uri {
   constructor(path) {
     this.scheme = 'file';
     this.path = posix.normalize(path);
-    this.fsPath = this.path;
+  }
+  get fsPath() {
+    return WINDOWS && /^\/[A-Za-z]:/.test(this.path) ? this.path.slice(1).replace(/\//g, '\\') : this.path;
   }
   static file(path) {
-    return new Uri(path);
+    return new Uri(WINDOWS ? `/${path.replace(/\\/g, '/')}`.replace(/^\/\//, '/') : path);
   }
   static joinPath(uri, ...parts) {
     return new Uri(posix.join(uri.path, ...parts));
@@ -136,7 +144,7 @@ export function fakeVscode({
           webview: {
             html: '',
             cspSource: origin,
-            asWebviewUri: (uri) => ({ toString: () => `${origin}/${posix.relative(served, uri.path)}` }),
+            asWebviewUri: (uri) => ({ toString: () => `${origin}/${posix.relative(Uri.file(served).path, uri.path)}` }),
             postMessage: async (message) => (tab.toPage(message), true),
             onDidReceiveMessage: (run) => (fromPage.push(run), { dispose() {} }),
           },
@@ -159,7 +167,7 @@ export function fakeVscode({
         return document;
       },
       getWorkspaceFolder: (uri) => {
-        const folder = folders.find((f) => uri.path.startsWith(`${f}/`));
+        const folder = folders.find((f) => uri.path.startsWith(`${Uri.file(f).path}/`));
         return folder ? { uri: Uri.file(folder) } : undefined;
       },
       fs: {

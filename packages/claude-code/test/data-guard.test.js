@@ -17,7 +17,7 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { guardDataFolder, pathOf } from '../src/data-guard.ts';
+import { guardDataFolder, guardOpenNote, pathOf } from '../src/data-guard.ts';
 
 const made = [];
 afterEach(() => {
@@ -26,7 +26,8 @@ afterEach(() => {
 
 /** A top folder holding `data` (the mod's data folder, with a settings file), `work` (the cwd) and `elsewhere`. */
 function world() {
-  const top = realpathSync(mkdtempSync(join(tmpdir(), 'gn-guard-')));
+  // native, as Windows' own real path gives the long name of a folder its temporary path spells short (RUNNER~1)
+  const top = realpathSync.native(mkdtempSync(join(tmpdir(), 'gn-guard-')));
   made.push(top);
   const data = join(top, 'data', 'thoughtknot');
   const work = join(top, 'work');
@@ -246,7 +247,7 @@ describe('what the first review found', () => {
     const missing = Object.assign(new Error('no such file'), { code: 'ENOENT' });
     const absent = {
       ...w.ports,
-      realPath: async (path) => (path.includes('elsewhere') ? realpathSync(path) : Promise.reject(missing)),
+      realPath: async (path) => (path.includes('elsewhere') ? realpathSync.native(path) : Promise.reject(missing)),
     };
     allowed(await guardDataFolder('Write', { file_path: join(w.elsewhere, 'new.md') }, absent));
   });
@@ -368,5 +369,70 @@ describe('the data folder is wherever the mod keeps it', () => {
     );
     // the folder the other setting names is not guarded now
     allowed(await guardDataFolder('Write', { file_path: join(w.data, 'settings.json') }, ports));
+  });
+});
+
+describe('on Windows, a path in backslashes and a drive is the same path', () => {
+  // A Windows disk, as its real-path call answers: backslashes, the long name for a short one, any case.
+  const DISK = new Map(
+    [
+      'C:\\',
+      'C:\\Profiles',
+      'C:\\Profiles\\Ann',
+      'C:\\Profiles\\Ann\\AppData',
+      'C:\\Profiles\\Ann\\AppData\\thoughtknot',
+      'C:\\Profiles\\Ann\\AppData\\thoughtknot\\settings.json',
+      'C:\\work',
+      'C:\\vault',
+      'C:\\vault\\plan.md',
+    ].map((p) => [p.toLowerCase(), p]),
+  );
+  const ports = {
+    data: 'C:\\Profiles\\Ann\\AppData\\thoughtknot',
+    home: 'C:\\Profiles\\Ann',
+    cwd: 'C:\\work',
+    realPath: async (path) => {
+      const key = path
+        .replace(/\//g, '\\')
+        .replace(/\\ANN~1/i, '\\Ann')
+        .toLowerCase();
+      if (DISK.has(key)) return DISK.get(key);
+      throw Object.assign(new Error(`ENOENT: ${path}`), { code: 'ENOENT' });
+    },
+    readLink: async () => null,
+  };
+
+  test('a file tool is refused in the folder: by its path, a short name, slashes, a relative path or a new file', async () => {
+    for (const file_path of [
+      'C:\\Profiles\\Ann\\AppData\\thoughtknot\\settings.json',
+      'C:\\Profiles\\ANN~1\\AppData\\thoughtknot\\settings.json',
+      'C:/Profiles/Ann/AppData/thoughtknot/settings.json',
+      'c:\\profiles\\ann\\appdata\\THOUGHTKNOT\\settings.json',
+      '..\\Profiles\\Ann\\AppData\\thoughtknot\\settings.json',
+      'C:\\Profiles\\Ann\\AppData\\thoughtknot\\drafts\\new.md',
+    ]) {
+      refused(await guardDataFolder('Write', { file_path }, ports));
+    }
+    allowed(await guardDataFolder('Write', { file_path: 'C:\\work\\notes.md' }, ports));
+    allowed(await guardDataFolder('Write', { file_path: 'notes.md' }, ports));
+  });
+
+  test('Bash naming the folder in backslashes or through the home folder is refused', async () => {
+    refused(
+      await guardDataFolder(
+        'Bash',
+        { command: 'echo {} > "C:\\Profiles\\Ann\\AppData\\thoughtknot\\settings.json"' },
+        ports,
+      ),
+    );
+    refused(await guardDataFolder('Bash', { command: 'echo {} > ~/AppData/thoughtknot/settings.json' }, ports));
+    allowed(await guardDataFolder('Bash', { command: 'echo hi > C:\\work\\out.txt' }, ports));
+  });
+
+  test('the note open in the editor is guarded by its path and its file name alone', async () => {
+    const open = { ...ports, note: 'C:\\vault\\plan.md' };
+    assert.equal(typeof (await guardOpenNote('Edit', { file_path: 'C:\\vault\\plan.md' }, open)), 'string');
+    assert.equal(typeof (await guardOpenNote('Bash', { command: 'del plan.md' }, open)), 'string');
+    assert.equal(await guardOpenNote('Edit', { file_path: 'C:\\vault\\other.md' }, open), null);
   });
 });

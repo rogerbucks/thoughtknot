@@ -2,9 +2,22 @@
 // screen, with its whole name inside. Far ones come first, a click picks the nearest, and arrowheads sit at card edges.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardArrows, cardAt, cardsOnScreen, frameOf, rowsOf } from '../src/space-cards.ts';
+import {
+  ZOOM_OPENS,
+  cardArrows,
+  cardAt,
+  cardsOnScreen,
+  clusterFilling,
+  fills,
+  frameOf,
+  isCluster,
+  rowsOf,
+} from '../src/space-cards.ts';
+import { NAME_TINY, READABLE_LEAST } from '../src/space-labels.ts';
 import { spreadSpace } from '../src/space-spread.ts';
-import { orbitFit, spaceMatrix } from '../src/space-view.ts';
+import { OUTLINE_FOLD, outlinesOf, stripTap } from '../src/space-outlines.ts';
+import { spotsKept } from '../src/space-parts.ts';
+import { middleOf, orbitFit, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const LONG = 'Data warehouse and reporting suite for the whole company';
 /** Two things in a row and a link from the first to the second, as the 2D drawing marks them. */
@@ -52,7 +65,7 @@ test('each card holds the whole name, wrapped to fit, and the picked card is mar
   for (let i = 1; i < rest.length; i++) assert.ok(rest[i - 1].far >= rest[i].far, 'far ones first');
 });
 
-test('far off, a card still shows its name where that covers no nearer name, else it is plain', () => {
+test('far off, a card shows its name readably where that covers no nearer name, else tiny inside it', () => {
   // the two things far apart, so seen whole their words are too small to be painted whatever they cover
   const { space } = spreadSpace(MARKS, undefined, true);
   const apart = { ...space, blocks: space.blocks.map((b, i) => ({ ...b, x: i ? 3000 : -3000, y: 0 })) };
@@ -68,8 +81,17 @@ test('far off, a card still shows its name where that covers no nearer name, els
   );
   // the same two things one before the other: only the nearer one is named
   const stacked = { ...apart, blocks: apart.blocks.map((b, i) => ({ ...b, x: 0, floor: b.floor + i * 5 })) };
-  const named = cardsOnScreen(stacked, matrix, W, H).filter((c) => c.rows.length);
-  assert.equal(named.length, 1, 'one name, never one over another');
+  const cards = cardsOnScreen(stacked, matrix, W, H);
+  const named = cards.filter((c) => c.rows.length && c.size >= READABLE_LEAST);
+  assert.equal(named.length, 1, 'one readable name, never one over another');
+  // proves: space_names_always
+  const nearer = zoomBy(orbit, 3.5),
+    closer = cardsOnScreen(stacked, spaceMatrix(nearer, W / H, nearer.distance * 4), W, H);
+  const [behind] = closer.filter((c) => !(c.rows.length && c.size >= READABLE_LEAST));
+  assert.equal(behind?.rows.join(' '), LONG, 'nearer, the other still wears its whole name, tiny, inside its card');
+  assert.ok(behind.size >= NAME_TINY && behind.size < READABLE_LEAST, `${behind.size}px`);
+  assert.equal(behind.height, Math.min(...closer.map((c) => c.height)), 'its card is not grown to hold it');
+  assert.equal(closer.indexOf(behind), 0, 'painted first, so the readable name covers it');
 });
 
 test('a click picks the nearest card under it', () => {
@@ -163,4 +185,158 @@ test('in 2D too, a link is a solid line with a bold, sharp arrowhead, under the 
   assert.ok(width(String.raw`g\.edge > :where\(polygon:not\(\[stroke-width\]\)\)`) >= 2, 'its arrowhead bolder');
   // :where weighs nothing, so a selected, kept or faded link still shows as the focus rules say
   assert.ok(css.indexOf(':where(path:not([stroke-width]))') < css.indexOf('g.is-selected > :is(path, polygon)'));
+});
+
+// proves: cluster_named_everywhere
+test('a folded group is a named card with its count even among balls, never a nameless ball', () => {
+  const marks = [
+    ...MARKS,
+    { id: 't:group: 1', kind: 'box', style: 'muted', of: 'group: 1', x: 0, y: 200, width: 220, height: 60 },
+    {
+      id: 'l:group: 1',
+      kind: 'label',
+      style: 'muted',
+      of: 'group: 1',
+      x: 110,
+      y: 230,
+      text: 'Identity · 8 things',
+      size: 14,
+      anchor: 'middle',
+    },
+    { id: 'e:a1', kind: 'link', style: 'link', from: 'a', to: 'group: 1', points: [] },
+  ];
+  assert.ok(isCluster('fold_group_2'), 'the drawing on screen names a folded group by its id');
+  assert.ok(!isCluster('group: x') && !isCluster('a'));
+  const { space } = spreadSpace(marks);
+  const group = space.blocks.find((b) => b.of === 'group: 1');
+  assert.deepEqual(group.card, { width: 220, height: 60 });
+  assert.equal(space.blocks.find((b) => b.of === 'a').card, undefined, 'a thing stays a ball');
+  const orbit = orbitFit(space, W / H);
+  const frame = frameOf(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H, null);
+  assert.deepEqual(
+    frame.cards.map((c) => c.block.of),
+    ['group: 1'],
+  );
+  assert.match(frame.cards[0].rows.join(' '), /Identity · 8 things/);
+  assert.ok(!frame.shapes.blocks.some((b) => isCluster(b.of)), 'no ball is painted for the group');
+  assert.equal(frame.arrows.length, 2, 'one arrowhead into the ball, one at the edge of the group card');
+});
+
+// proves: cluster_named_everywhere
+test('an open group is outlined round its things, its name on the outline, as cards and as balls', () => {
+  const marks = [
+    { id: 'g:team', kind: 'group', style: 'group', x: -10, y: -10, width: 420, height: 80, name: 'Team' },
+    ...MARKS.map((m) => (m.kind === 'box' ? { ...m, group: 'g:team' } : m)),
+    { id: 't:c', kind: 'box', style: 'thing', of: 'c', x: 0, y: 300, width: 90, height: 40 },
+    { id: 'e:bc', kind: 'link', style: 'link', from: 'b', to: 'c', points: [] },
+  ];
+  for (const cards of [true, false]) {
+    const { space } = spreadSpace(marks, undefined, cards);
+    const orbit = orbitFit(space, W / H);
+    const frame = frameOf(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H, null);
+    assert.equal(frame.outlines.length, 1, cards ? 'cards' : 'balls');
+    const [o] = frame.outlines;
+    assert.equal(o.name, 'Team');
+    assert.equal(o.style, 'group');
+    const inside = (k) => {
+      const c = cardsOnScreen(space, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H).find((x) => x.block.of === k);
+      return c.x > o.x && c.x < o.x + o.width && c.y > o.y && c.y < o.y + o.height;
+    };
+    assert.ok(inside('a') && inside('b'), 'its things sit inside it');
+    assert.ok(!inside('c'), 'a thing in no group sits outside it');
+    assert.ok(!frame.labels.some((l) => l.text === 'Team'), 'its name is on the outline, not floating twice');
+  }
+});
+
+// proves: cluster_opens
+test('zooming in on a folded group until its card fills the screen opens it; seen whole, it stays folded', () => {
+  assert.ok(fills({ width: W * ZOOM_OPENS, height: 10 }, W, H) && fills({ width: 10, height: H }, W, H));
+  assert.ok(!fills({ width: W * ZOOM_OPENS - 1, height: H * ZOOM_OPENS - 1 }, W, H));
+  const marks = [
+    ...MARKS,
+    { id: 't:fold_group_1', kind: 'box', style: 'muted', of: 'fold_group_1', x: 0, y: 200, width: 220, height: 60 },
+  ];
+  const { space } = spreadSpace(marks);
+  const whole = orbitFit(space, W / H);
+  const at = (orbit) => {
+    const m = spaceMatrix(orbit, W / H, orbit.distance * 4);
+    const card = cardsOnScreen(space, m, W, H).find((c) => c.block.of === 'fold_group_1');
+    return clusterFilling(space, m, W, H, card.x, card.y);
+  };
+  assert.equal(at(whole), undefined, 'the whole graph seen: the group stays folded');
+  const group = space.blocks.find((b) => b.of === 'fold_group_1');
+  assert.equal(at({ ...whole, target: middleOf(group), distance: whole.distance / 30 }), 'fold_group_1');
+  assert.equal(clusterFilling(space, spaceMatrix(whole, W / H, whole.distance * 4), W, H, -50, -50), undefined);
+});
+
+/** Four things as cards: a and b in a group drawn open, which `folds` folds back when given; c and d outside it. */
+const grouped = (folds) => [
+  { id: 'g:1', kind: 'group', style: 'group', name: 'Makers', x: -10, y: -10, width: 300, height: 80, ...folds },
+  ...['a', 'b', 'c', 'd'].map((k, i) => ({
+    id: `t:${k}`,
+    kind: 'box',
+    style: 'thing',
+    of: k,
+    x: i * 140,
+    y: 0,
+    width: 100,
+    height: 40,
+    ...(i < 2 ? { group: 'g:1' } : {}),
+  })),
+  { id: 'e:ac', kind: 'link', style: 'link', from: 'a', to: 'c', points: [] },
+  { id: 'e:bd', kind: 'link', style: 'link', from: 'b', to: 'd', points: [] },
+];
+
+// proves: cluster_fold_back
+test('a tap on an opened group’s button folds it back; one on its name fits the view to its things', () => {
+  const { space } = spreadSpace(grouped({ of: 'group:Makers' }), undefined, true);
+  assert.equal(space.groups?.[0]?.folds, 'group:Makers', 'the group keeps the fold that folds it back');
+  const matrix = spaceMatrix(orbitFit(space, W / H), W / H, 4000);
+  const [o] = outlinesOf(space, matrix, W, H);
+  assert.equal(o.folds, 'group:Makers');
+  assert.deepEqual(stripTap(space, matrix, W, H, o.x + o.width - OUTLINE_FOLD / 2, o.y + 6), { folds: 'group:Makers' });
+  const named = stripTap(space, matrix, W, H, o.x + 12, o.y + 6);
+  assert.deepEqual(
+    named.fit.blocks.map((b) => b.of),
+    ['a', 'b'],
+    'its name fits the view to its things only',
+  );
+  assert.equal(stripTap(space, matrix, W, H, o.x + 12, o.y + o.height / 2), undefined, 'inside it, no tap of its own');
+  // a group open by the View menu, with no box to fold back to, has no button: its whole strip zooms to it
+  const { space: open } = spreadSpace(grouped({}), undefined, true);
+  const [all] = outlinesOf(open, matrix, W, H);
+  assert.ok(!all.folds);
+  assert.ok('fit' in stripTap(open, matrix, W, H, all.x + all.width - OUTLINE_FOLD / 2, all.y + 6));
+});
+
+// proves: cluster_in_place
+test('laid out again, a group just opened starts where its box was, and one just folded at its things’ middle', () => {
+  const kept = spotsKept(
+    new Map([
+      ['fold_group_1', [4, 5, 6]],
+      ['c', [0, 0, 0]],
+    ]),
+    [['fold_group_1', ['a', 'b']]],
+  );
+  assert.deepEqual(kept.get('c'), [0, 0, 0], 'what was there stays');
+  for (const k of ['a', 'b']) assert.ok(Math.hypot(...kept.get(k).map((v, i) => v - [4, 5, 6][i])) < 0.5, k);
+  assert.notDeepEqual(kept.get('a'), kept.get('b'), 'no two start in one place');
+  const folded = spotsKept(
+    new Map([
+      ['a', [0, 0, 0]],
+      ['b', [2, 4, 0]],
+    ]),
+    [['fold_group_1', ['a', 'b']]],
+  );
+  assert.deepEqual(folded.get('fold_group_1'), [1, 2, 0]);
+  // laid out from them, the things opened stay round where the box was, and the rest stay put
+  const box = [
+    { id: 't:fold_group_1', kind: 'box', style: 'thing', of: 'fold_group_1', x: 0, y: 0, width: 100, height: 40 },
+  ];
+  const toBox = (k) => ({ id: `e:${k}`, kind: 'link', style: 'link', from: 'fold_group_1', to: k, points: [] });
+  const before = spreadSpace([...box, ...grouped({}).slice(3, 5), toBox('c'), toBox('d')]).spots;
+  const after = spreadSpace(grouped({}), spotsKept(before, [['fold_group_1', ['a', 'b']]])).spots;
+  const far = (p, q) => Math.hypot(...p.map((v, i) => v - q[i]));
+  for (const k of ['a', 'b']) assert.ok(far(after.get(k), before.get('fold_group_1')) < 1.5, `${k} opens in place`);
+  for (const k of ['c', 'd']) assert.ok(far(after.get(k), before.get(k)) < 1, `${k} stays put`);
 });

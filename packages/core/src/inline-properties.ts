@@ -96,6 +96,20 @@ export function inlineRows(
 }
 
 /**
+ * Every property of each box of `drawing`, its values from `g`, as semantic zoom shows them zoomed nearest (§68,
+ * projection_semantic_zoom). Its name and id are left out: the box's text says them. Crowded, a box shows what fits (tableRows).
+ */
+export function everyRow(drawing: Pick<GraphDrawing, 'boxes'>, g: Graph): InlineProperties {
+  const boxes = drawing.boxes.flatMap((b): [string, PropertyRow[]][] => {
+    const rows = Object.entries(g.p(b.key)).flatMap(([p, v]): PropertyRow[] =>
+      p === 'name' || p === 'id' || v === undefined ? [] : [[p, valueText(v)]],
+    );
+    return rows.length ? [[b.key, rows]] : [];
+  });
+  return { boxes, links: [] };
+}
+
+/**
  * One property's lines, never more than fit with the row saying how many are hidden (`INLINE_ROWS` less one). A value
  * too long for them is cut short at the last, which ends with an ellipsis. So it is shown in part rather than hidden.
  * Its length is counted in code points, as the wrapping counts it.

@@ -124,6 +124,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
+#### Many places, and what time can undo
+
+- `connectors.ts` — one graph from many places (editor spec §63). A FROM list names several places. Each is read by a
+  connector that gives its version and its statements, each citing its line. The places are joined as the mesh joins
+  documents, in the order of their names, so a disagreement is contested. A missing place is named, and the rest draw.
+
+- `temporal.ts` — what time can undo, and the rules that stop it (editor spec §65, risk SEC-19). Erasing a thing
+  reaches every earlier moment, the log, the edit inbox and the layout cache. A hybrid clock orders edits, and a clock
+  far ahead is never taken up. An edit sent again changes nothing, and a revoked key stops new ones. Links, tokens,
+  caches and grants are checked at the moment of use.
+
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
@@ -640,6 +651,44 @@ never data.
   - `writeBoard` writes a board in one fixed form, so the same board is always the same bytes.
   - `moveItem` changes only the moved item's own text, so notes and comments in the block stay as they were.
 
+#### Drawings on a graph (editor spec §70)
+
+- `sketch.ts` — freehand ink, shapes and notes drawn over a graph, kept as its own block: `// graph: trip_ink · SKETCH
+  ON trip`.
+  - `sketchOf` (in `blocks.ts`) knows the block by its graph line. `dataKind` leaves it out of the drawing.
+  - `readSketch` reads it with the board's reader (`readItems`), with three kinds: Ink, Shape and Text. A drawing may
+    have a `pin`, the thing or group it moves with. Points are one text of number pairs, as a graph holds no lists.
+  - Each fault is a problem with its fix, GN905 to GN908. They are a kind that is not a drawing's, or a pin to a thing
+    that is gone. They are also a shape it does not know, or points that are not pairs.
+  - `writeSketch` writes the drawings in one fixed form.
+- `sketch-marks.ts` — the drawings drawn in every view.
+  - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
+    wraps it. A drawing pinned to a thing the view leaves out is not drawn.
+  - `sketchSvg` lays them over a 2D drawing as one layer, each part tagged `data-sketch` for a tap.
+  - `sketchInSpace` lays them on the top of their block in 2.5D and 3D, where it stands there, or on the ground.
+  - `drawnMarks` reads a Graphviz drawing's boxes and groups from its SVG text, for the drawings to be placed on.
+    `marksOver` names each thing by the words on its box, so a drawing is said with the name of what it is pinned to.
+  - `withSketchSvg` lays the drawings on a drawing's SVG text. An export draws them so (`ExportInfo.sketch`).
+
+#### Drawings on a graph: made on the card
+
+- `sketch-edit.ts` — a drawing made on the card, written to the note.
+  - `sketchEdit` adds, moves or takes away one drawing, changing only its own text. The first writes the block.
+  - `drawnItem` makes a drawing from what was drawn, pinned to what it began over (`pinAt`). `thinned` thins a stroke.
+  - `drawnOn` makes one by keyboard on the thing selected: a shape round it, a note above, an arrow at it.
+- `sketch-proposals.ts` — `sketchProposal`: what the drawings seem to say, offered as a proposal (§17). It is never
+  applied by itself.
+  - A free note, or a box or ellipse with words, is a new thing named by its words.
+  - A line, an arrow or a stroke from one thing to another is a link. Its words name the type; else the usual type.
+  - What the graph holds already is not offered. The host writes it beside the graph (`noteWithProposal`).
+- `display/graph-view/sketch-tool.ts` — Draw on the card's tools row, with the pen, box, ellipse, line, arrow and note.
+  - A drag draws, and letting go writes the drawing through the host (`ViewOptions.sketching`).
+  - A first tap on a drawing selects it and says what it is, with Delete. A second tap centres it.
+  - By keyboard, Draw on the selected thing makes the tool's drawing on it. Next drawing selects each in turn.
+  - Hide drawings hides them flat and in space. The view in space draws them with `sketchInSpace`.
+  - Offer as things and links asks the host to propose them (`SketchHost.propose`). `sketch-preview.ts` draws the
+    drawing under way.
+
 #### Reading and checking a style
 
 - `style-graph.ts` — what a style graph holds once read, and the words it allows.
@@ -669,6 +718,44 @@ never data.
   - A Links (§25) has `routing`, one of `ROUTINGS`: curved, straight or right-angled. It has `merge`, on or off. It is
     for the whole graph or a view.
   - `style.ts`'s `linksOf` says how a graph's or a view's links are drawn, a view's own over the whole graph's.
+
+#### Rules and looks
+
+- `rule-looks.ts` — rules and looks (§56). A Look with a `when`, or naming a lens, is a rule: it finds its own things.
+  - `ruleThings` and `ruleLinks` run the rule as a lens, through the graph library, so both engines agree.
+  - `ruleLooks` gives each thing and link its parts from the first rule that sets each. A later rule setting the same
+    part is a clash, a warning naming both.
+  - Each mark gets a style token per rule, `look.<id>`, and a badge or a line: never colour alone.
+  - `ruleLegend` is each rule's look and meaning, made from the style graph alone.
+  - A bands rule (`bands`, `steps`) shades a number in steps. `bandSteps` gives each step a test, a numbered tag and a
+    colour of `BAND_HUES`, in order. `rulesFor` gives a card what it draws, links by their place on the card.
+- `rule-words.ts` — the words of a rule: its keys, the badges, the band colours and `isRule`.
+- `rule-look-checks.ts` — a rule's look and a bands rule, checked, each fault a problem with its fix.
+- `display/graph-view/rule-marks.ts` — a card marks each thing and link a rule finds: its token, line, hue and badge. Its
+  legend lists each rule drawn. The 2.5D and 3D views read the badge before each name (`svg-marks.ts`).
+- `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
+  overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
+  "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
+- `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
+  `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
+#### Making a rule from the card
+
+- `display/graph-view/rule-form.ts` — the Highlight things button beside the legend and its form, in three plain steps
+  (rule_look_builder). In reading view it tries a rule, offers Back to saved, and opens again on the rule tried. Where
+  the note is edited it saves it. Trying, and counting what a rule finds, are open in reading view (`read-only.ts`).
+  `rule-form-parts.ts` draws its Find step, its colour, badge and line samples, and its preview.
+- `rule-builder.ts` — a rule in plain words (rule_look_builder). `ruleChoices` lists the kinds, link types and
+  properties a graph holds. `whenOf` writes the test from a property, a comparison and a value, and `sayDraft` says it.
+  `testsOf` reads a simple test back. `ruleFinds` counts what a rule finds. `ruleStarts` gives quick starts from the
+  graph's own data. `savedRules` (rule-write.ts) lists the rules a card may change.
+- `rule-remove.ts` — taking a saved rule out, or moving it up (rule_look_remove). `ruleRemoved` finds it by its
+  meaning and view, and takes its line out with its comma. `ruleMovedUp` swaps it with the rule above, so it wins a
+  clash. The form puts Copy, Up and a bin beside each saved rule.
+- `RuleWrite.was` and `RuleWrite.removed` (rule-write.ts). A rule opened to change keeps `was`, its old meaning, so a
+  rename changes it in place. In reading view a rule is only tried as gone, with `removed`. The Obsidian host keeps
+  the note as it was, for one Undo (`rule-removal.ts`).
+- `off: true` on a rule's Look turns it off (rule_look_off). It stays in the style graph and draws nothing. `rulesIn`
+  leaves it out unless asked `withOff`, as the form does to offer turning it on.
 
 #### Checking the words of a style
 
@@ -771,8 +858,42 @@ never data.
   - `savedFilterFor` gives the Filter for the whole graph or a view. `filterText` writes one; `filterRefusal` says why
     a choice cannot be written.
   - A host saves it only where the note is edited. In reading view a filter is only tried.
+
+#### A graph's own view preset
+
+- A `Preset` in the style graph, `(p1:Preset {preset: 'focus'})`, is the graph's own view preset (§69,
+  view_presets_scoped). It is one of `PRESET_IDS`, the starters of `view-presets.ts`; `presetOf` checks it.
+- `aidsOf(settings, style)` gives a card the first one written, else the settings' preset. `presetClasses` gives the
+  card its classes: blurred rest, still links and plain words.
+
+#### A view's six layers
+
+- A view is six layers (§68, layout_concept_layers): dimensions, filters, strategy, projection, formatting, painter.
+  `viewLayers(style, view)` reads each from its own lines of the style graph, so each changes alone.
+- A `Render` line, `(r1:Render {view: 'plan', space: '3d', painter: 'canvas'})`, sets the space and the painter
+  (`render-choice.ts`). `renderFor` gives a view's own first, key by key, then the whole graph's.
+- `aidsOf(settings, style, view)` hands both to the card. It opens in its space (`spaceMode`), and `paintersFrom` keeps
+  the painter named and those slower than it, in space and in an overview.
   - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
     `python/graph_spec/tests/style_cases.json`.
+
+#### Lenses
+
+- A lens bends whatever a view drew round a focus (§68, projections_all_on), so it works on every view type and layout.
+  `lenses.ts` holds the sums: `fisheye` (projection_fisheye), and `bent` and `unbent` for a point. `bentPoints` bends
+  SVG path data, and `bentSpace` and `spaceSeen` a drawing in space. Each lens is radial, the same in 2D and 3D.
+- `(r1:Render {lens: 'fisheye'})` picks it for the whole graph or a view; the View menu's Lens list picks another, held
+  in `ViewState.lens`. Flat, `display/graph-view/lens-svg.ts` bends the card's SVG round the mouse, else the selection.
+  In space the view bends round the picked thing. The mini-map stays the drawing as laid out.
+- `hyperbolic` (projection_hyperbolic) and `sphere` (projection_sphere) reach the whole drawing (`WHOLE_LENSES`). Its
+  farthest box sits just inside the edge (`DISC_ROOM`). Flat, the disc is round the middle of the view, so a drag
+  brings a new part there. In space it is a ball round the picked thing, else the drawing's middle.
+- Semantic zoom (`lens: 'semantic'`, projection_semantic_zoom) bends nothing. `semantic-zoom.ts` counts the things on
+  screen and picks a rung: the ladder of detail, then every property (`everyProperty`, shown by `ViewState.toRung`).
+  `display/graph-view/semantic-zoom-view.ts` steps it once the zoom rests, only the way the person zoomed.
+- A headset (projection_spatial): where the device has one (WebXR), the view in space offers View in headset.
+  `space-xr.ts` stands the drawing on a table at arm's length (`ARM`, `xrModel`) and finds what a ray points at
+  (`xrPick`). `display/graph-view/space-xr-view.ts` paints each eye with the WebGL 2 painter and picks on a press.
 
 #### Writing a style
 
@@ -934,7 +1055,31 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 `thoughtknot.diagrams.<view>` (workstream V2).
 
 - `view-types.ts` — the list, `VIEW_TYPES`, and what draws each, `VIEW_DRAWERS`.
-- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked.
+
+#### Projections laid out as views (editor spec §68)
+
+- `view-parts.ts` — a view's marks written as Graphviz writes a drawing: each thing a node, each link an edge, numbered
+  as the graph writes them. A card draws every view as its own drawing (`viewDrawn` in the display). So a thing is
+  chosen, opened and centred by the same clicks in every view (projections_all_on).
+
+- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked. Each group is an
+  outlined block on the diagonal (projection_matrix).
+- `arc-view.ts` — each thing on one line, each link an arc: above it from left to right, below it back (projection_arc).
+- `block-order.ts` — the order an arc and a matrix share. A group's things sit side by side: the groups written, else
+  those the links make (`louvain.ts`), else the kinds. Linked groups sit next to each other, and within a group linked
+  things sit close (reverse Cuthill–McKee).
+- `hive-view.ts` — two to five axes from the middle, by kind, else by what each thing's links do. The most linked sit
+  furthest out, and each link is a curve between axes (projection_hive).
+- `grid-view.ts` — cards in columns by the word most things carry, such as status, and rows by kind. Steps of work,
+  such as todo, doing and done, go in that order (projection_grid).
+- `map-view.ts` — a thing with a latitude and longitude (`lat`/`latitude`, `lon`/`lng`/`longitude`) on a map, north
+  up. The rest are listed beside it. The map has lines of latitude and longitude; no tiles are fetched (projection_map).
+- `grid-move.ts` — a card dragged to another column lands in the column of the card nearest it across. That value is
+  written as its property where the thing is written; the column of things with no value takes it out. The card's
+  drag is `grid-drag.ts`, beside the drag of a box (`box-drag-view.ts`).
+
+#### The other views
+
 - `treemap-view.ts` — a rectangle for each group, else each kind, and one for each thing in it, sized by its links.
   The rectangles are laid out squarified (`squarified`), so they stay near square.
 - `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.

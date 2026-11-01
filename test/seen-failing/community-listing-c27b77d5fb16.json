@@ -1,0 +1,6 @@
+{
+  "file": "test/community-listing.test.js",
+  "test": "manifest.json follows the review rules > the id is lower case, has no \"obsidian\" and does not end in \"plugin\"",
+  "seen_failing_first": false,
+  "evidence": "Guards a rule the repository already met: the manifest, versions file and workflows were right before the check was written, so it cannot fail first."
+}

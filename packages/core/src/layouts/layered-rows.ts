@@ -108,3 +108,33 @@ export function wrapped(
   }
   return out;
 }
+
+/**
+ * `rows` moved so each band's rows come after the band before's, its own rows kept in order (layout_kind_lanes). Kinds
+ * in order each take a band, so each kind has a lane of its own. `band` is each thing's band; one of -1 has none, and
+ * goes in the band of the first thing it links with, else the first.
+ */
+export function banded(rows: readonly number[], band: readonly number[], links: readonly number[][]): number[] {
+  const of = band.slice();
+  links.forEach((next, v) => {
+    for (const w of next) {
+      if ((of[v] as number) < 0 && (of[w] as number) >= 0) of[v] = of[w] as number;
+      if ((of[w] as number) < 0 && (of[v] as number) >= 0) of[w] = of[v] as number;
+    }
+  });
+  const count = Math.max(0, ...of) + 1;
+  const [low, high] = [new Array<number>(count).fill(Infinity), new Array<number>(count).fill(-Infinity)];
+  rows.forEach((r, i) => {
+    const b = Math.max(0, of[i] as number);
+    [low[b], high[b]] = [Math.min(low[b] as number, r), Math.max(high[b] as number, r)];
+  });
+  // each band starts a row after the last band with things ends
+  const shift = new Array<number>(count).fill(0);
+  let next = 0;
+  for (let b = 0; b < count; b++) {
+    if (low[b] === Infinity) continue;
+    shift[b] = next - (low[b] as number);
+    next = (high[b] as number) + (shift[b] as number) + 1;
+  }
+  return rows.map((r, i) => r + (shift[Math.max(0, of[i] as number)] as number));
+}

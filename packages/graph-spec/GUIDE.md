@@ -32,7 +32,8 @@ Each folder holds one feature; each file opens with a line saying what it does. 
 and no module requires one that requires it back.
 
 - **`src/values/`** — the values the profile reads and how they order: `times.js` (DATE and DATETIME, and comparing
-  values), `order.js` (the shared sort orders).
+  values) and `order.js` (the shared sort orders). `refusal.js` and `refusal-codes.json` give the stable code every
+  refusal outside the reader carries (API-8).
 - **`src/hashing/`** — `sha256.js` (SHA-256, synchronous, no platform crypto), `canonical-json.js` (RFC 8785 JSON,
   `hash16`, `basisHash`) and `named.js` (a hash written with its algorithm's name, `requirements/hashes.md`).
 
@@ -76,6 +77,9 @@ and no module requires one that requires it back.
   `claims.js`, `union.js`, `merge3.js`, `finish.js`, and `join-docs.js`, which answers a join request end to end.
   `trust.js` holds a union to each document's trust. Only own and trusted ones count, and an id prefix has an owner
   (req:21.trust-counted, req:21.prefix-owner).
+- **`src/axioms/`** — the graph spec's axioms, its §28 (editor spec §64). `axioms.json` holds each axiom's words, code
+  and fix. `axioms.js` is one check that finds each axiom a graph breaks. It never stops a graph being read or drawn.
+  `test/axiom-cases.json` holds it and `graphspec/rules/axioms.py` to the same answers.
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
 
@@ -109,6 +113,8 @@ and no module requires one that requires it back.
 - **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
   - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
     time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
+    `queryThings` and `queryLinks` run a rule's `when` as a query of things or links (editor spec §56,
+    `test/rule-look-cases.json`). A test may count a thing's links: `links_out`, `links_in` and `links`.
 
 ### The process core
 

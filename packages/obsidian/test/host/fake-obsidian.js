@@ -109,9 +109,17 @@ export function fakeObsidian(state = {}) {
       const bytes = typeof held === 'string' ? new TextEncoder().encode(held) : held;
       return bytes.slice().buffer;
     },
+    // As Obsidian's: an awaited read, then the edit and an awaited write. A test changes the note between them by setting
+    // state.inProcess, which runs once in that gap (risk CODE-5). The edit is given the note as it stands after the gap.
     process: async (f, fn) => {
-      const next = fn(files.get(f.path));
-      if (next !== files.get(f.path)) {
+      await vault.read(f);
+      const gap = state.inProcess;
+      state.inProcess = null;
+      if (gap) await gap(f);
+      const was = files.get(f.path),
+        next = fn(was);
+      await Promise.resolve();
+      if (next !== was) {
         files.set(f.path, next);
         (state.writes ??= []).push(f.path);
         listeners.forEach((l) => l(file(f.path)));
@@ -159,7 +167,7 @@ export function fakeObsidian(state = {}) {
     handlers: new Map(),
     on(name, fn) {
       const ref = { name, fn, e: workspace };
-      if (name === 'window-open' || name === 'window-close') workspace.handlers.set(ref, ref);
+      if (['window-open', 'window-close', 'file-open'].includes(name)) workspace.handlers.set(ref, ref);
       return ref;
     },
     offref: (ref) => workspace.handlers.delete(ref),
@@ -174,6 +182,7 @@ export function fakeObsidian(state = {}) {
     },
     // an event told to the workspace: a hover over a link, which Page preview answers with its preview, is kept
     trigger: (name, data) => {
+      (state.triggered ??= []).push([name, data]);
       if (name === 'hover-link') state.hovered = data;
     },
   };
@@ -269,6 +278,9 @@ export function fakeObsidian(state = {}) {
     registerEditorExtension(ext) {
       (state.editorExtensions ??= []).push(ext);
     }
+    registerMarkdownPostProcessor(fn) {
+      (state.postProcessors ??= []).push(fn);
+    }
     addSettingTab(tab) {
       state.settingTabs.push(tab);
     }
@@ -278,8 +290,9 @@ export function fakeObsidian(state = {}) {
   }
   state.hoverSources = new Map();
   class Notice {
-    constructor(message) {
+    constructor(message, duration) {
       state.notices.push(String(message));
+      (state.noticeDurations ??= []).push(duration);
     }
     hide() {}
     setMessage() {

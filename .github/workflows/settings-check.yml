@@ -1,0 +1,32 @@
+name: Settings check
+
+# The repository's settings, each week (SEC-2). SECURITY.md promises secret scanning and push protection, CodeQL on each
+# pull request, Dependabot and a ruleset: all GitHub settings, with no file in the repository. So this reads them with
+# SECURITY_ALERTS_TOKEN and fails when one differs from what scripts/public-readiness.mjs wants, or the token is missing.
+# The release runs the same job before each stable release (release.yml, settings); test/settings-check.test.js holds
+# the three alike. It only reads, and changes nothing: an admin sets a differing one with --settings --apply.
+on:
+  schedule:
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: GitHub's settings are the ones SECURITY.md promises
+        env:
+          GH_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::error::SECURITY_ALERTS_TOKEN is not set, so the settings cannot be read (RELEASING.md, Keys and recovery)"; exit 1; }
+          node scripts/public-readiness.mjs --settings

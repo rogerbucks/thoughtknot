@@ -33,6 +33,9 @@ export interface SavedLayout {
 export interface LayoutStore {
   get(key: string): Promise<string | undefined>;
   set(key: string, saved: string): Promise<void>;
+  /** Its keys and a way to drop one, so an erasure reaches it too (editor spec §65). A store without them is cleared. */
+  keys?(): Promise<string[]>;
+  delete?(key: string): Promise<void>;
 }
 
 /** SHA-256 of a text, as UTF-8, in sixty-four lowercase hexadecimal digits. A host may give its own, faster one. */
@@ -110,6 +113,22 @@ export class LayoutCache {
     const laid = await lay();
     await this.set(key, laid);
     return laid;
+  }
+
+  /**
+   * Throws away every saved layout `holds` picks, such as one that shows an erased thing. It goes from memory and from
+   * the host's store (editor spec §65, temporal_erased_stays_erased). Says false when the store cannot list its keys, so the host
+   * must clear it.
+   */
+  async erase(holds: (saved: string) => boolean): Promise<boolean> {
+    for (const [key, text] of [...this.memory]) if (holds(text)) this.forget(key);
+    if (!this.store) return true;
+    if (!this.store.keys || !this.store.delete) return false;
+    for (const key of await this.store.keys()) {
+      const text = await this.store.get(key).catch(() => undefined);
+      if (text !== undefined && holds(text)) await this.store.delete(key);
+    }
+    return true;
   }
 
   /** Everything in memory thrown away. The host's store keeps its own. */

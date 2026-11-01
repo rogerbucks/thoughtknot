@@ -12,6 +12,7 @@ import type { PictureBox } from './picture.ts';
 import type { Nudge } from './style-graph.ts';
 import type { TimelineOrder } from './timeline.ts';
 import type { Folding } from './untangle-fold.ts';
+import type { LayoutStep } from './layouts/cheaper.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -89,6 +90,8 @@ export interface GraphDrawing {
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
   inline?: InlineProperties;
+  /** Every property of each box, as semantic zoom shows them zoomed nearest (§68); none, no box has any. */
+  everyProperty?: InlineProperties;
   /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */
   diagram?: DiagramPlan;
   /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */
@@ -98,15 +101,18 @@ export interface GraphDrawing {
    * (direct-links.ts). None, direct: the default (Roger, 24 Oct 2026).
    */
   routing?: 'curved' | 'straight' | 'right-angled' | 'direct';
-  /**
-   * Laid out quickly with straight links first, past 300 things, for its curves to follow (§11, curves_after_drawing);
-   * none, curved at once.
-   */
-  straightFirst?: boolean;
   /** Laid out by our own engine instead of Graphviz, where it can be (§53, layout_own_engine). */
   engine?: 'own';
+  /** The cheaper step it is laid out by, after a layout that ran out of time (§68, layout_never_text); none, as asked. */
+  step?: LayoutStep;
+  /** False where kinds that link in order are not to get a lane each (§68, layout_kind_lanes). */
+  kindLanes?: false;
   /** How our own engine spaces it, each a share of its default (§53, layout_options); none, as it lays out alone. */
   layoutOptions?: Partial<LayoutOptions>;
+  /** Shown as it improves: a quick first picture, then the settled one (§68, layout_live_loop); none, once settled. */
+  live?: true;
+  /** Each thing's spot as the plug-in's layout its options choose placed it (§68, layout_plugins); none, not yet. */
+  placed?: Record<string, [number, number]>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */

@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/merge3.test.mjs",
+  "test": "merge3: every branch of the three-way join > one side adds a label: it is kept",
+  "seen_failing_first": false,
+  "evidence": "CODE-2: merge3 already took each branch correctly; the cases write down its intended answers, so they pass against the code before them."
+}

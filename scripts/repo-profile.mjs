@@ -30,3 +30,13 @@ export const topicsSetting = (gh) => ({
   read: (repo) => [...gh([`repos/${repo}/topics`]).names].sort(),
   write: (repo) => gh(['-X', 'PUT', `repos/${repo}/topics`], { names: TOPICS }),
 });
+
+/**
+ * A reader of one field of the repository through GraphQL. REST leaves some fields out for a read-only token, such as
+ * whether auto-merge is allowed (SEC-2). `gh` runs `gh api`; `quiet` gives undefined when the read fails.
+ */
+export const graphRead = (gh, quiet) => (repo, name) => {
+  const [owner, repoName] = repo.split('/').map((s) => JSON.stringify(s));
+  const query = `query={repository(owner:${owner},name:${repoName}){${name}}}`;
+  return quiet(() => gh(['graphql', '-f', query]).data.repository[name]);
+};

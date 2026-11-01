@@ -25,6 +25,12 @@
   --gn-hue-red: var(--color-red);
   --gn-hue-orange: var(--color-orange);
   --gn-hue-green: var(--color-green);
+  --gn-branch-0: var(--color-blue);
+  --gn-branch-1: var(--color-orange);
+  --gn-branch-2: var(--color-green);
+  --gn-branch-3: var(--color-purple);
+  --gn-branch-4: var(--color-pink);
+  --gn-branch-5: var(--color-cyan);
   --gn-code-background: var(--code-background);
   --gn-code-normal: var(--code-normal);
   --gn-code-keyword: var(--code-keyword);
@@ -63,6 +69,9 @@
   --gn-radius-m: var(--radius-m);
   --gn-radius-l: var(--radius-l);
   --gn-cursor-link: var(--cursor-link);
+  --gn-line-height: 1.5;
+  --gn-letter-spacing: 0em;
+  --gn-word-spacing: normal;
   --gn-motion-dash: 1s;
   --gn-motion-dot: 2s;
   --gn-motion-step: 1s;
@@ -95,6 +104,12 @@
     --gn-hue-red: CanvasText;
     --gn-hue-orange: CanvasText;
     --gn-hue-green: CanvasText;
+    --gn-branch-0: CanvasText;
+    --gn-branch-1: CanvasText;
+    --gn-branch-2: CanvasText;
+    --gn-branch-3: CanvasText;
+    --gn-branch-4: CanvasText;
+    --gn-branch-5: CanvasText;
     --gn-code-background: Canvas;
     --gn-code-normal: CanvasText;
     --gn-code-keyword: CanvasText;
@@ -240,6 +255,16 @@ textarea:focus-visible,
 .gn-notice {
   padding: var(--gn-space-2) var(--gn-space-3);
   margin-top: var(--gn-space-1);
+}
+
+/* a long notice stays until it is dismissed: a click, Enter or Escape (risk NEURO-6) */
+.gn-notice-sticky {
+  cursor: pointer;
+}
+
+.gn-notice-sticky::after {
+  content: ' ✕';
+  color: var(--gn-text-muted);
 }
 
 .gn-menu {

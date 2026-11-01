@@ -4,11 +4,13 @@
 // - Some keys: built unsigned, with a warning naming the missing ones.
 // - The Linux GPG signature is made, and checks out against its key.
 // - The workflow hands the keys over only off pull requests.
+// - The step that runs the repository's code has none. The bundling step has the macOS keys.
+// - The Linux key is in a signing job that builds nothing (SEC-17).
 // - The Linux public key is published, public only, with the fingerprint the guide gives.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { KEYS, gpgSign, signingPlan } from '../scripts/desktop-build.mjs';
@@ -90,41 +92,75 @@ describe('what the desktop build signs', () => {
   });
 });
 
-test('a .deb gets a GPG signature that checks out against the key', { skip: !hasGpg() && 'no gpg' }, () => {
-  const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-gpg-test-'));
-  try {
-    const home = join(dir, 'maker');
-    const gpg = (args, input) =>
-      spawnSync('gpg', ['--homedir', home, '--batch', '--pinentry-mode', 'loopback', ...args], {
-        input,
-        encoding: 'utf8',
-      });
-    spawnSync('mkdir', ['-m', '700', home]);
-    assert.equal(gpg(['--passphrase', 'pw', '--quick-gen-key', 'Test <t@example.org>', 'ed25519', 'sign']).status, 0);
-    const key = gpg(['--passphrase', 'pw', '--armor', '--export-secret-keys']).stdout;
-    const deb = join(dir, 'app.deb');
-    writeFileSync(deb, 'pretend package');
-    assert.deepEqual(gpgSign([deb], key, 'pw'), [`${deb}.asc`]);
-    assert.match(readFileSync(`${deb}.asc`, 'utf8'), /BEGIN PGP SIGNATURE/);
-    assert.equal(gpg(['--verify', `${deb}.asc`, deb]).status, 0, 'the signature checks out');
-    assert.throws(() => gpgSign([deb], key, 'wrong'), /gpg/, 'a wrong passphrase fails loudly');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+const ON_WINDOWS = process.platform === 'win32' && 'a .deb is only signed on Linux';
+
+test(
+  'a .deb gets a GPG signature that checks out against the key',
+  { skip: ON_WINDOWS || (!hasGpg() && 'no gpg') },
+  () => {
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-gpg-test-'));
+    try {
+      const home = join(dir, 'maker');
+      const gpg = (args, input) =>
+        spawnSync('gpg', ['--homedir', home, '--batch', '--pinentry-mode', 'loopback', ...args], {
+          input,
+          encoding: 'utf8',
+        });
+      mkdirSync(home, { mode: 0o700 });
+      assert.equal(gpg(['--passphrase', 'pw', '--quick-gen-key', 'Test <t@example.org>', 'ed25519', 'sign']).status, 0);
+      const key = gpg(['--passphrase', 'pw', '--armor', '--export-secret-keys']).stdout;
+      const deb = join(dir, 'app.deb');
+      writeFileSync(deb, 'pretend package');
+      assert.deepEqual(gpgSign([deb], key, 'pw'), [`${deb}.asc`]);
+      assert.match(readFileSync(`${deb}.asc`, 'utf8'), /BEGIN PGP SIGNATURE/);
+      assert.equal(gpg(['--verify', `${deb}.asc`, deb]).status, 0, 'the signature checks out');
+      assert.throws(() => gpgSign([deb], key, 'wrong'), /gpg/, 'a wrong passphrase fails loudly');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+);
 
 test('the workflow hands signing keys to the build only off pull requests', () => {
   const build = jobs(read('.github/workflows/desktop-app.yml')).build.join('\n');
   const steps = build.split(/\n {6}- /);
   const unsigned = steps.find((s) => /github\.event_name == 'pull_request'/.test(s));
   const signed = steps.find((s) => /github\.event_name != 'pull_request'/.test(s));
-  assert.match(unsigned, /run: node scripts\/desktop-build\.mjs\b/);
+  assert.match(unsigned, /run: node scripts\/desktop-build\.mjs bundle\b/);
   assert.doesNotMatch(unsigned, /secrets\./, 'a pull request build gets no key');
-  assert.match(signed, /run: node scripts\/desktop-build\.mjs\b/);
+  assert.match(signed, /run: node scripts\/desktop-build\.mjs bundle\b/);
   const named = [...signed.matchAll(/^\s+([A-Z_]+): \$\{\{ secrets\.([A-Z_]+) \}\}$/gm)];
-  assert.deepEqual(named.map(([, a]) => a).sort(), [...KEYS.macOS, ...KEYS.notarise, ...KEYS.Linux].sort());
+  // the macOS keys alone: the Linux key is in the signing job below (SEC-17)
+  assert.deepEqual(named.map(([, a]) => a).sort(), [...KEYS.macOS, ...KEYS.notarise].sort());
   for (const [, a, b] of named) assert.equal(a, b, 'each key under its own name');
   assert.equal([...build.matchAll(/secrets\./g)].length, named.length, 'no key anywhere else in the job');
+});
+
+test('no key is in the step that runs the repository’s code: it compiles first, with none (SEC-17)', () => {
+  const build = jobs(read('.github/workflows/desktop-app.yml')).build.join('\n');
+  const steps = build.split(/\n {6}- /);
+  const compile = steps.find((s) => /run: node scripts\/desktop-build\.mjs compile\b/.test(s));
+  assert.ok(compile, 'a compile step');
+  assert.doesNotMatch(compile, /secrets\.|env:/, 'it is given no key and no variable');
+  assert.ok(
+    steps.indexOf(compile) < steps.findIndex((s) => /desktop-build\.mjs bundle\b/.test(s)),
+    'before the bundling',
+  );
+  // the cargo steps that run build scripts come before any step with a key, and none of them has one
+  for (const s of steps.filter((s) => /cargo (build|test|install)/.test(s))) assert.doesNotMatch(s, /secrets\./, s);
+});
+
+test('the Linux .deb is signed in a job of its own, which builds nothing and gets only the Linux keys (SEC-17)', () => {
+  const sign = jobs(read('.github/workflows/desktop-app.yml'))['sign-linux'].join('\n');
+  assert.match(sign, /^ {4}needs: build$/m);
+  assert.match(sign, /if: github\.event_name != 'pull_request'/);
+  assert.match(sign, /run: node scripts\/desktop-build\.mjs sign-linux linux\b/);
+  assert.match(sign, /actions\/download-artifact@/, 'it takes the built file');
+  assert.doesNotMatch(sign, /npm (ci|install)|cargo|apt-get|npm run/, 'no build of the repository’s code');
+  const named = [...sign.matchAll(/^\s+([A-Z_]+): \$\{\{ secrets\.([A-Z_]+) \}\}$/gm)];
+  assert.deepEqual(named.map(([, a]) => a).sort(), [...KEYS.Linux].sort());
+  for (const [, a, b] of named) assert.equal(a, b, 'each key under its own name');
+  assert.equal([...sign.matchAll(/secrets\./g)].length, named.length, 'no key anywhere else in the job');
 });
 
 function hasGpg() {

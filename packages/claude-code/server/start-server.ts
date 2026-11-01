@@ -22,7 +22,8 @@ import { currentLanguage, word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
-import { readBody, bodyLimitOf, BODY_LIMIT } from './request-body.ts';
+import { refusalText } from '../src/api-types.ts';
+import { readBody, bodyLimitOf, drained, BODY_LIMIT } from './request-body.ts';
 import { SECURITY_HEADERS, crossOrigin, hostAllowed, newToken, tokenMatches, writeAllowed } from './request-guard.ts';
 
 /** How long the server waits with no page before it stops: 30 minutes. */
@@ -137,8 +138,17 @@ const realEvery: Every = (ms, check) => {
   return () => clearInterval(timer);
 };
 
-/** Sends an answer with the headers every answer carries; nothing in it ever repeats the token. */
+/**
+ * Sends an answer with the headers every answer carries; nothing in it ever repeats the token. A refusal given as
+ * words is sent as JSON {why}, as every route's own refusals are (risk API-4).
+ */
 function send(res: ServerResponse, status: number, text: string, headers: Record<string, string> = {}): void {
+  const json = /^application\/json/.test(headers['content-type'] ?? '');
+  if (status >= 400 && !json) {
+    res.writeHead(status, { ...SECURITY_HEADERS, ...headers, 'content-type': 'application/json; charset=utf-8' });
+    res.end(refusalText(text));
+    return;
+  }
   res.writeHead(status, { ...SECURITY_HEADERS, 'content-type': 'text/plain; charset=utf-8', ...headers });
   res.end(status === 204 ? undefined : text);
 }
@@ -216,7 +226,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
     const limit = bodyLimitOf(url);
     const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
-      req.resume();
+      await drained(req);
       return send(
         res,
         413,

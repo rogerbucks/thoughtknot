@@ -21,6 +21,8 @@ import { word } from './words.ts';
 
 /** The settings the gate reads. */
 export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & {
+  /** The level a repository file with no classification counts as for a review; the lowest when not given (TRUST-4). */
+  aiRepoUnlabelled?: string;
   aiModels: readonly AiModel[];
   /** The rows of the vault's destination matrix, as the host read them, and the table mapping its class names. */
   matrix?: MatrixRow[];

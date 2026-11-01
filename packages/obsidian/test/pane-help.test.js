@@ -4,7 +4,7 @@
 // - Names, kinds and relationships are suggested while typing. New problems are announced to screen readers.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, until, wait } from './host/load-plugin.js';
+import { build, until } from './host/load-plugin.js';
 import { labelled } from './host/notes.js';
 import { READER, NOTE, open, textarea, type, note } from './host/pane-notes.js';
 
@@ -32,7 +32,7 @@ describe('problems, in place', () => {
     try {
       const typo = READER + ',\n(eyes)-[:FAVOURS]->(larg)';
       type(env.el, typo);
-      await wait(400);
+      await until(() => env.el.querySelector('.thoughtknot-overlay .thoughtknot-problem'));
       const mark = env.el.querySelector('.thoughtknot-overlay .thoughtknot-problem');
       assert.equal(mark.textContent, 'larg');
       assert.match(mark.className, /is-warning/);
@@ -41,7 +41,7 @@ describe('problems, in place', () => {
       assert.match(here.textContent, /larg is not in graph reader/);
       labelled(here, 'Change larg to large').click();
       assert.equal(textarea(env.el).value, READER + ',\n(eyes)-[:FAVOURS]->(large)');
-      await wait(400);
+      await until(() => note(env) === NOTE.replace(READER, READER + ',\n(eyes)-[:FAVOURS]->(large)'));
       assert.equal(note(env), NOTE.replace(READER, READER + ',\n(eyes)-[:FAVOURS]->(large)'));
     } finally {
       env.uninstall();
@@ -54,13 +54,15 @@ describe('problems, in place', () => {
     try {
       const typed = READER + ', // the reader graph';
       type(env.el, typed, typed.length);
-      await wait(400);
+      await until(
+        () => env.el.querySelector('.thoughtknot-fixbar') && !env.el.querySelector('.thoughtknot-fixbar').hidden,
+      );
       const here = env.el.querySelector('.thoughtknot-fixbar');
       assert.ok(!here.hidden);
       assert.match(here.textContent, /a comment must be on a line of its own/i);
       labelled(here, 'Put the comment on its own line').click();
       assert.equal(textarea(env.el).value, READER + ',\n// the reader graph');
-      await wait(400);
+      await until(() => note(env) === NOTE.replace(READER, READER + ',\n// the reader graph'));
       assert.equal(note(env), NOTE.replace(READER, READER + ',\n// the reader graph'));
     } finally {
       env.uninstall();
@@ -71,7 +73,7 @@ describe('problems, in place', () => {
     const env = await open();
     try {
       type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: })', 0); // the caret off both lines
-      await wait(400);
+      await until(() => env.el.querySelectorAll('.thoughtknot-pane-problems li').length === 2);
       const items = env.el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
       assert.equal(items.length, 2);
       assert.match(items[0], /^Line 7: /);
@@ -245,7 +247,9 @@ describe('a name only suggested', () => {
     const env = await open();
     try {
       type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(smal_reader)');
-      await wait(400);
+      await until(
+        () => env.el.querySelector('.thoughtknot-fixbar') && !env.el.querySelector('.thoughtknot-fixbar').hidden,
+      );
       const here = env.el.querySelector('.thoughtknot-fixbar');
       assert.ok(!here.hidden, 'the caret is on that line, so its problem is there');
       assert.match(here.textContent, /No thing called smal_reader in graph reader/);

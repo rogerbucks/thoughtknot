@@ -47,7 +47,7 @@ export async function buildPage(out) {
     name: 'no-engine-on-the-page',
     setup(build) {
       build.onResolve({ filter: /(^|\/)engine\.ts$/ }, (args) =>
-        args.resolveDir.endsWith('/core/src') ? { path: 'engine', namespace: 'no-engine' } : undefined,
+        /[\\/]core[\\/]src$/.test(args.resolveDir) ? { path: 'engine', namespace: 'no-engine' } : undefined,
       );
       build.onLoad({ filter: /.*/, namespace: 'no-engine' }, () => ({
         contents: "export const loadEngine = () => Promise.reject(new Error('The page carries no layout engine.'));",

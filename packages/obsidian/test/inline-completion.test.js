@@ -41,7 +41,7 @@ describe('the best match, shown inline', () => {
       typeFocused(env.el, READER + ',\n' + OPEN);
       key(env.el, 'Enter'); // at a closer-only ghost, Enter is a new line, which the browser makes: it takes nothing
       assert.equal(textarea(env.el).value, READER + ',\n' + OPEN);
-      await wait(400);
+      await until(() => note(env).includes(READER + ',\n' + OPEN + '\n```'));
       assert.ok(note(env).includes(READER + ',\n' + OPEN + '\n```'), 'the note has what was typed');
       assert.equal(note(env).includes('{}'), false);
       typeFocused(env.el, READER + ',\n(z:Opt');
@@ -165,7 +165,7 @@ describe('accepting with Tab or Enter', () => {
     try {
       typeFocused(env.el, READER + ',\n(z:Option {na');
       key(env.el, 'Tab');
-      await wait(400);
+      await until(() => note(env).includes(READER + ',\n(z:Option {name: \n```'));
       assert.ok(note(env).includes(READER + ',\n(z:Option {name: \n```'));
     } finally {
       env.uninstall();

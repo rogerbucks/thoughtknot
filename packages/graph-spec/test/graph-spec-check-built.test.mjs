@@ -8,7 +8,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 import { cases, changesetCase } from './cases.mjs';
 
@@ -75,6 +75,23 @@ test('required in Node, it is the module, and sets no global', () => {
   const C = require(built);
   assert.equal(globalThis.GraphSpecCheck, undefined);
   assert.equal(answers(C), answers(source));
+});
+
+test('imported as an ES module, it exports every name by name and the module as its default (API-8)', async () => {
+  const esm = built.replace(/\.js$/, '.mjs');
+  const m = await import(pathToFileURL(esm).href);
+  assert.deepEqual(
+    Object.keys(m)
+      .filter((k) => k !== 'default')
+      .sort(),
+    Object.keys(source).sort(),
+  );
+  assert.equal(answers(m.default), answers(source));
+  assert.equal(m.read, m.default.read, 'a name is the module’s own');
+  assert.match(
+    readFileSync(esm, 'utf8').split('\n')[0],
+    /^\/\/ Generated from packages\/graph-spec\/src by .+ — do not hand-edit\.$/,
+  );
 });
 
 test('run by the Node adapter beside it, as in the archive, it gives every recorded answer', () => {

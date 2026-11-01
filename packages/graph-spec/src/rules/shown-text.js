@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The text a thing is shown by in a drawing: chosen by one ranked rule, the same from Python (views.py, shown_text).
 'use strict';
 

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/link-scan.test.js",
+  "test": "text full of openers that never close (spec §9) > is read in one pass, and finds the link at its end",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

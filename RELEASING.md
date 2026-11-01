@@ -52,8 +52,10 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
 1. **Bump the version.** On a new branch from main, run `npm run release:prepare -- X.Y.Z`. It writes the version into
    `manifest.json`, `versions.json`, every `package.json`, the mod's `plugin.json`, `pyproject.toml` and both lockfiles.
    Open a pull request with the change.
-2. **Run the dry run.** Run the "Release check (dry run)" workflow on main by hand. It runs every check the release
-   waits on. A failure here costs no version number.
+2. **Export the settings, then run the dry run.** An admin runs `node scripts/public-readiness.mjs --settings --export`
+   with the GitHub CLI. It writes the default branch's whole ruleset and the Pages settings to `.github/settings/`. Then run the
+   "Release check (dry run)" workflow on main by hand. It runs every check the release waits on. A failure here costs
+   no version number. If the instruction counts fail, see "When the instruction counts fail" below.
 3. **Merge the bump.** Merge the latest main into the bump's pull request first, then merge it once CI is green.
 4. **Walk the accessibility checks** below, on the build to be released.
 5. **Push the tag** on the merge commit, from an up-to-date main:
@@ -61,6 +63,45 @@ Roger pushes the tag and publishes the release. Claude can prepare every step be
    The release's first job stops in seconds if the commit is not on main, or the tag is not the manifest version.
 6. **Publish the draft.** `release.yml` makes a draft release with the assets and the notes. Read the notes, then
    publish it. The nightly fails while a draft has waited more than a day, so a forgotten draft is seen.
+
+A difference between the export and the committed copy was made by hand. Commit it if it was meant (OPS-8).
+
+### When the instruction counts fail
+
+A new runner image or one flaky benchmark can fail the counts (OPS-10). Recover in this order:
+
+1. Run the "Quality baseline" workflow with "count every benchmark" and "spread" ticked.
+2. Commit its `metrics.json` as `quality/baseline.json`. It carries `largest_spread`. `quality-check.mjs` refuses a
+   tolerance under twice that.
+3. Run the dry run again.
+4. Only then push the tag.
+
+## Listing in the community directory
+
+**On hold (Roger, 29 Oct 2026): R2 stays private until he says it is ready.** Do not file this listing, and do not
+plan a public release, until he does. When he does, he files it, once, after the first stable release is published. Obsidian reviews the listing by hand, then
+lists the plug-in. Claude cannot file it.
+
+1. Check the release is published (not a draft), its tag is the bare version in `manifest.json`, and it holds `main.js`,
+   `manifest.json` and `styles.css`.
+2. Fork `obsidianmd/obsidian-releases`. Add this entry to the end of `community-plugins.json`, and open a pull request
+   with the title `Add plugin: ThoughtKnot`:
+
+```json
+{
+  "id": "thoughtknot",
+  "name": "ThoughtKnot",
+  "author": "Roger Bucks",
+  "description": "Draw the graphs written in your notes, and edit them as text, in place or beside the note.",
+  "repo": "rogerbucks/thoughtknot"
+}
+```
+
+3. Fill in the pull request's checklist as it asks. Answer review comments there. A later version needs no new
+   listing: Obsidian reads each new release's `manifest.json`.
+
+`test/community-listing.test.js` holds this entry to the manifest, so a change to the name or the description
+fails CI until the entry here is changed too.
 
 ## Going back
 
@@ -78,9 +119,9 @@ Everything a successor would need if Roger could not act. None of the values are
 
 | Key or account | What it does | Where it is made | Expires | If it is lost |
 | --- | --- | --- | --- | --- |
-| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | 15 Oct 2027. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
-| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not known. Rotate it if the review starts failing to authenticate. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
-| `SECURITY_ALERTS_TOKEN` (repository secret, optional) | Lets the release and the daily Security workflow read Dependabot and secret scanning alerts, which the workflow's own token may not. A fine-grained token for this repository alone, read only: "Dependabot alerts", "Secret scanning alerts" and "Code scanning alerts". | Roger's GitHub account, Settings, Developer settings, Fine-grained tokens. | The date set when it is made; a year at most. | Make a new one with the same access, and set it as the secret. While it is missing, both name the lists as not read, and npm audit and OSV still check the lock files. |
+| `PROJECT_TOKEN` (repository secret) | Lets the project mirror, the build status and the wave gate read and write the "ThoughtKnot requirements" board, and nothing else. A classic token with the `project` scope alone: GitHub's fine-grained tokens cannot reach a project a person owns, so it cannot be narrowed to the one board (SEC-8). Owner: Roger. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic), with an expiry date. | 15 Oct 2027. Renew by 1 Oct 2027, with a calendar reminder set two weeks before. The Token watch workflow asks GitHub once a day and opens an issue on the third refusal in a row. | Make a new token with the `project` scope alone, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
+| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets Claude review pull requests, run the risk panel, reply in the working group and push the daily security fixes, as Roger's Claude subscription. It reaches no GitHub permission of its own: each job's GitHub token is the workflow's, given only what that job needs. Owner: Roger. | `claude setup-token`, by Roger, on his machine. | A year after it is made. Roger notes the date here when he next makes it, and renews it two weeks before. | Run `claude setup-token` again and set the secret. Each job passes with a notice while it is missing. |
+| `SECURITY_ALERTS_TOKEN` (repository secret) | Lets the release and the daily Security workflow read Dependabot and secret scanning alerts, which the workflow's own token may not. The release and the weekly Settings check also read the repository's settings with it (SEC-2). A fine-grained token for this repository alone, read only: "Administration", "Pages", "Dependabot alerts", "Secret scanning alerts" and "Code scanning alerts". Owner: Roger. | Roger's GitHub account, Settings, Developer settings, Fine-grained tokens. | 24 Oct 2027. Renew by 10 Oct 2027, with a calendar reminder set two weeks before. | Make a new one with the same access, and set it as the secret. While it is missing, the security checks name the lists as not read (npm audit and OSV still check the lock files), and the settings check fails. |
 | `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY` (repository secrets) | Sign the macOS desktop app with Roger's Developer ID certificate. Only off pull requests (docs/app-signing.md). | Xcode, then Keychain Access, on Roger's Mac, under his Apple Developer membership. | The certificate after 5 years; the membership every year. | Make a new Developer ID certificate and set the three secrets again. The app builds unsigned, with a warning, while any is missing. |
 | `APPLE_API_ISSUER`, `APPLE_API_KEY`, `APPLE_API_PRIVATE_KEY` (repository secrets) | Send the signed macOS app to Apple to be notarised, with an App Store Connect API key, never Roger's Apple ID (LEGAL-4). The private key is the `.p8` file's text. | App Store Connect, Users and Access, Integrations, App Store Connect API. A copy is in his password manager. | When Roger revokes it. | Revoke it, make a new key and set the three secrets. The app is signed but not notarised while one is missing. |
 | `LINUX_GPG_PRIVATE_KEY`, `LINUX_GPG_PASSPHRASE` (repository secrets) | Sign the Linux `.deb` with a `.asc` file beside it. | `gpg` on Roger's Mac (docs/app-signing.md). A copy is in his password manager. | The date set when it is made. | Make a new key, set both secrets, and publish the new public key. The `.deb` has no signature while one is missing. |
@@ -88,8 +129,19 @@ Everything a successor would need if Roger could not act. None of the values are
 | The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
 | The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Cloudflare, in Roger's account. | Every year on 18 October. | Renew at Cloudflare. Pages reads the domain from the repository's Pages settings. |
 
+Every secret a workflow reads has a row here, with its owner, its scope and when it is renewed. A test
+(`test/secrets-recorded.test.js`) fails on one that has none.
+
 **The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
-settings with the wanted ones. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
+settings with the wanted ones. The release and the weekly Settings check (`settings-check.yml`) run it, and fail when one
+differs. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
+
+It also holds the default branch's whole ruleset and the Pages settings against the copies in `.github/settings/`.
+`--settings --export` writes them. So a rule loosened by hand shows as a difference (OPS-8).
+
+**Anyone can rebuild a release and compare it.** Check out the tag, then run `node scripts/reproducible-build.mjs`: it
+builds twice in clean checkouts and prints each asset's SHA-256, to compare with the release's `SHA256SUMS`. The release
+runs it too, and stops when two builds differ (SEC-6).
 
 **There is one admin, by choice** (Roger, 19 Oct 2026). Until a second is named, nobody else can publish a release,
 change the ruleset or rotate a key. Roger will add a second admin, or move the repository to an organisation with two
@@ -207,11 +259,13 @@ Use a note with the graph guide's example, a problem in one graph, and an empty 
 - [ ] **AX-01** Tab reaches every control of the card, the details, the edit pane, the settings page and the page's Export form.
       It goes in an order that follows the picture (SC 2.4.3). It never leaves the view or traps the focus (SC 2.1.2).
 - [ ] **AX-02** The focus is always visible. It is at least as clear as 2 pixels of line or a change of 3 to 1 against what is
-      next to it. It is never hidden behind the details sheet or a menu (SC 2.4.7, 2.4.11, 1.4.11).
+      next to it. It is never hidden behind the details sheet or a menu (SC 2.4.7, 2.4.11, 1.4.11). CI holds the ring on a
+      box, in both themes, on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-03** Every action of the editor can be done from the keyboard (SC 2.1.1). That covers choosing a thing and a link and
       moving along links. It covers the trail's Back and Forward, Fit and zoom, opening and closing the details, editing and Export.
 - [ ] **AX-04** Nothing needs a drag: every move made by dragging can also be made by a single press or by typing (SC 2.5.7).
 - [ ] **AX-05** Escape closes the details sheet, a menu or a form. The focus goes back to where it was (SC 3.2.2, 2.4.3).
+      CI holds it for the bar's panels on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-06** Keys typed in the note are never taken by the drawing. No single-character shortcut works while a text field
       has the focus (SC 2.1.4).
 
@@ -237,13 +291,16 @@ VoiceOver on macOS and on iOS; NVDA on Windows where one is at hand. Turn the di
       (SC 1.4.11). These are the box outlines, the link arrows, the field borders and the focus ring. Check them with a
       colour picker.
 - [ ] **AX-14** On a phone every target is 24 by 24 CSS pixels at least. The details sheet's buttons are 44 points (SC 2.5.8).
+      CI holds the 44 points on the harness (test/a11y-states.test.js); this is Obsidian itself, on a phone.
 - [ ] **AX-15** At a window 320 CSS pixels wide, or at 400% zoom, nothing is lost. Nothing needs scrolling in two directions,
       except the drawing itself (SC 1.4.10). CI holds AX-14 and AX-15 on the harness and the browser page
       (test/a11y-targets-reflow.test.js); this is Obsidian itself, on a phone.
 - [ ] **AX-16** Raise the text spacing and set the text size to 200%: nothing is cut off or overlaps (SC 1.4.12, 1.4.4).
       The spacing is line height 1.5, paragraph spacing 2, letter spacing 0.12 and word spacing 0.16, all times the font size.
+      CI holds this on the harness (test/a11y-states.test.js); this is Obsidian itself.
 - [ ] **AX-17** With the system set to reduce motion, no movement plays. Nothing flashes more than three times a second
-      (SC 2.3.1, 2.2.2; the motion rules of §11).
+      (SC 2.3.1, 2.2.2; the motion rules of §11). CI holds that nothing runs on for ever with reduced motion asked for
+      (test/a11y-states.test.js); this is what a person sees.
 - [ ] **AX-18** Nothing is said by colour alone (SC 1.4.1). Kinds of thing, problems, the chosen thing and a link that is
       estimated each also differ by a shape, a word or a line style.
 - [ ] **AX-19** Pointer: a press that can be undone is done on release, not on press. A tooltip can be reached, held and
@@ -255,7 +312,8 @@ Open the browser editor's page with the browser's language set to `en-XA`, then 
 `packages/core/src/pseudo-words.ts`). `test/pseudo-locales.test.js` checks the words and the direction of every view in a
 DOM with no layout; this checks what it cannot see.
 
-- [ ] **AX-20** In `en-XA` no longer word is cut off, overlaps another part, or pushes a control out of its view.
+- [ ] **AX-20** In `en-XA` no longer word is cut off, overlaps another part, or pushes a control out of its view. CI holds the
+      reflow and the controls of three views in both test languages (test/a11y-states.test.js); this is the rest.
 - [ ] **AX-21** In `ar-XB` the page and the details mirror, the drawing does not, and the arrow keys still move the way the
       drawing shows.
 

@@ -1,0 +1,6 @@
+{
+  "file": "test/community-listing.test.js",
+  "test": "versions.json and the release assets > the release workflow attaches main.js, manifest.json and styles.css to a tag that is the bare version",
+  "seen_failing_first": false,
+  "evidence": "Guards a rule the repository already met: the manifest, versions file and workflows were right before the check was written, so it cannot fail first."
+}

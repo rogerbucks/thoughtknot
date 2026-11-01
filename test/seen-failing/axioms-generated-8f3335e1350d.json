@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/axioms-generated.test.mjs",
+  "test": "axioms_safeguards > a block of the generated graphs reads as the reader writes it",
+  "seen_failing_first": false,
+  "evidence": "It holds a law the reader and the join already keep (GS8): generated graphs check the existing code, so it passes on the code before it."
+}

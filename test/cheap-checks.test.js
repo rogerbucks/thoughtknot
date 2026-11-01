@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { exists, path, read, readJSON, walk } from './repository/repo.js';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
 import { ignoreEntries, missingIgnoreEntries } from '../scripts/ignore-entries.mjs';
@@ -17,7 +18,8 @@ const { NODE_TEST_CONTEXT: _context, ...CLEAN_ENV } = process.env;
 const run = (command, args, cwd) => spawnSync(command, args, { cwd, env: CLEAN_ENV, encoding: 'utf8', timeout: 60000 });
 
 const REPORTER = path('scripts/quiet-reporter.mjs');
-const quietNode = (cwd, ...files) => run(process.execPath, ['--test', `--test-reporter=${REPORTER}`, ...files], cwd);
+const quietNode = (cwd, ...files) =>
+  run(process.execPath, ['--test', `--test-reporter=${pathToFileURL(REPORTER).href}`, ...files], cwd);
 
 const made = [];
 /** A temporary folder holding these files; removed when the file's tests are done. */
@@ -324,6 +326,8 @@ describe('running only the tests a change touches', () => {
     'python/graph_spec/src/graph_svg.py',
     'python/graph_spec/tests/test_graph_svg_entry_point.py',
     'test/conventions.test.js',
+    'test/agents-guide.test.js',
+    'test/public-readiness.test.js',
     'test/cheap-checks.test.js',
     'test/policy.test.js',
     'test/requirements.test.js',
@@ -371,9 +375,13 @@ describe('running only the tests a change touches', () => {
       ['packages/core/GUIDE.md', ['test/conventions.test.js']],
       ['python/graph_spec/GUIDE.md', ['test/conventions.test.js']],
       ['CONTRIBUTING.md', ['test/conventions.test.js']],
+      [
+        'docs/tests-that-span-modules.md',
+        ['test/agents-guide.test.js', 'test/conventions.test.js', 'test/public-readiness.test.js'],
+      ],
       ['README.md', ['test/conventions.test.js', 'test/policy.test.js']],
-      ['AGENTS.md', ['test/cheap-checks.test.js']],
-      ['CLAUDE.md', ['test/cheap-checks.test.js']],
+      ['AGENTS.md', ['test/agents-guide.test.js', 'test/cheap-checks.test.js']],
+      ['CLAUDE.md', ['test/agents-guide.test.js', 'test/cheap-checks.test.js']],
       ['test-vault/Long note.md', ['test/test-vault.test.js']],
       ['test-vault/GUIDE.md', ['test/test-vault.test.js']],
       ['scripts/reset-test-vault.mjs', ['test/test-vault.test.js']],

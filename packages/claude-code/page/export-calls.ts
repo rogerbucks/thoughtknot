@@ -5,7 +5,9 @@
 // The page names no folder or path of its own. The server writes the files only as new ones in the export folder. It
 // answers the names they were given (a number is added to one that was taken). The token is the one the page holds,
 // passed in. Every address is from the server's root.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
+import { whyOf } from '../src/api-types.ts';
+import { refusedWhy } from './server-calls.ts';
 
 /** One file of an export: its name alone, with its text or its bytes. */
 export interface SavedFile {
@@ -36,7 +38,7 @@ export function exportCalls(token: string, fetcher: typeof fetch) {
     /** Where an export of the note goes. */
     target: async (id: string): Promise<ExportTarget> => {
       const reply = await fetcher(`/api/export/${encodeURIComponent(id)}`, { headers });
-      if (!reply.ok) throw new Error(word('page.server-said-why', { status: reply.status, why: await reply.text() }));
+      if (!reply.ok) throw new Error(await refusedWhy(reply));
       return (await reply.json()) as ExportTarget;
     },
     /** Hands the files over to be written as new files; never rejects: a refusal is said in words. */
@@ -52,7 +54,7 @@ export function exportCalls(token: string, fetcher: typeof fetch) {
           headers: { ...headers, 'content-type': 'application/json' },
           body,
         });
-        if (!reply.ok) return { stopped: await reply.text() };
+        if (!reply.ok) return { stopped: whyOf(await reply.json().catch(() => null)) ?? String(reply.status) };
         return { written: ((await reply.json()) as { written: string[] }).written };
       } catch (e) {
         return {

@@ -140,6 +140,8 @@ describe('each session in the vault starts and ends clean', () => {
     const dir = mkdtempSync(join(tmpdir(), 'test-vault-'));
     git(dir, 'init', '-q');
     cpSync(path('.gitignore'), join(dir, '.gitignore'));
+    // with this repository's line ends, so a Windows checkout gives back the notes as written, not with CRLF
+    cpSync(path('.gitattributes'), join(dir, '.gitattributes'));
     for (const f of [...guideMap().keys(), 'GUIDE.md']) {
       mkdirSync(join(dir, VAULT), { recursive: true });
       cpSync(path(`${VAULT}/${f}`), join(dir, VAULT, f));

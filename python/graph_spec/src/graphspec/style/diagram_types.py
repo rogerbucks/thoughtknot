@@ -17,7 +17,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from graphspec.style.inline import value_text
-from graphspec.style.radial import lone_thing, radial_centre
+from graphspec.style.radial import radial_centre
 from graphspec.style.timeline import is_number, timeline_fit, timeline_plan
 from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
@@ -51,7 +51,7 @@ def _counted(n):
 
 def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[str, list]:
     """The shape a type is judged on, from graph_parts: each thing {key, text, kinds, date (the
-    first date it carries, said as inline, if any), dates and numbers (each it carries, by
+    first date it carries, said as inline, if any), dates, numbers and texts (each it carries, by
     property, if any)}, each written link {from, type, to}, and, when any are written, the groups
     `nudges` (read_style's) draw, [label, keys of things drawn], in the order first written — the
     core's types-shape.ts shapeOf."""
@@ -59,10 +59,13 @@ def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[s
     for (key, kind, text), (_, _, props) in zip(parts["nodes"], parts["boxes"], strict=True):
         dates = {k: value_text(v) for k, v in props.items() if isinstance(v, dt.date)}
         numbers = {k: v for k, v in props.items() if is_number(v)}
+        texts = {k: v for k, v in props.items() if isinstance(v, str)}
         thing = {"key": key, "text": text, "kinds": kind.split(" · ") if kind else []}
         if dates:
             thing = {**thing, "date": next(iter(dates.values())), "dates": dates}
-        things.append({**thing, "numbers": numbers} if numbers else thing)
+        if numbers:
+            thing = {**thing, "numbers": numbers}
+        things.append({**thing, "texts": texts} if texts else thing)
     links = [
         {"from": s, "type": t, "to": d}
         for (s, _, d), (t, _) in zip(parts["edges"], parts["links"], strict=True)
@@ -161,22 +164,12 @@ def _tree_fit(shape, relationship, text):
     return _no("tree", f"no relationship makes a tree: along {types[0]}, {why}")
 
 
-def _radial_fit(shape, text, chosen=None):
-    # around a thing picked it always fits, given two things or more (radial_centre_anywhere)
-    if len(shape["things"]) >= 2 and any(t["key"] == chosen for t in shape["things"]):
+def _radial_fit(shape):
+    # with two things or more it always fits (radial_always_fits): drawn round the centre, things
+    # joined to nothing beside it, groups without their boxes
+    if len(shape["things"]) >= 2:
         return _yes("radial")
-    if len(shape["things"]) < 3:
-        return _no("radial", "a radial drawing needs three things or more")
-    if shape.get("groups"):
-        # Graphviz's radial layout cannot draw a group's box
-        label = shape["groups"][0][0]
-        return _no("radial", f"a radial drawing cannot draw the box of group {label}")
-    centre = radial_centre(shape, chosen)
-    lone = lone_thing(shape, centre)
-    if lone is None:
-        return _yes("radial")
-    why = f"joined to the centre, {text(centre)}, and {lone['text']} is not"
-    return _no("radial", f"a radial drawing needs every thing {why}")
+    return _no("radial", "a radial drawing needs two things or more")
 
 
 def _lanes_fit(shape):
@@ -224,7 +217,7 @@ def type_fits(
         _yes("network"),
         _tree_fit(shape, relationship, text),
         flow,
-        _radial_fit(shape, text, (timeline or {}).get("centre")),
+        _radial_fit(shape),
         _lanes_fit(shape),
         timeline_fit(shape, timeline or {}),
         _yes("table"),

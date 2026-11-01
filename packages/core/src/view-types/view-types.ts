@@ -3,6 +3,7 @@
 // style graph's diagram type (style-graph.ts). The core adds each through the plug-in interface (core-diagrams.ts).
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
+import { arcMarks } from './arc-view.ts';
 import { blockMarks } from './block-view.ts';
 import { centroidMarks } from './centroid-view.ts';
 import { chordMarks } from './chord-view.ts';
@@ -10,6 +11,9 @@ import { containmentMarks } from './containment-view.ts';
 import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
+import { gridMarks } from './grid-view.ts';
+import { hiveMarks } from './hive-view.ts';
+import { mapMarks } from './map-view.ts';
 import { matrixMarks } from './matrix-view.ts';
 import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
@@ -27,7 +31,16 @@ export const VIEW_TYPES = [
   'plan',
   'centroid',
   'containment',
+  'arc',
+  'hive',
+  'grid',
+  'map',
 ] as const;
+/**
+ * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
+ * More views (Roger, 28 Oct 2026, Q-12 option B: all views stay, six shown by default).
+ */
+export const FIRST_VIEW_TYPES: readonly ViewType[] = ['force', 'matrix', 'treemap', 'ego'];
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 
@@ -44,4 +57,8 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   plan: (given) => scaffoldMarks(given, planMarks(given), VIEW_NEEDS.plan ?? []),
   centroid: centroidMarks,
   containment: containmentMarks,
+  arc: arcMarks,
+  hive: hiveMarks,
+  grid: gridMarks,
+  map: mapMarks,
 };

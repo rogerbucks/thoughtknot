@@ -79,6 +79,11 @@ export class Layouts {
     return this.runner.draw(drawing, owner, theme);
   }
 
+  /** Lets layouts run again after they were stopped for too many in a row. */
+  resume(): void {
+    this.runner.resume();
+  }
+
   /** Stops the worker, answers what waits on it with null, and lets its source go. */
   close(): void {
     this.runner.close();

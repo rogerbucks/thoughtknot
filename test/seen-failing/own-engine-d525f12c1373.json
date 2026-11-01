@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/own-engine.test.js",
+  "test": "a graph drawn by our own engine > is the default, and Graphviz stays for the routed curves a person chooses",
+  "seen_failing_first": false,
+  "evidence": "The default was already on before this test; #1320 asked for a test that proves it and keeps it so."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/grid-drag.test.js",
+  "test": "a card dragged on a kanban board > let go in its own column, writes nothing",
+  "seen_failing_first": false,
+  "evidence": "It guards against a wrong write: before the drag existed nothing was written either, so it could only pass."
+}

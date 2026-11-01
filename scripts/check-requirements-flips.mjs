@@ -4,7 +4,9 @@
 // comments may be added, changed and removed. What a pull request may never do is move a test back:
 // - a test's status goes only forward, from planned to partial or written and from partial to written;
 // - a test flipped forward must have its file;
-// - a test that is partial or written is never removed.
+// - a test that is partial or written is never removed;
+// - a proved requirement's rule is never reworded unless a commit message or the pull request names its id (FLOW-5).
+//   So no one softens a rule after its test was written without saying so.
 // This refuses exactly those, naming each one.
 //
 // Usage:
@@ -12,6 +14,7 @@
 //   node scripts/check-requirements-flips.mjs --merge-base-of <ref>  the committed copy against the copy at the merge base
 //                                                                   of <ref> and HEAD: only the branch's own changes.
 //   node scripts/check-requirements-flips.mjs --base <file>         the committed copy against a file.
+//   --named <text> adds text, such as the pull request's body, to the commit messages that may name a reworded id.
 //   --repo <dir> reads the copy and runs git in another repository (the tests use it).
 //
 // Exits 1 and lists each refused difference. A base that holds no copy (the copy is new) has nothing to compare.
@@ -39,8 +42,12 @@ function parse(text, side) {
     const store = read([requirementsGraph(text)]);
     const graph = store.graph(Object.keys(store.graphs)[0]);
     const name = (key) => graph.nodes.get(key)?.props.id ?? key;
+    // a requirement is proved when a written test is its PROVED_BY
+    const proved = new Set();
+    for (const [from, type, to] of graph.edges)
+      if (type === 'PROVED_BY' && graph.nodes.get(to)?.props.status === 'written') proved.add(name(from));
     return {
-      graph: { nodes: new Map([...graph.nodes].map(([key, n]) => [name(key), n])) },
+      graph: { nodes: new Map([...graph.nodes].map(([key, n]) => [name(key), n])), proved },
     };
   } catch (e) {
     const at = e.line === undefined ? '' : ` at line ${e.line}`;
@@ -100,11 +107,13 @@ function recordProblems(id, was, now, exists) {
  * - flip-back: a test's status moved back;
  * - not-a-test: a status flipped on a record that is not a test;
  * - missing-file: a test flipped to partial or written whose file the repository does not hold;
- * - removed: a test that was partial or written taken out.
+ * - removed: a test that was partial or written taken out;
+ * - reworded: a proved requirement whose rule changed, and whose id `named` (the commit messages, the pull request body)
+ *   does not hold as a word.
  * Empty for every other change: records, links and comments added, changed or removed, and tests moved forward with
  * their files. exists(path) says whether the repository holds a repo-relative path.
  */
-export function refusedChanges(baseText, headText, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
+export function refusedChanges(baseText, headText, { exists = (rel) => existsSync(join(ROOT, rel)), named = '' } = {}) {
   const base = parse(baseText, 'base');
   const head = parse(headText, 'head');
   if (base.problem || head.problem) return [base.problem, head.problem].filter(Boolean);
@@ -120,7 +129,31 @@ export function refusedChanges(baseText, headText, { exists = (rel) => existsSyn
         message: `${id}: a ${record.props.status} test was removed: a test only moves forward, so it stays`,
       });
   for (const [id, record] of now) if (was.has(id)) problems.push(...recordProblems(id, was.get(id), record, exists));
+  const says = (id) => new RegExp(`(^|[^\\w])${id}($|[^\\w])`).test(named);
+  for (const id of base.graph.proved) {
+    const before = was.get(id)?.props.rule;
+    const after = now.get(id)?.props.rule;
+    if (after !== undefined && !same(before, after) && !says(id))
+      problems.push({
+        kind: 'reworded',
+        id,
+        message: `${id}: its rule was reworded, and a written test proves it. Name ${id} in a commit message or the pull request body, so the change is said`,
+      });
+  }
   return problems;
+}
+
+/** The messages of the commits the branch adds, so the id of a reworded requirement may be named in any of them. */
+function repoMessages(repo, args, value) {
+  const flag = ['--base-ref', '--merge-base-of'].find((f) => args.includes(f));
+  if (!flag) return '';
+  try {
+    const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const base = flag === '--merge-base-of' ? git('merge-base', value(flag), 'HEAD').trim() : value(flag);
+    return git('log', '--format=%B', `${base}..HEAD`);
+  } catch {
+    return '';
+  }
 }
 
 function main(args) {
@@ -165,7 +198,8 @@ function main(args) {
     console.error('needs --base-ref <commit> or --base <file>');
     return 2;
   }
-  const problems = refusedChanges(base, head);
+  const named = [args.includes('--named') ? value('--named') : '', repoMessages(repo, args, value)].join('\n');
+  const problems = refusedChanges(base, head, { named });
   for (const p of problems) console.log(`${p.kind}: ${p.message}`);
   if (!problems.length) console.log(`${REQUIREMENTS}: no test moved back or lost`);
   return problems.length ? 1 : 0;

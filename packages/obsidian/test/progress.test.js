@@ -1,5 +1,5 @@
 // A wait is shown (editor spec §44, progress_shown). A wait longer than a second shows its progress, said to a screen
-// reader too. One longer than ten seconds offers to stop it. Stopped, it leaves nothing half done. The two long waits
+// reader too. One longer than ten seconds offers to stop it. A layout's wait shows after 0.3 seconds, and offers Stop at once. Stopped, it leaves nothing half done. The two long waits
 // are a drawing being laid out and an export.
 import { test, describe, before, mock, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -79,7 +79,7 @@ describe('a wait is shown', () => {
   });
 
   // proves: progress_shown
-  test('a drawing laid out: its progress after a second, Stop after ten, and stopped, the graph is shown as text', async () => {
+  test('a drawing laid out: its status after 0.3 seconds with Stop, the drawing busy, and stopped, the graph is shown as text', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       env.plugin.layout = () => new Promise(() => {}); // a layout that never comes back
@@ -87,15 +87,16 @@ describe('a wait is shown', () => {
       void show(env, NOTE, 0);
       await settle();
       const el = env.doc.body.querySelector('.block-language-gql');
-      mock.timers.tick(999);
-      assert.equal(progressIn(el), null, 'nothing shown for a wait under a second');
+      mock.timers.tick(299);
+      assert.equal(progressIn(el), null, 'nothing shown for a wait under 0.3 seconds');
       mock.timers.tick(1);
       assert.match(progressIn(el)?.words ?? '', /Drawing/);
       assert.equal(progressIn(el).el.getAttribute('role'), 'status');
-      pass(9000);
+      assert.ok(env.doc.body.querySelector('[aria-busy="true"]'), 'the drawing is busy');
       progressIn(el).stop.click();
       await settle();
       assert.equal(progressIn(el), null, 'stopped, the progress goes');
+      assert.equal(env.doc.body.querySelector('[aria-busy]'), null, 'and the drawing is no longer busy');
       assert.match(el.textContent, /stopped/i, 'said in words');
       assert.ok(el.querySelector('code')?.textContent.includes("(home:Place {name: 'Home'})"), 'the graph as text');
     } finally {

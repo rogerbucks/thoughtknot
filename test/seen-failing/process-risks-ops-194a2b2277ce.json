@@ -1,0 +1,6 @@
+{
+  "file": "test/process-risks-ops.test.js",
+  "test": "the wiki without Chrome (OPS-11) > the wiki is pushed without deleting the pictures it already has",
+  "seen_failing_first": false,
+  "evidence": "A control test: the publish step already used rsync without --delete, so the pictures the wiki holds were already kept when a screenshot step fails. The test pins that, so the new warning fallback cannot be paired with a deleting push."
+}

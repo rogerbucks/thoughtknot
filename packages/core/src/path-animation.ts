@@ -5,7 +5,7 @@
 // (motion_not_alone). Under `@media (prefers-reduced-motion: reduce)` every animation stops (motion_reduced_respected).
 // One too large for the device is refused before anything is laid out, saying why and what would make it fit
 // (animation_export_fits).
-import { inImage, runnerOf, withStyleSheet } from './export-motion.ts';
+import { inImage, replaceGroups, runnerOf, withStyleSheet } from './export-motion.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Palette } from './palette.ts';
@@ -141,28 +141,25 @@ function cornerOf(body: string): { x: number; y: number } | null {
  * thing stepped on twice has both). A dot's runner comes after the line of each link a dot travels.
  */
 export function pathBody(svg: string, path: WalkedPath, plan: PathPlan, palette: Palette): string {
-  return svg.replace(
-    /(<g id="(node|edge)(\d+)"[^>]*>)([\s\S]*?)(<\/g>)/g,
-    (all, open: string, kind: string, n: string, body: string, close: string) => {
-      if (kind === 'node') {
-        const slots = plan.nodes.get(Number(n));
-        const at = slots ? cornerOf(body) : null;
-        if (!slots || !at) return all;
-        const numbers = slots.map((s) => String(path.steps[s]?.seq ?? s + 1)).join(', ');
-        const mark =
-          `<text class="thoughtknot-step-number" x="${at.x + 4}" y="${at.y + 12}" font-family="${STYLE.font},sans-Serif" ` +
-          `font-size="${STYLE.kind_font_size}" font-weight="bold" fill="${palette.text}">${numbers}</text>`;
-        return `${open}${body}${mark}${close}`;
-      }
-      const mine = plan.runners.flatMap((r, i) => (r.edge === Number(n) ? [i + 1] : []));
-      const line = mine.length ? /<path\b[^>]*\/>/.exec(body)?.[0] : undefined;
-      if (!line) return all;
-      const copies = mine.map((k) =>
-        runnerOf(line, 'thoughtknot-path-runner').replace('<path ', `<path id="thoughtknot-run-${k}" `),
-      );
-      return `${open}${body.replace(line, () => `${line}${copies.join('')}`)}${close}`;
-    },
-  );
+  return replaceGroups(svg, ['node', 'edge'], (all, open, kind, n, body, close) => {
+    if (kind === 'node') {
+      const slots = plan.nodes.get(Number(n));
+      const at = slots ? cornerOf(body) : null;
+      if (!slots || !at) return all;
+      const numbers = slots.map((s) => String(path.steps[s]?.seq ?? s + 1)).join(', ');
+      const mark =
+        `<text class="thoughtknot-step-number" x="${at.x + 4}" y="${at.y + 12}" font-family="${STYLE.font},sans-Serif" ` +
+        `font-size="${STYLE.kind_font_size}" font-weight="bold" fill="${palette.text}">${numbers}</text>`;
+      return `${open}${body}${mark}${close}`;
+    }
+    const mine = plan.runners.flatMap((r, i) => (r.edge === Number(n) ? [i + 1] : []));
+    const line = mine.length ? /<path\b[^>]*\/>/.exec(body)?.[0] : undefined;
+    if (!line) return all;
+    const copies = mine.map((k) =>
+      runnerOf(line, 'thoughtknot-path-runner').replace('<path ', `<path id="thoughtknot-run-${k}" `),
+    );
+    return `${open}${body.replace(line, () => `${line}${copies.join('')}`)}${close}`;
+  });
 }
 
 /**

@@ -100,6 +100,23 @@ describe('a plug-in run apart from the host (TRUST-14)', () => {
     );
   });
 
+  // proves: layout_plugins
+  test('a layout it adds places things over the port, its spots checked as any other', async () => {
+    const { port } = inThread({
+      ...manifest(['layouts']),
+      register: (p) =>
+        p.layouts.add({
+          id: 'acme.iso.line',
+          title: 'Line',
+          dims: 2,
+          place: ({ shape }) => ({ [shape.things[0].key]: [3, 4] }),
+        }),
+    });
+    const { registry } = await installed(port);
+    const given = { shape: SHAPE, previous: {}, options: {}, sizes: {} };
+    assert.deepEqual(await registry.placeBy('acme.iso.line', given), { ok: true, value: { paris: [3, 4] } });
+  });
+
   test('a store it adds is opened in the worker, and each store’s calls go to that store', async () => {
     const { port } = inThread({
       ...manifest(['storage']),
@@ -230,7 +247,7 @@ describe('a plug-in run apart from the host (TRUST-14)', () => {
   });
 
   test('a point that needs the page or an answer at once cannot be used apart yet, and says so', async () => {
-    assert.deepEqual([...ISOLATED_POINTS], ['theme', 'storage', 'commands', 'sources', 'steps', 'diagrams']);
+    assert.deepEqual([...ISOLATED_POINTS], ['theme', 'storage', 'commands', 'sources', 'steps', 'diagrams', 'layouts']);
     for (const point of ['exports', 'ai', 'panels']) {
       const { port } = inThread({ ...manifest([point]), register: () => {} });
       await assert.rejects(

@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // SHA-256, computed here synchronously, so no platform crypto is needed.
 'use strict';
 

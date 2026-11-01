@@ -1,9 +1,9 @@
-// One gql block in a note (spec §3). A graph block is drawn, as built by the note's blocks up to it. Anything else is
-// shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed. Sometimes nothing
-// can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
-// with its problems or a banner.
-import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
-import type { Component, MarkdownPostProcessorContext } from 'obsidian';
+// One gql block in a note (spec §3). A graph block is drawn, as built by the note's blocks up to it; anything else is
+// shown as coloured code. A graph is never blank: what can be read is drawn and the rest listed. Some graphs cannot be
+// read or drawn, or are over a size or time limit (spec §9). Then the text shows, with a banner saying why.
+import { rulesOn } from './rule-card';
+import { MarkdownRenderChild, Notice, TFile, type Component } from 'obsidian';
+import type { BlockContext } from './block-context';
 import {
   brokenLinks,
   changeSetId,
@@ -20,7 +20,6 @@ import {
   reversedLinks,
   stepOf,
   styledDrawing,
-  styleOf,
   viewsOf,
   underStrictness,
   word,
@@ -28,27 +27,28 @@ import {
 import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
-import { waitShown } from '@thoughtknot/core/display/progress';
-import { renderStyleBlock } from './style-block';
-import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
+import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
+import { renderFoldedBlock, sketchingFor } from './sketch-block';
+import { exploringFor, renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
+import { pictureStatus } from './pictures/picture-status';
 import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { withPicture } from './outside/outside-diagrams';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
-import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
+import { renderProblems, type ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { showMassive } from './massive-card';
 import { overviewInParts } from './note-store';
-import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { compareWith } from './changes/compare-with';
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
@@ -62,7 +62,7 @@ function asText(
   target: EditTarget,
   readOnly: (card: HTMLElement) => boolean,
 ): void {
-  refusalBanner(root, why);
+  refusalBanner(root, why, () => plugin.resumeLayouts(true));
   if (problems.length) renderProblems(root, problems, false);
   const editing = plugin.inlineFor(target.path, target.line);
   if (!editing) {
@@ -111,20 +111,26 @@ export async function renderShown(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
 ): Promise<void> {
   const mine: Component[] = [];
-  const local = Object.create(ctx) as MarkdownPostProcessorContext;
-  local.addChild = (child: Component) => {
-    mine.push(child);
-    ctx.addChild(child as MarkdownRenderChild);
+  const local: BlockContext = {
+    sourcePath: ctx.sourcePath,
+    getSectionInfo: (at) => ctx.getSectionInfo(at),
+    addChild: (child) => {
+      mine.push(child);
+      ctx.addChild(child);
+    },
   };
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     el.empty();
+    // edited in place with Redraw while typing set to Done, the card is drawn as the block was when editing began (NEURO-7)
+    const line = ctx.getSectionInfo(el)?.lineStart ?? 0,
+      shown = plugin.inlineFor(ctx.sourcePath, line)?.drawnFrom(source) ?? source;
     // a card drawn from another note or a file is drawn again when that source changes (§20)
-    await renderBlock(plugin, source, el, local, owner, () => void draw());
+    await renderBlock(plugin, shown, el, local, owner, () => void draw());
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
@@ -147,7 +153,7 @@ export async function renderBlock(
   plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   owner?: object,
   redraw?: () => void,
 ): Promise<void> {
@@ -160,13 +166,8 @@ export async function renderBlock(
   if (step) return renderStepBlock(plugin, source, el, ctx, step);
   // a change set is a proposal, drawn over its graph and decided change by change (§17)
   if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
-  const styled = styleOf(source);
-  if (styled) {
-    // a style block is never drawn as a graph: folded away until opened (§2)
-    const all = gqlBlocks(ctx.getSectionInfo(el)?.text ?? '').map((b) => b.text);
-    renderStyleBlock(el, source, styled, all.includes(source) ? all : [...all, source]);
-    return;
-  }
+  // a style block or a drawings block is never drawn as a graph: folded away until opened (§2, §70)
+  if (renderFoldedBlock(el, source, ctx.getSectionInfo(el)?.text ?? '')) return;
   // a block that holds only a schema, a graph's own or a shared one, is drawn as the schema itself (§3, schema_drawn)
   if (await renderSchemaBlock(plugin, source, el, ctx, owner)) return;
   const graph = graphOfBlock(source);
@@ -218,8 +219,7 @@ export async function renderBlock(
     .filter((p) => p.graph === graph)
     .map(shown);
   const plain = reading.graphs.get(graph);
-  // drawn as the diagram type looked at in reading view, if one is, never saved (§15, type_try_reading)
-  const at = { path: target.path, graph };
+  const at = { path: target.path, graph }; // its type looked at in reading view, never saved (§15, type_try_reading)
   const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
   const drawing = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
@@ -263,8 +263,7 @@ export async function renderBlock(
       return;
     }
     if (problems.length) {
-      // nothing could be read: the text, and why
-      renderProblems(root, problems, false);
+      renderProblems(root, problems, false); // nothing could be read: the text, and why
       renderCode(root, source);
       return;
     }
@@ -273,10 +272,10 @@ export async function renderBlock(
   }
 
   // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
-  // drawn as a table has none. Laid out with straight links first past 300 things, then curved (§11)
+  // drawn as a table has none
   const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const folded = (by?: object) => (state ? state.folded(drawing, by) : drawing);
-  const laidOut = (by?: object, curved = false) => plugin.layout({ ...folded(by), straightFirst: !curved }, by);
+  const laidOut = (by?: object) => plugin.layout(folded(by), by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
@@ -284,7 +283,7 @@ export async function renderBlock(
       ? tableDrawn(diagram.table)
       : diagram?.picture
         ? pictureDrawn(diagram.picture)
-        : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
+        : await waitShown(root, word('progress.drawing'), () => laidOut(owner), LAYOUT_WAIT);
     if (laid === 'stopped') {
       // a layout the person stopped (§44, progress_shown): its graph is shown as text, and its result is not used
       root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
@@ -302,15 +301,16 @@ export async function renderBlock(
     renderCode(root, source);
     return;
   }
+  const exporting = {
+    path: target.path,
+    graph,
+    theme: plugin.settings.exportTheme,
+    run: (ask: Parameters<typeof plugin.exportGraph>[0]) => plugin.exportGraph(ask),
+  };
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
     // too large to draw, but not to export: its data needs no layout (spec §16, export_data_formats)
-    dataExportBar(root, {
-      path: target.path,
-      graph,
-      theme: plugin.settings.exportTheme,
-      run: (ask) => plugin.exportGraph(ask),
-    });
+    dataExportBar(root, exporting);
     // too large to draw whole: its overview, to search and fly to any thing in it (§53, scale_massive_card)
     if (drawn.reason === 'too-large') showMassive(plugin, root, drawing, { ...target, reading, styling, readOnly });
     asText(plugin, root, source, drawn, problems, target, readOnly);
@@ -325,8 +325,10 @@ export async function renderBlock(
       drawn,
       problems,
       mode: 'note',
+      stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
+      exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
-      ...(state ? { switches: { state, relayout: laidOut, curved: (by: object) => laidOut(by, true) } } : {}),
+      ...(state ? { switches: { state, relayout: laidOut } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
       ...(diagram?.table || diagram?.picture
         ? {}
@@ -337,25 +339,23 @@ export async function renderBlock(
               move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
             },
           }),
-      // the links its style graph moves, and the lines laid out backwards (§7)
-      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
+      motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
+      ...rulesOn(looked || styling, reading.world[graph], drawing, {}, problems, shown), // §56
       links,
       // its things' images, found from this note, and the pictures its style draws on boxes (§18)
       images: plugin.cardImages(target.path, drawing.pictures),
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
+      picture: pictureStatus(plugin, target.path, graph), // the bar says whether its picture is up to date (§62)
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
-      exporting: {
-        path: target.path,
-        graph,
-        theme: plugin.settings.exportTheme,
-        run: (ask) => plugin.exportGraph(ask),
-      },
+      sketching: sketchingFor(plugin, target.path, graph, info?.text),
+      exporting,
+      compare: () => compareWith(plugin, target.path, graph), // an earlier version drawn with it (risk NEURO-2)
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
       profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
-      aids: aidsOf(plugin.settings),
+      aids: aidsOf(plugin.settings, styling.style),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);

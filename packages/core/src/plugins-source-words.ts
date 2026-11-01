@@ -13,6 +13,7 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.none.source': 'No plug-in adds the source "{name}".',
   'plugins.none.step': 'No plug-in adds the step "{name}".',
   'plugins.none.diagram': 'No plug-in adds the diagram type "{name}".',
+  'plugins.none.layout': 'No plug-in adds the layout "{name}".',
   'plugins.none.provider': 'No plug-in adds the AI provider "{name}".',
   // what was called, by its title, as the sentences below name it
   'plugins.what.export': 'The export {title}',
@@ -22,6 +23,7 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.what.source': 'The source {title}',
   'plugins.what.step': 'The step {title}',
   'plugins.what.diagram': 'The diagram type {title}',
+  'plugins.what.layout': 'The layout {title}',
   'plugins.what.provider': 'The AI provider {title}',
   // a call that failed, ran too long or was not run (plugin-calls.ts)
   'plugins.not-run': '{what} of {plugin} was not run: {why}',
@@ -36,6 +38,7 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.graph.refused': '{what} of {plugin} was refused: {why}.',
   'plugins.diagram.no-space': '{what} of {plugin} was not drawn: the space has no width and height.',
   'plugins.diagram.not-drawn': '{what} of {plugin} was not drawn: {why}.',
+  'plugins.layout.not-placed': '{what} of {plugin} placed nothing: {why}.',
   'plugins.provider.no-request': '{what} of {plugin} gave no request text.',
   'plugins.provider.no-answer': '{what} of {plugin} read no answer from the reply.',
   // a plug-in run apart, in a worker, and stopped (plugin-isolated.ts)

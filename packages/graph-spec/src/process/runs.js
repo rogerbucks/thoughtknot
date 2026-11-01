@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A process run and its log (editor spec §34). Its Python twin is graphspec/engine/process/runs.py, and
 // test/process-core-cases.json holds both to the same answers.
 // - A run's state is its log: Entry things, each saying a state was entered or left, in order. The CURRENT links come
@@ -7,6 +8,7 @@
 //   CONTAINS links is refused, as the recursion rules ask.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { Graph } = require('../graph/graph.js');
 
 /** A run's log, in order: each entry's number, what it did, its state, the state it is under and when. */
@@ -41,7 +43,8 @@ function holdersOf(graph, state) {
   const out = [],
     seen = new Set([state]);
   for (let at = containerOf(graph, state); at !== null; at = containerOf(graph, at)) {
-    if (seen.has(at)) throw new Error(`refused: states contain each other in a loop through ${at} (editor spec §34)`);
+    if (seen.has(at))
+      throw refused('GR09', `refused: states contain each other in a loop through ${at} (editor spec §34)`);
     seen.add(at);
     out.unshift(at);
   }
@@ -63,7 +66,8 @@ function enterState(graph, run, state, at = null) {
   const out = [],
     seen = new Set();
   for (let s = state; s !== null; s = innerStart(graph, s)) {
-    if (seen.has(s)) throw new Error(`refused: states contain each other in a loop through ${s} (editor spec §34)`);
+    if (seen.has(s))
+      throw refused('GR09', `refused: states contain each other in a loop through ${s} (editor spec §34)`);
     seen.add(s);
     holdersOf(graph, s);
     out.push({ seq: ++seq, did: 'entered', state: s, under: containerOf(graph, s), at });

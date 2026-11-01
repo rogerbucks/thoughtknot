@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/arc-view.test.js",
+  "test": "the arc is offered among the views, and the View menu draws it",
+  "seen_failing_first": false,
+  "evidence": "#1517 already built the arc; this test only proves projections_all_on for it"
+}

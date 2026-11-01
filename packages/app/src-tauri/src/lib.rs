@@ -1,16 +1,21 @@
 // The desktop app (spec §41, standalone_app): one window, and the notes of one folder the person picks. The window
-// runs the browser editor's page, which reads and writes notes through the seven commands below and nothing else.
+// runs the browser editor's page, which reads and writes notes through the eight commands below and nothing else.
 // - Nothing is fetched: the window's pages come from inside the app, and its policy allows no other origin.
 // - Every path a command takes is relative to the picked folder. A path that climbs out (`..`), starts at a root, names
 //   a hidden part (`.git`) or reaches outside through a link is refused before anything is read or written.
 // - A note is written whole: to a new file beside it, then renamed over it. So a failed write leaves the note as it was.
 // - An export is only ever new files: never written over a file already there.
+// On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
+// documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
 mod place;
 
 use std::path::PathBuf;
 use std::sync::Mutex;
 
 use tauri::State;
+#[cfg(mobile)]
+use tauri::{Manager, Runtime};
+#[cfg(desktop)]
 use tauri_plugin_dialog::DialogExt;
 
 /// The folder the person picked; none until they pick one.
@@ -28,6 +33,7 @@ impl Folder {
 }
 
 /// Asks the person for a folder of notes, with the system's own dialog. Its name, or none when they cancelled.
+#[cfg(desktop)]
 #[tauri::command]
 async fn pick_folder(
     app: tauri::AppHandle,
@@ -38,15 +44,36 @@ async fn pick_folder(
     };
     let path = picked.into_path().map_err(|e| e.to_string())?;
     let real = path.canonicalize().map_err(|e| e.to_string())?;
-    let name = real
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
+    let name = name_of(&real);
     *folder
         .0
         .lock()
         .map_err(|_| "the folder is unreadable".to_string())? = Some(real);
     Ok(Some(name))
+}
+
+/// A phone has no folder dialog: the app's own folder, already open, is the one there is.
+#[cfg(mobile)]
+#[tauri::command]
+async fn pick_folder(folder: State<'_, Folder>) -> Result<Option<String>, String> {
+    Ok(Some(name_of(&folder.root()?)))
+}
+
+/// The name of the folder the app keeps its notes in on a phone or tablet; none on a computer, where the person picks.
+#[tauri::command]
+fn own_folder(folder: State<'_, Folder>) -> Result<Option<String>, String> {
+    if cfg!(mobile) {
+        Ok(Some(name_of(&folder.root()?)))
+    } else {
+        Ok(None)
+    }
+}
+
+/// A folder's last part, as the person knows it.
+fn name_of(path: &std::path::Path) -> String {
+    path.file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default()
 }
 
 /// Each entry of a folder inside the picked one: its name, and whether it is a folder. `""` is the picked folder.
@@ -89,6 +116,7 @@ fn write_new(
 }
 
 /// The folder named as the first argument, such as `thoughtknot ~/Notes`, when it is one.
+#[cfg(desktop)]
 fn folder_named() -> Option<PathBuf> {
     let real = PathBuf::from(std::env::args_os().nth(1)?)
         .canonicalize()
@@ -96,19 +124,42 @@ fn folder_named() -> Option<PathBuf> {
     real.is_dir().then_some(real)
 }
 
+/// The app's own documents folder on a phone or tablet, made at first launch: the notes live there.
+/// - Android: the app's Documents folder on the device's storage, which the app alone may write.
+/// - iPhone and iPad: the app's Documents folder, which the Files app shows under On My iPhone (UIFileSharingEnabled).
+#[cfg(mobile)]
+fn own_documents<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<PathBuf, String> {
+    let dir = app.path().document_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    dir.canonicalize().map_err(|e| e.to_string())
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default().plugin(tauri_plugin_keeper::init());
+    #[cfg(desktop)]
+    let app = app
         .plugin(tauri_plugin_dialog::init())
-        .manage(Folder(Mutex::new(folder_named())))
-        .invoke_handler(tauri::generate_handler![
-            pick_folder,
-            read_dir,
-            read_text,
-            write_text,
-            remove_file,
-            make_dir,
-            write_new
-        ])
-        .run(tauri::generate_context!())
-        .expect("the app could not start");
+        .manage(Folder(Mutex::new(folder_named())));
+    #[cfg(mobile)]
+    let app = app.manage(Folder::default()).setup(|app| {
+        let dir = own_documents(app.handle())?;
+        *app.state::<Folder>()
+            .0
+            .lock()
+            .map_err(|_| "the folder is unreadable")? = Some(dir);
+        Ok(())
+    });
+    app.invoke_handler(tauri::generate_handler![
+        pick_folder,
+        own_folder,
+        read_dir,
+        read_text,
+        write_text,
+        remove_file,
+        make_dir,
+        write_new
+    ])
+    .run(tauri::generate_context!())
+    .expect("the app could not start");
 }

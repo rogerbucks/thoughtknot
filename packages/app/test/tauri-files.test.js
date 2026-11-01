@@ -1,5 +1,5 @@
 // The desktop app's notes pass the one storage contract (spec §41, standalone_app; storage_contract). The app reaches
-// the disk only through its seven commands (src-tauri/src/place.rs). Here a stand-in answers them over a real folder.
+// the disk only through its eight commands (src-tauri/src/place.rs). Here a stand-in answers them over a real folder.
 // It answers as the Rust does: entries as [name, is a folder], and the text `ENOENT` when there is no file
 // (app-window.js).
 import { test, describe } from 'node:test';
@@ -13,7 +13,10 @@ import { cleanUpApp, emptyFolder, fakeInvoke } from './app-window.js';
 test.after(cleanUpApp);
 
 describe("notes kept in the desktop app's folder pass the storage contract", () => {
-  for (const check of storageContract(() => tauriStorage(fakeInvoke(emptyFolder())))) test(check.name, check.run);
+  for (const check of storageContract(() => tauriStorage(fakeInvoke(emptyFolder())), {
+    windows: process.platform === 'win32',
+  }))
+    test(check.name, check.run);
 });
 
 test('the app\'s "no file" is read as no note, and any other failure is said as it came', async () => {

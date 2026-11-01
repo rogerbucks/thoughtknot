@@ -9,9 +9,11 @@ import gs from '@thoughtknot/graph-spec';
 import type { MeshJoin } from '@thoughtknot/graph-spec';
 import type { ChangeLog, StoredChange } from './note-storage.ts';
 import { gqlBlocks } from './fences.ts';
+import { eraseInNote, eraseInWords } from './temporal.ts';
+import type { Erasure } from './temporal.ts';
 
 /** What a log entry records. */
-export type LogKind = 'change' | 'ai-query' | 'bundle' | 'join';
+export type LogKind = 'change' | 'ai-query' | 'bundle' | 'join' | 'erase';
 
 /** One entry of the log: what happened, when, where it came from, and what it touched. */
 export interface LogEntry {
@@ -123,6 +125,22 @@ export class MeshHistory implements ChangeLog {
         .map((e) => e.at)
         .at(-1) ?? null
     );
+  }
+
+  /**
+   * An erasure made to reach every moment the history can show (editor spec §65, temporal_erased_stays_erased). It
+   * reaches every kept version of every note, so the mesh as at any time holds nothing of it, and every entry's words.
+   * One entry says an erasure was made, by whom and in which notes, and names nothing of what was erased.
+   */
+  erase(erasure: Erasure, source: string): LogEntry {
+    const touched: string[] = [];
+    for (const [note, kept] of this.versions) {
+      const erased = kept.map((v) => ({ at: v.at, text: v.text === null ? null : eraseInNote(v.text, erasure) }));
+      if (erased.some((v, i) => v.text !== kept[i]?.text)) touched.push(note);
+      this.versions.set(note, erased);
+    }
+    for (const e of this.entries) e.detail = eraseInWords(e.detail, erasure);
+    return this.entry('erase', source, touched, []);
   }
 
   /** The whole log, oldest first. */

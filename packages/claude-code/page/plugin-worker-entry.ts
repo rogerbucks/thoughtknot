@@ -3,8 +3,8 @@
 // function, run on `self`, before each plug-in file it serves (server/page-plugins.ts). So the worker is sealed before
 // the file's first line runs: no network, and no way to make code from text. It is the Obsidian host's start, built
 // from the same core module.
-import { sealOutside } from '../../core/src/plugin-outside.ts';
-import type { PluginScope } from '../../core/src/plugin-serve.ts';
+import { sealOutside } from '@thoughtknot/core';
+import type { PluginScope } from '@thoughtknot/core';
 
 /** The worker's own scope, handed in by the function wrapped round this bundle: `self`. */
 declare const scope: PluginScope & object;

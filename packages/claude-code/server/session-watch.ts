@@ -1,13 +1,17 @@
 // What stops the editor server's process besides an idle period (spec §26, cc_server_stops):
 // - its input closing, as it does when the session that started it ends;
-// - the process that started it exiting, seen as the parent changing;
+// - the process that started it exiting, seen as the parent changing, or on Windows its number gone or reused;
 // - a stop signal, which is how `/graph stop` ends it.
 // It keeps no file to be found by, so nothing is left behind.
 import { word } from '@thoughtknot/core';
+import { execFile } from 'node:child_process';
 import { fstatSync } from 'node:fs';
 
 /** How often the process checks that the one that started it is still there. */
 export const PARENT_CHECK_MS = 1000;
+
+/** How often, on Windows, it checks that the process with its parent's number is its parent, and not a newer one. */
+export const PARENT_START_CHECK_MS = 5000;
 
 /** The signals that stop the server at once. */
 export const STOP_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'] as const;
@@ -16,10 +20,49 @@ export const STOP_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'] as const;
 function inputIsHeld(): boolean {
   try {
     const stat = fstatSync(0);
-    return stat.isFIFO() || stat.isSocket();
+    if (stat.isFIFO() || stat.isSocket()) return true;
   } catch {
-    return false;
+    /* no input to stat */
   }
+  // Windows' stat does not name a pipe as one; Node's own stream for the input does: a socket that is no terminal
+  return process.platform === 'win32' && process.stdin.constructor.name === 'Socket' && !process.stdin.isTTY;
+}
+
+/**
+ * Whether the process `parent`, that started this one, has gone. On Linux and macOS this process is then handed to
+ * another, so its parent changes. Windows hands it to none, so there the parent is asked after by its number.
+ */
+export function parentGone(parent: number): boolean {
+  if (process.ppid !== parent) return true;
+  if (process.platform !== 'win32') return false;
+  try {
+    process.kill(parent, 0);
+    return false;
+  } catch (e) {
+    return (e as { code?: unknown }).code === 'ESRCH';
+  }
+}
+
+/**
+ * Whether the process now holding the parent's number started after this one, from its start time as PowerShell
+ * says it. Windows soon gives a gone process's number to a new one. Only a newer process can hold it then.
+ */
+export function numberReused(started: string, since: number = performance.timeOrigin): boolean {
+  const at = Date.parse(started.trim());
+  return Number.isFinite(at) && at > since;
+}
+
+/** Asks, on Windows, when the process with the number `parent` started; `then` gets PowerShell's answer. */
+function askStart(parent: number, then: (started: string) => void): void {
+  const line = `[System.Diagnostics.Process]::GetProcessById(${parent}).StartTime.ToUniversalTime().ToString('o')`;
+  execFile(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', line],
+    { windowsHide: true, timeout: PARENT_START_CHECK_MS },
+    (error, stdout) => {
+      if (!error) then(String(stdout));
+    },
+  );
 }
 
 /** Calls `stop` with why when the session ends, the parent exits or a stop signal comes; once. */
@@ -38,6 +81,12 @@ export function watchSession(stop: (reason: string) => void, watch: { input: boo
   }
   const parent = process.ppid;
   setInterval(() => {
-    if (process.ppid !== parent) once(word('server.parent-exited'));
+    if (parentGone(parent)) once(word('server.parent-exited'));
   }, PARENT_CHECK_MS).unref();
+  if (process.platform === 'win32')
+    setInterval(() => {
+      askStart(parent, (started) => {
+        if (numberReused(started)) once(word('server.parent-exited'));
+      });
+    }, PARENT_START_CHECK_MS).unref();
 }

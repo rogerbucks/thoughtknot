@@ -52,10 +52,13 @@ export class LiveFilter {
   readonly order: string[][];
   /** For each group, the place of each of its things in the index's keys. */
   private readonly places: Int32Array[];
+  /** What each group box says of its things' looks (§56), if the graph has rules. */
+  private readonly looks: ((keys: readonly string[]) => string) | undefined;
 
-  constructor(whole: Grouping, index: FacetIndex) {
+  constructor(whole: Grouping, index: FacetIndex, looks?: (keys: readonly string[]) => string) {
     this.whole = whole;
     this.index = index;
+    this.looks = looks;
     this.order = overviewOrder(whole);
     const at = new Map(index.keys.map((k, i) => [k, i]));
     this.places = whole.groups.map((g) => Int32Array.from(g.keys, (k) => at.get(k) ?? -1));
@@ -65,7 +68,7 @@ export class LiveFilter {
   filter(chosen: Chosen): Filtered {
     if (!Object.values(chosen).some((v) => v.size)) {
       const kept = this.index.keys.length;
-      return { mask: null, kept, grouping: this.whole, laid: overviewOf(this.whole, this.order) };
+      return { mask: null, kept, grouping: this.whole, laid: overviewOf(this.whole, this.order, this.looks) };
     }
     const mask = this.index.keptMask(chosen);
     const grouping = keptGrouping(this.whole, (g, j) => {
@@ -73,7 +76,7 @@ export class LiveFilter {
       return i >= 0 && mask[i] === 1;
     });
     const kept = grouping.groups.reduce((n, g) => n + g.keys.length, 0);
-    return { mask, kept, grouping, laid: overviewOf(grouping, this.order) };
+    return { mask, kept, grouping, laid: overviewOf(grouping, this.order, this.looks) };
   }
 }
 

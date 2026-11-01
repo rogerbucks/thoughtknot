@@ -6,9 +6,10 @@
 // And a card drawn from a source is drawn again whenever that source changes, moves, or comes back.
 // A plug-in's source (`· FROM sample:trip`) is asked of the plug-in turned on that adds it (outside-plugins.ts).
 import { MarkdownRenderChild, TFile } from 'obsidian';
-import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
-import { namesSharedSchema, READ_LIMITS, readSource } from '@thoughtknot/core';
-import type { GraphSource, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
+import type { TAbstractFile } from 'obsidian';
+import type { BlockContext } from '../block-context';
+import { connect, joinPlaces, namesSharedSchema, placeKey, READ_LIMITS, readSource } from '@thoughtknot/core';
+import type { GraphSource, JoinedRead, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
 import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { vaultSourceRegistry } from './host-sources';
@@ -86,10 +87,31 @@ export async function readFromVault(
   source: GraphSource,
   from: string,
 ): Promise<SourceRead | SourceRefusal> {
+  if (source.places) return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
   const read = readSource(source, held);
   if ('refused' in read || !read.texts.some(namesSharedSchema)) return read;
   return readSource(source, held, await plugin.sharedSchemas());
+}
+
+/**
+ * The places of a FROM list, each read as one source is and joined as the mesh joins documents (connector_many_sources).
+ * A place that cannot be read is named in the join's `missing`, and the others are drawn (connector_source_missing).
+ */
+async function readPlaces(
+  plugin: ThoughtKnotPlugin,
+  source: GraphSource,
+  from: string,
+): Promise<JoinedRead | SourceRefusal> {
+  const reads = await Promise.all(
+    (source.places ?? [source]).map(async (place) => {
+      const held = await lookUp(plugin, place, from);
+      const read = connect(place, held);
+      if ('refused' in read || !read.read.texts.some(namesSharedSchema)) return read;
+      return connect(place, held, await plugin.sharedSchemas());
+    }),
+  );
+  return joinPlaces(source.graph, reads);
 }
 
 /**
@@ -100,11 +122,27 @@ export async function readFromVault(
 export function watchSource(
   plugin: ThoughtKnotPlugin,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
+  ctx: BlockContext,
   source: GraphSource,
   read: SourceRead | SourceRefusal,
   redraw?: () => void,
 ): void {
+  // each place of a FROM list is watched as one source is: the place it was read from, or its name
+  if (source.places && 'places' in read) {
+    const joined = read as JoinedRead;
+    for (const place of source.places) {
+      const own = joined.places.find((c) => c.place === placeKey(place))?.read;
+      watchSource(
+        plugin,
+        el,
+        ctx,
+        { ...place, places: undefined },
+        own ?? { source: place, why: 'missing', refused: '' },
+        redraw,
+      );
+    }
+    return;
+  }
   // a plug-in's source is not in the vault, so the vault never says it changed
   if (!redraw || source.kind === 'plugin') return;
   const name = nameOf(source),

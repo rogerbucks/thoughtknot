@@ -29,6 +29,11 @@ export interface Source {
   target: string;
   /** The block (0-based, among those given) that says it. */
   block: number;
+  /**
+   * Every place a FROM list names, this one first as written, when it names more than one (connector_many_sources):
+   * `FROM Graphs/people.gql, [[Team]], sample:trip`. They are joined as the mesh joins documents (connectors.ts).
+   */
+  places?: Source[];
 }
 
 /** A block meant to draw from elsewhere that cannot: what to change, in a sentence. */
@@ -86,6 +91,9 @@ function placeOf(written: string): string {
 export const outsideVault = (place: string): boolean =>
   /^[/\\]/.test(place) || /^[A-Za-z]:/.test(place) || place.split(/[/\\]/).some((part) => part.startsWith('.'));
 
+/** The places of a FROM list, split at each comma outside a link's brackets. */
+const listOf = (written: string): string[] => written.split(/,(?![^[]*\]\])/).map(trim);
+
 /** Whether a line holds anything but whitespace or a whole-line comment. */
 const holds = (line: string) => !!trim(line) && !trim(line).startsWith('//');
 
@@ -104,6 +112,21 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
     target = placeOf(written);
   const fault = (f: string): SourceFault => ({ graph, block, fault: f });
   if (!graph || !NAME.test(graph)) return fault(word('reading.source.name-not-word', { graph: graph ?? '' }));
+  const list = listOf(written);
+  if (list.length > 1) {
+    const places: Source[] = [];
+    for (const one of list) {
+      const s = sourceOf(
+        `${lines[at]?.replace(PLACE, `· FROM ${one}`) ?? ''}\n${lines.slice(at + 1).join('\n')}`,
+        block,
+      );
+      if (!s || 'fault' in s) return s ?? fault(word('reading.source.no-place'));
+      if (!places.some((p) => placeKey(p) === placeKey(s))) places.push(s);
+    }
+    const [first] = places;
+    if (!first) return fault(word('reading.source.no-place'));
+    return places.length > 1 ? { ...first, places } : first;
+  }
   if (!target) return fault(word('reading.source.no-place'));
   const plugged = written.startsWith('[[') ? null : PLUGGED.exec(target);
   if (plugged?.[1]) {
@@ -119,6 +142,10 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
 }
+
+/** A place as one key, the same however it was written: its kind, a plug-in's word, and the place. */
+export const placeKey = (s: Pick<Source, 'kind' | 'scheme' | 'target'>): string =>
+  s.kind === 'plugin' ? `${s.scheme ?? ''}:${s.target}` : s.target;
 
 /** Every block of a note that draws its graph from elsewhere, in order: each its source, or its fault. */
 export function sourcesOf(texts: readonly string[]): (Source | SourceFault)[] {

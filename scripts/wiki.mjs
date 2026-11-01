@@ -190,6 +190,7 @@ export function renderWiki({
   const open = questions.filter((q) => !q.answer);
   const fills = {
     settings: settingsTables(options),
+    needs: `Needs Obsidian ${versions[version]} or newer, on desktop or mobile.`,
     slices: slicesTable(requirements),
     now: [
       `- **Version:** ${version}`,

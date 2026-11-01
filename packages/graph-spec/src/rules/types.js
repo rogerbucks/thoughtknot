@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §5 types: the spec's built-in vocabulary, and which nodes and relationships a graph's schema types.
 'use strict';
 

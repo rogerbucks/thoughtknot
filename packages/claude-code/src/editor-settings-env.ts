@@ -21,10 +21,12 @@ const SHOWN = [
   'foldGroups',
   'mergeLinks',
   'ownLayout',
+  'kindLanes',
   'noteCallouts',
   'miniMap',
   'detailsOpen',
   'drawingHeight',
+  'easierReading',
   // who decides on the card: the name written into each Decision (proposals-judgement.ts)
   'decider',
 ] as const;
@@ -34,6 +36,7 @@ export function settingsForServer(settings: GateSettings): string {
   return JSON.stringify({
     classifications: settings.classifications,
     aiUnlabelled: settings.aiUnlabelled,
+    ...(settings.aiRepoUnlabelled ? { aiRepoUnlabelled: settings.aiRepoUnlabelled } : {}),
     // each model's row and switches go too, so the server holds Claude to the same row as the mod
     aiModels: settings.aiModels.map((m) => ({
       name: m.name,

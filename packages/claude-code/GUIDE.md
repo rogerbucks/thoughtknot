@@ -292,6 +292,12 @@ The note store (workstream C1), the real `api`:
     the gate's `file` word (a credential or a classification it gives; none counts as the lowest).
   - These routes live in `server/editor-changes.ts`.
 
+### Pictures for readers
+
+- `GET notes/<id>/pictures` says whether each picture for readers of the note is up to date, by graph (§62). The page's
+  bar says it. Only `current` or `stale` is sent, never anything of a picture, and the note is held to the gate (410
+  when refused). It is read in `server/note-pictures.ts`.
+
 ### History and GitHub
 
 - `server/note-history.ts` — `GIT_HISTORY` (changes_view): the open note's earlier versions in the git repository it
@@ -319,6 +325,9 @@ The note store (workstream C1), the real `api`:
   - It must have no part starting with a dot (`.obsidian`, `.git`, `.trash`, a hidden file).
   - A link that leads out of the vault, into a hidden folder or onto another kind of file is refused, each saying why.
   - So is a file with a second hard link (`nlink > 1`), which could lie outside the vault.
+- `server/note-pictures.ts` — `pictureStates` (§62): each picture's state, from its mark alone.
+  - It reads the first `PICTURE_HEAD_BYTES` of a file named `.thoughtknot.svg` inside the vault, in no hidden folder.
+  - No step of its path may be a link, and it opens with `O_NOFOLLOW`. A picture it may not read is out of date.
 - `server/note-file.ts` — `readNoteFile` and `writeAtomically`.
   - `readNoteFile` reads the whole note within the core's read limit, with `O_NOFOLLOW`. The path's real path must
     still be itself once it is open, so no folder swapped for a link is read through.
@@ -376,10 +385,11 @@ limits) are the server's and not the store's.
 
 ## The mod, `mod/`
 
-The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not by the repository's linter: run
-`claude plugin validate packages/claude-code/mod` and `claude plugin test packages/claude-code/mod` before a merge
-that touches it. CI has no Claude Code, so it runs neither: what the pane shows is decided in `src/`, which CI tests,
-and `register.tsx` stays thin.
+The folder Claude Code loads (`--plugin-dir`). Claude Code checks it, not the repository's linter. Run
+`node scripts/mod-check.mjs` before a merge that touches it. It builds the mod, then runs `claude plugin validate` and
+`claude plugin test` on it. The release check runs it with `--require`, in a job that installs the CLI, so a broken hook
+fails the release. What the pane shows is decided in `src/`, which every pull request's tests cover, and `register.tsx`
+stays thin.
 
 - `.claude-plugin/plugin.json` — the manifest, named `thoughtknot`.
 - `hooks/register.tsx` — the hooks module.
@@ -451,6 +461,8 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   token and the note's id out of the address's fragment, and reads the settings and the note. It shows the note's
   Markdown and, beside it, the edit pane of the Obsidian host (C9). Anything that goes wrong is said in words on the
   page, never a blank.
+  - The image line of a picture for readers after a block it draws is left out of the Markdown. So the graph shows
+    once (§62).
 
 ### The editor, the drawing and the host
 
@@ -582,5 +594,5 @@ with in the same environment variable as the gate's (`src/editor-settings-env.ts
     the host starts one, with standard input closed at once. Its support is `editor-mod-support.js`.
   - The other workstreams' cases for `test_cc_mod`: C3's, the gate, are in `editor-mod.test.js`. C7's, Claude's
     proposals, are in `editor-mod-claude.test.js`.
-- The mod's wiring (`register.tsx`) is checked by `claude plugin validate` and a type check. `claude plugin test` needs
-  a Claude Code signed in and online, so no test of it is in the repository yet.
+- The mod's wiring (`register.tsx`) is checked by `claude plugin validate` and `claude plugin test`, run by
+  `scripts/mod-check.mjs`. The CLI makes the mod's types itself, so `tsc` cannot check it apart from the CLI.

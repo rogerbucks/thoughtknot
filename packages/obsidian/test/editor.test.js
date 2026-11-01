@@ -4,7 +4,7 @@
 // - A note nobody is editing is never rewritten.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, wait } from './host/load-plugin.js';
+import { build, load, until, wait } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { PATH } from './host/pane-notes.js';
 
@@ -32,7 +32,7 @@ describe('the comma added for you in the note itself', () => {
       const dispatched = [];
       listener(typing(note, note.indexOf('(\n```') + 1, dispatched));
       assert.deepEqual(dispatched, [], 'not while the editor is updating');
-      await wait(10);
+      await until(() => dispatched.length > 0);
       assert.equal(dispatched.length, 1);
       assert.deepEqual(dispatched[0].changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
       assert.deepEqual(
@@ -85,7 +85,7 @@ describe('the colon added for you in the note itself', () => {
       const note = '```gql\n// graph: g\n(a:T),\n(b:T),\n(a)-[:LIKES]->(b),\n(b)-[likes]\n```';
       const dispatched = [];
       listener(typing(note, note.indexOf('likes]') + 6, dispatched));
-      await wait(10);
+      await until(() => dispatched.length > 0);
       assert.equal(dispatched.length, 1);
       const at = note.indexOf('likes]');
       assert.deepEqual(dispatched[0].changes, { from: at, to: at + 5, insert: ':LIKES' });
@@ -124,7 +124,7 @@ describe('what is added for you, with Obsidian’s brackets paired as you type',
         from = note.indexOf('()\n```'),
         dispatched = [];
       listener(update({ text: note, inserted: '()', from, head: from + 1, startHead: from }, dispatched));
-      await wait(10);
+      await until(() => dispatched.length > 0);
       assert.deepEqual(dispatched[0]?.changes, { from: note.indexOf('(a:T)') + 5, insert: ',' });
     } finally {
       env.uninstall();
@@ -139,7 +139,7 @@ describe('what is added for you, with Obsidian’s brackets paired as you type',
         at = note.indexOf('likes]'),
         dispatched = [];
       listener(update({ text: note, head: at + 6, startHead: at + 5 }, dispatched));
-      await wait(10);
+      await until(() => dispatched.length > 0);
       assert.deepEqual(dispatched[0]?.changes, { from: at, to: at + 5, insert: ':LIKES' });
     } finally {
       env.uninstall();

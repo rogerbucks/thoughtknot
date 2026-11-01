@@ -79,7 +79,7 @@ export function aiModelList(
               render: (setting) => {
                 new SecretComponent(app, setting.controlEl)
                   .setValue(m.keyName)
-                  .onChange((name) => void save(changed(owner.settings, i, { keyName: name })));
+                  .onChange((name) => void save(changed(owner.settings, i, { keyName: name ?? undefined })));
               },
             },
           ],

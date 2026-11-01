@@ -1,0 +1,146 @@
+{
+  "about": "A note’s classification as its front matter gives it: none, given (with its level) or unknown when it cannot be read for certain. Shared by the core’s gate (packages/core/test/claude-gate-classification.test.js, classificationOf in claude-gate.ts) and the Python library (python/graph_spec/tests/test_classification.py, classification_of), so the two never give one note different classes (TRUST-9).",
+  "cases": [
+    {
+      "name": "a plain value is given",
+      "text": "---\nclassification: Public\n---\nSome text.\n",
+      "kind": "given",
+      "level": "Public"
+    },
+    {
+      "name": "a quoted value is given without quotes",
+      "text": "---\ntitle: x\nclassification: \"Internal\"\n---\nSome text.\n",
+      "kind": "given",
+      "level": "Internal"
+    },
+    {
+      "name": "a value with a comment after it",
+      "text": "---\nclassification: Confidential # checked\n---\nSome text.\n",
+      "kind": "given",
+      "level": "Confidential"
+    },
+    {
+      "name": "no front matter is none, whatever the body says",
+      "text": "# Note\n\nclassification: Restricted\n",
+      "kind": "none"
+    },
+    {
+      "name": "a classification line in the body after front matter does not count",
+      "text": "---\ntitle: x\n---\nSome text.\nclassification: Restricted\n",
+      "kind": "none"
+    },
+    {
+      "name": "front matter that never ends is none",
+      "text": "---\nclassification: Public\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "a nested key does not count",
+      "text": "---\nmeta:\n  classification: Restricted\n---\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "a key inside a block scalar does not count",
+      "text": "---\nabout: |\n  classification: Restricted\nclassification: Public\n---\nSome text.\n",
+      "kind": "given",
+      "level": "Public"
+    },
+    {
+      "name": "an indented key is not top level",
+      "text": "---\n classification: Restricted\n---\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "a list item is not a key",
+      "text": "---\n- classification: Restricted\n---\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "two keys are unknown",
+      "text": "---\nclassification: Public\nclassification: Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "two keys differing in case are unknown",
+      "text": "---\nclassification: Public\nClassification: Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "a list is unknown",
+      "text": "---\nclassification: [Public, Restricted]\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "a mapping is unknown",
+      "text": "---\nclassification: {a: b}\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "a block is unknown",
+      "text": "---\nclassification: |\n  Public\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an open quote is unknown",
+      "text": "---\nclassification: \"Public\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an anchor is unknown",
+      "text": "---\nclassification: &anchor Public\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "a tag is unknown",
+      "text": "---\nclassification: !!str Public\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an empty value with an indented list is unknown",
+      "text": "---\nclassification:\n  - Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an empty value with a list is unknown",
+      "text": "---\nclassification:\n- Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an empty value with a child key is unknown",
+      "text": "---\nclassification:\n  level: Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an empty value then a value line is unknown",
+      "text": "---\nclassification:  \n  Restricted\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "an empty value followed by another key is none",
+      "text": "---\nclassification:\ntitle: x\n---\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "an empty value alone is none",
+      "text": "---\nclassification:\n---\nSome text.\n",
+      "kind": "none"
+    },
+    {
+      "name": "an earlier open quote that may run over the key is unknown",
+      "text": "---\ntitle: \"open\nclassification: Public\n---\nSome text.\n",
+      "kind": "unknown"
+    },
+    {
+      "name": "a byte order mark before the front matter is read past",
+      "text": "﻿---\nclassification: Internal\n---\nSome text.\n",
+      "kind": "given",
+      "level": "Internal"
+    },
+    {
+      "name": "Windows line ends are read",
+      "text": "---\r\nclassification: Internal\r\n---\r\nText\r\n",
+      "kind": "given",
+      "level": "Internal"
+    }
+  ]
+}

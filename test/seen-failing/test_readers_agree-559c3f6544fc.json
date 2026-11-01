@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_readers_agree.py",
+  "test": "ReadersAgree.test_the_grammar_makes_blocks_both_read_and_both_refuse",
+  "seen_failing_first": false,
+  "evidence": "ARCH-5: checks on the block generator and the seed, which hold before the readers were made to agree."
+}

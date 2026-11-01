@@ -28,6 +28,7 @@ const made = (more = {}) =>
     version: '0.6.0',
     sha: 'abc1234',
     today: '2026-10-18',
+    minApp: readJSON('manifest.json').minAppVersion,
     image: IMAGE,
     ...more,
   });
@@ -131,6 +132,17 @@ describe('search engines and AI assistants can find and read it', () => {
     const img = doc.querySelector('figure img');
     assert.equal(img.getAttribute('alt'), IMAGE.alt);
     assert.equal(img.getAttribute('width'), '800');
+  });
+});
+
+describe('what it needs and what leaves the device', () => {
+  // proves: landing_page
+  test('names the Obsidian version it needs, from the manifest, and says when an AI model is sent anything', () => {
+    const { minAppVersion } = readJSON('manifest.json');
+    const text = pageOf(made()['index.html']).body.textContent.replace(/\s+/g, ' ');
+    assert.ok(text.includes(`Needs Obsidian ${minAppVersion} or newer, on desktop or mobile`), text);
+    assert.match(text, /only what you have seen and approved, and only when you ask/);
+    assert.doesNotMatch(text, /\{minApp\}/);
   });
 });
 

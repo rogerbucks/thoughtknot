@@ -20,5 +20,7 @@ declare const GraphLayout: {
   escape(s: string): string;
   /** Python's textwrap.wrap(text, width, break_on_hyphens=False): the lines a box's text is wrapped to. */
   wrap(text: string, width: number): string[];
+  /** What the layout refuses, with its stable code: GL01 or GL02 (src/values/refusal-codes.json). */
+  LayoutError: new (code: string, message: string) => Error & { code: string };
 };
 export = GraphLayout;

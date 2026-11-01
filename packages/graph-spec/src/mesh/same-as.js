@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Which things in different graphs are one (editor spec §27, same_as_across_graphs; risk ARCH-6). Inside a graph, a
 // thing's name is its id, in every note that holds a block of it. Across graphs, two things are one only when a
 // written SAME_AS link says so. It goes from a thing to a Ref naming the other (`ref` and `graph`, as §23's Refs do).

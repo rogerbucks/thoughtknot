@@ -12,7 +12,7 @@
 // What a command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md
 // says so.
 import { classificationOf, word } from '@thoughtknot/core';
-import { forms, namesWord, pathOf } from './data-guard.ts';
+import { forms, namesWord, onWindows, pathOf, slashed, slashedPorts } from './data-guard.ts';
 import type { GuardPorts, ToolInput } from './data-guard.ts';
 
 // The refusals are said when made, in the language set then. Claude Code shows them in the chat, so the person may read them.
@@ -108,8 +108,10 @@ export async function guardGateFiles(tool: string, input: ToolInput, ports: Gate
   try {
     if (note) {
       const tail = `/${note.toLowerCase()}`;
-      if ((await forms(path, { ...ports, data: '' })).some((f) => f.toLowerCase().endsWith(tail)))
-        return matrixNoteRefusal();
+      const given = { ...ports, data: '' };
+      // on Windows the path and the folders are read with slashes, as the data folder's guard reads them
+      const found = onWindows(given) ? await forms(slashed(path), slashedPorts(given)) : await forms(path, given);
+      if (found.some((f) => f.toLowerCase().endsWith(tail))) return matrixNoteRefusal();
     }
   } catch {
     return gateCheckFailedRefusal();

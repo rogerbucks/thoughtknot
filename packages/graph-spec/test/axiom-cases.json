@@ -1,0 +1,183 @@
+{
+  "about": "Editor spec §64, axioms_checker: graphs that keep every axiom, and graphs that break each one a single graph can break, with the problems the check must give. A case gives its graph as blocks the reader reads, or as things and links made by hand (graphs), for a break no block can write. packages/graph-spec/test/axioms.test.mjs and python/graph_spec/tests/test_axioms.py both answer them.",
+  "cases": [
+    {
+      "name": "a draft graph that keeps every axiom gives nothing",
+      "blocks": [
+        [
+          "// graph: loans",
+          "INSERT",
+          "(l1:Loan {id: 'l1', likelihood: 'unlikely', likelihood_to: 'likely'}),",
+          "(l2:Loan {id: 'l2'}),",
+          "(l3:Loan {id: 'l3'}),",
+          "(l2)-[:SUPERSEDES]->(l1),",
+          "(l3)-[:SUPERSEDES]->(l2)"
+        ]
+      ],
+      "graph": "loans",
+      "answer": []
+    },
+    {
+      "name": "A1: a thing held under a name that is not its id",
+      "graphs": {
+        "g": { "nodes": [{ "key": "a", "labels": ["Item"], "props": { "id": "b" } }], "links": [] }
+      },
+      "graph": "g",
+      "answer": [
+        {
+          "axiom": "A1",
+          "code": "GA01",
+          "graph": "g",
+          "place": "thing 'a'",
+          "law": "Each thing has one id, and no other thing in its graph has it.",
+          "message": "thing 'a' is held under the name 'a' but its id is 'b'",
+          "fix": "keep each thing under its own id"
+        }
+      ]
+    },
+    {
+      "name": "A2: a link with no thing at its far end, and A4 waits",
+      "graphs": {
+        "g": {
+          "nodes": [{ "labels": ["Item"], "props": { "id": "a" } }],
+          "links": [["a", "OWNS", "gone", {}]]
+        }
+      },
+      "graph": "g",
+      "answer": [
+        {
+          "axiom": "A2",
+          "code": "GA02",
+          "graph": "g",
+          "place": "link a-[:OWNS]->gone",
+          "law": "Every link starts and ends at a thing that is in the graph.",
+          "message": "link a-[:OWNS]->gone has no thing at its far end, 'gone'",
+          "fix": "write the thing it names, or take the link out"
+        }
+      ]
+    },
+    {
+      "name": "A3: a kind and a link type the graph's own schema does not declare",
+      "blocks": [
+        [
+          "// graph: shop",
+          "INSERT",
+          "(meta:Meta:GraphMeta {id: 'meta', graph: 'shop', schema: 'shop@1', owner_engine: 'engine:a'}),",
+          "(t_item:Meta:ElementType {id: 't_item', kind: 'node', name: 'Item', origin: 'source'}),",
+          "(meta)-[:DECLARES]->(t_item),",
+          "(a:Item {id: 'a'}),",
+          "(b:Widget {id: 'b'}),",
+          "(a)-[:HOLDS]->(b)"
+        ]
+      ],
+      "graph": "shop",
+      "answer": [
+        {
+          "axiom": "A3",
+          "code": "GA03",
+          "graph": "shop",
+          "place": "thing 'b'",
+          "law": "Every thing and every link has a type its schema declares.",
+          "message": "thing 'b' has the type Widget, which the schema does not declare",
+          "fix": "declare Widget in the schema, or use a type it declares"
+        },
+        {
+          "axiom": "A3",
+          "code": "GA03",
+          "graph": "shop",
+          "place": "link a-[:HOLDS]->b",
+          "law": "Every thing and every link has a type its schema declares.",
+          "message": "link a-[:HOLDS]->b has the type HOLDS, which the schema does not declare",
+          "fix": "declare HOLDS in the schema, or use a type it declares"
+        }
+      ]
+    },
+    {
+      "name": "A4: a list value the flat projection cannot write",
+      "graphs": {
+        "g": { "nodes": [{ "labels": ["Item"], "props": { "id": "a", "tags": ["x", "y"] } }], "links": [] }
+      },
+      "graph": "g",
+      "answer": [
+        {
+          "axiom": "A4",
+          "code": "GA04",
+          "graph": "g",
+          "place": "graph g",
+          "law": "Reading is a function: the same text gives the same graph, and writing it out and reading it back changes nothing.",
+          "message": "graph g does not come back the same when it is written out and read again: the flat projection cannot write it",
+          "fix": "keep to values the flat projection can write, such as text, numbers, dates and true or false"
+        }
+      ]
+    },
+    {
+      "name": "A7: a word not on the scale, and a range from high to low",
+      "blocks": [
+        [
+          "// graph: claims",
+          "INSERT",
+          "(c1:Claim {id: 'c1', likelihood: 'probable'}),",
+          "(c2:Claim {id: 'c2', likelihood: 'very-likely', likelihood_to: 'unlikely'}),",
+          "(c3:Claim {id: 'c3', likelihood: 'likely', likelihood_to: 'cannot-judge'})"
+        ]
+      ],
+      "graph": "claims",
+      "answer": [
+        {
+          "axiom": "A7",
+          "code": "GA07",
+          "graph": "claims",
+          "place": "thing 'c1'",
+          "law": "A likelihood is a word on the graph's scale, and a range never runs from high to low.",
+          "message": "thing 'c1' has the likelihood 'probable', which is not on the scale",
+          "fix": "use a word on the scale, with the lower word first"
+        },
+        {
+          "axiom": "A7",
+          "code": "GA07",
+          "graph": "claims",
+          "place": "thing 'c2'",
+          "law": "A likelihood is a word on the graph's scale, and a range never runs from high to low.",
+          "message": "thing 'c2' has the likelihood range 'very-likely' to 'unlikely', which runs from high to low",
+          "fix": "use a word on the scale, with the lower word first"
+        }
+      ]
+    },
+    {
+      "name": "A8: two successors, and a loop of supersession",
+      "blocks": [
+        [
+          "// graph: history",
+          "INSERT",
+          "(a:Item {id: 'a'}), (b:Item {id: 'b'}), (c:Item {id: 'c'}),",
+          "(x:Item {id: 'x'}), (y:Item {id: 'y'}),",
+          "(b)-[:SUPERSEDES]->(a),",
+          "(c)-[:SUPERSEDES]->(a),",
+          "(y)-[:SUPERSEDES]->(x),",
+          "(x)-[:SUPERSEDES]->(y)"
+        ]
+      ],
+      "graph": "history",
+      "answer": [
+        {
+          "axiom": "A8",
+          "code": "GA08",
+          "graph": "history",
+          "place": "thing 'a'",
+          "law": "An item has at most one successor, and following successors never comes back to the start.",
+          "message": "thing 'a' has 2 successors: b, c",
+          "fix": "give each item one successor, and supersede only something older"
+        },
+        {
+          "axiom": "A8",
+          "code": "GA08",
+          "graph": "history",
+          "place": "thing 'x'",
+          "law": "An item has at most one successor, and following successors never comes back to the start.",
+          "message": "thing 'x' is superseded in a loop: x, y",
+          "fix": "give each item one successor, and supersede only something older"
+        }
+      ]
+    }
+  ]
+}

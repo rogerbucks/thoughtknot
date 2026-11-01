@@ -29,6 +29,8 @@ import { lookTag, lookTags } from './look-tags.ts';
 import { legendOf, lookOf } from './style.ts';
 import type { StyleGraph, ThingLook } from './style-graph.ts';
 import { styledDrawing } from './style-source.ts';
+import { withSketchSvg } from './sketch-marks.ts';
+import type { Sketch } from './sketch.ts';
 import { hueColour } from './theme.ts';
 import { sourceWord, word } from './words.ts';
 
@@ -86,6 +88,10 @@ export type ExportInfo = {
    * is a frame. Only `exportWithLayout` loads them.
    */
   pictures?: PictureLoad;
+  /** The drawings over the graph (§70), drawn on top as the card draws them (sketch_reader_picture). */
+  sketch?: Sketch | null;
+  /** The line at its foot in place of the export's, as a reader picture says who drew it (§62, reader-picture.ts). */
+  footer?: string;
 } & (
   | { style?: undefined; data?: undefined }
   | {
@@ -253,7 +259,9 @@ function framedImage(
   );
   // the pictures on boxes embedded, moving in an SVG within their limits, and what was done with each said (§16, §18)
   const pictured = withPictures(looked, drawing, loaded, !!info.motion, palette);
-  const body = withRunners(walk && plan ? pathBody(pictured.svg, walk.path, plan, palette) : pictured.svg, flow);
+  // the drawings over the graph on top, in the same fixed colours, so a reader of the file sees them too (§70)
+  const sketched = withSketchSvg(pictured.svg, info.sketch, drawing.boxes, palette);
+  const body = withRunners(walk && plan ? pathBody(sketched, walk.path, plan, palette) : sketched, flow);
   const view = scope.view !== undefined;
   const viewSaid = view
     ? scope.context
@@ -278,7 +286,7 @@ function framedImage(
       title: walk ? `${title} · path ${walk.path.title}` : title,
       ...(subtitle ? { subtitle } : {}),
       legend: legendItems(scope, drawing, info, palette),
-      footer: footerText(info.note, info.date),
+      footer: info.footer ?? footerText(info.note, info.date),
     },
     palette,
   );

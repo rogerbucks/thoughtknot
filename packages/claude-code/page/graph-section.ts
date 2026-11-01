@@ -3,11 +3,11 @@
 // is an isolated image of the SVG. The page's policy allows it from a blob. It runs nothing and does not move. Its
 // words always stand beside it, as the graph's text version (text-version.ts). They stand in alone when it cannot be
 // drawn. The page never shows a blank for a graph.
-import { gqlBlocks } from '../../core/src/blocks.ts';
-import { readNote } from '../../core/src/drawing.ts';
-import type { LayoutRunner } from '../../core/src/layout-worker.ts';
+import { gqlBlocks } from '@thoughtknot/core';
+import { readNote } from '@thoughtknot/core';
+import type { LayoutRunner } from '@thoughtknot/core';
 import { TEXT_VERSION_ID, textVersionSection } from './text-version.ts';
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 
 /** What the page says for a note with no graph in it. */
 export const noGraph = (): string => word('page.no-graph');

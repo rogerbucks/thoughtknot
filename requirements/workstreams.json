@@ -96,7 +96,11 @@
       "type_both_renderers",
       "type_stops_fitting",
       "large_way_in",
-      "wide_types_phone"
+      "wide_types_phone",
+      "table_grid_navigation",
+      "table_sort",
+      "table_resize",
+      "table_look"
     ]
   },
   "W6": {
@@ -595,6 +599,7 @@
       "keyboard_any_device",
       "a11y_semantics_auto",
       "a11y_targets_reflow_auto",
+      "a11y_states_auto",
       "ux_journey_auto",
       "ux_copy_auto",
       "visual_regression_auto",
@@ -663,7 +668,8 @@
       "plan_vs_actual",
       "plain_docs_auto",
       "waves_on_time",
-      "plan_milestones"
+      "plan_milestones",
+      "ideas_on_board"
     ]
   },
   "G1": {
@@ -1030,7 +1036,10 @@
       "rule_look_legend",
       "rule_look_bands",
       "rule_look_massive",
-      "rule_look_try_save"
+      "rule_look_try_save",
+      "rule_look_builder",
+      "rule_look_remove",
+      "rule_look_off"
     ]
   },
   "CV1": {
@@ -1216,7 +1225,13 @@
       "layout_real_fixtures",
       "layout_strategy_variables",
       "layout_pick_said",
-      "layout_own_default"
+      "layout_own_default",
+      "layout_parts_packed",
+      "layout_kinds_read",
+      "layout_pick_tried",
+      "layout_checks_gated",
+      "layout_kind_lanes",
+      "layout_tidy_tree"
     ]
   },
   "LE2": {
@@ -1225,6 +1240,8 @@
     "requirements": [
       "layout_live_loop",
       "layout_glide",
+      "orientation_cues",
+      "space_mini_map",
       "layout_concept_layers",
       "layout_plugins"
     ]
@@ -1261,6 +1278,48 @@
       "view_motion_safe",
       "view_reading_support",
       "view_presets_evidence"
+    ]
+  },
+  "DR1": {
+    "title": "Drawings on the graph: ink, shapes and notes",
+    "size": "M",
+    "requirements": [
+      "sketch_drawn",
+      "sketch_is_text",
+      "sketch_pinned",
+      "sketch_pin_hidden",
+      "sketch_every_view",
+      "sketch_checked",
+      "sketch_toggle",
+      "sketch_click_rule",
+      "sketch_keyboard",
+      "sketch_reader_picture",
+      "sketch_to_graph"
+    ]
+  },
+  "MM1": {
+    "title": "Exploring from one thing: mind maps in every view",
+    "size": "M",
+    "requirements": [
+      "explore_from_here",
+      "explore_branch_open",
+      "explore_branch_close",
+      "explore_tree_from_centre",
+      "explore_depth",
+      "explore_recentre",
+      "explore_back",
+      "explore_capped",
+      "explore_shapes",
+      "explore_stays_put",
+      "explore_badges",
+      "explore_controls_on_screen",
+      "explore_controls_accessible",
+      "explore_every_view",
+      "explore_saved",
+      "globe_layout",
+      "globe_view",
+      "globe_dive_detail",
+      "globe_explore_centre"
     ]
   }
 }

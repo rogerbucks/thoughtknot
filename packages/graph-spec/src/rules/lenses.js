@@ -1,6 +1,8 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §15 lens rules in their simple shape, evaluated without an engine.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 // §15 lens rules — the simple shape, evaluated without an engine
 function lensBuckets(g, rule) {
   const m = /^\s*MATCH \((\w+):(\w+)\) RETURN \1\.id AS id, CASE ([\s\S]*) ELSE '([^']*)' END AS grp\s*$/.exec(
@@ -18,12 +20,12 @@ function lensBuckets(g, rule) {
     // cut at each AND by plain text, never a pattern of spaces on both sides that can backtrack on a long run of them
     for (const part of cond.replace(/\s+/g, ' ').split(' AND ')) {
       const t = new RegExp(`^${v}\\.(\\w+)\\s*(<=|>=|<>|=|<|>)\\s*('([^']*)'|-?\\d+(?:\\.\\d+)?)$`).exec(part.trim());
-      if (!t) throw new Error('needs an engine');
+      if (!t) throw refused('GR16', 'needs an engine');
       const a = p[t[1]],
         b = t[4] !== undefined ? t[4] : Number(t[3]),
         op = t[2];
       if (a === undefined || a === null) return false;
-      if (['<', '>', '<=', '>='].includes(op) && typeof a !== typeof b) throw new Error('needs an engine');
+      if (['<', '>', '<=', '>='].includes(op) && typeof a !== typeof b) throw refused('GR16', 'needs an engine');
       if (!{ '=': a === b, '<>': a !== b, '<': a < b, '>': a > b, '<=': a <= b, '>=': a >= b }[op]) return false;
     }
     return true;

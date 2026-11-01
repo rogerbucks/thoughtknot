@@ -1,0 +1,9 @@
+{
+  "name": "claude-cli-for-ci",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Claude Code CLI, pinned, which only scripts/mod-check.mjs runs in CI. Never shipped.",
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "2.1.314"
+  }
+}

@@ -69,6 +69,7 @@ flowchart LR
   [design review](Design-review).
 - The whiteboard, a board for brainstorming with several people that decomposes into graph items:
   [whiteboard design](Whiteboard-design).
+- Freehand ink, shapes and notes drawn on a graph, pinned to what they mark: [drawings design](Drawings-design).
 - Graph notes in Microsoft 365 Copilot Cowork: [Copilot Cowork skill design](Copilot-Cowork-skill-design).
 - An AI breaking prose into a graph shown as a proposal: [text to graph design](Text-to-graph-design).
 - Claude showing a graph, walking you through it and taking your decision: [Claude presents and decides design](Claude-presents-and-decides-design).

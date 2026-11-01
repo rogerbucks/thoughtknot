@@ -71,6 +71,9 @@ STYLE_KINDS = (
     "Links",
     "Picture",
     "Filter",
+    "Preset",
+    "Render",
+    "Explore",
 )
 # The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
 # id is its name.
@@ -85,9 +88,14 @@ STYLE_KEYS = {
         "from",
         "type",
         "to",
+        "when",
+        "lens",
         "colour",
         "line",
         "format",
+        "badge",
+        "bands",
+        "steps",
         "means",
     ),
     "ViewStyle": ("view", "outside"),
@@ -103,6 +111,11 @@ STYLE_KEYS = {
         "spacing",
         "link_length",
         "group_pull",
+        "rounds",
+        "layout_direction",
+        "shape",
+        "pinned",
+        "layout_strategy",
     ),
     "Arrows": ("arrowheads", "view", "type"),
     "Diagram": ("type", "view", "relationship", "order", "by", "show", "centre"),
@@ -111,6 +124,12 @@ STYLE_KEYS = {
     "Picture": ("property", "kind", "thing", "view"),
     # a huge graph's filter (editor spec §53), checked in filter_saved.py
     "Filter": ("keep", "view"),
+    # a graph's own view preset (editor spec §69), checked in preset.py
+    "Preset": ("preset",),
+    # a graph's or a view's space and painter (editor spec §68), checked in render.py
+    "Render": ("space", "painter", "lens", "view"),
+    # an exploration saved (editor spec §71): only the plug-in opens it, so it is not checked here
+    "Explore": ("centre", "shown", "shape", "per_branch", "view"),
 }
 
 

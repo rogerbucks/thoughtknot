@@ -42,6 +42,7 @@ const accepted = (r) => {
   return r;
 };
 const SMALL = "(small_reader:Option {name: 'Small reader'})";
+const SMALL_MARKED = "(small_reader:Option {name: 'Small reader', proposer_kind: 'model'})";
 const LINK = '(small_reader)-[:ANSWERS]->(question)';
 const marks = (shown) => ({
   boxes: [...shown.marks.boxes].map(([k, m]) => [k, m.kind]).sort(),
@@ -121,7 +122,7 @@ describe('proposal_one_by_one: each change is accepted or rejected on its own, o
     const review = new ProposalReview(proposalOf());
     const r = accepted(review.accept(NOTE, [C1], ROGER, { at: NOW }));
     assert.deepEqual(r.ids, [C1]);
-    assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL}`);
+    assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL_MARKED}`);
     assert.deepEqual(
       review.show(r.note).rows.map((x) => x.state),
       ['accepted', 'pending', 'pending', 'pending', 'pending'],
@@ -132,7 +133,7 @@ describe('proposal_one_by_one: each change is accepted or rejected on its own, o
     const review = new ProposalReview(proposalOf());
     const rejected = accepted(review.reject(NOTE, [C3], ROGER, { at: NOW }));
     const r = accepted(review.accept(rejected.note, [C1], ROGER, { at: NOW }));
-    assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL}`);
+    assert.equal(blocksOf(r.note)[0], `${GRAPH},\n${SMALL_MARKED}`);
     assert.deepEqual(review.decision(C3), { state: 'rejected', by: 'roger', at: NOW });
     assert.deepEqual(review.decision(C1), { state: 'accepted', by: 'roger', at: NOW });
     assert.equal(review.decision(C2), undefined);
@@ -146,9 +147,9 @@ describe('proposal_one_by_one: each change is accepted or rejected on its own, o
       blocksOf(r.note)[0],
       `// graph: reader
 (question:Question {name: 'Which device?'}),
-(large_reader:Option {name: 'Large reader', price: 4}),
-${SMALL},
-${LINK}`,
+(large_reader:Option {name: 'Large reader', price: 4, ai_assisted: true}),
+${SMALL_MARKED},
+(small_reader)-[:ANSWERS {proposer_kind: 'model'}]->(question)`,
     );
     assert.equal(accepted(review.undo(r.note)).note, NOTE);
     assert.deepEqual(review.pending(), [C1, C2, C3, C4, C5]);
@@ -176,13 +177,13 @@ describe('accepting_is_an_edit: an accepted change is written as text, checked f
   test('the text of the graph block gains exactly the change, and nothing else in the note moves', () => {
     const review = new ProposalReview(proposalOf());
     const r = accepted(review.accept(NOTE, [C1], ROGER, { at: NOW }));
-    assert.equal(r.note, NOTE.replace(GRAPH, `${GRAPH},\n${SMALL}`));
+    assert.equal(r.note, NOTE.replace(GRAPH, `${GRAPH},\n${SMALL_MARKED}`));
     assert.deepEqual(readNote(blocksOf(r.note)).problems, []);
   });
 
   test('a change in a property is written in the thing’s own pattern', () => {
     const r = accepted(new ProposalReview(proposalOf()).accept(NOTE, [C3], ROGER, { at: NOW }));
-    assert.equal(r.note, NOTE.replace('price: 3', 'price: 4'));
+    assert.equal(r.note, NOTE.replace('price: 3', 'price: 4, ai_assisted: true'), 'a model set it: AI-assisted');
   });
 
   test('a removal takes out the text that wrote the link, and the comma that parted it, and nothing else', () => {
@@ -363,7 +364,7 @@ describe('proposal_provenance: a proposal shows who proposed it, when and what i
     assert.match(r.reason, /changed since this was proposed/);
     assert.equal(review.state(C1), 'pending');
     const seen = accepted(review.accept(moved, [C1], ROGER, { at: NOW, staleSeen: true }));
-    assert.equal(blocksOf(seen.note)[0], moved.match(/```gql\n([\s\S]*?)\n```/)[1] + `,\n${SMALL}`);
+    assert.equal(blocksOf(seen.note)[0], moved.match(/```gql\n([\s\S]*?)\n```/)[1] + `,\n${SMALL_MARKED}`);
   });
 
   test('the graph moving because changes were accepted is not the basis moving: the rest of the proposal is not called stale', () => {

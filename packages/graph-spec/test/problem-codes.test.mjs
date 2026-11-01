@@ -190,3 +190,20 @@ describe('editor spec §42, problem_codes: each block is refused with its code',
     assert.deepEqual(wrong, []);
   });
 });
+
+describe('editor spec §42, problem_codes: every code has its case (CODE-8)', () => {
+  test('each code is refused in a case, is a limit with its case in limit-cases.json, or says why no block raises it', () => {
+    const limits = new Set(Object.values(json('./limit-cases.json').codes));
+    const cased = new Set(CASES.cases.map((c) => c.code));
+    const noBlock = CASES.no_block ?? {};
+    const missing = TABLE.codes
+      .map((c) => c.code)
+      .filter((code) => !cased.has(code) && !limits.has(code) && !noBlock[code]);
+    assert.deepEqual(missing, []);
+    for (const [code, why] of Object.entries(noBlock)) {
+      assert.ok(BY_CODE.has(code), `${code} is in the table`);
+      assert.ok(!cased.has(code), `${code} has a case, so it is not one no block raises`);
+      assert.ok(why.length > 40, `${code} says why no block raises it`);
+    }
+  });
+});

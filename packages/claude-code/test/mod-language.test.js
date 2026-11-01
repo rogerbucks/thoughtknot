@@ -22,6 +22,9 @@ import { ENTRY } from './editor-threats-support.js';
 const PACKAGE = fileURLToPath(new URL('../', import.meta.url));
 
 /** The environment of a process whose system runs in `locale`, as the C library names it. */
+// Windows takes a process's language from its own settings, never from LANG or LC_ALL, so a test cannot set it there
+const LOCALE_FROM_SETTINGS = process.platform === 'win32' && 'Windows takes the language from its settings alone';
+
 const inLocale = (locale, more = {}) => ({ ...process.env, LC_ALL: locale, LANG: locale, ...more });
 
 describe('the language of the mod', () => {
@@ -36,26 +39,33 @@ describe('the language of the mod', () => {
     assert.equal(followSystemLanguage(), setLanguage(Intl.DateTimeFormat().resolvedOptions().locale));
   });
 
-  test('the /graph command’s words follow the system’s language, set before the command is registered', () => {
-    const script =
-      "import { word } from '@thoughtknot/core'; import { followSystemLanguage } from './src/mod-language.ts';" +
-      "followSystemLanguage(); console.log(JSON.stringify([word('cc.command'), word('cc.usage')]));";
-    const said = (locale) => {
-      const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-        cwd: PACKAGE,
-        env: inLocale(locale),
-        encoding: 'utf8',
-      });
-      assert.equal(r.status, 0, r.stderr);
-      return JSON.parse(r.stdout);
-    };
-    assert.ok(said('en_XA.UTF-8').every(isPseudoWord), 'in the test language');
-    assert.deepEqual(said('en_GB.UTF-8'), [SOURCE_WORDS['cc.command'], SOURCE_WORDS['cc.usage']]);
-    const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
-    assert.match(register, /export const register: Register = \(on\) => \{\s*\/\/[^\n]*\n\s*followSystemLanguage\(\);/);
-  });
+  test(
+    'the /graph command’s words follow the system’s language, set before the command is registered',
+    { skip: LOCALE_FROM_SETTINGS },
+    () => {
+      const script =
+        "import { word } from '@thoughtknot/core'; import { followSystemLanguage } from './src/mod-language.ts';" +
+        "followSystemLanguage(); console.log(JSON.stringify([word('cc.command'), word('cc.usage')]));";
+      const said = (locale) => {
+        const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+          cwd: PACKAGE,
+          env: inLocale(locale),
+          encoding: 'utf8',
+        });
+        assert.equal(r.status, 0, r.stderr);
+        return JSON.parse(r.stdout);
+      };
+      assert.ok(said('en_XA.UTF-8').every(isPseudoWord), 'in the test language');
+      assert.deepEqual(said('en_GB.UTF-8'), [SOURCE_WORDS['cc.command'], SOURCE_WORDS['cc.usage']]);
+      const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
+      assert.match(
+        register,
+        /export const register: Register = \(on\) => \{\s*\/\/[^\n]*\n\s*followSystemLanguage\(\);/,
+      );
+    },
+  );
 
-  test('the editor server says its words in the system’s language', () => {
+  test('the editor server says its words in the system’s language', { skip: LOCALE_FROM_SETTINGS }, () => {
     const vault = mkdtempSync(join(tmpdir(), 'mod-language-'));
     try {
       // a vault with no note to open: the server refuses to start, in words of the catalogue

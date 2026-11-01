@@ -3,8 +3,11 @@
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
+import { CHIP_LINES, renderChip } from './controls-chip';
+import { renderSheet } from './controls-sheet';
+import { isPhone, setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
-import type { ViewOptions } from './view-options';
+import type { PictureStatus, ViewOptions } from './view-options';
 
 /** A number of things, in words: "1 problem", "2 problems". */
 export const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? '' : 's'}`;
@@ -31,7 +34,8 @@ export interface BarActions {
   legend: (b: HTMLButtonElement) => void;
   /** View: opens or closes the View menu's switches, and says which (§25). */
   view: (b: HTMLButtonElement) => void;
-  fullScreen: () => void;
+  /** Opens full screen; in zen, with every panel hidden (controls_zen). */
+  fullScreen: (zen?: boolean) => void;
   /** 2D, 2.5D or 3D: shows the drawing the next way, flat or in space (§53, space-switch.ts). */
   space: () => void;
   editHere: () => void;
@@ -74,6 +78,21 @@ function badgeOf(bar: HTMLElement, o: ViewOptions, on: BarActions): void {
   const badge = button(bar, label, icon, () => on.toggleProblems(badge), label);
   badge.addClass('thoughtknot-badge', errors ? 'is-error' : 'is-calm');
   badge.setAttribute('aria-expanded', 'false');
+  if (o.picture) pictureWords(badge, label, o.picture);
+}
+
+/** The badge says whether the picture for readers is up to date, asked again each time it may have changed (§62). */
+function pictureWords(badge: HTMLButtonElement, label: string, picture: PictureStatus): void {
+  const say = async () => {
+    const state = await picture.state();
+    const said = state ? `${label}, ${word(state === 'current' ? 'bar.picture-current' : 'bar.picture-stale')}` : label;
+    badge.setAttribute('aria-label', said);
+    const text = badge.querySelector('.thoughtknot-badge-text');
+    if (text) text.textContent = said;
+  };
+  // a badge no longer on the page stops asking
+  const stop = picture.watch(() => (badge.isConnected ? void say() : stop()));
+  void say();
 }
 
 /** More in the bar, and the list it opens: hidden until pressed, closed by Escape or once a control in it is chosen. */
@@ -89,7 +108,10 @@ function moreMenu(bar: HTMLElement): HTMLElement {
   };
   shut();
   list.addEventListener('click', (e: Event) => {
-    if ((e.target as Element | null)?.closest?.('button')) shut();
+    if (!(e.target as Element | null)?.closest?.('button')) return;
+    shut();
+    // the button chosen is hidden now: the focus goes to More, unless what it opened took the focus into itself
+    if (list.contains(list.ownerDocument.activeElement)) toggle.focus();
   });
   wrap.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key !== 'Escape' || list.hidden) return;
@@ -125,6 +147,7 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     mode === 'full'
       ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
       : button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
+  button(bar, word('bar.zen'), 'eye-off', () => on.fullScreen(true)); // every panel hidden but one button (controls_zen)
   // the rest, used less, wait behind More, which opens over the drawing and closes once one is chosen
   const more = moreMenu(bar);
   button(more, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut(), word('bar.zoom-out'));
@@ -135,6 +158,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   }
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)
   if (o.exporting) button(more, word('bar.export'), 'download', () => on.export(), word('bar.export'));
+  // Compare with only looks, so it is offered wherever the drawing is (§41, changes_view_obsidian)
+  if (o.compare) button(more, word('changes.compare'), 'history', () => o.compare?.(), word('changes.compare'));
   const editing: HTMLElement[] = [];
   let editButton: HTMLButtonElement | null = null;
   if (mode !== 'pane' && o.onEditHere) {
@@ -174,9 +199,17 @@ export function overDrawing(
 ): HTMLElement {
   const layer = root.createDiv({ cls: 'thoughtknot-over' });
   root.insertBefore(layer, viewport);
+  // the top start corner: the chip of what the drawing shows, then the docks, under any panel opened (§25)
+  const corner = layer.createDiv({ cls: 'thoughtknot-corner' }),
+    chip = renderChip(corner);
+  if (isPhone()) renderSheet(layer, root, corner); // on a phone, in a sheet at the foot of the drawing (controls_sheet)
   const panels = layer.createDiv({ cls: 'thoughtknot-over-panels' });
+  const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))
-    if (OVER.some((cls) => el.classList.contains(cls))) panels.appendChild(el);
+    if (is(el, OVER)) panels.appendChild(el);
+    else if (is(el, ['thoughtknot-dock']))
+      corner.appendChild(el); // controls_dock
+    else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });
@@ -187,4 +220,12 @@ export function overDrawing(
     card.register(() => watch.disconnect());
   }
   return viewport;
+}
+
+/** The edit button as the card stands: a pencil to edit here, or, while edited (`on`), a view icon to finish (§4). */
+export function editButtonAs(b: HTMLElement, on: boolean): void {
+  b.empty();
+  setIcon(b, on ? 'book-open' : 'pencil');
+  b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
+  b.createSpan({ cls: 'thoughtknot-badge-text', text: b.getAttribute('aria-label') ?? '' }); // named in More
 }

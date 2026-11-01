@@ -7,7 +7,7 @@
 // the page (cc_redrawn_on_change). Once stopped it starts no write. Its stop waits for those under way, so the process
 // never exits half way through one (C0 review).
 //   GET notes/<id>          {text, version, draft}, the version also as the ETag.
-//   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {text, version, draft} when stale.
+//   PUT notes/<id>          the new text, If-Match its version: {version}. 409 {why, text, version, draft} when stale.
 //   PUT notes/<id>/draft    what was typed, kept as the note's draft. An empty one clears it.
 //   GET notes/<id>/events   a stream, a JSON object to a line: {version, text} now and on each change, or {gone}.
 //   GET notes/<id>/versions, /at/<commit>, /reviews…  its earlier versions and its repository's changes (editor-changes.ts)
@@ -21,14 +21,15 @@ import { folderStorage } from './folder-storage.ts';
 import { loadNote, writeNote, type Loaded } from './editor-notes.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
-import { sha256, word } from '@thoughtknot/core';
-import type { NoteStorage } from '@thoughtknot/core';
+import { sha256, word, type NoteStorage } from '@thoughtknot/core';
 
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';
 import { GIT_HISTORY, type NoteHistory } from './note-history.ts';
 import { GH_READER, type GitHubReader } from './github-reader.ts';
-import { changesAnswer, type ChangesAsked } from './editor-changes.ts';
+import { answer, changesAnswer, type ChangesAsked } from './editor-changes.ts';
+import { pictureStates } from './note-pictures.ts';
+import type { NoteReply, StaleWrite, UnwrittenReply, WriteReply } from '../src/api-types.ts';
 
 /** How a store is made: the vault, the mod's data folder for drafts (outside the vault), and what it is handed. */
 export interface NoteStoreOptions {
@@ -72,21 +73,12 @@ interface OpenNote {
 
 /** One route of the API: a note's id, and what of it is asked for. */
 const ROUTE =
-  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
+  /^notes\/([0-9a-f]{32})(\/events|\/draft|\/proposal|\/pictures|\/versions|\/at\/[0-9a-f]{40}|\/reviews(?:\/[a-z]+\/[0-9a-f]+)?)?$/;
 
 const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
 const notOpen = (): ApiAnswer => ({ status: 404, text: word('server.note-not-open') });
 const stopped = (): ApiAnswer => ({ status: 503, text: word('server.stopped-unwritten') });
-
-/** An answer in JSON. */
-function answer(status: number, body: object, headers: Record<string, string> = {}): ApiAnswer {
-  return {
-    status,
-    text: JSON.stringify(body),
-    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
-  };
-}
 
 /** The notes opened for one session of the editor, in one vault. */
 export class NoteStore {
@@ -188,6 +180,7 @@ export class NoteStore {
     if (what === 'PUT ') return this.write(id, r.body, ifMatch);
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
     if (what === 'GET /events') return this.follow(id);
+    if (what === 'GET /pictures') return this.pictures(id);
     if (/^GET \/(versions|at|reviews)/.test(what)) return this.changes(id, what.slice('GET '.length));
     return { status: 405, text: word('server.not-this-method') };
   };
@@ -219,7 +212,17 @@ export class NoteStore {
     const taken = await this.drafts.take(note.inVault);
     // a draft is typed text too: one the gate refuses (a credential, say) is withheld, and stays on the shelf unsent
     const draft = taken && this.gate?.draft(taken.text) ? null : taken;
-    return answer(200, { text: r.text, version: r.version, draft }, { etag: r.version });
+    return answer(200, { text: r.text, version: r.version, draft } satisfies NoteReply, { etag: r.version });
+  }
+
+  /** Whether each picture of the note is up to date, by graph, as its gate allows (§62). */
+  private async pictures(id: string): Promise<ApiAnswer> {
+    const note = this.notes.get(id) as OpenNote;
+    const r = await this.load(note);
+    const why = r.ok ? this.refusal(note, r.text) : r.why;
+    return why === null && r.ok
+      ? answer(200, await pictureStates(this.where.real, r.path, r.text))
+      : answer(410, { why });
   }
 
   /** The note's earlier versions and its repository's changes, each read only when asked and held to the gate. */
@@ -269,27 +272,28 @@ export class NoteStore {
         const now = await this.load(note);
         if (!now.ok) {
           const kept = await keep();
-          return answer(410, { why: now.why, draft: kept.ok });
+          return answer(410, { why: now.why, draft: kept.ok } satisfies UnwrittenReply);
         }
         const refused = this.refusal(note, now.text);
-        if (refused !== null) return answer(410, { why: refused, draft: false });
+        if (refused !== null) return answer(410, { why: refused, draft: false } satisfies UnwrittenReply);
         if (now.version !== ifMatch) {
           const kept = await keep();
-          return answer(409, { text: now.text, version: now.version, draft: kept.ok }, { etag: now.version });
+          const stale = { why: word('server.note-changed'), text: now.text, version: now.version, draft: kept.ok };
+          return answer(409, stale satisfies StaleWrite, { etag: now.version });
         }
         if (this.stopped) return stopped();
         const w =
           text === now.text ? { ok: true as const, version: now.version } : await writeNote(this.kept, now, text);
         if (!w.ok) {
           const kept = await keep();
-          return answer(500, { why: w.why, draft: kept.ok });
+          return answer(500, { why: w.why, draft: kept.ok } satisfies UnwrittenReply);
         }
         note.version = w.version;
         note.vouched = sha256(text);
         // the draft this write makes good is cleared; one typed on top of what was just written is newer, and kept
         const draft = await this.drafts.take(note.inVault);
         if (draft && (draft.text === text || draft.against !== w.version)) await this.drafts.clear(note.inVault);
-        return answer(200, { version: w.version }, { etag: w.version });
+        return answer(200, { version: w.version } satisfies WriteReply, { etag: w.version });
       }),
     );
   }

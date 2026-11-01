@@ -10,8 +10,8 @@
 // A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
 // stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD, eyeOf, orbitBy, upOf, zoomBy } from './space-view.ts';
-import type { Orbit, Vec3 } from './space-view.ts';
+import { FIELD, centredOn, eyeOf, orbitBy, orbitFit, upOf, zoomBy } from './space-view.ts';
+import type { Block, Orbit, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
 export const KEY_STEP = 24;
@@ -141,8 +141,18 @@ export function zoomAtPixel(orbit: Orbit, times: number, x: number, y: number, w
 }
 
 /**
+ * Whether two fingers went up or down together: mostly vertical, neither spreading nor twisting (space_two_finger_tilt).
+ * Touch events come for one finger at a time, so one step moves one finger and leaves a small twist.
+ */
+export function tiltsTogether(was: readonly [Touch, Touch], now: readonly [Touch, Touch]): boolean {
+  const { dx, dy, zoom } = twoFingers(was, now);
+  return Math.abs(dy) > 2 * Math.abs(dx) && Math.abs(zoom - 1) < 0.02 && Math.abs(twistOf(was, now)) < 0.15;
+}
+
+/**
  * `orbit` moved as two fingers went from `was` to `now`. The screen is `width` by `height` pixels, with its top left at
- * `at`. The view moves across with them, zooms toward their middle and turns as they twist.
+ * `at`. Two fingers going up or down together tilt the view round `pivot`, as one finger dragging does. Otherwise the view
+ * moves across with them, zooms toward their middle and turns as they twist.
  */
 export function pinchBy(
   orbit: Orbit,
@@ -151,8 +161,10 @@ export function pinchBy(
   at: { left: number; top: number },
   width: number,
   height: number,
+  pivot: Vec3,
 ): Orbit {
   const { dx, dy, zoom } = twoFingers(was, now);
+  if (tiltsTogether(was, now)) return turnRound(orbit, 0, dy, pivot);
   const x = (now[0].x + now[1].x) / 2 - at.left,
     y = (now[0].y + now[1].y) / 2 - at.top;
   return twistBy(zoomAtPixel(panBy(orbit, dx, dy, height), zoom, x, y, width, height), twistOf(was, now));
@@ -243,3 +255,34 @@ export function turnRound(orbit: Orbit, dx: number, dy: number, pivot: Vec3): Or
     tilt: orbit.tilt + lift,
   };
 }
+
+type TouchLike = { stopPropagation(): void; touches: { length: number } };
+/**
+ * A touch in the view goes no further, so the host's own swipes never take it. The touches really down also settle the
+ * pointers tracked, keeping the newest. A lift that never arrived must not leave one. Else the next single finger
+ * would pinch instead of turn (stuck_touch).
+ */
+export const touchesStay = (
+  el: { addEventListener(type: string, fn: (e: TouchLike) => void, o: object): void },
+  down: Map<number, unknown>,
+): void => {
+  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel'])
+    el.addEventListener(
+      type,
+      (e) => {
+        e.stopPropagation();
+        const fingers = e.touches.length;
+        if (type !== 'touchmove')
+          for (const id of [...down.keys()].slice(0, Math.max(0, down.size - fingers))) down.delete(id);
+      },
+      { passive: true },
+    );
+};
+
+/**
+ * The camera as the view changes to another way of showing it, `space`, on a screen `aspect` wide to each unit high.
+ * Each way is laid out to its own size. So with nothing picked the whole graph fits the view again. It is never a small
+ * knot in the last way's frame (Roger, 1 Nov 2026). With something `picked`, the view stays on it.
+ */
+export const orbitSwitched = (orbit: Orbit, space: SpaceMarks, picked: Block | null, aspect: number): Orbit =>
+  picked ? centredOn(orbit, picked) : orbitFit(space, aspect);

@@ -229,7 +229,8 @@ export class FakeElement {
   }
   // an event made by new Event or new CustomEvent, sent as dispatch sends one
   dispatchEvent(ev) {
-    this.dispatch(ev.type, ev.detail === undefined ? {} : { detail: ev.detail });
+    const { type, ...fields } = ev; // a made event's own fields, as a WheelEvent's are in the fake
+    this.dispatch(type ?? ev.type, ev.detail === undefined ? fields : { ...fields, detail: ev.detail });
     return true;
   }
   click() {
@@ -424,6 +425,8 @@ export function fakeDocument(width = 700) {
     );
   doc.defaultView = {
     innerHeight: 800,
+    // a window's own document, as a browser's: the display reads its body's classes, such as a still view preset
+    document: doc,
     // the window's own listeners, such as resize: a test tells them with `tell`
     listeners: new Map(),
     addEventListener(type, fn) {
@@ -523,6 +526,14 @@ export function installGlobals(doc) {
       }
       takeRecords() {
         return [];
+      }
+    },
+  );
+  set(
+    'WheelEvent',
+    class {
+      constructor(type, init = {}) {
+        Object.assign(this, init, { type });
       }
     },
   );

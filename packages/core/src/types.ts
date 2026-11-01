@@ -133,33 +133,12 @@ function radialCentre(shape: GraphShape, chosen?: string): string {
 }
 
 /**
- * Whether a radial drawing fits. Around a thing picked as its centre, it always fits when there are two things or more
- * (radial_centre_anywhere). Things not joined to it are drawn beside it, and groups are drawn without their boxes. With
- * no centre picked, it needs three things or more, each joined to the centre, whichever way its links run. No group
- * may be written then, as Graphviz's radial layout cannot draw a group's box.
+ * Whether a radial drawing fits: with two things or more, always (radial_always_fits). It is drawn around the thing
+ * picked as its centre, else the one with the most links. Things not joined to it are drawn beside it, and groups are
+ * drawn without their boxes. Roger, 1 Nov 2026: radial said every thing must be joined to the centre, "which is a lie".
  */
-function radialFit(shape: GraphShape, text: (k: string) => string, chosen?: string): TypeFit {
-  if (shape.things.length >= 2 && chosen !== undefined && shape.things.some((t) => t.key === chosen))
-    return yes('radial');
-  if (shape.things.length < 3) return no('radial', word('diagram.radial.three'));
-  const group = shape.groups?.[0];
-  if (group) return no('radial', word('diagram.radial.group', { group: group[0] }));
-  const centre = radialCentre(shape, chosen),
-    near = new Map<string, string[]>();
-  for (const l of shape.links) {
-    near.set(l.from, [...(near.get(l.from) ?? []), l.to]);
-    near.set(l.to, [...(near.get(l.to) ?? []), l.from]);
-  }
-  const reached = new Set([centre]),
-    queue = [centre];
-  for (let i = 0; i < queue.length; i++)
-    for (const n of near.get(queue[i] as string) ?? [])
-      if (!reached.has(n)) {
-        reached.add(n);
-        queue.push(n);
-      }
-  const lone = shape.things.find((t) => !reached.has(t.key));
-  return lone ? no('radial', word('diagram.radial.joined', { centre: text(centre), thing: lone.text })) : yes('radial');
+function radialFit(shape: GraphShape): TypeFit {
+  return shape.things.length >= 2 ? yes('radial') : no('radial', word('diagram.radial.two'));
 }
 
 /** Whether lanes fit: every thing of one kind, every group's things of one kind, so it sits in one lane, and two kinds. */
@@ -201,7 +180,7 @@ export function typeFits(shape: GraphShape, relationship?: string, timeline: Cho
       : loop
         ? no('flow', word('diagram.flow.loops', { loop: loop.map(text).join(' → ') }))
         : yes('flow'),
-    radialFit(shape, text, timeline.centre),
+    radialFit(shape),
     lanesFit(shape),
     timelineFit(shape, timeline),
     yes('table'),

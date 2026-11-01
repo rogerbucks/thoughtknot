@@ -27,7 +27,7 @@ import { until as untilTrue } from '../packages/obsidian/test/host/load-plugin.j
 const made = [];
 /** A new empty folder, real path, put away after the tests. */
 const folder = () => {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-')));
   made.push(dir);
   return dir;
 };
@@ -65,7 +65,7 @@ describe('Open in ThoughtKnot, in VS Code', () => {
     assert.equal(tab.options.enableScripts, true);
     assert.deepEqual(
       tab.options.localResourceRoots.map((u) => u.path),
-      [join(vs.extension, 'dist/webview')],
+      [Uri.file(join(vs.extension, 'dist/webview')).path],
       'the page reaches only the extension’s own page files',
     );
     const settings = JSON.parse(/<script id="thoughtknot-vscode"[^>]*>([^<]*)<\/script>/.exec(tab.webview.html)[1]);
@@ -157,7 +157,7 @@ describe('notes in a VS Code workspace, read and written through the tab’s cal
       }),
     );
   };
-  for (const check of storageContract(storage)) test(check.name, check.run);
+  for (const check of storageContract(storage, { windows: process.platform === 'win32' })) test(check.name, check.run);
 });
 
 describe('the tab’s page, in a real browser', () => {

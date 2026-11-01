@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const pkg = fileURLToPath(new URL('../', import.meta.url));
 const built = spawnSync(process.execPath, ['esbuild.config.mjs'], { cwd: pkg, encoding: 'utf8' });
@@ -61,7 +61,7 @@ test('the repository is a marketplace listing the mod by its folder, so an insta
 });
 
 test("the mod's test fixtures are the test vault's sample note and what Graphviz draws for it", async () => {
-  const { NOTE, SVGS } = await import(`${pkg}mod/tests/fixtures.js`);
+  const { NOTE, SVGS } = await import(pathToFileURL(`${pkg}mod/tests/fixtures.js`).href);
   assert.equal(NOTE, readFileSync(`${pkg}../../test-vault/Sample graph note.md`, 'utf8'));
   assert.ok(SVGS.length >= 1 && SVGS.every((s) => s.includes('<svg ')));
 });

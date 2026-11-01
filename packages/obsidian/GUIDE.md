@@ -51,6 +51,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   the graph's overview from there, above the text and why (§53, scale_in_parts).
 - `stored-edit.ts` — a thing chosen in that overview, by search or a click, shows its properties. A change is written
   to the note's text first, on the lines that wrote the thing. Then the store reads the note again.
+- `rule-card.ts` — the style rules a graph card or a view card draws (§56): what each finds, its look and the legend.
+  A clash of two rules is listed with the graph card's problems.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph.
   - Outside the view profile it is refused, saying what is allowed.
   - When its note is too large to read, it is shown as its query under the banner.
@@ -76,6 +78,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `style-block.ts` — a style block (§2). It is never drawn, and is folded away until opened. It says whose style it is,
   what it holds (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its
   nudges, and its problems listed, by `block.ts`.
+- `sketch-block.ts` — a drawings block (§70). It is never drawn as a graph, and is folded away, saying how many drawings
+  it holds. `sketchingFor` gives the graph's card its drawings, and writes each change there to the note (`sketchEdit`).
 - `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code.
   A very long one is shown plain.
 
@@ -225,6 +229,15 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   It is drawn by the platform's own decoding on a canvas from the file's bytes (no library). It is null where it cannot
   be drawn. It is never drawn for a frame over `STILL_PIXELS` (50 million pixels). The plugin's `stillFrame` calls it,
   so a test can stand in one, as for `rasterise`.
+
+### `src/pictures/` — the pictures for readers without ThoughtKnot (editor spec §62)
+
+- `pictures.ts` — the commands that turn a note's pictures on and off. Turning them off asks first. `keepPictures`
+  keeps each note's pictures in step as it changes, opens, is renamed or deleted.
+- `picture-files.ts` — `refreshPictures`: each picture written only when its text changed, where Obsidian keeps
+  attachments, with one image line after its block. A file ThoughtKnot did not make is never touched.
+- `picture-hide.ts` — the image line hidden where the plugin draws the block, in reading view and Live Preview.
+- `picture-status.ts` — `pictureStatus`: whether a graph's picture is up to date, which the card's bar says.
 
 ### `src/proposals/` — a proposal in a note (spec §17)
 
@@ -482,7 +495,12 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz.
   - It has a row for each thing (its kind and properties) and each link. Each row is reached, named and opened as a box
     or a link is. `taps.ts` and the details take a row as its thing or link.
-  - It is moved and scaled as a whole by the card's zoom.
+  - It works as a data table. It scrolls by itself, and its heads and row numbers stay in sight. The card's zoom only
+    sizes its words. A click or Enter on a head sorts by it.
+- `table-keys.ts` — the table's keys and focus: one cell at a time, arrows, Home, End, Page Up and Down, copy.
+  - With a row's details open, moving to another row opens its details.
+- `table-sizing.ts` — the grips that resize its columns and rows, and the bar above it: striped rows, row height,
+  Fit columns. The look is kept on the device.
   - On a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (`graph-view.ts`, the
     core's `Zoom` with `across`).
 
@@ -568,6 +586,14 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     `vault.process`, so a change made in between is never written over.
   - A note removed goes where the person's deleted files go (`fileManager.trashFile`).
   - The plugin's own code still reads and writes notes directly; it moves onto this backend in a later slice.
+  - It tells `kept` each note's text just before a write or change replaces it.
+- `note-history.ts` — the earlier versions of notes the plug-in changed, kept in its data for Compare with (NEURO-2).
+  A burst of changes keeps one version; a renamed note keeps its versions.
+
+### `src/changes/` — Compare with (editor spec §41, changes_view_obsidian)
+
+- `compare-with.ts` — the window a card's Compare with opens. It lists the versions kept, newest first. The one picked is
+  drawn with the note now by the core's changes view, each change marked by line and hue and listed in words.
 
 ### `src/links/` — links and attachments (spec §18)
 

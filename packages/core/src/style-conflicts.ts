@@ -9,6 +9,7 @@
 // Each is a problem with a fix. The first written is kept and the later left out, so what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
+import { isRule } from './rule-words.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
 import type { Arrows, Diagram, Flow, Links, Look, Nudge, Show, StyleAt, StyleGraph } from './style-graph.ts';
 import { word } from './words.ts';
@@ -94,11 +95,14 @@ function settleNudges(nudges: Nudge[], graph: string, out: Problem[]): { kept: N
   return direction?.direction ? { kept, direction: direction.direction } : { kept };
 }
 
-/** The looks, each colour given one meaning in each view or path: a second meaning is a problem, and is not drawn. */
+/**
+ * The looks, each colour given one meaning in each view or path: a second meaning is a problem, and is not drawn. A
+ * rule's look is told apart by its badge or line too (§56), so its colour may mean something else again.
+ */
 function settleLooks(looks: Look[], graph: string, out: Problem[]): Look[] {
   const meant = new Map<string, Look>();
   return looks.flatMap((l): Look[] => {
-    if (!l.colour) return [l];
+    if (!l.colour || isRule(l)) return [l];
     const scope = l.view !== undefined ? `view ${l.view}` : `path ${l.path}`,
       key = `${scope}\u0000${l.colour}`,
       first = meant.get(key);
@@ -290,6 +294,9 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.pictures = checked.pictures;
   // a graph's filter is the first written for it (filter-saved.ts): none conflicts
   style.filters = checked.filters;
+  style.presets = checked.presets; // and its preset the first written (§69)
+  style.renders = checked.renders; // its space and painter too, key by key (§68, render-choice.ts)
+  style.explores = checked.explores; // and its exploration the first written for a view (§71)
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {
     const first = style.views.get(view);

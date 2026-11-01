@@ -5,21 +5,25 @@
 import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { installHost } from '@thoughtknot/core/display/host';
-import type { DisplayHost } from '@thoughtknot/core/display/host';
+import { noticeMs } from '@thoughtknot/core/display/notices';
 import { detailsSidePane } from './details-pane';
+import { recentVisits } from './recent-visits';
+import type { SavedStore } from './recent-visits';
+import { keepHistory } from './storage/note-history';
 
 export { chooseLanguage } from '@thoughtknot/core/display/language';
 
 /**
- * Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. `layout` is
- * where the details' last place and size are kept, in the plugin's data.
+ * Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. `store` is
+ * where the plugin's data is kept: the details' last place and size, and the graphs and things last opened. It
+ * also keeps the notes' earlier versions.
  */
-export function installObsidianHost(plugin: Plugin, layout: DisplayHost['detailsLayout']): void {
+export function installObsidianHost(plugin: Plugin, store: SavedStore): void {
   installHost({
     icon: (el, name) => setIcon(el, name),
     isPhone: () => Platform.isPhone,
     notice: (message) => {
-      new Notice(message);
+      new Notice(message, noticeMs(message));
     },
     menu: (entries, at, doc) => {
       const m = new Menu();
@@ -39,6 +43,12 @@ export function installObsidianHost(plugin: Plugin, layout: DisplayHost['details
     },
     language: () => getLanguage(),
     sidePane: detailsSidePane(plugin),
-    detailsLayout: layout,
+    detailsLayout: {
+      saved: () => store.get().detailsLayout,
+      save: (detailsLayout) => store.set({ ...store.get(), detailsLayout }),
+    },
+    recent: recentVisits(plugin, store),
   });
+  // the text of each note just before the plug-in changes it, for Compare with (risk NEURO-2); it follows a rename
+  keepHistory(plugin, store);
 }

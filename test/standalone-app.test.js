@@ -114,7 +114,7 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
 
   before(async () => {
     if (why) return;
-    folder = realpathSync(mkdtempSync(join(tmpdir(), 'standalone-app-')));
+    folder = realpathSync.native(mkdtempSync(join(tmpdir(), 'standalone-app-')));
     writeFileSync(join(folder, 'Reader.md'), NOTE);
     const [port, native] = [await freePort(), await freePort()];
     server = spawn(driver, ['--port', String(port), '--native-port', String(native)], { stdio: 'ignore' });

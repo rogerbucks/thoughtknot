@@ -1,0 +1,6 @@
+{
+  "file": "test/check-requirements-reworded.test.js",
+  "test": "a reworded requirement > is accepted once a commit message or the pull request body names its id",
+  "seen_failing_first": false,
+  "evidence": "a case the old check also accepted: it guards that the new refusal does not over-reach"
+}

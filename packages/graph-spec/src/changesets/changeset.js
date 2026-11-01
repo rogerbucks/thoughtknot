@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §24 H1 change sets: what a model may add and link, applied to a copy of the base graph and checked.
 'use strict';
 

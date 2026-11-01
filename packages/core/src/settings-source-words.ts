@@ -35,6 +35,9 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-unlabelled.name': 'Unlabelled notes count as',
   'settings.ai-unlabelled.sentence':
     'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.',
+  'settings.ai-repo-unlabelled.name': 'Unlabelled repository files count as',
+  'settings.ai-repo-unlabelled.sentence':
+    'The classification a file of a note’s repository with no classification counts as, when you review its change with Claude. The lowest until you choose a stricter one.',
   'settings.ai-models.name': 'AI models',
   'settings.ai-models.sentence':
     'Each AI model the editor may ask, and its purpose. Each has a ceiling: the highest classification of note it may be sent, or a row of the destination matrix.',
@@ -54,6 +57,11 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.indent.two': 'Two spaces',
   'settings.indent.four': 'Four spaces',
   'settings.indent.tab': 'A tab',
+  'settings.redraw-while-typing.name': 'Redraw while typing',
+  'settings.redraw-while-typing.sentence':
+    'When the drawing changes as you type a graph. Either way it keeps its zoom, and the boxes you did not change stay where they were.',
+  'settings.redraw-while-typing.pause': 'After each pause in typing',
+  'settings.redraw-while-typing.done': 'When I press Done or leave the text',
   'settings.view-preset.name': 'View preset',
   'settings.view-preset.sentence':
     'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',
@@ -71,6 +79,23 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.view-preset.reading': 'Reading support',
   'settings.view-preset.reading.sentence':
     'Short labels with wider spacing, the full words when you select one, and the outline one key away.',
+  'settings.view-preset.preview': 'Before you use {name}',
+  'settings.view-preset.line': '{name}: {from} becomes {to}.',
+  'settings.view-preset.nothing': 'No other setting changes.',
+  'settings.view-preset.use': 'Use this preset',
+  'settings.view-preset.keep': 'Keep as it was',
+  'settings.view-preset.undo': 'Undo the preset change',
+  'settings.view-preset.undo.sentence': 'Puts back {name} and every setting the change turned.',
+  'settings.view-preset.own': 'Your own',
+  'settings.view-preset.own.sentence': 'The preset you brought in from a file, below.',
+  'settings.own-preset.name': 'Your own view preset',
+  'settings.own-preset.sentence':
+    'Paste the text of a view preset file to use it as Your own. It is checked first. Export writes the preset in use, as you have set it, to a file.',
+  'settings.own-preset.taken': 'Read in: {name}. Pick Your own above to use it.',
+  'settings.own-preset.problem': 'Not used: {why}',
+  'settings.own-preset.export': 'Export the preset in use',
+  'settings.own-preset.export.sentence': 'Writes it to one small file, to bring into ThoughtKnot on another device.',
+  'settings.own-preset.exported': 'View preset written to {path}',
   'view-preset.imported': 'Imported preset',
   'view-preset.not-json': 'This file is not a view preset: it is not JSON.',
   'view-preset.not-preset': 'This file is not a view preset: it does not say {format}.',
@@ -112,6 +137,11 @@ export const SETTINGS_SOURCE_WORDS = {
     'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
   'settings.own-layout.on': 'On',
   'settings.own-layout.off': 'Off',
+  'settings.kind-lanes.name': 'Lanes by kind',
+  'settings.kind-lanes.sentence':
+    'Whether kinds that link in order each get a lane, or a plane in space; a graph’s View menu can change it.',
+  'settings.kind-lanes.on': 'On',
+  'settings.kind-lanes.off': 'Off',
   'settings.note-callouts.name': 'Draw notes as callouts',
   'settings.note-callouts.sentence':
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
@@ -134,6 +164,11 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.drawing-height.half': 'Half the window',
   'settings.drawing-height.most': 'Three quarters of the window',
   'settings.drawing-height.none': 'No limit',
+  'settings.easier-reading.name': 'Easier reading',
+  'settings.easier-reading.sentence':
+    'Spreads out the text of the bar and the panels: a taller line, wider letters and wider words. It helps readers who find dense text tiring. Off unless you turn it on.',
+  'settings.easier-reading.on': 'On',
+  'settings.easier-reading.off': 'Off',
   'settings.export-theme.name': 'Export theme',
   'settings.export-theme.sentence':
     'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.',
@@ -150,6 +185,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.export-asks-above.name': 'Ask before exporting above',
   'settings.export-asks-above.sentence':
     'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
+  'settings.picture-folders.name': 'Pictures for readers without ThoughtKnot',
+  'settings.picture-folders.sentence':
+    'Notes in these folders get a picture after each graph, so GitHub and other Markdown apps show it. Part folders with commas; write / for the whole vault. Left empty, a note gets pictures only once you turn them on for it.',
+  'settings.picture-folder.name': 'Picture folder',
+  'settings.picture-folder.sentence':
+    'The vault folder the pictures are kept in. Left empty, they go where Obsidian keeps new attachments.',
   'settings.decider.name': 'Your name on decisions',
   'settings.decider.sentence':
     'The name recorded when you accept or reject a change in a proposal. It is kept exactly as you type it. Left empty, it is recorded as “you”.',

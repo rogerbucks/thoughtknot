@@ -43,6 +43,7 @@ export const ISOLATED_POINTS: readonly ExtensionPoint[] = [
   'sources',
   'steps',
   'diagrams',
+  'layouts',
 ];
 
 /** The web's ways out: the network, storage that outlives the worker, and more workers. */
@@ -142,6 +143,7 @@ export function servePlugin(scope: PluginScope, plugin: ThoughtKnotPlugin): void
     else if (p === 'sources') points.sources = point(p, 'read');
     else if (p === 'steps') points.steps = point(p, 'run');
     else if (p === 'diagrams') points.diagrams = point(p, 'draw');
+    else if (p === 'layouts') points.layouts = point(p, 'place');
   }
   if (named.length) points.host = Object.freeze(host);
   const { id, version, api, uses, abilities } = plugin;

@@ -4,6 +4,7 @@
 import type {
   CompletenessReport,
   Drawn,
+  ExploreSave,
   FlowLink,
   FocusDepth,
   Indent,
@@ -11,6 +12,8 @@ import type {
   NoteReading,
   Parked,
   Refusal,
+  RuleAsk,
+  RulesShown,
   ViewState,
 } from '@thoughtknot/core';
 
@@ -34,6 +37,8 @@ import type { LinkHost } from '../link-host';
 import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
 import type { SpaceMode } from './space-switch';
+import type { SketchHost } from './sketch-tool';
+import type { StayedAt } from './type-place';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
 export interface DeclaredDeferred {
@@ -70,13 +75,16 @@ export type Chosen = { thing: string } | { link: number } | { estimate: number }
 export interface SwitchesShown {
   state: ViewState;
   relayout: (owner: object) => Promise<Drawn | Refusal | null>;
-  /**
-   * The same layout with its links curved, for a drawing shown with straight links first (§11, curves_after_drawing).
-   * Without it, a drawing shown straight stays so.
-   */
-  curved?: (owner: object) => Promise<Drawn | Refusal | null>;
   /** The note as read: what the drawing's things say, which they can be grouped by. Without it, no Group by. */
   reading?: NoteReading;
+}
+
+/** Where a host says whether a graph's picture for readers is up to date (§62). */
+export interface PictureStatus {
+  /** Up to date, out of date, or null when the graph has no picture. */
+  state: () => Promise<'current' | 'stale' | null>;
+  /** Calls `then` each time the picture may have changed; gives back what stops it. */
+  watch: (then: () => void) => () => void;
 }
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */
@@ -99,6 +107,8 @@ export interface ViewOptions {
   completeness?: CompletenessReport;
   /** The things parked for later, counted apart from problems behind the badge (spec §8). */
   parked?: Map<string, Parked>;
+  /** Whether the graph's picture for readers is up to date, said by the badge (§62, picture_hidden_when_drawn). */
+  picture?: PictureStatus;
   /** How the editor indents a thing it writes, as the settings say (spec §21). */
   indent?: Indent;
   /** How many steps along its links focus reaches from a selected thing, as the settings say (§25); one when not given. */
@@ -111,14 +121,22 @@ export interface ViewOptions {
   tour?: boolean;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
+  /** What the style graph's rules give each thing and link drawn, and their legend (§56); none, no rule draws. */
+  rules?: RulesShown;
+  /** What the card may do with a rule made beside its legend: try it, or save it where the note is edited (§56). */
+  ruleAsk?: RuleAsk;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */
   diagram?: DiagramShown;
+  /** The drawings over the graph (§70), and how to change them; none, no drawings are drawn and no Draw is offered. */
+  sketching?: SketchHost;
   /** Moving a box by dragging it (spec §6): the nudges written, and how to write one; none, no box moves. */
   moving?: BoxMoving;
   /** The View menu's switches (§25); without it, as for a graph drawn as a table, no View menu is offered. */
   switches?: SwitchesShown;
+  /** Compare with: the graph now drawn with an earlier version, its changes marked (§41); none, it is not offered. */
+  compare?: () => void;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */
   exporting?: Exporting;
   /** How its links move, as its style graph says (§7); none, every link still. */
@@ -150,4 +168,21 @@ export interface ViewOptions {
   editing?: () => Editing | undefined;
   /** For a card opened from another, as full screen is: read-only whenever the card it was opened from is (spec §3). */
   readOnly?: () => boolean;
+  /** Where the card drawn before this one was left: drawn again, as typing redraws it, it stays there (NEURO-7). */
+  stay?: Stay;
+  /** The exploration its style graph saved, which it opens on, and how its sidebar saves one (§71, explore_saved). */
+  exploring?: Exploring;
+}
+
+/** A card's saved exploration, to open on, and how to save one: only where the note is edited (explore_saved). */
+export interface Exploring {
+  saved?: ExploreSave;
+  save?: (e: ExploreSave) => void;
+}
+
+/** Where a card is left as it goes, for the card drawn next in its place: its zoom, its camera in space, its boxes. */
+export interface Stay {
+  leave: (at: StayedAt) => void;
+  /** Where the last card was left, once; none when it was not, or long ago. */
+  kept: () => StayedAt | undefined;
 }

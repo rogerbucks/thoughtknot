@@ -28,6 +28,7 @@ import type {
   ExportWalk,
   NoteReading,
   PictureLoad,
+  Sketch,
   StyleGraph,
   TooLargeToAnimate,
 } from '@thoughtknot/core';
@@ -62,6 +63,8 @@ export type ImageAsk = {
   paged: (pages: number) => ExportGo;
   /** A path played into the image (§7): an animated SVG of it. */
   walk?: ExportWalk;
+  /** The drawings over the graph (§70), drawn on top. */
+  sketch?: Sketch | null;
 } & ({ style: StyleGraph; data: GraphRead } | { style?: undefined; data?: undefined });
 
 /** What an animated SVG too large for the device says (animation_export_fits): why, that nothing was saved, and the fix. */
@@ -94,6 +97,7 @@ export async function imageFiles(
     motion: x.format === 'svg',
     device: deviceOf(),
     ...(x.walk ? { walk: x.walk } : {}),
+    sketch: x.sketch ?? null, // the drawings over it (§70)
     pictures: picturesFrom(plugin, x.note), // the images on boxes, embedded in the file (§18)
   };
   const info: ExportInfo = x.style ? { ...basics, style: x.style, data: x.data } : basics;

@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §21 joins: a join request answered end to end — configuration, normalise, validate, union or merge3, finish.
 'use strict';
 

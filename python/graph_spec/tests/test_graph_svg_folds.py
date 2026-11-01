@@ -16,6 +16,7 @@ The Python library must give the same, from graph_svg.render_args and graph_svg.
 
 import json
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -88,7 +89,7 @@ def core_answers():
         [[texts_of(c), c.get("view"), c.get("switches"), c.get("opened")] for c in CASES]
     )
     out = subprocess.run(
-        ["node", "--input-type=module", "-e", CORE_SCRIPT, CORE, cases],
+        ["node", "--input-type=module", "-e", CORE_SCRIPT, pathlib.Path(CORE).as_uri(), cases],
         capture_output=True,
         text=True,
         check=True,

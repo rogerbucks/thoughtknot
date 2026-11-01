@@ -18,20 +18,22 @@ const S = `[${SPACE}]`;
 const N = `[^${SPACE}]`;
 
 /** Whether one character is whitespace; the empty text is not. */
-const isSpace = (c) => c !== '' && SPACE.includes(c);
+const isSpace = (/** @type {string} */ c) => c !== '' && SPACE.includes(c);
 /** The text without the whitespace it starts with. */
+/** @param {string} s */
 function trimStart(s) {
   let i = 0;
   while (i < s.length && SPACE.includes(s[i])) i++;
   return s.slice(i);
 }
 /** The text without the whitespace it ends with. */
+/** @param {string} s */
 function trimEnd(s) {
   let i = s.length;
   while (i > 0 && SPACE.includes(s[i - 1])) i--;
   return s.slice(0, i);
 }
 /** The text without the whitespace it starts and ends with: never trim(), which takes in U+FEFF. */
-const trim = (s) => trimEnd(trimStart(s));
+const trim = (/** @type {string} */ s) => trimEnd(trimStart(s));
 
 module.exports = { S, N, isSpace, trim, trimStart, trimEnd };

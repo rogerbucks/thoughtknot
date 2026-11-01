@@ -5,7 +5,7 @@
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { arrowlessLinks } from './arrows.ts';
-import { inlineRows } from './inline-properties.ts';
+import { everyRow, inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';
 import { flowLinks } from './link-flow.ts';
 import type { GraphDrawing } from './note-reading.ts';
@@ -104,6 +104,7 @@ export function withoutHidden(drawing: GraphDrawing, hidden: readonly string[] =
  * - in the direction its direction nudge sets, with its nudges (§6);
  * - with the links it draws without their arrowheads (§15);
  * - with the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown);
+ * - with every property of each box, for semantic zoom to show zoomed nearest (§68; none without `g`);
  * - with the links it moves (§7, link-flow.ts);
  * - with the boxes it draws a picture on (§18, picture.ts; none without `g`);
  * - laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise. A timeline
@@ -114,6 +115,7 @@ export function styledDrawing(whole: GraphDrawing, style: StyleGraph, g?: Graph,
     drawing = withoutHidden(whole, plan?.type === 'timeline' ? plan.hidden : []);
   const arrowless = arrowlessLinks(drawing, style, view),
     inline = g ? inlineRows(drawing, g, style, view) : undefined,
+    every = g ? everyRow(drawing, g) : undefined,
     flow = flowLinks(drawing, style, view),
     { routing } = linksOf(style, view),
     pictures = g ? picturesFor(drawing, g, style, view) : [];
@@ -122,6 +124,7 @@ export function styledDrawing(whole: GraphDrawing, style: StyleGraph, g?: Graph,
     nudges: style.nudges,
     ...(arrowless.length ? { arrowless } : {}),
     ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
+    ...(every?.boxes.length ? { everyProperty: every } : {}),
     ...(plan ? { diagram: plan } : {}),
     ...(flow.length ? { flow } : {}),
     // the links as its Links says (§25); said nowhere, they are direct, the default

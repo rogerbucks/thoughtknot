@@ -54,4 +54,21 @@ describe('lens_is_saved_query', () => {
     assert.deepEqual(flagged.things, ['d1']);
     assert.throws(() => C.runLens(graphOf(c.graph), 'd1'), /not a lens/);
   });
+
+  test('a query is read by plain search, the same as before, however long its runs of spaces (js/polynomial-redos)', () => {
+    const g = graphOf({
+      nodes: [
+        ['t1', ['Task'], { cost: 20 }],
+        ['t2', ['Task'], { cost: 90 }],
+      ],
+      edges: [],
+    });
+    const found = (text) => C.queryThings(g, text);
+    assert.deepEqual(found('Task WHERE cost > 50'), ['t2']);
+    assert.deepEqual(found('  * \t WHERE\n cost < 50  '), ['t1']);
+    assert.deepEqual(found('Task'), ['t1', 't2']);
+    for (const wrong of ['Task WHERE', 'Task WHEREcost > 1', 'TaskWHERE cost > 1 x', 'Task cost', ''])
+      assert.deepEqual(found(wrong), [], wrong);
+    assert.deepEqual(found(`Task WHERE${' '.repeat(100000)}cost > 50${' '.repeat(100000)}`), ['t2']);
+  });
 });

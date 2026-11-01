@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "the check itself > counts a sentence the code said itself in a paragraph, a list, a heading or a status",
+  "seen_failing_first": false,
+  "evidence": "The change is to the check itself, in this same test file; no shipped code moves, so there is no earlier code for it to fail against."
+}

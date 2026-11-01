@@ -3,7 +3,7 @@
 export { viewOf, PANE_PALETTE, notePath, SVG_MAX, noGraph } from './graph-view.ts';
 export { followSystemLanguage } from './mod-language.ts';
 export type { GraphView } from './graph-view.ts';
-export { settingsFrom, word } from '@thoughtknot/core';
+export { cleanSvg, settingsFrom, word } from '@thoughtknot/core';
 export { EditorLauncher, confirmArgs, editArgs, sayEdit, sayProposed, sayStopped } from './editor-launch.ts';
 export { dataFolderRefusal, guardDataFolder, guardOpenNote, pathOf } from './data-guard.ts';
 export { guardGateFiles } from './gate-guard.ts';

@@ -1,0 +1,6 @@
+{
+  "file": "test/community-listing.test.js",
+  "test": "manifest.json follows the review rules > the version, the minimum app version, the author and its link are set",
+  "seen_failing_first": false,
+  "evidence": "Guards a rule the repository already met: the manifest, versions file and workflows were right before the check was written, so it cannot fail first."
+}

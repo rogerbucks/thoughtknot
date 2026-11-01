@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals.test.js",
+  "test": "accepting_is_an_edit: an accepted change is written as text, checked first, like any other edit > a change in a property is written in the thing’s own pattern",
+  "seen_failing_first": false,
+  "evidence": "Expectation updated for the ARCH-14 marks; the code that writes them came in the commit before (fde0c73)."
+}

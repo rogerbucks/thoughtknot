@@ -23,10 +23,15 @@ if TYPE_CHECKING:
 PROJECTION_TZ = dt.timezone(dt.timedelta(hours=10))
 
 
-def _iso(v):
+def iso(v: Any) -> Any:
+    """A value as the projection writes it: an instant at UTC+10, a date as ISO text, the rest as
+    it is."""
     if isinstance(v, dt.datetime):
         return (v if v.tzinfo else v.replace(tzinfo=UTC)).astimezone(PROJECTION_TZ).isoformat()
     return v.isoformat() if isinstance(v, dt.date) else v
+
+
+_iso = iso  # the old private name, which the vault's scripts used (entry_points.json)
 
 
 def project(g: Graph) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
@@ -48,13 +53,13 @@ def project(g: Graph) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
                     "for a node's labels; rename the property"
                 )
         blocks[i] = {"id": i, "type": sorted(labels)} | {
-            k: _iso(v) for k, v in sorted(p.items()) if k != "id" and v is not None
+            k: iso(v) for k, v in sorted(p.items()) if k != "id" and v is not None
         }
     for s, t, d, p in g.edges:
         if p:
             rels.append(
                 {"from": s, "relationship": t, "to": d}
-                | {k: _iso(v) for k, v in sorted(p.items()) if v is not None}
+                | {k: iso(v) for k, v in sorted(p.items()) if v is not None}
             )
             continue
         blocks[s].setdefault(t.lower(), []).append(d)

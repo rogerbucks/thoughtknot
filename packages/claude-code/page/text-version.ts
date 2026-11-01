@@ -2,9 +2,9 @@
 // The sentences are the core's own `textVersion`, the same the Obsidian plugin gives a screen reader, so the two hosts
 // say one thing. It is a labelled section of the page, never hidden, and it stands in alone when the drawing cannot be
 // made. It is made again with every drawing, so it is always the graph as the note now holds it.
-import { textVersion } from '../../core/src/help.ts';
-import type { GraphDrawing } from '../../core/src/note-reading.ts';
-import { word } from '../../core/src/words.ts';
+import { textVersion } from '@thoughtknot/core';
+import type { GraphDrawing } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** The id of the section, which the drawing's image names as its description. */
 export const TEXT_VERSION_ID = 'gn-text-version';

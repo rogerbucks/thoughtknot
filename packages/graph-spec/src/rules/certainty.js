@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §20 certainty: likelihood bands, derived ranges, calibration, reliability and corroboration.
 'use strict';
 

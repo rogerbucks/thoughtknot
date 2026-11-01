@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-checks.test.js",
+  "test": "a show > a property its target does not have, or two targets at once, is left out",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

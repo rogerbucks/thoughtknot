@@ -76,7 +76,7 @@ describe('reading view is read-only', () => {
     const env = await load({ files: { [PATH]: empty } });
     try {
       const el = await showIn(env, 'reading');
-      await wait(50);
+      await until(() => el.querySelector('.thoughtknot-empty'));
       assert.ok(el.querySelector('.thoughtknot-empty'), 'the prompt is shown');
       assert.ok(labelled(el, 'Edit') === undefined, 'no Edit');
     } finally {

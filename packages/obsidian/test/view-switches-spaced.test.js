@@ -1,5 +1,6 @@
 // The View menu's layout options (editor spec §53, layout_saved_with_view): spacing, link length and group pull, each a
 // slider. Sliding one lays the graph out again, spaced so. A view saved as shown keeps them, and opens spaced so again.
+// Rounds is a slider too, and direction, shape and what is pinned are lists (§68, layout_strategy_variables).
 // The built plugin, loaded against the stand-ins for the page, laying out with the real engine.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,6 +42,7 @@ const GROUPS = `// graph: kit_style · STYLE kit
 (n3:Nudge {word: 'group', thing: 'cy', group: 'Helpers'}),
 (n4:Nudge {word: 'group', thing: 'dee', group: 'Helpers'})`;
 const VIEW = '// graph: kit · QUERY view people\nMATCH (n:Person) RETURN n';
+const ALL = '// graph: kit · QUERY view all\nMATCH (n IS Box|Tool|Person) RETURN n';
 /** How long a lay-out may take on a busy runner, the suite running six files at once. */
 const LAID = 20000;
 const noteOf = (...blocks) => ['# Kit', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
@@ -86,11 +88,11 @@ describe('layout options', () => {
       labelled(el, 'View').click();
       assert.deepEqual(
         sliders(el).map((s) => s.textContent.trim()),
-        ['Spacing', 'Link length', 'Group pull'],
+        ['Spacing', 'Link length', 'Group pull', 'Rounds'],
       );
       assert.deepEqual(
         sliders(el).map((s) => s.querySelector('input').value),
-        ['1', '1', '0.5'],
+        ['1', '1', '0.5', '1'],
         'as each layout lays out alone',
       );
       await until(() => spread(el) > 0, LAID);
@@ -101,7 +103,7 @@ describe('layout options', () => {
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
       saved = env.state.files.get(PATH);
-      assert.match(saved, /spacing: 3, link_length: 1, group_pull: 0.5/);
+      assert.match(saved, /spacing: 3, link_length: 1, group_pull: 0.5, rounds: 1/);
     } finally {
       env.uninstall();
     }
@@ -111,6 +113,41 @@ describe('layout options', () => {
       assert.equal(sliders(el)[0].querySelector('input').value, '3', 'the view opens spaced as saved');
     } finally {
       again.uninstall();
+    }
+  });
+
+  // proves: layout_strategy_variables
+  test('the View menu picks the layout, the direction, the shape and what is pinned, saved with a view as shown', async () => {
+    const note = noteOf(KIT, ALL); // two parts: the toolbox with Ann and Cy, and Bob with Dee
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const { el } = await show(env, note, 1);
+      labelled(el, 'View').click();
+      const lists = () => el.querySelectorAll('.thoughtknot-layout-choice');
+      const names = ['Layout', 'Direction', 'Shape', 'Keeps in place'];
+      assert.deepEqual(
+        lists().map((l, i) => l.textContent.startsWith(names[i])),
+        [true, true, true, true],
+        lists()
+          .map((l) => l.textContent)
+          .join(' | '),
+      );
+      assert.deepEqual(
+        lists().map((l) => l.querySelector('select').value),
+        ['auto', 'best', 'screen', 'selected'],
+        'as each layout lays out alone',
+      );
+      await until(() => spread(el) > 0, LAID);
+      const before = JSON.stringify(boxes(el));
+      const shape = lists()[2].querySelector('select');
+      shape.value = 'tall';
+      shape.dispatch('change');
+      await until(() => spread(el) > 0 && JSON.stringify(boxes(el)) !== before, LAID); // its parts stacked
+      labelled(el, 'Save as shown').click();
+      await until(() => /:Shown/.test(env.state.files.get(PATH)));
+      assert.match(env.state.files.get(PATH), /layout_direction: 'best', shape: 'tall', pinned: 'selected'/);
+    } finally {
+      env.uninstall();
     }
   });
 });

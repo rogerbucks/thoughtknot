@@ -18,7 +18,7 @@ import { EditorSession } from '../src/editor-session.ts';
 import type { ToWrite } from '../src/editor-session.ts';
 import type { FollowLine, Written } from './note-calls.ts';
 import type { NoteReply } from './server-calls.ts';
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 
 /** What is said when the note is deleted while what was typed is not yet written. */
 export const deletedOnPage = (): string => word('page.note-deleted');

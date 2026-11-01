@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §23 judgements: their basis, the review of a decision, the why layers, and the judgement rules.
 'use strict';
 

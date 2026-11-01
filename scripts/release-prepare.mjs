@@ -2,23 +2,34 @@
 // The version bump for a stable release, in one step (RELEASING.md, "Cutting a release"; risk OPS-3). It writes the new
 // version into every file that carries it, so none is missed:
 // - manifest.json, and a new line in versions.json with the manifest's minimum Obsidian version;
-// - every package.json, and the version each package asks for of its siblings;
+// - every package.json of the workspace, and the version each package asks for of its siblings;
+// - the desktop and phone app's Rust crates and tauri.conf.json, with the crates' lockfile entries;
 // - the Claude Code mod's plugin.json and the Python library's pyproject.toml;
 // - both lockfiles, edited in place, so no package is fetched.
 // It checks the version first and writes nothing if it is refused.
 //
 // Usage:
 //   npm run release:prepare -- 0.8.0
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RELEASE = /^(\d+)\.(\d+)\.(\d+)$/;
-const PACKAGES = [
+// Every workspace package, found on disk so a new package is never missed (the root's `workspaces` is packages/*).
+const packageFiles = (root) => [
   'package.json',
-  ...['claude-code', 'core', 'graph-spec', 'obsidian'].map((p) => `packages/${p}/package.json`),
+  ...readdirSync(join(root, 'packages'), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(root, 'packages', d.name, 'package.json')))
+    .map((d) => `packages/${d.name}/package.json`)
+    .sort(),
 ];
+const PACKAGES = packageFiles(ROOT);
+const TAURI = 'packages/app/src-tauri';
+const CARGO = [`${TAURI}/Cargo.toml`, `${TAURI}/keeper/Cargo.toml`];
+const TAURI_CONF = `${TAURI}/tauri.conf.json`;
+const CARGO_LOCK = `${TAURI}/Cargo.lock`;
+const CRATES = ['thoughtknot-app', 'tauri-plugin-keeper'];
 const MOD = 'packages/claude-code/mod/.claude-plugin/plugin.json';
 const PYPROJECT = 'python/graph_spec/pyproject.toml';
 const UV_LOCK = 'python/graph_spec/uv.lock';
@@ -32,6 +43,9 @@ export const VERSION_FILES = [
   PYPROJECT,
   'package-lock.json',
   UV_LOCK,
+  ...CARGO,
+  TAURI_CONF,
+  CARGO_LOCK,
 ];
 
 /** Whether release version a comes after b. */
@@ -71,7 +85,7 @@ export function prepare(root, version) {
   const out = new Map();
   out.set('manifest.json', asJSON({ ...manifest, version }));
   out.set('versions.json', asJSON({ ...JSON.parse(read('versions.json')), [version]: manifest.minAppVersion }));
-  for (const f of PACKAGES) {
+  for (const f of packageFiles(root)) {
     const pkg = JSON.parse(read(f));
     pkg.version = version;
     siblings(pkg, version);
@@ -80,7 +94,7 @@ export function prepare(root, version) {
   out.set(MOD, asJSON({ ...JSON.parse(read(MOD)), version }));
   const lock = JSON.parse(read('package-lock.json'));
   lock.version = version;
-  for (const f of PACKAGES) {
+  for (const f of packageFiles(root)) {
     const at = lock.packages[f === 'package.json' ? '' : f.replace(/\/package\.json$/, '')];
     if (!at) throw new Error(`refused: package-lock.json has no entry for ${f}`);
     at.version = version;
@@ -89,6 +103,22 @@ export function prepare(root, version) {
   out.set('package-lock.json', asJSON(lock));
   out.set(PYPROJECT, replaceOnce(PYPROJECT, read(PYPROJECT), /^version = "[^"]*"$/m, `version = "${version}"`));
   out.set(UV_LOCK, replaceOnce(UV_LOCK, read(UV_LOCK), /(\nname = "graph-spec"\nversion = )"[^"]*"/, `$1"${version}"`));
+  for (const f of CARGO) {
+    let body = replaceOnce(f, read(f), /^version = "[^"]*"$/m, `version = "${version}"`);
+    // the app asks for the keeper crate at exactly its own version
+    if (f === CARGO[0]) body = replaceOnce(f, body, /(tauri-plugin-keeper = \{ version = )"=[^"]*"/, `$1"=${version}"`);
+    out.set(f, body);
+  }
+  out.set(TAURI_CONF, replaceOnce(TAURI_CONF, read(TAURI_CONF), /^(  "version": )"[^"]*"/m, `$1"${version}"`));
+  let cargoLock = read(CARGO_LOCK);
+  for (const name of CRATES)
+    cargoLock = replaceOnce(
+      CARGO_LOCK,
+      cargoLock,
+      new RegExp(`(\\nname = "${name}"\\nversion = )"[^"]*"`),
+      `$1"${version}"`,
+    );
+  out.set(CARGO_LOCK, cargoLock);
   for (const [f, body] of out) writeFileSync(join(root, f), body);
 }
 

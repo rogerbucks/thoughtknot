@@ -139,15 +139,15 @@ describe('where the note is edited', () => {
     }
   });
 
-  // proves: radial_centre_anywhere
-  test('Radial can be chosen around a thing selected even where radial does not fit, and is drawn around it', async () => {
-    // pluto is joined to nothing, so a radial drawing does not fit with no centre picked
+  // proves: radial_centre_anywhere, radial_always_fits
+  test('Radial can be chosen with a thing joined to nothing, and around a thing selected', async () => {
+    // pluto is joined to nothing: drawn beside, never a reason to refuse (Roger, 1 Nov 2026, radial_always_fits)
     const apart = noteOf(`${SKY},\n(pluto:Planet {name: 'Pluto'})`);
     const { env } = await loaded(apart);
     try {
       const { el } = await show(env, apart, 0);
       labelled(el, 'Diagram type').click();
-      assert.equal(saying(el, 'Radial').disabled, true, 'nothing selected: radial does not fit');
+      assert.equal(saying(el, 'Radial').disabled, false, 'nothing selected: radial fits all the same');
       labelled(el, 'Diagram type').click();
       select(el, 'mars');
       labelled(el, 'Diagram type').click();
@@ -168,9 +168,31 @@ describe('where the note is edited', () => {
     try {
       const { el } = await show(env, apart, 0);
       labelled(el, 'Diagram type').click();
-      assert.equal(saying(el, 'Radial').disabled, true, 'nothing selected: radial does not fit');
+      assert.ok(saying(el, 'Radial'), 'nothing selected: plain Radial');
       select(el, 'mars');
       await until(() => saying(el, 'Radial, around Mars')?.disabled === false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: radial_fan_out
+  test('in a radial drawing, a tap again on the thing selected fans the drawing out from it', async () => {
+    // Roger, 1 Nov 2026: "I want radial view to allow me to fan out on the currently selected node"
+    const { env } = await loaded(RADIAL);
+    try {
+      const { el } = await show(env, RADIAL, 0);
+      const vp = el.querySelector('.thoughtknot-viewport');
+      const tap = (key) => {
+        const at = { target: box(el, key), pointerId: 31, pointerType: 'touch', button: 0, clientX: 40, clientY: 30 };
+        vp.dispatch('pointerdown', at);
+        vp.dispatch('pointerup', at);
+      };
+      tap('mars');
+      assert.ok(box(el, 'mars').hasClass('is-selected'), 'the first tap selects');
+      assert.doesNotMatch(env.state.files.get(PATH), /centre: 'mars'/, 'and fans nothing out');
+      tap('mars');
+      await until(() => /type: 'radial', centre: 'mars'/.test(env.state.files.get(PATH)));
     } finally {
       env.uninstall();
     }

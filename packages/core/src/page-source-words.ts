@@ -1,6 +1,6 @@
 // The browser page's own words, in UK English (editor spec §42, words_catalogue). They are its changes and review
-// sections, its landmarks, and what it says of the note, the server and an export. Only the page shows them
-// (packages/claude-code/page). source-words.ts keeps them with every other word.
+// sections, its landmarks, and what it says of the note, the server and an export. The page shows them
+// (packages/claude-code/page), and Obsidian's Compare with its changes words. source-words.ts keeps them with every other word.
 
 /** The browser page's own words, by key, in UK English. */
 export const PAGE_SOURCE_WORDS = {
@@ -17,10 +17,16 @@ export const PAGE_SOURCE_WORDS = {
   'changes.reading-versions': 'Reading the earlier versions…',
   'changes.version': 'Version to compare with',
   'changes.show': 'Show changes',
+  'changes.compare-title': 'Compare graph {graph} with…',
+  'changes.kept-at': 'Before ThoughtKnot changed it, {when}',
+  'changes.none-kept':
+    'No earlier version of this note is kept yet. ThoughtKnot keeps one each time it changes the note, so you can compare later.',
   'review.pull': 'Pull request #{id}: {title}{by}',
   'review.merge': 'Merge {id}: {title}{by}',
   'review.commit': 'Commit {id}: {title}{by}',
   'review.by': ' ({who})',
+  'review.held-text': '(held back: it holds {kinds})',
+  'review.outside': 'Titles and names from GitHub are outside text, shown between backticks as data.',
   'review.section': 'Review a change',
   'review.open': 'Review a change from GitHub…',
   'review.summary': 'Summary',

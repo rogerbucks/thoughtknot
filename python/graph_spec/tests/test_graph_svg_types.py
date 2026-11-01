@@ -17,6 +17,7 @@ import contextlib
 import io
 import json
 import os
+import pathlib
 import subprocess
 import sys
 import unittest
@@ -89,7 +90,7 @@ def core_answers():
     """The core's answer for every case, by Node."""
     cases = json.dumps([[texts_of(case), case.get("view")] for case in CASES])
     out = subprocess.run(
-        ["node", "--input-type=module", "-e", CORE_SCRIPT, CORE, cases],
+        ["node", "--input-type=module", "-e", CORE_SCRIPT, pathlib.Path(CORE).as_uri(), cases],
         capture_output=True,
         text=True,
         check=True,
@@ -176,12 +177,12 @@ class Types(unittest.TestCase):
         self.assertEqual(set(drawn), set(DIAGRAM_TYPES))
         self.assertIsNone(drawn["table"])
         self.assertTrue(any("stopped" in c for a in self.core for c in a["choice"].values()))
-        # and the groups: drawn inside lanes, refused by lanes when of two kinds, and by radial
+        # groups: drawn inside lanes, refused by lanes when of two kinds; radial always fits
         plans = [c.get("plan") or {} for a in self.core for c in a["choice"].values()]
         self.assertTrue(any(p.get("groups") for p in plans))
         whys = [f.get("why", "") for a in self.core for fs in a["fits"].values() for f in fs]
         self.assertTrue(any("holds things of two kinds" in w for w in whys))
-        self.assertTrue(any("cannot draw the box of group" in w for w in whys))
+        self.assertFalse(any("radial drawing needs every thing" in w for w in whys))
         self.assertTrue(any(p for a in self.core for ps in a["styles"].values() for p in ps))
 
     def test_render_lays_out_the_typed_source_in_the_types_direction(self):
@@ -192,7 +193,7 @@ class Types(unittest.TestCase):
         given = []
 
         def run(_args, input, **_kw):
-            given.append(input)
+            given.append(fake_dot.as_written(input))
             return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
         with (

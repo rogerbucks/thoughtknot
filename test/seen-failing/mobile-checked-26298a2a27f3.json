@@ -1,0 +1,6 @@
+{
+  "file": "test/mobile-checked.test.js",
+  "test": "the plug-in says it runs on phones and tablets too",
+  "seen_failing_first": false,
+  "evidence": "a guard: the manifest already says so, this keeps it"
+}

@@ -8,16 +8,16 @@
 // - the answer is written into the note as a proposal, for the person to accept or reject in the tab;
 // - each send is recorded, whatever came of it, the last ones only and never the text sent.
 import * as vscode from 'vscode';
-import { confirmSend, prepareSend, sendPrepared, type SendRecord, type Transport } from '../../core/src/ai.ts';
-import { noteWithProposal } from '../../core/src/ai-answer.ts';
-import type { HostModel } from '../../core/src/ai-host.ts';
-import type { ScopeChoice } from '../../core/src/ai-scope.ts';
-import { gqlBlocks } from '../../core/src/fences.ts';
-import { classificationOf } from '../../core/src/claude-gate.ts';
-import { readNote } from '../../core/src/drawing.ts';
-import { settingsFrom } from '../../core/src/settings.ts';
-import { viewsOf } from '../../core/src/views.ts';
-import { setLanguage, word } from '../../core/src/words.ts';
+import { confirmSend, prepareSend, sendPrepared, type SendRecord, type Transport } from '@thoughtknot/core';
+import { noteWithProposal } from '@thoughtknot/core';
+import type { HostModel } from '@thoughtknot/core';
+import type { ScopeChoice } from '@thoughtknot/core';
+import { gqlBlocks } from '@thoughtknot/core';
+import { classificationOf } from '@thoughtknot/core';
+import { readNote } from '@thoughtknot/core';
+import { settingsFrom } from '@thoughtknot/core';
+import { viewsOf } from '@thoughtknot/core';
+import { setLanguage, word } from '@thoughtknot/core';
 import { noteOf, placeOf, vscodeDisk } from './vscode-disk.ts';
 
 /** How many sends the record keeps: the oldest is let go when one more is recorded. */

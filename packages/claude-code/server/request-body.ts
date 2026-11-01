@@ -28,3 +28,23 @@ export async function readBody(req: IncomingMessage, most: number = BODY_LIMIT):
   }
   return Buffer.concat(parts).toString('utf8');
 }
+
+/** How long a refused body is let arrive, unread, before the refusal is sent and the connection closed. */
+export const DRAIN_MS = 1000;
+
+/**
+ * Resolves once the rest of a refused body has arrived and been thrown away, or after `ms`. A connection closed with
+ * bytes still coming is reset, and macOS then fails the sender's write before it reads the refusal.
+ */
+export function drained(req: IncomingMessage, ms: number = DRAIN_MS): Promise<void> {
+  return new Promise((done) => {
+    const timer = setTimeout(done, ms);
+    const end = () => {
+      clearTimeout(timer);
+      done();
+    };
+    req.once('end', end);
+    req.once('close', end);
+    req.resume();
+  });
+}

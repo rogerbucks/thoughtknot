@@ -5,6 +5,7 @@
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
 import { FADED, seeThrough } from '../../colour-numbers.ts';
+import { isCluster } from '../../space-cards.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
 /** How many points a link's curve is read at. */
@@ -47,7 +48,19 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     clusters.push({ id, x, y, width, height });
     const text = g.querySelector('text'),
       name = text?.textContent?.trim();
-    marks.push({ id, kind: 'group', style: styled(shape, text), x, y, width, height, ...(name ? { name } : {}) });
+    // a group opened from its box keeps the fold that folds it back, so its outline in space can (cluster_fold_back)
+    const folds = g.getAttribute('data-refold');
+    marks.push({
+      id,
+      kind: 'group',
+      style: styled(shape, text),
+      x,
+      y,
+      width,
+      height,
+      ...(name ? { name } : {}),
+      ...(folds ? { of: folds } : {}),
+    });
   }
   /** The smallest group holding the box from (`x`, `y`), `width` by `height`. */
   const holding = (x: number, y: number, width: number, height: number, not = '') => {
@@ -103,7 +116,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: wholeName(g, text),
+        text: labelOf(g, key, text),
         size,
         anchor: 'middle',
       });
@@ -137,6 +150,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       points,
       ...ends,
       ...(words ? { name: words } : {}),
+      // a line drawn with no arrowhead, such as a merged link's to its trunk, has none in space either (untangle_merge)
+      ...(g.querySelector(':scope > polygon, :scope > a polygon') ? {} : { headless: true as const }),
       // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
       ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
       // a bundle or a hub's stub is no link of the graph. It keeps the fold it opens, so a pick in 3D opens it (§25)
@@ -199,13 +214,19 @@ function touching(
 /** The size of `text`'s letters, as Graphviz writes them; 14 when it says none. */
 const sizeOf = (text: Element) => Number.parseFloat(text.getAttribute('font-size') ?? '') || 14;
 
+/** A box's name as drawn, with a rule's badge before it, so the look is told apart in space too (§56). */
+function labelOf(g: Element, key: string, text: Element): string {
+  const name = isCluster(key) ? clusterName(g, text) : wholeName(g, text);
+  return `${g.getAttribute('data-badge') ?? ''} ${name}`.trim();
+}
+
 /**
  * The words naming a thing: the largest in its box. A thing may show its kind in small letters above its name, and
  * the name is what a label should say (Roger, 23 Oct 2026). The first of the largest wins.
  */
 function nameOf(g: Element): Element | null {
   let best: Element | null = null;
-  for (const t of Array.from(g.querySelectorAll('text')))
+  for (const t of Array.from(g.querySelectorAll('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')))
     if (t.textContent?.trim() && (!best || sizeOf(t) > sizeOf(best))) best = t;
   return best;
 }
@@ -215,7 +236,7 @@ function nameOf(g: Element): Element | null {
  * another, and each row after it is joined on. Roger, 24 Oct 2026: a name in 3D was cut after its first row.
  */
 function wholeName(g: Element, first: Element): string {
-  const texts = Array.from(g.querySelectorAll<Element>('text')),
+  const texts = Array.from(g.querySelectorAll<Element>('text:not(.thoughtknot-rule-badge, .thoughtknot-look-tag)')),
     rows: string[] = [];
   for (const t of texts.slice(texts.indexOf(first))) {
     if (sizeOf(t) !== sizeOf(first)) break;
@@ -223,6 +244,14 @@ function wholeName(g: Element, first: Element): string {
     if (row) rows.push(row);
   }
   return rows.join(' ');
+}
+
+/** A folded group's name with its count, written smaller under it (fold-source.ts): `Identity · 8 things`. */
+function clusterName(g: Element, first: Element): string {
+  const texts = Array.from(g.querySelectorAll<Element>('text')),
+    after = texts.slice(texts.indexOf(first)).filter((t) => sizeOf(t) !== sizeOf(first));
+  const count = after.map((t) => t.textContent?.trim()).find(Boolean);
+  return count ? `${wholeName(g, first)} · ${count}` : wholeName(g, first);
 }
 
 /**
@@ -238,4 +267,12 @@ function endsOf(title: string, keys: ReadonlySet<string>): { from?: string; to?:
     if (from !== null && to !== null) return { from, to };
   }
   return {};
+}
+
+/** Each folded group's box in `svg`, by its id, with the keys of the things it holds (cluster_in_place). */
+export function heldIn(svg: Element): [string, string[]][] {
+  return Array.from(svg.querySelectorAll('[data-fold^="group:"][data-keys]')).map((g) => [
+    g.id,
+    (g.getAttribute('data-keys') ?? '').split(' ').filter(Boolean),
+  ]);
 }

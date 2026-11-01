@@ -12,6 +12,8 @@ import {
   memoryBackend,
   parked,
   readStyle,
+  renderFor,
+  savedExploreFor,
   setInParts,
   startingSwitches,
   storedGraphs,
@@ -21,6 +23,7 @@ import {
 } from '@thoughtknot/core';
 import type {
   Drawn,
+  ExploreSave,
   FocusDepth,
   GraphDrawing,
   NoteReading,
@@ -28,6 +31,7 @@ import type {
   PropType,
   Refusal,
   Settings,
+  StyleGraph,
 } from '@thoughtknot/core';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
@@ -36,7 +40,10 @@ import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
-import type { Chosen, SwitchesShown } from '../graph-view/view-options';
+import { nothingYet } from './pane-empty';
+import { LAYOUT_WAIT, waitShown } from '../progress';
+import type { Chosen, Exploring, PictureStatus, Stay, SwitchesShown } from '../graph-view/view-options';
+import type { StayedAt } from '../graph-view/type-place';
 import { aidsOf } from '../graph-view/viewer-aids';
 import type { ViewerAids } from '../graph-view/viewer-aids';
 
@@ -49,8 +56,14 @@ export interface PaneHost {
   palette?: Palette;
   /** Saves a filter chosen on the overview in the graph's style block (scale_filter_live). Not set: only tried. */
   saveFilter?: (graph: string, keep: FilterKeep) => void;
+  /** Saves an exploration in the graph's style block (§71, explore_saved). Not set: the sidebar offers no Save. */
+  saveExplore?: (graph: string, explore: ExploreSave) => void;
   /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
   noteText?: () => string;
+  /** Lets layouts run again, for a drawing refused for time; the pane then draws anew (risk UX-4). Not set: no Try again. */
+  again?: () => void;
+  /** Whether a graph's picture for readers is up to date, for the bar to say (§62). Not set: the bar says nothing of it. */
+  picture?: (graph: string) => PictureStatus;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -87,14 +100,18 @@ function drawInPane(
   switches: SwitchesShown,
   callouts: boolean,
   aids: ViewerAids,
+  again?: () => void,
+  picture?: PictureStatus,
+  stay?: Stay,
+  exploring?: Exploring,
 ) {
   host.empty();
   if (!drawn) {
-    host.createEl('p', { cls: 'thoughtknot-quiet', text: word('pane.nothing-yet') });
+    nothingYet(host);
     return null;
   }
   if ('reason' in drawn) {
-    refusalBanner(host, drawn);
+    refusalBanner(host, drawn, again);
     return null;
   }
   const card = host.createDiv({ cls: 'thoughtknot' });
@@ -118,6 +135,9 @@ function drawInPane(
     writeBlock: (_block, was, now) => Promise.resolve(fixInPane(s, on, was, now)),
     // the pane's badge counts things parked for later apart from problems, as a card's does (§8)
     parked: parked(reading, s.graph, new Date().toISOString().slice(0, 10)),
+    ...(picture && { picture }),
+    ...(stay && { stay }), // drawn again as typed, it stays where the last was left (NEURO-7)
+    ...(exploring && { exploring }), // opens on the exploration saved, and saves one (§71, explore_saved)
   });
 }
 
@@ -129,6 +149,16 @@ export class PaneDrawing extends Lifecycle {
   private state: ViewState | null = null;
   /** The store a block too large to read at once is read into, made when first needed. */
   private store: MeshIndex | null = null;
+  /** Where the last drawing was left as it went: the next, drawn from what is typed, stays there (NEURO-7). */
+  private left: StayedAt | undefined;
+  private readonly stay: Stay = {
+    leave: (at) => (this.left = at),
+    kept: () => {
+      const at = this.left;
+      this.left = undefined;
+      return at;
+    },
+  };
 
   constructor(host: PaneHost) {
     super();
@@ -146,6 +176,7 @@ export class PaneDrawing extends Lifecycle {
       layout: (part, by) => this.host.layout(part, by),
       props: (key) => reading.world[d.graph]?.p(key) ?? {},
       chosen: style.filters.find((f) => f.view === undefined)?.keep,
+      painter: renderFor(style).painter, // as its Render says (§68, layout_concept_layers)
       ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
     });
   }
@@ -183,6 +214,7 @@ export class PaneDrawing extends Lifecycle {
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
         ...(saved ? { chosen: saved } : {}),
+        ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
         picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
       });
@@ -192,6 +224,13 @@ export class PaneDrawing extends Lifecycle {
           text: word('massive.style-problem', { why: p.message }),
         });
     });
+  }
+
+  /** The graph's saved exploration, and how its sidebar saves one into the note (§71, explore_saved). */
+  private exploring(graph: string, style: StyleGraph): Exploring {
+    const saved = savedExploreFor(style.explores),
+      save = this.host.saveExplore;
+    return { ...(saved && { saved }), ...(save && { save: (e: ExploreSave) => save(graph, e) }) };
   }
 
   /** Takes the drawing away. */
@@ -204,20 +243,19 @@ export class PaneDrawing extends Lifecycle {
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
     const state = (this.state ??= new ViewState(startingSwitches(this.host.settings())));
-    // straight links first past 300 things, then the curves (§11, curves_after_drawing)
-    const laidOut = (by: object, curved = false) =>
-      d ? this.host.layout({ ...state.folded(d, by), straightFirst: !curved }, by) : Promise.resolve(null);
+    const laidOut = (by: object) => (d ? this.host.layout(state.folded(d, by), by) : Promise.resolve(null));
     // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
     const laid = reading.tooLarge
       ? Promise.resolve(reading.tooLarge)
       : d && d.boxes.length
         ? laidOut(this)
         : Promise.resolve(undefined);
-    void laid
+    void waitShown(host, word('progress.drawing'), () => laid, LAYOUT_WAIT)
       .then((drawn) => {
-        if (stale() || drawn === null) return;
+        if (stale() || drawn === null || drawn === 'stopped') return;
         this.clear();
         const depth = depthOf(this.host.settings().focusDepth);
+        const { style } = readStyle(reading.texts, s.graph, reading);
         const view = drawInPane(
           host,
           drawn,
@@ -225,9 +263,17 @@ export class PaneDrawing extends Lifecycle {
           s,
           on,
           depth,
-          { state, relayout: (by: object) => laidOut(by), curved: (by: object) => laidOut(by, true) },
+          { state, relayout: (by: object) => laidOut(by) },
           this.host.settings().noteCallouts === 'on',
-          aidsOf(this.host.settings()),
+          aidsOf(this.host.settings(), style), // its own preset first (§69)
+          this.host.again &&
+            (() => {
+              this.host.again?.();
+              this.redraw(host, reading, s, stale, on);
+            }),
+          this.host.picture?.(s.graph),
+          this.stay,
+          this.exploring(s.graph, style),
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);

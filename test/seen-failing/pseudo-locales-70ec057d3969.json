@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "the plugin’s notices > say no sentence of their own: each is a word of the catalogue",
+  "seen_failing_first": false,
+  "evidence": "A guard on code that is already clean: every notice is already a catalogue word, so it passes first and fails only on a future typed one."
+}

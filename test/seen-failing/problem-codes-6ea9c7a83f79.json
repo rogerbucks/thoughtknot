@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/problem-codes.test.mjs",
+  "test": "editor spec §42, problem_codes: every code has its case (CODE-8) > each code is refused in a case, is a limit with its case in limit-cases.json, or says why no block raises it",
+  "seen_failing_first": false,
+  "evidence": "CODE-8: every code already had a case or limit; the test holds that, and names why GN416 and GN502 have none."
+}

@@ -52,11 +52,22 @@ const OUTSIDE = [
   '',
 ];
 
-/** A note named as people name them: a `+`, a `?` and dots that end the name. Mac and Linux hold it, and so must we. */
-const ODD_NAME = '+Contacts as a single source of truth/Best Contact manager for gmail? I want to get con....md';
+/**
+ * A note named as people name them: a `+`, a `?` and dots that end the name. Mac and Linux hold it, and so must we.
+ * Windows holds no `?` in a file's name, nor does a note made there have one, so there it is the rest of the name.
+ */
+const oddName = (windows: boolean) =>
+  `+Contacts as a single source of truth/Best Contact manager for gmail${windows ? '' : '?'} I want to get con....md`;
 
-/** Every check of the contract, each run on a fresh, empty backend from `make`. */
-export function storageContract(make: () => NoteStorage | Promise<NoteStorage>): StorageCheck[] {
+/**
+ * Every check of the contract, each run on a fresh, empty backend from `make`. Pass `windows` for a backend that keeps
+ * its files on Windows.
+ */
+export function storageContract(
+  make: () => NoteStorage | Promise<NoteStorage>,
+  { windows = false }: { windows?: boolean } = {},
+): StorageCheck[] {
+  const oddNote = oddName(windows);
   return [
     {
       name: 'an empty store lists no note, and reads none',
@@ -144,11 +155,11 @@ export function storageContract(make: () => NoteStorage | Promise<NoteStorage>):
       name: 'a note named with a `+`, a `?` and dots before `.md` is written, listed, read and removed',
       run: async () => {
         const s = await make();
-        made('write', await s.write(ODD_NAME, 'odd'));
-        if ((await s.list()).join() !== ODD_NAME) fail('list', ODD_NAME, await s.list());
-        const read = await s.read(ODD_NAME);
+        made('write', await s.write(oddNote, 'odd'));
+        if ((await s.list()).join() !== oddNote) fail('list', oddNote, await s.list());
+        const read = await s.read(oddNote);
         if (read?.text !== 'odd') fail('read', '"odd"', read);
-        made('remove', await s.remove(ODD_NAME));
+        made('remove', await s.remove(oddNote));
         if ((await s.list()).length) fail('list', 'no notes', await s.list());
       },
     },

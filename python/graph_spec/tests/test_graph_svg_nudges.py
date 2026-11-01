@@ -15,6 +15,7 @@ a style block that cannot be read leaves the graph in the locked style (broken_s
 
 import json
 import os
+import pathlib
 import subprocess
 import sys
 import unittest
@@ -75,7 +76,7 @@ def core_answers():
     """The core's answer for every case, by Node."""
     notes = json.dumps([texts_of(case) for case in CASES])
     out = subprocess.run(
-        ["node", "--input-type=module", "-e", CORE_SCRIPT, CORE, notes],
+        ["node", "--input-type=module", "-e", CORE_SCRIPT, pathlib.Path(CORE).as_uri(), notes],
         capture_output=True,
         text=True,
         check=True,
@@ -103,7 +104,7 @@ def parts(world, name, problems):
         (i, " · ".join(sorted(x for x in g.nodes[i][0] if x not in gr.SCHEMA_LABELS)), text(i))
         for i in ids
     ]
-    edges = [(s, gr._word(words, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
+    edges = [(s, gr.word(words, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
     suggested = {p["suggested"] for p in problems if p.get("suggested") and p["graph"] == name}
     return nodes, edges, suggested
 
@@ -213,7 +214,7 @@ class Nudges(unittest.TestCase):
         given = []
 
         def run(_args, input, **_kw):
-            given.append(input)
+            given.append(fake_dot.as_written(input))
             return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
         with (

@@ -1,0 +1,45 @@
+name: Token watch
+
+# PROJECT_TOKEN expires, and the build status and the project mirror only warn when it is refused, which nobody reads
+# (OPS-7). This asks GitHub once a day whether the token still works. A refusal fails the run, so the run list shows
+# it, and the third refusal in a row opens one issue labelled workflow-failure. It runs no code of the repository and
+# prints no token. The expiry dates are in RELEASING.md, "Keys and recovery".
+on:
+  schedule:
+    - cron: '41 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - name: Ask GitHub who the token is
+        id: ask
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::warning::PROJECT_TOKEN is not set"; exit 1; fi
+          gh api graphql -f query='{ viewer { login } }' --jq .data.viewer.login > /dev/null ||
+            { echo "::warning::GitHub refused PROJECT_TOKEN. Make a new one as RELEASING.md says."; exit 1; }
+      - name: The third refusal in a row opens one issue
+        if: steps.ask.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          earlier=$(gh run list --workflow token-watch.yml --status completed --limit 2 --json conclusion --jq '[.[] | select(.conclusion == "failure")] | length')
+          title="PROJECT_TOKEN has been refused three times in a row"
+          open=$(gh issue list --label workflow-failure --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ "$earlier" = 2 ] && [ -z "$open" ]; then
+            gh label create workflow-failure --description "A scheduled or background workflow failed" --color d93f0b 2>/dev/null || true
+            gh issue create --title "$title" --label workflow-failure --body "The build status and the project mirror warn and go on without the board while it is refused. Make a new classic token with the project and public_repo scopes, as RELEASING.md says, and set it as the secret PROJECT_TOKEN. Close this issue once it works."
+          fi
+          exit 1

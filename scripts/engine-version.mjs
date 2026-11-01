@@ -254,6 +254,25 @@ function merge(list) {
   return out;
 }
 
+const pause = (ms) => new Promise((done) => setTimeout(done, ms));
+
+/** `fetch`, asked up to three times. A throw, a 429, a 403 (NVD's rate limit) or a 5xx is asked again after 1 s, then 2 s. */
+export const retrying =
+  (fetch, sleep = pause) =>
+  async (...args) => {
+    for (let at = 1; ; at++) {
+      let res;
+      try {
+        res = await fetch(...args);
+        if (res.ok || !(res.status === 429 || res.status === 403 || res.status >= 500)) return res;
+      } catch (e) {
+        if (at === 3) throw e;
+      }
+      if (at === 3) return res;
+      await sleep(1000 * 2 ** (at - 1));
+    }
+  };
+
 /** What a service said when it could not answer, or null when it answered. */
 const failure = async (name, ask) => {
   try {
@@ -269,7 +288,8 @@ const failure = async (name, ask) => {
  * npm package. A question any service cannot answer is an error, never an empty answer. A release is not made on
  * advisories nobody could read.
  */
-export async function refresh({ graphviz, wrapper, fetch = globalThis.fetch, today, previous }) {
+export async function refresh({ graphviz, wrapper, fetch: plain = globalThis.fetch, sleep, today, previous }) {
+  const fetch = retrying(plain, sleep);
   const osv = await failure('OSV', () => askOsv(fetch, GRAPHVIZ_REPO, graphviz, 'GIT'));
   const nvd = await failure('NVD', () => askNvd(fetch, graphviz));
   const errors = [osv.error, nvd.error].filter(Boolean);
@@ -284,6 +304,18 @@ export async function refresh({ graphviz, wrapper, fetch = globalThis.fetch, tod
   const kept = previous && { queried: previous.queried, sources: previous.sources, advisories: previous.advisories };
   const checked = today ?? new Date().toISOString().slice(0, 10);
   return { cache: { about: ABOUT, checked, ...body }, changed: JSON.stringify(kept) !== JSON.stringify(body) };
+}
+
+/** `refresh`, but a service still down after its retries leaves a cache for this engine, checked within 14 days, standing (OPS-5). */
+export async function refreshOrKeep(args) {
+  try {
+    return await refresh(args);
+  } catch (e) {
+    const { previous, graphviz, wrapper, today = new Date().toISOString().slice(0, 10) } = args;
+    const same = previous?.queried?.graphviz === graphviz && previous.queried?.[WRAPPER] === wrapper;
+    if (!same || staleness(previous, today)) throw e;
+    return { cache: previous, changed: false, warning: `${e.message}. Using ${CACHE}, checked ${previous.checked}.` };
+  }
 }
 
 const ids = (cache) => new Set((cache?.advisories ?? []).map((a) => a.id));
@@ -316,8 +348,9 @@ async function main(argv) {
   const cacheFile = resolve(ROOT, option('--cache') ?? CACHE);
   const engine = await engineVersion();
   if (argv.includes('--refresh')) {
-    const { cache, changed } = await refresh({ ...engine, previous: readJSON(cacheFile) });
-    writeFileSync(cacheFile, `${JSON.stringify(cache, null, 2)}\n`);
+    const { cache, changed, warning } = await refreshOrKeep({ ...engine, previous: readJSON(cacheFile) });
+    if (warning) console.error(`warning: ${warning}`);
+    else writeFileSync(cacheFile, `${JSON.stringify(cache, null, 2)}\n`);
     console.log(
       `Graphviz ${engine.graphviz}: ${cache.advisories.length} advisories listed (${changed ? 'the answer changed' : 'no change'})`,
     );

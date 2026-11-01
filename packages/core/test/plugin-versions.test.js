@@ -23,17 +23,17 @@ const installs = (over, options) => {
 
 describe('the versions of the plug-in interface (plugin_point_versions)', () => {
   test('the interface and every extension point carry a version, major.minor', () => {
-    assert.equal(PLUGIN_API, '1.1');
+    assert.equal(PLUGIN_API, '1.2');
     assert.deepEqual(Object.keys(POINT_VERSIONS), [...EXTENSION_POINTS]);
     for (const v of Object.values(POINT_VERSIONS)) assert.match(v, /^\d+\.\d+$/);
   });
 
   test('a plug-in built for the same major and a minor no higher loads; any other is refused', () => {
-    for (const api of ['1', '1.0', '1.1']) assert.deepEqual(installs({ api }), ['acme.lines'], api);
-    for (const api of ['1.2', '2.0', '0.9', 'one'])
+    for (const api of ['1', '1.0', '1.1', '1.2']) assert.deepEqual(installs({ api }), ['acme.lines'], api);
+    for (const api of ['1.3', '2.0', '0.9', 'one'])
       assert.throws(
         () => installs({ api }),
-        new RegExp(`built for version ${api} of the interface, and this host has 1.1`),
+        new RegExp(`built for version ${api} of the interface, and this host has 1.2`),
       );
   });
 

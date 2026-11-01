@@ -1,39 +1,39 @@
 {
-  "about": "Recorded reasons for a quality metric that got worse than quality/baseline.json (spec §12). Each entry covers one change: the metric, its baseline value (from), the value it may reach or anything better (to), why, and the day. Without an entry, scripts/quality-check.mjs fails the release. When the baseline is re-measured, entries for the old values simply stop applying.",
+  "about": "Recorded reasons for a quality metric that got worse than quality/baseline.json (spec \u00a712). Each entry covers one change: the metric, its baseline value (from), the value it may reach or anything better (to), why, and the day. Without an entry, scripts/quality-check.mjs fails the release. When the baseline is re-measured, entries for the old values simply stop applying.",
   "accepted": [
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 407431,
-      "reason": "the layout runs in a Web Worker (spec §9 layout_contained); the worker's own copy of the layout-source code is the cost of containing it",
+      "reason": "the layout runs in a Web Worker (spec \u00a79 layout_contained); the worker's own copy of the layout-source code is the cost of containing it",
       "date": "2026-10-10"
     },
     {
       "metric": "bundle_bytes",
       "from": 1958060,
       "to": 2203239,
-      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review.",
+      "reason": "Slice 2's views, style graph and export (core src 113 kB \u2192 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review.",
       "date": "2026-10-11"
     },
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 632893,
-      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review; raised to the final slice 2 size after #85, #91, #93 and #101; accepted by Roger, 12 Oct 2026.",
+      "reason": "Slice 2's views, style graph and export (core src 113 kB \u2192 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review; raised to the final slice 2 size after #85, #91, #93 and #101; accepted by Roger, 12 Oct 2026.",
       "date": "2026-10-12"
     },
     {
       "metric": "bundle_bytes",
       "from": 1958060,
       "to": 2806887,
-      "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
+      "reason": "Slice 3's features (core src 246 kB \u2192 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     },
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 1200306,
-      "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
+      "reason": "Slice 3's features (core src 246 kB \u2192 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     },
     {
@@ -105,6 +105,13 @@
       "to": 5064762507,
       "reason": "curved links past 300 things (#1043), as Roger asked: Graphviz's curves cost about half as much again as straight lines, and its cheaper curve modes were slower or the same. Still within the draw_five_hundred budget of 7.7 billion. Accepted by Roger, 24 Oct 2026",
       "date": "2026-10-24"
+    },
+    {
+      "metric": "coverage_percent",
+      "from": 99.2,
+      "to": 96.8,
+      "reason": "The 99.2 was measured on 9 Oct 2026, on a Mac, when the core was smaller. The CI runner now measures the core at 96.8, and the baseline is set to what CI sees so each pull request can be held to it (CODE-3). The core's coverage is not lowered by this change.",
+      "date": "2026-10-30"
     }
   ]
 }

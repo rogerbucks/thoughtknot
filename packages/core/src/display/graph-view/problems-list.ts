@@ -3,6 +3,7 @@
 // completeness report.
 import { word } from '@thoughtknot/core';
 import type { CompletenessReport, Problem } from '@thoughtknot/core';
+import { recentNotices } from '../notices.ts';
 
 /** A problem, with the note line it is on. */
 export interface ShownProblem extends Problem {
@@ -100,6 +101,13 @@ export function renderProblems(
       for (const x of r.overdue) sub.createEl('li', { cls: 'is-warning', text: word('problems.overdue', { what: x }) });
       for (const x of r.deferred) sub.createEl('li', { text: word('problems.deferred', { what: x }) });
     }
+  }
+  const recent = recentNotices();
+  if (recent.length) {
+    // the last notices, to read again once they have gone (risk NEURO-6)
+    box.createEl('h4', { text: word('problems.recent') });
+    const ul = box.createEl('ul', { cls: 'thoughtknot-recent-notices' });
+    for (const m of recent) ul.createEl('li', { text: m });
   }
   return box;
 }

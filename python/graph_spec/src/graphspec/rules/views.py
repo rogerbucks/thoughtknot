@@ -40,9 +40,13 @@ def readings(g: Graph, shared: Graph | None = None) -> dict[str, tuple[str | Non
     }
 
 
-def _word(type_words, t):
-    # undeclared (a draft): the type's own words, COUNTS_AGAINST -> counts against
+def word(type_words: dict, t: str) -> str:
+    """The words a link type is read by: its declared reading, or for a draft type its own name in
+    words, so COUNTS_AGAINST reads counts against."""
     return (type_words.get(t, (None, None))[0] or t.replace("_", " ").lower()).replace('"', "'")
+
+
+_word = word  # the old private name, which the vault's scripts used (entry_points.json)
 
 
 def mermaid_graph(g: Graph, shared: Graph | None = None) -> str:
@@ -53,7 +57,7 @@ def mermaid_graph(g: Graph, shared: Graph | None = None) -> str:
     type_words = readings(g, shared)
     lines = ["flowchart LR"] + [f'    {var[i]}["{_caption(g, i)}"]' for i in ids]
     lines += sorted(
-        f"    {var[s]} -->|{_word(type_words, t)}| {var[d]}"
+        f"    {var[s]} -->|{word(type_words, t)}| {var[d]}"
         for s, t, d, _ in g.edges
         if s in var and d in var
     )
@@ -67,7 +71,7 @@ def legend(g: Graph, shared: Graph | None = None) -> str:
     type_words = readings(g, shared)
     used = sorted({t for s, t, d, _ in g.edges if s in ids and d in ids})
     return "\n".join(
-        f"{_word(type_words, t)} = {t}"
+        f"{word(type_words, t)} = {t}"
         + (f" · reverse: {type_words[t][1]}" if type_words.get(t, (None, None))[1] else "")
         for t in used
     )

@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Views as Mermaid text, the same text as graph_rules.py: a graph's relationships, its legend, and a path.
 'use strict';
 

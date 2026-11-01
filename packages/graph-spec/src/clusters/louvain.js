@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Finding groups by how things link: the Louvain method (Blondel and others, 2008). Two features use it, so they agree.
 // One is clusters found by an algorithm (editor spec §31, cluster_kind_recorded). The other is big-graph groups
 // (editor spec §53, scale_groups). See wiki/Clusters-design.md. Its Python twin, step for step, is

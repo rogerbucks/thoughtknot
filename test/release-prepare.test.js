@@ -3,7 +3,7 @@
 // bump never misses one. Checked on a copy of the repository's own version files, in a folder of its own.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readJSON } from './repository/repo.js';
@@ -43,11 +43,25 @@ describe('release:prepare', () => {
           for (const [dep, wanted] of Object.entries({ ...deps.dependencies, ...deps.devDependencies }))
             if (dep.startsWith('@thoughtknot/')) assert.equal(wanted, '98.7.6', `${f} asks for ${dep}`);
       }
+      const tauri = 'packages/app/src-tauri';
+      assert.match(text(dir, `${tauri}/Cargo.toml`), /^version = "98\.7\.6"$/m);
+      assert.match(text(dir, `${tauri}/Cargo.toml`), /tauri-plugin-keeper = \{ version = "=98\.7\.6"/);
+      assert.match(text(dir, `${tauri}/keeper/Cargo.toml`), /^version = "98\.7\.6"$/m);
+      assert.equal(json(dir, `${tauri}/tauri.conf.json`).version, '98.7.6');
+      for (const name of ['thoughtknot-app', 'tauri-plugin-keeper'])
+        assert.match(text(dir, `${tauri}/Cargo.lock`), new RegExp(`\\nname = "${name}"\\nversion = "98\\.7\\.6"\\n`));
       assert.match(text(dir, 'python/graph_spec/pyproject.toml'), /^version = "98\.7\.6"$/m);
       assert.match(text(dir, 'python/graph_spec/uv.lock'), /\nname = "graph-spec"\nversion = "98\.7\.6"\n/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  test('moves every package of the workspace, so a package added later is never left on the old version', () => {
+    assert.deepEqual(readJSON('package.json').workspaces, ['packages/*']);
+    const dirs = readdirSync(join(ROOT, 'packages'), { withFileTypes: true }).filter((d) => d.isDirectory());
+    const wanted = dirs.filter((d) => existsSync(join(ROOT, 'packages', d.name, 'package.json')));
+    for (const d of wanted) assert.ok(VERSION_FILES.includes(`packages/${d.name}/package.json`), d.name);
   });
 
   test('refuses a version that is not major.minor.patch, or not after the current one, and changes nothing', () => {

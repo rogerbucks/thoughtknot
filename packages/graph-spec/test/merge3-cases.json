@@ -1,0 +1,189 @@
+{
+  "about": "The three-way join of two revisions over their base (graph spec §21, merge3; CODE-2). Each case is a base and two revisions of it, a and b, each a document's lines; its header line is added. Every answer is written for what the join is meant to do, not recorded from it. A change made on one side only is kept, a removal too. Changes on both sides that agree are kept once. Changes on both sides that differ are contested and left out, each as a claim. With hold on, a thing removed on one side and changed on the other is held back: its removal is contested with the change. With hold off it is removed. `rows` are the join's reading rows as [code, subject, about]; `claims` each contested claim by its id; `nodes` the properties of each thing joined; `edges` each relationship joined as from-TYPE->to. packages/graph-spec/test/merge3.test.mjs and python/graph_spec/tests/test_merge3.py run every case.",
+  "cases": [
+    {
+      "name": "both sides make the same change: it is kept once, and nothing is contested",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": ["(w:Product {name: 'Widget', price: 12})"],
+      "b": ["(w:Product {name: 'Widget', price: 12})"],
+      "answer": {
+        "rows": [["both-same", "w", "price"]],
+        "claims": {},
+        "nodes": { "w": { "id": "w", "name": "Widget", "price": 12 } },
+        "edges": []
+      }
+    },
+    {
+      "name": "one side changes a value: the change is kept",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": ["(w:Product {name: 'Widget', price: 12})"],
+      "b": ["(w:Product {name: 'Widget', price: 10})"],
+      "answer": {
+        "rows": [["one-side-change", "w", "price"]],
+        "claims": {},
+        "nodes": { "w": { "id": "w", "name": "Widget", "price": 12 } },
+        "edges": []
+      }
+    },
+    {
+      "name": "the other side changes a value: the change is kept, whichever side made it",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": ["(w:Product {name: 'Widget', price: 10})"],
+      "b": ["(w:Product {name: 'Widget', price: 14})"],
+      "answer": {
+        "rows": [["one-side-change", "w", "price"]],
+        "claims": {},
+        "nodes": { "w": { "id": "w", "name": "Widget", "price": 14 } },
+        "edges": []
+      }
+    },
+    {
+      "name": "both sides change a value differently: both are contested, and the value is left out for a person",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": ["(w:Product {name: 'Widget', price: 12})"],
+      "b": ["(w:Product {name: 'Widget', price: 14})"],
+      "answer": {
+        "rows": [["both-differ", "w", "price"]],
+        "claims": { "claim:join/w/price=12@a": "contested", "claim:join/w/price=14@b": "contested" },
+        "nodes": { "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "one side removes a thing the other leaves alone: the removal is kept",
+      "base": ["(w:Product {name: 'Widget', price: 10}),", "(g:Product {name: 'Gizmo'})"],
+      "a": ["(g:Product {name: 'Gizmo'})"],
+      "b": ["(w:Product {name: 'Widget', price: 10}),", "(g:Product {name: 'Gizmo'})"],
+      "answer": {
+        "rows": [["one-side-removal", "w", "node"]],
+        "claims": {},
+        "nodes": { "g": { "id": "g", "name": "Gizmo" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "one side removes a relationship the other leaves alone: the removal is kept, and its ends stay",
+      "base": ["(w:Product {name: 'Widget'}),", "(g:Product {name: 'Gizmo'}),", "(w)-[:LIKE]->(g)"],
+      "a": ["(w:Product {name: 'Widget'}),", "(g:Product {name: 'Gizmo'})"],
+      "b": ["(w:Product {name: 'Widget'}),", "(g:Product {name: 'Gizmo'}),", "(w)-[:LIKE]->(g)"],
+      "answer": {
+        "rows": [["one-side-removal", "w", "edge"]],
+        "claims": {},
+        "nodes": { "g": { "id": "g", "name": "Gizmo" }, "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "one side adds a label: it is kept",
+      "base": ["(w:Product {name: 'Widget'})"],
+      "a": ["(w:Product:Gadget {name: 'Widget'})"],
+      "b": ["(w:Product {name: 'Widget'})"],
+      "answer": {
+        "rows": [["one-side-addition", "w", "Gadget"]],
+        "claims": {},
+        "nodes": { "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "both sides add the same thing: it is kept once",
+      "base": ["(g:Product {name: 'Gizmo'})"],
+      "a": ["(g:Product {name: 'Gizmo'}),", "(w:Product {name: 'Widget'})"],
+      "b": ["(g:Product {name: 'Gizmo'}),", "(w:Product {name: 'Widget'})"],
+      "answer": {
+        "rows": [["both-same", "w", "node"]],
+        "claims": {},
+        "nodes": { "g": { "id": "g", "name": "Gizmo" }, "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "both sides add the same thing with different values: the thing is kept, its value contested",
+      "base": ["(g:Product {name: 'Gizmo'})"],
+      "a": ["(g:Product {name: 'Gizmo'}),", "(w:Product {name: 'Widget', price: 10})"],
+      "b": ["(g:Product {name: 'Gizmo'}),", "(w:Product {name: 'Widget', price: 11})"],
+      "answer": {
+        "rows": [
+          ["both-differ", "w", "price"],
+          ["both-same", "w", "node"]
+        ],
+        "claims": { "claim:join/w/price=10@a": "contested", "claim:join/w/price=11@b": "contested" },
+        "nodes": { "g": { "id": "g", "name": "Gizmo" }, "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "hold on: a thing removed on one side and changed on the other is held back, its removal contested",
+      "hold": true,
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": [],
+      "b": ["(w:Product {name: 'Widget', price: 11})"],
+      "answer": {
+        "rows": [
+          ["delete-v-change", "w", "node"],
+          ["remove-v-change", "w", "price"]
+        ],
+        "claims": {
+          "claim:join/w/exists=kept@b": "contested",
+          "claim:join/w/exists=removed@a": "contested",
+          "claim:join/w/price=11@b": "contested",
+          "claim:join/w/price=removed@a": "contested"
+        },
+        "nodes": { "w": { "id": "w", "name": "Widget" } },
+        "edges": []
+      }
+    },
+    {
+      "name": "hold off: the same thing is removed, and only its changed value is contested",
+      "hold": false,
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "a": [],
+      "b": ["(w:Product {name: 'Widget', price: 11})"],
+      "answer": {
+        "rows": [
+          ["one-side-removal", "w", "node"],
+          ["remove-v-change", "w", "price"]
+        ],
+        "claims": { "claim:join/w/price=11@b": "contested", "claim:join/w/price=removed@a": "contested" },
+        "nodes": {},
+        "edges": []
+      }
+    },
+    {
+      "name": "hold on: a thing removed on one side while its relationship is changed on the other keeps both",
+      "hold": true,
+      "base": ["(w:Product {name: 'Widget'}),", "(g:Product {name: 'Gizmo'}),", "(w)-[:LIKE {n: 1}]->(g)"],
+      "a": ["(g:Product {name: 'Gizmo'})"],
+      "b": ["(w:Product {name: 'Widget'}),", "(g:Product {name: 'Gizmo'}),", "(w)-[:LIKE {n: 2}]->(g)"],
+      "answer": {
+        "rows": [
+          ["delete-v-change", "w", "node"],
+          ["remove-v-change", "w", "LIKE n"]
+        ],
+        "claims": {
+          "claim:join/w/LIKE-g//n=2@b": "contested",
+          "claim:join/w/LIKE-g//n=removed@a": "contested",
+          "claim:join/w/exists=kept@b": "contested",
+          "claim:join/w/exists=removed@a": "contested"
+        },
+        "nodes": { "g": { "id": "g", "name": "Gizmo" }, "w": { "id": "w", "name": "Widget" } },
+        "edges": ["w-LIKE->g"]
+      }
+    },
+    {
+      "name": "the two sides changing different things are both kept, and nothing is contested",
+      "base": ["(w:Product {name: 'Widget', price: 10, colour: 'blue'})"],
+      "a": ["(w:Product {name: 'Widget', price: 12, colour: 'blue'})"],
+      "b": ["(w:Product {name: 'Widget', price: 10, colour: 'red'})"],
+      "answer": {
+        "rows": [
+          ["one-side-change", "w", "colour"],
+          ["one-side-change", "w", "price"]
+        ],
+        "claims": {},
+        "nodes": { "w": { "id": "w", "name": "Widget", "price": 12, "colour": "red" } },
+        "edges": []
+      }
+    }
+  ]
+}

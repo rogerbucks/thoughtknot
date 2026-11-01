@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/note-writing.test.js",
+  "test": "the note changes between the vault’s read and its write > Lock the graph writes its schema into the note as it then is, their change kept",
+  "seen_failing_first": false,
+  "evidence": "The plugin already refused a change in the gap; this commit gives the stand-in vault the gap so a test can prove it (CODE-5)."
+}

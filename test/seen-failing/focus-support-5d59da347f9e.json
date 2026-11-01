@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/focus-support.test.js",
+  "test": "the Focus support preset > the default preset starts the trail again at each pick in the drawing, and blurs nothing",
+  "seen_failing_first": false,
+  "evidence": "It guards the default against the change: the default already started the trail again and blurred nothing, so it passes on the old code by design."
+}

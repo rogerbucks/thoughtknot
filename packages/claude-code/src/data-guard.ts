@@ -77,21 +77,53 @@ export interface GuardPorts {
   readLink?: (path: string) => Promise<string | null>;
 }
 
-/** A path with `.` and `..` settled by its text alone. */
+/** A Windows drive at the start of a path, `C:/`, once its backslashes are slashes. */
+const DRIVE = /^[A-Za-z]:\//;
+
+/**
+ * Whether the host is Windows: its folders start with a drive. There a path is written with backslashes. So the guard
+ * reads each as a slash. Elsewhere a backslash is part of a name and is left as it is.
+ */
+export const onWindows = (ports: GuardPorts): boolean =>
+  [ports.cwd, ports.data].some((path) => /^[A-Za-z]:[\\/]/.test(path));
+
+/** `path` with Windows' backslashes as slashes. */
+export const slashed = (path: string): string => path.replace(/\\/g, '/');
+
+/** The ports with every path in slashes, the real-path and link calls' answers too, so one path reads one way. */
+export function slashedPorts(ports: GuardPorts): GuardPorts {
+  const { readLink } = ports;
+  return {
+    ...ports,
+    data: slashed(ports.data),
+    home: ports.home === undefined ? undefined : slashed(ports.home),
+    cwd: slashed(ports.cwd),
+    realPath: async (path) => slashed(await ports.realPath(path)),
+    readLink:
+      readLink &&
+      (async (path) => {
+        const leads = await readLink(path);
+        return leads === null ? null : slashed(leads);
+      }),
+  };
+}
+
+/** A path with `.` and `..` settled by its text alone. A drive it starts with stays its root. */
 function normalise(path: string): string {
+  const drive = DRIVE.test(path) ? path.slice(0, 2) : null;
   const parts: string[] = [];
-  for (const part of path.split('/')) {
+  for (const part of (drive ? path.slice(2) : path).split('/')) {
     if (part === '' || part === '.') continue;
     if (part === '..') parts.pop();
     else parts.push(part);
   }
-  return `/${parts.join('/')}`;
+  return `${drive ?? ''}/${parts.join('/')}`;
 }
 
 /** `path` as a full path: `~` is the home folder, a relative path starts at the session's folder. */
 function absolute(path: string, ports: GuardPorts): string {
   if (path === '~' || path.startsWith('~/')) return ports.home ? `${ports.home}${path.slice(1)}` : path;
-  return path.startsWith('/') ? path : `${ports.cwd}/${path}`;
+  return path.startsWith('/') || DRIVE.test(path) ? path : `${ports.cwd}/${path}`;
 }
 
 /** Whether `path` is `folder` or inside it. */
@@ -132,9 +164,10 @@ async function settle(path: string, ports: GuardPorts, links = 0): Promise<strin
         return settle(`${normalise(leads)}${rest}`, ports, links + 1);
       }
       const cut = head.lastIndexOf('/');
-      if (cut <= 0) return null;
+      // a drive's root, `C:/`, is the last folder to try
+      if (cut <= 0 || (cut === 2 && DRIVE.test(head) && head.length === 3)) return null;
       rest = `${head.slice(cut)}${rest}`;
-      head = head.slice(0, cut);
+      head = cut === 2 && DRIVE.test(head) ? head.slice(0, 3) : head.slice(0, cut);
     }
   }
 }
@@ -282,8 +315,9 @@ export type OpenNotePorts = Omit<GuardPorts, 'data'> & { note: string | null };
  * With no note open, nothing is refused. Reads are not judged.
  */
 export async function guardOpenNote(tool: string, input: ToolInput, ports: OpenNotePorts): Promise<string | null> {
-  const { note, ...rest } = ports;
-  if (!note) return null;
+  const { note: given, ...rest } = ports;
+  if (!given) return null;
+  const note = onWindows({ ...rest, data: given }) ? slashed(given) : given;
   const kept = {
     target: note,
     refusal: openNoteRefusal(),
@@ -294,14 +328,22 @@ export async function guardOpenNote(tool: string, input: ToolInput, ports: OpenN
   return guardCall(tool, input, kept, { ...rest, data: note });
 }
 
-async function guardCall(tool: string, input: ToolInput, kept: Kept, ports: GuardPorts): Promise<string | null> {
+async function guardCall(tool: string, input: ToolInput, kept: Kept, given: GuardPorts): Promise<string | null> {
+  const windows = onWindows(given);
+  const ports = windows ? slashedPorts(given) : given;
+  const as = (text: string): string => (windows ? slashed(text) : text);
   const path = pathOf(tool, input);
   if (tool !== 'Bash' && path === null) return null;
   try {
     if (tool === 'Bash') {
-      return typeof input.command === 'string' && input.command ? await guardCommand(input.command, kept, ports) : null;
+      const command = input.command;
+      if (typeof command !== 'string' || !command) return null;
+      const target = { ...kept, target: as(kept.target) };
+      // on Windows a backslash may still be the shell's escape, as in plug\ins: the command is read both ways
+      const read = await guardCommand(as(command), target, ports);
+      return read ?? (windows ? guardCommand(command, target, ports) : null);
     }
-    return path === null ? null : await guardFile(path, kept, ports);
+    return path === null ? null : await guardFile(as(path), { ...kept, target: as(kept.target) }, ports);
   } catch {
     // the real path could not be had (the process did not run, node is missing, it timed out): not knowing is a no
     return kept.failed;

@@ -36,7 +36,12 @@ const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
  * (radial_centre_anywhere), show the drawing filtered to it, and the shortest path to another thing. Each changes the
  * picture and nothing else, so reading view has them.
  */
-const UNTANGLING = ['Centre here', 'Show only this and its neighbours', 'Shortest path to another thing'];
+const UNTANGLING = [
+  'Centre here',
+  'Show only this and its neighbours',
+  'Shortest path to another thing',
+  'Explore from here',
+];
 const KEPT = ['Close details', ...UNTANGLING];
 
 /**
@@ -241,8 +246,13 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(full, 'full screen is open');
       assert.ok(!labelled(full, 'Add a thing'), 'no Add a thing in full screen');
       // the one field is the search box, which finds a thing and writes nothing (§25). The View menu's sliders only
-      // space this card's layout (layout_saved_with_view)
-      const fields = full.querySelectorAll('input').filter((i) => i.getAttribute('type') !== 'range');
+      // space this card's layout (layout_saved_with_view). A rule's form only tries a rule here (rule_look_try_save).
+      // The explore sidebar's search only finds a thing to explore from (§71)
+      const fields = full
+        .querySelectorAll('input')
+        .filter(
+          (i) => i.getAttribute('type') !== 'range' && !i.closest('.thoughtknot-rule-form, .thoughtknot-explore-find'),
+        );
       assert.equal(fields.length, 1, 'no field to type a thing in, but the one');
       assert.equal(fields[0].getAttribute('type'), 'search');
       assert.ok(fields[0].closest('.thoughtknot-find'), 'it is the search box');

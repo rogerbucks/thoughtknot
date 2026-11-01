@@ -1,5 +1,5 @@
 {
-  "about": "Graphs whose style graph hides or shows arrowheads (editor spec §15: arrows_switchable, arrows_both_renderers) and shows properties inline (§14: properties_switch, properties_readable, crowded_properties), and saves a filter (§53: scale_filter_live), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links drawn without their arrowheads, the same rows shown inline, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_styled.py does the same from the Python side.",
+  "about": "Graphs whose style graph hides or shows arrowheads (editor spec §15: arrows_switchable, arrows_both_renderers) and shows properties inline (§14: properties_switch, properties_readable, crowded_properties), saves a filter (§53: scale_filter_live), chooses its own view preset (§69: view_presets_scoped), and sets its space, painter and lens (§68: layout_concept_layers, projection_fisheye), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links drawn without their arrowheads, the same rows shown inline, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_styled.py does the same from the Python side.",
   "cases": [
     {
       "name": "arrowheads hidden for the whole graph, the link drawn backwards too",
@@ -264,6 +264,46 @@
           "(f2:Filter {keep: 'Kind: Plaice; open; Kind: Tag', view: 'v'}),",
           "(f3:Filter {}),",
           "(f4:Filter {kep: 'Kind: Place'})"
+        ]
+      ]
+    },
+    {
+      "name": "a graph's own view preset gives the same problems in both: a preset not among the starters, none named, a key misspelt",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(p1:Preset {preset: 'calm'}),",
+          "(p2:Preset {preset: 'clam'}),",
+          "(p3:Preset {}),",
+          "(p4:Preset {prest: 'focus'})"
+        ]
+      ]
+    },
+    {
+      "name": "a Render gives the same problems in both: a space, a painter and a lens not among theirs, neither set, a key misspelt",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(home)-[:NEAR]->(park)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(r1:Render {space: '3d', painter: 'canvas'}),",
+          "(r2:Render {space: '4d'}),",
+          "(r3:Render {painter: 'opengl', view: 'plan'}),",
+          "(r4:Render {}),",
+          "(r5:Render {spce: '2d'}),",
+          "(r6:Render {lens: 'fisheye', view: 'plan'}),",
+          "(r7:Render {lens: 'fishbowl'}),",
+          "(r8:Render {lens: 'semantic', view: 'board'})"
         ]
       ]
     }

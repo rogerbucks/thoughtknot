@@ -40,6 +40,16 @@ export function vaultOps(plugin: ThoughtKnotPlugin): WriteOps {
   };
 }
 
+/** The text of the export at `path`, such as a picture, or null when there is none. */
+export async function exportText(plugin: ThoughtKnotPlugin, path: string): Promise<string | null> {
+  const f = plugin.app.vault.getAbstractFileByPath(path);
+  return f instanceof TFile ? plugin.app.vault.read(f) : null;
+}
+
+/** Moves the export at `from` to `to`, such as a picture following its renamed note. */
+export const moveExport = (plugin: ThoughtKnotPlugin, from: string, to: string): Promise<void> =>
+  vaultOps(plugin).rename(from, to);
+
 /**
  * `paths`, as they are. Or, when a file is already at any of them, each as `<name>-2.<ext>`, or `-3`…. It takes the first
  * number free for all of them: the pages of one export keep one number between them.

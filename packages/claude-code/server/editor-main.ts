@@ -44,6 +44,7 @@ export function gateSettings(raw: string | undefined): GateSettings {
     return {
       classifications: s.classifications,
       aiUnlabelled: s.aiUnlabelled,
+      aiRepoUnlabelled: s.aiRepoUnlabelled,
       aiModels: s.aiModels,
       aiClassMap: s.aiClassMap,
       matrix,

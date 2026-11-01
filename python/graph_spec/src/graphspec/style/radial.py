@@ -28,21 +28,6 @@ def radial_centre(shape: Mapping[str, Any], chosen: str | None = None) -> str:
     return centre_of(shape)
 
 
-def lone_thing(shape: Mapping[str, Any], centre: str) -> Mapping[str, Any] | None:
-    """The first thing not joined to `centre`, whichever way its links run, or None."""
-    near: dict[str, list[str]] = {}
-    for link in shape["links"]:
-        near.setdefault(link["from"], []).append(link["to"])
-        near.setdefault(link["to"], []).append(link["from"])
-    reached, queue = {centre}, [centre]
-    for k in queue:
-        for n in near.get(k, []):
-            if n not in reached:
-                reached.add(n)
-                queue.append(n)
-    return next((t for t in shape["things"] if t["key"] not in reached), None)
-
-
 def centre_problem(typ: str, centre: str | None) -> tuple[str, str] | None:
     """A centre chosen for a type other than radial, as a problem and its fix, or None."""
     if centre is None or typ == "radial":

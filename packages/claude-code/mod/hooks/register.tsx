@@ -13,6 +13,7 @@ import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
 import {
+  cleanSvg,
   dataFolderRefusal,
   EditorLauncher,
   guardDataFolder,
@@ -265,7 +266,8 @@ export const register: Register = (on) => {
 
     // the terminal draws no Svg (Image and Raster only), though `'Svg' in` its table holds: the text stands in there
     const Svg = e.surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined;
-    if (Svg && shown.svg) return <Svg source={shown.svg} alt={shown.alt} />;
+    // the drawing passes the allowlist before the pane shows it: no script, event or outside link (TRUST-7)
+    if (Svg && shown.svg) return <Svg source={cleanSvg(shown.svg)} alt={shown.alt} />;
     // never text with no reason: a graph that could be drawn says why it is text here
     const why = shown.why ?? (shown.svg ? word('cc.no-pictures') : undefined);
     return (

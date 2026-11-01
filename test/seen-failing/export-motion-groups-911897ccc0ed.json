@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export-motion-groups.test.js",
+  "test": "the groups of a drawing are found by plain search, as their pattern found them (js/polynomial-redos) > it keeps its time on text made to slow the pattern",
+  "seen_failing_first": false,
+  "evidence": "Moved unchanged from test/code-scanning-fixes.test.js, where they failed first in fde0368."
+}

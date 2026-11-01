@@ -19,8 +19,28 @@ round — are ported here exactly, each proved against Python by the layout test
 (function (root) {
   'use strict';
 
+  /** @typedef {[string, string, string]} Row A thing [key, kind, text], or a link [source key, reading, target key]. */
+  /** @typedef {Record<string, any>} Style The locked style, graph_svg.style.json. */
+  /**
+   * @typedef {{type: string, centre?: string, tree?: number[], lanes: [string, string[]][],
+   *   groups?: [string, string[]][], dates: string[][]}} Plan A diagram type's plan, as the core's types.ts makes it.
+   */
+
+  /**
+   * What the layout refuses, with a stable code from src/values/refusal-codes.json (GL01, GL02), as the reader's
+   * problems carry theirs. This file loads in a page as it is, so it holds its own class.
+   */
+  class LayoutError extends Error {
+    /** @param {string} code @param {string} message */
+    constructor(code, message) {
+      super(message);
+      this.name = 'LayoutError';
+      this.code = code;
+    }
+  }
+
   // ── the parts Python lends the layout ────────────────────────────────────────────────────────
-  /** Python's round(): the nearest whole number, halves to the even one. */
+  /** Python's round(): the nearest whole number, halves to the even one. @param {number} x */
   function roundHalfEven(x) {
     const f = Math.floor(x),
       d = x - f;
@@ -29,7 +49,7 @@ round — are ported here exactly, each proved against Python by the layout test
   }
 
   /** Python's html.escape(s), quote=True. */
-  const escape = (s) =>
+  const escape = (/** @type {unknown} */ s) =>
     String(s)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -47,6 +67,7 @@ round — are ported here exactly, each proved against Python by the layout test
     }
     return t;
   })();
+  /** @param {string} s */
   function crc32(s) {
     let c = 0xffffffff;
     for (const b of new TextEncoder().encode(s)) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
@@ -62,9 +83,10 @@ round — are ported here exactly, each proved against Python by the layout test
   );
 
   /** Python's textwrap.wrap(text, width, break_on_hyphens=False), with its other defaults. Lengths count code points, as Python does. */
+  /** @param {string} text @param {number} width @returns {string[]} */
   function wrap(text, width) {
-    const len = (s) => [...s].length;
-    const cut = (s, n) => {
+    const len = (/** @type {string} */ s) => [...s].length;
+    const cut = (/** @type {string} */ s, /** @type {number} */ n) => {
       const cs = [...s];
       return [cs.slice(0, n).join(''), cs.slice(n).join('')];
     };
@@ -91,16 +113,16 @@ round — are ported here exactly, each proved against Python by the layout test
       .reverse();
     // a chunk Python's str.strip() empties, by its isspace(). Unlike JavaScript's trim(), that takes in U+001C–U+001F and
     // U+0085 and leaves out U+FEFF. Not the reader's whitespace, since this mirrors textwrap
-    const blank = (s) => [...s].every((c) => PY_SPACE.includes(c));
+    const blank = (/** @type {string} */ s) => [...s].every((c) => PY_SPACE.includes(c));
     const lines = [];
     while (chunks.length) {
-      let cur = [],
+      let cur = /** @type {string[]} */ ([]),
         curLen = 0;
       if (blank(chunks[chunks.length - 1]) && lines.length) chunks.pop();
       while (chunks.length) {
         const chunkLen = len(chunks[chunks.length - 1]);
         if (curLen + chunkLen <= width) {
-          cur.push(chunks.pop());
+          cur.push(/** @type {string} */ (chunks.pop()));
           curLen += chunkLen;
         } else break;
       }
@@ -121,10 +143,11 @@ round — are ported here exactly, each proved against Python by the layout test
   }
 
   /** A number written as Python's f-string writes it: 12.5, 0.55, 9. */
-  const num = (v) => (Number.isInteger(v) ? String(v) : String(v));
-  const hex2 = (i) => i.toString(16).padStart(2, '0');
+  const num = (/** @type {number} */ v) => (Number.isInteger(v) ? String(v) : String(v));
+  const hex2 = (/** @type {number} */ i) => i.toString(16).padStart(2, '0');
 
   // ── the layout source (graph_svg.dot_source) ─────────────────────────────────────────────────
+  /** @param {string} kind @param {string} text @param {Style} style @param {boolean} suggested */
   function label(kind, text, style, suggested) {
     const lines = wrap(text, style.wrap_chars);
     const rowsOf = lines.length ? lines : [''];
@@ -149,14 +172,17 @@ round — are ported here exactly, each proved against Python by the layout test
    * graph_svg.dot_source. suggested: the keys of boxes drawn under a suggested name, each outlined in the style's
    * suggested_style and labelled with its suggested_label. One key given as a plain string is refused, as Python refuses
    * it. Read letter by letter, it would mark boxes whose keys are part of it.
+   * @param {Row[]} nodes @param {Row[]} edges @param {string} rankdir @param {Style} style
+   * @param {Iterable<string>} [suggested]
+   * @returns {[string, string[], string[]]}
    */
   function dotSource(nodes, edges, rankdir, style, suggested = []) {
     if (typeof suggested === 'string')
-      throw new TypeError('suggested is a collection of keys, not one key as a string');
+      throw new LayoutError('GL01', 'suggested is a collection of keys, not one key as a string');
     const marked = new Set(suggested);
     const kinds = [...new Set(nodes.map(([, k]) => k).filter((k) => k))]; // order of first appearance — colours depend on it
     const dir = rankdir || style.rankdir;
-    if (!dir) throw new Error("KeyError: 'rankdir' — give a direction; the style sets none");
+    if (!dir) throw new LayoutError('GL02', "KeyError: 'rankdir' — give a direction; the style sets none");
     const out = [
       'digraph G {',
       `  graph [rankdir=${dir}, ranksep=${num(style.ranksep)}, nodesep=${num(style.nodesep)}, bgcolor="transparent", pad=0.1];`,
@@ -179,9 +205,9 @@ round — are ported here exactly, each proved against Python by the layout test
       }
     }
     // a kind that only receives links and is not the graph's main destination is laid out on the far side
-    const reach = new Map(kinds.map((k) => [k, new Set()]));
+    const reach = new Map(kinds.map((k) => [k, /** @type {Set<string>} */ (new Set())]));
     // each pair of kinds a link joins, once: the same reach as going over every link, in far fewer steps
-    const pairs = new Map();
+    const pairs = /** @type {Map<string, [string, string]>} */ (new Map());
     for (const [s, , d] of edges) {
       const from = of.get(s),
         to = of.get(d);
@@ -189,18 +215,18 @@ round — are ported here exactly, each proved against Python by the layout test
     }
     for (let n = 0; n < kinds.length; n++) {
       for (const [from, to] of pairs.values()) {
-        const r = reach.get(from);
+        const r = /** @type {Set<string>} */ (reach.get(from));
         r.add(to);
-        for (const x of reach.get(to)) r.add(x);
+        for (const x of /** @type {Set<string>} */ (reach.get(to))) r.add(x);
       }
     }
     const sinks = kinds.filter(
       (k) => !edges.some(([s]) => of.get(s) === k) && edges.some(([, , d]) => of.get(d) === k),
     );
-    let main = null,
+    let main = /** @type {string | null} */ (null),
       best = -Infinity;
     for (const k of sinks) {
-      const score = kinds.filter((o) => reach.get(o).has(k)).length;
+      const score = kinds.filter((o) => reach.get(o)?.has(k)).length;
       if (score > best) {
         best = score;
         main = k;
@@ -211,7 +237,7 @@ round — are ported here exactly, each proved against Python by the layout test
       const i = readings.indexOf(reading); // line #0003xx, its label #0004xx — blended differently, for their contrast minimums
       const a = `label="${escape(reading)}", color="#0003${hex2(i)}", fontcolor="#0004${hex2(i)}"`;
       out.push(
-        sinks.includes(of.get(d)) && of.get(d) !== main
+        sinks.includes(/** @type {string} */ (of.get(d))) && of.get(d) !== main
           ? `  "${d}" -> "${s}" [${a}, dir=back];`
           : `  "${s}" -> "${d}" [${a}];`,
       );
@@ -227,7 +253,8 @@ round — are ported here exactly, each proved against Python by the layout test
   const TYPE_DIRECTION = { tree: 'TB', flow: 'LR', radial: 'LR', lanes: 'LR', timeline: 'LR' };
 
   /** The one direction a diagram type is laid out in, when nothing else sets one: a tree down, the rest across. */
-  const typeDirection = (plan) => TYPE_DIRECTION[plan.type];
+  const typeDirection = (/** @type {{type: string}} */ plan) =>
+    TYPE_DIRECTION[/** @type {keyof typeof TYPE_DIRECTION} */ (plan.type)];
 
   /**
    * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts):
@@ -240,6 +267,7 @@ round — are ported here exactly, each proved against Python by the layout test
    * - timeline: each day's things on one rank, the days in order. They are joined by links never drawn, after every
    *   link drawn, so Graphviz numbers the drawn links as before.
    * No plan: `dot`.
+   * @param {string} dot @param {Plan | undefined} plan @param {Style} style
    */
   function typedSource(dot, plan, style) {
     if (!plan) return dot;
@@ -263,8 +291,9 @@ round — are ported here exactly, each proved against Python by the layout test
       const free = plan.type === 'timeline' || (plan.type === 'tree' && !tree.has(n));
       out.push(free ? `${forward.slice(0, -2)}, constraint=false];` : forward);
     }
-    const added = [];
+    const added = /** @type {string[]} */ ([]);
     // a box labelled as a group's is (style-source.ts, nudgedSource): a lane, or a group drawn inside its lane
+    /** @param {string} name @param {string} label @param {string[]} keys */
     const box = (name, label, keys, inside = '') =>
       `subgraph ${name} {label=<${escape(label)}>; fontname="${style.font}"; ` +
       `fontsize=${num(style.kind_font_size)}; fontcolor="#0000fe"; color="#0000fe"; style="rounded"; ` +
@@ -287,8 +316,9 @@ round — are ported here exactly, each proved against Python by the layout test
   }
 
   /** A colour per name, chosen from the name's CRC-32, as graph_svg._pick: a later name that clashes moves to the next free colour. */
+  /** @param {string[]} names @param {string[]} palette @param {Record<string, string>} pinned */
   function pick(names, palette, pinned) {
-    const out = {},
+    const out = /** @type {Record<string, string>} */ ({}),
       taken = new Set();
     for (const n of names) {
       if (Object.prototype.hasOwnProperty.call(pinned, n)) {
@@ -308,7 +338,7 @@ round — are ported here exactly, each proved against Python by the layout test
     return out;
   }
 
-  const api = { dotSource, typedSource, typeDirection, pick, wrap, crc32, escape, roundHalfEven };
+  const api = { dotSource, typedSource, typeDirection, pick, wrap, crc32, escape, roundHalfEven, LayoutError };
   if (typeof module === 'object' && module && module.exports) module.exports = api;
-  else root.GraphLayout = api;
+  else /** @type {any} */ (root).GraphLayout = api;
 })(typeof self !== 'undefined' ? self : this);

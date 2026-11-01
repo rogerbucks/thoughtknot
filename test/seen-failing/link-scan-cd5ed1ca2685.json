@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/link-scan.test.js",
+  "test": "what a link is, said plainly > a link that leaves the vault says where it goes; one in the vault says nothing; a refused one says so",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

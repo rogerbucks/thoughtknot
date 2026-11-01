@@ -2,7 +2,7 @@
 // the open note and the tips of the local branches. They are read from the git repository the note lives in. So is the
 // note's text at one of them. Read only and local:
 // - git is run with fixed arguments and no shell;
-// - its hooks, file-system monitor and pager are off;
+// - its hooks, file-system monitor and pager are off, and so are signature checks and the programs that make them;
 // - every transport is refused, and there is no fetch of a missing object.
 // So nothing runs that the repository names, and nothing leaves the machine. Only the open note is ever read, and only
 // at a commit this module listed for it.
@@ -49,6 +49,15 @@ const SAFE = [
   'protocol.allow=never',
   '-c',
   'core.pager=cat',
+  // a repository may ask for signatures to be shown, which runs the program it names (TRUST-10)
+  '-c',
+  'log.showSignature=false',
+  '-c',
+  'gpg.program=false',
+  '-c',
+  'gpg.ssh.program=false',
+  '-c',
+  'gpg.x509.program=false',
 ];
 
 const COMMIT = /^[0-9a-f]{40}$/;

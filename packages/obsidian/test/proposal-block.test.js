@@ -216,7 +216,10 @@ describe('a person decides, a change at a time', () => {
       await until(() => noteNow(env) !== note);
       await settled();
       const now = noteNow(env);
-      assert.match(now, /\(question:Question[^]*\(small_reader:Option \{name: 'Small reader'\}\)\n```/);
+      assert.match(
+        now,
+        /\(question:Question[^]*\(small_reader:Option \{name: 'Small reader', proposer_kind: 'model'\}\)\n```/,
+      );
       assert.doesNotMatch(now.split('```gql')[1], /price: 4/);
       assert.match(now, /\/\/ graph: judgements\n\(decision_reader_cs1_\w+:Decision \{state: 'accepted',/);
       assert.match(now, /decided_by: 'you', at: '\d{4}-\d\d-\d\dT[\d:.]+Z'/);
@@ -309,7 +312,7 @@ describe('a person decides, a change at a time', () => {
       await settled();
       const graph = noteNow(env).split('```gql')[1].split('```')[0];
       assert.match(graph, /price: 4/);
-      assert.match(graph, /\(small_reader\)-\[:ANSWERS\]->\(question\)/);
+      assert.match(graph, /\(small_reader\)-\[:ANSWERS \{proposer_kind: 'model'\}\]->\(question\)/);
       assert.doesNotMatch(graph, /alice/);
       assert.match(env.state.notices.at(-1), /Accepted 5 changes/);
     } finally {

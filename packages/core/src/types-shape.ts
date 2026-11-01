@@ -1,5 +1,5 @@
 // The shape a diagram type is judged on (editor spec §15):
-// - the things drawn, with their kinds, their dates and their numbers;
+// - the things drawn, with their kinds, their dates, their numbers and their words;
 // - their written links;
 // - the groups the style graph's nudges draw them in.
 // And what types.ts reads from it: the first loop the links make, and the thing with the most links. Host-free. The
@@ -12,7 +12,8 @@ import type { Nudge } from './style-graph.ts';
 
 /**
  * A thing as a type judges it: its key, its text, its kinds, and the first date it carries, said as inline. A timeline
- * also reads each date and each number it carries, by property, in the order written; none when it carries none.
+ * also reads each date and each number it carries, by property, in the order written; none when it carries none. A
+ * grid reads each word it carries, such as its status, the same way.
  */
 export interface ShapeThing {
   key: string;
@@ -21,6 +22,7 @@ export interface ShapeThing {
   date?: string;
   dates?: Map<string, string>;
   numbers?: Map<string, number>;
+  texts?: Map<string, string>;
 }
 
 /** A link as a type judges it: its two ends and the relationship type it is styled by. */
@@ -73,12 +75,14 @@ export function shapeOf(
       const numbers = props.flatMap(([k, v]): [string, number][] =>
         typeof v === 'number' && Number.isFinite(v) ? [[k, v]] : [],
       );
+      const texts = props.flatMap(([k, v]): [string, string][] => (typeof v === 'string' ? [[k, v]] : []));
       return {
         key: b.key,
         text: b.text,
         kinds: b.kind ? b.kind.split(' · ') : [],
         ...(dates.length ? { date: (dates[0] as [string, string])[1], dates: new Map(dates) } : {}),
         ...(numbers.length ? { numbers: new Map(numbers) } : {}),
+        ...(texts.length ? { texts: new Map(texts) } : {}),
       };
     }),
     links: drawing.links.map((l, i) => ({ from: l.from, type: types[i] ?? l.type, to: l.to })),

@@ -15,9 +15,12 @@ import type { DrawMark } from './drawing-marks.ts';
 import { FORCE_3D } from './layouts/layouts.ts';
 import { layoutOptions } from './layouts/layout-options.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
-import type { Spots } from './layouts/layouts.ts';
+import type { Spot, Spots } from './layouts/layouts.ts';
 import type { GraphShape } from './types-shape.ts';
 import { boundsOf } from './space-view.ts';
+import { isCluster } from './space-cards.ts';
+import { isJoint, jointsBetween, partsNear, withoutJoints } from './space-parts.ts';
+import type { SpaceGroup } from './space-cards.ts';
 import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
@@ -33,6 +36,20 @@ export const ROOM = 70;
 export const SPACE_SPACING = 1.4;
 /** `options` as the 3D view lays out with them: spaced SPACE_SPACING times as far. */
 const roomier = (options: LayoutOptions): LayoutOptions => ({ ...options, spacing: options.spacing * SPACE_SPACING });
+/** How far apart two planes of kinds are, in units of the layout: about two links. */
+const PLANE_STEP = 2;
+
+/** `spots` with each thing of `planes` moved in depth to its lane's plane, the middle plane at no depth. */
+function onPlanes(spots: Spots<3>, planes: ReadonlyMap<string, number>): Map<string, Spot<3>> {
+  const middle = Math.max(...planes.values()) / 2;
+  return new Map(
+    [...spots].map(([k, [x, y, z]]) => [
+      k,
+      [x, y, planes.has(k) ? ((planes.get(k) as number) - middle) * PLANE_STEP : z],
+    ]),
+  );
+}
+
 /** The most rounds of pushing apart things that sit too close. */
 const APART_ROUNDS = 40;
 /** A sphere's radius with no links, and how much it grows by the square root of its count of links. */
@@ -52,11 +69,16 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11,
   GROUP_SIZE = 18;
 
-/** Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). */
-const isPoint = (m: { of?: string }) => /^trunk: \d+ (in|out)$/.test(m.of ?? '');
+/**
+ * Whether box `m` is a trunk's joint (fold-source.ts). Drawn as a point, it stays one in space (untangle_merge). The
+ * layout source names it `trunk: 1 in`. The drawing on screen has no title to read, so there it is `trunk_1_in`.
+ */
+const isPoint = (m: { of?: string }) => /^(?:trunk: \d+ (?:in|out)|trunk_\d+_(?:in|out))$/.test(m.of ?? '');
 
-/** A thing's sphere radius, by its count of links. */
+/** A thing's sphere radius, by its count of links, as the globe sizes it (space-globe.ts). */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
+/** How much larger a ball is in 3D than on the globe, so it shows (Roger, 1 Nov 2026; space_names_always). */
+export const BALL_LARGER = 1.6;
 
 /** The things and links of `marks`, as the layouts read them: each box that draws a thing, and links between them. */
 export function shapeOfMarks(marks: readonly DrawMark[]): GraphShape {
@@ -126,6 +148,8 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
  * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
  * With `asDrawn`, each thing stays where the drawing put it, across and down, and only its depth is laid out
  * (space_follows_type). The View menu's `layout` spaces it, as it spaces the flat drawing (layout_saved_with_view).
+ * `planes` puts kinds in order each on a plane of their own, by each thing's lane (layout_kind_lanes). A layout the
+ * person chose in rows, or a plug-in's, keeps its places too, so the same choice shows in every view (layout_plugins).
  */
 export function spreadSpace(
   marks: readonly DrawMark[],
@@ -133,15 +157,21 @@ export function spreadSpace(
   cards = false,
   asDrawn = false,
   layout?: Partial<LayoutOptions>,
+  planes: ReadonlyMap<string, number> = new Map(),
 ): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
-  const middles = asDrawn ? middlesOf(marks) : null;
+  const strategy = layoutOptions(layout).strategy;
+  const middles = asDrawn || (strategy !== 'auto' && strategy !== 'spread') ? middlesOf(marks) : null;
   const drawn = middles && drawnSpots(shape, middles);
   // space is roomier than a page. Things laid out afresh sit further apart there, so how they link shows (Roger, 25 Oct
   // 2026: "give more spacing between the blocks")
   const options = layoutOptions(layout);
-  const laid = FORCE_3D.place(shape, drawn?.seeds ?? previous, drawn ? options : roomier(options));
-  const spots = drawn ? laid : partsNear(shape, laid);
+  // laid out afresh, a trunk's joints are set between its groups once the things are laid out (space-parts.ts)
+  const things = drawn ? shape : withoutJoints(shape);
+  const laid = FORCE_3D.place(things, drawn?.seeds ?? previous, drawn ? options : roomier(options));
+  // laid out again from last time's spots, each part stays where it was (cluster_in_place); afresh, they are packed
+  const packed = drawn ? laid : jointsBetween(shape, previous ? laid : partsNear(things, laid));
+  const spots = planes.size ? onPlanes(packed, planes) : packed;
   const count = new Map<string, number>();
   for (const l of shape.links)
     if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);
@@ -160,11 +190,16 @@ export function spreadSpace(
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
     centre.set(m.of, page ? [page[0], -page[1], z * unit] : [x * unit, y * unit, z * unit]);
-    radius.set(m.of, cards || isPoint(m) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0));
+    const flat = cards || isPoint(m) || isCluster(m.of);
+    radius.set(m.of, flat ? Math.max(m.width, m.height) / 2 : BALL_LARGER * radiusOf(count.get(m.of) ?? 0));
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
-  // where the drawing put them are spaced as the drawing is
-  if (!drawn) keepApart(centre, radius, ROOM * options.spacing);
+  // where the drawing put them are spaced as the drawing is. A trunk's joints then sit between the things kept apart
+  if (!drawn) {
+    const apart = new Map([...centre].filter(([k]) => !isJoint(k)));
+    keepApart(apart, radius, ROOM * options.spacing);
+    for (const [k, at] of jointsBetween(shape, apart)) centre.set(k, [...at]);
+  }
   for (const m of boxes) {
     const c = centre.get(m.of) as Vec3,
       r = radius.get(m.of) ?? 0;
@@ -180,7 +215,8 @@ export function spreadSpace(
       tall: 2 * r,
     };
     if (m.name !== undefined) block.name = m.name;
-    if (cards) block.card = { width: m.width, height: m.height };
+    // a folded group is a card among balls too, so its name and count always show (cluster_named_everywhere)
+    if (cards || isCluster(m.of)) block.card = { width: m.width, height: m.height };
     blocks.push(block);
   }
   // a thing's name is the words its label mark says, else its own name
@@ -202,10 +238,18 @@ export function spreadSpace(
   }
   // a group's name floats over the middle of its things, above the highest of them (space_groups)
   const groupOf = new Map(marks.flatMap((m) => (m.kind === 'box' && m.group ? [[m.id, m.group] as const] : [])));
+  const groups: SpaceGroup[] = [];
   for (const m of marks) {
     if (m.kind !== 'group' || !m.name) continue;
     const inside = blocks.filter((b) => groupOf.get(b.id) === m.id);
     if (!inside.length) continue;
+    groups.push({
+      id: m.id,
+      style: m.style,
+      name: m.name,
+      of: inside.flatMap((b) => (b.of === undefined ? [] : [b.of])),
+      ...(m.of ? { folds: m.of } : {}),
+    });
     const mid = (k: 0 | 1) => inside.reduce((t, b) => t + (centre.get(b.of ?? '')?.[k] ?? 0), 0) / inside.length;
     const top = Math.max(...inside.map((b) => b.floor + b.tall));
     labels.push({
@@ -248,9 +292,11 @@ export function spreadSpace(
     const ra = cards ? 0 : (radius.get(m.from) ?? 0),
       rb = cards ? 0 : (radius.get(m.to) ?? 0);
     // never bigger than the ball it points to (Roger, 24 Oct 2026)
-    const head = Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
-    const t0 = Math.min(0.45, ra / length),
-      tTip = Math.max(0.55, 1 - rb / length),
+    const head = m.headless
+      ? 0
+      : Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
+    const t0 = Math.min(0.45, bow === 0 ? ra / length : onSphere(curve, a, ra, 0, 0.5)),
+      tTip = Math.max(0.55, bow === 0 ? 1 - rb / length : onSphere(curve, b, rb, 0.5, 1)),
       tEnd = Math.max(0.5, tTip - head / length);
     const steps = bow === 0 ? 1 : BOW_STEPS;
     const points = Array.from({ length: steps + 1 }, (_, i) => curve(t0 + ((tEnd - t0) * i) / steps));
@@ -258,56 +304,16 @@ export function spreadSpace(
     if (m.name) line.words = m.name;
     if (m.of !== undefined) line.of = m.of;
     lines.push(line);
-    arrows.push({ id: `${m.id}\narrow`, style: m.style, tip: curve(tTip), back: curve(tEnd), size: head });
+    // a line drawn with no arrowhead, such as a merged link's to its trunk, has none in space either
+    if (!m.headless)
+      arrows.push({ id: `${m.id}\narrow`, style: m.style, tip: curve(tTip), back: curve(tEnd), size: head });
     if (m.name)
       labels.push({ id: `${m.id}\nwords`, style: m.style, at: curve(0.5), text: m.name, size: WORDS_SIZE, link: m.id });
   }
   const space: SpaceMarks = { blocks, lines, labels, arrows, round: true, ...boundsOf(blocks, lines, labels) };
+  if (groups.length) space.groups = groups;
   if (cards) space.cards = true;
   return { space, spots };
-}
-
-/**
- * `spots` with each lone part of `shape` moved in beside the largest part. A lone part is one no link joins to the
- * largest. It moves to a link's length clear of the largest, on the side it drifted to, when it is further off. Else the
- * rest push it far off. Then the view, fitting it in, draws the rest small and packed (Roger, 25 Oct 2026).
- */
-export function partsNear(shape: GraphShape, spots: Spots<3>): Spots<3> {
-  const top = new Map<string, string>();
-  const root = (k: string): string => {
-    let r = k;
-    while (top.has(r) && top.get(r) !== r) r = top.get(r) as string;
-    top.set(k, r);
-    return r;
-  };
-  for (const t of shape.things) top.set(t.key, t.key);
-  for (const l of shape.links) if (top.has(l.from) && top.has(l.to)) top.set(root(l.from), root(l.to));
-  const parts = new Map<string, string[]>();
-  for (const t of shape.things) {
-    if (!spots.has(t.key)) continue;
-    const r = root(t.key);
-    const here = parts.get(r);
-    if (here) here.push(t.key);
-    else parts.set(r, [t.key]);
-  }
-  if (parts.size < 2) return spots;
-  const at = (k: string) => spots.get(k) ?? [0, 0, 0];
-  const ball = (keys: readonly string[]) => {
-    const mid = scale(keys.map(at).reduce(add, [0, 0, 0]), 1 / keys.length);
-    return { mid, r: Math.max(...keys.map((k) => Math.hypot(...sub(at(k), mid)))) };
-  };
-  const [main, ...rest] = [...parts.values()].sort((a, b) => b.length - a.length);
-  const whole = ball(main ?? []);
-  const out = new Map(spots);
-  for (const keys of rest) {
-    const part = ball(keys),
-      away = sub(part.mid, whole.mid);
-    const clear = whole.r + part.r + 1;
-    if (Math.hypot(...away) <= clear) continue;
-    const by = sub(add(whole.mid, scale(norm(away), clear)), part.mid);
-    for (const k of keys) out.set(k, add(at(k), by));
-  }
-  return out;
 }
 
 /**
@@ -359,6 +365,20 @@ export function keepApart(centre: Map<string, Vec3>, radius: ReadonlyMap<string,
 function sideOf(v: Vec3): Vec3 {
   const level: Vec3 = [-v[1], v[0], 0];
   return Math.hypot(...level) > 1e-9 * Math.hypot(...v) ? level : [1, 0, 0];
+}
+
+/**
+ * Where `curve`, between `lo` and `hi`, crosses the sphere of radius `r` round `c`. A straight link crosses where its
+ * length says. A bowed one is found on the curve itself, so an arrowhead's tip sits on the ball it points at.
+ */
+function onSphere(curve: (t: number) => Vec3, c: Vec3, r: number, lo: number, hi: number): number {
+  const outside = (t: number) => Math.hypot(...sub(curve(t), c)) > r;
+  for (let i = 0; i < 24; i++) {
+    const t = (lo + hi) / 2;
+    if (outside(t) === outside(hi)) hi = t;
+    else lo = t;
+  }
+  return (lo + hi) / 2;
 }
 
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-checks.test.js",
+  "test": "the thing itself > a key its kind does not know keeps the whole thing out, though the rest is sound",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

@@ -41,6 +41,8 @@ const pluginSource = () =>
     .map((f) => ({ f, text: read(f) }));
 const ci = () => read('.github/workflows/ci.yml');
 const contributing = () => read('CONTRIBUTING.md');
+/** The list of tests that span modules, each with what it proves. */
+const SPANNING_LIST = 'docs/tests-that-span-modules.md';
 
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const SNAKE = /^[a-z0-9]+(_[a-z0-9]+)*$/;
@@ -50,7 +52,7 @@ const UPPER_SNAKE = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/;
 
 describe('one code style', () => {
   test('one formatter, Prettier, pinned, with its settings in the repository', () => {
-    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.9');
+    assert.equal(readJSON('package.json').devDependencies.prettier, '3.9.10');
     assert.deepEqual(readJSON('.prettierrc.json'), { printWidth: 120, singleQuote: true });
     assert.ok(exists('.prettierignore'));
   });
@@ -63,7 +65,9 @@ describe('one code style', () => {
 
   test('the test vault settings, which Obsidian rewrites in its own layout, are not format-checked', () => {
     for (const f of ['test-vault/.obsidian/app.json', 'test-vault/.obsidian/community-plugins.json']) {
-      const r = spawnSync(path('node_modules/.bin/prettier'), ['--file-info', f], { cwd: ROOT, encoding: 'utf8' });
+      // prettier's own script, run by node: node_modules/.bin holds a .cmd on Windows, which needs a shell
+      const prettier = path('node_modules/prettier/bin/prettier.cjs');
+      const r = spawnSync(process.execPath, [prettier, '--file-info', f], { cwd: ROOT, encoding: 'utf8' });
       assert.equal(JSON.parse(r.stdout).ignored, true, f);
     }
   });
@@ -79,7 +83,7 @@ describe('one code style', () => {
 
   test('the Python library follows PEP 8: Ruff checks and formats it, pinned, in CI', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
-    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.16\.9"\]/);
+    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.17\.1"\]/);
     assert.match(py, /\[tool\.ruff\][^[]*\nline-length = 99/);
     assert.match(py, /\[tool\.ruff\.lint\]\n(?:#[^\n]*\n)*select = \["E", "W", "F", "N"[\],]/);
     assert.match(ci(), /run: uv run --locked ruff check/);
@@ -162,8 +166,11 @@ describe('naming conventions', () => {
     assert.deepEqual(wrong, []);
   });
 
-  test('each test file is named after its file, or listed in CONTRIBUTING.md as a test that spans modules', () => {
-    const spanning = new Set([...contributing().matchAll(/^- `([^`]+\.(?:test\.(?:js|mjs)|py))`/gm)].map((m) => m[1]));
+  test('each test file is named after its file, or listed in docs/tests-that-span-modules.md', () => {
+    const list = read(SPANNING_LIST);
+    assert.match(list, /^# Tests that span modules$/m);
+    assert.match(contributing(), /\(docs\/tests-that-span-modules\.md\)/, 'CONTRIBUTING.md points to the list');
+    const spanning = new Set([...list.matchAll(/^- `([^`]+\.(?:test\.(?:js|mjs)|py))`/gm)].map((m) => m[1]));
     const loose = [];
     const named = (mods, n) => mods.some((m) => n === m || n.startsWith(`${m}-`) || n.startsWith(`${m}_`));
     for (const p of PACKAGES) {
@@ -424,6 +431,15 @@ describe('Obsidian’s guidelines, beyond the linter', () => {
       assert.doesNotMatch(text, /vault\.modify\(/, `${f}: vault.process, not vault.modify`);
       assert.doesNotMatch(text, /(?<![.\w])app\.|window\.app\b/, `${f}: this.app, never the global app`);
     }
+  });
+
+  test('no Obsidian type is made by a double cast: a hand-made object is checked against the fields it fills', () => {
+    // CODE-10: Live Preview's card once cast a hand-made context to Obsidian's, so a field the drawing read was unchecked
+    const casts = pluginSource()
+      .filter(({ f }) => f.startsWith('packages/obsidian/'))
+      .filter(({ text }) => /\bas unknown as\b/.test(text))
+      .map(({ f }) => f);
+    assert.deepEqual(casts, []);
   });
 });
 

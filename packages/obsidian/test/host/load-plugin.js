@@ -30,7 +30,10 @@ export const onDevice = (d) => {
   device = d ?? {};
 };
 
-/** Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins; returns the plugin, the stand-ins' record, the document and the app. */
+/**
+ * Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins. Returns the plugin, the stand-ins' record, the
+ * document, the app and what main.js exports.
+ */
 export async function load(options = {}) {
   options = { ...device, ...options };
   const doc = fakeDocument(options.width ?? 700),
@@ -48,13 +51,14 @@ export async function load(options = {}) {
     file = `${root}main.js`;
   const cm = fakeCodeMirror(state);
   Module._load = (req, ...rest) => (req === 'obsidian' ? obsidian : (cm[req] ?? real(req, ...rest)));
-  let Plugin;
+  let Plugin, exports;
   try {
     const m = new Module(file);
     m.filename = file;
     m.paths = Module._nodeModulePaths(root);
     m._compile(readFileSync(file, 'utf8'), file);
-    Plugin = m.exports.default;
+    ({ exports } = m);
+    Plugin = exports.default;
   } finally {
     Module._load = real;
   }
@@ -64,7 +68,7 @@ export async function load(options = {}) {
   // loaded with it. An example is an editor in place that listens for the note changing
   plugin._loaded = true;
   await plugin.onload();
-  return { plugin, state, doc, app: obsidian.app, obsidian, uninstall };
+  return { plugin, state, doc, app: obsidian.app, obsidian, uninstall, exports };
 }
 
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));

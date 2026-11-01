@@ -6,6 +6,8 @@
 // blocks and lines are sent to the graphics chip once; turning the camera only sends its 16 numbers.
 // Text is painted by the 2D canvas on a canvas laid over this one (space-canvas-painter.ts, paintSpaceLabels).
 import type { SpaceMarks, Vec3 } from '../../space-view.ts';
+import { OUTLINE_FOLD } from '../../space-outlines.ts';
+import type { ScreenOutline } from '../../space-outlines.ts';
 import { colourReader } from './gl-painter.ts';
 import type { PainterKind, Paints } from './mark-painter.ts';
 
@@ -107,6 +109,7 @@ export function ballPoints(around = 24): Float32Array {
 /** Numbers in each point of a ball's or a cube's shape: where it is (3) and its outward line (3). */
 export const SHAPE_POINT_NUMBERS = 6;
 
+/** How opaque a fill must be to be painted as a block's colour, rather than its outline's. */ const SEEN_FILL = 0.1;
 /** Numbers in each block: its corner and floor (3), its width, depth and height (3), its fill (4) and outline (4). */
 export const BLOCK_NUMBERS = 14;
 /** Numbers in each point of a line: where it is (3) and its tint (4). */
@@ -118,8 +121,10 @@ export function spaceNumbers(space: SpaceMarks, paints: Paints): { blocks: Float
   const blocks = new Float32Array(space.blocks.length * BLOCK_NUMBERS);
   space.blocks.forEach((b, i) => {
     const paint = paints(b.style);
-    const fill = numbersOf(paint.fill ?? paint.line),
-      line = numbersOf(paint.line ?? paint.fill);
+    const line = numbersOf(paint.line ?? paint.fill);
+    // painted solid, a clear fill is black: its outline's colour is used (Roger, 1 Nov 2026)
+    const given = numbersOf(paint.fill ?? paint.line),
+      fill = given[3] < SEEN_FILL ? line : given;
     blocks.set([b.x, b.y, b.floor, b.width, b.depth, b.tall, ...fill, ...line], i * BLOCK_NUMBERS);
   });
   const points: number[] = [];
@@ -325,4 +330,60 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
       canvas.width = canvas.height = 0;
     },
   };
+}
+
+/** The size of a group's name on its outline, and how round its corners are, in pixels. */
+const OUTLINE_WORDS = 13,
+  OUTLINE_CORNER = 12;
+
+/**
+ * Paints each open group's outline under everything else. It is a rounded box in the group's colours, as in 2D, with
+ * its name on its top edge. So a cluster reads as one thing in 2.5D and 3D too (cluster_named_everywhere).
+ */
+export function paintOutlines(
+  ctx: CanvasRenderingContext2D,
+  outlines: readonly ScreenOutline[],
+  paints: Paints,
+  halo: string,
+  ink: string,
+) {
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = `${OUTLINE_WORDS}px sans-serif`;
+  for (const o of outlines) {
+    const paint = paints(o.style);
+    ctx.beginPath();
+    ctx.roundRect(o.x, o.y, o.width, o.height, OUTLINE_CORNER);
+    if (paint.fill) {
+      ctx.fillStyle = paint.fill;
+      ctx.fill();
+    }
+    ctx.strokeStyle = paint.line ?? ink;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // the name leaves room at the right for the button that folds the group back, when it has one
+    const room = Math.max(0, o.width - OUTLINE_WORDS - (o.folds ? OUTLINE_FOLD : 0));
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = halo;
+    ctx.strokeText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, room);
+    ctx.fillStyle = paint.text ?? ink;
+    ctx.fillText(o.name, o.x + OUTLINE_WORDS / 2, o.y + 4, room);
+    if (o.folds) paintFoldButton(ctx, o.x + o.width - OUTLINE_FOLD + 3, o.y + 3, paint.line ?? ink);
+  }
+  ctx.lineWidth = 1;
+}
+
+/** The button that folds an open group back into its box: a minus in a small rounded square (cluster_fold_back). */
+function paintFoldButton(ctx: CanvasRenderingContext2D, x: number, y: number, ink: string): void {
+  const side = OUTLINE_FOLD - 6;
+  ctx.beginPath();
+  ctx.roundRect(x, y, side, side, 4);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + 4, y + side / 2);
+  ctx.lineTo(x + side - 4, y + side / 2);
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }

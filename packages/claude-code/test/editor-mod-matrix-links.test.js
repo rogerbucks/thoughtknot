@@ -146,7 +146,9 @@ describe('the real path asked of a host that can only start a process', () => {
     assert.equal(host.requests[0].env, undefined, 'nothing but the path is handed over');
   });
 
-  test('a path with a newline is one argument and comes back whole', async () => {
+  // Windows holds no newline in a file's name, so there is no such path to hand over there
+  const noNewlineNames = process.platform === 'win32' && "Windows holds no newline in a file's name";
+  test('a path with a newline is one argument and comes back whole', { skip: noNewlineNames }, async () => {
     const where = modVault();
     const host = hostSpawn();
     const odd = join(where.top, 'two\nlines.md');

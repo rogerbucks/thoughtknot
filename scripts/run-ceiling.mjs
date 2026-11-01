@@ -4,10 +4,12 @@
 // hundreds of gigabytes of swap in minutes, and the machine stopped dozens of other processes to survive it.
 //
 // The command runs in its own process group. About every 500 ms the resident memory of every process in the group is
-// added up (`ps -A -o pgid=,rss=`, on macOS and Linux). Over the memory ceiling, or past the time ceiling, the whole
-// group is killed. One line is written to stderr, and the exit status is 1. Otherwise the command's output and exit
-// status pass through unchanged. On Windows only the time ceiling is kept. The command also gets a JavaScript heap
-// limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is already set. So a heap runaway fails fast with a stack.
+// added up (`ps -A -o pgid=,rss=`, on macOS and Linux). Windows has no process groups. There the working set of the
+// command and every process under it is added up, from PowerShell's list of processes, as often as it answers. And the
+// tree is killed by `taskkill /T`. Over the memory ceiling, or past the time ceiling, the whole group is killed. One
+// line is written to stderr, and the exit status is 1. Otherwise the command's output and exit status pass through
+// unchanged. The command also gets a JavaScript heap limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is
+// already set. So a heap runaway fails fast with a stack.
 //
 // Defaults, measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests). It peaked at 1.3 GB
 // resident across 21 processes and took 64 s, on a 10-core machine. More cores run more test files at once, and use
@@ -71,6 +73,39 @@ export function groupMemoryKb(psOutput, group) {
   return kb;
 }
 
+/** PowerShell's arguments to list every process on Windows: its number, its parent's and its working set in bytes. */
+const WINDOWS_PROCESSES = [
+  '-NoProfile',
+  '-NonInteractive',
+  '-Command',
+  'Get-CimInstance Win32_Process | ForEach-Object { "$($_.ProcessId) $($_.ParentProcessId) $($_.WorkingSetSize)" }',
+];
+
+/** The total working set, in KB, of process `root` and every process under it, from the lines WINDOWS_PROCESSES prints. */
+export function treeMemoryKb(listing, root) {
+  const children = new Map();
+  const bytes = new Map();
+  for (const line of listing.split('\n')) {
+    const [pid, parent, size] = line.trim().split(/\s+/).map(Number);
+    if (!Number.isFinite(pid) || !Number.isFinite(parent)) continue;
+    bytes.set(pid, Number.isFinite(size) ? size : 0);
+    if (!children.has(parent)) children.set(parent, []);
+    children.get(parent).push(pid);
+  }
+  // a number Windows has given again may name a parent that is not the one it was: each process is counted once
+  const seen = new Set();
+  const todo = [root];
+  let total = 0;
+  while (todo.length) {
+    const pid = todo.pop();
+    if (seen.has(pid)) continue;
+    seen.add(pid);
+    total += bytes.get(pid) ?? 0;
+    todo.push(...(children.get(pid) ?? []));
+  }
+  return Math.round(total / 1024);
+}
+
 function main(argv) {
   const limits = ceilings(process.env);
   if (limits.error) {
@@ -90,9 +125,12 @@ function main(argv) {
   });
   const started = Date.now();
   let stopped = '';
+  // one listing of the processes at a time: PowerShell can take longer to answer than the time between two looks
+  let measuring = false;
   const killGroup = (signal) => {
     try {
-      if (windows) child.kill(signal);
+      // Windows sends no signal a process can catch: the tree is ended at once
+      if (windows) execFile('taskkill', ['/T', '/F', '/PID', String(child.pid)], { windowsHide: true }, () => {});
       else process.kill(-child.pid, signal);
     } catch {
       /* already gone */
@@ -120,11 +158,16 @@ function main(argv) {
           `If it really needs longer, set THOUGHTKNOT_TEST_MINUTES (default ${DEFAULT_MINUTES}).`,
       );
     }
-    if (windows || child.pid === undefined) return;
+    if (child.pid === undefined || measuring) return;
     try {
-      execFile('ps', ['-A', '-o', 'pgid=,rss='], { maxBuffer: 1 << 24 }, (error, out) => {
+      measuring = true;
+      const [lister, listArgs, kbOf] = windows
+        ? ['powershell', WINDOWS_PROCESSES, treeMemoryKb]
+        : ['ps', ['-A', '-o', 'pgid=,rss='], groupMemoryKb];
+      execFile(lister, listArgs, { maxBuffer: 1 << 24, windowsHide: true }, (error, out) => {
+        measuring = false;
         if (error || stopped) return;
-        const mb = Math.round(groupMemoryKb(out, child.pid) / 1024);
+        const mb = Math.round(kbOf(out, child.pid) / 1024);
         if (mb > limits.memoryMb)
           stop(
             `${STOPPED} at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
@@ -133,6 +176,7 @@ function main(argv) {
           );
       });
     } catch {
+      measuring = false;
       /* a sandbox that refuses ps keeps the time and heap ceilings */
     }
   }, POLL_MS);

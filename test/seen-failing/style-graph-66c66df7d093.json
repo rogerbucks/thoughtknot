@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-graph.test.js",
+  "test": "the kinds and their keys > every kind of style thing has its keys, each written once, and only those kinds do",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

@@ -238,6 +238,16 @@ describe('dragging', () => {
     assert.deepEqual(z.view(), before);
   });
 
+  // proves: hold_to_drag_touch
+  test('on touch, a swipe that starts on a box or link pans a zoomed-in drawing', () => {
+    const z = make();
+    z.zoomAt(2, 0, 0);
+    const x0 = z.view().x;
+    assert.equal(z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 200, y: 100, onBox: true }), true);
+    assert.equal(z.handle({ kind: 'move', id: 1, x: 150, y: 90 }), true);
+    close(z.view().x, x0 - 50);
+  });
+
   test('on touch, a fitted drawing leaves one finger to scroll the note', () => {
     const z = make();
     assert.equal(z.touchAction(), 'pan-x pan-y');
@@ -268,6 +278,36 @@ describe('dragging', () => {
 });
 
 describe('pinching', () => {
+  // stuck_touch (Roger, 27 Oct 2026): a finger's pointerup lost, so its pointer stayed down and the next single finger
+  // looked like a pinch. The host says how many fingers are really down (settle), which wins over what was tracked.
+  test('a lost lift does not turn the next single finger into a pinch', () => {
+    const z = make('full');
+    z.zoomAt(2, 0, 0);
+    z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 100, y: 100 });
+    z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 200, y: 100 });
+    z.handle({ kind: 'move', id: 2, x: 220, y: 100 });
+    // both fingers lift but no pointerup arrives; the touch events say none are down
+    z.settle(0);
+    const before = z.view();
+    z.handle({ kind: 'down', id: 3, pointer: 'touch', x: 100, y: 100 });
+    z.settle(1);
+    z.handle({ kind: 'move', id: 3, x: 140, y: 100 });
+    close(z.view().scale, before.scale, 'one finger pans, never zooms');
+    close(z.view().x, before.x + 40);
+  });
+
+  test('a stale pointer beside a new finger is dropped when only one finger is down', () => {
+    const z = make('full');
+    z.zoomAt(2, 0, 0);
+    z.handle({ kind: 'down', id: 1, pointer: 'touch', x: 300, y: 100 });
+    z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 100, y: 100 });
+    z.settle(1);
+    const before = z.view();
+    z.handle({ kind: 'move', id: 2, x: 130, y: 100 });
+    close(z.view().scale, before.scale);
+    close(z.view().x, before.x + 30);
+  });
+
   test('pinching zooms about the point between the fingers', () => {
     const z = make();
     const mid = [150, 100],
@@ -434,7 +474,7 @@ describe('a wide tree, flow or timeline on a phone scrolls one way only', () => 
     drag(z, 9000, 40);
     assert.deepEqual([z.view().x, z.view().y], [0, 0], 'and at its start');
     z.handle({ kind: 'down', id: 2, pointer: 'touch', x: 50, y: 50, onBox: true });
-    assert.equal(z.handle({ kind: 'move', id: 2, x: 10, y: 50 }), false, 'a drag from a box is the host’s, as ever');
+    assert.equal(z.handle({ kind: 'move', id: 2, x: 10, y: 50 }), true, 'a swipe from a box scrolls it across too');
   });
 
   // proves: wide_types_phone

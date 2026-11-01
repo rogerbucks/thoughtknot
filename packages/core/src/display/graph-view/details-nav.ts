@@ -5,7 +5,7 @@
 // - the back and forward steps of the trail of things chosen (details_trail);
 // - the move to what is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion).
 // The words, the walk and the easing are the core's; this puts them on the page and runs the move frame by frame.
-import { MOVE_MS, glideAt, word } from '@thoughtknot/core';
+import { MOVE_MS, glideAt, keepsTrail, word } from '@thoughtknot/core';
 import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@thoughtknot/core';
 import { button } from '../button.ts';
 
@@ -129,6 +129,9 @@ export function renderTrail(
       word('details.forward'),
     );
 }
+
+/** Whether a card's view preset keeps its trail of picks in the drawing, to go back along (§69, view_focus_support). */
+export const trailKept = (o: { aids?: { preset?: string } }): boolean => keepsTrail(o.aids?.preset);
 
 /** The class the host puts on the page's body while the view preset keeps everything still (§69). */
 export const STILL_CLASS = 'thoughtknot-still';

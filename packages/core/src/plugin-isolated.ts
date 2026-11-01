@@ -153,8 +153,8 @@ export function isolatedPlugin(port: PluginPort, options: IsolatedOptions): Prom
             add({ ...own, open });
           } else if (point === 'commands') add({ ...own, run: () => void run().catch(() => {}) });
           else if (point === 'sources') add({ ...own, read: run });
-          else if (point === 'steps' || point === 'diagrams')
-            add({ ...own, [point === 'steps' ? 'run' : 'draw']: run });
+          else if (point === 'steps' || point === 'diagrams' || point === 'layouts')
+            add({ ...own, [{ steps: 'run', diagrams: 'draw', layouts: 'place' }[point]]: run });
           else throw new Error(`a plug-in run apart cannot add to ${point} yet`);
         }
       },

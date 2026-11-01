@@ -54,6 +54,10 @@ jobs:
       - name: Count the benchmarks three times, for the spread between runs
         if: ${{ inputs.spread }}
         run: node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json
+      # committed with the baseline, so quality-check can refuse a tolerance under twice the noise (OPS-10)
+      - name: Record the spread in the metrics
+        if: ${{ inputs.spread }}
+        run: node scripts/record-spread.mjs quality/metrics.json quality/instruction-spread.json
       # printed as well as uploaded, so the counts can be read from the job's log where the artifact cannot be fetched
       - name: Print what was measured
         if: always()

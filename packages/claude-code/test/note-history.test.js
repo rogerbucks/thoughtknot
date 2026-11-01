@@ -139,6 +139,37 @@ describe('a note’s earlier versions', () => {
   });
 
   // proves: changes_view
+  test('run no signature program the repository names, even when it asks to show signatures', async () => {
+    const v = repoVault();
+    const ran = join(v.top, 'ran');
+    const script = join(v.top, 'gpg.sh');
+    writeFileSync(script, `#!/bin/sh\ntouch '${ran}'\nexit 1\n`);
+    chmodSync(script, 0o755);
+    // a signed-looking commit, so a signature check has something to run on
+    writeFileSync(v.plan, `${PLAN}signed\n`);
+    git(v.vault, 'commit', '-q', '-am', 'Signed', '--no-gpg-sign');
+    for (const [key, value] of [
+      ['log.showSignature', 'true'],
+      ['gpg.program', script],
+      ['gpg.ssh.program', script],
+      ['gpg.x509.program', script],
+    ])
+      git(v.vault, 'config', key, value);
+    const head = git(v.vault, 'rev-parse', 'HEAD');
+    const body = git(v.vault, 'cat-file', 'commit', head);
+    const fake = body.replace('\n\n', '\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n -----END PGP SIGNATURE-----\n\n');
+    const signed = execFileSync('git', ['hash-object', '-t', 'commit', '-w', '--stdin'], {
+      cwd: v.vault,
+      input: `${fake}\n`,
+      encoding: 'utf8',
+    }).trim();
+    git(v.vault, 'update-ref', 'refs/heads/main', signed);
+    const listed = await GIT_HISTORY.versions(v.plan);
+    assert.equal(listed.ok, true);
+    assert.equal(existsSync(ran), false);
+  });
+
+  // proves: changes_view
   test('list at most the last commits that changed the note', async () => {
     const v = repoVault();
     for (let i = 0; i < COMMITS_LISTED + 2; i++) {

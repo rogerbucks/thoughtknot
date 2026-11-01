@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 import graph_svg  # noqa: E402
 import fake_dot  # noqa: E402
 from graphspec.style import drawn_svg  # noqa: E402
-from graphspec.style.direct_curve import hypot  # noqa: E402
+from graphspec.style.direct_bends import CLEARANCE, GENTLE, aside  # noqa: E402
+from graphspec.style.direct_curve import Placed, curve_of, hypot  # noqa: E402
 from graphspec.style.direct_links import direct_links  # noqa: E402
 from graphspec.style.marks_svg import layout_svg, num, to_fixed  # noqa: E402
 
@@ -152,9 +153,24 @@ class Routing(unittest.TestCase):
             for routing in (None, "direct"):
                 self.assertIn('<g id="graph0"', drawn_svg.drawn_svg("dot", "digraph {}", routing))
             self.assertEqual(asked, ["-Tjson", "-Tjson"])
-            for routing in ("curved", "straight", "right-angled"):
+            for routing in ("straight", "right-angled"):
                 self.assertEqual(drawn_svg.drawn_svg("dot", "digraph {}", routing), fake_dot.SVG)
-        self.assertEqual(asked[2:], ["-Tsvg"] * 3)
+            self.assertEqual(asked[2:], ["-Tsvg"] * 2)
+            # curved is routed by our own router; laid out in no rows, it is Graphviz's own
+            self.assertEqual(drawn_svg.drawn_svg("dot", "digraph {}", "curved"), fake_dot.SVG)
+        self.assertEqual(asked[4:], ["-Tjson", "-Tsvg"])
+
+    def test_links_drawn_direct_are_laid_out_straight(self):
+        # curves_not_routed: Graphviz routes no curve only to have it thrown away
+        handed = []
+
+        def run(args, input, **_kw):
+            handed.append(input)
+            return mock.Mock(returncode=0, stdout=fake_dot.answer(args))
+
+        with mock.patch.object(drawn_svg.subprocess, "run", run):
+            drawn_svg.drawn_svg("dot", "digraph {\n  a -> b;\n}")
+        self.assertIn("splines=line", handed[0])
 
     def test_a_layout_the_marks_cannot_give_back_is_graphvizs_own(self):
         lost = json.dumps(
@@ -178,6 +194,29 @@ class Routing(unittest.TestCase):
         style = "// graph: g_style · STYLE g\n(r1:Links {routing: 'curved'})"
         self.assertIsNone(graph_svg.render_args([note], "g")["routing"])
         self.assertEqual(graph_svg.render_args([note, style], "g")["routing"], "curved")
+
+
+class BowsRoundABox(unittest.TestCase):
+    """A link bows round a box in its way just far enough, as the core does (direct-bends.ts)."""
+
+    def clearance(self, off: float) -> tuple[float, float]:
+        a, b = Placed("a", 0, 0, 20, 10), Placed("b", 200, 0, 20, 10)
+        c = Placed("c", 100, off, 20, 10)
+        bow = aside(a, b, [c])
+        mid = curve_of(a, b, bow).at(0.5)
+        sign = 1 if off >= 0 else -1
+        return sign * (off - sign * c.hh - mid[1]), bow
+
+    def test_the_curve_clears_the_near_edge_by_about_clearance_wherever_the_box_sits(self):
+        for off in (0, 5, -5):
+            clear, _ = self.clearance(off)
+            self.assertTrue(
+                CLEARANCE - 0.5 <= clear < CLEARANCE + 6, f"off {off}: clears by {clear}"
+            )
+
+    def test_a_box_only_just_in_the_way_still_gets_the_gentle_bow_and_one_clear_of_it_none(self):
+        self.assertEqual(abs(self.clearance(15)[1]), GENTLE)
+        self.assertEqual(self.clearance(40)[1], 0)
 
 
 if __name__ == "__main__":

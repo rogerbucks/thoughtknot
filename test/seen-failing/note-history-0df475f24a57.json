@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/note-history.test.js",
+  "test": "an app whose plug-in keeps no history has no keeper and no versions",
+  "seen_failing_first": false,
+  "evidence": "Covers code already merged in this PR and proved through the built plug-in; this loads it from source for coverage"
+}

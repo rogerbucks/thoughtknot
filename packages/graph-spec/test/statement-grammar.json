@@ -1,0 +1,74 @@
+{
+  "about": "A small grammar of graph statements, for the readers' differential test (risk ARCH-5). Each rule is a list of choices; each choice a list of parts. A part is a rule's name, a pool's name (starting with $), or text written as it is. The first choice of each rule is the shortest, taken once the depth runs out. python/graph_spec/tests/test_readers_agree.py makes statements from it, mutates some, and holds both readers to the same answer.",
+  "start": "block",
+  "rules": {
+    "block": [["// graph: g\n", "statements"]],
+    "statements": [["insert"], ["insert", "\n", "update"], ["insert", "\n", "update", "\n", "update"]],
+    "update": [["match_set"], ["bare_set"], ["insert"]],
+    "insert": [["INSERT\n", "items"], ["items"]],
+    "items": [["item"], ["item", ",\n", "items"]],
+    "item": [["node"], ["node"], ["edge"]],
+    "node": [
+      ["(", "$var", ":", "$label", ")"],
+      ["(", "$var", ":", "$label", " {", "props", "})"],
+      ["(", "$var", ":", "$label", ":", "$label", " {", "props", "})"],
+      ["(", "$var", " {", "props", "})"]
+    ],
+    "edge": [
+      ["(", "$var", ")-[:", "$type", "]->(", "$var", ")"],
+      ["(", "$var", ")-[:", "$type", " {", "props", "}]->(", "$var", ")"]
+    ],
+    "props": [["prop"], ["prop", ", ", "props"]],
+    "prop": [["$key", ": ", "value"]],
+    "value": [
+      ["$str"],
+      ["$int"],
+      ["$float"],
+      ["TRUE"],
+      ["FALSE"],
+      ["DATE '", "$date", "'"],
+      ["DATETIME '", "$datetime", "'"],
+      ["[", "list", "]"]
+    ],
+    "list": [["value"], ["value", ", ", "list"]],
+    "match_set": [
+      ["MATCH (", "$var", ":", "$label", " {id: ", "$str", "})\nSET ", "$var", ".", "$key", " = ", "value"]
+    ],
+    "bare_set": [["SET ", "$var", ".", "$key", " = ", "value"]]
+  },
+  "pools": {
+    "$var": ["a", "b", "ada", "notes", "x_1"],
+    "$label": ["Person", "Book", "ElementType", "Thing"],
+    "$type": ["WROTE", "READ", "PART_OF"],
+    "$key": ["id", "name", "title", "year", "pages", "kind"],
+    "$str": ["'a'", "'Ada'", "''", "'it\\'s'", "'two words'", "'é ünï 😀'", "'back\\\\slash'", "'a, b'"],
+    "$int": ["0", "1", "-3", "66", "1843", "9007199254740993", "-0", "9007199254740991", "-9007199254740992"],
+    "$float": ["1.5", "0.1", "-2.25", "1e3", "2.5E-2", "10.0"],
+    "$date": [
+      "1843-10-01",
+      "2026-02-28",
+      "2024-02-29",
+      "2026-02-30",
+      "26-1-1",
+      "0000-01-01",
+      "9999-12-31",
+      "0050-02-29",
+      "0048-02-29"
+    ],
+    "$datetime": [
+      "2026-10-07T09:30:00+01:00",
+      "2026-10-07T09:30:00Z",
+      "2026-10-07T25:00:00Z",
+      "2026-10-07",
+      "0001-01-01T00:00:00+01:00",
+      "2026-02-29T10:00:00Z",
+      "2026-10-07T09:30Z",
+      "2026-10-07 09:30:00.5-05:00",
+      "0050-06-01T00:00:00Z",
+      "2026-10-07T09:30:00+24:00",
+      "2026-10-07T09:30:00+0530",
+      "9999-12-31T23:00:00-02:00"
+    ]
+  },
+  "mutations": ["drop a character", "double a character", "swap two characters", "cut the end"]
+}

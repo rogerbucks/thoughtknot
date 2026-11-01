@@ -7,9 +7,9 @@
 // - The change stream sends the note now, then each change another program makes, read again every few seconds.
 // - An export's files are written as new files beside the note, never over a file (`saveNew`, place.rs).
 // - Earlier versions and GitHub reviews are not in the app yet: each is refused in words.
-import type { NoteStorage } from '../../core/src/note-storage.ts';
-import { REFUSED } from '../../core/src/note-storage.ts';
-import { word } from '../../core/src/words.ts';
+import type { NoteStorage } from '@thoughtknot/core';
+import { REFUSED } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** How often the change stream reads the note again, in milliseconds. */
 export const FOLLOW_EVERY_MS = 2000;

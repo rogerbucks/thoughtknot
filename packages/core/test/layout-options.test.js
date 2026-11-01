@@ -37,11 +37,12 @@ describe('the layout options', () => {
   test('are spacing, link length and group pull, each kept in its range, the default where missing', () => {
     assert.deepEqual(layoutOptions(), DEFAULT_LAYOUT_OPTIONS);
     assert.deepEqual(layoutOptions({ spacing: 9, linkLength: 0, groupPull: 'tight' }), {
+      ...DEFAULT_LAYOUT_OPTIONS,
       spacing: 4,
       linkLength: 0.25,
       groupPull: 0.5,
     });
-    assert.deepEqual(layoutOptions({ spacing: Number.NaN, groupPull: 1 }), { spacing: 1, linkLength: 1, groupPull: 1 });
+    assert.deepEqual(layoutOptions({ spacing: Number.NaN, groupPull: 1 }), { ...DEFAULT_LAYOUT_OPTIONS, groupPull: 1 });
   });
 
   test('rows lay out farther apart for longer links, and things farther apart beside each other for more spacing', () => {

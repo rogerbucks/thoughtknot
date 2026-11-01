@@ -13,14 +13,13 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
-import { buildLibrary, PACKAGES, assetName, releaseUrl } from '../scripts/library-release.mjs';
+import { buildLibrary, PACKAGES, assetName, releaseUrl, runNpm } from '../scripts/library-release.mjs';
 import { changelogText, pullRequests } from '../scripts/changelog.mjs';
 import { read, readJSON, jsPackages, workflowFiles } from './repository/repo.js';
 import { repository } from './repository/scratch-repository.js';
 
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const NOTE = "// graph: g\n(tea:Drink {name: 'Tea'}),\n(me:Person {name: 'Me'}),\n(tea)-[:WARMS]->(me)";
 
 describe('the release and the nightly attach the library', () => {
@@ -81,10 +80,16 @@ describe('the two packages, built and installed from their files', () => {
 
   test('each package is private, at the version given, and carries the licence and notices', () => {
     for (const { name, file } of built) {
-      const listed = execFileSync('tar', ['-tzf', file], { encoding: 'utf8' });
+      // tar is handed the file's name from its own folder: GNU tar, as Git's on Windows, reads `D:` as another computer
+      const tar = (...args) =>
+        execFileSync('tar', [...args.slice(0, 1), basename(file), ...args.slice(1)], {
+          cwd: dirname(file),
+          encoding: 'utf8',
+        });
+      const listed = tar('-tzf');
       for (const want of ['package/package.json', 'package/LICENSE', 'package/THIRD_PARTY_NOTICES.md'])
         assert.ok(listed.includes(want), `${name} has ${want}`);
-      const manifest = JSON.parse(execFileSync('tar', ['-xOzf', file, 'package/package.json'], { encoding: 'utf8' }));
+      const manifest = JSON.parse(tar('-xOzf', 'package/package.json'));
       assert.equal(manifest.version, '0.9.0');
       assert.equal(manifest.private, true, `${name} can never be published`);
       assert.equal(manifest.scripts, undefined, `${name} runs nothing when installed`);
@@ -97,15 +102,21 @@ describe('the two packages, built and installed from their files', () => {
     writeFileSync(join(app, 'package.json'), JSON.stringify({ name: 'app', private: true, type: 'module' }));
     const env = { ...process.env };
     delete env.npm_config_allow_scripts;
-    execFileSync(
-      NPM,
-      ['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', ...built.map(({ file }) => file)],
-      { cwd: app, env, stdio: 'pipe' },
-    );
+    runNpm(['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', ...built.map(({ file }) => file)], {
+      cwd: app,
+      env,
+      stdio: 'pipe',
+    });
     const program = (typed) =>
       [
-        "import { readNote, History, layoutSource } from '@thoughtknot/core';",
-        "import spec from '@thoughtknot/graph-spec';",
+        "import { readNote, History, layoutSource, currentLocale } from '@thoughtknot/core';",
+        "import spec, { check } from '@thoughtknot/graph-spec';",
+        // risk API-2: the host interface ships as the break check declares it, each entry its own
+        "import { HOST_CONTRACT_VERSION } from '@thoughtknot/core/display/host-contract';",
+        "import * as host from '@thoughtknot/core/display/host';",
+        `const rows${typed ? ': host.MenuRow[]' : ''} = [];`,
+        // one copy of the core behind both entries: a language the host sets is the one the core then speaks
+        "host.installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {}, language: () => 'fr' });",
         `const reading = readNote([${JSON.stringify(NOTE)}]);`,
         `const history${typed ? ': History' : ''} = new History();`,
         "history.record('a', 'b');",
@@ -117,6 +128,10 @@ describe('the two packages, built and installed from their files', () => {
         '  undo: history.canUndo(),',
         '  checked: checks.length > 0,',
         "  layout: layoutSource(drawing, 'LR').source.startsWith('digraph'),",
+        "  host: typeof host === 'object' && rows.length === 0 && HOST_CONTRACT_VERSION > 0,",
+        // graph-spec as an ES module: a name imported by name is the module's own (API-8)
+        '  named: check === spec.check,',
+        "  shared: currentLocale() === 'fr',",
         '}));',
       ].join('\n');
     writeFileSync(join(app, 'use.ts'), program(true));
@@ -131,7 +146,15 @@ describe('the two packages, built and installed from their files', () => {
     );
     writeFileSync(join(app, 'use.mjs'), program(false));
     const said = JSON.parse(execFileSync(process.execPath, ['use.mjs'], { cwd: app, encoding: 'utf8' }));
-    assert.deepEqual(said, { graphs: 1, undo: true, checked: true, layout: true });
+    assert.deepEqual(said, {
+      graphs: 1,
+      undo: true,
+      checked: true,
+      layout: true,
+      host: true,
+      named: true,
+      shared: true,
+    });
   });
 });
 

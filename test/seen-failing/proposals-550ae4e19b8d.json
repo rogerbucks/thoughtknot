@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals.test.js",
+  "test": "proposal_provenance: a proposal shows who proposed it, when and what it read, and says if its basis has moved > a proposal whose graph has moved since says so before anything is accepted, and nothing is accepted until it is seen",
+  "seen_failing_first": false,
+  "evidence": "Expectation updated for the ARCH-14 marks; the code that writes them came in the commit before (fde0c73)."
+}

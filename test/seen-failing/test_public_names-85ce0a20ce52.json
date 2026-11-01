@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_public_names.py",
+  "test": "EachJavaScriptExportHasItsPythonName.test_the_table_names_every_export_and_no_other",
+  "seen_failing_first": false,
+  "evidence": "The table is new data written with this test; the JavaScript exports it lists did not change."
+}

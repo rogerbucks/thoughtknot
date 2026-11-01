@@ -63,7 +63,9 @@ jobs:
               git show FETCH_HEAD:requirements/editor-requirements.gql > "$RUNNER_TEMP/released.gql"
           fi
       - name: Take the user guide's screenshots
-        run: node scripts/wiki-screens.mjs --out wiki-out/images --chrome "$(command -v google-chrome)"
+        run: |
+          node scripts/wiki-screens.mjs --out wiki-out/images --chrome "$(command -v google-chrome)" \
+            || echo "::warning::The guide's screenshots could not be taken, so the wiki keeps the pictures it already has."
       - name: Write the pages
         run: node scripts/wiki.mjs --out wiki-out --sha "$GITHUB_SHA" --releases "$RUNNER_TEMP/releases.json" --released "$RUNNER_TEMP/released.gql" --labels wiki-out/images/labels.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -163,3 +165,11 @@ jobs:
           git diff --cached --quiet && { echo "The wiki is already current."; exit 0; }
           git commit -q -m "Update the wiki from ${GITHUB_SHA::7}"
           git push
+
+  # A failure here tells nobody otherwise (OPS-6): this keeps one open issue, labelled workflow-failure.
+  report-failure:
+    needs: [make, review, report, publish]
+    if: failure()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/report-failure.yml

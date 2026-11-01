@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/reading-support.test.js",
+  "test": "the Reading support preset > the default preset keeps every word and offers no reading aloud",
+  "seen_failing_first": false,
+  "evidence": "It guards the default against the change: the default kept every word and had no Read aloud before Reading support existed, so it passes on the old code by design."
+}

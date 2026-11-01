@@ -6,6 +6,8 @@
 // saves a view as shown (untangle-saved.ts).
 import { adjacency, edgesOf, within } from './focus.ts';
 import type { FocusEdge, Kept } from './focus.ts';
+import { ExploreSession } from './explore-session.ts';
+import type { ExploreSave } from './explore-saved.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
@@ -296,6 +298,8 @@ export class Untangle {
   readonly legend = new LegendFilter();
   /** The thing the drawing is filtered to and how many steps out, if it is. */
   only: { key: string; steps: number } | null = null;
+  /** The exploration from one thing, mind-map style, if the card is exploring (§71, explore_from_here). */
+  explore: ExploreSession | null = null;
   /** The two things a path was asked for between, and what was found: null for none. */
   routed: { from: string; to: string; found: PathFound | null } | null = null;
   /** The links of the drawing, as `edgesOf` gives them. */
@@ -311,12 +315,29 @@ export class Untangle {
 
   /** Filters the drawing to a thing and what lies within `steps` of it. */
   showOnly(key: string, steps: number): void {
+    this.explore = null;
     this.only = { key, steps: Math.max(1, Math.min(MOST_STEPS, Math.round(steps))) };
+  }
+
+  /** Explores from `key`: it becomes the centre, shown with its direct links, and the rest is hidden. */
+  exploreFrom(key: string): ExploreSession {
+    this.only = null;
+    this.explore = new ExploreSession(this.d, key);
+    return this.explore;
+  }
+
+  /** Opens `saved` again, as the style graph saved it (explore_saved). Null when its centre is not drawn here. */
+  exploreSaved(saved: ExploreSave): ExploreSession | null {
+    if (!this.d.boxes.some((b) => b.key === saved.centre)) return null;
+    this.only = null;
+    this.explore = new ExploreSession(this.d, saved.centre, saved.shape, saved);
+    return this.explore;
   }
 
   /** Shows the whole graph again. */
   showAll(): void {
     this.only = null;
+    this.explore = null;
   }
 
   /** Asks for the shortest path between two things; the path, or null when there is none. */
@@ -333,15 +354,16 @@ export class Untangle {
 
   /** Whether anything is filtered, chosen or asked for. */
   active(): boolean {
-    return this.only !== null || this.routed !== null || this.legend.any();
+    return this.only !== null || this.explore !== null || this.routed !== null || this.legend.any();
   }
 
   /** What to bring forward and what to hide, given what the selection keeps (null for no selection). */
   layers(focus: Kept | null): Layers {
     const { forward, hidden } = this.legend.apply(this.d, this.edges);
     const hide: Kept = { things: new Set(hidden.things), edges: new Set(hidden.edges) };
-    if (this.only) {
-      const shown = neighbourhood(this.edges, this.only.key, this.only.steps);
+    const exploring = this.explore?.shown(this.edges);
+    if (this.only || exploring) {
+      const shown = exploring ?? neighbourhood(this.edges, (this.only as { key: string }).key, this.only?.steps ?? 1);
       for (const b of this.d.boxes) if (!shown.things.has(b.key)) hide.things.add(b.key);
       this.edges.forEach((_e, i) => {
         if (!shown.edges.has(i)) hide.edges.add(i);

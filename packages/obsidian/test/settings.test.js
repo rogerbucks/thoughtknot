@@ -6,7 +6,7 @@
 // - The language follows Obsidian's until one is chosen here (§42, language_follows_host).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './host/load-plugin.js';
+import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { open, note } from './host/pane-notes.js';
@@ -34,6 +34,10 @@ const row = (el, name, heading = false) =>
         r.classList.contains('setting-item-heading') === heading &&
         r.querySelector('.setting-item-name')?.textContent === name,
     );
+/** Picks a view preset on the page, which only shows what it would change. */
+const pickPreset = (env, id) => choose(row(page(env), 'View preset'), id);
+/** Presses the button of a row of the page, by the row's name. */
+const press = (env, name) => row(page(env), name).querySelector('button').click();
 const choose = (r, value) => {
   const sel = r.querySelector('select');
   sel.value = value;
@@ -71,7 +75,7 @@ describe('the settings page', () => {
     let data;
     try {
       choose(row(page(env), 'Strictness'), 'standard');
-      await wait(10);
+      await until(() => env.state.data?.settings?.strictness === 'standard');
       data = env.state.data;
       assert.equal(data.settings.strictness, 'standard');
     } finally {
@@ -142,7 +146,7 @@ describe('strictness', () => {
       const t = r.querySelector('input');
       t.checked = true;
       t.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.allowed?.length === 1);
       assert.deepEqual(env.state.data.settings.allowed, ['missing-comma']);
       assert.deepEqual(await problemsShown(env), []);
     } finally {
@@ -175,7 +179,7 @@ describe('strictness', () => {
       const t = env.el.querySelector('textarea');
       t.value = typed;
       t.dispatch('input');
-      await wait(400);
+      await until(() => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem'));
       const mark = () => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem')?.className ?? '';
       assert.match(mark(), /is-warning/);
       choose(row(page(env), 'Strictness'), 'standard');
@@ -192,7 +196,7 @@ describe('strictness', () => {
       const t = env.el.querySelector('textarea');
       t.value = typed;
       t.dispatch('input');
-      await wait(400);
+      await until(() => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem'));
       const mark = env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem');
       assert.ok(mark, 'the pane lists the slip');
       assert.match(mark.className, /is-error/);
@@ -289,7 +293,7 @@ describe('the AI models of §19', () => {
     try {
       let el = page(env);
       labelled(el, 'Add a model').click();
-      await wait(10);
+      await until(() => row(page(env), 'Model 1'));
       el = page(env);
       const r = row(el, 'Model 1');
       assert.ok(r);
@@ -305,7 +309,7 @@ describe('the AI models of §19', () => {
       );
       ceiling.value = 'Internal';
       ceiling.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiModels?.[0]?.ceiling === 'Internal');
       assert.deepEqual(
         [
           env.state.data.settings.aiModels[0].name,
@@ -329,8 +333,8 @@ describe('the AI models of §19', () => {
       for (const v of ['Public\nInterna', 'Public\nIntern', 'Public\nInternal']) {
         field.value = v;
         field.dispatch('input');
-        await wait(5);
       }
+      await until(() => env.state.data?.settings?.classifications?.join() === 'Public,Internal');
       assert.ok(row(el, 'Classifications').querySelector('textarea') === field, 'the page is not drawn again under it');
       assert.equal(env.state.data.settings.aiModels[0].ceiling, 'Internal');
       assert.deepEqual(env.state.data.settings.classifications, ['Public', 'Internal']);
@@ -344,7 +348,7 @@ describe('the AI models of §19', () => {
     try {
       const el = page(env);
       row(el, 'Model 1').querySelector('.fake-secret').secretComponent.enter('thoughtknot-drafts', 'sk-not-in-vault');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiModels?.[0]?.keyName === 'thoughtknot-drafts');
       assert.equal(env.state.data.settings.aiModels[0].keyName, 'thoughtknot-drafts');
       assert.equal(env.app.secretStorage.getSecret('thoughtknot-drafts'), 'sk-not-in-vault');
       assert.doesNotMatch(JSON.stringify(env.state.data), /sk-not-in-vault/);
@@ -375,7 +379,7 @@ describe('the AI models of §19', () => {
       assert.equal(use.value, 'off');
       use.value = 'on';
       use.dispatch('change');
-      await wait(10);
+      await until(() => env.state.data?.settings?.aiUse === 'on');
       assert.equal(env.state.data.settings.aiUse, 'on');
     } finally {
       env.uninstall();
@@ -388,7 +392,7 @@ describe('formatting and drawing defaults', () => {
     const env = await open({ data: { settings: { indent: 'two' } } });
     try {
       labelled(env.el, 'Lock the graph').click();
-      await wait(50);
+      await until(() => /graph: 'reader'/.test(note(env)));
       assert.match(note(env), /\n {2}graph: 'reader'/);
       assert.doesNotMatch(note(env), /\n {4}graph: 'reader'/);
     } finally {
@@ -419,10 +423,11 @@ describe('formatting and drawing defaults', () => {
   });
 
   // proves: view_presets_saved
-  test('a view preset picked on the page sets every Drawing setting it turns, and Calm keeps everything still', async () => {
+  test('a view preset used on the page sets every Drawing setting it turns, and Calm keeps everything still', async () => {
     const env = await load();
     try {
-      choose(row(page(env), 'View preset'), 'calm');
+      pickPreset(env, 'calm');
+      press(env, 'Use this preset');
       await until(() => env.state.data?.settings?.viewPreset === 'calm');
       const saved = env.state.data.settings;
       assert.equal(saved.viewPreset, 'calm');
@@ -433,10 +438,77 @@ describe('formatting and drawing defaults', () => {
       choose(row(page(env), 'Bundle links between groups'), 'off');
       await until(() => env.state.data.settings.mergeLinks === 'off');
       assert.equal(env.state.data.settings.mergeLinks, 'off', 'each still a setting of its own');
-      choose(row(page(env), 'View preset'), 'big-picture');
+      pickPreset(env, 'big-picture');
+      press(env, 'Use this preset');
       await until(() => env.state.data.settings.viewPreset === 'big-picture');
       assert.equal(env.state.data.settings.foldGroups, 'on');
       assert.equal(globalThis.document.body.classList.contains('thoughtknot-still'), false);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_presets_portable
+  test('a preset moves as one file: Export writes the one in use as set, and its text pasted in is Your own', async () => {
+    const env = await load({ data: { settings: { viewPreset: 'focus', mergeLinks: 'on' } } });
+    try {
+      const offered = () =>
+        row(page(env), 'View preset')
+          .querySelectorAll('option')
+          .map((o) => o.getAttribute('value'));
+      assert.ok(!offered().includes('own'), 'no Your own until one is read in');
+      press(env, 'Export the preset in use');
+      await until(() => [...env.state.files.keys()].some((k) => k.endsWith('View preset.json')));
+      const [path] = [...env.state.files.keys()].filter((k) => k.endsWith('View preset.json'));
+      const text = env.state.files.get(path);
+      assert.match(text, /"format": "thoughtknot-view-preset@1"/);
+      assert.match(text, /"mergeLinks": "on"/, 'as it is set now, not as the starter came');
+      const field = row(page(env), 'Your own view preset').querySelector('textarea');
+      field.value = text.replace('Focus support', 'Mine');
+      field.dispatch('input');
+      await until(() => !!env.state.data.settings.ownPreset);
+      assert.ok(row(page(env), 'Your own view preset'), 'read in');
+      assert.match(page(env).textContent, /Read in: Mine\./);
+      assert.ok(offered().includes('own'), 'Your own can be picked now');
+      pickPreset(env, 'own');
+      press(env, 'Use this preset');
+      await until(() => env.state.data.settings.viewPreset === 'own');
+      assert.equal(env.state.data.settings.mergeLinks, 'on');
+      // a file that is not a preset is never used, and says why
+      field.value = '{"format": "something else"}';
+      field.dispatch('input');
+      await until(() => env.state.data.settings.ownPreset === '');
+      assert.equal(env.state.data.settings.viewPreset, 'default', 'Your own goes with it');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: view_presets_predictable
+  test('a view preset picked first says what it would change, is used only when asked, and is undone in one step', async () => {
+    const env = await load();
+    try {
+      pickPreset(env, 'calm');
+      const preview = row(page(env), 'Before you use Calm and predictable');
+      assert.ok(preview, 'what it would change, before it changes anything');
+      const said = preview.querySelector('.setting-item-description').textContent;
+      assert.match(said, /Direction: [^.]+ becomes [^.]+\./);
+      assert.equal(env.state.data?.settings?.viewPreset ?? 'default', 'default', 'nothing saved yet');
+      // keeping it as it was drops the pick, and nothing changed
+      press(env, 'Keep as it was');
+      assert.equal(row(page(env), 'Before you use Calm and predictable'), undefined);
+      assert.equal(env.state.data?.settings?.viewPreset ?? 'default', 'default');
+      pickPreset(env, 'calm');
+      press(env, 'Use this preset');
+      await until(() => env.state.data?.settings?.viewPreset === 'calm');
+      assert.equal(env.state.data.settings.direction, 'LR');
+      press(env, 'Undo the preset change');
+      await until(() => env.state.data.settings.viewPreset === 'default');
+      const back = env.state.data.settings;
+      assert.equal(back.direction, 'best', 'every setting it turned is put back');
+      assert.equal(back.labelsByZoom, 'on');
+      assert.equal(back.mergeLinks, 'off');
+      assert.equal(row(page(env), 'Undo the preset change'), undefined, 'one step');
     } finally {
       env.uninstall();
     }

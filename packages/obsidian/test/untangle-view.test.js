@@ -2,8 +2,7 @@
 // - A thing and its neighbours alone, behind a banner with a step back.
 // - The legend bringing a kind or a relationship type forward, then hiding it.
 // - The shortest path between two things, or that there is none.
-// - Finding a thing and bringing it into view. Walking the links by arrow key.
-// The built plugin, loaded against the stand-ins for the page.
+// - Finding a thing and bringing it into view. Walking the links by arrow key. In the built plugin, on stand-ins.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load as loadWith, until, wait } from './host/load-plugin.js';
@@ -43,6 +42,7 @@ const tap = (el, g, pointerId = 3, extra = {}) => {
 const banner = (el) => el.querySelector('.thoughtknot-untangle');
 const said = (el) => banner(el)?.textContent ?? '';
 const withText = (el, tag, text) => el.querySelectorAll(tag).find((b) => b.textContent.includes(text));
+const alone = (b) => !b.hasClass('thoughtknot-find-explore'); // a thing found, not its Explore from (§71)
 
 describe('show only a thing and its neighbours', () => {
   let env, el;
@@ -294,7 +294,7 @@ describe('finding a thing', () => {
     const input = el.querySelector('.thoughtknot-find input');
     input.value = text;
     input.dispatch('input');
-    return el.querySelectorAll('.thoughtknot-find-results button');
+    return el.querySelectorAll('.thoughtknot-find-results button').filter(alone);
   };
 
   test('a button in the bar opens the search box', () => {
@@ -334,7 +334,7 @@ describe('finding a thing', () => {
       const input = shop.querySelector('.thoughtknot-find input');
       input.value = '249';
       input.dispatch('input');
-      const found = shop.querySelectorAll('.thoughtknot-find-results button');
+      const found = shop.querySelectorAll('.thoughtknot-find-results button').filter(alone);
       assert.equal(found.length, 1);
       assert.match(found[0].textContent, /Lamp/);
       assert.match(found[0].textContent, /price: 249/);

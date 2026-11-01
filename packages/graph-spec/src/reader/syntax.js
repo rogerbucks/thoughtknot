@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // A block's syntax alone, checked without a store: the profile, and names written before they are reused.
 'use strict';
 

@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // Who proposed a Proposal (§23 rule 6, §24 H3 rule 4), as W3C PROV records it. The Proposal is WAS_ATTRIBUTED_TO the
 // agent, a Ref to a Model in another graph. For one release the old form is still read, with a warning naming the
 // fix. The old form: the Proposal WAS_GENERATED_BY an Activity that is ASSOCIATED_WITH the agent. The twin of

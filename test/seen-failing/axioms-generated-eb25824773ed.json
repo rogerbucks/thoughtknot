@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/axioms-generated.test.mjs",
+  "test": "axioms_on_generated_graphs > A9: what is derived from a graph equals a recompute from its own source",
+  "seen_failing_first": false,
+  "evidence": "It holds a law the reader and the join already keep (GS8): generated graphs check the existing code, so it passes on the code before it."
+}

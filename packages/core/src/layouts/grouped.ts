@@ -6,6 +6,7 @@
 // never overlaps another, and no Graphviz cluster is needed, the slowest thing Graphviz does. A link into a group
 // runs to the group's edge, then to its thing. Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
+import { tidyTree } from './tidy-tree.ts';
 import { layered, viaKey } from './layered.ts';
 import type { Layered, Size } from './layered.ts';
 import { layoutOptions } from './layout-options.ts';
@@ -35,10 +36,21 @@ const LABEL = 22;
 /** The room round each thing and group, about, when guessing how much room the whole drawing takes. */
 const ROOM = 60;
 
+/** `shape`, a tree or a forest, laid out tidily and folded to about a screen's shape; undefined for any other shape. */
+export function tidyRows(
+  shape: GraphShape,
+  sizes: ReadonlyMap<string, Size>,
+  rankdir: 'LR' | 'TB',
+  options: Partial<LayoutOptions>,
+): (Layered & { boxes: GroupBox[] }) | undefined {
+  const tidy = tidyTree(shape, sizes, rankdir, options);
+  return tidy && { ...folded(tidy, shape, sizes, rankdir, PAD), boxes: [] };
+}
+
 /**
  * Each thing of `shape` placed in rows, the things of each of `groups` kept together in a box. A thing in two groups
  * stays in the first. Gives the spots, the links' bends and the groups' boxes. With no groups, `tries` is how many
- * times more the rows are ordered afresh (`layered`).
+ * times more the rows are ordered afresh. `bands` gives each kind a lane, in each group too (`layered`).
  */
 export function groupedLayered(
   shape: GraphShape,
@@ -48,6 +60,7 @@ export function groupedLayered(
   previous?: ReadonlyMap<string, readonly number[]>,
   options: Partial<LayoutOptions> = {},
   tries = 0,
+  bands?: ReadonlyMap<string, number>,
 ): Layered & { boxes: GroupBox[] } {
   // a group's box holds its things as tightly as `groupPull` asks: half the room at the most, half again at none
   const pad = PAD * (1.5 - layoutOptions(options).groupPull);
@@ -58,7 +71,7 @@ export function groupedLayered(
   // with no groups, the rows alone, folded when far from a screen's shape
   if (!used.length)
     return {
-      ...folded(layered(shape, sizes, rankdir, previous, options, tries), shape, sizes, rankdir, PAD),
+      ...folded(layered(shape, sizes, rankdir, previous, options, tries, bands), shape, sizes, rankdir, PAD),
       boxes: [],
     };
   // each group's own rows, and the box they need
@@ -72,7 +85,7 @@ export function groupedLayered(
       things: shape.things.filter((t) => members.has(t.key)),
       links: shape.links.filter((l) => members.has(l.from) && members.has(l.to)),
     };
-    const inner = layered(sub, sizes, rankdir, previous, options);
+    const inner = layered(sub, sizes, rankdir, previous, options, 0, bands);
     inside.set(g.id, { inner, sub, bounds: boundsOf(inner, sizes), size: [0, 0] });
   }
   // the room the whole drawing takes, about: so no group is longer across the way than a screen-shaped drawing
@@ -130,7 +143,7 @@ export function groupedLayered(
         at[side] = ws ? ws.reduce((t, v) => t + v, 0) / ws.length : centre + p[side] - mid;
         hint.set(k, at);
       }
-      const inner = folded(layered(it.sub, sizes, rankdir, hint, options), it.sub, sizes, rankdir, pad, most);
+      const inner = folded(layered(it.sub, sizes, rankdir, hint, options, 0, bands), it.sub, sizes, rankdir, pad, most);
       const bounds = boundsOf(inner, sizes);
       if (
         bounds[2] - bounds[0] <= it.bounds[2] - it.bounds[0] + 1 &&

@@ -3,20 +3,9 @@
   "panel": {
     "about": "The last time every role looked at the whole project. A release that starts a new version line (0.7 to 0.8) waits for a new one.",
     "last_full": {
-      "date": "2026-10-19",
-      "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd",
-      "version": "0.7.1",
-      "roles": [
-        "Senior security engineer",
-        "IT administrator and release / DevOps engineer",
-        "Senior coder and QA / test engineer",
-        "Enterprise, solution and data architect",
-        "User experience and accessibility lead",
-        "Senior UI designer: neurodiversity and data management",
-        "Workflow designer and open-source maintainer",
-        "API design expert",
-        "AI product expert"
-      ]
+      "date": "2026-10-31",
+      "commit": "c4c249610389881421da548e4f68ca83ab4526bc",
+      "version": "0.8.0"
     }
   },
   "risks": [
@@ -85,8 +74,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/settings-check.test.js",
+        ".github/workflows/settings-check.yml"
+      ]
     },
     {
       "id": "SEC-3",
@@ -178,8 +172,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/nightly-workflow.test.js",
+        ".github/workflows/nightly.yml"
+      ]
     },
     {
       "id": "SEC-6",
@@ -209,8 +208,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/reproducible-build.test.js",
+        "scripts/reproducible-build.mjs"
+      ]
     },
     {
       "id": "SEC-7",
@@ -237,8 +241,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_optional_imports_safe_parser.py",
+        "python/graph_spec/src/graphspec/engine/optional_imports.py"
+      ]
     },
     {
       "id": "SEC-8",
@@ -270,8 +279,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/secrets-recorded.test.js",
+        "RELEASING.md"
+      ]
     },
     {
       "id": "SEC-9",
@@ -330,8 +344,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/python-audit.test.js",
+        ".github/workflows/ci.yml"
+      ]
     },
     {
       "id": "OPS-1",
@@ -504,8 +523,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/engine-version-retry.test.js",
+        "scripts/engine-version.mjs"
+      ]
     },
     {
       "id": "OPS-6",
@@ -539,8 +563,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/report-failure.yml"
+      ]
     },
     {
       "id": "OPS-7",
@@ -575,8 +604,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/report-failure-workflow.test.js",
+        ".github/workflows/token-watch.yml"
+      ]
     },
     {
       "id": "OPS-8",
@@ -608,8 +642,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/settings-export.test.js",
+        "scripts/settings-export.mjs"
+      ]
     },
     {
       "id": "OPS-9",
@@ -645,8 +684,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/dependabot.yml"
+      ]
     },
     {
       "id": "OPS-10",
@@ -684,8 +728,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/record-spread.test.js",
+        "scripts/record-spread.mjs"
+      ]
     },
     {
       "id": "OPS-11",
@@ -713,8 +762,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        ".github/workflows/wiki.yml"
+      ]
     },
     {
       "id": "OPS-12",
@@ -748,8 +802,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1540",
+      "prevented_by": [
+        "test/process-risks-ops.test.js",
+        "CONTRIBUTING.md"
+      ]
     },
     {
       "id": "CODE-1",
@@ -779,8 +838,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "CODE-2",
@@ -810,8 +870,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "CODE-3",
@@ -842,8 +903,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1567",
+      "prevented_by": [
+        "test/quality-metrics.test.js",
+        "scripts/quality-check.mjs"
+      ]
     },
     {
       "id": "CODE-4",
@@ -875,8 +941,14 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1560",
+      "prevented_by": [
+        "test/mod-check.test.js",
+        "scripts/mod-check.mjs",
+        "packages/claude-code/mod/tests/graph.test.tsx"
+      ]
     },
     {
       "id": "CODE-5",
@@ -908,8 +980,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1546"
     },
     {
       "id": "CODE-6",
@@ -927,7 +1000,7 @@
       "likelihood": "medium",
       "impact": "low",
       "decision": "fix-later",
-      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.",
+      "fix": "Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each. Done in #1568 for every sleep that waits for a state. The 43 left wait for something that must not happen, so they stay as sleeps; Roger accepted that on 30 Oct 2026, and the ratchet keeps them from growing.",
       "check": "The existing fixed-sleeps ratchet, plus a quality metric that fails when the total allowance stops falling across two releases.",
       "paths": [
         "packages/obsidian/test/**",
@@ -940,8 +1013,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1568",
+      "prevented_by": [
+        "test/fixed-sleeps.test.js",
+        "scripts/fixed-sleeps.mjs"
+      ]
     },
     {
       "id": "CODE-7",
@@ -973,8 +1051,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1542"
     },
     {
       "id": "CODE-8",
@@ -1004,8 +1083,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "CODE-9",
@@ -1037,8 +1117,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1542"
     },
     {
       "id": "CODE-10",
@@ -1066,8 +1147,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1542"
     },
     {
       "id": "CODE-11",
@@ -1168,7 +1250,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1548",
       "wave": "Wave 6 · Host, storage and plug-in contracts"
     },
     {
@@ -1205,8 +1288,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1542"
     },
     {
       "id": "ARCH-3",
@@ -1243,8 +1327,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1544"
     },
     {
       "id": "ARCH-4",
@@ -1313,8 +1398,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "ARCH-6",
@@ -1452,8 +1538,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1544"
     },
     {
       "id": "ARCH-10",
@@ -1486,8 +1573,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1542"
     },
     {
       "id": "ARCH-11",
@@ -1623,8 +1711,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1550"
     },
     {
       "id": "UX-3",
@@ -1666,8 +1755,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1617"
     },
     {
       "id": "UX-4",
@@ -1701,8 +1791,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1594"
     },
     {
       "id": "UX-5",
@@ -1734,8 +1825,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1550"
     },
     {
       "id": "UX-6",
@@ -1798,8 +1890,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1550"
     },
     {
       "id": "UX-8",
@@ -1834,8 +1927,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1594"
     },
     {
       "id": "UX-9",
@@ -1867,8 +1961,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1550"
     },
     {
       "id": "UX-10",
@@ -1960,8 +2055,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1623"
     },
     {
       "id": "NEURO-3",
@@ -1992,8 +2088,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1591"
     },
     {
       "id": "NEURO-4",
@@ -2059,8 +2156,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1550"
     },
     {
       "id": "NEURO-6",
@@ -2094,8 +2192,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1588"
     },
     {
       "id": "NEURO-7",
@@ -2126,8 +2225,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1622"
     },
     {
       "id": "NEURO-8",
@@ -2157,8 +2257,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1594"
     },
     {
       "id": "NEURO-9",
@@ -2191,8 +2292,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1591"
     },
     {
       "id": "NEURO-10",
@@ -2253,8 +2355,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1613"
     },
     {
       "id": "FLOW-1",
@@ -2399,8 +2502,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1563",
+      "prevented_by": [
+        "test/prepare-pr.test.js",
+        "scripts/prepare-pr.mjs"
+      ]
     },
     {
       "id": "FLOW-5",
@@ -2431,8 +2539,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1564",
+      "prevented_by": [
+        "test/check-requirements-reworded.test.js",
+        "scripts/check-requirements-flips.mjs"
+      ]
     },
     {
       "id": "FLOW-6",
@@ -2634,8 +2747,13 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 5 · Automated quality and releases"
+      "status": "done",
+      "wave": "Wave 5 · Automated quality and releases",
+      "done_in": "#1566",
+      "prevented_by": [
+        "test/decision-remarks.test.js",
+        "scripts/decision-remarks.mjs"
+      ]
     },
     {
       "id": "FLOW-12",
@@ -2700,8 +2818,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "API-2",
@@ -2732,8 +2851,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1544"
     },
     {
       "id": "API-3",
@@ -2797,8 +2917,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1546"
     },
     {
       "id": "API-5",
@@ -2861,8 +2982,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1545"
     },
     {
       "id": "API-7",
@@ -2892,8 +3014,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1545"
     },
     {
       "id": "API-8",
@@ -2926,8 +3049,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1543"
     },
     {
       "id": "API-9",
@@ -3492,8 +3616,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1535",
+      "prevented_by": [
+        "test/release-split.test.js",
+        ".github/workflows/release.yml"
+      ]
     },
     {
       "id": "TRUST-4",
@@ -3522,8 +3651,14 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1539",
+      "prevented_by": [
+        "packages/claude-code/test/editor-changes.test.js",
+        "packages/claude-code/test/editor-gate.test.js",
+        "packages/core/src/github-review-items.ts"
+      ]
     },
     {
       "id": "TRUST-5",
@@ -3583,8 +3718,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_fill_contained.py",
+        "python/graph_spec/src/graphspec/engine/documents/fill.py"
+      ]
     },
     {
       "id": "TRUST-7",
@@ -3612,8 +3752,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1539",
+      "prevented_by": [
+        "packages/core/test/svg-allowlist.test.js",
+        "packages/core/src/svg-allowlist.ts"
+      ]
     },
     {
       "id": "TRUST-8",
@@ -3667,8 +3812,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "python/graph_spec/tests/test_classification.py",
+        "packages/core/test/classification-cases.json"
+      ]
     },
     {
       "id": "TRUST-10",
@@ -3694,8 +3844,13 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#1537",
+      "prevented_by": [
+        "packages/claude-code/test/note-history.test.js",
+        "packages/claude-code/server/note-history.ts"
+      ]
     },
     {
       "id": "TRUST-11",
@@ -4222,8 +4377,9 @@
         "date": "2026-10-23",
         "commit": "29ccf86e02a62b736f11b3eabb55fc1f94ff32bf"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1596"
     },
     {
       "id": "SEC-18",
@@ -4277,7 +4433,7 @@
         "packages/graph-spec/src/mesh/as-at.js",
         "packages/core/test/mesh-history.test.js",
         "packages/core/test/mesh-history-log.test.js",
-        "unverified: no review has looked at these together; requirements §65 plan the checks"
+        "packages/core/src/temporal.ts"
       ],
       "likelihood": "medium",
       "impact": "high",
@@ -4291,11 +4447,16 @@
       "effort": "days",
       "raised": "2026-10-24",
       "reviewed": {
-        "date": "2026-10-24",
-        "commit": "bb0e524729d761a56f141608ff7e51cff40bf43f"
+        "date": "2026-10-28",
+        "commit": "a3ea6dc9f8c52a2e16560f44a4e5a94873d75113"
       },
-      "status": "open",
-      "wave": "Wave 13 · Slice 9 store, sync and network"
+      "status": "done",
+      "wave": "Wave 13 · Slice 9 store, sync and network",
+      "done_in": "#1489",
+      "prevented_by": [
+        "packages/core/test/temporal-security.test.js",
+        "packages/core/src/temporal.ts"
+      ]
     },
     {
       "id": "SEC-20",
@@ -4332,6 +4493,557 @@
         "scripts/code-scan.mjs",
         "python/graph_spec/tests/test_graph_bidi.py"
       ]
+    },
+    {
+      "id": "SEC-21",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "The animated exports found each group of a drawing with a pattern that ran slow",
+      "risk": "Two patterns in the animated exports read each group of a drawing. On a long group with no end, their time grew with the square of its length, so the code scan counted each as high.",
+      "evidence": [
+        "packages/core/src/export-motion.ts",
+        "packages/core/src/path-animation.ts"
+      ],
+      "alerts": [
+        "code-scanning/114",
+        "code-scanning/115"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Find each group by plain search with replaceGroups in packages/core/src/export-motion.ts.",
+      "check": "test/code-scanning-fixes.test.js holds replaceGroups to the pattern’s result, under a time limit. CI’s code-scan job fails on any such pattern.",
+      "paths": [
+        "packages/core/src/export-motion.ts",
+        "packages/core/src/path-animation.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-30",
+      "reviewed": {
+        "date": "2026-10-30",
+        "commit": "be90575041133e781a5c4ce789da3d6cc78e7814"
+      },
+      "status": "done",
+      "done_in": "#1553",
+      "prevented_by": [
+        "packages/core/test/export-motion-groups.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-22",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The desktop app's temp file can follow a planted link",
+      "risk": "A note is written to a temp file named after the note and the process number, made with File::create. That call follows a link and truncates what it finds. A notes folder that another device or person syncs into could hold a link at that name. The write would then go outside the folder, past the check that only looks at the note's own path.",
+      "evidence": [
+        "packages/app/src-tauri/src/place.rs:69",
+        "packages/app/src-tauri/src/place.rs:71",
+        "packages/app/src-tauri/src/place.rs:9",
+        "packages/app/src-tauri/src/place.rs:206"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Make the temp file with create_new, so it never opens an existing name or link. Give it a random part in its name. Check the temp path inside the folder as the note's own path is checked.",
+      "check": "A Rust test in place.rs plants a link at the temp name that leads outside the folder. It asserts write_text fails and leaves the outside file alone.",
+      "paths": [
+        "packages/app/src-tauri/src/place.rs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "open",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+    },
+    {
+      "id": "SEC-23",
+      "role": "Senior security engineer",
+      "area": "privacy",
+      "title": "Kept drafts hold note text that Claude can read",
+      "risk": "The data-folder guard refuses Claude's writes there but lets reads through. A draft is the whole typed text of a note, in a file named by a hash. If the person confirmed a note above Claude's classification ceiling, its unsaved text sits in a file Claude's Read tool can open. The file name hides the note, but Glob lists the folder.",
+      "evidence": [
+        "packages/claude-code/src/data-guard.ts:5",
+        "packages/claude-code/src/data-guard.ts:31",
+        "packages/claude-code/server/note-drafts.ts:3",
+        "packages/claude-code/server/note-drafts.ts:67"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Refuse Claude's reads of the drafts folder as well as its writes. Or keep a draft only for notes within Claude's ceiling.",
+      "check": "A test in packages/claude-code/test asks the guard to judge a Read of a draft file and asserts a refusal.",
+      "paths": [
+        "packages/claude-code/src/data-guard.ts",
+        "packages/claude-code/server/note-drafts.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-24",
+      "role": "Senior security engineer",
+      "area": "supply-chain",
+      "title": "A hand-started desktop build runs any branch with the signing keys",
+      "risk": "The workflow gives the signing keys to every run that is not a pull request. That includes workflow_dispatch, which anyone with write access can start on any branch. The branch's own build scripts then run with the keys in the environment. Whether the keys sit in a protected environment is not visible from the repository.",
+      "evidence": [
+        ".github/workflows/desktop-app.yml:29",
+        ".github/workflows/desktop-app.yml:108",
+        ".github/workflows/desktop-app.yml:110",
+        ".github/workflows/desktop-app.yml:112",
+        "unverified: whether the secrets are held in a GitHub environment that limits them to main"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Give the keys only when the run is on main, a release, or a call from the nightly. Or move them to an environment that only main may use.",
+      "check": "test/desktop-build.test.js reads the workflow and asserts the signing step's condition names main, and not workflow_dispatch on other refs.",
+      "paths": [
+        ".github/workflows/desktop-app.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "SEC-25",
+      "role": "Senior security engineer",
+      "area": "supply-chain",
+      "title": "The panel may write anywhere in its checkout",
+      "risk": "The panel's allowed tools list has a bare Write beside Write(panel-out/*). The bare entry lets a prompt-injected session write any file in the checkout, with the Claude token in the job. Only panel-out is uploaded, so the harm today is small. The narrow rule alone was refused in CI on 31 Oct 2026, so the bare one stays until a narrow rule is found that works.",
+      "evidence": [
+        ".github/workflows/risk-panel.yml:141"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Find a Write rule limited to panel-out that the action accepts, then remove the bare Write.",
+      "check": "A test reads risk-panel.yml and asserts no allowed tool is a bare Write.",
+      "paths": [
+        ".github/workflows/risk-panel.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "OPS-13",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "A panel that is cut short still leaves no report",
+      "risk": "The brief says a cut-short run still leaves a report. But the upload step had no always() condition, so a failed or timed-out Claude step skipped it. The report job needed the panel job to succeed. A long report could also pass GitHub's 65,536-character issue limit, and the scope output grew toward the 1 MB job-output cap.",
+      "evidence": [
+        ".github/workflows/risk-panel.yml"
+      ],
+      "likelihood": "high",
+      "impact": "medium",
+      "decision": "fix-now",
+      "fix": "Upload with always() on the token check. Run the report job when the panel ran, whatever its result. Cut the body to fit the issue limit, with a link to the run. Drop the unused scope output.",
+      "check": "test/risk-panel-workflow.test.js asserts the upload step and the report job both run after a failed panel step.",
+      "paths": [
+        ".github/workflows/risk-panel.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "done",
+      "done_in": "#1587"
+    },
+    {
+      "id": "ARCH-13",
+      "role": "Enterprise, solution and data architect",
+      "area": "data",
+      "title": "The phone's vault key has no recovery path",
+      "risk": "The key is made on the device and kept in the Keystore or Keychain, for this device only and never backed up. A lost, reset or replaced phone loses the key. On Android a sealed copy that cannot be opened is never replaced. So if sync or encryption ever depends on the key, the person has no way back to their notes.",
+      "evidence": [
+        "packages/app/src-tauri/keeper/android/src/main/java/Keeper.kt:48",
+        "packages/app/src-tauri/keeper/android/src/main/java/Keeper.kt:51",
+        "packages/app/src-tauri/keeper/ios/Sources/KeeperPlugin.swift:42",
+        "packages/app/src-tauri/keeper/src/lib.rs:1",
+        "unverified: whether anything encrypts a note with this key yet"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Before sync (Wave 30) uses the key, offer a written recovery phrase or an export of the key the person keeps. Say plainly in the app what a lost phone means.",
+      "check": "A requirement and test that a new device can restore a vault from the recovery phrase alone.",
+      "paths": [
+        "packages/app/src-tauri/keeper/src/lib.rs",
+        "packages/app/src-tauri/keeper/android/src/main/java/Keeper.kt",
+        "packages/app/src-tauri/keeper/ios/Sources/KeeperPlugin.swift"
+      ],
+      "effort": "weeks",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "CODE-13",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "The desktop file commands read and write with no size cap",
+      "risk": "The core limits a note to 1 MB, but the Rust commands read whole files with fs::read and write any length given. The export command caps the number of names tried, not bytes. A huge file in the notes folder, or a page that sends one, can exhaust memory in the app.",
+      "evidence": [
+        "packages/app/src-tauri/src/place.rs:58",
+        "packages/app/src-tauri/src/place.rs:72",
+        "packages/app/src-tauri/src/place.rs:129"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "If wanted: refuse a read past the core's note limit, and an export past a total byte limit.",
+      "check": "A Rust test reads a file past the limit and asserts an error.",
+      "paths": [
+        "packages/app/src-tauri/src/place.rs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
+      },
+      "status": "accepted",
+      "accepted_by": "Roger Bucks",
+      "accepted_reason": "Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal."
+    },
+    {
+      "id": "SEC-26",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The lint tools carry a minimatch with a slow-matching flaw",
+      "risk": "Advisory GHSA-g3hv-75wg-m249 (medium): minimatch before 11.0.1 can be made slow by a crafted pattern. Our ESLint tools depend on it. It runs on build machines only, never in the shipped plugin, and no fixed release works with the lint tools yet.",
+      "evidence": [
+        "package-lock.json",
+        "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+      ],
+      "alerts": [
+        "npm/GHSA-g3hv-75wg-m249",
+        "dependabot/10"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "When the lint tools accept minimatch 11.0.1 or later, update the lock file and close this risk.",
+      "check": "scripts/security-alerts.mjs lists the advisory while it is open, and the release check fails once this entry is removed and it is still there.",
+      "paths": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "a69f6f58baf05f384172454342424b612951b3f4"
+      },
+      "status": "accepted",
+      "accepted_by": "Roger, 31 Oct 2026 (asked in the R2 release thread)",
+      "accepted_reason": "It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later."
+    },
+    {
+      "id": "SEC-27",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Claude's file tools can turn on a browser plug-in",
+      "risk": "The server reads which plug-ins are on from the first hidden vault folder, by name, that holds plugins/thoughtknot/data.json. Claude's file tools may write there. A prompt-injected session can add a plug-in file and its hash, and the page then runs it.",
+      "evidence": [
+        "packages/claude-code/server/page-plugins.ts:42",
+        "packages/claude-code/server/page-plugins.ts:48",
+        "packages/claude-code/server/page-plugins.ts:77",
+        "packages/claude-code/src/data-guard.ts:1",
+        "packages/claude-code/page/page-plugins.ts:73"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Read the turned-on list only from the folder Obsidian names for its settings, not the first hidden folder. Refuse Claude's writes to the plug-in folder and to any data.json under a hidden folder.",
+      "check": "A test makes .a/plugins/thoughtknot/data.json beside a real .obsidian one and asserts the server ignores it. A guard test asserts a Write to ThoughtKnot plug-ins is refused.",
+      "paths": [
+        "packages/claude-code/server/page-plugins.ts",
+        "packages/claude-code/src/data-guard.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-28",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Sync accepts replayed or doubled records",
+      "risk": "Messages between two devices are sealed with a key fixed per pair, with no session number. The receiver appends any records it is sent, with no check of where its copy ends. A replayed or repeated message doubles records and breaks the counts later syncs use.",
+      "evidence": [
+        "packages/sync/src/peer.ts:63",
+        "packages/sync/src/peer.ts:77",
+        "packages/sync/src/store.ts:53",
+        "packages/sync/src/folder-store.ts:56",
+        "packages/sync/src/keys.ts:33"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Mix a fresh random value from each side into the session key. Number each message. Let copyIn accept records only from the exact end of the file it holds. Refuse a second transport on one folder.",
+      "check": "A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.",
+      "paths": [
+        "packages/sync/src/peer.ts",
+        "packages/sync/src/store.ts",
+        "packages/sync/src/folder-store.ts",
+        "packages/sync/src/keys.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "SEC-29",
+      "role": "Senior security engineer",
+      "area": "privacy",
+      "title": "The desktop app drops a note's file mode on every save",
+      "risk": "The app writes a note through File::create and a rename, so the new file has the default mode. A note set to owner-only becomes readable by others after the first save. The Node server keeps the old mode.",
+      "evidence": [
+        "packages/app/src-tauri/src/place.rs:69",
+        "packages/app/src-tauri/src/place.rs:71",
+        "packages/app/src-tauri/src/place.rs:74",
+        "packages/claude-code/server/note-file.ts:29"
+      ],
+      "likelihood": "medium",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Read the note's permissions before the write and set them on the temp file before the rename. Do it with the SEC-22 change to the same lines.",
+      "check": "A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.",
+      "paths": [
+        "packages/app/src-tauri/src/place.rs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+    },
+    {
+      "id": "CODE-14",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "A connector edit can overwrite another thing's value",
+      "risk": "homeChange looks for the key from the chosen line to the end of the document. If that statement lacks the key, it changes the next statement that has it. The key is also used unescaped in a pattern and in the GQL text.",
+      "evidence": [
+        "packages/sync/src/connected.ts:87",
+        "packages/sync/src/connected.ts:93",
+        "packages/sync/src/connected.ts:94",
+        "packages/sync/src/connected.ts:145"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Limit the search to the one statement. Return no change when the key is absent in it. Escape the key in the pattern and refuse a key that is not a plain name.",
+      "check": "A test in packages/sync/test gives two statements, sets a key only the second holds on the first, and asserts no change. Another passes a key with a comma and a bracket and asserts it is refused.",
+      "paths": [
+        "packages/sync/src/connected.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "done",
+      "done_in": "#1632",
+      "prevented_by": [
+        "packages/sync/test/connector-sync.test.js"
+      ]
+    },
+    {
+      "id": "CODE-15",
+      "role": "Senior coder and QA / test engineer",
+      "area": "code",
+      "title": "A failed headset start leaves the session open",
+      "risk": "If a step after requestSession throws, the catch removes the canvas but never ends the session. The person is left in a headset that shows nothing.",
+      "evidence": [
+        "packages/core/src/display/graph-view/space-xr-view.ts:79",
+        "packages/core/src/display/graph-view/space-xr-view.ts:80",
+        "packages/core/src/display/graph-view/space-xr-view.ts:86",
+        "packages/core/src/display/graph-view/space-xr-view.ts:116"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "Keep the session in a variable outside the try. In the catch, call session.end() when it exists.",
+      "check": "A test with a fake XR that throws in requestReferenceSpace asserts end() was called.",
+      "paths": [
+        "packages/core/src/display/graph-view/space-xr-view.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "accepted",
+      "accepted_by": "Roger, 31 Oct 2026 (go on the panel's recommendations)",
+      "accepted_reason": "Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal."
+    },
+    {
+      "id": "ARCH-14",
+      "role": "Enterprise, solution and data architect",
+      "area": "data",
+      "title": "The AI-made rule at the boundary reads a flag nothing writes",
+      "risk": "A corporate setting removes, labels or holds AI-made things by reading ai_assisted or proposer_kind on each thing. No code writes either property. Accepted AI proposals carry neither, so they cross the boundary as if a person wrote them.",
+      "evidence": [
+        "packages/boundary/src/parcel.ts:89",
+        "packages/core/src/export-boundary.ts:37",
+        "packages/core/src/proposals-author.ts:1",
+        "packages/boundary/test/helpers.js:1"
+      ],
+      "likelihood": "high",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "When a proposal from a model or step is accepted, write proposer_kind on every thing and link it adds. Or derive AI-made from the note's proposer declarations and change history. Say which in the boundary guide.",
+      "check": "A test accepts a model's proposal through the real accept path. It then makes a parcel under the remove rule. It asserts the new things are left out and listed.",
+      "paths": [
+        "packages/boundary/src/parcel.ts",
+        "packages/core/src/export-boundary.ts",
+        "packages/core/src/proposals-author.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e93b457fa53fd94c08ced9abcbb35acacdda25db"
+      },
+      "status": "done",
+      "done_in": "#1635"
+    },
+    {
+      "id": "API-13",
+      "role": "API design expert",
+      "area": "architecture",
+      "title": "Sync records and messages carry no format version",
+      "risk": "A sealed record is a nonce and ciphertext. A file is length-framed records. A peer message is a JSON shape. None names its version or cipher. A later release cannot tell an old file from a damaged one, or change the cipher without breaking stored notes.",
+      "evidence": [
+        "packages/sync/src/keys.ts:124",
+        "packages/sync/src/store.ts:68",
+        "packages/sync/src/peer.ts:29",
+        "packages/boundary/src/parcel.ts:26"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Put a one-byte format number before every sealed record and a protocol number in the first peer message. Refuse an unknown number in words, as the parcel format does.",
+      "check": "A test opens a record with a changed first byte and asserts a refusal that names the format, not a decrypt error.",
+      "paths": [
+        "packages/sync/src/keys.ts",
+        "packages/sync/src/store.ts",
+        "packages/sync/src/peer.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "OPS-14",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "versions.json lists 0.7.1, which was never tagged",
+      "risk": "versions.json maps released versions to the Obsidian version they need. It lists 0.7.1 and 0.8.0. No 0.7.1 tag exists. Also, 0.8.0 starts a new line that needs a full panel first.",
+      "evidence": [
+        "versions.json:15",
+        "versions.json:16",
+        "manifest.json:4",
+        "RELEASING.md:162"
+      ],
+      "likelihood": "medium",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Remove the 0.7.1 line, or tag a 0.7.1 that matches it. The full panel is recorded; tag 0.8.0 only after that.",
+      "check": "A test asserts every released version in versions.json has a matching git tag, and that the newest equals manifest.json.",
+      "paths": [
+        "versions.json",
+        "manifest.json"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "done",
+      "done_in": "#1633",
+      "prevented_by": [
+        "test/versions-json.test.js"
+      ]
+    },
+    {
+      "id": "UX-11",
+      "role": "User experience lead and accessibility specialist",
+      "area": "accessibility",
+      "title": "The overview card is announced as an image but takes keys",
+      "risk": "The massive overview stage has role img and tabindex 0, and a keydown handler pans and zooms it. Assistive software announces a picture, not a control. Its groups are painted on canvas, and only search reaches one by name.",
+      "evidence": [
+        "packages/core/src/display/graph-view/massive-view.ts:94",
+        "packages/core/src/display/graph-view/massive-view.ts:95",
+        "packages/core/src/display/graph-view/massive-moves.ts:54"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Give the stage a role that fits a keyboard widget. Name its keys in its label. Offer the groups as a list a screen reader can walk.",
+      "check": "test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.",
+      "paths": [
+        "packages/core/src/display/graph-view/massive-view.ts",
+        "packages/core/src/display/graph-view/massive-moves.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-31",
+      "reviewed": {
+        "date": "2026-10-31",
+        "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
     }
   ]
 }

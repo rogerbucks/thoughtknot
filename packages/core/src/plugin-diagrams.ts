@@ -6,12 +6,13 @@
 // The core checks every mark and draws them itself, escaping every label, so markup in a label shows as text.
 import { drawMarksOf, fromPluginMarks } from './drawing-marks.ts';
 import type { DrawMark } from './drawing-marks.ts';
-import { layoutSvg } from './graphviz-svg.ts';
+import { PT, layoutSvg } from './graphviz-svg.ts';
 import { themed } from './theme.ts';
 import { pluginTypeOf } from './style-graph.ts';
 import type { GraphShape } from './types-shape.ts';
 import type { PluginCalls, PluginResult } from './plugin-calls.ts';
 import { word } from './words.ts';
+import { viewParts } from './view-types/view-parts.ts';
 
 /** The space a diagram is drawn in, in pixels. */
 export interface DiagramSpace {
@@ -201,10 +202,12 @@ export function diagramDrawing(find: (type: string) => Found, awaited: PluginCal
       if (!r.ok) return r;
       const { marks, plain, space: given } = r.value;
       if (plain) return { ok: true, value: marksSvg(plain, given) };
-      // drawing marks are written as the built-in drawings are, then coloured by the kinds and readings in order
+      // drawing marks are written as the built-in drawings are. Each thing and link is its own part, as Graphviz writes
+      // them, so a card can choose it. Then they are coloured by the kinds and readings in order
       const kinds = [...new Set(shape.things.map((t) => t.kinds.join('.')))];
       const readings = [...new Set(shape.links.map((l) => l.type))];
-      return { ok: true, value: themed(layoutSvg({ marks, space: given }), kinds, readings) };
+      const layout = { pad: 0, origin: [0, given.height * PT] as MarkPoint, parts: viewParts(marks, shape) };
+      return { ok: true, value: themed(layoutSvg({ marks, space: given, layout }), kinds, readings) };
     },
     async diagramMarks(type: string, shape: GraphShape, space: DiagramSpace): Promise<PluginResult<DrawMark[]>> {
       const r = await drawn(type, shape, space);

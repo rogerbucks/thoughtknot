@@ -5,9 +5,13 @@ import type { App } from 'obsidian';
 import type { ChangeOutcome, NoteEdit, NoteStorage } from '@thoughtknot/core';
 import { changeNote } from '@thoughtknot/core';
 import { vaultStorage } from './vault-storage.ts';
+import { keeperOf } from './note-history.ts';
 
-/** The vault's notes, read as they are on disk: for a note about to be changed, or one a check reads afresh. */
-export const vaultNotes = (app: App): NoteStorage => vaultStorage(app);
+/**
+ * The vault's notes, read as they are on disk: for a note about to be changed, or one a check reads afresh. The text a
+ * note had before each change is kept for Compare with (note-history.ts).
+ */
+export const vaultNotes = (app: App): NoteStorage => vaultStorage(app, { kept: keeperOf(app) });
 
 /** The vault's notes, read from Obsidian's cache: for a note only shown. */
 export const shownNotes = (app: App): NoteStorage => vaultStorage(app, { cached: true });

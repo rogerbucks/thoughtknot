@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/cluster-fold-back.test.js",
+  "test": "a group opened from its box > with every group open by the View menu, no group has a button to fold it back",
+  "seen_failing_first": false,
+  "evidence": "A guard: before this change no group had a fold-back button at all, so it passes; it keeps the button off groups the View menu opened."
+}

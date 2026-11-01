@@ -104,3 +104,11 @@ from graphspec.reader.syntax_check import (
     bind_order,
     check_syntax,
 )
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+bind_order canon check_syntax COMMENT_FIX COMMENT_RULE header KEYWORDS name_from_text
+name_style_of name_words notes owned_comments Parser ProfileError read_for_drawing read_style
+Store style_of suggested_names to_gql TOKEN tokens unquote UTC
+""".split()

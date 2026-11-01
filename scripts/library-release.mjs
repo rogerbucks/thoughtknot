@@ -11,16 +11,29 @@
 // Usage:
 //   node scripts/library-release.mjs --out DIR   builds both packages into DIR, at the manifest's version.
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
+import { npmCommand } from './npm-command.mjs';
+import { LIBRARY } from './public-api.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'rogerbucks/thoughtknot';
-const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+/** Runs npm with `args`, as execFileSync runs a program. */
+export const runNpm = (args, options) => execFileSync(...npmCommand(args), options);
 
 // The two packages: their short name, their package name and the start of their asset's file name.
 export const PACKAGES = [
@@ -66,7 +79,7 @@ const manifest = (pkg, version, fields) => ({
 // Packs a staged folder into DIR as the package's asset, and gives back its path.
 function pack(stage, out, short, version) {
   const [{ filename }] = JSON.parse(
-    execFileSync(NPM, ['pack', stage, '--pack-destination', out, '--json', '--ignore-scripts'], {
+    runNpm(['pack', stage, '--pack-destination', out, '--json', '--ignore-scripts'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     }),
@@ -86,6 +99,7 @@ async function stageGraphSpec(stage, version) {
     join(ROOT, 'packages/graph-spec/esbuild.check.mjs'),
     join(stage, 'graph-spec-check.js'),
   ]);
+  // the build writes graph-spec-check.mjs beside it, the same library as an ES module (API-8)
   for (const file of ['graph-layout.js', 'graph-spec.d.ts', 'graph-layout-types.d.ts'])
     copyFileSync(join(src, file), join(stage, file));
   common(stage, pkg, version);
@@ -94,7 +108,7 @@ async function stageGraphSpec(stage, version) {
     main: 'graph-spec-check.js',
     types: 'graph-spec.d.ts',
     exports: {
-      '.': { types: './graph-spec.d.ts', default: './graph-spec-check.js' },
+      '.': { types: './graph-spec.d.ts', import: './graph-spec-check.mjs', default: './graph-spec-check.js' },
       './graph-layout.js': { types: './graph-layout-types.d.ts', default: './graph-layout.js' },
       './package.json': './package.json',
     },
@@ -124,19 +138,28 @@ const filesUnder = (dir) =>
 function coreTypes(typesDir) {
   const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   const core = join(ROOT, 'packages/core');
-  execFileSync(process.execPath, [
-    tsc,
-    '-p',
-    core,
-    '--declaration',
-    '--emitDeclarationOnly',
-    '--noEmit',
-    'false',
-    '--rootDir',
-    join(core, 'src'),
-    '--outDir',
-    typesDir,
-  ]);
+  // the display layer has a tsconfig of its own, with the DOM: its entries the package ships are typed by it (API-2)
+  const display = join(typesDir, '..', 'display-entries.json');
+  const entries = CORE_ENTRIES.filter(([out]) => out.startsWith('display/')).map(([, from]) => join(core, from));
+  writeFileSync(
+    display,
+    JSON.stringify({ extends: join(core, 'src/display/tsconfig.json'), files: entries, include: [] }),
+  );
+  for (const project of [core, display])
+    execFileSync(process.execPath, [
+      tsc,
+      '-p',
+      project,
+      '--declaration',
+      '--emitDeclarationOnly',
+      '--noEmit',
+      'false',
+      '--rootDir',
+      join(core, 'src'),
+      '--outDir',
+      typesDir,
+    ]);
+  rmSync(display);
   for (const file of filesUnder(typesDir)) {
     const source = join(core, 'src', relative(typesDir, file).replace(/\.d\.ts$/, '.ts'));
     const text = readFileSync(file, 'utf8')
@@ -144,18 +167,32 @@ function coreTypes(typesDir) {
         const json = JSON.parse(readFileSync(resolve(dirname(source), path), 'utf8'));
         return `declare const ${name}: ${typeOfJson(json)};`;
       })
-      .replace(/(from '\.{1,2}\/[^']*)\.ts'/g, "$1.js'");
+      // each relative path names its .js file, as Node's ESM resolution asks: './a.ts' and './a' alike
+      .replace(/(from '\.{1,2}\/[^']*?)(\.ts)?'/g, (whole, path) =>
+        /\.(m?js|json)$/.test(path) ? whole : `${path}.js'`,
+      );
     writeFileSync(file, text);
   }
 }
+
+// The core's entries in its package: [where it is built, its source]. Each is one of the entries public-api.mjs checks.
+const CORE_ENTRIES = Object.entries(LIBRARY['@thoughtknot/core'].entries).map(([entry, from]) => [
+  entry === '.' ? 'index' : entry.slice(2),
+  from,
+]);
 
 async function stageCore(stage, version, graphSpec) {
   const pkg = PACKAGES[1];
   await esbuild.build({
     absWorkingDir: join(ROOT, 'packages/core'),
-    entryPoints: ['src/index.ts'],
-    outfile: join(stage, 'index.mjs'),
+    // the entry and the host interface, each an entry of its own, as public-api.mjs's LIBRARY names them (API-2)
+    entryPoints: CORE_ENTRIES.map(([out, from]) => ({ in: from, out })),
+    outdir: stage,
+    outExtension: { '.js': '.mjs' },
     bundle: true,
+    // what the entries share is one chunk beside them, so a host using two entries has one copy of the core's state
+    splitting: true,
+    chunkNames: 'chunks/[name]-[hash]',
     platform: 'neutral',
     format: 'esm',
     target: 'es2022',
@@ -169,7 +206,15 @@ async function stageCore(stage, version, graphSpec) {
   const fields = {
     type: 'module',
     types: './types/index.d.ts',
-    exports: { '.': { types: './types/index.d.ts', default: './index.mjs' }, './package.json': './package.json' },
+    exports: {
+      ...Object.fromEntries(
+        CORE_ENTRIES.map(([out]) => [
+          out === 'index' ? '.' : `./${out}`,
+          { types: `./types/${out}.d.ts`, default: `./${out}.mjs` },
+        ]),
+      ),
+      './package.json': './package.json',
+    },
     dependencies: { [PACKAGES[0].name]: graphSpec },
   };
   writeFileSync(join(stage, 'package.json'), `${JSON.stringify(manifest(pkg, version, fields), null, 2)}\n`);

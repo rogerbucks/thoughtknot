@@ -1,0 +1,6 @@
+{
+  "file": "test/nightly-workflow.test.js",
+  "test": "the nightly workflow > reads only, but for the publish job and the draft check, which may write contents alone",
+  "seen_failing_first": false,
+  "evidence": "the nightly's phone job came in the commit before, to fix a code-scan finding at its cause; this test catches up with it"
+}

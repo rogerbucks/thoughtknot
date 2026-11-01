@@ -11,7 +11,7 @@
     <g id="p4">
       <path d="M295.58,-19.2C295.58,-19.2 295.58,-19.2 295.58,-19.2 316.58,-19.2 316.58,15.75 337.58,15.75 337.58,15.75 337.58,15.75 337.58,15.75" paint="stroke:rgb(117, 222, 220);stroke-width:2.5">
       <polygon points="330.58,18.2 337.58,15.75 330.58,13.3 330.58,18.2" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2.5">
-      <text x="316.85" y="15.03" text-anchor="middle" paint="fill:rgb(151, 221, 220)"> answers
+      <text x="316.75" y="9.12" text-anchor="middle" paint="fill:rgb(151, 221, 220)"> answers
     <g id="p5">
       <path d="M265.16,22.5C265.16,22.5 215.86,22.5 215.86,22.5 209.86,22.5 203.86,28.5 203.86,34.5 203.86,34.5 203.86,66.9 203.86,66.9 203.86,72.9 209.86,78.9 215.86,78.9 215.86,78.9 265.16,78.9 265.16,78.9 271.16,78.9 277.16,72.9 277.16,66.9 277.16,66.9 277.16,34.5 277.16,34.5 277.16,28.5 271.16,22.5 265.16,22.5" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208);stroke-width:2">
       <text x="221.1" y="43.3" text-anchor="start" paint="fill:rgb(179, 179, 179)"> OPTION
@@ -26,8 +26,8 @@
     <g id="p8">
       <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2" paint="stroke:rgb(106, 210, 137);stroke-width:1">
       <polygon points="178.45,-16.75 185.45,-19.2 178.45,-21.65 178.45,-16.75" paint="fill:rgb(106, 210, 137);stroke:rgb(106, 210, 137);stroke-width:1">
-      <text x="163.94" y="6.21" text-anchor="middle" paint="fill:rgb(143, 213, 164);fill-opacity:0.95"> favours
+      <text x="166.3" y="6.2" text-anchor="middle" paint="fill:rgb(143, 213, 164);fill-opacity:0.95"> favours
     <g id="p9">
       <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,50.7 185.45,50.7 191.16,50.7 191.16,50.7 196.86,50.7" paint="stroke:rgb(243, 107, 112);stroke-width:1">
       <polygon points="196.86,53.15 203.86,50.7 196.86,48.25 196.86,53.15" paint="fill:rgb(243, 107, 112);stroke:rgb(243, 107, 112);stroke-width:1">
-      <text x="169.02" y="53.55" text-anchor="middle" paint="fill:rgb(235, 144, 147);fill-opacity:0.95"> counts against
+      <text x="167.2" y="56.73" text-anchor="middle" paint="fill:rgb(235, 144, 147);fill-opacity:0.95"> counts against

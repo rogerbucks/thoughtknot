@@ -7,12 +7,12 @@ import { STYLE } from './layout.ts';
 import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
-import { AID_OPTIONS } from './settings-aids.ts';
+import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
+import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
-import { STARTERS } from './view-presets.ts';
-import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
-
-export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
+import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
+import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
+import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
 
@@ -35,7 +35,7 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings {
+export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -44,6 +44,8 @@ export interface Settings extends StrictnessSettings {
   classifications: string[];
   /** The level a note with no classification counts as for AI (§19, unclassified_strictest): the highest until chosen. */
   aiUnlabelled: string;
+  /** The level a file of a note's repository with no classification counts as, when reviewed with Claude (§41, TRUST-4): the lowest. */
+  aiRepoUnlabelled: string;
   aiModels: AiModel[];
   /** The note that holds the destination matrix, by its path; empty when the vault keeps none. */
   aiMatrixNote: string;
@@ -52,6 +54,8 @@ export interface Settings extends StrictnessSettings {
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   viewPreset: string; // the view preset last picked (§69)
+  /** A preset of the person's own, as the text of the one file it moves in (view_presets_portable); none, empty. */
+  ownPreset: string;
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
@@ -62,6 +66,8 @@ export interface Settings extends StrictnessSettings {
   mergeLinks: SwitchSetting;
   /** Whether graphs are laid out by our own engine, as a preview, instead of Graphviz (§53, layout_own_engine). */
   ownLayout: SwitchSetting;
+  /** Whether kinds that link in order each get a lane of their own, or a plane in space (§68, layout_kind_lanes). */
+  kindLanes: SwitchSetting;
   /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
   noteCallouts: SwitchSetting;
   /** When the small copy of the whole drawing, with the visible part outlined, shows (§24, mini_map_setting). */
@@ -70,6 +76,7 @@ export interface Settings extends StrictnessSettings {
   detailsOpen: SwitchSetting;
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
+  easierReading: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -82,8 +89,7 @@ export interface Settings extends StrictnessSettings {
   decider: string;
 }
 
-/** The most characters a decider's name is kept to. */
-const MOST_NAME = 200;
+const MOST_NAME = 200; // the most characters a decider's name is kept to
 
 /** The settings before any is changed. */
 export const DEFAULT_SETTINGS: Settings = {
@@ -94,11 +100,13 @@ export const DEFAULT_SETTINGS: Settings = {
   classifications: CLASSIFICATIONS,
   // the most sensitive, so a note nobody has classified goes to no model until the user chooses otherwise
   aiUnlabelled: CLASSIFICATIONS.at(-1) ?? '',
+  aiRepoUnlabelled: CLASSIFICATIONS[0] ?? '',
   aiModels: [],
   aiMatrixNote: '',
   aiClassMap: {},
   indent: 'four',
   viewPreset: 'default',
+  ownPreset: '',
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'on',
@@ -106,16 +114,19 @@ export const DEFAULT_SETTINGS: Settings = {
   foldGroups: 'off',
   mergeLinks: 'off',
   ownLayout: 'on',
+  kindLanes: 'on',
   noteCallouts: 'off',
-  miniMap: 'auto',
+  miniMap: 'always',
   detailsOpen: 'off',
   drawingHeight: 'most',
+  easierReading: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
-  // the lowest, so anything above it asks
-  exportAsksAbove: CLASSIFICATIONS[0] ?? '',
+  exportAsksAbove: CLASSIFICATIONS[0] ?? '', // the lowest, so anything above it asks
   decider: '',
+  ...DEFAULT_PICTURES,
+  ...DEFAULT_TYPING,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -151,20 +162,6 @@ const INDENTS: Choice[] = [
   { value: 'four', name: 'Four spaces' },
   { value: 'tab', name: 'A tab' },
 ];
-
-/** The default of one of the View menu's switches (§25): on or off, in the Drawing section. */
-function switchOption(key: keyof Settings, name: string, sentence: string): Option {
-  return {
-    key,
-    section: 'Drawing',
-    name,
-    sentence,
-    choices: [
-      { value: 'on', name: 'On' },
-      { value: 'off', name: 'Off' },
-    ],
-  };
-}
 
 /** Every option, in the order the settings page shows them. */
 export const OPTIONS: Option[] = [
@@ -209,6 +206,13 @@ export const OPTIONS: Option[] = [
       'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.',
   },
   {
+    key: 'aiRepoUnlabelled',
+    section: 'AI models',
+    name: 'Unlabelled repository files count as',
+    sentence:
+      'The classification a file of a note’s repository with no classification counts as, when you review its change with Claude. The lowest until you choose a stricter one.',
+  },
+  {
     key: 'aiModels',
     section: 'AI models',
     name: 'AI models',
@@ -223,13 +227,24 @@ export const OPTIONS: Option[] = [
     sentence: 'How the editor indents the later lines of a thing it writes.',
     choices: INDENTS,
   },
+  ...TYPING_OPTIONS, // when the drawing is redrawn while typing (§4, NEURO-7)
   {
     key: 'viewPreset',
     section: 'Drawing',
     name: 'View preset',
     sentence:
       'A way of seeing graphs, named by what it helps with. It sets the Drawing settings below, each still yours to change.',
-    choices: STARTERS.map((p) => ({ value: p.id, name: p.name, sentence: p.sentence })),
+    choices: [
+      ...STARTERS.map((p) => ({ value: p.id, name: p.name, sentence: p.sentence })),
+      { value: OWN_PRESET, name: 'Your own', sentence: 'The preset you brought in from a file, below.' },
+    ],
+  },
+  {
+    key: 'ownPreset',
+    section: 'Drawing',
+    name: 'Your own view preset',
+    sentence:
+      'Paste the text of a view preset file to use it as Your own. It is checked first. Export writes the preset in use, as you have set it, to a file.',
   },
   {
     key: 'direction',
@@ -252,36 +267,7 @@ export const OPTIONS: Option[] = [
       { value: 'two', name: 'Two steps' },
     ],
   },
-  switchOption(
-    'labelsByZoom',
-    'Hide labels too small to read',
-    'Whether a link’s label shows only when zoomed in far enough to read it; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'foldHubs',
-    'Fold busy things',
-    'Whether a thing with many links draws them folded into one stub marked with their count; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'foldGroups',
-    'Fold groups',
-    'Whether each group draws as one box showing how many things it holds; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'mergeLinks',
-    'Bundle links between groups',
-    'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
-  ),
-  switchOption(
-    'ownLayout',
-    'Lay out with ThoughtKnot',
-    'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
-  ),
-  switchOption(
-    'noteCallouts',
-    'Draw notes as callouts',
-    'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
-  ),
+  ...SWITCH_OPTIONS, // the View menu's switches' defaults (§25)
   ...AID_OPTIONS, // the mini-map and the details kept open (§24)
   {
     key: 'exportTheme',
@@ -315,6 +301,7 @@ export const OPTIONS: Option[] = [
     name: 'Ask before exporting above',
     sentence: 'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
   },
+  ...PICTURE_OPTIONS, // the pictures for readers (§62)
   {
     key: 'decider',
     section: 'Proposals',
@@ -336,6 +323,8 @@ export function settingsFrom(saved: unknown): Settings {
   const given: unknown[] = Array.isArray(s.classifications) ? s.classifications : [];
   const levels = given.filter((c): c is string => typeof c === 'string');
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
+  // the person's own preset, taken as the settings are read in, so every host that reads them has it (§69)
+  const own = adoptOwn(text(s.ownPreset));
   return {
     language: oneOf('language', s.language, d.language),
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
@@ -348,6 +337,11 @@ export function settingsFrom(saved: unknown): Settings {
       typeof s.aiUnlabelled === 'string' && classifications.includes(s.aiUnlabelled)
         ? s.aiUnlabelled
         : (classifications.at(-1) ?? ''),
+    // one of the classifications set, else the lowest of them, as before the setting was there
+    aiRepoUnlabelled:
+      typeof s.aiRepoUnlabelled === 'string' && classifications.includes(s.aiRepoUnlabelled)
+        ? s.aiRepoUnlabelled
+        : (classifications[0] ?? ''),
     aiModels: Array.isArray(s.aiModels)
       ? s.aiModels
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
@@ -360,7 +354,9 @@ export function settingsFrom(saved: unknown): Settings {
       ),
     ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
-    viewPreset: oneOf('viewPreset', s.viewPreset, d.viewPreset),
+    ownPreset: own ? text(s.ownPreset) : d.ownPreset,
+    // Your own is picked only while there is one
+    viewPreset: s.viewPreset === OWN_PRESET && !own ? d.viewPreset : oneOf('viewPreset', s.viewPreset, d.viewPreset),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),
@@ -368,10 +364,12 @@ export function settingsFrom(saved: unknown): Settings {
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
     ownLayout: oneOf<SwitchSetting>('ownLayout', s.ownLayout, d.ownLayout),
+    kindLanes: oneOf<SwitchSetting>('kindLanes', s.kindLanes, d.kindLanes),
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
+    easierReading: oneOf<SwitchSetting>('easierReading', s.easierReading, d.easierReading),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,
@@ -382,6 +380,8 @@ export function settingsFrom(saved: unknown): Settings {
         : (classifications[0] ?? ''),
     // as typed, spaces and capitals kept; a name is one line, and not an essay
     decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
+    ...picturesFrom(s),
+    ...typingFrom(s),
   };
 }
 

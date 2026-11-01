@@ -259,8 +259,8 @@ describe('the release check, run by hand before a release is tagged', () => {
       dry = jobs(read(f));
     const waited = block(release.release, 'needs', 4).join('\n');
     // on-main checks the tag itself (policy.test.js), so the dry run, which has no tag, leaves it out, and the jobs'
-    // wait for it
-    const checks = Object.keys(release).filter((name) => !['release', 'on-main'].includes(name));
+    // wait for it. Publish only writes what the release job built (test/release-split.test.js).
+    const checks = Object.keys(release).filter((name) => !['release', 'publish', 'on-main'].includes(name));
     const ownSteps = (lines) => steps(lines).filter((l) => l !== '    needs: on-main');
     for (const name of checks) assert.match(waited, new RegExp(`\\b${name}\\b`), `the release waits on ${name}`);
     assert.deepEqual(Object.keys(dry), checks);
@@ -288,5 +288,14 @@ describe('the release check, run by hand before a release is tagged', () => {
     assert.deepEqual(block(text.split('\n'), 'on', 0).map(stripComment), ['on:', '  workflow_dispatch:']);
     assert.doesNotMatch(text, /:\s*write\b|gh release|git push|git tag/);
     assert.deepEqual(permissionValues(block(text.split('\n'), 'permissions', 0)), ['read']);
+  });
+});
+
+describe('a baseline that carries the spread between runs (OPS-10)', () => {
+  test('is refused when the instruction tolerance is under twice the largest spread', () => {
+    assert.deepEqual(baselineProblems({ ...baseline(), largest_spread: 0.02 }), []);
+    assert.deepEqual(baselineProblems({ ...baseline(), largest_spread: 0.025 }), [], 'exactly twice is enough');
+    const [found] = baselineProblems({ ...baseline(), largest_spread: 0.044 });
+    assert.match(found, /largest_spread.*under twice/);
   });
 });

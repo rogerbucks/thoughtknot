@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/typed.test.mjs",
+  "test": "the library is type-checked > an opt-out is told apart from a mention of one",
+  "seen_failing_first": false,
+  "evidence": "CODE-1: a check on the opt-out list and its reader, true of the files before the types were added."
+}

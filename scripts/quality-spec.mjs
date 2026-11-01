@@ -32,6 +32,26 @@ const instructionMetric = {
 };
 
 /**
+ * The packages whose coverage is held, each with its metric and the folders its code is in. The core's keeps the name it
+ * had when it was the only one.
+ */
+export const COVERAGE_PACKAGES = {
+  coverage_percent: ['packages/core/src/'],
+  coverage_percent_obsidian: ['packages/obsidian/src/'],
+  coverage_percent_claude_code: [
+    'packages/claude-code/src/',
+    'packages/claude-code/server/',
+    'packages/claude-code/page/',
+  ],
+  coverage_percent_app: ['packages/app/src/'],
+  coverage_percent_boundary: ['packages/boundary/src/'],
+  coverage_percent_graph_spec: ['packages/graph-spec/src/'],
+  coverage_percent_sync: ['packages/sync/src/'],
+  coverage_percent_vscode: ['packages/vscode/src/'],
+  coverage_percent_web: ['packages/web/src/'],
+};
+
+/**
  * Every metric:
  * - `better` is the direction that is an improvement.
  * - `tolerance` is the share of the baseline a noisy metric may worsen by with no reason recorded.
@@ -45,6 +65,8 @@ const instructionMetric = {
  * - `fast` marks the metrics that are measured in a moment, from the files alone.
  * - `journey` marks a count of the first-run journey (scripts/ux-journey.mjs). It is measured by running the journey in
  *   each host, which the suite does too: test/ux-journey.test.js holds it in CI.
+ * - `coverage` marks the share of a package's lines the tests run (CODE-3). It comes from one run of the suite with
+ *   coverage, which a pull request that touches a package can make alone.
  * - `waivable: false` marks one no recorded reason can excuse.
  */
 export const METRICS = {
@@ -64,7 +86,12 @@ export const METRICS = {
   suite_seconds: { better: 'lower', tolerance: 0.3, slack: 0, unit: 's', scaled: true, warnOnly: true },
   flaky_tests: { better: 'lower', tolerance: 0, slack: 0, unit: 'tests' },
   quiet_run_bytes: { better: 'lower', tolerance: 0, slack: 20, unit: 'bytes' },
-  coverage_percent: { better: 'higher', tolerance: 0, slack: 1, unit: '%' },
+  ...Object.fromEntries(
+    Object.keys(COVERAGE_PACKAGES).map((name) => [
+      name,
+      { better: 'higher', tolerance: 0, slack: 1, unit: '%', coverage: true },
+    ]),
+  ),
   // the first-run journey's steps and interactions in each host (scripts/ux-journey.mjs): one more is a worse journey
   ...Object.fromEntries(
     Object.values(JOURNEY_HOSTS).flatMap((h) => [

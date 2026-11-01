@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals.test.js",
+  "test": "proposal_one_by_one: each change is accepted or rejected on its own, or all at once > all at once applies every change still waiting, in the order proposed, and one undo takes them all back",
+  "seen_failing_first": false,
+  "evidence": "Expectation updated for the ARCH-14 marks; the code that writes them came in the commit before (fde0c73)."
+}

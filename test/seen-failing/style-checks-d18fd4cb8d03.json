@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-checks.test.js",
+  "test": "a nudge > a nudge with no word, or one of the wrong word, is left out",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

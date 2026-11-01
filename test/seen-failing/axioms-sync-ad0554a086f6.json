@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/axioms-sync.test.mjs",
+  "test": "axioms_before_sync > two devices fed the same changes, in shuffled orders with repeats, end with the same graph: the plain join",
+  "seen_failing_first": false,
+  "evidence": "It holds the plain join's order-free law (GS8) that the join already keeps, before sync is built on it, so it passes on the code before it."
+}

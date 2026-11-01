@@ -8,6 +8,7 @@ import type { FaceText } from '../../space-faces.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
+import { paintOutlines } from './space-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 
 /** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
@@ -138,7 +139,7 @@ const NOTCH = 0.25;
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
   frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> &
-    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts'>>,
+    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts' | 'outlines'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -150,6 +151,7 @@ export function paintSpaceLabels(
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  paintOutlines(ctx, frame.outlines ?? [], paints, halo, ink);
   // every link as a solid line, then the picked thing's links, or the picked link, thicker, under the cards in front
   const widest = Math.max(0, ...(frame.shafts ?? []).map((l) => l.width));
   const lines = [

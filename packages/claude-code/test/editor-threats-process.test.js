@@ -6,17 +6,24 @@
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ENTRY, FIXTURE, alive, ask, pause, reachable, startProcess } from './editor-threats-support.js';
 import { TEST_NOTE as NOTE } from './fixtures/editor-server-test.ts';
 
-/** A node process that starts the test-only server with `stdio` and then runs `then`; it says its child's pid first. */
-function parentOf(stdio, then) {
+const WINDOWS = process.platform === 'win32';
+
+/**
+ * A node process that runs `before`, starts the test-only server with `stdio` and then runs `then`. `stdio` is a list,
+ * or the code of one. A `detached` server outlives its parent on Windows too.
+ */
+function parentOf(stdio, then, before = '', detached = false) {
+  const given = typeof stdio === 'string' ? stdio : JSON.stringify(stdio);
   const code = [
     "const { spawn } = require('node:child_process');",
-    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${JSON.stringify(stdio)} });`,
+    before,
+    `const c = spawn(process.execPath, [${JSON.stringify(FIXTURE)}, '--serve'], { stdio: ${given}, detached: ${detached} });`,
     then,
   ].join('\n');
   return spawn(process.execPath, ['-e', code], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -66,7 +73,8 @@ describe('the token is never kept (cc_token_unkept, cc_one_server)', () => {
     ];
     assert.equal(answers[0].text, NOTE);
     run.child.kill('SIGTERM');
-    assert.deepEqual(await run.exited, { code: 0, signal: null });
+    // Windows ends a process at once on a signal: it has none to catch
+    assert.deepEqual(await run.exited, WINDOWS ? { code: null, signal: 'SIGTERM' } : { code: 0, signal: null });
     for (const a of answers) assert.ok(!JSON.stringify(a).includes(token), 'no answer repeats it');
     assert.equal(run.out.stdout, `${JSON.stringify({ url })}\n`, 'the one line, and nothing more');
     assert.ok(!run.out.stderr.includes(token), 'never in what it says on stderr');
@@ -85,12 +93,15 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('on a stop signal', async () => {
-    for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+    // Windows sends no SIGHUP. On the others it ends a process at once, with nothing to catch. There it is gone, its
+    // port closed, but says nothing
+    for (const signal of WINDOWS ? ['SIGTERM', 'SIGINT'] : ['SIGTERM', 'SIGINT', 'SIGHUP']) {
       const run = startProcess();
-      await run.ready;
+      const port = Number(new URL((await run.ready).url).port);
       run.child.kill(signal);
-      assert.deepEqual(await run.exited, { code: 0, signal: null }, signal);
-      assert.match(run.out.stderr, new RegExp(`stopped: ${signal}`));
+      assert.deepEqual(await run.exited, WINDOWS ? { code: null, signal } : { code: 0, signal: null }, signal);
+      if (!WINDOWS) assert.match(run.out.stderr, new RegExp(`stopped: ${signal}`));
+      assert.equal(await reachable('127.0.0.1', port), false, signal);
     }
   });
 
@@ -121,25 +132,22 @@ describe('the server stops (cc_server_stops)', () => {
   });
 
   test('it will not start when the process that started it has already gone', async () => {
-    // the parent says its child's pid and exits at once, before the child has loaded. The child's output comes on the
-    // same pipes, so they close only when it has exited too
+    // the parent says its child's pid and exits at once, before the child has loaded. The child writes its errors to a
+    // file, since Windows may close a pipe when the parent exits. Windows ends a child with its parent unless detached
+    const errors = join(mkdtempSync(join(tmpdir(), 'orphan-')), 'stderr.txt');
     const parent = parentOf(
-      ['ignore', 'inherit', 'inherit'],
+      "['ignore', 'inherit', err]",
       'process.stdout.write(c.pid + "\\n", () => process.exit(0));',
+      `const err = require('node:fs').openSync(${JSON.stringify(errors)}, 'w');`,
+      WINDOWS,
     );
-    let stderr = '';
-    parent.stderr.setEncoding('utf8');
-    parent.stderr.on('data', (d) => (stderr += d));
     const lines = linesOf(parent);
-    const closed = new Promise((r) => parent.on('close', r));
     for (let i = 0; i < 300 && !lines.length; i++) await pause(100);
     const pid = Number(lines[0]);
     after(() => alive(pid) && process.kill(pid, 'SIGKILL'));
-    let done = false;
-    void closed.then(() => (done = true));
-    for (let i = 0; i < 300 && !done && lines.length < 2; i++) await pause(100);
-    assert.deepEqual(lines.slice(1), [], 'it handed over no address');
-    assert.ok(done, 'and it exited');
-    assert.match(stderr, /the process that started it has already exited/);
+    for (let i = 0; i < 300 && alive(pid); i++) await pause(100);
+    assert.equal(alive(pid), false, 'it exited');
+    assert.deepEqual(lines.slice(1), [], 'and handed over no address');
+    assert.match(readFileSync(errors, 'utf8'), /the process that started it has already exited/);
   });
 });

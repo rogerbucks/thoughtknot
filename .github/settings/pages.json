@@ -1,0 +1,10 @@
+{
+  "build_type": "workflow",
+  "source": {
+    "branch": "main",
+    "path": "/"
+  },
+  "https_enforced": true,
+  "cname": "thoughtknot.app",
+  "public": true
+}

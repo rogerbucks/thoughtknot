@@ -306,3 +306,26 @@ for _name in _settings.NAMES:
     setattr(_Settings, _name, _setting(_name))
 del _name
 _sys.modules[__name__].__class__ = _Settings
+
+
+# The public names (risk API-7). A name with an underscore stays importable, for the vault only.
+__all__ = """
+ABSENT add_claim AGGREGATES ancestors band_rank basis basis_hash both breaches
+calibrated_marker calibration canon canon_graph certainty_lens changeset_header check_changeset
+claim_status class_order CLASSIFICATION_NOTE compatible compute CONFIDENCE
+confidence_from_evidence config config_from corroborate corroboration current_decisions cycles
+derived_ranges destination_matrix doc_statements document_class ecma either ekey EMBEDDED
+embedded_queries emit equivalent fence_holds fig_loan_balance FIGURES fill FILL_BLOCK
+fill_check fill_recipes finish flow_parents gql_block gql_rule graph_rules guard_holds hash16
+held ident_str invented is_named iso join join3 JUDGEMENT_EDGES judgement_hash judgements_rules
+latest_assessment lens_bucket lift LIKELIHOOD LIMITS lint load lost Machine MATRIX_ROWS
+may_serve merge3 META named negate nesting_loop new_J ni_uri normalise NOTICES NS outcomes
+OWNER_ENGINE parse PARSER path_steps paths_rules process_events project PROJECTION_TZ
+projects_back prov_rules Q Q_ QUOTES RANGE raw_props read rebuild refines refresh_section20
+reliability require_graph_line RESERVED_ANYWHERE resolve_ref review rule_else_over_ancestor
+rule_else_over_parent rule_final_is_final rule_one_start rule_repaid_after_drawn
+rule_subflow_needs_done rule_subflow_nesting_acyclic RULES scxml_valid ScxmlReader secrets_in
+section20 served_rules settled short SILENT_TRAPS sources_of span statements strip
+structs_to_db to_scxml typed unfill union untyped UTC validate verdict view_at ViewServer vtext
+why_layer wilson words WRITTEN_BY
+""".split()

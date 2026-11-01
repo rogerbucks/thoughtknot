@@ -67,7 +67,36 @@ const KINDS = new Set<string>(BOARD_KINDS);
  * the problems. Whatever can be read is on the board, so it can still be drawn; nothing is ever written to the note.
  */
 export function readBoard(text: string, things?: Set<string>, block = 0): { board: Board; problems: Problem[] } {
-  const line = boardOf(text);
+  return readItems(
+    text,
+    boardOf(text),
+    KINDS,
+    (kind, id) => ({
+      code: 'GN901',
+      message: word('board.kind-unknown', { kind, id }),
+      fix: word('board.kind-unknown.fix', { kinds: BOARD_KINDS.join(', ') }),
+    }),
+    things,
+    block,
+  );
+}
+
+/** The problem of an item whose kind a block does not hold: its code, what is wrong and its fix. */
+export type KindProblem = (kind: string, id: string) => { code: string; message: string; fix: string };
+
+/**
+ * The items a block holds, read as a board's are, with their problems. `line` is what its graph line says. `kinds` are
+ * the kinds of item it may hold, and `unknown` is the problem of any other kind. Drawings over a graph (sketch.ts) are
+ * read with it too, with fewer kinds.
+ */
+export function readItems(
+  text: string,
+  line: { name: string; on: string | null } | null,
+  kinds: ReadonlySet<string>,
+  unknown: KindProblem,
+  things?: Set<string>,
+  block = 0,
+): { board: Board; problems: Problem[] } {
   const board: Board = { name: line?.name ?? '', on: line?.on ?? null, items: [], connectors: [] };
   const read = readBlocks([text], [], REREAD_BUDGET, () => 'data');
   const problems: Problem[] = read.problems
@@ -83,15 +112,10 @@ export function readBoard(text: string, things?: Set<string>, block = 0): { boar
   const graph = gs.worldFromStore(read.store)[board.name];
   for (const [id, [labels, props]] of graph?.nodes ?? []) {
     const at = lineOf.get(id) ?? 1;
-    const kind = [...labels].find((l) => KINDS.has(l));
+    const kind = [...labels].find((l) => kinds.has(l));
     if (!kind || labels.size !== 1) {
-      const said = [...labels].join(':') || '(none)';
-      problem(
-        at,
-        'GN901',
-        word('board.kind-unknown', { kind: said, id }),
-        word('board.kind-unknown.fix', { kinds: BOARD_KINDS.join(', ') }),
-      );
+      const { code, message, fix } = unknown([...labels].join(':') || '(none)', id);
+      problem(at, code, message, fix);
       continue;
     }
     const whole = (v: Value | undefined) => typeof v === 'number' && Number.isInteger(v);

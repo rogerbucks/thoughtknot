@@ -325,7 +325,13 @@ describe('what is faded stays readable, and focus is shown by more than colour',
     const mine = all.filter((r) => r.selectors.some((s) => /thoughtknot-(dim|kept)\b/.test(s)));
     assert.ok(mine.length >= 4);
     const allowed = ['stroke-width', 'fill-opacity', 'stroke-opacity'];
+    // §69: a blur is neither colour, hiding nor moving, and only the reader's chosen preset turns it on
+    const chosen = (r) => r.selectors.every((s) => s.startsWith('.thoughtknot-blur-rest '));
     for (const r of mine)
-      for (const d of r.declarations) assert.ok(allowed.includes(d.property), `${r.selectors[0]}: ${d.property}`);
+      for (const d of r.declarations)
+        assert.ok(
+          allowed.includes(d.property) || (chosen(r) && d.property === 'filter'),
+          `${r.selectors[0]}: ${d.property}`,
+        );
   });
 });

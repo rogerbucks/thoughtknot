@@ -3,13 +3,11 @@
 // is a span the stylesheet fills from an image file the server holds (`/icons/<name>.svg`). So no icon library ships,
 // and no icon is ever shown as its name. A name with no file shows a plain dashed square. Everything the page says is
 // set as text.
-import { word } from '../../core/src/words.ts';
+import { word } from '@thoughtknot/core';
 import type { DisplayHost, MenuEntry } from '@thoughtknot/core/display/host';
+import { noticeMs } from '@thoughtknot/core/display/notices';
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/** How long a notice stays, in milliseconds. */
-export const NOTICE_MS = 5000;
 
 /** How wide a screen counts as a phone's. */
 export const PHONE_WIDTH = '(max-width: 600px)';
@@ -23,6 +21,9 @@ function drawIcon(el: HTMLElement, name: string): void {
   span.setAttribute('class', `gn-icon ${iconClass(name)}`.trim());
   span.setAttribute('aria-hidden', 'true');
   el.replaceChildren(span);
+  // the page has no tooltip of its own, as Obsidian has for a label: so a button's name is also its title (NEURO-3)
+  const label = el.getAttribute('aria-label');
+  if (label && el.tagName === 'BUTTON' && !el.hasAttribute('title')) el.setAttribute('title', label);
 }
 
 /** A menu of `entries`, a list of buttons, closed by a click anywhere else or Escape. */
@@ -100,7 +101,18 @@ export function browserHost(win: Window): DisplayHost {
       note.setAttribute('class', 'gn-notice');
       note.textContent = message;
       shelf.append(note);
-      win.setTimeout(() => note.remove(), NOTICE_MS);
+      const ms = noticeMs(message);
+      if (ms > 0) {
+        win.setTimeout(() => note.remove(), ms);
+        return;
+      }
+      // a long message stays until the person dismisses it, by a click or Enter or Escape (risk NEURO-6)
+      note.classList.add('gn-notice-sticky');
+      note.setAttribute('tabindex', '0');
+      note.addEventListener('click', () => note.remove());
+      note.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') note.remove();
+      });
     },
     menu: showMenu,
     // the page's policy allows no inline style (cc_csp): a drawing's colours are set through the CSSOM instead

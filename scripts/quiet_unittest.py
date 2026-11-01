@@ -36,8 +36,8 @@ def shorten(text: str, limit: int = CUT) -> str:
 
 
 def relative(path: str) -> str:
-    """The path relative to the working folder."""
-    return os.path.relpath(path)
+    """The path relative to the working folder, in slashes on Windows too."""
+    return os.path.relpath(path).replace(os.sep, "/")
 
 
 def inside_repository(path: str) -> bool:
@@ -157,6 +157,8 @@ def load(files: list[str]) -> unittest.TestSuite:
 
 def main(files: list[str]) -> int:
     """Runs the tests quietly and prints the result; the exit status is 0 only when all passed."""
+    # one line end everywhere: Windows would print each line with \r\n
+    sys.stdout.reconfigure(newline="\n")
     result = Quiet()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):

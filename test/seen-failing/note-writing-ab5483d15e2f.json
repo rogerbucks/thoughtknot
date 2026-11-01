@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/note-writing.test.js",
+  "test": "the note changes between the vault’s read and its write > an estimated link’s quick fix writes nothing over it, and says why",
+  "seen_failing_first": false,
+  "evidence": "The plugin already refused a change in the gap; this commit gives the stand-in vault the gap so a test can prove it (CODE-5)."
+}

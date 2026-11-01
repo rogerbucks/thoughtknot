@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-graph.test.js",
+  "test": "the words > a nudge has four words; the diagram types and presets each name a default",
+  "seen_failing_first": false,
+  "evidence": "CODE-7: a test named after a core module that was already built and tested only through others; it pins what the module does, so it passes against the code before it."
+}

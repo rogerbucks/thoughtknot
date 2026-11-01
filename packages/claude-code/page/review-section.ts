@@ -7,17 +7,12 @@
 // GitHub's titles and texts are shown as text, never as markup.
 import { changesFigure } from './changes-section.ts';
 import type { ChangesDeps } from './changes-section.ts';
-import { groupSaid, reviewLevels, workstreamsFrom } from '../../core/src/github-review-items.ts';
-import type { ChangedFile, ReviewItem, ReviewLevels, SummaryGroup } from '../../core/src/github-review-items.ts';
-import { word } from '../../core/src/words.ts';
+import { groupSaid, outsideSaid, reviewLevels, workstreamsFrom } from '@thoughtknot/core';
+import type { ReviewItem, ReviewLevels, SummaryGroup } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
+import type { PageItemFiles } from '../src/api-types.ts';
 
-/** One item's files as the server sends them: those the gate let through, those it held and why, and the rest. */
-export interface PageItemFiles {
-  files: ChangedFile[];
-  withheld: { path: string; why: string }[];
-  workstreams: string | null;
-  unread: number;
-}
+export type { PageItemFiles };
 
 /** What the section needs: the server's two calls, and a layout in a fixed theme and the scheme for the drawings. */
 export interface ReviewDeps extends Pick<ChangesDeps, 'layout' | 'dark'> {
@@ -25,15 +20,15 @@ export interface ReviewDeps extends Pick<ChangesDeps, 'layout' | 'dark'> {
   files: (item: ReviewItem) => Promise<PageItemFiles>;
 }
 
-/** An item named in a line: "Pull request #7: Finish is Done (roger)", "Commit 1a2b3c4: Tidy (Ann)". */
+/**
+ * An item named in a line: "Pull request #7: `Finish is Done` (`roger`)". Its title and author are GitHub's,
+ * so each is fenced as outside text that cannot pass as the page's own words (TRUST-4).
+ */
 export function itemSaid(item: ReviewItem): string {
-  const by = item.author ? word('review.by', { who: item.author }) : '';
-  if (item.kind === 'pull') return word('review.pull', { id: item.id, title: item.title, by });
-  return word(item.kind === 'merge' ? 'review.merge' : 'review.commit', {
-    id: item.id.slice(0, 7),
-    title: item.title,
-    by,
-  });
+  const by = item.author ? word('review.by', { who: outsideSaid(item.author) }) : '';
+  const title = outsideSaid(item.title);
+  if (item.kind === 'pull') return word('review.pull', { id: item.id, title, by });
+  return word(item.kind === 'merge' ? 'review.merge' : 'review.commit', { id: item.id.slice(0, 7), title, by });
 }
 
 const SIGNS = { keep: ' ', add: '+', remove: '−' } as const;
@@ -128,7 +123,9 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
       }
       lines.append(ol);
     }
-    return [el('h2', itemSaid(item)), summary, graphs, lines];
+    const heading = el('h2', itemSaid(item));
+    heading.dataset.outside = 'github';
+    return [heading, summary, graphs, lines];
   };
 
   const review = async (item: ReviewItem) => {
@@ -155,6 +152,7 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
       const label = el('label', word('review.pick'));
       const pick = el('select');
       pick.setAttribute('id', 'gn-review-pick');
+      pick.dataset.outside = 'github';
       label.setAttribute('for', pick.id);
       for (const item of items)
         pick.append(Object.assign(el('option', itemSaid(item)), { value: String(items.indexOf(item)) }));
@@ -166,7 +164,7 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
       });
       result.replaceChildren();
       if (!items.length) return say(word('review.none'));
-      chooser.replaceChildren(label, pick, go);
+      chooser.replaceChildren(el('p', word('review.outside'), 'gn-review-outside'), label, pick, go);
       pick.focus();
     })();
   });

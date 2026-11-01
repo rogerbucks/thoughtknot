@@ -207,8 +207,9 @@ describe('refreshing from the published advisories (with a fetch made for the pu
     },
   });
   const ENGINE = { graphviz: '16.1.0', wrapper: '3.31.0' };
+  const noWait = async () => {};
   const run = (answers, extra = {}) =>
-    refresh({ ...ENGINE, fetch: answers.fetch, today: '2026-10-10', previous: undefined, ...extra });
+    refresh({ ...ENGINE, fetch: answers.fetch, sleep: noWait, today: '2026-10-10', previous: undefined, ...extra });
 
   test('Graphviz is asked of OSV by its repository and of NVD, and the wrapper of OSV as an npm package', async () => {
     const f = fetching(clean);
@@ -373,7 +374,7 @@ describe('refreshing from the published advisories (with a fetch made for the pu
     const fetch = async () => {
       throw new Error('offline');
     };
-    await assert.rejects(refresh({ ...ENGINE, fetch, today: '2026-10-10' }), /offline|OSV/);
+    await assert.rejects(refresh({ ...ENGINE, fetch, sleep: noWait, today: '2026-10-10' }), /offline|OSV/);
   });
 
   test('the day of the check is always the day of the refresh; whether the answer changed is said apart from it', async () => {
@@ -530,7 +531,10 @@ describe('the workflows', () => {
   });
 
   test('the release names the engine in its notes, and the notes are attached', () => {
-    const rel = runCommands(jobs(release()).release.join('\n'));
+    // the release job writes the notes and the publish job, which runs no code, attaches them (TRUST-3)
+    const all = jobs(release());
+    const rel = runCommands([...all.release, ...all.publish].join('\n'));
+    assert.match(all.release.join('\n'), /release-notes\.md/, 'the notes are handed to the publish job');
     const notes = rel.findIndex((r) => /^node scripts\/engine-version\.mjs --notes [\w./-]+$/.test(r));
     const create = rel.findIndex((r) => /gh release create/.test(r));
     assert.ok(notes >= 0 && notes < create, 'the notes are written before the release is made');
@@ -551,9 +555,13 @@ describe('the workflows', () => {
     assert.match(on, /schedule:\n\s+- cron: '\d+ \d+ \* \* [0-6]'/, 'it runs weekly, on a set morning');
     assert.doesNotMatch(on, /pull_request|push:/, 'never on a change: the release does its own live check');
     const job = jobs(text);
-    assert.deepEqual(Object.keys(job), ['watch']);
+    assert.deepEqual(Object.keys(job), ['watch', 'report-failure']);
     assert.equal(block(job.watch, 'permissions', 4), null, 'the job keeps the read-only default');
-    assert.doesNotMatch(text, /:\s*write\b|gh pr create|git push/, 'it opens no pull request and pushes nothing');
+    assert.doesNotMatch(
+      text.replace('issues: write', ''),
+      /:\s*write\b|gh pr create|git push/,
+      'it opens no pull request and pushes nothing; only its failure report writes an issue',
+    );
     const runs = runCommands(text);
     assert.ok(runs.includes('node scripts/engine-version.mjs --watch --write advisories-fresh.json'));
     assert.ok(runs.includes('npm ci') && runs.includes('npm audit signatures'));

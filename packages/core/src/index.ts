@@ -17,12 +17,13 @@ export type { StorageCheck } from './storage-contract.ts';
 export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
 export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';
-export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
+export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote, DiagramPlan } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
 export { estimateFix, type EstimateFix } from './estimate-fix.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
+export { SVG_ELEMENTS, cleanSvg } from './svg-allowlist.ts';
 export { draw, directions, chosen, details, linkDetails } from './render.ts';
 export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.ts';
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
@@ -31,7 +32,7 @@ export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export { lookTag, lookTags } from './look-tags.ts';
 export { SHORTCUTS, SHORTCUT_PLACES } from './shortcuts.ts';
 export type { Shortcut, ShortcutPlace } from './shortcuts.ts';
-export { TOUR_STEPS, withExample } from './first-run.ts';
+export { TOUR_STEPS, withExample, exampleBlock } from './first-run.ts';
 export type { TourStep } from './first-run.ts';
 export type { StyleReading } from './style.ts';
 export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
@@ -82,7 +83,6 @@ export { TIMELINE_ORDERS, TIMELINE_SHOWS, pluginTypeOf, shapeOf, suggestType, ty
 export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
 export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
 export type { DiagramTable } from './types-table.ts';
-export type { DiagramPlan } from './note-reading.ts';
 export type { Diagram } from './style-graph.ts';
 export type {
   ArrowsWrite,
@@ -134,22 +134,21 @@ export { DEFAULT_PACE, PATH_PACES, PathAutoplay, paceSaid } from './path-play.ts
 export type { Scheduler } from './path-play.ts';
 export { ANIMATION_LIMITS, animationFits } from './path-animation.ts';
 export type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
-export { viewsOf, readingOf } from './views.ts';
-export type { NamedView } from './views.ts';
+export { viewsOf, readingOf, type NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view-profile.ts';
 export { addView, makeView } from './view-write.ts';
+export { readSketch, sketchOf, writeSketch, type Sketch, type SketchItem } from './sketch.ts';
+export { sketchEdit, sketchInNote, type NewSketchItem, type SketchChange } from './sketch-edit.ts';
+export { sketchProposal } from './sketch-proposals.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
 export type { ViewResult } from './view-evaluate.ts';
 export { isSourceBlock, isStepBlock } from './blocks.ts';
-export { lineInSource, readSource, sourceFor, sourceOf } from './sources.ts';
-export type {
-  Fetched as SourceFetched,
-  Source as GraphSource,
-  SourceFault,
-  SourceRead,
-  SourceRefusal,
-} from './sources.ts';
+export { lineInSource, placeKey, readSource, sourceFor, sourceOf } from './sources.ts';
+export { CONNECTORS, connect, connectorFor, gqlConnector, joinPlaces } from './connectors.ts';
+export type { Citation, Connected, Connector, JoinedRead, JoinOptions, Statement } from './connectors.ts';
+export type { Fetched as SourceFetched, Source as GraphSource, SourceFault, SourceRead } from './sources.ts';
+export type { SourceRefusal } from './sources.ts';
 export { runStep, stepOf } from './steps.ts';
 export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
 export { givenLabel } from './steps-input.ts';
@@ -255,16 +254,9 @@ export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from './changes-view.ts';
 export type { ChangeLine, ChangesShown } from './changes-view.ts';
 export { REVIEW_LEVELS, ReviewItems, asNote, groupSaid, reviewLevels, workstreamsFrom } from './github-review-items.ts';
-export type {
-  ChangedFile,
-  FileLines,
-  GraphChanges,
-  ReviewItem,
-  ReviewLevels,
-  ReviewSource,
-  SummaryGroup,
-  Workstreams,
-} from './github-review-items.ts';
+export { heldItem, outsideSaid } from './github-review-items.ts';
+export type { ChangedFile, FileLines, GraphChanges, ReviewItem, ReviewLevels } from './github-review-items.ts';
+export type { ReviewSource, SummaryGroup, Workstreams } from './github-review-items.ts';
 export { DIFF_LIMIT, lineDiff } from './line-diff.ts';
 export type { DiffLine } from './line-diff.ts';
 export { THRESHOLDS, thresholdValue } from './thresholds.ts';
@@ -293,6 +285,7 @@ export { sha256 } from './ai-digest.ts';
 export { AI_PURPOSES, endpointProblem, modelChoices, purposeWords } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
+export type { HostModel } from './ai-host.ts';
 export {
   classMapFrom,
   classMapProblems,
@@ -308,6 +301,8 @@ export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
 export { landingFor, landingSaid, placesFor } from './box-drag.ts';
+export { gridDrop, gridMoved } from './view-types/grid-move.ts';
+export type { GridDrop } from './view-types/grid-move.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
 export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {
@@ -347,9 +342,11 @@ export type { LayoutOptions } from './layouts/layout-options.ts';
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { DrawingHeightSetting, MiniMapSetting, SwitchSetting } from './settings.ts';
-export { tallestOf } from './settings-aids.ts';
+export type { SwitchSetting } from './settings.ts';
+export { tallestOf, EASIER_READING_CLASS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
 export { importedBlock, isDbFile, withImport } from './db-import.ts';
+export { VISITS_KEPT, visitsFrom, withVisit, type RecentVisit } from './recent.ts';
+export { historyFrom, historyMoved, withVersion, type NoteHistory, type NoteVersion } from './note-history.ts';
 export type { DbImported, DbRow } from './db-import.ts';
 export {
   applyChanges,
@@ -387,3 +384,4 @@ export { transitionAltitude, walkTransition } from './phase-altitude.ts';
 export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
 export * from './index-process.ts';
 export * from './index-profiles.ts';
+export * from './index-rules.ts';

@@ -1,10 +1,10 @@
 // ThoughtKnot: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
-import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
+import { Notice, Plugin, TFile, editorInfoField, type MarkdownPostProcessorContext } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
-import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
   gqlBlocks,
-  holdsStill,
+  labelsFor,
+  markBody,
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
@@ -38,12 +38,12 @@ import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { chooseLanguage, installObsidianHost } from './display-host';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
-import { STILL_CLASS } from '@thoughtknot/core/display/graph-view/details-nav';
 import { vaultImages } from './images/vault-images';
 import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-images';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { ThoughtKnotSettingTab } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
+export { obsidianHost } from './obsidian-host';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { TriedTypes } from './tried-types';
@@ -80,17 +80,14 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     // the display layer draws in Obsidian from here on, the details' layout kept with the plugin's data
     installObsidianHost(this, {
-      saved: () => this.saved.detailsLayout,
-      save: (detailsLayout) => {
-        this.saved = { ...this.saved, detailsLayout };
-        void this.saveData(this.saved);
-      },
+      get: () => this.saved,
+      set: (saved) => void this.saveData((this.saved = saved)),
     });
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
-    document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings)); // the view preset's motion (§69)
+    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -176,7 +173,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
     chooseLanguage(this.settings.language);
-    document.body.classList.toggle(STILL_CLASS, holdsStill(this.settings));
+    markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
     if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
@@ -186,7 +183,7 @@ export default class ThoughtKnotPlugin extends Plugin {
   /** Each graph's View menu state (§25), by note, graph and view: kept while the plugin runs, never saved. */
   private readonly viewStates = new Map<string, ViewState>();
   /** The diagram types looked at in reading view (§15, type_try_reading): kept while the plugin runs, never saved. */
-  readonly tried = new TriedTypes();
+  readonly tried = new TriedTypes(this);
 
   /**
    * The View menu's state of a graph, or of one of its views, in a note (§25). It is the same for every card that draws
@@ -294,8 +291,8 @@ export default class ThoughtKnotPlugin extends Plugin {
    * Or why it is text only, or null once a newer drawing for its `owner` is asked. Rejects if the engine can't start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read (§42)
-    const laid = this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner);
+    // direction: the graph's own (§6), its type's (§15), the settings' (§21), else best fit, as read (§42); words: §69
+    const laid = this.layoutsOf()?.draw(directed(labelsFor(drawing, this.settings), this.settings.direction), owner);
     return laid?.then(shownAsRead) ?? Promise.resolve(null);
   }
 
@@ -305,6 +302,12 @@ export default class ThoughtKnotPlugin extends Plugin {
    */
   layoutForExport(drawing: GraphDrawing, theme: ExportTheme): Promise<Drawn | Refusal | null> {
     return this.layoutsOf()?.draw(drawing, undefined, theme) ?? Promise.resolve(null);
+  }
+
+  /** Lets stopped layouts run again; `redraw` also draws every card anew, for a Try again banner (UX-4). */
+  resumeLayouts(redraw = false): void {
+    this.layouts?.resume();
+    if (redraw) for (const changed of [...this.settingsWatchers]) changed();
   }
 
   /** The plugin's layouts, started on first use; none once the plugin is unloaded. */
@@ -319,7 +322,7 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   override onunload(): void {
     this.unloaded = true;
-    document.body.classList.remove(STILL_CLASS);
+    document.body.classList.remove('thoughtknot-still', 'thoughtknot-easier-reading');
     this.layouts?.close();
     this.layouts = null;
     this.outside.stopAll();

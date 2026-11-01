@@ -12,6 +12,8 @@ import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-v
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
+import { writeStyle } from '../view-block';
+import { word } from '@thoughtknot/core';
 
 export type { Layout };
 
@@ -21,18 +23,44 @@ export class BlockEditor extends Component {
   private readonly editor: SharedEditor;
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
   lists?: DeclaredList[];
+  /** The block's text as the editor opened on it in place: its card is drawn from it until Done, if the settings say. */
+  private opened: string | null = null;
+  private readonly plugin: ThoughtKnotPlugin;
 
   constructor(plugin: ThoughtKnotPlugin, layout: Layout) {
     super();
     this.layout = layout;
+    this.plugin = plugin;
+    const note = new BlockNote(plugin);
     this.editor = new SharedEditor(
       {
         settings: () => plugin.settings,
         layout: (drawing, by) => plugin.layout(drawing, by),
+        again: () => plugin.resumeLayouts(),
+        // an exploration saved in the note's style block, as a card saves it (§71, explore_saved)
+        saveExplore: (graph, explore) => void writeStyle(plugin, note.path, graph, { explore }, word('explore.saved')),
       },
       layout,
-      new BlockNote(plugin),
+      note,
     );
+  }
+
+  /** Keeps the block's text as it is now, the editor just opened in place on it (NEURO-7). */
+  holdDrawing(): void {
+    this.opened = this.session?.text ?? null;
+  }
+
+  /**
+   * The text the card is drawn from while this editor is open in place on it: the block `now`. With Redraw while
+   * typing set to Done, it is the text as the editor opened, so the picture stays as it was until Done (NEURO-7).
+   */
+  drawnFrom(now: string): string {
+    return this.plugin.settings.redrawWhileTyping === 'done' && this.opened !== null ? this.opened : now;
+  }
+
+  /** Whether the card was drawn from the text as it opened, and so is drawn again once the editor goes. */
+  get held(): boolean {
+    return this.opened !== null && this.plugin.settings.redrawWhileTyping === 'done';
   }
 
   /** The path of the note being edited. */

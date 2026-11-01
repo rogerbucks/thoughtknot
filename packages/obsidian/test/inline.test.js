@@ -59,8 +59,14 @@ describe('edit here, in the card', () => {
       ])
         assert.ok(card.querySelector(part), part);
       assert.ok(labelled(card, 'Done') && labelled(card, 'Undo') && labelled(card, 'Lock the graph'));
-      // the View menu's Group by list is a select too: the picker would be any other
-      const pickers = [...card.querySelectorAll('select')].filter((s) => !s.closest('.thoughtknot-group-by'));
+      // the View menu's Group by, layout and lens choices are selects too. So are a rule's badge and line (§56). The
+      // picker would be any other
+      const menu = (s) =>
+        s.closest('.thoughtknot-group-by') ||
+        s.closest('.thoughtknot-layout-choice') ||
+        s.closest('.thoughtknot-lens-choice') ||
+        s.closest('.thoughtknot-rule-form');
+      const pickers = [...card.querySelectorAll('select')].filter((s) => !menu(s));
       assert.equal(pickers.length, 0, 'no picker: it edits this block');
     } finally {
       env.uninstall();
@@ -417,7 +423,8 @@ describe('edit here, in the card', () => {
       const el = await show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
-      assert.equal(el.querySelector('[role="tablist"]'), null);
+      // the editor's own tabs; the phone's control sheet has tabs of its own (controls_sheet)
+      assert.ok(el.querySelector('.thoughtknot-tabs[role="tablist"]') === null);
     } finally {
       env.uninstall();
     }

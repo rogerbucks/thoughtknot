@@ -52,9 +52,30 @@ jobs:
       - name: No metric is worse than the baseline without a recorded reason
         run: node scripts/quality-check.mjs quality/metrics.json
 
+  mod:
+    # CODE-4: only the Claude Code CLI can load the /graph mod's hooks, so it is installed here and the mod is checked
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.20.0
+      - run: npm ci
+      - name: Install the Claude Code CLI, at the version the mod was last checked with
+        run: npm ci --prefix tools/claude-cli && npm audit signatures --prefix tools/claude-cli
+      - name: The mod builds, validates and passes its own test, and a missing CLI fails
+        run: node scripts/mod-check.mjs --require --claude tools/claude-cli/node_modules/.bin/claude
+
   public-readiness:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The fresh clone's `npm test` runs the whole suite at once, as ci.yml's public-readiness job does. That passed the
+    # default 4 GB ceiling (4.2 GB, 30 Oct 2026), so it gets CI's ceiling too: 8 GB.
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,7 +84,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           version: 0.12.17
           enable-cache: false
@@ -108,3 +129,40 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
         run: node scripts/security-alerts.mjs --release
+
+  # SECURITY.md's promises rest on GitHub settings (SEC-2): secret scanning and push protection, CodeQL on each pull
+  # request, Dependabot, the ruleset and the Actions token. They are read with SECURITY_ALERTS_TOKEN, which may see
+  # them, and the run fails when one differs from the wanted, or the token is missing. settings-check.yml runs the same
+  # each week. It only reads.
+  settings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: GitHub's settings are the ones SECURITY.md promises
+        env:
+          GH_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::error::SECURITY_ALERTS_TOKEN is not set, so the settings cannot be read (RELEASING.md, Keys and recovery)"; exit 1; }
+          node scripts/public-readiness.mjs --settings
+
+  # The store assets are the same however often they are built (SEC-6): two clean checkouts of this commit, each
+  # installed and built as the release builds, give main.js, styles.css and the libraries' archive byte for byte alike.
+  # So anyone can rebuild a tag and compare it with what the store serves (RELEASING.md). It only reads.
+  reproducible:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Two clean builds of this commit give the same store assets and archive
+        run: node scripts/reproducible-build.mjs

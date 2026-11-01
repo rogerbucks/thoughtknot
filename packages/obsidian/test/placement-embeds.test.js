@@ -44,7 +44,12 @@ async function showEmbedded(env, where) {
 }
 
 /** What a thing's details offer beside closing, where the note is only read (§25): each changes the picture, never the note. */
-const UNTANGLING = ['Centre here', 'Show only this and its neighbours', 'Shortest path to another thing'];
+const UNTANGLING = [
+  'Centre here',
+  'Show only this and its neighbours',
+  'Shortest path to another thing',
+  'Explore from here',
+];
 
 describe('a graph embedded in another note is read-only wherever it is shown', () => {
   test('embedded in a note in Live Preview: Source and no Edit, and its details change nothing, while its own block is edited', async () => {

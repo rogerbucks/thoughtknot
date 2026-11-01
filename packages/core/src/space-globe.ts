@@ -1,0 +1,298 @@
+// The globe in the 3D view (editor spec §71, globe_view and globe_dive_detail). Roger, 31 Oct 2026: the 3D view was
+// taken for a globe you spin round. Keep every view, and add one seen from outside, which you dive into for detail.
+//
+// Each thing is a ball on the globe (layouts/globe.ts), sized by its links as in the other 3D view. Each link runs as
+// an arc over the surface, ending in an arrowhead at the ball it points to. A thing's name sits on its ball. The far
+// side of the globe is hidden, as it is on a real one, so the side facing you reads clearly.
+//
+// Names show as there is room, nearest first (space-labels.ts), so more show as you dive in. A link's words show only
+// once you are near enough to read them. From inside the globe nothing is hidden: you see the whole inner surface.
+// Host-free and pure.
+import { GLOBE_FACING, globeArc, globeSpots } from './layouts/globe.ts';
+import type { GlobeVec } from './layouts/globe.ts';
+import { isCluster } from './space-cards.ts';
+import { radiusOf, shapeOfMarks } from './space-spread.ts';
+import { boundsOf, eyeOf } from './space-view.ts';
+import type { Block, Orbit, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
+import type { DrawMark } from './drawing-marks.ts';
+
+/** The size of a thing's name and of a link's words, in pixels of the space. */
+const NAME_SIZE = 14,
+  WORDS_SIZE = 11;
+/** An arrowhead's length, in pixels of the space: never more than the ball it points to. */
+const ARROW_MOST = 18;
+/** How far past the horizon a thing still shows, as a share of the globe's radius: so one on the edge is not cut. */
+const HORIZON = 0.05;
+/** How near a link's words must be, as a share of the globe's radius, before they show: only once you dive in. */
+const WORDS_NEAR = 1.6;
+/** How near the camera must come to a thing, as a share of the globe's radius, before its properties show. */
+const DETAIL_NEAR = 0.6;
+/** How far below its ball a thing's properties sit, over the surface, as a share of the ball's radius. */
+const DETAIL_BELOW = 1.7;
+/** The end of the id of a label that holds a thing's properties. */
+const DETAIL = '\ndetail';
+
+/** A thing's properties, as lines to show beside it once the camera comes near (globe_dive_detail). */
+export type GlobeDetails = (key: string) => readonly string[];
+
+/** The globe a space is laid on: its middle and radius. Only a globe's space has one. */
+export interface GlobeOf {
+  middle: Vec3;
+  radius: number;
+}
+
+/** A space laid on a globe. */
+export type GlobeSpace = SpaceMarks & { globe: GlobeOf };
+
+/**
+ * `marks` laid on a globe, `centre` facing the viewer. Given last time's `previous` spots, each thing placed already
+ * keeps its spot (explore_stays_put). Each thing's `details` sit just below it. It gives back the spots used too.
+ */
+export function globeSpace(
+  marks: readonly DrawMark[],
+  previous?: ReadonlyMap<string, GlobeVec>,
+  centre?: string | null,
+  details?: GlobeDetails,
+): { space: GlobeSpace; spots: Map<string, GlobeVec> } {
+  const shape = shapeOfMarks(marks);
+  const kept = previous && new Map([...previous].filter(([k]) => shape.things.some((t) => t.key === k)));
+  const { radius, spots } = globeSpots(shape, {
+    ...(centre ? { centre } : {}),
+    ...(kept?.size ? { previous: kept } : {}),
+  });
+  const count = new Map<string, number>();
+  for (const l of shape.links)
+    if (l.from !== l.to) for (const end of [l.from, l.to]) count.set(end, (count.get(end) ?? 0) + 1);
+  const ball = new Map<string, number>(),
+    blocks: Block[] = [],
+    labels: SpaceLabel[] = [];
+  const named = new Map<string, DrawMark & { kind: 'label' }>();
+  for (const m of marks) if (m.kind === 'label' && m.of !== undefined && !named.has(m.of)) named.set(m.of, m);
+  for (const m of marks) {
+    if (m.kind !== 'box' || m.of === undefined || ball.has(m.of)) continue;
+    const c = spots.get(m.of);
+    if (!c) continue;
+    const r = isCluster(m.of) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
+    ball.set(m.of, r);
+    const block: Block = {
+      id: m.id,
+      style: m.style,
+      of: m.of,
+      x: c[0] - r,
+      y: c[1] - r,
+      width: 2 * r,
+      depth: 2 * r,
+      floor: c[2] - r,
+      tall: 2 * r,
+    };
+    if (m.name !== undefined) block.name = m.name;
+    // a folded group is a card among balls, so its name and count always show (cluster_named_everywhere)
+    if (isCluster(m.of)) block.card = { width: m.width, height: m.height };
+    blocks.push(block);
+    const words = named.get(m.of),
+      text = words?.text ?? m.name;
+    if (text)
+      labels.push({
+        id: words?.id ?? `${m.id}\nname`,
+        style: words?.style ?? m.style,
+        at: [...c] as Vec3, // on the ball's face, as the painter writes it: off it, near views would throw it wide
+        text,
+        size: NAME_SIZE,
+        of: m.of,
+      });
+    const said = details?.(m.of) ?? [];
+    if (said.length)
+      labels.push({
+        id: `${m.id}${DETAIL}`,
+        style: m.style,
+        at: below(c, r * DETAIL_BELOW),
+        text: said.join(' · '),
+        size: WORDS_SIZE,
+      });
+  }
+  const lines: SpaceLine[] = [],
+    arrows: SpaceArrow[] = [];
+  for (const m of marks) {
+    if (m.kind !== 'link' || m.from === undefined || m.to === undefined || m.from === m.to) continue;
+    const a = spots.get(m.from),
+      b = spots.get(m.to);
+    if (!a || !b) continue;
+    // the arc leaves its first ball and stops short of its last, where its arrowhead goes
+    const ra = ball.get(m.from) ?? 0,
+      rb = ball.get(m.to) ?? 0,
+      head = m.headless ? 0 : Math.min(ARROW_MOST, rb);
+    const arc = globeArc(a, b, radius),
+      long = lengthOf(arc);
+    // a link too short to leave room for its arrowhead between the balls is drawn with none
+    const end = long - rb - head > ra ? long - rb - head : long - rb;
+    if (end <= ra) continue;
+    const points = cut(arc, ra, end),
+      tip = head && end < long - rb ? at(arc, long - rb) : null;
+    const line: SpaceLine = { id: m.id, style: m.style, points, from: m.from, to: m.to };
+    if (m.name) line.words = m.name;
+    if (m.of !== undefined) line.of = m.of;
+    lines.push(line);
+    if (tip) arrows.push({ id: `${m.id}\narrow`, style: m.style, tip, back: points.at(-1) as Vec3, size: head });
+    if (m.name)
+      labels.push({
+        id: `${m.id}\nwords`,
+        style: m.style,
+        at: points[Math.floor(points.length / 2)] as Vec3,
+        text: m.name,
+        size: WORDS_SIZE,
+        link: m.id,
+      });
+  }
+  const globe: GlobeOf = { middle: [0, 0, 0], radius };
+  return { space: { blocks, lines, labels, arrows, round: true, globe, ...boundsOf(blocks, lines, labels) }, spots };
+}
+
+/**
+ * The half of `space`, laid on globe `g`, that faces a camera at `eye`: the far side hidden, as on a real globe. A link
+ * going over the edge keeps the part on this side. From inside the globe, everything shows.
+ */
+export function facingHalf<S extends SpaceMarks>(space: S, eye: Vec3, g: GlobeOf): S {
+  if (gap(eye, g.middle) <= g.radius) return space;
+  const shows = (p: Vec3) => {
+    const out = sub(p, g.middle);
+    return dot(out, sub(eye, p)) >= -HORIZON * g.radius * Math.hypot(...out);
+  };
+  const near = gap(eye, g.middle) <= g.radius * WORDS_NEAR;
+  const blocks = space.blocks.filter((b) => shows([b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2]));
+  const lines = space.lines.flatMap((l) => {
+    const run = longestRun(l.points, shows);
+    return run.length < 2 ? [] : [{ ...l, points: run }];
+  });
+  // a link's words show once the camera dives in; a thing's properties only once it comes near that thing
+  const seen = (l: SpaceLabel) =>
+    l.id.endsWith(DETAIL) ? gap(eye, l.at) <= g.radius * DETAIL_NEAR : l.link === undefined || near;
+  const labels = space.labels.filter((l) => shows(l.at) && seen(l));
+  return { ...space, blocks, lines, labels, arrows: space.arrows.filter((a) => shows(a.tip)) };
+}
+
+/** One 3D view's globe: laid out again, each thing keeps its spot, and only the side facing the camera shows. */
+export class GlobeLayout {
+  private spots: Map<string, GlobeVec> | undefined;
+  private globe: GlobeOf | undefined;
+  private centre: string | null | undefined;
+
+  /**
+   * `marks` laid on the globe, `centre` facing the viewer; each thing laid before keeps its spot. A new centre turns the
+   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round.
+   */
+  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails): GlobeSpace {
+    const now = centre && this.spots?.get(centre);
+    if (now && centre !== this.centre) this.spots = turnedTo(this.spots as Map<string, GlobeVec>, now);
+    this.centre = centre;
+    const laid = globeSpace(marks, this.spots, centre, details);
+    [this.spots, this.globe] = [laid.spots, laid.space.globe];
+    return laid.space;
+  }
+
+  /** What of `space` the camera `orbit` sees while the globe shows (`on`): the side facing it. Else all of it. */
+  facing<S extends SpaceMarks>(space: S, orbit: Orbit, on: boolean): S {
+    return on && this.globe ? facingHalf(space, eyeOf(orbit), this.globe) : space;
+  }
+}
+
+/** `spots` all turned together round the globe's middle, so the spot `to` comes to face the viewer. */
+function turnedTo(spots: ReadonlyMap<string, GlobeVec>, to: Vec3): Map<string, GlobeVec> {
+  const from = scale(to, 1 / (Math.hypot(...to) || 1)),
+    axis = cross(from, GLOBE_FACING),
+    sin = Math.hypot(...axis),
+    cos = dot(from, GLOBE_FACING);
+  if (sin < 1e-9) return new Map(spots);
+  const k = scale(axis, 1 / sin);
+  // Rodrigues: each spot turned by the angle between the two ways, round the line square to both
+  const turn = (v: Vec3): GlobeVec => add(add(scale(v, cos), scale(cross(k, v), sin)), scale(k, dot(k, v) * (1 - cos)));
+  return new Map([...spots].map(([key, v]) => [key, turn(v)]));
+}
+
+/** The point `by` below `p` over the globe: toward its south, or across where it has none, at the poles. */
+function below(p: Vec3, by: number): Vec3 {
+  const n = scale(p, 1 / (Math.hypot(...p) || 1)),
+    north = sub([0, 0, 1], scale(n, n[2])),
+    long = Math.hypot(...north);
+  const down = long > 1e-6 ? scale(north, -1 / long) : ([1, 0, 0] as Vec3);
+  return add(p, scale(down, by));
+}
+
+/** The longest run of `points` one after another that `shows` keeps. */
+function longestRun(points: readonly Vec3[], shows: (p: Vec3) => boolean): Vec3[] {
+  let best: Vec3[] = [],
+    now: Vec3[] = [];
+  for (const p of points) {
+    if (shows(p)) now.push(p);
+    else now = [];
+    if (now.length > best.length) best = now;
+  }
+  return best === now ? [...now] : best;
+}
+
+/** How long the path through `points` is. */
+function lengthOf(points: readonly Vec3[]): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += gap(points[i - 1] as Vec3, points[i] as Vec3);
+  return total;
+}
+
+/** The point `d` along the path through `points`. */
+function at(points: readonly Vec3[], d: number): Vec3 {
+  let left = d;
+  for (let i = 1; i < points.length; i++) {
+    const p = points[i - 1] as Vec3,
+      q = points[i] as Vec3,
+      step = gap(p, q);
+    if (left <= step && step > 0) return add(p, scale(sub(q, p), left / step));
+    left -= step;
+  }
+  return [...(points.at(-1) ?? [0, 0, 0])] as Vec3;
+}
+
+/** The path through `points` from `from` along it to `to`: its ends found exactly, the points between kept. */
+function cut(points: readonly Vec3[], from: number, to: number): Vec3[] {
+  const out: Vec3[] = [at(points, from)];
+  let d = 0;
+  for (let i = 1; i < points.length; i++) {
+    d += gap(points[i - 1] as Vec3, points[i] as Vec3);
+    if (d > from && d < to) out.push(points[i] as Vec3);
+  }
+  out.push(at(points, to));
+  return out;
+}
+
+const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
+const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const gap = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const cross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+
+/** How far from the globe's middle the camera stops when it dives to a thing, in radii: near enough for its details. */
+export const GLOBE_DIVE = 1.4;
+/** The nearest the camera comes to the globe's middle as it turns to face a thing, in radii: always outside it. */
+const GLOBE_OUTSIDE = 1.15;
+
+/**
+ * The camera on the line from the globe's middle out through `point`, looking straight down at it. The thing is in the
+ * middle of the screen, square to the camera (Roger, 1 Nov 2026: "selecting a node should move the camera orientation
+ * to be perpendicular to the node in relation to the globe"). It stays as far away as it is, never inside the globe.
+ * With `dive`, it comes near, so the thing's details show (globe_dive_detail). Its turn is the one nearest the camera's
+ * own, so gliding there takes the short way round.
+ */
+export function globeFacing(orbit: Orbit, g: GlobeOf, point: Vec3, dive = false): Orbit {
+  const out = [0, 1, 2].map((k) => (point[k] ?? 0) - (g.middle[k] ?? 0)),
+    length = Math.hypot(...out) || 1;
+  const [x, y, z] = out.map((n) => n / length) as Vec3;
+  const way = Math.hypot(x, y) > 1e-9 ? Math.atan2(y, x) : orbit.turn,
+    turn = way + 2 * Math.PI * Math.round((orbit.turn - way) / (2 * Math.PI));
+  const distance = dive ? g.radius * GLOBE_DIVE : Math.max(orbit.distance, g.radius * GLOBE_OUTSIDE);
+  return { target: [...g.middle], distance, turn, tilt: Math.asin(Math.max(-1, Math.min(1, z))) };
+}
+
+/** The globe `space` is laid on, if it is laid on one. */
+export const globeOf = (space: SpaceMarks): GlobeOf | undefined => (space as Partial<GlobeSpace>).globe;

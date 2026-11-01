@@ -7,6 +7,8 @@
 export const SERVER_SOURCE_WORDS = {
   'server.no-version-of-note': 'No such version of this note.',
   'server.no-change': 'No such change.',
+  'server.note-changed':
+    'The note changed after the page read it, so nothing was written. What was sent is kept as a draft.',
   'server.change-not-listed': 'No such change listed for this note.',
   'server.yes-not-covering': '{ask} The yes it was given does not cover this text.',
   'server.page-not-built': 'The editor page is not built: run `npm run build` for the ThoughtKnot mod.',

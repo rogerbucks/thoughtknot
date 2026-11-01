@@ -1,0 +1,6 @@
+# Text files are checked out with LF line endings on every system, Windows too. The tests and tools read them so, and
+# a Windows checkout would otherwise turn each line end into CRLF (the Other systems run, os-check.yml).
+* text=auto eol=lf
+# kept byte for byte as their makers wrote them, CRLF included
+licences/texts/automerge/serde-wasm-bindgen.MIT.txt -text
+THIRD_PARTY_NOTICES.md -text

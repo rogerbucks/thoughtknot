@@ -1,9 +1,7 @@
-// The View menu (editor spec §25, view_switches): a graph's four switches, each on or off, under the bar's View button.
-// They hide labels too small to read, fold busy things, fold groups and bundle links between groups, each with a line
-// saying what it does. They start as the plugin's settings hold them (view_switch_defaults). Turning one redraws the
-// graph at once: hiding labels in place, the others by laying the graph out again. The card puts that in place, keeping the selection and the focus. A busy hub's stub, a
-// folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
-// offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
+// The View menu (editor spec §25, view_switches), under the bar's View button. It opens on the ladder of detail and
+// the switch that hides labels too small to read. The switches the ladder turns, and the layout sliders, fold away
+// under More. Each switch starts as the settings hold it (view_switch_defaults), and turning one redraws the graph.
+// Nothing here reaches the note, so it works in reading view too (view_switch_view_only).
 import {
   BY_KIND,
   LAYOUT_OPTION_RANGE,
@@ -21,10 +19,8 @@ import {
 } from '@thoughtknot/core';
 
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
-const nameOf = (s: ViewSwitch): string => {
-  const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
-  return o ? optionSaid(o).name : switchName(s);
-};
+const nameOf = (s: ViewSwitch, o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s])): string =>
+  o ? optionSaid(o).name : switchName(s);
 import type {
   Drawn,
   GraphDrawing,
@@ -36,7 +32,12 @@ import type {
   WordKey,
 } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
+import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
+import type { SemanticRung } from '../../semantic-zoom.ts';
+import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
 import { trunkCount } from '../../untangle-fold.ts';
+import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
+import { offeredLayouts, strategyName } from '../../layouts/offered.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -55,6 +56,7 @@ const HINTS = {
   hubs: 'view.hint.hubs',
   groups: 'view.hint.groups',
   merge: 'view.hint.merge',
+  lanes: 'view.hint.lanes',
 } as const satisfies Record<Exclude<ViewSwitch, 'engine'>, WordKey>;
 /** How many hints have been drawn, so each has an id of its own its switch is described by. */
 let hints = 0;
@@ -63,15 +65,21 @@ let hints = 0;
 const AUTO = '',
   NONE = ':none';
 
-/**
- * The View menu's layout options, each a slider, and how far one step moves it (§53, layout_saved_with_view). They
- * space the layout in every view, flat or in space, and a view saved as shown keeps them.
- */
+/** The View menu's layout sliders, and how far one step moves each, in every view (§53, layout_saved_with_view). */
 const LAYOUT_SLIDERS = [
   ['spacing', 'view.layout.spacing', 0.25],
   ['linkLength', 'view.layout.link-length', 0.25],
   ['groupPull', 'view.layout.group-pull', 0.1],
+  ['rounds', 'view.layout.rounds', 0.25],
 ] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
+/** The View menu's layout choices: the layout first, then its variables, alike in 2D and 3D (layout_plugins). */
+const LAYOUT_LISTS = ['strategy', 'direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
+
+/** The words choice `k` may be, each with what the menu says for it. */
+const listed = (k: LayoutChoice): [string, string][] =>
+  k === 'strategy'
+    ? [...LAYOUT_CHOICES.strategy, ...offeredLayouts().map((l) => l.id)].map((v) => [v, strategyName(v)])
+    : LAYOUT_CHOICES[k].map((v) => [v, word(`view.layout.${k}.${v.toLowerCase()}` as WordKey)]);
 
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
@@ -82,22 +90,51 @@ export interface Grouping {
 /**
  * Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. With
  * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens. With `spaced`,
- * a slider for each layout option follows, which `spaced` acts on as one is let go.
+ * a slider for each layout number and a list for each choice follow, which `spaced` acts on as one is set.
  */
 export function renderViewMenu(
   root: HTMLElement,
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
   grouping?: Grouping,
-  spaced?: (k: keyof LayoutOptions, v: number) => void,
+  spaced?: <K extends keyof LayoutOptions>(k: K, v: LayoutOptions[K]) => void,
+  stepped?: (level: DetailLevel) => void,
 ): ViewMenu {
   const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
+  // the ladder of detail first: one choice for what the three switches under it fold (cluster_detail_ladder)
+  const ladderHint = `thoughtknot-switch-hint-${++hints}`;
+  const ladder = stepped
+    ? el.createDiv({
+        cls: 'thoughtknot-detail',
+        attr: { role: 'radiogroup', 'aria-label': word('view.detail'), 'aria-describedby': ladderHint },
+      })
+    : null;
+  ladder?.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
+  const rungs = (ladder ? DETAIL_LEVELS : []).map((level) => {
+    const b = (ladder as HTMLElement).createEl('button', {
+      cls: 'thoughtknot-detail-rung',
+      text: word(`view.detail.${level}`),
+      attr: { type: 'button', role: 'radio' },
+    });
+    b.addEventListener('click', () => stepped?.(level));
+    return { level, b };
+  });
+  ladder?.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
+  const pickLine = el.createDiv({ cls: 'thoughtknot-layout-said' }); // the engine's pick, said (layout_pick_said)
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
+  // with the ladder, the switches it turns and the layout sliders fold away under More (cluster_menu_plain)
+  let more: HTMLElement | null = null;
+  const holder = (s?: ViewSwitch): HTMLElement => {
+    if (!ladder || s === 'labels') return el;
+    const d = more ? null : el.createEl('details', { cls: 'thoughtknot-view-more' });
+    d?.createEl('summary', { text: word('view.more') });
+    return (more ??= (d as HTMLElement).createDiv({ cls: 'thoughtknot-view-more-body' }));
+  };
   for (const s of VIEW_SWITCHES) {
     if (s === 'engine') continue; // which engine lays out is the settings page's alone (Roger, 25 Oct 2026)
     const hint = `thoughtknot-switch-hint-${++hints}`;
-    const b = el.createEl('button', {
+    const b = holder(s).createEl('button', {
       cls: 'thoughtknot-switch',
       attr: { type: 'button', role: 'switch', 'aria-describedby': hint },
     });
@@ -120,15 +157,24 @@ export function renderViewMenu(
   list?.addEventListener('change', () => grouping?.pick(list.value));
   const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
     const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = el.createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
+    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
     const input = row.createEl('input', {
       attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
     });
     input.addEventListener('change', () => spaced?.(k, Number(input.value)));
     return { k, input };
   });
+  const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
+    const row = holder().createEl('label', { cls: 'thoughtknot-layout-choice', text: word(`view.layout.${k}`) });
+    const input = row.createEl('select');
+    for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
+    input.addEventListener('change', () => spaced?.(k, input.value));
+    return { k, input };
+  });
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
   const fill = () => {
+    const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
+    [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
     if (!list || !grouping) return;
     const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
     const choices: [string, string][] = [
@@ -141,11 +187,12 @@ export function renderViewMenu(
     list.value = state.groupBy === undefined ? AUTO : state.groupBy === null ? NONE : state.groupBy.by;
   };
   const refresh = () => {
+    for (const { level, b } of rungs) b.setAttribute('aria-checked', String(state.detail === level));
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));
       says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
-    for (const { k, input } of sliders) input.value = String(state.layout[k]);
+    for (const { k, input } of [...sliders, ...lists]) input.value = String(state.layout[k]);
     fill();
   };
   refresh();
@@ -179,8 +226,6 @@ export class ViewSwitching {
   private readonly owner: object;
   /** The switches and the plan the drawing shows now, to tell whether another card changed them. */
   private drawnAs = '';
-  /** How many drawings were put in: curves are put only in the drawing they were asked for. */
-  private laid = 0;
 
   /** Builds the menu in `root`, for the card `owner`, whose layouts replace one another. */
   constructor(root: HTMLElement, o: SwitchesShown, host: SwitchingHost, owner: object) {
@@ -201,6 +246,7 @@ export class ViewSwitching {
       (s, on) => this.turn(s, on),
       grouping,
       (k, v) => this.space(k, v),
+      (level) => this.step(level),
     );
     this.drawnAs = this.now();
   }
@@ -225,8 +271,15 @@ export class ViewSwitching {
     }
   }
 
-  /** Spaces the layout as the menu's slider for `k` now says, and lays the graph out again (layout_saved_with_view). */
-  space(k: keyof LayoutOptions, v: number): void {
+  /** Steps to the rung `level` of the ladder, or of semantic zoom, and lays the graph out again (cluster_detail_ladder). */
+  step(level: SemanticRung): void {
+    if (!this.o.state.toRung(level)) return;
+    this.menu.refresh();
+    void this.redraw();
+  }
+
+  /** Lays the graph out again as the menu's slider or list for `k` now says (layout_saved_with_view). */
+  space<K extends keyof LayoutOptions>(k: K, v: LayoutOptions[K]): void {
     if (this.o.state.layout[k] === v) return;
     this.o.state.layout = { ...this.o.state.layout, [k]: v };
     void this.redraw();
@@ -254,12 +307,14 @@ export class ViewSwitching {
       const from = name.split('\n')[0];
       const first = this.o.state.plan?.groups.find(([label]) => label === from)?.[1][0];
       this.o.state.open({ bundle: name });
-      void this.redraw(focus && first !== undefined ? () => focus(first) : undefined);
+      void this.redraw(focus && (() => focus(first ?? '')));
       return;
     }
-    const to = hub ? name : this.o.state.plan?.groups.find(([label]) => label === name)?.[1][0];
-    this.o.state.open(hub ? { hub: name } : { group: name });
-    void this.redraw(focus && to !== undefined ? () => focus(to) : undefined);
+    // a group opened from its box folds back by the button on it (cluster_fold_back)
+    const group = this.o.state.plan?.groups.find(([label]) => label === name);
+    if (!hub && group && !group[2]) this.o.state.fold({ group: name });
+    else this.o.state.open(hub ? { hub: name } : { group: name });
+    void this.redraw(focus && (() => focus((hub ? name : group?.[1][0]) ?? '')));
   }
 
   /** A busy hub's links and whether they are folded now, for its details; null for another thing. */
@@ -329,23 +384,6 @@ export class ViewSwitching {
     this.drawnAs = this.now();
     this.menu.say(this.nothingMerged() ? word('view.merge-nothing') : '');
     this.host.relaid(next);
-    this.curveLater(next);
     then?.();
-  }
-
-  /**
-   * Asks for the curves of a drawing shown with straight links first (§11, curves_after_drawing). The card puts them in
-   * as soon as they are laid out. Every box stays where it is, and the view, the selection and the zoom are kept.
-   * Curves asked for a drawing laid out again since are dropped: that drawing asks for its own.
-   */
-  curveLater(drawn: Drawn): void {
-    const asked = ++this.laid;
-    if (!drawn.curvesToCome || !this.o.curved) return;
-    this.o.curved(this.owner).then(
-      (d) => {
-        if (d && !('reason' in d) && asked === this.laid) this.host.relaid(d);
-      },
-      () => undefined, // curves that could not be laid out leave the straight links shown
-    );
   }
 }

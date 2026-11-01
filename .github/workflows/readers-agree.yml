@@ -1,0 +1,48 @@
+name: Readers agree
+
+# Holds the JavaScript and the Python reader to the same answer on many statements made at random from one grammar
+# (spec §51, spec_grammar; risk ARCH-5). A pull request's Python job reads a few hundred blocks from a fixed seed. Each
+# night this reads 20000 more, from a seed made from the date. So a drift between the two hand-kept readers is found
+# without a hand-written case. A failure names the seed and the block; the same seed reads the same blocks again by
+# hand (python/graph_spec/tests/test_readers_agree.py).
+#
+# It runs every night, and by hand with a seed of your choosing.
+on:
+  schedule:
+    - cron: '41 15 * * *'
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: The seed to read from; the date when empty
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  readers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: python/graph_spec
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: uv sync --locked
+      - name: Both readers read 20000 blocks alike
+        env:
+          SEED: ${{ inputs.seed }}
+        run: |
+          export GRAPH_SPEC_FUZZ_SEED="${SEED:-$(date -u +%Y%m%d)}" GRAPH_SPEC_FUZZ_COUNT=20000
+          echo "seed $GRAPH_SPEC_FUZZ_SEED"
+          node ../../scripts/run-ceiling.mjs uv run --locked python -m unittest tests.test_readers_agree

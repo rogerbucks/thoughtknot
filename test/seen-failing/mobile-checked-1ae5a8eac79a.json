@@ -1,0 +1,6 @@
+{
+  "file": "test/mobile-checked.test.js",
+  "test": "on Obsidian mobile the plug-in loads and draws a graph, asking for nothing from Node or Electron",
+  "seen_failing_first": false,
+  "evidence": "a guard: the plug-in already asks for nothing from Node or Electron; this keeps it so on phones"
+}

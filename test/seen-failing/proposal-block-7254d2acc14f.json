@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/proposal-block.test.js",
+  "test": "a person decides, a change at a time > Accept writes that change into the graph and no other, records it in the judgement graph, and says so",
+  "seen_failing_first": false,
+  "evidence": "Expectation updated for the ARCH-14 marks; the code that writes them came in the commit before (fde0c73)."
+}

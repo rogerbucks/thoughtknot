@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The comments an element owns (graph spec §26 notes, §27 tagged comments), as owned_comments.py reads them. A run of
 // /// note lines and //@ key: value lines is owned by the element on the line directly below it.
 'use strict';

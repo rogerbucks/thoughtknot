@@ -3,11 +3,20 @@
 // missing, the pane says so and shows the graph as text, never a blank drawing.
 import { test, expect } from 'claude-code/testing';
 
-import { NOTE, SVGS } from './fixtures.js';
+import { NOTE as SAMPLE, SVGS } from './fixtures.js';
+
+// a note with no classification counts as the highest, which is never shown to Claude, so this one is Public
+const NOTE = `---\nclassification: Public\n---\n${SAMPLE}`;
 
 const ran = (stdout: string, exitCode = 0) => ({
   value: { exitCode, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
 });
+// the data folder the mod keeps its files in is named by two variables the host has, and the editor starts in the
+// session's folder
+const withEnv = (on: any) => {
+  on('env.get', async (_$: any, e: any) => ({ value: e.name === 'HOME' ? '/work' : undefined }) as never);
+  on('session.cwd', async () => ({ value: '/work/vault' }) as never);
+};
 const SURFACES = ['desktop', 'vscode', 'mobile'] as const;
 const mount = ($: any, surface: string) =>
   $.ui.mount({
@@ -20,6 +29,7 @@ const mount = ($: any, surface: string) =>
 
 test('the sample note is drawn as SVG in the light or dark the app shows, and as text on the terminal', async ($, on) => {
   const argvs: string[][] = [];
+  withEnv(on);
   on('fs.read', async () => ({ value: NOTE }));
   // the terminal's theme setting says dark: the drawing must not take it, since the desktop app may be light
   on('config.list', async () => ({ value: [{ key: 'theme', value: 'dark' }] }) as never);
@@ -53,6 +63,7 @@ test('the sample note is drawn as SVG in the light or dark the app shows, and as
 
 test('the layout is given the time the host package names, and node --version a short one', async ($, on) => {
   const timeouts: (number | undefined)[] = [];
+  withEnv(on);
   on('fs.read', async () => ({ value: NOTE }));
   on('process.run', async (_$, e) => {
     timeouts.push(e.init?.timeoutMs);
@@ -64,6 +75,7 @@ test('the layout is given the time the host package names, and node --version a 
 });
 
 test('when node is missing, the pane says so and shows the graph as text on every surface', async ($, on) => {
+  withEnv(on);
   on('fs.read', async () => ({ value: NOTE }));
   // the call rejects, as the host's does when node cannot start (a hook that throws is skipped, so it denies)
   on('process.run', async () => ({ deny: 'spawn node ENOENT' }) as never);

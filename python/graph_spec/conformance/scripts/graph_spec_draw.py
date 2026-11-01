@@ -45,7 +45,7 @@ def mermaid(g, shared):
     ids = sorted(i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS)
     var = {i: f"n{k}" for k, i in enumerate(ids)}; R = gr.readings(g, shared)
     lines = ['flowchart LR'] + [f'    {var[i]}["{caption(g, i, shared)}"]' for i in ids]
-    lines += sorted(f'    {var[s]} -->|"{gr._word(R, t)}"| {var[d]}' for s, t, d, _ in g.edges if s in var and d in var)
+    lines += sorted(f'    {var[s]} -->|"{gr.word(R, t)}"| {var[d]}' for s, t, d, _ in g.edges if s in var and d in var)
     return '\n'.join(lines), len(ids), sum(1 for s, _, d, _ in g.edges if s in var and d in var)
 
 def parts(g, shared):
@@ -53,7 +53,7 @@ def parts(g, shared):
     parity check (graph_spec_layout_parity.py), so what is compared is what is drawn."""
     ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, shared)   # in the note's order: colours follow first appearance
     nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), gr.shown_text(g, i, shared)[0]) for i in ids]
-    edges = [(s, gr._word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
+    edges = [(s, gr.word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
     return nodes, edges
 
 def svg(g, shared, extra=None):

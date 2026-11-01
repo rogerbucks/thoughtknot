@@ -52,6 +52,12 @@ below the hosts as it is.
 - `packages/core`: the editor core, on top of graph-spec. It works out what to draw, the problems and their fixes, zoom,
   edits and undo. It uses no Obsidian, editor or Node module, so it runs on a phone too. Guide:
   [packages/core/GUIDE.md](packages/core/GUIDE.md).
+- `packages/sync`: sync between an owner's devices, beside the core. Each note is one Automerge text, sealed on disk and
+  copied by Syncthing. Guide: [packages/sync/GUIDE.md](packages/sync/GUIDE.md).
+- `packages/boundary`: the line between the owner's personal layer and a corporate one. What crosses is plain text,
+  with no key, and AI-made content labelled. Guide: [packages/boundary/GUIDE.md](packages/boundary/GUIDE.md).
+- `packages/web`: the web layer, a read-only site of static files built from what crossed. No server. Guide:
+  [packages/web/GUIDE.md](packages/web/GUIDE.md).
 - `packages/obsidian`: the Obsidian plugin. It puts the core's drawings and edits on Obsidian's page. Guide:
   [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md).
 - `packages/claude-code`: the Claude Code host. Its `/graph <note>` command draws a note's graph in a pane. It also
@@ -179,8 +185,8 @@ read until one is set.
 - **Verified.** CI runs `npm audit signatures` before every build.
 - **Slow to adopt, quick to patch.** Dependabot proposes version updates each week, after a seven-day wait. Security
   updates come at once.
-- **Pinned actions.** Every GitHub Action is pinned to a full commit hash. CI runs with read-only permissions, and only
-  the release job may write.
+- **Pinned actions.** Every GitHub Action is pinned to a full commit hash. CI runs with read-only permissions. The few jobs that
+  write, and why, are in the table "Who may write what" in CONTRIBUTING.md.
 - **Built by CI.** Releases are built from a version tag, with no `v` in front. Each has `SHA256SUMS` for every file.
   Once the repository is public, each also gets a build provenance attestation. GitHub keeps those only for public
   repositories owned by a person.

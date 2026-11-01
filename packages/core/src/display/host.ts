@@ -12,8 +12,9 @@ import {
   setLocale,
   SOURCE_LANGUAGE,
 } from '@thoughtknot/core';
-import type { NoteStorage } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, NoteStorage, Refusal, RecentVisit } from '@thoughtknot/core';
 import type { LinkHost } from './link-host';
+import { rememberNotice } from './notices.ts';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
@@ -63,6 +64,16 @@ export interface DisplayHost {
    */
   detailsLayout?: { saved: () => unknown; save: (layout: unknown) => void };
   /**
+   * The graphs and things last opened, kept in the host's own data (risk NEURO-11). `visit` notes that the graph, or the
+   * thing of it, was opened in the note in front. `list` gives the kept visits, newest first, and `open` goes to one.
+   * Not set: none are kept.
+   */
+  recent?: {
+    list: () => RecentVisit[];
+    visit: (graph: string, thing?: string) => void;
+    open: (visit: RecentVisit) => void;
+  };
+  /**
    * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
    * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes.
    * Where they are forbidden the layer sets the same declarations through the CSSOM, which the policy allows. No style
@@ -87,8 +98,35 @@ export interface DisplayHost {
 export interface SettingsStore {
   /** The settings last saved, or undefined when none were. */
   load: () => Promise<unknown>;
-  /** Saves `value`, a plain JSON value, in place of what was saved before. */
+  /** Saves `value`, the settings as the core reads them, in place of what was saved before. */
   save: (value: unknown) => Promise<void>;
+  /**
+   * Set where the settings are another program's, only read here. The browser editor's are the mod's (cc_settings_shared).
+   * Then `save` refuses, saying why.
+   */
+  readOnly?: true;
+}
+
+/**
+ * A host's drafts (spec §9, nothing_typed_lost): what was typed and could not be written, kept outside the note. Each is
+ * kept by its key, such as a note's path and its graph, until it is cleared.
+ */
+export interface DraftStore {
+  /** The draft kept under `key`, or null when none is. */
+  read: (key: string) => Promise<string | null>;
+  /** Keeps `text` under `key`, in place of the draft kept there before. */
+  keep: (key: string, text: string) => Promise<void>;
+  /** Forgets the draft kept under `key`, and no other. */
+  clear: (key: string) => Promise<void>;
+}
+
+/**
+ * Where a host lays its drawings out (spec §9, layout_contained): one worker of its own, under the core's limits. It
+ * gives the drawing laid out, or why it is shown as text. It gives null once a newer drawing for the same `owner` was
+ * asked.
+ */
+export interface LayoutHost {
+  draw: (drawing: GraphDrawing, owner?: object) => Promise<Drawn | Refusal | null>;
 }
 
 /**
@@ -102,7 +140,8 @@ export interface SecretStore {
 
 /**
  * Everything a host gives the core (editor spec §41, host_contract_published). That is its display, its links, its
- * settings, its secrets and its notes. A new host is built from this alone, with no change to the core.
+ * settings, its secrets, its notes, its drafts and its layouts (risk ARCH-1). A new host is built from this alone, with
+ * no change to the core.
  */
 export interface Host {
   display: DisplayHost;
@@ -112,6 +151,8 @@ export interface Host {
   secrets: SecretStore;
   /** Where the host's notes are read and written. */
   files: NoteStorage;
+  drafts: DraftStore;
+  layout: LayoutHost;
 }
 
 /** What is said when the layer is used before any host was installed. */
@@ -165,5 +206,11 @@ export const sidePane = (): SidePane | null => installed?.sidePane ?? null;
 /** Where the host keeps the details' layout between sessions, or null where it keeps none. */
 export const keptLayout = (): DisplayHost['detailsLayout'] | null => installed?.detailsLayout ?? null;
 
+/** Where the host keeps the graphs and things last opened, or null where it keeps none. */
+export const recentVisits = (): DisplayHost['recent'] | null => installed?.recent ?? null;
+
 /** Tells the person something briefly, through the host. */
-export const notice = (message: string): void => displayHost().notice(message);
+export const notice = (message: string): void => {
+  rememberNotice(message);
+  displayHost().notice(message);
+};

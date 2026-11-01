@@ -1,6 +1,8 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // §21 joins: a document validated — cycles, cardinality, constraints with their guards, and determinism.
 'use strict';
 
+const { refused } = require('../values/refusal.js');
 const { byKey } = require('../values/order.js');
 const { pyrepr, pystr, pyeq, keystr } = require('./python-text.js');
 const { guardHolds } = require('../rules/guards.js');
@@ -53,7 +55,7 @@ function breaches(nodes, edges, config, checks) {
   if (checks.includes('constraints'))
     for (const [name, fn] of config.constraints) {
       if (fn === null)
-        throw new Error(`the constraint '${name}' is written in GQL with no named twin — it needs an engine`);
+        throw refused('GR17', `the constraint '${name}' is written in GQL with no named twin — it needs an engine`);
       out = out.concat(
         fn(nodes, edges).map((b) => ({ kind: 'constraint', why: name, edges: b.edges || [], slots: b.slots || [] })),
       );

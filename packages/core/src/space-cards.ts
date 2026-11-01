@@ -9,10 +9,12 @@
 // named ones, so nothing covers a name. Each arrowhead is painted at the
 // edge of the card it points to. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
+import { isPlane } from './space-planes.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
   ARROW_WIDE,
+  NAME_TINY,
   READABLE_LEAST,
   arrowsOnScreen,
   largestName,
@@ -20,8 +22,10 @@ import {
   pickedRing,
 } from './space-labels.ts';
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
-import { facesOnScreen, rowsOf } from './space-faces.ts';
+import { facesOnScreen, fitWords, rowsOf } from './space-faces.ts';
 import type { FaceText } from './space-faces.ts';
+import { outlined, outlinesOf } from './space-outlines.ts';
+import type { ScreenOutline } from './space-outlines.ts';
 
 export { rowsOf };
 
@@ -115,13 +119,17 @@ export function cardsOnScreen(
     if (c.x + r < 0 || c.y + r < 0 || c.x - r > width || c.y - r > height) continue;
     const read = wrapped.length > 0 && (mine || natural >= WORDS_LEAST || free(c.x, c.y, ww, hh));
     if (read) named.push({ x: c.x, y: c.y, width: ww, height: hh });
-    const [rows, cw, ch] = read ? [wrapped, ww, hh] : [[], w, h];
+    // one whose name has no room to show readably still wears it, tiny, inside the card (space_names_always)
+    const tiny = read ? null : fitWords(text, w, h, Math.min(natural, READABLE_LEAST), NAME_TINY);
+    const [rows, cw, ch] = read ? [wrapped, ww, hh] : [tiny?.rows ?? [], w, h];
     const card: ScreenCard = { block: b, x: c.x, y: c.y, width: cw, height: ch, far: c.far, rows, size };
+    if (tiny) card.size = tiny.size;
     if (mine) card.picked = true;
     out.push(card);
   }
-  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each
-  const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length ? 1 : 0);
+  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each.
+  // A tiny name is painted with the plain cards, so near ones still cover far ones.
+  const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length && c.size >= READABLE_LEAST ? 1 : 0);
   return out.sort((p, q) => rank(p) - rank(q) || q.far - p.far);
 }
 
@@ -146,9 +154,11 @@ export function cardArrows(
   cards: readonly ScreenCard[],
 ): ScreenArrow[] {
   const byKey = new Map(cards.flatMap((c) => (c.block.of === undefined ? [] : [[c.block.of, c] as const])));
+  // a line with no arrowhead in space, such as a merged link's to its trunk, has none at a card either
+  const headed = new Set(space.arrows.map((a) => a.id));
   const out: ScreenArrow[] = [];
   for (const l of space.lines) {
-    const to = l.to === undefined ? undefined : byKey.get(l.to);
+    const to = l.to === undefined || !headed.has(`${l.id}\narrow`) ? undefined : byKey.get(l.to);
     if (!to) continue;
     // the last point of the line outside the card: where the link comes in from
     let from: { x: number; y: number } | null = null;
@@ -198,6 +208,38 @@ export interface SpaceFrame {
   strong: { style: string; points: { x: number; y: number }[] }[];
   /** Every link on the screen, with how thick it is drawn, in pixels: none past SHAFTS_MOST links. */
   shafts: { style: string; points: { x: number; y: number }[]; width: number }[];
+  /** Each open group outlined round its things on the screen, its name on its top edge (cluster_named_everywhere). */
+  outlines: ScreenOutline[];
+}
+
+/** An open group in the space: its id, its style, its name and the keys of the things in it. */
+export type SpaceGroup = NonNullable<SpaceMarks['groups']>[number];
+
+/**
+ * Whether a thing's key is a folded group's box. The layout source names it `group: 2` (fold-source.ts). The drawing
+ * on screen has no title to read, so there it is `fold_group_2` (drawing-svg.ts).
+ */
+export const isCluster = (of: string | undefined): boolean => /^(?:group: \d+|fold_group_\d+)$/.test(of ?? '');
+
+/** How much of the screen, wide or high, a folded group fills before zooming in opens it (cluster_opens). */
+export const ZOOM_OPENS = 0.5;
+
+/** Whether a box of `box`'s size fills enough of a screen `width` by `height` for zooming in to open it. */
+export const fills = (box: { width: number; height: number }, width: number, height: number): boolean =>
+  box.width >= width * ZOOM_OPENS || box.height >= height * ZOOM_OPENS;
+
+/** The key of the folded group whose card is under `x`, `y` and fills the screen, if any: zooming in opens it. */
+export function clusterFilling(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+): string | undefined {
+  const clusters = { ...space, blocks: space.blocks.filter((b) => isCluster(b.of)) };
+  const card = cardAt(cardsOnScreen(clusters, matrix, width, height), x, y);
+  return card && fills(card, width, height) ? card.block.of : undefined;
 }
 
 /** Every line of `space` as the camera's `matrix` sees it, each as thick as its middle is near (space_link_shafts). */
@@ -249,19 +291,40 @@ export function frameOf(
     ...(pickedLink === undefined ? {} : { pickedLink }),
   };
   if (!space.cards) {
+    // a folded group is a card here too, never a nameless ball, and so is a group's card above (cluster_planes)
+    const carded = (b: Block | null | undefined) => isCluster(b?.of) || isPlane(b?.of);
+    const clusters = space.blocks.filter(carded);
+    if (clusters.length) {
+      const into = new Set(clusters.map((b) => b.of)),
+        edged = new Set(space.lines.filter((l) => into.has(l.to)).map((l) => `${l.id}\narrow`));
+      // its arrowheads sit at the card's edge, drawn once
+      const balls = {
+        ...space,
+        blocks: space.blocks.filter((b) => !carded(b)),
+        arrows: space.arrows.filter((a) => !edged.has(a.id)),
+      };
+      const frame = frameOf(balls, matrix, width, height, carded(picked) ? null : picked, pickedLink);
+      const cards = cardsOnScreen({ ...space, blocks: clusters }, matrix, width, height, picked?.of);
+      return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
+    }
     const ring = picked && pickedRing(space, picked, matrix, width, height);
-    // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
-    const faces = facesOnScreen(space, matrix, width, height, chosen);
+    // each name goes on its thing. One that fits on no face, even tiny, floats beside it. So every thing in view is
+    // named (Roger, 1 Nov 2026)
+    const beside = new Set<string>();
+    const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
     const onFace = new Set(faces.map((f) => f.id));
     const floats = space.labels.filter(
-      (l) => !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked),
+      (l) =>
+        !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked || beside.has(l.id)),
     );
+    const outlines = outlinesOf(space, matrix, width, height);
     return {
       shapes: space,
       cards: [],
       faces,
       arrows: arrowsOnScreen(space, matrix, width, height),
-      labels: labelsOnScreen({ ...space, labels: floats }, matrix, width, height, chosen),
+      labels: labelsOnScreen({ ...space, labels: outlined(floats, outlines) }, matrix, width, height, chosen),
+      outlines,
       ring,
       strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
       shafts: shaftsOf(space, matrix, width, height),
@@ -270,6 +333,7 @@ export function frameOf(
   const cards = cardsOnScreen(space, matrix, width, height, picked?.of);
   const words = { ...space, labels: space.labels.filter((l) => l.link !== undefined) };
   return {
+    outlines: outlinesOf(space, matrix, width, height),
     shapes: { ...space, blocks: [], arrows: [] },
     cards,
     faces: [],

@@ -1,0 +1,6 @@
+{
+  "file": "packages/app/test/app-config.test.js",
+  "test": "CI builds an installer for each system, through the signing script, and none on Linux that carries WebKitGTK",
+  "seen_failing_first": false,
+  "evidence": "The workflow changed in the commit before, which broke this test; this commit only follows it to the new step names"
+}

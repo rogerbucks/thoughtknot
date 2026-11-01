@@ -55,6 +55,7 @@ const READERS = [
   [/^scripts\/import-graph\.mjs$/, [CHEAP, 'test/import-graph.test.js']],
   [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP, GUIDE]],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/(GUIDE\.md|guide\/[^/]+\.md))$/, [CONVENTIONS]],
+  [/^docs\/tests-that-span-modules\.md$/, [CONVENTIONS, GUIDE, 'test/public-readiness.test.js']],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
   [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES, DEVICE_QUOTES]],
   [/^packages\/obsidian\/test\/device-checklist\.md$/, [DEVICE_NOTES, DEVICE_QUOTES]],

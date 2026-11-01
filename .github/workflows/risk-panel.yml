@@ -34,7 +34,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       changed: ${{ steps.scope.outputs.changed }}
-      scope: ${{ steps.scope.outputs.scope }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,12 +50,6 @@ jobs:
         run: |
           if [ -n "$SINCE" ]; then node scripts/risk-register.mjs --stale --json --since "$SINCE" > scope.json
           else node scripts/risk-register.mjs --stale --json > scope.json; fi
-          cat scope.json
-          {
-            echo "scope<<EOF"
-            cat scope.json
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
           if [ "$(node -p "const s=require('./scope.json'); s.stale.length + Object.keys(s.roles).length")" = "0" ]; then
             echo "Nothing the panel watches has changed: no session this time."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -86,7 +79,19 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - if: steps.token.outputs.set == 'true'
-        uses: anthropics/claude-code-action@6fed3ca145920b639991cb756090506e1bcaf515 # v1.0.245
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # The scope goes to a file, as a pipe cut it at 64 KB; and the folder exists, as the session could not make it.
+      - if: steps.token.outputs.set == 'true'
+        run: |
+          mkdir -p panel-out panel-in
+          if [ -n "$SINCE" ]; then node scripts/risk-register.mjs --stale --json --since "$SINCE" > panel-in/scope.json
+          else node scripts/risk-register.mjs --stale --json > panel-in/scope.json; fi
+        env:
+          SINCE: ${{ inputs.since }}
+      - if: steps.token.outputs.set == 'true'
+        uses: anthropics/claude-code-action@e4a6faad497d33dbc7144135c75e41f82f0bf6c0 # v1.0.255
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
@@ -94,8 +99,9 @@ jobs:
             You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
             its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
 
-            SCOPE (from scripts/risk-register.mjs --stale --json):
-            ${{ needs.scope.outputs.scope }}
+            SCOPE: read panel-in/scope.json with the Read tool. It is not pasted here, as the whole register passed the
+            limit on one command line (30 Oct 2026). Use Read, Grep and Glob, and single git or register commands
+            with no pipes or redirects, as piped and compound commands are refused.
             EVERY ROLE: ${{ inputs.all_roles }}
 
             The roles: senior security engineer (also privacy), IT administrator and release engineer, senior coder
@@ -114,13 +120,19 @@ jobs:
             (neurodiversity), Tam (workflow), Rory (API) and Nell (AI). Open each role's part with a few dry, kind words
             in that character's voice (humour setting 60%: often none), signed with its name. The risks table and the JSON stay plain: no jokes there.
 
+            Work in the foreground, on your own: start no subagents and no background tasks. The run ends when you
+            stop, and anything still running is lost with it (the 31 Oct 2026 run started seven reviewers, stopped
+            to wait for them, and wrote nothing). Take the roles one after another, and rewrite panel-out/panel.md
+            after each role, so a run that is cut short still leaves a report.
+
             Write your findings to panel-out/panel.md as plain language (sentences of 25 words or fewer): first a
             table of proposed new risks, each as the JSON object quality/risks.json uses (id, role, area, title,
             risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
             with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
           claude_args: |
-            --allowedTools "Read,Grep,Glob,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
-      - if: steps.token.outputs.set == 'true'
+            --allowedTools "Read,Grep,Glob,Write,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
+      # always(): a run that is cut short or fails still leaves what the panel wrote so far
+      - if: always() && steps.token.outputs.set == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: risk-panel
@@ -130,6 +142,7 @@ jobs:
 
   report:
     needs: panel
+    if: always() && needs.panel.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -143,8 +156,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           body=panel-out/panel.md
+          # GitHub caps an issue body at 65,536 characters: keep the head and point to the run for the rest
+          if [ -s "$body" ] && [ "$(wc -c < "$body")" -gt 60000 ]; then
+            head -c 60000 "$body" > panel-out/short.md
+            printf '\n\n(Cut to fit an issue. The whole report is in the risk-panel artifact of this run: %s)\n' "$RUN_URL" >> panel-out/short.md
+            body=panel-out/short.md
+          fi
           number=$(gh issue list --label risk-panel --state open --limit 1 --json number --jq '.[0].number // empty')
           if [ ! -s "$body" ]; then
             [ -n "$number" ] && gh issue close "$number" --comment "The panel found nothing new to add."

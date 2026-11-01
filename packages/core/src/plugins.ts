@@ -7,13 +7,17 @@
 // The third is note storage (§41, storage_contract), and the fourth the commands a person runs. A call over the time
 // limit is named and its answer dropped; its plug-in is stopped. Then come panels, and graph sources and steps, whose
 // graphs are held as joined graphs (plugin-sources.ts, trust_source_joined). Then AI providers, and diagram types, which
-// give back marks as data that the core draws (plugin-diagrams.ts). Each has its own contract suite (plugins-contract.ts).
+// give back marks as data that the core draws (plugin-diagrams.ts), and layouts (plugin-layouts.ts). Each has its own
+// contract suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
+import { ownSecrets } from './plugin-points.ts';
+import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
+export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
 import { commandCalls, pluginCalls } from './plugin-calls.ts';
@@ -21,11 +25,12 @@ import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
 import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
+import { layoutPlacing, layoutProblem } from './plugin-layouts.ts';
+import type { LayoutGiven, PluginLayout } from './plugin-layouts.ts';
 import type { DrawMark } from './drawing-marks.ts';
 import type { GraphShape } from './types-shape.ts';
 import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
-import type { FilesOffer } from './plugin-files.ts';
 export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand } from './plugin-points.ts';
 export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
@@ -47,6 +52,7 @@ export const EXTENSION_POINTS = [
   'steps',
   'ai',
   'diagrams',
+  'layouts',
 ] as const;
 
 /** One of the extension points. */
@@ -64,6 +70,7 @@ export interface ExtensionPoints {
   steps?: { add: (step: PluginStep) => void };
   ai?: { add: (provider: AiProvider) => void };
   diagrams?: { add: (diagram: PluginDiagram) => void };
+  layouts?: { add: (layout: PluginLayout) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -91,44 +98,6 @@ const SEMVER = /^\d+\.\d+\.\d+$/;
 
 /** How long a call into a plug-in may run, in milliseconds, before the plug-in is stopped. */
 export const PLUGIN_TIME_LIMIT = 2000;
-
-/** The host's abilities a registry may hand out; settings are made for each plug-in, kept apart from the others'. */
-export interface HostOffer {
-  notice?: HostAbilities['notice'];
-  settingsFor?: (pluginId: string) => HostAbilities['settings'];
-  secrets?: HostAbilities['secrets'];
-  /** The notes, given to each plug-in through the note gate (plugin-files.ts, TRUST-16). */
-  files?: FilesOffer;
-}
-
-/**
- * The host's secrets as one plug-in sees them: only those named under its own id, such as `acme.one.token`. Any other
- * name, an AI model's key or another plug-in's, gives null, and the host is never asked for it (TRUST-15).
- */
-const ownSecrets = (store: HostAbilities['secrets'], pluginId: string): HostAbilities['secrets'] =>
-  Object.freeze({
-    get: (name: string) =>
-      name.startsWith(`${pluginId}.`) && name.length > pluginId.length + 1 ? store.get(name) : null,
-  });
-
-/** What a registry is made with: the host's abilities, how long a call may run, and the clock it is timed by. */
-export interface RegistryOptions {
-  /** What the host offers; a plug-in naming an ability it does not offer is refused. */
-  host?: HostOffer;
-  /** In milliseconds; `PLUGIN_TIME_LIMIT` unless set. */
-  timeLimit?: number;
-  /** The time now, in milliseconds; `Date.now` unless set. */
-  now?: () => number;
-  /** The version of each extension point this host has; `POINT_VERSIONS` unless set. */
-  pointVersions?: Partial<Record<ExtensionPoint, string>>;
-  builtIn?: boolean;
-}
-
-/** A plug-in that was stopped, and why. */
-export interface StoppedPlugin {
-  plugin: string;
-  why: string;
-}
 
 /** The plug-ins installed and what each added; one for each host, made by `pluginRegistry`. */
 export interface PluginRegistry extends SourceFetching {
@@ -180,6 +149,10 @@ export interface PluginRegistry extends SourceFetching {
   drawDiagram: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<string>>;
   /** The drawing marks the diagram type `type` gives for `shape` in `space`, checked, for a host that draws marks. */
   diagramMarks: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<DrawMark[]>>;
+  /** Every layout added, in the order added (§68, layout_plugins). */
+  layouts: () => PluginLayout[];
+  /** Each thing's spot as the layout `id` places `given`, checked: every thing has one, two finite numbers. Or why not. */
+  placeBy: (id: string, given: LayoutGiven) => Promise<PluginResult<Record<string, [number, number]>>>;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
@@ -214,6 +187,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const steps = shelf<PluginStep>('id');
   const providers = shelf<AiProvider>('name');
   const diagrams = shelf<PluginDiagram>('type');
+  const layouts = shelf<PluginLayout>('id');
   const calls = pluginCalls(now, timeLimit);
   const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
@@ -294,6 +268,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedSteps = shelf<PluginStep>('id');
       const addedProviders = shelf<AiProvider>('name');
       const addedDiagrams = shelf<PluginDiagram>('type');
+      const addedLayouts = shelf<PluginLayout>('id');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
@@ -303,6 +278,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       if (uses('steps')) points.steps = onShelf(addedSteps, steps, stepProblem);
       if (uses('ai')) points.ai = onShelf(addedProviders, providers, (c, _, t) => providerProblem(c, t));
       if (uses('diagrams')) points.diagrams = onShelf(addedDiagrams, diagrams, diagramProblem);
+      if (uses('layouts')) points.layouts = onShelf(addedLayouts, layouts, layoutProblem);
       if (given && typeof given !== 'string') points.host = given;
       try {
         plugin.register(Object.freeze(points));
@@ -326,6 +302,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       keep(addedSteps, steps, plugin.id);
       keep(addedProviders, providers, plugin.id);
       keep(addedDiagrams, diagrams, plugin.id);
+      keep(addedLayouts, layouts, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -383,6 +360,11 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     ...diagramDrawing((type) => {
       const d = diagrams.items.find((x) => x.type === type);
       return d && { d, plugin: diagrams.owner.get(type) ?? '' };
+    }, awaited),
+    layouts: () => layouts.items.map((c) => ({ ...c })),
+    ...layoutPlacing((id) => {
+      const l = layouts.items.find((x) => x.id === id);
+      return l && { l, plugin: layouts.owner.get(id) ?? '' };
     }, awaited),
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };

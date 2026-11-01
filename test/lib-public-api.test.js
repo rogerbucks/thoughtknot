@@ -74,6 +74,16 @@ describe('the declared interface', () => {
     assert.ok(declared['@thoughtknot/graph-spec'].entries['./src/graph-layout.js']['export ='].length > 0);
   });
 
+  // Risk API-1: an export left out of graph-spec.d.ts is outside the break check, so it could change with no new major.
+  test('every name the graph-spec library exports is declared, and every name declared is exported', async () => {
+    const { createRequire } = await import('node:module');
+    const exported = Object.keys(createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js'));
+    const declared = readJSON(DECLARATION)['@thoughtknot/graph-spec'].entries['.']['export ='].map((line) =>
+      line.slice(0, line.indexOf(':')),
+    );
+    assert.deepEqual([...declared].sort(), [...exported].sort());
+  });
+
   // Risk API-3: a host built for one version of DisplayHost must not break silently when it changes.
   test('the host interface is declared, and its version moves with it', async () => {
     const { HOST_CONTRACT_VERSION, HOST_CONTRACT_VERSIONS } =

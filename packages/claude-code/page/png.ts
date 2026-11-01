@@ -1,8 +1,8 @@
 // A PNG of an exported SVG, drawn by the page (spec §16, export_png_sharp; §26, cc_export_same): on a canvas at the size the
 // core gives, never less than twice natural size. The SVG is self-contained, in fixed colours, and given that size itself
 // before it is read. It is read as an image from a blob, which the page's policy allows, and nothing is fetched.
-import type { PngSize } from '../../core/src/export.ts';
-import { word } from '../../core/src/words.ts';
+import type { PngSize } from '@thoughtknot/core';
+import { word } from '@thoughtknot/core';
 
 /** The most pixels a canvas holds on the smallest device (iOS's limit): a larger PNG is split across pages or refused. */
 export const PNG_PIXEL_LIMIT = 16_777_216;

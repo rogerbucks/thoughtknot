@@ -1,3 +1,4 @@
+// @ts-nocheck -- not yet typed (CODE-1): packages/graph-spec/test/untyped.json lists it; take this line out once typed.
 // The centroid of each cluster (editor spec §31): a derived thing that sums its cluster up. See
 // wiki/Clusters-design.md, step 4. Its Python twin is graphspec/engine/clusters/centroids.py, and the shared cases in
 // test/centroid-cases.json prove both give the same centroids.
