@@ -280,7 +280,7 @@ export class GraphView extends Lifecycle {
         const reopen =
           this.edits.handedOn() ?? this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen); // handed on by an edit in place (§72), else the editor's or the saved selection
-        this.place.takeUp(this.svg, this.taps, this.zoom, () => this.fullscreen.show(), this.spaces);
+        this.place.takeUp(this.svg, taps, this.zoom, () => full.show(), this.spaces, this.size(zoomSize));
         void this.spaces.show(this.place.space() ?? this.o.inSpace ?? this.spaces.saved()); // as the last card, or its Render
       },
       () => !gone,
