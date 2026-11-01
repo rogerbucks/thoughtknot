@@ -2,7 +2,7 @@
 // the key the thing already uses, as one change to the one block that writes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addedNear, deleted, linkedTo, propertySet, renamed } from '../src/thing-edits.ts';
+import { addedInColumn, addedNear, deleted, linkedTo, propertySet, renamed } from '../src/thing-edits.ts';
 import { readNote } from '../src/drawing.ts';
 
 const BLOCK = `// graph: reader
@@ -132,5 +132,27 @@ describe('a value typed in a cell', () => {
   test('is refused, with why, where its type cannot read it', () => {
     const r = propertySet(reading, 'reader', 'large_reader', 'price', 'cheap');
     assert.ok('reason' in r && /number/i.test(r.reason), JSON.stringify(r));
+  });
+});
+
+describe('a card added to a column of a board', () => {
+  const BOARD = `// graph: work
+(plan:Task {title: 'Plan', status: 'todo'}),
+(ship:Task {title: 'Ship', status: 'doing'})`;
+  const reading = readNote([BOARD]);
+
+  // proves: edit_cells
+  test("takes the column's value and the kind of the cards there", () => {
+    const r = addedInColumn(reading, 'work', { by: 'status', value: 'doing', peer: 'ship' }, 'Test');
+    assert.equal(r.name, 'test');
+    assert.match(r.now, /\(test:Task \{title: 'Test', status: 'doing'\}\)/);
+    assert.ok(r.now.startsWith(BOARD), 'the cards there kept as they were');
+  });
+
+  // proves: edit_cells
+  test('has no value in the column of things with none, and a graph not written is refused', () => {
+    const r = addedInColumn(reading, 'work', { by: 'status', value: null }, 'Idea');
+    assert.match(r.now, /\(idea:Task \{title: 'Idea'\}\)/);
+    assert.ok('reason' in addedInColumn(reading, 'nowhere', { by: 'status', value: 'todo' }, 'X'));
   });
 });

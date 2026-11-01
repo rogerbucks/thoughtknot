@@ -2,7 +2,7 @@
 // process's number to a new one, so there the number alone cannot say the parent is still there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { numberReused } from '../server/session-watch.ts';
+import { numberReused, parentWaitLine } from '../server/session-watch.ts';
 
 describe('on Windows, a parent number held by a newer process', () => {
   const since = Date.parse('2026-11-01T05:00:00.000Z');
@@ -18,5 +18,15 @@ describe('on Windows, a parent number held by a newer process', () => {
   test('an answer that is no time says nothing', () => {
     assert.equal(numberReused('', since), false);
     assert.equal(numberReused('Exception calling "GetProcessById"', since), false);
+  });
+});
+
+describe('on Windows, one PowerShell holds the parent until it exits', () => {
+  test('its line names the parent, says its start time, waits, then says it is gone', () => {
+    const line = parentWaitLine(4242);
+    assert.match(line, /GetProcessById\(4242\)/);
+    assert.ok(line.indexOf('StartTime') < line.indexOf('WaitForExit()'), 'the start time is said before the wait');
+    assert.match(line, /catch \{ 'gone'; exit \}/, 'a parent already gone is said at once');
+    assert.match(line, /WaitForExit\(\); 'gone'$/);
   });
 });

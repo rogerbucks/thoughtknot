@@ -8,13 +8,15 @@
 // - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
 // - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
+// - On a kanban board, each column has a button that adds a card there, its name open (grid-drag.ts, edit_cells).
 // Each write draws the card again, so what to select there, and whether to open its name, is handed on by graph.
 import { details, word } from '@thoughtknot/core';
-import { addedNear, deleted, propertySet, renamed } from '../../thing-edits.ts';
+import { addedInColumn, addedNear, deleted, propertySet, renamed } from '../../thing-edits.ts';
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
 import { accept } from './estimate-actions';
+import { gridAdds } from './grid-drag';
 import type { CellWrite } from './table-edit';
 import { boxIn, type Target } from './taps';
 import type { ViewOptions } from './view-options';
@@ -130,6 +132,28 @@ export class EditCard {
     };
   }
 
+  /** Offers a button per column of a kanban board drawn on the card, each adding a card there, ready to name. */
+  columns(): void {
+    const layer = this.layer();
+    if (!layer || !this.writable()) return;
+    gridAdds(this.o, layer, this.viewport, async (column) => {
+      const r = addedInColumn(this.o.reading, this.o.graph, column, word('edit.new-thing'));
+      if ('reason' in r) return r.reason;
+      handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
+      const why = await accept(this.o, r.block, r.was, r.now);
+      if (why) handed.delete(this.o.graph);
+      return why;
+    });
+  }
+
+  /** The layer over the drawing, the editor's and the board's buttons' place; none on a card without one. */
+  private layer(): HTMLElement | null {
+    const layer = Array.from(this.viewport.parentElement?.children ?? []).find((c) =>
+      c.classList.contains('thoughtknot-over'),
+    );
+    return (layer as HTMLElement | undefined) ?? null;
+  }
+
   /** Whether a thing can be edited here: never where the card is read-only, nor with nowhere to write. */
   private writable(): boolean {
     return !this.o.readOnly?.() && (!!this.o.writeBlock || !!this.o.editing?.()?.session);
@@ -142,11 +166,9 @@ export class EditCard {
     if (!d || !('key' in t)) return;
     this.listen();
     this.key = t.key;
-    const layer = Array.from(this.viewport.parentElement?.children ?? []).find((c) =>
-      c.classList.contains('thoughtknot-over'),
-    );
+    const layer = this.layer();
     // only over the drawing, where no key typed reaches the drawing's own keys; a card with no such layer shows none
-    if (!(layer instanceof HTMLElement)) return;
+    if (!layer) return;
     this.el = layer.createDiv({
       cls: 'thoughtknot-edit-card',
       attr: { role: 'group', 'aria-label': word('edit.card', { thing: d.text }) },

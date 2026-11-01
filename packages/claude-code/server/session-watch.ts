@@ -10,9 +10,6 @@ import { fstatSync } from 'node:fs';
 /** How often the process checks that the one that started it is still there. */
 export const PARENT_CHECK_MS = 1000;
 
-/** How often, on Windows, it checks that the process with its parent's number is its parent, and not a newer one. */
-export const PARENT_START_CHECK_MS = 5000;
-
 /** The signals that stop the server at once. */
 export const STOP_SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'] as const;
 
@@ -52,17 +49,30 @@ export function numberReused(started: string, since: number = performance.timeOr
   return Number.isFinite(at) && at > since;
 }
 
-/** Asks, on Windows, when the process with the number `parent` started; `then` gets PowerShell's answer. */
-function askStart(parent: number, then: (started: string) => void): void {
-  const line = `[System.Diagnostics.Process]::GetProcessById(${parent}).StartTime.ToUniversalTime().ToString('o')`;
-  execFile(
-    'powershell.exe',
-    ['-NoProfile', '-NonInteractive', '-Command', line],
-    { windowsHide: true, timeout: PARENT_START_CHECK_MS },
-    (error, stdout) => {
-      if (!error) then(String(stdout));
-    },
-  );
+/** The PowerShell line that says the parent's start time, then waits for it to exit; `gone` when it has. */
+export function parentWaitLine(parent: number): string {
+  const p = `[System.Diagnostics.Process]::GetProcessById(${parent})`;
+  return `try { $p = ${p} } catch { 'gone'; exit }; $p.StartTime.ToUniversalTime().ToString('o'); $p.WaitForExit(); 'gone'`;
+}
+
+/**
+ * Has one PowerShell, on Windows, hold the parent and wait for it to exit. While it is held, Windows gives its number
+ * to no other process. A slow PowerShell start is no matter: a number reused before then shows a newer start time.
+ */
+function awaitParent(parent: number, gone: () => void): void {
+  const child = execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', parentWaitLine(parent)], {
+    windowsHide: true,
+  });
+  let said = '';
+  child.stdout?.on('data', (d) => {
+    said += d;
+    const first = (said.split('\n')[0] ?? '').trim();
+    if (first === 'gone' || (said.includes('\n') && numberReused(first))) gone();
+  });
+  child.on('error', () => {}); // no PowerShell: the check by number still runs
+  child.unref();
+  for (const s of [child.stdin, child.stdout, child.stderr]) (s as { unref?: () => void } | null)?.unref?.();
+  process.on('exit', () => child.kill());
 }
 
 /** Calls `stop` with why when the session ends, the parent exits or a stop signal comes; once. */
@@ -83,10 +93,5 @@ export function watchSession(stop: (reason: string) => void, watch: { input: boo
   setInterval(() => {
     if (parentGone(parent)) once(word('server.parent-exited'));
   }, PARENT_CHECK_MS).unref();
-  if (process.platform === 'win32')
-    setInterval(() => {
-      askStart(parent, (started) => {
-        if (numberReused(started)) once(word('server.parent-exited'));
-      });
-    }, PARENT_START_CHECK_MS).unref();
+  if (process.platform === 'win32') awaitParent(parent, () => once(word('server.parent-exited')));
 }

@@ -2,6 +2,7 @@
 // - A card pressed and dragged over another column says the value it would take.
 // - Let go there, the value is written as its status in the data block, and the line says it was moved.
 // - Let go in its own column, nothing is written.
+// - Each column has a button that adds a card to it, of its value and its cards' kind, its name open (edit_cells).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
@@ -88,6 +89,30 @@ describe('a card dragged on a kanban board', () => {
       vp.dispatch('pointerup', mouse(2, vp, { ...mid, clientY: mid.clientY + 40 }));
       await settled();
       assert.equal(env.state.files.get(PATH), NOTE);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+describe('a card added to a column of a kanban board', () => {
+  // proves: edit_cells
+  test('each column has a button; one adds a card there, its name open for typing', async () => {
+    const { env, el } = await board();
+    try {
+      await until(() => !!el.querySelector('.thoughtknot-grid-adds'));
+      const buttons = el.querySelector('.thoughtknot-grid-adds').querySelectorAll('button');
+      assert.deepEqual(
+        buttons.map((b) => b.getAttribute('aria-label')),
+        ['Add a card to todo', 'Add a card to doing'],
+      );
+      buttons[1].click();
+      await until(() => env.state.files.get(PATH).includes("(new_thing:Task {name: 'New thing', status: 'doing'})"));
+      const again = (await show(env, env.state.files.get(PATH), 0)).el; // drawn again, as the note is
+      await until(() => !!again.querySelector('.thoughtknot-edit-card'));
+      const name = again.querySelector('.thoughtknot-edit-card .thoughtknot-edit-name');
+      assert.equal(name.value, 'New thing');
+      assert.equal(env.doc.activeElement, name, 'its name open for typing');
     } finally {
       env.uninstall();
     }

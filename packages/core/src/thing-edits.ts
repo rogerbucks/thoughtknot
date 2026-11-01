@@ -169,3 +169,28 @@ export function propertySet(reading: NoteReading, graph: string, key: string, pr
   }
   return { reason: reason ?? word('edit.name-same') };
 }
+
+/**
+ * A new card with text `text` in a column of a board (edit_cells). Its property `by` is the column's `value`. In the
+ * column of things with no value, it has none. It is of the kind of `peer`, a card in that column, else of the graph's
+ * first thing. It is written in the graph's first block.
+ */
+export function addedInColumn(
+  reading: NoteReading,
+  graph: string,
+  column: { by: string; value: string | null; peer?: string },
+  text: string,
+): ThingAdded {
+  const g = reading.world[graph];
+  const home = [...reading.texts.entries()].find(([, t]) => graphOfBlock(t) === graph);
+  if (!g || !home) return { reason: word('edit.not-here', { thing: graph }) };
+  const like = column.peer && g.nodes.has(column.peer) ? column.peer : [...g.nodes.keys()][0];
+  const [block, was] = home;
+  const made = addThing(reading, graph, was, { text, kind: like ? kindOf(g, like) : '' });
+  if ('refused' in made) return { reason: made.refused };
+  if (column.value === null) return { block, was, now: made.text, name: made.name };
+  const gql = parseValue('text', column.value);
+  if (!gql.ok) return { reason: gql.error };
+  const set = setProperty(made.text, graph, { thing: made.name }, column.by, gql.gql);
+  return set.ok ? { block, was, now: set.text, name: made.name } : { reason: set.reason };
+}
