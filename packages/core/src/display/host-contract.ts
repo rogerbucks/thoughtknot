@@ -3,7 +3,8 @@
 // for Obsidian's, the browser page's, the standalone app's and VS Code's alike. The checks need no test framework. Each
 // one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
-import type { FoundLink, StorageContractOptions } from '@thoughtknot/core';
+import type { FoundLink } from '@thoughtknot/core';
+import type { StorageContractOptions } from '../storage-contract.ts';
 import { readNote, settingsFrom, storageContract } from '@thoughtknot/core';
 import type { DisplayHost, Host, MenuEntry } from './host.ts';
 

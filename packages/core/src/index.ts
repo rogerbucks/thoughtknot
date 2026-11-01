@@ -13,7 +13,7 @@ export { notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
 export type { ChangeLog, ChangeOutcome, NoteEdit, NoteStorage, StorageLayer, StoredChange } from './note-storage.ts';
 export type { StoredNote, WriteOptions, WriteOutcome } from './note-storage.ts';
 export { storageContract } from './storage-contract.ts';
-export type { StorageCheck, StorageContractOptions } from './storage-contract.ts';
+export type { StorageCheck } from './storage-contract.ts';
 export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
 export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';

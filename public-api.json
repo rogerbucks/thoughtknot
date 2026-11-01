@@ -4405,10 +4405,6 @@
         "storageContract": [
           "value: (make: () => NoteStorage | Promise<NoteStorage>, { windows }?: StorageContractOptions) => StorageCheck[]"
         ],
-        "StorageContractOptions": [
-          "interface",
-          "windows?: boolean | undefined"
-        ],
         "StorageLayer": [
           "type = (inner: NoteStorage) => NoteStorage"
         ],
