@@ -523,8 +523,8 @@
   stroke-width: 3px;
 }
 /* the explore sidebar (§71, explore_controls_on_screen): a card floating over the drawing, never shrinking it or
-   pushing it down. On a wide card it is a column at the top start corner; on a narrow one, a strip across the top no
-   taller than 45% of the drawing. Either scrolls inside itself. Its dials and buttons are 44-point targets, and the
+   pushing it down. On a wide card it is a column at the top start corner. On a narrow one it is a strip across the
+   top, no taller than 45% of the drawing. Either scrolls inside itself. Its dials and buttons are 44-point targets, and the
    shape in use is pressed, so said by more than colour. */
 .thoughtknot-over > .thoughtknot-explore-sidebar {
   position: absolute;

@@ -31,8 +31,8 @@ export const typeLeftAt = (
 });
 
 /**
- * The thing nearest the middle of the card's `viewport`, with the drawing `svg` shown at `v`: the card drawn as a new
- * type is centred on it, so what was in the middle stays there (type_keeps_centre, Roger, 1 Nov 2026).
+ * The thing nearest the middle of the card's `viewport`, with the drawing `svg` shown at `v`. The card drawn as a new
+ * type is centred on it, so what was in the middle stays there (type_keeps_centre).
  */
 export function middleThing(taps: Taps, v: View, viewport: HTMLElement, svg: SVGSVGElement | null): string | undefined {
   const mid = taps.toDrawing({ x: viewport.clientWidth / 2, y: viewport.clientHeight / 2 }, v);
@@ -121,8 +121,8 @@ export class TypePlace {
   }
 
   /**
-   * Once the card is placed: the thing that was in the middle centred, at the zoom kept (type_keeps_centre), then the
-   * thing selected brought into view, and full screen opened again when it was open. In space, its camera where it was.
+   * Once the card is placed, the thing that was in the middle is centred at the zoom kept (type_keeps_centre). Then
+   * the thing selected is brought into view. Full screen opens again if it was open. In space, its camera is kept.
    */
   takeUp(svg: SVGSVGElement | null, taps: Taps, zoom: Zoom, full: () => void, spaces?: SpaceSwitch): void {
     spaces?.startAt(this.kept?.orbit);

@@ -88,8 +88,7 @@ export interface TypeLeftAt extends LeftAt {
   space?: SpaceMode;
   /** Where each box was on the screen, by its thing's key: the boxes of the card drawn next glide from there. */
   places?: Map<string, DOMRect>;
-  /** The thing nearest the middle of the card: the card drawn next is centred on it (type_keeps_centre). */
-  middle?: string;
+  middle?: string; // the thing nearest the middle of the card, which the card drawn next centres on (type_keeps_centre)
 }
 
 /** How a host lets a card look at a type without saving it (type_try_reading). */
