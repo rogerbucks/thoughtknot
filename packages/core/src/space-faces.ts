@@ -4,9 +4,9 @@
 // So a thing's name is painted on it, never beside it:
 // - on a box, on the face the camera sees most of, lying on that face, turned so it reads as near upright as it can;
 // - on a ball, on the disc it shows the camera, inside the square that fits in its circle.
-// The name wraps at its spaces and shrinks to fit inside the face, down to a tiny size where a readable one will not
-// fit (Roger, 1 Nov 2026: "even if the text is ridiculously small"). Where even that will not fit, the name is handed
-// back to float beside its thing (space_names_always). A thing hidden by a nearer one shows no name. Cards (2.5D) hold
+// The name wraps at its spaces and shrinks to fit inside the face. Where a readable size will not fit, it goes down to
+// a tiny one (Roger, 1 Nov 2026: "even if the text is ridiculously small"). Where even that will not fit, the name
+// floats beside its thing (space_names_always). A thing hidden by a nearer one shows no name. Cards (2.5D) hold
 // their names already (space-cards.ts). Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';

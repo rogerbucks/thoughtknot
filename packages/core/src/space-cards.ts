@@ -127,8 +127,8 @@ export function cardsOnScreen(
     if (mine) card.picked = true;
     out.push(card);
   }
-  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each
-  // a tiny name is painted with the plain cards, so near ones still cover far ones
+  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each.
+  // A tiny name is painted with the plain cards, so near ones still cover far ones.
   const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length && c.size >= READABLE_LEAST ? 1 : 0);
   return out.sort((p, q) => rank(p) - rank(q) || q.far - p.far);
 }
@@ -308,8 +308,8 @@ export function frameOf(
       return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
     }
     const ring = picked && pickedRing(space, picked, matrix, width, height);
-    // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
-    // and a name too long for its face even tiny floats beside it too, so every thing in view is named (Roger, 1 Nov)
+    // each name goes on its thing. One that fits on no face, even tiny, floats beside it. So every thing in view is
+    // named (Roger, 1 Nov 2026)
     const beside = new Set<string>();
     const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
     const onFace = new Set(faces.map((f) => f.id));
