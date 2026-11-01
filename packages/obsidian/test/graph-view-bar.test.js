@@ -41,8 +41,9 @@ describe('the bar', () => {
   // Roger chose the Zen-led refresh on 1 Nov 2026 (step 4): a slim bar, not a row of boxed buttons
   test('the bar is slim: its buttons are quiet until pointed at, and on a phone they sit edge to edge', async () => {
     const { el } = await show(env, fence(GRAPH));
-    const type = labelled(el.querySelector('.thoughtknot-bar'), 'Diagram type');
-    assert.ok(type.classList.contains('thoughtknot-type-choose'), 'the diagram type button can be told apart');
+    const bar = el.querySelector('.thoughtknot-bar');
+    for (const name of ['Diagram type', 'No problems'])
+      assert.ok(labelled(bar, name).hasAttribute('aria-expanded'), `${name} opens a panel, so a phone shows its icon`);
     const quiet = styles.match(/:is\(\.thoughtknot-bar, \.thoughtknot-bar-more\) > button \{([^}]*)\}/);
     assert.ok(quiet, 'one rule for the bar’s own buttons');
     assert.match(quiet[1], /border: 0;/);
@@ -59,10 +60,7 @@ describe('the bar', () => {
       /\.thoughtknot-badge(\.is-[a-z]+)? \{\s*display: none;/,
       'no button is hidden, only words',
     );
-    assert.match(
-      phone,
-      /\.thoughtknot-bar > :is\(\.thoughtknot-type-choose, \.thoughtknot-badge\) \.thoughtknot-badge-text \{\s*display: none;/,
-    );
+    assert.match(phone, /\.thoughtknot-bar > button\[aria-expanded\] \.thoughtknot-badge-text \{\s*display: none;/);
   });
 
   test('touch targets are at least 44 points', () => {

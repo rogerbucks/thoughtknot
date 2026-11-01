@@ -293,7 +293,8 @@ export function renderTypeStrip(
     list.hidden = !list.hidden;
     toggle.setAttribute('aria-expanded', String(!list.hidden));
   };
-  const toggle = typeToggle(strip, open);
+  const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
+  toggle.setAttribute('aria-expanded', 'false');
   inBar?.bar.insertBefore(toggle, inBar.before); // in the bar, with the rest that change how it is drawn (type_in_bar)
   const around = aroundSelected(toggle, d, where, root); // Radial with a thing selected (radial_centre_anywhere)
   picks(toggle, list);
@@ -384,12 +385,4 @@ export function renderTypeStrip(
     if (d.keep) writes.push(button(tried, word('type.keep'), 'check', leaving(d.keep), word('type.keep')));
   }
   return writes;
-}
-
-/** The bar's Diagram type button, its list shut. Its words step aside on a phone, so the bar takes fewer rows. */
-function typeToggle(strip: HTMLElement, open: () => void): HTMLButtonElement {
-  const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
-  toggle.addClass('thoughtknot-type-choose');
-  toggle.setAttribute('aria-expanded', 'false');
-  return toggle;
 }
