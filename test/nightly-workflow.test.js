@@ -122,6 +122,12 @@ describe('the nightly workflow', () => {
     );
   });
 
+  test('a merge to main during the run does not stop the night: the build is of the commit whose tests passed', () => {
+    const build = jobs(text).build.join('\n');
+    assert.doesNotMatch(build, /main moved/, 'no step fails because main moved');
+    assert.match(build, /git fetch --depth=1 origin "\$SHA"\n\s*git checkout --detach "\$SHA"/);
+  });
+
   // The whole suite at once, browser drawing included, peaked over the default 4 GB ceiling (22 Oct 2026). CI's shards
   // and fresh clone got 6 GB; the nightly and the release run the same suite, so they get the same.
   test('runs the full suite under the memory ceiling CI gives it, as the stable release does', () => {

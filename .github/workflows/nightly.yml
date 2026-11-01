@@ -163,10 +163,16 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - name: Main has not moved since `check` named the commit whose tests passed
+      # The commit `check` named and whose tests passed, not main's tip: a merge during the run no longer stops the night.
+      # It is fetched by name and checked out here, not named in the checkout above.
+      - name: Build the commit `check` named, whose tests passed
         env:
           SHA: ${{ needs.check.outputs.sha }}
-        run: '[ "$(git rev-parse HEAD)" = "$SHA" ] || { echo "::error::main moved from $SHA while this ran; run the nightly again"; exit 1; }'
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
+          git fetch --depth=1 origin "$SHA"
+          git checkout --detach "$SHA"
+          [ "$(git rev-parse HEAD)" = "$SHA" ] || { echo "::error::checked out $(git rev-parse HEAD), not the commit $SHA whose tests passed"; exit 1; }
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
@@ -217,7 +223,7 @@ jobs:
   # The installers, by the Desktop app workflow at the built commit, read only. The time limit is that workflow's own.
   # They build beside the tests, not after them (they took 18 of the night's 31 minutes, in a row with the tests'
   # 13): `publish` still waits for the tests, so nothing goes out on a red suite. They build the commit `check` named;
-  # if main moved before `build` checked it out, they are of another commit and `publish` leaves them out.
+  # `build` checks out the same commit, so a merge during the run changes none of them.
   desktop:
     needs: [check, security]
     if: needs.check.outputs.moved == 'true'
