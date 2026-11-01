@@ -220,7 +220,8 @@ export function diagramDrawing(find: (type: string) => Found, awaited: PluginCal
 /**
  * `marks` with every style token the theme can colour, and every word in the drawing's font (view_types_themed). A view
  * type paints with its own tokens, such as `ring.1` for the Ego view. Here a thing's box takes its kind's colour, as in
- * the built-in drawings. A word takes the text colour, and any other shape the link colour, as an outline. Never black
+ * the built-in drawings. A word takes the text colour, a line or a region the link colour, and any other shape the
+ * link colour as an outline. A region is drawn as an outline, so nothing covers the things over it. Never black
  * (Roger, 1 Nov 2026: "The backgrounds of the items are all black").
  */
 function inTheme(marks: readonly DrawMark[], shape: GraphShape, kinds: readonly string[]): DrawMark[] {
@@ -234,9 +235,9 @@ function inTheme(marks: readonly DrawMark[], shape: GraphShape, kinds: readonly 
         ? 'text'
         : m.kind === 'box' && kind !== undefined && kind >= 0
           ? `kind.${kind}`
-          : m.kind === 'box'
-            ? 'link.outline'
-            : 'link';
+          : m.kind === 'link' || m.kind === 'arrowhead' || m.kind === 'group'
+            ? 'link'
+            : 'link.outline';
     return { ...m, ...font, style };
   });
 }
