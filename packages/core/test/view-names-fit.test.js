@@ -1,5 +1,5 @@
-// A name drawn inside a box stays inside it (design review, 1 Nov 2026): view-types/fit-text.ts. The card's SVG draws
-// a label at full length. So a view whose names sit in boxes or a names column cuts each to its room.
+// Names inside boxes (editor spec §36, view_types_offered): view-types/fit-text.ts. The card's SVG draws a label at
+// full length. So a view whose names sit in boxes or a names column cuts each to its room.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { VIEW_DRAWERS } from '../src/view-types/view-types.ts';
