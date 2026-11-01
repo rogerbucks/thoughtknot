@@ -336,7 +336,7 @@
       ]
     },
     {
-      "name": "lanes with a group of two kinds, and a radial drawing with any group: neither fits, each says why",
+      "name": "lanes with a group of two kinds does not fit, and says why; a radial drawing with a group fits, drawn without its box",
       "blocks": [
         [
           "// graph: teams",
@@ -356,7 +356,7 @@
       ]
     },
     {
-      "name": "a radial drawing around a thing picked, where none would fit with no centre picked: a thing joined to nothing beside it, and a group drawn without its box",
+      "name": "a radial drawing around a thing picked: a thing joined to nothing beside it, and a group drawn without its box",
       "blocks": [
         [
           "// graph: sky",
