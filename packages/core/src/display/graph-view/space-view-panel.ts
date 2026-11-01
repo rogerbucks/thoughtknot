@@ -65,6 +65,11 @@ const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first 
  */
 type Depth = DepthBy | 'cards' | 'globe' | null;
 
+/** How `marks` shown `by` that way are lifted as they lie; none to lay them out afresh. So too a drawing of no things,
+ * as a density view's squares, which has nothing to lay out (space_density_tiles). */
+const liftOf = (by: Depth, marks: readonly DrawMark[]): DepthBy | null =>
+  by && by !== 'cards' && by !== 'globe' ? by : marks.some((m) => m.of !== undefined) ? null : { by: 'group' };
+
 /** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
 const KEPT = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'click', 'dblclick', 'wheel', 'keydown'];
 
@@ -115,7 +120,8 @@ export async function openSpaceView(
   const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
     if (by === 'globe') return globe.lay(marks, more.centre?.(), more.details);
-    if (by !== 'cards' && by) return spaceOf(marks, by);
+    const lifted = liftOf(by, marks);
+    if (lifted) return spaceOf(marks, lifted);
     const kept = spots && spotsKept(spots, held);
     const laid = spreadSpace(marks, kept, by === 'cards', more.asDrawn, more.layout?.(), planes);
     spots = laid.spots;
@@ -170,8 +176,7 @@ export async function openSpaceView(
   };
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(el);
-  // the card marked its drawing again. The things it shows now are laid out, faded as it fades them. The view is
-  // fitted to them when they are other things than before
+  // the card marked its drawing again: its things are laid out and faded as it shows them, and fitted if others
   const marked = () => {
     if ('marks' in from || !open) return;
     const was = space.blocks.map((b) => b.of).join(),

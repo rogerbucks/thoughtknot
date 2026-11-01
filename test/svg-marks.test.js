@@ -29,6 +29,18 @@ window.readBare = () => {
   holder.remove();
   return { marks, paints: Object.fromEntries(marks.map((m) => [m.id, paints(m.style)])), text: { x: text.x, y: text.y, width: text.width, height: text.height } };
 };
+window.readTiles = () => {
+  const holder = document.body.appendChild(document.createElement('div'));
+  holder.style.background = 'rgb(255, 255, 255)';
+  holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><g class="graph">
+    <polygon fill="none" stroke="rgb(9, 9, 9)" points="0,0 400,0 400,200 0,200"/>
+    <polygon class="thoughtknot-tile" fill="rgb(40, 80, 160)" fill-opacity="0.4" stroke="none" points="10,10 50,10 50,50 10,50"/>
+    <polygon class="thoughtknot-tile" fill="rgb(40, 80, 160)" fill-opacity="1" stroke="none" points="50,10 90,10 90,50 50,50"/>
+  </g></svg>\`;
+  const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
+  holder.remove();
+  return { marks, paints: Object.fromEntries(marks.map((m) => [m.id, paints(m.style)])) };
+};
 `;
 
 describe('the marks of a drawing on screen, in a real browser', () => {
@@ -84,5 +96,26 @@ describe('the marks of a drawing on screen, in a real browser', () => {
     const bob = byId.get('t:bob');
     assert.deepEqual([bob.x, bob.y, bob.width, bob.height], [200, 140, 80, 40], 'a boxed thing is read as before');
     assert.equal(byId.get('l:bob').text, 'Bob');
+  });
+
+  // proves: space_density_tiles
+  test('a shaded square of the drawing, as a density view draws, is a box of its own shade', options, async () => {
+    const { marks, paints } = JSON.parse(await browser.run('JSON.stringify(readTiles())'));
+    const tiles = marks.filter((m) => m.kind === 'box');
+    assert.equal(tiles.length, 2, 'each square is read, and the frame round the drawing is not');
+    assert.deepEqual(
+      tiles.map((m) => [m.x, m.y, m.width, m.height]),
+      [
+        [10, 10, 40, 40],
+        [50, 10, 40, 40],
+      ],
+    );
+    assert.ok(
+      tiles.every((m) => m.of === undefined),
+      'a square is no thing',
+    );
+    const [pale, full] = tiles.map((m) => paints[m.id].fill);
+    assert.equal(pale, 'rgb(169, 185, 217)', 'a paler square is its colour mixed with the page, solid');
+    assert.equal(full, 'rgb(40, 80, 160)', 'the most crowded is its full colour');
   });
 });
