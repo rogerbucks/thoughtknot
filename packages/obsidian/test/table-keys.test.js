@@ -155,6 +155,63 @@ describe('the table scrolls and zooms as a data table does', () => {
       env.uninstall();
     }
   });
+
+  // proves: table_grid_navigation
+  test('two fingers spread on the table make its words larger, as a trackpad pinch does; one finger only scrolls', async () => {
+    const { env, el } = await card();
+    try {
+      const vp = el.querySelector('.thoughtknot-viewport'),
+        cell = el.querySelectorAll('tbody td')[0];
+      const words = () => Number(vp.cssProps['--thoughtknot-text-scale']);
+      const at = (...xs) => xs.map((x) => ({ clientX: x, clientY: 50 }));
+      const one = cell.dispatch('touchstart', { touches: at(100) });
+      cell.dispatch('touchmove', { touches: at(160) });
+      assert.equal(one.defaultPrevented, false, 'one finger is left to scroll the table');
+      assert.equal(words(), 1, 'and never sizes its words');
+      cell.dispatch('touchstart', { touches: at(100, 200) });
+      const spread = cell.dispatch('touchmove', { touches: at(80, 220) });
+      assert.ok(spread.defaultPrevented, 'the page neither scrolls nor zooms under the two fingers');
+      assert.ok(words() > 1, 'the words grow as the fingers spread');
+      const bigger = words();
+      cell.dispatch('touchmove', { touches: at(120, 180) });
+      assert.ok(words() < bigger, 'and shrink as they close');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: table_grid_navigation
+  test('drawn again, as after an edit, the table is scrolled where it was and its cell has the focus again', async () => {
+    const { env, el } = await card();
+    try {
+      const scroll = el.querySelector('.thoughtknot-table-scroll');
+      scroll.scrollTop = 120;
+      scroll.scrollLeft = 30;
+      scroll.dispatch('scroll');
+      cellOf(el, 'cafe', 1).focus();
+      el.remove(); // the card is drawn again: its old table goes, and the focus with it
+      env.doc.activeElement = env.doc.body;
+      const { el: again } = await show(env, note, 0);
+      const now = again.querySelector('.thoughtknot-table-scroll');
+      assert.deepEqual([now.scrollTop, now.scrollLeft], [120, 30], 'scrolled where it was');
+      assert.equal(env.doc.activeElement, cellOf(again, 'cafe', 1), 'the cell that had the focus has it again');
+      const other = env.doc.body.createEl('button');
+      other.focus(); // the focus taken elsewhere on the page is left there
+      again.remove();
+      const { el: third } = await show(env, note, 0);
+      assert.equal(env.doc.activeElement, other, 'the focus is never taken back from elsewhere');
+      assert.equal(third.querySelector('.thoughtknot-table-scroll').scrollTop, 120);
+      cellOf(third, 'cafe', 1).focus();
+      cellOf(third, 'cafe', 1).dispatch('focusout', { relatedTarget: null }); // a click on the page's words, not a control
+      env.doc.activeElement = env.doc.body;
+      await Promise.resolve(); // the click and the drawing again come one after the other, never at once
+      third.remove();
+      await show(env, note, 0);
+      assert.ok(env.doc.activeElement === env.doc.body, 'nor from the page itself, clicked where nothing takes it');
+    } finally {
+      env.uninstall();
+    }
+  });
 });
 
 describe('sorting the table', () => {

@@ -1,7 +1,7 @@
 // Taking a saved rule out of the note, and putting it back with one Undo (editor spec §56, rule_look_remove). A rule
 // is moved up the same way, so it wins a clash (rule_look_order). The note is changed as a rule is saved: through its
-// editor when open, so Cmd+Z works too, else in the vault. The note as it was, and as it was left, are kept. Undo puts the first back only while the note is still the second, so an edit
-// made since is never lost.
+// editor when open, so Cmd+Z works too, else in the vault. The note as it was, and as it was left, are kept. Undo puts
+// the first back only while the note is still the second, so an edit made since is never lost.
 import { Notice, TFile } from 'obsidian';
 import { ruleMovedUp, ruleRemoved, word } from '@thoughtknot/core';
 import type { RuleRemove } from '@thoughtknot/core';
