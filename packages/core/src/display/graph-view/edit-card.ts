@@ -72,10 +72,12 @@ export class EditCard {
       'keydown',
       (e: KeyboardEvent) => {
         if (!this.el || e.ctrlKey || e.metaKey || e.altKey) return;
+        // Tab only on the selected thing's own box: elsewhere it moves the focus on, so the keys never trap it
+        const onBox = (e.target as Element | null)?.closest?.('[data-key]')?.getAttribute('data-key') === this.key;
         const act =
           e.key === 'F2'
             ? () => this.rename()
-            : e.key === 'Tab' && !e.shiftKey
+            : e.key === 'Tab' && !e.shiftKey && onBox
               ? () => this.add('child')
               : e.key === 'Enter' && e.shiftKey
                 ? () => this.add('sibling')

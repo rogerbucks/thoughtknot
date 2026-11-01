@@ -43,8 +43,10 @@ describe('adding and deleting where things are drawn', () => {
   test('Tab adds a child linked from the thing, selected next with its name open for typing', async () => {
     const { env, el } = await tapped('q');
     try {
+      const away = press(el, 'Tab', { target: el.querySelector('.thoughtknot-viewport') });
+      assert.ok(!away.defaultPrevented, 'Tab off the selected box moves the focus on, as ever');
       const ev = press(el, 'Tab');
-      assert.ok(ev.defaultPrevented, 'Tab is taken while a thing is selected');
+      assert.ok(ev.defaultPrevented, 'Tab is taken on the selected box');
       await until(() => note(env).includes("(new_thing {name: 'New thing'})"));
       assert.equal(
         note(env),
