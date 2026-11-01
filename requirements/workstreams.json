@@ -1243,7 +1243,8 @@
       "orientation_cues",
       "space_mini_map",
       "layout_concept_layers",
-      "layout_plugins"
+      "layout_plugins",
+      "things_stay_put"
     ]
   },
   "PJ1": {
