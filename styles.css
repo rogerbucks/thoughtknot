@@ -522,11 +522,11 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
-/* the explore sidebar (§71, explore_controls_on_screen): a card floating over the drawing, never shrinking it or
-   pushing it down. On a wide card it is a column at the top start corner. On a narrow one it is a strip across the
-   top, no taller than 45% of the drawing. Either scrolls inside itself. Its dials and buttons are 44-point targets, and the
-   shape in use is pressed, so said by more than colour. */
-.thoughtknot-over > .thoughtknot-explore-sidebar {
+/* A control dock (§25, controls_dock), as the explore sidebar is: a card floating over the drawing, never shrinking it
+   or pushing it down. On a wide card it is a column at the top start corner. On a narrow one it is a strip across the
+   top, no taller than 45% of the drawing. Either scrolls inside itself. Folded, only its head shows, as a tab. Its
+   dials and buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
+.thoughtknot-over > .thoughtknot-dock {
   position: absolute;
   top: var(--gn-space-2);
   inset-inline: var(--gn-space-2);
@@ -542,15 +542,46 @@
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-l);
 }
-.thoughtknot-over > .thoughtknot-explore-sidebar[hidden] {
+.thoughtknot-over > .thoughtknot-dock[hidden] {
   display: none;
 }
 @media (min-width: 1024px) {
-  .thoughtknot-over > .thoughtknot-explore-sidebar {
+  .thoughtknot-over > .thoughtknot-dock {
     inset-inline-end: auto;
     max-width: 18rem;
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
+}
+.thoughtknot-over > .thoughtknot-dock.is-folded {
+  inset-inline-end: auto;
+  padding: var(--gn-space-1);
+}
+.thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
+  display: none;
+}
+.thoughtknot-dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gn-space-2);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-dock-body,
+.thoughtknot-dock-more-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-dock-fold,
+.thoughtknot-dock-more > summary {
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-dock-more > summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--gn-accent);
 }
 .thoughtknot-explore-find input {
   width: 100%;
@@ -570,7 +601,7 @@
   flex-wrap: wrap;
   gap: var(--gn-space-1);
 }
-.thoughtknot-explore-sidebar button,
+.thoughtknot-dock button,
 .thoughtknot-find-explore {
   min-width: 44px;
   min-height: 44px;
