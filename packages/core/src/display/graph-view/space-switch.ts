@@ -35,8 +35,12 @@ export class SpaceSwitch {
   private view: SpaceView | null = null;
   private now: SpaceMode | null = null;
   private button: HTMLButtonElement | null = null;
-  /** Counts each change, so a view that opens after a later change is closed at once. */
+  /** Counts each press, so only the last one is shown once a view still opening is open. */
   private turn = 0;
+  /** The view open or opening now, so the close of one already gone is not taken for this one's (space_press_kept). */
+  private live: object | null = null;
+  /** The view opening now, if one is: a press meanwhile waits for it, so two views never open at once. */
+  private opening: Promise<void> | null = null;
   /** Where the camera starts as the view next opens, if the last card left it somewhere. */
   private start: Orbit | undefined;
 
@@ -92,22 +96,27 @@ export class SpaceSwitch {
     const turn = ++this.turn;
     this.now = mode;
     this.label();
+    // a view still opening is let open first; then only the last press is shown (space_press_kept)
+    while (this.opening) await this.opening;
+    if (turn !== this.turn) return;
     if (!mode) {
       // it fades out over the flat drawing (space_glide)
       const view = this.view,
         el = this.svg()?.parentElement?.querySelector<HTMLElement>(':scope > .thoughtknot-space-view');
       this.view = null;
+      this.live = null;
       if (view) el ? fadeOut(el, () => view.close()) : view.close();
       return;
     }
     if (this.view) return this.view.as(mode);
+    const live = (this.live = {});
     const svg = this.svg(),
       frame = svg?.parentElement;
-    if (!svg || !frame) return this.closed(turn);
+    if (!svg || !frame) return this.closed(live);
     flatAgain(svg); // read as drawn: in space it is bent there
     const start = this.start;
     this.start = undefined;
-    const view = await openSpaceView(frame, svg, this.graph, () => this.closed(turn), {
+    this.opening = openSpaceView(frame, svg, this.graph, () => this.closed(live), {
       ...(start ? { orbit: start } : {}),
       cards: mode === 'cards',
       globe: mode === 'globe',
@@ -119,10 +128,15 @@ export class SpaceSwitch {
       painter: this.says().aids?.painter,
       lens: () => this.says().switches?.state.lens ?? this.says().aids?.lens, // as the View menu picks it (§68)
       sketch: this.sketch,
+    }).then((view) => {
+      this.view = view;
+      if (!view) this.closed(live);
     });
-    if (turn !== this.turn) return view?.close();
-    this.view = view;
-    if (!view) this.closed(turn);
+    try {
+      await this.opening;
+    } finally {
+      this.opening = null;
+    }
   }
 
   /** Makes the bar's move `m` in space, if the drawing is shown there; says whether it was. */
@@ -140,9 +154,13 @@ export class SpaceSwitch {
     };
   }
 
-  /** The view opened at change `turn` closed, by Escape or as the card went: the drawing is flat again. */
-  private closed(turn: number): void {
-    if (turn !== this.turn) return;
+  /**
+   * The view `live` closed, by Escape or as the card went: the drawing is flat again, and the button says so. It is
+   * so whichever way the view was shown as it closed (space_press_kept). The close of a view already gone does nothing.
+   */
+  private closed(live: object): void {
+    if (live !== this.live) return;
+    this.live = null;
     this.view = null;
     this.now = null;
     this.label();
