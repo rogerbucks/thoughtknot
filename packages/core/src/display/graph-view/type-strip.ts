@@ -234,12 +234,11 @@ export function renderPicture(viewport: HTMLElement, p: PluginPicture): HTMLElem
 
 export { viewDrawn } from './view-drawn';
 
-/** The drawing a card shows in `viewport` that is not Graphviz's: the table, or a plug-in's picture; else null. */
-export function drawnApart(
-  viewport: HTMLElement,
-  d: Pick<DiagramShown, 'table' | 'picture'> | undefined,
-): HTMLElement | null {
-  if (d?.table) return renderTable(viewport, d.table);
+type Shown = Pick<DiagramShown, 'table' | 'picture'> | undefined;
+type Open = Parameters<typeof renderTable>[2];
+/** The drawing a card shows in `viewport` that is not Graphviz's: the table, its rows opened by `open`; or a picture. */
+export function drawnApart(viewport: HTMLElement, d: Shown, open?: Open): HTMLElement | null {
+  if (d?.table) return renderTable(viewport, d.table, open);
   return d?.picture && !d.picture.live ? renderPicture(viewport, d.picture) : null;
 }
 

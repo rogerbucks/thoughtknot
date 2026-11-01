@@ -61,6 +61,10 @@ const OPERABLE = new Set([
   'region',
   // a separator that takes the keyboard is a window splitter, a widget (WAI-ARIA 1.2): the details sheet's resize bar
   'separator',
+  // a cell or head of a grid, which takes the focus one at a time (WAI-ARIA 1.2, the grid pattern): a table's (§15)
+  'gridcell',
+  'columnheader',
+  'rowheader',
 ]);
 
 /** The state each role must say, where the element is not a native control that says it itself. */

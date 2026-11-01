@@ -96,7 +96,11 @@
       "type_both_renderers",
       "type_stops_fitting",
       "large_way_in",
-      "wide_types_phone"
+      "wide_types_phone",
+      "table_grid_navigation",
+      "table_sort",
+      "table_resize",
+      "table_look"
     ]
   },
   "W6": {
