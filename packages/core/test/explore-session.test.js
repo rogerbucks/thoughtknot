@@ -78,6 +78,13 @@ test('the card keeps what is shown, each thing at its spot, and nothing already 
   assert.ok(s.kept(edges).edges.has(cross), 'with Other links on, it is drawn faint and dashed');
   assert.ok(!s.setOtherLinks(true), 'on already is no change');
   s.setOtherLinks(false);
+  // each thing is on one of the centre's branches, counted in the order they are written: its colour
+  assert.deepEqual(
+    ['idea', 'a', 'a1', 'b', 'c', 'far'].map((k) => s.branchIndex(k)),
+    [-1, 0, 0, 1, 2, -1],
+  );
+  assert.equal(s.parentOf('a1'), 'a');
+  assert.ok(s.has('a1') && !s.has('far'));
   assert.ok(s.setShape('top-down'));
   const down = s.kept(edges);
   assert.ok(down.placed.get('a')[1] > 0, 'a new shape lays the map out afresh');

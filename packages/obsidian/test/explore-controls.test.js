@@ -6,6 +6,7 @@
 // - The banner's Show the whole graph ends the exploration.
 // - An open branch always has a − that folds it, with + more beside it while some wait.
 // - Each sits at the branch's outer end, as in a classic mind map (Roger, 1 Nov 2026).
+// - Each step along a branch is a curve with no arrowhead, in its main branch's colour; ended, the lines are as drawn.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
@@ -122,8 +123,25 @@ test('an open branch always folds with its −, + more waits beside it, and each
     const left = Math.max(...xs) < Math.min(...xsOf(thing(card, 'hub')));
     assert.equal(outer, left ? 'left' : 'right', `the ${fold} badge sits at the outer end`);
   }
+  const steps = () => card.querySelectorAll('g.edge.thoughtknot-explore-step');
+  assert.equal(steps().length, 10, 'four main branches and six things on the first');
+  assert.ok(
+    steps().every(
+      (g) => !g.querySelector('polygon') && /^M[-\d.]+,[-\d.]+ C/.test(g.querySelector('path').getAttribute('d')),
+    ),
+    'each a curve with no arrowhead',
+  );
+  assert.deepEqual([...new Set(steps().map((g) => g.getAttribute('data-branch')))].sort(), ['0', '1', '2', '3']);
+  const onW = steps().filter((g) => g.getAttribute('data-branch') === steps()[0].getAttribute('data-branch'));
+  assert.ok(onW.length > 1, 'a main branch and what is reached through it share a colour');
   of('w', 'close').click();
   await until(() => !thing(card, 'l0'));
   assert.ok(!of('w', 'close'), 'folded, it offers only +');
   assert.equal(of('w', 'more').querySelector('text').textContent, '+8');
+  withText(card.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
+  await until(() => !steps().length);
+  assert.ok(
+    card.querySelectorAll('g.edge').some((g) => g.querySelector('polygon')),
+    'the whole graph has its arrowheads again',
+  );
 });
