@@ -115,7 +115,7 @@ test('the sidebar floats over the drawing in its own card, taking no room from i
   const card = { tag: 'div', classes: ['thoughtknot-view'] };
   const side = {
     tag: 'div',
-    classes: ['thoughtknot-explore-sidebar'],
+    classes: ['thoughtknot-dock', 'thoughtknot-explore-sidebar'],
     states: [],
     ancestors: [{ tag: 'div', classes: ['thoughtknot-over'] }, card],
   };

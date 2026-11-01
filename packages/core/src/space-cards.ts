@@ -14,6 +14,7 @@ import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
 import {
   ARROW_LEAST,
   ARROW_WIDE,
+  NAME_TINY,
   READABLE_LEAST,
   arrowsOnScreen,
   largestName,
@@ -21,7 +22,7 @@ import {
   pickedRing,
 } from './space-labels.ts';
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
-import { facesOnScreen, rowsOf } from './space-faces.ts';
+import { facesOnScreen, fitWords, rowsOf } from './space-faces.ts';
 import type { FaceText } from './space-faces.ts';
 import { outlined, outlinesOf } from './space-outlines.ts';
 import type { ScreenOutline } from './space-outlines.ts';
@@ -118,13 +119,17 @@ export function cardsOnScreen(
     if (c.x + r < 0 || c.y + r < 0 || c.x - r > width || c.y - r > height) continue;
     const read = wrapped.length > 0 && (mine || natural >= WORDS_LEAST || free(c.x, c.y, ww, hh));
     if (read) named.push({ x: c.x, y: c.y, width: ww, height: hh });
-    const [rows, cw, ch] = read ? [wrapped, ww, hh] : [[], w, h];
+    // one whose name has no room to show readably still wears it, tiny, inside the card (space_names_always)
+    const tiny = read ? null : fitWords(text, w, h, Math.min(natural, READABLE_LEAST), NAME_TINY);
+    const [rows, cw, ch] = read ? [wrapped, ww, hh] : [tiny?.rows ?? [], w, h];
     const card: ScreenCard = { block: b, x: c.x, y: c.y, width: cw, height: ch, far: c.far, rows, size };
+    if (tiny) card.size = tiny.size;
     if (mine) card.picked = true;
     out.push(card);
   }
-  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each
-  const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length ? 1 : 0);
+  // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each.
+  // A tiny name is painted with the plain cards, so near ones still cover far ones.
+  const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length && c.size >= READABLE_LEAST ? 1 : 0);
   return out.sort((p, q) => rank(p) - rank(q) || q.far - p.far);
 }
 
@@ -303,11 +308,14 @@ export function frameOf(
       return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
     }
     const ring = picked && pickedRing(space, picked, matrix, width, height);
-    // each name goes on its thing; one with no face to fit on floats beside it only when picked, so it always shows
-    const faces = facesOnScreen(space, matrix, width, height, chosen);
+    // each name goes on its thing. One that fits on no face, even tiny, floats beside it. So every thing in view is
+    // named (Roger, 1 Nov 2026)
+    const beside = new Set<string>();
+    const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
     const onFace = new Set(faces.map((f) => f.id));
     const floats = space.labels.filter(
-      (l) => !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked),
+      (l) =>
+        !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked || beside.has(l.id)),
     );
     const outlines = outlinesOf(space, matrix, width, height);
     return {

@@ -75,8 +75,10 @@ const NAME_SIZE = 14,
  */
 const isPoint = (m: { of?: string }) => /^(?:trunk: \d+ (?:in|out)|trunk_\d+_(?:in|out))$/.test(m.of ?? '');
 
-/** A thing's sphere radius, by its count of links. */
+/** A thing's sphere radius, by its count of links, as the globe sizes it (space-globe.ts). */
 export const radiusOf = (links: number) => Math.min(RADIUS_MOST, RADIUS_LEAST + RADIUS_GROWTH * Math.sqrt(links));
+/** How much larger a ball is in 3D than on the globe, so it shows (Roger, 1 Nov 2026; space_names_always). */
+export const BALL_LARGER = 1.6;
 
 /** The things and links of `marks`, as the layouts read them: each box that draws a thing, and links between them. */
 export function shapeOfMarks(marks: readonly DrawMark[]): GraphShape {
@@ -188,10 +190,8 @@ export function spreadSpace(
       unit = drawn?.unit ?? (cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT),
       page = middles?.get(m.of);
     centre.set(m.of, page ? [page[0], -page[1], z * unit] : [x * unit, y * unit, z * unit]);
-    radius.set(
-      m.of,
-      cards || isPoint(m) || isCluster(m.of) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0),
-    );
+    const flat = cards || isPoint(m) || isCluster(m.of);
+    radius.set(m.of, flat ? Math.max(m.width, m.height) / 2 : BALL_LARGER * radiusOf(count.get(m.of) ?? 0));
   }
   // things laid out afresh keep clear room round each, so links show between them (Roger, 25 Oct 2026). Things kept
   // where the drawing put them are spaced as the drawing is. A trunk's joints then sit between the things kept apart
