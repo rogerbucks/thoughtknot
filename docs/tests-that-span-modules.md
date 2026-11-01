@@ -80,6 +80,9 @@ after a module nor listed here, and on a listed file that is missing.
   exploration pass it.
 - `packages/core/test/multi-member-drawn.test.js` — a thing in two clusters is drawn in each region, with the same
   marker. So is a part with two wholes (editor spec §36, multi_member_drawn).
+- `packages/core/test/view-names-fit.test.js` — a name drawn in a box or a names column is cut to its room with an
+  ellipsis. It spans `fit-text.ts` and the grid, block, centroid, plan, treemap, containment and matrix views (editor
+  spec §36, view_types_offered).
 - `packages/core/test/views-as-scaffolds.test.js` — a view says what a complete version needs. Each field a thing lacks
   is drawn as a prompt, and filling one writes it into the graph (editor spec §36, views_as_scaffolds).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
