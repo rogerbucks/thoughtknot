@@ -717,6 +717,27 @@
 }
 /* The editor beside a selected thing (§72, edit_card): a small card floating over the drawing next to the thing's box,
    never shrinking the drawing. Its name field is a 44-point target. It keeps inside the drawing on any screen. */
+/* A board's add buttons (spec §72, edit_cells): one per column, in the columns' order, at the drawing's top end corner,
+   over it. Each is a 44-point target named by its column. */
+.thoughtknot-over > .thoughtknot-grid-adds {
+  position: absolute;
+  top: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--gn-space-1);
+  max-width: 50%;
+}
+.thoughtknot-grid-adds > button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
 .thoughtknot-edit-card {
   position: absolute;
   top: var(--thoughtknot-edit-y, var(--gn-space-2));
