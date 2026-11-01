@@ -78,7 +78,7 @@ export function renderSheet(layer: HTMLElement, root: HTMLElement, corner: HTMLE
     handle.setAttribute('aria-label', word('sheet.height', { height: word(`sheet.${tall}`) }));
   };
   // the handle steps up through the heights, then back down to the strip
-  handle.addEventListener('click', () => height(HEIGHTS[(HEIGHTS.indexOf(tall) + 1) % HEIGHTS.length]));
+  handle.addEventListener('click', () => height(HEIGHTS[(HEIGHTS.indexOf(tall) + 1) % HEIGHTS.length] ?? 'peek'));
   // the details, shown, come into the sheet and open at peek. Closed, the sheet goes back to its controls.
   root.addEventListener(SHOWN, (e: Event) => {
     const details = e.target as HTMLElement,
