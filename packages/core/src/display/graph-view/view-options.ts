@@ -149,6 +149,11 @@ export interface ViewOptions {
   images?: CardImages;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
   writeView?: (block: string) => Promise<string | null>;
+  /**
+   * Expand with AI, from the editor beside a thing (edit_ai_expand). It says whether AI is on now. It opens the send
+   * dialog with thing `key` chosen, given its text and any words typed in the quick line.
+   */
+  expand?: { ready: () => boolean; open: (key: string, thing: string, typed: string) => void };
   /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */
   onEditHere?: (at?: Chosen) => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */

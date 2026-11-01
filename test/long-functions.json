@@ -49,5 +49,5 @@
   "packages/obsidian/src/links/link-host.ts#linkHost": 102,
   "packages/obsidian/src/proposals/proposal-block.ts#renderProposalBlock": 154,
   "packages/obsidian/src/view-block.ts#renderViewBlock": 241,
-  "packages/vscode/src/ask-ai.ts#askAi": 118
+  "packages/vscode/src/ask-ai.ts#askAi": 123
 }

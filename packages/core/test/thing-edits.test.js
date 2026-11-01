@@ -2,7 +2,7 @@
 // the key the thing already uses, as one change to the one block that writes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addedInColumn, addedNear, deleted, linkedTo, propertySet, renamed } from '../src/thing-edits.ts';
+import { addedInColumn, addedNear, deleted, linkedTo, propertySet, quickLine, renamed } from '../src/thing-edits.ts';
 import { readNote } from '../src/drawing.ts';
 
 const BLOCK = `// graph: reader
@@ -154,5 +154,35 @@ describe('a card added to a column of a board', () => {
     const r = addedInColumn(reading, 'work', { by: 'status', value: null }, 'Idea');
     assert.match(r.now, /\(idea:Task \{title: 'Idea'\}\)/);
     assert.ok('reason' in addedInColumn(reading, 'nowhere', { by: 'status', value: 'todo' }, 'X'));
+  });
+});
+
+describe('a quick line', () => {
+  const WORK = `// graph: work
+(plan:Task {title: 'Plan'}),
+(ship:Task {title: 'Ship'}),
+(plan)-[:BEFORE]->(ship)`;
+  const reading = readNote([WORK]);
+
+  // proves: edit_quick_line
+  test('writes the things and links it names, reusing those already there, in one edit', () => {
+    const r = quickLine(reading, 'work', 'Idea -> plan, Risk');
+    assert.deepEqual(r.things, ['idea', 'plan', 'risk']);
+    assert.equal(
+      r.now,
+      `${WORK},\n(idea:Task {title: 'Idea'}),\n(risk:Task {title: 'Risk'}),\n` +
+        '(idea)-[:BEFORE]->(plan),\n(idea)-[:BEFORE]->(risk)',
+    );
+  });
+
+  // proves: edit_quick_line
+  test('starts from the selected thing after an arrow, and writes no link twice', () => {
+    const r = quickLine(reading, 'work', '-> Ship, Test', 'plan');
+    assert.match(r.now, /\(plan\)-\[:BEFORE\]->\(test\)$/);
+    assert.ok(!r.now.endsWith('(plan)-[:BEFORE]->(ship)'), 'the link already there is kept once');
+    assert.deepEqual(quickLine(reading, 'work', 'Plan -> Ship'), {
+      reason: 'Those things and links are already there',
+    });
+    assert.ok('reason' in quickLine(reading, 'work', ' -> , '));
   });
 });

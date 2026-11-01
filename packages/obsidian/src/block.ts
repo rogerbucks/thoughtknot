@@ -271,8 +271,7 @@ export async function renderBlock(
     return;
   }
 
-  // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
-  // drawn as a table has none
+  // the View menu (§25): one state for every card of this graph in this note, as its switches say; none for a table
   const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const folded = (by?: object) => (state ? state.folded(drawing, by) : drawing);
   const laidOut = (by?: object) => plugin.layout(folded(by), by);
@@ -351,6 +350,7 @@ export async function renderBlock(
       sketching: sketchingFor(plugin, target.path, graph, info?.text),
       exporting,
       compare: () => compareWith(plugin, target.path, graph), // an earlier version drawn with it (risk NEURO-2)
+      expand: plugin.expandFor(target.path, graph), // Expand with AI, from the editor beside a thing (§72)
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',

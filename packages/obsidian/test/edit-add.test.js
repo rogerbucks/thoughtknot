@@ -4,6 +4,7 @@
 //   in the card drawn next, its name open for typing.
 // - Delete takes the thing and its links out of the note, as one edit.
 // - The editor's buttons do the same.
+// - Its quick line writes the things and links a short sentence names, reusing those already there (edit_quick_line).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
@@ -111,6 +112,23 @@ describe('adding and deleting where things are drawn', () => {
       await until(() => !note(env).includes('large'));
       assert.equal(note(env), NOTE.replace(",\n(large:Option {name: 'Large reader'}),\n(large)-[:ANSWERS]->(q)", ''));
       await until(() => /Large reader deleted/.test(card(el).textContent));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_quick_line
+  test('the quick line writes what it names from the selected thing, reusing those already there', async () => {
+    const { env, el } = await tapped('large');
+    try {
+      const line = card(el).querySelector('input.thoughtknot-edit-line-input');
+      assert.equal(line.getAttribute('aria-label'), 'Quick line from Large reader');
+      assert.match(line.getAttribute('title'), /Idea -> Plan, Risk/);
+      line.value = '-> Which device?, Tablet';
+      line.dispatch('keydown', { key: 'Enter' });
+      await until(() => note(env).includes('(large)-[:ANSWERS]->(tablet)'));
+      const want = `${READER},\n(tablet:Question {title: 'Tablet'}),\n(large)-[:ANSWERS]->(tablet)`;
+      assert.ok(note(env) === NOTE.replace(READER, want), note(env));
     } finally {
       env.uninstall();
     }

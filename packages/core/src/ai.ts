@@ -122,9 +122,15 @@ export interface SendRecord {
   why?: string;
 }
 
-/** What came of a send: a proposal, or why there is none (the send recorded either way); or refused before it went. */
+/**
+ * What came of a send: a proposal, or the one question the model asks back first. Else why there is none. The send is
+ * recorded each way. Or it was refused before it went.
+ */
 export type SendResult =
-  { record: SendRecord; proposal: Proposal } | { record: SendRecord; failed: string } | { refused: string };
+  | { record: SendRecord; proposal: Proposal }
+  | { record: SendRecord; asks: string }
+  | { record: SendRecord; failed: string }
+  | { refused: string };
 
 /** The user's yes to one prepared send: only `confirmSend` makes one, and it is good for one send of exactly that. */
 export interface Confirmation {
@@ -275,6 +281,7 @@ export async function sendPrepared(
   if ('refused' in read) return failed(word('ai.send.refused', { model: p.model.name, why: read.refused }));
   const changes = 'content' in read ? changesIn(read.content) : read;
   const cannot = (why: string) => failed(word('ai.send.unread', { model: p.model.name, why }));
+  if ('asks' in changes) return { record: { ...record, outcome: 'answered' }, asks: changes.asks };
   if (!Array.isArray(changes)) return cannot(changes.unread);
   const proposal = proposalFrom(changes, {
     id: record.id,

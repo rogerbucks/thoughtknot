@@ -218,6 +218,7 @@ export const KEPT = {
     'Answer with JSON only, and no other text: {"changes": [ ... ]}, each change one of these, its "reason" optional:',
     '{"op": "set", "thing": "a_name", "key": "property", "value": "a text, a number, true or false", "reason": "why"}',
     'A name is one word of letters, digits and underscores. Nothing you propose is written until a person accepts it.',
+    'If you are unsure what the user means, answer {"question": "your one question"} instead, and propose nothing yet.',
     'Graph {}, {}:\n\n{}',
   ],
   // what was chosen, as the model is sent it and the change set records it in the note: shown from the catalogue instead

@@ -108,3 +108,12 @@ describe('a note that carries instructions is sent as data, and steers nothing p
     assert.match(changesIn(JSON.stringify({ changes: [{ op: 'run', command: 'rm -rf ~' }] })).unread, /not one of/);
   });
 });
+
+// proves: edit_ai_expand
+test('a model unsure what is meant asks one question back, cut to a sentence or two, and proposes nothing', () => {
+  assert.match(INSTRUCTIONS, /\{"question": "your one question"\}/);
+  assert.deepEqual(changesIn('{"question": "  Which reader do you mean?  "}'), { asks: 'Which reader do you mean?' });
+  assert.equal(changesIn(JSON.stringify({ question: 'x'.repeat(900) })).asks.length, 501, 'never a page');
+  const both = changesIn(JSON.stringify({ question: 'Sure?', changes: [{ op: 'remove-thing', thing: 'alice' }] }));
+  assert.ok(Array.isArray(both), 'changes given with it are read as ever');
+});

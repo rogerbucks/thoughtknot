@@ -71,4 +71,11 @@ export const EDIT_SOURCE_WORDS = {
   'edit.linked': 'Linked to {thing}',
   'edit.link-self': 'A thing cannot be linked to itself here',
   'edit.link-there': 'That link is already there',
+  'edit.expand': 'Expand with AI',
+  'edit.line': 'Quick line from {thing}',
+  'edit.line-hint':
+    'Names parted by arrows and commas, such as Idea -> Plan, Risk. Start with an arrow to begin here. Enter writes them.',
+  'edit.lined': 'Wrote a line of {count} things',
+  'edit.line-empty': 'Type names parted by arrows, such as Idea -> Plan, Risk',
+  'edit.line-there': 'Those things and links are already there',
 } as const;

@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/ai.test.js",
+  "test": "asking an AI model to propose changes (§19) > Expand with AI, from the editor beside a thing (§72) > is not offered while AI is off",
+  "seen_failing_first": false,
+  "evidence": "It guards that AI stays off until chosen: no button existed before, so it passes before the code by design."
+}

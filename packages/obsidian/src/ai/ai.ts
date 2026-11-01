@@ -3,7 +3,11 @@
 // from its text as well as the metadata cache, and the higher is taken. Obsidian has no AI of its own to
 // offer first (host_ai_first), so only the models set up in the settings are offered. And the command that clears the
 // record of sends (record_every_send), which keeps only the last ones and never the text sent.
+// Expand with AI (edit_ai_expand) opens the same dialog from the editor beside a thing. The thing is chosen, with a
+// question to expand it into things and links. Nothing goes until the person shows and sends it, and nothing is written but a
+// proposal, accepted one change at a time. While AI is off, the editor offers no Expand.
 import { Notice } from 'obsidian';
+import type { TFile } from 'obsidian';
 import { aiReady, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
@@ -41,18 +45,51 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
   const front = noteToRewrite(plugin.app.workspace, word('host.to-ask-ai'));
   if (!front) return;
   const text = (await noteText(plugin.app, front.file.path)) ?? '';
-  // read from the text being sent as well as the metadata cache, which can be behind it. The higher is taken. Read
-  // again each time the dialog shows what will be sent, against the classifications as they are then
-  const levelOf = () => {
+  new SendDialog(plugin, front.file, text, levelFor(plugin, front.file, text), await plugin.sharedSchemas()).open();
+}
+
+/**
+ * The note's classification, read from the text being sent as well as the metadata cache, which can be behind it. The
+ * higher is taken. It is read again each time the dialog shows what will be sent, against the classifications then.
+ */
+function levelFor(plugin: ThoughtKnotPlugin, file: TFile, text: string): () => string | null {
+  return () => {
     const { classifications: levels, aiUnlabelled } = plugin.settings;
     return higherClassification(
-      classificationOf(plugin.app, front.file, text, levels),
+      classificationOf(plugin.app, file, text, levels),
       classificationInText(text, levels),
       levels,
       aiUnlabelled,
     );
   };
-  new SendDialog(plugin, front.file, text, levelOf, await plugin.sharedSchemas()).open();
+}
+
+/** Expand with AI for the card of graph `graph` in note `path`: offered only while AI is on (ai_off_until_chosen). */
+export function expandFor(plugin: ThoughtKnotPlugin, path: string, graph: string) {
+  return {
+    ready: () => !('off' in aiReady(plugin.settings)),
+    open: (key: string, thing: string, typed: string) => void expandWithAi(plugin, path, graph, key, thing, typed),
+  };
+}
+
+/** Opens the send dialog on note `path`, thing `key` of `graph` chosen, asked to expand it, with what was `typed`. */
+async function expandWithAi(
+  plugin: ThoughtKnotPlugin,
+  path: string,
+  graph: string,
+  key: string,
+  thing: string,
+  typed: string,
+): Promise<void> {
+  const ready = aiReady(plugin.settings);
+  if ('off' in ready) return void new Notice(ready.off);
+  const file = plugin.app.vault.getFileByPath(path);
+  if (!file) return;
+  const text = (await noteText(plugin.app, path)) ?? '';
+  const more = typed.trim() ? word('ai.expand-typed', { typed: typed.trim() }) : '';
+  const question = word('ai.expand', { thing, typed: more });
+  const start = { graph, things: [key], question };
+  new SendDialog(plugin, file, text, levelFor(plugin, file, text), await plugin.sharedSchemas(), start).open();
 }
 
 /** Clears the record of sends, saying how many were let go. */

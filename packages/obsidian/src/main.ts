@@ -61,6 +61,7 @@ import { OutsidePlugins } from './outside/outside-plugins';
 import { Profiles } from './profile/profiles';
 import type { Drafts, Saved } from './saved';
 import { noteText, shownNotes } from './storage/plugin-notes';
+import { expandFor } from './ai/ai';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -124,6 +125,8 @@ export default class ThoughtKnotPlugin extends Plugin {
     }
   }
 
+  /** Expand with AI for a card of graph `graph` in note `path` (§72, edit_ai_expand). */
+  expandFor = (path: string, graph: string) => expandFor(this, path, graph);
   /** Every shared schema block in the vault (§5), then each standard one the vault has none of its name of (§27). */
   async sharedSchemas(): Promise<string[]> {
     if (!this.schemas) {
