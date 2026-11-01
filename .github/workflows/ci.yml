@@ -148,10 +148,16 @@ jobs:
       - run: npm run build
 
   # Each package's share of lines the tests run, held to its baseline on a pull request that touches a package (CODE-3).
-  # It always reports, so it can be required. A change to neither packages nor the ratchet itself skips the run.
-  coverage:
+  # The suite runs in six shares at once, as above, each keeping its coverage report; the `coverage` job merges them and
+  # holds the figures. One machine running it whole took 15 to 19 minutes, the longest job of the run; this is about 6.
+  # A change to neither packages nor the ratchet itself skips the run.
+  coverage-shard:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -167,14 +173,57 @@ jobs:
           if [ -z "$BASE" ] || git diff --name-only "$BASE" HEAD | grep -qE '^(packages/|scripts/quality-|quality/baseline)'; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "::notice::No package changed, so its coverage was not measured."; fi
       - if: steps.touched.outputs.run == 'true'
         run: npm ci
-      # the whole suite at once, as the release's quality job runs it, so it gets the same 8 GB ceiling
+      # each share gets the same 8 GB ceiling the suite's shards get
       - if: steps.touched.outputs.run == 'true'
         env:
           THOUGHTKNOT_TEST_MEMORY_MB: 8192
           THOUGHTKNOT_RUN_MINUTES: 40
           # the ceiling inside each run (scripts/run-ceiling.mjs) reads its own name, so it is given the 40 minutes too
           THOUGHTKNOT_TEST_MINUTES: 40
-        run: node scripts/quality-check.mjs --coverage
+          SHARD: ${{ matrix.shard }}
+        run: node scripts/quality-check.mjs --coverage-shard "$SHARD/6" --lcov-out "$RUNNER_TEMP/lcov-$SHARD.info"
+      - if: steps.touched.outputs.run == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-lcov-${{ matrix.shard }}
+          path: ${{ runner.temp }}/lcov-${{ matrix.shard }}.info
+          retention-days: 1
+
+  # Passes when every share ran and each package's merged coverage is no worse than its baseline: the one check the
+  # default branch requires for coverage. It always reports, so it can be required.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: coverage-shard
+    if: always()
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - id: touched
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          if [ -z "$BASE" ] || git diff --name-only "$BASE" HEAD | grep -qE '^(packages/|scripts/quality-|quality/baseline)'; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "::notice::No package changed, so its coverage was not measured."; fi
+      - if: steps.touched.outputs.run == 'true' && needs.coverage-shard.result != 'success'
+        run: |
+          echo "A share of the suite failed or did not finish, so its coverage means nothing."
+          exit 1
+      - if: steps.touched.outputs.run == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: coverage-lcov-*
+          path: ${{ runner.temp }}/lcov
+          merge-multiple: true
+      # all six reports must be there: a missing one would read as lines never run
+      - if: steps.touched.outputs.run == 'true'
+        run: |
+          test "$(ls "$RUNNER_TEMP"/lcov/lcov-*.info | wc -l)" = 6
+          node scripts/quality-check.mjs --coverage-merge "$RUNNER_TEMP"/lcov/lcov-*.info
 
   python:
     runs-on: ubuntu-latest
