@@ -715,6 +715,35 @@
 .thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
   display: none;
 }
+/* The editor beside a selected thing (§72, edit_card): a small card floating over the drawing next to the thing's box,
+   never shrinking the drawing. Its name field is a 44-point target. It keeps inside the drawing on any screen. */
+.thoughtknot-edit-card {
+  position: absolute;
+  top: var(--thoughtknot-edit-y, var(--gn-space-2));
+  left: var(--thoughtknot-edit-x, var(--gn-space-2));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  max-width: min(18rem, calc(100% - 2 * var(--gn-space-2)));
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
+  padding: var(--gn-space-2);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-l);
+}
+.thoughtknot-edit-name {
+  min-height: 44px;
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-edit-kind,
+.thoughtknot-edit-said {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-edit-said:empty {
+  display: none;
+}
 /* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
    It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */
 .thoughtknot-over > .thoughtknot-phone-sheet {

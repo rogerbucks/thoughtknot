@@ -1,9 +1,11 @@
 // The code's structure is a graph (editor spec §43, structure_checked): each part of requirements/architecture.gql cut
 // into areas, each naming its files. Every shipped file of such a part is in exactly one area, and no area is over its
-// ceiling. The Architecture page draws the areas and the imports between them. Pure: the real files are read.
+// ceiling. The pairs of areas that import each other are the recorded ones. The Architecture page draws the areas and
+// the imports between them. Pure: the real files are read.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  cycleProblems,
   globToRegExp,
   readStructure,
   repoFiles,
@@ -29,7 +31,8 @@ const SMALL = `// graph: project_architecture · SOURCE
 (b_part)-[:IN_LAYER]->(apps),
 (a_read)-[:PART_OF]->(a_part),
 (a_draw)-[:PART_OF]->(a_part),
-(a_deep)-[:PART_OF]->(a_part)`;
+(a_deep)-[:PART_OF]->(a_part),
+(a_draw)-[:CYCLES_WITH]->(a_read)`;
 
 const FILES = {
   'packages/a/src/read.ts': "import { box } from './draw/box.ts';",
@@ -55,6 +58,7 @@ describe('the structure graph', () => {
     assert.equal(areas.find((a) => a.id === 'a_read').most, 40);
     assert.deepEqual(areas.find((a) => a.id === 'a_draw').nots, ['packages/a/src/draw/deep/**']);
     assert.deepEqual(areas.find((a) => a.id === 'a_read').nots, []);
+    assert.deepEqual([...readStructure(SMALL).cycles], ['a_draw a_read']);
     assert.ok(globToRegExp('packages/a/src/draw/**').test('packages/a/src/draw/deep/line.ts'));
     assert.ok(globToRegExp('packages/a/src/*-words.ts').test('packages/a/src/ai-words.ts'));
     assert.ok(!globToRegExp('packages/a/src/*-words.ts').test('packages/a/src/deep/ai-words.ts'));
@@ -103,6 +107,20 @@ describe('the structure graph', () => {
     assert.deepEqual(fact.cycles, [['a_draw', 'a_read']]);
   });
 
+  test('a cycle is a fault unless recorded, and a record of a cycle that is gone is a fault too', () => {
+    const facts = (text) => structureFacts(readStructure(text), Object.keys(FILES), readSmall);
+    assert.deepEqual(cycleProblems(readStructure(SMALL), facts(SMALL)), []);
+    const unrecorded = SMALL.replace(',\n(a_draw)-[:CYCLES_WITH]->(a_read)', '');
+    assert.deepEqual(cycleProblems(readStructure(unrecorded), facts(unrecorded)), [
+      'a_draw and a_read: import each other: untangle them, or record it with CYCLES_WITH',
+    ]);
+    const stale = SMALL.replace('(a_draw)-[:CYCLES_WITH]->(a_read)', '(a_deep)-[:CYCLES_WITH]->(a_read)');
+    assert.deepEqual(cycleProblems(readStructure(stale), facts(stale)), [
+      'a_deep and a_read: recorded as a cycle, but no longer one',
+      'a_draw and a_read: import each other: untangle them, or record it with CYCLES_WITH',
+    ]);
+  });
+
   test('draws the areas as ThoughtKnot draws a graph, and lists them with their ceilings and cycles', () => {
     const [fact] = structureFacts(readStructure(SMALL), Object.keys(FILES), readSmall);
     const chart = structureChart(fact);
@@ -115,6 +133,11 @@ describe('the structure graph', () => {
 
   test('the repository as committed has every shipped file of the core and the display layer in one area', () => {
     assert.deepEqual(structureProblems(readStructure(ARCHITECTURE), repoFiles()), []);
+  });
+
+  test('the repository as committed has no cycle between areas but the recorded ones, and no stale record', () => {
+    const structure = readStructure(ARCHITECTURE);
+    assert.deepEqual(cycleProblems(structure, structureFacts(structure, repoFiles(), read)), []);
   });
 
   test('the display shell imports no other area of the display layer: the panels build on it, never the other way', () => {
