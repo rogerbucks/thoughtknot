@@ -1,4 +1,5 @@
-// The workflow that flags an auto-merge pull request stuck on a conflict with main, so the session watching it wakes.
+// The workflow that flags a stuck auto-merge pull request, so the session watching it wakes. It is stuck on a conflict
+// with main, or on a required check that never ran on its head.
 // Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -31,5 +32,24 @@ describe('the workflow that flags a stuck auto-merge pull request', () => {
     assert.match(run, /"\$state" = dirty \] && \[ "\$labelled" = false \]/);
     assert.match(run, /-X DELETE "repos\/\$REPO\/issues\/\$n\/labels\/merge-conflict"/);
     assert.doesNotMatch(run, /\$\{\{/);
+  });
+
+  test('flags a green auto-merge pull request whose head misses CodeQL or dependency-review, once the head is 20 minutes old and nothing runs', () => {
+    const run = runCommands(text).join('\n');
+    assert.match(run, /commits\/\$sha\/check-runs/);
+    assert.match(run, /any\(\.check_runs\[\]; \.status != "completed"\) then "running"/);
+    assert.match(run, /index\("CodeQL"\) and index\("dependency-review"\)/);
+    assert.match(
+      run,
+      /"\$state" = blocked \] && \[ "\$checks" = missing \] && \[ \$\(\(now - pushed\)\) -gt 1200 \] && \[ "\$flagged" = false \]/,
+    );
+    assert.match(run, /labels\[\]=checks-missing/);
+    assert.match(run, /merge main into the branch and push/);
+    assert.match(run, /-X DELETE "repos\/\$REPO\/issues\/\$n\/labels\/checks-missing"/);
+    assert.doesNotMatch(
+      run,
+      /update-branch/,
+      'a push with the workflow token starts no check, so it never updates the branch itself',
+    );
   });
 });

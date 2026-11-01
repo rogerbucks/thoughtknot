@@ -240,6 +240,8 @@ export const DRAWING_SOURCE_WORDS = {
   'view.map': 'Map',
   'view.map.unplaced': { one: '{count} thing with no place', other: '{count} things with no place' },
   // a card dragged to another column of the grid (view-types/grid-move.ts, projection_grid)
+  'view.grid.add': 'Add a card to {column}',
+  'view.grid.add-cards': 'Add a card to a column',
   'view.grid.move': 'Move {thing} to {column}',
   'view.grid.moved': 'Moved {thing} to {column}',
   'view.grid.nowhere': 'Let go over another column to move {thing} there',
