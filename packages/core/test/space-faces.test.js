@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { facesOnScreen, fitWords } from '../src/space-faces.ts';
 import { frameOf } from '../src/space-cards.ts';
-import { READABLE_LEAST } from '../src/space-labels.ts';
+import { NAME_TINY, READABLE_LEAST } from '../src/space-labels.ts';
 import { orbitFit, projectPoint, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
 
 /** One box, 200 wide and 100 deep on the page, lifted 60 tall, with its name. */
@@ -134,8 +134,8 @@ test('a ball wears its name on the disc it shows, inside its circle, and one hid
   for (const c of wordCorners(f)) assert.ok(Math.hypot(c.x - f.x, c.y - f.y) <= r, 'inside its circle');
 });
 
-// proves: space_text_on_face
-test("in 3D the frame's names are on the things; a link's words, and a picked name with no room, still float", () => {
+// proves: space_text_on_face, space_names_always
+test("in 3D the frame's names are on the things; a link's words, and a name with no room, still float", () => {
   const space = balls([ball('a', 0, 40, 'Thing a'), ball('b', 300, 4, 'A name far too long for this')]);
   [space.least, space.most] = [
     [-50, -50, 0],
@@ -151,10 +151,21 @@ test("in 3D the frame's names are on the things; a link's words, and a picked na
   assert.deepEqual(frame.labels.map((l) => l.id).sort(), ['b\nname', 'w']);
   const plain = frameOf(space, m, W, H, null, undefined);
   assert.deepEqual(
-    plain.labels.map((l) => l.id),
-    ['w'],
-    'a name that fits nowhere floats only when picked',
+    plain.labels.map((l) => l.id).sort(),
+    ['b\nname', 'w'],
+    'a name that fits nowhere floats beside its ball, picked or not (Roger, 1 Nov 2026)',
   );
+});
+
+// proves: space_names_always
+test('with the whole graph in view, a small ball still wears its name, tiny, rather than none', () => {
+  const space = balls([ball('a', 0, 40, 'Thing a')]);
+  const far = zoomBy(orbitFit(space, W / H), 0.1);
+  const [face] = facesOnScreen(space, look(space, far), W, H);
+  assert.ok(face, 'its name is on it');
+  assert.ok(face.size < READABLE_LEAST && face.size >= NAME_TINY, `tiny, ${face.size}px, but painted`);
+  const picked = facesOnScreen(space, look(space, far), W, H, { picked: 'a' });
+  assert.deepEqual(picked, [], 'picked, it is never tiny: it floats beside the ball at a readable size');
 });
 
 // proves: space_text_on_face
