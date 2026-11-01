@@ -198,6 +198,10 @@ export const KEPT = {
   'packages/core/src/schema-picture.ts': ["({}:Meta:ElementType {name: {}, kind: {}, origin: 'source'{}})"],
   // a marker the note's writer throws and catches again, never shown
   'packages/claude-code/server/note-file.ts': ['folder moved'],
+  // the PowerShell line that holds the server's parent on Windows, run by PowerShell and never shown
+  'packages/claude-code/server/session-watch.ts': [
+    "try { $p = {} } catch { 'gone'; exit }; $p.StartTime.ToUniversalTime().ToString('o'); $p.WaitForExit(); 'gone'",
+  ],
   // the groups a change takes when none is named: compared to write a `//@ group:` line, and kept in the judgement block
   'packages/core/src/proposals.ts': ['Removed things', 'Removed {} links', 'New {} links'],
   // the reason of the proposer's declaration, written into the change set as its `//@ reason:` line

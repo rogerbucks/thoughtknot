@@ -21,12 +21,13 @@ function fakeCli(failing = '') {
 after(() => made.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
 const missing = '/nonexistent/claude';
+const NO_STAND_IN = process.platform === 'win32' && 'Windows runs the stand-in CLI, a script, only through a shell';
 
 describe('mod-check', () => {
-  test('passes when validate and test both pass', () => {
+  test('passes when validate and test both pass', { skip: NO_STAND_IN }, () => {
     assert.deepEqual(checkMod({ claude: fakeCli(), build: false }), { problems: [], skipped: false });
   });
-  test('names each step that failed', () => {
+  test('names each step that failed', { skip: NO_STAND_IN }, () => {
     const v = checkMod({ claude: fakeCli('validate'), build: false });
     assert.equal(v.problems.length, 1);
     assert.match(v.problems[0], /validate/);

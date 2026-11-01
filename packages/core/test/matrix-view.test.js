@@ -78,3 +78,40 @@ test('a graph with nothing in it draws nothing, and a link to a thing not drawn 
   const marks = matrixMarks({ shape: shapeOf([['a']], [['a', 'LINKS', 'gone']]), space: SPACE });
   assert.equal(marks.filter((m) => m.kind === 'box').length, 0);
 });
+
+// proves: matrix_labels_fit
+test('names stay small and inside their room: rows shortened to fit, columns numbered as their rows are', () => {
+  const long = 'Which device should I read long PDFs on, at home and on the train? '.repeat(3).trim();
+  const shape = shapeOf(
+    [
+      ['a', long],
+      ['b', 'Large e-ink reader'],
+      ['c', 'Small e-ink reader'],
+    ],
+    [['b', 'ANSWERS', 'a']],
+  );
+  const big = { width: 1000, height: 700 };
+  const labels = matrixMarks({ shape, space: big }).filter((m) => m.kind === 'label');
+  // Roger, 1 Nov 2026: Matrix labels in 2D were oversized and overlapped
+  assert.ok(
+    labels.every((m) => m.size <= 12),
+    'no name is drawn larger than the drawing’s words',
+  );
+  const width = (m) => [...m.text].length * m.size * 0.56;
+  for (const m of labels.filter((l) => l.id.endsWith('.row'))) assert.ok(width(m) <= m.maxWidth, m.text);
+  const row = labels.find((m) => m.id === 'a.row');
+  assert.match(row.text, /^\d {2}Which device.*…$/);
+  assert.equal(row.name, long, 'a shortened name is still said in full');
+  const columns = labels.filter((m) => m.id.endsWith('.column'));
+  // each column is numbered as its own thing's row, in the order drawn, and says its name in full
+  assert.deepEqual(
+    columns.map((m) => m.text),
+    columns.map((_, i) => String(i + 1)),
+  );
+  for (const m of columns) {
+    const own = labels.find((l) => l.id === m.id.replace(/\.column$/, '.row'));
+    assert.ok(own.text.startsWith(`${m.text}  `), `${m.id} has its row's number`);
+    assert.equal(m.name, shape.things.find((t) => t.key === m.of).text);
+  }
+  for (const m of columns) assert.ok(width(m) <= m.maxWidth, `column ${m.text} fits its cell`);
+});
