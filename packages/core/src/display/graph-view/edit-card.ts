@@ -85,7 +85,7 @@ export class EditCard {
         if (!act) return;
         e.preventDefault();
         e.stopPropagation();
-        act();
+        void act();
       },
       { capture: true },
     );
