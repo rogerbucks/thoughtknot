@@ -174,11 +174,14 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       const typed = READER + ",\n(mine:Reason {title: 'Mine'})";
       await page.typed(typed);
       assert.equal(page.file(), NOTE.replace(READER, typed));
-      // each step writes the note, then puts its text in the field: both are waited for before the next press
+      // each step writes the note, then puts its text in the field: both are waited for before the next press. A slow
+      // disk, as the Windows runner's, can land the write after the tools are drawn again (1 Nov 2026)
       await page.press('Undo');
+      await until(() => page.file() === NOTE, 8000).catch(() => {});
       assert.equal(page.file(), NOTE);
       assert.equal(page.field().value, READER);
       await page.press('Redo');
+      await until(() => page.file() === NOTE.replace(READER, typed), 8000).catch(() => {});
       assert.equal(page.file(), NOTE.replace(READER, typed));
       assert.equal(page.field().value, typed);
     });

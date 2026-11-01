@@ -4,7 +4,8 @@
 // kind. F2, or a tap on the name, lets the name be typed in place: Enter writes it, Escape leaves it as it was.
 // - The name is written as the thing's text, into the text being edited or else into the note (thing-edits.ts).
 // - Where the card is read-only, or there is nowhere to write, it is never shown (edit_read_only).
-// - In space, where no box is on the page, it sits at the drawing's top corner (edit_every_view).
+// - In 2.5D, 3D and on the globe, it sits beside the picked thing and follows it as the view turns. On a phone, it
+//   sits at the top of the sheet's Details tab, in reach of a thumb (edit_every_view).
 // - Insert adds a child and Shift+Enter a sibling, each ready to name; Delete takes the thing out (edit_quick_add,
 //   edit_delete). The card's buttons do the same, for a pointer or a screen reader.
 // - A handle, L, or the Link button links the thing to another, or to a new one (edit-link.ts, edit_link_drag).
@@ -15,6 +16,7 @@ import { addedInColumn, addedNear, deleted, propertySet, renamed } from '../../t
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
+import { SPACE_PICKED_AT, type PickedAt } from './space-picked-at';
 import { accept } from './estimate-actions';
 import { gridAdds } from './grid-drag';
 import type { CellWrite } from './table-edit';
@@ -23,6 +25,8 @@ import type { ViewOptions } from './view-options';
 
 /** How far the card sits from its box, and from the drawing's edges, in pixels. */
 const GAP = 8;
+/** How far from a thing's middle in space the card keeps, in pixels: about the size its name and ball are drawn. */
+const SPACE_REACH = 24;
 
 /** What the editor needs of its card: the drawing's viewport, the card's options and its SVG, if drawn as one. */
 export interface EditParts {
@@ -44,6 +48,8 @@ export class EditCard {
   private said: HTMLElement | null = null;
   /** Whether F2 in the drawing is listened for: from the first thing shown, once the drawing is built. */
   private keyed = false;
+  /** Where the 3D view shows the thing picked there, in the drawing's pixels; none while it is flat. */
+  private pickedAt: PickedAt | null = null;
   /** The handle and search that link the thing shown to another. */
   private readonly linking = new EditLink({
     o: () => this.o,
@@ -81,6 +87,11 @@ export class EditCard {
   private listen(): void {
     if (this.keyed) return;
     this.keyed = true;
+    // in space, the editor follows the picked thing as the view turns
+    this.card.registerDomEvent(this.viewport, SPACE_PICKED_AT, (e: CustomEvent<PickedAt | null>) => {
+      this.pickedAt = e.detail;
+      this.place();
+    });
     this.card.registerDomEvent(
       this.viewport,
       'keydown',
@@ -169,10 +180,13 @@ export class EditCard {
     const layer = this.layer();
     // only over the drawing, where no key typed reaches the drawing's own keys; a card with no such layer shows none
     if (!layer) return;
-    this.el = layer.createDiv({
-      cls: 'thoughtknot-edit-card',
+    // on a phone, at the top of the sheet's Details tab, above the details, in reach of a thumb
+    const sheet = layer.querySelector<HTMLElement>('.thoughtknot-phone-sheet .thoughtknot-details');
+    this.el = (sheet?.parentElement ?? layer).createDiv({
+      cls: sheet ? 'thoughtknot-edit-card is-in-sheet' : 'thoughtknot-edit-card',
       attr: { role: 'group', 'aria-label': word('edit.card', { thing: d.text }) },
     });
+    if (sheet) sheet.parentElement?.insertBefore(this.el, sheet);
     const name = this.el.createEl('input', {
       cls: 'thoughtknot-edit-name',
       attr: { type: 'text', 'aria-label': word('edit.name', { thing: d.text }), title: word('edit.name-hint') },
@@ -247,9 +261,19 @@ export class EditCard {
 
   /** Puts the card beside its thing's box as the drawing is now: after it, else before it, else at the top corner. */
   place(): void {
-    if (!this.el || !this.key) return;
-    const box = boxIn(this.svg(), this.key)?.getBoundingClientRect(),
-      vp = this.viewport.getBoundingClientRect();
+    if (!this.el || !this.key || this.el.classList.contains('is-in-sheet')) return;
+    const vp = this.viewport.getBoundingClientRect(),
+      inSpace = !!this.viewport.querySelector('.thoughtknot-space-view'),
+      at = inSpace && this.pickedAt?.key === this.key ? this.pickedAt : null;
+    // in space, a small square round the thing's middle as the view shows it; flat, its box
+    const box = at
+      ? {
+          left: vp.left + at.x - SPACE_REACH,
+          right: vp.left + at.x + SPACE_REACH,
+          top: vp.top + at.y - SPACE_REACH,
+          width: 2 * SPACE_REACH,
+        }
+      : boxIn(this.svg(), this.key)?.getBoundingClientRect();
     const width = this.el.getBoundingClientRect().width;
     let x = GAP,
       y = GAP;
