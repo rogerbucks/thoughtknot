@@ -105,4 +105,19 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
     assert.doesNotMatch(r.value, /#000[0-5][0-9a-f]{2}/);
     assert.match(r.value, />ANN</);
   });
+
+  // proves: view_types_themed
+  test('every type drawn as SVG paints its things in their kind’s colour, never black, in the drawing’s font', async () => {
+    for (const d of registry().diagramTypes()) {
+      const r = await registry().drawDiagram(d.type, FAMILY, SPACE);
+      assert.ok(r.ok, `${d.type}: ${r.message}`);
+      assert.doesNotMatch(r.value, /(?:fill|stroke)="(?:black|#000000)"/, `${d.type} paints something black`);
+      assert.doesNotMatch(r.value, /Times/, `${d.type} writes its words in Times`);
+      // Roger, 1 Nov 2026: "The backgrounds of the items are all black" (the Ego view)
+      const things = r.value.match(/<g id="node\d+" class="node">[^]*?<\/g>/g) ?? [];
+      for (const t of things)
+        if (/<(?:ellipse|polygon|path)\b/.test(t))
+          assert.match(t, /fill:rgba\(var\(--color-|fill="none"/, `${d.type}: a thing not in its kind’s colour: ${t}`);
+    }
+  });
 });

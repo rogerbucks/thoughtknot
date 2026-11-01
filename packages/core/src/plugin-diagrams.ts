@@ -6,7 +6,7 @@
 // The core checks every mark and draws them itself, escaping every label, so markup in a label shows as text.
 import { drawMarksOf, fromPluginMarks } from './drawing-marks.ts';
 import type { DrawMark } from './drawing-marks.ts';
-import { PT, layoutSvg } from './graphviz-svg.ts';
+import { PT, knownStyle, layoutSvg } from './graphviz-svg.ts';
 import { themed } from './theme.ts';
 import { pluginTypeOf } from './style-graph.ts';
 import type { GraphShape } from './types-shape.ts';
@@ -207,11 +207,36 @@ export function diagramDrawing(find: (type: string) => Found, awaited: PluginCal
       const kinds = [...new Set(shape.things.map((t) => t.kinds.join('.')))];
       const readings = [...new Set(shape.links.map((l) => l.type))];
       const layout = { pad: 0, origin: [0, given.height * PT] as MarkPoint, parts: viewParts(marks, shape) };
-      return { ok: true, value: themed(layoutSvg({ marks, space: given, layout }), kinds, readings) };
+      const svg = layoutSvg({ marks: inTheme(marks, shape, kinds), space: given, layout });
+      return { ok: true, value: themed(svg, kinds, readings) };
     },
     async diagramMarks(type: string, shape: GraphShape, space: DiagramSpace): Promise<PluginResult<DrawMark[]>> {
       const r = await drawn(type, shape, space);
       return r.ok ? { ok: true, value: r.value.marks } : r;
     },
   };
+}
+
+/**
+ * `marks` with every style token the theme can colour, and every word in the drawing's font (view_types_themed). A view
+ * type paints with its own tokens, such as `ring.1` for the Ego view. Here a thing's box takes its kind's colour, as in
+ * the built-in drawings. A word takes the text colour, and any other shape the link colour, as an outline. Never black
+ * (Roger, 1 Nov 2026: "The backgrounds of the items are all black").
+ */
+function inTheme(marks: readonly DrawMark[], shape: GraphShape, kinds: readonly string[]): DrawMark[] {
+  const kindOf = new Map(shape.things.map((t) => [t.key, kinds.indexOf(t.kinds.join('.'))]));
+  return marks.map((m): DrawMark => {
+    const font = m.kind === 'label' && !m.font ? { font: 'Helvetica' } : {};
+    if (knownStyle(m.style)) return { ...m, ...font };
+    const kind = m.of === undefined ? undefined : kindOf.get(m.of);
+    const style =
+      m.kind === 'label'
+        ? 'text'
+        : m.kind === 'box' && kind !== undefined && kind >= 0
+          ? `kind.${kind}`
+          : m.kind === 'box'
+            ? 'link.outline'
+            : 'link';
+    return { ...m, ...font, style };
+  });
 }
