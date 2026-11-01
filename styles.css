@@ -29,6 +29,12 @@
   --gn-hue-red: var(--color-red);
   --gn-hue-orange: var(--color-orange);
   --gn-hue-green: var(--color-green);
+  --gn-branch-0: var(--color-blue);
+  --gn-branch-1: var(--color-orange);
+  --gn-branch-2: var(--color-green);
+  --gn-branch-3: var(--color-purple);
+  --gn-branch-4: var(--color-pink);
+  --gn-branch-5: var(--color-cyan);
   --gn-code-background: var(--code-background);
   --gn-code-normal: var(--code-normal);
   --gn-code-keyword: var(--code-keyword);
@@ -108,6 +114,12 @@
     --gn-hue-red: CanvasText;
     --gn-hue-orange: CanvasText;
     --gn-hue-green: CanvasText;
+    --gn-branch-0: CanvasText;
+    --gn-branch-1: CanvasText;
+    --gn-branch-2: CanvasText;
+    --gn-branch-3: CanvasText;
+    --gn-branch-4: CanvasText;
+    --gn-branch-5: CanvasText;
     --gn-code-background: Canvas;
     --gn-code-normal: CanvasText;
     --gn-code-keyword: CanvasText;
@@ -355,6 +367,17 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--gn-space-1);
+}
+.thoughtknot-rule-mine {
+  /* a rule saved, with the button beside it that takes it out (rule_look_remove) */
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.thoughtknot-rule-mine.is-off .thoughtknot-rule-chip {
+  /* a rule turned off: kept, drawn nothing, shown faded and struck through (rule_look_off) */
+  opacity: 0.6;
+  text-decoration: line-through;
 }
 .thoughtknot-rule-chip {
   border-radius: 999px;
@@ -846,6 +869,31 @@
 g.edge.thoughtknot-explore-cross path {
   stroke-dasharray: 4 4;
   opacity: 0.45;
+}
+/* a step along a branch, as a classic mind map draws it (Roger, 1 Nov 2026). It is a curve with no arrowhead, in its
+   main branch's colour. Under forced colours every branch is the text colour; its shape still says which it is on. */
+g.edge.thoughtknot-explore-step path {
+  fill: none;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+}
+g.edge.thoughtknot-explore-step[data-branch='0'] path {
+  stroke: var(--gn-branch-0);
+}
+g.edge.thoughtknot-explore-step[data-branch='1'] path {
+  stroke: var(--gn-branch-1);
+}
+g.edge.thoughtknot-explore-step[data-branch='2'] path {
+  stroke: var(--gn-branch-2);
+}
+g.edge.thoughtknot-explore-step[data-branch='3'] path {
+  stroke: var(--gn-branch-3);
+}
+g.edge.thoughtknot-explore-step[data-branch='4'] path {
+  stroke: var(--gn-branch-4);
+}
+g.edge.thoughtknot-explore-step[data-branch='5'] path {
+  stroke: var(--gn-branch-5);
 }
 .thoughtknot-untangle-reach button.clickable-icon {
   justify-content: center;
@@ -2136,7 +2184,7 @@ pre.thoughtknot-code {
 }
 
 /* Zen view (§25, controls_zen): full screen with every panel hidden, the drawing alone and edge to edge. One button
-   stays in the top end corner to bring the panels back. The mini-map hides too, as Roger asked for all panels. */
+   stays in the top end corner to bring the panels back. The mini-map stays, so the person knows where they are. */
 .thoughtknot-fullscreen.is-zen {
   padding: 0;
 }
@@ -2149,7 +2197,6 @@ pre.thoughtknot-code {
 }
 .thoughtknot-fullscreen.is-zen
   :is(
-    .thoughtknot-mini-map,
     .thoughtknot-pointer,
     .thoughtknot-space-pad,
     .thoughtknot-hint,

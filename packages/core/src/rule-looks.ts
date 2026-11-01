@@ -81,12 +81,13 @@ export const lookToken = (l: Look): string =>
 
 /**
  * The rules' looks that hold in `scope`, in the order written: those for every drawing of the graph, and those for
- * its view or path. With no scope, only those for every drawing.
+ * its view or path. With no scope, only those for every drawing. A rule turned off is left out unless `withOff`.
  */
-export function rulesIn(style: Pick<StyleGraph, 'looks'>, scope: StyleScope = {}): Look[] {
+export function rulesIn(style: Pick<StyleGraph, 'looks'>, scope: StyleScope = {}, withOff = false): Look[] {
   return style.looks.filter(
     (l) =>
       isRule(l) &&
+      (withOff || !l.off) &&
       ((l.view === undefined && l.path === undefined) ||
         (scope.view !== undefined && l.view === scope.view) ||
         (scope.path !== undefined && l.path === scope.path)),

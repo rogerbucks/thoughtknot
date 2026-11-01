@@ -25,7 +25,7 @@ export function rulesOn<P>(
     ? {
         choices: ruleChoices(graph),
         finds: (r: RuleWrite) => ruleFinds(graph, r),
-        saved: savedRules(rulesIn(style, scope)),
+        saved: savedRules(rulesIn(style, scope, true)), // those turned off too, to turn on
       }
     : {};
   const asked = ask ? { ruleAsk: { ...ask, ...built } } : {};

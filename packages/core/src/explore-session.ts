@@ -87,6 +87,29 @@ export class ExploreSession {
     return this.map.perBranch;
   }
 
+  /** Whether `key` is shown. */
+  has(key: string): boolean {
+    return this.map.has(key);
+  }
+
+  /** The thing `key`'s branch was opened from; undefined for the centre or a thing not shown. */
+  parentOf(key: string): string | undefined {
+    return this.map.parentOf(key);
+  }
+
+  /**
+   * Which of the centre's branches `key` is on, counted from 0 in the order they are written: its colour. -1 for the
+   * centre or a thing not shown.
+   */
+  branchIndex(key: string): number {
+    let at = key;
+    for (let up = this.map.parentOf(at); up !== undefined; up = this.map.parentOf(at)) {
+      if (up === this.map.centre) return this.map.childrenOf(up).indexOf(at);
+      at = up;
+    }
+    return -1;
+  }
+
   /** Every thing shown, the centre first. */
   keys(): string[] {
     return this.map.keys();
