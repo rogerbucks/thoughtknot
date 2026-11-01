@@ -24,6 +24,12 @@ export interface RuleWrite {
   line?: string;
   badge?: string;
   means: string;
+  /** Tried as taken out: in reading view a rule removed is only tried, as any change is (rule_look_remove). */
+  removed?: boolean;
+  /** Turned off: kept, but nothing drawn by it (rule_look_off). */
+  off?: boolean;
+  /** The meaning it had when opened to change, so a rule renamed is changed in place, never copied (rule_look_remove). */
+  was?: string;
 }
 
 /** That `key` must be one of `among`. */
@@ -48,7 +54,7 @@ export function ruleRefusal(r: RuleWrite): string | null {
 }
 
 /** The rule's properties in the order the style graph writes them, those not given left out. */
-export function ruleProps(r: RuleWrite): [string, string | undefined][] {
+export function ruleProps(r: RuleWrite): [string, string | boolean | undefined][] {
   return [
     ['when', r.when],
     ['lens', r.lens],
@@ -59,12 +65,13 @@ export function ruleProps(r: RuleWrite): [string, string | undefined][] {
     ['line', r.line],
     ['badge', r.badge],
     ['means', r.means],
+    ['off', r.off ? true : undefined],
   ];
 }
 
 /** Whether a look is the rule `r` changes: a rule with the same meaning, in the same view. */
 const sameRule = (l: Look, r: RuleWrite) =>
-  (l.when !== undefined || l.lens !== undefined) && l.means === r.means && l.view === r.view;
+  (l.when !== undefined || l.lens !== undefined) && l.means === (r.was ?? r.means) && l.view === r.view;
 
 /**
  * `style` with the rules tried drawn as if saved. Each changes the rule with its meaning in its view, or is added after
@@ -84,8 +91,13 @@ export function withTriedRules(style: StyleGraph, tried: readonly RuleWrite[]): 
       ...(r.colour ? { colour: r.colour } : {}),
       ...(r.line ? { line: r.line as LineStyle } : {}),
       ...(r.badge ? { badge: r.badge as Badge } : {}),
+      ...(r.off ? { off: true } : {}),
     };
     const at = looks.findIndex((l) => sameRule(l, r));
+    if (r.removed) {
+      if (at >= 0) looks.splice(at, 1); // tried as taken out: drawn as if it were gone
+      return;
+    }
     if (at >= 0) looks[at] = look;
     else looks.push(look);
   });
@@ -103,6 +115,14 @@ export interface RuleAsk {
   finds?(rule: RuleWrite): { count: number; names: string[] };
   saved?: RuleWrite[];
   last?: RuleWrite;
+  /** Takes a saved rule out of the style graph, where the note is edited (rule_look_remove). */
+  remove?(rule: RuleWrite): void;
+  /** The meaning of the rule just taken out, while one Undo can put it back. */
+  removed?: string;
+  /** Puts the rule just taken out back where it was. */
+  undo?(): void;
+  /** Moves a saved rule before the one above it, so it wins where two set one part (rule_look_order). */
+  moveUp?(rule: RuleWrite): void;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */
@@ -114,7 +134,7 @@ export function savedRules(looks: readonly Look[]): RuleWrite[] {
   return looks
     .filter((l) => l.when !== undefined && l.bands === undefined)
     .map((l) => {
-      const r: RuleWrite = { means: l.means ?? '' };
+      const r: RuleWrite = { means: l.means ?? '', ...(l.off ? { off: true } : {}) };
       for (const k of ['when', 'kind', 'type', 'view', 'colour', 'line', 'badge'] as const) {
         const v = l[k];
         if (typeof v === 'string') r[k] = v;

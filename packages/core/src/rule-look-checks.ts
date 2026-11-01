@@ -49,7 +49,11 @@ export function ruleLookOf(raw: RawThing, names: StyledNames, out: Problem[]): L
   const line = r.word('line', LINES, mustBe('line', LINES)),
     format = r.word('format', FORMATS, mustBe('format', FORMATS)),
     badge = r.word('badge', BADGES, mustBe('badge', BADGES));
-  const means = r.text('means');
+  const means = r.text('means'),
+    off = raw.props['off'];
+  // turned off is true or false, never a word (rule_look_off)
+  if (off !== undefined && typeof off !== 'boolean')
+    r.report(mustBe('off', ['true', 'false']), mustBe('off', ['true', 'false']));
   if (out.length > before) return null;
   if (!badge && !line) {
     r.missing(say('styling.rule.second-sign'), say('styling.rule.second-sign.fix'));
@@ -71,6 +75,7 @@ export function ruleLookOf(raw: RawThing, names: StyledNames, out: Problem[]): L
     format ? { format } : {},
     badge ? { badge } : {},
     { means },
+    off === true ? { off: true } : {},
   );
   return look;
 }
