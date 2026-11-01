@@ -1,6 +1,6 @@
 // The mini-map (editor spec §24, mini_map, mini_map_setting). When a drawing is bigger than its view, it shows a small copy
 // of the whole drawing with the visible part outlined. Tapping or dragging it moves the view, in a card and in the pane
-// alike. Whether it shows is a setting: Off, When the drawing does not fit (the default), or Always.
+// alike. Whether it shows is a setting: Off, When the drawing does not fit, or Always (the default: always on screen).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -44,7 +44,7 @@ async function card(miniMap) {
 
 describe('mini_map: shown when the drawing is bigger than its view', () => {
   test('a drawing that fits its view has no mini-map; zoomed in past the fit it has one, and Fit takes it away', async () => {
-    const { env, el } = await card();
+    const { env, el } = await card('auto');
     try {
       assert.equal(shown(el), false, 'fitted: the whole drawing is in view');
       zoomIn(el, 1);
@@ -189,7 +189,7 @@ describe('mini_map: tapped or dragged, it moves the view', () => {
 });
 
 describe('mini_map_setting: Off, When the drawing does not fit, or Always', () => {
-  test('the setting is on the page, in the Drawing section, with its three choices and the second as the default', async () => {
+  test('the setting is on the page, in the Drawing section, with its three choices and Always as the default', async () => {
     const env = await load();
     try {
       const tab = env.state.settingTabs[0];
@@ -198,7 +198,7 @@ describe('mini_map_setting: Off, When the drawing does not fit, or Always', () =
         .querySelectorAll('.setting-item')
         .find((r) => r.querySelector('.setting-item-name')?.textContent === 'Mini-map');
       assert.ok(row, 'the setting is on the page');
-      assert.equal(row.querySelector('select').value, 'auto');
+      assert.equal(row.querySelector('select').value, 'always');
       assert.deepEqual(
         row.querySelectorAll('option').map((o) => o.getAttribute('value')),
         ['off', 'auto', 'always'],
@@ -233,10 +233,10 @@ describe('mini_map_setting: Off, When the drawing does not fit, or Always', () =
     }
   });
 
-  test('a saved value that is none of the three is read as the default', async () => {
+  test('a saved value that is none of the three is read as the default, Always', async () => {
     const { env, el } = await card('sometimes');
     try {
-      assert.equal(shown(el), false);
+      assert.equal(shown(el), true, 'shown though the drawing fits');
       zoomIn(el, 1);
       assert.equal(shown(el), true);
     } finally {
@@ -262,7 +262,7 @@ describe('mini_map: in the pane as in a card', () => {
   });
 
   test('and in the pane, “when the drawing does not fit” follows the zoom', async () => {
-    const env = await openPane();
+    const env = await openPane({ data: { settings: { miniMap: 'auto' } } });
     try {
       await until(() => !!env.el.querySelector('g.node'));
       assert.equal(shown(env.el), false);
