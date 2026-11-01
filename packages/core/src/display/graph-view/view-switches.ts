@@ -1,7 +1,7 @@
 // The View menu (editor spec §25, view_switches), under the bar's View button. It opens on the ladder of detail and
-// the switch that hides labels too small to read. The switches the ladder turns, and the layout sliders, fold away
-// under More. Each switch starts as the settings hold it (view_switch_defaults), and turning one redraws the graph.
-// Nothing here reaches the note, so it works in reading view too (view_switch_view_only).
+// the switch that hides small labels. The two are on screen in the card's dock too (controls_keys). The rest fold
+// away under More. Each starts as the settings hold it (view_switch_defaults). Nothing here reaches the note
+// (view_switch_view_only).
 import {
   BY_KIND,
   LAYOUT_OPTION_RANGE,
@@ -32,6 +32,7 @@ import type {
   WordKey,
 } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
+import { viewDock } from './controls-view';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
@@ -248,6 +249,7 @@ export class ViewSwitching {
       (k, v) => this.space(k, v),
       (level) => this.step(level),
     );
+    viewDock(root, o.state, this.menu, { step: (r) => this.step(r), turn: (s, on) => this.turn(s, on) }); // §25
     this.drawnAs = this.now();
   }
 
@@ -341,10 +343,7 @@ export class ViewSwitching {
     return true;
   }
 
-  /**
-   * Lays this card's graph out again with only what `only` keeps, so a thing and its neighbours sit together; or the
-   * whole graph again (null). `then` runs on the drawing laid out again (untangle_regroup).
-   */
+  /** Lays the graph out with only what `only` keeps, or all of it (null); then runs `then` (untangle_regroup). */
   regroup(only: Kept | null, then?: () => void): void {
     this.o.state.keepOnly(this.owner, only);
     void this.redraw(then);
