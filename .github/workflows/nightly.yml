@@ -158,16 +158,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # the commit `check` named and whose tests passed, not main's tip: a merge during the run no longer stops the night
-          ref: ${{ needs.check.outputs.sha }}
+          ref: main
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      - name: This is the commit `check` named, whose tests passed
+      # The commit `check` named and whose tests passed, not main's tip: a merge during the run no longer stops the night.
+      # It is fetched by name and checked out here, not named in the checkout above.
+      - name: Build the commit `check` named, whose tests passed
         env:
           SHA: ${{ needs.check.outputs.sha }}
-        run: '[ "$(git rev-parse HEAD)" = "$SHA" ] || { echo "::error::checked out $(git rev-parse HEAD), not the commit $SHA whose tests passed"; exit 1; }'
+        run: |
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
+          git fetch --depth=1 origin "$SHA"
+          git checkout --detach "$SHA"
+          [ "$(git rev-parse HEAD)" = "$SHA" ] || { echo "::error::checked out $(git rev-parse HEAD), not the commit $SHA whose tests passed"; exit 1; }
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all

@@ -100,7 +100,7 @@ describe('the nightly workflow', () => {
 
   test('builds main, and publishes only after the content check and main’s CI suite pass', () => {
     const build = jobs(text).build.join('\n');
-    assert.match(build, /ref: \$\{\{ needs\.check\.outputs\.sha \}\}\n\s*persist-credentials: false/, 'not main’s tip');
+    assert.match(build, /ref: main\s*\n\s*persist-credentials: false/);
     const runs = runCommands(build);
     const at = (re) => runs.findIndex((r) => re.test(r));
     assert.ok(at(/^npm ci$/) >= 0, 'npm ci');
@@ -124,9 +124,8 @@ describe('the nightly workflow', () => {
 
   test('a merge to main during the run does not stop the night: the build is of the commit whose tests passed', () => {
     const build = jobs(text).build.join('\n');
-    assert.doesNotMatch(build, /ref: main/, 'main’s tip moves while the night runs');
     assert.doesNotMatch(build, /main moved/, 'no step fails because main moved');
-    assert.match(build, /ref: \$\{\{ needs\.check\.outputs\.sha \}\}/);
+    assert.match(build, /git fetch --depth=1 origin "\$SHA"\n\s*git checkout --detach "\$SHA"/);
   });
 
   // The whole suite at once, browser drawing included, peaked over the default 4 GB ceiling (22 Oct 2026). CI's shards
