@@ -7,8 +7,20 @@
 // DEFAULT_LAYOUT_OPTIONS, LAYOUT_OPTION_RANGE and startingLayout (layout_saved_with_view) came on 25 Oct 2026.
 // SVG_ELEMENTS and cleanSvg (TRUST-7), with heldItem and outsideSaid (TRUST-4), came on 29 Oct 2026.
 // BADGES, BADGE_GLYPHS, LOOK_PARTS, BAND_HUES, isRule, lookToken and the rule functions (§56, rules and looks) came on 30 Oct 2026.
-// So did ruleProps, ruleRefusal and withTriedRules (rule_look_try_save).
+// So did ruleProps, ruleRefusal and withTriedRules (rule_look_try_save). The rule built in plain words came on 1 Nov
+// 2026 (rule_look_builder). That is LINKS_FIELD, NUMBER_OPS, RULE_OPS and savedRules. It is also ruleChoices,
+// ruleFinds, ruleStarts, sayDraft, testsOf and whenOf.
 export const VALUES_LATE = [
+  'LINKS_FIELD',
+  'NUMBER_OPS',
+  'RULE_OPS',
+  'ruleChoices',
+  'ruleFinds',
+  'ruleStarts',
+  'sayDraft',
+  'testsOf',
+  'whenOf',
+  'savedRules',
   'BADGES',
   'BADGE_GLYPHS',
   'BAND_HUES',

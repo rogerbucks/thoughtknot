@@ -64,6 +64,7 @@ export class TriedTypes {
   private ruleAsk(at: TriedAt): RuleAsk {
     return {
       tried: this.rules.has(TriedTypes.key(at)),
+      ...(this.rules.get(TriedTypes.key(at))?.at(-1) ? { last: this.rules.get(TriedTypes.key(at))?.at(-1) } : {}),
       tryOut: (rule) => this.tryRule(at, rule),
       back: () => this.tryRule(at, null),
       save: (rule) => {
