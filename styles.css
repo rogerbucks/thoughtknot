@@ -932,7 +932,7 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  color: var(--gn-accent);
+  color: var(--gn-text-normal);
 }
 .thoughtknot-explore-find input {
   width: 100%;

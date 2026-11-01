@@ -18,6 +18,7 @@ export const KEYS_SHOWN = 5;
 /** Draws the key controls `keys` in `dock`, the first few in its body and the rest under More. Gives back their buttons. */
 export function fillDock(dock: ControlDock, keys: readonly KeyControl[]): HTMLButtonElement[] {
   dock.el.addClass('has-keys'); // a tablet folds it to a rail of these
+  if (keys.length <= KEYS_SHOWN && dock.more.parentElement) dock.more.parentElement.hidden = true; // no empty More
   return keys.map((k, i) =>
     i < KEYS_SHOWN ? button(dock.body, k.name, k.icon, k.run) : button(dock.more, k.name, k.icon, k.run, k.name),
   );
