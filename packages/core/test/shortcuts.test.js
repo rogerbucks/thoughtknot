@@ -13,6 +13,7 @@ const HANDLERS = [
   'src/display/graph-view/viewport-events.ts',
   'src/display/graph-view/box-move-keys.ts',
   'src/display/graph-view/selection.ts',
+  'src/display/graph-view/table-keys.ts',
   'src/display/editor/typing-keys.ts',
 ];
 
