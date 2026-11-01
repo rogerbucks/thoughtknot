@@ -692,6 +692,17 @@
 .thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
   display: none;
 }
+/* On a tablet a dock of key controls folds to a rail of their icons, so the drawing keeps the room (controls_keys) */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .thoughtknot-dock.has-keys.is-folded > .thoughtknot-dock-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gn-space-half-2);
+  }
+  .thoughtknot-dock.has-keys.is-folded .thoughtknot-dock-name {
+    display: none;
+  }
+}
 /* On a phone the chip and the docks sit in one sheet at the foot of the drawing, in reach of a thumb (controls_sheet).
    It lies over the drawing, which keeps its size. It has three heights: a strip, half the drawing, or all of it. */
 .thoughtknot-over > .thoughtknot-phone-sheet {
@@ -3496,19 +3507,24 @@ body.thoughtknot-easier-reading
   font-weight: var(--gn-font-weight-semibold);
   text-align: end;
 }
-/* the buttons that move the 3D view, down the right side */
+/* the 3D view's dock of key controls (controls_keys), down the right side: its head, then its buttons two by two */
 .thoughtknot-space-pad {
   position: absolute;
   inset-block-end: var(--gn-space-2);
   inset-inline-end: var(--gn-space-2);
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(2, auto);
+  display: flex;
+  flex-direction: column;
   gap: var(--gn-space-half-2);
   padding: var(--gn-space-half-2);
   background: var(--gn-bg);
   border-radius: var(--gn-radius-s);
   border: 1px solid var(--gn-border-focus);
+}
+.thoughtknot-space-pad > .thoughtknot-dock-body {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: var(--gn-space-half-2);
 }
 /* how to move it, in short steps at the foot, kept clear of the buttons */
 .thoughtknot-space-help {
