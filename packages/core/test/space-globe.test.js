@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GLOBE_FACING } from '../src/layouts/globe.ts';
-import { GlobeLayout, facingHalf, globeSpace } from '../src/space-globe.ts';
+import { GLOBE_DIVE, GlobeLayout, facingHalf, globeFacing, globeSpace } from '../src/space-globe.ts';
 import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
 import { turnRound } from '../src/space-controls.ts';
 
@@ -152,4 +152,30 @@ test('a drag turns the globe with the pointer, in every 3D way of showing it', (
   const was = seen(orbit);
   assert.ok(seen(turnRound(orbit, 50, 0, [0, 0, 0])).x > was.x + 20, 'dragged right, its front goes right');
   assert.ok(seen(turnRound(orbit, 0, 50, [0, 0, 0])).y > was.y + 20, 'dragged down, its front goes down');
+});
+
+// proves: globe_face_picked
+test('a thing picked on the globe turns to face the camera square on, in the middle; another click dives to it', () => {
+  const { space } = globeSpace(HUB);
+  const g = space.globe,
+    from = { ...orbitFit(space, 1), turn: 2 * Math.PI + 0.3 };
+  for (const b of space.blocks) {
+    const at = middle(b),
+      o = globeFacing(from, g, at);
+    assert.deepEqual(o.target, g.middle, 'it still turns round the globe');
+    const eye = eyeOf(o),
+      out = at.map((c, k) => c - g.middle[k]),
+      look = eye.map((c, k) => c - g.middle[k]);
+    const square = out.reduce((s, c, k) => s + c * look[k], 0) / (length(out) * length(look));
+    assert.ok(square > 0.9999, `${b.of}: the camera is on the line out from the middle through it`);
+    assert.ok(
+      o.distance >= from.distance && length(look) > g.radius,
+      'never nearer than it was, never inside the globe',
+    );
+    const p = projectPoint(spaceMatrix(o, 1, o.distance * 4), at, 600, 600);
+    assert.ok(Math.hypot(p.x - 300, p.y - 300) < 1, 'in the middle of the screen');
+    assert.ok(Math.abs(o.turn - from.turn) <= Math.PI + 1e-9, 'the short way round');
+    const dived = globeFacing(o, g, at, true);
+    assert.equal(dived.distance, g.radius * GLOBE_DIVE, 'a dive comes near enough for its details');
+  }
 });

@@ -19,6 +19,7 @@ import {
   twistOf,
   touchesStay,
   twoFingers,
+  orbitSwitched,
 } from '../src/space-controls.ts';
 import { eyeOf, orbitBy, orbitFit, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
@@ -279,4 +280,25 @@ test('two fingers going up together tilt the view one finger at a time, as one f
   let over = ORBIT;
   for (let i = 0; i < 60; i++) over = pinchBy(over, pair(300), pair(310), at, 900, 600, PIVOT);
   assert.ok(over.tilt > Math.PI / 2 || over.tilt < -Math.PI / 2, 'it runs on past straight down or up');
+});
+
+// proves: space_switch_fits
+test('changing how the view shows the graph fits the whole of it again, unless a thing is picked', () => {
+  const block = (of, x) => ({ id: of, style: 's', of, x, y: 0, width: 40, depth: 40, floor: 0, tall: 40 });
+  const wide = {
+    blocks: [block('a', -2000), block('b', 2000)],
+    lines: [],
+    labels: [],
+    arrows: [],
+    least: [-2000, 0, 0],
+    most: [2040, 40, 40],
+  };
+  const small = { ...wide, blocks: [block('a', -100), block('b', 100)], least: [-100, 0, 0], most: [140, 40, 40] };
+  const was = orbitFit(wide, 1.5);
+  const now = orbitSwitched(was, small, null, 1.5);
+  assert.deepEqual(now, orbitFit(small, 1.5), "the smaller way fills the view, not a knot in the wider way's frame");
+  assert.ok(now.distance < was.distance / 4);
+  const kept = orbitSwitched(was, small, small.blocks[1], 1.5);
+  assert.equal(kept.distance, was.distance, 'with b picked, the camera stays as near');
+  assert.deepEqual(kept.target, [120, 20, 20], 'and looks at b');
 });
