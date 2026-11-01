@@ -1800,6 +1800,40 @@ pre.thoughtknot-code {
   min-height: 30%;
 }
 
+/* Zen view (§25, controls_zen): full screen with every panel hidden, the drawing alone and edge to edge. One button
+   stays in the top end corner to bring the panels back. The mini-map hides too, as Roger asked for all panels. */
+.thoughtknot-fullscreen.is-zen {
+  padding: 0;
+}
+.thoughtknot-fullscreen.is-zen .thoughtknot-view > :not(.thoughtknot-viewport, .thoughtknot-sr) {
+  display: none;
+}
+.thoughtknot-fullscreen.is-zen .thoughtknot-view {
+  border: 0;
+  border-radius: 0;
+}
+.thoughtknot-fullscreen.is-zen
+  :is(
+    .thoughtknot-mini-map,
+    .thoughtknot-pointer,
+    .thoughtknot-space-pad,
+    .thoughtknot-hint,
+    .thoughtknot-move-hint,
+    .thoughtknot-switch-hint
+  ) {
+  display: none;
+}
+.thoughtknot-zen-exit {
+  position: absolute;
+  top: max(var(--gn-space-2), env(safe-area-inset-top));
+  inset-inline-end: max(var(--gn-space-2), env(safe-area-inset-right));
+  z-index: 1;
+  min-width: 44px;
+  min-height: 44px;
+  opacity: 0.85;
+  box-shadow: var(--gn-shadow-l);
+}
+
 /* Problems, details and the banner: words and an icon, never colour alone. */
 .thoughtknot-problems summary {
   cursor: pointer;
