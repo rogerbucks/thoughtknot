@@ -50,8 +50,12 @@ export function keepPlace(scroll: HTMLElement): void {
     if (cell && tr) place.focus = { row: rowOf(tr), col: cellsOf(tr).indexOf(cell) };
   });
   scroll.addEventListener('focusout', (e: FocusEvent) => {
-    // the focus gone elsewhere on the page is not brought back; a table taken away takes it with it, to come back
+    // the focus gone elsewhere on the page, or to nothing by a click on its words, is not brought back. A table taken
+    // away loses its focus too, while still on the page, as Chromium does: it is told apart by being gone just after
     const to = e.relatedTarget as Node | null;
-    if (to && !scroll.contains(to)) delete place.focus;
+    if (to && scroll.contains(to)) return;
+    queueMicrotask(() => {
+      if (scroll.isConnected) delete place.focus;
+    });
   });
 }

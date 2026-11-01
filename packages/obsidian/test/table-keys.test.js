@@ -201,6 +201,13 @@ describe('the table scrolls and zooms as a data table does', () => {
       const { el: third } = await show(env, note, 0);
       assert.equal(env.doc.activeElement, other, 'the focus is never taken back from elsewhere');
       assert.equal(third.querySelector('.thoughtknot-table-scroll').scrollTop, 120);
+      cellOf(third, 'cafe', 1).focus();
+      cellOf(third, 'cafe', 1).dispatch('focusout', { relatedTarget: null }); // a click on the page's words, not a control
+      env.doc.activeElement = env.doc.body;
+      await Promise.resolve(); // the click and the drawing again come one after the other, never at once
+      third.remove();
+      await show(env, note, 0);
+      assert.ok(env.doc.activeElement === env.doc.body, 'nor from the page itself, clicked where nothing takes it');
     } finally {
       env.uninstall();
     }
