@@ -15,6 +15,18 @@ type Heredoc = { end: string; quoted: boolean; tabs: boolean; step: ShellStep };
 /** What the next word is, when it is not a word of the command. */
 type Next = 'write' | 'append' | 'read' | 'heredoc' | 'heredoc-tabs' | null;
 
+/** How far the reading has got. Each reader below moves `at` on, and answers false when the command is unread. */
+type Reading = {
+  command: string;
+  at: number;
+  steps: ShellStep[];
+  step: ShellStep;
+  word: string | null;
+  quoted: boolean;
+  next: Next;
+  waiting: Heredoc | null;
+};
+
 const newStep = (): ShellStep => ({ words: [], writes: [], body: null });
 
 /** The heredoc's text, and where the line after its last ends; null when it never closes or its text would run code. */
@@ -48,111 +60,140 @@ function readDoubleQuoted(command: string, from: number): { text: string; next: 
   return null;
 }
 
+/** Files the word as what `next` says it is. False when that is a second heredoc. */
+function endWord(r: Reading): boolean {
+  if (r.word === null) return true;
+  if (r.next === 'write' || r.next === 'append') {
+    if (r.word !== '/dev/null') r.step.writes.push({ to: r.word, append: r.next === 'append' });
+  } else if (r.next === 'heredoc' || r.next === 'heredoc-tabs') {
+    if (r.waiting) return false;
+    r.waiting = { end: r.word, quoted: r.quoted, tabs: r.next === 'heredoc-tabs', step: r.step };
+  } else if (r.next === null) {
+    r.step.words.push(r.word);
+  }
+  r.word = null;
+  r.quoted = false;
+  r.next = null;
+  return true;
+}
+
+/** Ends the step. False when a redirection has no word to go to. */
+function endStep(r: Reading): boolean {
+  if (!endWord(r) || r.next !== null) return false;
+  if (r.step.words.length || r.step.writes.length) r.steps.push(r.step);
+  r.step = newStep();
+  return true;
+}
+
+/** Drops a word of digits before a redirection: it is only a file descriptor. */
+function dropDescriptor(r: Reading): void {
+  if (r.word !== null && !r.quoted && /^\d+$/.test(r.word)) r.word = null;
+}
+
+/** Starts a redirection of `length` characters. */
+function redirect(r: Reading, kind: Next, length: number): boolean {
+  dropDescriptor(r);
+  if (!endWord(r) || r.next !== null) return false;
+  r.next = kind;
+  r.at += length;
+  return true;
+}
+
+function readSingleQuoted(r: Reading): boolean {
+  const end = r.command.indexOf("'", r.at + 1);
+  if (end < 0) return false;
+  r.word = (r.word ?? '') + r.command.slice(r.at + 1, end);
+  r.quoted = true;
+  r.at = end + 1;
+  return true;
+}
+
+function readQuoted(r: Reading): boolean {
+  const inner = readDoubleQuoted(r.command, r.at + 1);
+  if (!inner) return false;
+  r.word = (r.word ?? '') + inner.text;
+  r.quoted = true;
+  r.at = inner.next;
+  return true;
+}
+
+function readEscape(r: Reading): boolean {
+  const then = r.command.charAt(r.at + 1);
+  if (then !== '\n') r.word = (r.word ?? '') + then;
+  r.quoted = true;
+  r.at += 2;
+  return true;
+}
+
+/** Ends the line; the heredoc its step opened, if any, starts on the next. */
+function readNewline(r: Reading): boolean {
+  if (!endStep(r)) return false;
+  r.at += 1;
+  if (!r.waiting) return true;
+  const read = readHeredoc(r.command, r.at, r.waiting);
+  if (!read) return false;
+  r.waiting.step.body = read.body;
+  r.waiting = null;
+  r.at = read.next;
+  return true;
+}
+
+function readGreater(r: Reading): boolean {
+  const then = r.command.charAt(r.at + 1);
+  const fd = /^>&\d+(?=[\s;&|]|$)/.exec(r.command.slice(r.at));
+  if (fd) {
+    dropDescriptor(r);
+    r.at += fd[0].length;
+    return true;
+  }
+  if (then === '&') return false;
+  return redirect(r, then === '>' ? 'append' : 'write', then === '>' || then === '|' ? 2 : 1);
+}
+
+function readLess(r: Reading): boolean {
+  const then = r.command.charAt(r.at + 1);
+  const after = r.command.charAt(r.at + 2);
+  if (then === '&' || then === '>') return false;
+  if (then !== '<') return redirect(r, 'read', 1);
+  if (after === '<') return redirect(r, 'read', 3);
+  return after === '-' ? redirect(r, 'heredoc-tabs', 3) : redirect(r, 'heredoc', 2);
+}
+
+/** Reads what starts at `at`. */
+function readNext(r: Reading): boolean {
+  const c = r.command.charAt(r.at);
+  if (c === "'") return readSingleQuoted(r);
+  if (c === '"') return readQuoted(r);
+  if (c === '\\') return readEscape(r);
+  if (c === '`' || c === '(' || c === ')' || (c === '#' && r.word === null)) return false;
+  if (c === '\n') return readNewline(r);
+  if (c === '>') return readGreater(r);
+  if (c === '<') return readLess(r);
+  if (c === '&' && r.command.charAt(r.at + 1) === '>') {
+    const append = r.command.charAt(r.at + 2) === '>';
+    return redirect(r, append ? 'append' : 'write', append ? 3 : 2);
+  }
+  if (c === ' ' || c === '\t' || c === ';' || c === '|' || c === '&') {
+    r.at += 1;
+    return c === ' ' || c === '\t' ? endWord(r) : endStep(r);
+  }
+  r.word = (r.word ?? '') + c;
+  r.at += 1;
+  return true;
+}
+
 /** Each step of `command`, in order; null when the command holds anything this does not read. */
 export function shellSteps(command: string): ShellStep[] | null {
-  const steps: ShellStep[] = [];
-  let step = newStep();
-  let word: string | null = null;
-  let quoted = false;
-  let next: Next = null;
-  const waiting: Heredoc[] = [];
-  let at = 0;
-
-  /** Files the word as what `next` says it is. False when that is a second heredoc. */
-  const endWord = (): boolean => {
-    if (word === null) return true;
-    if (next === 'write' || next === 'append') {
-      if (word !== '/dev/null') step.writes.push({ to: word, append: next === 'append' });
-    } else if (next === 'heredoc' || next === 'heredoc-tabs') {
-      if (waiting.length) return false;
-      waiting.push({ end: word, quoted, tabs: next === 'heredoc-tabs', step });
-    } else if (next === null) {
-      step.words.push(word);
-    }
-    word = null;
-    quoted = false;
-    next = null;
-    return true;
+  const r: Reading = {
+    command,
+    at: 0,
+    steps: [],
+    step: newStep(),
+    word: null,
+    quoted: false,
+    next: null,
+    waiting: null,
   };
-
-  /** Ends the step. False when a redirection has no word to go to. */
-  const endStep = (): boolean => {
-    if (!endWord() || next !== null) return false;
-    if (step.words.length || step.writes.length) steps.push(step);
-    step = newStep();
-    return true;
-  };
-
-  /** Starts a redirection; a word of digits before it is only a file descriptor. */
-  const redirect = (kind: Next): boolean => {
-    if (word !== null && !quoted && /^\d+$/.test(word)) word = null;
-    if (!endWord() || next !== null) return false;
-    next = kind;
-    return true;
-  };
-
-  while (at < command.length) {
-    const c = command.charAt(at);
-    const then = command.charAt(at + 1);
-    if (c === "'") {
-      const end = command.indexOf("'", at + 1);
-      if (end < 0) return null;
-      word = (word ?? '') + command.slice(at + 1, end);
-      quoted = true;
-      at = end + 1;
-    } else if (c === '"') {
-      const inner = readDoubleQuoted(command, at + 1);
-      if (!inner) return null;
-      word = (word ?? '') + inner.text;
-      quoted = true;
-      at = inner.next;
-    } else if (c === '\\') {
-      if (then !== '\n') word = (word ?? '') + then;
-      quoted = true;
-      at += 2;
-    } else if (c === '`' || c === '(' || c === ')' || (c === '#' && word === null)) {
-      return null;
-    } else if (c === '\n') {
-      if (!endStep()) return null;
-      at += 1;
-      const doc = waiting.pop();
-      if (doc) {
-        const read = readHeredoc(command, at, doc);
-        if (!read) return null;
-        doc.step.body = read.body;
-        at = read.next;
-      }
-    } else if (c === ' ' || c === '\t') {
-      if (!endWord()) return null;
-      at += 1;
-    } else if (c === '&' && then === '>') {
-      if (!redirect(command.charAt(at + 2) === '>' ? 'append' : 'write')) return null;
-      at += command.charAt(at + 2) === '>' ? 3 : 2;
-    } else if (c === ';' || c === '|' || c === '&') {
-      if (!endStep()) return null;
-      at += 1;
-    } else if (c === '>') {
-      const fd = /^>&\d+(?=[\s;&|]|$)/.exec(command.slice(at));
-      if (fd) {
-        if (word !== null && !quoted && /^\d+$/.test(word)) word = null;
-        at += fd[0].length;
-      } else if (then === '&') {
-        return null;
-      } else {
-        if (!redirect(then === '>' ? 'append' : 'write')) return null;
-        at += then === '>' || then === '|' ? 2 : 1;
-      }
-    } else if (c === '<') {
-      if (then === '&' || then === '>') return null;
-      const here = then === '<' && command.charAt(at + 2) !== '<';
-      const tabs = here && command.charAt(at + 2) === '-';
-      const string = then === '<' && !here;
-      if (!redirect(tabs ? 'heredoc-tabs' : here ? 'heredoc' : 'read')) return null;
-      at += tabs || string ? 3 : here ? 2 : 1;
-    } else {
-      word = (word ?? '') + c;
-      at += 1;
-    }
-  }
-  return endStep() && !waiting.length ? steps : null;
+  while (r.at < command.length) if (!readNext(r)) return null;
+  return endStep(r) && !r.waiting ? r.steps : null;
 }

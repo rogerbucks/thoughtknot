@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/gate-guard.test.js",
+  "test": "a note’s classification line > a heredoc whose target or text cannot be known is refused when it names it",
+  "seen_failing_first": false,
+  "evidence": "A refusal the old code also gave, as it refused every such command. It pins that the new reading of heredocs does not widen to paths or text it cannot know; the cases beside it were seen failing."
+}
