@@ -94,3 +94,20 @@ test('the map is offered among the views, and reads latitude and longitude from 
   const box = (k) => marks.find((m) => m.id === k);
   assert.ok(middle(box('a'))[0] > middle(box('b'))[0], 'Oslo is east of Bergen');
 });
+
+// Design review, 1 Nov 2026: a graph of many things with no place was refused. A dot fell past the foot of the space,
+// so it was drawn as a network instead. They are now listed in columns, each row tall enough to read.
+// proves: projection_map
+test('many things with no place are listed in readable columns, every mark inside the space', () => {
+  const many = shapeOf(Array.from({ length: 120 }, (_, i) => [`thing${i}`]));
+  const marks = mapMarks({ shape: many, space: SPACE });
+  for (const m of marks.filter((k) => k.kind === 'box')) {
+    assert.ok(m.x >= 0 && m.y >= 0, m.id);
+    assert.ok(m.x + m.width <= SPACE.width && m.y + m.height <= SPACE.height, `${m.id} inside the space`);
+  }
+  const labels = marks.filter((m) => m.kind === 'label' && m.id.endsWith('\nlabel'));
+  const rows = [...new Set(labels.map((m) => m.y))].sort((a, b) => a - b);
+  assert.ok(rows[1] - rows[0] >= labels[0].size, 'a row is at least as tall as its words');
+  assert.ok(new Set(labels.map((m) => m.x)).size > 1, 'in more than one column');
+  assert.ok(drawMarksOf(marks, SPACE), 'the marks are taken');
+});
