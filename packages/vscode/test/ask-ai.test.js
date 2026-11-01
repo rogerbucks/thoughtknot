@@ -118,3 +118,15 @@ test('the record keeps the last 200 sends only', async () => {
   assert.equal(sends[0].old, 1);
   assert.equal(sends.at(-1).outcome, 'answered');
 });
+
+test('a model unsure what is meant asks its question, and nothing is written to the note', async () => {
+  const folder = emptyFolder();
+  writeFileSync(join(folder, 'Reader.md'), NOTE);
+  const model = fakeModel('Copilot', JSON.stringify({ question: 'Which readers do you mean?' }));
+  const vs = await vscodeOn(folder, 'Reader.md', { settings: ON, models: [model] });
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  await vs.ask();
+  assert.equal(model.sent.length, 1);
+  assert.match(vs.said.at(-1), /asks a question first[\s\S]*Which readers do you mean\?/);
+  assert.equal(readFileSync(join(folder, 'Reader.md'), 'utf8'), NOTE);
+});

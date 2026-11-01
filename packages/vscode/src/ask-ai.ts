@@ -177,6 +177,11 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
     void vscode.window.showWarningMessage(result.failed);
     return;
   }
+  // a model unsure what is meant asks first: nothing is written, and the person asks again with the answer
+  if ('asks' in result) {
+    void vscode.window.showWarningMessage(`${word('ai.asks', { model: host.name })}\n${result.asks}`);
+    return;
+  }
   // the proposal goes into the note as it is now; one the graph spec's check fails is not written
   const written = noteWithProposal(await disk.readText(note), result.proposal);
   if (typeof written !== 'string') {
