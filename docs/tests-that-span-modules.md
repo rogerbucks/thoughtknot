@@ -75,6 +75,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The core's views
 
+- `packages/core/test/stay-put.test.js` — a thing already shown stays where it is (editor spec §68, things_stay_put).
+  Its check, in `stay-put-fixtures.js`, fails on a shown thing that moved on its own. Every view type and the
+  exploration pass it.
 - `packages/core/test/multi-member-drawn.test.js` — a thing in two clusters is drawn in each region, with the same
   marker. So is a part with two wholes (editor spec §36, multi_member_drawn).
 - `packages/core/test/views-as-scaffolds.test.js` — a view says what a complete version needs. Each field a thing lacks
