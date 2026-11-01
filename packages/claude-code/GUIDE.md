@@ -158,7 +158,7 @@ So a change to the open note is never applied by Claude's own tools while `guard
     after is compared. A change or removal is refused (`CLASSIFICATION_REFUSAL`). So is an edit that breaks the front
     matter around it. A note not yet made may be written.
   - When the note cannot be read, a call is refused if any text it carries holds a classification line.
-  - Bash is read into its steps by `shell-steps.ts`. A heredoc sent by `cat` to an absolute or `~/` path is judged as a
+  - Bash is read into its steps by `shell-steps.ts`. A heredoc sent by `cat` to an absolute or home-relative path is judged as a
     Write is, whether the command names `classification` or not. So a new note may carry one, and an existing note's
     may not change.
   - Other Bash that names `classification` is refused unless every step only reads, searches or prints. Such a step is
