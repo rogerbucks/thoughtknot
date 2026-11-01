@@ -41,6 +41,7 @@ const DATA = [
  * alone, so keeping and taking it up are open too. The viewer's profile (§39) is kept with the plugin, never in the note.
  * Its show-as-shared and pace last the session alone, so it is open whole. A rule tried is drawn, never written
  * (§56, rule_look_try_save): trying it and going back are open, saving it is not.
+ * Counting what a rule being built finds only reads the graph, so is open too (rule_look_builder).
  */
 export const READS = [
   'lineOf',
@@ -66,6 +67,7 @@ export const READS = [
   'diagram.kept',
   'ruleAsk.tryOut',
   'ruleAsk.back',
+  'ruleAsk.finds',
   'profile',
 ] as const;
 

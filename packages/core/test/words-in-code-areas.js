@@ -99,6 +99,9 @@ export const KEPT = {
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
   'packages/core/src/display/host-contract.ts': '*',
   'packages/core/src/display/panel-contract.ts': '*',
+  // the guard language's own `and`, joining the tests a rule built in plain words writes (rule_look_builder), read
+  // by the engine, never by a person
+  'packages/core/src/rule-builder.ts': [' and '],
   // the mark a reader picture names itself by, read by ThoughtKnot to know its own file, never shown (§62)
   'packages/core/src/reader-picture-note.ts': ['<metadata>thoughtknot reader picture {}</metadata>'],
   // the comments carrying the layout options and the kinds in the source our engine is given, read by the engine,

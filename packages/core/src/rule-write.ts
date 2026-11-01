@@ -11,6 +11,7 @@ import type { Badge } from './rule-words.ts';
 import { LINES, STYLE_HUES, orList } from './style-graph.ts';
 import type { LineStyle, Look, StyleGraph } from './style-graph.ts';
 import { word } from './words.ts';
+import type { RuleChoices } from './rule-builder.ts';
 
 /** A rule to try or save: its test or lens, what it may name, its look and what it means. */
 export interface RuleWrite {
@@ -91,11 +92,33 @@ export function withTriedRules(style: StyleGraph, tried: readonly RuleWrite[]): 
   return { ...style, looks };
 }
 
-/** What a card may do with a rule: try it (reading view), or save it where the note is edited, and if any is tried. */
+/**
+ * What a card may do with a rule: try it (reading view), or save it where the note is edited, and if any is tried.
+ * With its graph it also says what a rule may be built from, what a rule being built finds, the rules saved that may
+ * be changed, and the rule last tried (rule_look_builder).
+ */
 export interface RuleAsk {
   tried: boolean;
+  choices?: RuleChoices;
+  finds?(rule: RuleWrite): { count: number; names: string[] };
+  saved?: RuleWrite[];
+  last?: RuleWrite;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */
   back(): void;
+}
+
+/** The rules of `looks` a person may change from the card: those with a test, as they would be written again. */
+export function savedRules(looks: readonly Look[]): RuleWrite[] {
+  return looks
+    .filter((l) => l.when !== undefined && l.bands === undefined)
+    .map((l) => {
+      const r: RuleWrite = { means: l.means ?? '' };
+      for (const k of ['when', 'kind', 'type', 'view', 'colour', 'line', 'badge'] as const) {
+        const v = l[k];
+        if (typeof v === 'string') r[k] = v;
+      }
+      return r;
+    });
 }

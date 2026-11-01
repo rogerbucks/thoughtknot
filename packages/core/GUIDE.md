@@ -738,8 +738,14 @@ never data.
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
   `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
-- `display/graph-view/rule-form.ts` — the Rule button beside the legend and its form. In reading view it tries a rule
-  and offers Back to saved. Where the note is edited it saves it. Trying is open in reading view (`read-only.ts`).
+- `display/graph-view/rule-form.ts` — the Highlight things button beside the legend and its form, in three plain steps
+  (rule_look_builder). In reading view it tries a rule, offers Back to saved, and opens again on the rule tried. Where
+  the note is edited it saves it. Trying, and counting what a rule finds, are open in reading view (`read-only.ts`).
+  `rule-form-parts.ts` draws its Find step, its colour, badge and line samples, and its preview.
+- `rule-builder.ts` — a rule in plain words (rule_look_builder). `ruleChoices` lists the kinds, link types and
+  properties a graph holds. `whenOf` writes the test from a property, a comparison and a value, and `sayDraft` says it.
+  `testsOf` reads a simple test back. `ruleFinds` counts what a rule finds. `ruleStarts` gives quick starts from the
+  graph's own data. `savedRules` (rule-write.ts) lists the rules a card may change.
 
 #### Checking the words of a style
 
