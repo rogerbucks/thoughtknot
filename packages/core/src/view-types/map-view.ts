@@ -47,12 +47,16 @@ export function mapSplit(shape: GraphShape): { placed: Map<string, { lat: number
 /** The step for lines across `span` degrees: about LINES of them. */
 const stepFor = (span: number): number => STEPS.find((s) => span / s <= LINES) ?? 45;
 
-/** The marks of `shape` drawn as a map in `space`: a dot where each thing is, the rest listed, a line per link. */
+/**
+ * The marks of `shape` drawn as a map in `space`: a dot where each thing is, the rest listed. A link is a line when one
+ * of its things is on the map. A line between two listed things says nothing of where they are.
+ */
 export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
   if (!shape.things.length) return [];
   const { placed, rest } = mapSplit(shape);
   const nameSize = Math.min(12, Math.max(space.height * 0.025, 7));
   const listWidth = rest.length ? space.width * (placed.size ? LIST_SHARE : 1) : 0;
+  let column = listWidth; // the width of one column of the list
   const mapWidth = space.width - listWidth;
   const marks: DrawMark[] = [];
   const at = new Map<string, [number, number]>();
@@ -152,8 +156,7 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
       anchor: 'start',
       maxWidth: listWidth - 2 * nameSize,
     });
-    const row = Math.min(nameSize * 2, (space.height - nameSize * 3) / rest.length);
-    rest.forEach((k, i) => at.set(k, [left + row / 2, nameSize * 3 + row * (i + 0.5)]));
+    column = listPlaces(rest, at, [left, nameSize * 3], [listWidth - nameSize, space.height - nameSize * 3], nameSize);
   }
   const dot = Math.min(nameSize, Math.max(space.height * 0.012, 3));
   for (const t of shape.things) {
@@ -181,13 +184,13 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
       text: t.text,
       size: nameSize * 0.85,
       anchor: 'start',
-      maxWidth: placed.has(t.key) ? mapWidth / 4 : listWidth - 3 * nameSize,
+      maxWidth: placed.has(t.key) ? mapWidth / 4 : Math.max(column - 3 * nameSize, nameSize),
     });
   }
   shape.links.forEach((l, i) => {
     const a = at.get(l.from),
       b = at.get(l.to);
-    if (!a || !b || l.from === l.to) return;
+    if (!a || !b || l.from === l.to || !(placed.has(l.from) || placed.has(l.to))) return;
     marks.push({
       kind: 'link',
       id: `link\n${i}`,
@@ -201,4 +204,24 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
     });
   });
   return marks;
+}
+
+/**
+ * Lists the things with no place, `rest`, into `at`, from the corner `[left, top]` within `[width, height]`. Each
+ * row is tall enough to read words of `size` points. The rest go in more columns, side by side. Gives back a column's width.
+ */
+function listPlaces(
+  rest: string[],
+  at: Map<string, [number, number]>,
+  [left, top]: [number, number],
+  [width, height]: [number, number],
+  size: number,
+): number {
+  const perColumn = Math.max(1, Math.min(rest.length, Math.floor(height / (size * 1.4))));
+  const row = Math.min(size * 2, height / perColumn);
+  const column = width / Math.ceil(rest.length / perColumn);
+  rest.forEach((k, i) =>
+    at.set(k, [left + column * Math.floor(i / perColumn) + row / 2, top + row * ((i % perColumn) + 0.5)]),
+  );
+  return column;
 }

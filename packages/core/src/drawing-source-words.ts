@@ -237,6 +237,8 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hive': 'Hive',
   'view.grid': 'Grid',
   // the map view (view-types/map-view.ts, projection_map): things with a latitude and longitude on a map
+  'view.density.fewer': 'Fewer things',
+  'view.density.more': 'More',
   'view.map': 'Map',
   'view.map.unplaced': { one: '{count} thing with no place', other: '{count} things with no place' },
   // a card dragged to another column of the grid (view-types/grid-move.ts, projection_grid)
