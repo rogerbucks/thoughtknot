@@ -161,8 +161,7 @@ function renderStarts(starts: HTMLElement, ask: RuleAsk, acts: SavedActs) {
  * back, and nothing is moved. Where the note is edited it is taken out, or moved up.
  */
 function savedActs(box: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void): SavedActs {
-  const reading = readOnlyHere(box),
-    up = ask.moveUp;
+  const reading = readOnlyHere(box);
   return {
     load,
     remove: (r) => (reading ? ask.tryOut({ ...r, removed: true }) : ask.remove?.(r)),
@@ -173,7 +172,7 @@ function savedActs(box: HTMLElement, ask: RuleAsk, load: (r: RuleWrite) => void)
       if (reading) ask.tryOut(next);
       else ask.save({ ...next, was: r.means });
     },
-    ...(reading || !up ? {} : { moveUp: (r: RuleWrite) => up(r) }),
+    ...(reading || !ask.moveUp ? {} : { moveUp: (r: RuleWrite) => ask.moveUp?.(r) }),
   };
 }
 
@@ -280,7 +279,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
   }
   // Escape closes the form, back on the button that opened it
   form.addEventListener('keydown', (e) => {
-    if ((e as KeyboardEvent).key !== 'Escape') return;
+    if (e.key !== 'Escape') return;
     toggle(false);
     open.focus();
   });
