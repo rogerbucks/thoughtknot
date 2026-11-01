@@ -2,8 +2,8 @@
 // architecture may be cut into areas. Each area names its files, what it does and the spec section it serves. Every
 // shipped file of such a part must sit in exactly one area, and an area holds no more files than its ceiling. So a new
 // file has to be placed, and a crowded area has to be split or its ceiling raised on purpose. Two areas that import each
-// other are a cycle. Each known one is recorded in the graph as CYCLES_WITH, so a new cycle or a stale record is a fault
-// too. The areas and the imports between them are drawn on the wiki's Architecture page by scripts/wiki-developers.mjs.
+// other are a cycle. Each known one is a CYCLES_WITH link in requirements/architecture-cycles.gql, the same graph
+// continued. So a new cycle or a stale record is a fault too. The areas and the imports between them are drawn on the wiki's Architecture page by scripts/wiki-developers.mjs.
 //
 //   node scripts/code-structure.mjs   lists each fault, and fails when there is one
 import { execFileSync } from 'node:child_process';
@@ -39,13 +39,14 @@ export function globToRegExp(glob) {
 }
 
 /**
- * The structure in `architecture` (the text of architecture.gql): the parts with a path, and the areas of each. An area
+ * The structure in `architecture` (the text of architecture.gql), plus the cycles in `recorded` (the text of
+ * architecture-cycles.gql, the same graph continued). It holds the parts with a path, and the areas of each. An area
  * is {id, name, does, section, part, globs, nots, most}. Its files are those matching a glob of `files` and none of
  * `not`, so a folder is cut by file name without listing every file. `cycles` holds each recorded CYCLES_WITH pair as
  * 'a b', the two ids sorted. Parts are sorted so the one with the longest path, the closest folder, comes first.
  */
-export function readStructure(architecture) {
-  const g = gs.worldFromStore(gs.read([architecture])).project_architecture;
+export function readStructure(architecture, recorded = '') {
+  const g = gs.worldFromStore(gs.read(recorded ? [architecture, recorded] : [architecture])).project_architecture;
   const text = (id, key) => (g.p(id)[key] === undefined ? undefined : String(g.p(id)[key]));
   const parts = g
     .labelled('Part')
@@ -218,7 +219,7 @@ export const repoFiles = () =>
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
-  const structure = readStructure(read('requirements/architecture.gql'));
+  const structure = readStructure(read('requirements/architecture.gql'), read('requirements/architecture-cycles.gql'));
   const files = repoFiles();
   const problems = structureProblems(structure, files);
   if (!problems.length) problems.push(...cycleProblems(structure, structureFacts(structure, files, read)));
