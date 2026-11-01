@@ -7,7 +7,11 @@ import type { ViewState, ViewSwitch } from '@thoughtknot/core';
 import { SEMANTIC_RUNGS, type SemanticRung } from '../../semantic-zoom.ts';
 import { renderDock } from './controls-dock.ts';
 import { fillDock } from './controls-keys.ts';
-import type { ViewMenu } from './view-switches.ts';
+
+/** The View menu, as the dock needs it: it redraws its switches, and the dock follows. */
+export interface ViewMenu {
+  refresh: () => void;
+}
 
 /** What the dock asks of the card's switches: to step the ladder, or turn a switch. */
 export interface ViewKeys {
