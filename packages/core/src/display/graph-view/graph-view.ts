@@ -275,6 +275,7 @@ export class GraphView extends Lifecycle {
         } else {
           source?.remove();
           if (slot) this.o.onReady?.(slot);
+          this.edits.columns(); // a button to add a card to each column of a board (§72)
         }
         const reopen =
           this.edits.handedOn() ?? this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
