@@ -9,6 +9,10 @@
 //   node scripts/quality-check.mjs --fast                  measure the quick metrics now (file sizes, secrets) and
 //                                                          compare.
 //   node scripts/quality-check.mjs --coverage              run the suite with coverage; compare each package's share.
+//   node scripts/quality-check.mjs --coverage-shard 2/6 --lcov-out f.info
+//                                                          one share of that run, its report kept for the merge below.
+//   node scripts/quality-check.mjs --coverage-merge a.info b.info ...
+//                                                          merge the shares' reports; compare each package's share.
 //   node scripts/quality-check.mjs --baseline-since <ref>  compare the committed baseline with the one at this commit.
 //
 // Exits 1 and names each metric that is worse, with the baseline value, the new one and what would let it through. Test
@@ -22,7 +26,7 @@
 // - In CI (GITHUB_ACTIONS set), no baseline for them, or one counted on another machine, fails. It fails after the
 //   figures are printed.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { INSTRUCTION_TOLERANCE, METRICS } from './quality-spec.mjs';
@@ -301,13 +305,28 @@ function report(r, details, passed) {
 async function main(argv) {
   const since = argv.includes('--baseline-since') ? argv[argv.indexOf('--baseline-since') + 1] : undefined;
   const fast = argv.includes('--fast');
-  const coverage = argv.includes('--coverage');
-  const file = argv.find((x) => !x.startsWith('--') && x !== since);
-  if (!fast && !coverage && !file && !since) {
+  const shardAt = argv.indexOf('--coverage-shard');
+  const mergeAt = argv.indexOf('--coverage-merge');
+  const coverage = argv.includes('--coverage') || mergeAt >= 0;
+  // the value of an option that takes one is not the metrics file
+  const takesValue = new Set(['--baseline-since', '--coverage-shard', '--lcov-out']);
+  const file = mergeAt >= 0 ? undefined : argv.find((x, i) => !x.startsWith('--') && !takesValue.has(argv[i - 1]));
+  if (!fast && !coverage && !file && !since && shardAt < 0) {
     console.error(
-      'usage: node scripts/quality-check.mjs <metrics.json> | --fast | --coverage | --baseline-since <ref>',
+      'usage: node scripts/quality-check.mjs <metrics.json> | --fast | --coverage | --coverage-shard N/M --lcov-out <file> | --coverage-merge <files> | --baseline-since <ref>',
     );
     return 2;
+  }
+  if (shardAt >= 0) {
+    const out = argv[argv.indexOf('--lcov-out') + 1];
+    const run = (await import('./quality-suite.mjs')).measureCoverage(ROOT, argv[shardAt + 1]);
+    if (!run.passed) {
+      console.error(`the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}`);
+      return 1;
+    }
+    writeFileSync(out, run.lcov);
+    console.log(`coverage of share ${argv[shardAt + 1]} kept in ${out}`);
+    return 0;
   }
   const baseline = readJSON(BASELINE),
     accepted = readJSON(ACCEPTED).accepted;
@@ -326,7 +345,17 @@ async function main(argv) {
     return report(r.result, {}, passed) ? 0 : 1;
   }
   let quick = fast ? (await import('./quality-metrics.mjs')).measureFast() : undefined;
-  if (coverage) {
+  if (mergeAt >= 0) {
+    const { mergeLcov, coverageMetrics } = await import('./quality-suite.mjs');
+    const files = argv.slice(mergeAt + 1).filter((x) => !x.startsWith('--'));
+    if (!files.length) {
+      console.error('--coverage-merge needs the reports of the shares');
+      return 2;
+    }
+    const metrics = coverageMetrics(mergeLcov(files.map((f) => readFileSync(f, 'utf8'))));
+    console.log(`coverage: ${JSON.stringify(metrics)}`);
+    quick = { metrics, details: {} };
+  } else if (coverage) {
     const run = (await import('./quality-suite.mjs')).measureCoverage(ROOT);
     if (!run.passed) {
       console.error(`the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}`);

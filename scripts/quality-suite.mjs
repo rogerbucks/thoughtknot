@@ -87,6 +87,39 @@ export function parseLcov(lcov, folder) {
   return total;
 }
 
+/**
+ * One lcov report from several: the reports of a suite split over machines (`--test-shard`), each with its share of the
+ * test files. A line counts as hit when any report hit it. Files and lines come back in order, with LF and LH counted
+ * again from the lines, which is all `parseLcov` reads.
+ */
+export function mergeLcov(reports) {
+  const files = new Map();
+  for (const report of reports)
+    for (const record of report.split('end_of_record')) {
+      const file = /^SF:(.*)$/m.exec(record)?.[1];
+      if (!file) continue;
+      if (!files.has(file)) files.set(file, new Map());
+      const lines = files.get(file);
+      for (const [, line, hits] of record.matchAll(/^DA:(\d+),(\d+)/gm))
+        lines.set(Number(line), (lines.get(Number(line)) ?? 0) + Number(hits));
+    }
+  return [...files.keys()]
+    .sort()
+    .map((file) => {
+      const lines = [...files.get(file)].sort((a, b) => a[0] - b[0]);
+      const hit = lines.filter(([, hits]) => hits > 0).length;
+      return [
+        `SF:${file}`,
+        ...lines.map(([line, hits]) => `DA:${line},${hits}`),
+        `LF:${lines.length}`,
+        `LH:${hit}`,
+        'end_of_record',
+      ].join('\n');
+    })
+    .join('\n')
+    .concat('\n');
+}
+
 /** The `--test-coverage-include` arguments for every package held, and each package's metric from an lcov report. */
 export const COVERAGE_INCLUDE = Object.values(COVERAGE_PACKAGES)
   .flat()
@@ -182,13 +215,15 @@ export function measureSuite(root) {
 
 /**
  * The coverage of each package from one run of the suite, as a pull request that touches a package makes it (CODE-3).
- * `passed` is false if the run failed, and then its figures mean nothing.
+ * `passed` is false if the run failed, and then its figures mean nothing. With a `shard` such as `2/6` it runs only that
+ * share of the test files; its `lcov` is then merged with the other shards' (`mergeLcov`).
  */
-export function measureCoverage(root) {
+export function measureCoverage(root, shard) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-coverage-'));
   try {
     const lcov = join(dir, 'lcov.info');
     const run = nodeTest(root, [
+      ...(shard ? [`--test-shard=${shard}`] : []),
       '--experimental-test-coverage',
       ...COVERAGE_INCLUDE,
       '--test-reporter=./scripts/quiet-reporter.mjs',
@@ -200,6 +235,8 @@ export function measureCoverage(root) {
       passed: run.passed,
       stderr: run.stderr,
       metrics: run.passed ? coverageMetrics(readFileSync(lcov, 'utf8')) : {},
+      // the raw report, for a split run: the parts are merged later, as one suite's
+      lcov: run.passed ? readFileSync(lcov, 'utf8') : '',
     };
   } finally {
     rmSync(dir, { recursive: true, force: true });
