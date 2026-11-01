@@ -47,7 +47,7 @@ test('an exploration is saved as one Explore line, and saved again it is changed
   assert.deepEqual(data(first.note), data(NOTE), 'the data is never touched');
   const block = gqlBlocks(first.note).at(-1).text;
   assert.ok(
-    block.includes("(explore_1:Explore {centre: 'idea', shown: 'a, b, c, a1, a2', shape: 'rings', per_branch: 12})"),
+    block.includes("(explore_1:Explore {centre: 'idea', shown: 'a, b, c, a1, a2', shape: 'rings', per_branch: 40})"),
     block,
   );
   s.close('a');
@@ -64,7 +64,7 @@ test('an exploration is saved as one Explore line, and saved again it is changed
   assert.deepEqual(problems, []);
   assert.deepEqual(
     { ...savedExploreFor(style.explores), at: undefined },
-    { centre: 'idea', shown: ['a', 'b', 'c'], shape: 'rings', perBranch: 12, at: undefined },
+    { centre: 'idea', shown: ['a', 'b', 'c'], shape: 'rings', perBranch: 40, at: undefined },
   );
   assert.equal(savedExploreFor(style.explores, 'board'), undefined, 'a view has its own');
 });
@@ -96,7 +96,7 @@ test('a centre the graph lacks is a problem with its fix; a shown thing it lacks
   const { style, problems } = read([MIND, lines.join('\n')]);
   assert.deepEqual(
     { ...savedExploreFor(style.explores), at: undefined },
-    { centre: 'idea', shown: ['a'], shape: 'balanced', perBranch: 12, at: undefined },
+    { centre: 'idea', shown: ['a'], shape: 'balanced', perBranch: 40, at: undefined },
   );
   assert.deepEqual(
     problems.map(([line, message]) => [line, message]),

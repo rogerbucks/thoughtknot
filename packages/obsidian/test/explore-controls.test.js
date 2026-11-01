@@ -4,6 +4,8 @@
 // - Explore from here in a thing's details shows it with its direct links alone, and says so in the banner.
 // - Each thing shown with neighbours waiting has a badge; pressed, it opens that branch and selects nothing.
 // - The banner's Show the whole graph ends the exploration.
+// - An open branch always has a − that folds it, with + more beside it while some wait.
+// - Each sits at the branch's outer end, as in a classic mind map (Roger, 1 Nov 2026).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';
@@ -80,4 +82,48 @@ test('Explore from here is a toggle, and Show only ends the exploration', async 
   await until(() => !badge(el, 'q'));
   withText(el.querySelector('.thoughtknot-untangle'), 'button', 'Show the whole graph').click();
   await until(() => !!thing(el, 'island'));
+});
+
+const HUB = [
+  '// graph: hub',
+  "(hub:Idea {name: 'Hub'}),",
+  ...['w', 'e', 'n', 's'].map((k) => `(${k}:Idea {name: '${k}'}), (hub)-[:LINKS]->(${k}),`),
+  ...Array.from({ length: 8 }, (_, i) => `(l${i}:Idea {name: 'l${i}'}), (w)-[:LINKS]->(l${i}),`),
+  '(e)-[:LINKS]->(l0)',
+].join('\n');
+const xsOf = (g) =>
+  (g.querySelector('path, polygon')?.getAttribute('d') ?? g.querySelector('polygon')?.getAttribute('points') ?? '')
+    .match(/-?\d+(?:\.\d+)?/g)
+    .map(Number)
+    .filter((_v, i) => i % 2 === 0);
+
+// proves: explore_badges
+test('an open branch always folds with its −, + more waits beside it, and each sits at the outer end', async () => {
+  const card = (await show(env, fence(HUB))).el;
+  tap(card, thing(card, 'hub'));
+  withText(card.querySelector('.thoughtknot-details'), 'button', 'Explore from here').click();
+  await until(() => !!thing(card, 'w') && !thing(card, 'l0'));
+  const per = card
+    .querySelector('.thoughtknot-explore-sidebar')
+    .querySelectorAll('.thoughtknot-explore-dial')
+    .find((d) => /Per branch/.test(d.textContent));
+  per.querySelector('[role="spinbutton"]').dispatch('keydown', { key: 'Home' });
+  const of = (key, fold) =>
+    card.querySelector(`.thoughtknot-explore-badge[data-explore="${key}"][data-fold="${fold}"]`);
+  await until(() => !!of('w', 'more'));
+  of('w', 'more').click();
+  await until(() => !!thing(card, 'l0') && !!of('w', 'close'));
+  assert.equal(of('w', 'more').querySelector('text').textContent, '+2', 'six shown, two still waiting');
+  assert.equal(of('w', 'close').querySelector('text').textContent, '−', 'and it folds all the same');
+  for (const fold of ['close', 'more']) {
+    const cx = Number(of('w', fold).querySelector('circle').getAttribute('cx')),
+      xs = xsOf(thing(card, 'w'));
+    const outer = Math.abs(cx - Math.min(...xs)) < Math.abs(cx - Math.max(...xs)) ? 'left' : 'right';
+    const left = Math.max(...xs) < Math.min(...xsOf(thing(card, 'hub')));
+    assert.equal(outer, left ? 'left' : 'right', `the ${fold} badge sits at the outer end`);
+  }
+  of('w', 'close').click();
+  await until(() => !thing(card, 'l0'));
+  assert.ok(!of('w', 'close'), 'folded, it offers only +');
+  assert.equal(of('w', 'more').querySelector('text').textContent, '+8');
 });

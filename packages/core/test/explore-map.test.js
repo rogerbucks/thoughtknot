@@ -59,16 +59,16 @@ test('closing a branch hides all reached through it, and the thing itself stays'
 });
 
 test('a big branch shows a few at a time, best-linked first, kept in the order written', () => {
-  const spokes = Array.from({ length: 30 }, (_, i) => `s${i}`);
-  // s29 has a second link, so it is better linked than the rest
-  const d = drawing(['hub', ...spokes, 'far'], [...spokes.map((s) => link('hub', s)), link('s29', 'far')]);
+  const spokes = Array.from({ length: 90 }, (_, i) => `s${i}`);
+  // s89 has a second link, so it is better linked than the rest
+  const d = drawing(['hub', ...spokes, 'far'], [...spokes.map((s) => link('hub', s)), link('s89', 'far')]);
   const m = new ExploreMap(d, 'hub');
   const first = m.open('hub');
   assert.equal(first.length, BRANCH_FIRST);
-  assert.ok(first.includes('s29'), 'the best-linked comes first');
+  assert.ok(first.includes('s89'), 'the best-linked comes first');
   assert.deepEqual(first.slice(0, 3), ['s0', 's1', 's2'], 'then ties in the order written');
-  assert.equal(first.at(-1), 's29', 'and all are shown in the order written');
-  assert.equal(m.hidden('hub'), 30 - BRANCH_FIRST, 'the rest wait as + more');
+  assert.equal(first.at(-1), 's89', 'and all are shown in the order written');
+  assert.equal(m.hidden('hub'), 90 - BRANCH_FIRST, 'the rest wait as + more');
   assert.equal(m.open('hub').length, BRANCH_FIRST, 'opened again, it shows the next few');
   m.perBranch = 100;
   assert.equal(m.perBranch, BRANCH_RANGE[1], 'the dial stops at its most');
