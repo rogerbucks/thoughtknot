@@ -2,7 +2,8 @@
 // branches one at a time, in every view.
 //
 // The thing it starts from is the centre. Each thing shown has one parent: the thing its branch was opened from. So
-// what is shown reads as a tree from the centre. Any other link between two shown things is a cross-link.
+// what is shown reads as a tree from the centre. Any other link between two shown things is a cross-link, hidden unless
+// asked for: Roger, 1 Nov 2026, wanted a classic mind map, with no lines looping back.
 //
 // Opening a branch adds that one thing's hidden neighbours, a few at a time, and nothing else. Closing it hides all
 // that was reached through it. Nothing else shown ever changes, so a view can keep every other box where it is.
@@ -12,8 +13,8 @@ import { EXPANSION_MOST, partOf } from './expand-on-demand.ts';
 import { adjacency, edgesOf } from './focus.ts';
 import type { GraphDrawing } from './note-reading.ts';
 
-/** How many things one branch shows at first: a mind map reads well with about a dozen per branch. */
-export const BRANCH_FIRST = 12;
+/** How many things one branch shows when opened: all, as a classic mind map does, up to the dial's most (1 Nov 2026). */
+export const BRANCH_FIRST = 40;
 /** The fewest and most things a branch may show at once, as the per-branch dial allows. */
 export const BRANCH_RANGE = [6, 40] as const;
 /** The most steps out the depth dial reaches. */
