@@ -199,6 +199,8 @@ async function reducedMotion(page, { plant } = {}) {
 /** Opens the details sheet of the first box at a phone's width, and measures every button on it. */
 async function sheetTargets(page, { plant } = {}) {
   const { browser } = page;
+  // a phone has a touch screen. A Mac's Chrome says it has a mouse, which gives a line its compact 28 pixels
+  await browser.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await browser.resize(NARROW, 700);
   try {
     await ready(page, { plant });
@@ -218,6 +220,7 @@ async function sheetTargets(page, { plant } = {}) {
           `the sheet: button ${b.name} is ${Math.round(b.width)} by ${Math.round(b.height)}, under ${SHEET_TARGET} by ${SHEET_TARGET}`,
       );
   } finally {
+    await browser.send('Emulation.setTouchEmulationEnabled', { enabled: false });
     await browser.resize(WIDE);
   }
 }
