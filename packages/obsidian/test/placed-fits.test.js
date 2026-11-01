@@ -1,5 +1,5 @@
-// A card drawn off the page, as Live Preview draws each card before it puts it there, fits its frame once it is placed
-// (editor spec §15, centre_here_fits). Off the page the card has no size, so a drawing aimed then lands off the frame.
+// Live Preview draws each card off the page, then puts it there. Once placed, the card fits its frame (editor spec
+// §15, centre_here_fits). Off the page the card has no size, so a drawing aimed then lands off the frame.
 // Roger, 1 Nov 2026: "centre here seems to always cause the drawing to fail completely". The card drawn around a new
 // centre fits, its centre in the middle: the last layout's zoom and pan do not fit the new one.
 import { test, describe, before } from 'node:test';

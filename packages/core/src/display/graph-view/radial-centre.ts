@@ -105,8 +105,8 @@ export function aroundSelected(
 
 /**
  * What a card leaves for the card drawn around a new centre, `key` (none: the usual centre), from where it is now,
- * `at`. The new card fits, its centre in the middle: the zoom and pan of the last layout do not fit the new one, and
- * kept they put the drawing off the frame (Roger, 1 Nov 2026: "centre here seems to always cause the drawing to fail
+ * `at`. The new card fits, its centre in the middle. The last layout's zoom and pan do not fit the new one. Kept,
+ * they put the drawing off the frame (Roger, 1 Nov 2026: "centre here seems to always cause the drawing to fail
  * completely"). Nor is the thing selected opened again, which would zoom in on it. Full screen, space and each
  * box's place, to glide from, are kept.
  */
