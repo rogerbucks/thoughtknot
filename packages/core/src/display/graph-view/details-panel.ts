@@ -15,6 +15,7 @@ import { button } from '../button';
 import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton, trailKept } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
+import { detailsShown, inPhoneSheet } from './controls-sheet';
 import { RichDetails } from './rich-details';
 import { renderSummary } from './details-summary';
 import { relabelShowOnly, untangleOffers } from './details-untangle';
@@ -76,7 +77,7 @@ export class DetailsPanel {
     this.sheet = new DetailsSheet(el, {
       // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
       // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
-      on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
+      on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen && !inPhoneSheet(el),
       paneable: () => o.mode === 'note' && !o.aids?.detailsOpen,
       close: () => this.close(),
       moved: () => this.actions?.sheetMoved(),
@@ -204,7 +205,7 @@ export class DetailsPanel {
     this.rich.begin();
     this.images.release('details'); // the images of the details shown before let go
     el.empty();
-    el.hidden = false;
+    detailsShown(el, true); // and, on a phone, its sheet turns to them (controls_sheet)
     el.setAttribute('aria-label', word('details.of', { name: title }));
     el.toggleClass('is-sheet', isPhone() && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'thoughtknot-details-head' });
@@ -231,7 +232,7 @@ export class DetailsPanel {
 
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
   close(): void {
-    this.el.hidden = true;
+    detailsShown(this.el, false);
     this.images.release('details');
     this.shown = null;
     if (!trailKept(this.o)) this.trail.clear(); // Focus support keeps it, to go back along (§69)
