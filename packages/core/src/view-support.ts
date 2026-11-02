@@ -63,7 +63,9 @@ export function viewSupport(view: string, option: ViewOption): Support {
     return 'yes';
   }
   if (option === 'lens') return CELLS.has(view) ? 'cells' : 'yes';
-  if (LAYOUT_ONLY.includes(option)) return view === 'force' && option === 'layout' ? 'yet' : 'own-shape';
+  // Force lays things out itself, so it takes the View menu's spacing; its own layout is still to be built (PR 4)
+  if (view === 'force' && (option === 'spacing' || option === 'layout')) return option === 'spacing' ? 'yes' : 'yet';
+  if (LAYOUT_ONLY.includes(option)) return 'own-shape';
   if (TILES.has(view) && (option === 'labels' || option === 'hubs' || option === 'merge')) return 'no-links';
   if (FOLDS.includes(option)) return 'yet';
   return 'yes';

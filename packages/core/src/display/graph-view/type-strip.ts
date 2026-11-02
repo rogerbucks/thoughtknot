@@ -14,6 +14,7 @@ import type {
   DiagramSpace,
   DiagramTable,
   DiagramType,
+  LayoutOptions,
   DiagramWrite,
   Drawn,
   GraphDrawing,
@@ -139,6 +140,8 @@ export interface PluginPicture {
   live?: boolean;
   /** The shape it was drawn from, so a grid's card is moved by the columns it was drawn in (grid-drag.ts). */
   shape?: GraphShape;
+  /** It drawn again with the View menu's layout options, for a view that lays things out itself; null, not drawn. */
+  redraw?: (layout: Partial<LayoutOptions>) => Promise<string | null>;
 }
 
 /** A type's name as a sentence says it, with its article: "a tree". */
