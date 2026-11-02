@@ -20,7 +20,11 @@ export function layoutControls(
 ) {
   const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
     const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says), attr: layoutSliderRow(k) });
+    const row = holder().createEl('label', {
+      cls: 'thoughtknot-layout-option',
+      text: word(says),
+      attr: layoutSliderRow(k),
+    });
     const input = row.createEl('input', {
       attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
     });
