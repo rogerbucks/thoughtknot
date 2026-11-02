@@ -13,7 +13,7 @@ import { inlineSource } from './inline-properties.ts';
 import { foldedSource, routedSource } from './fold-source.ts';
 import { flowSource } from './link-flow.ts';
 import { pictureSource } from './picture.ts';
-import { spacedSource } from './spaced-source.ts';
+import { lanedSource, spacedSource } from './spaced-source.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
@@ -30,6 +30,7 @@ import {
   stepIn,
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
+import { layoutOptions } from './layouts/layout-options.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -109,8 +110,11 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // drawing that fits the note best is shown. A drawing whose layout ran out of time is laid out by a cheaper step,
   // whatever its routing and type (layout_never_text). Rows and a grid are tried one way only
   const { step } = drawing;
+  // a tree, flow or lanes is laid out by the layout the View menu chose, rows, spread out or a plug-in's, as a network is
   const ours =
-    step || (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct'));
+    step ||
+    (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct')) ||
+    (shapeable(drawing) && layoutOptions(drawing.layoutOptions).strategy !== 'auto');
   const cheap = quick || (step && step !== 'own');
   const ways = only ? [only] : cheap ? STYLE.directions.slice(0, 1) : STYLE.directions;
   const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));
@@ -158,8 +162,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
       !quick && !step && shapeable(drawing) && ownable(dot)
         ? ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false)
         : undefined;
-    // the View menu's spacing reaches Graphviz too, not only our own engine (view_options_everywhere)
-    const spaced = spacedSource(dot, drawing.layoutOptions);
+    // the View menu's layout and lanes reach Graphviz too, not only our own engine (view_options_everywhere)
+    const spaced = spacedSource(lanedSource(dot, drawing), drawing.layoutOptions);
     return { rankdir, dot: quick ? quickSource(spaced) : spaced, src, ...(shaped ? { shaped } : {}) };
   });
 }

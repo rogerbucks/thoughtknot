@@ -33,6 +33,8 @@ export const listed = (k: LayoutChoice): [string, string][] =>
     ? [...LAYOUT_CHOICES.strategy, ...offeredLayouts().map((l) => l.id)].map((v) => [v, strategyName(v)])
     : LAYOUT_CHOICES[k].map((v) => [v, word(`view.layout.${k}.${v.toLowerCase()}` as WordKey)]);
 
+/** The class of the line saying some controls are only for our own engine (view_controls_apply). */
+export const OWN_HINT_CLASS = 'thoughtknot-own-hint';
 /** The attribute that names the option a row of the menu is (view-support.ts). */
 export const OPTION_ATTRIBUTE = 'data-option';
 /** The ladder of detail's attributes, described by the hint `hint`. */

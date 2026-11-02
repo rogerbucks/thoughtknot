@@ -16,13 +16,7 @@ import { VIEW_TYPES } from '../src/view-types/view-types.ts';
 import { word } from '../src/words.ts';
 
 /** The options each view could take but does not yet: the list only shrinks (view-options design, 2 Nov 2026). */
-const KNOWN_GAPS = {
-  tree: ['lanes', 'layout'],
-  flow: ['lanes', 'layout'],
-  radial: ['lanes', 'layout'],
-  lanes: ['lanes', 'layout'],
-  timeline: ['lanes', 'layout'],
-};
+const KNOWN_GAPS = {};
 
 describe('which view takes which option', () => {
   // proves: view_options_everywhere

@@ -4,8 +4,7 @@
 import { word } from '@thoughtknot/core';
 import { VIEW_OPTIONS, notHereSaid, viewSupport } from '../../view-support.ts';
 import type { NotHere, ViewOption } from '../../view-support.ts';
-import { OPTION_ATTRIBUTE } from '../../view-menu-rows.ts';
-import { OWN_HINT_CLASS } from './view-layout-controls.ts';
+import { OPTION_ATTRIBUTE, OWN_HINT_CLASS } from '../../view-menu-rows.ts';
 
 /** The View menu, as greying it needs: its rows, and its redraw, which the greying follows. */
 export interface MenuToGrey {
@@ -32,7 +31,6 @@ export function notHereIn(view: string): Map<ViewOption, NotHere> {
  */
 export function greyNotHere(root: HTMLElement, menu: MenuToGrey, view: string): void {
   const off = notHereIn(view);
-  if (!off.size) return;
   const grey = () => {
     laysOut(menu.el, view, off);
     for (const row of [...rowsIn(menu.el), ...rowsIn(root.querySelector<HTMLElement>('.thoughtknot-view-dock'))]) {
@@ -54,7 +52,7 @@ export function greyNotHere(root: HTMLElement, menu: MenuToGrey, view: string): 
 const OWN_OPTIONS: readonly ViewOption[] = ['lanes', 'layout'];
 
 /**
- * The controls of `menu` only our own engine reads, set going where `view` lays itself out by them, such as Force.
+ * The controls of `menu` only our own engine reads, set going where `view` takes them, such as Force or a tree.
  * The menu greys them, saying only a network takes them, for any drawing our engine did not lay out.
  */
 function laysOut(menu: HTMLElement, view: string, off: ReadonlyMap<ViewOption, NotHere>): void {

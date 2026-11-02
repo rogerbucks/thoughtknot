@@ -60,3 +60,42 @@ test('a tree, flow and lanes run the way the View menu’s Direction picks, as G
     }
   }
 });
+
+// requirement, then tests, then code: kinds that link in order
+const ORDERED = [
+  "// graph: org\n(r:Req {name: 'R'}),\n(t:Test {name: 'T'}),\n(t2:Test {name: 'T2'}),\n(c:Code {name: 'C'}),\n(c2:Code {name: 'C2'}),\n(r)-[:M]->(t),\n(r)-[:M]->(t2),\n(t)-[:M]->(c),\n(t2)-[:M]->(c2)",
+];
+/** The org graph drawn as the diagram type `type`. */
+const drawnAs = (type) => {
+  const reading = readNote(ORDERED);
+  const texts = [...ORDERED, `// graph: org_style · STYLE org\n(d:Diagram {type: '${type}'})`];
+  return styledDrawing(reading.graphs.get('org'), readStyle(texts, 'org', reading).style, reading.world.org);
+};
+const columns = (d) => (directions(d)[0].dot.match(/^ {2}\{ rank=same; /gm) ?? []).length;
+
+// proves: view_options_everywhere
+test('rounds and a wider or taller shape are written for Graphviz', () => {
+  assert.match(spacedSource(DOT, { rounds: 2 }), /pad=0.1, mclimit=2\];/);
+  assert.match(spacedSource(DOT, { shape: 'wide' }), /pad=0.1, ratio=0.5\];/);
+  assert.match(spacedSource(DOT, { shape: 'tall', rounds: 0.5 }), /pad=0.1, mclimit=0.5, ratio=2\];/);
+  assert.equal(spacedSource(DOT, { rounds: 1, shape: 'screen' }), DOT);
+});
+
+// proves: view_options_everywhere
+test('a network Graphviz lays out keeps each kind in a column of its own with lanes on, and none with lanes off', () => {
+  const reading = readNote(ORDERED);
+  const d = reading.graphs.get('org');
+  assert.equal(columns(d), 2, 'the tests in one column, the code in another');
+  assert.equal(columns({ ...d, kindLanes: false }), 0);
+});
+
+// proves: view_options_everywhere
+test('a tree, flow and lanes are laid out by the layout the View menu chose; by Graphviz on Auto', () => {
+  for (const type of ['tree', 'flow', 'lanes']) {
+    const d = drawnAs(type);
+    assert.equal(d.diagram?.type, type);
+    assert.ok(!directions(d)[0].own, `${type} on Auto: Graphviz`);
+    for (const strategy of ['rows', 'spread'])
+      assert.ok(directions({ ...d, layoutOptions: { strategy } })[0].own, `${type} in ${strategy}`);
+  }
+});

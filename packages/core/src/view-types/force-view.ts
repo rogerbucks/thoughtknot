@@ -44,9 +44,11 @@ export type Spots = Readonly<Record<string, readonly [number, number]>>;
 
 /**
  * Where each thing of `shape` sits, in the layout's own units, starting from `previous` where it has a place. The View
- * menu's layout options say how (view_options_everywhere): rounds take more or fewer steps; in rows each thing keeps
- * its row, by the way its links run; a plug-in's layout places things at its `spots`; and the shape stretches the
- * whole wider or taller.
+ * menu's layout options say how (view_options_everywhere):
+ * - rounds take more or fewer steps;
+ * - in rows, each thing keeps its row, by the way its links run;
+ * - a plug-in's layout places things at its `spots`;
+ * - the shape stretches the whole wider or taller.
  */
 export function forceLayout(
   shape: GraphShape,

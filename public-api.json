@@ -800,6 +800,7 @@
           "interface",
           "height: number",
           "layout?: Partial<LayoutOptions> | undefined",
+          "spots?: Readonly<Record<string, readonly [number, number]>> | undefined",
           "width: number"
         ],
         "DiagramTable": [
@@ -4331,6 +4332,9 @@
         "spanOf": [
           "value: (block: string, t: Target, unnamed?: { line: number; character: number; }) => { from: number; to: number; } | null"
         ],
+        "spotsBy": [
+          "value: (shape: GraphShape, raw?: Partial<LayoutOptions>) => Promise<Record<string, [number, number]> | undefined>"
+        ],
         "SqlEngine": [
           "interface",
           "run: (sql: string, params?: readonly (string | number | null)[]) => Record<string, unknown>[]"
@@ -4940,7 +4944,7 @@
           "type = 'picked' | 'near' | 'reaches' | 'kinds' | 'path'"
         ],
         "ViewLayer": [
-          "type = 'dimensions' | 'filters' | 'strategy' | 'projection' | 'formatting' | 'painter'"
+          "type = 'strategy' | 'dimensions' | 'filters' | 'projection' | 'formatting' | 'painter'"
         ],
         "viewLayers": [
           "value: (style: StyleGraph, view?: string) => ViewLayers"

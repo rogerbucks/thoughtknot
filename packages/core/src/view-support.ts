@@ -49,18 +49,24 @@ const FIXED_WAY = new Set(['radial', 'timeline']);
 /** The options a view drawn as marks takes from the graph's layout, which its own shape replaces. */
 const LAYOUT_ONLY: readonly ViewOption[] = ['lanes', 'layout', 'spacing', 'direction'];
 /**
- * The options only our own engine reads, so only a plain network takes them yet (view_controls_apply). Direction is
- * not one: Graphviz runs a tree, flow or lanes the way the View menu picks, as render.ts hands it the one direction.
+ * The options a diagram type's own shape sets. Its shape is its levels, links running one way, a lane for each group,
+ * rings round a middle or days in order. So none lays out its kinds in lanes. A tree, flow and lanes take the View
+ * menu's layout (spaced-source.ts, render.ts).
  */
-const OWN_ENGINE: readonly ViewOption[] = ['lanes', 'layout'];
+const SHAPE_SETS: Readonly<Record<string, readonly ViewOption[]>> = {
+  tree: ['lanes'],
+  flow: ['lanes'],
+  lanes: ['lanes'],
+  radial: ['lanes', 'layout'],
+  timeline: ['lanes', 'layout'],
+};
 
 /** Whether `option` works in `view`: a diagram type such as `tree`, or a view drawn as marks such as `matrix`. */
 export function viewSupport(view: string, option: ViewOption): Support {
   if (!SUPPORTED_VIEWS.includes(view)) return 'own-shape';
   if ((GRAPH_TYPES as readonly string[]).includes(view)) {
     if (option === 'direction' && FIXED_WAY.has(view)) return 'fixed-way';
-    // our own engine lays out a plain network only: Graphviz lays the other types out, without these (PR 4)
-    if (OWN_ENGINE.includes(option) && view !== 'network') return 'yet';
+    if (SHAPE_SETS[view]?.includes(option)) return 'own-shape';
     return 'yes';
   }
   if (option === 'lens') return CELLS.has(view) ? 'cells' : 'yes';

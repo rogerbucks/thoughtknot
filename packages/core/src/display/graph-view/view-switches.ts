@@ -26,8 +26,8 @@ import { viewDock } from './controls-view';
 import { dockHead, wideWindow } from './controls-dock';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
-import { GROUP_BY_ROW, HINTS, ladderAttributes } from '../../view-menu-rows.ts';
-import { OWN_HINT_CLASS, OWN_ONLY, layoutControls } from './view-layout-controls.ts';
+import { GROUP_BY_ROW, HINTS, OWN_HINT_CLASS, ladderAttributes } from '../../view-menu-rows.ts';
+import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
 
