@@ -351,15 +351,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "e1f88d8ed94fb62d03de1784eb568d11b6ed2b7bd19906121b44aa16abbc7a93",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "914374cc148248055bdec7cf1a5cea7438295d9acf2a8f271eeeb59a9ca0830c",
+      "reason": "Names scale with their things and link labels show by default (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "db4dba51533bccd175d089c5124a8f7f9e5aea71eb5ba53f85941d2318923b87",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "914764e29defbd6edcfc42c32cb1d414f5296dec3c6960619ede67e4273250ff",
+      "reason": "Names scale with their things and link labels show by default (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",

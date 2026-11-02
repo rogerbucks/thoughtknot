@@ -62,19 +62,19 @@ describe('the switches', () => {
     );
   });
 
-  test('start from the settings: labels by zoom on, busy hubs folded off, groups folded off, links merged off, our engine on', () => {
+  test('start from the settings: labels by zoom off, busy hubs folded off, groups folded off, links merged off, our engine on', () => {
     // every thing starts open, its links drawn; the person folds what they want (Roger, 24 Oct 2026)
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS), {
-      labels: true,
+      labels: false,
       hubs: false,
       groups: false,
       merge: false,
       engine: true,
       lanes: true,
     });
-    const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on', foldHubs: 'on' };
+    const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'on', foldGroups: 'on', foldHubs: 'on' };
     assert.deepEqual(startingSwitches(changed), {
-      labels: false,
+      labels: true,
       hubs: true,
       groups: true,
       merge: false,
@@ -97,7 +97,7 @@ describe('the switches', () => {
       `${GROUPED},\n(r1:Links {merge: 'on'}),\n(w1:Shown {view: 'near', labels: 'off', merge: 'off', groups: 'on'})`,
     );
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style), {
-      labels: true,
+      labels: false,
       hubs: false,
       groups: false,
       merge: true,

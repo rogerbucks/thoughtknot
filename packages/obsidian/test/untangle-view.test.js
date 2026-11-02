@@ -493,7 +493,11 @@ describe('labels by zoom, folded hubs and groups, merged links and routing', () 
 
   test('each changes only the drawing: folded, merged, routed and labelled by zoom, the note never written', async () => {
     // busy hubs folded on: by default every thing starts open (view_switch_defaults)
-    const env = await loadWith({ files: { [PATH]: NOTED }, width: 150, data: { settings: { foldHubs: 'on' } } });
+    const env = await loadWith({
+      files: { [PATH]: NOTED },
+      width: 150,
+      data: { settings: { foldHubs: 'on', labelsByZoom: 'on' } },
+    });
     try {
       const laid = [];
       const layout = env.plugin.layout.bind(env.plugin);
