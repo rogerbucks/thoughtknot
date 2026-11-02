@@ -1,6 +1,7 @@
-// Links that touch their things' edges (Roger, 2 Nov 2026). A view drew each link from one thing's middle to the
+// Links drawn as the network view draws them (Roger, 2 Nov 2026). A view drew each link from one thing's middle to the
 // other's, so the line ran over the shape and its arrowhead hid under it. Now each end stops where the line, aimed at
-// the thing's middle, meets the thing's outline: an ellipse's curve, a diamond's sides, or a box's. Host-free and pure.
+// the thing's middle, meets the thing's outline: an ellipse's curve, a diamond's sides, or a box's. Each link also takes
+// its type's colour, as in the network view, so a type reads the same in every view. Host-free and pure.
 import type { BoxShape, DrawMark } from '../drawing-marks.ts';
 import type { MarkPoint } from '../plugin-diagrams.ts';
 
@@ -57,5 +58,23 @@ export function linkEnds(marks: DrawMark[]): DrawMark[] {
     if (a) points[0] = onEdge(a, points[0] as MarkPoint, points[1] as MarkPoint);
     if (b) points[n - 1] = onEdge(b, points[n - 1] as MarkPoint, points[n - 2] as MarkPoint);
     return { ...m, points };
+  });
+}
+
+/**
+ * `marks` with each plain link in its type's colour, `reading.<n>`, as the network view draws it. `types` are the
+ * links' types in order, as the theme numbers them (plugin-diagrams.ts). A link is matched to its own by its number
+ * in `links`, as `link\n<i>`, or else by the two things it joins.
+ */
+export function linkHues(marks: DrawMark[], links: readonly { from: string; to: string; type: string }[]): DrawMark[] {
+  const types = [...new Set(links.map((l) => l.type))];
+  const byEnds = new Map<string, string>();
+  for (const l of links) if (!byEnds.has(`${l.from}\n${l.to}`)) byEnds.set(`${l.from}\n${l.to}`, l.type);
+  return marks.map((m) => {
+    if (m.kind !== 'link' || m.style !== 'link' || m.from === undefined || m.to === undefined) return m;
+    const own = links[Number(/^link\n(\d+)$/.exec(m.id ?? '')?.[1] ?? NaN)];
+    const type = own && own.from === m.from && own.to === m.to ? own.type : byEnds.get(`${m.from}\n${m.to}`);
+    const n = type === undefined ? -1 : types.indexOf(type);
+    return n < 0 ? m : { ...m, style: `reading.${n}` };
   });
 }

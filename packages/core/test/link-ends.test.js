@@ -2,7 +2,7 @@
 // where the line, aimed at its thing's middle, meets the thing's outline.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linkEnds } from '../src/view-types/link-ends.ts';
+import { linkEnds, linkHues } from '../src/view-types/link-ends.ts';
 
 const box = (of, x, y, shape) => ({ kind: 'box', id: of, of, x: x - 10, y: y - 10, width: 20, height: 20, shape });
 const link = (points) => ({ kind: 'link', id: 'l', from: 'a', to: 'b', points });
@@ -48,4 +48,33 @@ test('a square thing is met on its side; a link that starts outside, or a thing 
   ]);
   assert.deepEqual(linkEnds([box('a', 0, 0), out])[1].points, out.points);
   assert.deepEqual(linkEnds([out])[0], out);
+});
+
+// proves: links_touch_edges
+test("each plain link takes its type's colour, numbered as the theme numbers the types", () => {
+  const links = [
+    { from: 'a', to: 'b', type: 'uses' },
+    { from: 'b', to: 'c', type: 'owns' },
+    { from: 'a', to: 'b', type: 'owns' },
+  ];
+  const mark = (id, from, to, style = 'link') => ({
+    kind: 'link',
+    id,
+    from,
+    to,
+    style,
+    points: [
+      [0, 0],
+      [1, 1],
+    ],
+  });
+  const out = linkHues(
+    [mark('link\n0', 'a', 'b'), mark('link\n2', 'a', 'b'), mark('x', 'b', 'c'), mark('m', 'a', 'b', 'link.many')],
+    links,
+  );
+  assert.deepEqual(
+    out.map((m) => m.style),
+    ['reading.0', 'reading.1', 'reading.1', 'link.many'],
+    "by its number, else by its ends; a view's own style is kept",
+  );
 });
