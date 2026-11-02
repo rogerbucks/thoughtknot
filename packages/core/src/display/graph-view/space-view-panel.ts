@@ -145,7 +145,8 @@ export async function openSpaceView(
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
-  const seen = () => globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked)), orbit, depth === GLOBE);
+  const seen = () =>
+    globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked), orbit.target), orbit, depth === GLOBE);
   const paint = () => {
     asked = false;
     if (!open) return;
