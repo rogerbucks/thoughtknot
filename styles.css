@@ -2424,6 +2424,27 @@ pre.thoughtknot-code {
 .thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-viewport {
   min-height: 30%;
 }
+/* On a wide screen the details float in a card at the drawing's end edge. The drawing keeps its full size (Zen-led
+   refresh, Roger 1 Nov 2026). The card sits above the mini-map, which is at most 200 pixels tall, so the mini-map stays in
+   sight. It is no taller than 60% of the card and scrolls. */
+@media (min-width: 1024px) {
+  .thoughtknot-fullscreen .thoughtknot-view {
+    position: relative;
+  }
+  .thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-details {
+    position: absolute;
+    inset-inline-end: var(--gn-space-2);
+    inset-block-end: calc(200px + 3 * var(--gn-space-2));
+    z-index: 5;
+    min-width: min(18rem, 40%);
+    max-width: min(24rem, 40%);
+    max-height: 60%;
+    border: 1px solid var(--gn-border-focus);
+    border-radius: var(--gn-radius-m);
+    background: var(--gn-bg);
+    box-shadow: var(--gn-shadow-l);
+  }
+}
 
 /* Zen view (§25, controls_zen): full screen with every panel hidden, the drawing alone and edge to edge. One button
    stays in the top end corner to bring the panels back. The mini-map stays, so the person knows where they are. */

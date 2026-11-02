@@ -273,9 +273,24 @@ describe('full screen', () => {
         ],
       }),
       details = inFull('thoughtknot-details');
-    assert.equal(winner(all, details, 'max-height')?.value, '40%');
+    // the rule for any screen; a wide one floats them in a card instead (the next test)
+    assert.match(styles, /\.thoughtknot-fullscreen \.thoughtknot-view > \.thoughtknot-details \{[^}]*max-height: 40%;/);
     assert.equal(winner(all, details, 'overflow-y')?.value, 'auto');
     assert.equal(winner(all, details, 'flex')?.value, '0 1 auto', 'the details give way first when room is short');
     assert.equal(winner(all, inFull('thoughtknot-viewport'), 'min-height')?.value, '30%');
+  });
+
+  // Roger chose the Zen-led refresh on 1 Nov 2026 (step 6): on a laptop, details sit in a card at the side.
+  // proves: details_keep_view
+  test('on a wide screen, full screen details float in a card at the end edge, clear of the mini-map', () => {
+    const wide = styles.match(/@media \(min-width: 1024px\) \{([\s\S]*?)\n\}/g)?.join('\n') ?? '';
+    const card =
+      wide.match(/\.thoughtknot-fullscreen \.thoughtknot-view > \.thoughtknot-details \{([^}]*)\}/)?.[1] ?? '';
+    assert.match(card, /position: absolute;/, 'over the drawing, which keeps its size');
+    assert.match(card, /inset-inline-end: var\(--gn-space-2\);/, 'at the end edge');
+    assert.match(card, /inset-block-end: calc\(200px \+ 3 \* var\(--gn-space-2\)\);/, 'above the mini-map');
+    assert.match(card, /border-radius: var\(--gn-radius-m\);/);
+    assert.match(card, /box-shadow: var\(--gn-shadow-l\);/);
+    assert.match(wide, /\.thoughtknot-fullscreen \.thoughtknot-view \{\s*position: relative;/);
   });
 });
