@@ -90,3 +90,23 @@ test('filling a prompt writes the field into the graph, so filling a gap is capt
   });
   assert.equal(fillGap(block, 'work', { thing: 'nobody', field: 'start' }, "DATE '2026-11-10'").ok, false);
 });
+
+// proves: plan_undated_calm
+test('a plan where nothing has dates yet says so in one line, with one Add dates button on the first thing', () => {
+  const undated = { things: ['build', 'test', 'ship', 'launch'].map((k) => thing(k)), links: [] };
+  const given = { shape: undated, space: SPACE };
+  const marks = drawMarksOf(VIEW_DRAWERS.plan(given), SPACE);
+  assert.ok(Array.isArray(marks), String(marks));
+  assert.deepEqual(prompts(marks), [], 'no wall of prompts, one per thing');
+  const says = marks.filter((m) => m.style === 'prompt.empty');
+  assert.deepEqual(
+    says.map((m) => m.text),
+    ['Nothing here has dates yet'],
+  );
+  const [add, ...more] = marks.filter((m) => m.style === 'prompt.button');
+  assert.equal(more.length, 0, 'one button');
+  assert.equal(add.text, 'Add dates');
+  assert.equal(add.of, 'build', 'it opens the first thing, where its dates are written');
+  assert.ok(add.x >= 0 && add.x <= SPACE.width && add.y >= 0 && add.y <= SPACE.height, 'inside the space');
+  assert.equal(says[0].of, undefined, 'the line belongs to the drawing, not to a thing');
+});

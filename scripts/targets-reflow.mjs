@@ -153,11 +153,15 @@ const press = (label) =>
 const tab = (label) =>
   `[...document.querySelectorAll('[role=tab]')].find((t) => t.textContent.trim() === ${jsText(label)}).click()`;
 
+/** Opens the More list of the bar, where a phone keeps Fit (bar_one_row_phone). */
+const MORE = `document.querySelector('.thoughtknot-bar-more > button').click()`;
+
 /**
  * The Claude Code host's views: the note opened, then each of the choosers under its graph opened. At a phone's width
- * the edit pane shows its Drawing and its Text as tabs, one at a time. So each view is measured narrow on each tab.
+ * the edit pane shows its Drawing and its Text as tabs, one at a time. So each view is measured narrow on each tab. The
+ * Drawing is measured once more with More open, since a phone keeps Fit there.
  */
-const PHONE_TABS = [[tab('Text')], [tab('Drawing')]];
+const PHONE_TABS = [[tab('Text')], [tab('Drawing')], [tab('Drawing'), MORE]];
 export const PAGE_VIEWS = [
   { name: 'page', steps: [], tabs: PHONE_TABS },
   { name: 'compare', steps: [press('Compare with…')], tabs: PHONE_TABS },

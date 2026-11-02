@@ -1,4 +1,5 @@
 // A drawing's bar (spec §3). In sight are Find a thing, View (§25), Diagram type (§15), 2D (§53), Fit and Full screen.
+// On a phone, Fit waits behind More (bar_one_row_phone).
 // Then come More and last the problems badge (bar_kept_short). More opens the rest: zoom out and zoom in,
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
@@ -143,7 +144,9 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   const space = o.diagram?.table
     ? null
     : button(bar, word('bar.space'), 'box', () => on.space(), word('bar.space-flat'));
-  button(bar, word('bar.fit'), 'maximize', () => on.fit());
+  // on a phone Fit waits behind More, so the bar keeps to one row; a pinch fits there too (bar_one_row_phone)
+  const phone = isPhone();
+  if (!phone) button(bar, word('bar.fit'), 'maximize', () => on.fit());
   const full =
     mode === 'full'
       ? button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.())
@@ -151,6 +154,7 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
   button(bar, word('bar.zen'), 'eye-off', () => on.fullScreen(true)); // every panel hidden but one button (controls_zen)
   // the rest, used less, wait behind More, which opens over the drawing and closes once one is chosen
   const more = moreMenu(bar);
+  if (phone) button(more, word('bar.fit'), 'maximize', () => on.fit(), word('bar.fit'));
   button(more, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut(), word('bar.zoom-out'));
   button(more, word('bar.zoom-in'), 'zoom-in', () => on.zoomIn(), word('bar.zoom-in'));
   if (!o.diagram?.table) {
