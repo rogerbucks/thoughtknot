@@ -63,6 +63,27 @@ export interface Grouping {
 }
 
 /**
+ * The ladder of detail at the top of the View menu `el`: one choice for what the three switches under it fold, which
+ * `stepped` acts on (cluster_detail_ladder). Returns each rung's button, by its level.
+ */
+function detailLadder(el: HTMLElement, stepped: (level: DetailLevel) => void) {
+  const ladderHint = `thoughtknot-switch-hint-${++hints}`;
+  const ladder = el.createDiv({ cls: 'thoughtknot-detail', attr: ladderAttributes(ladderHint) });
+  ladder.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
+  const rungs = DETAIL_LEVELS.map((level) => {
+    const b = ladder.createEl('button', {
+      cls: 'thoughtknot-detail-rung',
+      text: word(`view.detail.${level}`),
+      attr: { type: 'button', role: 'radio' },
+    });
+    b.addEventListener('click', () => stepped(level));
+    return { level, b };
+  });
+  ladder.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
+  return rungs;
+}
+
+/**
  * Builds the menu at the end of what `root` holds so far: a switch for each of the four, which `turned` acts on. With
  * `grouping`, a Group by list follows them, filled with the drawing's choices each time the menu opens. With `spaced`,
  * a slider for each layout number and a list for each choice follow, which `spaced` acts on as one is set.
@@ -82,25 +103,7 @@ export function renderViewMenu(
   });
   el.hidden = true;
   const folds = dockHead(el, word('bar.view'));
-  // the ladder of detail first: one choice for what the three switches under it fold (cluster_detail_ladder)
-  const ladderHint = `thoughtknot-switch-hint-${++hints}`;
-  const ladder = stepped
-    ? el.createDiv({
-        cls: 'thoughtknot-detail',
-        attr: ladderAttributes(ladderHint),
-      })
-    : null;
-  ladder?.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
-  const rungs = (ladder ? DETAIL_LEVELS : []).map((level) => {
-    const b = (ladder as HTMLElement).createEl('button', {
-      cls: 'thoughtknot-detail-rung',
-      text: word(`view.detail.${level}`),
-      attr: { type: 'button', role: 'radio' },
-    });
-    b.addEventListener('click', () => stepped?.(level));
-    return { level, b };
-  });
-  ladder?.createSpan({ cls: 'thoughtknot-switch-hint', text: word('view.hint.detail'), attr: { id: ladderHint } });
+  const rungs = stepped ? detailLadder(el, stepped) : [];
   const pickLine = el.createDiv({ cls: 'thoughtknot-layout-said' }); // the engine's pick, said (layout_pick_said)
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
