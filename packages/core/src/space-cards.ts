@@ -4,9 +4,9 @@
 //
 // Each thing is laid out in space as a ball is (space-spread.ts), but painted as a card flat to the screen. It is the
 // size of the thing's box in 2D, smaller as it is further off, with the thing's whole name inside, wrapped to fit. Far
-// ones are painted first, so near ones cover them. A card far off still shows its name, at a size that can be read, where
-// it covers no nearer card's name. Else it is a small plain card, unless it is picked. Plain cards are painted before
-// named ones, so nothing covers a name. Each arrowhead is painted at the
+// ones are painted first, so near ones cover them. A card near or far shows its name, at a size that can be read, where
+// it covers no nearer card's name. Else its name is tiny inside it, unless it is picked. Plain cards are painted before
+// named ones, so no name lies over another (design review, 1 Nov 2026). Each arrowhead is painted at the
 // edge of the card it points to. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import { isPlane } from './space-planes.ts';
@@ -44,8 +44,6 @@ export interface ScreenCard {
 
 /** The size of a card's words, in pixels of the space: as a 2D box's. */
 const WORDS_SIZE = 14;
-/** The smallest a card's words would be, unclamped, for them to be painted whatever they cover. */
-const WORDS_LEAST = 6;
 /** The most cards whose names are painted only where they cover no other's, so a huge graph stays quick. */
 const NAMES_MOST = 200;
 /** The room kept between two cards' names, in pixels. */
@@ -117,10 +115,10 @@ export function cardsOnScreen(
       hh = Math.max(h, wrapped.length * size * ROW + room);
     const r = Math.hypot(ww, hh) / 2;
     if (c.x + r < 0 || c.y + r < 0 || c.x - r > width || c.y - r > height) continue;
-    const read = wrapped.length > 0 && (mine || natural >= WORDS_LEAST || free(c.x, c.y, ww, hh));
+    const read = wrapped.length > 0 && (mine || free(c.x, c.y, ww, hh));
     if (read) named.push({ x: c.x, y: c.y, width: ww, height: hh });
     // one whose name has no room to show readably still wears it, tiny, inside the card (space_names_always)
-    const tiny = read ? null : fitWords(text, w, h, Math.min(natural, READABLE_LEAST), NAME_TINY);
+    const tiny = read ? null : fitWords(text, w, h, Math.min(natural, READABLE_LEAST - 1), NAME_TINY);
     const [rows, cw, ch] = read ? [wrapped, ww, hh] : [tiny?.rows ?? [], w, h];
     const card: ScreenCard = { block: b, x: c.x, y: c.y, width: cw, height: ch, far: c.far, rows, size };
     if (tiny) card.size = tiny.size;

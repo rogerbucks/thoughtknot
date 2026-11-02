@@ -17,6 +17,10 @@ const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 /** The mini-map of one view in space. */
 export class SpaceMiniMap {
   readonly el: HTMLElement;
+  /** The view it lies in, told how tall the mini-map is, so the help line sits above it. */
+  private readonly view: HTMLElement;
+  /** How tall the copy is, in pixels. */
+  private tall = 0;
   private svg: SVGSVGElement | null = null;
   private seen: SVGPolygonElement | null = null;
   private plan: Plan | null = null;
@@ -29,6 +33,7 @@ export class SpaceMiniMap {
   /** In the view `view`, shown by `setting`. A tap or drag on it moves the `camera` to look at that spot instead. */
   constructor(view: HTMLElement, setting: () => MiniMapSetting, camera: (by: (o: Orbit) => Orbit) => void) {
     this.setting = setting;
+    this.view = view;
     this.el = view.createDiv({
       cls: 'thoughtknot-mini-map is-space',
       attr: { role: 'img', 'aria-label': word('drawing.mini-map') },
@@ -72,8 +77,10 @@ export class SpaceMiniMap {
     const show =
       setting === 'always' || (setting === 'auto' && !!shown.blocks.length && !allInView(shown, matrix, width, height));
     this.el.hidden = !show;
+    if (show && (this.of[0] !== shown || this.of[1] !== picked?.of)) this.copy(shown, picked?.of);
+    // the help line at the foot sits above it (design review, 1 Nov 2026)
+    this.view.setCssProps({ '--thoughtknot-space-mini': `${show ? this.tall : 0}px` });
     if (!show) return;
-    if (this.of[0] !== shown || this.of[1] !== picked?.of) this.copy(shown, picked?.of);
     this.seen?.setAttribute(
       'points',
       seenOf(orbit, width / height)
@@ -89,6 +96,7 @@ export class SpaceMiniMap {
     const plan = (this.plan = planOf(shown)),
       { bounds: b } = plan;
     const { width, height } = miniScale(b.width, b.height);
+    this.tall = height;
     const svg = make('svg', {
       class: 'thoughtknot-mini-svg',
       viewBox: `${b.x} ${b.y} ${b.width} ${b.height}`,
