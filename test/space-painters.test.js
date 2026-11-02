@@ -325,13 +325,11 @@ window.oneBar = async () => {
     for (let n = 0; n < 100 && (!view() !== !spaces.mode() || unlifted() !== noLift); n++) await frames();
     steps.push({ said: b.textContent, inFrame: !!view(), unlifted: unlifted() });
     if (spaces.mode() !== 'cards') continue;
-    // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
+    // as cards: the bar's zoom moves the camera; a click on a card tells the card, past the frame (and on a link, the link)
     zoom.zoomIn();
     const at = view().getBoundingClientRect();
-    // past any link met first: a click on a link tells the link
-    const card = () => told.some((t) => 'key' in t);
-    for (let y = 4; y < at.height && !card(); y += 6)
-      for (let x = 4; x < at.width && !card(); x += 6)
+    for (let y = 4; y < at.height && !told.some((t) => 'key' in t); y += 6)
+      for (let x = 4; x < at.width && !told.some((t) => 'key' in t); x += 6)
         for (const type of ['pointerdown', 'pointerup'])
           view().dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
   }
