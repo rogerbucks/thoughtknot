@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/controls-support.test.js",
+  "test": "the View menu in every view > a network greys nothing: it takes every option",
+  "seen_failing_first": false,
+  "evidence": "A guard: the network already took every option; it proves the greying never touches it."
+}
