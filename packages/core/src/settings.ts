@@ -109,7 +109,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ownPreset: '',
   direction: 'best',
   focusDepth: 'one',
-  labelsByZoom: 'on',
+  labelsByZoom: 'off',
   foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',

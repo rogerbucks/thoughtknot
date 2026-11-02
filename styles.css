@@ -681,6 +681,63 @@
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
+/* A dock moved to the end side joins a card like it in the top end corner. One moved free is a card of its own where
+   it was put (controls_panels, Roger 2 Nov 2026). Its look is the corner card's, so every panel reads the same. */
+.thoughtknot-over > .thoughtknot-corner-end {
+  inset-inline-start: auto;
+  inset-inline-end: var(--gn-space-2);
+}
+.thoughtknot-over > .thoughtknot-corner-end:not(:has(> .thoughtknot-dock:not([hidden]))) {
+  display: none;
+}
+.thoughtknot-over > .thoughtknot-dock.is-free {
+  position: absolute;
+  top: var(--thoughtknot-at-y, var(--gn-space-2));
+  left: var(--thoughtknot-at-x, var(--gn-space-2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  width: fit-content;
+  max-width: 20rem;
+  max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+  overflow-y: auto;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-over > .thoughtknot-dock.is-free[hidden] {
+  display: none;
+}
+.thoughtknot-dock.is-moving {
+  opacity: 0.92;
+}
+/* its head drags it; its grip and dock buttons are quiet, as its fold is */
+.thoughtknot-over .thoughtknot-dock-head {
+  cursor: grab;
+  touch-action: none;
+}
+.thoughtknot-dock-place {
+  display: flex;
+  gap: var(--gn-space-half-2);
+  margin-inline-start: auto;
+}
+.thoughtknot-dock-head :is(.thoughtknot-dock-grip, .thoughtknot-dock-place > button) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--gn-text-muted);
+  cursor: grab;
+}
+.thoughtknot-dock-place > button {
+  cursor: pointer;
+}
+/* not on the 3D view's pad, which keeps its own place. On a phone they stay, so no control is lost at a small width.
+   The sheet holds the dock there, so they leave it in place. */
+.thoughtknot-space-pad :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+  display: none;
+}
 /* The chip and each dock: a part of that card, a hairline between them. Folded, only its head shows. Its dials and
    buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
 .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
@@ -2307,6 +2364,10 @@ pre.thoughtknot-code {
   height: var(--thoughtknot-height, auto);
   touch-action: var(--thoughtknot-touch, pan-x pan-y);
   border-radius: var(--gn-radius-s);
+}
+/* names past the drawing's own edge show up to the panel's, which clips them (Roger, 2 Nov 2026) */
+.thoughtknot-viewport svg.thoughtknot-svg {
+  overflow: visible;
 }
 .thoughtknot-viewport:focus-visible {
   outline: 2px solid var(--gn-accent);

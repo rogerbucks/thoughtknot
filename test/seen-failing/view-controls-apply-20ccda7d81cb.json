@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-controls-apply.test.js",
+  "test": "in a network our own engine lays out, every layout control can be used",
+  "seen_failing_first": false,
+  "evidence": "Guards the controls that already worked: it shows the greying never reaches a drawing our own engine lays out."
+}

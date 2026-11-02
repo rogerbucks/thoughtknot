@@ -153,7 +153,8 @@ export class Aids {
     const win = this.host.viewport.win ?? window;
     win.requestAnimationFrame(() => {
       this.naming = false;
-      readableNames(svg);
+      const { reading, graph, switches } = this.host.o;
+      readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
     });
   }
 

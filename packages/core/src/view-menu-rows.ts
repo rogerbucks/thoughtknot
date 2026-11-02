@@ -42,8 +42,12 @@ export const ladderAttributes = (hint: string): Record<string, string> => ({
   'aria-describedby': hint,
   [OPTION_ATTRIBUTE]: 'detail',
 });
-/** The Group by row's option, and each layout slider's. */
-export const [GROUP_BY_ROW, LAYOUT_ROW] = [{ [OPTION_ATTRIBUTE]: 'groupBy' }, { [OPTION_ATTRIBUTE]: 'layout' }];
+/** The Group by row's option. */
+export const GROUP_BY_ROW = { [OPTION_ATTRIBUTE]: 'groupBy' };
+/** A layout slider's option: rounds are the layout's; the others space what any layout draws. */
+export const layoutSliderRow = (k: keyof LayoutOptions): Record<string, string> => ({
+  [OPTION_ATTRIBUTE]: k === 'rounds' ? 'layout' : 'spacing',
+});
 /** A layout list's option: which way it runs is its own; the rest are the layout's. */
 export const layoutListRow = (k: LayoutChoice): Record<string, string> => ({
   [OPTION_ATTRIBUTE]: k === 'direction' ? k : 'layout',

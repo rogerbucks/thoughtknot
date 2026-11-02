@@ -1,0 +1,6 @@
+{
+  "file": "test/rtl.test.js",
+  "test": "the style sheets mirror in a right-to-left language > styles.css says sides by reading direction, except where a rule is placed at a measured point",
+  "seen_failing_first": false,
+  "evidence": "Only the allow list grows: a free panel is placed at the point the pointer dropped it, so it keeps a physical left. The test already passed; it now names one more measured rule."
+}

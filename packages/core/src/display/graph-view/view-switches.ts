@@ -4,7 +4,6 @@
 // (view_switch_view_only).
 import {
   BY_KIND,
-  LAYOUT_OPTION_RANGE,
   OPTIONS,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
@@ -26,16 +25,8 @@ import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
-import {
-  GROUP_BY_ROW,
-  HINTS,
-  LAYOUT_LISTS,
-  LAYOUT_ROW,
-  LAYOUT_SLIDERS,
-  ladderAttributes,
-  layoutListRow,
-  listed,
-} from '../../view-menu-rows.ts';
+import { GROUP_BY_ROW, HINTS, ladderAttributes } from '../../view-menu-rows.ts';
+import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
 
@@ -135,26 +126,16 @@ export function renderViewMenu(
   const label = grouping && rowIn(el, 'thoughtknot-group-by', word('view.group-by'), GROUP_BY_ROW);
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
-  const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
-    const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = rowIn(holder(), 'thoughtknot-layout-option', word(says), LAYOUT_ROW);
-    const input = row.createEl('input', {
-      attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
-    });
-    input.addEventListener('change', () => spaced?.(k, Number(input.value)));
-    return { k, input };
-  });
-  const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
-    const row = rowIn(holder(), 'thoughtknot-layout-choice', word(`view.layout.${k}`), layoutListRow(k));
-    const input = row.createEl('select');
-    for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
-    input.addEventListener('change', () => spaced?.(k, input.value));
-    return { k, input };
-  });
+  const { sliders, lists } = layoutControls(holder, spaced);
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
+  const ownHint = holder().createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.own-only') });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
+    // only a drawing our own engine laid out says its pick; with none, what only it reads is greyed (view_controls_apply)
+    ownHint.hidden = !!shown;
+    for (const { s, b } of switches) if (OWN_ONLY.has(s)) b.disabled = !shown;
+    for (const { k, input } of [...sliders, ...lists]) if (OWN_ONLY.has(k)) input.disabled = !shown;
     if (!list || !grouping) return;
     const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
     const choices: [string, string][] = [

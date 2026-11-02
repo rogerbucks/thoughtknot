@@ -17,8 +17,9 @@ import {
   NAME_TINY,
   READABLE_LEAST,
   arrowsOnScreen,
-  largestName,
+  hubGrow,
   labelsOnScreen,
+  linkCounts,
   pickedRing,
 } from './space-labels.ts';
 import type { ScreenArrow, ScreenLabel } from './space-labels.ts';
@@ -40,6 +41,8 @@ export interface ScreenCard {
   rows: string[];
   size: number;
   picked?: boolean;
+  /** Set on a card whose name is placed, covering no other, rather than worn tiny inside it. */
+  named?: boolean;
 }
 
 /** The size of a card's words, in pixels of the space: as a 2D box's. */
@@ -87,25 +90,28 @@ export function cardsOnScreen(
   const focal = height / 2 / Math.tan(FIELD / 2);
   const names = new Map<string, string>();
   for (const l of space.labels) if (l.of !== undefined && l.link === undefined) names.set(l.of, l.text);
-  // nearest first, the picked one before all: a name is painted where it covers none painted already
+  const links = linkCounts(space),
+    busiest = Math.max(1, ...links.values());
+  // the picked one before all, then the busiest, then the nearest: a name is painted where it covers none painted already
   const seen = space.blocks.flatMap((b) => {
     const c = projectPoint(matrix, middle(b), width, height);
-    return c ? [{ b, c, mine: picked !== undefined && b.of === picked }] : [];
+    const many = b.of === undefined ? 0 : (links.get(b.of) ?? 0);
+    return c ? [{ b, c, many, mine: picked !== undefined && b.of === picked }] : [];
   });
-  seen.sort((p, q) => Number(q.mine) - Number(p.mine) || p.c.far - q.c.far);
+  seen.sort((p, q) => Number(q.mine) - Number(p.mine) || q.many - p.many || p.c.far - q.c.far);
   const named: { x: number; y: number; width: number; height: number }[] = [];
   const free = (x: number, y: number, w: number, h: number) =>
     named.length < NAMES_MOST &&
     named.every(
       (n) => Math.abs(n.x - x) * 2 >= n.width + w + NAMES_APART || Math.abs(n.y - y) * 2 >= n.height + h + NAMES_APART,
     );
-  const out: ScreenCard[] = [],
-    largest = largestName(width, height);
-  for (const { b, c, mine } of seen) {
+  const out: ScreenCard[] = [];
+  for (const { b, c, many, mine } of seen) {
     const scale = focal / c.far;
-    const natural = WORDS_SIZE * scale;
+    // a name scales with its card, the busiest larger, and the picked one stays readable (Roger, 2 Nov 2026)
+    const natural = WORDS_SIZE * scale * hubGrow(many, busiest);
     const text = (b.of === undefined ? undefined : names.get(b.of)) ?? b.name ?? '';
-    const size = Math.max(READABLE_LEAST, Math.min(largest, natural));
+    const size = mine ? Math.max(READABLE_LEAST, natural) : natural;
     const w = (b.card?.width ?? b.width) * scale,
       h = (b.card?.height ?? b.tall) * scale;
     // its name wrapped to fit, and the card grown to hold it
@@ -122,12 +128,13 @@ export function cardsOnScreen(
     const [rows, cw, ch] = read ? [wrapped, ww, hh] : [tiny?.rows ?? [], w, h];
     const card: ScreenCard = { block: b, x: c.x, y: c.y, width: cw, height: ch, far: c.far, rows, size };
     if (tiny) card.size = tiny.size;
+    if (read) card.named = true;
     if (mine) card.picked = true;
     out.push(card);
   }
   // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each.
   // A tiny name is painted with the plain cards, so near ones still cover far ones.
-  const rank = (c: ScreenCard) => (c.picked ? 2 : c.rows.length && c.size >= READABLE_LEAST ? 1 : 0);
+  const rank = (c: ScreenCard) => (c.picked ? 2 : c.named ? 1 : 0);
   return out.sort((p, q) => rank(p) - rank(q) || q.far - p.far);
 }
 

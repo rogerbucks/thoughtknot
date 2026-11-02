@@ -16,6 +16,7 @@ export const VIEW_OPTIONS = [
   'groupBy',
   'lanes',
   'layout',
+  'spacing',
   'direction',
   'lens',
   'semantic',
@@ -46,7 +47,9 @@ const CELLS = new Set(['matrix', 'density']);
 /** The diagram types whose shape sets which way they run. */
 const FIXED_WAY = new Set(['radial', 'timeline']);
 /** The options a view drawn as marks takes from the graph's layout, which its own shape replaces. */
-const LAYOUT_ONLY: readonly ViewOption[] = ['lanes', 'layout', 'direction'];
+const LAYOUT_ONLY: readonly ViewOption[] = ['lanes', 'layout', 'spacing', 'direction'];
+/** The options only our own engine reads, so only a plain network takes them yet (view_controls_apply). */
+const OWN_ENGINE: readonly ViewOption[] = ['lanes', 'layout', 'direction'];
 /** The options that fold or group the graph before a view drawn as marks draws it: still to be built there. */
 const FOLDS: readonly ViewOption[] = ['detail', 'hubs', 'groups', 'merge', 'groupBy', 'semantic'];
 
@@ -56,7 +59,7 @@ export function viewSupport(view: string, option: ViewOption): Support {
   if ((GRAPH_TYPES as readonly string[]).includes(view)) {
     if (option === 'direction' && FIXED_WAY.has(view)) return 'fixed-way';
     // our own engine lays out a plain network only: Graphviz lays the other types out, without these (PR 4)
-    if ((option === 'layout' || option === 'lanes') && view !== 'network') return 'yet';
+    if (OWN_ENGINE.includes(option) && view !== 'network') return 'yet';
     return 'yes';
   }
   if (option === 'lens') return CELLS.has(view) ? 'cells' : 'yes';

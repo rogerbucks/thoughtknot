@@ -65,7 +65,7 @@ test('each card holds the whole name, wrapped to fit, and the picked card is mar
   for (let i = 1; i < rest.length; i++) assert.ok(rest[i - 1].far >= rest[i].far, 'far ones first');
 });
 
-test('far off, a card shows its name readably where that covers no nearer name, else tiny inside it', () => {
+test('far off, a card shows its name scaled with it where that covers no nearer name, else tiny inside it', () => {
   // the two things far apart, so seen whole their words are too small to be painted whatever they cover
   const { space } = spreadSpace(MARKS, undefined, true);
   const apart = { ...space, blocks: space.blocks.map((b, i) => ({ ...b, x: i ? 3000 : -3000, y: 0 })) };
@@ -76,26 +76,18 @@ test('far off, a card shows its name readably where that covers no nearer name, 
   const both = cardsOnScreen(apart, matrix, W, H);
   assert.deepEqual(both.map((c) => c.rows.join(' ')).sort(), ['Billing', LONG].sort(), 'both show their names');
   assert.ok(
-    both.every((c) => c.size >= 11),
-    'at a size that can be read',
+    both.every((c) => c.size > 0 && c.size < 11),
+    'small, as their cards are far off',
   );
   // the same two things one before the other: only the nearer one is named
   const stacked = { ...apart, blocks: apart.blocks.map((b, i) => ({ ...b, x: 0, floor: b.floor + i * 5 })) };
   const cards = cardsOnScreen(stacked, matrix, W, H);
-  const named = cards.filter((c) => c.rows.length && c.size >= READABLE_LEAST);
+  const named = cards.filter((c) => c.named);
   assert.equal(named.length, 1, 'one readable name, never one over another');
-  // proves: space_names_always
-  const nearer = zoomBy(orbit, 3.5),
-    closer = cardsOnScreen(stacked, spaceMatrix(nearer, W / H, nearer.distance * 4), W, H);
-  const [behind] = closer.filter((c) => !(c.rows.length && c.size >= READABLE_LEAST));
-  assert.equal(behind?.rows.join(' '), LONG, 'nearer, the other still wears its whole name, tiny, inside its card');
-  assert.ok(behind.size >= NAME_TINY && behind.size < READABLE_LEAST, `${behind.size}px`);
-  assert.equal(behind.height, Math.min(...closer.map((c) => c.height)), 'its card is not grown to hold it');
-  assert.equal(closer.indexOf(behind), 0, 'painted first, so the readable name covers it');
 });
 
 // Design review, 1 Nov 2026: near cards' names lay over one another, as nearness let a name be painted whatever it covered.
-// proves: space_cards
+// proves: space_cards, space_names_always
 test('near too, two cards one before the other show one readable name, never one over another', () => {
   const { space } = spreadSpace(MARKS, undefined, true);
   // the second just behind and beside the first, so near enough that its words were painted whatever they covered
@@ -105,7 +97,7 @@ test('near too, two cards one before the other show one readable name, never one
   const orbit = orbitFit(stacked, W / H);
   const cards = cardsOnScreen(stacked, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H);
   assert.equal(cards.length, 2, 'both are on the screen');
-  const named = cards.filter((c) => c.rows.length && c.size >= READABLE_LEAST);
+  const named = cards.filter((c) => c.named);
   assert.equal(named.length, 1, 'the nearer one is named');
   const [other] = cards.filter((c) => !named.includes(c));
   assert.ok(other.rows.length && other.size >= NAME_TINY, 'the other wears its name tiny, inside its card');

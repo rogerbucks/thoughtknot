@@ -250,6 +250,11 @@ after a module nor listed here, and on a listed file that is missing.
   glide there round the selected thing, which stays put. In 2.5D and 3D the picked card or ball, marked and named.
 - `packages/obsidian/test/detail-ladder.test.js` — the View menu's ladder of detail, Overview, Groups and All, in the
   built plugin. A step turns the switches under it (editor spec §53, cluster_detail_ladder).
+
+## The Obsidian plugin: what the View menu offers
+
+- `packages/obsidian/test/view-controls-apply.test.js` — the View menu greys what the drawing shown does not read. In
+  a drawing Graphviz lays out, our own engine's layout choices are greyed, and the menu says why.
 - `packages/obsidian/test/layout-said.test.js` — the View menu says how the drawing was laid out, and why. It says
   where its loose things went. In the built plugin (editor spec §68, layout_pick_said).
 - `packages/obsidian/test/cluster-open.test.js` — a folded group opened by zooming in on it, or picked again in 3D, in
