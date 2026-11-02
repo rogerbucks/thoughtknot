@@ -440,6 +440,18 @@ describe('Dependabot', () => {
     assert.match(npm, /# Held back:/, 'the reason is written down');
   });
 
+  test('the benchmark image’s Node is held at the major CI runs, with the reason written down', () => {
+    const docker = updates().find((u) => u.ecosystem === 'docker').chunk;
+    assert.match(docker, /dependency-name: node\n\s*update-types: \['version-update:semver-major'\]/);
+    assert.match(docker, /# Held back:/, 'the reason is written down');
+    const ci = /node-version: (\d+)/.exec(read('.github/workflows/ci.yml'))[1];
+    assert.match(
+      read('docker/benchmarks.Dockerfile'),
+      new RegExp(`^FROM node:${ci}\\.`, 'm'),
+      `the image runs Node ${ci}`,
+    );
+  });
+
   test('a Python package is watched too', () => {
     if (!exists('python/graph_spec/pyproject.toml')) return;
     assert.ok(updates().some((u) => u.ecosystem === 'uv'));

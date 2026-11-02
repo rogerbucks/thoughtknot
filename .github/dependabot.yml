@@ -55,6 +55,12 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    # Held back: the benchmark image runs the Node that CI runs (node-version in ci.yml), so counts made in it
+    # compare with CI's. A new major of Node comes here in the change that moves CI to it (30 Oct 2026: #1554
+    # bumped the image to Node 26 while CI ran 24, and sat red).
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
     groups:
       docker-version-updates:
         applies-to: version-updates
