@@ -24,9 +24,6 @@ export interface SpacePainter {
   destroy(): void;
 }
 
-/** A way to make a 3D painter for a canvas, or null where the device cannot. */
-export type SpacePainterMaker = (canvas: HTMLCanvasElement) => SpacePainter | null | Promise<SpacePainter | null>;
-
 /** Where the light comes from: above, a little to the front and the left, so tops are brightest and sides differ. */
 export const LIGHT: Vec3 = [-0.35, -0.55, 0.76];
 

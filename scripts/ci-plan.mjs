@@ -40,6 +40,7 @@ export const GUARDS = [
   'packages/core/test/index.test.js',
   'packages/obsidian/test/accessibility.test.js',
   'test/code-structure.test.js',
+  'test/core-exports-used.test.js',
   'test/plain-docs.test.js',
   'test/policy.test.js',
   'test/wiki-developers.test.js',

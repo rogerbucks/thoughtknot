@@ -44,9 +44,6 @@ export interface MarkPainter {
   destroy(): void;
 }
 
-/** A way to make a painter for a canvas, or null where the device cannot. It may wait, as WebGPU does. */
-export type PainterMaker = (canvas: HTMLCanvasElement) => MarkPainter | null | Promise<MarkPainter | null>;
-
 /**
  * The first painter `makers` can make for `canvas`, tried in order. A maker that fails or throws is passed over, so
  * a device that claims a feature it cannot give still gets a painter. Null only when none can paint at all. The 3D
