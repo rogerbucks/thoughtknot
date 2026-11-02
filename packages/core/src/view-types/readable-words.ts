@@ -162,7 +162,7 @@ export function readableWords(
         b.most - a.most ||
         a.i - b.i,
     );
-  // the names kept so far, and the things, by the cells of a grid they touch, so each new one is checked only against
+  // the names kept so far and the things, by the cells of a grid they touch. So each new name is checked only against
   // its neighbours. A name may lie on its own thing, as one inside its box does, and on a quieter thing drawn before
   // its own, never another
   const drawn = new Map([...things.keys()].map((g, i) => [g, i]));
