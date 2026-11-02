@@ -83,7 +83,8 @@ describe('one code style', () => {
 
   test('the Python library follows PEP 8: Ruff checks and formats it, pinned, in CI', () => {
     const py = read(`${PYTHON}/pyproject.toml`);
-    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==0\.17\.1"\]/);
+    // an exact version, not a particular one: Dependabot moves it, and the lock file holds the number
+    assert.match(py, /\[dependency-groups\][^[]*\ndev = \["ruff==\d+\.\d+\.\d+"\]/);
     assert.match(py, /\[tool\.ruff\][^[]*\nline-length = 99/);
     assert.match(py, /\[tool\.ruff\.lint\]\n(?:#[^\n]*\n)*select = \["E", "W", "F", "N"[\],]/);
     assert.match(ci(), /run: uv run --locked ruff check/);
