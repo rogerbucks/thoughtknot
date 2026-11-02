@@ -1,6 +1,7 @@
 // The force-directed view (editor spec §36, view_types_offered). Links pull the things they join together, and every
 // pair of near things pushes apart. After some steps, linked things sit close and the rest spread out. It is drawn as
-// marks (drawing-marks.ts), so every painter draws it the same way.
+// marks (drawing-marks.ts), so every painter draws it the same way. Each thing is a rounded card with its name inside
+// (thing-card.ts); past NAMED_MOST things, each is a dot.
 //
 // The layout is the same each time for the same graph. Its places are in its own units, where a link is about one long.
 // Those places are what a host saves. Drawing fits them into the space. Given the places from last time, the layout
@@ -15,7 +16,7 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { layoutOptions } from '../layouts/layout-options.ts';
 import type { LayoutOptions } from '../layouts/layout-options.ts';
-import { nameSize as nameOf } from './type-scale.ts';
+import { cardTall, cardWidth, spreadCards, thingCard } from './thing-card.ts';
 
 /** The most steps a layout takes. */
 export const FORCE_STEPS = 300;
@@ -158,10 +159,27 @@ export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): D
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const kinds = [...new Set(shape.things.map((t) => t.kinds.join(', ')))];
   const size = Math.max(1, Math.min(24, Math.sqrt((space.width * space.height) / n) / 3));
-  const nameSize = nameOf(size / 2);
   const marks: DrawMark[] = [];
-  for (const t of shape.things) {
+  // named, each thing is a card as wide as its name, the cards moved apart where they would cover one another
+  const tall =
+    n <= NAMED_MOST
+      ? cardTall(
+          shape.things.map((t) => t.text),
+          space.width * space.height,
+        )
+      : 0;
+  const wide = shape.things.map((t) => cardWidth(t.text, tall));
+  if (tall > 0)
+    spreadCards([...at.values()], wide, tall, space.width, space.height).forEach((c, i) =>
+      at.set(shape.things[i]?.key ?? '', c),
+    );
+  shape.things.forEach((t, i) => {
     const [px, py] = at.get(t.key) ?? [0, 0];
+    const style = `kind.${kinds.indexOf(t.kinds.join(', '))}`;
+    if (tall > 0) {
+      marks.push(...thingCard(t.key, t.text, px, py, wide[i] ?? 0, tall, style));
+      return;
+    }
     // a box near the edge is moved in, so all of it stays inside the space
     const bx = Math.min(Math.max(px - size / 2, 0), space.width - size),
       by = Math.min(Math.max(py - size / 2, 0), space.height - size);
@@ -169,7 +187,7 @@ export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): D
       kind: 'box',
       id: t.key,
       of: t.key,
-      style: `kind.${kinds.indexOf(t.kinds.join(', '))}`,
+      style,
       x: bx,
       y: by,
       width: size,
@@ -178,20 +196,7 @@ export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): D
       role: 'thing',
       name: t.text,
     });
-    if (n <= NAMED_MOST)
-      marks.push({
-        kind: 'label',
-        id: `${t.key}\nlabel`,
-        of: t.key,
-        style: 'text',
-        x: bx + size / 2,
-        y: Math.min(by + size + nameSize, space.height),
-        text: t.text,
-        size: nameSize,
-        anchor: 'middle',
-        maxWidth: Math.max(size * 6, 1),
-      });
-  }
+  });
   shape.links.forEach((l, i) => {
     const p = at.get(l.from),
       q = at.get(l.to);

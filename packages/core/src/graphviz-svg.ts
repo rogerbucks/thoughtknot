@@ -161,6 +161,8 @@ export function layoutSvg(laid: LaidMarks): string {
       return `<polygon${paint} points="${[...ps, ps[0] ?? [0, 0]].map(pt).join(' ')}"/>`;
     }
     if (m.kind === 'arrowhead') return arrowSvg(m, paint, pt);
+    // a solid box is first painted white, which the theme makes the page's colour (styles.css)
+    if (m.kind === 'box' && m.solid) return shapeSvg(m, ' fill="white" stroke="none"', pt) + shapeSvg(m, paint, pt);
     return shapeSvg(m, paint, pt);
   };
   const out: string[] = [];

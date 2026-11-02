@@ -4049,6 +4049,10 @@ img.thoughtknot-picture-hidden,
 /* every word in a drawing is edged in the page colour, the opposite of its own. So it reads over lines and other
    things: dark words get a light edge, light words a dark one (Roger, 2 Nov 2026). The edge is a share of the
    word's size, so it scales with it, and is drawn under the letters. */
+/* a card's page-coloured base, under its see-through tint, follows the theme (thing-card.ts) */
+.thoughtknot-svg g.node > path[fill='white'] {
+  fill: var(--gn-bg);
+}
 .thoughtknot-svg g.graph text {
   paint-order: stroke;
   stroke: var(--gn-bg);
