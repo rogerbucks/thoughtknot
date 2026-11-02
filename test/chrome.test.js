@@ -2,7 +2,9 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   findChrome,
   firstPage,
@@ -11,6 +13,7 @@ import {
   removeProfile,
   SETTLED_MEDIA,
   startAgainIfStuck,
+  takeChromeSlot,
 } from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
@@ -124,5 +127,49 @@ describe('a headless Chrome, once started', () => {
     assert.deepEqual(SETTLED_MEDIA, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
     const source = readFileSync(new URL('../scripts/chrome.mjs', import.meta.url), 'utf8');
     assert.match(source, /send\('Emulation\.setEmulatedMedia', \{ features: SETTLED_MEDIA \}\)/);
+  });
+});
+
+describe('the Chromes open at once across the test processes', () => {
+  const noSleep = async () => {};
+  test('wait for a free slot, and a released slot lets the next in', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'slots-'));
+    try {
+      const a = await takeChromeSlot({ dir, limit: 2, sleep: noSleep });
+      const b = await takeChromeSlot({ dir, limit: 2, sleep: noSleep });
+      let third = false;
+      const waiting = takeChromeSlot({
+        dir,
+        limit: 2,
+        sleep: async () => {
+          await new Promise((r) => setTimeout(r, 5));
+        },
+      }).then((s) => {
+        third = true;
+        return s;
+      });
+      await new Promise((r) => setTimeout(r, 40));
+      assert.equal(third, false, 'two are open, so the third waits');
+      a();
+      const c = await waiting;
+      assert.equal(third, true);
+      b();
+      c();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a slot left by a process that is gone is taken over', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'slots-'));
+    try {
+      const { mkdirSync, writeFileSync } = await import('node:fs');
+      mkdirSync(join(dir, 'slot-0'));
+      writeFileSync(join(dir, 'slot-0', 'pid'), '999999999');
+      const release = await takeChromeSlot({ dir, limit: 1, sleep: noSleep });
+      release();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
