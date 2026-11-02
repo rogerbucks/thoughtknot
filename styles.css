@@ -2436,7 +2436,8 @@ pre.thoughtknot-code {
     inset-inline-end: var(--gn-space-2);
     inset-block-end: calc(200px + 3 * var(--gn-space-2));
     z-index: 5;
-    width: min(24rem, 40%);
+    min-width: min(18rem, 40%);
+    max-width: min(24rem, 40%);
     max-height: 60%;
     border: 1px solid var(--gn-border-focus);
     border-radius: var(--gn-radius-m);
