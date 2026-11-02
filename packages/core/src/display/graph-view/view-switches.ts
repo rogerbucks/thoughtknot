@@ -63,8 +63,8 @@ export interface Grouping {
 }
 
 /**
- * The ladder of detail at the top of the View menu `el`: one choice for what the three switches under it fold, which
- * `stepped` acts on (cluster_detail_ladder). Returns each rung's button, by its level.
+ * The ladder of detail at the top of the View menu `el`: one choice for what the three switches under it fold. A rung
+ * picked is passed to `stepped` (cluster_detail_ladder). Returns each rung's button, by its level.
  */
 function detailLadder(el: HTMLElement, stepped: (level: DetailLevel) => void) {
   const ladderHint = `thoughtknot-switch-hint-${++hints}`;
