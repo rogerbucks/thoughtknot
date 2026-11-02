@@ -164,6 +164,9 @@
   .thoughtknot-svg text:not(.thoughtknot-link) {
     fill: CanvasText !important;
   }
+  .thoughtknot-svg g.graph text {
+    stroke: Canvas !important;
+  }
   .thoughtknot-svg :is(g.is-selected, g.node:focus-visible) > :is(path, polygon, ellipse) {
     stroke: Highlight !important;
   }
@@ -4079,4 +4082,17 @@ img.thoughtknot-picture-hidden,
 /* a name hidden for now, as at this zoom it would cover another; zooming in brings it back (§3, names_readable_any_zoom) */
 .thoughtknot-svg text.thoughtknot-name-crowded {
   visibility: hidden;
+}
+/* every word in a drawing is edged in the page colour, the opposite of its own. So it reads over lines and other
+   things: dark words get a light edge, light words a dark one (Roger, 2 Nov 2026). The edge is a share of the
+   word's size, so it scales with it, and is drawn under the letters. */
+/* a card's page-coloured base, under its see-through tint, follows the theme (thing-card.ts) */
+.thoughtknot-svg g.node > path[fill='white'] {
+  fill: var(--gn-bg);
+}
+.thoughtknot-svg g.graph text {
+  paint-order: stroke;
+  stroke: var(--gn-bg);
+  stroke-width: 0.35em;
+  stroke-linejoin: round;
 }

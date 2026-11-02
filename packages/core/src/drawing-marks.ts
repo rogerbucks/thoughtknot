@@ -63,7 +63,17 @@ export interface MarkOutline {
 /** A mark: where it goes, as numbers, by kind. */
 export type DrawMark = MarkCommon &
   (
-    | { kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline }
+    | {
+        kind: 'box';
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        shape?: BoxShape;
+        outline?: MarkOutline;
+        /** Painted over the page's colour first, so a line passing behind its see-through tint does not show. */
+        solid?: true;
+      }
     | {
         kind: 'link';
         points: MarkPoint[];
@@ -174,7 +184,8 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
     if (m.shape !== undefined && !(BOX_SHAPES as readonly unknown[]).includes(m.shape))
       return `a box whose shape is not one of ${BOX_SHAPES.join(', ')}`;
     const shape = m.shape === undefined ? {} : { shape: m.shape as BoxShape };
-    return { ...common, kind: 'box', ...rect, ...shape, ...exact };
+    const solid = m.solid === true ? { solid: true as const } : {};
+    return { ...common, kind: 'box', ...rect, ...shape, ...solid, ...exact };
   }
   if (m.kind === 'link') {
     const points = Array.isArray(m.points) ? (m.points as unknown[]) : [];

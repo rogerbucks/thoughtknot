@@ -6,7 +6,7 @@ export const LETTER = 0.56;
 
 /** `text` cut to fit `room` at `size`, with an ellipsis where it was cut. */
 export function fitText(text: string, room: number, size: number): string {
-  const most = Math.floor(room / (size * LETTER));
+  const most = Math.floor(room / (size * LETTER) + 1e-9);
   const letters = [...text];
   return letters.length <= most ? text : `${letters.slice(0, Math.max(most - 1, 0)).join('')}…`;
 }

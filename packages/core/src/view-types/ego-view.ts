@@ -1,13 +1,14 @@
 // The ego view (editor spec §36, view_types_offered). One thing sits in the middle. The things one link away sit on a
 // ring round it, and the things two links away on a ring outside that. The rest are not drawn. An ego view shows what
 // one thing touches, which a whole network hides. It is drawn as marks (drawing-marks.ts), so every painter draws it
-// the same way.
+// the same way. A named thing is a rounded card with its name inside (thing-card.ts); a ring too crowded to name is
+// of dots.
 //
 // A key never holds a new line, so the ids this view joins with one never meet a thing's key.
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
-import { nameSize as nameOf } from './type-scale.ts';
+import { cardTall, cardWidth, spreadCards, thingCard } from './thing-card.ts';
 
 /** The most links away a thing may be and still be drawn. */
 export const EGO_DEPTH = 2;
@@ -70,7 +71,6 @@ export function egoMarks({ shape, space }: DiagramGiven, middle?: string): DrawM
   const step = (outer * (1 - NAMES_SHARE)) / EGO_DEPTH;
   // each ring's things in written order, spread evenly round it
   const where = new Map<string, [number, number]>([[focus, [cx, cy]]]);
-  const angle = new Map<string, number>();
   const rings: string[][] = Array.from({ length: EGO_DEPTH }, () => []);
   for (const t of shape.things) {
     const d = away.get(t.key);
@@ -79,46 +79,48 @@ export function egoMarks({ shape, space }: DiagramGiven, middle?: string): DrawM
   rings.forEach((ring, i) =>
     ring.forEach((k, j) => {
       const th = -Math.PI / 2 + (2 * Math.PI * j) / ring.length;
-      angle.set(k, th);
       where.set(k, [cx + step * (i + 1) * Math.cos(th), cy + step * (i + 1) * Math.sin(th)]);
     }),
   );
   const crowd = Math.max(1, ...rings.map((r, i) => r.length / (i + 1)));
   const size = Math.max(1, Math.min(outer * 0.08, (2 * Math.PI * step) / crowd / 1.5));
-  const nameSize = nameOf(size / 2);
-  const marks: DrawMark[] = [];
-  for (const [k, [x, y]] of where) {
+  const named = (k: string) => {
     const d = away.get(k) ?? 0;
-    const s = d === 0 ? size * 1.5 : size;
+    return d === 0 || (rings[d - 1]?.length ?? 0) <= NAMED_MOST;
+  };
+  // the named things are cards as wide as their names, moved apart where they would cover one another
+  const cards = [...where.keys()].filter(named);
+  const tall = cardTall(
+    cards.map((k) => text.get(k) ?? k),
+    space.width * space.height,
+  );
+  const wide = cards.map((k) => cardWidth(text.get(k) ?? k, tall));
+  spreadCards(
+    cards.map((k) => where.get(k) ?? [cx, cy]),
+    wide,
+    tall,
+    space.width,
+    space.height,
+  ).forEach((c, i) => where.set(cards[i] as string, c));
+  const marks: DrawMark[] = cards.flatMap((k, i) =>
+    thingCard(k, text.get(k) ?? k, ...(where.get(k) ?? [cx, cy]), wide[i] ?? 0, tall, `ring.${away.get(k) ?? 0}`),
+  );
+  for (const [k, [x, y]] of where) {
+    if (named(k)) continue;
+    const d = away.get(k) ?? 0;
     marks.push({
       kind: 'box',
       id: k,
       of: k,
       style: `ring.${d}`,
-      x: x - s / 2,
-      y: y - s / 2,
-      width: s,
-      height: s,
+      x: x - size / 2,
+      y: y - size / 2,
+      width: size,
+      height: size,
       shape: 'ellipse',
       role: 'thing',
       name: text.get(k) ?? k,
     });
-    if (d === 0 || (rings[d - 1]?.length ?? 0) <= NAMED_MOST) {
-      const th = angle.get(k);
-      const right = th === undefined || Math.cos(th) >= 0;
-      marks.push({
-        kind: 'label',
-        id: `${k}\nlabel`,
-        of: k,
-        style: 'text',
-        x: d === 0 ? x : x + (right ? s / 2 + 2 : -s / 2 - 2),
-        y: d === 0 ? y + s / 2 + nameSize : y + nameSize / 3,
-        text: text.get(k) ?? k,
-        size: nameSize,
-        anchor: d === 0 ? 'middle' : right ? 'start' : 'end',
-        maxWidth: Math.max(outer * NAMES_SHARE, 1),
-      });
-    }
   }
   shape.links.forEach((l, i) => {
     const p = where.get(l.from),

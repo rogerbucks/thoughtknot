@@ -1,0 +1,6 @@
+{
+  "file": "test/space-painters.test.js",
+  "test": "the 3D view's painters, in a real browser > one button on the card's bar goes from 2D to 2.5D to 3D to the globe and back, the view inside the drawing's frame",
+  "seen_failing_first": false,
+  "evidence": "A probe change later taken back: the test is as on main again"
+}
