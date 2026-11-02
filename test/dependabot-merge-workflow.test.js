@@ -1,5 +1,6 @@
 // The workflow that turns auto-merge on for a Dependabot pull request, so it merges once CI is green like every other
-// pull request (AGENTS.md). Read as text, by indentation, as policy.test.js reads the others.
+// pull request (AGENTS.md). Dependabot is one source of security fixes (spec §66, soc_detection_sources), and a fix
+// nobody merges lands nowhere. Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { block, exists, jobs, permissionValues, read, runCommands, stripComment, usesRefs } from './repository/repo.js';
