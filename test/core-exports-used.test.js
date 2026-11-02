@@ -17,13 +17,14 @@ const WORD = /[A-Za-z_$][\w$]*/g;
 export function exportsUsedNowhere(files, read) {
   const counts = new Map();
   const texts = new Map(files.map((f) => [f, read(f)]));
-  for (const t of texts.values()) for (const w of new Set(t.match(WORD) ?? [])) counts.set(w, (counts.get(w) ?? 0) + 1);
+  const words = new Map([...texts].map(([f, t]) => [f, t.match(WORD) ?? []]));
+  for (const ws of words.values()) for (const w of new Set(ws)) counts.set(w, (counts.get(w) ?? 0) + 1);
   const nowhere = [];
   for (const [f, t] of texts)
     if (f.startsWith(CORE) && /\.tsx?$/.test(f))
       for (const m of t.matchAll(EXPORT)) {
         const name = m[1];
-        const own = (t.match(new RegExp(`\\b${name.replace(/\$/g, '\\$')}\\b`, 'g')) ?? []).length;
+        const own = words.get(f).filter((w) => w === name).length;
         if ((counts.get(name) ?? 0) < 2 && own < 2) nowhere.push(`${f}: ${name}`);
       }
   return nowhere;
