@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { READABLE_LEAST, READABLE_MOST, readableWords } from '../src/view-types/readable-words.ts';
+import { LETTER } from '../src/view-types/fit-text.ts';
 
 /** A one-row name of `letters` letters in `group`, centred at (`x`, `y`), `size` units tall. */
 const word = (group, x, y, letters = 6, size = 12) => ({ group, x, y, size, anchor: 'middle', letters });
@@ -62,4 +63,14 @@ test('a name that would cover another is left out, the picked one first; zooming
     readableWords(two, 3).every((s) => !s.hidden),
     'zoomed in, both show',
   );
+});
+
+// proves: names_readable_any_zoom
+test('a name grown past the edge of the view is nudged back in, so it is not cut off', () => {
+  const view = { left: 0, top: 0, right: 200, bottom: 100 };
+  const [edge] = readableWords([word('a', 195, 50)], 0.5, [], view);
+  const half = (6 * edge.size * LETTER) / 2;
+  assert.ok(edge.x + half <= 200 + 1e-9 && edge.x < 195, 'moved in from the right edge');
+  const [away] = readableWords([word('a', 400, 50)], 0.5, [], view);
+  assert.equal(away.x, 400, 'a thing out of view keeps its name where it is');
 });

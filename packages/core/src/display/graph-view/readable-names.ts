@@ -2,7 +2,7 @@
 // changes, and the names are sized again: none shows under 9 pixels. One that would then cover another is hidden
 // (readable-words.ts). The drawing's own attributes are left as drawn: a name grows by its style, moves
 // by its own transform, and is hidden by a class. So the lens, hit tests and export still see the drawing as laid out.
-import { readableWords, type Word } from '../../view-types/readable-words.ts';
+import { readableWords, type Box, type Word } from '../../view-types/readable-words.ts';
 
 /** The words whose size is kept readable: a thing's name, a group's and the drawing's own captions, such as an axis's.
  * A link's words follow labels by zoom. */
@@ -56,23 +56,31 @@ function wordOf(text: Element, group: string): Word {
   return w;
 }
 
-/** The scale of `svg`'s top group, read from its transform, as the lens reads it (lens-svg.ts). */
-function scaleOf(svg: SVGSVGElement): number {
+/** The scale and shift of `svg`'s top group, read from its transform, as the lens reads it (lens-svg.ts's frameOf): a
+ * point in the group is at `s × (p + shift)` in the drawing's units. */
+function frameOf(svg: SVGSVGElement): { s: number; tx: number; ty: number } {
   const t = svg.querySelector('g.graph')?.getAttribute('transform') ?? '';
-  return Number((/scale\(([^()]*)\)/.exec(t)?.[1] ?? '1').split(/[\s,]+/)[0]) || 1;
+  const [s = 1] = (/scale\(([^()]*)\)/.exec(t)?.[1] ?? '1').split(/[\s,]+/).map(Number);
+  const [tx = 0, ty = 0] = (/translate\(([^()]*)\)/.exec(t)?.[1] ?? '0 0').split(/[\s,]+/).map(Number);
+  return { s: s || 1, tx, ty };
 }
 
-/** How many screen pixels one unit of `svg`'s top group is: its size over its viewBox, times the group's own scale. */
-function pixelsPerUnit(svg: SVGSVGElement): number {
-  const [, , width = 0] = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
+/** How many screen pixels one unit of `svg`'s top group is, and the part of the group shown, in its own units. */
+function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
+  const [left = 0, top = 0, width = 0, height = 0] = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
   const shown = Number.parseFloat(svg.getAttribute('width') ?? '');
-  return width > 0 && shown > 0 ? (shown / width) * scaleOf(svg) : 0;
+  if (!(width > 0 && shown > 0)) return null;
+  const { s, tx, ty } = frameOf(svg);
+  const at = (x: number, y: number) => [x / s - tx, y / s - ty] as const;
+  const [l, t] = at(left, top),
+    [r, b] = at(left + width, top + height);
+  return { k: (shown / width) * s, view: { left: l, top: t, right: r, bottom: b } };
 }
 
 /** Sizes the names in `svg` for how large it is shown now. */
 export function readableNames(svg: SVGSVGElement): void {
-  const k = pixelsPerUnit(svg);
-  if (!k) return;
+  const at = shownOf(svg);
+  if (!at) return;
   // a name is a text straight in its thing's, its group's or the drawing's own element; a hidden thing's is left alone
   const texts = Array.from(svg.querySelectorAll(NAMES)).filter((t) => {
     const g = t.parentElement?.classList;
@@ -89,8 +97,9 @@ export function readableNames(svg: SVGSVGElement): void {
   ];
   const shown = readableWords(
     texts.map((t, i) => wordOf(t, groups[i] as string)),
-    k,
+    at.k,
     first,
+    at.view,
   );
   texts.forEach((t, i) => {
     const w = drawn.get(t) as Word,

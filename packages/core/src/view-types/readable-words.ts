@@ -5,7 +5,8 @@
 // - a name beside its thing, as a map's, never shows over READABLE_MOST: zooming in spreads the things, not the names;
 // - a name drawn larger would cover another, so the one placed first keeps its place and the other is left out;
 // - first placed are the picked thing's and those in focus, then the largest, then the rest in drawing order.
-// Zooming in shows more names, as each needs less room. Nothing moves: a name grows about its own middle. Host-free.
+// - a name grown past the edge of the view is nudged back in, so it is not cut off and stays in reach.
+// Zooming in shows more names, as each needs less room. A name grows about its own middle. Host-free.
 import { LETTER } from './fit-text.ts';
 
 /** The least and most size a name beside its thing shows at on the screen, in pixels: the type scale's (type-scale.ts). A
@@ -40,7 +41,7 @@ export interface Shown {
 }
 
 /** A box on the screen, in the drawing's units. */
-interface Box {
+export interface Box {
   left: number;
   top: number;
   right: number;
@@ -57,11 +58,22 @@ function boxOf(w: Word, x: number, y: number, size: number): Box {
 const overlaps = (a: Box, b: Box, gap: number): boolean =>
   a.left < b.right + gap && b.left < a.right + gap && a.top < b.bottom + gap && b.top < a.bottom + gap;
 
+/** How far to move one way to bring `from`, to `to`, inside `[lo, hi]`: none when it is already in, or cannot fit. */
+const into = (from: number, to: number, lo: number, hi: number): number =>
+  to - from > hi - lo ? 0 : from < lo ? lo - from : to > hi ? hi - to : 0;
+
+/** How far to move `box` to bring it inside `view`: none for a box wholly out of view, as its thing is. */
+function inward(box: Box, view: Box): [number, number] {
+  if (!overlaps(box, view, 0)) return [0, 0];
+  return [into(box.left, box.right, view.left, view.right), into(box.top, box.bottom, view.top, view.bottom)];
+}
+
 /**
  * How each of `words` shows when one unit of the drawing is `k` pixels on the screen. The groups in `first` are placed
- * before the rest, in their order. Gives back one Shown for each word, in the same order.
+ * before the rest, in their order. A name grown past the edge of `view`, the part of the drawing shown, is nudged back
+ * inside it. Gives back one Shown for each word, in the same order.
  */
-export function readableWords(words: readonly Word[], k: number, first: readonly string[] = []): Shown[] {
+export function readableWords(words: readonly Word[], k: number, first: readonly string[] = [], view?: Box): Shown[] {
   const groups = new Map<string, number[]>();
   words.forEach((w, i) => groups.set(w.group, [...(groups.get(w.group) ?? []), i]));
   const out: Shown[] = words.map((w) => ({ size: w.size, x: w.x, y: w.y, hidden: false }));
@@ -95,7 +107,16 @@ export function readableWords(words: readonly Word[], k: number, first: readonly
           }
         : b;
     }
-    if (box) placed.push({ group, box, most: Math.max(...own.map((w) => w.size)) });
+    if (!box) continue;
+    const [dx, dy] = view ? inward(box, view) : [0, 0];
+    if (dx || dy) {
+      for (const i of at) {
+        (out[i] as Shown).x += dx;
+        (out[i] as Shown).y += dy;
+      }
+      box = { left: box.left + dx, top: box.top + dy, right: box.right + dx, bottom: box.bottom + dy };
+    }
+    placed.push({ group, box, most: Math.max(...own.map((w) => w.size)) });
   }
   const rank = new Map(first.map((g, i) => [g, i]));
   const order = placed
