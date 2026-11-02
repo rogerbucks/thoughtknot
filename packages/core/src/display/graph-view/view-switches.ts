@@ -21,24 +21,23 @@ import {
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
 const nameOf = (s: ViewSwitch, o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s])): string =>
   o ? optionSaid(o).name : switchName(s);
-import type {
-  Drawn,
-  GraphDrawing,
-  Kept,
-  LayoutOptions,
-  NoteReading,
-  ViewState,
-  ViewSwitch,
-  WordKey,
-} from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
-import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
+import {
+  GROUP_BY_ROW,
+  HINTS,
+  LAYOUT_LISTS,
+  LAYOUT_ROW,
+  LAYOUT_SLIDERS,
+  ladderAttributes,
+  layoutListRow,
+  listed,
+} from '../../view-menu-rows.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
-import { offeredLayouts, strategyName } from '../../layouts/offered.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -51,36 +50,12 @@ export interface ViewMenu {
   say: (words: string) => void;
 }
 
-/** The line under each switch saying in plain words what it does (F9 of the UX review, 25 Oct 2026). */
-const HINTS = {
-  labels: 'view.hint.labels',
-  hubs: 'view.hint.hubs',
-  groups: 'view.hint.groups',
-  merge: 'view.hint.merge',
-  lanes: 'view.hint.lanes',
-} as const satisfies Record<Exclude<ViewSwitch, 'engine'>, WordKey>;
 /** How many hints have been drawn, so each has an id of its own its switch is described by. */
 let hints = 0;
 
 /** The View menu's choice of what to group by: as written or found, none, or one of `groupChoices` (untangle_group_by). */
 const AUTO = '',
   NONE = ':none';
-
-/** The View menu's layout sliders, and how far one step moves each, in every view (§53, layout_saved_with_view). */
-const LAYOUT_SLIDERS = [
-  ['spacing', 'view.layout.spacing', 0.25],
-  ['linkLength', 'view.layout.link-length', 0.25],
-  ['groupPull', 'view.layout.group-pull', 0.1],
-  ['rounds', 'view.layout.rounds', 0.25],
-] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
-/** The View menu's layout choices: the layout first, then its variables, alike in 2D and 3D (layout_plugins). */
-const LAYOUT_LISTS = ['strategy', 'direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
-
-/** The words choice `k` may be, each with what the menu says for it. */
-const listed = (k: LayoutChoice): [string, string][] =>
-  k === 'strategy'
-    ? [...LAYOUT_CHOICES.strategy, ...offeredLayouts().map((l) => l.id)].map((v) => [v, strategyName(v)])
-    : LAYOUT_CHOICES[k].map((v) => [v, word(`view.layout.${k}.${v.toLowerCase()}` as WordKey)]);
 
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
@@ -108,7 +83,7 @@ export function renderViewMenu(
   const ladder = stepped
     ? el.createDiv({
         cls: 'thoughtknot-detail',
-        attr: { role: 'radiogroup', 'aria-label': word('view.detail'), 'aria-describedby': ladderHint },
+        attr: ladderAttributes(ladderHint),
       })
     : null;
   ladder?.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
@@ -137,7 +112,7 @@ export function renderViewMenu(
     const hint = `thoughtknot-switch-hint-${++hints}`;
     const b = holder(s).createEl('button', {
       cls: 'thoughtknot-switch',
-      attr: { type: 'button', role: 'switch', 'aria-describedby': hint },
+      attr: { type: 'button', role: 'switch', 'aria-describedby': hint, 'data-option': s },
     });
     // the name is the switch's name, and its hint under it says what it does. The toggle and its words show its state,
     // which aria-checked says to a screen reader
@@ -153,12 +128,13 @@ export function renderViewMenu(
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
-  const label = grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by') });
+  const label =
+    grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by'), attr: GROUP_BY_ROW });
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
   const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
     const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
+    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says), attr: LAYOUT_ROW });
     const input = row.createEl('input', {
       attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
     });
@@ -166,7 +142,11 @@ export function renderViewMenu(
     return { k, input };
   });
   const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-choice', text: word(`view.layout.${k}`) });
+    const row = holder().createEl('label', {
+      cls: 'thoughtknot-layout-choice',
+      text: word(`view.layout.${k}`),
+      attr: layoutListRow(k),
+    });
     const input = row.createEl('select');
     for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
     input.addEventListener('change', () => spaced?.(k, input.value));
@@ -255,6 +235,11 @@ export class ViewSwitching {
 
   private now(): string {
     return JSON.stringify([this.o.state.switches, this.o.state.plan, this.o.state.layout]);
+  }
+
+  /** Whether laying the graph out again can change it: not for a view of the core's own, drawn as it is. */
+  get relays(): boolean {
+    return !this.o.asDrawn;
   }
 
   /** Whether the drawing's link labels are hidden at `scale` (untangle_labels). */

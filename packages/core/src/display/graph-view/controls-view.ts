@@ -7,6 +7,7 @@ import type { ViewState, ViewSwitch } from '@thoughtknot/core';
 import { SEMANTIC_RUNGS, type SemanticRung } from '../../semantic-zoom.ts';
 import { renderDock } from './controls-dock.ts';
 import { fillDock } from './controls-keys.ts';
+import { OPTION_ATTRIBUTE } from '../../view-menu-rows.ts';
 
 /** The View menu, as the dock needs it: it redraws its switches, and the dock follows. */
 export interface ViewMenu {
@@ -32,6 +33,13 @@ export function viewDock(root: HTMLElement, state: ViewState, menu: ViewMenu, ac
     { name: word('controls.more'), icon: 'unfold-vertical', run: () => step(1) },
     { name: switchName('labels'), icon: 'text', run: () => act.turn('labels', !state.switches.labels) },
   ]);
+  // each names the option it is, so a view that cannot take it greys it out (view_options_everywhere)
+  for (const [b, o] of [
+    [less, 'detail'],
+    [more, 'detail'],
+    [labels, 'labels'],
+  ] as const)
+    b?.setAttribute(OPTION_ATTRIBUTE, o);
   // each says the rung it goes to, and is off at the end of the ladder; the labels switch says if it is on
   const show = () => {
     for (const [b, by] of [

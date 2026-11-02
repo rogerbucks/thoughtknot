@@ -77,6 +77,8 @@ export interface SwitchesShown {
   relayout: (owner: object) => Promise<Drawn | Refusal | null>;
   /** The note as read: what the drawing's things say, which they can be grouped by. Without it, no Group by. */
   reading?: NoteReading;
+  /** Set for a view of the core's own, drawn as it is: laid out again, it is the same picture (view_options_everywhere). */
+  asDrawn?: boolean;
 }
 
 /** Where a host says whether a graph's picture for readers is up to date (§62). */
