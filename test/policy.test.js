@@ -452,6 +452,19 @@ describe('Dependabot', () => {
     );
   });
 
+  test('the Python reference engine is held at the dialect the spec names, with the reason written down', () => {
+    const uv = updates().find((u) => u.ecosystem === 'uv').chunk;
+    assert.match(
+      uv,
+      /dependency-name: grafeo\n\s*update-types: \['version-update:semver-minor', 'version-update:semver-major'\]/,
+    );
+    assert.match(uv, /# Held back:/, 'the reason is written down');
+    // the extra and the test group pin one version, and the hold names it
+    const pins = [...read('python/graph_spec/pyproject.toml').matchAll(/grafeo==([\d.]+)/g)].map((m) => m[1]);
+    assert.equal(new Set(pins).size, 1, 'one grafeo version everywhere');
+    assert.ok(uv.includes(`Grafeo ${pins[0]}`), `the hold names ${pins[0]}`);
+  });
+
   test('a Python package is watched too', () => {
     if (!exists('python/graph_spec/pyproject.toml')) return;
     assert.ok(updates().some((u) => u.ecosystem === 'uv'));
