@@ -202,9 +202,8 @@ export class GraphView extends Lifecycle {
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
-    // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
     this.aids = new Aids(this, {
-      o: this.o,
+      o: this.o, // the aids: the mini-map, the quick-info tooltip and where the kept-open details go (§24)
       root,
       viewport: this.viewport,
       svg: () => this.svg,
@@ -214,6 +213,7 @@ export class GraphView extends Lifecycle {
       taps: this.taps,
       byKeyboard: () => this.sel.byKeyboard(),
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
+      space: this.spaces, // its camera zooms semantic zoom as the flat zoom does
     });
     if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
     if (!this.sel.untangle.reopen() && view?.shown?.legend?.length) this.sel.refresh(); // its legend, or exploration (§25, §71)

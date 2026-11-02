@@ -69,6 +69,8 @@ export interface AidsHost {
   byKeyboard: () => boolean;
   /** What a lens follows, the selected thing by its key, and the View menu it is picked in, if the card has one. */
   lens: { selected: () => string | null; menu: () => LensMenu | null };
+  /** The view in space, if the card has one: its camera zooms semantic zoom as the flat zoom does. */
+  space?: { nearer: () => number; camera: (f: () => void) => void };
 }
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
@@ -119,11 +121,21 @@ export class Aids {
       : null;
     const menu = host.lens.menu(),
       written = o.aids?.lens;
-    const step = (r: SemanticRung) => host.lens.menu()?.step(r);
+    const step = (r: SemanticRung) => host.lens.menu()?.step(r),
+      nearer = () => host.space?.nearer() ?? 1;
     this.semantic =
       state && menu && allowed('semantic')
-        ? new SemanticZoom({ win: viewport.win, state, written, view: () => zoom().view(), size: host.size, step })
+        ? new SemanticZoom({
+            win: viewport.win,
+            state,
+            written,
+            view: () => zoom().view(),
+            size: host.size,
+            step,
+            nearer,
+          })
         : null;
+    host.space?.camera(() => this.semantic?.changed());
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
   }

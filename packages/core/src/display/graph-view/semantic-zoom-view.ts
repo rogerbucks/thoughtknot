@@ -25,6 +25,8 @@ export interface SemanticHost {
   /** The view as it is now, and the viewport's size on screen. */
   view: () => View;
   size: () => { width: number; height: number };
+  /** How much nearer the 3D camera is than as the view in space opened: 1 while flat. Zooming there steps it too. */
+  nearer?: () => number;
   /** Steps to a rung, laying the graph out again as the View menu's ladder does. */
   step: (r: SemanticRung) => void;
 }
@@ -65,7 +67,7 @@ export class SemanticZoom {
     if (this.timer !== null) this.host.win.clearTimeout(this.timer);
     this.timer = this.host.win.setTimeout(() => {
       this.timer = null;
-      const scale = this.host.view().scale;
+      const scale = this.scale();
       if (Date.now() < this.still || this.judged === null) this.judged = scale;
       else if (scale !== this.judged) this.judge(scale > this.judged ? 1 : -1);
     }, SEMANTIC_REST_MS);
@@ -73,10 +75,15 @@ export class SemanticZoom {
 
   /** Steps the rung `way`, as the things on screen now say. */
   private judge(way: -1 | 0 | 1): void {
-    const { state, view, size, step } = this.host,
-      v = view();
-    this.judged = v.scale;
-    const to = semanticStep(thingsSeen(state.things, v.scale, size()), state.rung, way);
+    const { state, size, step } = this.host,
+      scale = this.scale();
+    this.judged = scale;
+    const to = semanticStep(thingsSeen(state.things, scale, size()), state.rung, way);
     if (to !== state.rung) step(to);
+  }
+
+  /** One zoom level for flat and 3D alike: the flat scale, times how much nearer the camera in space is. */
+  private scale(): number {
+    return this.host.view().scale * (this.host.nearer?.() ?? 1);
   }
 }
