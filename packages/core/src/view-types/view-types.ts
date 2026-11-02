@@ -12,6 +12,7 @@ import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
 import { gridMarks } from './grid-view.ts';
+import { linkEnds } from './link-ends.ts';
 import { hiveMarks } from './hive-view.ts';
 import { mapMarks } from './map-view.ts';
 import { matrixMarks } from './matrix-view.ts';
@@ -44,8 +45,8 @@ export const FIRST_VIEW_TYPES: readonly ViewType[] = ['force', 'matrix', 'treema
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 
-/** What draws each view type. */
-export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
+/** What draws each view type, before its links are cut to their things' edges. */
+const DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
   matrix: matrixMarks,
   treemap: treemapMarks,
   chord: chordMarks,
@@ -62,3 +63,8 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   grid: gridMarks,
   map: mapMarks,
 };
+
+/** What draws each view type: each link touches its things' outlines, not their middles (link-ends.ts). */
+export const VIEW_DRAWERS = Object.fromEntries(
+  VIEW_TYPES.map((t) => [t, (given: DiagramGiven) => linkEnds(DRAWERS[t](given))]),
+) as Record<ViewType, (given: DiagramGiven) => DrawMark[]>;
