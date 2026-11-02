@@ -6,6 +6,7 @@
 import { button } from '../button';
 import { CHIP_LINES, renderChip } from './controls-chip';
 import { renderSheet } from './controls-sheet';
+import { keepPlace } from './controls-place';
 import { isPhone, setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { PictureStatus, ViewOptions } from './view-options';
@@ -183,7 +184,6 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
 /** The panels the bar opens, by their class: each lies over the drawing (panels_over_drawing). */
 const OVER = [
   'thoughtknot-problems',
-  'thoughtknot-view-menu',
   'thoughtknot-find',
   'thoughtknot-filter',
   'thoughtknot-type-list',
@@ -211,9 +211,10 @@ export function overDrawing(
   const is = (el: Element, classes: string[]) => classes.some((cls) => el.classList.contains(cls));
   for (const el of Array.from(root.children))
     if (is(el, OVER)) panels.appendChild(el);
-    else if (is(el, ['thoughtknot-dock']))
+    else if (is(el, ['thoughtknot-dock'])) {
       corner.appendChild(el); // controls_dock
-    else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
+      keepPlace(el as HTMLElement, el.getAttribute('aria-label') ?? ''); // where it was left (controls_panels)
+    } else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });

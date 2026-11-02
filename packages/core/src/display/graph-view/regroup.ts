@@ -77,7 +77,7 @@ export class Regrouping {
   to(only: Kept | null): void {
     const sw = this.host.switching(),
       svg = this.host.svg();
-    if (!sw || !svg) return;
+    if (!sw?.relays || !svg) return; // a view of the core's own keeps what is hidden in place
     const back = only ? null : this.before;
     if (only) this.before ??= { view: this.host.zoom().view(), height: this.host.size().height };
     else this.before = null;

@@ -43,7 +43,9 @@ test('a view that names things in open space names them at a readable size', () 
   ])
     for (const type of open) {
       const marks = VIEW_DRAWERS[type]({ shape: shapeOf(n), space });
-      for (const m of marks.filter((k) => k.kind === 'label'))
+      // a name inside its card scales with the card, so a crowded view's cards are read by zooming in (things_as_cards)
+      const carded = new Set(marks.filter((k) => k.kind === 'box' && k.shape === 'round').map((k) => k.of));
+      for (const m of marks.filter((k) => k.kind === 'label' && !carded.has(k.of)))
         assert.ok(m.size >= NAME_LEAST * CAPTION - 1e-9, `${type}, ${n} things: ${m.id} is ${m.size}px`);
     }
 });

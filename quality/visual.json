@@ -3,375 +3,375 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "e37d8226bb66b40da9e0109e3a62ef99f830c5fa36efc04185e98b83afca8a43",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "b57a1b3f61516a02b7dfc4f52e3417829ea40f506e19f2f588299943f0bdaba3",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "83dcf5bd3d78c377461b34710bc25893d56de4b721bba49345a51d6af30e8f71",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "de627c7f319a30fd5d5286d340e58765d96d9493cf48f62871f45857fd25bed2",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "b66cb37c9648a3a77661ec3e9f342cbd78cff55612b8a89066c1f0a13c49ec0f",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "e07f8d7c76a1ea1c244116e3d3c47ce6ad3c3d321d6357ea570d204a551ebdc5",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "8dde78015ef17ed835eee769f6e86f24b2b1160c4203fc8dba4e5f9ac24a14bc",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "437181750ba6447bf5ee7d5cccda5ce2be4ad925bd5c46f9a597d1eaa22da353",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "50830e92a2cb3bcb1f189d27f7bf539ef13a16f5433d087c731205f8e3f8a768",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "7104395fb35832995179f35790f558558df597bf11387f55c63103c7b01d91da",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "f1a2d2372f4de11a1c83b029b4cab8097cab4b0d1a24b77ae890b8e9a780e53e",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca8f30ffa00f082e976c92163c184faa839ed4e3805a24baa763ef8cf6ce0638",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "71f90b058af9ce2b8472589233a7b41c40486020d6b17da8b19fa0e5bbb7ca71",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "9fba0d7e116848f2456c7545b95e838057cef487241295ddc5e4408faa4fb847",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "c18df102ff44521ef88984a63518a1e014c6023fa19f7d9dfd7dae2e3eb5087c",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "9fd550ad8f28cf890b8ecc1a9e501f4ac624cd49e1da3c33169c71d705743463",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "0b397c3263da38d8732086a477198b4f1f6b170a146398b732dac60cc6ad1195",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "3bd9395ca6f4e0fec2d5f92df04b9e5f8da6eef948234e4603e8a8f2892e6e35",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "7fe73935b19d7665b34054303dfc02faaee6aeaa3c97eac13c0c68409d3f74e9",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "354830f1207110f5fdcb4dab137bed4a08384b4bc2b9f75d79d3b60e9bbd2f72",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "9908799d8477895faa229adcf6af8773eb3f6bedb1658a178ce93e921bfaabdb",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "14c5b81f275bdb38dffe91bc9ef4a0c1a4f8477f3635bfe87635c1ccd0b132a4",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "e453a7830c98eb282e3f04c28edd0a9c48a5a61fcdf695138fa985631b547711",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "9766ead1253ef962dc60b497e4548a9a0e2039f71b6d566ce60156202a8dec2f",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "bd8f497e342f8426cdfb71cab7120d43926278083d21b261b1a1c090376949ac",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "56bf65b930b541fc9f27d67a2a48c061663399148c886b42f4f138fc3f7eb892",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
-      "sha256": "ef712aa447ac5c122d306102dc7bcec99e360e2f0e0f675dc0d6fcfbed09952b",
-      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
-      "day": "2026-10-28"
+      "sha256": "31e926faa670b74687ce21cb0dd003581d5f3b8c49796e8c9c3cc73086243606",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
-      "sha256": "de09e45644e380ebede0bbe9f23a076b162531382eac08dfdf66b8ba690c9747",
-      "reason": "Two loose things now sit in a tray, side by side, by name (layout_parts_packed)",
-      "day": "2026-10-28"
+      "sha256": "f92ed0a42a50727c73af9018fdcda91dff5a547dad7e046bcfa5095c475a7051",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "87bb46054bb47de6ae8de78de56d5c12be696c6ca372d16fbfa40400d32ae05a",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "a18aa4f11512193051196b69a2b9380b6654d0e04c7f28938de490b0f69e58e7",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "dca8beec7162130ae18cb921d962be09692c4fd831e13d4d4808a7a3d0b1954f",
-      "reason": "a fan of links is labelled once, near the end it shares (layout_one_label_per_fan)",
-      "day": "2026-10-25"
+      "sha256": "8ae867ebc817f5715d879f69c1f97685abc8fdeaa49c7d5d05aa162a3d09ed4d",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "f597b4e47aa179e19db2085a5e71dee6303685fb13c02ebdb47693771aeae232",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "79c62c7ec38fe4725cbaa22f4a0b310cacd21e5ee5e2a4aad1e0244a96093648",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "2a07679989c9f7651b98598462b61fb5a3c7df5ceaa331bcea8be1df66abb5c6",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "7dc8386cf1758b9c8f1139a990f5023b1bbe5f1e72f2216e38a64479c4487e45",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "701bdfa6529f66929cfc22d3c07d409a6d83b1c3e23196488127391718590eb3",
-      "reason": "the cubic of a link cut short of its arrowhead now lies on the curve itself (code review L3)",
-      "day": "2026-10-30"
+      "sha256": "eb9e46aa35d9d1e686f2d093bce02e5c7e2af09ba3c8b6e0618d795491e9d3c8",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "4fd2f5fe87f2af3f855971addb8b5497da23c3302318b285ec144a45897d501b",
-      "reason": "the cubic of a link cut short of its arrowhead now lies on the curve itself (code review L3)",
-      "day": "2026-10-30"
+      "sha256": "773e1d77cf8f76188674462b3dce49574ee7209b049b794018bcf4e80439dc8a",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "c18df102ff44521ef88984a63518a1e014c6023fa19f7d9dfd7dae2e3eb5087c",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "9fd550ad8f28cf890b8ecc1a9e501f4ac624cd49e1da3c33169c71d705743463",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "0b397c3263da38d8732086a477198b4f1f6b170a146398b732dac60cc6ad1195",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "3bd9395ca6f4e0fec2d5f92df04b9e5f8da6eef948234e4603e8a8f2892e6e35",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "a683f0c665f27f29af36718dd7151efc3f1d1dfd75a94a1871de02f70bf28209",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "3c1f1d989f9c984baf85acd8f0a87739e08678a9fd87656a2e0c432aada29800",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "bd8aa2943cd0cfab52457017abc15ba5f555568273923ab4a60399d7373a45f3",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "487e51b140eb7aa45e150fea15a174aed9093191ac3bc8e42fd216b7dd82b442",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "f54ed8302327b0ef7f10a00bc6e2d2ea11eac5bd5696711d2f00b0fe539f01e9",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "438016eef4147f6abba66b7df912897d907e1208b042799a496a252e86dcbea9",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "f46c164ec35215b83c987aec50cbd815b675f1fbc7e9651cdf589926ff7a9bcf",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "729fd716cd761a5e2d0a6a2770fb46b69516c77a247e645c14159d7e64442b2e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "57043b0fd84085f95723ceb20bf9ec52a05801c304193f58231e5e81ea040452",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "f7a0bf12873837bd29bd79acc20771092b54b5cf758cd5b5c3b350973a53db3e",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "52eb63336c48e99901b12553c87a950293f3c5c8deaa36609369833f0309414a",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "571f059551c3c72eb8b3d68bbace8666dae7096736a41788a65f2e556778dc06",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "6bb39e2b53740708f90dacc52ee0a98ce1eb00fba5f85ad99487dfe1f9f83823",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "9db974e4af838d3119d3a45e4b4403a7ce445369763c39dfbc023d790efc6d53",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "8fc43b80bd54a5719e7fc33f3c456ef722e5853d3e0efb246a48b00fc54cd81c",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "02420d468188e1cf66b5782a1ffa43f4d411fe176d208b67d1a1ddd5bb562e09",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "9dc0eca3f42b1d795183acdc936e6dfca54f1c6b6a36fa2c29a1b6caf1b4608a",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "7b38f5526947bc54afd97e3c8ccafc06c5ae55408f8675a31f901ab200a316c2",
-      "reason": "Links drawn heavier with bolder arrowheads (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "e453a7830c98eb282e3f04c28edd0a9c48a5a61fcdf695138fa985631b547711",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "9766ead1253ef962dc60b497e4548a9a0e2039f71b6d566ce60156202a8dec2f",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "bd8f497e342f8426cdfb71cab7120d43926278083d21b261b1a1c090376949ac",
-      "reason": "our own curve router (#1232): a routed link's words sit on its curve as drawn, not on its chord, and its ends are drawn in along the drawing's way under the arrowhead",
-      "day": "2026-10-28"
+      "sha256": "56bf65b930b541fc9f27d67a2a48c061663399148c886b42f4f138fc3f7eb892",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "914374cc148248055bdec7cf1a5cea7438295d9acf2a8f271eeeb59a9ca0830c",
-      "reason": "Names scale with their things and link labels show by default (Roger, 2 Nov 2026)",
+      "sha256": "8342894e6e2a265870214f4cf35c81e8ec4b194acc098e480338c0e38be558f0",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
       "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "914764e29defbd6edcfc42c32cb1d414f5296dec3c6960619ede67e4273250ff",
-      "reason": "Names scale with their things and link labels show by default (Roger, 2 Nov 2026)",
+      "sha256": "40ddfd5fa1ca9724b0ec1f4f6c880ba5cc3a38c33c788555c8c0a2727f2a7dc3",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
       "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "66755770340eed462886caf534a88a6fbf40ea0158a4892fa0abade25dc28d17",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "0734054e1ab770e23589655ec9617da16b5c2a78b03b2d8f2b105fe0ec85985d",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "2c1a4d9ff04097f8c5072f3974aebd73ef42d166ade2f95234a35c24b1e0b114",
-      "reason": "Our own layout engine is now the default (Roger, 25 Oct 2026)",
-      "day": "2026-10-25"
+      "sha256": "ee49873beb02d5767e1c60a4de57736c730fa6b8a49b2aae47b159487907dbce",
+      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
+      "day": "2026-11-02"
     }
   ]
 }

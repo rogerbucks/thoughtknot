@@ -39,6 +39,7 @@ import { pictureStatus } from './pictures/picture-status';
 import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { noViewMenu, pictureAgain as live } from '@thoughtknot/core/display/graph-view/view-drawn';
 import { withPicture } from './outside/outside-diagrams';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { renderProblems, type ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
@@ -157,8 +158,7 @@ export async function renderBlock(
   owner?: object,
   redraw?: () => void,
 ): Promise<void> {
-  // a query block named as a view is drawn as the view (§7)
-  const view = viewsOf([source])[0];
+  const view = viewsOf([source])[0]; // a query block named as a view is drawn as the view (§7)
   if (view) return renderViewBlock(plugin, source, el, ctx, view, owner, redraw);
   // a block drawn from another note or a .gql file (§20), and a graph step, run only when asked (§20)
   if (isSourceBlock(source)) return renderSourceBlock(plugin, source, el, ctx, owner, redraw);
@@ -271,10 +271,10 @@ export async function renderBlock(
     return;
   }
 
-  // the View menu (§25): one state for every card of this graph in this note, as its switches say; none for a table
-  const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
+  // the View menu (§25): one state for every card of this graph in this note; none for a table (view_options_everywhere)
+  const state = noViewMenu(diagram) ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const folded = (by?: object) => (state ? state.folded(drawing, by) : drawing);
-  const laidOut = (by?: object) => plugin.layout(folded(by), by);
+  const laidOut = (by?: object) => live(diagram?.picture) ?? plugin.layout(folded(by), by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
@@ -327,7 +327,7 @@ export async function renderBlock(
       stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
       exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
-      ...(state ? { switches: { state, relayout: laidOut } } : {}),
+      ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
       ...(diagram?.table || diagram?.picture
         ? {}

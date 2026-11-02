@@ -38,6 +38,9 @@ export function flatAgain(svg: SVGSVGElement): void {
   lenses.get(svg)?.putAllBack();
 }
 
+/** The Lens row names the options it holds, so a view that cannot take one greys it out (view-support.ts). */
+const LENS_ROW = { 'data-option': 'lens' };
+
 /** What a lens asks of its card. */
 export interface LensHost {
   svg: () => SVGSVGElement | null;
@@ -50,6 +53,8 @@ export interface LensHost {
   state?: ViewState;
   /** The key of what is selected, if anything. */
   selected: () => string | null;
+  /** Whether the view drawn can take lens `l`; one it cannot bends nothing. Every lens, when not given. */
+  allowed?: (l: Lens) => boolean;
 }
 
 /** The attributes a lens bends: points, and where words and round shapes are. */
@@ -141,7 +146,8 @@ export class LensSvg {
 
   /** The lens the drawing is seen through: the View menu's, else the style graph's. */
   get lens(): Lens {
-    return this.host.state?.lens ?? this.host.written ?? 'none';
+    const l = this.host.state?.lens ?? this.host.written ?? 'none';
+    return this.host.allowed?.(l) === false ? 'none' : l; // one the view cannot take bends nothing (view-support.ts)
   }
 
   /** Picks `lens` in the View menu: the drawing is bent again round the selection, or the middle of the view. */
@@ -336,7 +342,7 @@ export function renderLensChoice(
   svg: () => SVGSVGElement | null,
   picked?: () => void,
 ): HTMLSelectElement {
-  const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens') }),
+  const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens'), attr: LENS_ROW }),
     input = row.createEl('select');
   for (const l of LENSES) input.createEl('option', { text: word(`view.lens.${l}` as WordKey), attr: { value: l } });
   row.createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.lens') });

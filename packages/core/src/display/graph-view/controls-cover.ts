@@ -14,7 +14,7 @@ export interface ScreenBox {
 }
 
 /** The cards that float over the drawing and may cover a thing chosen. */
-const CARDS = ['.thoughtknot-corner', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map'];
+const CARDS = ['.thoughtknot-corner', '.thoughtknot-dock.is-free', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map'];
 
 /**
  * How much of `view` the `cards` cover at each edge. A card covers a strip from the edge that needs the thinnest strip

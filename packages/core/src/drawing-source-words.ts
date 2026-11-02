@@ -149,6 +149,9 @@ export const DRAWING_SOURCE_WORDS = {
   'sheet.height': 'Sheet height: {height}. Change it',
   'dock.fold': 'Fold {name} away',
   'dock.open': 'Open {name}',
+  'dock.move': 'Move {name}: drag, or use the arrow keys. Home docks it left, End docks it right',
+  'dock.to-start': 'Dock {name} at the left',
+  'dock.to-end': 'Dock {name} at the right',
   'explore.shapes': 'Shape',
   'explore.depth': 'Steps out',
   'explore.per-branch': 'Per branch',
@@ -262,7 +265,6 @@ export const DRAWING_SOURCE_WORDS = {
     'A fisheye enlarges what is round the pointer, or the selection. Hyperbolic and sphere lay the whole graph on a disc round the middle of the view: drag to bring a part there. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
-  'view.more': 'More choices',
   'view.list.more': 'More views',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
