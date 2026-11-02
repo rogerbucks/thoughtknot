@@ -316,6 +316,7 @@ export const VALUES = [
   'flowLegend',
   'flowSaid',
   'focusOf',
+  'foldedShape',
   'foldsHiding',
   'formatCount',
   'formatDay',
