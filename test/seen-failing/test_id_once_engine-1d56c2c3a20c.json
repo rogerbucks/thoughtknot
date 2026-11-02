@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "GrafeoTakesARepeat.test_grafeo_refuses_a_variable_written_twice",
+  "seen_failing_first": false,
+  "evidence": "The behaviour is Grafeo's own: the 0.6.0 package refuses the repeat, so the test passes on the old code once the package is upgraded; no code of ours changed for it"
+}
