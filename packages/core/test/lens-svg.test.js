@@ -125,3 +125,32 @@ test('a hyperbolic or sphere lens lays the whole drawing on a disc round the mid
     assert.ok(d.b.getAttribute('transform'), 'nothing in the drawing lies beyond its reach');
   }
 });
+
+/** Where box `g`'s transform puts point `p` of it: `translate(x y) scale(t) translate(-cx -cy)`. */
+const movedBy = (g, [px, py]) => {
+  const [x, y, t, cx, cy] = (g.getAttribute('transform') ?? '').match(/-?\d[\d.]*(?:e-?\d+)?/g).map(Number);
+  return [x + t * (px + cx), y + t * (py + cy)];
+};
+
+// proves: links_attached_lensed
+test('under every lens a link still meets both its boxes, its arrowhead on the edge it points at', () => {
+  for (const name of ['fisheye', 'hyperbolic', 'sphere']) {
+    const d = drawingOf();
+    // a link from a's right edge to b's left edge, its arrowhead's tip there
+    d.path.setAttribute('d', 'M220,200C300,200 300,390 370,390');
+    const head = partOf({ points: '363,387 370,390 363,393 363,387' });
+    d.path.kids = [];
+    const link = d.svg.querySelectorAll('g.edge, g.cluster')[0];
+    link.kids.push(head);
+    lensOf(d).pick(name);
+    const pairs = (text) => (text.match(/-?[\d.]+,-?[\d.]+/g) ?? []).map((p) => p.split(',').map(Number));
+    const near = ([x, y], [u, v], what) =>
+      assert.ok(Math.hypot(x - u, y - v) < 0.05, `${name}: ${what} at ${x},${y}, not ${u},${v}`);
+    const path = pairs(d.path.getAttribute('d'));
+    near(path[0], movedBy(d.a, [220, 200]), 'the link leaves a');
+    if (d.b.getAttribute('transform')) {
+      near(path.at(-1), movedBy(d.b, [370, 390]), 'the link reaches b');
+      near(pairs(head.getAttribute('points'))[1], movedBy(d.b, [370, 390]), 'the arrowhead touches b');
+    }
+  }
+});

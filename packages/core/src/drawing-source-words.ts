@@ -225,6 +225,7 @@ export const DRAWING_SOURCE_WORDS = {
   'view.hint.groups': 'Each group shows as one box until you open it.',
   'view.hint.merge': 'Links between the same two groups share one line.',
   'view.hint.lanes': 'Kinds that link in order each get a lane, or a plane in space.',
+  'view.hint.own-only': 'Only for a network our own engine lays out. Pick Network to use it.',
   'view.lens': 'Lens',
   'view.lens.none': 'None',
   'view.lens.fisheye': 'Fisheye',

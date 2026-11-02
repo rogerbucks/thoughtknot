@@ -4,7 +4,6 @@
 // (view_switch_view_only).
 import {
   BY_KIND,
-  LAYOUT_OPTION_RANGE,
   OPTIONS,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
@@ -35,10 +34,9 @@ import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
-import { LAYOUT_CHOICES, type LayoutChoice } from '../../layouts/layout-options.ts';
+import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
-import { offeredLayouts, strategyName } from '../../layouts/offered.ts';
 
 /** A card's View menu, hidden until the bar's button opens it. */
 export interface ViewMenu {
@@ -65,22 +63,6 @@ let hints = 0;
 /** The View menu's choice of what to group by: as written or found, none, or one of `groupChoices` (untangle_group_by). */
 const AUTO = '',
   NONE = ':none';
-
-/** The View menu's layout sliders, and how far one step moves each, in every view (§53, layout_saved_with_view). */
-const LAYOUT_SLIDERS = [
-  ['spacing', 'view.layout.spacing', 0.25],
-  ['linkLength', 'view.layout.link-length', 0.25],
-  ['groupPull', 'view.layout.group-pull', 0.1],
-  ['rounds', 'view.layout.rounds', 0.25],
-] as const satisfies readonly (readonly [keyof LayoutOptions, string, number])[];
-/** The View menu's layout choices: the layout first, then its variables, alike in 2D and 3D (layout_plugins). */
-const LAYOUT_LISTS = ['strategy', 'direction', 'shape', 'pinned'] as const satisfies readonly LayoutChoice[];
-
-/** The words choice `k` may be, each with what the menu says for it. */
-const listed = (k: LayoutChoice): [string, string][] =>
-  k === 'strategy'
-    ? [...LAYOUT_CHOICES.strategy, ...offeredLayouts().map((l) => l.id)].map((v) => [v, strategyName(v)])
-    : LAYOUT_CHOICES[k].map((v) => [v, word(`view.layout.${k}.${v.toLowerCase()}` as WordKey)]);
 
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
@@ -156,26 +138,16 @@ export function renderViewMenu(
   const label = grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by') });
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
-  const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
-    const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says) });
-    const input = row.createEl('input', {
-      attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
-    });
-    input.addEventListener('change', () => spaced?.(k, Number(input.value)));
-    return { k, input };
-  });
-  const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-choice', text: word(`view.layout.${k}`) });
-    const input = row.createEl('select');
-    for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
-    input.addEventListener('change', () => spaced?.(k, input.value));
-    return { k, input };
-  });
+  const { sliders, lists } = layoutControls(holder, spaced);
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
+  const ownHint = holder().createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.own-only') });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
+    // only a drawing our own engine laid out says its pick; with none, what only it reads is greyed (view_controls_apply)
+    ownHint.hidden = !!shown;
+    for (const { s, b } of switches) if (OWN_ONLY.has(s)) b.disabled = !shown;
+    for (const { k, input } of [...sliders, ...lists]) if (OWN_ONLY.has(k)) input.disabled = !shown;
     if (!list || !grouping) return;
     const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
     const choices: [string, string][] = [
