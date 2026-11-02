@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/gate-guard.test.js",
+  "test": "a note’s classification line > a heredoc is refused when the note cannot be read to judge it",
+  "seen_failing_first": false,
+  "evidence": "A refusal the old code also gave, as it refused every such command. It pins that a heredoc is not let through when no read is given; the cases beside it were seen failing."
+}

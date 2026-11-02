@@ -8,12 +8,15 @@
 // A classification is judged by what the call leaves. The note is read, the call's change is made to a copy, and the
 // classification before and after is compared. A note not yet made has none to change, so a new note may be written.
 // When the note cannot be read, a call is refused if any text it carries holds a classification line. Bash cannot be
-// parsed, so a command that names `classification` is refused, unless it only searches or prints with no redirection.
-// What a command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md
-// says so.
+// fully parsed, so shell-steps.ts reads a command into its steps. A heredoc that `cat` sends to a path known in full is
+// judged as a Write is, whether the command names `classification` or not. Beyond that, a command that names it is
+// refused unless every step only reads. What a command changes without naming it, such as cutting the front matter by
+// line numbers, is not seen. GUIDE.md says so.
 import { classificationOf, word } from '@thoughtknot/core';
 import { forms, namesWord, onWindows, pathOf, slashed, slashedPorts } from './data-guard.ts';
 import type { GuardPorts, ToolInput } from './data-guard.ts';
+import { shellSteps } from './shell-steps.ts';
+import type { ShellStep } from './shell-steps.ts';
 
 // The refusals are said when made, in the language set then. Claude Code shows them in the chat, so the person may read them.
 
@@ -36,8 +39,33 @@ export type GatePorts = Omit<GuardPorts, 'data'> & {
 /** A line that sets a classification, top-level or not: what the gate's own reader looks for. */
 const CLASSIFICATION_LINE = /^\s*-?\s*["']?classification["']?\s*:/im;
 
-/** A command that only searches or prints, with nothing to write its output. */
-const ONLY_READS = /^\s*(grep|rg|cat|head|tail|less)\s[^>|;&`$]*$/;
+/**
+ * The programs that only read, search or print, with the arguments that would make each do more. No other program is
+ * trusted. `cd` and `mkdir` touch no note's text, so they may stand beside a heredoc.
+ */
+const READERS = new Map<string, RegExp | null>([
+  ['cat', null],
+  ['cd', null],
+  ['cut', null],
+  ['echo', null],
+  ['find', /^-(exec|ok|delete|fprint|fls)/],
+  ['grep', null],
+  ['head', null],
+  ['less', /^(-\w*o|--log)/i],
+  ['ls', null],
+  ['mkdir', null],
+  ['printf', null],
+  ['pwd', null],
+  ['rg', /^--(pre|hostname-bin)/],
+  ['sort', /^(-\w*o|--o|--c)/],
+  ['tail', null],
+  ['tr', null],
+  ['true', null],
+  ['wc', null],
+]);
+
+/** A character that makes the shell choose the path, so what it would write to is not known here. */
+const PATH_NOT_KNOWN = /[*?[\]{}$`~^#<>|]/;
 
 /** One change of an edit: the text replaced, its replacement, and whether every copy is replaced. */
 type Change = { old_string?: unknown; new_string?: unknown; replace_all?: unknown };
@@ -74,6 +102,9 @@ function textsOf(value: unknown): string[] {
 /** The matrix note's path in the vault, as parts joined by `/`, without a leading `./` or `/`. */
 const vaultPath = (note: string) => note.replace(/\\/g, '/').replace(/^(\.\/|\/)+/, '');
 
+const sameClassification = (before: string, after: string) =>
+  JSON.stringify(classificationOf(before)) === JSON.stringify(classificationOf(after));
+
 async function guardClassification(tool: string, path: string, input: Record<string, unknown>, ports: GatePorts) {
   let before: string | null = null;
   try {
@@ -83,12 +114,52 @@ async function guardClassification(tool: string, path: string, input: Record<str
     if (tool === 'Write') return null;
   }
   const after = before === null ? null : textAfter(tool, input, before);
-  if (before !== null && after !== null) {
-    const same = JSON.stringify(classificationOf(before)) === JSON.stringify(classificationOf(after));
-    return same ? null : classificationRefusal();
-  }
+  if (before !== null && after !== null) return sameClassification(before, after) ? null : classificationRefusal();
   const carried = textsOf({ ...input, file_path: '', notebook_path: '', path: '' });
   return carried.some((t) => CLASSIFICATION_LINE.test(t)) ? classificationRefusal() : null;
+}
+
+/** Whether a step runs a trusted program, with no argument that would make it write and no file to write to. */
+function onlyReads(step: ShellStep): boolean {
+  const [program = '', ...args] = step.words;
+  const more = READERS.get(program);
+  if (more === undefined || step.writes.length) return false;
+  return !more || !args.some((arg) => more.test(arg));
+}
+
+/** Where a step's heredoc goes, and whether it appends; null unless it is `cat` to one path known in full. */
+function heredocTarget(step: ShellStep, home?: string): { path: string; append: boolean } | null {
+  const [write, ...others] = step.writes;
+  if (!write || others.length || step.body === null || step.words.join(' ') !== 'cat') return null;
+  const path = home ? write.to.replace(/^~(?=\/)/, home) : write.to;
+  return path.startsWith('/') && !PATH_NOT_KNOWN.test(path) ? { path, append: write.append } : null;
+}
+
+/** Whether a heredoc would change the classification of the note it writes; a note not yet made has none to change. */
+async function heredocChanges(
+  body: string,
+  target: { path: string; append: boolean },
+  read: (path: string) => Promise<string>,
+): Promise<boolean> {
+  let before: string;
+  try {
+    before = await read(target.path);
+  } catch {
+    return false;
+  }
+  return !sameClassification(before, target.append ? before + body : body);
+}
+
+async function guardCommand(command: string, named: boolean, ports: GatePorts) {
+  const steps = shellSteps(command);
+  if (!steps) return named ? classificationRefusal() : null;
+  for (const step of steps) {
+    const target = ports.read ? heredocTarget(step, ports.home) : null;
+    if (target && ports.read && (await heredocChanges(step.body ?? '', target, ports.read)))
+      return classificationRefusal();
+    if (named && !target && !onlyReads(step)) return classificationRefusal();
+  }
+  return null;
 }
 
 /**
@@ -98,10 +169,10 @@ async function guardClassification(tool: string, path: string, input: Record<str
 export async function guardGateFiles(tool: string, input: ToolInput, ports: GatePorts): Promise<string | null> {
   const note = ports.matrixNote ? vaultPath(ports.matrixNote) : '';
   if (tool === 'Bash') {
-    const command = typeof input.command === 'string' ? input.command.replace(/['"`\\]/g, '') : '';
+    const given = typeof input.command === 'string' ? input.command : '';
+    const command = given.replace(/['"`\\]/g, '');
     if (note && namesWord(command, note.slice(note.lastIndexOf('/') + 1))) return matrixNoteRefusal();
-    if (namesWord(command, 'classification') && !ONLY_READS.test(command)) return classificationRefusal();
-    return null;
+    return guardCommand(given, namesWord(command, 'classification'), ports);
   }
   const path = pathOf(tool, input);
   if (path === null) return null;
