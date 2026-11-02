@@ -26,7 +26,10 @@ const KNOWN_GAPS = {
   force: [...FOLDS, 'layout'],
   ...Object.fromEntries(['chord', 'ego', 'block', 'centroid', 'containment', 'arc', 'hive'].map((v) => [v, FOLDS])),
   ...Object.fromEntries(
-    ['matrix', 'treemap', 'density', 'grid', 'plan', 'map'].map((v) => [v, ['detail', 'groups', 'groupBy', 'semantic']]),
+    ['matrix', 'treemap', 'density', 'grid', 'plan', 'map'].map((v) => [
+      v,
+      ['detail', 'groups', 'groupBy', 'semantic'],
+    ]),
   ),
 };
 
@@ -87,7 +90,11 @@ describe('the view a card draws', () => {
     assert.equal(viewOf('network', 'thoughtknot.diagrams.matrix'), 'matrix');
     assert.equal(viewOf('tree'), 'tree');
     assert.equal(viewOf(undefined), 'network');
-    assert.equal(viewOf('network', 'acme.shapes.circle'), 'network', 'a plug-in’s type from outside is not one of ours');
+    assert.equal(
+      viewOf('network', 'acme.shapes.circle'),
+      'network',
+      'a plug-in’s type from outside is not one of ours',
+    );
   });
 
   // proves: view_options_everywhere
