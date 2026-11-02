@@ -456,6 +456,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Test tooling and the build status's parts
 
+- `test/core-exports-used.test.js` — every export of the core is named somewhere else in the repository, so an export
+  nothing reads is taken out, not kept in case.
 - `test/prepare-pr.test.js` — FLOW-4: `npm run prepare-pr` writes every record a pull request carries. CI runs it in check
   mode and names every stale record at once. A change to words alone gets no Claude review.
 

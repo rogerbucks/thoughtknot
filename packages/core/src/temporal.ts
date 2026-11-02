@@ -97,10 +97,6 @@ export interface Stamp {
 /** How far ahead of this device's own clock another device's may be and still be taken up: five minutes. */
 export const MOST_AHEAD = 5 * 60 * 1000;
 
-/** Stamps in order: by wall time, then count, then device, so every device sorts them the same. */
-export const byStamp = (a: Stamp, b: Stamp): number =>
-  a.wall - b.wall || a.count - b.count || (a.device < b.device ? -1 : a.device > b.device ? 1 : 0);
-
 /**
  * A device's hybrid logical clock. A stamp it gives sorts after every stamp it gave or heard before. So what a device
  * did after seeing an edit sorts after that edit. A stamp more than MOST_AHEAD in front of this device's clock is

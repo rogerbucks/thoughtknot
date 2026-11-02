@@ -22,9 +22,6 @@ export interface ThemeRule {
   value: string;
 }
 
-/** The labels a theme graph holds; none of them is knowledge. */
-export const THEME_LABELS = ['Theme', 'ThemeRule'];
-
 /** Whether a graph is a theme graph: it holds a Theme. */
 export const isThemeGraph = (g: Graph): boolean => g.labelled('Theme').length > 0;
 

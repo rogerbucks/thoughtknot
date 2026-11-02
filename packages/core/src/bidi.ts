@@ -7,9 +7,6 @@
 /** A letter of a right-to-left block: Hebrew to Arabic Extended-A, their presentation forms, and the astral ones. */
 const RTL = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff\u{10800}-\u{10fff}\u{1e800}-\u{1efff}]/u;
 
-/** Whether `text` holds a right-to-left letter. */
-export const hasRtl = (text: string): boolean => RTL.test(text);
-
 /**
  * `text`, already escaped for SVG, set apart and read from its first strong letter when it holds a right-to-left one.
  * Words already set apart are left as they are.
