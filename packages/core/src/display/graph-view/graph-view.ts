@@ -202,9 +202,8 @@ export class GraphView extends Lifecycle {
     if (!this.table)
       this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     this.glide.follow(this.o.drawn, (d) => this.drawn === this.o.drawn && this.relaid(d)); // its settled layout
-    // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
     this.aids = new Aids(this, {
-      o: this.o,
+      o: this.o, // the aids: the mini-map, the quick-info tooltip and where the kept-open details go (§24)
       root,
       viewport: this.viewport,
       svg: () => this.svg,
