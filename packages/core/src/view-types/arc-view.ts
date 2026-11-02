@@ -5,6 +5,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { blockName, blockOrder } from './block-order.ts';
+import { nameSize as nameOf } from './type-scale.ts';
 
 /** The share of the space's width kept clear at each end of the line. */
 const END_SHARE = 0.04;
@@ -24,7 +25,7 @@ export function arcMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const x = new Map(order.map((k, i) => [k, end + step * (i + 0.5)]));
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const size = Math.max(Math.min(step * 0.6, space.height * 0.03), 1),
-    nameSize = Math.min(12, Math.max(size, 6));
+    nameSize = nameOf(size);
   // an arc rises half as high as it is long, up to the room above or below the line. A long arc is flattened alone. So
   // one link across the whole line no longer squashes the rest into a strip (layout_types_screen_shaped)
   const room = line - nameSize * 3;

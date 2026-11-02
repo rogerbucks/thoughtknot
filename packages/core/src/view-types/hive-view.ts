@@ -7,6 +7,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { word } from '../words.ts';
+import { nameSize as nameOf, captionSize } from './type-scale.ts';
 
 /** The most axes a hive has: past this, the smallest kinds share the last. */
 const MOST_AXES = 5;
@@ -79,7 +80,7 @@ export function hiveMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const most = Math.max(...axes.map((a) => a.keys.length));
   const step = (long - inner) / Math.max(most, 1);
   const size = Math.max(Math.min(step * 0.7, outer * 0.04), 1),
-    nameSize = Math.min(12, Math.max(size, 7));
+    nameSize = nameOf(size);
   const place = new Map<string, { th: number; r: number }>();
   const marks: DrawMark[] = [];
   axes.forEach((axis, i) => {
@@ -138,7 +139,7 @@ export function hiveMarks({ shape, space }: DiagramGiven): DrawMark[] {
           x: x + size,
           y: y + nameSize / 3,
           text: name,
-          size: nameSize * 0.85,
+          size: captionSize(nameSize),
           anchor: 'start',
           maxWidth: step * 4,
         });

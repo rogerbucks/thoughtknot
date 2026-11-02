@@ -6,6 +6,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** A rectangle: its corner, width and height. */
 interface Rect {
@@ -18,8 +19,6 @@ interface Rect {
 /** The most a group's name band takes of its rectangle's height, and its height when there is room. */
 const BAND_SHARE = 0.2;
 const BAND = 18;
-/** The largest a thing's name is drawn, in CSS pixels. */
-const NAME_MOST = 12;
 
 /** The worst ratio of long side to short side, laying out the areas of `row` along a side `side` long. */
 function worst(row: readonly number[], side: number): number {

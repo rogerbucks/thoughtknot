@@ -15,6 +15,7 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { layoutOptions } from '../layouts/layout-options.ts';
 import type { LayoutOptions } from '../layouts/layout-options.ts';
+import { nameSize as nameOf } from './type-scale.ts';
 
 /** The most steps a layout takes. */
 export const FORCE_STEPS = 300;
@@ -157,7 +158,7 @@ export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): D
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const kinds = [...new Set(shape.things.map((t) => t.kinds.join(', ')))];
   const size = Math.max(1, Math.min(24, Math.sqrt((space.width * space.height) / n) / 3));
-  const nameSize = Math.min(12, Math.max(size / 2, 6));
+  const nameSize = nameOf(size / 2);
   const marks: DrawMark[] = [];
   for (const t of shape.things) {
     const [px, py] = at.get(t.key) ?? [0, 0];

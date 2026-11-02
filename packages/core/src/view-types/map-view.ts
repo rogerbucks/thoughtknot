@@ -7,6 +7,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape, ShapeThing } from '../types-shape.ts';
 import { word } from '../words.ts';
+import { nameSize as nameOf, captionSize } from './type-scale.ts';
 
 /** The property names a latitude and a longitude go by, as people write them. */
 const LATITUDES = ['lat', 'latitude'];
@@ -54,7 +55,7 @@ const stepFor = (span: number): number => STEPS.find((s) => span / s <= LINES) ?
 export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
   if (!shape.things.length) return [];
   const { placed, rest } = mapSplit(shape);
-  const nameSize = Math.min(12, Math.max(space.height * 0.025, 7));
+  const nameSize = nameOf(space.height * 0.025);
   const listWidth = rest.length ? space.width * (placed.size ? LIST_SHARE : 1) : 0;
   let column = listWidth; // the width of one column of the list
   const mapWidth = space.width - listWidth;
@@ -112,7 +113,7 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
         x: left + 2,
         y: y(lat) - 2,
         text: `${lat}°`,
-        size: nameSize * 0.7,
+        size: captionSize(nameSize),
         anchor: 'start',
         maxWidth: w,
       });
@@ -136,7 +137,7 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
         x: x(lon),
         y: top - nameSize / 3,
         text: `${lon}°`,
-        size: nameSize * 0.7,
+        size: captionSize(nameSize),
         anchor: 'middle',
         maxWidth: w,
       });
@@ -182,7 +183,7 @@ export function mapMarks({ shape, space }: DiagramGiven): DrawMark[] {
       x: cx + dot,
       y: cy + nameSize / 3,
       text: t.text,
-      size: nameSize * 0.85,
+      size: captionSize(nameSize),
       anchor: 'start',
       maxWidth: placed.has(t.key) ? mapWidth / 4 : Math.max(column - 3 * nameSize, nameSize),
     });

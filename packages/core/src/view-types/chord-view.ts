@@ -3,6 +3,7 @@
 // network hides in a tangle. It is drawn as marks (drawing-marks.ts), so every painter draws it the same way.
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
+import { nameSize as nameOf } from './type-scale.ts';
 
 /** The share of the circle's radius kept outside it for names. */
 const NAMES_SHARE = 0.25;
@@ -38,7 +39,7 @@ export function chordMarks({ shape, space }: DiagramGiven): DrawMark[] {
   }
   const at = (t: number, radius: number): [number, number] => [cx + radius * Math.cos(t), cy + radius * Math.sin(t)];
   const size = Math.max(Math.min((step * r) / 1.5, outer * 0.05), 1);
-  const nameSize = Math.min(12, Math.max(size, 6));
+  const nameSize = nameOf(size);
   const marks: DrawMark[] = [];
   for (const t of ordered) {
     const th = angle.get(t.key) ?? 0;

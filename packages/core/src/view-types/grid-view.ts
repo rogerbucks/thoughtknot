@@ -6,6 +6,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { fitText } from './fit-text.ts';
+import { nameSize as nameOf } from './type-scale.ts';
 
 /** The fewest and most values a property may have to make the columns. */
 const FEWEST_COLUMNS = 2;
@@ -85,7 +86,7 @@ export function gridSplit(shape: GraphShape): GridSplit {
 export function gridMarks({ shape, space }: DiagramGiven): DrawMark[] {
   if (!shape.things.length) return [];
   const { by, columns, rows, cell } = gridSplit(shape);
-  const nameSize = Math.min(12, Math.max(space.height * 0.025, 7));
+  const nameSize = nameOf(space.height * 0.025);
   const head = nameSize * 2.5,
     side = rows.length > 1 ? Math.min(space.width * 0.15, nameSize * 9) : 0;
   const width = (space.width - side) / columns.length;

@@ -12,13 +12,12 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven, MarkPoint } from '../plugin-diagrams.ts';
 import { dayOf, type ShapeThing } from '../types-shape.ts';
 import { fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** The share of the width kept for names on the left. */
 const NAMES_SHARE = 0.25;
 /** The share of a row's height a bar takes. */
 const BAR_SHARE = 0.6;
-/** The largest a name is drawn. */
-const NAME_MOST = 12;
 /** A day in milliseconds. */
 const DAY = 86_400_000;
 
