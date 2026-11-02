@@ -1,8 +1,8 @@
 // The View menu's spacing in a drawing Graphviz lays out (editor spec §53, layout_options; §68, view_options_everywhere).
-// Roger, 2 Nov 2026: "The lack of consistent functionality is driving me nuts." Spacing and link length moved a
-// network our own engine lays out, but a tree, flow, lanes, radial or timeline ignored them. Graphviz reads its own
-// room between things: `nodesep` across a rank and `ranksep` between ranks. So the View menu scales those two. Spacing
-// scales both; link length scales the room between ranks, which the links cross. Host-free and pure.
+// Roger, 2 Nov 2026: options must work the same in every view. Spacing and link length moved only a network our own
+// engine lays out. A tree, flow, lanes, radial or timeline ignored them. Graphviz reads its own room between things:
+// `nodesep` across a rank and `ranksep` between ranks. So the View menu scales those two. Spacing scales both; link
+// length scales the room between ranks, which the links cross. Host-free and pure.
 import type { LayoutOptions } from './layouts/layout-options.ts';
 
 /** Rounds to two places, as Graphviz's source is written. */
