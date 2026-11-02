@@ -15,12 +15,7 @@ import { PATH, NOTE, show } from './host/card-notes.js';
 before(() => build());
 
 /** The card's panels that lie over the drawing, by their class. */
-const PANELS = [
-  'thoughtknot-find',
-  'thoughtknot-filter',
-  'thoughtknot-type-list',
-  'thoughtknot-view-list',
-];
+const PANELS = ['thoughtknot-find', 'thoughtknot-filter', 'thoughtknot-type-list', 'thoughtknot-view-list'];
 
 describe('the panels the bar opens', () => {
   // proves: panels_over_drawing
