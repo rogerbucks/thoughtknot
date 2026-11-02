@@ -3,7 +3,7 @@
 // a11y_targets_reflow_auto) share it. Chrome is the one given, the first of the usual names on the PATH, or where a Mac
 // or a Windows PC installs it.
 import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -146,6 +146,55 @@ export async function startAgainIfStuck(start, attempts = 2) {
   }
 }
 
+/** How many headless Chromes may be open at once across all the test processes of a machine (about 1.5 GB each). */
+export const CHROME_SLOTS = Number(process.env.THOUGHTKNOT_CHROME_SLOTS) || 2;
+
+const alive = (pid) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return e?.code === 'EPERM';
+  }
+};
+
+/**
+ * Waits for one of `limit` slots and returns the function that frees it. A slot is a folder made in `dir`. It holds the
+ * pid of the process using it. Test files run as separate processes, so the folders are how they count each other.
+ * Four browser-heavy files in one CI shard once peaked at 8.1 GB. So no more than `limit` Chromes run at once, and the
+ * others wait their turn. A slot whose process is gone is taken over.
+ */
+export async function takeChromeSlot({
+  dir = join(tmpdir(), 'thoughtknot-chrome-slots'),
+  limit = CHROME_SLOTS,
+  sleep = (ms) => new Promise((done) => setTimeout(done, ms)),
+} = {}) {
+  mkdirSync(dir, { recursive: true });
+  for (;;) {
+    for (let i = 0; i < limit; i++) {
+      const slot = join(dir, `slot-${i}`);
+      try {
+        mkdirSync(slot);
+      } catch (e) {
+        if (e?.code !== 'EEXIST') throw e;
+        let owner = 0;
+        try {
+          owner = Number(readFileSync(join(slot, 'pid'), 'utf8'));
+        } catch {
+          continue; // just made by another process, which has not written its pid yet
+        }
+        if (alive(owner)) continue;
+        rmSync(slot, { recursive: true, force: true });
+        i--; // try this slot again, now it is free
+        continue;
+      }
+      writeFileSync(join(slot, 'pid'), String(process.pid));
+      return () => rmSync(slot, { recursive: true, force: true });
+    }
+    await sleep(250);
+  }
+}
+
 /**
  * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
  * - send speaks the DevTools protocol, and on hears its events.
@@ -154,7 +203,27 @@ export async function startAgainIfStuck(start, attempts = 2) {
  * - stop ends it all.
  * `flags` are more of Chrome's switches, such as those that let it paint with WebGL and WebGPU in software.
  */
-export const startChrome = (options) => startAgainIfStuck(() => startOnce(options));
+export async function startChrome(options) {
+  const release = await takeChromeSlot();
+  try {
+    const started = await startAgainIfStuck(() => startOnce(options));
+    let freed = false;
+    return {
+      ...started,
+      stop: async () => {
+        try {
+          await started.stop();
+        } finally {
+          if (!freed) release();
+          freed = true;
+        }
+      },
+    };
+  } catch (e) {
+    release();
+    throw e;
+  }
+}
 
 /**
  * The media features every check starts from, whatever the machine is set to. A Mac can ask for reduced motion, and
