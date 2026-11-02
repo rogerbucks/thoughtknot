@@ -26,7 +26,7 @@ import type { WordKey } from '../../words.ts';
 import type { View, Zoom } from '../../zoom.ts';
 import type { Lifecycle } from '../lifecycle';
 import { reducedMotion } from './details-nav.ts';
-import { changeOf, MARKED, tellChanged } from './view-changed.ts';
+import { changeOf, MARKED, tellChanged } from './focus-marks.ts';
 import { boxIn } from './taps.ts';
 import type { Taps } from './taps.ts';
 

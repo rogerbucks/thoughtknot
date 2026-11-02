@@ -18,7 +18,7 @@ import type { MarkPoint } from '../../plugin-diagrams.ts';
 import { marksBounds, type DrawMark } from '../../drawing-marks.ts';
 import { sketchPreview } from './sketch-preview';
 import type { Drawn } from '@thoughtknot/core';
-import { tellChanged } from './view-changed.ts';
+import { tellChanged } from './focus-marks.ts';
 import { button } from '../button';
 import type { Taps } from './taps';
 import type { ViewOptions } from './view-options';

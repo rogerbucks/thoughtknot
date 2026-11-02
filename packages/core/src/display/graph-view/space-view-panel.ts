@@ -35,7 +35,7 @@ import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
 import { SpaceGlide } from './space-view-glide.ts';
 import { SpaceMiniMap } from './space-mini-map.ts';
-import { changeOf, MARKED } from './view-changed.ts';
+import { changeOf, MARKED } from './focus-marks';
 import type { Target } from './taps';
 
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
