@@ -135,8 +135,7 @@ export async function openSpaceView(
   let space: SpaceMarks = sketched(spaceBy(depths[depth] ?? null));
   let width = 1,
     height = 1;
-  let orbit: Orbit = orbitFit(space, 1);
-  let asked = false;
+  let [orbit, asked]: [Orbit, boolean] = [orbitFit(space, 1), false];
   let open = true;
   // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
   let [picked, pickedLine]: [Block | null, SpaceLine | null] = [null, null];
@@ -154,6 +153,7 @@ export async function openSpaceView(
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
+    more.moved?.(orbit); // the card's semantic zoom reads how near the camera is
     tellPickedAt(root, glide.match(picked), matrix, width, height); // the editor beside it follows it (§72)
   };
   const again = () => {

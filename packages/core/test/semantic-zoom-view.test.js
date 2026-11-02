@@ -8,7 +8,7 @@ import { onScreen } from '../src/display/graph-view/layout-glide-svg.ts';
 import { ViewState } from '../src/view-switches.ts';
 
 /** A card of 300 things in a viewport 800 × 600, its timers run by hand, and the rungs it was stepped to. */
-function cardOf(lens = 'semantic') {
+function cardOf(lens = 'semantic', nearer = undefined) {
   const state = new ViewState({ labels: true, hubs: false, groups: true, merge: true, engine: false, lanes: true });
   [state.lens, state.things] = [lens, 300];
   let timers = [];
@@ -28,6 +28,7 @@ function cardOf(lens = 'semantic') {
     state,
     view: () => view,
     size: () => ({ width: 800, height: 600 }),
+    nearer,
     step: (r) => {
       steps.push(r);
       state.toRung(r);
@@ -71,6 +72,26 @@ test('a new layout gliding in never steps it, and with another lens zooming chan
   other.zoomTo(0.4);
   other.zoomTo(2);
   assert.deepEqual(other.steps, []);
+});
+
+// proves: projection_semantic_zoom
+test('in space, the camera coming nearer steps the ladder as zooming in flat does', () => {
+  let near = 1;
+  const { zoom, steps, zoomTo } = cardOf('semantic', () => near);
+  zoomTo(0.4); // the flat zoom the view in space opens at: where zooming is judged from
+  for (const [n, rung] of [
+    [1.75, 'groups'],
+    [3.25, 'all'],
+    [5, 'properties'],
+  ]) {
+    near = n; // the camera that much nearer than it opened, the flat zoom left as it was
+    zoom.changed();
+    zoomTo(0.4);
+    assert.equal(steps.at(-1), rung);
+  }
+  near = 1; // back out to where it opened
+  zoomTo(0.4);
+  assert.equal(steps.at(-1), 'overview', 'one zoom level: flat or in space, the same rung');
 });
 
 // proves: projection_semantic_zoom

@@ -46,6 +46,11 @@ export class SpaceSwitch {
   /** Where the camera starts as the view next opens, if the last card left it somewhere. */
   private start: Orbit | undefined;
 
+  /** How far the camera sat as the view in space first painted: nearer than that is zoomed in. */
+  private far = 0;
+  /** Told each time the camera in space moves: the card's semantic zoom listens. */
+  private onCamera: () => void = () => {};
+
   /** The graph's name, which the view in space is named by. */
   private graph = '';
 
@@ -69,6 +74,17 @@ export class SpaceSwitch {
   /** Where the camera is now, while the drawing is shown in space. */
   orbit(): Orbit | undefined {
     return this.view?.orbit();
+  }
+
+  /** Listens to the camera in space: semantic zoom steps as it nears, as zooming flat steps it (projection_semantic_zoom). */
+  camera(f: () => void): void {
+    this.onCamera = f;
+  }
+
+  /** How much nearer the camera is than as the view opened: 1 while flat. */
+  nearer(): number {
+    const o = this.view?.orbit();
+    return o && this.far ? this.far / o.distance : 1;
   }
 
   /** How the drawing is shown now: in space as cards or balls, or flat (null). */
@@ -118,6 +134,7 @@ export class SpaceSwitch {
     flatAgain(svg); // read as drawn: in space it is bent there
     const start = this.start;
     this.start = undefined;
+    this.far = 0;
     this.opening = openSpaceView(frame, svg, this.graph, () => this.closed(live), {
       ...(start ? { orbit: start } : {}),
       cards: mode === 'cards',
@@ -130,6 +147,10 @@ export class SpaceSwitch {
       painter: this.says().aids?.painter,
       lens: () => this.lens(), // as the View menu picks it (§68), where the view can take it
       sketch: this.sketch,
+      moved: (o) => {
+        this.far ||= o.distance;
+        this.onCamera();
+      },
     }).then((view) => {
       this.view = view;
       if (!view) this.closed(live);

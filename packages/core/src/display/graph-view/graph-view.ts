@@ -214,6 +214,7 @@ export class GraphView extends Lifecycle {
       taps: this.taps,
       byKeyboard: () => this.sel.byKeyboard(),
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
+      space: this.spaces, // its camera zooms semantic zoom as the flat zoom does
     });
     if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
     if (!this.sel.untangle.reopen() && view?.shown?.legend?.length) this.sel.refresh(); // its legend, or exploration (§25, §71)

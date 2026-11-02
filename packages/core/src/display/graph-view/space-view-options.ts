@@ -22,6 +22,7 @@ export interface SpaceOptions {
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
   lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
+  moved?: (orbit: Orbit) => void; // the camera moved: semantic zoom reads how near it is (projection_semantic_zoom)
   orbit?: Orbit; // drawn again in its card's place, the camera where the last left it (NEURO-7)
 }
 
