@@ -711,7 +711,6 @@
   display: none;
 }
 .thoughtknot-dock.is-moving {
-  box-shadow: var(--gn-shadow-l);
   opacity: 0.92;
 }
 /* its head drags it; its grip and dock buttons are quiet, as its fold is */
@@ -734,8 +733,9 @@
 .thoughtknot-dock-place > button {
   cursor: pointer;
 }
-/* not where it cannot move: on a phone the sheet holds it, and the 3D view's pad keeps its own place */
-:is(.thoughtknot-phone-sheet, .thoughtknot-space-pad) :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+/* not on the 3D view's pad, which keeps its own place. On a phone they stay, so no control is lost at a small width;
+   the sheet holds the dock there, and they leave it in place. */
+.thoughtknot-space-pad :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
   display: none;
 }
 /* The chip and each dock: a part of that card, a hairline between them. Folded, only its head shows. Its dials and

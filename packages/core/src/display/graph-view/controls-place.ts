@@ -16,8 +16,9 @@ export interface DockPlace {
 
 /** How near a side, in pixels, a dock dropped there docks to it. */
 export const SNAP = 24;
-/** How far one press of an arrow key moves a free dock, and with Shift held. */
+/** How far one press of an arrow key moves a free dock. */
 export const KEY_MOVE = 16;
+/** How far one press of an arrow key moves it with Shift held. */
 export const KEY_MOVE_FAR = 64;
 
 /** Where each dock was left in this session, by its name. */
