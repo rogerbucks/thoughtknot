@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import re
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
@@ -90,6 +91,8 @@ def read(db: GrafeoDB, g: str) -> tuple[list[dict[str, Any]], list[dict[str, Any
             "MATCH (a)-[r]->(b) RETURN id(a) AS s, id(b) AS t, type(r) AS ty, properties(r) AS p"
         )
     )
+    for row in node_rows + rel_rows:
+        row["p"] = _plain(row["p"])
     return node_rows, rel_rows
 
 
@@ -123,8 +126,23 @@ def canon_graph(db: GrafeoDB, g: str) -> tuple[str, int, int]:
 
 
 # ── §7 and §16: the generic process engine ──
+def _plain(v: Any) -> Any:
+    """A value as Grafeo 0.5.43 returned it: an exact decimal as a float, and an instant that
+    carries an offset (Grafeo 0.6 returns that for a Cypher-written one) as its naive UTC time;
+    a map leaves out a null entry, which 0.6 now keeps."""
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, dt.datetime) and v.tzinfo:
+        return v.astimezone(UTC).replace(tzinfo=None)
+    if isinstance(v, list):
+        return [_plain(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _plain(x) for k, x in v.items() if x is not None}  # a map holds no null, as 0.5
+    return v
+
+
 def _query_rows(db, q):
-    return list(db.execute_cypher(q))
+    return [{k: _plain(x) for k, x in r.items()} for r in db.execute_cypher(q)]
 
 
 Q_ = _query_rows  # the short name the engine reads with

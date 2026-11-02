@@ -159,9 +159,9 @@ rounds:
       queries:
         - {test: Q1, query: "Dialect test — seven traps in Grafeo 0.5.43#Over budget", returns: [{budget: "budget:kitchen", over: true}, {budget: "budget:roof", over: false}]}
         - {test: Q2, query: "Dialect test — seven traps in Grafeo 0.5.43#Areas that contain themselves", returns: []}
-        - {test: Q3, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck"}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard"}}]}
+        - {test: Q3, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck", note: null}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard", note: null}}]}
         - {test: Q4, query: "Dialect test — seven traps in Grafeo 0.5.43#Events after 1 November", returns: [{event: "event:inspection"}]}
-        - {test: Q8, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck"}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard"}}]}
+        - {test: Q8, query: "Dialect test — seven traps in Grafeo 0.5.43#Each area", returns: [{row: {id: "area:deck", note: null}}, {row: {id: "area:garden", note: "north side"}}, {row: {id: "area:yard", note: null}}]}
         - {test: Q9, query: "Dialect test — seven traps in Grafeo 0.5.43#A loop in two patterns", returns: []}
         - {test: Q10, query: "Dialect test — seven traps in Grafeo 0.5.43#How many areas, plus one", returns: [{n: 4}]}
         - {test: Q11, query: "Dialect test — seven traps in Grafeo 0.5.43#Area ids as lists", returns: [{row: ["area:deck", "area"]}, {row: ["area:garden", "area"]}, {row: ["area:yard", "area"]}]}
