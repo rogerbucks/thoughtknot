@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import re
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
@@ -78,6 +79,12 @@ def strip(s: str) -> str:
     )
 
 
+def _floats(p: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Properties with each exact decimal as the float the reader holds: Grafeo 0.6 returns a
+    decimal where 0.5 returned a float."""
+    return p and {k: float(v) if isinstance(v, Decimal) else v for k, v in p.items()}
+
+
 def read(db: GrafeoDB, g: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Graph g's nodes and relationships as rows — nodes {k, l, p}, relationships {s, t, ty, p} —
     leaving db on graph g."""
@@ -90,6 +97,8 @@ def read(db: GrafeoDB, g: str) -> tuple[list[dict[str, Any]], list[dict[str, Any
             "MATCH (a)-[r]->(b) RETURN id(a) AS s, id(b) AS t, type(r) AS ty, properties(r) AS p"
         )
     )
+    for row in node_rows + rel_rows:
+        row["p"] = _floats(row["p"])
     return node_rows, rel_rows
 
 
@@ -123,8 +132,19 @@ def canon_graph(db: GrafeoDB, g: str) -> tuple[str, int, int]:
 
 
 # ── §7 and §16: the generic process engine ──
+def _plain(v: Any) -> Any:
+    """A value with each exact decimal (Grafeo 0.6) as a float, as 0.5 returned it."""
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, list):
+        return [_plain(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _plain(x) for k, x in v.items()}
+    return v
+
+
 def _query_rows(db, q):
-    return list(db.execute_cypher(q))
+    return [_plain(dict(r)) for r in db.execute_cypher(q)]
 
 
 Q_ = _query_rows  # the short name the engine reads with
