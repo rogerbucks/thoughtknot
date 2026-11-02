@@ -211,8 +211,7 @@ export function overDrawing(
     else if (is(el, ['thoughtknot-dock'])) {
       corner.appendChild(el); // controls_dock
       keepPlace(el as HTMLElement, el.getAttribute('aria-label') ?? ''); // where it was left (controls_panels)
-    }
-    else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
+    } else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });
