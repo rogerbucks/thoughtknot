@@ -1,0 +1,29 @@
+name: Dependabot auto-merge
+
+# Dependabot's pull requests had no owner: on 30 Oct 2026 three sat for three days, one green and unmerged. Every
+# other pull request turns auto-merge on once its full CI run is green (AGENTS.md), so this does the same for
+# Dependabot's. GitHub merges it as a merge commit once every required check passes; a red one waits for a person.
+# The gates stay: a version update waits seven days after publication (.github/dependabot.yml), dependency review
+# fails a package with a known advisory, and the lint job checks npm signatures. This checks nothing out and runs
+# no code from the pull request. Pattern: GitHub's "Automate Dependabot with Actions" guide.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'rogerbucks/thoughtknot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Turn auto-merge on, as a merge commit, so the pull request merges when CI is green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR"
