@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/controls-view-wide.test.js",
+  "test": "shut from the bar, it stays shut on the next card drawn in this session",
+  "seen_failing_first": false,
+  "evidence": "Before this change no card opened its View panel by itself, so a shut panel stayed shut by default. The test guards the new rule: a large screen opens it, but not once it was shut."
+}
