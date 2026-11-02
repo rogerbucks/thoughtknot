@@ -1,0 +1,6 @@
+{
+  "file": "test/workflow-writers.test.js",
+  "test": "GitHub Actions writers > only these jobs may write: the failure reports and the token watch, the release, the nightly, its draft check and its wave-end call, the lock, the stuck pull request flag, Dependabot’s auto-merge, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
+  "seen_failing_first": false,
+  "evidence": "An allowlist of the jobs that may write gains one entry; it passes before the workflow it names exists, and would fail if the workflow asked for more."
+}

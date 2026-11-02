@@ -648,6 +648,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/github-project-workflow.test.js` — the workflow that runs that mirror. It is woken by a push to main alone, and
   `issues: write` is its one write permission. One run goes at a time and none is cancelled. Main is checked out with
   nothing installed, the one command runs, and the project secret is given only to it.
+- `test/dependabot-merge-workflow.test.js` — the workflow that turns auto-merge on for a Dependabot pull request, so
+  it merges once CI is green like every other.
+- `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
+  main, and comments once so its owner wakes.
 
 ## Claude's workflows
 
@@ -656,8 +660,6 @@ after a module nor listed here, and on a listed file that is missing.
   - `pull-requests: write` is its one write permission. The token is given only to the step that checks it and to the
     action.
   - No checkout keeps credentials, and the review approves, pushes and edits nothing.
-- `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
-  main, and comments once so its owner wakes.
 - `test/working-group-workflow.test.js` — the workflow that lets Sara keep up with the working group discussion.
   - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
   - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.

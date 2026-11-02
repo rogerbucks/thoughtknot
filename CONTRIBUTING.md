@@ -589,6 +589,7 @@ in this table.
 | --- | --- | --- | --- |
 | build-status | `update` | pull requests | Posts the comment on each pull request that says which requirements it proves. |
 | claude-review | `review` | pull requests | Posts the Claude review's comments. |
+| dependabot-merge | `merge` | contents, pull requests | Turns auto-merge on for a Dependabot pull request, so it merges once CI is green. |
 | engine-advisories | `report-failure` | issues | Opens an issue when the weekly advisory watch fails. |
 | lock-conversations | `lock` | pull requests | Locks each pull request's conversation, as only a collaborator contributes. |
 | nightly | `publish` | contents, id-token, attestations | Makes the nightly pre-release, attests it and removes old ones. |
