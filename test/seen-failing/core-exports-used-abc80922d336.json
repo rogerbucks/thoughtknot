@@ -1,0 +1,6 @@
+{
+  "file": "test/core-exports-used.test.js",
+  "test": "the exports of the core > the check finds an export named nowhere else, and not one another file or its own file reads",
+  "seen_failing_first": false,
+  "evidence": "The test runs the check over a fixture, with the function kept in the test file, so it passes against any tree. The second test in the file is the one the dead exports failed."
+}
