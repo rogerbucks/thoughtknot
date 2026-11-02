@@ -3,7 +3,15 @@
 // nearest where you look, and no name covers another.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LABELS_MOST, READABLE_LEAST, READABLE_MOST, labelsOnScreen, largestName } from '../src/space-labels.ts';
+import {
+  LABELS_MOST,
+  NAME_TINY,
+  READABLE_LEAST,
+  READABLE_MOST,
+  hubGrow,
+  labelsOnScreen,
+  largestName,
+} from '../src/space-labels.ts';
 import { orbitFit, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
 
 /** A grid of `count` things, 20 a row, each a box with its name in a small font, as Graphviz draws 9-pixel names. */
@@ -40,11 +48,13 @@ const overlap = (a, b) => {
   return Math.abs(a.x - b.x) < half(a) + half(b) && Math.abs(a.y - b.y) < (a.size + b.size) / 2;
 };
 
-test('with the whole graph in view, names still show, at a size people can read', () => {
+test('with the whole graph in view, names still show, scaled with their things and never under the tiny size', () => {
   const shown = shownOf(grid(200), 400, 640);
   assert.ok(shown.length >= 5, `only ${shown.length} names shown`);
   assert.ok(shown.length <= LABELS_MOST);
-  assert.ok(shown.every((l) => l.size >= READABLE_LEAST && l.size <= READABLE_MOST));
+  assert.ok(shown.every((l) => l.size >= NAME_TINY));
+  const near = shownOf(grid(200), 400, 640, 12);
+  assert.ok(Math.max(...near.map((l) => l.size)) > Math.max(...shown.map((l) => l.size)), 'nearer, larger');
 });
 
 test('no name covers another, and zooming in shows more names', () => {
@@ -115,4 +125,39 @@ test('on a phone the names are smaller, and none runs past the sides of the view
     shown.some((l) => l.text.endsWith('…')),
     'a long name is cut to fit',
   );
+});
+
+// proves: names_readable_any_zoom
+test('the busiest thing is named first and larger, as in 2D', () => {
+  const thing = (k, x) => [
+    { id: `t:${k}`, kind: 'box', style: 'thing', of: k, x, y: 0, width: 20, height: 20 },
+    {
+      id: `l:${k}`,
+      kind: 'label',
+      style: 'thing.name',
+      of: k,
+      x: x + 10,
+      y: 10,
+      text: 'Name',
+      size: 9,
+      anchor: 'middle',
+    },
+  ];
+  const link = (i, to) => ({
+    id: `e${i}`,
+    kind: 'link',
+    style: 'link',
+    from: 'b',
+    to,
+    points: [
+      [0, 0],
+      [1, 1],
+    ],
+  });
+  const marks = [...thing('a', 0), ...thing('b', 22), ...thing('c', 44), link(0, 'a'), link(1, 'c')];
+  const shown = shownOf(spaceOf(marks, { by: 'group' }), 800, 600);
+  assert.equal(shown[0]?.id, 'l:b', 'the thing with the most links is placed first');
+  const quiet = shown.find((l) => l.id !== 'l:b');
+  if (quiet) assert.ok(shown[0].size > quiet.size, 'and drawn larger');
+  assert.equal(hubGrow(2, 2), 1.4);
 });

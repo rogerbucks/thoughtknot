@@ -172,12 +172,12 @@ describe('the View menu’s defaults (editor spec §25)', () => {
   });
 
   // proves: view_switch_defaults
-  test('labels by zoom on, busy hubs folded off, groups folded off and links merged off, until changed', () => {
+  test('labels by zoom off, busy hubs folded off, groups folded off and links merged off, until changed', () => {
     assert.deepEqual(
       keys.map((k) => DEFAULT_SETTINGS[k]),
-      ['on', 'off', 'off', 'off'],
+      ['off', 'off', 'off', 'off'],
     );
-    const saved = { labelsByZoom: 'off', foldHubs: 'on', foldGroups: 'on', mergeLinks: 'on' };
+    const saved = { labelsByZoom: 'on', foldHubs: 'on', foldGroups: 'on', mergeLinks: 'on' };
     assert.deepEqual(settingsFrom(saved), { ...DEFAULT_SETTINGS, ...saved });
     assert.equal(settingsFrom({ foldHubs: 'yes' }).foldHubs, 'off');
   });

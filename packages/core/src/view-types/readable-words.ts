@@ -1,18 +1,17 @@
-// Names readable at any zoom in 2D (Zen-led refresh step 1b; Roger chose it on 2 Nov 2026). A 2D drawing's words
-// shrank with it, so a big graph fitted to a small card showed names of 4 to 6 pixels. 3D already keeps its names
-// readable (space-labels.ts), and now 2D does too, the same way:
-// - a name never shows under READABLE_LEAST pixels on the screen: drawn smaller than that, it is drawn larger;
-// - a name beside its thing, as a map's, never shows over READABLE_MOST: zooming in spreads the things, not the names;
-// - a name drawn larger would cover another, so the one placed first keeps its place and the other is left out;
-// - first placed are the picked thing's and those in focus, then the largest, then the rest in drawing order.
-// - a name grown past the edge of the view is nudged back in, so it is not cut off and stays in reach.
-// Zooming in shows more names, as each needs less room. A name grows about its own middle. Host-free.
+// Names that scale with their things in 2D, the busiest shown first (Roger, 2 Nov 2026). A name keeps its size in the
+// drawing, so it grows and shrinks with its thing as you zoom, as a map's names do:
+// - a name is never blown up; with "Hide labels too small to read" on, one under SHOWN_LEAST pixels is left out;
+// - a name beside its thing grows with the thing's links, up to HUB_LARGER times, so the busiest read from far out;
+// - a name that would cover another is left out. The picked thing's and those in focus are placed first. Then come
+//   the things with the most links, then the largest, then the rest in drawing order;
+// - a name past the edge of the view is nudged back in, so it is not cut off and stays in reach.
+// Zooming in shows more names, as more grow large enough and the room between them grows. Host-free.
 import { LETTER } from './fit-text.ts';
 
-/** The least and most size a name beside its thing shows at on the screen, in pixels: the type scale's (type-scale.ts). A
- * name inside its box grows with the box as you zoom in, so it has no most. */
-export const READABLE_LEAST = 9,
-  READABLE_MOST = 12;
+/** The least size a name is shown at on the screen, in pixels, when labels too small to read are hidden. */
+export const SHOWN_LEAST = 6;
+/** How much larger the name beside the busiest thing is drawn than one beside a thing with no links. */
+export const HUB_LARGER = 1.4;
 /** How tall a row of words is, as a share of their size. */
 const ROW = 1.2;
 /** The room kept round each name, in pixels of the screen. */
@@ -28,7 +27,7 @@ export interface Word {
   size: number;
   anchor: 'start' | 'middle' | 'end';
   letters: number;
-  /** Set on a name inside its thing's box, which grows with the box; else it is beside its thing, as a map's names. */
+  /** Set on a name inside its thing's box, which keeps its size so it fits; else it is beside its thing, as a map's. */
   inside?: boolean;
 }
 
@@ -70,24 +69,31 @@ function inward(box: Box, view: Box): [number, number] {
 
 /**
  * How each of `words` shows when one unit of the drawing is `k` pixels on the screen. The groups in `first` are placed
- * before the rest, in their order. A name grown past the edge of `view`, the part of the drawing shown, is nudged back
- * inside it. Gives back one Shown for each word, in the same order.
+ * before the rest, in their order; then those with the most `links`, a count by group. A name past the edge of `view`,
+ * the part of the drawing shown, is nudged back inside it. With `hideSmall`, a name too small to read is left out.
+ * Gives back one Shown for each word, in the same order.
  */
-export function readableWords(words: readonly Word[], k: number, first: readonly string[] = [], view?: Box): Shown[] {
+export function readableWords(
+  words: readonly Word[],
+  k: number,
+  first: readonly string[] = [],
+  view?: Box,
+  links: ReadonlyMap<string, number> = new Map(),
+  hideSmall = false,
+): Shown[] {
   const groups = new Map<string, number[]>();
   words.forEach((w, i) => groups.set(w.group, [...(groups.get(w.group) ?? []), i]));
   const out: Shown[] = words.map((w) => ({ size: w.size, x: w.x, y: w.y, hidden: false }));
   if (!(k > 0)) return out;
-  const least = READABLE_LEAST / k,
-    most = READABLE_MOST / k,
-    gap = GAP / k;
+  const gap = GAP / k,
+    busiest = Math.max(1, ...links.values());
   // each group grows by one factor about its middle, so its rows keep their spacing and none covers another
-  const placed: { group: string; box: Box; most: number }[] = [];
+  const placed: { group: string; box: Box; most: number; links: number }[] = [];
   for (const [group, at] of groups) {
     const own = at.map((i) => words[i] as Word);
-    // a name beside its thing keeps to the most as you zoom in, so the room between names grows and more show
-    const shrink = own.some((w) => w.inside) ? 1 : Math.min(1, ...own.map((w) => most / w.size));
-    const grow = Math.max(shrink, ...own.map((w) => least / w.size));
+    const many = links.get(group) ?? 0;
+    // a name beside a busy thing is drawn larger; one inside its box keeps its size, so it still fits
+    const grow = own.some((w) => w.inside) ? 1 : 1 + (HUB_LARGER - 1) * Math.sqrt(many / busiest);
     const cx = own.reduce((s, w) => s + w.x, 0) / own.length,
       cy = own.reduce((s, w) => s + w.y, 0) / own.length;
     let box: Box | null = null;
@@ -116,12 +122,21 @@ export function readableWords(words: readonly Word[], k: number, first: readonly
       }
       box = { left: box.left + dx, top: box.top + dy, right: box.right + dx, bottom: box.bottom + dy };
     }
-    placed.push({ group, box, most: Math.max(...own.map((w) => w.size)) });
+    const most = Math.max(...own.map((w) => w.size * grow));
+    // too small to read, when asked: left out, and it takes no room
+    if (hideSmall && most * k < SHOWN_LEAST) for (const i of at) (out[i] as Shown).hidden = true;
+    else placed.push({ group, box, most, links: many });
   }
   const rank = new Map(first.map((g, i) => [g, i]));
   const order = placed
     .map((p, i) => ({ ...p, i }))
-    .sort((a, b) => (rank.get(a.group) ?? Infinity) - (rank.get(b.group) ?? Infinity) || b.most - a.most || a.i - b.i);
+    .sort(
+      (a, b) =>
+        (rank.get(a.group) ?? Infinity) - (rank.get(b.group) ?? Infinity) ||
+        b.links - a.links ||
+        b.most - a.most ||
+        a.i - b.i,
+    );
   // the names kept so far, by the cells of a grid they touch, so each new one is checked only against its neighbours
   const cell = CELL / k,
     grid = new Map<string, Box[]>();

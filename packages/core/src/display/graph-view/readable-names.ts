@@ -77,8 +77,15 @@ function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
   return { k: (shown / width) * s, view: { left: l, top: t, right: r, bottom: b } };
 }
 
-/** Sizes the names in `svg` for how large it is shown now. */
-export function readableNames(svg: SVGSVGElement): void {
+/**
+ * Sizes the names in `svg` for how large it is shown now. A thing with more of `links` is named first, and larger. With
+ * `hideSmall`, a name too small to read is hidden.
+ */
+export function readableNames(
+  svg: SVGSVGElement,
+  links: readonly { from: string; to: string }[] = [],
+  hideSmall = false,
+): void {
   const at = shownOf(svg);
   if (!at) return;
   // a name is a text straight in its thing's, its group's or the drawing's own element; a hidden thing's is left alone
@@ -95,11 +102,25 @@ export function readableNames(svg: SVGSVGElement): void {
   const first = [
     ...new Set(groups.filter((_, i) => FIRST.some((c) => texts[i]?.parentElement?.classList.contains(c)))),
   ];
+  // how many links each thing has, by the group its name is in
+  const count = new Map<string, number>();
+  for (const l of links) {
+    count.set(l.from, (count.get(l.from) ?? 0) + 1);
+    if (l.to !== l.from) count.set(l.to, (count.get(l.to) ?? 0) + 1);
+  }
+  const many = new Map<string, number>();
+  texts.forEach((t, i) => {
+    const key = t.parentElement?.getAttribute('data-key');
+    const n = key ? count.get(key) : undefined;
+    if (n) many.set(groups[i] as string, n);
+  });
   const shown = readableWords(
     texts.map((t, i) => wordOf(t, groups[i] as string)),
     at.k,
     first,
     at.view,
+    many,
+    hideSmall,
   );
   texts.forEach((t, i) => {
     const w = drawn.get(t) as Word,

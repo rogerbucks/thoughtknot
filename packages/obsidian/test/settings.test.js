@@ -506,7 +506,7 @@ describe('formatting and drawing defaults', () => {
       await until(() => env.state.data.settings.viewPreset === 'default');
       const back = env.state.data.settings;
       assert.equal(back.direction, 'best', 'every setting it turned is put back');
-      assert.equal(back.labelsByZoom, 'on');
+      assert.equal(back.labelsByZoom, 'off');
       assert.equal(back.mergeLinks, 'off');
       assert.equal(row(page(env), 'Undo the preset change'), undefined, 'one step');
     } finally {
