@@ -3,9 +3,9 @@
 // rest. Only classes change, never an attribute that places or sizes anything, so nothing moves and nothing is laid out
 // again.
 import type { FocusTarget, Kept } from '@thoughtknot/core';
+import { tellChanged } from './view-changed.ts';
 
-/** The event the drawing's SVG sends once every box and link is marked again. */
-export const MARKED = 'thoughtknot-marked';
+export { MARKED } from './view-changed.ts';
 
 /** What the drawing is to show: what stays at full strength (null: all of it), what is hidden, and what is highlighted. */
 export interface Marks {
@@ -71,7 +71,7 @@ export class DrawingMarks {
     for (const [n, gs] of this.edges)
       for (const g of gs) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
     // the 3D view of the drawing, if open, shows what it hides and brings forward too (space-view-panel.ts)
-    this.svg.dispatchEvent(new Event(MARKED));
+    tellChanged(this.svg, 'look');
   }
 
   /** Marks only these boxes (by key) and links (by place), as `m` says: the ones a change of highlight touched. */
