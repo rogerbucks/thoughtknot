@@ -7,11 +7,10 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { blockName, blockOrder } from './block-order.ts';
 import { LETTER, fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** The share of the space's shorter side kept for the things' names, along the top and down the left. */
 const NAMES_SHARE = 0.25;
-/** The largest a name is drawn, in CSS pixels: the drawing's own words, never larger. */
-const NAME_MOST = 12;
 
 /**
  * The marks of `shape` drawn as a matrix in `space`. Names run along the top and down the left, with a cell per link.

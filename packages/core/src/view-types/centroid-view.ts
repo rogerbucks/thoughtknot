@@ -14,6 +14,7 @@ import { louvain } from '../louvain.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** The kind of a written cluster. */
 const CLUSTER = 'Cluster';
@@ -21,8 +22,6 @@ const CLUSTER = 'Cluster';
 const MEMBER_OF = 'MEMBER_OF';
 /** The share of the space's half kept round the edge for names. */
 const NAMES_SHARE = 0.15;
-/** The largest a name is drawn. */
-const NAME_MOST = 12;
 
 /** One cluster of a shape: its id, written or found, and its members in the order written. */
 export interface ShapeCluster {

@@ -11,13 +11,12 @@ import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven, MarkPoint } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** The share of a column's width a block takes; the rest is room for links. */
 const BLOCK_SHARE = 0.6;
 /** The share of a row's height a block takes. */
 const ROW_SHARE = 0.6;
-/** The largest a block's name is drawn. */
-const NAME_MOST = 14;
 /** An arrowhead's size, at most. */
 const ARROW_MOST = 6;
 /** The shape a cell is kept near, as its width over its height: a block wide enough for its name. */

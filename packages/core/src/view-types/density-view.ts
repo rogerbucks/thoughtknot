@@ -7,6 +7,7 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { word } from '../words.ts';
 import { LETTER } from './fit-text.ts';
 import { fitted, forceLayout, type Places } from './force-view.ts';
+import { nameSize } from './type-scale.ts';
 
 /** How many squares across the longer side of the space. */
 const SQUARES = 24;
@@ -58,7 +59,7 @@ export function densityMarks({ shape, space }: DiagramGiven, previous?: Places):
  * marks and the height of the strip it takes, which the squares leave clear.
  */
 function densityKey(space: DiagramGiven['space']): { marks: DrawMark[]; height: number } {
-  const size = Math.min(12, Math.max(space.height * 0.03, 8));
+  const size = nameSize(space.height * 0.03);
   const middle = size * 1.25,
     gap = size / 2;
   const more = word('view.density.more');

@@ -7,6 +7,7 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
+import { nameSize as nameOf } from './type-scale.ts';
 
 /** The most links away a thing may be and still be drawn. */
 export const EGO_DEPTH = 2;
@@ -84,7 +85,7 @@ export function egoMarks({ shape, space }: DiagramGiven, middle?: string): DrawM
   );
   const crowd = Math.max(1, ...rings.map((r, i) => r.length / (i + 1)));
   const size = Math.max(1, Math.min(outer * 0.08, (2 * Math.PI * step) / crowd / 1.5));
-  const nameSize = Math.min(12, Math.max(size / 2, 6));
+  const nameSize = nameOf(size / 2);
   const marks: DrawMark[] = [];
   for (const [k, [x, y]] of where) {
     const d = away.get(k) ?? 0;

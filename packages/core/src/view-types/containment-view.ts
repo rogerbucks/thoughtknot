@@ -14,6 +14,7 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { squarified } from './treemap-view.ts';
 import { fitText } from './fit-text.ts';
+import { NAME_MOST } from './type-scale.ts';
 
 /** The links that run from a part to its whole. */
 export const PART_LINKS: readonly string[] = ['PART_OF', 'MEMBER_OF', 'IN', 'INSIDE'];
@@ -113,7 +114,7 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
         role: 'thing',
         name: text.get(k) ?? k,
       });
-      const size = held.length ? band * 0.6 : Math.min(12, box.height / 2);
+      const size = held.length ? band * 0.6 : Math.min(NAME_MOST, box.height / 2);
       if (size >= 4 && box.width > 8)
         marks.push({
           kind: 'label',
