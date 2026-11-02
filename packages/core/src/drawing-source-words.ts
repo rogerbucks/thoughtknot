@@ -163,6 +163,9 @@ export const DRAWING_SOURCE_WORDS = {
   'menu.thing': 'What to do with {thing}',
   // a field a view needs and a thing lacks (view-scaffold.ts)
   'scaffold.prompt': 'Add {field} for {thing}',
+  // when nothing in a plan has a date yet: one line and one button, never a prompt for each thing (plan_undated_calm)
+  'scaffold.plan-empty': 'Nothing here has dates yet',
+  'scaffold.add-dates': 'Add dates',
   // how sure a thing is: its mark on the drawing, and what is said to screen readers (certainty-drawn.ts)
   'certainty.mark.likely': '~ likely',
   'certainty.mark.doubtful': '? doubtful',

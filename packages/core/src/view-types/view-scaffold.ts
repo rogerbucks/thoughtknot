@@ -10,7 +10,7 @@ import type { DrawMark } from '../drawing-marks.ts';
 import { setProperty, type Edit } from '../inspector.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { ShapeThing } from '../types-shape.ts';
-import { word } from '../words.ts';
+import { word, type WordKey } from '../words.ts';
 import { spanOf } from './plan-view.ts';
 import type { ViewType } from './view-types.ts';
 
@@ -56,6 +56,9 @@ export const VIEW_NEEDS: Partial<Record<ViewType, ViewNeed[]>> = {
   ],
 };
 
+/** What the plan says when nothing has a date yet. */
+export const PLAN_EMPTY: ScaffoldEmpty = { says: 'scaffold.plan-empty', button: 'scaffold.add-dates' };
+
 /** The size a prompt is drawn at. */
 const PROMPT_SIZE = 10;
 
@@ -73,16 +76,69 @@ export function gapsOf(things: ShapeThing[], needs: ViewNeed[]): ViewGap[] {
   );
 }
 
+/** What a view says when no thing has any field it needs: one line, and one button on its first thing. */
+interface ScaffoldEmpty {
+  says: WordKey;
+  button: WordKey;
+}
+
+/**
+ * Instead of a wall of prompts, when every thing lacks every field (plan_undated_calm): one line for the drawing, and
+ * one button beside the first thing. The button is that thing's, so a tap opens it, where its fields are written.
+ */
+function emptyMarks(given: DiagramGiven, first: DrawMark | undefined, key: string, none: ScaffoldEmpty): DrawMark[] {
+  const { width, height } = given.space;
+  const says = word(none.says),
+    add = word(none.button);
+  const x = first && 'x' in first ? Math.min(first.x + ('width' in first ? first.width : 0) + 8, width) : 0;
+  const y = first && 'y' in first ? Math.min(first.y + ('width' in first ? PROMPT_SIZE : 0), height) : PROMPT_SIZE;
+  const wide = add.length * PROMPT_SIZE * 0.6 + 8;
+  const common = { size: PROMPT_SIZE, anchor: 'start', z: 1 } as const;
+  return [
+    { id: 'prompt\nempty', kind: 'label', style: 'prompt.empty', x: 0, y: height, text: says, name: says, ...common },
+    {
+      id: `prompt\n${key}\nbutton.box`,
+      kind: 'box',
+      style: 'link.outline',
+      of: key,
+      x: Math.min(x, Math.max(width - wide, 0)),
+      y: Math.max(y - PROMPT_SIZE, 0),
+      width: wide,
+      height: PROMPT_SIZE + 4,
+      z: 1,
+    },
+    {
+      id: `prompt\n${key}\nbutton`,
+      kind: 'label',
+      style: 'prompt.button',
+      of: key,
+      x: Math.min(x, Math.max(width - wide, 0)) + 4,
+      y: Math.max(y - PROMPT_SIZE, 0) + PROMPT_SIZE,
+      text: add,
+      name: add,
+      ...common,
+    },
+  ];
+}
+
 /**
  * The view's marks with a prompt for each gap. A prompt is a label beside the thing's mark. It sits at the bottom when
  * the view draws no mark for the thing. Each prompt names the field and the thing, for a screen reader too.
  */
-export function scaffoldMarks(given: DiagramGiven, drawn: DrawMark[], needs: ViewNeed[]): DrawMark[] {
-  const gaps = gapsOf(given.shape.things, needs);
+export function scaffoldMarks(
+  given: DiagramGiven,
+  drawn: DrawMark[],
+  needs: ViewNeed[],
+  none?: ScaffoldEmpty,
+): DrawMark[] {
+  const things = given.shape.things;
+  const gaps = gapsOf(things, needs);
   if (!gaps.length) return drawn;
-  const text = new Map(given.shape.things.map((t) => [t.key, t.text]));
+  const text = new Map(things.map((t) => [t.key, t.text]));
   // the box a view draws for a thing, else its name's label
   const shown = new Map(drawn.filter((m) => m.id === m.of || m.id === `${m.of}\nlabel`).map((m) => [m.of, m]));
+  if (none && things.length > 1 && gaps.length === things.length * needs.length)
+    return [...drawn, ...emptyMarks(given, shown.get(things[0]?.key ?? ''), things[0]?.key ?? '', none)];
   const count = new Map<string, number>();
   let under = 0;
   const prompts = gaps.map((g): DrawMark => {
