@@ -1,6 +1,0 @@
-{
-  "file": "packages/core/test/readable-names.test.js",
-  "test": "names keep their size as drawn; where two overlap, the busier is named in place, and larger",
-  "seen_failing_first": false,
-  "evidence": "An existing test renamed and loosened: the quieter name may now move round its thing instead of hiding"
-}

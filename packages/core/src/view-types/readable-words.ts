@@ -1,14 +1,9 @@
 // Names that scale with their things in 2D, the busiest shown first (Roger, 2 Nov 2026). A name keeps its size in the
 // drawing, so it grows and shrinks with its thing as you zoom, as a map's names do:
 // - a name is never blown up; with "Hide labels too small to read" on, one under SHOWN_LEAST pixels is left out;
-// - a name beside its thing grows with the thing's links, up to HUB_LARGER times, so the busiest read from far out.
-//   It grows away from its thing, from the edge nearest it, so it stays touching its thing and never covers it;
-// - a name with no room where it was drawn moves to touch its thing below, above, right or left, the first with room.
-// - a name that would cover another is left out. So is one on a thing with as many links as its own, so each name
-//   plainly belongs to one thing. A busier thing's name may lie over a quieter thing drawn before it, so the name
-//   is painted over that thing and still reads. The picked thing's and
-//   those in focus are placed first. Then come the things with the most links, then the largest, then the rest in
-//   drawing order;
+// - a name beside its thing grows with the thing's links, up to HUB_LARGER times, so the busiest read from far out;
+// - a name that would cover another is left out. The picked thing's and those in focus are placed first. Then come
+//   the things with the most links, then the largest, then the rest in drawing order;
 // - a name past the edge of the view is nudged back in, so it is not cut off and stays in reach.
 // Zooming in shows more names, as more grow large enough and the room between them grows. Host-free.
 import { LETTER } from './fit-text.ts';
@@ -72,37 +67,10 @@ function inward(box: Box, view: Box): [number, number] {
   return [into(box.left, box.right, view.left, view.right), into(box.top, box.bottom, view.top, view.bottom)];
 }
 
-/** Where on `box` a name beside its thing grows from: its point nearest the middle of `thing`. */
-function anchorOf(box: Box, thing: Box): [number, number] {
-  const x = (thing.left + thing.right) / 2,
-    y = (thing.top + thing.bottom) / 2;
-  return [Math.min(Math.max(x, box.left), box.right), Math.min(Math.max(y, box.top), box.bottom)];
-}
-
-/** `box`, a name's, moved to touch `thing` below, above, right and left of it, as far from it as it was drawn. */
-function besides(box: Box, thing: Box): Box[] {
-  const d = Math.max(0, box.top - thing.bottom, thing.top - box.bottom, box.left - thing.right, thing.left - box.right);
-  const w = box.right - box.left,
-    h = box.bottom - box.top,
-    mx = (thing.left + thing.right) / 2 - w / 2,
-    my = (thing.top + thing.bottom) / 2 - h / 2;
-  const at = (left: number, top: number): Box => ({ left, top, right: left + w, bottom: top + h });
-  return [at(mx, thing.bottom + d), at(mx, thing.top - d - h), at(thing.right + d, my), at(thing.left - d - w, my)];
-}
-
-/** The box round all of `boxes`. */
-const around = (boxes: readonly Box[]): Box => ({
-  left: Math.min(...boxes.map((b) => b.left)),
-  top: Math.min(...boxes.map((b) => b.top)),
-  right: Math.max(...boxes.map((b) => b.right)),
-  bottom: Math.max(...boxes.map((b) => b.bottom)),
-});
-
 /**
  * How each of `words` shows when one unit of the drawing is `k` pixels on the screen. The groups in `first` are placed
  * before the rest, in their order; then those with the most `links`, a count by group. A name past the edge of `view`,
  * the part of the drawing shown, is nudged back inside it. With `hideSmall`, a name too small to read is left out.
- * `things` are the outlines of the things named, by group: a name grows away from its own, and never covers another.
  * Gives back one Shown for each word, in the same order.
  */
 export function readableWords(
@@ -112,7 +80,6 @@ export function readableWords(
   view?: Box,
   links: ReadonlyMap<string, number> = new Map(),
   hideSmall = false,
-  things: ReadonlyMap<string, Box> = new Map(),
 ): Shown[] {
   const groups = new Map<string, number[]>();
   words.forEach((w, i) => groups.set(w.group, [...(groups.get(w.group) ?? []), i]));
@@ -120,37 +87,45 @@ export function readableWords(
   if (!(k > 0)) return out;
   const gap = GAP / k,
     busiest = Math.max(1, ...links.values());
-  // each group grows by one factor about the point nearest its thing, else its middle, so its rows keep their spacing
-  const placed: { group: string; was: Box; boxes: Box[]; most: number; links: number }[] = [];
+  // each group grows by one factor about its middle, so its rows keep their spacing and none covers another
+  const placed: { group: string; box: Box; most: number; links: number }[] = [];
   for (const [group, at] of groups) {
     const own = at.map((i) => words[i] as Word);
     const many = links.get(group) ?? 0;
     // a name beside a busy thing is drawn larger; one inside its box keeps its size, so it still fits
     const grow = own.some((w) => w.inside) ? 1 : 1 + (HUB_LARGER - 1) * Math.sqrt(many / busiest);
-    const thing = things.get(group);
-    const [cx, cy] = thing
-      ? anchorOf(around(own.map((w) => boxOf(w, w.x, w.y, w.size))), thing)
-      : [own.reduce((s, w) => s + w.x, 0) / own.length, own.reduce((s, w) => s + w.y, 0) / own.length];
-    const boxes: Box[] = [];
+    const cx = own.reduce((s, w) => s + w.x, 0) / own.length,
+      cy = own.reduce((s, w) => s + w.y, 0) / own.length;
+    let box: Box | null = null;
     for (const i of at) {
       const w = words[i] as Word,
         shown = out[i] as Shown;
       shown.size = w.size * grow;
       shown.x = cx + (w.x - cx) * grow;
       shown.y = cy + (w.y - cy) * grow;
-      boxes.push(boxOf(w, shown.x, shown.y, shown.size));
+      const b = boxOf(w, shown.x, shown.y, shown.size);
+      box = box
+        ? {
+            left: Math.min(box.left, b.left),
+            top: Math.min(box.top, b.top),
+            right: Math.max(box.right, b.right),
+            bottom: Math.max(box.bottom, b.bottom),
+          }
+        : b;
     }
-    if (!boxes.length) continue;
-    const box = around(boxes);
-    // where it may go: as drawn, else touching its thing below, above, right or left; each nudged inside the view
-    const spots = (thing && !own.some((w) => w.inside) ? [box, ...besides(box, thing)] : [box]).map((b) => {
-      const [dx, dy] = view ? inward(b, view) : [0, 0];
-      return { left: b.left + dx, top: b.top + dy, right: b.right + dx, bottom: b.bottom + dy };
-    });
+    if (!box) continue;
+    const [dx, dy] = view ? inward(box, view) : [0, 0];
+    if (dx || dy) {
+      for (const i of at) {
+        (out[i] as Shown).x += dx;
+        (out[i] as Shown).y += dy;
+      }
+      box = { left: box.left + dx, top: box.top + dy, right: box.right + dx, bottom: box.bottom + dy };
+    }
     const most = Math.max(...own.map((w) => w.size * grow));
     // too small to read, when asked: left out, and it takes no room
     if (hideSmall && most * k < SHOWN_LEAST) for (const i of at) (out[i] as Shown).hidden = true;
-    else placed.push({ group, was: box, boxes: spots, most, links: many });
+    else placed.push({ group, box, most, links: many });
   }
   const rank = new Map(first.map((g, i) => [g, i]));
   const order = placed
@@ -162,12 +137,9 @@ export function readableWords(
         b.most - a.most ||
         a.i - b.i,
     );
-  // the names kept so far and the things, by the cells of a grid they touch. So each new name is checked only against
-  // its neighbours. A name may lie on its own thing, as one inside its box does, and on a quieter thing drawn before
-  // its own, never another
-  const drawn = new Map([...things.keys()].map((g, i) => [g, i]));
+  // the names kept so far, by the cells of a grid they touch, so each new one is checked only against its neighbours
   const cell = CELL / k,
-    grid = new Map<string, (Box & { of?: string; links?: number })[]>();
+    grid = new Map<string, Box[]>();
   const cells = (b: Box): string[] => {
     const keys: string[] = [];
     for (let cx = Math.floor((b.left - gap) / cell); cx <= Math.floor((b.right + gap) / cell); cx++)
@@ -175,26 +147,11 @@ export function readableWords(
         keys.push(`${cx},${cy}`);
     return keys;
   };
-  for (const [of, b] of things)
-    for (const c of cells(b)) grid.set(c, [...(grid.get(c) ?? []), { ...b, of, links: links.get(of) ?? 0 }]);
-  const under = (of: string, p: (typeof order)[number], many: number): boolean =>
-    many < p.links && (drawn.get(of) ?? Infinity) < (drawn.get(p.group) ?? -Infinity);
-  const covers = (p: (typeof order)[number], box: Box, b: Box & { of?: string; links?: number }): boolean =>
-    b.of === undefined
-      ? overlaps(b, box, gap)
-      : b.of !== p.group && !under(b.of, p, b.links ?? 0) && overlaps(b, box, 0);
   for (const p of order) {
-    const at = groups.get(p.group) ?? [];
-    const box = p.boxes.find((box) => !cells(box).some((c) => grid.get(c)?.some((b) => covers(p, box, b))));
-    if (!box) for (const i of at) (out[i] as Shown).hidden = true;
-    else {
-      for (const c of cells(box)) grid.set(c, [...(grid.get(c) ?? []), box]);
-      const was = p.was;
-      for (const i of at) {
-        (out[i] as Shown).x += box.left - was.left;
-        (out[i] as Shown).y += box.top - was.top;
-      }
-    }
+    const near = cells(p.box);
+    if (near.some((c) => grid.get(c)?.some((b) => overlaps(b, p.box, gap))))
+      for (const i of groups.get(p.group) ?? []) (out[i] as Shown).hidden = true;
+    else for (const c of near) grid.set(c, [...(grid.get(c) ?? []), p.box]);
   }
   return out;
 }

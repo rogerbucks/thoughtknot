@@ -83,37 +83,3 @@ test('a name past the edge of the view is nudged back in, so it is not cut off',
   const [away] = readableWords([word('a', 400, 50)], 1, [], view);
   assert.equal(away.x, 400, 'a thing out of view keeps its name where it is');
 });
-
-// proves: names_readable_any_zoom
-test('a name grows away from its thing, touches it below, above, right or left, and never lies on another thing', () => {
-  // a dot from 95 to 105 down to y 45; its name below it, the top of its letters at 50
-  const dot = { left: 95, top: 35, right: 105, bottom: 45 };
-  const [hub] = readableWords(
-    [word('a', 100, 62)],
-    1,
-    [],
-    undefined,
-    new Map([['a', 4]]),
-    false,
-    new Map([['a', dot]]),
-  );
-  assert.ok(Math.abs(hub.y - hub.size - 50) < 1e-9, 'its top stays where it was, touching its thing');
-  assert.ok(hub.size > 12, 'and it grows down, away from it');
-  const other = { left: 110, top: 52, right: 120, bottom: 60 };
-  const things = new Map([
-    ['a', dot],
-    ['b', other],
-  ]);
-  const [over] = readableWords([word('a', 100, 62)], 1, [], undefined, new Map(), false, things);
-  assert.ok(!over.hidden && over.y < dot.top, 'with another thing below, it moves above its own, still touching it');
-  const boxedIn = new Map([
-    ...things,
-    ['c', { left: 60, top: 0, right: 140, bottom: 34 }],
-    ['d', { left: 106, top: 0, right: 200, bottom: 100 }],
-    ['e', { left: 0, top: 0, right: 94, bottom: 100 }],
-  ]);
-  const [none] = readableWords([word('a', 100, 62)], 1, [], undefined, new Map(), false, boxedIn);
-  assert.ok(none.hidden, 'with no room round its thing it is hidden, never shown on another thing');
-  const [own] = readableWords([boxed('a', 100, 42)], 1, [], undefined, new Map(), false, things);
-  assert.ok(!own.hidden, 'a name inside its own thing is shown');
-});

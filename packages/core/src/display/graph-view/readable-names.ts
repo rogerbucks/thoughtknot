@@ -1,6 +1,6 @@
 // Names readable at any zoom in a 2D drawing (editor spec §3, names_readable_any_zoom), for the graph view's viewer-aids.ts. The view
-// changes, and the names are sized again. One that would then cover another name, or another thing, is hidden, and a
-// name grows away from its own thing (readable-words.ts). The drawing's own attributes are left as drawn: a name grows by its style, moves
+// changes, and the names are sized again: none shows under 9 pixels. One that would then cover another is hidden
+// (readable-words.ts). The drawing's own attributes are left as drawn: a name grows by its style, moves
 // by its own transform, and is hidden by a class. So the lens, hit tests and export still see the drawing as laid out.
 import { readableWords, type Box, type Word } from '../../view-types/readable-words.ts';
 
@@ -114,14 +114,6 @@ export function readableNames(
     const n = key ? count.get(key) : undefined;
     if (n) many.set(groups[i] as string, n);
   });
-  // each thing's outline, by its name's group: a name grows away from its own thing, and never lies on another
-  const things = new Map<string, Box>();
-  texts.forEach((t, i) => {
-    const g = t.parentElement;
-    if (!g?.classList.contains('node') || things.has(groups[i] as string)) return;
-    const box = outlineOf(g);
-    if (box && box.right > box.left && box.bottom > box.top) things.set(groups[i] as string, box);
-  });
   const shown = readableWords(
     texts.map((t, i) => wordOf(t, groups[i] as string)),
     at.k,
@@ -129,7 +121,6 @@ export function readableNames(
     at.view,
     many,
     hideSmall,
-    things,
   );
   texts.forEach((t, i) => {
     const w = drawn.get(t) as Word,

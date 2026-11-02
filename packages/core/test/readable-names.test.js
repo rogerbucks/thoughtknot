@@ -41,13 +41,12 @@ async function drawing(width, hideSmall = false) {
 }
 
 // proves: names_readable_any_zoom
-test('names keep their size as drawn; where two overlap, the busier is named in place, and larger', async () => {
+test('names keep their size as drawn; the busier of two that overlap is named, and larger', async () => {
   const { boxed, a, b, CROWDED, uninstall } = await drawing(200);
   try {
     assert.equal(boxed.cssProps.fontSize, undefined, 'a name in its box is left as drawn');
     assert.equal(b.cssProps.fontSize, '14px', 'the busiest thing is named larger, 10 units grown 1.4 times');
-    assert.ok(!b.hasClass(CROWDED), 'the busiest is named where it was drawn');
-    assert.ok(a.hasClass(CROWDED) || a.getAttribute('transform'), 'the quieter one moves round its thing, or hides');
+    assert.ok(a.hasClass(CROWDED) && !b.hasClass(CROWDED), 'the quieter name it would cover is hidden');
     assert.equal(a.getAttribute('font-size'), '10', 'the drawing is left as drawn');
   } finally {
     uninstall();
