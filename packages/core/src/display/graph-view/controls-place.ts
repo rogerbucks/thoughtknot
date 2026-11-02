@@ -63,9 +63,10 @@ export function placeDock(el: HTMLElement, name: string, place: DockPlace): void
   } else cornerAt(layer, place.side).appendChild(el);
 }
 
-/** Puts the dock `el` back where it was left in this session, if it was moved. */
+/** Puts the dock `el` back where it was left in this session, or else at the side it asks for first. */
 export function keepPlace(el: HTMLElement, name: string): void {
-  const was = kept.get(name);
+  const first = el.getAttribute('data-place') === 'end' ? { side: 'end' as const, x: 0, y: 0 } : undefined;
+  const was = kept.get(name) ?? first;
   if (was && was.side !== 'start') placeDock(el, name, was);
 }
 
