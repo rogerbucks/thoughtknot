@@ -159,10 +159,10 @@ const alive = (pid) => {
 };
 
 /**
- * Waits for one of `limit` slots and returns the function that frees it. A slot is a folder made in `dir`, which holds the
- * pid of the process using it; the files of a test run are separate processes, so the folders are how they count each
- * other. Four browser-heavy files that landed in one CI shard together peaked at 8.1 GB, so no more than `limit` Chromes
- * run at once and the others wait their turn. A slot whose process is gone is taken over.
+ * Waits for one of `limit` slots and returns the function that frees it. A slot is a folder made in `dir`. It holds the
+ * pid of the process using it. Test files run as separate processes, so the folders are how they count each other.
+ * Four browser-heavy files in one CI shard once peaked at 8.1 GB. So no more than `limit` Chromes run at once, and the
+ * others wait their turn. A slot whose process is gone is taken over.
  */
 export async function takeChromeSlot({
   dir = join(tmpdir(), 'thoughtknot-chrome-slots'),
