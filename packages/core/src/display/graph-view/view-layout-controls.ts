@@ -6,7 +6,8 @@ import { LAYOUT_LISTS, LAYOUT_SLIDERS, layoutListRow, layoutSliderRow, listed } 
 
 /**
  * The menu's controls that only our own engine reads (view_controls_apply). Roger, 2 Nov 2026: "Does the View menu
- * update the screen?" A diagram type Graphviz lays out reads none of them, so there each is greyed, saying why.
+ * update the screen?" A network Graphviz lays out reads none of them, so there each is greyed, saying why. A view that
+ * lays itself out by them, such as Force or a tree, sets them going again (controls-support.ts).
  */
 export const OWN_ONLY: ReadonlySet<string> = new Set(['lanes', 'rounds', 'strategy', 'shape', 'pinned']);
 

@@ -9,6 +9,7 @@ import type { LayoutGiven } from '../plugin-layouts.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { word } from '../words.ts';
 import { isPluginLayoutId, layoutOptions } from './layout-options.ts';
+import type { LayoutOptions } from './layout-options.ts';
 
 /** What a host offers: its registry's layouts, and its way to place a graph by one. */
 export interface LayoutOffer {
@@ -69,9 +70,19 @@ export function drawingShape(drawing: GraphDrawing): GraphShape {
  * fails or that runs too long gives no spots. Our engine then lays the drawing out by its shape, and says so.
  */
 export async function placedFor(drawing: GraphDrawing): Promise<GraphDrawing> {
-  const options = layoutOptions(drawing.layoutOptions);
-  const r = offer
-    ? await offer.placeBy(options.strategy, { shape: drawingShape(drawing), previous: {}, options, sizes: {} })
-    : null;
-  return { ...drawing, placed: r?.ok ? r.value : {} };
+  return { ...drawing, placed: (await spotsBy(drawingShape(drawing), drawing.layoutOptions)) ?? {} };
+}
+
+/**
+ * The spots the plug-in's layout `raw` chooses gives each thing of `shape`; none for our own layouts, or where it
+ * fails. So a view that lays things out itself, such as Force, places them by it too (view_options_everywhere).
+ */
+export async function spotsBy(
+  shape: GraphShape,
+  raw?: Partial<LayoutOptions>,
+): Promise<Record<string, [number, number]> | undefined> {
+  const options = layoutOptions(raw);
+  if (!offer || !isPluginLayoutId(options.strategy)) return undefined;
+  const r = await offer.placeBy(options.strategy, { shape, previous: {}, options, sizes: {} });
+  return r.ok ? r.value : undefined;
 }

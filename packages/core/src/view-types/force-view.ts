@@ -14,8 +14,9 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { GraphShape } from '../types-shape.ts';
-import { layoutOptions } from '../layouts/layout-options.ts';
+import { isPluginLayoutId, layoutOptions } from '../layouts/layout-options.ts';
 import type { LayoutOptions } from '../layouts/layout-options.ts';
+import { rowsOf } from '../layouts/layered-rows.ts';
 import { cardTall, cardWidth, spreadCards, thingCard } from './thing-card.ts';
 
 /** The most steps a layout takes. */
@@ -33,16 +34,31 @@ const NAMED_MOST = 150;
 /** The angle between one thing and the next on the starting spiral: the golden angle. */
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
+/** How much wider, or taller, the View menu's shape draws the layout than it settles. */
+const STRETCH = 1.6;
+
 /** Each thing's place, by its key, in the layout's own units. */
 export type Places = ReadonlyMap<string, readonly [number, number]>;
+/** Each thing's spot as a plug-in's layout gave it, by its key (plugin-layouts.ts). */
+export type Spots = Readonly<Record<string, readonly [number, number]>>;
 
-/** Where each thing of `shape` sits, in the layout's own units, starting from `previous` where it has a place. */
+/**
+ * Where each thing of `shape` sits, in the layout's own units, starting from `previous` where it has a place. The View
+ * menu's layout options say how (view_options_everywhere):
+ * - rounds take more or fewer steps;
+ * - in rows, each thing keeps its row, by the way its links run;
+ * - a plug-in's layout places things at its `spots`;
+ * - the shape stretches the whole wider or taller.
+ */
 export function forceLayout(
   shape: GraphShape,
   previous?: Places,
   options: Partial<LayoutOptions> = {},
+  spots?: Spots,
 ): Map<string, [number, number]> {
-  const { spacing, linkLength } = layoutOptions(options);
+  const { spacing, linkLength, rounds, strategy, direction, shape: aim } = layoutOptions(options);
+  const given = isPluginLayoutId(strategy) ? givenPlaces(shape, spots) : undefined;
+  if (given) return stretched(given, aim);
   // things push apart as far as `spacing` asks, and a link pulls weaker as it is asked to be longer
   const apart = spacing * spacing,
     reach = REACH * spacing,
@@ -58,6 +74,7 @@ export function forceLayout(
       b = index.get(l.to);
     if (a !== undefined && b !== undefined && a !== b) links.push([a, b]);
   }
+  const row = strategy === 'rows' ? rowsOf(n, linksOut(n, links)) : undefined;
   // start from last time's places, else on a spiral out from the middle
   const x = new Float64Array(n),
     y = new Float64Array(n);
@@ -65,10 +82,11 @@ export function forceLayout(
     const p = previous?.get(key);
     const r = 0.5 * Math.sqrt(i + 0.5);
     [x[i], y[i]] = p ? [p[0], p[1]] : [r * Math.cos(i * GOLDEN), r * Math.sin(i * GOLDEN)];
+    if (row) y[i] = (row[i] ?? 0) * linkLength;
   });
   const warm = keys.some((key) => previous?.has(key));
   // a warm start takes fewer, smaller steps, so things already placed stay near where they were
-  const steps = Math.max(1, Math.floor(Math.min(FORCE_STEPS, WORK_MOST / n) / (warm ? 4 : 1)));
+  const steps = Math.max(1, Math.floor((Math.min(FORCE_STEPS, WORK_MOST / n) * rounds) / (warm ? 4 : 1)));
   const hottest = warm ? 0.2 : Math.max(1, Math.sqrt(n) / 2);
   const dx = new Float64Array(n),
     dy = new Float64Array(n);
@@ -122,11 +140,38 @@ export function forceLayout(
       if (d < 1e-12) continue;
       const move = Math.min(d, heat) / d;
       x[i] = (x[i] ?? 0) + mx * move;
-      y[i] = (y[i] ?? 0) + my * move;
+      if (!row) y[i] = (y[i] ?? 0) + my * move;
     }
   }
-  keys.forEach((key, i) => out.set(key, [x[i] ?? 0, y[i] ?? 0]));
+  // rows run down, or across when the View menu says so
+  const across = row && direction === 'LR';
+  keys.forEach((key, i) => out.set(key, across ? [y[i] ?? 0, x[i] ?? 0] : [x[i] ?? 0, y[i] ?? 0]));
+  return stretched(out, aim);
+}
+
+/** Each thing's links out, by index, as rows are found from them. */
+function linksOut(n: number, links: readonly [number, number][]): number[][] {
+  const out: number[][] = Array.from({ length: n }, () => []);
+  for (const [a, b] of links) out[a]?.push(b);
   return out;
+}
+
+/** Each thing's place as a plug-in's layout gave it, or none where it left any thing out. */
+function givenPlaces(shape: GraphShape, spots?: Spots): Map<string, [number, number]> | undefined {
+  const out = new Map<string, [number, number]>();
+  for (const { key } of shape.things) {
+    const p = spots?.[key];
+    if (!p) return undefined;
+    out.set(key, [p[0], p[1]]);
+  }
+  return out;
+}
+
+/** `places` stretched wider, or taller, as the View menu's shape says; for a screen's shape, as they are. */
+function stretched(places: Map<string, [number, number]>, aim: LayoutOptions['shape']): Map<string, [number, number]> {
+  if (aim === 'screen') return places;
+  for (const p of places.values()) p[aim === 'wide' ? 0 : 1] *= STRETCH;
+  return places;
 }
 
 /** `places` fitted inside a `width` by `height` space, keeping their shape, with a margin round the edge. */
@@ -155,7 +200,7 @@ export function fitted(places: Places, width: number, height: number): Map<strin
 export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): DrawMark[] {
   const n = shape.things.length;
   if (!n) return [];
-  const at = fitted(forceLayout(shape, previous, space.layout), space.width, space.height);
+  const at = fitted(forceLayout(shape, previous, space.layout, space.spots), space.width, space.height);
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const kinds = [...new Set(shape.things.map((t) => t.kinds.join(', ')))];
   const size = Math.max(1, Math.min(24, Math.sqrt((space.width * space.height) / n) / 3));

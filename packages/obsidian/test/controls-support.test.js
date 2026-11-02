@@ -16,7 +16,10 @@ const ORG = `// graph: org
 (cy:Person {name: 'Cy'}),
 (ada)-[:MANAGES]->(bea),
 (ada)-[:MANAGES]->(cy)`;
-const styledAs = (view) => `// graph: org_style · STYLE org\n(d1:Diagram {type: 'thoughtknot.diagrams.${view}'})`;
+/** The diagram types Graphviz lays out, chosen by their own names; a view drawn as marks by its whole name. */
+const GRAPHVIZ = ['tree', 'flow', 'lanes', 'radial', 'timeline'];
+const typeOf = (view) => (GRAPHVIZ.includes(view) ? view : `thoughtknot.diagrams.${view}`);
+const styledAs = (view) => `// graph: org_style · STYLE org\n(d1:Diagram {type: '${typeOf(view)}'})`;
 const noteOf = (...blocks) => ['# Org', '', ...blocks.flatMap((b) => [fence(b), '']), ''].join('\n');
 
 /** The card of the org graph drawn as `view`, or as a network; what `check` finds in it, then the card is gone. */
@@ -62,6 +65,31 @@ describe('the View menu in every view', () => {
       const options = select.querySelectorAll('option');
       assert.ok(!options.find((o) => o.getAttribute('value') === 'fisheye').hasAttribute('disabled'));
       assert.ok(!options.find((o) => o.getAttribute('value') === 'semantic').hasAttribute('disabled'));
+    });
+  });
+
+  // proves: view_options_everywhere
+  test('Force takes the layout lists and rounds, which it lays itself out by', async () => {
+    await inCard('force', (el) => {
+      const layout = menu(el).querySelectorAll('[data-option="layout"]');
+      assert.ok(layout.length >= 4, 'rounds, then the layout, its shape and what stays put');
+      for (const r of layout)
+        for (const c of r.querySelectorAll('input, select')) assert.ok(!c.disabled, r.textContent);
+      assert.ok(menu(el).querySelector('.thoughtknot-own-hint').hidden, 'no line says only a network takes them');
+    });
+  });
+
+  // proves: view_options_everywhere
+  test('a tree takes the layout lists; a radial greys them, its rings being its layout', async () => {
+    await inCard('tree', (el) => {
+      for (const option of ['layout', 'direction'])
+        for (const r of menu(el).querySelectorAll(`[data-option="${option}"]`))
+          for (const c of [r, ...r.querySelectorAll('input, select')])
+            assert.ok(!c.disabled, `${option}: ${r.textContent}`);
+    });
+    await inCard('radial', (el) => {
+      assert.ok(greyed(el).includes('layout') && greyed(el).includes('lanes'), greyed(el).join());
+      assert.match(row(el, 'layout').getAttribute('title'), /shape/);
     });
   });
 
