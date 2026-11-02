@@ -1,5 +1,5 @@
-// A drawing's bar (spec §3). In sight are Find a thing, View (§25), Diagram type (§15), 2D (§53), Fit and Full screen;
-// on a phone Fit waits behind More (bar_one_row_phone).
+// A drawing's bar (spec §3). In sight are Find a thing, View (§25), Diagram type (§15), 2D (§53), Fit and Full screen.
+// On a phone, Fit waits behind More (bar_one_row_phone).
 // Then come More and last the problems badge (bar_kept_short). More opens the rest: zoom out and zoom in,
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.

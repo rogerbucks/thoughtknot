@@ -54,8 +54,8 @@ const DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
   force: (given) => forceMarks(given),
   density: (given) => densityMarks(given),
   block: blockMarks,
-  // drawn as a scaffold: each date a thing lacks is a prompt (views_as_scaffolds)
-  // and when nothing has a date yet, one calm line and one Add dates button (plan_undated_calm)
+  // drawn as a scaffold: each date a thing lacks is a prompt (views_as_scaffolds). With no date yet, one line and
+  // one Add dates button instead (plan_undated_calm)
   plan: (given) => scaffoldMarks(given, planMarks(given), VIEW_NEEDS.plan ?? [], PLAN_EMPTY),
   centroid: centroidMarks,
   containment: containmentMarks,

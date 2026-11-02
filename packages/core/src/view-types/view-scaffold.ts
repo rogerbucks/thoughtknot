@@ -83,8 +83,8 @@ interface ScaffoldEmpty {
 }
 
 /**
- * Instead of a wall of prompts, when every thing lacks every field (plan_undated_calm): one line for the drawing, and
- * one button beside the first thing. The button is that thing's, so a tap opens it, where its fields are written.
+ * What a view draws when every thing lacks every field (plan_undated_calm). There is no wall of prompts. One line is
+ * the drawing's, and one button sits beside the first thing. The button is that thing's, so a tap opens it.
  */
 function emptyMarks(given: DiagramGiven, first: DrawMark | undefined, key: string, none: ScaffoldEmpty): DrawMark[] {
   const { width, height } = given.space;
@@ -95,9 +95,18 @@ function emptyMarks(given: DiagramGiven, first: DrawMark | undefined, key: strin
   const wide = add.length * PROMPT_SIZE * 0.6 + 8;
   const common = { size: PROMPT_SIZE, anchor: 'start', z: 1 } as const;
   return [
-    { id: 'prompt\nempty', kind: 'label', style: 'prompt.empty', x: 0, y: height, text: says, name: says, ...common },
     {
-      id: `prompt\n${key}\nbutton.box`,
+      id: ['prompt', 'empty'].join('\n'),
+      kind: 'label',
+      style: 'prompt.empty',
+      x: 0,
+      y: height,
+      text: says,
+      name: says,
+      ...common,
+    },
+    {
+      id: ['prompt', key, 'button.box'].join('\n'),
       kind: 'box',
       style: 'link.outline',
       of: key,
@@ -108,7 +117,7 @@ function emptyMarks(given: DiagramGiven, first: DrawMark | undefined, key: strin
       z: 1,
     },
     {
-      id: `prompt\n${key}\nbutton`,
+      id: ['prompt', key, 'button'].join('\n'),
       kind: 'label',
       style: 'prompt.button',
       of: key,
