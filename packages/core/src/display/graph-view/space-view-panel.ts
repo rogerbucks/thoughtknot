@@ -139,13 +139,13 @@ export async function openSpaceView(
   let asked = false;
   let open = true;
   // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
-  let picked: Block | null = null;
-  let pickedLine: SpaceLine | null = null;
+  let [picked, pickedLine]: [Block | null, SpaceLine | null] = [null, null];
   let turning = 0;
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
-  const seen = () => globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked)), orbit, depth === GLOBE);
+  const seen = () =>
+    globe.facing(spaceSeen(glide.shown, more.lens?.(), glide.match(picked), orbit.target), orbit, depth === GLOBE);
   const paint = () => {
     asked = false;
     if (!open) return;

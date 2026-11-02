@@ -271,16 +271,17 @@ export const DISC_ROOM = 1.15;
 const SPACE_REACH = 1 / 3;
 
 /**
- * `space` seen through `lens` round `picked`, the thing picked in it; as laid out, with no lens or nothing picked. A
- * lens that reaches the whole drawing makes a ball of it, round the picked thing, else round the drawing's middle.
+ * `space` seen through `lens` round `picked`, the thing picked in it; as laid out, with no lens. A fisheye with nothing
+ * picked is round `facing`, what the camera looks at, else the drawing's middle: flat, it follows the pointer. A lens
+ * that reaches the whole drawing makes a ball of it, round the picked thing, else round the drawing's middle.
  */
-export function spaceSeen(space: SpaceMarks, lens: Lens | undefined, picked: Block | null): SpaceMarks {
+export function spaceSeen(space: SpaceMarks, lens: Lens | undefined, picked: Block | null, facing?: Vec3): SpaceMarks {
   const across = Math.hypot(...[0, 1, 2].map((i) => (space.most[i] ?? 0) - (space.least[i] ?? 0)));
+  const middle: Vec3 = [0, 1, 2].map((i) => ((space.most[i] ?? 0) + (space.least[i] ?? 0)) / 2) as Vec3;
   if (lens && WHOLE_LENSES.has(lens)) {
-    const middle: Vec3 = [0, 1, 2].map((i) => ((space.most[i] ?? 0) + (space.least[i] ?? 0)) / 2) as Vec3;
     const focus = picked ? middleOf(picked) : middle;
     const far = Math.max(0, ...space.blocks.map((b) => Math.hypot(...middleOf(b).map((v, i) => v - (focus[i] ?? 0)))));
     return bentSpace(space, lensOf(lens, focus, far * DISC_ROOM));
   }
-  return bentSpace(space, lensOf(lens, picked && middleOf(picked), across * SPACE_REACH));
+  return bentSpace(space, lensOf(lens, picked ? middleOf(picked) : (facing ?? middle), across * SPACE_REACH));
 }

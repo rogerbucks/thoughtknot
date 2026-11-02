@@ -4316,7 +4316,7 @@
           "value: readonly ['2d', '2.5d', '3d']"
         ],
         "spaceSeen": [
-          "value: (space: SpaceMarks, lens: Lens | undefined, picked: Block | null) => SpaceMarks"
+          "value: (space: SpaceMarks, lens: Lens | undefined, picked: Block | null, facing?: Vec3) => SpaceMarks"
         ],
         "Span": [
           "interface",

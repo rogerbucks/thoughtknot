@@ -160,10 +160,18 @@ describe('a lens bends a flat drawing and a drawing in space (projections_all_on
   });
 
   // proves: projections_all_on
-  test('in space the lens follows the picked thing: with nothing picked, or no lens, it is as laid out', () => {
-    assert.equal(spaceSeen(space, 'fisheye', null), space);
+  test('in space the lens follows the picked thing; with no lens, it is as laid out', () => {
     assert.equal(spaceSeen(space, 'none', space.blocks[0]), space);
     assert.ok(spaceSeen(space, 'fisheye', space.blocks[0]).blocks[0].width > 20);
+  });
+
+  // proves: projections_all_on
+  test('in space a fisheye with nothing picked enlarges round what the camera looks at', () => {
+    // Roger, 2 Nov 2026: "Fisheye doesn't seem to work on any but the 2d view". Flat, it follows the pointer
+    const [b] = space.blocks,
+      facing = [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
+    assert.ok(spaceSeen(space, 'fisheye', null, facing).blocks[0].width > b.width, 'not left as laid out');
+    assert.notEqual(spaceSeen(space, 'fisheye', null), space, 'round the middle when no camera is given');
   });
 });
 
