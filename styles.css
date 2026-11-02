@@ -3603,6 +3603,13 @@ body.thoughtknot-easier-reading
 .thoughtknot-mini-map[hidden] {
   display: none;
 }
+/* how tall the control sheet is, for the 3D view's pad to ride above it too */
+.thoughtknot-view:has(.thoughtknot-phone-sheet.is-peek) {
+  --thoughtknot-sheet: max(7.5rem, 18%);
+}
+.thoughtknot-view:has(.thoughtknot-phone-sheet.is-half) {
+  --thoughtknot-sheet: 50%;
+}
 /* On a phone the control sheet lies over the foot of the drawing. So the mini-map rides just above it at each of its
    heights, never hidden (Roger, 1 Nov 2026: the mini-map is always visible). The sheet's heights are shares of
    the drawing's room; here they are the same shares of the drawing, which is that room. */
@@ -3826,10 +3833,11 @@ body.thoughtknot-easier-reading
   font-weight: var(--gn-font-weight-semibold);
   text-align: end;
 }
-/* the 3D view's dock of key controls (controls_keys), down the right side: its head, then its buttons two by two */
+/* the 3D view's dock of key controls (controls_keys), down the right side: its head, then its buttons two by two.
+   On a phone it rides above the control sheet, as the mini-map does. */
 .thoughtknot-space-pad {
   position: absolute;
-  inset-block-end: var(--gn-space-2);
+  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + var(--gn-space-2));
   inset-inline-end: var(--gn-space-2);
   z-index: 1;
   display: flex;
@@ -3870,6 +3878,18 @@ body.thoughtknot-easier-reading
 }
 .thoughtknot-space-help[hidden] {
   display: none;
+}
+/* above the mini-map while it shows, never under it (design review, 1 Nov 2026). The view says how tall it is
+   (space-mini-map.ts), and the 2 pixels are its border. */
+.thoughtknot-space-view:has(> .thoughtknot-mini-map:not([hidden])) > .thoughtknot-space-help {
+  inset-block-end: calc(var(--thoughtknot-space-mini, 0px) + 2px + 2 * var(--gn-space-2));
+}
+/* On a phone the foot holds the sheet, the pad and the mini-map, and the controls card has gone into the sheet. So the
+   help line sits at the top start, clear of what the view says at the top end. */
+.thoughtknot-view:has(.thoughtknot-phone-sheet) .thoughtknot-space-view > .thoughtknot-space-help {
+  inset-block-start: var(--gn-space-2);
+  inset-block-end: auto;
+  max-width: calc(60% - 2 * var(--gn-space-2));
 }
 .thoughtknot-space-help li {
   padding: var(--gn-space-half-1) var(--gn-space-2);

@@ -112,6 +112,24 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
       assert.match(rule, /inset-block-end:\s*calc\(/, height);
     }
   });
+
+  // design review, 1 Nov 2026: in 3D the help line ran under the mini-map. On a phone the sheet hid the pad
+  test('in 3D the help line sits above the mini-map, or on a phone at the top, and the pad rides above the sheet', () => {
+    const css = readFileSync(`${root}styles.css`, 'utf8');
+    const ruleOf = (sel) =>
+      new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+    const above = ruleOf(
+      '.thoughtknot-space-view:has(> .thoughtknot-mini-map:not([hidden])) > .thoughtknot-space-help',
+    );
+    assert.match(above, /inset-block-end:[^;]*var\(--thoughtknot-space-mini/, 'above the mini-map, by its height');
+    assert.match(ruleOf('.thoughtknot-space-pad'), /inset-block-end:\s*calc\(var\(--thoughtknot-sheet, 0px\)/);
+    const phone = ruleOf(
+      '.thoughtknot-view:has(.thoughtknot-phone-sheet) .thoughtknot-space-view > .thoughtknot-space-help',
+    );
+    assert.match(phone, /inset-block-start:/, 'on a phone, the help line at the top');
+    for (const height of ['is-peek', 'is-half'])
+      assert.match(ruleOf(`.thoughtknot-view:has(.thoughtknot-phone-sheet.${height})`), /--thoughtknot-sheet:/, height);
+  });
 });
 
 describe('mini_map: tapped or dragged, it moves the view', () => {

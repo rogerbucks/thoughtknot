@@ -87,7 +87,7 @@ async function mapIn(setting) {
     (by) => (orbit = by(orbit)),
   );
   const update = (o = orbit, picked = null) => map.update(SPACE, o, spaceMatrix(o, W / H, 2000), [W, H], picked);
-  return { map, said, update, orbit: () => orbit, uninstall };
+  return { map, said, update, orbit: () => orbit, uninstall, view };
 }
 
 // proves: space_mini_map
@@ -105,6 +105,23 @@ test('it shows by the setting: never, when some thing is off the screen, or alwa
     update();
     assert.equal(map.el.hidden, false, 'always');
     assert.ok(map.el.hasClass('is-space'), 'in the corner the buttons leave free');
+  } finally {
+    uninstall();
+  }
+});
+
+// Design review, 1 Nov 2026: the help line at the foot ran under the mini-map. The view now says how tall the mini-map
+// is, and the help line sits above it.
+// proves: space_mini_map
+test('the view says how tall the mini-map is, so the help line sits above it, and none while hidden', async () => {
+  const { said, update, uninstall, view } = await mapIn('always');
+  try {
+    update();
+    assert.match(view.cssProps['--thoughtknot-space-mini'], /^\d+px$/, 'its height in pixels');
+    assert.ok(parseInt(view.cssProps['--thoughtknot-space-mini']) > 0);
+    said.setting = 'off';
+    update();
+    assert.equal(view.cssProps['--thoughtknot-space-mini'], '0px', 'hidden, it takes no room');
   } finally {
     uninstall();
   }
