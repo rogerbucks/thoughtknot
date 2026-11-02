@@ -799,6 +799,7 @@
         "DiagramSpace": [
           "interface",
           "height: number",
+          "layout?: Partial<LayoutOptions> | undefined",
           "width: number"
         ],
         "DiagramTable": [
