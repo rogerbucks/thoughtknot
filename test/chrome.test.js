@@ -137,18 +137,15 @@ describe('the Chromes open at once across the test processes', () => {
     try {
       const a = await takeChromeSlot({ dir, limit: 2, sleep: noSleep });
       const b = await takeChromeSlot({ dir, limit: 2, sleep: noSleep });
-      let third = false;
-      const waiting = takeChromeSlot({
-        dir,
-        limit: 2,
-        sleep: async () => {
-          await new Promise((r) => setTimeout(r, 5));
-        },
-      }).then((s) => {
+      let third = false,
+        tries = 0;
+      // each wait is one turn of the event loop, counted, so the test waits on tries and never on the clock
+      const turn = () => new Promise((r) => setImmediate(r));
+      const waiting = takeChromeSlot({ dir, limit: 2, sleep: async () => (tries++, turn()) }).then((s) => {
         third = true;
         return s;
       });
-      await new Promise((r) => setTimeout(r, 40));
+      while (tries < 3) await turn();
       assert.equal(third, false, 'two are open, so the third waits');
       a();
       const c = await waiting;
