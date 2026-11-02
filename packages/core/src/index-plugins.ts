@@ -14,7 +14,7 @@ export { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from './
 export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.ts';
 export { diagramContract, layoutContract, themeTokenContract } from './plugins-contract.ts';
 export type { GivenSpots, LayoutGiven, LayoutPlaced, PluginLayout } from './plugin-layouts.ts';
-export { offerLayouts, offerOf, offeredLayouts } from './layouts/offered.ts';
+export { offerLayouts, offerOf, offeredLayouts, spotsBy } from './layouts/offered.ts';
 export type { LayoutOffer } from './layouts/offered.ts';
 export { isolatedPlugin } from './plugin-isolated.ts';
 export type { IsolatedOptions, IsolatedPlugin, PluginPort } from './plugin-isolated.ts';

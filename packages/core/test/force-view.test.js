@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fitted, forceLayout, forceMarks } from '../src/view-types/force-view.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
+import { diagramGiven } from '../src/plugin-diagrams.ts';
 
 const SPACE = { width: 600, height: 400 };
 
@@ -74,4 +75,51 @@ test('the View menu’s spacing draws the force view again, things farther apart
   const marks = (layout) => JSON.stringify(forceMarks({ shape: TWO, space: { ...SPACE, layout } }));
   assert.notEqual(marks({ spacing: 3 }), marks(undefined), 'a wider spacing is drawn otherwise');
   assert.equal(marks({ spacing: 1, linkLength: 1 }), marks(undefined), 'as it was by default, the same drawing');
+});
+
+// a chain a → b → c → d, and a side branch b → e
+const CHAIN = shapeOf(
+  ['a', 'b', 'c', 'd', 'e'],
+  [
+    ['a', 'b'],
+    ['b', 'c'],
+    ['c', 'd'],
+    ['b', 'e'],
+  ],
+);
+const across = (at) => Math.max(...[...at.values()].map(([x]) => x)) - Math.min(...[...at.values()].map(([x]) => x));
+const down = (at) => Math.max(...[...at.values()].map(([, y]) => y)) - Math.min(...[...at.values()].map(([, y]) => y));
+
+// proves: view_options_everywhere
+test('the View menu’s layout: in rows each thing keeps its row, down or across as the menu says', () => {
+  const rows = forceLayout(CHAIN, undefined, { strategy: 'rows' });
+  const y = (k) => rows.get(k)[1];
+  assert.ok(y('a') < y('b') && y('b') < y('c') && y('c') < y('d'), 'each link runs down a row');
+  assert.equal(y('e'), y('c'), 'two things one link from b share a row');
+  const turned = forceLayout(CHAIN, undefined, { strategy: 'rows', direction: 'LR' });
+  assert.ok(turned.get('a')[0] < turned.get('d')[0], 'across, each link runs one row to the right');
+  assert.deepEqual([...forceLayout(CHAIN, undefined, { strategy: 'spread' })], [...forceLayout(CHAIN)]);
+});
+
+// proves: view_options_everywhere
+test('the View menu’s layout: rounds, its shape and a plug-in’s layout', () => {
+  const plain = forceLayout(TWO);
+  assert.notDeepEqual([...forceLayout(TWO, undefined, { rounds: 0.25 })], [...plain], 'fewer rounds, settled less');
+  const wide = forceLayout(TWO, undefined, { shape: 'wide' }),
+    tall = forceLayout(TWO, undefined, { shape: 'tall' });
+  assert.ok(across(wide) / down(wide) > across(plain) / down(plain), 'wider');
+  assert.ok(down(tall) / across(tall) > down(plain) / across(plain), 'taller');
+  const spots = Object.fromEntries(TWO.things.map((t, i) => [t.key, [i, 0]]));
+  const placed = forceLayout(TWO, undefined, { strategy: 'acme.shapes.line' }, spots);
+  assert.deepEqual(placed.get('c'), [2, 0], 'each thing at the spot the plug-in gave it');
+  assert.deepEqual([...forceLayout(TWO, undefined, { strategy: 'acme.shapes.line' })], [...plain], 'none: as Force');
+});
+
+// proves: view_options_everywhere
+test('a view type is given the View menu’s layout and a plug-in’s spots, copied', () => {
+  const space = { ...SPACE, layout: { spacing: 2 }, spots: { a: [1, 2] } };
+  const given = diagramGiven(TWO, space);
+  assert.deepEqual(given.space, space, 'the spacing reaches Force: it was dropped before');
+  assert.notEqual(given.space.layout, space.layout);
+  assert.ok(Object.isFrozen(given.space.spots.a));
 });

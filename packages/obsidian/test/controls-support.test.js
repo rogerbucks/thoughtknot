@@ -66,6 +66,16 @@ describe('the View menu in every view', () => {
   });
 
   // proves: view_options_everywhere
+  test('Force takes the layout lists and rounds, which it lays itself out by', async () => {
+    await inCard('force', (el) => {
+      const layout = menu(el).querySelectorAll('[data-option="layout"]');
+      assert.ok(layout.length >= 4, 'rounds, then the layout, its shape and what stays put');
+      for (const r of layout) for (const c of r.querySelectorAll('input, select')) assert.ok(!c.disabled, r.textContent);
+      assert.ok(menu(el).querySelector('.thoughtknot-own-hint').hidden, 'no line says only a network takes them');
+    });
+  });
+
+  // proves: view_options_everywhere
   test('Matrix keeps the Lens row, greyed, saying why, never just gone', async () => {
     await inCard('matrix', (el) => {
       const lens = row(el, 'lens');

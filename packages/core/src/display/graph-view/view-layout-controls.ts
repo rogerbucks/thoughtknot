@@ -9,6 +9,8 @@ import { LAYOUT_LISTS, LAYOUT_SLIDERS, layoutListRow, layoutSliderRow, listed } 
  * update the screen?" A diagram type Graphviz lays out reads none of them, so there each is greyed, saying why.
  */
 export const OWN_ONLY: ReadonlySet<string> = new Set(['lanes', 'rounds', 'strategy', 'shape', 'pinned']);
+/** The class of the line saying those are only for our own engine. */
+export const OWN_HINT_CLASS = 'thoughtknot-own-hint';
 
 /**
  * The menu's layout sliders and lists, each in the place `holder` gives, which `spaced` acts on as one is set. None

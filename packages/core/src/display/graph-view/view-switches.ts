@@ -27,7 +27,7 @@ import { dockHead, wideWindow } from './controls-dock';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { GROUP_BY_ROW, HINTS, ladderAttributes } from '../../view-menu-rows.ts';
-import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
+import { OWN_HINT_CLASS, OWN_ONLY, layoutControls } from './view-layout-controls.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
 
@@ -132,7 +132,7 @@ export function renderViewMenu(
   list?.addEventListener('change', () => grouping?.pick(list.value));
   const { sliders, lists } = layoutControls(() => el, spaced); // all in sight, none under More
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
-  const ownHint = el.createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.own-only') });
+  const ownHint = el.createDiv({ cls: ['thoughtknot-switch-hint', OWN_HINT_CLASS], text: word('view.hint.own-only') });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];

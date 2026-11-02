@@ -21,6 +21,8 @@ export interface DiagramSpace {
   height: number;
   /** The View menu's layout options, for a view that lays things out itself, such as Force (view_options_everywhere). */
   layout?: Partial<LayoutOptions>;
+  /** Each thing's spot, where the View menu chose a plug-in's layout, for a view that lays things out itself. */
+  spots?: Readonly<Record<string, readonly [number, number]>>;
 }
 
 /** A point in the space, as x and y. */
@@ -81,7 +83,13 @@ export function diagramGiven(shape: GraphShape, space: DiagramSpace): DiagramGiv
     links: shape.links.map((l) => ({ ...l })),
     ...(shape.groups ? { groups: shape.groups.map(([g, keys]): [string, string[]] => [g, [...keys]]) } : {}),
   };
-  return frozen({ shape: copy, space: { width: space.width, height: space.height } });
+  // the View menu's layout options and a plug-in layout's spots are copied too, as plain data (view_options_everywhere)
+  const { width, height, layout, spots } = space;
+  const pairs = spots && Object.fromEntries(Object.entries(spots).map(([k, [x, y]]) => [k, [x, y] as const]));
+  return frozen({
+    shape: copy,
+    space: { width, height, ...(layout ? { layout: { ...layout } } : {}), ...(pairs ? { spots: pairs } : {}) },
+  });
 }
 
 type Raw = Record<string, unknown>;

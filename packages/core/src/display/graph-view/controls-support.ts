@@ -5,6 +5,7 @@ import { word } from '@thoughtknot/core';
 import { VIEW_OPTIONS, notHereSaid, viewSupport } from '../../view-support.ts';
 import type { NotHere, ViewOption } from '../../view-support.ts';
 import { OPTION_ATTRIBUTE } from '../../view-menu-rows.ts';
+import { OWN_HINT_CLASS } from './view-layout-controls.ts';
 
 /** The View menu, as greying it needs: its rows, and its redraw, which the greying follows. */
 export interface MenuToGrey {
@@ -33,6 +34,7 @@ export function greyNotHere(root: HTMLElement, menu: MenuToGrey, view: string): 
   const off = notHereIn(view);
   if (!off.size) return;
   const grey = () => {
+    laysOut(menu.el, view, off);
     for (const row of [...rowsIn(menu.el), ...rowsIn(root.querySelector<HTMLElement>('.thoughtknot-view-dock'))]) {
       const why = off.get(row.getAttribute(OPTION_ATTRIBUTE) as ViewOption);
       if (why) greyed(row, why);
@@ -46,6 +48,22 @@ export function greyNotHere(root: HTMLElement, menu: MenuToGrey, view: string): 
   const was = menu.refresh;
   menu.refresh = () => (was(), grey());
   grey();
+}
+
+/** The options only a layout of ours reads, which the menu greys unless our own engine drew the network. */
+const OWN_OPTIONS: readonly ViewOption[] = ['lanes', 'layout'];
+
+/**
+ * The controls of `menu` only our own engine reads, set going where `view` lays itself out by them, such as Force.
+ * The menu greys them, saying only a network takes them, for any drawing our engine did not lay out.
+ */
+function laysOut(menu: HTMLElement, view: string, off: ReadonlyMap<ViewOption, NotHere>): void {
+  const own = OWN_OPTIONS.filter((o) => !off.has(o));
+  if (view === 'network' || !own.length) return;
+  for (const row of rowsIn(menu).filter((r) => own.includes(r.getAttribute(OPTION_ATTRIBUTE) as ViewOption)))
+    for (const c of [row, ...Array.from(row.querySelectorAll<HTMLElement>('button, input, select'))])
+      (c as HTMLInputElement).disabled = false;
+  for (const hint of Array.from(menu.querySelectorAll<HTMLElement>(`.${OWN_HINT_CLASS}`))) hint.hidden = true;
 }
 
 /** The rows in `el` that name an option, `el` itself among them. */

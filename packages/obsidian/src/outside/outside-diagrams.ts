@@ -2,7 +2,7 @@
 // chooses it by its name, such as `example.sample.row`. A plug-in turned on that adds it is given the graph's shape and
 // a space. The card shows the core's picture of the marks it gave back. Otherwise the graph is a network, and
 // the strip says which plug-in draws it, or why it could not.
-import { foldedShape, shapeOf } from '@thoughtknot/core';
+import { foldedShape, shapeOf, spotsBy } from '@thoughtknot/core';
 import type { GraphDrawing, LayoutOptions, Nudge } from '@thoughtknot/core';
 import type { NoteReading } from '@thoughtknot/core';
 import { PICTURE_SPACE } from '@thoughtknot/core/display/graph-view/type-strip';
@@ -30,7 +30,9 @@ export async function withPicture(
   // (view_options_everywhere)
   const redraw = async (layout?: Partial<LayoutOptions>, folded?: GraphDrawing) => {
     const now = folded ? foldedShape(shapeOf(folded, g, folded.nudges ?? nudges), folded.folding) : shape;
-    const again = await outside.drawDiagram(wanted.type, now, { ...PICTURE_SPACE, ...(layout ? { layout } : {}) });
+    const spots = await spotsBy(now, layout);
+    const space = { ...PICTURE_SPACE, ...(layout ? { layout } : {}), ...(spots ? { spots } : {}) };
+    const again = await outside.drawDiagram(wanted.type, now, space);
     return again && 'svg' in again ? again.svg : null;
   };
   const picture = { svg: drawn.svg, type: wanted.type, plugin: wanted.plugin, shape, redraw, ...PICTURE_SPACE };

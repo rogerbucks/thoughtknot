@@ -22,7 +22,6 @@ const KNOWN_GAPS = {
   radial: ['lanes', 'layout'],
   lanes: ['lanes', 'layout'],
   timeline: ['lanes', 'layout'],
-  force: ['layout'],
 };
 
 describe('which view takes which option', () => {
