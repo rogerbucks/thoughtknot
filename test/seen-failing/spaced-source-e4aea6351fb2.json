@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/spaced-source.test.js",
+  "test": "a tree, flow and lanes run the way the View menu’s Direction picks, as Graphviz lays them out",
+  "seen_failing_first": false,
+  "evidence": "It pins behaviour that already worked. The fix is the greying, which the support table test proves."
+}

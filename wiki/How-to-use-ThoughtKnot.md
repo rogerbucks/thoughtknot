@@ -55,6 +55,10 @@ The buttons along the top of each drawing:
 
 Tap any thing to see its details and the things linked to it.
 
+The **View** menu offers the same options in every view, flat or in 3D. When a view cannot use one, the option stays
+in its place, greyed, with a line saying why. Lenses such as fisheye work in 2D, 2.5D, 3D and on the globe. In 3D,
+coming nearer with the camera shows more detail, just as zooming in does on a flat drawing.
+
 <!-- wiki:shot find -->
 
 <!-- wiki:shot filter -->
