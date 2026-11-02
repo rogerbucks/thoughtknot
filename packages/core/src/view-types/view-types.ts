@@ -12,7 +12,7 @@ import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
 import { gridMarks } from './grid-view.ts';
-import { linkEnds } from './link-ends.ts';
+import { linkEnds, linkHues } from './link-ends.ts';
 import { hiveMarks } from './hive-view.ts';
 import { mapMarks } from './map-view.ts';
 import { matrixMarks } from './matrix-view.ts';
@@ -64,7 +64,7 @@ const DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
   map: mapMarks,
 };
 
-/** What draws each view type: each link touches its things' outlines, not their middles (link-ends.ts). */
+/** What draws each view type: each link touches its things' outlines and takes its type's colour (link-ends.ts). */
 export const VIEW_DRAWERS = Object.fromEntries(
-  VIEW_TYPES.map((t) => [t, (given: DiagramGiven) => linkEnds(DRAWERS[t](given))]),
+  VIEW_TYPES.map((t) => [t, (given: DiagramGiven) => linkHues(linkEnds(DRAWERS[t](given)), given.shape.links)]),
 ) as Record<ViewType, (given: DiagramGiven) => DrawMark[]>;

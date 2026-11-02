@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { arcMarks } from '../src/view-types/arc-view.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
 import { VIEW_DRAWERS, VIEW_TYPES } from '../src/view-types/view-types.ts';
+import { linkEnds, linkHues } from '../src/view-types/link-ends.ts';
 
 const SPACE = { width: 600, height: 300 };
 /** A shape of things `[key, kind]` and links `[from, to]`. */
@@ -69,7 +70,8 @@ test('groups show as runs on the line, and a long arc is lowered to stay in the 
 test('the arc is offered among the views, and the View menu draws it', () => {
   assert.ok(VIEW_TYPES.includes('arc'));
   const shape = shapeOf([['a'], ['b']], [['a', 'b']]);
-  assert.deepEqual(VIEW_DRAWERS.arc({ shape, space: SPACE }), arcMarks({ shape, space: SPACE }));
+  const drawn = arcMarks({ shape, space: SPACE });
+  assert.deepEqual(VIEW_DRAWERS.arc({ shape, space: SPACE }), linkHues(linkEnds(drawn), shape.links));
 });
 
 // proves: layout_types_screen_shaped
