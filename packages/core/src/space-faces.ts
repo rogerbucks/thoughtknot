@@ -10,7 +10,7 @@
 // their names already (space-cards.ts). Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
-import { NAME_TINY, READABLE_LEAST, largestName } from './space-labels.ts';
+import { NAME_TINY, READABLE_LEAST, hubGrow, linkCounts } from './space-labels.ts';
 
 /**
  * A name on a face: its rows, their size and the widest a row may be, in steps of the face. The face's middle is at
@@ -241,7 +241,8 @@ export function facesOnScreen(
   { most = FACES_MOST, picked, beside }: { most?: number; picked?: string; beside?: Set<string> } = {},
 ): FaceText[] {
   const outlines = outlinesOf(space, matrix, width, height),
-    largest = largestName(width, height),
+    links = linkCounts(space),
+    busiest = Math.max(1, ...links.values()),
     across = Math.hypot(width, height) / 2;
   const names = new Map<string, { id: string; style: string; text: string; size: number }>();
   for (const l of space.labels) if (l.of !== undefined && l.link === undefined && !names.has(l.of)) names.set(l.of, l);
@@ -250,18 +251,22 @@ export function facesOnScreen(
     .filter((o) => o.x >= 0 && o.y >= 0 && o.x <= width && o.y <= height)
     .map((o) => {
       const mine = picked !== undefined && o.b.of === picked;
-      return { o, mine, rank: mine ? -1 : o.far * (1 + (2 * Math.hypot(o.x - width / 2, o.y - height / 2)) / across) };
+      const many = links.get(o.b.of as string) ?? 0;
+      // the picked first, then the busiest, then the nearest the middle and the camera
+      const near = o.far * (1 + (2 * Math.hypot(o.x - width / 2, o.y - height / 2)) / across);
+      return { o, mine, many, rank: mine ? -Infinity : -many * 1e9 + near };
     })
     .sort((p, q) => p.rank - q.rank);
   const out: FaceText[] = [];
-  for (const { o, mine } of wanted) {
+  for (const { o, mine, many } of wanted) {
     if (out.length >= most) break;
     const name = names.get(o.b.of as string) as { id: string; style: string; text: string; size: number };
     const face = space.round ? ballFace(o) : bestFace(o.b, matrix, width, height);
     if (!face || outlines.some((n) => n !== o && covers(n, face.x, face.y, face.far))) continue;
     // its size on the screen: one step of the face is this many pixels, as its area says
     const scale = Math.sqrt(face.across[0] * face.down[1] - face.across[1] * face.down[0]);
-    const natural = space.round ? largest : Math.min(largest, name.size * scale);
+    // it scales with its thing: a ball's name as large as its face holds, a box's as drawn, the busiest larger
+    const natural = space.round ? face.high * scale : name.size * scale * hubGrow(many, busiest);
     // the picked name is never tiny: with no room to read it on its face, it floats beside it at a readable size
     const fit = fitWords(name.text, face.wide, face.high, natural / scale, (mine ? READABLE_LEAST : NAME_TINY) / scale);
     if (!fit) {
