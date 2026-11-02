@@ -6,7 +6,7 @@
 // a page would cross pass in front or behind. Each thing is a sphere. The more links it has, the larger it is: by the
 // square root, so a hub stands out without hiding its neighbours. Each link runs straight from sphere to sphere, ending
 // in an arrowhead on the sphere it points to. Two links between the same two things bow apart, so both show. A link's
-// words float at its middle, and a thing's name just below its sphere, as in 2D (Roger, 2 Nov 2026).
+// words float at its middle, and a thing's name just above its sphere.
 //
 // A drawing of any type but a network is kept as drawn (space_follows_type). Each thing stays where its type put it,
 // across and down, and only its depth is laid out. So a flow, a tree or a radial drawing looks like itself in space.
@@ -231,7 +231,7 @@ export function spreadSpace(
     labels.push({
       id: words?.id ?? `${b.id}\nname`,
       style: words?.style ?? b.style,
-      at: [c[0], c[1], c[2] - b.tall / 2 - NAME_SIZE],
+      at: [c[0], c[1], c[2] + b.tall / 2 + NAME_SIZE],
       text,
       size: NAME_SIZE,
       of: b.of,

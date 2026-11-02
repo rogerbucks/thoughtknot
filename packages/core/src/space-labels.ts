@@ -110,14 +110,12 @@ export function labelsOnScreen(
     const rank = mine
       ? -Infinity
       : -many * 1e9 + at.far * (1 + 2 * off) * (l.link === undefined ? 1 : LINK_WORDS_LATER);
-    // a thing's name hangs below its sphere: grown past its natural size, it grows down, away from the sphere
-    const down = l.of !== undefined && l.link === undefined ? Math.max(0, size - (l.size * focal) / at.far) / 2 : 0;
     const label: ScreenLabel & { rank: number } = {
       id: l.id,
       style: l.style,
       text: shortened(text, fits),
       x: at.x,
-      y: at.y + down,
+      y: at.y,
       size,
       rank,
     };

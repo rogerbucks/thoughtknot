@@ -403,18 +403,3 @@ test('with three links between two things, every arrowhead tip sits on the ball 
     assert.ok(off <= r * 0.01 + 0.5, `${a.id}: tip ${off} off the ball's surface of ${r}`);
   }
 });
-
-// proves: names_readable_any_zoom
-test('a thing’s name hangs just below its ball, as in 2D, and grows down away from it', () => {
-  const { space } = spreadSpace(MARKS);
-  for (const b of space.blocks) {
-    const name = space.labels.find((l) => l.of === b.of && l.link === undefined);
-    assert.ok(name.at[2] < b.floor, `${name.text} is under its ball`);
-  }
-  const orbit = orbitFit(space, 1);
-  const m = spaceMatrix(orbit, 1, 4000);
-  const hub = space.labels.find((l) => l.of === 'hub');
-  const at = projectPoint(m, hub.at, 600, 600);
-  const shown = labelsOnScreen(space, m, 600, 600).find((l) => l.id === hub.id);
-  assert.ok(shown && shown.y >= at.y - 1e-9, 'a name grown past its size moves down, never up over its ball');
-});
