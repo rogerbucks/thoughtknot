@@ -35,7 +35,7 @@ import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
 import { SpaceGlide } from './space-view-glide.ts';
 import { SpaceMiniMap } from './space-mini-map.ts';
-import { MARKED } from './focus-marks';
+import { changeOf, MARKED } from './focus-marks';
 import type { Target } from './taps';
 
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
@@ -133,8 +133,7 @@ export async function openSpaceView(
   let depth =
     'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : more.globe ? 4 : more.cards === false ? 1 : 0;
   let space: SpaceMarks = sketched(spaceBy(depths[depth] ?? null));
-  let width = 1,
-    height = 1;
+  let [width, height] = [1, 1];
   let [orbit, asked]: [Orbit, boolean] = [orbitFit(space, 1), false];
   let open = true;
   // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
@@ -177,7 +176,8 @@ export async function openSpaceView(
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(el);
   // the card marked its drawing again: its things are laid out and faded as it shows them, and fitted if others
-  const marked = () => {
+  const marked = (e: Event) => {
+    if (changeOf(e) === 'lens') return again(); // a new lens only bends it: painted again, so nothing moves
     if ('marks' in from || !open) return;
     const was = space.blocks.map((b) => b.of).join(),
       before = picked && { of: picked.of, at: middleOf(picked) };

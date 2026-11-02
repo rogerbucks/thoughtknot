@@ -26,7 +26,7 @@ import type { WordKey } from '../../words.ts';
 import type { View, Zoom } from '../../zoom.ts';
 import type { Lifecycle } from '../lifecycle';
 import { reducedMotion } from './details-nav.ts';
-import { MARKED } from './focus-marks.ts';
+import { changeOf, MARKED, tellChanged } from './focus-marks.ts';
 import { boxIn } from './taps.ts';
 import type { Taps } from './taps.ts';
 
@@ -128,7 +128,7 @@ export class LensSvg {
       svg = host.svg();
     if (svg) lenses.set(svg, this);
     // the selection changed, or what the focus fades: the lens follows it
-    if (svg) card.registerDomEvent(svg, MARKED, () => this.changed());
+    if (svg) card.registerDomEvent(svg, MARKED, (e: Event) => changeOf(e) !== 'lens' && this.changed()); // not its own
     card.registerDomEvent(vp, 'pointerdown', () => (this.held = true));
     for (const type of ['pointerup', 'pointercancel'] as const)
       card.registerDomEvent(vp, type, () => ((this.held = false), this.again()));
@@ -349,7 +349,8 @@ export function renderLensChoice(
   input.value = lens.lens;
   input.addEventListener('change', () => {
     lens.pick(input.value as Lens);
-    svg()?.dispatchEvent(new Event(MARKED)); // the view in space, if open, bends with it
+    const drawing = svg();
+    if (drawing) tellChanged(drawing, 'lens'); // the view in space, if open, bends with it
     picked?.();
   });
   const status = Array.from(menu.children).find((el) => el.getAttribute('role') === 'status');

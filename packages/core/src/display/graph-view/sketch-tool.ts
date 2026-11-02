@@ -18,7 +18,7 @@ import type { MarkPoint } from '../../plugin-diagrams.ts';
 import { marksBounds, type DrawMark } from '../../drawing-marks.ts';
 import { sketchPreview } from './sketch-preview';
 import type { Drawn } from '@thoughtknot/core';
-import { MARKED } from './focus-marks';
+import { tellChanged } from './focus-marks.ts';
 import { button } from '../button';
 import type { Taps } from './taps';
 import type { ViewOptions } from './view-options';
@@ -180,7 +180,7 @@ export class SketchTool {
         if (this.selected) partOf(layer, this.selected)?.classList.add('is-selected');
       }
     }
-    svg.dispatchEvent(new CustomEvent(MARKED)); // a view in space open over it draws them again too
+    tellChanged(svg, 'sketch'); // a view in space open over it draws them again too
   }
 
   /** A pointer pressed at `p` in the viewport. True when the tool takes it: a drawing begun, or a drawing pressed. */
