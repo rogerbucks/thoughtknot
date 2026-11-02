@@ -68,3 +68,10 @@ test('a small graph is named and fits; a graph with nothing draws nothing', () =
   const one = fitted(forceLayout(shapeOf(['x'])), SPACE.width, SPACE.height);
   assert.deepEqual(one.get('x'), [300, 200]);
 });
+
+// proves: view_options_everywhere
+test('the View menu’s spacing draws the force view again, things farther apart', () => {
+  const marks = (layout) => JSON.stringify(forceMarks({ shape: TWO, space: { ...SPACE, layout } }));
+  assert.notEqual(marks({ spacing: 3 }), marks(undefined), 'a wider spacing is drawn otherwise');
+  assert.equal(marks({ spacing: 1, linkLength: 1 }), marks(undefined), 'as it was by default, the same drawing');
+});

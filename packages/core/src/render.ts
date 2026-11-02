@@ -13,6 +13,7 @@ import { inlineSource } from './inline-properties.ts';
 import { foldedSource, routedSource } from './fold-source.ts';
 import { flowSource } from './link-flow.ts';
 import { pictureSource } from './picture.ts';
+import { spacedSource } from './spaced-source.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
@@ -157,7 +158,9 @@ export function directions(drawing: GraphDrawing): Direction[] {
       !quick && !step && shapeable(drawing) && ownable(dot)
         ? ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false)
         : undefined;
-    return { rankdir, dot: quick ? quickSource(dot) : dot, src, ...(shaped ? { shaped } : {}) };
+    // the View menu's spacing reaches Graphviz too, not only our own engine (view_options_everywhere)
+    const spaced = spacedSource(dot, drawing.layoutOptions);
+    return { rankdir, dot: quick ? quickSource(spaced) : spaced, src, ...(shaped ? { shaped } : {}) };
   });
 }
 

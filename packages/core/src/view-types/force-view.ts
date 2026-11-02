@@ -155,7 +155,7 @@ export function fitted(places: Places, width: number, height: number): Map<strin
 export function forceMarks({ shape, space }: DiagramGiven, previous?: Places): DrawMark[] {
   const n = shape.things.length;
   if (!n) return [];
-  const at = fitted(forceLayout(shape, previous), space.width, space.height);
+  const at = fitted(forceLayout(shape, previous, space.layout), space.width, space.height);
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const kinds = [...new Set(shape.things.map((t) => t.kinds.join(', ')))];
   const size = Math.max(1, Math.min(24, Math.sqrt((space.width * space.height) / n) / 3));

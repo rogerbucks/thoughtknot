@@ -2307,7 +2307,8 @@ pre.thoughtknot-code {
 .thoughtknot-bar-more-list {
   position: absolute;
   top: 100%;
-  inset-inline-start: 0;
+  /* More sits near the bar's far end: the list opens back over the bar, so it stays on a phone's screen */
+  inset-inline-end: 0;
   z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;

@@ -1,7 +1,8 @@
 // A short bar (spec §3, bar_kept_short; UX review F5 and F10, 25 Oct 2026):
 // - Find, View, 2D, Fit and Full screen in sight, and the rest behind More;
 // - More names each of its buttons, and closes on a pick or Escape;
-// - the problems count last, calm unless one is an error.
+// - the problems count last, calm unless one is an error;
+// - on a phone, Fit waits behind More too, so the bar keeps to one row (bar_one_row_phone).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -80,4 +81,23 @@ describe('a short bar', () => {
     assert.match(styles, /\.thoughtknot-badge\s*\{\s*margin-inline-start:\s*auto;/);
     assert.match(styles, /\.thoughtknot-bar-more-list\s*\{[^}]*position:\s*absolute;[^}]*z-index:/);
   });
+});
+
+// proves: bar_one_row_phone
+test('on a phone, Fit waits behind More so the bar keeps to one row', async () => {
+  const env = await load({ mobile: true });
+  try {
+    const { el } = await show(env, fence(GRAPH));
+    const bar = el.querySelector('.thoughtknot-bar');
+    const row = Array.from(bar.children).map((c) => c.getAttribute('aria-label'));
+    assert.ok(!row.includes('Fit'), 'Fit is not on the bar');
+    assert.ok(row.includes('Full screen'), 'Full screen stays on it');
+    const list = bar.querySelector('.thoughtknot-bar-more-list');
+    labelled(bar, 'More').click();
+    const fit = labelled(list, 'Fit');
+    assert.ok(fit, 'Fit is in More');
+    assert.match(fit.textContent, /Fit/, 'named in words');
+  } finally {
+    env.uninstall();
+  }
 });

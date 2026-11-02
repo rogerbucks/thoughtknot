@@ -10,6 +10,7 @@ import { PT, knownStyle, layoutSvg } from './graphviz-svg.ts';
 import { themed } from './theme.ts';
 import { pluginTypeOf } from './style-graph.ts';
 import type { GraphShape } from './types-shape.ts';
+import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { PluginCalls, PluginResult } from './plugin-calls.ts';
 import { word } from './words.ts';
 import { viewParts } from './view-types/view-parts.ts';
@@ -18,6 +19,8 @@ import { viewParts } from './view-types/view-parts.ts';
 export interface DiagramSpace {
   width: number;
   height: number;
+  /** The View menu's layout options, for a view that lays things out itself, such as Force (view_options_everywhere). */
+  layout?: Partial<LayoutOptions>;
 }
 
 /** A point in the space, as x and y. */

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/lenses.test.js",
+  "test": "a lens bends a flat drawing and a drawing in space (projections_all_on) > in space the lens follows the picked thing; with no lens, it is as laid out",
+  "seen_failing_first": false,
+  "evidence": "Renamed: the old test's nothing-picked case moved to its own new test, which failed first."
+}
