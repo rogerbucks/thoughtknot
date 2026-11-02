@@ -17,6 +17,8 @@ import { readableNames } from './readable-names';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import { SemanticZoom } from './semantic-zoom-view.ts';
+import { greyNotHere } from './controls-support.ts';
+import { lensIn, viewOf } from '../../view-support.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import type { Taps } from './taps';
 import type { ViewOptions } from './view-options';
@@ -71,7 +73,7 @@ export interface AidsHost {
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
 interface LensMenu {
-  menu: { el: HTMLElement };
+  menu: { el: HTMLElement; refresh: () => void };
   step: (r: SemanticRung) => void;
 }
 
@@ -109,17 +111,21 @@ export class Aids {
     this.miniMap?.redrawn(host.drawn());
     const { o, viewport, zoom, taps } = host,
       state = o.switches?.state;
+    // the view the card draws: a lens or semantic zoom it cannot take is greyed, and never bends it (view-support.ts)
+    const view = viewOf(o.diagram?.choice.drawn, o.diagram?.picture?.type),
+      allowed = (l: Lens) => lensIn(view, l) === l;
     this.lens = host.svg()
-      ? new LensSvg(card, { svg: host.svg, viewport, zoom, taps, written: o.aids?.lens, state, ...host.lens })
+      ? new LensSvg(card, { svg: host.svg, viewport, zoom, taps, written: o.aids?.lens, state, allowed, ...host.lens })
       : null;
     const menu = host.lens.menu(),
       written = o.aids?.lens;
     const step = (r: SemanticRung) => host.lens.menu()?.step(r);
     this.semantic =
-      state && menu
+      state && menu && allowed('semantic')
         ? new SemanticZoom({ win: viewport.win, state, written, view: () => zoom().view(), size: host.size, step })
         : null;
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
+    if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
   }
 
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */

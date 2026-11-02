@@ -44,6 +44,7 @@ import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { noViewMenu, pictureAgain as live } from '@thoughtknot/core/display/graph-view/view-drawn';
 import { withPicture } from './outside/outside-diagrams';
 import type { ViewShown } from '@thoughtknot/core/display/graph-view/view-strip';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
@@ -310,7 +311,7 @@ export async function renderViewBlock(
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, looked.style, g, v.name);
-  const laidOut = (by?: object) => plugin.layout(state.folded(styled, by), by);
+  const laidOut = (by?: object) => live(diagram.picture) ?? plugin.layout(state.folded(styled, by), by);
   try {
     drawn = diagram.table
       ? tableDrawn(diagram.table)
@@ -362,7 +363,7 @@ export async function renderViewBlock(
       view,
       ...rulesOn(looked, g, styled, { view: v.name }), // its rules' looks (§56); a clash shows on the graph's card
       diagram,
-      ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
+      ...(noViewMenu(diagram) ? {} : { switches: { state, relayout: laidOut, asDrawn: !!diagram.picture } }), // §68
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
       links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] }, // as the graph's (§18); broken, on its card
       images: plugin.cardImages(ctx.sourcePath, styled.pictures), // its things' images and pictures (§18)
