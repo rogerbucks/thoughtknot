@@ -1,14 +1,15 @@
 // The globe in the 3D view (editor spec §71, globe_view and globe_dive_detail). Roger, 31 Oct 2026: the 3D view was
 // taken for a globe you spin round. Keep every view, and add one seen from outside, which you dive into for detail.
 //
-// Each thing is a ball on the globe (layouts/globe.ts), sized by its links as in the other 3D view. Each link runs as
-// an arc over the surface, ending in an arrowhead at the ball it points to. A thing's name sits on its ball. The far
-// side of the globe is hidden, as it is on a real one, so the side facing you reads clearly.
+// Each thing is a card on the globe (layouts/globe.ts), flat to the screen with its name inside (Roger, 2 Nov 2026:
+// "Cards default, spheres an option"). With balls asked for, each is a ball sized by its links, its name on it. Each
+// link runs as an arc over the surface, ending in an arrowhead at the thing it points to. The far side of the globe is
+// hidden, as it is on a real one, so the side facing you reads clearly.
 //
 // Names show as there is room, nearest first (space-labels.ts), so more show as you dive in. A link's words show only
 // once you are near enough to read them. From inside the globe nothing is hidden: you see the whole inner surface.
 // Host-free and pure.
-import { GLOBE_FACING, globeArc, globeSpots } from './layouts/globe.ts';
+import { GLOBE_FACING, GLOBE_SPACING, globeArc, globeSpots } from './layouts/globe.ts';
 import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
@@ -21,6 +22,8 @@ const NAME_SIZE = 14,
   WORDS_SIZE = 11;
 /** An arrowhead's length, in pixels of the space: never more than the ball it points to. */
 const ARROW_MOST = 18;
+/** How much room a card leaves round it on the globe, as a share of its size. */
+const CARD_ROOM = 1.3;
 /** How far past the horizon a thing still shows, as a share of the globe's radius: so one on the edge is not cut. */
 const HORIZON = 0.05;
 /** How near a link's words must be, as a share of the globe's radius, before they show: only once you dive in. */
@@ -47,18 +50,21 @@ export type GlobeSpace = SpaceMarks & { globe: GlobeOf };
 /**
  * `marks` laid on a globe, `centre` facing the viewer. Given last time's `previous` spots, each thing placed already
  * keeps its spot (explore_stays_put). Each thing's `details` sit just below it. It gives back the spots used too.
+ * Each thing is a card the size of its box, or with `balls` a ball sized by its links.
  */
 export function globeSpace(
   marks: readonly DrawMark[],
   previous?: ReadonlyMap<string, GlobeVec>,
   centre?: string | null,
   details?: GlobeDetails,
+  balls = false,
 ): { space: GlobeSpace; spots: Map<string, GlobeVec> } {
   const shape = shapeOfMarks(marks);
   const kept = previous && new Map([...previous].filter(([k]) => shape.things.some((t) => t.key === k)));
   const { radius, spots } = globeSpots(shape, {
     ...(centre ? { centre } : {}),
     ...(kept?.size ? { previous: kept } : {}),
+    ...(balls ? {} : { spacing: Math.max(GLOBE_SPACING, cardSpacing(marks)) }),
   });
   const count = new Map<string, number>();
   for (const l of shape.links)
@@ -72,23 +78,10 @@ export function globeSpace(
     if (m.kind !== 'box' || m.of === undefined || ball.has(m.of)) continue;
     const c = spots.get(m.of);
     if (!c) continue;
-    const r = isCluster(m.of) ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
+    const card = !balls || isCluster(m.of),
+      r = card ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
     ball.set(m.of, r);
-    const block: Block = {
-      id: m.id,
-      style: m.style,
-      of: m.of,
-      x: c[0] - r,
-      y: c[1] - r,
-      width: 2 * r,
-      depth: 2 * r,
-      floor: c[2] - r,
-      tall: 2 * r,
-    };
-    if (m.name !== undefined) block.name = m.name;
-    // a folded group is a card among balls, so its name and count always show (cluster_named_everywhere)
-    if (isCluster(m.of)) block.card = { width: m.width, height: m.height };
-    blocks.push(block);
+    blocks.push(blockOn(m, m.of, c, r, card));
     const words = named.get(m.of),
       text = words?.text ?? m.name;
     if (text)
@@ -117,10 +110,10 @@ export function globeSpace(
     const a = spots.get(m.from),
       b = spots.get(m.to);
     if (!a || !b) continue;
-    // the arc leaves its first ball and stops short of its last, where its arrowhead goes
-    const ra = ball.get(m.from) ?? 0,
-      rb = ball.get(m.to) ?? 0,
-      head = m.headless ? 0 : Math.min(ARROW_MOST, rb);
+    // the arc leaves its ball, and stops short of the last for its arrowhead; cards cut it as painted (space-cards.ts)
+    const ra = balls ? (ball.get(m.from) ?? 0) : 0,
+      rb = balls ? (ball.get(m.to) ?? 0) : 0,
+      head = m.headless ? 0 : balls ? Math.min(ARROW_MOST, rb) : ARROW_MOST;
     const arc = globeArc(a, b, radius),
       long = lengthOf(arc);
     // a link too short to leave room for its arrowhead between the balls is drawn with none
@@ -143,8 +136,39 @@ export function globeSpace(
         link: m.id,
       });
   }
-  const globe: GlobeOf = { middle: [0, 0, 0], radius };
-  return { space: { blocks, lines, labels, arrows, round: true, globe, ...boundsOf(blocks, lines, labels) }, spots };
+  const globe: GlobeOf = { middle: [0, 0, 0], radius },
+    shown = balls ? {} : { cards: true };
+  return {
+    space: { blocks, lines, labels, arrows, round: true, globe, ...shown, ...boundsOf(blocks, lines, labels) },
+    spots,
+  };
+}
+
+/** Thing `of`, drawn `m`, as a block of radius `r` round its spot `c`: a ball, or as a `card` the size of its box. */
+function blockOn(m: DrawMark & { kind: 'box' }, of: string, c: Vec3, r: number, card: boolean): Block {
+  const [x, y, z] = c,
+    across = 2 * r;
+  const block: Block = {
+    id: m.id,
+    style: m.style,
+    of,
+    x: x - r,
+    y: y - r,
+    width: across,
+    depth: across,
+    floor: z - r,
+    tall: across,
+  };
+  if (m.name !== undefined) block.name = m.name;
+  // a folded group is a card among balls too, so its name and count always show (cluster_named_everywhere)
+  if (card) block.card = { width: m.width, height: m.height };
+  return block;
+}
+
+/** The room between neighbours on a globe of cards: enough for the boxes drawn, as they are on average. */
+function cardSpacing(marks: readonly DrawMark[]): number {
+  const sizes = marks.flatMap((m) => (m.kind === 'box' && m.of !== undefined ? [Math.max(m.width, m.height)] : []));
+  return sizes.length ? (sizes.reduce((s, x) => s + x, 0) / sizes.length) * CARD_ROOM : 0;
 }
 
 /**
@@ -175,6 +199,8 @@ export class GlobeLayout {
   private spots: Map<string, GlobeVec> | undefined;
   private globe: GlobeOf | undefined;
   private centre: string | null | undefined;
+  /** Whether each thing shows as a ball, not a card (Roger, 2 Nov 2026: cards by default, balls an option). */
+  balls = false;
 
   /**
    * `marks` laid on the globe, `centre` facing the viewer; each thing laid before keeps its spot. A new centre turns the
@@ -184,7 +210,7 @@ export class GlobeLayout {
     const now = centre && this.spots?.get(centre);
     if (now && centre !== this.centre) this.spots = turnedTo(this.spots as Map<string, GlobeVec>, now);
     this.centre = centre;
-    const laid = globeSpace(marks, this.spots, centre, details);
+    const laid = globeSpace(marks, this.spots, centre, details, this.balls);
     [this.spots, this.globe] = [laid.spots, laid.space.globe];
     return laid.space;
   }

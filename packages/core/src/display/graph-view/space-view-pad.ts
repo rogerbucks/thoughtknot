@@ -26,6 +26,20 @@ export const DEPTH_WORDS = [
   'space.globe',
 ] as const;
 
+/** The way the button goes to from way `depth`: round the lifts; on the globe (the last way), cards swapped for balls. */
+function wayAfter(depth: number, globe: { balls: boolean }): number {
+  if (depth < DEPTH_WORDS.length - 1) return (depth % (DEPTH_WORDS.length - 2)) + 1;
+  globe.balls = !globe.balls;
+  return depth;
+}
+
+/** What the button says for way `depth`: on the globe (the last way), whether it shows `balls` or cards. */
+const wayWord = (depth: number, balls: boolean): string =>
+  word(depth === DEPTH_WORDS.length - 1 && balls ? 'space.globe-balls' : (DEPTH_WORDS[depth] ?? 'space.spread'));
+
+/** The ways the drawing is shown in 3D: the one the button goes to next, and what it says for each. */
+export const ways = { after: wayAfter, word: wayWord };
+
 /** The help line's steps, with a mouse or trackpad. */
 const MOUSE_HELP = [
   'space.help-drag',

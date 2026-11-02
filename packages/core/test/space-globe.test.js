@@ -1,6 +1,7 @@
 // The globe in the 3D view (editor spec §71): space-globe.ts. Requirements: globe_view, globe_dive_detail and
 // globe_explore_centre.
-// - Each thing is a ball on the globe, its name on it; each link an arc ending in an arrowhead.
+// - Each thing is a card on the globe, the size of its box, with its name; balls once asked (Roger, 2 Nov 2026).
+// - As balls, each has its name on it; each link is an arc ending in an arrowhead.
 // - Seen from outside, the far side is hidden; from inside, all of it shows.
 // - A link's words show only once the camera dives near; names show nearest first as there is room.
 // - Laid again, each thing keeps its spot, and an exploration's centre faces the camera first; a new centre turns it.
@@ -37,8 +38,32 @@ const SPREAD = [
 const length = (v) => Math.hypot(...v);
 const middle = (b) => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
 
-test('each thing is a ball on the globe, named on it, and each link an arc ending at its ball', () => {
+// proves: globe_view
+test('each thing is a card on the globe, the size of its box, and swapped for balls it keeps its spot', () => {
   const { space } = globeSpace(HUB);
+  const r = space.globe.radius;
+  assert.equal(space.cards, true, 'painted as cards');
+  for (const b of space.blocks) {
+    assert.deepEqual(b.card, { width: 80, height: 30 }, `${b.of} is a card the size of its box`);
+    assert.ok(Math.abs(length(middle(b)) - r) < 1e-6, `${b.of} sits on the globe`);
+  }
+  assert.equal(space.labels.find((l) => l.of === 'hub').text, 'HUB');
+  const ends = space.lines.map((l) => [l.points[0], l.points.at(-1)]);
+  for (const [a] of ends) assert.ok(Math.abs(length(a) - r) < r * 0.05, 'a link runs from its card, middle on');
+  assert.equal(space.arrows.length, 20, 'each link ends in an arrowhead, put at the card it points to');
+  const globe = new GlobeLayout();
+  const cards = globe.lay(HUB, 'hub');
+  globe.balls = true;
+  const balls = globe.lay(HUB, 'hub');
+  assert.ok(!balls.cards && balls.blocks.every((b) => !b.card), 'as balls');
+  for (const b of cards.blocks) {
+    const ball = balls.blocks.find((o) => o.of === b.of);
+    assert.ok(length(middle(b).map((c, i) => c - middle(ball)[i])) < 1e-6, `${b.of} stays put`);
+  }
+});
+
+test('as balls, each thing is a ball on the globe, named on it, and each link an arc ending at its ball', () => {
+  const { space } = globeSpace(HUB, undefined, undefined, undefined, true);
   const r = space.globe.radius;
   assert.equal(space.blocks.length, 21);
   assert.ok(space.round, 'painted as balls');

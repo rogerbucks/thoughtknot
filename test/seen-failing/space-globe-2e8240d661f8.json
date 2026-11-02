@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/space-globe.test.js",
+  "test": "as balls, each thing is a ball on the globe, named on it, and each link an arc ending at its ball",
+  "seen_failing_first": false,
+  "evidence": "The old ball test, renamed: balls are now asked for, and it proves they still draw as before"
+}

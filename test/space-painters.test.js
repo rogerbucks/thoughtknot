@@ -318,10 +318,10 @@ window.oneBar = async () => {
   const steps = [];
   for (let i = 0; i < 5; i++) {
     b.click();
-    // until the view is as its mode says (a slow machine takes more frames); cards and the globe have no lift button
+    // until the view is as its mode says (a slow machine takes more frames); only cards have no lift button
     const view = () => frame.querySelector(':scope > .thoughtknot-space-view');
     const unlifted = () => !!view()?.querySelector('.thoughtknot-space-pad button[hidden]');
-    const noLift = ['cards', 'globe'].includes(spaces.mode());
+    const noLift = spaces.mode() === 'cards';
     for (let n = 0; n < 100 && (!view() !== !spaces.mode() || unlifted() !== noLift); n++) await frames();
     steps.push({ said: b.textContent, inFrame: !!view(), unlifted: unlifted() });
     if (spaces.mode() !== 'cards') continue;
@@ -511,7 +511,7 @@ describe("the 3D view's painters, in a real browser", () => {
       assert.deepEqual(r.steps, [
         { said: '2.5D', inFrame: true, unlifted: true },
         { said: '3D', inFrame: true, unlifted: false },
-        { said: 'Globe', inFrame: true, unlifted: true },
+        { said: 'Globe', inFrame: true, unlifted: false },
         { said: '2D', inFrame: false, unlifted: false },
         { said: '2.5D', inFrame: true, unlifted: true },
       ]);

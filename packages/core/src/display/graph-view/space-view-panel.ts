@@ -29,7 +29,7 @@ import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
-import { DEPTH_WORDS, aimOf, glideIn, fitIn, linkCounts, pivotOf, spacePad, turnToward } from './space-view-pad.ts';
+import { aimOf, glideIn, fitIn, linkCounts, pivotOf, spacePad, turnToward, ways } from './space-view-pad.ts';
 import { heldIn } from './svg-marks.ts';
 import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
@@ -252,7 +252,7 @@ export async function openSpaceView(
     orbit = focusOn(orbit, [block.x + block.width / 2, block.y + block.depth / 2, top], near);
     pick(block);
   };
-  const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
+  const depthWords = () => ways.word(depth, globe.balls);
   /** Shows it the `next` way, the picked thing kept and the view centred on it, and says how. */
   const showAs = (next: number) => {
     const [shown, shownOrbit] = [glide.settle(), orbit];
@@ -262,13 +262,13 @@ export async function openSpaceView(
     orbit = orbitSwitched(orbit, space, picked, width, height); // the whole graph fits again (space_switch_fits)
     const label = depthWords();
     depthButton.setAttribute('aria-label', label);
-    depthButton.hidden = depth % GLOBE === 0; // none for cards or the globe
+    depthButton.hidden = depth === 0; // none for cards; on the globe it swaps cards and balls
     said.setText(label);
     glide.to(space, shown, shownOrbit, orbit);
   };
-  const pad = spacePad(el, depthWords(), move, () => showAs((depth % (GLOBE - 1)) + 1)), // its key controls (§25)
+  const pad = spacePad(el, depthWords(), move, () => showAs(ways.after(depth, globe))), // its key controls (§25)
     { depthButton, showHelp, help, rare } = pad;
-  depthButton.hidden = depth % GLOBE === 0;
+  depthButton.hidden = depth === 0;
   offerHeadset(el, rare, seen, () => paints, tell); // in a headset (projection_spatial)
   // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
