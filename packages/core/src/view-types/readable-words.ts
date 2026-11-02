@@ -6,7 +6,7 @@
 // - a name drawn larger would cover another, so the one placed first keeps its place and the other is left out;
 // - first placed are the picked thing's and those in focus, then the largest, then the rest in drawing order.
 // Zooming in shows more names, as each needs less room. Nothing moves: a name grows about its own middle. Host-free.
-import { LETTER } from './view-types/fit-text.ts';
+import { LETTER } from './fit-text.ts';
 
 /** The least and most size a name beside its thing shows at on the screen, in pixels: the type scale's (type-scale.ts). A
  * name inside its box grows with the box as you zoom in, so it has no most. */

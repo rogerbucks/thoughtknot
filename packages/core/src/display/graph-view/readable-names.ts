@@ -1,8 +1,8 @@
-// Names readable at any zoom in a 2D drawing (editor spec §3, names_readable_any_zoom), for viewer-aids.ts. The view
+// Names readable at any zoom in a 2D drawing (editor spec §3, names_readable_any_zoom), for the graph view's viewer-aids.ts. The view
 // changes, and the names are sized again: none shows under 9 pixels. One that would then cover another is hidden
 // (readable-words.ts). The drawing's own attributes are left as drawn: a name grows by its style, moves
 // by its own transform, and is hidden by a class. So the lens, hit tests and export still see the drawing as laid out.
-import { readableWords, type Word } from '../../readable-words.ts';
+import { readableWords, type Word } from '../../view-types/readable-words.ts';
 
 /** The words whose size is kept readable: a thing's name, a group's and the drawing's own captions, such as an axis's.
  * A link's words follow labels by zoom. */

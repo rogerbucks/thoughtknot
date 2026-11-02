@@ -2,7 +2,7 @@
 // 9 pixels: drawn smaller, it grows about its middle with its rows. One that would then cover another is left out.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { READABLE_LEAST, READABLE_MOST, readableWords } from '../src/readable-words.ts';
+import { READABLE_LEAST, READABLE_MOST, readableWords } from '../src/view-types/readable-words.ts';
 
 /** A one-row name of `letters` letters in `group`, centred at (`x`, `y`), `size` units tall. */
 const word = (group, x, y, letters = 6, size = 12) => ({ group, x, y, size, anchor: 'middle', letters });
