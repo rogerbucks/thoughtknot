@@ -180,7 +180,6 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
 /** The panels the bar opens, by their class: each lies over the drawing (panels_over_drawing). */
 const OVER = [
   'thoughtknot-problems',
-  'thoughtknot-view-menu',
   'thoughtknot-find',
   'thoughtknot-filter',
   'thoughtknot-type-list',

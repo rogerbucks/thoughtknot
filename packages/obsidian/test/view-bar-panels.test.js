@@ -16,7 +16,6 @@ before(() => build());
 
 /** The card's panels that lie over the drawing, by their class. */
 const PANELS = [
-  'thoughtknot-view-menu',
   'thoughtknot-find',
   'thoughtknot-filter',
   'thoughtknot-type-list',
