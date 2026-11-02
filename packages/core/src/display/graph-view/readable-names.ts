@@ -56,8 +56,8 @@ function wordOf(text: Element, group: string): Word {
   return w;
 }
 
-/** The scale and shift of `svg`'s top group, read from its transform, as the lens reads it (lens-svg.ts's frameOf): a
- * point in the group is at `s × (p + shift)` in the drawing's units. */
+/** The scale and shift of `svg`'s top group, read as lens-svg.ts's frameOf reads them. A point in the group is at
+ * `s × (p + shift)` in the drawing's units. */
 function frameOf(svg: SVGSVGElement): { s: number; tx: number; ty: number } {
   const t = svg.querySelector('g.graph')?.getAttribute('transform') ?? '';
   const [s = 1] = (/scale\(([^()]*)\)/.exec(t)?.[1] ?? '1').split(/[\s,]+/).map(Number);
