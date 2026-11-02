@@ -2,9 +2,9 @@
   <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
     <g id="p2">
       <path d="M51,-47.4C51,-47.4 21,-47.4 21,-47.4 15,-47.4 9,-41.4 9,-35.4 9,-35.4 9,-3 9,-3 9,3 15,9 21,9 21,9 51,9 51,9 57,9 63,3 63,-3 63,-3 63,-35.4 63,-35.4 63,-41.4 57,-47.4 51,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
-      <text x="32.89" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> T
-      <text x="31.83" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> A
+      <text x="32.89" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92);stroke:rgb(255, 255, 255);stroke-width:5.6px"> T
+      <text x="31.83" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34);stroke:rgb(255, 255, 255);stroke-width:5.6px"> A
     <g id="p3">
       <path d="M115.5,-47.4C115.5,-47.4 85.5,-47.4 85.5,-47.4 79.5,-47.4 73.5,-41.4 73.5,-35.4 73.5,-35.4 73.5,-3 73.5,-3 73.5,3 79.5,9 85.5,9 85.5,9 115.5,9 115.5,9 121.5,9 127.5,3 127.5,-3 127.5,-3 127.5,-35.4 127.5,-35.4 127.5,-41.4 121.5,-47.4 115.5,-47.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
-      <text x="97.39" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> T
-      <text x="96.33" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> B
+      <text x="97.39" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92);stroke:rgb(255, 255, 255);stroke-width:5.6px"> T
+      <text x="96.33" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34);stroke:rgb(255, 255, 255);stroke-width:5.6px"> B

@@ -215,7 +215,7 @@ export function paintSpaceLabels(
     // the picked thing's name is bold, with a wider halo, so it stands out from the rest.
     // A link's words are in italics, so they read as what joins things rather than as a thing
     ctx.font = `${l.picked ? 'bold ' : l.link ? 'italic ' : ''}${l.size}px sans-serif`;
-    ctx.lineWidth = Math.max(l.picked ? 4 : 2, l.size / (l.picked ? 3 : 5));
+    ctx.lineWidth = Math.max(l.picked ? 5 : 3, l.size / (l.picked ? 2.5 : 4));
     ctx.strokeStyle = halo;
     ctx.strokeText(l.text, l.x, l.y);
     ctx.fillStyle = text;
@@ -238,7 +238,7 @@ function paintFaces(ctx: CanvasRenderingContext2D, faces: readonly FaceText[], p
       [dx, dy] = f.down;
     ctx.setTransform(ratio * ax, ratio * ay, ratio * dx, ratio * dy, ratio * f.x, ratio * f.y);
     ctx.font = `${f.picked ? 'bold ' : ''}${f.size}px sans-serif`;
-    ctx.lineWidth = f.size / 5;
+    ctx.lineWidth = f.size / 4;
     ctx.strokeStyle = ground.fill ?? ground.line ?? 'transparent';
     f.rows.forEach((row, i) => {
       const y = (i - (f.rows.length - 1) / 2) * f.size * FACE_ROW;
