@@ -23,7 +23,7 @@ const nameOf = (s: ViewSwitch, o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS
 import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
-import { dockHead } from './controls-dock';
+import { dockHead, wideWindow } from './controls-dock';
 import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { GROUP_BY_ROW, HINTS, ladderAttributes } from '../../view-menu-rows.ts';
@@ -41,6 +41,9 @@ export interface ViewMenu {
   /** Says how the last turn went, such as why the drawing could not be redrawn; empty, nothing. */
   say: (words: string) => void;
 }
+
+/** Whether the View panel was last opened (true) or shut (false) from the bar in this session; unset until then. */
+let leftOpen: boolean | undefined;
 
 /** How many hints have been drawn, so each has an id of its own its switch is described by. */
 let hints = 0;
@@ -155,10 +158,17 @@ export function renderViewMenu(
     fill();
   };
   refresh();
-  return {
+  // a large screen opens it from the start, unless it was shut in this session (controls_view_panel_wide)
+  if (leftOpen !== false && wideWindow())
+    queueMicrotask(() => {
+      const b = root.querySelector<HTMLElement>(`.thoughtknot-bar button[aria-label="${word('bar.view')}"]`);
+      if (b && el.hidden) menu.toggle(b);
+    });
+  const menu: ViewMenu = {
     el,
     toggle: (b) => {
       el.hidden = !el.hidden;
+      leftOpen = !el.hidden;
       if (!el.hidden) {
         folds.fold(false); // opened from the bar, it opens whole
         fill();
@@ -168,6 +178,7 @@ export function renderViewMenu(
     refresh,
     say: (words) => status.setText(words),
   };
+  return menu;
 }
 
 /** What turning a switch needs of its card. */

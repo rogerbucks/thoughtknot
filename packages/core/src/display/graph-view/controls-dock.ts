@@ -30,6 +30,12 @@ const narrowWindow = (): boolean => {
   return !!win?.matchMedia?.('(min-width: 600px) and (max-width: 1023px)')?.matches;
 };
 
+/** Whether a window this wide keeps its View panel open from the start: a large screen's, with room to spare. */
+export const wideWindow = (): boolean => {
+  const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
+  return !!win?.matchMedia?.('(min-width: 1600px)')?.matches;
+};
+
 /** Builds a dock named `name` in `root`, with the classes `cls` as well as its own. */
 export function renderDock(root: HTMLElement, name: string, cls: string[] = []): ControlDock {
   const el = root.createDiv({ cls: ['thoughtknot-dock', ...cls], attr: { role: 'region', 'aria-label': name } });
