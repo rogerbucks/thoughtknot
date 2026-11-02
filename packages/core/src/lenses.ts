@@ -156,13 +156,14 @@ function pairsIn(text: string): { at: number; end: number; x: number; y: number 
 /** Rounds to two places, as the drawing is written. */
 const two = (v: number) => String(Math.round(v * 100) / 100);
 
-/** The middle of the box round each `x,y` of SVG path data or points; none for none. */
-export function pointsMiddle(text: string): number[] | null {
+/** The box round each `x,y` of SVG path data or points, as its middle and half its size; none for none. */
+export function pointsBox(text: string): HeldBox | null {
   const pairs = pairsIn(text);
   if (!pairs.length) return null;
   const xs = pairs.map((p) => p.x),
     ys = pairs.map((p) => p.y);
-  return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  return { c: [(x0 + x1) / 2, (y0 + y1) / 2], half: [(x1 - x0) / 2, (y1 - y0) / 2] };
 }
 
 /** SVG path data or points, each `x,y` moved by `to`. */
@@ -175,6 +176,43 @@ export function bentPoints(text: string, to: (x: number, y: number) => readonly 
     from = end;
   }
   return out + text.slice(from);
+}
+
+/** A box as drawn: its middle and half its size each way. */
+export interface HeldBox {
+  c: readonly number[];
+  half: readonly number[];
+}
+/** How far past a box's edge a link's end or arrowhead may lie and still be held by it. */
+const HOLD_SLACK = 2;
+
+/**
+ * Where `lens` sees each point of a link, held to `boxes` (links_attached_lensed). Roger, 2 Nov 2026, asked that
+ * links stay joined under a fisheye. A box moves whole, to where the lens sees its middle, and
+ * grows as the lens grows there. So a point on or in a box moves with it, and every other point is bent alone. A link
+ * then still meets its box. `holder` says which box holds a point, -1 for none; `by` moves a point with that box.
+ */
+export function heldBy(lens: Radial, boxes: readonly HeldBox[]) {
+  const seen = boxes.map((b) => ({ ...b, ...bent(lens, b.c) }));
+  // cells as big as the biggest box, so a box lies in the cells of its corners and a point looks only in its own
+  const cell = Math.max(1, ...boxes.flatMap((b) => b.half.map((h) => 2 * (h + HOLD_SLACK))));
+  const key = (p: readonly number[]) => p.map((v) => Math.floor(v / cell)).join(',');
+  const grid = new Map<string, number[]>();
+  seen.forEach((b, i) => {
+    const corners = new Set<string>();
+    for (let m = 0; m < 1 << b.c.length; m++)
+      corners.add(key(b.c.map((v, d) => v + ((m >> d) & 1 ? 1 : -1) * ((b.half[d] ?? 0) + HOLD_SLACK))));
+    for (const k of corners) (grid.get(k) ?? grid.set(k, []).get(k))?.push(i);
+  });
+  const holder = (p: readonly number[]): number =>
+    (grid.get(key(p)) ?? []).find((i) =>
+      p.every((v, d) => Math.abs(v - (seen[i]?.c[d] ?? 0)) <= (seen[i]?.half[d] ?? 0) + HOLD_SLACK),
+    ) ?? -1;
+  const by = (i: number, p: readonly number[]): number[] => {
+    const b = seen[i];
+    return b ? p.map((v, d) => (b.at[d] ?? 0) + (v - (b.c[d] ?? 0)) * b.times) : bent(lens, p).at;
+  };
+  return { holder, by, to: (p: readonly number[]): number[] => by(holder(p), p) };
 }
 
 /**
@@ -203,13 +241,24 @@ export function bentSpace(space: SpaceMarks, lens: Radial | null): SpaceMarks {
       ...(card ? { card } : {}),
     };
   });
-  const lines = space.lines.map((l) => ({ ...l, points: l.points.map(at) }));
+  // a link's ends and arrowheads move with the blocks they meet, so each link stays joined (links_attached_lensed)
+  const held = heldBy(
+    lens,
+    space.blocks.map((b) => ({
+      c: [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2],
+      half: [b.width / 2, b.depth / 2, b.tall / 2],
+    })),
+  );
+  const lines = space.lines.map((l) => ({ ...l, points: l.points.map((p) => held.to(p) as Vec3) }));
   const labels = space.labels.map((l) => {
     const seen = bent(lens, l.at);
     return { ...l, at: seen.at as Vec3, size: l.size * seen.times };
   });
   const arrows = space.arrows.map((a) => {
-    const tip = bent(lens, a.tip);
+    const tip = bent(lens, a.tip),
+      by = held.holder(a.tip);
+    if (by >= 0)
+      return { ...a, tip: held.by(by, a.tip) as Vec3, back: held.by(by, a.back) as Vec3, size: a.size * tip.times };
     return { ...a, tip: tip.at as Vec3, back: at(a.back), size: a.size * tip.times };
   });
   return { ...space, blocks, lines, labels, arrows };

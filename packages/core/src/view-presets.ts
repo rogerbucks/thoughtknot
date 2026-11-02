@@ -63,7 +63,7 @@ const DEFAULT_CHAIN: ViewChain = {
 const DEFAULT_TURNS: Partial<Settings> = {
   direction: 'best',
   focusDepth: 'one',
-  labelsByZoom: 'on',
+  labelsByZoom: 'off',
   foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',

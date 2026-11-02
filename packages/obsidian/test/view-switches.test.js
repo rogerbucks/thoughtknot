@@ -113,7 +113,7 @@ describe('the View menu', () => {
       assert.ok(!menu.hidden);
       assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'true');
       assert.deepEqual(switches(el), [
-        ['Hide labels too small to read', 'switch', 'true'],
+        ['Hide labels too small to read', 'switch', 'false'],
         ['Fold busy things', 'switch', 'false'],
         ['Fold groups', 'switch', 'false'],
         ['Bundle links between groups', 'switch', 'false'],
@@ -137,7 +137,7 @@ describe('the View menu', () => {
       );
       const says = b.querySelector('.thoughtknot-switch-state');
       assert.equal(says.getAttribute('aria-hidden'), 'true', 'aria-checked says it to a screen reader');
-      assert.equal(says.textContent, 'on');
+      assert.equal(says.textContent, 'off');
     } finally {
       env.uninstall();
     }
@@ -436,10 +436,12 @@ describe('groups folded and links merged', () => {
 });
 
 describe('labels by zoom', () => {
-  test('in a narrow note link labels are hidden until zoomed in far enough to read them; switched off, always shown', async () => {
+  test('switched on, in a narrow note link labels are hidden until zoomed in far enough to read them; off, always shown', async () => {
     const { env, el } = await card(NOTE, { width: 150 });
     try {
       const svg = el.querySelector('svg');
+      assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'off by default (Roger, 2 Nov 2026), so all are shown');
+      turn(el, 'Hide labels too small to read').click();
       assert.ok(svg.hasClass('thoughtknot-labels-hidden'), 'too small to read');
       for (let i = 0; i < 12 && svg.hasClass('thoughtknot-labels-hidden'); i++) labelled(el, 'Zoom in').click();
       assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'zoomed in, the labels read');
@@ -468,6 +470,7 @@ describe('labels by zoom', () => {
         ],
       });
       const painted = (g) => winner(all, labelOf(g), 'fill-opacity')?.value ?? '1';
+      turn(el, 'Hide labels too small to read').click();
       tap(el, thing(el, 'cy'));
       assert.ok(svg.hasClass('thoughtknot-labels-hidden'));
       const check = () => {
@@ -565,7 +568,7 @@ describe('a switch turned', () => {
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
       saved = env.state.files.get(PATH);
-      assert.match(saved, /labels: 'off', hubs: 'on', groups: 'on', merge: 'off'/);
+      assert.match(saved, /labels: 'on', hubs: 'on', groups: 'on', merge: 'off'/);
     } finally {
       env.uninstall();
     }
@@ -574,7 +577,7 @@ describe('a switch turned', () => {
     try {
       const { el } = await show(again, saved, 2);
       assert.equal(turn(el, 'Fold groups').getAttribute('aria-checked'), 'true');
-      assert.equal(turn(el, 'Hide labels too small to read').getAttribute('aria-checked'), 'false');
+      assert.equal(turn(el, 'Hide labels too small to read').getAttribute('aria-checked'), 'true');
       assert.ok(node(el, 'fold_group_1'), 'drawn folded, as saved');
     } finally {
       again.uninstall();

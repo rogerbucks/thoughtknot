@@ -1,9 +1,10 @@
 // The names in the 3D view (editor spec §53, scale_space_labels). Roger, 23 Oct 2026: labels did not show as he
 // expected. With the whole graph in view every name was under 6 pixels, so every one was dropped.
 //
-// Now a name is never dropped for being small. Each is painted flat to the screen, so it always faces the camera, at
-// a size people can read. More show as you zoom in, as in a map:
-// - the picked thing's name always shows, first and a little larger;
+// Now a name is never dropped for being small. Each is painted flat to the screen, so it always faces the camera. It
+// scales with its thing as you come nearer, as 2D names do (Roger, 2 Nov 2026), so more show as you zoom in:
+// - the picked thing's name always shows, first and at a readable size;
+// - then the names of the things with the most links, drawn up to HUB_LARGER times larger;
 // - then the names nearest the middle of the screen and nearest the camera, where you are looking;
 // - a name that would cover one already placed is left out, so names never pile up.
 // At most LABELS_MOST are painted. Host-free and pure.
@@ -33,6 +34,8 @@ export const READABLE_LEAST = 11,
  * 1 Nov 2026, "the text hardly ever renders. Fix that, even if the text is ridiculously small" (space_names_always).
  */
 export const NAME_TINY = 4;
+/** How much larger the busiest thing's name is drawn than one with no links, as in 2D (readable-words.ts). */
+export const HUB_LARGER = 1.4;
 /** The size of the picked thing's name, at least. */
 const PICKED_LEAST = 14;
 /** The longest name painted whole, in letters, as the shown-text rule keeps it: a longer one ends in "…". */
@@ -51,6 +54,20 @@ const SMALL_VIEW = 640;
 /** The largest size a name is painted at in a view `width` by `height`: smaller on a phone (Roger, 25 Oct 2026). */
 export const largestName = (width: number, height: number): number =>
   Math.max(READABLE_LEAST, READABLE_MOST * Math.min(1, Math.min(width, height) / SMALL_VIEW));
+
+/** How many links each thing in `space` has, by its key. */
+export function linkCounts(space: Pick<SpaceMarks, 'lines'>): Map<string, number> {
+  const count = new Map<string, number>();
+  for (const l of space.lines) {
+    if (l.from !== undefined) count.set(l.from, (count.get(l.from) ?? 0) + 1);
+    if (l.to !== undefined && l.to !== l.from) count.set(l.to, (count.get(l.to) ?? 0) + 1);
+  }
+  return count;
+}
+
+/** How much larger a name is drawn for a thing with `n` links, when the busiest has `busiest`. */
+export const hubGrow = (n: number, busiest: number): number =>
+  1 + (HUB_LARGER - 1) * Math.sqrt(Math.max(0, n) / Math.max(1, busiest));
 
 /** A name cut to LETTERS_MOST letters, or to the `fits` letters the screen has room for, ending in "…" when cut. */
 const shortened = (text: string, fits = LETTERS_MOST) => {
@@ -71,24 +88,28 @@ export function labelsOnScreen(
 ): ScreenLabel[] {
   const focal = height / 2 / Math.tan(FIELD / 2),
     across = Math.hypot(width, height) / 2;
-  // a phone's view is narrow: its largest name is smaller, and none runs past its sides
-  const largest = largestName(width, height);
+  const links = linkCounts(space),
+    busiest = Math.max(1, ...links.values());
   const wanted: (ScreenLabel & { rank: number })[] = [];
   for (const l of space.labels) {
     const at = projectPoint(matrix, l.at, width, height);
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
     const mine = (picked !== undefined && l.of === picked) || (pickedLink !== undefined && l.link === pickedLink);
-    const natural = (l.size * focal) / at.far;
+    const many = l.link === undefined && l.of !== undefined ? (links.get(l.of) ?? 0) : 0;
+    const natural = ((l.size * focal) / at.far) * hubGrow(many, busiest);
     // a long name is painted smaller to fit across the view, and cut only where even the smallest size will not fit
     const text = shortened(l.text),
       room = width - 4 * GAP,
-      least = mine ? PICKED_LEAST : READABLE_LEAST;
-    const size = Math.max(least, Math.min(largest, natural, room / (text.length * LETTER_WIDTH)));
-    const fits = Math.max(4, Math.floor(room / (size * LETTER_WIDTH)));
-    // nearer the middle of the screen and nearer the camera ranks first; the picked name ranks before all
+      least = mine ? PICKED_LEAST : NAME_TINY;
+    // it scales with its thing: never blown up past it, but the picked one stays readable
+    const size = Math.max(least, Math.min(natural, room / (text.length * LETTER_WIDTH)));
+    const fits = Math.max(4, Math.floor(room / (size * LETTER_WIDTH) + 1e-9));
+    // the picked name ranks before all, then the busiest; then nearer the middle of the screen and the camera
     const off = Math.hypot(at.x - width / 2, at.y - height / 2) / across;
     // a link's words come after the names near them: names say what is there, words only what joins it
-    const rank = mine ? -1 : at.far * (1 + 2 * off) * (l.link === undefined ? 1 : LINK_WORDS_LATER);
+    const rank = mine
+      ? -Infinity
+      : -many * 1e9 + at.far * (1 + 2 * off) * (l.link === undefined ? 1 : LINK_WORDS_LATER);
     const label: ScreenLabel & { rank: number } = {
       id: l.id,
       style: l.style,

@@ -127,6 +127,15 @@ describe('a lens bends a flat drawing and a drawing in space (projections_all_on
     assert.deepEqual([seen.least, seen.most], [space.least, space.most], 'the box round it all stays, for the camera');
   });
 
+  // proves: links_attached_lensed
+  test('in space a link still leaves the face of the ball the lens enlarged', () => {
+    for (const reach of [300, 2000]) {
+      const seen = bentSpace(space, fisheye([0, 0, 0], reach));
+      const [a] = seen.blocks;
+      assert.ok(near(seen.lines[0].points[0], [a.x + a.width, 0, 0]), `reach ${reach}: on its face`);
+    }
+  });
+
   test('how far a lens reaches in space is the drawing’s size, the same wherever in space the drawing sits', () => {
     // a third ball, nearer than a third of the drawing: just past the lens’s reach, so left as it is
     const c = { ...space.blocks[0], of: 'c', x: 390 };
