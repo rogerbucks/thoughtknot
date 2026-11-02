@@ -94,6 +94,24 @@ test('far off, a card shows its name readably where that covers no nearer name, 
   assert.equal(closer.indexOf(behind), 0, 'painted first, so the readable name covers it');
 });
 
+// Design review, 1 Nov 2026: near cards' names lay over one another, as nearness let a name be painted whatever it covered.
+// proves: space_cards
+test('near too, two cards one before the other show one readable name, never one over another', () => {
+  const { space } = spreadSpace(MARKS, undefined, true);
+  // the second just behind and beside the first, so near enough that its words were painted whatever they covered
+  const [first] = space.blocks;
+  const close = space.blocks.map((b, i) => ({ ...b, x: first.x + i * 20, y: first.y + i * 30, floor: first.floor }));
+  const stacked = { ...space, blocks: close };
+  const orbit = orbitFit(stacked, W / H);
+  const cards = cardsOnScreen(stacked, spaceMatrix(orbit, W / H, orbit.distance * 4), W, H);
+  assert.equal(cards.length, 2, 'both are on the screen');
+  const named = cards.filter((c) => c.rows.length && c.size >= READABLE_LEAST);
+  assert.equal(named.length, 1, 'the nearer one is named');
+  const [other] = cards.filter((c) => !named.includes(c));
+  assert.ok(other.rows.length && other.size >= NAME_TINY, 'the other wears its name tiny, inside its card');
+  assert.equal(cards.indexOf(other), 0, 'painted first, so the readable name covers it');
+});
+
 test('a click picks the nearest card under it', () => {
   const near = { block: { id: 'near' }, x: 100, y: 100, width: 80, height: 40, far: 10, rows: [], size: 11 },
     far = { ...near, block: { id: 'far' }, far: 50 };
