@@ -40,7 +40,7 @@ export function spacedSource(dot: string, options?: Partial<LayoutOptions>): str
       [
         line.replace(
           /\b(nodesep|ranksep)=([0-9.]+)/g,
-          (__, k: string, v: string) => `${k}=${two(Number(v) * (times[k] ?? 1))}`,
+          (_all, k: string, v: string) => `${k}=${two(Number(v) * (times[k] ?? 1))}`,
         ),
         ...added,
       ].join(', ') + '];',
