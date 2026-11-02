@@ -733,8 +733,8 @@
 .thoughtknot-dock-place > button {
   cursor: pointer;
 }
-/* not on the 3D view's pad, which keeps its own place. On a phone they stay, so no control is lost at a small width;
-   the sheet holds the dock there, and they leave it in place. */
+/* not on the 3D view's pad, which keeps its own place. On a phone they stay, so no control is lost at a small width.
+   The sheet holds the dock there, so they leave it in place. */
 .thoughtknot-space-pad :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
   display: none;
 }
