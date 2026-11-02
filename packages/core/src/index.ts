@@ -327,6 +327,7 @@ export { BY_KIND, groupChoices, groupValues } from './group-by.ts';
 export type { GroupBy } from './group-by.ts';
 export { trunksOf } from './fold-source.ts';
 export type { Folding } from './untangle-fold.ts';
+export { foldedShape } from './folded-shape.ts';
 export {
   LABEL_SCALE,
   SWITCH_SETTINGS,

@@ -274,7 +274,7 @@ export async function renderBlock(
   // the View menu (§25): one state for every card of this graph in this note; none for a table (view_options_everywhere)
   const state = noViewMenu(diagram) ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const folded = (by?: object) => (state ? state.folded(drawing, by) : drawing);
-  const laidOut = (by?: object) => live(diagram?.picture, state?.layout) ?? plugin.layout(folded(by), by);
+  const laidOut = (by?: object) => live(diagram?.picture, state, drawing, by) ?? plugin.layout(folded(by), by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)

@@ -2,7 +2,7 @@
 // projections_all_on). Its things and links are written as Graphviz writes them (view-parts.ts). So each is chosen,
 // opened and centred by the same clicks as in a network.
 import { CORE_DIAGRAMS_ID } from '@thoughtknot/core';
-import type { Drawn, LayoutOptions } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, LayoutOptions } from '@thoughtknot/core';
 import { viewOf, viewSupport } from '../../view-support.ts';
 import type { DiagramShown, PluginPicture } from './type-strip';
 
@@ -28,17 +28,36 @@ export const pictureLive = (p: PluginPicture): Drawn => ({
 export const noViewMenu = (diagram?: Pick<DiagramShown, 'table' | 'picture'>): boolean =>
   !!diagram?.table || (!!diagram?.picture && diagram.picture.plugin !== CORE_DIAGRAMS_ID);
 
-/** A picture that can be drawn again with the View menu's layout options; null, not drawn (outside-diagrams.ts). */
-export type RedrawnPicture = PluginPicture & { redraw?: (layout: Partial<LayoutOptions>) => Promise<string | null> };
+/**
+ * A picture that can be drawn again: with the View menu's layout options, and of the drawing as its folds fold it.
+ * Null, not drawn (outside-diagrams.ts).
+ */
+export type RedrawnPicture = PluginPicture & {
+  redraw?: (layout?: Partial<LayoutOptions>, folded?: GraphDrawing) => Promise<string | null>;
+};
+
+/** What the View menu holds that a picture is drawn again by: its layout options, and how it folds a drawing. */
+export interface PictureMenu {
+  layout: Partial<LayoutOptions>;
+  folded: (d: GraphDrawing, card?: object) => GraphDrawing;
+}
 
 /**
- * A view of the core's own laid out again by the View menu, as `layout` says. A view that lays things out itself, such
- * as Force, is drawn again. Any other is the same picture, which a lens then bends anew.
+ * A view of the core's own laid out again by the View menu `menu`. It is drawn again of `drawing` as the menu folds it:
+ * its hubs, groups and merged links (view_options_everywhere). A view that lays things out itself, such as Force, is
+ * spaced as the menu says too. With no menu, it is the same picture, which a lens bends anew.
  */
-export function pictureAgain(p?: RedrawnPicture, layout?: Partial<LayoutOptions>): Promise<Drawn> | undefined {
+export function pictureAgain(
+  p?: RedrawnPicture,
+  menu?: PictureMenu,
+  drawing?: GraphDrawing,
+  card?: object,
+): Promise<Drawn> | undefined {
   if (!p) return undefined;
   const { redraw } = p;
-  if (!redraw || !layout || viewSupport(viewOf(undefined, p.type), 'spacing') !== 'yes')
-    return Promise.resolve(pictureLive(p));
-  return redraw(layout).then((svg) => pictureLive(svg ? { ...p, svg } : p));
+  if (!redraw || !menu) return Promise.resolve(pictureLive(p));
+  const spaced = viewSupport(viewOf(undefined, p.type), 'spacing') === 'yes' ? menu.layout : undefined;
+  if (!spaced && !drawing) return Promise.resolve(pictureLive(p));
+  const folded = drawing && menu.folded(drawing, card);
+  return redraw(spaced, folded).then((svg) => pictureLive(svg ? { ...p, svg } : p));
 }
