@@ -4,9 +4,10 @@
 // It is a card floating in a corner of the drawing (styles.css). Its head names it and folds it. Folded, only the head
 // shows, so the drawing is whole again and nothing is laid out anew. Its body holds the key controls. Under them, More
 // opens the controls used less often. The fold is kept for the session, by the dock's name, so a card drawn again
-// opens the same way. On a tablet-sized window a dock starts folded, as a tab at the edge. The [ key folds or opens
-// the dock of the card in focus.
+// opens the same way. Its head also moves it, or docks it at either side (controls-place.ts). On a tablet-sized
+// window a dock starts folded, as a tab at the edge. The [ key folds or opens the dock of the card in focus.
 import { word } from '@thoughtknot/core';
+import { frameDock } from './controls-place.ts';
 
 /** One dock: its card, where its key controls go, where the others go, and how to fold it. */
 export interface ControlDock {
@@ -32,13 +33,24 @@ const narrowWindow = (): boolean => {
 /** Builds a dock named `name` in `root`, with the classes `cls` as well as its own. */
 export function renderDock(root: HTMLElement, name: string, cls: string[] = []): ControlDock {
   const el = root.createDiv({ cls: ['thoughtknot-dock', ...cls], attr: { role: 'region', 'aria-label': name } });
-  const head = el.createDiv({ cls: 'thoughtknot-dock-head' });
-  head.createSpan({ cls: 'thoughtknot-dock-name', text: name });
-  const toggle = head.createEl('button', { cls: 'thoughtknot-dock-fold', attr: { type: 'button' } });
+  const folds = dockHead(el, name);
   const body = el.createDiv({ cls: 'thoughtknot-dock-body' });
   const details = el.createEl('details', { cls: 'thoughtknot-dock-more' });
   details.createEl('summary', { text: word('dock.more') });
   const more = details.createDiv({ cls: 'thoughtknot-dock-more-body' });
+  return { el, body, more, ...folds };
+}
+
+/**
+ * Makes the empty `el` a dock named `name`: its head names it, moves it and folds it. Folded, only the head shows.
+ * Gives back how to fold it and whether it is.
+ */
+export function dockHead(el: HTMLElement, name: string): Pick<ControlDock, 'fold' | 'folded'> {
+  el.addClass('thoughtknot-dock');
+  const head = el.createDiv({ cls: 'thoughtknot-dock-head' });
+  head.createSpan({ cls: 'thoughtknot-dock-name', text: name });
+  frameDock(el, head, name); // moved, and docked at either side (controls_panels)
+  const toggle = head.createEl('button', { cls: 'thoughtknot-dock-fold', attr: { type: 'button' } });
   let folded = kept.get(name) ?? narrowWindow();
   const show = () => {
     el.toggleClass('is-folded', folded);
@@ -53,7 +65,7 @@ export function renderDock(root: HTMLElement, name: string, cls: string[] = []):
   };
   toggle.addEventListener('click', () => fold(!folded));
   show();
-  return { el, body, more, fold, folded: () => folded };
+  return { fold, folded: () => folded };
 }
 
 /** Whether a key press is the dock's own: [ with no modifier, outside a place to type. */

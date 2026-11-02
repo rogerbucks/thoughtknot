@@ -14,10 +14,11 @@ import {
   WHOLE_LENSES,
   bent,
   bentPoints,
+  heldBy,
   lensOf,
-  pointsMiddle,
+  pointsBox,
 } from '../../lenses.ts';
-import type { Lens, Radial } from '../../lenses.ts';
+import type { HeldBox, Lens, Radial } from '../../lenses.ts';
 import { GLIDE_MOST, LAYOUT_GLIDE_MS, easeGlide } from '../../layout-glide.ts';
 import type { ViewState } from '../../view-switches.ts';
 import { word } from '../../words.ts';
@@ -37,6 +38,9 @@ export function flatAgain(svg: SVGSVGElement): void {
   lenses.get(svg)?.putAllBack();
 }
 
+/** The Lens row names the options it holds, so a view that cannot take one greys it out (view-support.ts). */
+const LENS_ROW = { 'data-option': 'lens' };
+
 /** What a lens asks of its card. */
 export interface LensHost {
   svg: () => SVGSVGElement | null;
@@ -49,6 +53,8 @@ export interface LensHost {
   state?: ViewState;
   /** The key of what is selected, if anything. */
   selected: () => string | null;
+  /** Whether the view drawn can take lens `l`; one it cannot bends nothing. Every lens, when not given. */
+  allowed?: (l: Lens) => boolean;
 }
 
 /** The attributes a lens bends: points, and where words and round shapes are. */
@@ -66,13 +72,33 @@ export function frameOf(svg: SVGSVGElement): Frame {
   return { s: s || 1, tx, ty };
 }
 
-/** The middle of box `g` as drawn, in its top group's units: of its outline, a path, polygon or ellipse. */
-export function middleOf(g: Element): number[] | null {
+/** Box `g` as drawn, in its top group's units: the middle and half size of its outline, a path, polygon or ellipse. */
+export function heldOf(g: Element): HeldBox | null {
   const shape = g.querySelector('path, polygon, ellipse');
   if (!shape) return null;
   const cx = shape.getAttribute('cx');
-  if (cx !== null) return [Number(cx), Number(shape.getAttribute('cy'))];
-  return pointsMiddle(shape.getAttribute('d') ?? shape.getAttribute('points') ?? '');
+  if (cx !== null)
+    return {
+      c: [Number(cx), Number(shape.getAttribute('cy'))],
+      half: [Number(shape.getAttribute('rx') ?? 0), Number(shape.getAttribute('ry') ?? 0)],
+    };
+  return pointsBox(shape.getAttribute('d') ?? shape.getAttribute('points') ?? '');
+}
+
+/** The middle of box `g` as drawn, in its top group's units. */
+export function middleOf(g: Element): number[] | null {
+  const box = heldOf(g);
+  return box ? [...box.c] : null;
+}
+
+/** The box holding any point of polygon `points`, such as an arrowhead's tip; -1 for none. */
+function arrowHolder(points: string, held: ReturnType<typeof heldBy>): number {
+  for (const pair of points.trim().split(/\s+/)) {
+    const [x, y] = pair.split(',').map(Number);
+    const i = x === undefined || y === undefined ? -1 : held.holder([x, y]);
+    if (i >= 0) return i;
+  }
+  return -1;
 }
 
 /** A card's lens: what it bends, round which focus, and the drawing's parts as drawn, kept to bend again. */
@@ -87,8 +113,8 @@ export class LensSvg {
   private following: string | null = null;
   /** Each part's attributes as drawn, before any lens, so each bend starts from the drawing itself. */
   private drawn = new WeakMap<Element, Map<string, string | null>>();
-  /** Each box's middle as drawn, read once. */
-  private middles = new WeakMap<Element, number[] | null>();
+  /** Each box as drawn, its middle and half size, read once. */
+  private middles = new WeakMap<Element, HeldBox | null>();
   /** The parts bent last time, put back once the lens no longer reaches them. */
   private bentLast = new Set<Element>();
   private held = false;
@@ -120,7 +146,8 @@ export class LensSvg {
 
   /** The lens the drawing is seen through: the View menu's, else the style graph's. */
   get lens(): Lens {
-    return this.host.state?.lens ?? this.host.written ?? 'none';
+    const l = this.host.state?.lens ?? this.host.written ?? 'none';
+    return this.host.allowed?.(l) === false ? 'none' : l; // one the view cannot take bends nothing (view-support.ts)
   }
 
   /** Picks `lens` in the View menu: the drawing is bent again round the selection, or the middle of the view. */
@@ -214,18 +241,24 @@ export class LensSvg {
     // the lens is worked in the units of the drawing's top group, where its parts are written
     const at = focus && [focus.x / s - tx, focus.y / s - ty];
     const boxes = Array.from(svg.querySelectorAll<SVGGElement>('g.node'));
-    if (at && whole) for (const g of boxes) if (!this.middles.has(g)) this.middles.set(g, middleOf(g));
+    if (at && whole) for (const g of boxes) if (!this.middles.has(g)) this.middles.set(g, heldOf(g));
     const reach = whole ? this.farthest(boxes, at) : origin && across ? (across.x - origin.x) / s : 0;
     const lens = lensOf(this.lens, at, reach);
     const now = new Set<Element>();
+    const held: HeldBox[] = [];
     for (const g of boxes) {
-      if (lens && !this.middles.has(g)) this.middles.set(g, middleOf(g));
-      const c = lens && this.middles.get(g);
-      if (lens && c) this.boxBent(g, lens, c, now);
+      if (lens && !this.middles.has(g)) this.middles.set(g, heldOf(g));
+      const box = lens && this.middles.get(g);
+      if (lens && box) {
+        this.boxBent(g, lens, box.c, now);
+        held.push(box);
+      }
     }
-    if (lens)
+    // a link's ends and arrowhead move with the boxes they meet, so it stays joined (links_attached_lensed)
+    const by = lens && heldBy(lens, held);
+    if (lens && by)
       for (const part of Array.from(svg.querySelectorAll<SVGElement>(LINED)))
-        for (const el of [part, ...Array.from(part.querySelectorAll<SVGElement>('*'))]) this.pointsBent(el, lens, now);
+        for (const el of [part, ...Array.from(part.querySelectorAll<SVGElement>('*'))]) this.pointsBent(el, by, now);
     for (const el of this.bentLast) if (!now.has(el)) this.putBack(el);
     this.bentLast = now;
   }
@@ -236,7 +269,7 @@ export class LensSvg {
     const [ax = 0, ay = 0] = at;
     let far = 0;
     for (const g of boxes) {
-      const [x = ax, y = ay] = this.middles.get(g) ?? [];
+      const [x = ax, y = ay] = this.middles.get(g)?.c ?? [];
       far = Math.max(far, Math.hypot(x - ax, y - ay));
     }
     return far * DISC_ROOM;
@@ -255,11 +288,16 @@ export class LensSvg {
     now.add(g);
   }
 
-  /** A link's or an outline's part with its points, words or middle moved by `lens`, if the lens reaches it. */
-  private pointsBent(el: Element, lens: Radial, now: Set<Element>): void {
+  /**
+   * A link's or an outline's part with its points, words or middle moved by `held`, if the lens reaches it. An
+   * arrowhead held by a box moves whole with it, so its tip stays on the box's edge.
+   */
+  private pointsBent(el: Element, held: ReturnType<typeof heldBy>, now: Set<Element>): void {
     if (!BENT.some((a) => el.hasAttribute(a))) return;
     const as = this.kept(el);
-    const to = (x: number, y: number) => bent(lens, [x, y]).at;
+    const points = as.get('points'),
+      tip = points ? arrowHolder(points, held) : -1;
+    const to = (x: number, y: number) => (tip >= 0 ? held.by(tip, [x, y]) : held.to([x, y]));
     let moved = false;
     for (const [a, v] of as) {
       if (v === null || a === 'transform') continue;
@@ -304,7 +342,7 @@ export function renderLensChoice(
   svg: () => SVGSVGElement | null,
   picked?: () => void,
 ): HTMLSelectElement {
-  const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens') }),
+  const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens'), attr: LENS_ROW }),
     input = row.createEl('select');
   for (const l of LENSES) input.createEl('option', { text: word(`view.lens.${l}` as WordKey), attr: { value: l } });
   row.createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.lens') });

@@ -15,6 +15,8 @@ import { openSpaceView } from './space-view-panel';
 import type { SpaceMode, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
 import { flatAgain } from './lens-svg';
+import type { Lens } from '../../lenses.ts';
+import { lensIn, viewOf } from '../../view-support.ts';
 import type { ViewOptions } from './view-options';
 
 /** What the card's options say of the view in space: its type, its spacing, and whether its mini-map shows. */
@@ -126,7 +128,7 @@ export class SpaceSwitch {
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',
       painter: this.says().aids?.painter,
-      lens: () => this.says().switches?.state.lens ?? this.says().aids?.lens, // as the View menu picks it (§68)
+      lens: () => this.lens(), // as the View menu picks it (§68), where the view can take it
       sketch: this.sketch,
     }).then((view) => {
       this.view = view;
@@ -152,6 +154,13 @@ export class SpaceSwitch {
       zoomIn: () => this.move({ zoom: ZOOM_STEP }) || zoom().zoomIn(),
       zoomOut: () => this.move({ zoom: 1 / ZOOM_STEP }) || zoom().zoomOut(),
     };
+  }
+
+  /** The lens the View menu picks, else the Render's; none where the view drawn cannot take it (view-support.ts). */
+  private lens(): Lens | undefined {
+    const { switches, aids, diagram } = this.says(),
+      l = switches?.state.lens ?? aids?.lens;
+    return l && lensIn(viewOf(diagram?.choice.drawn, diagram?.picture?.type), l);
   }
 
   /**

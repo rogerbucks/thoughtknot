@@ -1261,7 +1261,8 @@
       "projection_map",
       "projection_grid",
       "projection_semantic_zoom",
-      "projection_spatial"
+      "projection_spatial",
+      "view_options_everywhere"
     ]
   },
   "VP1": {

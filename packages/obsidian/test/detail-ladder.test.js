@@ -66,22 +66,27 @@ describe('the ladder of detail', () => {
   });
 
   // proves: cluster_menu_plain
-  test('the menu shows the ladder and the labels switch; the switches the ladder turns fold away under More', async () => {
+  test('the menu shows the ladder first, then every switch and the layout sliders in sight, none under More', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       const { el } = await show(env, NOTE);
       labelled(el, 'View').click();
       const menu = el.querySelector('.thoughtknot-view-menu');
-      const more = menu.querySelector('details.thoughtknot-view-more');
-      assert.equal(more.querySelector('summary').textContent, 'More choices');
-      assert.ok(!more.open, 'folded away until asked');
-      const inMore = (name) => !!more.querySelectorAll('button').find((b) => b.textContent.startsWith(name));
-      assert.ok(['Fold busy things', 'Fold groups', 'Bundle links between groups'].every(inMore));
-      assert.ok(!inMore('Hide labels too small to read'), 'the labels switch stays in sight');
-      assert.ok(more.querySelector('.thoughtknot-layout-option'), 'and so do the layout sliders, under More');
+      assert.ok(!menu.querySelector('details'), 'nothing folded away under More');
+      const kids = menu.children;
+      const at = (cls) => kids.findIndex((k) => k.classList.contains(cls));
+      assert.ok(at('thoughtknot-detail') < at('thoughtknot-switch'), 'the ladder comes first');
+      const inSight = (name) =>
+        kids.some((b) => b.classList.contains('thoughtknot-switch') && b.textContent.startsWith(name));
+      assert.ok(['Fold busy things', 'Fold groups', 'Bundle links between groups'].every(inSight));
+      assert.ok(inSight('Hide labels too small to read'));
+      assert.ok(
+        kids.some((k) => k.classList.contains('thoughtknot-layout-option')),
+        'and the layout sliders',
+      );
       turn(el, 'Overview').click();
       await until(() => !!node(el, 'fold_group_1'));
-      assert.equal(turn(el, 'Fold groups').getAttribute('aria-checked'), 'true', 'a switch under More still follows');
+      assert.equal(turn(el, 'Fold groups').getAttribute('aria-checked'), 'true', 'a switch follows the ladder');
     } finally {
       env.uninstall();
     }

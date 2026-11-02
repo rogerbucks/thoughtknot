@@ -684,6 +684,63 @@
     max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   }
 }
+/* A dock moved to the end side joins a card like it in the top end corner. One moved free is a card of its own where
+   it was put (controls_panels, Roger 2 Nov 2026). Its look is the corner card's, so every panel reads the same. */
+.thoughtknot-over > .thoughtknot-corner-end {
+  inset-inline-start: auto;
+  inset-inline-end: var(--gn-space-2);
+}
+.thoughtknot-over > .thoughtknot-corner-end:not(:has(> .thoughtknot-dock:not([hidden]))) {
+  display: none;
+}
+.thoughtknot-over > .thoughtknot-dock.is-free {
+  position: absolute;
+  top: var(--thoughtknot-at-y, var(--gn-space-2));
+  left: var(--thoughtknot-at-x, var(--gn-space-2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+  width: fit-content;
+  max-width: 20rem;
+  max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+  overflow-y: auto;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-over > .thoughtknot-dock.is-free[hidden] {
+  display: none;
+}
+.thoughtknot-dock.is-moving {
+  opacity: 0.92;
+}
+/* its head drags it; its grip and dock buttons are quiet, as its fold is */
+.thoughtknot-over .thoughtknot-dock-head {
+  cursor: grab;
+  touch-action: none;
+}
+.thoughtknot-dock-place {
+  display: flex;
+  gap: var(--gn-space-half-2);
+  margin-inline-start: auto;
+}
+.thoughtknot-dock-head :is(.thoughtknot-dock-grip, .thoughtknot-dock-place > button) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--gn-text-muted);
+  cursor: grab;
+}
+.thoughtknot-dock-place > button {
+  cursor: pointer;
+}
+/* not on the 3D view's pad, which keeps its own place. On a phone they stay, so no control is lost at a small width.
+   The sheet holds the dock there, so they leave it in place. */
+.thoughtknot-space-pad :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+  display: none;
+}
 /* The chip and each dock: a part of that card, a hairline between them. Folded, only its head shows. Its dials and
    buttons are 44-point targets, and the shape in use is pressed, so said by more than colour. */
 .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip) {
@@ -727,7 +784,8 @@
 .thoughtknot-corner > .thoughtknot-dock.is-folded {
   padding: var(--gn-space-1);
 }
-.thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more) {
+.thoughtknot-dock.is-folded > :is(.thoughtknot-dock-body, .thoughtknot-dock-more),
+.thoughtknot-view-menu.is-folded > :not(.thoughtknot-dock-head) {
   display: none;
 }
 /* A dock's key controls are quiet tiles: each its icon, then its name, as wide as the card (controls_keys). They
@@ -1138,15 +1196,10 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
    draws one, and on or off in words. So the state is never said by colour alone. The knob sits at the line's end when
    on, which a right-to-left line mirrors. Hiding labels paints a link's label clear while it is too small to read. It
    never does so on a link in focus, highlighted or selected. It is paint only, as focus and the highlight are. So
-   nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
-.thoughtknot-over-panels > .thoughtknot-view-menu {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
-  gap: var(--gn-space-1) var(--gn-space-4);
-  margin: 0;
-  border-top: 1px solid var(--gn-border);
-  background: var(--gn-bg-alt);
-  padding: var(--gn-space-2) var(--gn-space-3);
+   nothing moves and nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. It is
+   a panel over the drawing, as every dock is, its choices one under another (controls_view_panel, Roger 2 Nov 2026). */
+.thoughtknot-view-menu.thoughtknot-dock {
+  gap: var(--gn-space-1);
 }
 .thoughtknot-view-menu > .thoughtknot-quiet {
   grid-column: 1 / -1;
@@ -1160,20 +1213,6 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   padding: 0 var(--gn-space-2);
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
-}
-/* the switches the ladder turns, and the layout sliders, folded away under More (cluster_menu_plain) */
-.thoughtknot-view-menu > .thoughtknot-view-more {
-  grid-column: 1 / -1;
-}
-.thoughtknot-view-more > summary {
-  cursor: pointer;
-  padding: var(--gn-space-1) var(--gn-space-2);
-  color: var(--gn-text-muted);
-}
-.thoughtknot-view-more-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
-  gap: var(--gn-space-1) var(--gn-space-4);
 }
 /* the ladder of detail (cluster_detail_ladder). Its name and three rungs sit side by side, the chosen one filled.
    The line under them says what each shows. */
@@ -1218,8 +1257,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   color: var(--gn-text-normal);
 }
 /* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
-.thoughtknot-view-menu > .thoughtknot-layout-option,
-.thoughtknot-view-more-body > .thoughtknot-layout-option {
+.thoughtknot-view-menu > .thoughtknot-layout-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1228,8 +1266,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   min-height: 44px;
   color: var(--gn-text-normal);
 }
-.thoughtknot-view-menu > .thoughtknot-layout-option > input,
-.thoughtknot-view-more-body > .thoughtknot-layout-option > input {
+.thoughtknot-view-menu > .thoughtknot-layout-option > input {
   flex: 1;
   min-width: 96px;
   max-width: 160px;
