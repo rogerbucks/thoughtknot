@@ -36,7 +36,7 @@ export interface Globe {
 /** The way the pole faces: toward the camera as the space view opens, from the front and above. */
 export const GLOBE_FACING: GlobeVec = unit([0, -Math.cos(0.9), Math.sin(0.9)]);
 /** Pixels between neighbours, and the smallest radius, so a few things do not crowd a tiny ball. */
-const SPACING = 140;
+export const GLOBE_SPACING = 140;
 const LEAST_RADIUS = 160;
 /** Rounds of pulling and pushing, fewer past ROOMY things, and how far each round moves things. */
 const ROUNDS = 40;
@@ -56,7 +56,7 @@ export function globeSpots(shape: GlobeShape, options: GlobeOptions = {}): Globe
   const [was] = options.previous?.values() ?? [];
   const radius = was
     ? Math.hypot(...was)
-    : Math.max(LEAST_RADIUS, (options.spacing ?? SPACING) * Math.sqrt(n / (4 * Math.PI)));
+    : Math.max(LEAST_RADIUS, (options.spacing ?? GLOBE_SPACING) * Math.sqrt(n / (4 * Math.PI)));
   const near = neighbours(keys, shape.links);
   const order = walk(keys, near, options.centre);
   // the spiral's frame: its pole is the way the globe faces
