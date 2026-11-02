@@ -16,21 +16,13 @@ import { VIEW_TYPES } from '../src/view-types/view-types.ts';
 import { word } from '../src/words.ts';
 
 /** The options each view could take but does not yet: the list only shrinks (view-options design, 2 Nov 2026). */
-const FOLDS = ['detail', 'hubs', 'groups', 'merge', 'groupBy', 'semantic'];
 const KNOWN_GAPS = {
   tree: ['lanes', 'layout'],
   flow: ['lanes', 'layout'],
   radial: ['lanes', 'layout'],
   lanes: ['lanes', 'layout'],
   timeline: ['lanes', 'layout'],
-  force: [...FOLDS, 'layout'],
-  ...Object.fromEntries(['chord', 'ego', 'block', 'centroid', 'containment', 'arc', 'hive'].map((v) => [v, FOLDS])),
-  ...Object.fromEntries(
-    ['matrix', 'treemap', 'density', 'grid', 'plan', 'map'].map((v) => [
-      v,
-      ['detail', 'groups', 'groupBy', 'semantic'],
-    ]),
-  ),
+  force: ['layout'],
 };
 
 describe('which view takes which option', () => {
@@ -101,7 +93,7 @@ describe('the view a card draws', () => {
   test('takes a lens only where the view can', () => {
     assert.equal(lensIn('network', 'fisheye'), 'fisheye');
     assert.equal(lensIn('matrix', 'fisheye'), 'none');
-    assert.equal(lensIn('force', 'semantic'), 'none', 'semantic zoom is still to be built in views drawn as marks');
+    assert.equal(lensIn('force', 'semantic'), 'semantic', 'semantic zoom folds a view drawn as marks too');
     assert.equal(lensIn('tree', 'semantic'), 'semantic');
     assert.equal(lensIn('matrix', 'none'), 'none');
   });

@@ -53,7 +53,7 @@ describe('the View menu in every view', () => {
   });
 
   // proves: view_options_everywhere
-  test('Force offers the fisheye; semantic zoom, still to be built there, is greyed in the Lens list', async () => {
+  test('Force offers the fisheye and semantic zoom, as a network does', async () => {
     await inCard('force', (el) => {
       const lens = row(el, 'lens');
       assert.ok(!lens.classList.contains('is-not-here'));
@@ -61,7 +61,7 @@ describe('the View menu in every view', () => {
       assert.ok(!select.hasAttribute('disabled'));
       const options = select.querySelectorAll('option');
       assert.ok(!options.find((o) => o.getAttribute('value') === 'fisheye').hasAttribute('disabled'));
-      assert.ok(options.find((o) => o.getAttribute('value') === 'semantic').hasAttribute('disabled'));
+      assert.ok(!options.find((o) => o.getAttribute('value') === 'semantic').hasAttribute('disabled'));
     });
   });
 
@@ -92,8 +92,11 @@ describe('the View menu in every view', () => {
       const dock = el.querySelector('.thoughtknot-view-dock');
       const buttons = dock.querySelectorAll('button[data-option]');
       assert.equal(buttons.length, 3, 'less detail, more detail, small labels');
-      for (const b of buttons) assert.ok(b.hasAttribute('disabled'), b.getAttribute('aria-label'));
-      assert.match(buttons[0].getAttribute('title'), /yet/);
+      const [less, more, labels] = buttons;
+      // its things fold into groups as a network's do, so the detail ladder works; it draws no links to label
+      for (const b of [less, more]) assert.ok(!b.classList.contains('is-not-here'), b.getAttribute('aria-label'));
+      assert.ok(labels.hasAttribute('disabled'), labels.getAttribute('aria-label'));
+      assert.match(labels.getAttribute('title'), /no links/);
     });
   });
 });

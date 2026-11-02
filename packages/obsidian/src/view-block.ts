@@ -311,7 +311,7 @@ export async function renderViewBlock(
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, looked.style, g, v.name);
-  const laidOut = (by?: object) => live(diagram.picture, state.layout) ?? plugin.layout(state.folded(styled, by), by);
+  const laidOut = (b?: object) => live(diagram.picture, state, styled, b) ?? plugin.layout(state.folded(styled, b), b);
   try {
     drawn = diagram.table
       ? tableDrawn(diagram.table)

@@ -1243,6 +1243,9 @@
         "Fold": [
           "type = { hub: string; } | { group: string; } | { bundle: string; }"
         ],
+        "foldedShape": [
+          "value: (shape: GraphShape, plan: Folding | undefined) => GraphShape"
+        ],
         "folderPictures": [
           "value: (input: FolderPicturesInput) => Promise<FolderPicturesRun>"
         ],

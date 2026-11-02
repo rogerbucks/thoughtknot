@@ -273,6 +273,8 @@ export const VALUES_LATE = [
   'pictureBlocks',
   'pictureLinkOf',
   'picturesOnFor',
+  // a view drawn as marks, folded as the View menu folds it (§68, view_options_everywhere), 2 Nov 2026
+  'foldedShape',
   // the pictures of a whole folder, for the command line (§62, RP1), 30 Oct 2026
   'folderPictures',
   // the picture lines a host hides where it draws the block (§62, RP1), 31 Oct 2026

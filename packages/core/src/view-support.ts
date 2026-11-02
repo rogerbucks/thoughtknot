@@ -53,8 +53,6 @@ const LAYOUT_ONLY: readonly ViewOption[] = ['lanes', 'layout', 'spacing', 'direc
  * not one: Graphviz runs a tree, flow or lanes the way the View menu picks, as render.ts hands it the one direction.
  */
 const OWN_ENGINE: readonly ViewOption[] = ['lanes', 'layout'];
-/** The options that fold or group the graph before a view drawn as marks draws it: still to be built there. */
-const FOLDS: readonly ViewOption[] = ['detail', 'hubs', 'groups', 'merge', 'groupBy', 'semantic'];
 
 /** Whether `option` works in `view`: a diagram type such as `tree`, or a view drawn as marks such as `matrix`. */
 export function viewSupport(view: string, option: ViewOption): Support {
@@ -70,7 +68,6 @@ export function viewSupport(view: string, option: ViewOption): Support {
   if (view === 'force' && (option === 'spacing' || option === 'layout')) return option === 'spacing' ? 'yes' : 'yet';
   if (LAYOUT_ONLY.includes(option)) return 'own-shape';
   if (TILES.has(view) && (option === 'labels' || option === 'hubs' || option === 'merge')) return 'no-links';
-  if (FOLDS.includes(option)) return 'yet';
   return 'yes';
 }
 
