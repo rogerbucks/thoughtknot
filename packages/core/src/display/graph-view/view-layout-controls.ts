@@ -8,7 +8,7 @@ import { LAYOUT_LISTS, LAYOUT_SLIDERS, layoutListRow, layoutSliderRow, listed } 
  * The menu's controls that only our own engine reads (view_controls_apply). Roger, 2 Nov 2026: "Does the View menu
  * update the screen?" A diagram type Graphviz lays out reads none of them, so there each is greyed, saying why.
  */
-export const OWN_ONLY: ReadonlySet<string> = new Set(['lanes', 'rounds', 'strategy', 'direction', 'shape', 'pinned']);
+export const OWN_ONLY: ReadonlySet<string> = new Set(['lanes', 'rounds', 'strategy', 'shape', 'pinned']);
 
 /**
  * The menu's layout sliders and lists, each in the place `holder` gives, which `spaced` acts on as one is set. None

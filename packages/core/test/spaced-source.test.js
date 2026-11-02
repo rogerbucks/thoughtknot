@@ -37,3 +37,26 @@ test('a tree, flow, lanes, radial and timeline take the View menu’s spacing', 
     assert.ok(sep({ ...drawing, layoutOptions: { spacing: 2 } }) > sep(drawing), type);
   }
 });
+
+// proves: view_options_everywhere
+test('a tree, flow and lanes run the way the View menu’s Direction picks, as Graphviz lays them out', () => {
+  const texts = ["// graph: org\n(a:P {name: 'A'}),\n(b:P {name: 'B'}),\n(a)-[:M]->(b)"];
+  const reading = readNote(texts);
+  for (const type of ['tree', 'flow', 'lanes']) {
+    const style = readStyle(
+      [...texts, `// graph: org_style · STYLE org\n(d:Diagram {type: '${type}'})`],
+      'org',
+      reading,
+    );
+    const drawing = styledDrawing(reading.graphs.get('org'), style.style, reading.world.org);
+    for (const direction of ['LR', 'TB']) {
+      // the View menu writes the direction it picks on the drawing (view-switches.ts)
+      const laid = directions({ ...drawing, direction });
+      assert.deepEqual(
+        laid.map((d) => /rankdir=(\w+)/.exec(d.dot)?.[1]),
+        [direction],
+        `${type} runs ${direction}`,
+      );
+    }
+  }
+});

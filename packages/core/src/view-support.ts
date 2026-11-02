@@ -48,8 +48,11 @@ const CELLS = new Set(['matrix', 'density']);
 const FIXED_WAY = new Set(['radial', 'timeline']);
 /** The options a view drawn as marks takes from the graph's layout, which its own shape replaces. */
 const LAYOUT_ONLY: readonly ViewOption[] = ['lanes', 'layout', 'spacing', 'direction'];
-/** The options only our own engine reads, so only a plain network takes them yet (view_controls_apply). */
-const OWN_ENGINE: readonly ViewOption[] = ['lanes', 'layout', 'direction'];
+/**
+ * The options only our own engine reads, so only a plain network takes them yet (view_controls_apply). Direction is
+ * not one: Graphviz runs a tree, flow or lanes the way the View menu picks, as render.ts hands it the one direction.
+ */
+const OWN_ENGINE: readonly ViewOption[] = ['lanes', 'layout'];
 /** The options that fold or group the graph before a view drawn as marks draws it: still to be built there. */
 const FOLDS: readonly ViewOption[] = ['detail', 'hubs', 'groups', 'merge', 'groupBy', 'semantic'];
 

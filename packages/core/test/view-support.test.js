@@ -18,10 +18,10 @@ import { word } from '../src/words.ts';
 /** The options each view could take but does not yet: the list only shrinks (view-options design, 2 Nov 2026). */
 const FOLDS = ['detail', 'hubs', 'groups', 'merge', 'groupBy', 'semantic'];
 const KNOWN_GAPS = {
-  tree: ['direction', 'lanes', 'layout'],
-  flow: ['direction', 'lanes', 'layout'],
+  tree: ['lanes', 'layout'],
+  flow: ['lanes', 'layout'],
   radial: ['lanes', 'layout'],
-  lanes: ['direction', 'lanes', 'layout'],
+  lanes: ['lanes', 'layout'],
   timeline: ['lanes', 'layout'],
   force: [...FOLDS, 'layout'],
   ...Object.fromEntries(['chord', 'ego', 'block', 'centroid', 'containment', 'arc', 'hive'].map((v) => [v, FOLDS])),
