@@ -328,15 +328,17 @@ window.oneBar = async () => {
     // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
     zoom.zoomIn();
     const at = view().getBoundingClientRect();
-    for (let y = 4; y < at.height && !told.length; y += 6)
-      for (let x = 4; x < at.width && !told.length; x += 6)
+    // past any link met first: a click on a link tells the link
+    const card = () => told.some((t) => 'key' in t);
+    for (let y = 4; y < at.height && !card(); y += 6)
+      for (let x = 4; x < at.width && !card(); x += 6)
         for (const type of ['pointerdown', 'pointerup'])
           view().dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
   }
   await spaces.show(null);
   zoom.zoomIn();
   root.remove();
-  return { steps, told: told[0] ?? null, under: under.length, flat };
+  return { steps, told: told.find((t) => 'key' in t) ?? told[0] ?? null, under: under.length, flat };
 };
 window.checkWebgpu = async () => {
   const canvas = document.body.appendChild(document.createElement('canvas'));
