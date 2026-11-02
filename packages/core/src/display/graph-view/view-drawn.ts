@@ -28,4 +28,4 @@ export const noViewMenu = (diagram?: Pick<DiagramShown, 'table' | 'picture'>): b
   !!diagram?.table || (!!diagram?.picture && diagram.picture.plugin !== CORE_DIAGRAMS_ID);
 
 /** A view of the core's own laid out again by the View menu: the same picture, which a lens then bends anew. */
-export const pictureAgain = (p: PluginPicture): Promise<Drawn> => Promise.resolve(pictureLive(p));
+export const pictureAgain = (p?: PluginPicture): Promise<Drawn> | undefined => p && Promise.resolve(pictureLive(p));

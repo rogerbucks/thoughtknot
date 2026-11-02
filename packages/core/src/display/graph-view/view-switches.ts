@@ -57,6 +57,10 @@ let hints = 0;
 const AUTO = '',
   NONE = ':none';
 
+/** A row of the menu in `at`: a label with its words, and the option it sets (view_options_everywhere). */
+const rowIn = (at: HTMLElement, cls: string, text: string, attr: Record<string, string>) =>
+  at.createEl('label', { cls, text, attr });
+
 /** What the menu's Group by needs: the choices the drawing offers now, and what picking one does. */
 export interface Grouping {
   choices: () => string[];
@@ -128,13 +132,12 @@ export function renderViewMenu(
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
-  const label =
-    grouping && el.createEl('label', { cls: 'thoughtknot-group-by', text: word('view.group-by'), attr: GROUP_BY_ROW });
+  const label = grouping && rowIn(el, 'thoughtknot-group-by', word('view.group-by'), GROUP_BY_ROW);
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
   const sliders = (spaced ? LAYOUT_SLIDERS : []).map(([k, says, step]) => {
     const [least, most] = LAYOUT_OPTION_RANGE[k];
-    const row = holder().createEl('label', { cls: 'thoughtknot-layout-option', text: word(says), attr: LAYOUT_ROW });
+    const row = rowIn(holder(), 'thoughtknot-layout-option', word(says), LAYOUT_ROW);
     const input = row.createEl('input', {
       attr: { type: 'range', min: String(least), max: String(most), step: String(step) },
     });
@@ -142,11 +145,7 @@ export function renderViewMenu(
     return { k, input };
   });
   const lists = (spaced ? LAYOUT_LISTS : []).map((k) => {
-    const row = holder().createEl('label', {
-      cls: 'thoughtknot-layout-choice',
-      text: word(`view.layout.${k}`),
-      attr: layoutListRow(k),
-    });
+    const row = rowIn(holder(), 'thoughtknot-layout-choice', word(`view.layout.${k}`), layoutListRow(k));
     const input = row.createEl('select');
     for (const [value, text] of listed(k)) input.createEl('option', { text, attr: { value } });
     input.addEventListener('change', () => spaced?.(k, input.value));
