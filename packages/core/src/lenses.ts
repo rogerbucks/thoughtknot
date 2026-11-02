@@ -166,12 +166,6 @@ export function pointsBox(text: string): HeldBox | null {
   return { c: [(x0 + x1) / 2, (y0 + y1) / 2], half: [(x1 - x0) / 2, (y1 - y0) / 2] };
 }
 
-/** The middle of the box round each `x,y` of SVG path data or points; none for none. */
-export function pointsMiddle(text: string): number[] | null {
-  const box = pointsBox(text);
-  return box ? [...box.c] : null;
-}
-
 /** SVG path data or points, each `x,y` moved by `to`. */
 export function bentPoints(text: string, to: (x: number, y: number) => readonly number[]): string {
   let out = '',
