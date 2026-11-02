@@ -13,6 +13,7 @@ import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
+import { readableNames } from './readable-names';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import { SemanticZoom } from './semantic-zoom-view.ts';
@@ -83,6 +84,8 @@ export class Aids {
   /** Semantic zoom, stepping the ladder of detail as the person zooms (projection_semantic_zoom). */
   private readonly semantic: SemanticZoom | null;
   private readonly host: AidsHost;
+  /** Whether names are waiting to be sized at the next frame. */
+  private naming = false;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -124,6 +127,7 @@ export class Aids {
     this.miniMap?.redrawn(drawn);
     this.lens?.redrawn();
     this.semantic?.redrawn();
+    this.names();
   }
 
   /** The view changed: the mini-map outlines the part in view, a tooltip closes, the lens follows, semantic zoom steps. */
@@ -132,6 +136,19 @@ export class Aids {
     this.info.hide();
     this.lens?.changed();
     this.semantic?.changed();
+    this.names();
+  }
+
+  /** Names readable at the size the drawing is shown now, sized once a frame however often it changes (§3). */
+  private names(): void {
+    const svg = this.host.svg();
+    if (!svg || this.naming) return;
+    this.naming = true;
+    const win = this.host.viewport.win ?? window;
+    win.requestAnimationFrame(() => {
+      this.naming = false;
+      readableNames(svg);
+    });
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */
