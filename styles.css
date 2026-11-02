@@ -4034,3 +4034,8 @@ img.thoughtknot-picture-hidden,
   max-width: 100%;
   height: auto;
 }
+
+/* a name hidden for now, as at this zoom it would cover another; zooming in brings it back (§3, names_readable_any_zoom) */
+.thoughtknot-svg text.thoughtknot-name-crowded {
+  visibility: hidden;
+}
