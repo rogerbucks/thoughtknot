@@ -247,6 +247,10 @@ export const DRAWING_SOURCE_WORDS = {
   'view.density.fewer': 'Fewer things',
   'view.density.more': 'More',
   'view.map': 'Map',
+  // the pole view (view-types/pole-view.ts, intent_pole_view): each intent a pole, and a band for things not linked
+  'view.pole': 'Pole',
+  'view.pole.band': 'Not linked to an intent',
+  'view.pole.pole': 'Intent: {name}',
   'view.map.unplaced': { one: '{count} thing with no place', other: '{count} things with no place' },
   // a card dragged to another column of the grid (view-types/grid-move.ts, projection_grid)
   'view.grid.add': 'Add a card to {column}',

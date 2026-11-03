@@ -132,7 +132,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
-  Filter: ['keep', 'view'],
+  Filter: ['keep', 'view', 'poles'],
   Preset: ['preset'],
   Render: ['space', 'painter', 'lens', 'view'],
   Explore: ['centre', 'shown', 'shape', 'per_branch', 'view'],

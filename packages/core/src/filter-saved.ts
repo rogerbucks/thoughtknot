@@ -6,7 +6,8 @@
 //
 // Each part between semicolons is one filter: its name, a colon, then the values kept, comma-joined. `Kind` filters by
 // kind; any other name is a property. A Filter with `view` is for that view; with none, for the whole graph. A `keep`
-// of '' keeps everything. Here: the text written, the text read and checked, and what it keeps.
+// of '' keeps everything. It may name the intents its overview is placed round too, `poles: 'early, calm'` (§58,
+// intent_poles_massive). Here: the text written, the text read and checked, and what it keeps.
 import { nearest } from './estimates.ts';
 import type { Problem } from './note-reading.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
@@ -25,6 +26,8 @@ export interface SavedFilter {
   keep: FilterKeep;
   /** The view it is for; none, the whole graph. */
   view?: string;
+  /** The intents its overview is placed round, in the order chosen; none, the overview as it is laid out. */
+  poles?: string[];
   at: StyleAt;
 }
 
@@ -55,6 +58,11 @@ export function filterOf(raw: RawThing, names: StyledNames, out: Problem[]): Sav
   const r = reader(raw, names, out);
   const text = r.text('keep');
   const view = r.text('view');
+  const poles = r
+    .text('poles')
+    ?.split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (text === undefined) {
     r.missing(word('styling.filter.keep'), word('styling.filter.keep.fix'));
     return null;
@@ -89,7 +97,7 @@ export function filterOf(raw: RawThing, names: StyledNames, out: Problem[]): Sav
     }
     keep[name] = values.filter((v) => !unknown.includes(v));
   }
-  return { keep, ...(view === undefined ? {} : { view }), at: raw.at };
+  return { keep, ...(view === undefined ? {} : { view }), ...(poles?.length ? { poles } : {}), at: raw.at };
 }
 
 /** The Filter for `view`, or for the whole graph with none: the first written of those for it. */
