@@ -85,7 +85,7 @@ export class KeptSpots {
   }
 
   /** Hears where `drawn` put each thing for `owner`, and where its settled layout does once that comes. */
-  heard(owner: object, drawing: GraphDrawing, drawn: Drawn | unknown): void {
+  heard(owner: object, drawing: GraphDrawing, drawn: unknown): void {
     if (!drawn || typeof drawn !== 'object' || !('svg' in drawn)) return;
     const d = drawn as Drawn;
     const spots = spotsHeard(SPOTS.exec(d.svg)?.[1]);
