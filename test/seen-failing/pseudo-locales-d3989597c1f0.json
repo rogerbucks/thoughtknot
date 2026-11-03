@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "a longer language fits every box > styles.css clips no words and keeps none from wrapping, but those listed",
+  "seen_failing_first": false,
+  "evidence": "An existing guard: its list of allowed rules gains one entry for the new hidden room-holder, so it passed before and after."
+}
