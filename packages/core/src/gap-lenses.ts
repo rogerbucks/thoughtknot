@@ -2,6 +2,7 @@
 // names the things it finds. None changes the graph. They find things with nothing linked, things missing a property
 // their kind needs, and numbers far from their kind's usual. They also find stale things and names that nearly match.
 import type { Graph } from '@thoughtknot/graph-spec';
+import { word } from './words.ts';
 
 /** A thing a gap lens found, and why in a few words. */
 export interface Gap {
@@ -23,7 +24,9 @@ const nameOf = (g: Graph, id: string) => (typeof g.p(id).name === 'string' ? (g.
 /** Things with no link in or out. */
 export function unlinked(g: Graph): Gap[] {
   const linked = new Set(g.edges.flatMap(([from, , to]) => [from, to]));
-  return [...g.nodes.keys()].filter((id) => !linked.has(id)).map((thing) => ({ thing, why: 'nothing linked' }));
+  return [...g.nodes.keys()]
+    .filter((id) => !linked.has(id))
+    .map((thing) => ({ thing, why: word('lens.gap.unlinked') }));
 }
 
 /** Things missing a property `needs` names for their kind, or else one most things of their kind have. */
@@ -35,7 +38,9 @@ export function missingNeeds(g: Graph, needs: Readonly<Record<string, readonly s
     const keys = new Set(ids.flatMap((id) => Object.keys(g.p(id))));
     const wanted =
       needs[kind] ?? [...keys].filter((k) => ids.filter((id) => g.p(id)[k] !== undefined).length / ids.length >= USUAL);
-    for (const id of ids) for (const k of wanted) if (g.p(id)[k] === undefined) out.push({ thing: id, why: `no ${k}` });
+    for (const id of ids)
+      for (const k of wanted)
+        if (g.p(id)[k] === undefined) out.push({ thing: id, why: word('lens.gap.missing', { property: k }) });
   }
   return out;
 }
@@ -56,7 +61,10 @@ export function unusualNumbers(g: Graph): Gap[] {
       [...sorted.map((n) => Math.abs(n - mid))].sort((a, b) => a - b)[Math.floor(sorted.length / 2)]! || 1e-9;
     for (const [id, n] of rows)
       if (Math.abs(n - mid) / spread > SPREADS)
-        out.push({ thing: id, why: `${group.split('\u0000')[1]} ${n} is unusual` });
+        out.push({
+          thing: id,
+          why: word('lens.gap.unusual', { property: group.split('\u0000')[1]!, number: String(n) }),
+        });
   }
   return out;
 }
@@ -69,7 +77,7 @@ export function stale(g: Graph, now: string): Gap[] {
       const at = typeof u === 'string' ? Date.parse(u) : NaN;
       return !Number.isNaN(at) && Date.parse(now) - at > STALE_DAYS * DAY;
     })
-    .map((thing) => ({ thing, why: 'not touched for months' }));
+    .map((thing) => ({ thing, why: word('lens.gap.stale') }));
 }
 
 /** Names with the same letters once case, spaces and marks are dropped, or one letter apart when long enough. */
@@ -81,7 +89,8 @@ export function nearDuplicates(g: Graph): Gap[] {
     for (let j = i + 1; j < ids.length; j++) {
       const a = squash(nameOf(g, ids[i]!));
       const b = squash(nameOf(g, ids[j]!));
-      if (a && (a === b || (a.length >= 6 && oneApart(a, b)))) out.push({ thing: ids[i]!, why: `like ${ids[j]}` });
+      if (a && (a === b || (a.length >= 6 && oneApart(a, b))))
+        out.push({ thing: ids[i]!, why: word('lens.gap.like', { other: ids[j]! }) });
     }
   return out;
 }
