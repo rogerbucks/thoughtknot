@@ -171,6 +171,9 @@ test('kept as drawn, each thing stays where its diagram type put it, across and 
       for (const [key, [x, y]] of Object.entries(at))
         assert.deepEqual(placed.get(key).map(Math.round), [x + 40, -(y + 15)], key);
     }
+  // laid out afresh, the type made no difference: the bug Roger saw (25 Oct 2026)
+  const fresh = (at) => [...across(spreadSpace(drawnAs(at)).space)];
+  assert.deepEqual(fresh(FLOW), fresh(RADIAL));
   const kept = (at) => [...across(spreadSpace(drawnAs(at), undefined, false, true).space)];
   assert.notDeepEqual(kept(FLOW), kept(RADIAL));
 });
@@ -399,24 +402,4 @@ test('with three links between two things, every arrowhead tip sits on the ball 
     const off = Math.abs(dist(a.tip, centreOf(ball)) - r);
     assert.ok(off <= r * 0.01 + 0.5, `${a.id}: tip ${off} off the ball's surface of ${r}`);
   }
-});
-
-// proves: things_stay_put
-test('a network opened in space starts where the page drew each thing, so nothing is shuffled', () => {
-  // a chain drawn left to right on the page, zigzag, and the same chain drawn right to left
-  const chain = ['hub', 'a', 'b', 'c', 'd'];
-  const marks = (order) =>
-    [...chain.flatMap(thing), ...chain.slice(1).map((k, i) => link(`e:${i}`, chain[i], k, 'NEXT'))].map((m) =>
-      m.kind === 'box' ? { ...m, x: order.indexOf(m.of) * 120, y: (order.indexOf(m.of) % 2) * 60 } : m,
-    );
-  for (const cards of [false, true])
-    for (const order of [chain, [...chain].reverse()]) {
-      const placed = across(spreadSpace(marks(order), undefined, cards).space);
-      const xs = order.map((k) => placed.get(k)[0]);
-      assert.deepEqual(
-        [...xs].sort((p, q) => p - q),
-        xs,
-        `${cards ? 'cards' : 'balls'}: each thing keeps its place along the chain, as the page drew it`,
-      );
-    }
 });
