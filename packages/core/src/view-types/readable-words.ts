@@ -1,6 +1,7 @@
 // Names that scale with their things in 2D, the busiest shown first (Roger, 2 Nov 2026). A name keeps its size in the
 // drawing, so it grows and shrinks with its thing as you zoom, as a map's names do:
-// - a name is never blown up: past NAME_CEILING pixels on the screen it stops growing as you zoom in; with "Hide labels too small to read" on, one under SHOWN_LEAST pixels is left out;
+// - a name is never blown up. Past NAME_CEILING pixels on the screen it stops growing as you zoom in. With "Hide
+//   labels too small to read" on, one under SHOWN_LEAST pixels is left out;
 // - a name beside its thing grows with the thing's links, up to HUB_LARGER times, so the busiest read from far out;
 // - a name that would cover another is left out. The picked thing's and those in focus are placed first. Then come
 //   the things with the most links, then the largest, then the rest in drawing order;
