@@ -4144,3 +4144,29 @@ img.thoughtknot-picture-hidden,
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-xs);
 }
+/* the table's filters and Total row (§57, table_view): rows off screen are not drawn until they scroll into view */
+.thoughtknot-table-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--gn-space-1);
+  padding-block: var(--gn-space-1);
+}
+.thoughtknot-table-filter {
+  flex: 0 0 8em;
+  min-width: 0;
+}
+.thoughtknot-grid tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 30px;
+}
+.thoughtknot-grid tbody tr[hidden] {
+  display: none;
+}
+.thoughtknot-total-row td,
+.thoughtknot-total-row th {
+  position: sticky;
+  bottom: 0;
+  background: var(--gn-bg);
+  font-weight: var(--gn-font-weight-semibold);
+}

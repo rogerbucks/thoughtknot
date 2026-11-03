@@ -767,6 +767,10 @@ never data.
 - `facet-totals.ts` and `measures.ts` — totals beside the counts of a filter (§57, calc_set_totals). `measuresOf` gives
   the numbers a graph can total: its calculated values and its number properties. `facetTotals` adds one up for each
   filter value and for all the things kept. It says how many things had none, and never counts one as zero.
+- `table-totals.ts` — the totals under a table's number columns (§57, table_view). `tableTotals` adds each one up over the
+  rows kept, with the same running total a filter uses, and `cellPasses` is what a column's filter box keeps. A kind of
+  thing with no number in a column is not said to have none. `types-table.ts` makes a calculated value a column.
+  `display/graph-view/table-totals-row.ts` draws the filter boxes and the Total row; a row filtered out is hidden.
 - `calculated-details.ts` — a calculated value in the details panel (§57, calc_details_shown): marked as worked out,
   with its expression, and no field to change it. `display/graph-view/details-calculated-rows.ts` draws it.
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
