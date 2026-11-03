@@ -74,7 +74,6 @@ import { VALUES_LATE } from './index-values-late.js';
 
 /** The values src/index.ts exports, sorted. */
 export const VALUES = [
-  'AI_PRESETS',
   'AI_PURPOSES',
   'ANIMATION_LIMITS',
   'ARROWHEADS',
@@ -407,7 +406,6 @@ export const VALUES = [
   'mergePathProblems',
   'mirrored',
   'modelChoices',
-  'modelFromPreset',
   'nameFromText',
   'nameSlug',
   'nameStyleOf',

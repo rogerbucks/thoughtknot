@@ -1,9 +1,6 @@
 // Ready-made starting points for an AI model (editor spec §19, user_models): the address of each well-known service that
 // takes the chat completions shape. A preset fills the name and endpoint only. The person gives the model's name and key.
 // Until then nothing is sent. The ceiling starts at the lowest classification.
-import { aiModel } from './ai-model.ts';
-import type { AiModel } from './ai-model.ts';
-
 /** A service a model can be added from: its name, and the full address its requests go to. */
 export interface AiPreset {
   id: string;
@@ -22,9 +19,3 @@ export const AI_PRESETS: readonly AiPreset[] = [
   { id: 'grok', name: 'Grok', endpoint: 'https://api.x.ai/v1/chat/completions' },
   { id: 'chatgpt', name: 'ChatGPT', endpoint: 'https://api.openai.com/v1/chat/completions' },
 ];
-
-/** A new model from the preset named `id`, or null when there is none of that name. */
-export function modelFromPreset(id: string, classifications?: string[]): AiModel | null {
-  const preset = AI_PRESETS.find((p) => p.id === id);
-  return preset ? aiModel({ name: preset.name, endpoint: preset.endpoint }, classifications) : null;
-}

@@ -59,9 +59,6 @@
         "adoptOwn": [
           "value: (text: string) => ViewPreset | null"
         ],
-        "AI_PRESETS": [
-          "value: ReadonlyArray<AiPreset>"
-        ],
         "AI_PURPOSES": [
           "value: Array<string>"
         ],
@@ -2465,9 +2462,6 @@
         ],
         "modelChoices": [
           "value: (s: Settings, purpose: string, hostAi?: HostAi | null) => ModelChoice[]"
-        ],
-        "modelFromPreset": [
-          "value: (id: string, classifications?: string[]) => AiModel | null"
         ],
         "MOST_STEPS": [
           "value: 3"

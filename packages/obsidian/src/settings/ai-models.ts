@@ -3,17 +3,9 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
-import {
-  AI_PRESETS,
-  AI_PURPOSES,
-  aiModel,
-  endpointProblem,
-  formatSeries,
-  modelFromPreset,
-  purposeWords,
-  word,
-} from '@thoughtknot/core';
+import { AI_PURPOSES, aiModel, endpointProblem, formatSeries, purposeWords, word } from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
+import { AI_PRESETS } from './ai-presets';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type ThoughtKnotPlugin from '../main';
 
@@ -126,8 +118,9 @@ export function presetPicker(): SettingDefinitionItem {
 
 /** The models with a service's model added, or none changed when the choice is none. */
 export function withPreset(s: Settings, id: string): Partial<Settings> {
-  const added = modelFromPreset(id, s.classifications);
-  return added ? { aiModels: [...s.aiModels, added] } : {};
+  const preset = AI_PRESETS.find((p) => p.id === id);
+  if (!preset) return {};
+  return { aiModels: [...s.aiModels, aiModel({ name: preset.name, endpoint: preset.endpoint }, s.classifications)] };
 }
 
 /** The models with one changed, read back as the core reads a model. */
