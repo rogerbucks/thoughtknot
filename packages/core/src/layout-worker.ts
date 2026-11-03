@@ -16,6 +16,7 @@ import { nextStep } from './layouts/cheaper.ts';
 import { LayoutFailure } from './layout-port.ts';
 export { LayoutFailure, inThreadPort } from './layout-port.ts';
 import { needsPlacing, placedFor } from './layouts/offered.ts';
+import { KeptSpots } from './layout-kept.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
@@ -161,6 +162,7 @@ export class LayoutRunner {
   private next = 1;
   /** The drawing each owner asked for last, while a plug-in's layout places it, so an older one placed late is dropped. */
   private readonly placing = new WeakMap<object, GraphDrawing>();
+  private readonly kept = new KeptSpots(); // each card's last spots (things_stay_put)
 
   constructor(options: RunnerOptions) {
     this.o = options;
@@ -192,8 +194,11 @@ export class LayoutRunner {
     const over = counted(drawing, this.limits());
     if (over) return Promise.resolve(this.paged(over));
     if (this.isStopped()) return Promise.resolve(this.stopped());
+    const asked = drawing;
+    if (owner && !theme) drawing = this.kept.onto(owner, drawing);
     return new Promise((resolve, reject) => {
-      this.queue.push({ drawing, owner, theme, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
+      const heard = (r: Drawn | Refusal | null) => (owner && !theme && this.kept.heard(owner, asked, r), r);
+      this.queue.push({ drawing, owner, theme, done: (r) => (r instanceof Error ? reject(r) : resolve(heard(r))) });
       this.pump();
     });
   }

@@ -23,6 +23,7 @@ import {
   kindsIn,
   lanesIn,
   placedIn,
+  keptIn,
   optionsIn,
   ownable,
   ownSource,
@@ -151,7 +152,15 @@ export function directions(drawing: GraphDrawing): Direction[] {
     if (ours && ownable(dot))
       return {
         rankdir,
-        dot: ownSource(dot, drawing.layoutOptions, kindsByKey, drawing.kindLanes !== false, step, drawing.placed),
+        dot: ownSource(
+          dot,
+          drawing.layoutOptions,
+          kindsByKey,
+          drawing.kindLanes !== false,
+          step,
+          drawing.placed,
+          drawing.kept,
+        ),
         src,
         own: true,
       };
@@ -243,6 +252,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         lanesIn(dot),
         stepIn(dot),
         placedIn(dot),
+        keptIn(dot),
       );
   }
   // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)

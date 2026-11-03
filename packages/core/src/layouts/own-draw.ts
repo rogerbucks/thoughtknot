@@ -14,6 +14,7 @@ import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { LAYOUT_STEPS } from './cheaper.ts';
+import { keptSpots, spotsHeard, spotsSaid } from './kept-spots.ts';
 import type { LayoutStep } from './cheaper.ts';
 import type { Pick as LayoutPick } from './pick.ts';
 
@@ -83,6 +84,15 @@ const NO_LANES_LINE = /^\s*\/\/ layout lanes off$/m;
 /** The line of a layout source that carries each thing's spot, as a plug-in's layout gave it. */
 const PLACED_LINE = /^\s*\/\/ layout spots (\{.*\})$/m;
 
+/** The line of a layout source that carries each thing's spot as the card showed it last (things_stay_put). */
+const KEPT_LINE = /^\s*\/\/ layout kept (\S+)$/m;
+
+/** The attribute of our own engine's drawing that says where it put each thing, for the next drawing to keep. */
+export const SPOTS_ATTRIBUTE = 'data-layout-spots';
+
+/** Each thing's spot as the card showed it last, as `ownSource` wrote them into `dot` (things_stay_put). */
+export const keptIn = (dot: string): Map<string, [number, number]> => spotsHeard(KEPT_LINE.exec(dot)?.[1]);
+
 /** Each thing's spot as a plug-in's layout gave it, as `ownSource` wrote them into the source `dot` (layout_plugins). */
 export function placedIn(dot: string): Map<string, [number, number]> {
   try {
@@ -138,6 +148,7 @@ export function ownSource(
   lanes = true,
   step?: LayoutStep,
   placed: Readonly<Record<string, readonly [number, number]>> = {},
+  kept: Readonly<Record<string, readonly [number, number]>> = {},
 ): string {
   let i = 0;
   // a radial drawing's line names Graphviz's twopi, which would then lay it out and route its curves, not measure it.
@@ -160,7 +171,23 @@ export function ownSource(
   if (!lanes) lines.splice(3, 0, '  // layout lanes off');
   if (step) lines.splice(3, 0, `  // layout step ${step}`);
   if (Object.keys(placed).length) lines.splice(3, 0, `  // layout spots ${JSON.stringify(placed)}`);
+  if (Object.keys(kept).length) lines.splice(3, 0, `  // layout kept ${spotsSaid(new Map(Object.entries(kept)))}`);
   return lines.join('\n');
+}
+
+/** `spots` moved, all together, only as far as keeps every box inside the drawing's top left margin. */
+function inside(spots: Map<string, [number, number]>, laid: LaidMarks): Map<string, [number, number]> {
+  let dx = 0,
+    dy = 0;
+  for (const m of laid.marks) {
+    if (m.kind !== 'box' || m.role !== 'thing' || m.of === undefined) continue;
+    const at = spots.get(m.of);
+    if (!at) continue;
+    dx = Math.max(dx, MARGIN + m.width / 2 - at[0]);
+    dy = Math.max(dy, MARGIN + m.height / 2 - at[1]);
+  }
+  if (!dx && !dy) return spots;
+  return new Map([...spots].map(([k, [x, y]]) => [k, [x + dx, y + dy]]));
 }
 
 /** `laid` resized to hold the boxes at `spots`, its background with it, so the drawing has no empty room round it. */
@@ -245,14 +272,21 @@ export function ownLaid(
   lanes = true,
   step?: LayoutStep,
   placed?: ReadonlyMap<string, [number, number]>,
-): { marks: LaidMarks; shown: PickShown } {
+  kept?: ReadonlyMap<string, [number, number]>,
+): { marks: LaidMarks; shown: PickShown; spots: ReadonlyMap<string, [number, number]> } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
   const cheaper = step === 'own' ? undefined : step;
   const drawn = ownSpots(laid, asked, undefined, groups, options, lanes ? kinds : undefined, cheaper, placed);
-  const { spots, via, boxes, rankdir: way, pick, parts, loose, bands } = drawn;
-  const seen = kindsOf(marksShape(laid.marks).shape, kinds);
+  const { rankdir: way, pick, parts, loose, bands } = drawn;
+  const { shape } = marksShape(laid.marks);
+  // drawn again by the same layout, each thing it showed stays where it was, its links drawn straight (things_stay_put)
+  const keep = kept?.size && !drawn.boxes.length ? kept : undefined;
+  const spots = keep ? inside(keptSpots(drawn.spots, keep, shape.links), laid) : drawn.spots;
+  const [via, boxes] = keep ? [new Map(), []] : [drawn.via, drawn.boxes];
+  const seen = kindsOf(shape, kinds);
   return {
+    spots,
     marks: directLinks(groupMarks(fitted(laid, spots, boxes), boxes, groups), spots, via, way),
     shown: {
       ...{ why: pick.why, kinds: seen.pattern, order: seen.order, parts, loose, lanes: bands.size > 0 },
@@ -272,8 +306,10 @@ export const ownMarks = (...args: Parameters<typeof ownLaid>): LaidMarks => ownL
 
 /** The SVG of the drawing Graphviz measured in `laid`, as `ownLaid` draws it, carrying what the engine picked. */
 export function ownSvg(...args: Parameters<typeof ownLaid>): string {
-  const { marks, shown } = ownLaid(...args);
+  const { marks, shown, spots } = ownLaid(...args);
   const said = encodeURIComponent(JSON.stringify(shown));
-  // last in the tag: the page reads `<svg width=` from its start (theme.ts)
-  return layoutSvg(marks).replace(/<svg\b[^>]*/, (open) => `${open} ${PICK_ATTRIBUTE}="${said}"`);
+  // last in the tag: the page reads `<svg width=` from its start (theme.ts). Where each thing is goes with it, so the
+  // card's next drawing can keep it there (things_stay_put)
+  const at = `${SPOTS_ATTRIBUTE}="${spotsSaid(spots)}"`;
+  return layoutSvg(marks).replace(/<svg\b[^>]*/, (open) => `${open} ${PICK_ATTRIBUTE}="${said}" ${at}`);
 }
