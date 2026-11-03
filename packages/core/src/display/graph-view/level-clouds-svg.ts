@@ -17,6 +17,7 @@ import { shapeOf } from '../../types-shape.ts';
 import type { GraphShape } from '../../types-shape.ts';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { BY_KIND, ownChoices, withOwnLevel } from '../../own-levels.ts';
+import { namedLevels } from '../../named-levels.ts';
 import type { OwnLevel } from '../../own-levels.ts';
 import { make } from './note-callouts.ts';
 import { outlineOf, shownOf } from './readable-names.ts';
@@ -60,7 +61,7 @@ function foundOf(drawing: GraphDrawing, g?: Graph): Found {
   let f = found.get(drawing);
   if (!f) {
     const shape = shapeOf(drawing, g),
-      levels = detailLevels(shape);
+      levels = namedLevels(shape) ?? detailLevels(shape);
     const texts = new Map(shape.things.map((t) => [t.key, t.text]));
     f = { shape, found: levels, levels, own: null, links: shape.links, texts };
     found.set(drawing, f);

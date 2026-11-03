@@ -106,3 +106,29 @@ test('asking about an intent offers the graph’s intents, and an empty ask send
     env.uninstall();
   }
 });
+
+// ai_levels
+test('asking your AI to name the levels writes a subject, area and topic per thing as a change set grouped by subject', async () => {
+  const env = await open();
+  try {
+    await env.state.commands.find((c) => c.id === 'ask-ai-model').callback();
+    const m = dialog(env);
+    choose(m, 'Ask for', 'levels');
+    choose(m, 'Model', 'Local');
+    const field = row(m, 'Your question').querySelector('textarea');
+    field.value = 'Name the levels';
+    field.dispatch('input');
+    button(m, 'Show what will be sent').click();
+    assert.match(shownBody(m) ?? '', /You name the levels of detail/);
+    env.state.reply = answer({
+      suggestions: [{ thing: 'login', subject: 'Product', area: 'Login', certainty: 'likely', read: ['login'] }],
+    });
+    button(m, 'Send').click();
+    await until(() => env.state.files.get(PATH).includes('CHANGE SET'));
+    const note = env.state.files.get(PATH);
+    assert.ok(note.startsWith(NOTE), 'the graph is as it was');
+    assert.match(note, /\/\/@ group: Subject Product/);
+  } finally {
+    env.uninstall();
+  }
+});

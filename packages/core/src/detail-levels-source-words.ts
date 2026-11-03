@@ -20,4 +20,6 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.own-label': 'Your own top level',
   'levels.own-found': 'Levels from the links',
   'levels.own-swap': 'Swap your level with the one below it',
+  'levels.ai': 'Name with AI',
+  'levels.ai-label': 'Ask your AI to name the subjects, areas and topics',
 } as const;

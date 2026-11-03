@@ -6,8 +6,8 @@ import { Setting } from 'obsidian';
 import { word } from '@thoughtknot/core';
 import type { SuggestFor } from '@thoughtknot/core';
 
-/** What is asked for: changes, values of a property, or pulls on an intent. */
-export type AskFor = 'changes' | 'values' | 'intent';
+/** What is asked for: changes, values of a property, pulls on an intent, or names for the levels (ai_levels). */
+export type AskFor = 'changes' | 'values' | 'intent' | 'levels';
 
 /** What the rows hold, as the person typed or chose it. */
 export interface SuggestRows {
@@ -25,6 +25,7 @@ export const NO_SUGGESTION: SuggestRows = { ask: 'changes', key: 'category', of:
 export function suggestForOf(rows: SuggestRows): SuggestFor | null {
   if (rows.ask === 'changes') return null;
   if (rows.ask === 'intent') return { kind: 'intent', intent: rows.intent.trim() };
+  if (rows.ask === 'levels') return { kind: 'levels' };
   const values = rows.values
     .split(',')
     .map((v) => v.trim())
@@ -68,6 +69,7 @@ export function drawSuggestRows(
         .addOption('changes', word('ai.suggest.ask-changes'))
         .addOption('values', word('ai.suggest.ask-values'))
         .addOption('intent', word('ai.suggest.ask-intent'))
+        .addOption('levels', word('ai.suggest.ask-levels'))
         .setValue(rows.ask)
         .onChange((v) => {
           rows.ask = v as AskFor;

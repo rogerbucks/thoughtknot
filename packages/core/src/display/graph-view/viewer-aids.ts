@@ -220,6 +220,7 @@ export class Aids {
         svg: this.host.svg,
         redraw: () => this.names(),
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
+        nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
       });
     }
     this.said?.setText(text ?? '');

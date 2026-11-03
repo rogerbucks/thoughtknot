@@ -31,6 +31,7 @@ import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
 import { NO_SUGGESTION, drawSuggestRows, suggestForOf } from './suggest-rows';
+import type { SuggestRows } from './suggest-rows';
 import { changeVaultNote } from '../storage/plugin-notes';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
@@ -71,8 +72,8 @@ export class SendDialog extends Modal {
     /** The note's classification, read each time it is asked, against the classifications as they are then. */
     private readonly levelOf: () => string | null,
     private readonly shared: string[],
-    /** What is chosen as the dialog opens, if anything: a graph, the things of it ticked, and the question. */
-    start?: { graph: string; things: string[]; question: string },
+    /** What is chosen as the dialog opens, if anything: a graph, things ticked, the question, what is asked for. */
+    start?: { graph: string; things: string[]; question: string; suggest?: Partial<SuggestRows> },
   ) {
     super(plugin.app);
     const reading = readNote(
@@ -93,9 +94,10 @@ export class SendDialog extends Modal {
     this.model = modelChoices(plugin.settings, PURPOSE)[0]?.name ?? '';
     if (start && this.things.has(start.graph)) {
       this.graph = start.graph;
-      this.what = 'things';
+      this.what = start.things.length ? 'things' : 'graph';
       for (const k of start.things) this.ticked.add(k);
       this.question = start.question;
+      Object.assign(this.suggest, start.suggest);
     }
   }
 

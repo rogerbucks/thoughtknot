@@ -3,7 +3,8 @@
 // - pointing at a chip, or at a cloud, puts that subject in the spotlight while the pointer stays;
 // - clicking a chip keeps it in the spotlight, and clicking it again lets it go;
 // - the chip's colour button picks the subject's next colour, and its clouds take it at once.
-// The chips are buttons, so the keyboard reaches them, and each says what it does. Nothing moves.
+// The chips are buttons, so the keyboard reaches them, and each says what it does. Nothing moves. While AI is on, a
+// button asks your AI to name the levels (ai_levels).
 import type { DetailLevel } from '../../detail-levels.ts';
 import { word } from '../../words.ts';
 import { hueOf, nextHue, spotlight } from './level-colours.ts';
@@ -19,6 +20,8 @@ export interface LevelLegendHost {
   redraw: () => void;
   /** The drawing shown, whose own level is chosen here (own_levels). */
   drawing: () => GraphDrawing | undefined;
+  /** What asks your AI to name the levels, while AI is on; null while it is off (ai_levels). */
+  nameLevels?: () => (() => void) | null;
 }
 
 /** The legend of one card's subjects. */
@@ -33,6 +36,8 @@ export class LevelLegend {
   private readonly pick: HTMLSelectElement;
   /** The drawing whose choices the picker lists. */
   private listed: GraphDrawing | undefined;
+  /** The button that asks your AI to name the levels, shown only while AI is on. */
+  private readonly ai: HTMLElement;
 
   /** Made inside `parent`, the badge. */
   constructor(parent: HTMLElement, host: LevelLegendHost) {
@@ -44,6 +49,13 @@ export class LevelLegend {
     const swap = own.createEl('button', { cls: 'thoughtknot-level-swap', text: '⇅', attr: { type: 'button' } });
     swap.setAttribute('aria-label', word('levels.own-swap'));
     swap.addEventListener('click', () => this.swap());
+    this.ai = own.createEl('button', {
+      cls: 'thoughtknot-level-ai',
+      text: word('levels.ai'),
+      attr: { type: 'button' },
+    });
+    this.ai.setAttribute('aria-label', word('levels.ai-label'));
+    this.ai.addEventListener('click', () => host.nameLevels?.()?.());
     this.chips = this.el.createDiv({ cls: 'thoughtknot-level-chips' });
     this.chips.setAttribute('aria-label', word('levels.legend-label'));
     // pointing at a cloud spotlights its subject too, for as long as the pointer stays on it
@@ -57,6 +69,7 @@ export class LevelLegend {
     this.kept = null;
     this.chips.empty();
     this.listChoices();
+    this.ai.toggleClass('is-hidden', !this.host.nameLevels?.());
     const subjects = levels && levels.length > 1 ? (levels[0]?.groups ?? []) : [];
     const drawing = this.host.drawing();
     this.el.toggleClass('is-hidden', !subjects.length && !(drawing && ownLevelOf(drawing)));
