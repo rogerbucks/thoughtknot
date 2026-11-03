@@ -7,6 +7,7 @@ import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
 import { LIVE_LEAST, LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
 import { keptSpots, spotsHeard } from '../src/layouts/kept-spots.ts';
+import { directLinks } from '../src/direct-links.ts';
 import { assertStaysPut, movedThings } from './stay-put-fixtures.js';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
@@ -88,5 +89,40 @@ test('a big live drawing drawn again with its spots kept comes once, with no qui
   await first.better;
   const again = await r.draw(big(LIVE_LEAST + 1), card);
   assert.equal(again.better, undefined, 'nothing to settle: every thing it showed stays where it was');
+  r.close();
+});
+
+// proves: things_stay_put
+test('a box held where the person saw it stays; a new box over it moves off it, onto the drawing', () => {
+  const thing = (key, x, y) => ({
+    id: `t:${key}`,
+    kind: 'box',
+    style: 'thing',
+    of: key,
+    role: 'thing',
+    x,
+    y,
+    width: 100,
+    height: 40,
+  });
+  const laid = { space: { width: 400, height: 300 }, marks: [thing('old', 10, 10), thing('new', 0, 0)] };
+  const at = new Map([
+    ['old', [60, 30]],
+    ['new', [55, 25]],
+  ]);
+  const { marks } = directLinks(laid, at, new Map(), 'LR', false, undefined, new Set(['old']));
+  const [old, fresh] = ['old', 'new'].map((k) => marks.find((m) => m.kind === 'box' && m.of === k));
+  assert.deepEqual([old.x, old.y], [10, 10], 'the held box stays where it was');
+  assert.ok(fresh.x >= 0 && fresh.y >= 0, 'the new box stays on the drawing');
+  assert.ok(fresh.x >= old.x + old.width || fresh.y >= old.y + old.height, 'and clear of the held one');
+});
+
+// proves: things_stay_put
+test('a card drawn again with nothing changed is drawn exactly as it was, links and all', async () => {
+  const r = runner(),
+    card = {};
+  const first = await r.draw(network(), card);
+  const again = await r.draw(network(), card);
+  assert.equal(again.svg, first.svg);
   r.close();
 });

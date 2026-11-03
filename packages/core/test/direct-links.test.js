@@ -586,28 +586,3 @@ test('two links between the same boxes that our own engine routed run side by si
   assert.ok(Math.abs(middle(ab)[0] - middle(ba)[0]) >= 5, `${middle(ab)[0]} and ${middle(ba)[0]} are apart`);
   assert.ok(Math.abs(middle(ab)[0] - 100) <= 4 && Math.abs(middle(ba)[0] - 100) <= 4, 'each stays by its way');
 });
-
-// proves: things_stay_put
-test('a box held where the person saw it stays; a new box over it moves off it, onto the drawing', () => {
-  const thing = (key, x, y) => ({
-    id: `t:${key}`,
-    kind: 'box',
-    style: 'thing',
-    of: key,
-    role: 'thing',
-    x,
-    y,
-    width: 100,
-    height: 40,
-  });
-  const laid = { space: { width: 400, height: 300 }, marks: [thing('old', 10, 10), thing('new', 0, 0)] };
-  const at = new Map([
-    ['old', [60, 30]],
-    ['new', [55, 25]],
-  ]);
-  const { marks } = directLinks(laid, at, new Map(), 'LR', false, undefined, new Set(['old']));
-  const [old, fresh] = ['old', 'new'].map((k) => box(marks, k));
-  assert.deepEqual([old.x, old.y], [10, 10], 'the held box stays where it was');
-  assert.ok(fresh.x >= 0 && fresh.y >= 0, 'the new box stays on the drawing');
-  assert.ok(fresh.x >= old.x + old.width || fresh.y >= old.y + old.height, 'and clear of the held one');
-});

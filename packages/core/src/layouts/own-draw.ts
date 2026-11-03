@@ -14,7 +14,7 @@ import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 import { LAYOUT_STEPS } from './cheaper.ts';
-import { SPOTS_ATTRIBUTE, keptSpots, spotsHeard, spotsSaid } from './kept-spots.ts';
+import { SPOTS_ATTRIBUTE, boxesRound, drawnAt, keptSpots, sameSpots, spotsHeard, spotsSaid } from './kept-spots.ts';
 import type { LayoutStep } from './cheaper.ts';
 import type { Pick as LayoutPick } from './pick.ts';
 
@@ -172,48 +172,6 @@ export function ownSource(
   return lines.join('\n');
 }
 
-/** The bounds of the things in `members` at `at`, each thing `size` big; none when none of them is there. */
-function boundsAt(
-  members: readonly string[],
-  at: ReadonlyMap<string, readonly [number, number]>,
-  size: ReadonlyMap<string, readonly [number, number]>,
-): [number, number, number, number] | null {
-  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const k of members) {
-    const p = at.get(k);
-    if (!p) continue;
-    const [w, h] = size.get(k) ?? [0, 0];
-    [x0, y0, x1, y1] = [
-      Math.min(x0, p[0] - w / 2),
-      Math.min(y0, p[1] - h / 2),
-      Math.max(x1, p[0] + w / 2),
-      Math.max(y1, p[1] + h / 2),
-    ];
-  }
-  return x0 <= x1 ? [x0, y0, x1, y1] : null;
-}
-
-/** Each group's box moved and sized round its things `now`, with the room round them it had round them `was`. */
-function boxesRound(
-  boxes: readonly GroupBox[],
-  groups: readonly SourceGroup[],
-  was: ReadonlyMap<string, readonly [number, number]>,
-  now: ReadonlyMap<string, readonly [number, number]>,
-  size: ReadonlyMap<string, readonly [number, number]>,
-): GroupBox[] {
-  const members = new Map(groups.map((g) => [g.id, g.members]));
-  return boxes.map((b) => {
-    const these = members.get(b.id) ?? [];
-    const [before, after] = [boundsAt(these, was, size), boundsAt(these, now, size)];
-    if (!before || !after) return b;
-    // the room the fresh layout left round its things, each side: its name's room at the top is the most
-    const [l, t] = [before[0] - (b.x - b.width / 2), before[1] - (b.y - b.height / 2)];
-    const [r, d] = [b.x + b.width / 2 - before[2], b.y + b.height / 2 - before[3]];
-    const [x0, y0, x1, y1] = [after[0] - l, after[1] - t, after[2] + r, after[3] + d];
-    return { ...b, x: (x0 + x1) / 2, y: (y0 + y1) / 2, width: x1 - x0, height: y1 - y0 };
-  });
-}
-
 /**
  * `spots` with each thing not `kept` moved, on its own, only as far as keeps it inside the drawing's top left margin.
  * A kept thing never moves, so the drawing does not shift as a whole (things_stay_put).
@@ -257,18 +215,6 @@ function fitted(
     return { ...rest, x: 0, y: 0, width, height };
   });
   return { ...laid, space: { width, height }, marks };
-}
-
-/**
- * Where each thing is drawn in `laid`: after links moved boxes apart and the drawing grew round a curve. So a drawing
- * that keeps these spots puts each thing where the person saw it, and does not grow again (things_stay_put).
- */
-function drawnAt(laid: LaidMarks): Map<string, [number, number]> {
-  const at = new Map<string, [number, number]>();
-  for (const m of laid.marks)
-    if (m.kind === 'box' && m.role === 'thing' && m.of !== undefined && !at.has(m.of))
-      at.set(m.of, [m.x + m.width / 2, m.y + m.height / 2]);
-  return at;
 }
 
 /** The marks and part of each group's box and its name, drawn under everything else, as Graphviz draws them. */
@@ -335,21 +281,28 @@ export function ownLaid(
   const { shape, sizes } = marksShape(laid.marks);
   // drawn again by the same layout, each thing it showed stays where it was, its links drawn straight. Each group's
   // box is drawn round its things where they are now, as roomy as the fresh layout made it (things_stay_put)
-  const keep = kept?.size ? kept : undefined;
-  const spots = keep ? inside(keptSpots(drawn.spots, keep, shape.links), laid, keep) : drawn.spots;
-  const via = keep ? new Map<string, [number, number][]>() : drawn.via;
-  const boxes = keep ? boxesRound(drawn.boxes, groups, drawn.spots, spots, sizes) : drawn.boxes;
   const seen = kindsOf(shape, kinds);
-  const held = new Set(keep?.keys());
-  const marks = directLinks(
-    groupMarks(fitted(laid, spots, boxes), boxes, groups),
-    spots,
-    via,
+  const fresh = directLinks(
+    groupMarks(fitted(laid, drawn.spots, drawn.boxes), drawn.boxes, groups),
+    drawn.spots,
+    drawn.via,
     way,
-    false,
-    undefined,
-    held,
   );
+  // a drawing the fresh layout draws just as the person saw it is that drawing, links and all
+  const keep = kept?.size && !sameSpots(drawnAt(fresh), kept) ? kept : undefined;
+  const spots = keep ? inside(keptSpots(drawn.spots, keep, shape.links), laid, keep) : drawn.spots;
+  const boxes = keep ? boxesRound(drawn.boxes, groups, drawn.spots, spots, sizes) : drawn.boxes;
+  const marks = keep
+    ? directLinks(
+        groupMarks(fitted(laid, spots, boxes), boxes, groups),
+        spots,
+        new Map(),
+        way,
+        false,
+        undefined,
+        new Set(keep.keys()),
+      )
+    : fresh;
   return {
     spots: drawnAt(marks),
     marks,

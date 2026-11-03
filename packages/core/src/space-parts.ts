@@ -10,6 +10,10 @@ import type { Spots } from './layouts/layouts.ts';
 import { packPlaced, partsOf, trayOf } from './layouts/parts.ts';
 import type { Placed } from './layouts/parts.ts';
 import type { GraphShape } from './types-shape.ts';
+import type { DrawMark } from './drawing-marks.ts';
+
+/** How many pixels of the space one unit of the layout is: about one link's length. */
+export const SPREAD_UNIT = 120;
 
 /** A trunk's joint, as the layout source names it (`trunk: 1 in`), or as the drawing on screen does (`trunk_1_in`). */
 const JOINT = /^(?:trunk: (\d+) (in|out)|trunk_(\d+)_(in|out))$/;
@@ -147,4 +151,43 @@ export function partsNear(shape: GraphShape, spots: Spots<3>): Spots<3> {
   const out = new Map(spots);
   for (const [k, [x, y]] of packed.spots) out.set(k, [x - px + x0, -(y - py) + y0, at(k)[2]]);
   return out;
+}
+
+/** Each thing's middle on the page, by its key: where its first box is drawn. */
+export function middlesOf(marks: readonly DrawMark[]): Map<string, [number, number]> {
+  const at = new Map<string, [number, number]>();
+  for (const m of marks)
+    if (m.kind === 'box' && m.of !== undefined && !at.has(m.of)) at.set(m.of, [m.x + m.width / 2, m.y + m.height / 2]);
+  return at;
+}
+
+/**
+ * The spots of things kept where the drawing put them, `at`, in the layout's units: a link about one long. Each starts
+ * a little off the page, so the force layout can lift what lies close apart in depth. Gives back the pixels per unit.
+ */
+export function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { seeds: Spots<3>; unit: number } {
+  const lengths = shape.links
+    .map((l) => [at.get(l.from), at.get(l.to)])
+    .flatMap(([a, b]) => (a && b && (a[0] !== b[0] || a[1] !== b[1]) ? [Math.hypot(a[0] - b[0], a[1] - b[1])] : []))
+    .sort((p, q) => p - q);
+  const unit = lengths[Math.floor(lengths.length / 2)] ?? SPREAD_UNIT;
+  const seeds = new Map<string, [number, number, number]>();
+  shape.things.forEach((t, i) => {
+    const [x, y] = at.get(t.key) ?? [0, 0];
+    // down the page is back along the space, as spaceOf lifts it: so the drawing's top is at the top of the view
+    seeds.set(t.key, [x / unit, -y / unit, ((i % 3) - 1) * 0.1]);
+  });
+  return { seeds, unit };
+}
+
+/**
+ * Where the page drew each thing, as seeds for a first layout in space; none where the page gave no real places. So a
+ * network opened in space is not shuffled: it spreads out in depth from where it was (things_stay_put).
+ */
+export function pageSeeds(shape: GraphShape, marks: readonly DrawMark[]): Spots<3> | undefined {
+  const at = middlesOf(marks);
+  const distinct = new Set([...at.values()].map(([x, y]) => `${Math.round(x)},${Math.round(y)}`));
+  // a page that drew things in one line gives no shape to keep: it is laid out afresh
+  const flat = [0, 1].some((d) => new Set([...at.values()].map((p) => Math.round(p[d] ?? 0))).size < 2);
+  return distinct.size > at.size / 2 && !flat ? drawnSpots(shape, at).seeds : undefined;
 }
