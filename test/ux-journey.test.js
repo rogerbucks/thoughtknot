@@ -95,7 +95,7 @@ describe('every host: the first-run journey, its counts held', () => {
     // the packages that are libraries draw no interface of their own (as test/wcag.test.js reads them). The web layer
     // draws a page, but only to read: it has nothing to edit, fix or export, so it has no first-run journey
     const hosts = readdirSync(`${ROOT}/packages`).filter(
-      (p) => !p.startsWith('.') && !['boundary', 'core', 'graph-spec', 'sync', 'web'].includes(p),
+      (p) => !p.startsWith('.') && !['boundary', 'core', 'cowork', 'graph-spec', 'sync', 'web'].includes(p),
     );
     assert.deepEqual(hosts.sort(), Object.keys(HOSTS).sort());
     assert.deepEqual(Object.keys(JOURNEYS).sort(), Object.keys(HOSTS).sort());

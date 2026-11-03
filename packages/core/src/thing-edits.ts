@@ -97,8 +97,10 @@ export function addedNear(
 }
 
 /** Whether the item at `text` names thing `key`, as a thing in a path, or in a SET of its properties. */
-const names = (text: string, key: string): boolean =>
-  new RegExp(`\\(${S}*${key}${S}*[:){]|\\b${key}${S}*\\.`).test(blankText(text));
+const names = (text: string, key: string): boolean => {
+  const k = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\(${S}*${k}${S}*[:){]|\\b${k}${S}*\\.`).test(blankText(text));
+};
 
 /**
  * The block of `texts` without thing `key` of `graph` and every item that names it: its links and the SETs of its
@@ -201,7 +203,7 @@ export function addedInColumn(
 export type LineWritten = { block: number; was: string; now: string; things: string[] } | { reason: string };
 
 /** The arrow that parts the steps of a quick line. */
-const ARROW = /\s*(?:->|→)\s*/;
+const ARROW = /->|→/;
 
 /**
  * The graph's first block with the things and links that quick line `line` names (edit_quick_line). Arrows part its

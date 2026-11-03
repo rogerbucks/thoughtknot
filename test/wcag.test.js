@@ -277,7 +277,7 @@ describe('the web layer: its page, in both themes', () => {
 
 describe('every host', () => {
   /** The packages that are hosts, which draw an interface: the others are libraries with none. */
-  const LIBRARIES = ['boundary', 'core', 'graph-spec', 'sync'];
+  const LIBRARIES = ['boundary', 'core', 'cowork', 'graph-spec', 'sync'];
   /** The hosts this file checks, with the views it checks of each. */
   const HOSTS = {
     obsidian: Object.keys(OBSIDIAN),
