@@ -377,4 +377,8 @@ export const TYPES_LATE = [
   // the earlier versions of a note the plug-in keeps (§41, changes_view_obsidian), 31 Oct 2026
   'NoteHistory',
   'NoteVersion',
+  // editing a thing where it is drawn (§46), 3 Nov 2026
+  'BlockEdit',
+  'LineWritten',
+  'ThingAddedNear',
 ];

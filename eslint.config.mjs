@@ -56,7 +56,7 @@ export default defineConfig([
     // The Claude Code editor's local server runs in Node, as a process of its own, never in Obsidian or a page
     // (packages/claude-code/GUIDE.md): Node's built-ins and globals are what it is written in, and a popout window's
     // timers mean nothing there. Every other rule holds.
-    files: ['packages/claude-code/server/**/*.ts'],
+    files: ['packages/claude-code/server/**/*.ts', 'packages/cowork/src/**/*.ts', 'packages/cowork/bin/**/*.ts'],
     languageOptions: { globals: { process: 'readonly', Buffer: 'readonly' } },
     rules: { 'obsidianmd/no-nodejs-modules': 'off', 'obsidianmd/prefer-window-timers': 'off' },
   },
