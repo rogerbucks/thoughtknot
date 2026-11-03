@@ -2,8 +2,17 @@
 // purpose, ceiling, model, endpoint and key. The key is chosen in the app's own secret store, by name. So it never
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
-import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
-import { AI_PURPOSES, aiModel, endpointProblem, formatSeries, purposeWords, word } from '@thoughtknot/core';
+import type { App, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
+import {
+  AI_PRESETS,
+  AI_PURPOSES,
+  aiModel,
+  endpointProblem,
+  formatSeries,
+  modelFromPreset,
+  purposeWords,
+  word,
+} from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type ThoughtKnotPlugin from '../main';
@@ -92,6 +101,33 @@ export function aiModelList(
       action: () => void save([...owner.settings.aiModels, aiModel({}, owner.settings.classifications)]),
     },
   };
+}
+
+/** The key of the picker that adds a model from a service. */
+export const PRESET_KEY = 'aiPreset';
+
+/** The picker: choosing a service adds a model with its name and address filled in (§19). */
+export function presetPicker(): SettingDefinitionItem {
+  return {
+    type: 'group',
+    items: [
+      {
+        name: word('models.preset'),
+        desc: word('models.preset.sentence'),
+        control: {
+          type: 'dropdown',
+          key: PRESET_KEY,
+          options: { '': word('models.preset.pick'), ...Object.fromEntries(AI_PRESETS.map((p) => [p.id, p.name])) },
+        },
+      },
+    ],
+  };
+}
+
+/** The models with a service's model added, or none changed when the choice is none. */
+export function withPreset(s: Settings, id: string): Partial<Settings> {
+  const added = modelFromPreset(id, s.classifications);
+  return added ? { aiModels: [...s.aiModels, added] } : {};
 }
 
 /** The models with one changed, read back as the core reads a model. */

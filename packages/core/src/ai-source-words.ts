@@ -70,6 +70,10 @@ export const AI_SOURCE_WORDS = {
   'models.key': 'Key',
   'models.key.sentence': 'Kept in the app’s own secret store, never in the vault.',
   'models.add': 'Add a model',
+  'models.preset': 'Add from a service',
+  'models.preset.sentence':
+    'Fills in the name and address of a service. You still give its model name and your own API key: an app subscription is not a key.',
+  'models.preset.pick': 'Choose a service…',
   'models.no-row': 'None: use the ceiling',
   'models.unmatched': ' (flagged: matches no classification)',
   'models.row-gone':

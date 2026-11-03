@@ -17,7 +17,7 @@ import type { MatrixRow, Option, Settings } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
-import { aiModelList, getModelValue, setModelValue } from './ai-models';
+import { PRESET_KEY, aiModelList, getModelValue, presetPicker, setModelValue, withPreset } from './ai-models';
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
 import { PresetChoice, sharePreset } from './preset-rows';
@@ -62,7 +62,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         items: OPTIONS.filter((o) => o.section === heading).flatMap((o) => this.definitions(o)),
       },
       // a list stands on its own, after its part of the page
-      ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this, this.matrix)] : []),
+      ...(heading === 'AI models' ? [presetPicker(), aiModelList(this.app, this.owner, this, this.matrix)] : []),
     ])
       .concat(profileGroup(this.owner.profiles, () => this.update()))
       .concat(outsideGroup(this.owner.outside, () => void this.addLink()));
@@ -172,6 +172,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (key === 'classifications') return s.classifications.join('\n');
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
     if (key.startsWith('aiModels.')) return getModelValue(s, key, this.matrix);
+    if (key === PRESET_KEY) return '';
     if (key === 'viewPreset') return this.preset.shown();
     return s[key as keyof Settings];
   }
@@ -186,7 +187,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (key.startsWith(PROFILE_KEY)) return setProfileValue(this.owner.profiles, key, value);
     if (key === 'viewPreset') return this.preset.pick(String(value)); // shown first, used on asking (§69)
     let change: Partial<Settings>;
-    if (key.startsWith('allowed.')) {
+    if (key === PRESET_KEY) change = withPreset(s, String(value));
+    else if (key.startsWith('allowed.')) {
       const id = key.slice('allowed.'.length);
       const others = s.allowed.filter((a) => a !== id);
       change = { allowed: value ? ([...others, id] as Settings['allowed']) : others };
