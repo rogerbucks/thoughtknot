@@ -1,6 +1,12 @@
 // Things stay put (editor spec §68, things_stay_put). A card drawn again, by the same layout, keeps each thing it showed
 // where it was. A View menu switch, a filter or an edit to the note then moves nothing already on screen. A thing new
 // to the drawing keeps the place the fresh layout gave it, beside a neighbour it shows already.
+// Each card's last drawing by our own engine says where it put each thing (`KeptSpots`, for layout-worker.ts).
+import type { GraphDrawing } from '../note-reading.ts';
+import type { Drawn } from '../render.ts';
+
+/** The attribute of our own engine's drawing that says where it put each thing, for the next drawing to keep. */
+export const SPOTS_ATTRIBUTE = 'data-layout-spots';
 
 /** A thing's middle, in our own engine's CSS pixels. */
 type Spot = [number, number];
@@ -40,13 +46,13 @@ export function keptSpots(
   return out;
 }
 
-/** The spots of a drawing, as an attribute's text: each thing's middle, rounded to a tenth of a pixel. */
+/** The spots of a drawing, as an attribute's text: each thing's middle, to a thousandth of a pixel. So each box is drawn exactly where it was. */
 export const spotsSaid = (spots: ReadonlyMap<string, readonly number[]>): string =>
   encodeURIComponent(
     JSON.stringify(Object.fromEntries([...spots].map(([k, [x = 0, y = 0]]) => [k, [round(x), round(y)]]))),
   );
 
-const round = (n: number): number => Math.round(n * 10) / 10;
+const round = (n: number): number => Math.round(n * 1000) / 1000;
 
 /** The spots an attribute's text `said` holds, each a pair of finite numbers; none for text that is not. */
 export function spotsHeard(said: string | null | undefined): Map<string, Spot> {
@@ -57,5 +63,33 @@ export function spotsHeard(said: string | null | undefined): Map<string, Spot> {
     return new Map(Object.entries(all).flatMap(([k, v]) => (pair(v) ? [[k, v] as const] : [])));
   } catch {
     return new Map();
+  }
+}
+
+/** What makes a drawing laid out the same way as another: so its things may keep their spots. */
+const sameLayout = (d: GraphDrawing): string =>
+  JSON.stringify([d.graph, d.engine, d.diagram, d.direction, d.layoutOptions, d.kindLanes, d.routing]);
+
+const SPOTS = new RegExp(`<svg\\b[^>]*\\s${SPOTS_ATTRIBUTE}="([^"]*)"`);
+
+/** Each card's last spots, by the layout they were laid out by. */
+export class KeptSpots {
+  private readonly last = new WeakMap<object, { layout: string; spots: Record<string, [number, number]> }>();
+
+  /** `drawing` for `owner`, with the spots its last drawing by the same layout put things at. */
+  onto(owner: object, drawing: GraphDrawing): GraphDrawing {
+    const was = this.last.get(owner);
+    // an exploration places its things itself (explore_shapes); a plug-in's layout gives its own spots
+    if (!was || drawing.placed || drawing.engine !== 'own' || was.layout !== sameLayout(drawing)) return drawing;
+    return { ...drawing, kept: was.spots };
+  }
+
+  /** Hears where `drawn` put each thing for `owner`, and where its settled layout does once that comes. */
+  heard(owner: object, drawing: GraphDrawing, drawn: Drawn | unknown): void {
+    if (!drawn || typeof drawn !== 'object' || !('svg' in drawn)) return;
+    const d = drawn as Drawn;
+    const spots = spotsHeard(SPOTS.exec(d.svg)?.[1]);
+    if (spots.size) this.last.set(owner, { layout: sameLayout(drawing), spots: Object.fromEntries(spots) });
+    void d.better?.then((b) => b && this.heard(owner, drawing, b));
   }
 }

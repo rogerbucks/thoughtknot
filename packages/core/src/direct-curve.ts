@@ -12,6 +12,8 @@ export interface Placed {
   hh: number;
   /** The group it must stay inside, as its edges, when it is in one. */
   inside?: { x0: number; y0: number; x1: number; y1: number };
+  /** Where a person saw it last: it stays there, and a box over it moves off it instead (things_stay_put). */
+  held?: true;
 }
 
 /** A direct link's curve: its points, where its tip is at either end, and where its words go. */

@@ -403,11 +403,11 @@ test('with three links between two things, every arrowhead tip sits on the ball 
 
 // proves: things_stay_put
 test('a network opened in space starts where the page drew each thing, so nothing is shuffled', () => {
-  // a chain drawn left to right on the page, and the same chain drawn right to left
+  // a chain drawn left to right on the page, zigzag, and the same chain drawn right to left
   const chain = ['hub', 'a', 'b', 'c', 'd'];
   const marks = (order) =>
     [...chain.flatMap(thing), ...chain.slice(1).map((k, i) => link(`e:${i}`, chain[i], k, 'NEXT'))].map((m) =>
-      m.kind === 'box' ? { ...m, x: order.indexOf(m.of) * 120 } : m,
+      m.kind === 'box' ? { ...m, x: order.indexOf(m.of) * 120, y: (order.indexOf(m.of) % 2) * 60 } : m,
     );
   for (const cards of [false, true])
     for (const order of [chain, [...chain].reverse()]) {

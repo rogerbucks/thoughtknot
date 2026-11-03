@@ -38,6 +38,7 @@ const LANE = 6; // how far apart links between the same two boxes run where our 
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
  * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts). With
  * `inRows`, the boxes stay where Graphviz put them and each link is routed between them, on its rows (rows-route.ts).
+ * Each box `held` stays at its spot in `at`: a box over it moves off it alone (things_stay_put).
  */
 export function directLinks(
   laid: LaidMarks,
@@ -46,6 +47,7 @@ export function directLinks(
   rankdir: 'LR' | 'TB' = 'LR',
   inRows = false,
   work: LinkWork = linkWork(), // each pass's work, against its own budget
+  held: ReadonlySet<string> = new Set(),
 ): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
@@ -74,6 +76,7 @@ export function directLinks(
     const p = boxes.get(k);
     if (!p) continue;
     [p.x, p.y] = b;
+    if (held.has(k)) p.held = true;
     // the group our engine placed it in holds it, not the one round its stand-in spot, so no box is drawn inside out
     const round = groupRound(groups, { x: p.x - p.hw, y: p.y - p.hh, width: 2 * p.hw, height: 2 * p.hh });
     if (round) p.inside = round;
@@ -302,8 +305,11 @@ function apart(boxes: Placed[], work: Work): number {
       const ox = p.hw + q.hw + BOX_GAP - Math.abs(q.x - p.x),
         oy = p.hh + q.hh + BOX_GAP - Math.abs(q.y - p.y);
       if (ox <= 0 || oy <= 0) continue;
-      // each moves half the overlap, along the way that is shorter
-      if (oy <= ox) {
+      if (p.held && q.held) continue;
+      // one held stays: the other goes beside it, the nearest way that keeps it on the drawing (things_stay_put)
+      if (p.held || q.held) offHeld(p.held ? q : p, p.held ? p : q);
+      // else each moves half the overlap, along the way that is shorter
+      else if (oy <= ox) {
         const s = (q.y >= p.y ? 1 : -1) * (oy / 2);
         moveTo(p, p.x, p.y - s);
         moveTo(q, q.x, q.y + s);
@@ -316,6 +322,21 @@ function apart(boxes: Placed[], work: Work): number {
     }
   }
   return moves;
+}
+
+/** Puts box `b` beside the box `held`, the nearest way round it that keeps `b` off the drawing's top and left edges. */
+function offHeld(b: Placed, held: Placed): void {
+  const [dx, dy] = [held.hw + b.hw + BOX_GAP, held.hh + b.hh + BOX_GAP];
+  const ways: [number, number][] = [
+    [held.x + dx, b.y],
+    [held.x - dx, b.y],
+    [b.x, held.y + dy],
+    [b.x, held.y - dy],
+  ];
+  const fits = ways.filter(([x, y]) => x >= b.hw && y >= b.hh);
+  const near = ([x, y]: [number, number]) => Math.hypot(x - b.x, y - b.y);
+  const [x, y] = (fits.length ? fits : ways).reduce((m, w) => (near(w) < near(m) ? w : m));
+  moveTo(b, x, y);
 }
 
 /** Puts box `b`'s middle at (`x`, `y`), kept inside its group. */

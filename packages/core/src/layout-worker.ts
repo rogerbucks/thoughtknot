@@ -16,7 +16,7 @@ import { nextStep } from './layouts/cheaper.ts';
 import { LayoutFailure } from './layout-port.ts';
 export { LayoutFailure, inThreadPort } from './layout-port.ts';
 import { needsPlacing, placedFor } from './layouts/offered.ts';
-import { KeptSpots } from './layout-kept.ts';
+import { KeptSpots } from './layouts/kept-spots.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a

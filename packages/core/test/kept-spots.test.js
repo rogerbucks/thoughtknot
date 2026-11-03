@@ -1,4 +1,4 @@
-// Things stay put (editor spec §68, things_stay_put): layout-kept.ts and layouts/kept-spots.ts. A card drawn again
+// Things stay put (editor spec §68, things_stay_put): layouts/kept-spots.ts. A card drawn again
 // keeps each thing it showed where it was. That holds after a View menu switch, a filter or an edit to the note, by
 // the same layout. A new layout the person asks for is laid out afresh.
 import { test } from 'node:test';
@@ -29,6 +29,11 @@ function network(more = 0) {
   return { ...d, engine: 'own' };
 }
 const spotsOf = (drawn) => spotsHeard(/data-layout-spots="([^"]*)"/.exec(drawn.svg)?.[1]);
+/** Each thing's spot from the hub's, so a drawing shifted whole reads the same. */
+const fromHub = (spots) => {
+  const [hx, hy] = spots.get('hub') ?? [0, 0];
+  return new Map([...spots].map(([k, [x, y]]) => [k, [x - hx, y - hy]]));
+};
 const runner = () => new LayoutRunner({ page: () => inThreadPort((s) => serveLayouts(s, loadEngine)), clock: CLOCK });
 
 // proves: things_stay_put
@@ -40,7 +45,8 @@ test('a card drawn again with a thing more keeps every thing it showed where it 
   const fresh = spotsOf(await r.draw(network(3), {}));
   assert.ok(movedThings(first, fresh).length > 0, 'laid out afresh, the new things move the old ones');
   const again = spotsOf(await r.draw(network(3), card));
-  assertStaysPut(first, again, 'the same card, three things added');
+  // the drawing may grow round a link bowed past its edge: the view keeps the person's place (layout_glide)
+  assertStaysPut(fromHub(first), fromHub(again), 'the same card, three things added');
   assert.ok(
     ['n0', 'n1', 'n2'].every((k) => again.has(k)),
     'and the new ones are drawn',
