@@ -21,6 +21,7 @@ const PACKAGES = [
   'packages/claude-code',
   'packages/app',
   'packages/vscode',
+  'packages/cowork',
 ];
 const PYTHON = 'python/graph_spec';
 const CODE = /\.(ts|js|mjs)$/;

@@ -1,0 +1,6 @@
+{
+  "file": "test/cowork-skill.test.js",
+  "test": "an edit gives the same bytes as the other hosts, and only after approval > an approval is for one edit of one note: another edit or another note is refused",
+  "seen_failing_first": false,
+  "evidence": "It pins the approval check a review asked to see tested. The check was already written, so the test passes on the code before it."
+}

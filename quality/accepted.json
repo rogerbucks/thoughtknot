@@ -112,6 +112,27 @@
       "to": 96.8,
       "reason": "The 99.2 was measured on 9 Oct 2026, on a Mac, when the core was smaller. The CI runner now measures the core at 96.8, and the baseline is set to what CI sees so each pull request can be held to it (CODE-3). The core's coverage is not lowered by this change.",
       "date": "2026-10-30"
+    },
+    {
+      "metric": "instructions_draw_fifty",
+      "from": 912574259,
+      "to": 2100000000,
+      "reason": "R2 (0.8.0) ships now, privately, with this slower count; accepted by Roger, 3 Nov 2026. Main took many view and layout merges since the baseline was set, and the release runner counted 1.94 billion. The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "instructions_keystroke",
+      "from": 389586025,
+      "to": 520000000,
+      "reason": "R2 (0.8.0) ships now, privately, with this slower count; accepted by Roger, 3 Nov 2026. Main took many view and layout merges since the baseline was set, and the release runner counted 485 million. The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "instructions_cold_start",
+      "from": 2672152969,
+      "to": 4200000000,
+      "reason": "R2 (0.8.0) ships now, privately, with this slower count; accepted by Roger, 3 Nov 2026. Main took many view and layout merges since the baseline was set, and the release runner counted 3.91 billion. The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
     }
   ]
 }
