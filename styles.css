@@ -2356,17 +2356,20 @@ pre.thoughtknot-code {
 }
 /* A label that changes, such as the 2D and 3D button's, holds the room of its widest word (space-switch.ts). So the
    bar never wraps anew as it changes. Where a label is hidden, it stays hidden. */
-:where(.thoughtknot-badge-text[data-room]) {
-  display: inline-block;
-  text-align: center;
-}
-.thoughtknot-badge-text[data-room]::after {
-  content: attr(data-room);
-  display: block;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  white-space: pre;
+/* At the narrowest a bar wraps anyway, and the room would push its last buttons off the screen. */
+@media (min-width: 22rem) {
+  :where(.thoughtknot-badge-text[data-room]) {
+    display: inline-block;
+    text-align: center;
+  }
+  .thoughtknot-badge-text[data-room]::after {
+    content: attr(data-room);
+    display: block;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: pre;
+  }
 }
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
