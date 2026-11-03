@@ -3,9 +3,8 @@
 // to a graph too large for one drawing: the table, or a view (large_way_in). And it holds the types that, wide on a
 // phone, scroll one way only (wide_types_phone). Host-free.
 import type { Graph } from '@thoughtknot/graph-spec';
-import gs from '@thoughtknot/graph-spec';
 import { valueText } from './inline-properties.ts';
-import { formatCount } from './locale-formats.ts';
+import { calcText, calculatedOf, numberOf } from './table-calculated.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { DiagramType } from './style-graph.ts';
 import { LARGE_GRAPH } from './types.ts';
@@ -48,12 +47,7 @@ export function tableOf(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Grap
     return {
       key: b.key,
       cells: [b.text, b.kind, ...props.map((v) => (v === undefined ? '' : valueText(v))), ...calc.map(calcText)],
-      numbers: [
-        null,
-        null,
-        ...props.map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)),
-        ...calc.map((v) => v?.value ?? null),
-      ],
+      numbers: [null, null, ...props.map(numberOf), ...calc.map((v) => v?.value ?? null)],
     };
   });
   const numeric = heads.map((_, c) => rows.some((r) => r.numbers[c] !== null));
@@ -61,9 +55,10 @@ export function tableOf(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Grap
     columns: heads,
     numeric,
     calculated: worked.names,
-    units: heads.map((_, c) =>
-      c < heads.length - worked.names.length ? '' : (worked.units[c - (heads.length - worked.names.length)] ?? ''),
-    ),
+    units: [
+      ...heads.slice(0, heads.length - worked.names.length).map(() => ''),
+      ...worked.names.map((_, k) => worked.units[k] ?? ''),
+    ],
     rows,
     links: drawing.links.map((l, index) => {
       const props = (l.edge !== undefined ? g?.edges[l.edge] : edges[index])?.[3] ?? {};
@@ -102,36 +97,4 @@ export const ONE_WAY_TYPES: readonly DiagramType[] = ['tree', 'flow', 'timeline'
  */
 export function scrollsOneWay(type: DiagramType, phone: boolean, width: number, room: number): boolean {
   return phone && ONE_WAY_TYPES.includes(type) && width > room;
-}
-
-/** What a calculated value says in its cell: the number with its unit, or nothing where it could not be worked out. */
-function calcText(v: { value: number | null; unit?: string } | undefined): string {
-  if (!v || v.value === null) return '';
-  return `${formatCount(v.value)}${v.unit ? ` ${v.unit}` : ''}`;
-}
-
-/** The calculated values the schema declares for the things drawn, by thing, and their names (not a property's). */
-function calculatedOf(drawing: Pick<GraphDrawing, 'boxes'>, g: Graph | undefined, taken: string[]) {
-  const none = {
-    names: [] as string[],
-    units: [] as string[],
-    values: new Map<string, Record<string, { value: number | null; unit?: string }>>(),
-  };
-  if (!g) return none;
-  const found = gs.calculate(
-    g,
-    drawing.boxes.map((b) => b.key),
-  ).values;
-  for (const b of drawing.boxes) {
-    const mine = Object.hasOwn(found, b.key) ? found[b.key] : undefined;
-    if (!mine) continue;
-    none.values.set(b.key, mine);
-    for (const [name, v] of Object.entries(mine)) {
-      if (taken.includes(name)) continue;
-      let at = none.names.indexOf(name);
-      if (at < 0) at = none.names.push(name) - 1;
-      if (!none.units[at] && v.unit) none.units[at] = v.unit;
-    }
-  }
-  return none;
 }
