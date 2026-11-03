@@ -775,6 +775,14 @@ never data.
   with its expression, and no field to change it. `display/graph-view/details-calculated-rows.ts` draws it.
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
   `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
+
+#### Discovery in large graphs
+
+- `gap-lenses.ts` — ready-made lenses that find gaps (§60, discover_gap_lenses): `unlinked`, `missingNeeds`,
+  `unusualNumbers`, `stale` and `nearDuplicates`. Each reads the graph and names things; none changes it.
+- `compare-sets.ts` and `working-set.ts` — two sets compared into only-one, only-other and both (§60). Things pinned
+  into a working set make a graph of just those things and the links between them.
+
 #### Making a rule from the card
 
 - `display/graph-view/rule-form.ts` — the Highlight things button beside the legend and its form, in three plain steps
