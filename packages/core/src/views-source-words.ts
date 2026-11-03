@@ -3,7 +3,9 @@
 // a view cannot be written into a note. GQL and names stay inside the sentence as written. The block a view is written
 // as is never here: it is the note's bytes. source-words.ts keeps these with every other word. The names of the
 // ready-made lenses come with them (lens-source-words.ts), and so do the words of personal profiles
-// (profile-source-words.ts). So do the words that say why a View menu option is greyed (view-support-source-words.ts).
+// (profile-source-words.ts). So do the words that say why a View menu option is greyed (view-support-source-words.ts),
+// and an intent's standing (intent-source-words.ts).
+import { INTENT_SOURCE_WORDS } from './intent-source-words.ts';
 import { LENS_SOURCE_WORDS } from './lens-source-words.ts';
 import { PROCESS_SOURCE_WORDS } from './process-source-words.ts';
 import { PROFILE_SOURCE_WORDS } from './profile-source-words.ts';
@@ -11,6 +13,7 @@ import { VIEW_SUPPORT_SOURCE_WORDS } from './view-support-source-words.ts';
 
 /** The words of the core's views, by key, in UK English. */
 export const VIEWS_SOURCE_WORDS = {
+  ...INTENT_SOURCE_WORDS,
   ...LENS_SOURCE_WORDS,
   ...PROCESS_SOURCE_WORDS,
   ...PROFILE_SOURCE_WORDS,

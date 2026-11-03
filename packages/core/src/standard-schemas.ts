@@ -26,6 +26,24 @@ export const STANDARD_SCHEMAS: readonly string[] = [
 (decision_schema)-[:DECLARES]->(link_answers),
 (decision_schema)-[:DECLARES]->(link_favours),
 (decision_schema)-[:DECLARES]->(link_counts_against)`,
+  `// graph: intent · SCHEMA intent@1
+// The standard schema for an intent: what a person is trying to reach, and the things that support or contradict it.
+(intent_schema:GraphMeta {graph: 'intent', schema: 'intent@1'}),
+(kind_intent:Meta:ElementType {name: 'Intent', kind: 'node', origin: 'source'}),
+(kind_intent_rule:Meta:ElementType {name: 'IntentRule', kind: 'node', origin: 'source'}),
+(kind_thing:Meta:ElementType {name: 'Thing', kind: 'node', origin: 'source'}),
+(link_supports:Meta:ElementType {name: 'SUPPORTS', kind: 'edge', origin: 'source',
+    reading: 'supports', reverse_name: 'is supported by'}),
+(link_contradicts:Meta:ElementType {name: 'CONTRADICTS', kind: 'edge', origin: 'source',
+    reading: 'contradicts', reverse_name: 'is contradicted by'}),
+(link_checks:Meta:ElementType {name: 'CHECKS', kind: 'edge', origin: 'source',
+    reading: 'checks', reverse_name: 'is checked by'}),
+(intent_schema)-[:DECLARES]->(kind_intent),
+(intent_schema)-[:DECLARES]->(kind_intent_rule),
+(intent_schema)-[:DECLARES]->(kind_thing),
+(intent_schema)-[:DECLARES]->(link_supports),
+(intent_schema)-[:DECLARES]->(link_contradicts),
+(intent_schema)-[:DECLARES]->(link_checks)`,
 ];
 
 /** The name a shared schema block gives itself, with its version: `decision@1`; null for any other block. */
