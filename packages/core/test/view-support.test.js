@@ -22,7 +22,7 @@ describe('which view takes which option', () => {
   // proves: view_options_everywhere
   test('covers every diagram type with a View menu and every view drawn as marks', () => {
     assert.deepEqual(SUPPORTED_VIEWS, ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', ...VIEW_TYPES]);
-    assert.equal(SUPPORTED_VIEWS.length, 20, 'all 21 views but the table, which has no View menu');
+    assert.equal(SUPPORTED_VIEWS.length, 21, 'all 22 views but the table, which has no View menu');
   });
 
   // proves: view_options_everywhere

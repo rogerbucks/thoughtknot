@@ -1,9 +1,12 @@
 // The words of the AI send dialog, the AI models' settings and the question before leaving the app. They are in UK
 // English (editor spec §42, words_catalogue). The core's AI words follow: what is sent, its ceilings and its refusals.
-// source-words.ts keeps them with every other word.
+// source-words.ts keeps them with every other word. The words of AI suggestions are kept with them
+// (ai-suggest-source-words.ts).
+import { AI_SUGGEST_SOURCE_WORDS } from './ai-suggest-source-words.ts';
 
 /** The AI dialog's, the AI models', leaving the app's and the core's AI words, by key, in UK English. */
 export const AI_SOURCE_WORDS = {
+  ...AI_SUGGEST_SOURCE_WORDS,
   'ai.view': 'View',
   'ai.graph': 'Graph',
   'ai.title': 'Ask an AI model to propose changes',

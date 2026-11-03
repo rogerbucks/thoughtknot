@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/facet-totals.test.js",
+  "test": "10,000 kept things total in one pass, each counted once",
+  "seen_failing_first": false,
+  "evidence": "A guard over code this branch already had: it checks existing behaviour at scale, so it cannot fail before a change."
+}

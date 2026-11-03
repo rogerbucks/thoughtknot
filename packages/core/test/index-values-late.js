@@ -10,7 +10,23 @@
 // So did ruleProps, ruleRefusal and withTriedRules (rule_look_try_save). The rule built in plain words came on 1 Nov
 // 2026 (rule_look_builder). That is LINKS_FIELD, NUMBER_OPS, RULE_OPS and savedRules. It is also ruleChoices,
 // ruleFinds, ruleStarts, sayDraft, testsOf and whenOf. ruleRemoved and ruleMovedUp (rule_look_remove) came the same day.
+// INTENT_LINK_TYPES, INTENT_MARKS, UNSTATED and the intent functions (§58, intents) came on 3 Nov 2026.
 export const VALUES_LATE = [
+  'CERTAINTY_WORDS',
+  'SUGGESTED_TOKEN',
+  'suggestAsk',
+  'suggestedPreview',
+  'suggestionGroups',
+  'INTENT_LINK_TYPES',
+  'INTENT_MARKS',
+  'intentOverlay',
+  'intentPulls',
+  'withIntentOverlay',
+  'UNSTATED',
+  'intentLinks',
+  'intentStanding',
+  'intentStandings',
+  'intentThings',
   'LINKS_FIELD',
   'NUMBER_OPS',
   'RULE_OPS',
@@ -285,4 +301,6 @@ export const VALUES_LATE = [
   'historyFrom',
   'historyMoved',
   'withVersion',
+  // the numbers a filter can total (§57, calc_set_totals), 3 Nov 2026
+  'measuresOf',
 ];

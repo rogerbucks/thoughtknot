@@ -304,6 +304,20 @@
 .thoughtknot-rule-glyph {
   margin-inline-end: var(--gn-space-1);
 }
+/* the list that picks the intent shown over the drawing, and its standing in words (§58, intent_overlay) */
+.thoughtknot-intent-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  align-items: baseline;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-intent-pick select {
+  margin-inline-start: var(--gn-space-1);
+}
+.thoughtknot-intent-pick-standing {
+  color: var(--gn-text-muted);
+}
 .thoughtknot-rule-line {
   display: inline-block;
   width: 1.5em;
@@ -4024,6 +4038,12 @@ body.thoughtknot-easier-reading
   flex-wrap: wrap;
   gap: var(--gn-space-2);
 }
+/* the intents a huge graph's groups are placed round (§58, intent_poles_massive) */
+.thoughtknot-massive-poles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
 .thoughtknot-massive-facet {
   display: flex;
   flex-direction: column;
@@ -4039,6 +4059,12 @@ body.thoughtknot-easier-reading
 .thoughtknot-massive-count {
   margin-inline-start: auto;
   color: var(--gn-text-muted);
+}
+.thoughtknot-massive-total {
+  color: var(--gn-text-muted);
+}
+.thoughtknot-massive-total:empty {
+  display: none;
 }
 /* drawings on the graph (§70): the tools on the card's bar, and a drawing chosen or being drawn */
 .thoughtknot-sketch-tools {
@@ -4096,4 +4122,51 @@ img.thoughtknot-picture-hidden,
   stroke: var(--gn-bg);
   stroke-width: 0.35em;
   stroke-linejoin: round;
+}
+/* a calculated value in the details (§57): marked as worked out, never edited */
+.thoughtknot-calculated {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  margin-block: var(--gn-space-2);
+}
+.thoughtknot-calculated-title {
+  font-weight: var(--gn-font-weight-semibold);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-calculated-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-calculated-from {
+  flex-basis: 100%;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
+}
+/* the table's filters and Total row (§57, table_view): rows off screen are not drawn until they scroll into view */
+.thoughtknot-table-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--gn-space-1);
+  padding-block: var(--gn-space-1);
+}
+.thoughtknot-table-filter {
+  flex: 0 0 8em;
+  min-width: 0;
+}
+.thoughtknot-grid tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 30px;
+}
+.thoughtknot-grid tbody tr[hidden] {
+  display: none;
+}
+.thoughtknot-total-row td,
+.thoughtknot-total-row th {
+  position: sticky;
+  bottom: 0;
+  background: var(--gn-bg);
+  font-weight: var(--gn-font-weight-semibold);
 }

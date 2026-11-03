@@ -365,6 +365,41 @@ declare namespace GraphSpecCheck {
   function queryThings(graph: Graph, query: string): string[];
   /** The links of `type`, or every type, passing `where`, by their place in the edges (editor spec §56). */
   function queryLinks(graph: Graph, type: string | null, where: string | null): number[];
+  /** A Calculated or Quantity thing of a graph: its kind, property, expression, unit and what is wrong with it. */
+  interface CalculatedDeclaration {
+    id: string;
+    of: string | null;
+    name: string | null;
+    /** The expression of a Calculated thing; null for a Quantity. */
+    is: string | null;
+    unit: string | null;
+    /** Each flag: its code and a detail, such as calc-unreadable. */
+    flags: [code: string, detail: string][];
+  }
+  /** One calculated value (editor spec §57). A gap is a null value; `missing` counts the inputs it lacked. */
+  interface CalculatedValue {
+    value: number | null;
+    unit: string;
+    missing: number;
+    /** The things in a loop this value depends on, else null. */
+    loop: string[] | null;
+    /** Why it was refused, such as adding two units, else null. */
+    refusal: string | null;
+    /** What it was worked out from, so a kept copy is known stale when this changes. */
+    basis: string;
+  }
+  /** The Calculated and Quantity things of a graph (editor spec §57). */
+  function calculatedOf(graph: Graph): CalculatedDeclaration[];
+  /** Every thing's calculated values by thing and name, worked out now, and the declarations that cannot be used. */
+  function calculate(
+    graph: Graph,
+    ids?: string[],
+  ): {
+    values: Record<string, Record<string, CalculatedValue>>;
+    problems: [id: string, code: string, detail: string][];
+  };
+  /** The keys (`thing|name`) of kept values no longer what they would be worked out as now. */
+  function staleCalculated(graph: Graph, cache: Record<string, { basis: string }>): string[];
   /** What is wrong with a guard as written, or null when it reads; its names are not looked up (editor spec §56). */
   function guardProblem(guard: string): string | null;
   /** One thing in the altitude and topic index (editor spec §32). */

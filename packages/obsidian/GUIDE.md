@@ -47,11 +47,20 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 
 - `block.ts` — one gql block in a note. It is drawn, or shown as code, never blank. It is shown as text with a banner
   when it is over a size or time limit.
+
+### Graphs too large to draw
+
+- `massive-card.ts` — a graph too large to draw, as its overview. Its filter and its poles (§58) are saved where the
+  note is edited, and only tried in reading view.
 - `note-store.ts` — a note too big to read at once is read into a store in memory, a part at a time. Its card shows
   the graph's overview from there, above the text and why (§53, scale_in_parts).
 - `stored-edit.ts` — a thing chosen in that overview, by search or a click, shows its properties. A change is written
   to the note's text first, on the lines that wrote the thing. Then the store reads the note again.
+
+### Rules and views on a card
+
 - `rule-card.ts` — the style rules a graph card or a view card draws (§56): what each finds, its look and the legend.
+  `intentOn` adds the graph's intents to pick from, and the one shown over the card (§58), held in `tried-types.ts`.
   A clash of two rules is listed with the graph card's problems.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph.
   - Outside the view profile it is refused, saying what is allowed.
@@ -289,6 +298,9 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     again.
   - The key is read from the app's secret store as the request goes. Every model's key is read before, only to make sure
     none is in what is sent.
+- `suggest-rows.ts` — what the send dialog asks for (§59): changes, or suggestions. Suggestions are a value of one
+  property (of one kind, from a list if given) or each thing's pull on an intent of the graph. `suggestForOf` makes the
+  ask for the core's `suggestAsk`. The answer is a change set grouped by value, applied a group at a time in its card.
   - Every send is recorded in the plugin's data (`recordAiSend`).
   - An answer is written into the note as a change set after the graph's blocks, through `vault.process`. A failure is
     said in a notice, the note left as it was.

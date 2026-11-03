@@ -30,9 +30,9 @@ export class FacetIndex {
   readonly keys: readonly string[];
   readonly facets: readonly Facet[];
   /** Each facet's values, most common first, ties by name, so the list keeps its order as choices change. */
-  private readonly order: string[][];
+  readonly order: string[][];
   /** Each facet's value for each thing, as its place in `order`, or -1 where it has none: numbers compare fast. */
-  private readonly codes: Int32Array[];
+  readonly codes: Int32Array[];
 
   constructor(keys: readonly string[], facets: readonly Facet[]) {
     this.keys = keys;
@@ -52,7 +52,7 @@ export class FacetIndex {
   }
 
   /** For each facet with a choice, which of its values are kept, by place; null for a facet that keeps everything. */
-  private wanted(chosen: Chosen): (Uint8Array | null)[] {
+  wanted(chosen: Chosen): (Uint8Array | null)[] {
     return this.facets.map((facet, f) => {
       const want = chosen[facet.name];
       if (!want || !want.size) return null;
@@ -61,7 +61,7 @@ export class FacetIndex {
   }
 
   /** Whether the thing at place `i` is kept by every facet's choice but `skip`'s. */
-  private keeps(i: number, wanted: readonly (Uint8Array | null)[], skip = -1): boolean {
+  keeps(i: number, wanted: readonly (Uint8Array | null)[], skip = -1): boolean {
     for (let f = 0; f < wanted.length; f++) {
       const want = wanted[f];
       if (f === skip || !want) continue;

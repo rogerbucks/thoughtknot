@@ -38,6 +38,8 @@ import { LISTED, searchBox } from './massive-search.ts';
 import { button } from '../button';
 import type { MassiveOptions, MassiveView } from './massive-options.ts';
 import { groupLooks, lookFacet } from '../../rule-looks-massive.ts';
+import { poledMarks } from '../../pole-groups.ts';
+import { polesPanel } from './massive-poles.ts';
 
 export type { MassiveOptions, MassiveView } from './massive-options.ts';
 
@@ -71,7 +73,10 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   let names = new Map(grouping.groups.map((g) => [g.id, g.label]));
   let keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
   const owner = {};
-  let laid: LaidMarks = placesKept(o.graph, overviewOf(grouping, live.order, looks));
+  // the intents its groups are placed round, if any (§58, intent_poles_massive): its marks only move, never laid out again
+  let poles: string[] = o.intents ? [...(o.poles ?? [])] : [];
+  const poled = (l: LaidMarks) => (o.intents && poles.length ? poledMarks(l, grouping, o.intents.graph, poles) : l);
+  let laid: LaidMarks = poled(placesKept(o.graph, overviewOf(grouping, live.order, looks)));
   /** The marks while groups glide after a filter, painted without an index; null when still. */
   let gliding: LaidMarks | null = null;
   let index = new MarkIndex(laid);
@@ -218,18 +223,31 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     search = new ThingSearch(f.mask ? drawing.boxes.filter((_, i) => f.mask?.[i]) : drawing.boxes, grouping);
     names = new Map(grouping.groups.map((g) => [g.id, g.label]));
     keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
-    laid = f.laid;
+    laid = poled(f.laid);
     index = new MarkIndex(laid);
     opened.clear();
     stage.setAttribute('aria-label', named());
     said.setText(word('massive.kept', { count: search.size }));
   };
   // the filters: the overview drawn again from the things kept, its groups in the same order, gliding there
+  const keepOf = (now: Chosen) => Object.fromEntries(Object.entries(now).map(([k, v]) => [k, [...v]]));
   const regroup = (now: Chosen) => {
     const from = gliding ?? laid;
     kept(now);
     record(fit(laid.space));
-    o.chose?.(Object.fromEntries(Object.entries(now).map(([k, v]) => [k, [...v]])));
+    o.chose?.(keepOf(now), poles); // with the poles chosen, so saving a filter keeps them
+    glideFrom(from);
+  };
+  // poles chosen: the groups glide to their places round them, or back, and the host saves them or only tries them
+  const repole = (next: string[]) => {
+    const from = gliding ?? laid;
+    poles = next;
+    kept(chosen);
+    record(fit(laid.space));
+    o.chosePoles?.(next, keepOf(chosen));
+    glideFrom(from);
+  };
+  const glideFrom = (from: LaidMarks) => {
     const at = glide(from, laid),
       mine = ++flight,
       start = win.performance.now(),
@@ -248,7 +266,8 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
-  const filters = filterPanel(tools, live.index, regroup);
+  const filters = filterPanel(tools, live.index, regroup, o.measures);
+  if (o.intents?.choices.length) polesPanel(tools, o.intents.choices, poles, repole);
   spaceButton(tools, el, o.graph, () => ({ marks: laid.marks, paints }), stage);
 
   // the trail: each search, grown thing and filter is a step, and back and forward draw that step's picture again

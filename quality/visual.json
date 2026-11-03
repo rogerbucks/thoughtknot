@@ -159,15 +159,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "9fd550ad8f28cf890b8ecc1a9e501f4ac624cd49e1da3c33169c71d705743463",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "6d2b8d56a9f8165cfb09595e7e165047f967befe444db309030ab6c9e3774c4c",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "3bd9395ca6f4e0fec2d5f92df04b9e5f8da6eef948234e4603e8a8f2892e6e35",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "ca00f344f1433ffd07e7d7a0b91f0362c29de5c90485bb1a5498729419ddd9ef",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
@@ -207,15 +207,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "a18aa4f11512193051196b69a2b9380b6654d0e04c7f28938de490b0f69e58e7",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "066d2e80ad1be9053dc18021d74cdfadede238274e48303176462cdec9fe4b52",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "8ae867ebc817f5715d879f69c1f97685abc8fdeaa49c7d5d05aa162a3d09ed4d",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "9625551d487e23308c4aeea17fa8bdc01f6c0b5f8b7903e4ee38e371001c8d87",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
@@ -255,15 +255,15 @@
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "9fd550ad8f28cf890b8ecc1a9e501f4ac624cd49e1da3c33169c71d705743463",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "6d2b8d56a9f8165cfb09595e7e165047f967befe444db309030ab6c9e3774c4c",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "3bd9395ca6f4e0fec2d5f92df04b9e5f8da6eef948234e4603e8a8f2892e6e35",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "ca00f344f1433ffd07e7d7a0b91f0362c29de5c90485bb1a5498729419ddd9ef",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
@@ -315,15 +315,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "bc21e086ba3b1d1b24db464de4494d8589d94f250a79dbfeebd8db396902c57f",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "947f5ed6e0a58a67a580b73a03da53a107ab170de00e2fe8434e64aad9f5807d",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
@@ -363,15 +363,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "0734054e1ab770e23589655ec9617da16b5c2a78b03b2d8f2b105fe0ec85985d",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "8fbea489e16fa3dfbca57e984612d9989fd11fe4bf53e4fd020e8b9915dc860c",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "ee49873beb02d5767e1c60a4de57736c730fa6b8a49b2aae47b159487907dbce",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "c9be8a03734f58f5f70595d63b10409d465d523ff7eee8a21114f654a9a23d6f",
+      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "day": "2026-11-03"
     }
   ]
 }

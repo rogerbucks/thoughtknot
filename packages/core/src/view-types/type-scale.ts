@@ -5,6 +5,12 @@
 /** The least and most size a thing's name is drawn at, in pixels of a screen-shaped view. */
 export const NAME_LEAST = 9,
   NAME_MOST = 12;
+/**
+ * The most a thing's name is shown at on the screen as you zoom in, in pixels, in 2D and 3D alike. Zooming in shows the
+ * thing larger, but its name stops growing here, so it stays readable and never fills the screen (Roger, 3 Nov 2026:
+ * "big items first, detail on zoom"). The busiest thing's name may be up to 1.4 times this (HUB_LARGER).
+ */
+export const NAME_CEILING = 16;
 /** A caption's size, as a share of a name's. */
 export const CAPTION = 0.85;
 

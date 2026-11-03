@@ -1,7 +1,7 @@
 // The diagram types looked at in reading view, never saved (spec §15, type_try_reading). One for each graph or view of
 // each note, held until Obsidian closes, as the View menu's switches are. A card is drawn as the type held, if any. It
 // says it is not saved, and where the note is edited offers to keep it. Choosing a type there saves it and forgets this.
-// The rules tried in reading view are held the same way (§56, rule_look_try_save). A rule saved where the note is
+// The rules tried in reading view are held the same way (§56, rule_look_try_save). So is the intent shown over a card (§58). A rule saved where the note is
 // edited is written into the style graph, and the rules tried there are forgotten.
 import { diagramFor, withTriedRules, word } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, RuleAsk, RuleWrite, StyleGraph } from '@thoughtknot/core';
@@ -16,6 +16,12 @@ import type { StayedAt } from '@thoughtknot/core/display/graph-view/type-place';
 
 /** How long where a card was left waits for the card drawn as its new type: a type saved draws it once written. */
 const LEFT_FOR_MS = 10_000;
+
+/** The intent shown over a card, and how to show another or none (§58, intent_overlay). */
+export interface IntentHeld {
+  chosen: string | null;
+  choose(intent: string | null): void;
+}
 
 /** Where a type is looked at: the note, its graph, and the view, if the card shows one. */
 export interface TriedAt {
@@ -34,6 +40,8 @@ export class TriedTypes {
   private readonly stayed = new Map<string, { at: StayedAt; when: number }>();
   /** The rules tried where each card is, in the order tried (§56). */
   private readonly rules = new Map<string, RuleWrite[]>();
+  /** The intent shown over each card, by its id (§58, intent_overlay): held as the rules tried are, never written. */
+  private readonly intents = new Map<string, string>();
   /** The rule last taken out where each card is, while one Undo can put it back (rule_look_remove). */
   private readonly removals = new Map<string, Removal>();
 
@@ -148,6 +156,14 @@ export class TriedTypes {
     for (const changed of [...this.watchers]) changed(path);
   }
 
+  /** Shows `intent` over the card at `at`, or with none takes it off; then draws its note's cards again. */
+  chooseIntent(at: TriedAt, intent: string | null): void {
+    const key = TriedTypes.key(at);
+    if (intent) this.intents.set(key, intent);
+    else if (!this.intents.delete(key)) return;
+    for (const changed of [...this.watchers]) changed(at.path);
+  }
+
   /** Calls `changed` with the note's path whenever a type is looked at or put back; gives what stops it. */
   watch(changed: (path: string) => void): () => void {
     this.watchers.add(changed);
@@ -156,20 +172,25 @@ export class TriedTypes {
 
   /**
    * The style to draw `drawing` with where `at` says: as saved, or with the type looked at and the rules tried. It
-   * comes with how its card looks at a type, for `diagramShown`, and what it may do with a rule (§56).
+   * comes with how its card looks at a type, for `diagramShown`, and what it may do with a rule (§56). With them is the
+   * intent shown over it, and how to show another (§58).
    */
   styleFor(
     at: TriedAt,
     drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
     style: StyleGraph,
     g: NoteReading['world'][string] | undefined,
-  ): { style: StyleGraph; trying: Trying; ask: RuleAsk } {
+  ): { style: StyleGraph; trying: Trying; ask: RuleAsk; intent: IntentHeld } {
     const tried = this.of(at),
       saved = diagramFor(drawing, style, g, at.view).drawn,
       centre = saved === 'radial' ? pickedCentre(style, at.view) : undefined;
     return {
       style: withTriedRules(tried ? withTried(style, tried) : style, this.rules.get(TriedTypes.key(at)) ?? []),
       ask: this.ruleAsk(at),
+      intent: {
+        chosen: this.intents.get(TriedTypes.key(at)) ?? null,
+        choose: (intent) => this.chooseIntent(at, intent),
+      },
       trying: {
         saved,
         ...(centre === undefined ? {} : { savedCentre: centre }),

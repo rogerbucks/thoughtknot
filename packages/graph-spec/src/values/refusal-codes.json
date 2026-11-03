@@ -19,6 +19,7 @@
     "GR16": "a lens rule that needs an engine to run (lenses.js)",
     "GR17": "a constraint written in GQL with no named twin, which needs an engine (validate.js)",
     "GR18": "a document's trust that is not own, trusted or untrusted (trust.js)",
+    "GR19": "a calculated-value expression that cannot be read, or is too long or deep (calculated.js)",
     "GL01": "the layout handed one key as text where a collection of keys goes (graph-layout.js)",
     "GL02": "the layout handed no direction, and a style that sets none (graph-layout.js)"
   }

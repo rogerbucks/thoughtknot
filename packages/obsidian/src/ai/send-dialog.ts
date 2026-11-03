@@ -7,6 +7,7 @@
 // - Every send is recorded in the plugin's data, whatever came of it.
 // - A model unsure what is meant asks one question back. It is put under the question, for the person to answer there;
 //   then Show and Send again, as for any change (edit_ai_expand).
+// - It may ask for suggestions instead: a value of one property, or each thing's pull on an intent (suggest-rows.ts).
 // - Opened from Expand with AI, the thing's graph, the thing and the expand question are chosen already.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
@@ -20,6 +21,7 @@ import {
   purposeWords,
   readNote,
   sendPrepared,
+  suggestAsk,
   viewsOf,
   word,
 } from '@thoughtknot/core';
@@ -28,6 +30,7 @@ import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
+import { NO_SUGGESTION, drawSuggestRows, suggestForOf } from './suggest-rows';
 import { changeVaultNote } from '../storage/plugin-notes';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
@@ -56,6 +59,8 @@ export class SendDialog extends Modal {
   private asked = 0;
   private readonly things: Map<string, Listed[]>;
   private readonly views: Map<string, string[]>;
+  private readonly intents: Map<string, string[]>;
+  private readonly suggest = { ...NO_SUGGESTION };
   private shownEl: HTMLElement | null = null;
   private sendButton: ButtonComponent | null = null;
 
@@ -80,6 +85,7 @@ export class SendDialog extends Modal {
         .filter(([, d]) => d.boxes.length)
         .map(([g, d]) => [g, d.boxes.map((b) => ({ key: b.key, text: b.text || b.key }))]),
     );
+    this.intents = new Map(Object.entries(reading.world).map(([g, w]) => [g, w.labelled('Intent')]));
     this.views = new Map();
     for (const v of viewsOf(reading.texts))
       if (!v.fault) this.views.set(v.graph, [...(this.views.get(v.graph) ?? []), v.name]);
@@ -135,6 +141,11 @@ export class SendDialog extends Modal {
             this.changed(true);
           }),
       );
+    drawSuggestRows(el, this.suggest, { name: this.graph, intents: this.intents.get(this.graph) ?? [] }, (redraw) => {
+      if (redraw && this.question === word(this.suggest.ask === 'changes' ? 'ai.suggest.question' : 'ai.question'))
+        this.question = word(this.suggest.ask === 'changes' ? 'ai.question' : 'ai.suggest.question');
+      this.changed(redraw);
+    });
     if (this.what === 'view') this.drawViews(el);
     if (this.what === 'things') this.drawThings(el);
     this.drawModel(el);
@@ -271,7 +282,7 @@ export class SendDialog extends Modal {
       const key = m.keyName ? this.app.secretStorage.getSecret(m.keyName) : null;
       return key ? [key] : [];
     });
-    const p = prepareSend({
+    const base = {
       settings: this.plugin.settings,
       model: this.model,
       note: this.note,
@@ -279,11 +290,14 @@ export class SendDialog extends Modal {
       // read now, never kept from when the dialog opened, so a classification changed meanwhile is never stale here
       level: this.levelOf(),
       choice,
-      question: this.question,
       secrets,
       shared: this.shared,
       matrix,
-    });
+    };
+    // suggestions are asked for in the person's own words, and read back only as suggestions (§59)
+    const f = suggestForOf(this.suggest);
+    const ask = f ? suggestAsk(base, f, this.question) : { ...base, question: this.question };
+    const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;
     this.drawShown();

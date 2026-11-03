@@ -9,7 +9,7 @@
   "packages/core/src/display/graph-view/gl-painter.ts#webgl2Painter": 136,
   "packages/core/src/display/graph-view/gpu-painter.ts#webgpuPainter": 193,
   "packages/core/src/display/graph-view/graph-view.ts#GraphView.onload": 172,
-  "packages/core/src/display/graph-view/massive-view.ts#massiveView": 303,
+  "packages/core/src/display/graph-view/massive-view.ts#massiveView": 320,
   "packages/core/src/display/graph-view/space-gpu-painter.ts#webgpuSpacePainter": 155,
   "packages/core/src/display/graph-view/space-painter.ts#webgl2SpacePainter": 113,
   "packages/core/src/display/graph-view/space-view-panel.ts#openSpaceView": 308,
@@ -46,7 +46,7 @@
   "packages/obsidian/src/block.ts#renderBlock": 237,
   "packages/obsidian/src/export/export.ts#exporting": 108,
   "packages/obsidian/src/links/link-host.ts#linkHost": 102,
-  "packages/obsidian/src/proposals/proposal-block.ts#renderProposalBlock": 154,
+  "packages/obsidian/src/proposals/proposal-block.ts#renderProposalBlock": 152,
   "packages/obsidian/src/view-block.ts#renderViewBlock": 241,
   "packages/vscode/src/ask-ai.ts#askAi": 123
 }

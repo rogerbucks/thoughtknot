@@ -140,6 +140,9 @@ const NAMES = [
   'queryThings',
   'queryLinks',
   'guardProblem',
+  'calculatedOf',
+  'calculate',
+  'staleCalculated',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',

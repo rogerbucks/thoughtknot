@@ -63,6 +63,7 @@ const runs = require('./process/runs.js');
 const altitude = require('./altitude/altitude.js');
 const { lensesOf, runLens, queryThings, queryLinks } = require('./lenses/saved-lenses.js');
 const { guardProblem } = require('./rules/guards.js');
+const { calculatedOf, calculate, staleCalculated } = require('./calculated/calculated.js');
 const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
@@ -196,6 +197,9 @@ module.exports = {
   queryThings,
   queryLinks,
   guardProblem,
+  calculatedOf,
+  calculate,
+  staleCalculated,
   altitudeIndex,
   searchIndex,
   contextsOf,

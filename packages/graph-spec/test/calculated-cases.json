@@ -1,0 +1,1220 @@
+{
+  "about": "Shared cases for calculated values (editor spec §57). The JavaScript test and python/graph_spec/tests/test_calculated.py both run them. A case is a graph, a call and the answer it must give.",
+  "cases": [
+    {
+      "name": "a calculated property on one thing and a roll-up over linked things give the right value",
+      "graph": {
+        "nodes": [
+          [
+            "c_cost",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "c_total",
+            ["Calculated"],
+            {
+              "of": "Project",
+              "name": "total",
+              "is": "sum(HAS.cost)",
+              "unit": "USD"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "q_r",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "rate",
+              "unit": "USD/h"
+            }
+          ],
+          ["p", ["Project"], {}],
+          [
+            "t1",
+            ["Task"],
+            {
+              "hours": 2,
+              "rate": 10
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "hours": 3,
+              "rate": 5
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "hours": 1,
+              "rate": 7
+            }
+          ]
+        ],
+        "edges": [
+          ["p", "HAS", "t1"],
+          ["p", "HAS", "t2"],
+          ["p", "HAS", "t3"]
+        ]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "p": {
+            "total": {
+              "value": 42,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "fbda08b0e0b4b5de"
+            }
+          },
+          "t1": {
+            "cost": {
+              "value": 20,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "2b334373e8862429"
+            }
+          },
+          "t2": {
+            "cost": {
+              "value": 15,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "4956886f27a3c526"
+            }
+          },
+          "t3": {
+            "cost": {
+              "value": 7,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "31ea47c5e9b84e5d"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a total with three missing values says three are missing and does not count them as zero",
+      "graph": {
+        "nodes": [
+          [
+            "c_cost",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "c_total",
+            ["Calculated"],
+            {
+              "of": "Project",
+              "name": "total",
+              "is": "sum(HAS.cost)",
+              "unit": "USD"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "q_r",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "rate",
+              "unit": "USD/h"
+            }
+          ],
+          ["p", ["Project"], {}],
+          [
+            "t1",
+            ["Task"],
+            {
+              "hours": 2,
+              "rate": 10
+            }
+          ],
+          [
+            "t2",
+            ["Task"],
+            {
+              "hours": 3
+            }
+          ],
+          [
+            "t3",
+            ["Task"],
+            {
+              "rate": 7
+            }
+          ],
+          ["t4", ["Task"], {}],
+          [
+            "t5",
+            ["Task"],
+            {
+              "hours": 1,
+              "rate": 1
+            }
+          ]
+        ],
+        "edges": [
+          ["p", "HAS", "t1"],
+          ["p", "HAS", "t2"],
+          ["p", "HAS", "t3"],
+          ["p", "HAS", "t4"],
+          ["p", "HAS", "t5"]
+        ]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "p": {
+            "total": {
+              "value": 21,
+              "unit": "USD",
+              "missing": 3,
+              "loop": null,
+              "refusal": null,
+              "basis": "03c4309c4757320a"
+            }
+          },
+          "t1": {
+            "cost": {
+              "value": 20,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "2b334373e8862429"
+            }
+          },
+          "t2": {
+            "cost": {
+              "value": null,
+              "unit": "USD",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "71cd992eecaeb695"
+            }
+          },
+          "t3": {
+            "cost": {
+              "value": null,
+              "unit": "USD",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "50e73e9aecf6e0f5"
+            }
+          },
+          "t4": {
+            "cost": {
+              "value": null,
+              "unit": "USD",
+              "missing": 2,
+              "loop": null,
+              "refusal": null,
+              "basis": "5d7519de1826241f"
+            }
+          },
+          "t5": {
+            "cost": {
+              "value": 1,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "1bbec52cd8454ff8"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a total over nothing is zero and over only gaps is a gap",
+      "graph": {
+        "nodes": [
+          [
+            "c_cost",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "c_total",
+            ["Calculated"],
+            {
+              "of": "Project",
+              "name": "total",
+              "is": "sum(HAS.cost)",
+              "unit": "USD"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "q_r",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "rate",
+              "unit": "USD/h"
+            }
+          ],
+          ["p", ["Project"], {}],
+          ["q", ["Project"], {}],
+          ["t1", ["Task"], {}]
+        ],
+        "edges": [["q", "HAS", "t1"]]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "p": {
+            "total": {
+              "value": 0,
+              "unit": "USD",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "ef25a37785444465"
+            }
+          },
+          "q": {
+            "total": {
+              "value": null,
+              "unit": "USD",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "13e632b1ade46526"
+            }
+          },
+          "t1": {
+            "cost": {
+              "value": null,
+              "unit": "USD",
+              "missing": 2,
+              "loop": null,
+              "refusal": null,
+              "basis": "b8d1d2299157b47b"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "adding money to hours is refused naming both units",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "bad",
+              "is": "hours + rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "q_r",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "hours": 2,
+              "rate": 10
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t1": {
+            "bad": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "cannot add h and USD",
+              "basis": "3e406ca2bde769a2"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "taking one unit from another is refused naming both",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "bad",
+              "is": "rate - hours"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "q_r",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "rate",
+              "unit": "USD"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "hours": 2,
+              "rate": 10
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t1": {
+            "bad": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "cannot take h from USD",
+              "basis": "a9098626264db93d"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "rolling up values of different units is refused",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Project",
+              "name": "mix",
+              "is": "sum(HAS.v)"
+            }
+          ],
+          [
+            "q1",
+            ["Quantity"],
+            {
+              "of": "A",
+              "name": "v",
+              "unit": "h"
+            }
+          ],
+          [
+            "q2",
+            ["Quantity"],
+            {
+              "of": "B",
+              "name": "v",
+              "unit": "USD"
+            }
+          ],
+          ["p", ["Project"], {}],
+          [
+            "a",
+            ["A"],
+            {
+              "v": 1
+            }
+          ],
+          [
+            "b",
+            ["B"],
+            {
+              "v": 2
+            }
+          ]
+        ],
+        "edges": [
+          ["p", "HAS", "a"],
+          ["p", "HAS", "b"]
+        ]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "p": {
+            "mix": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "cannot sum h with USD",
+              "basis": "2d8fad27c15aa105"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a declared unit that the expression does not give is refused",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * 2",
+              "unit": "USD"
+            }
+          ],
+          [
+            "q_h",
+            ["Quantity"],
+            {
+              "of": "Task",
+              "name": "hours",
+              "unit": "h"
+            }
+          ],
+          [
+            "t1",
+            ["Task"],
+            {
+              "hours": 2
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t1": {
+            "cost": {
+              "value": null,
+              "unit": "h",
+              "missing": 0,
+              "loop": null,
+              "refusal": "cost works out in h but is declared in USD",
+              "basis": "04b7eb725cfe4ca1"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a roll-up through a cycle shows a loop naming its things, and the rest still works out",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Part",
+              "name": "total",
+              "is": "weight + sum(HAS.total)"
+            }
+          ],
+          [
+            "a",
+            ["Part"],
+            {
+              "weight": 1
+            }
+          ],
+          [
+            "b",
+            ["Part"],
+            {
+              "weight": 2
+            }
+          ],
+          [
+            "c",
+            ["Part"],
+            {
+              "weight": 4
+            }
+          ],
+          [
+            "d",
+            ["Part"],
+            {
+              "weight": 8
+            }
+          ],
+          [
+            "e",
+            ["Part"],
+            {
+              "weight": 16
+            }
+          ]
+        ],
+        "edges": [
+          ["a", "HAS", "b"],
+          ["b", "HAS", "a"],
+          ["d", "HAS", "a"],
+          ["e", "HAS", "c"]
+        ]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "a": {
+            "total": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": ["a", "b"],
+              "refusal": null,
+              "basis": "0e31ed6778aa1a27"
+            }
+          },
+          "b": {
+            "total": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": ["a", "b"],
+              "refusal": null,
+              "basis": "f00a9b7075474006"
+            }
+          },
+          "c": {
+            "total": {
+              "value": 4,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "2868fa13b85c7450"
+            }
+          },
+          "d": {
+            "total": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": ["a", "b"],
+              "refusal": null,
+              "basis": "bc622ae11ee9eab1"
+            }
+          },
+          "e": {
+            "total": {
+              "value": 20,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "d7f8f28535c3b641"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a value that depends on itself directly is a loop",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Part",
+              "name": "x",
+              "is": "x + 1"
+            }
+          ],
+          ["a", ["Part"], {}]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "a": {
+            "x": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": ["a"],
+              "refusal": null,
+              "basis": "95ebcdbfb49747df"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "count, average, smallest, largest and links coming in",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Team",
+              "name": "size",
+              "is": "count(HAS)"
+            }
+          ],
+          [
+            "c2",
+            ["Calculated"],
+            {
+              "of": "Team",
+              "name": "mean",
+              "is": "avg(HAS.age)"
+            }
+          ],
+          [
+            "c3",
+            ["Calculated"],
+            {
+              "of": "Team",
+              "name": "young",
+              "is": "min(HAS.age)"
+            }
+          ],
+          [
+            "c4",
+            ["Calculated"],
+            {
+              "of": "Team",
+              "name": "old",
+              "is": "max(HAS.age)"
+            }
+          ],
+          [
+            "c5",
+            ["Calculated"],
+            {
+              "of": "Person",
+              "name": "teams",
+              "is": "count(<HAS)"
+            }
+          ],
+          ["t", ["Team"], {}],
+          [
+            "p1",
+            ["Person"],
+            {
+              "age": 30
+            }
+          ],
+          [
+            "p2",
+            ["Person"],
+            {
+              "age": 40
+            }
+          ],
+          ["p3", ["Person"], {}]
+        ],
+        "edges": [
+          ["t", "HAS", "p1"],
+          ["t", "HAS", "p2"],
+          ["t", "HAS", "p3"]
+        ]
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t": {
+            "size": {
+              "value": 3,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "abfc806763039b1b"
+            },
+            "mean": {
+              "value": 35,
+              "unit": "",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "d2bd678f9cccfc11"
+            },
+            "young": {
+              "value": 30,
+              "unit": "",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "4f87cccc2a206db9"
+            },
+            "old": {
+              "value": 40,
+              "unit": "",
+              "missing": 1,
+              "loop": null,
+              "refusal": null,
+              "basis": "663fea709f8c7212"
+            }
+          },
+          "p1": {
+            "teams": {
+              "value": 1,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "33f44c2da4ef305e"
+            }
+          },
+          "p2": {
+            "teams": {
+              "value": 1,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "33f44c2da4ef305e"
+            }
+          },
+          "p3": {
+            "teams": {
+              "value": 1,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "33f44c2da4ef305e"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a calculated value can use another calculated value of the same thing",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate"
+            }
+          ],
+          [
+            "c2",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "tax",
+              "is": "cost / 10"
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 3,
+              "rate": 50
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t": {
+            "cost": {
+              "value": 150,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "10f43794846530ec"
+            },
+            "tax": {
+              "value": 15,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "5bc7400bc7c4bb5a"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "an expression that cannot be read is a problem and its values are refused",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "bad",
+              "is": "hours *"
+            }
+          ],
+          [
+            "c2",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "worse",
+              "is": "now()"
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 1
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t": {
+            "bad": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "the expression \"hours *\" ends too soon (editor spec §57)",
+              "basis": "5153c7aca1516c75"
+            },
+            "worse": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "the expression \"now()\" calls \"now\" (editor spec §57)",
+              "basis": "63645461588998c0"
+            }
+          }
+        },
+        "problems": [
+          ["c1", "calc-unreadable", "the expression \"hours *\" ends too soon (editor spec §57)"],
+          ["c2", "calc-unreadable", "the expression \"now()\" calls \"now\" (editor spec §57)"]
+        ]
+      }
+    },
+    {
+      "name": "dividing by zero is refused, and text is not a number",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "per",
+              "is": "hours / rate"
+            }
+          ],
+          [
+            "c2",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "twice",
+              "is": "label * 2"
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 1,
+              "rate": 0,
+              "label": "x"
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t": {
+            "per": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "it divides by zero",
+              "basis": "d31293de15c1c68c"
+            },
+            "twice": {
+              "value": null,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": "label of t is not a number",
+              "basis": "a534ade1453df622"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a thing of another kind has no calculated property",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * 2"
+            }
+          ],
+          [
+            "n",
+            ["Note"],
+            {
+              "hours": 1
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 1
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "calculate",
+      "args": [],
+      "expected": {
+        "values": {
+          "t": {
+            "cost": {
+              "value": 2,
+              "unit": "",
+              "missing": 0,
+              "loop": null,
+              "refusal": null,
+              "basis": "bd3300133bcc09e8"
+            }
+          }
+        },
+        "problems": []
+      }
+    },
+    {
+      "name": "a cache whose inputs are unchanged is fresh",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate"
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 2,
+              "rate": 5
+            }
+          ],
+          [
+            "u",
+            ["Task"],
+            {
+              "hours": 1,
+              "rate": 5
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "staleCalculated",
+      "args": [
+        {
+          "t|cost": {
+            "basis": "9ca9da7768e4e00f"
+          },
+          "u|cost": {
+            "basis": "18ca820b98bcef17"
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "a cache whose input changed is found stale and an unknown one too",
+      "graph": {
+        "nodes": [
+          [
+            "c1",
+            ["Calculated"],
+            {
+              "of": "Task",
+              "name": "cost",
+              "is": "hours * rate"
+            }
+          ],
+          [
+            "t",
+            ["Task"],
+            {
+              "hours": 3,
+              "rate": 5
+            }
+          ],
+          [
+            "u",
+            ["Task"],
+            {
+              "hours": 1,
+              "rate": 5
+            }
+          ]
+        ],
+        "edges": []
+      },
+      "call": "staleCalculated",
+      "args": [
+        {
+          "t|cost": {
+            "basis": "9ca9da7768e4e00f"
+          },
+          "u|cost": {
+            "basis": "18ca820b98bcef17"
+          },
+          "zz|cost": {
+            "basis": "0"
+          }
+        }
+      ],
+      "expected": ["t|cost", "zz|cost"]
+    }
+  ]
+}

@@ -107,6 +107,8 @@ export interface DiagramWrite {
 export interface FilterWrite {
   keep: FilterKeep;
   view?: string;
+  /** The intents its overview is placed round (§58); none, the overview as it is laid out. */
+  poles?: readonly string[];
 }
 
 /** One change to a graph's style. */
@@ -229,7 +231,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
         };
   }
   if ('filter' in change) {
-    const { keep, view } = change.filter,
+    const { keep, view, poles } = change.filter,
       why = filterRefusal(keep) ?? (view === '' ? noViewName() : null);
     if (why) return { refused: why };
     // changed in place for the same view, so a graph keeps one filter
@@ -238,6 +240,7 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
       props: [
         ['keep', filterText(keep)],
         ['view', view],
+        ['poles', poles?.length ? poles.join(', ') : undefined],
       ],
       match: [['view', view]],
     };

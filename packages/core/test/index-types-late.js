@@ -1,6 +1,17 @@
 // The last part of the types src/index.ts exports, from HitAreas on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  // AI suggestions (§59), 3 Nov 2026
+  'AnswerShape',
+  'SuggestFor',
+  'SuggestionGroup',
+  // intents (§58), 3 Nov 2026
+  'IntentAsk',
+  'IntentLink',
+  'IntentOverlay',
+  'IntentPull',
+  'IntentSide',
+  'IntentStanding',
   // rules and looks (§56), 30 Oct 2026
   'Badge',
   'LookPart',
