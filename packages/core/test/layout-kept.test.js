@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
-import { LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
+import { LIVE_LEAST, LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.ts';
 import { keptSpots, spotsHeard } from '../src/layouts/kept-spots.ts';
 import { assertStaysPut, movedThings } from './stay-put-fixtures.js';
 
@@ -71,4 +71,16 @@ test('a new thing keeps its fresh place beside a neighbour that was kept', () =>
   const out = keptSpots(fresh, kept, [{ from: 'b', to: 'new' }]);
   assert.deepEqual(out.get('new'), [140, 130], '30 below b, as the fresh layout put it');
   assert.deepEqual(out.get('a'), [100, 100]);
+});
+
+// proves: things_stay_put
+test('a big live drawing drawn again with its spots kept comes once, with no quick picture first', async () => {
+  const r = runner(),
+    card = {};
+  const big = (more) => ({ ...network(more), live: true });
+  const first = await r.draw(big(LIVE_LEAST), card);
+  await first.better;
+  const again = await r.draw(big(LIVE_LEAST + 1), card);
+  assert.equal(again.better, undefined, 'nothing to settle: every thing it showed stays where it was');
+  r.close();
 });

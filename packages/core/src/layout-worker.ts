@@ -106,7 +106,10 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       // and every thing would jump (Roger, 3 Nov 2026: nodes stay put)
       const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
       const rings = asked.some((d) => !d.own && /\blayout=/.test(d.dot));
-      const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings;
+      // nor is one drawn again with its things kept where they were: it has nothing to settle (things_stay_put)
+      const again = !!drawing.kept && Object.keys(drawing.kept).length > 0;
+      const quick =
+        drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings && !again;
       const rows = quick ? directions({ ...drawing, step: 'rows' })[0] : undefined;
       if (rows?.own) scope.postMessage({ id, early: chosen([rows], [svgOf(e, rows.dot, drawing.routing, true)]) });
       // direct and curved links are drawn again from Graphviz's marks (untangle_direct); any other routing is its own
