@@ -10,19 +10,20 @@
 import { louvain } from './louvain.ts';
 import { sizeScores } from './size-score.ts';
 import type { GraphShape } from './types-shape.ts';
+import { word } from './words.ts';
 
 /** About how many groups sit under each group, and things under each finest group. */
 export const BRANCH = 6;
 /** The most levels, every item included. */
 export const LEVELS_MOST = 4;
 /** The name of each level, far to near, for a graph of 1 to LEVELS_MOST levels. */
-const NAMES = ['Subjects', 'Areas', 'Topics'];
+const NAMES = ['levels.subjects', 'levels.areas', 'levels.topics'] as const;
 /** What the last level, where every item shows, is called. */
-export const EVERY_ITEM = 'Every item';
+export const everyItem = (): string => word('levels.every-item');
 /** The key of the group of things that link to nothing in their level. */
 export const LOOSE = 'loose';
 /** What the group of loose ends is called. */
-export const LOOSE_NAME = 'Loose ends';
+export const looseName = (): string => word('levels.loose-ends');
 
 /** A group at one level: its key, its name, its things, and the group it is in one level out. */
 export interface LevelGroup {
@@ -43,7 +44,10 @@ export const levelCount = (n: number): number =>
   n <= BRANCH ? 1 : Math.min(LEVELS_MOST, Math.ceil(Math.log(n) / Math.log(BRANCH)));
 
 /** The names of `count` levels, far to near. */
-export const levelNames = (count: number): string[] => [...NAMES.slice(0, Math.max(0, count - 1)), EVERY_ITEM];
+export const levelNames = (count: number): string[] => [
+  ...NAMES.slice(0, Math.max(0, count - 1)).map((k) => word(k)),
+  everyItem(),
+];
 
 /** Groups of `n` members from weighted links between them, joined until at most `most` remain. */
 function grouped(n: number, links: readonly (readonly [number, number])[], most: number): number[] {
@@ -113,7 +117,7 @@ export function detailLevels(shape: GraphShape): DetailLevel[] {
   const keys = shape.things.map((t) => t.key),
     count = levelCount(keys.length);
   let names = levelNames(count);
-  if (count === 1) return [{ name: EVERY_ITEM, groups: [] }];
+  if (count === 1) return [{ name: everyItem(), groups: [] }];
   const index = new Map(keys.map((k, i) => [k, i]));
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const score = sizeScores(shape);
@@ -147,14 +151,14 @@ export function detailLevels(shape: GraphShape): DetailLevel[] {
         const biggest = [...things].sort((a, b) => (score.get(b) ?? 0) - (score.get(a) ?? 0))[0] as string;
         const loose = things.every((t) => !ends.has(t));
         const key = `${depth}:${loose ? LOOSE : i}`;
-        const g: LevelGroup = { key, name: loose ? LOOSE_NAME : (text.get(biggest) ?? biggest), things };
+        const g: LevelGroup = { key, name: loose ? looseName() : (text.get(biggest) ?? biggest), things };
         const parent = parentOf.get(biggest);
         if (parent !== undefined) g.parent = parent;
         return g;
       }),
     });
   });
-  levels.push({ name: EVERY_ITEM, groups: [] });
+  levels.push({ name: everyItem(), groups: [] });
   return levels;
 }
 
@@ -176,4 +180,4 @@ export function levelAt(levels: readonly DetailLevel[], seen: number): number {
 
 /** The badge that says where you are: "Level 2 of 4 · Areas". */
 export const levelBadge = (levels: readonly DetailLevel[], at: number): string =>
-  `Level ${at + 1} of ${levels.length} · ${levels[at]?.name ?? EVERY_ITEM}`;
+  word('levels.badge', { at: at + 1, count: levels.length, name: levels[at]?.name ?? everyItem() });

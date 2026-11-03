@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BRANCH,
-  EVERY_ITEM,
+  everyItem,
   LEVELS_MOST,
-  LOOSE_NAME,
+  looseName,
   detailLevels,
   levelAt,
   levelBadge,
@@ -33,9 +33,9 @@ test('the count of levels fits the graph: a handful has one, hundreds have the m
   assert.equal(levelCount(BRANCH), 1);
   assert.equal(levelCount(20), 2);
   assert.equal(levelCount(430), LEVELS_MOST);
-  assert.deepEqual(levelNames(1), [EVERY_ITEM]);
-  assert.deepEqual(levelNames(4), ['Subjects', 'Areas', 'Topics', EVERY_ITEM]);
-  assert.deepEqual(detailLevels(clumped(1, 2)), [{ name: EVERY_ITEM, groups: [] }]);
+  assert.deepEqual(levelNames(1), [everyItem()]);
+  assert.deepEqual(levelNames(4), ['Subjects', 'Areas', 'Topics', everyItem()]);
+  assert.deepEqual(detailLevels(clumped(1, 2)), [{ name: everyItem(), groups: [] }]);
 });
 
 // proves: detail_levels
@@ -44,7 +44,7 @@ test('things that link closely share a group, each group nests in one a level ou
   const levels = detailLevels(shape);
   assert.deepEqual(
     levels.map((l) => l.name),
-    ['Subjects', EVERY_ITEM],
+    ['Subjects', everyItem()],
   );
   const [top] = levels;
   assert.equal(
@@ -75,7 +75,7 @@ test('far out the farthest level shows, nearer the nearest that fits, and a badg
   assert.equal(levelAt(levels, levels[1].groups.length), 1);
   assert.equal(levelAt(levels, 160), 2);
   assert.equal(levelBadge(levels, 1), 'Level 2 of 3 · Areas');
-  assert.equal(levelAt([{ name: EVERY_ITEM, groups: [] }], 0), 0);
+  assert.equal(levelAt([{ name: everyItem(), groups: [] }], 0), 0);
 });
 
 // proves: detail_levels
@@ -89,6 +89,6 @@ test('things linked to nothing gather in one group of loose ends, and a group is
   assert.ok(top.groups.some((g) => g.name === 'The hub'));
   const lone = top.groups.filter((g) => g.things.some((k) => k.startsWith('lone')));
   assert.equal(lone.length, 1, 'loose ends together');
-  assert.equal(lone[0].name, LOOSE_NAME);
+  assert.equal(lone[0].name, looseName());
   assert.equal(lone[0].things.length, 12);
 });

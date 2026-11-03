@@ -10,6 +10,7 @@ import { LENS_SOURCE_WORDS } from './lens-source-words.ts';
 import { PROCESS_SOURCE_WORDS } from './process-source-words.ts';
 import { PROFILE_SOURCE_WORDS } from './profile-source-words.ts';
 import { VIEW_SUPPORT_SOURCE_WORDS } from './view-support-source-words.ts';
+import { DETAIL_LEVELS_SOURCE_WORDS } from './detail-levels-source-words.ts';
 
 /** The words of the core's views, by key, in UK English. */
 export const VIEWS_SOURCE_WORDS = {
@@ -18,6 +19,7 @@ export const VIEWS_SOURCE_WORDS = {
   ...PROCESS_SOURCE_WORDS,
   ...PROFILE_SOURCE_WORDS,
   ...VIEW_SUPPORT_SOURCE_WORDS,
+  ...DETAIL_LEVELS_SOURCE_WORDS,
   // each of the five kinds of view, as a refusal names it (view-profile.ts)
   'views.kind.picked': 'a hand-picked set of things',
   'views.kind.near': 'everything near a thing',
