@@ -109,7 +109,10 @@ export function presetPicker(): SettingDefinitionItem {
         control: {
           type: 'dropdown',
           key: PRESET_KEY,
-          options: { '': word('models.preset.pick'), ...Object.fromEntries(AI_PRESETS.map((p) => [p.id, p.name])) },
+          options: {
+            '': word('models.preset.pick'),
+            ...Object.fromEntries(AI_PRESETS.map((p) => [p.id, word(p.name)])),
+          },
         },
       },
     ],
@@ -120,7 +123,9 @@ export function presetPicker(): SettingDefinitionItem {
 export function withPreset(s: Settings, id: string): Partial<Settings> {
   const preset = AI_PRESETS.find((p) => p.id === id);
   if (!preset) return {};
-  return { aiModels: [...s.aiModels, aiModel({ name: preset.name, endpoint: preset.endpoint }, s.classifications)] };
+  return {
+    aiModels: [...s.aiModels, aiModel({ name: word(preset.name), endpoint: preset.endpoint }, s.classifications)],
+  };
 }
 
 /** The models with one changed, read back as the core reads a model. */

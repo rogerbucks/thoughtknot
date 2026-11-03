@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { AI_PRESETS } from '../src/settings/ai-presets.ts';
 import { endpointProblem, usable } from '../../core/src/ai-choice.ts';
+import { word } from '../../core/src/words.ts';
 import { aiModel } from '../../core/src/ai-model.ts';
 
 test('every preset address is one requests can go to', () => {
@@ -12,7 +13,7 @@ test('every preset address is one requests can go to', () => {
 
 test('a model made from a preset has no model name and no key, so it is not yet usable', () => {
   const p = AI_PRESETS.find((x) => x.id === 'grok');
-  const m = aiModel({ name: p?.name, endpoint: p?.endpoint }, ['Public', 'Internal']);
+  const m = aiModel({ name: word(p?.name), endpoint: p?.endpoint }, ['Public', 'Internal']);
   assert.equal(m.name, 'Grok');
   assert.equal(m.ceiling, 'Public');
   assert.equal(m.keyName, '');
