@@ -67,6 +67,7 @@ export const PAGE_SOURCE_WORDS = {
   'page.block-changed': 'the block has changed since the pane read it',
   'page.no-proposal': 'the note holds no proposal {id}',
   'page.no-graph': 'No graph in this note.',
+  'page.boards': 'Whiteboards',
   'page.too-large': 'This note is too large to read here.',
   'page.text-only': 'This graph is shown as text only: it is over what is drawn here.',
   'page.alt': '{graph}: {things}, {links}',

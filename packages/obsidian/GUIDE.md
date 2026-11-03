@@ -89,6 +89,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   nudges, and its problems listed, by `block.ts`.
 - `sketch-block.ts` — a drawings block (§70). It is never drawn as a graph, and is folded away, saying how many drawings
   it holds. `sketchingFor` gives the graph's card its drawings, and writes each change there to the note (`sketchEdit`).
+- `board-block.ts` — a board block (§45) opens as a board to pan, zoom and edit (`showBoard`). Each edit is written to
+  the note as it is then (`boardEditInNote`). In reading view the board can be read and moved round, not changed.
 - `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code.
   A very long one is shown plain.
 

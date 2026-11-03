@@ -1,6 +1,6 @@
 {
   "packages/claude-code/page/export-run.ts#exporting": 128,
-  "packages/claude-code/page/page-main.ts#startPage": 174,
+  "packages/claude-code/page/page-main.ts#startPage": 170,
   "packages/claude-code/page/review-section.ts#reviewSection": 136,
   "packages/claude-code/server/start-server.ts#startEditorServer": 137,
   "packages/core/src/connectors.ts#joinPlaces": 102,

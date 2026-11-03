@@ -506,6 +506,9 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   in the palette of the system's scheme, drawn again when the scheme changes, with its words beside it. Since C9 the
   page draws a note's graph with the edit pane instead. This stands for a note with no graph block to edit, which it
   says so for.
+- `board-section.ts` — each whiteboard in the note, opened as the board Obsidian opens (§45, `showBoard`). It pans,
+  zooms and is edited by keyboard. Each edit goes through the page's version-checked write. The desktop and phone apps
+  and VS Code's tab run this page, so they open boards too.
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
 - `page-plugins.ts` — the plug-ins from outside turned on in Obsidian, each run in a worker of its own. The server
   serves each sealed. When the note's style graph chooses a diagram type one adds, the page shows its picture of the
