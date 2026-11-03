@@ -29,6 +29,7 @@ import { FOLDED_GROUP, TRY_MOST, chosenPick, pickLayout, tidier } from './pick.t
 import { givenSpots } from './given.ts';
 import type { Pick } from './pick.ts';
 import { cheaperSpots } from './cheaper.ts';
+import { levelSeed } from './level-seed.ts';
 
 export { pickLayout };
 export type { OwnLayout, Pick } from './pick.ts';
@@ -279,7 +280,11 @@ function laidBy(
   const placed = pick.layout === 'given' ? givenSpots(shape, more.placed ?? new Map(), unit) : null;
   const spots =
     placed ??
-    new Map([...stressLayout(shape, 2, previous, { unit })].map(([k, [x = 0, y = 0]]) => [k, [x, y] as Point]));
+    new Map(
+      [...stressLayout(shape, 2, previous ?? levelSeed(shape, 2, unit) ?? undefined, { unit })].map(
+        ([k, [x = 0, y = 0]]) => [k, [x, y] as Point],
+      ),
+    );
   apart(spots, sizes, APART * spacing, roundsOf(options, APART_ROUNDS));
   return { spots, via: new Map(), boxes: [], pick, way };
 }

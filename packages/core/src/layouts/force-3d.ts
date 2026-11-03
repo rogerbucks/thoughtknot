@@ -9,6 +9,7 @@
 // The same shape gives the same spots. Given last time's spots, it starts from them and takes fewer, smaller steps, so
 // a small edit moves little (warm start). Things push apart only within nearby cubes of a grid. So each step costs
 // about as much as the number of things. Units: a link is about one long. Host-free and pure.
+import { levelSeed } from './level-seed.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { DEFAULT_LAYOUT_OPTIONS, aspectOf, layoutOptions, roundsOf } from './layout-options.ts';
 import { SCREEN } from './folded-rows.ts';
@@ -57,6 +58,8 @@ export function forceLayout3d(
   const n = keys.length;
   const out = new Map<string, [number, number, number]>();
   if (!n) return out;
+  // a cold start of a big graph starts from its groups placed first, each in its own room (level-seed.ts)
+  previous ??= (levelSeed(shape, 3, 1) ?? undefined) as Spots3 | undefined;
   const index = new Map(keys.map((k, i) => [k, i]));
   const links: [number, number][] = [];
   for (const l of shape.links) {
