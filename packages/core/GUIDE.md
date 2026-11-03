@@ -1785,6 +1785,19 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
 - `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model. It is against the state of the graph
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
+#### AI suggestions (spec §59)
+
+- `ai-suggestions.ts` — AI suggestions for categories and intents (§59). `suggestAsk` makes the ask for `prepareSend`.
+  - It needs the person's own words: nothing is suggested unasked. The send then holds to the ceiling and the yes.
+  - It asks for one property's value, of one kind and from a list if given, or a pull on one Intent. It brings its own
+    instructions and reader (`AnswerShape`, `answers` on the ask).
+  - The reader takes only suggestions of that shape, for things that went, each with a certainty word, a reason and what
+    it read. Anything else refuses the whole answer, so text in a thing cannot make it do more.
+  - Each comes back as a change grouped by value (or by side). The review applies a group in one step and undoes it in
+    one (`suggestionGroups` gives each group with a sample). No drawing module reaches it.
+- `ai-suggestions-preview.ts` — `suggestedPreview`: the rules' looks on the graph with the waiting suggestions laid over
+  it. A look only a suggestion gives is dashed, said to be suggested, and has a legend row (`SUGGESTED_TOKEN`). The
+  change set card shows it for a model's proposal. Nothing is saved.
 
 #### The AI query contract and write scoring (spec §37)
 

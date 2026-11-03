@@ -26,6 +26,16 @@ export const INSTRUCTIONS = [
   'If you are unsure what the user means, answer {"question": "your one question"} instead, and propose nothing yet.',
 ].join('\n');
 
+/**
+ * How an answer of another shape is asked for and read, such as suggestions (editor spec §59). It is the model's
+ * instructions and the reader that makes its answer into changes. `sent` names the things that went: nothing else is
+ * taken.
+ */
+export interface AnswerShape {
+  instructions: string;
+  read(content: string, sent: readonly string[]): ChangeInput[] | { unread: string } | { asks: string };
+}
+
 /** A fence of backticks longer than any run of them in `text`, so no text of the note can close it (AI-3). */
 function fenceFor(text: string): string {
   const longest = Math.max(2, ...(text.match(/`+/g) ?? []).map((run) => run.length));
@@ -121,7 +131,7 @@ function propertiesOf(v: unknown): Record<string, string | number | boolean> | n
  * Markdown or HTML gives a meaning to is escaped with a backslash. So no reason can become an image, a link, emphasis,
  * a heading or HTML, and every word of it is still read.
  */
-function plainText(s: string): string {
+export function plainText(s: string): string {
   // the slash and the at sign too, so an address in it is never made a link by itself
   return s.replace(/[\\`*_{}[\]()#+!|<>~&/@]/g, '\\$&');
 }

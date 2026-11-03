@@ -15,6 +15,7 @@ import { hostAiModel } from './ai-host.ts';
 import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
 import { INSTRUCTIONS, askedText, changesIn } from './ai-request.ts';
+import type { AnswerShape } from './ai-request.ts';
 import { coreAiProvider } from './core-ai.ts';
 import { keyHeader } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
@@ -67,6 +68,8 @@ export interface SendAsk {
   provider?: AiProvider;
   /** The host's own model, when the model asked is the host's (host_ai_first): sent through the host, not an address. */
   host?: HostModel;
+  /** An answer of another shape, such as suggestions (ai-suggestions.ts): its instructions and its reader. */
+  answers?: AnswerShape;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -91,6 +94,9 @@ export interface PreparedSend {
   basis: string;
   /** The AI provider that shaped the body and reads the reply, when the model names one. */
   provider?: AiProvider;
+  /** The answer's own shape, when the ask gave one, and the things that went, which its reader holds it to. */
+  answers?: AnswerShape;
+  sent?: string[];
 }
 
 /** What a send held, as its record keeps it: the kind of choice and the counts. */
@@ -167,7 +173,8 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   let body: string;
   try {
     const asked = askedText(scope, ask.question);
-    body = (provider ?? coreAiProvider()).shape({ model: model.model, instructions: INSTRUCTIONS, asked });
+    const instructions = ask.answers?.instructions ?? INSTRUCTIONS;
+    body = (provider ?? coreAiProvider()).shape({ model: model.model, instructions, asked });
   } catch (e) {
     return { refused: e instanceof Error ? e.message : String(e) };
   }
@@ -205,6 +212,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
     basis: basisOf(ask.note, scope.graph, ask.shared),
     ...(provider && { provider }),
+    ...(ask.answers && { answers: ask.answers, sent: [...scope.things] }),
   };
 }
 
@@ -279,8 +287,11 @@ export async function sendPrepared(
     return failed(hide(e instanceof Error ? e.message : String(e)));
   }
   if ('refused' in read) return failed(word('ai.send.refused', { model: p.model.name, why: read.refused }));
-  const changes = 'content' in read ? changesIn(read.content) : read;
   const cannot = (why: string) => failed(word('ai.send.unread', { model: p.model.name, why }));
+  // an answer of its own shape is read only by its own reader, held to the things that went
+  if (p.answers && !('content' in read)) return cannot(word('ai.reply.no-message'));
+  const changes =
+    'content' in read ? (p.answers ? p.answers.read(read.content, p.sent ?? []) : changesIn(read.content)) : read;
   if ('asks' in changes) return { record: { ...record, outcome: 'answered' }, asks: changes.asks };
   if (!Array.isArray(changes)) return cannot(changes.unread);
   const proposal = proposalFrom(changes, {

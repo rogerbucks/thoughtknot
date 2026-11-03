@@ -15,7 +15,9 @@ import {
   gqlSpans,
   namesSharedSchema,
   nudgedDrawing,
+  readNote,
   readStyle,
+  suggestedPreview,
   word,
 } from '@thoughtknot/core';
 import type { Which } from '@thoughtknot/core';
@@ -166,6 +168,17 @@ export async function renderProposalBlock(
   // drawn with its style graph's nudges, as the graph itself is, so the proposal lies over the graph as it looks
   const styling = readStyle(reading.texts, graph, reading);
   const drawing = { ...nudgedDrawing(plain, styling.style), nudges: styling.style.nudges };
+  // an AI's suggestions show the looks they would give, dashed and marked suggested, and nothing is saved (§59)
+  const laid = reading.world[graph];
+  const base = readNote(
+    gqlSpans(note).map((s) => s.text),
+    undefined,
+    review.shared,
+  ).world[graph];
+  const rules =
+    review.proposal.provenance.by.kind === 'model' && laid && styling.style.looks.length
+      ? suggestedPreview(styling.style, base, laid, drawing, shown.marks)
+      : undefined;
   let drawn;
   try {
     drawn = await plugin.layout(drawing, owner);
@@ -195,6 +208,7 @@ export async function renderProposalBlock(
     lineOf: (at) => at.line + (info?.lineStart ?? 0),
     onEdit: () => openAt(plugin, path, info?.lineStart ?? 0),
     proposal: card,
+    ...(rules ? { rules } : {}),
     ...(info ? {} : { readOnly: () => true }),
   });
   ctx.addChild(view);

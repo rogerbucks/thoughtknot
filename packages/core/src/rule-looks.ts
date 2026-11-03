@@ -49,6 +49,8 @@ export interface RuleMark {
   tag?: string;
   /** What each of those rules means, in the order written, so a screen reader says it. */
   means: string[];
+  /** True when the look comes only with a value an AI suggested and nobody applied: a preview, drawn dashed (§59). */
+  suggested?: boolean;
 }
 
 /** What the rules of a scope give: each thing by key, each link by its place in the graph's edges, and the clashes. */
