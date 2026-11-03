@@ -6,6 +6,9 @@
 export const DISPLAY_SOURCE_WORDS = {
   'pane.no-block': 'This note has no graph block to edit.',
   'table.row': 'Row',
+  'table.total': 'Total',
+  'table.filters': 'Filter the rows',
+  'table.filter-by': 'Show only rows where {name} has…',
   'table.look': 'How the table looks',
   'table.stripes': 'Striped rows',
   'table.row-height': 'Row height',

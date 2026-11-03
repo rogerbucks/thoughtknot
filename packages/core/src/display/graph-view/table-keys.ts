@@ -42,7 +42,7 @@ export const tableTookKey = (e: KeyboardEvent): boolean =>
 
 /** Binds the keys, the focus and the sorting of `tables`, in `scroll`. `open` opens a row as a tap does. */
 export function bindTableKeys(scroll: HTMLElement, tables: HTMLTableElement[], open?: (t: Target) => void): void {
-  const rows = () => tables.flatMap((t) => all(t, 'tr'));
+  const rows = () => tables.flatMap((t) => all(t, 'tr')).filter((r) => !r.hidden && !r.closest('tfoot'));
   let column = 1; // the column the focus is in, kept as it moves up and down past shorter rows
   const make = (cell: HTMLElement) => {
     for (const c of all(scroll, '[tabindex="0"]')) if (c !== cell) c.setAttribute('tabindex', '-1');
