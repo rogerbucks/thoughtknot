@@ -34,6 +34,12 @@ export const READABLE_LEAST = 11,
  * 1 Nov 2026, "the text hardly ever renders. Fix that, even if the text is ridiculously small" (space_names_always).
  */
 export const NAME_TINY = 4;
+/**
+ * The most a name is painted at as you come nearer, in pixels: the same ceiling 2D names stop at (type-scale.ts,
+ * NAME_CEILING). It is kept here, not imported, so the space view does not reach into the view types. A test holds them
+ * equal.
+ */
+export const NAME_CEILING = 16;
 /** How much larger the busiest thing's name is drawn than one with no links, as in 2D (readable-words.ts). */
 export const HUB_LARGER = 1.4;
 /** The size of the picked thing's name, at least. */
@@ -96,7 +102,9 @@ export function labelsOnScreen(
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
     const mine = (picked !== undefined && l.of === picked) || (pickedLink !== undefined && l.link === pickedLink);
     const many = l.link === undefined && l.of !== undefined ? (links.get(l.of) ?? 0) : 0;
-    const natural = ((l.size * focal) / at.far) * hubGrow(many, busiest);
+    const hub = hubGrow(many, busiest);
+    // it grows as you come nearer, up to the ceiling 2D names share, and never past what the view has room for
+    const natural = Math.min(((l.size * focal) / at.far) * hub, NAME_CEILING * hub, largestName(width, height));
     // a long name is painted smaller to fit across the view, and cut only where even the smallest size will not fit
     const text = shortened(l.text),
       room = width - 4 * GAP,
