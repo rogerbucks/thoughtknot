@@ -12,7 +12,7 @@ import type { SpaceMove } from '../../space-controls.ts';
 import type { Sketch } from '../../sketch.ts';
 import type { Orbit } from '../../space-view.ts';
 import { openSpaceView } from './space-view-panel';
-import type { SpaceMode, SpaceView } from './space-view-options.ts';
+import type { SpaceMode, SpaceScreen, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
 import { flatAgain } from './lens-svg';
 import type { Lens } from '../../lenses.ts';
@@ -48,6 +48,8 @@ export class SpaceSwitch {
 
   /** How far the camera sat as the view in space first painted: nearer than that is zoomed in. */
   private far = 0;
+  /** The view in space as last painted. */
+  private seen: SpaceScreen | null = null;
   /** Told each time the camera in space moves: the card's semantic zoom listens. */
   private onCamera: () => void = () => {};
 
@@ -79,6 +81,11 @@ export class SpaceSwitch {
   /** Listens to the camera in space: semantic zoom steps as it nears, as zooming flat steps it (projection_semantic_zoom). */
   camera(f: () => void): void {
     this.onCamera = f;
+  }
+
+  /** The view in space as the screen last showed it, while open: the levels draw their clouds over it (level_space). */
+  screen(): SpaceScreen | null {
+    return this.view ? this.seen : null;
   }
 
   /** How much nearer the camera is than as the view opened: 1 while flat. */
@@ -147,8 +154,9 @@ export class SpaceSwitch {
       painter: this.says().aids?.painter,
       lens: () => this.lens(), // as the View menu picks it (§68), where the view can take it
       sketch: this.sketch,
-      moved: (o) => {
+      moved: (o, screen) => {
         this.far ||= o.distance;
+        this.seen = screen ?? null;
         this.onCamera();
       },
     }).then((view) => {

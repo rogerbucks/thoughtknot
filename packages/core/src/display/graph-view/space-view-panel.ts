@@ -18,7 +18,7 @@ import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
 import { spotsKept } from '../../space-parts.ts';
-import { stripTap } from '../../space-outlines.ts';
+import { screenBoxes, stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
 import { keyMove, orbitSwitched, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
@@ -152,7 +152,7 @@ export async function openSpaceView(
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
-    more.moved?.(orbit); // the card's semantic zoom reads how near the camera is
+    more.moved?.(orbit, { boxes: () => screenBoxes(seen(), matrix, width, height), width, height, el }); // zoom, levels
     tellPickedAt(root, glide.match(picked), matrix, width, height); // the editor beside it follows it (§72)
   };
   const again = () => {

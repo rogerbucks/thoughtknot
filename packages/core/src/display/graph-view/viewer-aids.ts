@@ -16,6 +16,8 @@ import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
 import { levelClouds, levelsOf } from './level-clouds-svg.ts';
 import { LevelLegend } from './level-legend.ts';
+import { levelSpace } from './level-space.ts';
+import type { SpaceScreen } from './space-view-options.ts';
 import { LevelTaps } from './level-taps.ts';
 import { word } from '../../words.ts';
 import { MiniMap } from './mini-map';
@@ -74,7 +76,7 @@ export interface AidsHost {
   /** What a lens follows, the selected thing by its key, and the View menu it is picked in, if the card has one. */
   lens: { selected: () => string | null; menu: () => LensMenu | null };
   /** The view in space, if the card has one: its camera zooms semantic zoom as the flat zoom does. */
-  space?: { nearer: () => number; camera: (f: () => void) => void };
+  space?: { nearer: () => number; camera: (f: () => void) => void; screen?: () => SpaceScreen | null };
 }
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
@@ -154,7 +156,11 @@ export class Aids {
             nearer,
           })
         : null;
-    host.space?.camera(() => this.semantic?.changed());
+    // the camera in space steps semantic zoom, and its levels are drawn again (level_space)
+    host.space?.camera(() => {
+      this.semantic?.changed();
+      this.names();
+    });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
   }
@@ -187,8 +193,9 @@ export class Aids {
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
       const drawing = reading.graphs.get(graph),
-        g = reading.world[graph];
-      this.level(levelClouds(svg, drawing, g));
+        g = reading.world[graph],
+        screen = this.host.space?.screen?.();
+      this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
       this.levelTaps?.mark();
       this.legend?.show(drawing ? levelsOf(drawing, g) : null);
     });

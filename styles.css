@@ -3881,6 +3881,18 @@ body.thoughtknot-easier-reading
     transition: opacity var(--gn-motion-fade) var(--gn-ease-soft);
   }
 }
+/* The levels of detail over the view in space (spec §68, level_space): clouds, roads and gates round the things as
+   the camera sees them. The layer takes no pointer, so turning and picking in space work as before. */
+.thoughtknot-space-levels {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.thoughtknot-space-levels * {
+  pointer-events: none;
+}
 .thoughtknot-space-canvas {
   position: absolute;
   inset: 0;

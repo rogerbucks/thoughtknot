@@ -22,8 +22,16 @@ export interface SpaceOptions {
   miniMap?: () => MiniMapSetting; // whether its mini-map shows, as the flat drawing's does (space_mini_map)
   painter?: Painter; // the fastest that may paint it, as its style graph's Render says (layout_concept_layers)
   lens?: () => Lens | undefined; // what it is seen through, round the picked thing (projections_all_on)
-  moved?: (orbit: Orbit) => void; // the camera moved: semantic zoom reads how near it is (projection_semantic_zoom)
+  moved?: (orbit: Orbit, screen?: SpaceScreen) => void; // the camera moved: semantic zoom and the levels follow it
   orbit?: Orbit; // drawn again in its card's place, the camera where the last left it (NEURO-7)
+}
+
+/** The view in space as the screen shows it: each thing's box in pixels, the size, and the element it is drawn in. */
+export interface SpaceScreen {
+  boxes: () => Map<string, { left: number; top: number; right: number; bottom: number }>;
+  width: number;
+  height: number;
+  el: HTMLElement;
 }
 
 /** An open 3D view: how to close it, move it as the card's bar asks, and show it as cards, balls or a globe. */

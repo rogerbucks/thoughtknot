@@ -103,15 +103,30 @@ function rectsOf(top: Element): Map<string, Rect> {
  */
 export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefined, g?: Graph): string | null {
   const top = svg.querySelector('g.graph');
-  for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
   const levels = drawing ? levelsOf(drawing, g) : [],
     shown = shownOf(svg);
   if (!top || !shown || levels.length < 2) {
+    for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
     svg.classList.remove(FAR);
     return null;
   }
-  const { k, view } = shown,
-    rects = rectsOf(top);
+  return levelsInto(svg, top, levels, drawing, rectsOf(top), shown);
+}
+
+/**
+ * Draws into `top` of `svg` the clouds of `levels` that fit the things in `rects`. They are shown in `view`, at `k`
+ * pixels a unit. The view in space draws them the same way, over its canvas (level_space). Gives back the badge.
+ */
+export function levelsInto(
+  svg: SVGSVGElement,
+  top: Element,
+  levels: readonly DetailLevel[],
+  drawing: GraphDrawing | undefined,
+  rects: ReadonlyMap<string, Rect>,
+  { k, view }: { k: number; view: Rect },
+): string | null {
+  for (const old of Array.from(top.children)) if (old.classList.contains(CLOUDS)) old.remove();
+  if (levels.length < 2) return null;
   // the things on screen now: far out all of them, zoomed in fewer, so a nearer level fits
   const seen = new Set<string>();
   for (const [key, r] of rects)
@@ -125,10 +140,10 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
       inside = new Map<string, string[]>();
     for (const c of clouds) {
       group.appendChild(unitOf(c, levels, at, rects, f?.texts ?? new Map(), k));
-      inside.set(c.key, levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []);
+      inside.set(c.key, levels[at]?.groups.find((x) => x.key === c.key)?.things ?? []);
     }
     held.set(svg, inside);
-    roads(group, roadsAt(levels, at, drawing ? foundOf(drawing).links : [], clouds, LANE_PX / k, GATE_PX / k), k);
+    roads(group, roadsAt(levels, at, f?.links ?? [], clouds, LANE_PX / k, GATE_PX / k), k);
     top.prepend(group);
   }
   return levelBadge(levels, at);
