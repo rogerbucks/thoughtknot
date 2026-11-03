@@ -771,6 +771,10 @@ never data.
   the rows kept. It uses the running total a filter uses. `cellPasses` is what a column's filter box keeps. A kind of
   thing with no number in a column is not said to have none. `types-table.ts` makes a calculated value a column.
   `display/graph-view/table-totals-row.ts` draws the filter boxes and the Total row; a row filtered out is hidden.
+- `gap-lenses.ts` — ready-made lenses that find gaps (§60, discover_gap_lenses): `unlinked`, `missingNeeds`,
+  `unusualNumbers`, `stale` and `nearDuplicates`. Each reads the graph and names things; none changes it.
+- `compare-sets.ts` and `working-set.ts` — two sets compared into only-one, only-other and both; things pinned into a
+  working set, whose own graph holds just those things and the links between them (§60).
 - `calculated-details.ts` — a calculated value in the details panel (§57, calc_details_shown): marked as worked out,
   with its expression, and no field to change it. `display/graph-view/details-calculated-rows.ts` draws it.
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
