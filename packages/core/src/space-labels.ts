@@ -10,6 +10,7 @@
 // At most LABELS_MOST are painted. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks } from './space-view.ts';
+import { NAME_CEILING } from './view-types/type-scale.ts';
 
 /** A label to paint on the screen, at its pixel, and its size in pixels. `picked` marks the picked thing's name. */
 export interface ScreenLabel {
@@ -96,7 +97,9 @@ export function labelsOnScreen(
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
     const mine = (picked !== undefined && l.of === picked) || (pickedLink !== undefined && l.link === pickedLink);
     const many = l.link === undefined && l.of !== undefined ? (links.get(l.of) ?? 0) : 0;
-    const natural = ((l.size * focal) / at.far) * hubGrow(many, busiest);
+    const hub = hubGrow(many, busiest);
+    // it grows as you come nearer, up to the ceiling 2D names share, and never past what the view has room for
+    const natural = Math.min(((l.size * focal) / at.far) * hub, NAME_CEILING * hub, largestName(width, height));
     // a long name is painted smaller to fit across the view, and cut only where even the smallest size will not fit
     const text = shortened(l.text),
       room = width - 4 * GAP,

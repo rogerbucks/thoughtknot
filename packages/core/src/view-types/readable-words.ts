@@ -1,12 +1,13 @@
 // Names that scale with their things in 2D, the busiest shown first (Roger, 2 Nov 2026). A name keeps its size in the
 // drawing, so it grows and shrinks with its thing as you zoom, as a map's names do:
-// - a name is never blown up; with "Hide labels too small to read" on, one under SHOWN_LEAST pixels is left out;
+// - a name is never blown up: past NAME_CEILING pixels on the screen it stops growing as you zoom in; with "Hide labels too small to read" on, one under SHOWN_LEAST pixels is left out;
 // - a name beside its thing grows with the thing's links, up to HUB_LARGER times, so the busiest read from far out;
 // - a name that would cover another is left out. The picked thing's and those in focus are placed first. Then come
 //   the things with the most links, then the largest, then the rest in drawing order;
 // - a name past the edge of the view is nudged back in, so it is not cut off and stays in reach.
 // Zooming in shows more names, as more grow large enough and the room between them grows. Host-free.
 import { LETTER } from './fit-text.ts';
+import { NAME_CEILING } from './type-scale.ts';
 
 /** The least size a name is shown at on the screen, in pixels, when labels too small to read are hidden. */
 export const SHOWN_LEAST = 6;
@@ -93,7 +94,10 @@ export function readableWords(
     const own = at.map((i) => words[i] as Word);
     const many = links.get(group) ?? 0;
     // a name beside a busy thing is drawn larger; one inside its box keeps its size, so it still fits
-    const grow = own.some((w) => w.inside) ? 1 : 1 + (HUB_LARGER - 1) * Math.sqrt(many / busiest);
+    const hub = own.some((w) => w.inside) ? 1 : 1 + (HUB_LARGER - 1) * Math.sqrt(many / busiest);
+    // zoomed in past the ceiling, the name stops growing: the thing shows larger, its name stays readable
+    const largest = Math.max(...own.map((w) => w.size)) * hub * k,
+      grow = hub * Math.min(1, (NAME_CEILING * hub) / largest);
     const cx = own.reduce((s, w) => s + w.x, 0) / own.length,
       cy = own.reduce((s, w) => s + w.y, 0) / own.length;
     let box: Box | null = null;

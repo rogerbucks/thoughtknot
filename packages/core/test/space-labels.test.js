@@ -8,11 +8,13 @@ import {
   NAME_TINY,
   READABLE_LEAST,
   READABLE_MOST,
+  HUB_LARGER,
   hubGrow,
   labelsOnScreen,
   largestName,
 } from '../src/space-labels.ts';
 import { orbitFit, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
+import { NAME_CEILING } from '../src/view-types/type-scale.ts';
 
 /** A grid of `count` things, 20 a row, each a box with its name in a small font, as Graphviz draws 9-pixel names. */
 function grid(count, size = 9) {
@@ -160,4 +162,14 @@ test('the busiest thing is named first and larger, as in 2D', () => {
   const quiet = shown.find((l) => l.id !== 'l:b');
   if (quiet) assert.ok(shown[0].size > quiet.size, 'and drawn larger');
   assert.equal(hubGrow(2, 2), 1.4);
+});
+
+// proves: names_readable_any_zoom
+test('flying right up to a thing, its name stops growing at the ceiling 2D names share', () => {
+  const space = grid(200, 9);
+  const shown = shownOf(space, 1200, 800, 10);
+  assert.ok(shown.length > 0);
+  for (const l of shown) assert.ok(l.size <= NAME_CEILING * HUB_LARGER + 1e-9, `${l.size}`);
+  const far = shownOf(space, 1200, 800, 1);
+  assert.ok(Math.max(...far.map((l) => l.size)) <= Math.max(...shown.map((l) => l.size)), 'nearer is never smaller');
 });
