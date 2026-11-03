@@ -7,7 +7,6 @@ import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { APP_SOURCE_WORDS } from './app-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
-import { COWORK_SOURCE_WORDS } from './cowork-source-words.ts';
 import { CHECK_SOURCE_WORDS } from './check-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
@@ -365,8 +364,6 @@ export const SOURCE_WORDS = {
   ...HOST_SOURCE_WORDS,
   // the Claude Code mod's pane and /graph command, and its editor server's answers (cc-, server-source-words.ts)
   ...CC_SOURCE_WORDS,
-  // the Copilot Cowork skill's companion script (cowork-source-words.ts)
-  ...COWORK_SOURCE_WORDS,
   ...SERVER_SOURCE_WORDS,
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
