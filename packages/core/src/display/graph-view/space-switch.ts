@@ -213,6 +213,9 @@ export class SpaceSwitch {
     const now = word(WORDS[MODES.indexOf(this.now)] ?? 'bar.space-flat');
     b.setAttribute('aria-label', `${word('bar.space')}: ${now}`);
     b.setAttribute('aria-pressed', String(this.now !== null));
-    b.querySelector<HTMLElement>('.thoughtknot-badge-text')?.setText(now);
+    const text = b.querySelector<HTMLElement>('.thoughtknot-badge-text');
+    text?.setText(now);
+    // it holds room for its widest word, so the bar never wraps anew as it changes (adversarial review, 1 Nov 2026)
+    text?.setAttribute('data-room', WORDS.map((w) => word(w)).join('\n'));
   }
 }

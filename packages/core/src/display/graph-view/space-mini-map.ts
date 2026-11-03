@@ -17,10 +17,11 @@ const clamp = (n: number): number => Math.max(0, Math.min(1, n));
 /** The mini-map of one view in space. */
 export class SpaceMiniMap {
   readonly el: HTMLElement;
-  /** The view it lies in, told how tall the mini-map is, so the help line sits above it. */
+  /** The view it lies in, told how big the mini-map is, so the help line sits beside it. */
   private readonly view: HTMLElement;
-  /** How tall the copy is, in pixels. */
+  /** How tall and how wide the copy is, in pixels. */
   private tall = 0;
+  private wide = 0;
   private svg: SVGSVGElement | null = null;
   private seen: SVGPolygonElement | null = null;
   private plan: Plan | null = null;
@@ -78,8 +79,11 @@ export class SpaceMiniMap {
       setting === 'always' || (setting === 'auto' && !!shown.blocks.length && !allInView(shown, matrix, width, height));
     this.el.hidden = !show;
     if (show && (this.of[0] !== shown || this.of[1] !== picked?.of)) this.copy(shown, picked?.of);
-    // the help line at the foot sits above it (design review, 1 Nov 2026)
-    this.view.setCssProps({ '--thoughtknot-space-mini': `${show ? this.tall : 0}px` });
+    // the help line at the foot sits beside it (design review and adversarial review, 1 Nov 2026)
+    this.view.setCssProps({
+      '--thoughtknot-space-mini': `${show ? this.tall : 0}px`,
+      '--thoughtknot-space-mini-w': `${show ? this.wide : 0}px`,
+    });
     if (!show) return;
     this.seen?.setAttribute(
       'points',
@@ -97,6 +101,7 @@ export class SpaceMiniMap {
       { bounds: b } = plan;
     const { width, height } = miniScale(b.width, b.height);
     this.tall = height;
+    this.wide = width;
     const svg = make('svg', {
       class: 'thoughtknot-mini-svg',
       viewBox: `${b.x} ${b.y} ${b.width} ${b.height}`,

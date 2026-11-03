@@ -112,6 +112,22 @@ test('it shows by the setting: never, when some thing is off the screen, or alwa
 
 // Design review, 1 Nov 2026: the help line at the foot ran under the mini-map. The view now says how tall the mini-map
 // is, and the help line sits above it.
+// Adversarial review, 1 Nov 2026 (finding 11): the 3D help line was cut off behind the mini-map and the pad.
+// proves: space_help_clear
+test('the view says how wide the mini-map is, so the help line sits beside it, and none while hidden', async () => {
+  const { said, update, uninstall, view } = await mapIn('always');
+  try {
+    update();
+    assert.match(view.cssProps['--thoughtknot-space-mini-w'], /^\d+px$/, 'its width in pixels');
+    assert.ok(parseInt(view.cssProps['--thoughtknot-space-mini-w']) > 0);
+    said.setting = 'off';
+    update();
+    assert.equal(view.cssProps['--thoughtknot-space-mini-w'], '0px', 'hidden, it takes no room');
+  } finally {
+    uninstall();
+  }
+});
+
 // proves: space_mini_map
 test('the view says how tall the mini-map is, so the help line sits above it, and none while hidden', async () => {
   const { said, update, uninstall, view } = await mapIn('always');
