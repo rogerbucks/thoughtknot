@@ -1400,6 +1400,7 @@
           "folding?: Folding | undefined",
           "graph: string",
           "inline?: InlineProperties | undefined",
+          "kept?: Record<string, [number, number]> | undefined",
           "kindLanes?: false | undefined",
           "layoutOptions?: Partial<LayoutOptions> | undefined",
           "links: Array<Link>",
