@@ -158,6 +158,16 @@ const holds = (have: Value | undefined, op: Op, want: string | number | boolean)
   return op === '<' ? a < b : op === '>' ? a > b : op === '<=' ? a <= b : a >= b;
 };
 
+/** The ids of the things a checked query matches, before its limit is applied. It only reads. */
+export function matchIds(g: Pick<Graph, 'nodes' | 'edges'>, query: AiQuery): string[] {
+  const ids = [...g.nodes]
+    .filter(([, [labels, p]]) => labels.has(query.match) && query.where.every((c) => holds(p[c.key], c.op, c.value)))
+    .map(([id]) => id);
+  if (query.linked === undefined) return ids;
+  const from = new Set(ids);
+  return [...new Set(g.edges.filter((e) => e[1] === query.linked && from.has(e[0])).map((e) => e[2]))];
+}
+
 /** The engine's side of the contract: it checks, guards, answers and logs each query an AI sends. */
 export class AiQueryEngine {
   readonly log: QueryLogEntry[] = [];
@@ -194,13 +204,7 @@ export class AiQueryEngine {
     const allowed = this.permissions.check(client, 'read', target.note);
     if (!allowed.ok) return { ok: false, why: allowed.why };
     const g = target.graph;
-    let ids = [...g.nodes]
-      .filter(([, [labels, p]]) => labels.has(query.match) && query.where.every((c) => holds(p[c.key], c.op, c.value)))
-      .map(([id]) => id);
-    if (query.linked !== undefined) {
-      const from = new Set(ids);
-      ids = [...new Set(g.edges.filter((e) => e[1] === query.linked && from.has(e[0])).map((e) => e[2]))];
-    }
+    const ids = matchIds(g, query);
     const results = ids.slice(0, query.limit).map((id): QueryResult => {
       const [labels, props] = g.nodes.get(id) ?? [new Set<string>(), {}];
       return {
