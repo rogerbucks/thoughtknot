@@ -166,6 +166,9 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.forward': 'Forward',
   'massive.kept': { one: '{count} thing kept', other: '{count} things kept' },
   'massive.filter-saved': 'Saved the filter in the style graph. The overview starts with it next time.',
+  'massive.poles-saved': 'Saved the poles in the style graph. The overview starts placed round them next time.',
+  'massive.poles': 'Poles',
+  'massive.poles.tried': 'Tried, not saved: open the note to edit it to keep these poles.',
   // a thing chosen in the overview of a note too big to read at once (§53, scale_in_parts)
   'massive.thing': 'Properties of {name}',
   'massive.style-problem': 'In the style graph: {why}',

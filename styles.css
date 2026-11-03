@@ -4038,6 +4038,12 @@ body.thoughtknot-easier-reading
   flex-wrap: wrap;
   gap: var(--gn-space-2);
 }
+/* the intents a huge graph's groups are placed round (§58, intent_poles_massive) */
+.thoughtknot-massive-poles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
 .thoughtknot-massive-facet {
   display: flex;
   flex-direction: column;
