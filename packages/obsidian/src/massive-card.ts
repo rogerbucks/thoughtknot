@@ -4,7 +4,7 @@
 //
 // It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
 // in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
-import { PALETTES, renderFor, rulesFor, storedStyle, word } from '@thoughtknot/core';
+import { measuresOf, PALETTES, renderFor, rulesFor, storedStyle, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
 import type { MassiveOptions } from '@thoughtknot/core/display/graph-view/massive-view';
@@ -33,6 +33,15 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
     props: (key) => g?.p(key) ?? {},
     // each group box counts its looks, and the filters offer them (§56, rule_look_massive)
     ...(g && c.styling.style.looks.length ? { rules: rulesFor(c.styling.style, g, drawing) } : {}),
+    // the numbers the filters can total beside their counts (§57, calc_set_totals)
+    ...(g
+      ? {
+          measures: measuresOf(
+            g,
+            drawing.boxes.map((b) => b.key),
+          ),
+        }
+      : {}),
     // the Filter for the whole graph: a view's own is for when views are drawn as overviews
     chosen: c.styling.style.filters.find((f) => f.view === undefined)?.keep,
     painter: renderFor(c.styling.style).painter, // as its Render says (§68, layout_concept_layers)

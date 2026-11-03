@@ -4,6 +4,8 @@
 // overview is drawn again from them. The counts are core facet-counts.ts.
 import { formatCount, word } from '@thoughtknot/core';
 import type { Chosen, FacetIndex } from '../../facet-counts.ts';
+import { facetTotals } from '../../facet-totals.ts';
+import type { Measure, Total } from '../../facet-totals.ts';
 import { button } from '../button';
 
 /**
@@ -14,6 +16,7 @@ export function filterPanel(
   parent: HTMLElement,
   index: FacetIndex,
   changed: (chosen: Chosen) => void,
+  measures: readonly Measure[] = [],
 ): { set(chosen: Chosen): void } {
   const panel = parent.createDiv({ cls: 'thoughtknot-massive-filters' });
   panel.hidden = true;
@@ -33,10 +36,34 @@ export function filterPanel(
   const counted = new Map<string, HTMLElement>();
   const boxes = new Map<string, HTMLInputElement>();
 
+  const totalled = new Map<string, HTMLElement>();
+  let measure: Measure | undefined;
+  /** A total as words: the sum with its unit, or that there were no numbers, and how many things had none. */
+  const said = (t: Total, unit: string) => {
+    const sum = t.total === null ? word('massive.total-none') : `${formatCount(t.total)}${unit ? ` ${unit}` : ''}`;
+    return t.missing ? `${sum}, ${word('massive.total-missing', { count: t.missing })}` : sum;
+  };
   const recount = () => {
     for (const [facet, values] of index.counts(chosen))
       for (const { value, count } of values) counted.get(`${facet}\n${value}`)?.setText(formatCount(count));
+    for (const el of totalled.values()) el.setText('');
+    if (!measure) return;
+    for (const [facet, values] of facetTotals(index, chosen, measure).facets)
+      for (const row of values) totalled.get(`${facet}\n${row.value}`)?.setText(said(row, measure.unit));
   };
+  if (measures.length) {
+    const pick = panel.createEl('label', { text: word('massive.total-of') }).createEl('select', {
+      cls: 'dropdown',
+      attr: { 'aria-label': word('massive.total-of') },
+    });
+    pick.createEl('option', { text: word('massive.total-off'), value: '' });
+    for (const m of measures)
+      pick.createEl('option', { text: m.unit ? `${m.name} (${m.unit})` : m.name, value: m.name });
+    pick.addEventListener('change', () => {
+      measure = measures.find((m) => m.name === pick.value);
+      recount();
+    });
+  }
   for (const [facet, values] of index.counts({})) {
     const group = panel.createEl('fieldset', { cls: 'thoughtknot-massive-facet' });
     group.createEl('legend', { text: facet });
@@ -46,6 +73,7 @@ export function filterPanel(
       boxes.set(`${facet}\n${value}`, box);
       label.createSpan({ text: value });
       counted.set(`${facet}\n${value}`, label.createSpan({ cls: 'thoughtknot-massive-count' }));
+      totalled.set(`${facet}\n${value}`, label.createSpan({ cls: 'thoughtknot-massive-total' }));
       box.addEventListener('change', () => {
         const set = (chosen[facet] ??= new Set());
         if (box.checked) set.add(value);

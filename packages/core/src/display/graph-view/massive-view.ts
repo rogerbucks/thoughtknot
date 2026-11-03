@@ -248,7 +248,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
-  const filters = filterPanel(tools, live.index, regroup);
+  const filters = filterPanel(tools, live.index, regroup, o.measures);
   spaceButton(tools, el, o.graph, () => ({ marks: laid.marks, paints }), stage);
 
   // the trail: each search, grown thing and filter is a step, and back and forward draw that step's picture again

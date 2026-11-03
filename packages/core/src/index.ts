@@ -177,6 +177,7 @@ export type { PngPage } from './export-pages.ts';
 export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
+export { measuresOf } from './measures.ts';
 export { currentLocale, DEFAULT_LOCALE, formatCount, formatDay, formatInstant } from './locale-formats.ts';
 export { formatList, formatSeries, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
 export * from './index-plugins.ts';
