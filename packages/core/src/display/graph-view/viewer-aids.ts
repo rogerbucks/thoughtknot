@@ -14,6 +14,7 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
+import { levelClouds } from './level-clouds-svg.ts';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import { SemanticZoom } from './semantic-zoom-view.ts';
@@ -90,6 +91,8 @@ export class Aids {
   private readonly host: AidsHost;
   /** Whether names are waiting to be sized at the next frame. */
   private naming = false;
+  /** The badge that says which level of detail shows (§68, level_clouds), made the first time one shows. */
+  private badge: HTMLElement | null = null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -167,7 +170,16 @@ export class Aids {
       this.naming = false;
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
+      this.level(levelClouds(svg, reading.graphs.get(graph)));
     });
+  }
+
+  /** Says which level of detail shows, as "Level 2 of 4 · Areas"; nothing for a drawing of one level. */
+  private level(text: string | null): void {
+    if (!text && !this.badge) return;
+    this.badge ??= this.host.viewport.createDiv({ cls: 'thoughtknot-level-badge' });
+    this.badge.setText(text ?? '');
+    this.badge.toggleClass('is-hidden', !text);
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */
