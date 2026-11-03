@@ -114,36 +114,28 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
   });
 
   // design review, 1 Nov 2026: in 3D the help line ran under the mini-map. On a phone the sheet hid the pad
-  test('in 3D the help line is clear of the mini-map, or on a phone at the top, and the pad rides above the sheet', () => {
+  test('in 3D the pad rides above the sheet on a phone', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
     const ruleOf = (sel) =>
       new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
     assert.match(ruleOf('.thoughtknot-space-pad'), /inset-block-end:\s*calc\(var\(--thoughtknot-sheet, 0px\)/);
-    const phone = ruleOf(
-      '.thoughtknot-view:has(.thoughtknot-phone-sheet) .thoughtknot-space-view > .thoughtknot-space-help',
-    );
-    assert.match(phone, /inset-block-start:/, 'on a phone, the help line at the top');
     for (const height of ['is-peek', 'is-half'])
       assert.match(ruleOf(`.thoughtknot-view:has(.thoughtknot-phone-sheet.${height})`), /--thoughtknot-sheet:/, height);
   });
 
-  // adversarial review, 1 Nov 2026 (finding 11): the 3D help line was cut off behind the mini-map and the pad
+  // adversarial review, 1 Nov 2026 (finding 11): the 3D help line was cut off behind the mini-map and the pad. Roger,
+  // 3 Nov 2026: put it inside the pad
   // proves: space_help_clear
-  test('in 3D the help line sits beside the mini-map at the foot, kept clear of the pad by its width', () => {
+  test('in 3D the help is inside the pad, above its buttons, and folds with it', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
-    const ruleOf = (sel) =>
-      new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-    assert.match(ruleOf('.thoughtknot-space-help'), /max-width:[^;]*var\(--thoughtknot-space-pad/, 'clear of the pad');
-    const sel = '.thoughtknot-space-view:has(> .thoughtknot-mini-map:not([hidden])) > .thoughtknot-space-help';
-    const above = ruleOf(sel);
-    assert.match(above, /inset-block-end:[^;]*var\(--thoughtknot-space-mini\b/, 'narrow: above the mini-map');
-    const wide = /@container \(min-width: [\d.]+rem\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
-    const beside = new RegExp(`${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(wide)?.[1] ?? '';
-    assert.match(beside, /inset-inline-start:[^;]*var\(--thoughtknot-space-mini-w/, 'wide: beside the mini-map');
-    assert.match(beside, /max-width:[^;]*--thoughtknot-space-mini-w[^;]*--thoughtknot-space-pad/, 'between the two');
-    assert.match(beside, /inset-block-end:\s*var\(--gn-space-2\)/, 'wide: low at the foot, clear of the card above');
     const src = readFileSync(`${root}packages/core/src/display/graph-view/space-view-pad.ts`, 'utf8');
-    assert.match(src, /'--thoughtknot-space-pad'/, 'the view says how wide the pad is');
+    assert.match(src, /dock\.el\.insertBefore\(help, dock\.body\)/, 'the help goes in the pad, before its buttons');
+    assert.doesNotMatch(
+      css,
+      /\.thoughtknot-space-help\s*\{[^}]*position:\s*absolute/,
+      'it no longer lies over the view',
+    );
+    assert.match(css, /\.thoughtknot-space-pad\.is-folded > \.thoughtknot-space-help/, 'folded, the pad hides it');
   });
 });
 
