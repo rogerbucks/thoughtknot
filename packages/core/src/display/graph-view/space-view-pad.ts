@@ -88,12 +88,11 @@ export function spacePad(el: HTMLElement, shown: string, move: (m: SpaceMove) =>
     { name: word('space.help'), icon: 'help-circle', run: () => move({ help: true }) },
   ]);
   el.addEventListener('keydown', (e: KeyboardEvent) => dockKey(e) && dock.fold(!dock.folded()));
-  const help = el.createEl('ul', { cls: 'thoughtknot-space-help' });
+  // the help is in the pad, above its buttons, so nothing on the view covers it (Roger, 3 Nov 2026)
+  const help = dock.el.createEl('ul', { cls: 'thoughtknot-space-help' });
+  dock.el.insertBefore(help, dock.body);
   const touch = el.win.matchMedia?.('(pointer: coarse)').matches ?? false;
   for (const key of touch ? TOUCH_HELP : MOUSE_HELP) help.createEl('li', { text: word(key) });
-  // the view says how wide the pad is, folded or not, so the help line keeps clear of it (adversarial review, 1 Nov)
-  const padWide = () => el.setCssProps({ '--thoughtknot-space-pad': `${dock.el.offsetWidth}px` });
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(padWide).observe(dock.el);
   const showHelp = (show: boolean) => {
     help.hidden = !show;
     helpButton?.setAttribute('aria-pressed', String(show));
