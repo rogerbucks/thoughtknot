@@ -8,6 +8,7 @@
 import { detailLevels, levelAt, levelBadge } from '../../detail-levels.ts';
 import type { DetailLevel } from '../../detail-levels.ts';
 import { cloudsAt } from '../../level-clouds.ts';
+import { roadsAt } from '../../level-roads.ts';
 import type { Rect } from '../../level-clouds.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
@@ -21,21 +22,34 @@ export const FAR = 'thoughtknot-far';
 /** The room round a cloud's things, and the size of its name, in pixels of the screen. */
 const PAD_PX = 14,
   NAME_PX = 14;
+/** The room between a road's two lanes, how far its gate sits from its port, and the size of a gate's words, in pixels. */
+const LANE_PX = 5,
+  GATE_PX = 26,
+  GATE_NAME_PX = 11;
 /** How many colours the clouds take in turn. */
 const HUES = 6;
 
-/** The levels of each drawing, found once. */
-const found = new WeakMap<GraphDrawing, DetailLevel[]>();
+/** The levels and links of each drawing, found once. */
+const found = new WeakMap<GraphDrawing, Found>();
+
+interface Found {
+  levels: DetailLevel[];
+  links: { from: string; to: string }[];
+}
+
+/** The levels of `drawing`, and its links, found the first time they are asked for. */
+function foundOf(drawing: GraphDrawing): Found {
+  let f = found.get(drawing);
+  if (!f) {
+    const shape = shapeOf(drawing);
+    f = { levels: detailLevels(shape), links: shape.links };
+    found.set(drawing, f);
+  }
+  return f;
+}
 
 /** The levels of `drawing`, found the first time they are asked for. */
-export function levelsOf(drawing: GraphDrawing): DetailLevel[] {
-  let levels = found.get(drawing);
-  if (!levels) {
-    levels = detailLevels(shapeOf(drawing));
-    found.set(drawing, levels);
-  }
-  return levels;
-}
+export const levelsOf = (drawing: GraphDrawing): DetailLevel[] => foundOf(drawing).levels;
 
 /** The box of each thing drawn in `top`, by its key. */
 function rectsOf(top: Element): Map<string, Rect> {
@@ -70,8 +84,9 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
   const at = levelAt(levels, seen);
   svg.classList.toggle(FAR, at < levels.length - 1);
   if (at < levels.length - 1) {
-    const group = make('g', { class: CLOUDS });
-    for (const c of cloudsAt(levels, at, rects, PAD_PX / k)) {
+    const group = make('g', { class: CLOUDS }),
+      clouds = cloudsAt(levels, at, rects, PAD_PX / k);
+    for (const c of clouds) {
       group.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, 'data-hue': c.index % HUES }));
       const name = make('text', {
         class: 'thoughtknot-cloud-name',
@@ -83,7 +98,36 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
       name.textContent = `${c.name} · ${c.count}`;
       group.appendChild(name);
     }
+    roads(group, roadsAt(levels, at, drawing ? foundOf(drawing).links : [], clouds, LANE_PX / k, GATE_PX / k), k);
     top.prepend(group);
   }
   return levelBadge(levels, at);
+}
+
+/** The roads between the clouds drawn into `group`, over the clouds: each lane, its width by its links, and its gates. */
+function roads(group: Element, all: ReturnType<typeof roadsAt>, k: number): void {
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  for (const r of all) {
+    for (const l of r.lanes)
+      group.appendChild(
+        make('path', {
+          class: 'thoughtknot-road',
+          d: l.d,
+          'data-from': l.from,
+          'data-to': l.to,
+          'stroke-width': round1(2 + Math.log2(l.count)),
+        }),
+      );
+    for (const g of r.gates) {
+      const t = make('text', {
+        class: 'thoughtknot-gate',
+        x: g.x,
+        y: g.y,
+        'text-anchor': 'middle',
+        'font-size': GATE_NAME_PX / k,
+      });
+      t.textContent = g.text;
+      group.appendChild(t);
+    }
+  }
 }

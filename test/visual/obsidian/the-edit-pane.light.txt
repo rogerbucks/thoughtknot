@@ -9,7 +9,7 @@
       <text x="221.1" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92);stroke:rgb(255, 255, 255);stroke-width:5.6px"> OPTION
       <text x="204.73" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34);stroke:rgb(255, 255, 255);stroke-width:5.6px"> Large reader
     <g id="p4">
-      <path d="M295.58,-19.2C295.58,-19.2 295.58,-19.2 295.58,-19.2 316.58,-19.2 316.58,-19.2 337.58,-19.2 337.58,-19.2 337.58,-19.2 337.58,-19.2" paint="stroke:rgb(9, 152, 150);stroke-width:1.6">
+      <path d="M295.58,-19.2C295.58,-19.2 295.58,-19.2 295.58,-19.2 316.58,-19.2 316.58,-19.2 337.58,-19.2 337.58,-19.2 337.58,-19.2 337.58,-19.2" paint="stroke:rgb(9, 152, 150);stroke-width:2">
       <polygon points="330.58,-16.75 337.58,-19.2 330.58,-21.65 330.58,-16.75" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2.2">
       <text x="316.58" y="-31.91" text-anchor="middle" paint="fill:rgb(17, 113, 111);stroke:rgb(255, 255, 255);stroke-width:5.6px"> answers
     <g id="p5">
@@ -17,6 +17,6 @@
       <text x="55.06" y="-26.6" text-anchor="start" paint="fill:rgb(92, 92, 92);stroke:rgb(255, 255, 255);stroke-width:5.6px"> REASON
       <text x="28.28" y="-6.3" text-anchor="start" paint="fill:rgb(34, 34, 34);stroke:rgb(255, 255, 255);stroke-width:5.6px"> Easy on the eyes
     <g id="p6">
-      <path d="M143.45,-19.2C143.45,-19.2 143.45,-19.2 143.45,-19.2 164.45,-19.2 164.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2" paint="stroke:rgb(15, 147, 67);stroke-width:1.6">
+      <path d="M143.45,-19.2C143.45,-19.2 143.45,-19.2 143.45,-19.2 164.45,-19.2 164.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2 185.45,-19.2" paint="stroke:rgb(15, 147, 67);stroke-width:2">
       <polygon points="178.45,-16.75 185.45,-19.2 178.45,-21.65 178.45,-16.75" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67);stroke-width:2.2">
       <text x="164.45" y="-24.98" text-anchor="middle" paint="fill:rgb(21, 110, 56);stroke:rgb(255, 255, 255);stroke-width:5.6px"> favours

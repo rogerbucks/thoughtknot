@@ -9,4 +9,5 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.every-item': 'Every item',
   'levels.loose-ends': 'Loose ends',
   'levels.badge': 'Level {at} of {count} · {name}',
+  'levels.gate': 'to {name} · {count}',
 } as const;

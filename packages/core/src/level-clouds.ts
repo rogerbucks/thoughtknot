@@ -22,6 +22,8 @@ export interface Cloud {
   y: number;
   /** Its place among the clouds of its level, so each can take its own colour. */
   index: number;
+  /** The box round its things with their room: where roads leave it, and what other roads go round. */
+  box: Rect;
 }
 
 type Point = [number, number];
@@ -86,7 +88,8 @@ export function cloudsAt(
     if (!rects.length) return;
     const top = Math.min(...rects.map((r) => r.top)) - pad,
       left = Math.min(...rects.map((r) => r.left)),
-      right = Math.max(...rects.map((r) => r.right));
+      right = Math.max(...rects.map((r) => r.right)),
+      bottom = Math.max(...rects.map((r) => r.bottom)) + pad;
     clouds.push({
       key: g.key,
       name: g.name,
@@ -95,6 +98,7 @@ export function cloudsAt(
       x: (left + right) / 2,
       y: top,
       index,
+      box: { left: left - pad, top, right: right + pad, bottom },
     });
   });
   return clouds;

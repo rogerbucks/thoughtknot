@@ -9,7 +9,7 @@
       <text x="150.28" y="-26.6" transform="translate(-0.16 0.41)" text-anchor="start" paint="stroke:rgb(255, 255, 255);stroke-width:5.6px"> PLACE
       <text x="142.18" y="-6.3" transform="translate(0.16 -0.41)" text-anchor="start" paint="stroke:rgb(255, 255, 255);stroke-width:5.6px"> The park
     <g id="p4">
-      <path d="M80.9,-19.2C80.9,-19.2 80.9,-19.2 80.9,-19.2 101.9,-19.2 101.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:1.6">
+      <path d="M80.9,-19.2C80.9,-19.2 80.9,-19.2 80.9,-19.2 101.9,-19.2 101.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:2">
       <polygon points="115.9,-16.75 122.9,-19.2 115.9,-21.65 115.9,-16.75" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9);stroke-width:2.2">
       <text x="101.9" y="-24.98" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near
     <g id="p5">
@@ -17,6 +17,6 @@
       <text x="271.83" y="-26.6" transform="translate(0 0.41)" text-anchor="start" paint="stroke:rgb(255, 255, 255);stroke-width:5.6px"> CAFE
       <text x="272.07" y="-6.3" transform="translate(0 -0.41)" text-anchor="start" paint="stroke:rgb(255, 255, 255);stroke-width:5.6px"> Cafe
     <g id="p6">
-      <path d="M210.79,-19.2C210.79,-19.2 210.79,-19.2 210.79,-19.2 231.79,-19.2 231.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:1.6">
+      <path d="M210.79,-19.2C210.79,-19.2 210.79,-19.2 210.79,-19.2 231.79,-19.2 231.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:2">
       <polygon points="245.79,-16.75 252.79,-19.2 245.79,-21.65 245.79,-16.75" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9);stroke-width:2.2">
       <text x="231.79" y="-24.98" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near

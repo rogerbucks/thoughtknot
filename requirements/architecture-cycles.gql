@@ -46,6 +46,7 @@
 (core_properties)-[:CYCLES_WITH]->(core_reading),
 (core_properties)-[:CYCLES_WITH]->(core_style),
 (core_layout)-[:CYCLES_WITH]->(core_settings),
+(core_layout)-[:CYCLES_WITH]->(core_style),
 (core_layout)-[:CYCLES_WITH]->(core_views),
 (core_layout)-[:CYCLES_WITH]->(core_view_types),
 (core_paths)-[:CYCLES_WITH]->(core_reading),

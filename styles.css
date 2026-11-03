@@ -222,7 +222,7 @@
    sets itself, such as a trunk's, is kept. The selectors weigh less than the focus rules below, so a selected, kept or
    faded link still shows as they say. */
 .thoughtknot-svg g.edge > :where(path:not([stroke-width])) {
-  stroke-width: 1.6;
+  stroke-width: 2;
 }
 .thoughtknot-svg g.edge > :where(polygon:not([stroke-width])) {
   stroke-width: 2.2;
@@ -531,10 +531,15 @@
   background: var(--thoughtknot-swatch, var(--gn-text-muted));
 }
 /* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap. It is a glow round the
-   outline and an underline on the words, never a size, a place or a weight, so nothing moves. It shows over any focus,
+   outline, an underline on the words and a heavier line, never a size or a place, so nothing moves. It shows over any focus,
    as the thing comes forward from the fade while it is highlighted. */
 .thoughtknot-svg g.thoughtknot-hot {
   filter: drop-shadow(0 0 3px var(--gn-accent));
+}
+/* A highlighted link is the same line, only heavier (Roger, 3 Nov 2026: 2 px at rest, 3.2 px on hover). A line's
+   weight moves nothing. */
+.thoughtknot-svg g.edge.thoughtknot-hot > :where(path:not([stroke-width])) {
+  stroke-width: 3.2;
 }
 .thoughtknot-svg g.thoughtknot-hot > text {
   text-decoration: underline;
@@ -4144,8 +4149,21 @@ img.thoughtknot-picture-hidden,
   fill: var(--gn-text-normal);
   font-weight: var(--gn-font-weight-semibold);
 }
-.thoughtknot-svg.thoughtknot-far g.node {
+.thoughtknot-svg.thoughtknot-far :is(g.node, g.edge) {
   opacity: 0.35;
+}
+/* Far out, links between clouds run as roads, one lane each way, round other clouds (spec §68, level_roads). A gate
+   at each end says where they go. The item links under them only fade: links never vanish. */
+.thoughtknot-svg .thoughtknot-road {
+  fill: none;
+  stroke: var(--gn-text-muted);
+  stroke-opacity: 0.7;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.thoughtknot-svg .thoughtknot-gate {
+  fill: var(--gn-text-muted);
+  font-style: italic;
 }
 .thoughtknot-level-badge {
   position: absolute;

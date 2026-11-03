@@ -101,3 +101,26 @@ test('far out a drawing shows its groups as named clouds under its things, which
     uninstall();
   }
 });
+
+// proves: level_roads
+test('far out the links between clouds run as roads with gates, and the item links under them only fade', async () => {
+  const { svg, top, drawing, CLOUDS, levelClouds, uninstall } = await drawn(60, 120);
+  try {
+    levelClouds(svg, drawing);
+    const clouds = top.children.find((c) => c.classList.contains(CLOUDS));
+    const roads = clouds.children.filter((c) => c.classList.contains('thoughtknot-road'));
+    const gates = clouds.children.filter((c) => c.classList.contains('thoughtknot-gate'));
+    assert.ok(roads.length >= 1, 'a road between two clouds');
+    assert.ok(roads.every((r) => /^M/.test(r.getAttribute('d')) && Number(r.getAttribute('stroke-width')) >= 2));
+    assert.ok(
+      gates.length ===
+        2 * new Set(roads.map((r) => [r.getAttribute('data-from'), r.getAttribute('data-to')].sort().join())).size,
+    );
+    assert.ok(
+      gates.every((g) => /^to .+ · \d+$/.test(g.textContent)),
+      'each gate says where it goes',
+    );
+  } finally {
+    uninstall();
+  }
+});
