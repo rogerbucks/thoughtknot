@@ -1,6 +1,6 @@
-// Ready-made lenses for finding gaps in a large graph (editor spec §60, discover_gap_lenses). Each one reads the graph
-// and names the things it finds, never changing it: things with nothing linked, things missing a property their kind
-// needs, numbers far from their kind's usual, stale things, and names that nearly match.
+// Ready-made lenses for finding gaps in a large graph (editor spec §60, discover_gap_lenses). Each reads the graph and
+// names the things it finds. None changes the graph. They find things with nothing linked, things missing a property
+// their kind needs, and numbers far from their kind's usual. They also find stale things and names that nearly match.
 import type { Graph } from '@thoughtknot/graph-spec';
 
 /** A thing a gap lens found, and why in a few words. */

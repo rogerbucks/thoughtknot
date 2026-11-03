@@ -1,5 +1,6 @@
-// Comparing two sets of things (editor spec §60, discover_compare_sets): two filters or two lenses give the things in
-// the first only, the second only, and both. Each list keeps the order the thing was first met.
+// Comparing two sets of things (editor spec §60, discover_compare_sets). Two filters or two lenses each give a set.
+// The result is what only the first holds, what only the second holds, and what both hold. Each list keeps the order
+// the thing was first met.
 
 /** The three sets two sets of things make. */
 export interface Compared {
