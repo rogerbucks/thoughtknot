@@ -4186,8 +4186,71 @@ img.thoughtknot-picture-hidden,
   gap: var(--gn-space-2);
   align-items: center;
 }
-.thoughtknot-level-back {
+.thoughtknot-level-back,
+.thoughtknot-level-legend {
   pointer-events: auto;
+}
+.thoughtknot-level-badge {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+/* The legend of subjects (spec §68, level_colours): a chip each, with its colour. Pointing at one spotlights it; a
+   click keeps it. Its colour button picks the next colour. */
+.thoughtknot-level-legend {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  justify-content: center;
+}
+.thoughtknot-level-legend.is-hidden {
+  display: none;
+}
+.thoughtknot-level-chip {
+  display: inline-flex;
+  gap: var(--gn-space-1);
+  align-items: center;
+}
+.thoughtknot-level-chip[aria-pressed='true'] {
+  outline: 2px solid var(--gn-accent);
+}
+.thoughtknot-level-swatch {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+}
+.thoughtknot-level-swatch[data-hue='0'] {
+  background: var(--gn-branch-0);
+}
+.thoughtknot-level-swatch[data-hue='1'] {
+  background: var(--gn-branch-1);
+}
+.thoughtknot-level-swatch[data-hue='2'] {
+  background: var(--gn-branch-2);
+}
+.thoughtknot-level-swatch[data-hue='3'] {
+  background: var(--gn-branch-3);
+}
+.thoughtknot-level-swatch[data-hue='4'] {
+  background: var(--gn-branch-4);
+}
+.thoughtknot-level-swatch[data-hue='5'] {
+  background: var(--gn-branch-5);
+}
+/* Areas and topics take lighter shades of their subject's colour. */
+.thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
+  fill-opacity: 0.06;
+}
+.thoughtknot-svg .thoughtknot-cloud[data-shade='2'] {
+  fill-opacity: 0.04;
+}
+/* The spotlight: the subject pointed at comes to the front, the rest fade. Only their look changes. */
+.thoughtknot-svg.thoughtknot-spotlit :is(g.node, .thoughtknot-cloud-unit):not(.is-spot) {
+  opacity: 0.15;
+}
+.thoughtknot-svg.thoughtknot-spotlit g.node.is-spot {
+  opacity: 1;
 }
 /* A cloud pointed at or picked dashes its outline and previews the level in it (spec §68, level_click_back). The first
    tap picks it, the second flies in. */

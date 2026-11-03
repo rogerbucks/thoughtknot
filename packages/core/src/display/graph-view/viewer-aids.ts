@@ -14,7 +14,8 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
-import { levelClouds } from './level-clouds-svg.ts';
+import { levelClouds, levelsOf } from './level-clouds-svg.ts';
+import { LevelLegend } from './level-legend.ts';
 import { LevelTaps } from './level-taps.ts';
 import { word } from '../../words.ts';
 import { MiniMap } from './mini-map';
@@ -100,6 +101,8 @@ export class Aids {
   private backButton: HTMLElement | null = null;
   /** The taps on the clouds: pick, fly in, and back (level_click_back); none for a table. */
   private readonly levelTaps: LevelTaps | null;
+  /** The legend of subjects under the badge: the spotlight, and each subject's colour (level_colours). */
+  private legend: LevelLegend | null = null;
   /** What the badge said last. */
   private badgeText: string | null = null;
 
@@ -183,8 +186,10 @@ export class Aids {
       this.naming = false;
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
-      this.level(levelClouds(svg, reading.graphs.get(graph)));
+      const drawing = reading.graphs.get(graph);
+      this.level(levelClouds(svg, drawing));
       this.levelTaps?.mark();
+      this.legend?.show(drawing ? levelsOf(drawing) : null);
     });
   }
 
@@ -202,6 +207,11 @@ export class Aids {
       });
       this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
+      this.legend = new LevelLegend(this.badge, {
+        viewport: this.host.viewport,
+        svg: this.host.svg,
+        redraw: () => this.names(),
+      });
     }
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);

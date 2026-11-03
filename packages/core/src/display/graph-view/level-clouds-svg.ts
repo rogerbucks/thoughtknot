@@ -11,6 +11,7 @@ import { cloudsAt } from '../../level-clouds.ts';
 import { roadsAt } from '../../level-roads.ts';
 import type { Cloud, Rect } from '../../level-clouds.ts';
 import { word } from '../../words.ts';
+import { hueOf, subjectOf } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
 import { make } from './note-callouts.ts';
@@ -29,8 +30,6 @@ const PEEK_PX = 12,
 const LANE_PX = 5,
   GATE_PX = 26,
   GATE_NAME_PX = 11;
-/** How many colours the clouds take in turn. */
-const HUES = 6;
 
 /** The things in each cloud drawn now, by the cloud's key, for each drawing's SVG: what a tap on a cloud flies to. */
 const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
@@ -152,8 +151,11 @@ function unitOf(
   texts: ReadonlyMap<string, string>,
   k: number,
 ): Element {
-  const unit = make('g', { class: 'thoughtknot-cloud-unit', 'data-cloud': c.key });
-  unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, 'data-hue': c.index % HUES }));
+  // each cloud takes its subject's hue, a shade lighter for each level in (level_colours)
+  const subject = subjectOf(levels, at, c.key);
+  const unit = make('g', { class: 'thoughtknot-cloud-unit', 'data-cloud': c.key, 'data-subject': subject });
+  const look = { 'data-hue': hueOf(levels, subject), 'data-shade': Math.min(at, 2) };
+  unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, ...look }));
   const text = (cls: string, x: number, y: number, px: number, words: string) => {
     const t = make('text', { class: cls, x, y, 'text-anchor': 'middle', 'font-size': px / k });
     t.textContent = words;
