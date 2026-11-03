@@ -10,7 +10,7 @@ import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
-import { renderCalculated } from './calculated-rows';
+import { renderCalculated } from './details-calculated-rows';
 import { button } from '../button';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../link-host';

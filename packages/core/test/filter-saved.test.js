@@ -84,3 +84,18 @@ describe('a filter saved in the style graph', () => {
     assert.ok('refused' in styleEdit(NOTE, 'work', { filter: { keep: { Kind: ['Task'] }, view: '' } }));
   });
 });
+
+describe('poles saved with the filter', () => {
+  // proves: intent_poles_massive
+  test('the poles chosen are written on the Filter line, read back in order, and taken off when none is chosen', () => {
+    const r = styleEdit(NOTE, 'work', { filter: { keep: { Kind: ['Task'] }, poles: ['early', 'calm'] } });
+    assert.ok('note' in r, r.refused);
+    assert.ok(gqlBlocks(r.note).at(-1).text.includes("(filter_1:Filter {keep: 'Kind: Task', poles: 'early, calm'})"));
+    const { style, problems } = read(texts(r.note));
+    assert.deepEqual(problems, []);
+    assert.deepEqual(style.filters[0].poles, ['early', 'calm']);
+    const off = styleEdit(r.note, 'work', { filter: { keep: { Kind: ['Task'] } } });
+    assert.ok('note' in off, off.refused);
+    assert.equal(read(texts(off.note)).style.filters[0].poles, undefined);
+  });
+});

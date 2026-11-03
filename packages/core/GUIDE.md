@@ -749,6 +749,18 @@ never data.
   it over the rules' looks. It moves nothing and writes nothing.
 - `display/graph-view/intent-pick.ts` — the Show an intent list beside the legend, and the standing of the one shown.
   Picking only draws, so it is open in reading view (`read-only.ts`).
+
+#### The pole view
+
+- `view-types/pole-view.ts` — the pole view (intent_pole_view). Each intent is a pole round a circle; two face each
+  other on one axis. `pullPlaces` puts a thing near the poles it supports and away from those it contradicts. A thing
+  pulled both ways sits between, and one with no pull sits in the band along the bottom.
+- `pole-groups.ts` — poles on a graph too large to draw (intent_poles_massive). `poleGlide` places each overview group
+  by its balance, by `pullPlaces`, and gives each its glide from where it was. Nothing is laid out again.
+  `choosePoles` only tries poles in reading view, and saves them where the note is edited. `poledMarks` moves the
+  overview's marks to those places, so the groups glide there.
+- `display/graph-view/massive-poles.ts` — the Poles button on a huge graph's overview, with a box to tick for each
+  intent. The poles are saved on the Filter line (`filter-saved.ts`, `poles`).
 - `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
   overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
@@ -756,7 +768,7 @@ never data.
   the numbers a graph can total: its calculated values and its number properties. `facetTotals` adds one up for each
   filter value and for all the things kept. It says how many things had none, and never counts one as zero.
 - `calculated-details.ts` — a calculated value in the details panel (§57, calc_details_shown): marked as worked out,
-  with its expression, and no field to change it. `display/graph-view/calculated-rows.ts` draws it.
+  with its expression, and no field to change it. `display/graph-view/details-calculated-rows.ts` draws it.
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
   `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
 #### Making a rule from the card

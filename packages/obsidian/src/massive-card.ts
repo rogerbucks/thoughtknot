@@ -3,7 +3,8 @@
 // properties, for the filters. It gives the style graph's rules too, so each group counts its looks (§56).
 //
 // It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
-// in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
+// in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter. The
+// graph's intents can be chosen as poles the groups are placed round (§58), saved or only tried the same way.
 import { measuresOf, PALETTES, renderFor, rulesFor, storedStyle, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
@@ -26,6 +27,11 @@ export interface MassiveCard {
 export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawing: GraphDrawing, c: MassiveCard): void {
   const { path, graph, reading } = c,
     g = reading.world[graph];
+  const whole = c.styling.style.filters.find((f) => f.view === undefined);
+  const intents = g?.labelled('Intent').map((id) => {
+    const says = g.p(id).says;
+    return { id, says: typeof says === 'string' ? says : id };
+  });
   massiveView(root, drawing, {
     graph,
     palette: PALETTES.obsidian,
@@ -43,10 +49,17 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
         }
       : {}),
     // the Filter for the whole graph: a view's own is for when views are drawn as overviews
-    chosen: c.styling.style.filters.find((f) => f.view === undefined)?.keep,
+    chosen: whole?.keep,
+    // the intents to place the groups round, and those saved (§58, intent_poles_massive)
+    ...(g && intents?.length ? { intents: { graph: g, choices: intents }, poles: whole?.poles ?? [] } : {}),
+    chosePoles: (poles, keep) => {
+      const saved = word('massive.poles-saved');
+      if (!c.readOnly(root)) void writeStyle(plugin, path, graph, { filter: { keep, poles } }, saved);
+    },
     painter: renderFor(c.styling.style).painter, // as its Render says (§68, layout_concept_layers)
-    chose: (keep) => {
-      if (!c.readOnly(root)) void writeStyle(plugin, path, graph, { filter: { keep } }, word('massive.filter-saved'));
+    chose: (keep, poles) => {
+      const filter = { keep, ...(poles?.length ? { poles } : {}) };
+      if (!c.readOnly(root)) void writeStyle(plugin, path, graph, { filter }, word('massive.filter-saved'));
     },
   });
 }

@@ -2,6 +2,7 @@
 // massive-view.ts). Kept apart so the overview itself stays short.
 import type { Drawn, GraphDrawing, Painter, Refusal, RulesShown } from '@thoughtknot/core';
 import type { Measure } from '../../facet-totals.ts';
+import type { Graph } from '@thoughtknot/graph-spec';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
 import type { FlyView, Match } from '../../search-fly.ts';
@@ -19,7 +20,7 @@ export interface MassiveOptions {
   /** The filter the overview starts with, as saved. Not set: everything is kept. */
   chosen?: FilterKeep;
   /** Told each filter the user chooses, to save it. Going back or forward is not a choice. */
-  chose?: (keep: FilterKeep) => void;
+  chose?: (keep: FilterKeep, poles?: readonly string[]) => void;
   /** Told the thing chosen: found by search, even in a group too large to draw, or clicked in an opened group. */
   picked?: (key: string) => void;
   painter?: Painter; // the fastest that may paint it, as the style graph's Render says (layout_concept_layers)
@@ -27,6 +28,12 @@ export interface MassiveOptions {
   rules?: Pick<RulesShown, 'things' | 'legend'>;
   /** The numbers the filters can total beside their counts, by thing in the order of the drawing's boxes (§57). */
   measures?: readonly Measure[];
+  /** The graph's intents, to place the groups round as poles (§58, intent_poles_massive); not set, none is offered. */
+  intents?: { graph: Graph; choices: { id: string; says: string }[] };
+  /** The poles the overview starts placed round, as saved. */
+  poles?: readonly string[];
+  /** Told the poles chosen, with the filter kept, to save them where the note is edited; reading view only tries them. */
+  chosePoles?: (poles: string[], keep: FilterKeep) => void;
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */

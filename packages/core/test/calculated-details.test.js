@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
 import { calculatedDetails } from '../src/calculated-details.ts';
-import { renderCalculated } from '../src/display/graph-view/calculated-rows.ts';
+import { renderCalculated } from '../src/display/graph-view/details-calculated-rows.ts';
 
 const node = (id, labels, props) => [id, [new Set(labels), { id, ...props }]];
 const graph = (nodes, edges = []) => new gs.Graph(new Map(nodes), edges);

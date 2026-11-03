@@ -17,6 +17,7 @@ import { hiveMarks } from './hive-view.ts';
 import { mapMarks } from './map-view.ts';
 import { matrixMarks } from './matrix-view.ts';
 import { planMarks } from './plan-view.ts';
+import { poleMarks } from './pole-view.ts';
 import { treemapMarks } from './treemap-view.ts';
 import { PLAN_EMPTY, VIEW_NEEDS, scaffoldMarks } from './view-scaffold.ts';
 
@@ -36,6 +37,7 @@ export const VIEW_TYPES = [
   'hive',
   'grid',
   'map',
+  'pole',
 ] as const;
 /**
  * The view types the picker shows at first. Timeline and Radial are shown too, as diagram types. The rest are under
@@ -63,6 +65,7 @@ const DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
   hive: hiveMarks,
   grid: gridMarks,
   map: mapMarks,
+  pole: poleMarks,
 };
 
 /** What draws each view type: each link touches its things' outlines and takes its type's colour (link-ends.ts). */
