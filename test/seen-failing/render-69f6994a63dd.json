@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render.test.js",
+  "test": "a long timeline wraps its days into rows (§68, timeline_wraps_days) > a short timeline that already fits a screen's shape is not wrapped",
+  "seen_failing_first": false,
+  "evidence": "It guards that a short timeline is drawn as before, so it passes before the fix by design."
+}

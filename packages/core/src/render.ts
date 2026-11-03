@@ -17,7 +17,7 @@ import { lanedSource, spacedSource } from './spaced-source.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
-import { marksInRows } from './layouts/rows-route.ts';
+import { marksInRows, wrappedRows } from './layouts/rows-route.ts';
 import {
   groupsIn,
   kindsIn,
@@ -69,6 +69,8 @@ export interface Direction {
    * out as a thin strip. This is drawn instead when Graphviz's drawing is far from a screen's shape.
    */
   shaped?: string;
+  /** A timeline: its days, one row each, are wrapped into rows under each other when far from a screen's shape. */
+  wrap?: true;
 }
 
 /**
@@ -164,7 +166,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
         : undefined;
     // the View menu's layout and lanes reach Graphviz too, not only our own engine (view_options_everywhere)
     const spaced = spacedSource(lanedSource(dot, drawing), drawing.layoutOptions);
-    return { rankdir, dot: quick ? quickSource(spaced) : spaced, src, ...(shaped ? { shaped } : {}) };
+    const wrap = drawing.diagram?.type === 'timeline' ? { wrap: true as const } : {};
+    return { rankdir, dot: quick ? quickSource(spaced) : spaced, src, ...(shaped ? { shaped } : {}), ...wrap };
   });
 }
 
@@ -186,7 +189,7 @@ const offScreen = (svg: string): number => {
  * Fit shows readable names, not a sliver. The choice is made where the drawing is first placed, the same each time.
  */
 export function drawnSvg(engine: Engine, d: Direction, routing?: string): string {
-  const svg = svgOf(engine, d.dot, routing, d.own);
+  const svg = svgOf(engine, d.dot, routing, d.own, d.wrap);
   const off = offScreen(svg);
   if (!d.shaped || off <= Math.log(2)) return svg;
   const other = svgOf(engine, d.shaped, routing, true);
@@ -229,7 +232,7 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
  * Graphviz's layout as marks, its links made direct and its boxes moved aside (direct-links.ts). It is Graphviz's own
  * where the marks cannot give the drawing back exactly, or the engine gives no marks.
  */
-export function svgOf(engine: Engine, dot: string, routing?: string, own?: boolean): string {
+export function svgOf(engine: Engine, dot: string, routing?: string, own?: boolean, wrap?: boolean): string {
   // our own engine places the boxes Graphviz measured (layout_own_engine); Graphviz's own layout where it cannot
   if (own && engine.placed) {
     const measured = engine.placed(dot);
@@ -260,6 +263,12 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   // no rows, such as a radial one, keeps Graphviz's own curves while small. Past the quick size routing them is slow,
   // so its links are drawn direct
   const rows = !/\blayout=/.test(dot) && marksInRows(laid.marks, way === 'TB' ? 1 : 0);
+  // a timeline far longer than a screen has its days wrapped into rows, still in order (timeline_wraps_days)
+  const wrapped = wrap && !large ? wrappedRows(laid.marks, way === 'TB' ? 1 : 0) : undefined;
+  if (wrapped) {
+    const { at, width, height } = wrapped;
+    return layoutSvg(directLinks({ ...laid, space: { ...laid.space, width, height } }, at, undefined, way));
+  }
   if (curved && !rows && !large) return engine.render(dot);
   return layoutSvg(directLinks(laid, undefined, undefined, way, rows && (large || curved)));
 }
