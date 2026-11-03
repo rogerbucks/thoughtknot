@@ -29,8 +29,11 @@ test('grouping by a look and a lens bucket each gives those groups, with no layo
     ['blue', ['b']],
   ]);
   assert.equal(groupingOf(BY_LOOK, lookValues(new Map())), null, 'no looks, no groups');
-  const buckets = bucketValues(G, "Task WHERE status == 'open'");
-  const byBucket = groupingOf(`${BY_BUCKET}rule`, buckets);
-  if (byBucket) assert.ok(groupsBy(byBucket, ['a', 'b', 'c']).every(([, things]) => things.length > 0));
+  const rule = "MATCH (p:Task) RETURN p.id AS id, CASE WHEN p.status = 'open' THEN 'open' ELSE 'other' END AS grp";
+  const byBucket = groupingOf(`${BY_BUCKET}rule`, bucketValues(G, rule));
+  assert.deepEqual(groupsBy(byBucket, ['a', 'b', 'c']), [
+    ['open', ['a', 'c']],
+    ['other', ['b']],
+  ]);
   assert.equal(bucketValues(G, 'not a rule ((').size, 0, 'a rule that cannot be run gives no groups');
 });

@@ -785,6 +785,11 @@ never data.
 - `group-by-sources.ts` — grouping an overview by a look or by a lens bucket, beside `group-by.ts` (§60, discover_group_by).
 - `bulk-edit.ts` — one property set on every thing a filter keeps. `bulkPlan` lists the changes to read first. `applyBulk`
   writes them and gives the plan that undoes them (§60, discover_bulk_edit).
+- `ask-plain.ts` — a plain question turned by an AI into a checked read-only query, shown with its count before it runs
+  (§60, discover_ask_plain). It uses `matchIds` from `ai-query.ts`, so the counting and the running are one code.
+- `watch-rule.ts` — a watched bucket of a lens rule: each look at the graph gives at most one notice (§60).
+- `group-names.ts` — names an AI suggests for groups. They wait, and change nothing until a person applies one (§60).
+- `saved-trail.ts` — a trail saved as a lens, or as a path that replays each step (§60, discover_saved_trail).
 - `as-at.ts` — a graph as it was on a chosen day, on recorded or real-world time, with what came and went since (§60).
 
 #### Making a rule from the card
