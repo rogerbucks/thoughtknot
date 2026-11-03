@@ -584,7 +584,7 @@ own handlers. Nothing here reaches the network.
     type not used yet is a box of its own.
   - It writes this as a small graph of GQL, and reads it; never the note's text.
 - `standard-schemas.ts` — the standard schemas (§27, standard_schemas): shared schemas named with their version
-  (`decision@1`), read for a note that names one. `withStandardSchemas` adds each the vault has none of its name of.
+  (`decision@1`, `intent@1`), read for a note that names one. `withStandardSchemas` adds each the vault has none of its name of.
 - `schema-names.ts` — `missingSchemas`: a graph naming a shared schema neither the vault nor the standard ones hold. It
   is warned of with the versions there are (schema_named_found). `readNote` asks it only when given the vault's schemas.
 
@@ -733,6 +733,16 @@ never data.
 - `rule-look-checks.ts` — a rule's look and a bands rule, checked, each fault a problem with its fix.
 - `display/graph-view/rule-marks.ts` — a card marks each thing and link a rule finds: its token, line, hue and badge. Its
   legend lists each rule drawn. The 2.5D and 3D views read the badge before each name (`svg-marks.ts`).
+
+#### Intents
+
+- `intents.ts` — intents (§58). An Intent thing says what a person is trying to reach, with an optional `test`.
+  - `intentLinks` reads each SUPPORTS and CONTRADICTS link to an intent, with its likelihood word and reason.
+  - An IntentRule finds its own things, by `when` or a lens, and links each the way it is linked. Those links are worked
+    out each time, never written into the note.
+  - A thing linked both ways to one intent is contested.
+  - `intentStanding` counts what supports it and what contradicts it, by likelihood word, and what is not linked. It
+    says them in words (`intent-source-words.ts`) and stores no score.
 - `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
   overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
