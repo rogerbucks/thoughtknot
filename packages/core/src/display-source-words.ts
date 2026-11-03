@@ -173,6 +173,7 @@ export const DISPLAY_SOURCE_WORDS = {
   // a total beside each filter value's count (§57, calc_set_totals)
   'massive.total-of': 'Total of',
   'massive.total-off': 'No total',
+  'massive.total-kept': 'All kept',
   'massive.total-none': 'no numbers',
   'massive.total-missing': { one: '{count} has none', other: '{count} have none' },
   'massive.look-count': '{look} {n}',

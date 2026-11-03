@@ -5,6 +5,7 @@
 // - 10,000 kept things total in under 100 ms.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import gs from '@thoughtknot/graph-spec';
 import { FacetIndex } from '../src/facet-counts.ts';
 import { facetTotals } from '../src/facet-totals.ts';
 
@@ -42,6 +43,23 @@ test('a value whose things all lack the number has no total, and is not zero', (
   );
   assert.equal(row(t, 'Kind', 'Person').total, null);
   assert.deepEqual(row(t, 'Kind', 'Person'), { value: 'Person', count: 3, total: null, counted: 0, missing: 3 });
+});
+
+test('measures of 10,000 things, worked out as a card opens, take under 500 ms', async () => {
+  const { measuresOf } = await import('../src/measures.ts');
+  const n = 10_000;
+  const nodes = new Map();
+  for (let i = 0; i < n; i++) nodes.set(`t${i}`, [new Set(['Task']), { id: `t${i}`, cost: i, hours: i % 5 }]);
+  const g = new gs.Graph(nodes, []);
+  const keys = [...nodes.keys()];
+  measuresOf(g, keys);
+  const start = performance.now();
+  const ms = measuresOf(g, keys);
+  assert.ok(performance.now() - start < 500, 'under 500 ms');
+  assert.deepEqual(
+    ms.map((m) => m.name),
+    ['cost', 'hours'],
+  );
 });
 
 test('10,000 kept things total in under 100 ms', () => {

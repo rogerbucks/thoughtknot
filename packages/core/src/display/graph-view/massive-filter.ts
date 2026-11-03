@@ -43,19 +43,22 @@ export function filterPanel(
     const sum = t.total === null ? word('massive.total-none') : `${formatCount(t.total)}${unit ? ` ${unit}` : ''}`;
     return t.missing ? `${sum}, ${word('massive.total-missing', { count: t.missing })}` : sum;
   };
+  let keptTotal: HTMLElement | undefined;
   const recount = () => {
     for (const [facet, values] of index.counts(chosen))
       for (const { value, count } of values) counted.get(`${facet}\n${value}`)?.setText(formatCount(count));
     for (const el of totalled.values()) el.setText('');
+    keptTotal?.setText('');
     if (!measure) return;
-    for (const [facet, values] of facetTotals(index, chosen, measure).facets)
+    const t = facetTotals(index, chosen, measure);
+    keptTotal?.setText(`${word('massive.total-kept')}: ${said(t.kept, measure.unit)}`);
+    for (const [facet, values] of t.facets)
       for (const row of values) totalled.get(`${facet}\n${row.value}`)?.setText(said(row, measure.unit));
   };
   if (measures.length) {
-    const pick = panel.createEl('label', { text: word('massive.total-of') }).createEl('select', {
-      cls: 'dropdown',
-      attr: { 'aria-label': word('massive.total-of') },
-    });
+    const label = panel.createEl('label', { text: word('massive.total-of') });
+    const pick = label.createEl('select', { cls: 'dropdown', attr: { 'aria-label': word('massive.total-of') } });
+    keptTotal = label.createSpan({ cls: 'thoughtknot-massive-total' });
     pick.createEl('option', { text: word('massive.total-off'), value: '' });
     for (const m of measures)
       pick.createEl('option', { text: m.unit ? `${m.name} (${m.unit})` : m.name, value: m.name });
