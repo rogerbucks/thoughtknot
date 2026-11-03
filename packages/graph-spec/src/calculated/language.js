@@ -4,7 +4,7 @@
 
 const { refused } = require('../values/refusal.js');
 
-/** @typedef {Record<string, number>} Unit A unit as symbols and their powers: USD per hour is `{USD: 1, h: -1}`. */
+/** @typedef {Map<string, number>} Unit A unit as symbols and their powers: USD per hour is USD 1, h -1. */
 /**
  * @typedef {{ t: 'num', v: number } | { t: 'name', n: string } | { t: 'neg', a: Tree }
  *   | { t: 'bin', op: string, a: Tree, b: Tree }
@@ -123,7 +123,7 @@ function parse(source) {
 /** A unit written as text, such as `USD/h`, read into symbols and powers. @param {unknown} text @returns {Unit} */
 function unitOfText(text) {
   /** @type {Unit} */
-  const u = {};
+  const u = new Map();
   if (typeof text !== 'string') return u;
   let next = 1;
   for (const part of text.split(/([*/])/)) {
@@ -131,32 +131,31 @@ function unitOfText(text) {
     if (part === '*') next = 1;
     else if (part === '/') next = -1;
     else if (symbol) {
-      u[symbol] = (u[symbol] ?? 0) + next;
+      u.set(symbol, (u.get(symbol) ?? 0) + next);
       next = 1;
     }
   }
-  for (const k of Object.keys(u)) if (u[k] === 0) delete u[k];
+  for (const [k, p] of u) if (p === 0) u.delete(k);
   return u;
 }
 /** A unit written the one way: top symbols sorted joined by *, then / and the bottom ones. @param {Unit} u */
 function unitText(u) {
-  const power = (/** @type {string} */ k) => Math.abs(u[k] ?? 0);
-  const side = (/** @type {string[]} */ keys) =>
-    keys
-      .sort()
-      .map((k) => (power(k) === 1 ? k : `${k}^${power(k)}`))
+  const side = (/** @type {number} */ sign) =>
+    [...u]
+      .filter(([, p]) => p * sign > 0)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, p]) => (Math.abs(p) === 1 ? k : `${k}^${Math.abs(p)}`))
       .join('*');
-  const top = Object.keys(u).filter((k) => (u[k] ?? 0) > 0),
-    bottom = Object.keys(u).filter((k) => (u[k] ?? 0) < 0);
-  return side(top) + (bottom.length ? `/${side(bottom)}` : '');
+  const bottom = side(-1);
+  return side(1) + (bottom ? `/${bottom}` : '');
 }
 /** @param {Unit} u */
 const shown = (u) => unitText(u) || 'a plain number';
 /** @param {Unit} a @param {Unit} b @param {number} sign */
 function unitTimes(a, b, sign) {
-  const u = { ...a };
-  for (const [k, p] of Object.entries(b)) u[k] = (u[k] ?? 0) + sign * p;
-  for (const k of Object.keys(u)) if (u[k] === 0) delete u[k];
+  const u = new Map(a);
+  for (const [k, p] of b) u.set(k, (u.get(k) ?? 0) + sign * p);
+  for (const [k, p] of u) if (p === 0) u.delete(k);
   return u;
 }
 /** @param {Unit} a @param {Unit} b */

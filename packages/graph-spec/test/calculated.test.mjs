@@ -74,4 +74,21 @@ describe('calculated values', () => {
     });
     assert.equal(C.calculate(g).values.t.cost.value, 4);
   });
+
+  test('names such as __proto__ in units, kinds and things never reach Object.prototype', () => {
+    const g = graphOf({
+      nodes: [
+        ['c', ['Calculated'], { of: '__proto__', name: '__proto__', is: 'x * 2', unit: '__proto__' }],
+        ['q', ['Quantity'], { of: '__proto__', name: 'x', unit: '__proto__' }],
+        ['__proto__', ['__proto__'], { x: 2 }],
+      ],
+      edges: [],
+    });
+    const { values } = C.calculate(g);
+    assert.equal(Object.getPrototypeOf(values), Object.prototype);
+    assert.equal(Object.hasOwn(values, '__proto__'), true);
+    assert.equal({}.polluted, undefined);
+    assert.equal(Object.keys(Object.prototype).length, 0);
+    assert.equal(values['__proto__']?.['__proto__']?.unit, '__proto__');
+  });
 });
