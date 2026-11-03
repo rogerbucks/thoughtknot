@@ -2453,6 +2453,37 @@ pre.thoughtknot-code {
   stroke-width: 3;
 }
 
+/* A whiteboard (editor spec §45). The item the keyboard is on is ringed in the text colour, thicker and dashed, so it
+   is told by more than colour. The help, the words said and the outline sit under the board in the note's own type. */
+.thoughtknot-board g.is-focused > rect {
+  stroke: var(--gn-text-normal);
+  stroke-width: 3;
+  stroke-dasharray: 8 3;
+}
+.thoughtknot-board [data-item] {
+  cursor: grab;
+}
+.thoughtknot-board-help,
+.thoughtknot-board-said {
+  margin: var(--gn-space-1) 0;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-edit {
+  display: flex;
+  gap: var(--gn-space-1);
+  align-items: flex-start;
+}
+.thoughtknot-board-edit textarea {
+  flex: 1;
+}
+.thoughtknot-board-outline li[data-depth='1'] {
+  margin-inline-start: var(--gn-space-4);
+}
+.thoughtknot-board-outline li[data-depth='2'] {
+  margin-inline-start: calc(2 * var(--gn-space-4));
+}
+
 /* Names, labels and values as the person wrote them (editor spec §42, bidi_labels). Each is read in its own direction,
    from its first strong letter, and set apart from the words around it. So an Arabic name in an English panel, or an
    English one in a Hebrew panel, is neither reordered nor reorders what follows it. */
