@@ -764,6 +764,11 @@ never data.
 - `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
   overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).
+- `facet-totals.ts` and `measures.ts` — totals beside the counts of a filter (§57, calc_set_totals). `measuresOf` gives
+  the numbers a graph can total: its calculated values and its number properties. `facetTotals` adds one up for each
+  filter value and for all the things kept. It says how many things had none, and never counts one as zero.
+- `calculated-details.ts` — a calculated value in the details panel (§57, calc_details_shown): marked as worked out,
+  with its expression, and no field to change it. `display/graph-view/details-calculated-rows.ts` draws it.
 - `rule-write.ts` — a rule made from the card (rule_look_try_save). `ruleRefusal` says why a rule cannot be read.
   `withTriedRules` draws the rules tried in reading view, never written. `style-edit.ts` saves one, changed in place.
 #### Making a rule from the card

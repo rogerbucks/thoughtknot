@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { HUB_LARGER, SHOWN_LEAST, readableWords } from '../src/view-types/readable-words.ts';
 import { LETTER } from '../src/view-types/fit-text.ts';
+import { NAME_CEILING } from '../src/view-types/type-scale.ts';
 
 /** A one-row name of `letters` letters in `group`, centred at (`x`, `y`), `size` units tall. */
 const word = (group, x, y, letters = 6, size = 12) => ({ group, x, y, size, anchor: 'middle', letters });
@@ -82,4 +83,27 @@ test('a name past the edge of the view is nudged back in, so it is not cut off',
   assert.ok(edge.x + half <= 200 + 1e-9 && edge.x < 195, 'moved in from the right edge');
   const [away] = readableWords([word('a', 400, 50)], 1, [], view);
   assert.equal(away.x, 400, 'a thing out of view keeps its name where it is');
+});
+
+// proves: names_readable_any_zoom
+test('zoomed far in, a name stops growing at the ceiling, so its thing shows larger and the name stays readable', () => {
+  const [mid] = readableWords([word('a', 100, 50)], 1.2);
+  assert.equal(mid.size * 1.2, 12 * 1.2, 'under the ceiling it scales with its thing');
+  for (const k of [2, 8, 40]) {
+    const [near] = readableWords([word('a', 100, 50)], k);
+    assert.ok(Math.abs(near.size * k - NAME_CEILING) < 1e-9, `${near.size * k} pixels at ${k}×`);
+    const [inBox] = readableWords([boxed('b', 100, 50)], k);
+    assert.ok(inBox.size * k <= NAME_CEILING + 1e-9, 'a name in its box stops too');
+  }
+  const two = [word('a', 100, 50, 6, 12), word('a', 100, 70, 6, 12)];
+  const rows = readableWords(two, 10);
+  assert.ok(
+    Math.abs(rows[1].y - rows[0].y - (20 * NAME_CEILING) / 120) < 1e-9,
+    'its rows shrink together, as one name',
+  );
+  const [hub] = readableWords([word('h', 100, 50), word('q', 900, 50)], 20, [], undefined, new Map([['h', 9]]));
+  assert.ok(
+    hub.size * 20 <= NAME_CEILING * HUB_LARGER + 1e-9 && hub.size * 20 > NAME_CEILING,
+    'the busiest a bit larger',
+  );
 });

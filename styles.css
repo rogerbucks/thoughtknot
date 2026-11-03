@@ -4060,6 +4060,12 @@ body.thoughtknot-easier-reading
   margin-inline-start: auto;
   color: var(--gn-text-muted);
 }
+.thoughtknot-massive-total {
+  color: var(--gn-text-muted);
+}
+.thoughtknot-massive-total:empty {
+  display: none;
+}
 /* drawings on the graph (§70): the tools on the card's bar, and a drawing chosen or being drawn */
 .thoughtknot-sketch-tools {
   display: flex;
@@ -4116,4 +4122,25 @@ img.thoughtknot-picture-hidden,
   stroke: var(--gn-bg);
   stroke-width: 0.35em;
   stroke-linejoin: round;
+}
+/* a calculated value in the details (§57): marked as worked out, never edited */
+.thoughtknot-calculated {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  margin-block: var(--gn-space-2);
+}
+.thoughtknot-calculated-title {
+  font-weight: var(--gn-font-weight-semibold);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-calculated-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-calculated-from {
+  flex-basis: 100%;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
 }

@@ -266,7 +266,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
-  const filters = filterPanel(tools, live.index, regroup);
+  const filters = filterPanel(tools, live.index, regroup, o.measures);
   if (o.intents?.choices.length) polesPanel(tools, o.intents.choices, poles, repole);
   spaceButton(tools, el, o.graph, () => ({ marks: laid.marks, paints }), stage);
 

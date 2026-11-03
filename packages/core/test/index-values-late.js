@@ -308,4 +308,6 @@ export const VALUES_LATE = [
   'propertySet',
   'quickLine',
   'renamed',
+  // the numbers a filter can total (§57, calc_set_totals), 3 Nov 2026
+  'measuresOf',
 ];
