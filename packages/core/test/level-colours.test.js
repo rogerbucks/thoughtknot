@@ -51,7 +51,12 @@ test('the legend spotlights a subject while pointed at, keeps it on a click, and
     const parent = doc.createElement('div'),
       viewport = doc.createElement('div');
     let redrawn = 0;
-    const legend = new LevelLegend(parent, { viewport, svg: () => svg, redraw: () => redrawn++ });
+    const legend = new LevelLegend(parent, {
+      viewport,
+      svg: () => svg,
+      redraw: () => redrawn++,
+      drawing: () => undefined,
+    });
     legend.show(fresh);
     const chips = parent.querySelectorAll('.thoughtknot-level-chip');
     assert.deepEqual(

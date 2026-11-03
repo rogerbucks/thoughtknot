@@ -7,14 +7,18 @@
 import type { DetailLevel } from '../../detail-levels.ts';
 import { word } from '../../words.ts';
 import { hueOf, nextHue, spotlight } from './level-colours.ts';
+import type { GraphDrawing } from '../../note-reading.ts';
+import { chooseOwnLevel, ownChoicesOf, ownLevelOf } from './level-clouds-svg.ts';
 
 /** What the legend needs from its card. */
 export interface LevelLegendHost {
   /** The card's viewport, where the pointer is followed over the clouds. */
   viewport: HTMLElement;
   svg: () => SVGSVGElement | null;
-  /** Draws the clouds again, after a colour is picked. */
+  /** Draws the clouds again, after a colour or a level is picked. */
   redraw: () => void;
+  /** The drawing shown, whose own level is chosen here (own_levels). */
+  drawing: () => GraphDrawing | undefined;
 }
 
 /** The legend of one card's subjects. */
@@ -24,12 +28,24 @@ export class LevelLegend {
   private levels: readonly DetailLevel[] | null = null;
   /** The subject kept in the spotlight by a click, if any. */
   private kept: string | null = null;
+  /** The chips' row, and the row that chooses your own level: what groups it, and a button to swap it down or up. */
+  private readonly chips: HTMLElement;
+  private readonly pick: HTMLSelectElement;
+  /** The drawing whose choices the picker lists. */
+  private listed: GraphDrawing | undefined;
 
   /** Made inside `parent`, the badge. */
   constructor(parent: HTMLElement, host: LevelLegendHost) {
     this.host = host;
     this.el = parent.createDiv({ cls: 'thoughtknot-level-legend', attr: { role: 'group' } });
-    this.el.setAttribute('aria-label', word('levels.legend-label'));
+    const own = this.el.createDiv({ cls: 'thoughtknot-level-own' });
+    this.pick = own.createEl('select', { attr: { 'aria-label': word('levels.own-label') } });
+    this.pick.addEventListener('change', () => this.choose(this.pick.value || null));
+    const swap = own.createEl('button', { cls: 'thoughtknot-level-swap', text: '⇅', attr: { type: 'button' } });
+    swap.setAttribute('aria-label', word('levels.own-swap'));
+    swap.addEventListener('click', () => this.swap());
+    this.chips = this.el.createDiv({ cls: 'thoughtknot-level-chips' });
+    this.chips.setAttribute('aria-label', word('levels.legend-label'));
     // pointing at a cloud spotlights its subject too, for as long as the pointer stays on it
     host.viewport.addEventListener('pointerover', (e: Event) => this.pointed(e.target));
   }
@@ -39,11 +55,13 @@ export class LevelLegend {
     if (levels === this.levels) return this.respot();
     this.levels = levels;
     this.kept = null;
-    this.el.empty();
+    this.chips.empty();
+    this.listChoices();
     const subjects = levels && levels.length > 1 ? (levels[0]?.groups ?? []) : [];
-    this.el.toggleClass('is-hidden', !subjects.length);
+    const drawing = this.host.drawing();
+    this.el.toggleClass('is-hidden', !subjects.length && !(drawing && ownLevelOf(drawing)));
     for (const g of subjects) {
-      const chip = this.el.createEl('button', {
+      const chip = this.chips.createEl('button', {
         cls: 'thoughtknot-level-chip',
         attr: { type: 'button', 'data-subject': g.key, 'aria-pressed': 'false' },
       });
@@ -54,7 +72,7 @@ export class LevelLegend {
       chip.addEventListener('focus', () => this.spot(g.key));
       chip.addEventListener('blur', () => this.spot(this.kept));
       chip.addEventListener('click', () => this.keep(g.key));
-      const colour = this.el.createEl('button', {
+      const colour = this.chips.createEl('button', {
         cls: 'thoughtknot-level-colour',
         text: '◐',
         attr: { type: 'button', 'aria-label': word('levels.colour-label', { name: g.name }) },
@@ -66,7 +84,7 @@ export class LevelLegend {
   /** Keeps the subject `key` in the spotlight, or lets it go when it was kept already. */
   keep(key: string): void {
     this.kept = this.kept === key ? null : key;
-    for (const chip of Array.from(this.el.querySelectorAll('.thoughtknot-level-chip')))
+    for (const chip of Array.from(this.chips.querySelectorAll('.thoughtknot-level-chip')))
       chip.setAttribute('aria-pressed', String(chip.getAttribute('data-subject') === this.kept));
     this.spot(this.kept);
   }
@@ -78,6 +96,36 @@ export class LevelLegend {
     this.el
       .querySelector(`.thoughtknot-level-chip[data-subject="${key}"] .thoughtknot-level-swatch`)
       ?.setAttribute('data-hue', String(hue));
+    this.host.redraw();
+  }
+
+  /** Lists what the drawing's own level could group by, once for each drawing. */
+  private listChoices(): void {
+    const drawing = this.host.drawing();
+    if (!drawing || drawing === this.listed) return;
+    this.listed = drawing;
+    this.pick.empty();
+    this.pick.createEl('option', { text: word('levels.own-found'), attr: { value: '' } });
+    for (const by of ownChoicesOf(drawing))
+      this.pick.createEl('option', { text: by === 'kind' ? word('levels.kind') : by, attr: { value: by } });
+    this.pick.value = ownLevelOf(drawing)?.by ?? '';
+  }
+
+  /** Groups the top level by `by`, or goes back to the levels found from the links (null). */
+  choose(by: string | null): void {
+    const drawing = this.host.drawing();
+    if (!drawing) return;
+    chooseOwnLevel(drawing, by ? { by, at: ownLevelOf(drawing)?.at ?? 0 } : null);
+    this.pick.value = by ?? '';
+    this.host.redraw();
+  }
+
+  /** Swaps your own level with the one below it, or back to the top. */
+  swap(): void {
+    const drawing = this.host.drawing(),
+      own = drawing && ownLevelOf(drawing);
+    if (!drawing || !own) return;
+    chooseOwnLevel(drawing, { by: own.by, at: own.at === 0 ? 1 : 0 });
     this.host.redraw();
   }
 

@@ -14,6 +14,10 @@ import { word } from '../../words.ts';
 import { hueOf, subjectOf } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
+import type { GraphShape } from '../../types-shape.ts';
+import type { Graph } from '@thoughtknot/graph-spec';
+import { BY_KIND, ownChoices, withOwnLevel } from '../../own-levels.ts';
+import type { OwnLevel } from '../../own-levels.ts';
 import { make } from './note-callouts.ts';
 import { outlineOf, shownOf } from './readable-names.ts';
 
@@ -24,9 +28,10 @@ export const FAR = 'thoughtknot-far';
 /** The room round a cloud's things, and the size of its name, in pixels of the screen. */
 const PAD_PX = 14,
   NAME_PX = 14;
-/** The room between a road's two lanes, how far its gate sits from its port, and the size of a gate's words, in pixels. */
+/** The size of a preview's names and of its hint, in pixels. */
 const PEEK_PX = 12,
   HINT_PX = 11;
+/** The room between a road's two lanes, how far its gate sits from its port, and the size of a gate's words, in pixels. */
 const LANE_PX = 5,
   GATE_PX = 26,
   GATE_NAME_PX = 11;
@@ -41,24 +46,45 @@ export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.g
 const found = new WeakMap<GraphDrawing, Found>();
 
 interface Found {
+  shape: GraphShape;
+  /** The levels found from the links, and those shown: with your own level put in, if you chose one. */
+  found: DetailLevel[];
   levels: DetailLevel[];
+  own: OwnLevel | null;
   links: { from: string; to: string }[];
   texts: Map<string, string>;
 }
 
 /** The levels of `drawing`, and its links, found the first time they are asked for. */
-function foundOf(drawing: GraphDrawing): Found {
+function foundOf(drawing: GraphDrawing, g?: Graph): Found {
   let f = found.get(drawing);
   if (!f) {
-    const shape = shapeOf(drawing);
-    f = { levels: detailLevels(shape), links: shape.links, texts: new Map(shape.things.map((t) => [t.key, t.text])) };
+    const shape = shapeOf(drawing, g),
+      levels = detailLevels(shape);
+    const texts = new Map(shape.things.map((t) => [t.key, t.text]));
+    f = { shape, found: levels, levels, own: null, links: shape.links, texts };
     found.set(drawing, f);
   }
   return f;
 }
 
-/** The levels of `drawing`, found the first time they are asked for. */
-export const levelsOf = (drawing: GraphDrawing): DetailLevel[] => foundOf(drawing).levels;
+/** The own level chosen for `drawing`, if any (own_levels). */
+export const ownLevelOf = (drawing: GraphDrawing): OwnLevel | null => foundOf(drawing).own;
+
+/** The values `drawing`'s things could make their own level by: kind, then each property. */
+export const ownChoicesOf = (drawing: GraphDrawing): string[] => ownChoices(foundOf(drawing).shape);
+
+/** Chooses your own level for `drawing`, or none (null): its levels are worked out again. */
+export function chooseOwnLevel(drawing: GraphDrawing, own: OwnLevel | null): void {
+  const f = foundOf(drawing);
+  f.own = own;
+  const name = own?.by === BY_KIND ? word('levels.kind') : (own?.by ?? '');
+  const title = name.charAt(0).toUpperCase() + name.slice(1);
+  f.levels = own ? withOwnLevel(f.found, f.shape, own, title, word('levels.none', { name: title })) : f.found;
+}
+
+/** The levels of `drawing`, with its graph `g` as read for its properties, found the first time they are asked for. */
+export const levelsOf = (drawing: GraphDrawing, g?: Graph): DetailLevel[] => foundOf(drawing, g).levels;
 
 /** The box of each thing drawn in `top`, by its key. */
 function rectsOf(top: Element): Map<string, Rect> {
@@ -75,10 +101,10 @@ function rectsOf(top: Element): Map<string, Rect> {
  * Draws in `svg` the clouds of the level of `drawing` that fits the part shown at the zoom shown now. Gives back the
  * badge that says which level shows, or null when the drawing has one level only.
  */
-export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefined): string | null {
+export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefined, g?: Graph): string | null {
   const top = svg.querySelector('g.graph');
   for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
-  const levels = drawing ? levelsOf(drawing) : [],
+  const levels = drawing ? levelsOf(drawing, g) : [],
     shown = shownOf(svg);
   if (!top || !shown || levels.length < 2) {
     svg.classList.remove(FAR);

@@ -4203,6 +4203,14 @@ img.thoughtknot-picture-hidden,
   gap: var(--gn-space-1);
   justify-content: center;
 }
+.thoughtknot-level-own,
+.thoughtknot-level-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  align-items: center;
+  justify-content: center;
+}
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }

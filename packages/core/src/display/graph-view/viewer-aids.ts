@@ -186,10 +186,11 @@ export class Aids {
       this.naming = false;
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
-      const drawing = reading.graphs.get(graph);
-      this.level(levelClouds(svg, drawing));
+      const drawing = reading.graphs.get(graph),
+        g = reading.world[graph];
+      this.level(levelClouds(svg, drawing, g));
       this.levelTaps?.mark();
-      this.legend?.show(drawing ? levelsOf(drawing) : null);
+      this.legend?.show(drawing ? levelsOf(drawing, g) : null);
     });
   }
 
@@ -211,6 +212,7 @@ export class Aids {
         viewport: this.host.viewport,
         svg: this.host.svg,
         redraw: () => this.names(),
+        drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
       });
     }
     this.said?.setText(text ?? '');

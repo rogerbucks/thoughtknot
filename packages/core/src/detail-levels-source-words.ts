@@ -15,4 +15,9 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.back-label': 'Back to the level you were at',
   'levels.legend-label': 'Subjects: point at one to spotlight it, click to keep it',
   'levels.colour-label': 'Next colour for {name}',
+  'levels.kind': 'Kind',
+  'levels.none': 'No {name}',
+  'levels.own-label': 'Your own top level',
+  'levels.own-found': 'Levels from the links',
+  'levels.own-swap': 'Swap your level with the one below it',
 } as const;
