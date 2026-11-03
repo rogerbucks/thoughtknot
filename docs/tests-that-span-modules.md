@@ -518,6 +518,14 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/vscode-release.test.js` — each nightly attaches the VS Code extension as a `.vsix` to install (spec §41,
   nightly_prerelease). `scripts/vscode-release.mjs` packs it, and the test reads a real one back.
 
+## The Copilot Cowork skill
+
+- `test/cowork-skill.test.js` — the skill works through the library alone (spec §46, cowork_skill, cowork_core_only,
+  cowork_same_bytes, cowork_drawing, cowork_ceiling, cowork_no_server). It reads, checks, draws and edits. It spans
+  `packages/cowork`, the core's edits and gate, and the skill's own files.
+- `test/cowork-release.test.js` — the release and the nightly attach the `.skill` file. `scripts/cowork-release.mjs`
+  builds it from the library. The same SKILL.md reads as a Claude skill (cowork_released).
+
 ## The library's release
 
 - `test/lib-release.test.js` — each release publishes the library on GitHub, never on npm (spec §41, lib_github_release).
