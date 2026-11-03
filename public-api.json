@@ -858,7 +858,8 @@
           "own?: boolean | undefined",
           "rankdir: string",
           "shaped?: string | undefined",
-          "src: LayoutSource"
+          "src: LayoutSource",
+          "wrap?: true | undefined"
         ],
         "directionOf": [
           "value: (tag: string) => 'ltr' | 'rtl'"
