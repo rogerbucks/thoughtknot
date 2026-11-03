@@ -2354,6 +2354,20 @@ pre.thoughtknot-code {
 .thoughtknot-badge-text {
   font-size: var(--gn-font-size-s);
 }
+/* A label that changes, such as the 2D and 3D button's, holds the room of its widest word (space-switch.ts). So the
+   bar never wraps anew as it changes. Where a label is hidden, it stays hidden. */
+:where(.thoughtknot-badge-text[data-room]) {
+  display: inline-block;
+  text-align: center;
+}
+.thoughtknot-badge-text[data-room]::after {
+  content: attr(data-room);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: pre;
+}
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
 .thoughtknot-viewport {
@@ -3837,14 +3851,13 @@ body.thoughtknot-easier-reading
 }
 
 /* The view in space (§53, space-view-panel.ts) lies over the drawing, under the card's bar. It stays until the bar's
-   button or Escape shows it flat again (space-switch.ts). So the bar, the types and the details work on it as in 2D. A short
-   drawing's frame grows to give it room. An overview's covers the overview. The mini-map and the arrow to the
-   selection belong to the flat drawing, so they hide. */
+   button or Escape shows it flat again (space-switch.ts). So the bar, the types and the details work on it as in 2D. It
+   takes the flat drawing's frame as it is, so nothing on the page moves (adversarial review, 1 Nov 2026). An overview's
+   covers the overview. The mini-map and the arrow to the selection belong to the flat drawing, so they hide. */
 .thoughtknot-view:has(> .thoughtknot-space-view) {
   position: relative;
 }
 .thoughtknot-viewport:has(> .thoughtknot-space-view) {
-  min-height: min(480px, 70vh);
   > :is(.thoughtknot-mini-map, .thoughtknot-pointer) {
     display: none;
   }

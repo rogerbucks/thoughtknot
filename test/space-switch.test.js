@@ -8,7 +8,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -63,6 +63,37 @@ window.pressing = async () => {
   root.remove();
   return out;
 };
+// a short drawing in a card's frame, styled as the plugin styles it. How tall is the frame in 2D and in each way in space?
+window.heights = async () => {
+  const view = document.body.appendChild(document.createElement('div'));
+  view.className = 'thoughtknot-view';
+  view.style.cssText = 'width:480px';
+  const bar = view.appendChild(document.createElement('div'));
+  const frame = view.appendChild(document.createElement('div'));
+  frame.className = 'thoughtknot-viewport';
+  frame.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120" style="display:block"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" points="200,60 280,60 280,100 200,100"/><text x="240" y="85" font-size="14">Bob</text></g>
+  </g></svg>\`;
+  const after = view.appendChild(document.createElement('p'));
+  after.textContent = 'The note goes on.';
+  const spaces = new SpaceSwitch(() => frame.querySelector('svg'));
+  const b = bar.appendChild(document.createElement('button'));
+  b.createSpan({ cls: 'thoughtknot-badge-text' });
+  b.addEventListener('click', () => spaces.pressed());
+  spaces.bar(b, 'Team');
+  const views = () => frame.querySelectorAll(':scope > .thoughtknot-space-view');
+  const settled = async () => { for (let n = 0; n < 150 && !views().length !== !spaces.mode(); n++) await frames(); await frames(10); };
+  const at = () => [frame.getBoundingClientRect().height, after.getBoundingClientRect().top, b.getBoundingClientRect().width];
+  const out = [at()];
+  for (let i = 0; i < 4; i++) {
+    b.click(); // 2.5D, 3D, globe, then 2D again
+    await settled();
+    out.push(at());
+  }
+  view.remove();
+  return out;
+};
 `;
 
 describe('the 2D, 2.5D and 3D button, in a real browser', () => {
@@ -94,9 +125,11 @@ describe('the 2D, 2.5D and 3D button, in a real browser', () => {
     });
     folder = mkdtempSync(join(tmpdir(), 'space-switch-'));
     writeFileSync(join(folder, 'page.js'), bundle.outputFiles[0].text);
+    copyFileSync(join(ROOT, 'styles.css'), join(folder, 'styles.css'));
     writeFileSync(
       join(folder, 'page.html'),
-      '<!doctype html><meta charset="utf-8"><title>2D and 3D</title><script src="page.js"></script>',
+      '<!doctype html><meta charset="utf-8"><title>2D and 3D</title><link rel="stylesheet" href="styles.css">' +
+        '<script src="page.js"></script>',
     );
     await browser.send('Page.navigate', { url: pathToFileURL(join(folder, 'page.html')).href });
     for (let i = 0; i < 50 && (await browser.run('document.readyState')) !== 'complete'; i++)
@@ -116,6 +149,22 @@ describe('the 2D, 2.5D and 3D button, in a real browser', () => {
       assert.deepEqual(out.escaped, { said: '2D', mode: null, views: 0 }, 'Escape left the button as it was');
       assert.deepEqual(out.again, { said: '2.5D', mode: 'cards', views: 1 }, 'the next press opened no view');
       assert.deepEqual(out.fast, { said: '2.5D', mode: 'cards', views: 1 }, 'five fast presses');
+    },
+  );
+
+  // Adversarial review, 1 Nov 2026 (finding 10): a short drawing's frame grew from 334 to 480 pixels in space, and
+  // the note below it moved. Nothing on the page moves when the drawing goes into space and back. The button keeps its
+  // width as it names each way, so the bar never wraps anew.
+  // proves: space_frame_kept
+  test(
+    'a short drawing keeps its frame as tall in 2.5D, 3D and the globe as in 2D, so the note below and the bar stay put',
+    options,
+    async () => {
+      const out = JSON.parse(await browser.run('heights().then(JSON.stringify)'));
+      const [flat] = out;
+      assert.ok(flat[0] > 100 && flat[0] < 200, `the short drawing's frame is ${flat[0]} pixels tall`);
+      for (const [i, at] of out.entries())
+        assert.deepEqual(at, flat, `press ${i}: frame height, the note below, and the button as wide`);
     },
   );
 });
