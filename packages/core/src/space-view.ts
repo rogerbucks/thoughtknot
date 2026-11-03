@@ -259,9 +259,9 @@ export interface Orbit {
 
 /** How wide the camera sees, top to bottom, in radians. */
 export const FIELD = Math.PI / 4;
-/** How much of the screen the fitted view fills, and how many corners it takes before it lets the farthest few fall off. */
-const FILL = 0.94,
-  MANY = 200;
+/** How much of the screen the fitted view fills, and how many corners before the farthest few may fall off. Then how
+ * much wider and taller than its box a card may grow to hold its name (space-cards.ts). */
+const [FILL, MANY, GROWS] = [0.94, 200, 1.5];
 
 /**
  * The camera that shows all of `space`, from the front and above, as the drawing reads on the page. The screen is
@@ -277,9 +277,14 @@ export function orbitFit(space: SpaceMarks, aspect = 1, [inX, inY]: [number, num
     u = cross(r, f);
   const half = Math.tan(FIELD / 2),
     corners: Vec3[] = space.blocks?.length ? [] : [least, most];
-  for (const b of space.blocks ?? [])
+  for (const b of space.blocks ?? []) {
     for (let i = 0; i < 8; i++)
       corners.push([b.x + (i & 1) * b.width, b.y + ((i >> 1) & 1) * b.depth, b.floor + (i >> 2) * b.tall]);
+    // a card faces the screen round its middle, as big as its name may grow it (a small spot under a big card)
+    const [m, w, h] = [middleOf(b), (b.card?.width ?? b.width) * GROWS, (b.card?.height ?? b.tall) * GROWS];
+    for (let i = 0; space.cards && i < 4; i++)
+      corners.push(m.map((v, k) => v + ((i & 1) - 0.5) * w * (r[k] ?? 0) + ((i >> 1) - 0.5) * h * (u[k] ?? 0)) as Vec3);
+  }
   // how far back each corner needs the camera to be to land in view, the perspective counted too
   const needs = corners.map((c) => {
     const o = sub(c, target);
@@ -292,10 +297,8 @@ export function orbitFit(space: SpaceMarks, aspect = 1, [inX, inY]: [number, num
   return { ...camera, distance: Math.max(needs[cut] ?? 1, 1) };
 }
 
-/**
- * `orbit` turned and tilted by a drag of `dx` and `dy` screen pixels. It turns right round any way, with no way locked,
- * over the top and under the floor too (Roger, 24 Oct 2026). The camera's up turns with it (`upOf`).
- */
+/** `orbit` turned and tilted by a drag of `dx` and `dy` screen pixels. It turns right round any way, with no way
+ * locked, over the top and under the floor too (Roger, 24 Oct 2026). The camera's up turns with it (`upOf`). */
 export function orbitBy(orbit: Orbit, dx: number, dy: number): Orbit {
   return { ...orbit, turn: orbit.turn - dx * 0.008, tilt: orbit.tilt + dy * 0.008 };
 }
@@ -323,10 +326,8 @@ export function eyeOf(orbit: Orbit): Vec3 {
   return [target[0] + Math.cos(turn) * flat, target[1] + Math.sin(turn) * flat, target[2] + Math.sin(tilt) * distance];
 }
 
-/**
- * The matrix taking a point of the space to the screen, for a screen `aspect` wide to each unit high. Its 16 numbers
- * are column by column, as WebGL and WebGPU read them. The screen's depth runs from -1 near to 1 far.
- */
+/** The matrix taking a point of the space to the screen, for a screen `aspect` wide to each unit high. Its 16
+ * numbers are column by column, as WebGL and WebGPU read them. The screen's depth runs from -1 near to 1 far. */
 export function spaceMatrix(orbit: Orbit, aspect: number, reach: number): Float32Array {
   const eye = eyeOf(orbit);
   const f = norm(sub(orbit.target, eye)),
@@ -381,9 +382,7 @@ const norm = (a: Vec3): Vec3 => {
 /** The middle of `block`, where the view turns round it. */
 export const middleOf = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
 
-/**
- * `orbit` centred again on `picked`, as found in the space laid out again, or as it was with nothing picked. The camera
- * keeps its turn, tilt and distance, so a redraw never loses what the person was looking at (Roger, 24 Oct 2026).
- */
+/** `orbit` centred again on `picked`, as found in the space laid out again, or as it was with nothing picked. The
+ * camera keeps its turn, tilt and distance, so a redraw never loses what the person was looking at (Roger, 24 Oct). */
 export const centredOn = (orbit: Orbit, picked: Block | null): Orbit =>
   picked ? { ...orbit, target: middleOf(picked) } : orbit;
