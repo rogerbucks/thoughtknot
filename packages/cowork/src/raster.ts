@@ -255,7 +255,7 @@ export function svgToPng(svg: string, width = 1600): Raster {
       runs = [run];
     } else if (kind === 'text') {
       const size = Number(attr(tag, 'font-size')) || 12;
-      const body = unescape((m[4] ?? '').replace(/<[^>]*>/g, ''));
+      const body = unescape(m[4] ?? '');
       const colour = fill ?? [0, 0, 0];
       const u = (size * 0.52) / 6; // one dot of a letter, in graph units
       const chars = [...body];
