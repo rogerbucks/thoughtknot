@@ -310,7 +310,7 @@
   flex-wrap: wrap;
   gap: var(--gn-space-1);
   align-items: baseline;
-  font-size: var(--font-ui-small);
+  font-size: var(--gn-font-size-s);
 }
 .thoughtknot-intent-pick select {
   margin-inline-start: var(--gn-space-1);
