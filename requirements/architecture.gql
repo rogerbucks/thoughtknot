@@ -22,6 +22,7 @@
 (claude_code:Part {name: 'Browser editor, from Claude Code', path: 'packages/claude-code', guide: 'packages/claude-code/GUIDE.md'}),
 (standalone:Part {name: 'Standalone app (Tauri)', path: 'packages/app', guide: 'packages/app/GUIDE.md', requirement: 'standalone_app'}),
 (vscode:Part {name: 'VS Code plugin', path: 'packages/vscode', guide: 'packages/vscode/GUIDE.md', requirement: 'vscode_plugin'}),
+(cowork:Part {name: 'Copilot Cowork skill', path: 'packages/cowork', guide: 'packages/cowork/GUIDE.md', requirement: 'cowork_skill'}),
 (sync_part:Part {name: 'Sync between devices', path: 'packages/sync', guide: 'packages/sync/GUIDE.md'}),
 (boundary_part:Part {name: 'The work and personal boundary', path: 'packages/boundary', guide: 'packages/boundary/GUIDE.md'}),
 (web_part:Part {name: 'The web layer', path: 'packages/web', guide: 'packages/web/GUIDE.md'}),
@@ -201,6 +202,7 @@
 (claude_code)-[:IN_LAYER]->(apps),
 (standalone)-[:IN_LAYER]->(apps),
 (vscode)-[:IN_LAYER]->(apps),
+(cowork)-[:IN_LAYER]->(apps),
 // the built-in exports are written to the plug-in interface, so they prove it, but they ship in the core: the core
 // and the apps import them. A plug-in from outside is loaded through the interface instead (plugin_interface, P1)
 (built_in_exports)-[:IN_LAYER]->(core),
