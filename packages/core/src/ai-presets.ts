@@ -1,6 +1,6 @@
 // Ready-made starting points for an AI model (editor spec §19, user_models): the address of each well-known service that
-// takes the chat completions shape. A preset fills the name and endpoint only. The model's own name and the key stay the
-// person's to give, so nothing is sent until they have, and the ceiling starts at the lowest classification.
+// takes the chat completions shape. A preset fills the name and endpoint only. The person gives the model's name and key.
+// Until then nothing is sent. The ceiling starts at the lowest classification.
 import { aiModel } from './ai-model.ts';
 import type { AiModel } from './ai-model.ts';
 

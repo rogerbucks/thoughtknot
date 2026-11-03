@@ -1,5 +1,5 @@
-// Presets for an AI model (editor spec §19, user_models): each fills a name and an address requests can go to, and
-// leaves the model's own name and the key to the person, so nothing is sent until they are given.
+// Presets for an AI model (editor spec §19, user_models). Each fills a name and an address requests can go to.
+// The person gives the model's name and key. Until then nothing is sent.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { AI_PRESETS, modelFromPreset } from '../src/ai-presets.ts';
