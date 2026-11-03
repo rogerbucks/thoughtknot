@@ -20,6 +20,8 @@ export const COWORK_SOURCE_WORDS = {
     other:
       'The PNG draws plain letters, digits and punctuation only: {count} other characters are drawn as a question mark. The SVG shows them all.',
   },
+  'cowork.draw.kept':
+    'These files are already there and differ, so they were left as they are. Ask the user, and run draw again with --replace to replace them.',
   'cowork.proposal': 'Proposal: {what}. Nothing is written until you approve it.',
   'cowork.proposal.no-change': 'That edit changes nothing.',
   'cowork.proposal.refused': 'Nothing to propose: {why}',

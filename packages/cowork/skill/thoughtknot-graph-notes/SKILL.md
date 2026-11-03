@@ -25,7 +25,8 @@ All answers are JSON on standard output. `<note>` is the note's file.
 - `node scripts/thoughtknot.mjs read <note>`: the graphs, their things and links, and the problems.
 - `node scripts/thoughtknot.mjs check <note>`: the problems alone, each with its line of the note.
 - `node scripts/thoughtknot.mjs draw <note>`: writes `<note>.svg` and `<note>.png` beside it and answers with a card to
-  show in the conversation. When it cannot draw it says why and gives the graph as text. Show that text.
+  show in the conversation. When it cannot draw it says why and gives the graph as text. Show that text. A different
+  file already there is kept: ask the user, and only on their yes run `draw` again with `--replace`.
 - `node scripts/thoughtknot.mjs propose <note> --edit '<json>'`: what an edit would change. It writes nothing.
 - `node scripts/thoughtknot.mjs apply <note> --edit '<json>' --approve <digest>`: writes the edit.
 

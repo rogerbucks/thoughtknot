@@ -5,7 +5,7 @@
 // - propose: what an edit would change. Nothing is written.
 // - apply: writes the edit, only with the approval that propose gave for this edit of this note as it is now.
 // It reads the files it is named and writes beside the note. It makes no network call (cowork_no_server).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import { word } from '@thoughtknot/core';
 import { apply, clear, draw, propose, read } from '../src/cowork.ts';
@@ -57,20 +57,24 @@ if (command === 'draw') {
   const made = await draw(note, level, option('graph'));
   const stem = join(dirname(notePath as string), basename(notePath as string, extname(notePath as string)));
   const files: string[] = [];
-  if (made.svg) {
-    writeFileSync(`${stem}.svg`, made.svg);
-    files.push(`${stem}.svg`);
-  }
-  if (made.png) {
-    writeFileSync(`${stem}.png`, made.png);
-    files.push(`${stem}.png`);
-  }
+  const kept: string[] = [];
+  // a file already there that differs is the person's: it is replaced only when they said so (--replace)
+  const put = (file: string, bytes: string | Uint8Array) => {
+    const had = existsSync(file) ? readFileSync(file) : null;
+    if (had && had.toString('latin1') !== Buffer.from(bytes).toString('latin1') && !rest.includes('--replace'))
+      return kept.push(file);
+    writeFileSync(file, bytes);
+    files.push(file);
+  };
+  if (made.svg) put(`${stem}.svg`, made.svg);
+  if (made.png) put(`${stem}.png`, made.png);
   out({
     read: true,
     level,
     card: made.card,
     text: made.text,
     files,
+    ...(kept.length ? { kept, keptSaid: word('cowork.draw.kept') } : {}),
     ...(made.why ? { why: made.why } : {}),
     notes: made.notes,
   });
@@ -79,7 +83,9 @@ if (command === 'draw') {
 // an edit: propose it, or apply it with the approval propose gave
 let ask: EditAsk;
 try {
-  ask = JSON.parse(option('edit') ?? '') as EditAsk;
+  const parsed: unknown = JSON.parse(option('edit') ?? '');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('not an edit');
+  ask = parsed as EditAsk;
 } catch {
   out({ error: word('cowork.usage') }, 2);
   ask = { do: 'line', line: '' };

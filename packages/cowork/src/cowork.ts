@@ -239,7 +239,11 @@ export type Proposal =
   | { same: true; said: string }
   | { said: string; was: string; now: string; after: string; approve: string };
 
-/** The digest that approves one edit of one note: the note as it is and as it would be. */
+/**
+ * The digest that approves one edit of one note: the note as it is and as it would be. It is an integrity check, not
+ * proof of a person's yes: it stops a stale or different edit being written. That the person said yes is SKILL.md's
+ * rule for the model, which the script cannot see.
+ */
 export const approvalFor = (before: string, after: string): string => sha256(`${before}\u0000${after}`);
 
 /** The proposal for an edit of a note (nothing is written). */

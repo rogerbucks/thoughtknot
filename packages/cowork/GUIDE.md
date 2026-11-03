@@ -13,7 +13,9 @@ The skill is a `SKILL.md` and companion files. The same `SKILL.md` loads as a Cl
   says what the notation allows, so there is no second copy of its rules to drift.
 - **The gate comes first.** A note is held to its classification and the AI ceiling before it is read into the
   conversation. Microsoft 365 sensitivity labels still apply to the note and the files made from it.
-- **An edit is a proposal.** Nothing is written until the person approves that edit of that note as it is now.
+- **An edit is a proposal.** The script writes only with the digest of that edit of that note as it is now. The digest is
+  an integrity check, not proof of a yes. Asking the person first is SKILL.md's rule for the model.
+- **Drawings never replace a file.** A different file already beside the note is kept, unless the person says to replace it.
 
 ## The source
 

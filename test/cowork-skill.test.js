@@ -217,6 +217,37 @@ describe('an edit gives the same bytes as the other hosts, and only after approv
     }
   });
 
+  test('an approval is for one edit of one note: another edit or another note is refused', () => {
+    const ask = { do: 'rename', thing: 'large_reader', text: 'Big e-ink reader' };
+    const other = { do: 'rename', thing: 'large_reader', text: 'Huge e-ink reader' };
+    const approve = propose(open, ask).approve;
+    assert.ok('write' in apply(open, ask, approve));
+    assert.ok('refused' in apply(open, other, approve), 'another edit');
+    assert.ok('refused' in apply(`${open}\nMore words.\n`, ask, approve), 'another note');
+  });
+
+  test('an edit that is not an object is a usage answer in JSON, never a crash', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cowork-usage-'));
+    try {
+      const file = join(dir, 'note.md');
+      writeFileSync(file, open);
+      for (const bad of ['null', '0', '"x"', '[]']) {
+        let out = '';
+        try {
+          execFileSync(process.execPath, [join(COWORK, 'bin/thoughtknot.ts'), 'propose', file, '--edit', bad], {
+            encoding: 'utf8',
+            stdio: 'pipe',
+          });
+        } catch (error) {
+          out = error.stdout;
+        }
+        assert.ok(JSON.parse(out).error, `${bad} is said to be a usage mistake`);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test('an edit the library refuses is a refusal with its reason, never a write', () => {
     const made = propose(open, { do: 'rename', thing: 'no_such_thing', text: 'x' });
     assert.ok('refused' in made && made.refused.length > 0);
@@ -256,6 +287,28 @@ describe('the drawing is files beside the note and a card, never blank', () => {
       );
       assert.ok(existsSync(join(dir, 'note.svg')) && existsSync(join(dir, 'note.png')));
       assert.equal(readFileSync(file, 'utf8'), open, 'the note is untouched');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('a different file already beside the note is kept unless the person says to replace it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cowork-keep-'));
+    try {
+      const file = join(dir, 'note.md');
+      writeFileSync(file, open);
+      writeFileSync(join(dir, 'note.png'), "the person's own picture");
+      const kept = cli('draw', file);
+      assert.deepEqual(
+        kept.kept.map((f) => f.slice(dir.length + 1)),
+        ['note.png'],
+      );
+      assert.equal(readFileSync(join(dir, 'note.png'), 'utf8'), "the person's own picture");
+      assert.deepEqual(
+        cli('draw', file, '--replace').files.map((f) => f.slice(dir.length + 1)),
+        ['note.svg', 'note.png'],
+      );
+      assert.notEqual(readFileSync(join(dir, 'note.png'), 'utf8'), "the person's own picture");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
