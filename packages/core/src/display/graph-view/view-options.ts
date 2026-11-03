@@ -8,6 +8,7 @@ import type {
   FlowLink,
   FocusDepth,
   Indent,
+  IntentAsk,
   Mode,
   NoteReading,
   Parked,
@@ -127,6 +128,8 @@ export interface ViewOptions {
   rules?: RulesShown;
   /** What the card may do with a rule made beside its legend: try it, or save it where the note is edited (§56). */
   ruleAsk?: RuleAsk;
+  /** The graph's intents, the one shown over the drawing, and how to show another (§58, intent_overlay). */
+  intent?: IntentAsk;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */

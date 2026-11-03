@@ -743,6 +743,12 @@ never data.
   - A thing linked both ways to one intent is contested.
   - `intentStanding` counts what supports it and what contradicts it, by likelihood word, and what is not linked. It
     says them in words (`intent-source-words.ts`) and stores no score.
+- `intent-overlay.ts` — one intent shown over any view (intent_overlay). `intentOverlay` marks each thing drawn as
+  supporting, contradicting, pulling both ways or not linked. Each mark has a badge and a line beside its hue
+  (`INTENT_MARKS`). It gives the shape a rule gives, so every view that draws rules draws it. `withIntentOverlay` lays
+  it over the rules' looks. It moves nothing and writes nothing.
+- `display/graph-view/intent-pick.ts` — the Show an intent list beside the legend, and the standing of the one shown.
+  Picking only draws, so it is open in reading view (`read-only.ts`).
 - `rule-looks-massive.ts` — a graph too large to draw counts its looks (rule_look_massive). Each group box of the
   overview says how many of its things each look holds (`groupLooks`, given to `overviewOf`). `lookFacet` makes the
   "By look" filter, whose counts follow the other filters. The host gives the overview the rules (`MassiveOptions`).

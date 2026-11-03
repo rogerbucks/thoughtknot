@@ -196,3 +196,41 @@ describe('rule_look_try_save', () => {
     }
   });
 });
+
+describe('intent_overlay', () => {
+  const PLAN = `// graph: plan · schema intent@1
+(early:Intent {says: 'Out of the door by eight'}),
+(prep:Thing {name: 'Pack the bag'}),
+(news:Thing {name: 'Read the news'}),
+(walk:Thing {name: 'Walk the dog'}),
+(prep)-[:SUPPORTS {likelihood: 'likely'}]->(early),
+(news)-[:CONTRADICTS {likelihood: 'likely'}]->(early)`;
+
+  test('a card picks an intent to show over it in reading view, marking each thing, and writes nothing', async () => {
+    const note = noteOf(PLAN);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      const pick = (at) => at.querySelector('.thoughtknot-intent-pick select');
+      const select = pick(el);
+      assert.ok(select, 'a graph with an intent offers the list');
+      assert.equal(node(el, 'prep').querySelector('.thoughtknot-rule-badge'), null, 'nothing marked until picked');
+      select.value = 'early';
+      select.dispatch('change');
+      await until(() => !!node(el, 'prep')?.querySelector('.thoughtknot-rule-badge'));
+      assert.equal(node(el, 'prep').getAttribute('data-style'), 'intent.supports');
+      assert.equal(node(el, 'news').querySelector('.thoughtknot-rule-badge').textContent, '▼');
+      assert.equal(node(el, 'walk').getAttribute('data-style'), 'intent.unlinked');
+      assert.match(el.querySelector('.thoughtknot-intent-pick-standing').textContent, /supported by 1/);
+      assert.match(el.querySelector('.thoughtknot-rule-legend').textContent, /Goes against: Out of the door by eight/);
+      assert.equal(env.state.files.get(PATH), note, 'the note unchanged');
+      const again = pick(el);
+      again.value = '';
+      again.dispatch('change');
+      await until(() => !node(el, 'prep')?.querySelector('.thoughtknot-rule-badge'));
+      assert.equal(env.state.files.get(PATH), note);
+    } finally {
+      env.uninstall();
+    }
+  });
+});

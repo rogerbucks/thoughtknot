@@ -52,6 +52,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `stored-edit.ts` — a thing chosen in that overview, by search or a click, shows its properties. A change is written
   to the note's text first, on the lines that wrote the thing. Then the store reads the note again.
 - `rule-card.ts` — the style rules a graph card or a view card draws (§56): what each finds, its look and the legend.
+  `intentOn` adds the graph's intents to pick from, and the one shown over the card (§58), held in `tried-types.ts`.
   A clash of two rules is listed with the graph card's problems.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph.
   - Outside the view profile it is refused, saying what is allowed.

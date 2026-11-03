@@ -33,3 +33,5 @@ export type { RuleRemove } from './rule-remove.ts';
 export type { RuleAsk, RuleWrite } from './rule-write.ts';
 export { INTENT_LINK_TYPES, UNSTATED, intentLinks, intentStanding, intentStandings, intentThings } from './intents.ts';
 export type { IntentLink, IntentSide, IntentStanding } from './intents.ts';
+export { INTENT_MARKS, intentOverlay, intentPulls, withIntentOverlay } from './intent-overlay.ts';
+export type { IntentAsk, IntentOverlay, IntentPull } from './intent-overlay.ts';
