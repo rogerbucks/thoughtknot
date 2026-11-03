@@ -298,6 +298,9 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     again.
   - The key is read from the app's secret store as the request goes. Every model's key is read before, only to make sure
     none is in what is sent.
+- `suggest-rows.ts` — what the send dialog asks for (§59): changes, or suggestions. Suggestions are a value of one
+  property (of one kind, from a list if given) or each thing's pull on an intent of the graph. `suggestForOf` makes the
+  ask for the core's `suggestAsk`. The answer is a change set grouped by value, applied a group at a time in its card.
   - Every send is recorded in the plugin's data (`recordAiSend`).
   - An answer is written into the note as a change set after the graph's blocks, through `vault.process`. A failure is
     said in a notice, the note left as it was.
