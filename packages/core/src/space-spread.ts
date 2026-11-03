@@ -143,6 +143,13 @@ function drawnSpots(shape: GraphShape, at: Map<string, [number, number]>): { see
   return { seeds, unit };
 }
 
+/** Where the page drew each thing, as seeds for a first layout in space; none where the page gave no real places. */
+function pageSeeds(shape: GraphShape, marks: readonly DrawMark[]): Spots<3> | undefined {
+  const at = middlesOf(marks);
+  const distinct = new Set([...at.values()].map(([x, y]) => `${Math.round(x)},${Math.round(y)}`));
+  return distinct.size > at.size / 2 ? drawnSpots(shape, at).seeds : undefined;
+}
+
 /**
  * `marks` laid out in space as spheres and arrows, starting from `previous` spots where a thing has one. It gives
  * back the spots used too, so the next layout can start from them. Each sphere keeps the style of the box it stands for.
@@ -169,9 +176,12 @@ export function spreadSpace(
   const options = layoutOptions(layout);
   // laid out afresh, a trunk's joints are set between its groups once the things are laid out (space-parts.ts)
   const things = drawn ? shape : withoutJoints(shape);
-  const laid = FORCE_3D.place(things, drawn?.seeds ?? previous, drawn ? options : roomier(options));
+  // opened in space for the first time, a network starts where the page drew each thing. So nothing is shuffled: it
+  // only spreads out in depth from there (things_stay_put)
+  const seeds = drawn?.seeds ?? previous ?? pageSeeds(shape, marks);
+  const laid = FORCE_3D.place(things, seeds, drawn ? options : roomier(options));
   // laid out again from last time's spots, each part stays where it was (cluster_in_place); afresh, they are packed
-  const packed = drawn ? laid : jointsBetween(shape, previous ? laid : partsNear(things, laid));
+  const packed = drawn ? laid : jointsBetween(shape, seeds ? laid : partsNear(things, laid));
   const spots = planes.size ? onPlanes(packed, planes) : packed;
   const count = new Map<string, number>();
   for (const l of shape.links)
