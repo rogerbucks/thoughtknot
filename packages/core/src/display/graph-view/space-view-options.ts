@@ -1,6 +1,6 @@
 // What the 3D view of a card's drawing takes as it opens, and what an open one offers (editor spec §53). The view
 // itself is space-view-panel.ts.
-import type { Lens, MiniMapSetting, Painter } from '@thoughtknot/core';
+import type { GraphDrawing, Lens, MiniMapSetting, Painter } from '@thoughtknot/core';
 import type { LayoutOptions } from '../../layouts/layout-options.ts';
 import type { SpaceMove } from '../../space-controls.ts';
 import type { Orbit } from '../../space-view.ts';
@@ -16,6 +16,7 @@ export interface SpaceOptions {
   globe?: boolean; // on a globe, seen from outside (Roger, 31 Oct 2026)
   centre?: () => string | null; // the thing a globe faces you with first: the centre of an exploration (§71)
   details?: GlobeDetails; // each thing's properties, shown on the globe as you near it (globe_dive_detail)
+  drawing?: () => GraphDrawing | undefined; // the graph's own things and links, where its type draws none (globe_view)
   asDrawn?: boolean; // each thing kept where its diagram type drew it (space_follows_type)
   layout?: () => Partial<LayoutOptions> | undefined; // as the View menu spaces it (layout_saved_with_view)
   sketch?: () => Sketch | null; // the drawings over the graph as shown now, none while hidden (§70)

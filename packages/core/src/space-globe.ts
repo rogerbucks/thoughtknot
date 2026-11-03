@@ -12,10 +12,12 @@
 import { GLOBE_FACING, GLOBE_SPACING, globeArc, globeSpots } from './layouts/globe.ts';
 import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
+import { globeMarks } from './space-globe-graph.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
 import { boundsOf, eyeOf } from './space-view.ts';
 import type { Block, Orbit, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 import type { DrawMark } from './drawing-marks.ts';
+import type { GraphDrawing } from './note-reading.ts';
 
 /** The size of a thing's name and of a link's words, in pixels of the space. */
 const NAME_SIZE = 14,
@@ -204,13 +206,14 @@ export class GlobeLayout {
 
   /**
    * `marks` laid on the globe, `centre` facing the viewer; each thing laid before keeps its spot. A new centre turns the
-   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round.
+   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round. Where the marks draw
+   * no things or no links, as Density and Treemap do, the graph `drawing`'s own are laid (space-globe-graph.ts).
    */
-  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails): GlobeSpace {
+  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails, drawing?: GraphDrawing): GlobeSpace {
     const now = centre && this.spots?.get(centre);
     if (now && centre !== this.centre) this.spots = turnedTo(this.spots as Map<string, GlobeVec>, now);
     this.centre = centre;
-    const laid = globeSpace(marks, this.spots, centre, details, this.balls);
+    const laid = globeSpace(globeMarks(marks, drawing), this.spots, centre, details, this.balls);
     [this.spots, this.globe] = [laid.spots, laid.space.globe];
     return laid.space;
   }

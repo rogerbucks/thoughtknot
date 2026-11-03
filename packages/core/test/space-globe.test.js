@@ -204,3 +204,40 @@ test('a thing picked on the globe turns to face the camera square on, in the mid
     assert.equal(dived.distance, g.radius * GLOBE_DIVE, 'a dive comes near enough for its details');
   }
 });
+
+/** The graph as the card reads it: things a to d, a linked to each of the others, as a hub. */
+const GRAPH = {
+  boxes: ['a', 'b', 'c', 'd'].map((key) => ({ key, kind: 'Idea', text: key.toUpperCase() })),
+  links: ['b', 'c', 'd'].map((to) => ({ from: 'a', type: 'HAS', reading: 'has', to })),
+};
+
+// proves: globe_view
+test('where its type draws no things or no links, the globe lays the graph’s own (Density, Treemap)', () => {
+  // Density: a heat map, its squares drawing no thing
+  const heat = [0, 1, 2].map((i) => ({
+    id: `h${i}`,
+    kind: 'box',
+    style: 'svg.2',
+    x: i * 10,
+    y: 0,
+    width: 10,
+    height: 10,
+  }));
+  const blank = new GlobeLayout().lay(heat, null, undefined, GRAPH);
+  assert.deepEqual(blank.blocks.map((b) => b.of).sort(), ['a', 'b', 'c', 'd'], 'each thing of the graph is on it');
+  assert.equal(blank.lines.length, 3, 'and each of its links');
+  assert.equal(blank.labels.find((l) => l.of === 'a')?.text, 'A', 'each named as the graph names it');
+  // Treemap: its things drawn, no links between them; the drawn cards are kept as drawn
+  const tiles = ['a', 'b', 'c', 'd'].flatMap((k) => thing(k));
+  const tree = new GlobeLayout().lay(tiles, null, undefined, GRAPH);
+  assert.equal(tree.blocks.length, 4, 'no thing drawn twice');
+  assert.ok(
+    tree.blocks.every((b) => b.card?.width === 80),
+    'each card the size its type drew it',
+  );
+  assert.deepEqual(tree.lines.map((l) => `${l.from}>${l.to}`).sort(), ['a>b', 'a>c', 'a>d'], 'the graph’s links');
+  // a drawing with its own links is laid as drawn
+  const drawn = new GlobeLayout().lay(HUB, 'hub', undefined, GRAPH);
+  assert.equal(drawn.lines.length, 20, 'only the links it draws');
+  assert.ok(!drawn.blocks.some((b) => b.of === 'a'), 'only the things it draws');
+});
