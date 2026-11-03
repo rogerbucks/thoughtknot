@@ -111,6 +111,9 @@ and no module requires one that requires it back.
 ### Lenses
 
 - **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
+- **`src/calculated/`** — calculated values (editor spec §57): `Calculated` and `Quantity` things worked out each time,
+  with units, gaps counted and loops named. The language is [`requirements/calc-language.md`](../../requirements/calc-language.md).
+  `test/calculated-cases.json` holds Python's twin to the same answers.
   - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
     time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
     `queryThings` and `queryLinks` run a rule's `when` as a query of things or links (editor spec §56,
