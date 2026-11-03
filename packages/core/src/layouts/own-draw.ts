@@ -21,6 +21,8 @@ import type { Pick as LayoutPick } from './pick.ts';
 const BOX_LINE = /^(\s+)("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*) \[/;
 /** The words that start a line of defaults, not a box. */
 const DEFAULTS = new Set(['graph', 'node', 'edge']);
+/** A graph line that names the Graphviz engine to lay it out with, as a radial drawing's twopi does. */
+const ENGINE_LINE = /^ {2}graph \[layout=/;
 
 /** A group of the layout source, on one line: its name, its words, the rest of its attributes and its things. */
 const GROUP_LINE = /^\s*subgraph (cluster_\w+) \{label=<((?:[^>\\]|\\.)*)>;(.*)\}\s*$/;
@@ -138,15 +140,20 @@ export function ownSource(
   placed: Readonly<Record<string, readonly [number, number]>> = {},
 ): string {
   let i = 0;
-  const lines = dot.split('\n').map((line) =>
-    line.includes('->') || line.includes(' -- ')
-      ? line
-      : line.replace(BOX_LINE, (whole, indent: string, key: string) => {
-          if (DEFAULTS.has(key)) return whole;
-          const k = i++;
-          return `${indent}${key} [pos="${(k % 50) * 300},${Math.floor(k / 50) * 200}", `;
-        }),
-  );
+  // a radial drawing's line names Graphviz's twopi, which would then lay it out and route its curves, not measure it.
+  // At 334 things that took 22 seconds (Roger, 3 Nov 2026). Dropped, so Graphviz only measures (layout_never_text)
+  const lines = dot
+    .split('\n')
+    .filter((line) => !ENGINE_LINE.test(line))
+    .map((line) =>
+      line.includes('->') || line.includes(' -- ')
+        ? line
+        : line.replace(BOX_LINE, (whole, indent: string, key: string) => {
+            if (DEFAULTS.has(key)) return whole;
+            const k = i++;
+            return `${indent}${key} [pos="${(k % 50) * 300},${Math.floor(k / 50) * 200}", `;
+          }),
+    );
   lines.splice(1, 0, '  graph [splines=false];', `  // layout options ${JSON.stringify(layoutOptions(options))}`);
   // each thing's kind, for the engine to read how kinds link (fingerprint.ts)
   if (kinds.size) lines.splice(3, 0, `  // layout kinds ${JSON.stringify(Object.fromEntries(kinds))}`);

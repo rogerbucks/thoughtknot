@@ -60,6 +60,18 @@ describe('a big drawing shown as it improves (layout_live_loop)', () => {
   });
 
   // proves: layout_live_loop
+  test('a big radial one comes once, in its rings, never first in rows that then jump into rings', async () => {
+    // Roger, 3 Nov 2026: nodes stay put. Graphviz lays a radial drawing out in rings, which no quick picture in rows
+    // could glide into
+    const radial = { ...chain(LIVE_LEAST), diagram: { type: 'radial', centre: 't0' }, live: true };
+    const said = await replies(radial);
+    assert.deepEqual(
+      said.map((r) => Object.keys(r).find((k) => k !== 'id')),
+      ['drawn'],
+    );
+  });
+
+  // proves: layout_live_loop
   test('the runner gives the quick picture at once, its settled layout still coming', async () => {
     const r = new LayoutRunner({ page: () => inThreadPort((s) => serveLayouts(s, loadEngine)), clock: CLOCK });
     const first = await r.draw(own(chain(LIVE_LEAST), { live: true }), {});

@@ -8,7 +8,7 @@ import { LAYOUT_STEPS, cheaperSpots, nextStep } from '../src/layouts/cheaper.ts'
 import { ownSpots } from '../src/layouts/own-engine.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../src/layouts/fingerprint.ts';
 import { readNote } from '../src/drawing.ts';
-import { draw } from '../src/render.ts';
+import { directions, draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 
 const box = (of, width = 120) => ({
@@ -150,6 +150,23 @@ describe('a drawing laid out by a cheaper step', () => {
       if (step !== 'own')
         assert.doesNotMatch(said, /Laid out in rows as|Spread out/, 'the step is said in place of why');
     });
+
+  // proves: layout_never_text
+  test('one drawn radial is only measured by Graphviz, never laid out in its rings, so the step stays quick', async () => {
+    // Roger, 3 Nov 2026: Radial on a big graph never came. Graphviz laid each cheaper step out as rings and routed its
+    // curves, 22 seconds at 334 things, so every step ran out of time. Measured only, each thing keeps its stand-in spot
+    const engine = await loadEngine();
+    for (const step of LAYOUT_STEPS) {
+      const [d] = directions({ ...readNote([NOTE]).graphs.get('g'), diagram: { type: 'radial', centre: 'b' }, step });
+      assert.doesNotMatch(d.dot, /layout=twopi/, step);
+      const boxes = engine.placed(d.dot).marks.filter((m) => m.kind === 'box' && m.role === 'thing');
+      assert.deepEqual(
+        boxes.map((b) => Math.round(b.y)),
+        [0, 0, 0, 0],
+        `${step}: in a row of stand-in spots, not in rings`,
+      );
+    }
+  });
 
   test('one written for a diagram type or a routing of Graphviz’s own is still laid out by our engine', async () => {
     const drawing = { ...readNote([NOTE]).graphs.get('g'), routing: 'curved', step: 'rows' };
