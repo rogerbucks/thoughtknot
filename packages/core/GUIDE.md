@@ -782,6 +782,10 @@ never data.
   `unusualNumbers`, `stale` and `nearDuplicates`. Each reads the graph and names things; none changes it.
 - `compare-sets.ts` and `working-set.ts` — two sets compared into only-one, only-other and both (§60). Things pinned
   into a working set make a graph of just those things and the links between them.
+- `group-by-sources.ts` — grouping an overview by a look or by a lens bucket, beside `group-by.ts` (§60, discover_group_by).
+- `bulk-edit.ts` — one property set on every thing a filter keeps. `bulkPlan` lists the changes to read first. `applyBulk`
+  writes them and gives the plan that undoes them (§60, discover_bulk_edit).
+- `as-at.ts` — a graph as it was on a chosen day, on recorded or real-world time, with what came and went since (§60).
 
 #### Making a rule from the card
 
