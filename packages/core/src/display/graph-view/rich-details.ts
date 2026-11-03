@@ -10,6 +10,7 @@ import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
+import { renderCalculated } from './details-calculated-rows';
 import { button } from '../button';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../link-host';
@@ -81,6 +82,7 @@ export class RichDetails {
       this.render(box, `![[${note.opens}]]`, 'thoughtknot-note-body');
     }
     if (host && MARKED.test(text)) this.render(el, text, 'thoughtknot-rich-text');
+    renderCalculated(el, this.o.reading.world[this.o.graph], key); // worked out, with its expression (§57)
     this.note(el, { thing: key }); // its note (§24, note_shown)
   }
 

@@ -159,8 +159,23 @@ export const DISPLAY_SOURCE_WORDS = {
   },
   'massive.no-more': '{name} has no more neighbours to show',
   'massive.grow-too-large': 'Too many things near {name} to draw at once',
+  // a calculated value in the details panel (§57, calc_details_shown)
+  'details.calculated': 'Worked out',
+  'details.calculated-from': 'worked out from {expression}',
+  'details.calculated-gap': 'no value yet: an input is missing',
+  'details.calculated-loop': 'depends on itself through {things}',
+  'details.calculated-missing': {
+    one: 'not counting {count} thing with no number',
+    other: 'not counting {count} things with no number',
+  },
   'massive.filter': 'Filter',
   'massive.by-look': 'By look',
+  // a total beside each filter value's count (§57, calc_set_totals)
+  'massive.total-of': 'Total of',
+  'massive.total-off': 'No total',
+  'massive.total-kept': 'All kept',
+  'massive.total-none': 'no numbers',
+  'massive.total-missing': { one: '{count} has none', other: '{count} have none' },
   'massive.look-count': '{look} {n}',
   'massive.back': 'Back',
   'massive.forward': 'Forward',

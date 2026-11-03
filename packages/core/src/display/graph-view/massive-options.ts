@@ -1,6 +1,7 @@
 // What the overview of a graph too large to draw needs from its host, and what it gives back (editor spec §53,
 // massive-view.ts). Kept apart so the overview itself stays short.
 import type { Drawn, GraphDrawing, Painter, Refusal, RulesShown } from '@thoughtknot/core';
+import type { Measure } from '../../facet-totals.ts';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
@@ -25,6 +26,8 @@ export interface MassiveOptions {
   painter?: Painter; // the fastest that may paint it, as the style graph's Render says (layout_concept_layers)
   /** What the style graph's rules give its things: each group box counts its looks, and the filters offer them (§56). */
   rules?: Pick<RulesShown, 'things' | 'legend'>;
+  /** The numbers the filters can total beside their counts, by thing in the order of the drawing's boxes (§57). */
+  measures?: readonly Measure[];
   /** The graph's intents, to place the groups round as poles (§58, intent_poles_massive); not set, none is offered. */
   intents?: { graph: Graph; choices: { id: string; says: string }[] };
   /** The poles the overview starts placed round, as saved. */
