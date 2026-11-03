@@ -4250,7 +4250,7 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }
-/* every control in the badge is at least 24 by 24 pixels, so a finger or a shaky hand can hit it (WCAG 2.5.8) */
+/* every control in the badge is at least 24 by 24 pixels, so a finger can hit it (WCAG 2.5.8) */
 .thoughtknot-level-badge :is(button, select) {
   min-width: 24px;
   min-height: 24px;
