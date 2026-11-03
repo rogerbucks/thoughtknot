@@ -66,7 +66,7 @@ export function globeSpace(
   const { radius, spots } = globeSpots(shape, {
     ...(centre ? { centre } : {}),
     ...(kept?.size ? { previous: kept } : {}),
-    ...(balls ? {} : { spacing: Math.max(GLOBE_SPACING, cardSpacing(marks)) }),
+    spacing: Math.max(GLOBE_SPACING, cardSpacing(marks, balls)),
   });
   const count = new Map<string, number>();
   for (const l of shape.links)
@@ -167,10 +167,18 @@ function blockOn(m: DrawMark & { kind: 'box' }, of: string, c: Vec3, r: number, 
   return block;
 }
 
-/** The room between neighbours on a globe of cards: enough for the boxes drawn, as they are on average. */
-function cardSpacing(marks: readonly DrawMark[]): number {
-  const sizes = marks.flatMap((m) => (m.kind === 'box' && m.of !== undefined ? [Math.max(m.width, m.height)] : []));
-  return sizes.length ? (sizes.reduce((s, x) => s + x, 0) / sizes.length) * CARD_ROOM : 0;
+/**
+ * The room between neighbours on a globe: so its surface holds each card in a square of room round it, and each ball,
+ * with `balls`, in the room a ball has. A folded group's wide card among many small things gets its own room, so the
+ * cards sit on the surface, never piled over it (review of 1 Nov 2026, finding 12). Things all one size get the same.
+ */
+function cardSpacing(marks: readonly DrawMark[], balls: boolean): number {
+  const rooms = marks.flatMap((m) =>
+    m.kind !== 'box' || m.of === undefined
+      ? []
+      : [balls && !isCluster(m.of) ? GLOBE_SPACING : Math.max(m.width, m.height) * CARD_ROOM],
+  );
+  return rooms.length ? Math.sqrt(rooms.reduce((s, x) => s + x * x, 0) / rooms.length) : 0;
 }
 
 /**
