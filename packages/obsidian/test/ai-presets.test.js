@@ -2,9 +2,9 @@
 // The person gives the model's name and key. Until then nothing is sent.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AI_PRESETS } from '../packages/obsidian/src/settings/ai-presets.ts';
-import { endpointProblem, usable } from '../packages/core/src/ai-choice.ts';
-import { aiModel } from '../packages/core/src/ai-model.ts';
+import { AI_PRESETS } from '../src/settings/ai-presets.ts';
+import { endpointProblem, usable } from '../../core/src/ai-choice.ts';
+import { aiModel } from '../../core/src/ai-model.ts';
 
 test('every preset address is one requests can go to', () => {
   for (const p of AI_PRESETS) assert.equal(endpointProblem(p.endpoint), null, p.id);
