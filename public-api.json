@@ -5360,6 +5360,8 @@
           "below: (g: GraphSpecCheck.Graph, top: string, depth?: number) => Set<string>",
           "byAxes: (graph: GraphSpecCheck.Graph, query?: { composition?: GraphSpecCheck.Value; audience?: string; }) => string[]",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
+          "calculate: (graph: GraphSpecCheck.Graph, ids?: string[]) => { values: Record<string, Record<string, GraphSpecCheck.CalculatedValue>>; problems: [id: string, code: string, detail: string][]; }",
+          "calculatedOf: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CalculatedDeclaration[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
           "centroidId: (cluster: string) => string",
           "centroidsOf: (graph: GraphSpecCheck.Graph, options?: { previous?: GraphSpecCheck.Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => GraphSpecCheck.Centroids",
@@ -5458,6 +5460,7 @@
           "SPEC_NODES: Array<string>",
           "SPEC_SCHEMA: string",
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
+          "staleCalculated: (graph: GraphSpecCheck.Graph, cache: Record<string, { basis: string; }>) => string[]",
           "Store: typeof GraphSpecCheck.Store",
           "tokens: (text: string) => [string, string, number, string, number][]",
           "transitionsOf: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.ProcessTransition[]",
@@ -5540,6 +5543,30 @@
         ],
         "byCertainty": [
           "value: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]"
+        ],
+        "calculate": [
+          "value: (graph: GraphSpecCheck.Graph, ids?: string[]) => { values: Record<string, Record<string, GraphSpecCheck.CalculatedValue>>; problems: [id: string, code: string, detail: string][]; }"
+        ],
+        "CalculatedDeclaration": [
+          "interface",
+          "flags: Array<[code: string, detail: string]>",
+          "id: string",
+          "is: string | null",
+          "name: string | null",
+          "of: string | null",
+          "unit: string | null"
+        ],
+        "calculatedOf": [
+          "value: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CalculatedDeclaration[]"
+        ],
+        "CalculatedValue": [
+          "interface",
+          "basis: string",
+          "loop: Array<string> | null",
+          "missing: number",
+          "refusal: string | null",
+          "unit: string",
+          "value: number | null"
         ],
         "canon": [
           "value: (g: GraphSpecCheck.Graph) => string"
@@ -6087,6 +6114,9 @@
         ],
         "splitChangeset": [
           "value: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }"
+        ],
+        "staleCalculated": [
+          "value: (graph: GraphSpecCheck.Graph, cache: Record<string, { basis: string; }>) => string[]"
         ],
         "Store": [
           "class",

@@ -166,6 +166,8 @@ archive's layout on every pull request, so it always works with the library as s
 
 - `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
   the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
+- `src/graphspec/engine/calculated/` — editor spec §57, calculated values. `calculated.calculate` and `language.parse`
+  are the twins of `calculated.js` and `language.js`, held to `calculated-cases.json`.
 
 ### The graph mesh
 
