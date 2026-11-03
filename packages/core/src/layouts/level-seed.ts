@@ -93,7 +93,7 @@ function spaced(
   if (units.length === 1) return new Map([[(units[0] as Unit).key, [...centre]]]);
   const shape = { things: units.map((u) => ({ key: u.key, text: u.key, kinds: [] })), links };
   const laid = stressLayout(shape, p.dims, undefined, { unit: 1 });
-  const at = units.map((u) => laid.get(u.key) ?? new Array(p.dims).fill(0)),
+  const at = units.map((u): number[] => laid.get(u.key) ?? (new Array(p.dims).fill(0) as number[])),
     room = units.map((u) => roomOf(u.count));
   // spread so the nearest two rooms just clear each other, with a gap
   let scale = 1;

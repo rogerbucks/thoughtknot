@@ -38,10 +38,13 @@ const ROW = 1_000_003,
 /** Each thing's spot, by its key, in the layout's own units. */
 export type Spots3 = ReadonlyMap<string, readonly [number, number, number]>;
 
+/** A cold start of a big graph starts from its groups placed first, each in its own room (level-seed.ts). */
+const seedOf = (shape: GraphShape): Spots3 | undefined => (levelSeed(shape, 3, 1) ?? undefined) as Spots3 | undefined;
+
 /** Where each thing of `shape` sits in space, starting from `previous` where it has a spot. */
 export function forceLayout3d(
   shape: GraphShape,
-  previous?: Spots3,
+  previous: Spots3 | undefined = seedOf(shape),
   options: Partial<LayoutOptions> = {},
 ): Map<string, [number, number, number]> {
   const { spacing, linkLength, groupPull } = layoutOptions(options);
@@ -58,8 +61,6 @@ export function forceLayout3d(
   const n = keys.length;
   const out = new Map<string, [number, number, number]>();
   if (!n) return out;
-  // a cold start of a big graph starts from its groups placed first, each in its own room (level-seed.ts)
-  previous ??= (levelSeed(shape, 3, 1) ?? undefined) as Spots3 | undefined;
   const index = new Map(keys.map((k, i) => [k, i]));
   const links: [number, number][] = [];
   for (const l of shape.links) {
