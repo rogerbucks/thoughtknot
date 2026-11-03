@@ -4177,8 +4177,60 @@ img.thoughtknot-picture-hidden,
   font-size: var(--gn-font-size-xs);
   pointer-events: none;
 }
-.thoughtknot-level-badge.is-hidden {
+.thoughtknot-level-badge.is-hidden,
+.thoughtknot-level-back.is-hidden {
   display: none;
+}
+.thoughtknot-level-badge {
+  display: flex;
+  gap: var(--gn-space-2);
+  align-items: center;
+}
+.thoughtknot-level-back {
+  pointer-events: auto;
+}
+/* A cloud pointed at or picked dashes its outline and previews the level in it (spec §68, level_click_back). The first
+   tap picks it, the second flies in. */
+.thoughtknot-svg .thoughtknot-cloud-unit > .thoughtknot-cloud {
+  cursor: pointer;
+}
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, .is-picked) > .thoughtknot-cloud {
+  stroke-dasharray: 6 4;
+  stroke-opacity: 0.9;
+}
+.thoughtknot-svg .thoughtknot-cloud-peek {
+  opacity: 0;
+  pointer-events: none;
+}
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, .is-picked) > .thoughtknot-cloud-peek {
+  opacity: 1;
+}
+.thoughtknot-svg .thoughtknot-cloud-peek-name {
+  fill: var(--gn-text-muted);
+}
+.thoughtknot-svg .thoughtknot-cloud-hint {
+  fill: var(--gn-text-faint);
+  font-style: italic;
+}
+/* Calm hover (Roger, 3 Nov 2026): a highlight waits a moment, then fades in, and fades out when the pointer leaves. So
+   passing over a drawing does not flicker. With reduced motion it still waits, then shows at once. */
+.thoughtknot-svg g.thoughtknot-hot,
+.thoughtknot-svg .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
+  transition-delay: var(--gn-motion-fade);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .thoughtknot-svg :is(g.node, g.edge),
+  .thoughtknot-svg .thoughtknot-cloud-peek {
+    transition:
+      filter var(--gn-motion-fade) var(--gn-ease-soft),
+      opacity var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-svg g.edge > path {
+    transition: stroke-width var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-svg g.edge.thoughtknot-hot > path {
+    transition-delay: var(--gn-motion-fade);
+  }
 }
 /* every word in a drawing is edged in the page colour, the opposite of its own. So it reads over lines and other
    things: dark words get a light edge, light words a dark one (Roger, 2 Nov 2026). The edge is a share of the

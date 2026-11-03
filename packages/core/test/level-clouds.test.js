@@ -89,7 +89,17 @@ test('far out a drawing shows its groups as named clouds under its things, which
     assert.match(badge, /^Level [12] of 3 · (Subjects|Areas)$/);
     const clouds = top.children[0];
     assert.ok(clouds.classList.contains(CLOUDS), 'the clouds are first, so under the things');
-    const names = clouds.children.filter((c) => c.tagName.toLowerCase() === 'text');
+    const units = clouds.children.filter((c) => c.classList.contains('thoughtknot-cloud-unit'));
+    const names = units.map((u) => u.children.find((c) => c.classList.contains('thoughtknot-cloud-name')));
+    assert.ok(
+      units.every((u) => u.getAttribute('data-cloud')),
+      'each cloud knows its group',
+    );
+    const peeks = units.map((u) => u.children.find((c) => c.classList.contains('thoughtknot-cloud-peek')));
+    assert.ok(
+      peeks.every((p) => p && p.children.length >= 2),
+      'each previews the level in it, with a hint',
+    );
     assert.ok(names.length >= 2 && names.every((t) => / · \d+$/.test(t.textContent)), 'each named with its count');
     assert.ok(svg.classList.contains(FAR), 'the things fade');
     svg.setAttribute('viewBox', '0 0 120 80');

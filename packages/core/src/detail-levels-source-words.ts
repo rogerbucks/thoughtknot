@@ -10,4 +10,7 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.loose-ends': 'Loose ends',
   'levels.badge': 'Level {at} of {count} · {name}',
   'levels.gate': 'to {name} · {count}',
+  'levels.open': 'Click or tap again to open',
+  'levels.back': 'Back',
+  'levels.back-label': 'Back to the level you were at',
 } as const;

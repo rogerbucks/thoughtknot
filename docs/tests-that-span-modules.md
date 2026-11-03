@@ -1116,3 +1116,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/versions-json.test.js` — `versions.json` lists only released versions, and its newest equals `manifest.json`.
   It spans `versions.json`, `manifest.json` and the git tags (community_listing, OPS-14).
+
+## Styles
+
+- `test/calm-hover.test.js` — a highlight waits, then fades, and a link is 2 px at rest and 3.2 px highlighted. It
+  reads `styles.css`, whose highlight classes `hover.ts` and `level-clouds-svg.ts` set (calm_hover).

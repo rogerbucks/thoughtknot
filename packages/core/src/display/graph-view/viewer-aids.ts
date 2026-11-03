@@ -15,6 +15,8 @@ import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
 import { levelClouds } from './level-clouds-svg.ts';
+import { LevelTaps } from './level-taps.ts';
+import { word } from '../../words.ts';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import { SemanticZoom } from './semantic-zoom-view.ts';
@@ -93,6 +95,13 @@ export class Aids {
   private naming = false;
   /** The badge that says which level of detail shows (§68, level_clouds), made the first time one shows. */
   private badge: HTMLElement | null = null;
+  /** The badge's words, and its Back button, shown once a cloud was flown into. */
+  private said: HTMLElement | null = null;
+  private backButton: HTMLElement | null = null;
+  /** The taps on the clouds: pick, fly in, and back (level_click_back); none for a table. */
+  private readonly levelTaps: LevelTaps | null;
+  /** What the badge said last. */
+  private badgeText: string | null = null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -114,6 +123,10 @@ export class Aids {
         })
       : null;
     this.miniMap?.redrawn(host.drawn());
+    const { viewport: vp, svg, zoom: z, size, taps: t } = host;
+    this.levelTaps = svg()
+      ? new LevelTaps(card, { viewport: vp, svg, zoom: z, size, taps: t, changed: () => this.level(this.badgeText) })
+      : null;
     const { o, viewport, zoom, taps } = host,
       state = o.switches?.state;
     // the view the card draws: a lens or semantic zoom it cannot take is greyed, and never bends it (view-support.ts)
@@ -171,15 +184,28 @@ export class Aids {
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
       this.level(levelClouds(svg, reading.graphs.get(graph)));
+      this.levelTaps?.mark();
     });
   }
 
-  /** Says which level of detail shows, as "Level 2 of 4 · Areas"; nothing for a drawing of one level. */
+  /** Says which level of detail shows, as "Level 2 of 4 · Areas", with Back once a cloud was flown into. */
   private level(text: string | null): void {
-    if (!text && !this.badge) return;
-    this.badge ??= this.host.viewport.createDiv({ cls: 'thoughtknot-level-badge' });
-    this.badge.setText(text ?? '');
-    this.badge.toggleClass('is-hidden', !text);
+    this.badgeText = text;
+    const back = !!this.levelTaps?.canGoBack();
+    if (!text && !back && !this.badge) return;
+    if (!this.badge) {
+      this.badge = this.host.viewport.createDiv({ cls: 'thoughtknot-level-badge' });
+      this.backButton = this.badge.createEl('button', {
+        cls: 'thoughtknot-level-back',
+        text: word('levels.back'),
+        attr: { 'aria-label': word('levels.back-label'), type: 'button' },
+      });
+      this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
+      this.said = this.badge.createSpan();
+    }
+    this.said?.setText(text ?? '');
+    this.backButton?.toggleClass('is-hidden', !back);
+    this.badge.toggleClass('is-hidden', !text && !back);
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */

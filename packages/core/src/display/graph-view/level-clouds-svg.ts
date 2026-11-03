@@ -9,7 +9,8 @@ import { detailLevels, levelAt, levelBadge } from '../../detail-levels.ts';
 import type { DetailLevel } from '../../detail-levels.ts';
 import { cloudsAt } from '../../level-clouds.ts';
 import { roadsAt } from '../../level-roads.ts';
-import type { Rect } from '../../level-clouds.ts';
+import type { Cloud, Rect } from '../../level-clouds.ts';
+import { word } from '../../words.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
 import { make } from './note-callouts.ts';
@@ -23,11 +24,19 @@ export const FAR = 'thoughtknot-far';
 const PAD_PX = 14,
   NAME_PX = 14;
 /** The room between a road's two lanes, how far its gate sits from its port, and the size of a gate's words, in pixels. */
+const PEEK_PX = 12,
+  HINT_PX = 11;
 const LANE_PX = 5,
   GATE_PX = 26,
   GATE_NAME_PX = 11;
 /** How many colours the clouds take in turn. */
 const HUES = 6;
+
+/** The things in each cloud drawn now, by the cloud's key, for each drawing's SVG: what a tap on a cloud flies to. */
+const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
+
+/** The things of the cloud `key` drawn in `svg` now; none when it shows no such cloud. */
+export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.get(svg)?.get(key) ?? [];
 
 /** The levels and links of each drawing, found once. */
 const found = new WeakMap<GraphDrawing, Found>();
@@ -35,6 +44,7 @@ const found = new WeakMap<GraphDrawing, Found>();
 interface Found {
   levels: DetailLevel[];
   links: { from: string; to: string }[];
+  texts: Map<string, string>;
 }
 
 /** The levels of `drawing`, and its links, found the first time they are asked for. */
@@ -42,7 +52,7 @@ function foundOf(drawing: GraphDrawing): Found {
   let f = found.get(drawing);
   if (!f) {
     const shape = shapeOf(drawing);
-    f = { levels: detailLevels(shape), links: shape.links };
+    f = { levels: detailLevels(shape), links: shape.links, texts: new Map(shape.things.map((t) => [t.key, t.text])) };
     found.set(drawing, f);
   }
   return f;
@@ -86,18 +96,13 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
   if (at < levels.length - 1) {
     const group = make('g', { class: CLOUDS }),
       clouds = cloudsAt(levels, at, rects, PAD_PX / k);
+    const f = drawing ? foundOf(drawing) : null,
+      inside = new Map<string, string[]>();
     for (const c of clouds) {
-      group.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, 'data-hue': c.index % HUES }));
-      const name = make('text', {
-        class: 'thoughtknot-cloud-name',
-        x: c.x,
-        y: c.y - 4 / k,
-        'text-anchor': 'middle',
-        'font-size': NAME_PX / k,
-      });
-      name.textContent = `${c.name} · ${c.count}`;
-      group.appendChild(name);
+      group.appendChild(unitOf(c, levels, at, rects, f?.texts ?? new Map(), k));
+      inside.set(c.key, levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []);
     }
+    held.set(svg, inside);
     roads(group, roadsAt(levels, at, drawing ? foundOf(drawing).links : [], clouds, LANE_PX / k, GATE_PX / k), k);
     top.prepend(group);
   }
@@ -130,4 +135,53 @@ function roads(group: Element, all: ReturnType<typeof roadsAt>, k: number): void
       group.appendChild(t);
     }
   }
+}
+
+/** The most names a cloud previews of the level in it. */
+const PEEK_MOST = 6;
+
+/**
+ * One cloud drawn: its outline, its name with its count, and a preview of the level in it. The preview names its own
+ * groups, or its biggest things when the next level is every item. It shows when the cloud is pointed at or picked.
+ */
+function unitOf(
+  c: Cloud,
+  levels: readonly DetailLevel[],
+  at: number,
+  rects: ReadonlyMap<string, Rect>,
+  texts: ReadonlyMap<string, string>,
+  k: number,
+): Element {
+  const unit = make('g', { class: 'thoughtknot-cloud-unit', 'data-cloud': c.key });
+  unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, 'data-hue': c.index % HUES }));
+  const text = (cls: string, x: number, y: number, px: number, words: string) => {
+    const t = make('text', { class: cls, x, y, 'text-anchor': 'middle', 'font-size': px / k });
+    t.textContent = words;
+    return t;
+  };
+  unit.appendChild(text('thoughtknot-cloud-name', c.x, c.y - 4 / k, NAME_PX, `${c.name} · ${c.count}`));
+  const peek = make('g', { class: 'thoughtknot-cloud-peek' });
+  const middle = (keys: readonly string[]) => {
+    const rs = keys.flatMap((key) => rects.get(key) ?? []);
+    return rs.length
+      ? [
+          rs.reduce((t, r) => t + r.left + r.right, 0) / (2 * rs.length),
+          rs.reduce((t, r) => t + r.top + r.bottom, 0) / (2 * rs.length),
+        ]
+      : null;
+  };
+  const next = at + 1 < levels.length - 1 ? levels[at + 1] : null;
+  const named = next
+    ? next.groups.filter((g) => g.parent === c.key).map((g) => ({ words: g.name, keys: g.things }))
+    : (levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []).map((key) => ({
+        words: texts.get(key) ?? key,
+        keys: [key],
+      }));
+  for (const n of named.slice(0, PEEK_MOST)) {
+    const m = middle(n.keys);
+    if (m) peek.appendChild(text('thoughtknot-cloud-peek-name', m[0] as number, m[1] as number, PEEK_PX, n.words));
+  }
+  peek.appendChild(text('thoughtknot-cloud-hint', c.x, c.box.bottom + 14 / k, HINT_PX, word('levels.open')));
+  unit.appendChild(peek);
+  return unit;
 }
