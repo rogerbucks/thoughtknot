@@ -12,10 +12,12 @@
 import { GLOBE_FACING, GLOBE_SPACING, globeArc, globeSpots } from './layouts/globe.ts';
 import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
+import { globeMarks } from './space-globe-graph.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
 import { boundsOf, eyeOf } from './space-view.ts';
 import type { Block, Orbit, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 import type { DrawMark } from './drawing-marks.ts';
+import type { GraphDrawing } from './note-reading.ts';
 
 /** The size of a thing's name and of a link's words, in pixels of the space. */
 const NAME_SIZE = 14,
@@ -64,7 +66,7 @@ export function globeSpace(
   const { radius, spots } = globeSpots(shape, {
     ...(centre ? { centre } : {}),
     ...(kept?.size ? { previous: kept } : {}),
-    ...(balls ? {} : { spacing: Math.max(GLOBE_SPACING, cardSpacing(marks)) }),
+    spacing: Math.max(GLOBE_SPACING, cardSpacing(marks, balls)),
   });
   const count = new Map<string, number>();
   for (const l of shape.links)
@@ -165,10 +167,18 @@ function blockOn(m: DrawMark & { kind: 'box' }, of: string, c: Vec3, r: number, 
   return block;
 }
 
-/** The room between neighbours on a globe of cards: enough for the boxes drawn, as they are on average. */
-function cardSpacing(marks: readonly DrawMark[]): number {
-  const sizes = marks.flatMap((m) => (m.kind === 'box' && m.of !== undefined ? [Math.max(m.width, m.height)] : []));
-  return sizes.length ? (sizes.reduce((s, x) => s + x, 0) / sizes.length) * CARD_ROOM : 0;
+/**
+ * The room between neighbours on a globe. Its surface holds each card in a square of room round it. With `balls`, it
+ * holds each ball in the room a ball has. A folded group's wide card among many small things gets its own room. So the
+ * cards sit on the surface, never piled over it (review of 1 Nov 2026, finding 12). Things all one size get the same.
+ */
+function cardSpacing(marks: readonly DrawMark[], balls: boolean): number {
+  const rooms = marks.flatMap((m) =>
+    m.kind !== 'box' || m.of === undefined
+      ? []
+      : [balls && !isCluster(m.of) ? GLOBE_SPACING : Math.max(m.width, m.height) * CARD_ROOM],
+  );
+  return rooms.length ? Math.sqrt(rooms.reduce((s, x) => s + x * x, 0) / rooms.length) : 0;
 }
 
 /**
@@ -204,13 +214,14 @@ export class GlobeLayout {
 
   /**
    * `marks` laid on the globe, `centre` facing the viewer; each thing laid before keeps its spot. A new centre turns the
-   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round.
+   * whole globe to face the viewer. Each thing stays where it is on it, so the view glides round. Where the marks draw
+   * no things or no links, as Density and Treemap do, the graph `drawing`'s own are laid (space-globe-graph.ts).
    */
-  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails): GlobeSpace {
+  lay(marks: readonly DrawMark[], centre?: string | null, details?: GlobeDetails, drawing?: GraphDrawing): GlobeSpace {
     const now = centre && this.spots?.get(centre);
     if (now && centre !== this.centre) this.spots = turnedTo(this.spots as Map<string, GlobeVec>, now);
     this.centre = centre;
-    const laid = globeSpace(marks, this.spots, centre, details, this.balls);
+    const laid = globeSpace(globeMarks(marks, drawing), this.spots, centre, details, this.balls);
     [this.spots, this.globe] = [laid.spots, laid.space.globe];
     return laid.space;
   }

@@ -166,8 +166,8 @@ export async function renderBlock(
   if (step) return renderStepBlock(plugin, source, el, ctx, step);
   // a change set is a proposal, drawn over its graph and decided change by change (§17)
   if (changeSetId(source)) return renderProposalBlock(plugin, source, el, ctx, owner);
-  // a style block or a drawings block is never drawn as a graph: folded away until opened (§2, §70)
-  if (renderFoldedBlock(el, source, ctx.getSectionInfo(el)?.text ?? '')) return;
+  // a style block or a drawings block is never drawn as a graph: folded away until opened (§2, §70); a board opens (§45)
+  if (renderFoldedBlock(plugin, el, source, ctx)) return;
   // a block that holds only a schema, a graph's own or a shared one, is drawn as the schema itself (§3, schema_drawn)
   if (await renderSchemaBlock(plugin, source, el, ctx, owner)) return;
   const graph = graphOfBlock(source);

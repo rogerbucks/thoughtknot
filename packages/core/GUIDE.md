@@ -656,6 +656,22 @@ never data.
   - `itemSaid` says an item's kind, text and what it joins. It is each item's title, for a screen reader.
   - `boardOutline` lists the whole board as text, top to bottom, with what a frame holds under it.
 
+#### Editing and opening a board
+
+- `board-edit.ts` — a board edited by its text (board_keyboard).
+  - `boardEdit` makes one change: a move, a size, new text, an item made or taken out, or two items joined.
+  - A move, size or text change rewrites that item alone. The other changes write the board in its fixed form.
+  - A change to the board's shape is refused while the block holds a problem, so nothing unread is lost.
+  - A locked item is never moved, sized or taken out. `boardEditInNote` makes the change in a whole note.
+  - `newItem` places a new item in free room beside the one in focus, and moves no other item.
+- `board-keys.ts` — a board worked by the keyboard alone. `boardKey` takes a key and says what it does.
+  - Tab goes from item to item. The arrows move, Alt and the arrows size, and N makes a sticky note.
+  - Enter edits text, C joins two items, and Delete takes one out. Each step says what happened, in words.
+- `display/board/board-view.ts` — `showBoard` opens a board in a host, as Obsidian and the browser page do.
+  - It pans, zooms and pinches with the core's `Zoom`, the gestures of a drawing. A mouse or pen drags an item.
+  - The keys are `boardKey`'s, said in a live region, with the outline under the board.
+  - After each edit the board is drawn again in place, and the view stays where it was.
+
 #### Drawings on a graph (editor spec §70)
 
 - `sketch.ts` — freehand ink, shapes and notes drawn over a graph, kept as its own block: `// graph: trip_ink · SKETCH
@@ -1964,6 +1980,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     and the rest.
   - `view-options.ts` is what a card is given.
   - Each module's purpose is its opening comment, and the Obsidian guide describes them by feature.
+- `src/display/board/` — a whiteboard opened in a host: `board-view.ts` (`showBoard`). See "Reading and writing a board".
 - `src/display/properties/` — the inspector's property rows, type menu (through the host) and list chips.
 - `src/display/proposals/` — the proposal strip and the marks on the drawing.
 - `src/display/export/` — the Export form (`export-form.ts`) and the types it and the host share (`export-types.ts`).

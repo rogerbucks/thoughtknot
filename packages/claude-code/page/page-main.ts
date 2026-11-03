@@ -22,13 +22,14 @@ import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
+import { boardsKept } from './board-section.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
-import { textVersionSection } from './text-version.ts';
+import { textVersionKept } from './text-version.ts';
 import { renderMarkdown } from './markdown.ts';
 import { noteCalls } from './note-calls.ts';
 import { PageNote } from './page-note.ts';
@@ -128,14 +129,9 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       button(bar, word('bar.export'), 'download', () => toggleExportForm(graph, exporting), word('bar.export'));
     };
     // the graph as plain-language sentences, under the editor, made again with the note (cc_text_version)
-    let words: HTMLElement | null = null;
-    const addTextVersion = () => {
-      words?.remove();
-      const first = readNote(gqlBlocks(page.text).map((b) => b.text))
-        .graphs.values()
-        .next().value;
-      words = first ? graph.appendChild(textVersionSection(doc, first)) : null;
-    };
+    const addTextVersion = textVersionKept(graph, () => page.text);
+    // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
+    const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches);
     // the plug-ins turned on in Obsidian, each in its own sealed worker, and the note's graph by a type one adds
     // (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
@@ -155,6 +151,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         showCards(cards, proposalsIn(page.text), decideOn, announce);
         addExportBar();
         addTextVersion();
+        addBoards();
         return addPlugins();
       });
     // the user's accept or reject: the core's review on the note, written by the page's own version-checked write
