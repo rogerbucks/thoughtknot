@@ -23,7 +23,7 @@ The skill is a `SKILL.md` and companion files. The same `SKILL.md` loads as a Cl
 - `src/cowork.ts` — what the script does: `clear` (the gate), `read`, `draw`, `propose` and `apply`. `COWORK_LIMITS`
   holds the size limits the package is checked against. They are our best reading of Cowork's; check them against
   Cowork when its docs say more.
-- `src/raster.ts` — the PNG. Cowork's sandbox has no picture library, so this paints the SVG's shapes and text itself
+- `bin/raster.ts` — the PNG. It sits in `bin/` because it needs node's zlib, and the shipped source holds no Node. Cowork's sandbox has no picture library, so this paints the SVG's shapes and text itself
   and writes the PNG with node's zlib. Its letters are a small built-in set (plain letters, digits and punctuation).
   Other characters are drawn as a question mark, and the card says how many. The SVG beside it shows every character.
 - `bin/thoughtknot.ts` — the command line Cowork runs. It answers in JSON.

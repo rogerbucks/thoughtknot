@@ -9,6 +9,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import { word } from '@thoughtknot/core';
 import { apply, clear, draw, propose, read } from '../src/cowork.ts';
+import { svgToPng } from './raster.ts';
 import type { EditAsk } from '../src/cowork.ts';
 
 const out = (answer: unknown, code = 0): never => {
@@ -54,7 +55,7 @@ if (command === 'check') {
   out({ read: true, level, problems, ...(why ? { why } : {}) });
 }
 if (command === 'draw') {
-  const made = await draw(note, level, option('graph'));
+  const made = await draw(note, level, svgToPng, option('graph'));
   const stem = join(dirname(notePath as string), basename(notePath as string, extname(notePath as string)));
   const files: string[] = [];
   const kept: string[] = [];

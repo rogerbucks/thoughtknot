@@ -31,6 +31,7 @@ import {
   sha256,
 } from '@thoughtknot/core';
 import { apply, approvalFor, clear, COWORK_LIMITS, draw, propose, read } from '../packages/cowork/src/cowork.ts';
+import { svgToPng } from '../packages/cowork/bin/raster.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const COWORK = join(ROOT, 'packages/cowork');
@@ -258,7 +259,7 @@ describe('an edit gives the same bytes as the other hosts, and only after approv
 
 describe('the drawing is files beside the note and a card, never blank', () => {
   test('a shared case gives an SVG, a PNG that decodes, a card and the graph as text', async () => {
-    const made = await draw(open, 'Public');
+    const made = await draw(open, 'Public', svgToPng);
     assert.ok(made.svg?.startsWith('<svg'), 'an SVG');
     assert.ok(made.png, 'a PNG');
     const png = Buffer.from(made.png);
@@ -315,7 +316,7 @@ describe('the drawing is files beside the note and a card, never blank', () => {
   });
 
   test('a note that cannot be drawn says why and gives text, with no files', async () => {
-    const made = await draw('No graph here.\n', null);
+    const made = await draw('No graph here.\n', null, svgToPng);
     assert.ok(made.why, 'it says why');
     assert.ok(made.text.length > 0 && made.card.includes(made.why), 'the card and the text say it');
     assert.equal(made.svg, undefined);

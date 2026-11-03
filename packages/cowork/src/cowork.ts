@@ -37,7 +37,8 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { BlockEdit, GateSettings, GraphDrawing, NoteReading, Refusal } from '@thoughtknot/core';
-import { svgToPng } from './raster.ts';
+/** Paints an SVG as a PNG: the host's own, because a PNG needs node's zlib and the source holds no Node (raster.ts). */
+export type Rasterise = (svg: string) => { png: Uint8Array; unknown: number } | { why: string };
 
 /** Cowork's limits for a skill, as far as they are known, so the package is checked against them (cowork_skill). */
 export const COWORK_LIMITS = {
@@ -155,7 +156,7 @@ export interface Drawn {
 }
 
 /** The first graph of a note, or the one named, drawn as an SVG and a PNG. It comes with a card and the graph as text. */
-export async function draw(note: string, level: string | null, graph?: string): Promise<Drawn> {
+export async function draw(note: string, level: string | null, rasterise: Rasterise, graph?: string): Promise<Drawn> {
   const reading = readNote(gqlBlocks(note).map((b) => b.text));
   const problems = problemsOf(note, reading).length;
   const wanted = graph ? reading.graphs.get(graph) : [...reading.graphs.values()][0];
@@ -205,7 +206,7 @@ export async function draw(note: string, level: string | null, graph?: string): 
     }
   }
   const notes: string[] = [];
-  const raster = svgToPng(svg);
+  const raster = rasterise(svg);
   if ('why' in raster) return { card, text, svg, why: raster.why, notes };
   if (raster.unknown) notes.push(word('cowork.png-text', { count: raster.unknown }));
   return { card, text, svg, png: raster.png, notes };
