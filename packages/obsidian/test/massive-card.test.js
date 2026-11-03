@@ -45,13 +45,18 @@ test('poles chosen where the note is edited are saved in the style graph, and in
       ['Out early', 'Stay calm'],
       'each intent offered by its words',
     );
-    tick(reading, 'early');
-    await new Promise((r) => setTimeout(r, 50));
+    // reading view tries `calm` first; the edited note's save of `early`, queued after it, is the sign it is done
+    tick(reading, 'calm');
     assert.equal(env.state.files.get(PATH), note, 'reading view saves nothing');
     const editing = await card(env, note, source, 'markdown-source-view');
     tick(editing, 'early');
     await until(() => env.state.files.get(PATH) !== note);
     assert.match(env.state.files.get(PATH), /:Filter \{keep: '', poles: 'early'\}\)/);
+    assert.doesNotMatch(
+      env.state.files.get(PATH),
+      /poles: '[^']*calm/,
+      'the poles tried in reading view are not saved',
+    );
   } finally {
     env.plugin.onunload();
     env.uninstall();
