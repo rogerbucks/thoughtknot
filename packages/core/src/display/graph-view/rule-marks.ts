@@ -19,6 +19,8 @@ function markOne(g: SVGElement, mark: RuleMark | undefined, edge: boolean) {
   g.classList.add('thoughtknot-look', 'thoughtknot-rule');
   if (mark.line) g.classList.add(`thoughtknot-line-${mark.line}`);
   if (mark.format) g.classList.add(`thoughtknot-format-${mark.format}`);
+  // a look only an AI's suggestion gives, not applied: a preview, drawn dashed and said so (§59)
+  if (mark.suggested) g.setAttribute('data-suggested', 'true');
   if (mark.hue) g.setCssProps({ '--thoughtknot-look-line': hueColour(mark.hue, 'line') });
   // its badge, or the numbered tag of the step a bands rule puts it in
   const glyph = mark.badge ? BADGE_GLYPHS[mark.badge] : mark.tag;

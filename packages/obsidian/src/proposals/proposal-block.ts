@@ -15,10 +15,12 @@ import {
   gqlSpans,
   namesSharedSchema,
   nudgedDrawing,
+  readNote,
   readStyle,
+  suggestedPreview,
   word,
 } from '@thoughtknot/core';
-import type { Which } from '@thoughtknot/core';
+import type { GraphDrawing, Marks, NoteReading, RulesShown, StyleGraph, Which } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
@@ -42,6 +44,29 @@ function openAt(plugin: ThoughtKnotPlugin, path: string, line: number): void {
   if (file instanceof TFile && typeof leaf.openFile === 'function')
     void leaf.openFile(file, { eState: { line }, active: true });
   else new Notice(word('blocks.proposal-edit'));
+}
+
+/**
+ * What an AI's suggestions would look like, as the card draws them (§59). These are the rules' looks of the graph with
+ * the suggestions laid over it, dashed and marked suggested. Nothing is saved. None for a proposal not a model's.
+ */
+function suggestedLooks(
+  review: ProposalReview,
+  note: string,
+  reading: NoteReading,
+  style: StyleGraph,
+  drawing: GraphDrawing,
+  marks: Marks,
+): { rules?: RulesShown } {
+  const { graph } = review.proposal;
+  const laid = reading.world[graph];
+  if (review.proposal.provenance.by.kind !== 'model' || !laid || !style.looks.length) return {};
+  const base = readNote(
+    gqlSpans(note).map((s) => s.text),
+    undefined,
+    review.shared,
+  ).world[graph];
+  return { rules: suggestedPreview(style, base, laid, drawing, marks) };
 }
 
 /** Draws the change set `source` where the note shows it: the proposal over its graph, or why it cannot be shown. */
@@ -157,10 +182,7 @@ export async function renderProposalBlock(
     whenPlaced(root, () => {
       if (readOnly()) writes.forEach((b) => b.remove());
     });
-    root.createDiv({
-      cls: 'thoughtknot-empty',
-      text: word('blocks.proposal-no-graph', { graph }),
-    });
+    root.createDiv({ cls: 'thoughtknot-empty', text: word('blocks.proposal-no-graph', { graph }) });
     return;
   }
   // drawn with its style graph's nudges, as the graph itself is, so the proposal lies over the graph as it looks
@@ -195,6 +217,7 @@ export async function renderProposalBlock(
     lineOf: (at) => at.line + (info?.lineStart ?? 0),
     onEdit: () => openAt(plugin, path, info?.lineStart ?? 0),
     proposal: card,
+    ...suggestedLooks(review, note, reading, styling.style, drawing, shown.marks),
     ...(info ? {} : { readOnly: () => true }),
   });
   ctx.addChild(view);

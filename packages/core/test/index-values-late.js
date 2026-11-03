@@ -12,6 +12,11 @@
 // ruleFinds, ruleStarts, sayDraft, testsOf and whenOf. ruleRemoved and ruleMovedUp (rule_look_remove) came the same day.
 // INTENT_LINK_TYPES, INTENT_MARKS, UNSTATED and the intent functions (§58, intents) came on 3 Nov 2026.
 export const VALUES_LATE = [
+  'CERTAINTY_WORDS',
+  'SUGGESTED_TOKEN',
+  'suggestAsk',
+  'suggestedPreview',
+  'suggestionGroups',
   'INTENT_LINK_TYPES',
   'INTENT_MARKS',
   'intentOverlay',
