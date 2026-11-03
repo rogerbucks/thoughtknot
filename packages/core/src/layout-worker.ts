@@ -100,9 +100,12 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       const e = await engine;
       // a large graph's drawing is kept, so one opened again is drawn at once (curves_saved)
       const large = drawing.boxes.length > QUICK_LAYOUT;
-      // a big live drawing not kept is shown first in rows, one pass over it, then as it settles (layout_live_loop)
+      // a big live drawing not kept is shown first in rows, one pass over it, then as it settles (layout_live_loop).
+      // One laid out in no rows, a radial one's rings, is not: its rows would be swapped for rings a moment later,
+      // every thing jumping (Roger, 3 Nov 2026: nodes stay put)
       const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
-      const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept;
+      const rings = asked.some((d) => !d.own && /\blayout=/.test(d.dot));
+      const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings;
       const rows = quick ? directions({ ...drawing, step: 'rows' })[0] : undefined;
       if (rows?.own) scope.postMessage({ id, early: chosen([rows], [svgOf(e, rows.dot, drawing.routing, true)]) });
       // direct and curved links are drawn again from Graphviz's marks (untangle_direct); any other routing is its own
