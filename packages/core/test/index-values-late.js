@@ -301,4 +301,11 @@ export const VALUES_LATE = [
   'historyFrom',
   'historyMoved',
   'withVersion',
+  // editing a thing where it is drawn, for the Copilot Cowork skill (§46, cowork_same_bytes), 3 Nov 2026
+  'addedNear',
+  'deleted',
+  'linkedTo',
+  'propertySet',
+  'quickLine',
+  'renamed',
 ];

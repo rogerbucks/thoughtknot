@@ -67,6 +67,8 @@ below the hosts as it is.
   plain folder of notes, offline, with no server inside. Guide: [packages/app/GUIDE.md](packages/app/GUIDE.md).
 - `packages/vscode`: the VS Code extension. It runs the browser editor in a VS Code tab beside a Markdown note, over
   the note's workspace folder. Guide: [packages/vscode/GUIDE.md](packages/vscode/GUIDE.md).
+- `packages/cowork`: the Copilot Cowork skill. It reads, checks, draws and edits notes kept in Microsoft 365, through the
+  core alone. Guide: [packages/cowork/GUIDE.md](packages/cowork/GUIDE.md).
 
 ## Privacy and network use
 
