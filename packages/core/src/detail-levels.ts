@@ -188,3 +188,7 @@ export function levelAt(levels: readonly DetailLevel[], seen: ReadonlySet<string
 /** The badge that says where you are: "Level 2 of 4 · Areas". */
 export const levelBadge = (levels: readonly DetailLevel[], at: number): string =>
   word('levels.badge', { at: at + 1, count: levels.length, name: levels[at]?.name ?? everyItem() });
+
+/** Where the thing `key` sits in `levels`: the names of its groups, far to near, as "Money › Budget"; empty for none. */
+export const levelPath = (levels: readonly DetailLevel[], key: string): string =>
+  levels.flatMap((l) => l.groups.filter((g) => g.things.includes(key)).map((g) => g.name)).join(' › ');

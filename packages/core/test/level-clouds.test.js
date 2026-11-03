@@ -127,7 +127,7 @@ test('far out the links between clouds run as roads with gates, and the item lin
         2 * new Set(roads.map((r) => [r.getAttribute('data-from'), r.getAttribute('data-to')].sort().join())).size,
     );
     assert.ok(
-      gates.every((g) => /^to .+ · \d+$/.test(g.textContent)),
+      gates.every((g) => /^[→←⇄] .+ · \d+$/.test(g.textContent)),
       'each gate says where it goes',
     );
   } finally {

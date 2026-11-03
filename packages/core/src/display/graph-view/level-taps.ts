@@ -1,7 +1,8 @@
 // Tapping a cloud, and going back (editor spec §68, level_click_back). Roger's click rule, 24 Oct 2026: the first click
 // on something picks it and shows what it is; the second turns to it. So the first tap on a cloud picks it: its outline
 // dashes and it previews the level in it. The second flies in until it fills the screen. Back flies out to where you
-// were, one step at a time. Pointing at a cloud previews it too, but never moves anything.
+// were, one step at a time. Pointing at a cloud previews it too, but never moves anything. From the keyboard, Tab reaches
+// each cloud, Enter flies into it and Backspace goes back (level_keys).
 import type { Lifecycle } from '../lifecycle.ts';
 import type { Place, Zoom } from '../../zoom.ts';
 import { Glide } from './details-nav.ts';
@@ -48,6 +49,14 @@ export class LevelTaps {
       this.down = null;
       if (!d || d.id !== e.pointerId || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= TAP_PX) return;
       if (cloudAt(e.target) === d.key) this.tapped(d.key);
+    });
+    // from the keyboard: Enter or Space on a cloud flies into it, Backspace or Escape goes back (level_keys)
+    card.registerDomEvent(host.viewport, 'keydown', (e: KeyboardEvent) => {
+      const key = cloudAt(e.target);
+      if (key && (e.key === 'Enter' || e.key === ' ')) this.fly(key);
+      else if ((e.key === 'Backspace' || e.key === 'Escape') && this.canGoBack() && !typing(e.target)) this.goBack();
+      else return;
+      e.preventDefault();
     });
   }
 
@@ -105,6 +114,14 @@ export class LevelTaps {
     this.glide.to(zoom, to);
     this.host.changed();
   }
+}
+
+/** Whether an event's target takes typed text, where Backspace and Escape are the field's own. */
+function typing(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  return (
+    !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || !!el.isContentEditable)
+  );
 }
 
 /** The key of the cloud an event's target is in, if any. */

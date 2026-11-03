@@ -1,6 +1,6 @@
 // The links between clouds, drawn as roads (editor spec §68, level_roads). Roger, 3 Nov 2026: far out, links merge into
-// roads that run all the way to the other cloud, one lane each way. Roads go round clouds they do not belong to, and
-// each end has a gate that says where it goes ("to Money").
+// roads that run all the way to the other cloud, one lane each way. Roads go round clouds they do not belong to. Each
+// end has a gate that says where it goes, and its arrow says which way the links run ("→ Money · 3").
 //
 // At a level of groups, every link between two things in different groups counts toward the road between those
 // groups. A road leaves each cloud at its port, the point where the line between their middles crosses the cloud's box.
@@ -85,6 +85,9 @@ function lanePath(p: Point, q: Point, bend: Point | null, side: number): string 
   return bend ? `M${s(p)} Q${s(bend)} ${s(q)}` : `M${s(p)} L${s(q)}`;
 }
 
+/** The arrow at a gate, from its own cloud: → links only go out, ← only come in, ⇄ both (level_arrows). */
+const arrowOf = (out: number, into: number): string => (out && into ? '⇄' : out ? '→' : '←');
+
 /**
  * The roads between the clouds of level `at`, from the drawing's `links`. Two lanes sit `lane` apart. A gate sits
  * `gate` out from each port, saying where the road goes and how many links it carries.
@@ -127,8 +130,8 @@ export function roadsAt(
     };
     const count = ab + ba;
     const gates: Gate[] = [
-      { ...xy(toward(p, bend ?? q)), text: word('levels.gate', { name: cb.name, count }) },
-      { ...xy(toward(q, bend ?? p)), text: word('levels.gate', { name: ca.name, count }) },
+      { ...xy(toward(p, bend ?? q)), text: word('levels.gate', { arrow: arrowOf(ab, ba), name: cb.name, count }) },
+      { ...xy(toward(q, bend ?? p)), text: word('levels.gate', { arrow: arrowOf(ba, ab), name: ca.name, count }) },
     ];
     return { a, b, lanes, gates, count };
   });

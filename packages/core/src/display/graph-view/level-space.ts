@@ -23,8 +23,15 @@ export function levelSpace(screen: SpaceScreen, drawing: GraphDrawing | undefine
   layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
   const top = layer.firstElementChild ?? layer;
   const levels = drawing ? levelsOf(drawing, g) : [];
-  return levelsInto(layer, top, levels, drawing, screen.boxes(), {
+  const badge = levelsInto(layer, top, levels, drawing, screen.boxes(), {
     k: 1,
     view: { left: 0, top: 0, right: width, bottom: height },
   });
+  // the layer takes no pointer and is hidden from screen readers, so Tab passes its clouds by
+  for (const unit of Array.from(layer.querySelectorAll('.thoughtknot-cloud-unit'))) {
+    unit.removeAttribute('tabindex');
+    unit.removeAttribute('role');
+    unit.removeAttribute('aria-label');
+  }
+  return badge;
 }

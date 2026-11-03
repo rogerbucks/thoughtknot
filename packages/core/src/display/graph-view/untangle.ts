@@ -23,6 +23,8 @@ import type { Exploring } from './view-options';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';
+import { levelsOf } from './level-clouds-svg.ts';
+import { levelPath } from '../../detail-levels.ts';
 import type { FindRow } from './untangle-find';
 import { renderLegend } from './untangle-legend';
 import type { LegendPanel } from './untangle-legend';
@@ -105,6 +107,8 @@ export class UntangleView {
         host.go(f.key);
       },
       close: () => this.closeFind(),
+      // where each thing found sits in the levels of detail (level_find)
+      where: (key) => levelPath(levelsOf(host.drawing, host.reading.world[host.graph]), key),
       // the quick search starts a mind map from any thing found (Roger, 31 Oct 2026)
       explore: (f) => {
         this.finder.el.hidden = true;

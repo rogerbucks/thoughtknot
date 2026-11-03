@@ -14,7 +14,8 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
-import { levelClouds, levelsOf } from './level-clouds-svg.ts';
+import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
+import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
 import { levelSpace } from './level-space.ts';
 import type { SpaceScreen } from './space-view-options.ts';
@@ -107,6 +108,8 @@ export class Aids {
   private legend: LevelLegend | null = null;
   /** What the badge said last. */
   private badgeText: string | null = null;
+  /** The badge's one-line hint and arrow legend (level_hints). */
+  private hints: LevelHints | null = null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -196,6 +199,8 @@ export class Aids {
         g = reading.world[graph],
         screen = this.host.space?.screen?.();
       this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
+      const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
+      this.hints?.show(layer ? levelShown(layer) : null);
       this.levelTaps?.mark();
       this.legend?.show(drawing ? levelsOf(drawing, g) : null);
     });
@@ -222,6 +227,7 @@ export class Aids {
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
         nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
       });
+      this.hints = new LevelHints(this.badge);
     }
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);

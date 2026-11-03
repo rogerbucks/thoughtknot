@@ -1201,6 +1201,13 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   font-size: var(--gn-font-size-s);
   color: var(--gn-text-muted);
 }
+/* where a thing found sits in the levels of detail, on its own line under its name (level_find) */
+.thoughtknot-find-where {
+  display: block;
+  inline-size: 100%;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
 .thoughtknot-find-results .thoughtknot-find-explore {
   background: none;
   box-shadow: none;
@@ -4190,7 +4197,10 @@ img.thoughtknot-picture-hidden,
   pointer-events: none;
 }
 .thoughtknot-level-badge.is-hidden,
-.thoughtknot-level-back.is-hidden {
+.thoughtknot-level-back.is-hidden,
+.thoughtknot-level-hint.is-hidden,
+.thoughtknot-level-arrows.is-hidden,
+.thoughtknot-level-ai.is-hidden {
   display: none;
 }
 .thoughtknot-level-badge {
@@ -4208,6 +4218,17 @@ img.thoughtknot-picture-hidden,
 }
 /* The legend of subjects (spec §68, level_colours): a chip each, with its colour. Pointing at one spotlights it; a
    click keeps it. Its colour button picks the next colour. */
+/* One short hint for each level, shown once, and what the gates' arrows mean (spec §68, level_hints) */
+.thoughtknot-level-hint,
+.thoughtknot-level-arrows {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-level-hint {
+  font-style: italic;
+}
 .thoughtknot-level-legend {
   display: flex;
   flex-basis: 100%;
@@ -4272,12 +4293,12 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-svg.thoughtknot-spotlit g.node.is-spot {
   opacity: 1;
 }
-/* A cloud pointed at or picked dashes its outline and previews the level in it (spec §68, level_click_back). The first
-   tap picks it, the second flies in. */
+/* A cloud pointed at, picked or reached by Tab dashes its outline and previews the level in it (spec §68,
+   level_click_back, level_keys). The first tap picks it, the second flies in. */
 .thoughtknot-svg .thoughtknot-cloud-unit > .thoughtknot-cloud {
   cursor: pointer;
 }
-.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, .is-picked) > .thoughtknot-cloud {
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, :focus-visible, .is-picked) > .thoughtknot-cloud {
   stroke-dasharray: 6 4;
   stroke-opacity: 0.9;
 }
@@ -4285,7 +4306,7 @@ img.thoughtknot-picture-hidden,
   opacity: 0;
   pointer-events: none;
 }
-.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, .is-picked) > .thoughtknot-cloud-peek {
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, :focus-visible, .is-picked) > .thoughtknot-cloud-peek {
   opacity: 1;
 }
 .thoughtknot-svg .thoughtknot-cloud-peek-name {

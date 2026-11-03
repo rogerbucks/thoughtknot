@@ -40,6 +40,12 @@ const LANE_PX = 5,
 /** The things in each cloud drawn now, by the cloud's key, for each drawing's SVG: what a tap on a cloud flies to. */
 const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
 
+/** The level each drawing shows now, and how many it has: for the hints and the arrow legend (level_hints). */
+const shownAt = new WeakMap<Element, { at: number; count: number }>();
+
+/** The level `svg` shows now, from 0 (farthest), and how many levels it has; null when it shows none. */
+export const levelShown = (svg: Element): { at: number; count: number } | null => shownAt.get(svg) ?? null;
+
 /** The things of the cloud `key` drawn in `svg` now; none when it shows no such cloud. */
 export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.get(svg)?.get(key) ?? [];
 
@@ -107,6 +113,7 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
   const levels = drawing ? levelsOf(drawing, g) : [],
     shown = shownOf(svg);
   if (!top || !shown || levels.length < 2) {
+    shownAt.delete(svg);
     for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
     svg.classList.remove(FAR);
     return null;
@@ -127,12 +134,14 @@ export function levelsInto(
   { k, view }: { k: number; view: Rect },
 ): string | null {
   for (const old of Array.from(top.children)) if (old.classList.contains(CLOUDS)) old.remove();
+  shownAt.delete(svg);
   if (levels.length < 2) return null;
   // the things on screen now: far out all of them, zoomed in fewer, so a nearer level fits
   const seen = new Set<string>();
   for (const [key, r] of rects)
     if (r.right >= view.left && r.left <= view.right && r.bottom >= view.top && r.top <= view.bottom) seen.add(key);
   const at = levelAt(levels, seen);
+  shownAt.set(svg, { at, count: levels.length });
   svg.classList.toggle(FAR, at < levels.length - 1);
   if (at < levels.length - 1) {
     const group = make('g', { class: CLOUDS }),
@@ -195,7 +204,15 @@ function unitOf(
 ): Element {
   // each cloud takes its subject's hue, a shade lighter for each level in (level_colours)
   const subject = subjectOf(levels, at, c.key);
-  const unit = make('g', { class: 'thoughtknot-cloud-unit', 'data-cloud': c.key, 'data-subject': subject });
+  // Tab reaches each cloud, and a screen reader says what it is and how to open it (level_keys)
+  const unit = make('g', {
+    class: 'thoughtknot-cloud-unit',
+    'data-cloud': c.key,
+    'data-subject': subject,
+    tabindex: 0,
+    role: 'button',
+    'aria-label': word('levels.cloud-label', { name: c.name, count: c.count, level: levels[at]?.name ?? '' }),
+  });
   const look = { 'data-hue': hueOf(levels, subject), 'data-shade': Math.min(at, 2) };
   unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, ...look }));
   const text = (cls: string, x: number, y: number, px: number, words: string) => {

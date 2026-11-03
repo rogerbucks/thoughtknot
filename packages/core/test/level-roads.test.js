@@ -46,7 +46,15 @@ test('links between two groups merge into one road, a lane each way, every link 
   );
   assert.notEqual(road.lanes[0].d, road.lanes[1].d, 'two lanes side by side');
   assert.match(road.lanes[1].d, /^M100,-?\d/, 'starts at the port on the edge of its cloud');
-  assert.deepEqual(road.gates.map((g) => g.text).sort(), ['to Money · 3', 'to Work · 3']);
+  assert.deepEqual(road.gates.map((g) => g.text).sort(), ['⇄ Money · 3', '⇄ Work · 3']);
+});
+
+// proves: level_arrows
+test("a gate's arrow says which way its links go: out, in, or both", () => {
+  const clouds = [cloud('W', 'Work', box(0, 0, 100, 100), 0), cloud('M', 'Money', box(300, 0, 400, 100), 1)];
+  const [road] = roadsAt(levels, 0, [{ from: 'a', to: 'c' }], clouds, 6, 20);
+  // the gate at Work points out to Money; the one at Money points in from Work
+  assert.deepEqual(road.gates.map((g) => g.text).sort(), ['← Work · 1', '→ Money · 1']);
 });
 
 // proves: level_roads

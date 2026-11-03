@@ -37,10 +37,11 @@ async function card() {
       sent.push(place);
     },
   };
+  const heard = {};
   // a reduced-motion window, so a fly goes at once
   const viewport = {
     win: { document: { body: { classList: { contains: () => true } } }, matchMedia: () => ({ matches: true }) },
-    addEventListener: () => {},
+    addEventListener: (type, f) => (heard[type] = f),
   };
   const n = (id) => Number(id.slice(4));
   const taps = {
@@ -62,7 +63,7 @@ async function card() {
     changed: () => changes++,
   });
   const units = top.children[0].children.filter((c) => c.classList.contains('thoughtknot-cloud-unit'));
-  return { level, units, sent, PICKED, changes: () => changes, uninstall };
+  return { level, units, sent, PICKED, heard, changes: () => changes, uninstall };
 }
 
 // proves: level_click_back
@@ -81,6 +82,28 @@ test('the first tap on a cloud picks it, the second flies in until it fills the 
     level.goBack();
     assert.deepEqual(sent.at(-1), { scale: 0.1, x: 0, y: 0 }, 'back where it was');
     assert.equal(level.canGoBack(), false);
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: level_keys
+test('Tab reaches each cloud, which says what it is; Enter flies in and Backspace goes back', async () => {
+  const { units, sent, heard, uninstall } = await card();
+  try {
+    assert.equal(units[0].getAttribute('tabindex'), '0');
+    assert.equal(units[0].getAttribute('role'), 'button');
+    assert.match(units[0].getAttribute('aria-label'), /\d+ things, in .+\. Enter opens it/);
+    let stopped = 0;
+    const press = (key, target) => heard.keydown({ key, target, preventDefault: () => stopped++ });
+    press('Enter', units[0]);
+    assert.equal(sent.length, 1, 'Enter flies in');
+    press('Backspace', { tagName: 'INPUT' });
+    assert.equal(sent.length, 1, "Backspace in a text box is the box's own");
+    press('Backspace', units[0]);
+    assert.deepEqual(sent.at(-1), { scale: 0.1, x: 0, y: 0 }, 'Backspace goes back');
+    press('a', units[0]);
+    assert.equal(stopped, 2, 'other keys are left alone');
   } finally {
     uninstall();
   }
