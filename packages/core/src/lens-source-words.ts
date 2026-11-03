@@ -13,4 +13,6 @@ export const LENS_SOURCE_WORDS = {
   'lens.gap.unusual': '{property} {number} is unusual',
   'lens.gap.stale': 'not touched for months',
   'lens.gap.like': 'like {other}',
+  'bulk.label': { one: 'Set {property} on {count} thing', other: 'Set {property} on {count} things' },
+  'bulk.undo': 'Undo: {label}',
 } as const;
