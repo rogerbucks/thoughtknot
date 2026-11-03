@@ -523,7 +523,11 @@ describe('a table', () => {
     const { plain, g } = shown(`${TRIP},\n(leave)-[:THEN {by: 'train'}]->(back)`);
     const t = tableOf(plain, g);
     assert.deepEqual(t.columns, ['Thing', 'Kind', 'on']);
-    assert.deepEqual(t.rows[0], { key: 'leave', cells: ['Leave home', 'Event', '2026-09-01'] });
+    assert.deepEqual(t.rows[0], {
+      key: 'leave',
+      cells: ['Leave home', 'Event', '2026-09-01'],
+      numbers: [null, null, null],
+    });
     assert.equal(t.rows.length, 4);
     assert.deepEqual(t.links.at(-1), { index: 3, cells: ['Leave home', 'then', 'Back'], properties: 'by: train' });
   });
