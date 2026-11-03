@@ -6,7 +6,7 @@ import { formatCount, word } from '@thoughtknot/core';
 import type { Chosen, FacetIndex } from '../../facet-counts.ts';
 import { facetTotals } from '../../facet-totals.ts';
 import { totalSaid } from '../../table-totals.ts';
-import type { Measure, Total } from '../../facet-totals.ts';
+import type { Measure } from '../../facet-totals.ts';
 import { button } from '../button';
 
 /**
