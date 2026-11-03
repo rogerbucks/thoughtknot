@@ -168,8 +168,8 @@ function blockOn(m: DrawMark & { kind: 'box' }, of: string, c: Vec3, r: number, 
 }
 
 /**
- * The room between neighbours on a globe: so its surface holds each card in a square of room round it, and each ball,
- * with `balls`, in the room a ball has. A folded group's wide card among many small things gets its own room, so the
+ * The room between neighbours on a globe. Its surface holds each card in a square of room round it. With `balls`, it
+ * holds each ball in the room a ball has. A folded group's wide card among many small things gets its own room. So the
  * cards sit on the surface, never piled over it (review of 1 Nov 2026, finding 12). Things all one size get the same.
  */
 function cardSpacing(marks: readonly DrawMark[], balls: boolean): number {

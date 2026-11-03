@@ -2,7 +2,7 @@
 // the drawing's marks (space-globe.ts), and some diagram types draw no things or no links: Density draws a heat map,
 // Treemap and Containment draw boxes inside boxes. So the globe would be blank, or cards with no links. Where the
 // drawing has no things, the globe takes the graph's own things; where it has no links, the graph's own links. A drawing
-// that has them is laid as it is. The points where a big drawing merges its links are no things here: each run of
+// that has them is laid as it is. A big drawing merges its links at points, which are no things here. Each run of
 // links through them is one link from thing to thing. Host-free and pure.
 import type { DrawMark } from './drawing-marks.ts';
 import type { GraphDrawing } from './note-reading.ts';
@@ -42,8 +42,8 @@ export function globeMarks(drawn: readonly DrawMark[], drawing?: GraphDrawing): 
 }
 
 /**
- * `marks` with the points where a big drawing merges its links taken out (space-spread.ts). They are no things: on the
- * globe each took a thing's room, and crowded the folded groups' cards together over the front of it (review of 1 Nov
+ * `marks` with the points where a big drawing merges its links taken out (space-spread.ts). They are no things. On the
+ * globe each took a thing's room. So they crowded the folded groups' cards together over its front (review of 1 Nov
  * 2026, finding 12). Each run of links through them becomes one link from thing to thing, drawn as its last part is,
  * with its arrowhead.
  */
