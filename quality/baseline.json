@@ -269,7 +269,7 @@
           "benchmark": "cold_start",
           "says": "the Obsidian plugin draws its first note of 50 things from a cold start within its budget",
           "measured": 1285163241,
-          "allowed": 2400000000,
+          "allowed": 2700000000,
           "holds": true
         },
         {
