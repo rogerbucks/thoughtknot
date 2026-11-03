@@ -10,7 +10,6 @@
 // At most LABELS_MOST are painted. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
 import type { Block, SpaceMarks } from './space-view.ts';
-import { NAME_CEILING } from './view-types/type-scale.ts';
 
 /** A label to paint on the screen, at its pixel, and its size in pixels. `picked` marks the picked thing's name. */
 export interface ScreenLabel {
@@ -35,6 +34,12 @@ export const READABLE_LEAST = 11,
  * 1 Nov 2026, "the text hardly ever renders. Fix that, even if the text is ridiculously small" (space_names_always).
  */
 export const NAME_TINY = 4;
+/**
+ * The most a name is painted at as you come nearer, in pixels: the same ceiling 2D names stop at (type-scale.ts,
+ * NAME_CEILING). It is kept here, not imported, so the space view does not reach into the view types. A test holds them
+ * equal.
+ */
+export const NAME_CEILING = 16;
 /** How much larger the busiest thing's name is drawn than one with no links, as in 2D (readable-words.ts). */
 export const HUB_LARGER = 1.4;
 /** The size of the picked thing's name, at least. */
