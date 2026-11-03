@@ -1,4 +1,4 @@
-// The board picture itself (editor spec §45): one SVG with a title on every item and an outline that lists the board.
+// The board picture itself (editor spec §45, board_keyboard): one SVG with a title on every item and an outline that lists the board.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
