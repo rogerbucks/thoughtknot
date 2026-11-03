@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-svg.test.js",
+  "test": "the board picture > is one svg that holds each item’s text",
+  "seen_failing_first": false,
+  "evidence": "board-svg.ts was already covered by the board-a11y and board-view tests in the commit that added it; this file only gives it a test under its own name (CODE-7)"
+}
