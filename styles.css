@@ -4187,8 +4187,11 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-badge {
   position: absolute;
   inset-block-start: var(--gn-space-2);
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
+  /* centred in either reading direction, never pushed off the card */
+  inset-inline: 0;
+  inline-size: fit-content;
+  max-inline-size: 90%;
+  margin-inline: auto;
   padding: var(--gn-space-half-1) var(--gn-space-2);
   border-radius: var(--gn-radius-l);
   background: var(--gn-bg-alt);
@@ -4246,6 +4249,11 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-level-legend.is-hidden {
   display: none;
+}
+/* every control in the badge is at least 24 by 24 pixels, so a finger or a shaky hand can hit it (WCAG 2.5.8) */
+.thoughtknot-level-badge :is(button, select) {
+  min-width: 24px;
+  min-height: 24px;
 }
 .thoughtknot-level-chip {
   display: inline-flex;
