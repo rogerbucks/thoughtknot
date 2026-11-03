@@ -5,7 +5,8 @@
 import { formatCount, word } from '@thoughtknot/core';
 import type { Chosen, FacetIndex } from '../../facet-counts.ts';
 import { facetTotals } from '../../facet-totals.ts';
-import type { Measure, Total } from '../../facet-totals.ts';
+import { totalSaid } from '../../table-totals.ts';
+import type { Measure } from '../../facet-totals.ts';
 import { button } from '../button';
 
 /**
@@ -38,11 +39,7 @@ export function filterPanel(
 
   const totalled = new Map<string, HTMLElement>();
   let measure: Measure | undefined;
-  /** A total as words: the sum with its unit, or that there were no numbers, and how many things had none. */
-  const said = (t: Total, unit: string) => {
-    const sum = t.total === null ? word('massive.total-none') : `${formatCount(t.total)}${unit ? ` ${unit}` : ''}`;
-    return t.missing ? `${sum}, ${word('massive.total-missing', { count: t.missing })}` : sum;
-  };
+  const said = totalSaid;
   let keptTotal: HTMLElement | undefined;
   const recount = () => {
     for (const [facet, values] of index.counts(chosen))

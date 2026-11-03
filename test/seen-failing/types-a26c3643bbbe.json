@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/types.test.js",
+  "test": "a table > lists each thing with its kind and properties, and each link, in the order drawn",
+  "seen_failing_first": false,
+  "evidence": "Only the expected row shape changed to match the new numbers field, made in the commit after the code that added it."
+}

@@ -13,6 +13,7 @@ import { bindSizing, renderTableBar } from './table-sizing';
 import { bindPinch } from './table-pinch';
 import { keepPlace } from './table-place';
 import { bindCellEdits, type CellWrite } from './table-edit';
+import { bindTableTotals } from './table-totals-row';
 
 /** What a table is handed by its card. It opens a row as a tap does, and writes a cell where one can be written. */
 export interface TableHands {
@@ -117,6 +118,7 @@ export function renderTable(viewport: HTMLElement, t: DiagramTable, hands: Table
       cells: r.cells,
     })),
   );
+  if (t.rows.length) bindTableTotals(wrap, scroll, things, t); // the filters and the Total row (§57, table_view)
   const tables = [things];
   if (t.links.length)
     tables.push(
