@@ -101,8 +101,8 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       // a large graph's drawing is kept, so one opened again is drawn at once (curves_saved)
       const large = drawing.boxes.length > QUICK_LAYOUT;
       // a big live drawing not kept is shown first in rows, one pass over it, then as it settles (layout_live_loop).
-      // One laid out in no rows, a radial one's rings, is not: its rows would be swapped for rings a moment later,
-      // every thing jumping (Roger, 3 Nov 2026: nodes stay put)
+      // One laid out in no rows, such as a radial one's rings, is not. Its rows would turn into rings a moment later,
+      // and every thing would jump (Roger, 3 Nov 2026: nodes stay put)
       const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
       const rings = asked.some((d) => !d.own && /\blayout=/.test(d.dot));
       const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings;
