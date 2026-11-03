@@ -1,5 +1,5 @@
 // The filters and the totals of a graph drawn as a table (spec §57, table_view). A box above the table for each column
-// takes what rows to keep, and a Total row under the last row says what each number column adds up to over the rows
+// takes what rows to keep. A Total row under the last row says what each number column adds up to. It follows the rows
 // kept. A row that does not pass is hidden, never taken out, so sorting, the keys and the focus go on as they were.
 import { word } from '@thoughtknot/core';
 import type { DiagramTable } from '@thoughtknot/core';

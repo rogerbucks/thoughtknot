@@ -1,7 +1,8 @@
 // A graph drawn as a table, with calculated columns, filters and totals (editor spec §57, table_view).
 // - A calculated value is a column, and a Total row under the last row adds up each number column.
-// - A box for each column keeps the rows that pass it; the Total row follows the rows kept, and a row with no number is
-//   said, never counted as zero. Rows hidden by a filter stay in the table, so sorting and the keys go on as they were.
+// - A box for each column keeps the rows that pass it. The Total row follows the rows kept.
+// - A row with no number is said, never counted as zero.
+// - Rows hidden by a filter stay in the table, so sorting and the keys go on as they were.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
