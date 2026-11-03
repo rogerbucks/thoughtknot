@@ -38,8 +38,8 @@ export interface Totals {
   kept: Total;
 }
 
-/** A running total, kept in plain numbers so a pass over many things allocates nothing. */
-class Running {
+/** A running total, kept in plain numbers so a pass over many things allocates nothing. A table's totals use it too. */
+export class Running {
   sum = 0;
   counted = 0;
   missing = 0;
