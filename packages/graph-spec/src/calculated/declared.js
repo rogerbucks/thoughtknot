@@ -1,5 +1,5 @@
-// What a schema declares for calculated values (editor spec §57): the Calculated and Quantity things of a graph, and the
-// lookups the engine in calculated.js uses. Its Python twin is the top of graphspec/engine/calculated/calculated.py.
+// What a schema declares for calculated values (editor spec §57). It holds the Calculated and Quantity things of a
+// graph, and the lookups the engine in calculated.js uses. Its Python twin is the top of calculated.py.
 'use strict';
 
 const { Refusal } = require('../values/refusal.js');
