@@ -15,4 +15,8 @@ export const LENS_SOURCE_WORDS = {
   'lens.gap.like': 'like {other}',
   'bulk.label': { one: 'Set {property} on {count} thing', other: 'Set {property} on {count} things' },
   'bulk.undo': 'Undo: {label}',
+  'trail.empty': 'A trail with no step cannot be saved.',
+  'trail.path-refused': 'A path needs at least one step, and no step may hold a vertical bar between spaces.',
+  'watch.started': '{rule} now matches {things}.',
+  'watch.stopped': '{rule} no longer matches {things}.',
 } as const;
