@@ -1,5 +1,5 @@
-// Clouds drawn on the drawing (editor spec §68, level_clouds, level_roads): level-clouds-svg.ts. Far out, each group
-// shows as a named cloud under its things, with roads between clouds. Near in, every item shows as drawn.
+// Clouds drawn on the drawing (editor spec §68, level_clouds, level_roads, level_tags): level-clouds-svg.ts. Far out, each
+// group shows as a named cloud under its things, with roads between clouds. Near in, every item shows as drawn.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -81,6 +81,33 @@ test('far out the links between clouds run as roads with gates, and the item lin
       gates.every((g) => /^[→←⇄] .+ · \d+$/.test(g.textContent)),
       'each gate says where it goes',
     );
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: level_tags
+test("clouds' names and gates' signposts that would overlap are moved down, and the rest stay", async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { make } = await import('../src/display/graph-view/note-callouts.ts');
+    const { unclash } = await import('../src/display/graph-view/level-clouds-svg.ts');
+    const group = make('g', {});
+    const tag = (cls, x, y, words) => {
+      const t = make('text', { class: cls, x, y, 'font-size': 10 });
+      t.textContent = words;
+      return group.appendChild(t);
+    };
+    const money = tag('thoughtknot-cloud-name', 100, 50, 'Money · 6'),
+      gate = tag('thoughtknot-gate', 110, 52, '→ Health · 2'),
+      far = tag('thoughtknot-cloud-name', 900, 50, 'Health · 6');
+    unclash(group);
+    assert.equal(money.getAttribute('y'), '50', 'the higher one stays');
+    assert.equal(gate.getAttribute('y'), '62', 'the gate moves just below it');
+    assert.equal(far.getAttribute('y'), '50', 'one that overlaps none stays');
+    assert.equal(gate.getAttribute('x'), '110', 'never moved across');
   } finally {
     uninstall();
   }
