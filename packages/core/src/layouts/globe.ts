@@ -10,6 +10,11 @@
 // their size, a thing placed already keeps its spot exactly, and a new one starts beside a placed neighbour. Links run as arcs over the
 // surface, a little above it. Host-free and pure: the same graph gives the same globe every time.
 
+import { detailLevels } from '../detail-levels.ts';
+import type { GraphShape } from '../types-shape.ts';
+import { levelWays } from './globe-levels.ts';
+import { LEVELLED_FROM } from './level-seed.ts';
+
 /** A point in space. */
 export type GlobeVec = [number, number, number];
 
@@ -32,6 +37,13 @@ export interface Globe {
   radius: number;
   spots: Map<string, GlobeVec>;
 }
+
+/** The levels of `shape`, as its clouds find them (detail-levels.ts). */
+const levelsOfGlobe = (shape: GlobeShape) =>
+  detailLevels({
+    things: shape.things.map((t) => ({ key: t.key, text: t.key, kinds: [] })),
+    links: shape.links.map((l) => ({ from: l.from, to: l.to, type: '' })),
+  } as unknown as GraphShape);
 
 /** The way the pole faces: toward the camera as the space view opens, from the front and above. */
 export const GLOBE_FACING: GlobeVec = unit([0, -Math.cos(0.9), Math.sin(0.9)]);
@@ -59,6 +71,10 @@ export function globeSpots(shape: GlobeShape, options: GlobeOptions = {}): Globe
     : Math.max(LEAST_RADIUS, (options.spacing ?? GLOBE_SPACING) * Math.sqrt(n / (4 * Math.PI)));
   const near = neighbours(keys, shape.links);
   const order = walk(keys, near, options.centre);
+  // a big graph, laid out afresh: each subject in its own region of the globe, as its clouds show (globe_levels)
+  const ways = !options.previous?.size && n > LEVELLED_FROM ? levelWays(levelsOfGlobe(shape), GLOBE_FACING) : null;
+  if (ways && ways.size === n)
+    return { radius, spots: new Map(order.map((k) => [k, scale(ways.get(k) as GlobeVec, radius)])) };
   // the spiral's frame: its pole is the way the globe faces
   const [side, up] = frameOf(GLOBE_FACING);
   const dir = new Map<string, GlobeVec>();
