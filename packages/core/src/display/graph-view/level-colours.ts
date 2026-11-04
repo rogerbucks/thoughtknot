@@ -50,3 +50,20 @@ export function spotlight(svg: SVGSVGElement, levels: readonly DetailLevel[], ke
   for (const u of Array.from(svg.querySelectorAll('g.thoughtknot-cloud-unit')))
     u.classList.toggle(SPOT, !!key && u.getAttribute('data-subject') === key);
 }
+
+/**
+ * Gives each thing in `svg` its subject's hue (level_thing_hue), so near in it keeps the colour its dot had far out.
+ * Roger chose this on 4 Nov 2026 for 2D, 3D and the globe; the views in space read it from the drawing. A thing a rule
+ * colours keeps its own look. With no levels, every thing keeps the drawing's own colours.
+ */
+export function tintThings(svg: Element, levels: readonly DetailLevel[] | null): void {
+  const subject = new Map<string, string>();
+  for (const g of levels && levels.length > 1 ? (levels[0]?.groups ?? []) : [])
+    for (const t of g.things) subject.set(t, g.key);
+  for (const g of Array.from(svg.querySelectorAll('g.node'))) {
+    const key = subject.get(g.getAttribute('data-key') ?? '');
+    const hue = key === undefined || g.classList.contains('thoughtknot-look') ? null : String(hueOf(levels ?? [], key));
+    if (hue === null) g.removeAttribute('data-hue');
+    else if (g.getAttribute('data-hue') !== hue) g.setAttribute('data-hue', hue);
+  }
+}

@@ -12,7 +12,7 @@ import { roadsAt } from '../../level-roads.ts';
 import type { Cloud, Rect } from '../../level-clouds.ts';
 import { spreadTags, tagWidth } from '../../level-tags.ts';
 import { word } from '../../words.ts';
-import { hueOf, subjectOf } from './level-colours.ts';
+import { hueOf, subjectOf, tintThings } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
 import type { GraphShape } from '../../types-shape.ts';
@@ -120,6 +120,7 @@ export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefine
   const top = svg.querySelector('g.graph');
   const levels = drawing ? levelsOf(drawing, g) : [],
     shown = shownOf(svg);
+  tintThings(svg, levels); // each thing in its subject's colour (level_thing_hue)
   if (!top || !shown || levels.length < 2) {
     shownAt.delete(svg);
     for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
