@@ -67,6 +67,11 @@ test('far out in space, the clouds of the level that fits are drawn on a layer o
       1,
       'drawn again on the same layer',
     );
+    // drawn again in its drawing group, never in the blurs' defs, where nothing shows and the old clouds would stay
+    const defs = layer.children.find((c) => c.tagName.toLowerCase() === 'defs');
+    assert.equal(defs?.querySelectorAll('g.thoughtknot-cloud-unit').length ?? 0, 0, 'none hidden in the defs');
+    const graph = layer.children.find((c) => c.classList.contains('graph'));
+    assert.equal(graph.querySelectorAll('g.thoughtknot-clouds').length, 1, 'one set of clouds, the new one');
   } finally {
     uninstall();
   }

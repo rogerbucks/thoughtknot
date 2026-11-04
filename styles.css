@@ -3990,6 +3990,8 @@ body.thoughtknot-easier-reading
   inset: 0;
   width: 100%;
   height: 100%;
+  /* drawn in the view's own pixels: the flat drawing's pan never shifts it off the things it rings */
+  transform: none;
   pointer-events: none;
 }
 .thoughtknot-space-levels * {

@@ -8,6 +8,7 @@ import {
   cardAt,
   cardsOnScreen,
   clusterFilling,
+  farFrame,
   fills,
   frameOf,
   isCluster,
@@ -133,6 +134,19 @@ test('with cards the graphics chip paints only the lines, and only link words fl
   assert.equal(frame.ring, null);
   const balls = spreadSpace(MARKS).space;
   assert.equal(frameOf(balls, matrix, W, H, null).shapes, balls, 'balls are painted as before');
+});
+
+// proves: level_look
+test('far out, where the clouds are marked far, the frame paints no card, name or link; near in it is whole', () => {
+  const { space, matrix } = seen();
+  const frame = frameOf(space, matrix, W, H, null);
+  const view = (far) => ({ querySelector: (q) => (far && q === 'svg.thoughtknot-far' ? {} : null) });
+  assert.equal(farFrame(frame, view(false)), frame, 'near in, as before');
+  const far = farFrame(frame, view(true));
+  assert.ok(frame.cards.length && frame.shapes.lines.length, 'the frame had cards and lines');
+  for (const k of ['cards', 'faces', 'arrows', 'labels', 'shafts', 'outlines']) assert.deepEqual(far[k], [], k);
+  for (const k of ['blocks', 'lines', 'labels', 'arrows']) assert.deepEqual(far.shapes[k], [], k);
+  assert.equal(far.ring, frame.ring, 'the picked ring stays');
 });
 
 // proves: select_links_stronger

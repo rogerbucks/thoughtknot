@@ -21,7 +21,8 @@ export function levelSpace(screen: SpaceScreen, drawing: GraphDrawing | undefine
     el.appendChild(layer);
   }
   layer.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  const top = layer.firstElementChild ?? layer;
+  // its drawing group, not the blurs' defs put in before it once the clouds are drawn
+  const top = Array.from(layer.children).find((c) => c.classList.contains('graph')) ?? layer;
   const levels = drawing ? levelsOf(drawing, g) : [];
   const badge = levelsInto(layer, top, levels, drawing, screen.boxes(), {
     k: 1,
