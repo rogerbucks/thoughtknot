@@ -106,6 +106,9 @@ window.paintCity = async (count) => {
   }
   return out;
 };
+// the view's size, as styles.css sets it: unstyled, its canvases stack and it grows past its frame and the camera's fit
+const SIZED = { textContent: '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }' };
+const sizedView = () => Object.assign(document.head.appendChild(document.createElement('style')), SIZED);
 // a drawing as Graphviz writes it: a group holding one of two things, and a link between them. With \`marked\`, the
 // card's focus has faded Ada and hidden Bob, with the link that names him
 window.readSvg = (marked = false) => {
@@ -137,9 +140,7 @@ window.readSvg = (marked = false) => {
 // link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it.
 // With \`cluster\`, Bob is a folded group's box instead: picked again, it tells the card to open it
 window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) => {
-  // the view's size, as styles.css sets it: unstyled, its canvases stack and it grows past its frame, out of the camera's fit
-  const sized = document.head.appendChild(document.createElement('style'));
-  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const sized = sizedView();
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -158,8 +159,7 @@ window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) =>
     g.removeAttribute('data-key');
     g.id = 'fold_group_1';
     g.setAttribute('data-fold', 'group:Team');
-    // so the only thing a click opens is the group: a quick second click on Ada, found first, would fly to her
-    for (const g of holder.querySelectorAll('[data-link], [data-key="ada"]')) g.remove();
+    for (const g of holder.querySelectorAll('[data-link], [data-key="ada"]')) g.remove(); // the group alone opens
   }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
@@ -191,16 +191,13 @@ window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) =>
     }
   const said = view.querySelector('.thoughtknot-space-said')?.textContent;
   opened?.close();
-  root.remove();
-  sized.remove();
+  for (const el of [root, sized]) el.remove();
   return { ...found, said, keys: [...keys] };
 };
 // the same view: a first click on a thing only picks it, and the view stays still. Another click on it, a moment
 // later, turns the view to face it, so it is then in the middle
 window.clickAgain = async () => {
-  // the view's size, as styles.css sets it, so it holds still while it is looked at
-  const sized = document.head.appendChild(document.createElement('style'));
-  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const sized = sizedView();
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -249,8 +246,7 @@ window.clickAgain = async () => {
 // the view's mini-map (space_mini_map), and the drawing laid out again gliding in it (layout_glide): Bob moved on the
 // page, the card marks its drawing again, and Bob's footprint passes through the spots between, a frame at a time
 window.miniInSpace = async () => {
-  const sized = document.head.appendChild(document.createElement('style'));
-  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const sized = sizedView();
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
