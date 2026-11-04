@@ -204,3 +204,81 @@ test('a thing picked on the globe turns to face the camera square on, in the mid
     assert.equal(dived.distance, g.radius * GLOBE_DIVE, 'a dive comes near enough for its details');
   }
 });
+
+/** The graph as the card reads it: things a to d, a linked to each of the others, as a hub. */
+const GRAPH = {
+  boxes: ['a', 'b', 'c', 'd'].map((key) => ({ key, kind: 'Idea', text: key.toUpperCase() })),
+  links: ['b', 'c', 'd'].map((to) => ({ from: 'a', type: 'HAS', reading: 'has', to })),
+};
+
+// proves: globe_view
+test('where its type draws no things or no links, the globe lays the graph’s own (Density, Treemap)', () => {
+  // Density: a heat map, its squares drawing no thing
+  const heat = [0, 1, 2].map((i) => ({
+    id: `h${i}`,
+    kind: 'box',
+    style: 'svg.2',
+    x: i * 10,
+    y: 0,
+    width: 10,
+    height: 10,
+  }));
+  const blank = new GlobeLayout().lay(heat, null, undefined, GRAPH);
+  assert.deepEqual(blank.blocks.map((b) => b.of).sort(), ['a', 'b', 'c', 'd'], 'each thing of the graph is on it');
+  assert.equal(blank.lines.length, 3, 'and each of its links');
+  assert.equal(blank.labels.find((l) => l.of === 'a')?.text, 'A', 'each named as the graph names it');
+  // Treemap: its things drawn, no links between them; the drawn cards are kept as drawn
+  const tiles = ['a', 'b', 'c', 'd'].flatMap((k) => thing(k));
+  const tree = new GlobeLayout().lay(tiles, null, undefined, GRAPH);
+  assert.equal(tree.blocks.length, 4, 'no thing drawn twice');
+  assert.ok(
+    tree.blocks.every((b) => b.card?.width === 80),
+    'each card the size its type drew it',
+  );
+  assert.deepEqual(tree.lines.map((l) => `${l.from}>${l.to}`).sort(), ['a>b', 'a>c', 'a>d'], 'the graph’s links');
+  // a drawing with its own links is laid as drawn
+  const drawn = new GlobeLayout().lay(HUB, 'hub', undefined, GRAPH);
+  assert.equal(drawn.lines.length, 20, 'only the links it draws');
+  assert.ok(!drawn.blocks.some((b) => b.of === 'a'), 'only the things it draws');
+});
+
+// proves: globe_view
+test('folded groups among many small things get room for their cards on the globe’s surface (700 things)', () => {
+  // as a big graph draws it: each thing a dot, each folded hub a wide card holding its name and count
+  const dot = (key) => ({ id: `t:${key}`, kind: 'box', style: 'svg.0', of: key, x: 0, y: 0, width: 6, height: 6 });
+  const fold = (i) => ({ ...dot(`fold_group_${i}`), name: `Hub ${i} · 30 things`, width: 300, height: 60 });
+  const big = [
+    ...Array.from({ length: 40 }, (_, i) => dot(`d${i}`)),
+    ...Array.from({ length: 10 }, (_, i) => fold(i)),
+    ...Array.from({ length: 40 }, (_, i) => link(`f${i}`, `fold_group_${i % 10}`, `d${i}`, 'has')),
+  ];
+  for (const balls of [false, true]) {
+    const { space } = globeSpace(big, undefined, undefined, undefined, balls);
+    const r = space.globe.radius,
+      folds = space.blocks.filter((b) => b.of.startsWith('fold_group_'));
+    assert.equal(folds.length, 10);
+    for (const b of folds) assert.ok(Math.abs(length(middle(b)) - r) < 1e-6, `${b.of} sits on the globe`);
+    // each card's own square of room, as the globe gives a thing, fits on its surface with the others'
+    const room = folds.reduce((s, b) => s + (Math.max(b.card.width, b.card.height) * 1.3) ** 2, 0);
+    assert.ok(4 * Math.PI * r * r >= room, `${balls ? 'balls' : 'cards'}: the globe has room for its folded cards`);
+  }
+});
+
+// proves: globe_view
+test('the points where a big drawing merges its links are no things on the globe: its links join the things', () => {
+  // as a big graph draws merged links: a's link runs into a trunk, which splits to b and to c
+  const point = (key) => ({ id: `t:${key}`, kind: 'box', style: 'svg.0', of: key, x: 0, y: 0, width: 6, height: 6 });
+  const merged = [
+    ...['a', 'b', 'c'].flatMap((k) => thing(k)),
+    point('trunk_1_in'),
+    point('trunk_1_out'),
+    { ...link('m0', 'a', 'trunk_1_in'), headless: true },
+    { ...link('m1', 'trunk_1_in', 'trunk_1_out'), headless: true },
+    link('m2', 'trunk_1_out', 'b', 'has'),
+    link('m3', 'trunk_1_out', 'c', 'has'),
+  ];
+  const space = new GlobeLayout().lay(merged, 'a');
+  assert.deepEqual(space.blocks.map((b) => b.of).sort(), ['a', 'b', 'c'], 'only the things are on the globe');
+  assert.deepEqual(space.lines.map((l) => `${l.from}>${l.to}`).sort(), ['a>b', 'a>c'], 'each link thing to thing');
+  assert.equal(space.arrows.length, 2, 'each with its arrowhead');
+});

@@ -2,7 +2,7 @@
 // The sentences are the core's own `textVersion`, the same the Obsidian plugin gives a screen reader, so the two hosts
 // say one thing. It is a labelled section of the page, never hidden, and it stands in alone when the drawing cannot be
 // made. It is made again with every drawing, so it is always the graph as the note now holds it.
-import { textVersion } from '@thoughtknot/core';
+import { gqlBlocks, readNote, textVersion } from '@thoughtknot/core';
 import type { GraphDrawing } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 
@@ -26,4 +26,19 @@ export function textVersionSection(doc: Document, drawing: GraphDrawing): HTMLEl
   section.setAttribute('aria-labelledby', heading.id);
   section.append(heading, list);
   return section;
+}
+
+/**
+ * Keeps the first graph's text version at the end of `parent`. Each call puts it there again from `text()`, the note
+ * as it is now. A note with no graph has none.
+ */
+export function textVersionKept(parent: HTMLElement, text: () => string): () => void {
+  let words: HTMLElement | null = null;
+  return () => {
+    words?.remove();
+    const first = readNote(gqlBlocks(text()).map((b) => b.text))
+      .graphs.values()
+      .next().value;
+    words = first ? parent.appendChild(textVersionSection(parent.ownerDocument, first)) : null;
+  };
 }

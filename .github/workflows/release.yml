@@ -35,11 +35,15 @@ jobs:
     needs: on-main
     # pinned, as the instruction counts are held only to counts from the same machine; and bounded, as Cachegrind is slow
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     # The quality metrics run the whole suite at once, twice, as the fresh clone does. That passed the default 4 GB
-    # ceiling (4.2 GB, 22 Oct 2026), so it gets CI's ceiling too.
+    # ceiling (4.2 GB, 22 Oct 2026), so it gets CI's ceiling too. The suite with coverage now runs past the default
+    # 20 minutes, which stopped the second run on 3 Nov 2026 and listed every test as flaky, so each run gets the
+    # 40 minutes CI's coverage shards get.
     env:
       THOUGHTKNOT_TEST_MEMORY_MB: 8192
+      THOUGHTKNOT_RUN_MINUTES: 40
+      THOUGHTKNOT_TEST_MINUTES: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -229,6 +233,9 @@ jobs:
       # The JavaScript library as two packages, installed from the release and never published to npm (Q-02)
       - name: Build the library's packages, the reader, checker and layout, and the core
         run: node scripts/library-release.mjs --out .
+      # The Copilot Cowork skill as one .skill file, built from the same library; never to a store
+      - name: Build the Copilot Cowork skill
+        run: node scripts/cowork-release.mjs --out .
       # The Python library as a wheel, installed with pip from the release (risk API-6)
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
@@ -240,7 +247,7 @@ jobs:
       - name: The software bill of materials
         run: npm sbom --sbom-format cyclonedx > "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json"
       - name: Checksums for every asset
-        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-cowork-$GITHUB_REF_NAME.skill" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" > SHA256SUMS
       - name: The Graphviz version inside the engine, for the release notes
         run: node scripts/engine-version.mjs --notes engine-notes.md
       - name: The changelog since the last release, at the top of the release notes
@@ -257,6 +264,7 @@ jobs:
             THIRD_PARTY_NOTICES.md
             graph-spec-libraries-*.tar.gz
             thoughtknot-*.tgz
+            thoughtknot-*.skill
             graph_spec-*.whl
             thoughtknot-sbom-*.cdx.json
             SHA256SUMS
@@ -291,9 +299,10 @@ jobs:
             release/styles.css
             release/graph-spec-libraries-*.tar.gz
             release/thoughtknot-*.tgz
+            release/thoughtknot-*.skill
             release/graph_spec-*.whl
             release/thoughtknot-sbom-*.cdx.json
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes
+        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-cowork-$GITHUB_REF_NAME.skill" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes

@@ -1,0 +1,6 @@
+{
+  "file": "test/ux-journey.test.js",
+  "test": "every host: the first-run journey, its counts held > every host has its journey: a new host with none fails",
+  "seen_failing_first": false,
+  "evidence": "The test walks every host folder it finds, so it passed before the Cowork entry was added to its list of libraries; the entry only keeps the count right."
+}

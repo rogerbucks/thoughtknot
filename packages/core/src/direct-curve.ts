@@ -2,6 +2,10 @@
 // It has its tip at either end and a place for its words. The Python library draws the same
 // curve (graphspec/style/direct_curve.py). Host-free and pure.
 import type { MarkPoint } from './plugin-diagrams.ts';
+import type { Work } from './layout-work.ts';
+
+/** The least room between two boxes, in pixels. */
+const BOX_GAP = 12;
 
 /** A box being placed: its key, its middle and its half width and height. */
 export interface Placed {
@@ -12,6 +16,8 @@ export interface Placed {
   hh: number;
   /** The group it must stay inside, as its edges, when it is in one. */
   inside?: { x0: number; y0: number; x1: number; y1: number };
+  /** Where a person saw it last: it stays there, and a box over it moves off it instead (things_stay_put). */
+  held?: true;
 }
 
 /** A direct link's curve: its points, where its tip is at either end, and where its words go. */
@@ -89,4 +95,58 @@ function edgeOf(b: Placed, p: MarkPoint): MarkPoint {
     dy = p[1] - b.y;
   const k = Math.min(dx === 0 ? Infinity : b.hw / Math.abs(dx), dy === 0 ? Infinity : b.hh / Math.abs(dy), 1);
   return [b.x + dx * k, b.y + dy * k];
+}
+
+/** Pushes apart boxes that overlap, the way that parts them least, each pair counted in `work`: says how many moved. */
+export function apart(boxes: Placed[], work: Work): number {
+  let moves = 0;
+  const sorted = [...boxes].sort((p, q) => p.x - p.hw - (q.x - q.hw));
+  for (let i = 0; i < sorted.length; i++) {
+    const p = sorted[i] as Placed;
+    for (let j = i + 1; j < sorted.length; j++) {
+      if (!work.take(1)) return moves;
+      const q = sorted[j] as Placed;
+      if (q.x - q.hw >= p.x + p.hw + BOX_GAP) break;
+      const ox = p.hw + q.hw + BOX_GAP - Math.abs(q.x - p.x),
+        oy = p.hh + q.hh + BOX_GAP - Math.abs(q.y - p.y);
+      if (ox <= 0 || oy <= 0) continue;
+      if (p.held && q.held) continue;
+      // one held stays: the other goes beside it, the nearest way that keeps it on the drawing (things_stay_put)
+      if (p.held || q.held) offHeld(p.held ? q : p, p.held ? p : q);
+      // else each moves half the overlap, along the way that is shorter
+      else if (oy <= ox) {
+        const s = (q.y >= p.y ? 1 : -1) * (oy / 2);
+        moveTo(p, p.x, p.y - s);
+        moveTo(q, q.x, q.y + s);
+      } else {
+        const s = (q.x >= p.x ? 1 : -1) * (ox / 2);
+        moveTo(p, p.x - s, p.y);
+        moveTo(q, q.x + s, q.y);
+      }
+      moves++;
+    }
+  }
+  return moves;
+}
+
+/** Puts box `b` beside the box `held`, the nearest way round it that keeps `b` off the drawing's top and left edges. */
+function offHeld(b: Placed, held: Placed): void {
+  const [dx, dy] = [held.hw + b.hw + BOX_GAP, held.hh + b.hh + BOX_GAP];
+  const ways: [number, number][] = [
+    [held.x + dx, b.y],
+    [held.x - dx, b.y],
+    [b.x, held.y + dy],
+    [b.x, held.y - dy],
+  ];
+  const fits = ways.filter(([x, y]) => x >= b.hw && y >= b.hh);
+  const near = ([x, y]: [number, number]) => Math.hypot(x - b.x, y - b.y);
+  const [x, y] = (fits.length ? fits : ways).reduce((m, w) => (near(w) < near(m) ? w : m));
+  moveTo(b, x, y);
+}
+
+/** Puts box `b`'s middle at (`x`, `y`), kept inside its group. */
+export function moveTo(b: Placed, x: number, y: number): void {
+  const g = b.inside;
+  b.x = g ? Math.min(Math.max(x, g.x0 + b.hw), g.x1 - b.hw) : x;
+  b.y = g ? Math.min(Math.max(y, g.y0 + b.hh), g.y1 - b.hh) : y;
 }

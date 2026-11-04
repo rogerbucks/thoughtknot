@@ -113,6 +113,8 @@ export interface GraphDrawing {
   live?: true;
   /** Each thing's spot as the plug-in's layout its options choose placed it (§68, layout_plugins); none, not yet. */
   placed?: Record<string, [number, number]>;
+  /** Each thing's spot as its card showed it last, for our own engine to keep it there (§68, things_stay_put). */
+  kept?: Record<string, [number, number]>;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */

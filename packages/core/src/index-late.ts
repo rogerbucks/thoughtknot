@@ -83,3 +83,15 @@ export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-
 export { Permissions, readable, type Guarded } from './permissions.ts';
 export * from './index-pictures.ts';
 export { savedExploreFor, type ExploreSave, type SavedExplore } from './explore-saved.ts';
+// editing a thing where it is drawn, for the Copilot Cowork skill (§46, cowork_same_bytes)
+export {
+  addedNear,
+  deleted,
+  linkedTo,
+  propertySet,
+  quickLine,
+  renamed,
+  type BlockEdit,
+  type LineWritten,
+  type ThingAdded as ThingAddedNear,
+} from './thing-edits.ts';

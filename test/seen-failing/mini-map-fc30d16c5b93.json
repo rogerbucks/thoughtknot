@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/mini-map.test.js",
+  "test": "mini_map: shown when the drawing is bigger than its view > in 3D the pad rides above the sheet on a phone",
+  "seen_failing_first": false,
+  "evidence": "Only its phone help assertion was removed with the help moving into the pad; the pad placement it checks is unchanged"
+}

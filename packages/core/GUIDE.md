@@ -650,6 +650,27 @@ never data.
     whole numbers. They are also a link to a thing that is gone, or a link that is not CONNECTS. Whatever can be read stays on the board.
   - `writeBoard` writes a board in one fixed form, so the same board is always the same bytes.
   - `moveItem` changes only the moved item's own text, so notes and comments in the block stay as they were.
+- `board-svg.ts` — a board drawn and said.
+  - `boardSvg` draws a board as one SVG picture in the palette's colours, lower layers first. Given a view, it draws
+    only the items in it (board_speed). Each item carries `data-item`, so a host can tell what was tapped.
+  - `itemSaid` says an item's kind, text and what it joins. It is each item's title, for a screen reader.
+  - `boardOutline` lists the whole board as text, top to bottom, with what a frame holds under it.
+
+#### Editing and opening a board
+
+- `board-edit.ts` — a board edited by its text (board_keyboard).
+  - `boardEdit` makes one change: a move, a size, new text, an item made or taken out, or two items joined.
+  - A move, size or text change rewrites that item alone. The other changes write the board in its fixed form.
+  - A change to the board's shape is refused while the block holds a problem, so nothing unread is lost.
+  - A locked item is never moved, sized or taken out. `boardEditInNote` makes the change in a whole note.
+  - `newItem` places a new item in free room beside the one in focus, and moves no other item.
+- `board-keys.ts` — a board worked by the keyboard alone. `boardKey` takes a key and says what it does.
+  - Tab goes from item to item. The arrows move, Alt and the arrows size, and N makes a sticky note.
+  - Enter edits text, C joins two items, and Delete takes one out. Each step says what happened, in words.
+- `display/board/board-view.ts` — `showBoard` opens a board in a host, as Obsidian and the browser page do.
+  - It pans, zooms and pinches with the core's `Zoom`, the gestures of a drawing. A mouse or pen drags an item.
+  - The keys are `boardKey`'s, said in a live region, with the outline under the board.
+  - After each edit the board is drawn again in place, and the view stays where it was.
 
 #### Drawings on a graph (editor spec §70)
 
@@ -782,6 +803,15 @@ never data.
   `unusualNumbers`, `stale` and `nearDuplicates`. Each reads the graph and names things; none changes it.
 - `compare-sets.ts` and `working-set.ts` — two sets compared into only-one, only-other and both (§60). Things pinned
   into a working set make a graph of just those things and the links between them.
+- `group-by-sources.ts` — grouping an overview by a look or by a lens bucket, beside `group-by.ts` (§60, discover_group_by).
+- `bulk-edit.ts` — one property set on every thing a filter keeps. `bulkPlan` lists the changes to read first. `applyBulk`
+  writes them and gives the plan that undoes them (§60, discover_bulk_edit).
+- `ask-plain.ts` — a plain question turned by an AI into a checked read-only query, shown with its count before it runs
+  (§60, discover_ask_plain). It uses `matchIds` from `ai-query.ts`, so the counting and the running are one code.
+- `watch-rule.ts` — a watched bucket of a lens rule: each look at the graph gives at most one notice (§60).
+- `group-names.ts` — names an AI suggests for groups. They wait, and change nothing until a person applies one (§60).
+- `saved-trail.ts` — a trail saved as a lens, or as a path that replays each step (§60, discover_saved_trail).
+- `as-at.ts` — a graph as it was on a chosen day, on recorded or real-world time, with what came and went since (§60).
 
 #### Making a rule from the card
 
@@ -1950,6 +1980,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     and the rest.
   - `view-options.ts` is what a card is given.
   - Each module's purpose is its opening comment, and the Obsidian guide describes them by feature.
+- `src/display/board/` — a whiteboard opened in a host: `board-view.ts` (`showBoard`). See "Reading and writing a board".
 - `src/display/properties/` — the inspector's property rows, type menu (through the host) and list chips.
 - `src/display/proposals/` — the proposal strip and the marks on the drawing.
 - `src/display/export/` — the Export form (`export-form.ts`) and the types it and the host share (`export-types.ts`).

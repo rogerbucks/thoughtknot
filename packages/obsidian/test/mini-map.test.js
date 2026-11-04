@@ -114,21 +114,28 @@ describe('mini_map: shown when the drawing is bigger than its view', () => {
   });
 
   // design review, 1 Nov 2026: in 3D the help line ran under the mini-map. On a phone the sheet hid the pad
-  test('in 3D the help line sits above the mini-map, or on a phone at the top, and the pad rides above the sheet', () => {
+  test('in 3D the pad rides above the sheet on a phone', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
     const ruleOf = (sel) =>
       new RegExp(`(?:^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-    const above = ruleOf(
-      '.thoughtknot-space-view:has(> .thoughtknot-mini-map:not([hidden])) > .thoughtknot-space-help',
-    );
-    assert.match(above, /inset-block-end:[^;]*var\(--thoughtknot-space-mini/, 'above the mini-map, by its height');
     assert.match(ruleOf('.thoughtknot-space-pad'), /inset-block-end:\s*calc\(var\(--thoughtknot-sheet, 0px\)/);
-    const phone = ruleOf(
-      '.thoughtknot-view:has(.thoughtknot-phone-sheet) .thoughtknot-space-view > .thoughtknot-space-help',
-    );
-    assert.match(phone, /inset-block-start:/, 'on a phone, the help line at the top');
     for (const height of ['is-peek', 'is-half'])
       assert.match(ruleOf(`.thoughtknot-view:has(.thoughtknot-phone-sheet.${height})`), /--thoughtknot-sheet:/, height);
+  });
+
+  // adversarial review, 1 Nov 2026 (finding 11): the 3D help line was cut off behind the mini-map and the pad. Roger,
+  // 3 Nov 2026: put it inside the pad
+  // proves: space_help_clear
+  test('in 3D the help is inside the pad, above its buttons, and folds with it', () => {
+    const css = readFileSync(`${root}styles.css`, 'utf8');
+    const src = readFileSync(`${root}packages/core/src/display/graph-view/space-view-pad.ts`, 'utf8');
+    assert.match(src, /dock\.el\.insertBefore\(help, dock\.body\)/, 'the help goes in the pad, before its buttons');
+    assert.doesNotMatch(
+      css,
+      /\.thoughtknot-space-help\s*\{[^}]*position:\s*absolute/,
+      'it no longer lies over the view',
+    );
+    assert.match(css, /\.thoughtknot-space-pad\.is-folded > \.thoughtknot-space-help/, 'folded, the pad hides it');
   });
 });
 

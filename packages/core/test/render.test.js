@@ -245,3 +245,54 @@ describe('long types fit a screen (§68, layout_types_screen_shaped)', () => {
     );
   });
 });
+
+/** A timeline of `days` days, two things on each, each linked to one of the day before: Graphviz lays it out in a strip. */
+const dated = (days) => {
+  const day = (i) => new Date(Date.UTC(2026, 0, 1) + i * 86400000).toISOString().slice(0, 10);
+  const things = Array.from({ length: days * 2 }, (_, i) => {
+    const d = Math.floor(i / 2);
+    const link = d ? `, (t${i})-[:AFTER]->(t${(d - 1) * 2})` : '';
+    return `(t${i}:Event {name: 'Day ${String(d).padStart(2, '0')} ${i % 2 ? 'b' : 'a'}', on: DATE '${day(d)}'})${link}`;
+  });
+  const texts = [`// graph: g\n${things.join(',\n')}`, `// graph: g_style · STYLE g\n(d1:Diagram {type: 'timeline'})`];
+  const reading = readNote(texts);
+  return styledDrawing(reading.graphs.get('g'), readStyle(texts, 'g', reading).style, reading.world.g);
+};
+
+describe('a long timeline wraps its days into rows (§68, timeline_wraps_days)', () => {
+  // proves: timeline_wraps_days
+  test("a timeline of forty days is drawn near a screen's shape, its days still read in order", async () => {
+    const engine = await loadEngine();
+    const drawn = draw(dated(40), engine);
+    const off = Math.abs(Math.log(drawn.width / drawn.height / SCREEN));
+    assert.ok(off <= Math.log(2), `the timeline is ${(drawn.width / drawn.height).toFixed(2)} wide for each 1 tall`);
+    // each day's first name, where it is drawn. Day by day it goes on to the right, or starts a row below
+    const spots = [...drawn.svg.matchAll(/<text[^>]* x="([-\d.]+)" y="([-\d.]+)"[^>]*>Day (\d\d) a<\/text>/g)]
+      .map(([, x, y, d]) => ({ x: Number(x), y: Number(y), d: Number(d) }))
+      .sort((p, q) => p.d - q.d);
+    assert.equal(spots.length, 40);
+    let rows = 1;
+    for (let d = 1; d < 40; d++) {
+      const [was, now] = [spots[d - 1], spots[d]];
+      if (now.x > was.x) continue;
+      rows++;
+      assert.ok(now.y > was.y, `day ${d} starts a row below day ${d - 1}`);
+    }
+    assert.ok(rows > 1, 'the days are wrapped into more than one row');
+    // the same drawing each time, so nothing moves when it is drawn again (things_stay_put)
+    assert.equal(draw(dated(40), engine).svg, drawn.svg);
+  });
+
+  test("a short timeline that already fits a screen's shape is not wrapped", async () => {
+    const engine = await loadEngine();
+    const drawing = dated(3);
+    const laid = directions(drawing);
+    assert.equal(
+      draw(drawing, engine).svg,
+      chosen(
+        laid,
+        laid.map((d) => svgOf(engine, d.dot, drawing.routing, d.own)),
+      ).svg,
+    );
+  });
+});

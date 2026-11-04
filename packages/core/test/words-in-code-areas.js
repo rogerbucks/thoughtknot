@@ -112,6 +112,7 @@ export const KEPT = {
     '  // layout lanes off',
     '  // layout step {}',
     '  // layout spots {}',
+    '  // layout kept {}',
   ],
   // the steps of work a grid matches a note's values against, to order its columns; never shown, the note's own are
   'packages/core/src/view-types/grid-view.ts': ['to do', 'in progress', 'in review'],

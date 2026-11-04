@@ -6,6 +6,7 @@
 // View menu, Find, filter, full screen and details all work on it as on the flat drawing. Fit and zoom move its camera.
 // It stays open as the View menu lays the drawing out again, and as the type changes (type-place.ts).
 import { propertiesOf, spaceMode, word } from '@thoughtknot/core';
+import type { GraphDrawing } from '@thoughtknot/core';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { asDrawnFor } from '../../space-spread.ts';
 import type { SpaceMove } from '../../space-controls.ts';
@@ -148,6 +149,7 @@ export class SpaceSwitch {
       globe: mode === 'globe',
       centre: this.centre, // an exploration's centre faces you on the globe (globe_explore_centre)
       details: (key) => this.details(key),
+      drawing: () => this.drawing(), // its own things and links, where its type draws none (globe_view)
       asDrawn: asDrawnFor(this.says().diagram?.choice),
       layout: () => this.says().switches?.state.layout,
       miniMap: () => this.says().aids?.miniMap ?? 'off',
@@ -214,6 +216,12 @@ export class SpaceSwitch {
       .map((p) => `${p.key}: ${p.value}`);
   }
 
+  /** The graph as the card reads it: the globe lays its things and links where the drawing's type draws none. */
+  private drawing(): GraphDrawing | undefined {
+    const { reading, graph } = this.says();
+    return graph === undefined ? undefined : reading?.graphs.get(graph);
+  }
+
   /** The button says how the drawing is shown now, and is pressed while it is in space. */
   private label(): void {
     const b = this.button;
@@ -221,6 +229,9 @@ export class SpaceSwitch {
     const now = word(WORDS[MODES.indexOf(this.now)] ?? 'bar.space-flat');
     b.setAttribute('aria-label', `${word('bar.space')}: ${now}`);
     b.setAttribute('aria-pressed', String(this.now !== null));
-    b.querySelector<HTMLElement>('.thoughtknot-badge-text')?.setText(now);
+    const text = b.querySelector<HTMLElement>('.thoughtknot-badge-text');
+    text?.setText(now);
+    // it holds room for its widest word, so the bar never wraps anew as it changes (adversarial review, 1 Nov 2026)
+    text?.setAttribute('data-room', WORDS.map((w) => word(w)).join('\n'));
   }
 }

@@ -119,7 +119,7 @@ export async function openSpaceView(
     held = new Map('marks' in from ? [] : heldIn(from));
   const planes = lanesShown('marks' in from ? null : from.getAttribute(PICK_ATTRIBUTE));
   const spaceBy = (by: Depth): SpaceMarks => {
-    if (by === 'globe') return globe.lay(marks, more.centre?.(), more.details);
+    if (by === 'globe') return globe.lay(marks, more.centre?.(), more.details, more.drawing?.());
     const lifted = liftOf(by, marks);
     if (lifted) return spaceOf(marks, lifted);
     const kept = spots && spotsKept(spots, held);

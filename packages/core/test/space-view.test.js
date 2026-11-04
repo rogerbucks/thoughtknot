@@ -14,6 +14,7 @@ import {
   zoomBy,
 } from '../src/space-view.ts';
 import { blockAt } from '../src/space-pick.ts';
+import { cardsOnScreen } from '../src/space-cards.ts';
 import { overviewOf } from '../src/overview.ts';
 import { arrowsOnScreen, pickedRing } from '../src/space-labels.ts';
 
@@ -247,4 +248,47 @@ test('the fitted camera fills the screen with the drawing, whatever its shape, a
   );
   const span = Math.max(...seen.map((p) => p.x)) - Math.min(...seen.map((p) => p.x));
   assert.ok(span > W * 0.7, `fills the width: ${span}`);
+});
+
+// Adversarial review, 1 Nov 2026 (finding 8): in 2.5D, Lanes and Timeline ran off the frame on open. The fit counted
+// each thing's spot on the floor. But 2.5D paints a card flat to the screen over it, often much bigger than the spot.
+// proves: space_fit_whole
+test('a fitted view in 2.5D shows each card whole, its name inside, for a tall drawing and a wide one', () => {
+  const block = (of, x, y) => ({
+    id: of,
+    style: 's',
+    of,
+    x,
+    y,
+    width: 24,
+    depth: 24,
+    floor: 0,
+    tall: 6,
+    card: { width: 90, height: 40 },
+  });
+  for (const [across, down] of [
+    [4, 12],
+    [14, 3],
+  ]) {
+    const blocks = [];
+    for (let i = 0; i < across * down; i++)
+      blocks.push(block(`t${i}`, (i % across) * 130, Math.floor(i / across) * 70));
+    const labels = blocks.map((b) => ({ id: `n:${b.of}`, of: b.of, text: `Thing ${b.of} of lanes`, at: [0, 0, 0] }));
+    const most = [across * 130, down * 70, 6];
+    const space = { blocks, lines: [], labels, arrows: [], least: [0, 0, 0], most, cards: true };
+    for (const [w, h] of [
+      [594, 588],
+      [800, 400],
+      [360, 640],
+    ]) {
+      const m = spaceMatrix(orbitFit(space, w / h), w / h, 100000);
+      const cards = cardsOnScreen(space, m, w, h);
+      assert.equal(cards.length, blocks.length, `${w}x${h}: every card painted`);
+      for (const c of cards) {
+        const at = `${across}x${down} in ${w}x${h}: ${c.block.of} at ${Math.round(c.x)},${Math.round(c.y)}`;
+        assert.ok(c.x - c.width / 2 >= 0 && c.x + c.width / 2 <= w, `${at}, ${Math.round(c.width)} wide`);
+        assert.ok(c.y - c.height / 2 >= 0 && c.y + c.height / 2 <= h, `${at}, ${Math.round(c.height)} tall`);
+      }
+    }
+  }
 });

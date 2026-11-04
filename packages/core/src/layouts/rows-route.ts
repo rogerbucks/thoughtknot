@@ -8,6 +8,7 @@
 import type { Placed } from '../direct-curve.ts';
 import type { DrawMark } from '../drawing-marks.ts';
 import type { MarkPoint } from '../plugin-diagrams.ts';
+import { SCREEN } from './folded-rows.ts';
 
 /** The room kept between a link and a box it passes, in pixels. */
 export const ROW_CLEAR = 6;
@@ -63,13 +64,115 @@ export function inRows(boxes: readonly Placed[], axis: 0 | 1): boolean {
   return boxes.length > 2 && rows.length > 1 && rows.length * 2 <= boxes.length;
 }
 
-/** Whether the thing boxes of `marks` are laid out in rows along `axis`, as `inRows` says. */
-export function marksInRows(marks: readonly DrawMark[], axis: 0 | 1): boolean {
+/** The thing boxes of `marks`, each once, by its middle and half its size. */
+function thingBoxes(marks: readonly DrawMark[]): Placed[] {
   const boxes = new Map<string, Placed>();
   for (const m of marks)
     if (m.kind === 'box' && m.role === 'thing' && m.of !== undefined && !boxes.has(m.of))
       boxes.set(m.of, { key: m.of, x: m.x + m.width / 2, y: m.y + m.height / 2, hw: m.width / 2, hh: m.height / 2 });
-  return inRows([...boxes.values()], axis);
+  return [...boxes.values()];
+}
+
+/** Whether the thing boxes of `marks` are laid out in rows along `axis`, as `inRows` says. */
+export function marksInRows(marks: readonly DrawMark[], axis: 0 | 1): boolean {
+  return inRows(thingBoxes(marks), axis);
+}
+
+/** The room between two runs of rows wrapped beside each other, in pixels. */
+const WRAP_GAP = 48;
+
+/** `rows` cut into runs of about the same length along the way, about `n` of them, in order. */
+function runsOf(rows: readonly Row[], n: number): Row[][] {
+  const share = ((rows[rows.length - 1] as Row).hi - (rows[0] as Row).lo) / n;
+  const runs: Row[][] = [];
+  let run: Row[] = [];
+  for (const r of rows) {
+    if (run.length && r.hi - (run[0] as Row).lo > share) runs.push(run.splice(0));
+    run.push(r);
+  }
+  return [...runs, run];
+}
+
+/** Where each thing box goes once its rows are wrapped, and the drawing's new size. */
+export interface Wrapped {
+  at: Map<string, [number, number]>;
+  width: number;
+  height: number;
+}
+
+/** A strip of rows no longer than this, in pixels, is read at Fit as it is: it is never wrapped. */
+const WRAP_LONGER = 1600;
+/** The room between two boxes of one row once its boxes are stacked close, in pixels. */
+const STACK_GAP = 16;
+
+/** Each box of `boxes` in its row along `axis`, the rows in order, each row's boxes in order across. */
+function rowBoxes(boxes: readonly Placed[], axis: 0 | 1): Placed[][] {
+  const byAt = new Map<number, Placed[]>();
+  for (const b of boxes) {
+    if (b.key.startsWith(TRUNK)) continue;
+    const at = Math.round(axis === 0 ? b.x : b.y);
+    byAt.set(at, [...(byAt.get(at) ?? []), b]);
+  }
+  const across = (b: Placed) => (axis === 0 ? b.y : b.x);
+  return [...byAt].sort(([p], [q]) => p - q).map(([, bs]) => bs.sort((p, q) => across(p) - across(q)));
+}
+
+/**
+ * The thing boxes of `marks` with their rows wrapped (timeline_wraps_days). Rows run along `axis`, as a timeline's
+ * days do. Each row's boxes are stacked close, in their order. A strip far longer than a screen's shape is then cut
+ * into runs of rows, in order. Each run goes under the one before, or beside it for rows down. So the days still read
+ * in order, first to last, and the drawing comes near a screen's shape. Undefined for a short or screen-shaped drawing.
+ */
+export function wrappedRows(marks: readonly DrawMark[], axis: 0 | 1): Wrapped | undefined {
+  const rows = rowBoxes(thingBoxes(marks), axis);
+  if (rows.length < 2) return undefined;
+  const half = (b: Placed): [number, number] => (axis === 0 ? [b.hw, b.hh] : [b.hh, b.hw]);
+  const mid = (b: Placed): [number, number] => (axis === 0 ? [b.x, b.y] : [b.y, b.x]);
+  const all = rows.flat(),
+    top = Math.min(...all.map((b) => mid(b)[1] - half(b)[1])),
+    lo = (r: Placed[]) => Math.min(...r.map((b) => mid(b)[0] - half(b)[0])),
+    hi = (r: Placed[]) => Math.max(...r.map((b) => mid(b)[0] + half(b)[0]));
+  // each row's boxes stacked close from the top, in their order: the middle across of each
+  const stacked = new Map<string, number>();
+  let deep = 0;
+  for (const r of rows) {
+    let y = top;
+    for (const b of r) {
+      stacked.set(b.key, y + half(b)[1]);
+      y += 2 * half(b)[1] + STACK_GAP;
+    }
+    deep = Math.max(deep, y - STACK_GAP - top);
+  }
+  const start = lo(rows[0] as Placed[]);
+  const spans: Row[] = rows.map((r) => ({ at: mid(r[0] as Placed)[0], lo: lo(r), hi: hi(r), spans: [] }));
+  const sizeOf = (runs: readonly Row[][]): [number, number] => [
+    Math.max(...runs.map((r) => (r[r.length - 1] as Row).hi - (r[0] as Row).lo)) + 2 * start,
+    runs.length * deep + (runs.length - 1) * WRAP_GAP + 2 * top,
+  ];
+  const off = (runs: readonly Row[][]) => {
+    const [l, a] = sizeOf(runs);
+    return Math.abs(Math.log((axis === 0 ? l / a : a / l) / SCREEN));
+  };
+  let best: Row[][] = [spans];
+  if (sizeOf(best)[0] <= WRAP_LONGER || off(best) <= Math.log(2)) return undefined;
+  for (let n = 2; n <= spans.length; n++) {
+    const runs = runsOf(spans, n);
+    if (off(runs) < off(best)) best = runs;
+  }
+  const shift = new Map<Row, [number, number]>();
+  best.forEach((run, i) => {
+    for (const r of run) shift.set(r, [start - (run[0] as Row).lo, i * (deep + WRAP_GAP)]);
+  });
+  const at = new Map<string, [number, number]>();
+  rows.forEach((r, i) => {
+    const [l, a] = shift.get(spans[i] as Row) ?? [0, 0];
+    for (const b of r) {
+      const p: [number, number] = [mid(b)[0] + l, (stacked.get(b.key) ?? mid(b)[1]) + a];
+      at.set(b.key, axis === 0 ? p : [p[1], p[0]]);
+    }
+  });
+  const [l, a] = sizeOf(best);
+  return { at, ...(axis === 0 ? { width: l, height: a } : { width: a, height: l }) };
 }
 
 /** The first span of `spans` that ends past `v`: the gap before it is gap `i`, the room after the last is gap length. */

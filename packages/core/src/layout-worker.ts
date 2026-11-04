@@ -16,6 +16,7 @@ import { nextStep } from './layouts/cheaper.ts';
 import { LayoutFailure } from './layout-port.ts';
 export { LayoutFailure, inThreadPort } from './layout-port.ts';
 import { needsPlacing, placedFor } from './layouts/offered.ts';
+import { KeptSpots } from './layouts/kept-spots.ts';
 
 /**
  * What the page asks the worker: one drawing laid out, and the most drawing instructions it may write for it. With a
@@ -105,7 +106,10 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       // and every thing would jump (Roger, 3 Nov 2026: nodes stay put)
       const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
       const rings = asked.some((d) => !d.own && /\blayout=/.test(d.dot));
-      const quick = drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings;
+      // nor is one drawn again with its things kept where they were: it has nothing to settle (things_stay_put)
+      const again = !!drawing.kept && Object.keys(drawing.kept).length > 0;
+      const quick =
+        drawing.live && !theme && !drawing.step && drawing.boxes.length >= LIVE_LEAST && !kept && !rings && !again;
       const rows = quick ? directions({ ...drawing, step: 'rows' })[0] : undefined;
       if (rows?.own) scope.postMessage({ id, early: chosen([rows], [svgOf(e, rows.dot, drawing.routing, true)]) });
       // direct and curved links are drawn again from Graphviz's marks (untangle_direct); any other routing is its own
@@ -161,6 +165,7 @@ export class LayoutRunner {
   private next = 1;
   /** The drawing each owner asked for last, while a plug-in's layout places it, so an older one placed late is dropped. */
   private readonly placing = new WeakMap<object, GraphDrawing>();
+  private readonly kept = new KeptSpots(); // each card's last spots (things_stay_put)
 
   constructor(options: RunnerOptions) {
     this.o = options;
@@ -192,8 +197,11 @@ export class LayoutRunner {
     const over = counted(drawing, this.limits());
     if (over) return Promise.resolve(this.paged(over));
     if (this.isStopped()) return Promise.resolve(this.stopped());
+    const asked = drawing;
+    if (owner && !theme) drawing = this.kept.onto(owner, drawing);
     return new Promise((resolve, reject) => {
-      this.queue.push({ drawing, owner, theme, done: (r) => (r instanceof Error ? reject(r) : resolve(r)) });
+      const heard = (r: Drawn | Refusal | null) => (owner && !theme && this.kept.heard(owner, asked, r), r);
+      this.queue.push({ drawing, owner, theme, done: (r) => (r instanceof Error ? reject(r) : resolve(heard(r))) });
       this.pump();
     });
   }

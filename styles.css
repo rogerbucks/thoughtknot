@@ -2366,6 +2366,23 @@ pre.thoughtknot-code {
 .thoughtknot-badge-text {
   font-size: var(--gn-font-size-s);
 }
+/* A label that changes, such as the 2D and 3D button's, holds the room of its widest word (space-switch.ts). So the
+   bar never wraps anew as it changes. Where a label is hidden, it stays hidden. */
+/* At the narrowest a bar wraps anyway, and the room would push its last buttons off the screen. */
+@media (min-width: 22rem) {
+  :where(.thoughtknot-badge-text[data-room]) {
+    display: inline-block;
+    text-align: center;
+  }
+  .thoughtknot-badge-text[data-room]::after {
+    content: attr(data-room);
+    display: block;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    white-space: pre;
+  }
+}
 
 /* The drawing: resized to zoom, never stretched, so its text stays sharp; moved, not scrolled, to pan. */
 .thoughtknot-viewport {
@@ -2446,6 +2463,37 @@ pre.thoughtknot-code {
 }
 .thoughtknot-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
+}
+
+/* A whiteboard (editor spec §45). The item the keyboard is on is ringed in the text colour, thicker and dashed, so it
+   is told by more than colour. The help, the words said and the outline sit under the board in the note's own type. */
+.thoughtknot-board g.is-focused > rect {
+  stroke: var(--gn-text-normal);
+  stroke-width: 3;
+  stroke-dasharray: 8 3;
+}
+.thoughtknot-board [data-item] {
+  cursor: grab;
+}
+.thoughtknot-board-help,
+.thoughtknot-board-said {
+  margin: var(--gn-space-1) 0;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-board-edit {
+  display: flex;
+  gap: var(--gn-space-1);
+  align-items: flex-start;
+}
+.thoughtknot-board-edit textarea {
+  flex: 1;
+}
+.thoughtknot-board-outline li[data-depth='1'] {
+  margin-inline-start: var(--gn-space-4);
+}
+.thoughtknot-board-outline li[data-depth='2'] {
+  margin-inline-start: calc(2 * var(--gn-space-4));
 }
 
 /* Names, labels and values as the person wrote them (editor spec §42, bidi_labels). Each is read in its own direction,
@@ -3849,14 +3897,13 @@ body.thoughtknot-easier-reading
 }
 
 /* The view in space (§53, space-view-panel.ts) lies over the drawing, under the card's bar. It stays until the bar's
-   button or Escape shows it flat again (space-switch.ts). So the bar, the types and the details work on it as in 2D. A short
-   drawing's frame grows to give it room. An overview's covers the overview. The mini-map and the arrow to the
-   selection belong to the flat drawing, so they hide. */
+   button or Escape shows it flat again (space-switch.ts). So the bar, the types and the details work on it as in 2D. It
+   takes the flat drawing's frame as it is, so nothing on the page moves (adversarial review, 1 Nov 2026). An overview's
+   covers the overview. The mini-map and the arrow to the selection belong to the flat drawing, so they hide. */
 .thoughtknot-view:has(> .thoughtknot-space-view) {
   position: relative;
 }
 .thoughtknot-viewport:has(> .thoughtknot-space-view) {
-  min-height: min(480px, 70vh);
   > :is(.thoughtknot-mini-map, .thoughtknot-pointer) {
     display: none;
   }
@@ -3945,40 +3992,24 @@ body.thoughtknot-easier-reading
 .thoughtknot-space-pad > .thoughtknot-dock-body .thoughtknot-badge-text {
   display: none;
 }
-/* how to move it, in short steps at the foot, kept clear of the buttons */
+/* how to move it, in short steps inside the pad above its buttons, so nothing on the view covers it (Roger, 3 Nov
+   2026). Folded, the pad shows its head alone. */
 .thoughtknot-space-help {
-  position: absolute;
-  inset-block-end: var(--gn-space-2);
-  inset-inline-start: var(--gn-space-2);
-  max-width: calc(100% - 7rem);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--gn-space-half-2);
+  max-width: 12rem;
   margin: 0;
   padding: 0;
   list-style: none;
   pointer-events: none;
 }
-.thoughtknot-space-help[hidden] {
+.thoughtknot-space-help[hidden],
+.thoughtknot-space-pad.is-folded > .thoughtknot-space-help {
   display: none;
-}
-/* above the mini-map while it shows, never under it (design review, 1 Nov 2026). The view says how tall it is
-   (space-mini-map.ts), and the 2 pixels are its border. */
-.thoughtknot-space-view:has(> .thoughtknot-mini-map:not([hidden])) > .thoughtknot-space-help {
-  inset-block-end: calc(var(--thoughtknot-space-mini, 0px) + 2px + 2 * var(--gn-space-2));
-}
-/* On a phone the foot holds the sheet, the pad and the mini-map, and the controls card has gone into the sheet. So the
-   help line sits at the top start, clear of what the view says at the top end. */
-.thoughtknot-view:has(.thoughtknot-phone-sheet) .thoughtknot-space-view > .thoughtknot-space-help {
-  inset-block-start: var(--gn-space-2);
-  inset-block-end: auto;
-  max-width: calc(60% - 2 * var(--gn-space-2));
 }
 .thoughtknot-space-help li {
   padding: var(--gn-space-half-1) var(--gn-space-2);
-  background: var(--gn-bg);
-  border: 1px solid var(--gn-border-focus);
-  border-radius: var(--gn-radius-s);
   color: var(--gn-text-normal);
   font-size: var(--gn-font-size-xs);
 }

@@ -18,12 +18,24 @@ import type { Sketch, SketchChange } from '@thoughtknot/core';
 import { renderCode } from '@thoughtknot/core/display/code';
 import type { SketchHost } from '@thoughtknot/core/display/graph-view/sketch-tool';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
+import type { BlockContext } from './block-context';
+import { renderBoardBlock } from './board-block';
 import type ThoughtKnotPlugin from './main';
 import { renderStyleBlock } from './style-block';
 import { changeVaultNote, noteText } from './storage/plugin-notes';
 
-/** A block never drawn as a graph, folded: a style block or a drawings block. False for any other. */
-export function renderFoldedBlock(el: HTMLElement, source: string, note: string): boolean {
+/**
+ * A block never drawn as a graph: a style block or a drawings block, folded, or a board, opened as a board (§45).
+ * False for any other.
+ */
+export function renderFoldedBlock(
+  plugin: ThoughtKnotPlugin,
+  el: HTMLElement,
+  source: string,
+  ctx: BlockContext,
+): boolean {
+  if (renderBoardBlock(plugin, el, source, ctx)) return true;
+  const note = ctx.getSectionInfo(el)?.text ?? '';
   const styled = styleOf(source),
     sketched = sketchOf(source);
   if (styled) {
