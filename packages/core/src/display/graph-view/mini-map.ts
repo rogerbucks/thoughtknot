@@ -11,6 +11,8 @@ import { hitAreas, word } from '@thoughtknot/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
 import { make } from './note-callouts.ts';
+import type { DetailLevel } from '../../detail-levels.ts';
+import { drawHulls, subjectHulls, type MiniBox } from './level-mini-map.ts';
 
 /** The longest side of the copy, in pixels, for a drawing of an ordinary shape. */
 const LONGEST = 120;
@@ -49,6 +51,11 @@ export class MiniMap {
   /** The pointer that is dragging on it, if one is. */
   private drag: number | null = null;
   private readonly host: MiniMapHost;
+  /** Each box drawn on the copy, by its element's id in the drawing: node1 (level_mini_map). */
+  private readonly boxes = new Map<string, MiniBox>();
+  /** The levels whose subjects are drawn, and on which copy: drawn again only when either changes. */
+  private subjects: readonly DetailLevel[] | null = null;
+  private subjectsOn: SVGSVGElement | null = null;
 
   /** For the viewport it sits in, the card (which owns its listeners), and what it asks of the card. */
   constructor(viewport: HTMLElement, card: Lifecycle, host: MiniMapHost) {
@@ -81,6 +88,7 @@ export class MiniMap {
   redrawn(drawn: Drawn): void {
     this.el.empty();
     this.svg = this.frame = null;
+    this.boxes.clear();
     this.areas = hitAreas(drawn.svg);
     const { viewBox: vb, shapes } = this.areas;
     if (!vb.width || !vb.height) return;
@@ -100,15 +108,9 @@ export class MiniMap {
           ys = pts.map(([, y]) => y);
         const x = Math.min(...xs),
           y = Math.min(...ys);
-        svg.appendChild(
-          make('rect', {
-            class: 'thoughtknot-mini-box',
-            x,
-            y,
-            width: Math.max(...xs) - x,
-            height: Math.max(...ys) - y,
-          }),
-        );
+        const box = { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+        this.boxes.set(s.id, box);
+        svg.appendChild(make('rect', { class: 'thoughtknot-mini-box', ...box }));
       } else
         for (const line of s.lines)
           svg.appendChild(
@@ -129,6 +131,23 @@ export class MiniMap {
     svg.appendChild(this.frame);
     this.el.appendChild(svg);
     this.svg = svg;
+  }
+
+  /**
+   * The subjects of `levels` drawn behind the boxes, each a patch of its colour (level_mini_map). `ids` gives how to find
+   * the id a thing's box has in the drawing. None for a drawing of one level.
+   */
+  clouds(levels: readonly DetailLevel[] | null, ids: () => (key: string) => string | null): void {
+    const vb = this.areas?.viewBox;
+    if (!this.svg || !vb || (levels === this.subjects && this.svg === this.subjectsOn)) return;
+    this.subjects = levels;
+    this.subjectsOn = this.svg;
+    const idOf = ids();
+    const boxOf = (key: string) => {
+      const id = idOf(key);
+      return id ? this.boxes.get(id) : undefined;
+    };
+    drawHulls(this.svg, subjectHulls(levels, boxOf, Math.min(vb.width, vb.height)));
   }
 
   /** The view changed, or the setting's reading of it: shown or hidden, and the part in view outlined. */

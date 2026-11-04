@@ -3778,6 +3778,29 @@ body.thoughtknot-easier-reading
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
+/* each subject on the mini-map is a soft patch of its colour, behind its boxes (level_mini_map) */
+.thoughtknot-mini-cloud {
+  fill-opacity: 0.25;
+  stroke: none;
+}
+.thoughtknot-mini-cloud[data-hue='0'] {
+  fill: var(--gn-branch-0);
+}
+.thoughtknot-mini-cloud[data-hue='1'] {
+  fill: var(--gn-branch-1);
+}
+.thoughtknot-mini-cloud[data-hue='2'] {
+  fill: var(--gn-branch-2);
+}
+.thoughtknot-mini-cloud[data-hue='3'] {
+  fill: var(--gn-branch-3);
+}
+.thoughtknot-mini-cloud[data-hue='4'] {
+  fill: var(--gn-branch-4);
+}
+.thoughtknot-mini-cloud[data-hue='5'] {
+  fill: var(--gn-branch-5);
+}
 .thoughtknot-mini-frame {
   fill: var(--gn-accent);
   fill-opacity: 0.08;
