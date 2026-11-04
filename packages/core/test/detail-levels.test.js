@@ -71,11 +71,14 @@ test('things that link closely share a group, each group nests in one a level ou
 // proves: detail_levels
 test('far out the farthest level shows, nearer the nearest that fits, and a badge says where you are', () => {
   const levels = detailLevels(clumped(20, 8));
-  assert.equal(levelAt(levels, 2), 0);
-  assert.equal(levelAt(levels, levels[1].groups.length), 1);
-  assert.equal(levelAt(levels, 160), 2);
+  const all = new Set(levels[0].groups.flatMap((g) => g.things));
+  assert.equal(levelAt(levels, all, BRANCH), 0, 'far out, every thing on screen: the subjects');
+  const area = levels[1].groups[0];
+  assert.equal(levelAt(levels, new Set(area.things.slice(0, 10))), 2, 'zoomed into one area: every item');
+  const twoSubjects = new Set(levels[0].groups.slice(0, 2).flatMap((g) => g.things));
+  assert.equal(levelAt(levels, twoSubjects, 8), 1, 'a few subjects on screen: their areas');
   assert.equal(levelBadge(levels, 1), 'Level 2 of 3 · Areas');
-  assert.equal(levelAt([{ name: everyItem(), groups: [] }], 0), 0);
+  assert.equal(levelAt([{ name: everyItem(), groups: [] }], new Set()), 0);
 });
 
 // proves: detail_levels

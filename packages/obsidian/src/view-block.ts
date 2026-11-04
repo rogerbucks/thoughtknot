@@ -22,24 +22,16 @@ import {
   readNote,
   readStyle,
   readingOf,
-  styleEdit,
   reversedLinks,
   savedExploreFor,
   styledDrawing,
   underStrictness,
   word,
 } from '@thoughtknot/core';
-import type {
-  ExploreSave,
-  GraphDrawing,
-  NamedView,
-  Outside,
-  StyleChange,
-  StyleGraph,
-  ThingLook,
-} from '@thoughtknot/core';
+import type { ExploreSave, GraphDrawing, NamedView, Outside, StyleGraph, ThingLook } from '@thoughtknot/core';
 import type { Exploring } from '@thoughtknot/core/display/graph-view/view-options';
 import type ThoughtKnotPlugin from './main';
+import { writeStyle } from './style-write';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
@@ -53,35 +45,6 @@ import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
-import { replaceInEditor } from './block-editor/note-writing';
-
-/** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
-export async function writeStyle(
-  plugin: ThoughtKnotPlugin,
-  path: string,
-  graph: string,
-  change: StyleChange,
-  done: string,
-): Promise<void> {
-  const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile)) return;
-  let refused = '';
-  // a thing only suggested in the note as it is now is not styled until its name is written (§4)
-  const edit = (note: string) => {
-    const r = styleEdit(note, graph, change);
-    if ('refused' in r) refused = r.refused;
-    return 'note' in r ? r.note : note;
-  };
-  // a note open in the editing view is changed through its editor, so one Cmd+Z takes the change back (UX-5)
-  const cm = plugin.editorFor(file.path);
-  if (cm) {
-    const now = cm.state.doc.toString(),
-      next = edit(now);
-    if (next !== now) replaceInEditor(cm, next);
-  } else await changeVaultNote(plugin.app, file.path, edit);
-  // each write is confirmed in words, as is each refusal
-  new Notice(refused ? word('blocks.style-failed', { why: refused }) : done);
-}
 
 /**
  * A card's saved exploration, which it opens on, and how its sidebar saves one (§71, explore_saved). The sidebar

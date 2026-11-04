@@ -13,6 +13,8 @@ export interface FindActions {
   close: () => void;
   /** Explores from the thing found, mind-map style; each result offers it beside its name when given (§71). */
   explore?: (found: Found) => void;
+  /** Where a thing found sits in the levels of detail, as "Money › Budget", shown under its name (§68, level_find). */
+  where?: (key: string) => string;
 }
 
 /** The search row of a card, hidden until the bar's button opens it, and how to put the cursor in its box. */
@@ -50,6 +52,8 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
       const b = list.createEl('li').createEl('button', { cls: 'thoughtknot-find-result', attr: { type: 'button' } });
       b.createSpan({ text: f.text });
       b.createSpan({ cls: 'thoughtknot-find-kind', text: ` · ${f.kind}${f.via === 'name' ? '' : ` — ${f.via}`}` });
+      const where = on.where?.(f.key);
+      if (where) b.createSpan({ cls: 'thoughtknot-find-where', text: where });
       b.addEventListener('click', () => on.choose(f));
       const explore = on.explore;
       if (explore) {

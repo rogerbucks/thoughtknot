@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/hover.test.js",
+  "test": "a highlight never moves, resizes or re-lays the drawing > what the style does to a highlighted thing is paint, never a size or a place",
+  "seen_failing_first": false,
+  "evidence": "the allow-list only widens to stroke-width and transition-delay, which the commit before had already started using"
+}

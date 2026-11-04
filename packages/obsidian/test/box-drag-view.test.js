@@ -10,6 +10,7 @@
 // - A hold lifted without moving is the long press it was.
 // - While a box is picked up the page does not scroll.
 // In a radial drawing (radial_spoke_order), a box let go by a thing around the centre goes just before or after it.
+// A move written offers its undo (move_undo): a toast, and Ctrl+Z, take the note back as it was.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, settled, until } from './host/load-plugin.js';
@@ -44,6 +45,29 @@ describe('dragging a box with a mouse', () => {
       assert.equal(env.state.notices.at(-1), 'Moved: Put Ann beside Cy');
       assert.equal(ann.getAttribute('transform'), null, 'the box is put back until the drawing is laid out again');
       assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'a drag is not a tap: nothing opens');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: move_undo
+  test('a move written is taken back by Ctrl+Z on the card drawn again, as the toast offers', async () => {
+    const before = noteOf(TEAM);
+    const { env, el, vp, boxOf, placeOf, besideOf, at } = await card(before);
+    try {
+      const drop = besideOf('cy');
+      vp.dispatch('pointerdown', mouse(7, boxOf('ann'), at(placeOf('ann').x, placeOf('ann').y)));
+      vp.dispatch('pointermove', mouse(7, vp, drop));
+      vp.dispatch('pointerup', mouse(7, vp, drop));
+      await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
+      const toast = el.querySelectorAll('.thoughtknot-undo-toast').find((t) => !t.classList.contains('is-hidden'));
+      assert.equal(toast?.querySelector('.thoughtknot-undo-said').textContent, 'Moved: Put Ann beside Cy');
+      const now = toast.parentElement;
+      assert.ok(now.dispatch('keydown', { key: 'z', ctrlKey: true }).defaultPrevented);
+      await until(() => !/:Nudge /.test(env.state.files.get(PATH)));
+      assert.equal(env.state.files.get(PATH), before, 'the note as it was');
+      assert.equal(env.state.notices.at(-1), 'Move undone');
     } finally {
       env.uninstall();
     }

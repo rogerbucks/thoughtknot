@@ -16,7 +16,7 @@ const FIRST = 'is-selected thoughtknot-hot thoughtknot-kept'.split(' ');
 const drawn = new WeakMap<Element, Word>();
 
 /** The box round the outline of thing `g` as drawn, from its first shape: an ellipse, rectangle, polygon or path. */
-function outlineOf(g: Element | null): { left: number; top: number; right: number; bottom: number } | null {
+export function outlineOf(g: Element | null): { left: number; top: number; right: number; bottom: number } | null {
   const shape = g?.querySelector('ellipse, rect, polygon, path');
   if (!shape) return null;
   const n = (a: string) => Number(shape.getAttribute(a)) || 0;
@@ -66,7 +66,7 @@ function frameOf(svg: SVGSVGElement): { s: number; tx: number; ty: number } {
 }
 
 /** How many screen pixels one unit of `svg`'s top group is, and the part of the group shown, in its own units. */
-function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
+export function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
   const [left = 0, top = 0, width = 0, height = 0] = (svg.getAttribute('viewBox') ?? '').split(/[\s,]+/).map(Number);
   const shown = Number.parseFloat(svg.getAttribute('width') ?? '');
   if (!(width > 0 && shown > 0)) return null;

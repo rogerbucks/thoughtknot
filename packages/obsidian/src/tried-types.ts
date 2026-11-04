@@ -6,7 +6,7 @@
 import { diagramFor, withTriedRules, word } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, RuleAsk, RuleWrite, StyleGraph } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
-import { writeStyle } from './view-block';
+import { writeStyle } from './style-write';
 import { moveRuleUp, putBack, removeRule } from './rule-removal';
 import type { Removal } from './rule-removal';
 import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';

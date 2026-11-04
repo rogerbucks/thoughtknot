@@ -14,6 +14,17 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
+import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
+import { LevelHints } from './level-hints.ts';
+import { LevelLegend } from './level-legend.ts';
+import { groupEdits } from '../../group-edit.ts';
+import { MoveUndo } from './move-undo.ts';
+import { moveHint } from './box-move-keys';
+import { accept } from './estimate-actions';
+import { levelSpace } from './level-space.ts';
+import type { SpaceScreen } from './space-view-options.ts';
+import { LevelTaps } from './level-taps.ts';
+import { word } from '../../words.ts';
 import { MiniMap } from './mini-map';
 import { QuickInfo } from './quick-info';
 import { SemanticZoom } from './semantic-zoom-view.ts';
@@ -70,7 +81,7 @@ export interface AidsHost {
   /** What a lens follows, the selected thing by its key, and the View menu it is picked in, if the card has one. */
   lens: { selected: () => string | null; menu: () => LensMenu | null };
   /** The view in space, if the card has one: its camera zooms semantic zoom as the flat zoom does. */
-  space?: { nearer: () => number; camera: (f: () => void) => void };
+  space?: { nearer: () => number; camera: (f: () => void) => void; screen?: () => SpaceScreen | null };
 }
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
@@ -90,6 +101,19 @@ export class Aids {
   private readonly host: AidsHost;
   /** Whether names are waiting to be sized at the next frame. */
   private naming = false;
+  /** The badge that says which level of detail shows (§68, level_clouds), made the first time one shows. */
+  private badge: HTMLElement | null = null;
+  /** The badge's words, and its Back button, shown once a cloud was flown into. */
+  private said: HTMLElement | null = null;
+  private backButton: HTMLElement | null = null;
+  /** The taps on the clouds: pick, fly in, and back (level_click_back); none for a table. */
+  private readonly levelTaps: LevelTaps | null;
+  /** The legend of subjects under the badge: the spotlight, and each subject's colour (level_colours). */
+  private legend: LevelLegend | null = null;
+  /** What the badge said last. */
+  private badgeText: string | null = null;
+  /** The badge's one-line hint and arrow legend (level_hints). */
+  private hints: LevelHints | null = null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -111,6 +135,10 @@ export class Aids {
         })
       : null;
     this.miniMap?.redrawn(host.drawn());
+    const { viewport: vp, svg, zoom: z, size, taps: t } = host;
+    this.levelTaps = svg()
+      ? new LevelTaps(card, { viewport: vp, svg, zoom: z, size, taps: t, changed: () => this.level(this.badgeText) })
+      : null;
     const { o, viewport, zoom, taps } = host,
       state = o.switches?.state;
     // the view the card draws: a lens or semantic zoom it cannot take is greyed, and never bends it (view-support.ts)
@@ -135,7 +163,11 @@ export class Aids {
             nearer,
           })
         : null;
-    host.space?.camera(() => this.semantic?.changed());
+    // the camera in space steps semantic zoom, and its levels are drawn again (level_space)
+    host.space?.camera(() => {
+      this.semantic?.changed();
+      this.names();
+    });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
   }
@@ -167,7 +199,73 @@ export class Aids {
       this.naming = false;
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
+      const drawing = reading.graphs.get(graph),
+        g = reading.world[graph],
+        screen = this.host.space?.screen?.();
+      this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
+      const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
+      this.hints?.show(layer ? levelShown(layer) : null);
+      this.levelTaps?.mark();
+      this.legend?.show(drawing ? levelsOf(drawing, g) : null);
     });
+  }
+
+  /** Says which level of detail shows, as "Level 2 of 4 · Areas", with Back once a cloud was flown into. */
+  private level(text: string | null): void {
+    this.badgeText = text;
+    const back = !!this.levelTaps?.canGoBack();
+    if (!text && !back && !this.badge) return;
+    if (!this.badge) {
+      this.badge = this.host.viewport.createDiv({ cls: 'thoughtknot-level-badge' });
+      this.backButton = this.badge.createEl('button', {
+        cls: 'thoughtknot-level-back',
+        text: word('levels.back'),
+        attr: { 'aria-label': word('levels.back-label'), type: 'button' },
+      });
+      this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
+      this.said = this.badge.createSpan();
+      this.legend = new LevelLegend(this.badge, {
+        viewport: this.host.viewport,
+        svg: this.host.svg,
+        redraw: () => this.names(),
+        drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
+        nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
+        editGroup: () => this.groupEditor(),
+      });
+      this.hints = new LevelHints(this.badge);
+    }
+    this.said?.setText(text ?? '');
+    this.backButton?.toggleClass('is-hidden', !back);
+    this.badge.toggleClass('is-hidden', !text && !back);
+  }
+
+  /**
+   * How a named group's things are written (cloud_edit): into the text being edited, else the note. Each edit offers its
+   * undo, and says why when nothing was written. None while the card is only read.
+   */
+  private groupEditor():
+    ((things: readonly string[], property: string, value: string | null, said: string) => void) | null {
+    const o = this.host.o;
+    if (o.readOnly?.() || (!o.writeBlock && !o.editing?.()?.session)) return null;
+    return (things, property, value, said) => {
+      const say = (why: string) => {
+        const line = moveHint(this.host.viewport);
+        line.hidden = false;
+        line.textContent = why;
+      };
+      const edits = groupEdits(o.reading.texts, o.graph, things, property, value);
+      if ('reason' in edits) return say(edits.reason);
+      const undo = new MoveUndo(this.host.viewport, o.graph);
+      void (async () => {
+        for (const e of edits) {
+          const why = await accept(o, e.block, e.was, e.now);
+          if (why) return say(why);
+        }
+        undo.offer(said, async () => {
+          for (const e of [...edits].reverse()) await accept(o, e.block, e.now, e.was);
+        });
+      })();
+    };
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */

@@ -1,0 +1,6 @@
+{
+  "file": "test/calm-hover.test.js",
+  "test": "a link is 2 px at rest and the same line at 3.2 px when highlighted",
+  "seen_failing_first": false,
+  "evidence": "the line weights came in the roads commit just before; this test pins them down with the calm hover"
+}

@@ -60,7 +60,7 @@ function grouped(n: number, links: readonly (readonly [number, number])[], most:
   };
   // the Louvain method can join too much at a coarse level. Then each member starts alone, and the smallest join.
   const found = gather(louvain(n, links));
-  const of = new Set(found).size < Math.min(most, n) / 2 ? gather([...Array(n).keys()]) : found;
+  const of = new Set(found).size < Math.min(most, n) / BRANCH ? gather([...Array(n).keys()]) : found;
   // each group's links to the others, by weight, and its size
   const near = new Map<number, Map<number, number>>(),
     sizes = new Map<number, number>();
@@ -79,13 +79,17 @@ function grouped(n: number, links: readonly (readonly [number, number])[], most:
     }
   }
   const into = new Map<number, number>();
-  // join the smallest group to the one it links to most, or else to the smallest other, until few enough remain
+  // join the smallest group to the one it links to most for its size, or else to the smallest other, until few remain
   while (sizes.size > most) {
     let small = -1;
     for (const [g, n] of sizes) if (small < 0 || n < (sizes.get(small) as number)) small = g;
     let to = -1,
       best = 0;
-    for (const [g, w] of near.get(small) ?? []) if (w > best || (w === best && g < to)) [to, best] = [g, w];
+    // the one it links to most for its size, so no group snowballs
+    for (const [g, w] of near.get(small) ?? []) {
+      const pull = w / (sizes.get(g) as number);
+      if (pull > best || (pull === best && g < to)) [to, best] = [g, pull];
+    }
     if (to < 0) for (const [g, n] of sizes) if (g !== small && (to < 0 || n < (sizes.get(to) as number))) to = g;
     if (to < 0) break;
     into.set(small, to);
@@ -162,22 +166,29 @@ export function detailLevels(shape: GraphShape): DetailLevel[] {
   return levels;
 }
 
-/** How many units level `i` of `levels` shows: its groups, or at the last level every thing. */
-function units(levels: readonly DetailLevel[], i: number): number {
-  if (i < levels.length - 1) return levels[i]?.groups.length ?? 0;
-  return levels[0]?.groups.length ? levels[0].groups.reduce((s, g) => s + g.things.length, 0) : Infinity;
+/** The most units a level shows on screen at once: more, and the level a step out shows instead. */
+export const SHOWN_MOST = 40;
+
+/** How many units of level `i` of `levels` have a thing in `seen`: its groups, or at the last level the things. */
+function unitsSeen(levels: readonly DetailLevel[], i: number, seen: ReadonlySet<string>): number {
+  if (i === levels.length - 1) return seen.size;
+  return (levels[i]?.groups ?? []).filter((g) => g.things.some((t) => seen.has(t))).length;
 }
 
 /**
- * Which level to show, from 0 (farthest), when about `seen` things fit on screen (semantic-zoom.ts, thingsSeen): the
- * nearest level whose units all fit. A graph of one level is always at it.
+ * Which level to show, from 0 (farthest), with the things `seen` on screen: the nearest level that shows at most `most`
+ * units there. Far out every thing is on screen and only the subjects fit; zoomed in, fewer things are, and the
+ * nearer levels fit. A graph of one level is always at it.
  */
-export function levelAt(levels: readonly DetailLevel[], seen: number): number {
-  if (levels.length <= 1) return 0;
-  for (let i = levels.length - 1; i > 0; i--) if (units(levels, i) <= seen) return i;
+export function levelAt(levels: readonly DetailLevel[], seen: ReadonlySet<string>, most = SHOWN_MOST): number {
+  for (let i = levels.length - 1; i > 0; i--) if (unitsSeen(levels, i, seen) <= most) return i;
   return 0;
 }
 
 /** The badge that says where you are: "Level 2 of 4 · Areas". */
 export const levelBadge = (levels: readonly DetailLevel[], at: number): string =>
   word('levels.badge', { at: at + 1, count: levels.length, name: levels[at]?.name ?? everyItem() });
+
+/** Where the thing `key` sits in `levels`: the names of its groups, far to near, as "Money › Budget"; empty for none. */
+export const levelPath = (levels: readonly DetailLevel[], key: string): string =>
+  levels.flatMap((l) => l.groups.filter((g) => g.things.includes(key)).map((g) => g.name)).join(' › ');

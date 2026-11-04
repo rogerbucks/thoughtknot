@@ -65,3 +65,29 @@ describe('choosing a thing found', () => {
     assert.match(winner(all, kind, 'color').value, /--gn-text-muted/);
   });
 });
+
+// level_find (Roger, 3 Nov 2026): find flies through the levels, each result saying where it sits
+describe('a thing found says where it sits in the levels', () => {
+  let env, el;
+  const NAMED = [
+    '// graph: named',
+    "(rent:Task {name: 'Pay rent', subject: 'Money', area: 'Budget'}),",
+    "(food:Task {name: 'Buy food', subject: 'Money', area: 'Budget'}),",
+    "(run:Task {name: 'Go running', subject: 'Health'}),",
+    '(rent)-[:BEFORE]->(food)',
+  ].join('\n');
+  before(async () => {
+    env = await load(GRAPHVIZ);
+    el = (await show(env, fence(NAMED))).el;
+  });
+  after(() => env.uninstall());
+
+  test('its subject and area show under its name', () => {
+    labelled(el, 'Find a thing').click();
+    const input = el.querySelector('.thoughtknot-find input');
+    input.value = 'rent';
+    input.dispatch('input');
+    const [first] = el.querySelectorAll('.thoughtknot-find-results button');
+    assert.equal(first.querySelector('.thoughtknot-find-where')?.textContent, 'Money › Budget');
+  });
+});

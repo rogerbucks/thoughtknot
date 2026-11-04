@@ -1,0 +1,248 @@
+// The levels of detail drawn in a 2D drawing (editor spec §68, level_clouds), for the graph view's viewer-aids.ts.
+// Roger, 3 Nov 2026: far out, show the subjects as clouds with their names; zoom in for areas, topics, then every item.
+//
+// Each time the view changes, the level that fits the things on screen is found (detail-levels.ts, levelAt). Its groups are drawn
+// as clouds under the things (level-clouds.ts), each named with its count at a readable size. While a level of groups
+// shows, the things fade so the clouds read first (the class FAR). At the last level the clouds go, and every item shows
+// as drawn. Nothing moves: the things stay put and the drawing's own attributes are left as drawn.
+import { detailLevels, levelAt, levelBadge } from '../../detail-levels.ts';
+import type { DetailLevel } from '../../detail-levels.ts';
+import { cloudsAt } from '../../level-clouds.ts';
+import { roadsAt } from '../../level-roads.ts';
+import type { Cloud, Rect } from '../../level-clouds.ts';
+import { word } from '../../words.ts';
+import { hueOf, subjectOf } from './level-colours.ts';
+import type { GraphDrawing } from '../../note-reading.ts';
+import { shapeOf } from '../../types-shape.ts';
+import type { GraphShape } from '../../types-shape.ts';
+import type { Graph } from '@thoughtknot/graph-spec';
+import { BY_KIND, ownChoices, withOwnLevel } from '../../own-levels.ts';
+import { namedLevels } from '../../named-levels.ts';
+import type { OwnLevel } from '../../own-levels.ts';
+import { make } from './note-callouts.ts';
+import { outlineOf, shownOf } from './readable-names.ts';
+
+/** The class of the group that holds the clouds, the first in the drawing's top group so it is under everything. */
+export const CLOUDS = 'thoughtknot-clouds';
+/** The class on the drawing while a level of groups shows: its things fade so the clouds read first. */
+export const FAR = 'thoughtknot-far';
+/** The room round a cloud's things, and the size of its name, in pixels of the screen. */
+const PAD_PX = 14,
+  NAME_PX = 14;
+/** The size of a preview's names and of its hint, in pixels. */
+const PEEK_PX = 12,
+  HINT_PX = 11;
+/** The room between a road's two lanes, how far its gate sits from its port, and the size of a gate's words, in pixels. */
+const LANE_PX = 5,
+  GATE_PX = 26,
+  GATE_NAME_PX = 11;
+
+/** The things in each cloud drawn now, by the cloud's key, for each drawing's SVG: what a tap on a cloud flies to. */
+const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
+
+/** The level each drawing shows now, and how many it has: for the hints and the arrow legend (level_hints). */
+const shownAt = new WeakMap<Element, { at: number; count: number }>();
+
+/** The level `svg` shows now, from 0 (farthest), and how many levels it has; null when it shows none. */
+export const levelShown = (svg: Element): { at: number; count: number } | null => shownAt.get(svg) ?? null;
+
+/** The things of the cloud `key` drawn in `svg` now; none when it shows no such cloud. */
+export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.get(svg)?.get(key) ?? [];
+
+/** The levels and links of each drawing, found once. */
+const found = new WeakMap<GraphDrawing, Found>();
+
+interface Found {
+  shape: GraphShape;
+  /** The levels found from the links, and those shown: with your own level put in, if you chose one. */
+  found: DetailLevel[];
+  levels: DetailLevel[];
+  own: OwnLevel | null;
+  links: { from: string; to: string }[];
+  texts: Map<string, string>;
+}
+
+/** The levels of `drawing`, and its links, found the first time they are asked for. */
+function foundOf(drawing: GraphDrawing, g?: Graph): Found {
+  let f = found.get(drawing);
+  if (!f) {
+    const shape = shapeOf(drawing, g),
+      levels = namedLevels(shape) ?? detailLevels(shape);
+    const texts = new Map(shape.things.map((t) => [t.key, t.text]));
+    f = { shape, found: levels, levels, own: null, links: shape.links, texts };
+    found.set(drawing, f);
+  }
+  return f;
+}
+
+/** The own level chosen for `drawing`, if any (own_levels). */
+export const ownLevelOf = (drawing: GraphDrawing): OwnLevel | null => foundOf(drawing).own;
+
+/** The values `drawing`'s things could make their own level by: kind, then each property. */
+export const ownChoicesOf = (drawing: GraphDrawing): string[] => ownChoices(foundOf(drawing).shape);
+
+/** Chooses your own level for `drawing`, or none (null): its levels are worked out again. */
+export function chooseOwnLevel(drawing: GraphDrawing, own: OwnLevel | null): void {
+  const f = foundOf(drawing);
+  f.own = own;
+  const name = own?.by === BY_KIND ? word('levels.kind') : (own?.by ?? '');
+  const title = name.charAt(0).toUpperCase() + name.slice(1);
+  f.levels = own ? withOwnLevel(f.found, f.shape, own, title, word('levels.none', { name: title })) : f.found;
+}
+
+/** The levels of `drawing`, with its graph `g` as read for its properties, found the first time they are asked for. */
+export const levelsOf = (drawing: GraphDrawing, g?: Graph): DetailLevel[] => foundOf(drawing, g).levels;
+
+/** The box of each thing drawn in `top`, by its key. */
+function rectsOf(top: Element): Map<string, Rect> {
+  const rects = new Map<string, Rect>();
+  for (const g of Array.from(top.querySelectorAll('g.node'))) {
+    const key = g.getAttribute('data-key'),
+      box = outlineOf(g);
+    if (key && box) rects.set(key, box);
+  }
+  return rects;
+}
+
+/**
+ * Draws in `svg` the clouds of the level of `drawing` that fits the part shown at the zoom shown now. Gives back the
+ * badge that says which level shows, or null when the drawing has one level only.
+ */
+export function levelClouds(svg: SVGSVGElement, drawing: GraphDrawing | undefined, g?: Graph): string | null {
+  const top = svg.querySelector('g.graph');
+  const levels = drawing ? levelsOf(drawing, g) : [],
+    shown = shownOf(svg);
+  if (!top || !shown || levels.length < 2) {
+    shownAt.delete(svg);
+    for (const old of Array.from(top?.children ?? [])) if (old.classList.contains(CLOUDS)) old.remove();
+    svg.classList.remove(FAR);
+    return null;
+  }
+  return levelsInto(svg, top, levels, drawing, rectsOf(top), shown);
+}
+
+/**
+ * Draws into `top` of `svg` the clouds of `levels` that fit the things in `rects`. They are shown in `view`, at `k`
+ * pixels a unit. The view in space draws them the same way, over its canvas (level_space). Gives back the badge.
+ */
+export function levelsInto(
+  svg: SVGSVGElement,
+  top: Element,
+  levels: readonly DetailLevel[],
+  drawing: GraphDrawing | undefined,
+  rects: ReadonlyMap<string, Rect>,
+  { k, view }: { k: number; view: Rect },
+): string | null {
+  for (const old of Array.from(top.children)) if (old.classList.contains(CLOUDS)) old.remove();
+  shownAt.delete(svg);
+  if (levels.length < 2) return null;
+  // the things on screen now: far out all of them, zoomed in fewer, so a nearer level fits
+  const seen = new Set<string>();
+  for (const [key, r] of rects)
+    if (r.right >= view.left && r.left <= view.right && r.bottom >= view.top && r.top <= view.bottom) seen.add(key);
+  const at = levelAt(levels, seen);
+  shownAt.set(svg, { at, count: levels.length });
+  svg.classList.toggle(FAR, at < levels.length - 1);
+  if (at < levels.length - 1) {
+    const group = make('g', { class: CLOUDS }),
+      clouds = cloudsAt(levels, at, rects, PAD_PX / k);
+    const f = drawing ? foundOf(drawing) : null,
+      inside = new Map<string, string[]>();
+    for (const c of clouds) {
+      group.appendChild(unitOf(c, levels, at, rects, f?.texts ?? new Map(), k));
+      inside.set(c.key, levels[at]?.groups.find((x) => x.key === c.key)?.things ?? []);
+    }
+    held.set(svg, inside);
+    roads(group, roadsAt(levels, at, f?.links ?? [], clouds, LANE_PX / k, GATE_PX / k), k);
+    top.prepend(group);
+  }
+  return levelBadge(levels, at);
+}
+
+/** The roads between the clouds drawn into `group`, over the clouds: each lane, its width by its links, and its gates. */
+function roads(group: Element, all: ReturnType<typeof roadsAt>, k: number): void {
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  for (const r of all) {
+    for (const l of r.lanes)
+      group.appendChild(
+        make('path', {
+          class: 'thoughtknot-road',
+          d: l.d,
+          'data-from': l.from,
+          'data-to': l.to,
+          'stroke-width': round1(2 + Math.log2(l.count)),
+        }),
+      );
+    for (const g of r.gates) {
+      const t = make('text', {
+        class: 'thoughtknot-gate',
+        x: g.x,
+        y: g.y,
+        'text-anchor': 'middle',
+        'font-size': GATE_NAME_PX / k,
+      });
+      t.textContent = g.text;
+      group.appendChild(t);
+    }
+  }
+}
+
+/** The most names a cloud previews of the level in it. */
+const PEEK_MOST = 6;
+
+/**
+ * One cloud drawn: its outline, its name with its count, and a preview of the level in it. The preview names its own
+ * groups, or its biggest things when the next level is every item. It shows when the cloud is pointed at or picked.
+ */
+function unitOf(
+  c: Cloud,
+  levels: readonly DetailLevel[],
+  at: number,
+  rects: ReadonlyMap<string, Rect>,
+  texts: ReadonlyMap<string, string>,
+  k: number,
+): Element {
+  // each cloud takes its subject's hue, a shade lighter for each level in (level_colours)
+  const subject = subjectOf(levels, at, c.key);
+  // Tab reaches each cloud, and a screen reader says what it is and how to open it (level_keys)
+  const unit = make('g', {
+    class: 'thoughtknot-cloud-unit',
+    'data-cloud': c.key,
+    'data-subject': subject,
+    tabindex: 0,
+    role: 'button',
+    'aria-label': word('levels.cloud-label', { name: c.name, count: c.count, level: levels[at]?.name ?? '' }),
+  });
+  const look = { 'data-hue': hueOf(levels, subject), 'data-shade': Math.min(at, 2) };
+  unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, ...look }));
+  const text = (cls: string, x: number, y: number, px: number, words: string) => {
+    const t = make('text', { class: cls, x, y, 'text-anchor': 'middle', 'font-size': px / k });
+    t.textContent = words;
+    return t;
+  };
+  unit.appendChild(text('thoughtknot-cloud-name', c.x, c.y - 4 / k, NAME_PX, `${c.name} · ${c.count}`));
+  const peek = make('g', { class: 'thoughtknot-cloud-peek' });
+  const middle = (keys: readonly string[]) => {
+    const rs = keys.flatMap((key) => rects.get(key) ?? []);
+    return rs.length
+      ? [
+          rs.reduce((t, r) => t + r.left + r.right, 0) / (2 * rs.length),
+          rs.reduce((t, r) => t + r.top + r.bottom, 0) / (2 * rs.length),
+        ]
+      : null;
+  };
+  const next = at + 1 < levels.length - 1 ? levels[at + 1] : null;
+  const named = next
+    ? next.groups.filter((g) => g.parent === c.key).map((g) => ({ words: g.name, keys: g.things }))
+    : (levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []).map((key) => ({
+        words: texts.get(key) ?? key,
+        keys: [key],
+      }));
+  for (const n of named.slice(0, PEEK_MOST)) {
+    const m = middle(n.keys);
+    if (m) peek.appendChild(text('thoughtknot-cloud-peek-name', m[0] as number, m[1] as number, PEEK_PX, n.words));
+  }
+  peek.appendChild(text('thoughtknot-cloud-hint', c.x, c.box.bottom + 14 / k, HINT_PX, word('levels.open')));
+  unit.appendChild(peek);
+  return unit;
+}

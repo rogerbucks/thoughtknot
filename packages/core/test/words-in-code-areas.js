@@ -235,6 +235,10 @@ export const KEPT = {
     '"certainty" is one of: {}. "read" names the things you read to decide.',
     'Leave out any thing you cannot judge. Nothing you suggest is written until a person applies it.',
     'If you are unsure what the user means, answer {"question": "your one question"} instead, and suggest nothing yet.',
+    'You name the levels of detail of a graph written in GQL in a note, so a person sees big groups first and detail on zoom.',
+    'Give each thing a subject, an area within its subject, and a topic within its area. Use about six subjects in all.',
+    'Each name is one to three plain words. Things that belong together share a name. Leave out area or topic for a small graph.',
+    '{"thing": "a_name", "subject": "Money", "area": "Budget", "topic": "Rent", "certainty": "likely", "reason": "why", "read": ["a_name"]}',
   ],
   // what was chosen, as the model is sent it and the change set records it in the note: shown from the catalogue instead
   'packages/core/src/ai-scope.ts': [

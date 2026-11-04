@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-suggestions.test.js",
+  "test": "a level name that is not text, or too long, refuses the whole answer",
+  "seen_failing_first": false,
+  "evidence": "Before the levels ask existed any levels answer was refused as unknown, so this guard passed; it now pins the refusal of bad names."
+}
