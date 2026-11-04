@@ -290,13 +290,7 @@ function roads(
 }
 
 /** A signpost: the cloud it stands by, where it leads, its links each way, and where it stands. */
-interface Post {
-  from: string;
-  label: string;
-  out: number;
-  back: number;
-  at: number[];
-}
+type Post = { from: string; label: string; out: number; back: number; at: number[] };
 
 /** Moves the cards and signposts in `group` down just below any they overlap, so no two names cover each other. */
 export function unclash(group: Element): void {
