@@ -10,7 +10,7 @@ import { BALL_LIGHT } from '../../palette.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 import { paintOutlines } from './space-painter.ts';
 import { colourReader } from './gl-painter.ts';
-import { solidCss } from '../../colour-numbers.ts';
+import { inkOn, solidCss } from '../../colour-numbers.ts';
 import type { SpacePainter } from './space-painter.ts';
 
 /** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
@@ -240,16 +240,18 @@ export function paintSpaceLabels(
 function paintFaces(ctx: CanvasRenderingContext2D, faces: readonly FaceText[], paints: Paints, ratio: number) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  const read = colourReader();
   for (const f of faces) {
-    const text = paints(f.style).text,
-      ground = paints(f.ground);
-    if (!text) continue;
+    // black or white on the thing's own colour, edged in the other, so it reads on any ball (space_name_contrast)
+    const behind = solidOf(read, paints(f.ground));
+    if (!paints(f.style).text || !behind) continue;
+    const { ink: text, edge } = inkOn(behind);
     const [ax, ay] = f.across,
       [dx, dy] = f.down;
     ctx.setTransform(ratio * ax, ratio * ay, ratio * dx, ratio * dy, ratio * f.x, ratio * f.y);
     ctx.font = `${f.picked ? 'bold ' : ''}${f.size}px sans-serif`;
     ctx.lineWidth = f.size / 4;
-    ctx.strokeStyle = ground.fill ?? ground.line ?? 'transparent';
+    ctx.strokeStyle = edge;
     f.rows.forEach((row, i) => {
       const y = (i - (f.rows.length - 1) / 2) * f.size * FACE_ROW;
       ctx.strokeText(row, 0, y, f.room);
