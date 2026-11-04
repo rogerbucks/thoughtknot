@@ -7,12 +7,20 @@ import { FACE_ROW } from '../../space-faces.ts';
 import type { FaceText } from '../../space-faces.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
-import type { Paints } from './mark-painter.ts';
+import type { Paint, Paints } from './mark-painter.ts';
 import { paintOutlines } from './space-painter.ts';
+import { colourReader } from './gl-painter.ts';
+import { solidCss } from '../../colour-numbers.ts';
 import type { SpacePainter } from './space-painter.ts';
 
 /** Whether a computed colour paints nothing: none, `transparent`, or one with no opacity. */
 const clear = (c: string) => !c || c === 'transparent' || /,\s*0\)$/.test(c) || /\/\s*0\)$/.test(c);
+
+/** A thing's fill, solid, as the graphics chip paints it (colour-numbers.ts, solidFill); none when it has no colour. */
+function solidOf(read: ReturnType<typeof colourReader>, paint: Paint): string | undefined {
+  if (!paint.fill && !paint.line) return undefined;
+  return solidCss(read(paint.fill ?? paint.line), read(paint.line ?? paint.fill));
+}
 
 /**
  * The colour seen behind `el`: its own background, or the first painted one of the elements round it. The system's page
@@ -48,6 +56,7 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   let width = 1,
     height = 1,
     ratio = 1;
+  const read = colourReader();
   return {
     kind: 'canvas',
     resize(w, h, r) {
@@ -62,7 +71,7 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.lineWidth = 1;
-      if (space.round) return paintBalls(ctx, space, matrix, paints, width, height);
+      if (space.round) return paintBalls(ctx, space, matrix, paints, width, height, read);
       const placed = space.blocks
         .map((b) => ({ b, at: cornersOf(b).map((p) => projectPoint(matrix, p, width, height)) }))
         .filter(({ at }) => at.every((p) => p !== null))
@@ -72,7 +81,8 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
         })
         .sort((a, b) => b.far - a.far);
       for (const { b, points } of placed) {
-        const paint = paints(b.style);
+        const paint = paints(b.style),
+          fill = solidOf(read, paint);
         // the four sides, far ones first, then the top: so the sides facing the camera cover the ones facing away
         const farOf = (face: number[]) => face.reduce((n, k) => n + (points[k]?.far ?? 0), 0);
         const sides = [
@@ -89,8 +99,8 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
             else ctx.lineTo(p.x, p.y);
           });
           ctx.closePath();
-          if (paint.fill) {
-            ctx.fillStyle = paint.fill;
+          if (fill) {
+            ctx.fillStyle = fill;
             ctx.fill();
           }
           if (paint.line) {
@@ -260,6 +270,7 @@ function paintBalls(
   paints: Paints,
   width: number,
   height: number,
+  read: ReturnType<typeof colourReader>,
 ) {
   const focal = height / 2 / Math.tan(FIELD / 2);
   const items: { far: number; paint: () => void }[] = [];
@@ -274,8 +285,8 @@ function paintBalls(
       paint: () => {
         ctx.beginPath();
         ctx.arc(c.x, c.y, seen, 0, Math.PI * 2);
-        // filled as the graphics chip fills it: in its outline colour where its style gives no fill
-        const fill = paint.fill ?? paint.line;
+        // filled solid, as the graphics chip fills it: in its outline colour where its fill is too faint to see
+        const fill = solidOf(read, paint);
         if (fill) {
           ctx.fillStyle = fill;
           ctx.fill();

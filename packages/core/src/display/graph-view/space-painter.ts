@@ -8,6 +8,7 @@
 import type { SpaceMarks, Vec3 } from '../../space-view.ts';
 import { OUTLINE_FOLD } from '../../space-outlines.ts';
 import type { ScreenOutline } from '../../space-outlines.ts';
+import { solidFill } from '../../colour-numbers.ts';
 import { colourReader } from './gl-painter.ts';
 import type { PainterKind, Paints } from './mark-painter.ts';
 
@@ -106,7 +107,6 @@ export function ballPoints(around = 24): Float32Array {
 /** Numbers in each point of a ball's or a cube's shape: where it is (3) and its outward line (3). */
 export const SHAPE_POINT_NUMBERS = 6;
 
-/** How opaque a fill must be to be painted as a block's colour, rather than its outline's. */ const SEEN_FILL = 0.1;
 /** Numbers in each block: its corner and floor (3), its width, depth and height (3), its fill (4) and outline (4). */
 export const BLOCK_NUMBERS = 14;
 /** Numbers in each point of a line: where it is (3) and its tint (4). */
@@ -120,8 +120,7 @@ export function spaceNumbers(space: SpaceMarks, paints: Paints): { blocks: Float
     const paint = paints(b.style);
     const line = numbersOf(paint.line ?? paint.fill);
     // painted solid, a clear fill is black: its outline's colour is used (Roger, 1 Nov 2026)
-    const given = numbersOf(paint.fill ?? paint.line),
-      fill = given[3] < SEEN_FILL ? line : given;
+    const fill = solidFill(numbersOf(paint.fill ?? paint.line), line);
     blocks.set([b.x, b.y, b.floor, b.width, b.depth, b.tall, ...fill, ...line], i * BLOCK_NUMBERS);
   });
   const points: number[] = [];

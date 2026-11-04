@@ -114,3 +114,38 @@ export function solidOver(fill: string, alpha: number, behind: Rgba): string {
     mix = (i: number) => Math.round(255 * ((f[i] ?? 0) * alpha + (behind[i] ?? 0) * (1 - alpha)));
   return `rgb(${mix(0)}, ${mix(1)}, ${mix(2)})`;
 }
+
+/** How opaque a fill must be to be painted as a thing's colour in 3D, rather than its outline's. */
+export const SEEN_FILL = 0.1;
+
+/**
+ * A thing's colour as the 3D view paints it, solid: its fill, or its outline's colour when the fill is too faint to see.
+ * Every painter fills so. The 2D canvas painter once painted the faint fill as it was, so balls were black on a dark
+ * page (Roger, 4 Nov 2026: "Black balls ... on mac").
+ */
+export const solidFill = (fill: Rgba, line: Rgba): Rgba => (fill[3] < SEEN_FILL ? line : fill);
+
+/** `solidFill` as a colour a 2D canvas paints with. */
+export function solidCss(fill: Rgba, line: Rgba): string {
+  const [r, g, b] = solidFill(fill, line).map((n) => Math.round(n * 255));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/** How light a colour looks, from 0 (black) to 1 (white). */
+const lightness = ([r, g, b]: Rgba) => 0.2126 * unshown(r) + 0.7152 * unshown(g) + 0.0722 * unshown(b);
+/** The lightness halfway between black and white, as the eye sees it. */
+const MIDDLE = 0.18;
+
+/**
+ * The colour round words in `ink`, so they read: `behind`, the page behind them, unless it is unknown or as light as the
+ * ink. Then black or white, whichever the ink stands out on. Before, a page with no painted colour gave white round light
+ * words on a phone (Roger, 4 Nov 2026: "light background and light text").
+ */
+export function haloFor(behind: string, ink: string): string {
+  const b = rgbaOf(behind),
+    i = rgbaOf(ink);
+  if (!i[3]) return behind;
+  const light = lightness(i) > MIDDLE;
+  if (b[3] && lightness(b) > MIDDLE !== light) return behind;
+  return light ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
+}

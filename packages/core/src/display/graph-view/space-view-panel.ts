@@ -27,6 +27,7 @@ import type { SpaceMode, SpaceOptions, SpaceView } from './space-view-options.ts
 import { pickPainter, type Paints } from './mark-painter.ts';
 import { webgl2SpacePainter, type SpacePainter } from './space-painter.ts';
 import { backgroundOf, canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
+import { haloFor } from '../../colour-numbers.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
 import { aimOf, glideIn, fitIn, linkCounts, pivotOf, spacePad, turnToward, ways } from './space-view-pad.ts';
@@ -107,10 +108,10 @@ export async function openSpaceView(
   for (const type of KEPT) el.addEventListener(type, (e) => e.stopPropagation());
   const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } }),
     win = el.win;
-  // the label halo is the colour behind the view: the first painted one up from it, else the system's page colour
-  const halo = backgroundOf(el);
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
+  // the label halo is the colour behind the view, the first painted one up from it; else black or white, against the ink
+  const halo = haloFor(backgroundOf(el), ink);
   const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }, 'globe'];
   const globe = new GlobeLayout(); // spots kept as more opens; only the side facing the camera is seen
   let depths = depthsOf();

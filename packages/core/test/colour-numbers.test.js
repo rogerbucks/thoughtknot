@@ -1,7 +1,9 @@
 // A colour as numbers, for a painter on the graphics chip (editor spec §53, scale_gpu_painters): colour-numbers.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FADED, rgbaOf, seeThrough } from '../src/colour-numbers.ts';
+import { FADED, haloFor, rgbaOf, seeThrough } from '../src/colour-numbers.ts';
+import { canvasSpacePainter } from '../src/display/graph-view/space-canvas-painter.ts';
+import { orbitFit, spaceMatrix } from '../src/space-view.ts';
 import { BLOCK_NUMBERS, spaceNumbers } from '../src/display/graph-view/space-painter.ts';
 
 test('a colour in hex digits is four numbers from 0 to 1, opaque when it says nothing of how opaque', () => {
@@ -85,4 +87,55 @@ test('a ball or block with a clear fill is painted in its outline colour on the 
     [...blocks.slice(i * BLOCK_NUMBERS + 6, i * BLOCK_NUMBERS + 10)].map((n) => Math.round(n * 255));
   assert.deepEqual(fillOf(0), [64, 177, 183, 255], 'its outline colour');
   assert.deepEqual(fillOf(1), [255, 0, 0, 128], 'a fill that shows is kept');
+});
+
+// Every 3D painter fills a thing solid, in one colour. Roger, 4 Nov 2026: balls were black on a Mac and an iPhone.
+/** A 2D canvas that keeps each colour it fills with, as `fills` says. */
+function fakeCanvas() {
+  const fills = [],
+    kept = { fillStyle: '', createRadialGradient: () => ({ addColorStop() {} }) };
+  kept.fill = () => fills.push(kept.fillStyle);
+  const ctx = new Proxy(kept, { get: (o, k) => (k in o ? o[k] : () => {}) });
+  return { canvas: { width: 0, height: 0, getContext: () => ctx }, fills };
+}
+
+const blockOf = (style) => ({ id: style, style, x: 0, y: 0, width: 10, depth: 10, floor: 0, tall: 10 });
+const spaceOf = (round) => ({
+  blocks: [blockOf('faint'), blockOf('clear')],
+  lines: [],
+  labels: [],
+  arrows: [],
+  round,
+  least: [0, 0, 0],
+  most: [10, 10, 10],
+});
+// as Obsidian's palette fills a thing: its hue at 16% (palette.ts), over a page the canvas does not see
+const PAINTS = (style) =>
+  style === 'faint'
+    ? { fill: 'rgba(0, 191, 188, 0.16)', line: 'rgb(0, 191, 188)' }
+    : { fill: 'rgba(0, 0, 0, 0)', line: 'rgb(255, 0, 0)' };
+
+// proves: space_colours_any_form
+test('the 2D canvas painter fills a ball or a box solid, as the graphics chip does, never faint or black', () => {
+  for (const round of [true, false]) {
+    const { canvas, fills } = fakeCanvas();
+    const painter = canvasSpacePainter(canvas);
+    painter.resize(400, 400, 1);
+    const space = spaceOf(round);
+    painter.paint(space, spaceMatrix(orbitFit(space, 1), 1, 30), PAINTS);
+    const solid = fills.filter((f) => typeof f === 'string');
+    assert.ok(solid.includes('rgb(0, 191, 188)'), `${round ? 'a ball' : 'a box'} with a faint fill: ${solid}`);
+    assert.ok(solid.includes('rgb(255, 0, 0)'), `${round ? 'a ball' : 'a box'} with no fill takes its outline's`);
+    assert.ok(!solid.some((f) => f.startsWith('rgba')), 'no faint or clear fill is painted as it is');
+  }
+});
+
+// proves: space_colours_any_form
+test('words in 3D keep a halo they stand out on, even where no page colour is painted behind them', () => {
+  assert.equal(haloFor('rgb(30, 30, 30)', 'rgb(220, 221, 222)'), 'rgb(30, 30, 30)', 'a dark page round light words');
+  assert.equal(haloFor('rgb(255, 255, 255)', 'rgb(34, 34, 34)'), 'rgb(255, 255, 255)', 'a light page round dark words');
+  assert.equal(haloFor('Canvas', 'rgb(220, 221, 222)'), 'rgb(0, 0, 0)', 'no page known: dark round light words');
+  assert.equal(haloFor('Canvas', 'rgb(34, 34, 34)'), 'rgb(255, 255, 255)', 'no page known: light round dark words');
+  assert.equal(haloFor('rgb(250, 250, 250)', 'rgb(220, 221, 222)'), 'rgb(0, 0, 0)', 'never light round light words');
+  assert.equal(haloFor('rgb(30, 30, 30)', 'CanvasText'), 'rgb(30, 30, 30)', 'words of no known colour keep the page');
 });
