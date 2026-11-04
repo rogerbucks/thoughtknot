@@ -4214,55 +4214,133 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-svg text.thoughtknot-name-crowded {
   visibility: hidden;
 }
-/* the clouds of a level of detail, under the things they gather; far out the things fade so the clouds read first
-   (§68, level_clouds) */
+/* The clouds of a level of detail, under the things they gather (§68, level_clouds). They look as their mockup draws
+   them (level_look). Each cloud is soft, with no outline. Far out each thing is a dot. Each cloud's name sits on a
+   frosted card in its colour, and roads are wide ribbons with a count. */
 .thoughtknot-svg .thoughtknot-cloud {
   fill: var(--gn-branch-0);
-  fill-opacity: 0.08;
+  fill-opacity: 0.32;
+  stroke: none;
+}
+/* each subject's region: one soft wash of its colour under every level, its puffs merged before it fades */
+.thoughtknot-svg .thoughtknot-region {
+  fill: var(--gn-branch-0);
+  opacity: 0.12;
+  pointer-events: none;
+}
+.thoughtknot-svg .thoughtknot-cloud-dots {
+  fill: var(--gn-branch-0);
+  fill-opacity: 0.85;
+}
+.thoughtknot-svg .thoughtknot-cloud-card-svg {
   stroke: var(--gn-branch-0);
-  stroke-opacity: 0.4;
+  color: var(--gn-branch-0);
+}
+.thoughtknot-svg
+  :is(
+    .thoughtknot-cloud,
+    .thoughtknot-cloud-dots,
+    .thoughtknot-road-count,
+    .thoughtknot-gate,
+    .thoughtknot-region
+  )[data-hue='1'] {
+  fill: var(--gn-branch-1);
+}
+.thoughtknot-svg :is(.thoughtknot-road, .thoughtknot-cloud-card-svg)[data-hue='1'] {
+  stroke: var(--gn-branch-1);
+  color: var(--gn-branch-1);
+}
+.thoughtknot-svg
+  :is(
+    .thoughtknot-cloud,
+    .thoughtknot-cloud-dots,
+    .thoughtknot-road-count,
+    .thoughtknot-gate,
+    .thoughtknot-region
+  )[data-hue='2'] {
+  fill: var(--gn-branch-2);
+}
+.thoughtknot-svg :is(.thoughtknot-road, .thoughtknot-cloud-card-svg)[data-hue='2'] {
+  stroke: var(--gn-branch-2);
+  color: var(--gn-branch-2);
+}
+.thoughtknot-svg
+  :is(
+    .thoughtknot-cloud,
+    .thoughtknot-cloud-dots,
+    .thoughtknot-road-count,
+    .thoughtknot-gate,
+    .thoughtknot-region
+  )[data-hue='3'] {
+  fill: var(--gn-branch-3);
+}
+.thoughtknot-svg :is(.thoughtknot-road, .thoughtknot-cloud-card-svg)[data-hue='3'] {
+  stroke: var(--gn-branch-3);
+  color: var(--gn-branch-3);
+}
+.thoughtknot-svg
+  :is(
+    .thoughtknot-cloud,
+    .thoughtknot-cloud-dots,
+    .thoughtknot-road-count,
+    .thoughtknot-gate,
+    .thoughtknot-region
+  )[data-hue='4'] {
+  fill: var(--gn-branch-4);
+}
+.thoughtknot-svg :is(.thoughtknot-road, .thoughtknot-cloud-card-svg)[data-hue='4'] {
+  stroke: var(--gn-branch-4);
+  color: var(--gn-branch-4);
+}
+.thoughtknot-svg
+  :is(
+    .thoughtknot-cloud,
+    .thoughtknot-cloud-dots,
+    .thoughtknot-road-count,
+    .thoughtknot-gate,
+    .thoughtknot-region
+  )[data-hue='5'] {
+  fill: var(--gn-branch-5);
+}
+.thoughtknot-svg :is(.thoughtknot-road, .thoughtknot-cloud-card-svg)[data-hue='5'] {
+  stroke: var(--gn-branch-5);
+  color: var(--gn-branch-5);
+}
+.thoughtknot-svg .thoughtknot-cloud-card-back {
+  fill: var(--gn-bg);
+  fill-opacity: 0.88;
   stroke-width: 1.5px;
   vector-effect: non-scaling-stroke;
-}
-.thoughtknot-svg .thoughtknot-cloud[data-hue='1'] {
-  fill: var(--gn-branch-1);
-  stroke: var(--gn-branch-1);
-}
-.thoughtknot-svg .thoughtknot-cloud[data-hue='2'] {
-  fill: var(--gn-branch-2);
-  stroke: var(--gn-branch-2);
-}
-.thoughtknot-svg .thoughtknot-cloud[data-hue='3'] {
-  fill: var(--gn-branch-3);
-  stroke: var(--gn-branch-3);
-}
-.thoughtknot-svg .thoughtknot-cloud[data-hue='4'] {
-  fill: var(--gn-branch-4);
-  stroke: var(--gn-branch-4);
-}
-.thoughtknot-svg .thoughtknot-cloud[data-hue='5'] {
-  fill: var(--gn-branch-5);
-  stroke: var(--gn-branch-5);
+  filter: drop-shadow(0 2px 5px var(--gn-border));
 }
 .thoughtknot-svg .thoughtknot-cloud-name {
-  fill: var(--gn-text-normal);
-  font-weight: var(--gn-font-weight-semibold);
+  fill: currentcolor;
+  stroke: none;
+  font-weight: 800;
 }
+.thoughtknot-svg .thoughtknot-cloud-count {
+  fill: var(--gn-text-muted);
+  stroke: none;
+}
+/* Far out, each thing is a dot and its links run in the roads: links never vanish. */
 .thoughtknot-svg.thoughtknot-far :is(g.node, g.edge) {
-  opacity: 0.35;
+  opacity: 0;
+  pointer-events: none;
 }
-/* Far out, links between clouds run as roads, one lane each way, round other clouds (spec §68, level_roads). A gate
-   at each end says where they go. The item links under them only fade: links never vanish. */
 .thoughtknot-svg .thoughtknot-road {
   fill: none;
-  stroke: var(--gn-text-muted);
-  stroke-opacity: 0.7;
+  stroke: var(--gn-branch-0);
+  stroke-opacity: 0.55;
   stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
 }
-.thoughtknot-svg .thoughtknot-gate {
-  fill: var(--gn-text-muted);
-  font-style: italic;
+.thoughtknot-svg .thoughtknot-road.thoughtknot-road-far {
+  stroke-opacity: 0.22;
+}
+.thoughtknot-svg :is(.thoughtknot-road-count, .thoughtknot-gate) {
+  fill: var(--gn-branch-0);
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--gn-bg);
 }
 .thoughtknot-level-badge {
   position: absolute;
@@ -4402,10 +4480,10 @@ img.thoughtknot-picture-hidden,
 }
 /* Areas and topics take lighter shades of their subject's colour. */
 .thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
-  fill-opacity: 0.06;
+  fill-opacity: 0.26;
 }
 .thoughtknot-svg .thoughtknot-cloud[data-shade='2'] {
-  fill-opacity: 0.04;
+  fill-opacity: 0.22;
 }
 /* The spotlight: the subject pointed at comes to the front, the rest fade. Only their look changes. */
 .thoughtknot-svg.thoughtknot-spotlit :is(g.node, .thoughtknot-cloud-unit):not(.is-spot) {

@@ -239,6 +239,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/details-open.test.js` — the details panel kept open by a setting, off by default, in a card
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
+- `packages/obsidian/test/text-to-graph.test.js` — text to graph from the editor (spec §47, text_to_graph_in_editor).
+  The command takes the selection or the note's words through the send dialog, and a review keeps what is ticked.
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
 - `packages/obsidian/test/placed-fits.test.js` — a card drawn off the page, as Live Preview draws it, fits its frame
   once placed. Centre here leaves no zoom or pan for the card drawn next (editor spec §15).
@@ -525,6 +527,10 @@ after a module nor listed here, and on a listed file that is missing.
   `packages/cowork`, the core's edits and gate, and the skill's own files.
 - `test/cowork-release.test.js` — the release and the nightly attach the `.skill` file. `scripts/cowork-release.mjs`
   builds it from the library. The same SKILL.md reads as a Claude skill (cowork_released).
+- `test/text-to-graph-skill.test.js` — the skill makes a graph of a text through the library, and writes only after
+  approval (spec §47, text_to_graph_skill). It spans `packages/cowork` and the core's text to graph.
+- `test/text-to-graph-contract.test.js` — the editor and the skill take one prompt and one reader from the library
+  (spec §47, text_to_graph_one_contract). It spans the core, `packages/obsidian` and `packages/cowork`.
 
 ## The library's release
 

@@ -49,6 +49,43 @@ export const levelNames = (count: number): string[] => [
   everyItem(),
 ];
 
+/** `of` with its biggest groups split by the Louvain method on their own links, while fewer than `most` groups remain. */
+function split(of: number[], links: readonly (readonly [number, number])[], most: number): number[] {
+  const whole = new Set<number>(),
+    big = (1.5 * of.length) / most;
+  for (;;) {
+    const members = new Map<number, number[]>();
+    of.forEach((g, i) => members.set(g, [...(members.get(g) ?? []), i]));
+    if (members.size >= most) break;
+    // the biggest group not yet found whole, if it is well over its share
+    const [g, ms] = [...members].filter(([k]) => !whole.has(k)).sort((x, y) => y[1].length - x[1].length)[0] ?? [];
+    if (g === undefined || !ms || ms.length <= big) break;
+    const at = new Map(ms.map((m, i) => [m, i]));
+    const inner = links.flatMap(([a, b]) => {
+      const x = at.get(a),
+        y = at.get(b);
+      return x !== undefined && y !== undefined ? [[x, y] as const] : [];
+    });
+    const parts = louvain(ms.length, inner);
+    if (new Set(parts).size < 2) {
+      whole.add(g);
+      continue;
+    }
+    const base = Math.max(...of) + 1;
+    ms.forEach((m, i) => (of[m] = base + (parts[i] as number)));
+  }
+  return of;
+}
+
+/** The most groups level `depth` of `count` has, for `n` things. Far out there are about BRANCH subjects. Nearest, a
+ * topic holds about BRANCH things, and the levels between are spaced evenly. */
+function mostAt(depth: number, count: number, n: number): number {
+  const finest = Math.max(1, n / BRANCH),
+    top = Math.min(BRANCH, finest);
+  const share = count > 2 ? (depth - 1) / (count - 2) : 0;
+  return Math.max(1, Math.round(top * (finest / top) ** share));
+}
+
 /** Groups of `n` members from weighted links between them, joined until at most `most` remain. */
 function grouped(n: number, links: readonly (readonly [number, number])[], most: number): number[] {
   // members linked to nothing gather in one group of loose ends
@@ -58,9 +95,8 @@ function grouped(n: number, links: readonly (readonly [number, number])[], most:
     for (const i of loose) of[i] = of[loose[0] as number] as number;
     return of;
   };
-  // the Louvain method can join too much at a coarse level. Then each member starts alone, and the smallest join.
-  const found = gather(louvain(n, links));
-  const of = new Set(found).size < Math.min(most, n) / BRANCH ? gather([...Array(n).keys()]) : found;
+  // the Louvain method can join too much: a group far bigger than its share is split by its own links again
+  const of = gather(split(louvain(n, links), links, most));
   // each group's links to the others, by weight, and its size
   const near = new Map<number, Map<number, number>>(),
     sizes = new Map<number, number>();
@@ -117,7 +153,15 @@ function grouped(n: number, links: readonly (readonly [number, number])[], most:
 }
 
 /** The levels of `shape`, far to near, the last where every item shows. */
-export function detailLevels(shape: GraphShape): DetailLevel[] {
+export function detailLevels(given: GraphShape): DetailLevel[] {
+  // the same graph gives the same levels whichever order its things and links come in. So the layout and the clouds
+  // drawn over it always agree (level_layout)
+  const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  const shape: GraphShape = {
+    ...given,
+    things: [...given.things].sort((a, b) => byKey(a.key, b.key)),
+    links: [...given.links].sort((a, b) => byKey(a.from, b.from) || byKey(a.to, b.to) || byKey(a.type, b.type)),
+  };
   const keys = shape.things.map((t) => t.key),
     count = levelCount(keys.length);
   let names = levelNames(count);
@@ -136,7 +180,7 @@ export function detailLevels(shape: GraphShape): DetailLevel[] {
   let members: string[][] = keys.map((k) => [k]);
   const rounds: string[][][] = [];
   for (let depth = count - 1; depth >= 1; depth--) {
-    const of = grouped(members.length, links, Math.max(1, Math.round(BRANCH ** depth)));
+    const of = grouped(members.length, links, mostAt(depth, count, keys.length));
     const next: string[][] = [];
     of.forEach((g, i) => (next[g] = [...(next[g] ?? []), ...(members[i] as string[])]));
     links = links.map(([a, b]) => [of[a] as number, of[b] as number] as [number, number]).filter(([a, b]) => a !== b);
@@ -166,8 +210,11 @@ export function detailLevels(shape: GraphShape): DetailLevel[] {
   return levels;
 }
 
-/** The most units a level shows on screen at once: more, and the level a step out shows instead. */
-export const SHOWN_MOST = 40;
+/** The most groups a level shows on screen at once: more, and the level a step out shows instead. Roger's mockup
+ * shows about six subjects far out, and areas once a few subjects fill the screen. */
+export const SHOWN_MOST = 12;
+/** How many more things than groups may show at the last level, where every item shows. */
+const ITEMS_TIMES = 3;
 
 /** How many units of level `i` of `levels` have a thing in `seen`: its groups, or at the last level the things. */
 function unitsSeen(levels: readonly DetailLevel[], i: number, seen: ReadonlySet<string>): number {
@@ -181,7 +228,8 @@ function unitsSeen(levels: readonly DetailLevel[], i: number, seen: ReadonlySet<
  * nearer levels fit. A graph of one level is always at it.
  */
 export function levelAt(levels: readonly DetailLevel[], seen: ReadonlySet<string>, most = SHOWN_MOST): number {
-  for (let i = levels.length - 1; i > 0; i--) if (unitsSeen(levels, i, seen) <= most) return i;
+  for (let i = levels.length - 1; i > 0; i--)
+    if (unitsSeen(levels, i, seen) <= (i === levels.length - 1 ? most * ITEMS_TIMES : most)) return i;
   return 0;
 }
 

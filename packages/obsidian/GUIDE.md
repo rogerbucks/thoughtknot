@@ -306,6 +306,16 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - Every send is recorded in the plugin's data (`recordAiSend`).
   - An answer is written into the note as a change set after the graph's blocks, through `vault.process`. A failure is
     said in a notice, the note left as it was.
+- `model-row.ts` — the dialog's row that chooses the model, the one for proposing changes first.
+
+#### Text to graph (spec §47)
+
+- `text-graph.ts` — the command in `ai.ts` is Make a graph of the text with an AI model. It takes the selection, or
+  the note's words (`proseOf`) when nothing is selected. It is offered only while AI is on.
+  - It opens the send dialog on the text, with the graph it goes into (`graphFor`). The core's `textToGraphAsk` makes
+    the ask, so the ceiling, Show, Send and the record hold as for any send.
+  - A note that holds the graph gets the answer as a change set. A note with no such graph gets `TextGraphReview`: the
+    person ticks what to keep, and only that is written, into a new block.
 #### The destination matrix and the network
 
 - `matrix-note.ts` — the destination matrix note, named in the settings, read into plain rows (`matrixRows`).

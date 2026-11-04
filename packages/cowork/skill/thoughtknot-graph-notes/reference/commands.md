@@ -11,6 +11,10 @@ The script's answers and the edits it takes. The notation itself is not describe
 - `draw` adds `card`, `text`, `files`, `notes` and, when it could not draw, `why`.
 - `propose` adds `said`, `was`, `now` and `approve`; or `refused`; or `same` when the edit changes nothing.
 - `apply` adds `written` and `said`.
+- `text-to-graph` with `--text` alone adds `graph`, `instructions` and `message`.
+- With `--answer` too it adds `said`, `changes`, `matched`, `now` and `approve`. Each change has `gql`, and a `reason`
+  that says where in the text it came from. Or it gives `refused`, or `asks`: a question to put to the user.
+- With `--approve` too it adds `written` and `said`.
 
 ## Edits (the `--edit` JSON)
 

@@ -10,7 +10,7 @@ import { groupedLayered } from '../src/layouts/grouped.ts';
 import { layered } from '../src/layouts/layered.ts';
 import { folded } from '../src/layouts/folded-rows.ts';
 import { readability } from '../src/layouts/readability.ts';
-import { ownMarks, groupsIn } from '../src/layouts/own-draw.ts';
+import { ownMarks, groupsIn, kindsIn } from '../src/layouts/own-draw.ts';
 import { directLinks } from '../src/direct-links.ts';
 import { fans } from '../src/direct-words.ts';
 import { readNote } from '../src/drawing.ts';
@@ -431,7 +431,10 @@ describe('the readability scores', () => {
       // the whole drawing, not the overview a graph this big opens on
       state.toDetail('all');
       const d = directions(state.folded(drawing))[0];
-      const laid = own ? ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)) : directLinks(engine.marks(d.dot));
+      // with each thing's kind, as the app lays it out: a big flow of many kinds keeps its rows
+      const laid = own
+        ? ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot))
+        : directLinks(engine.marks(d.dot));
       return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
     };
     const gv = scored(false),

@@ -203,6 +203,7 @@ export const DRAWING_SOURCE_WORDS = {
   'view.layout.why.tree': 'Laid out in rows as a tree: most things have one link in.',
   'view.layout.why.flow': 'Laid out in rows as a flow: its links mostly run one way.',
   'view.layout.why.network': 'Spread out as a network: its links run every way.',
+  'view.layout.why.levels': 'Placed by its levels: each subject in its own room, its areas and topics inside it.',
   'view.layout.why.dense': 'Spread out: it has many links for each thing.',
   'view.layout.why.overview': 'Laid out in rows: each group is one box.',
   'view.layout.why.tried': 'Laid out in rows and spread out, and the one with fewer crossings kept.',

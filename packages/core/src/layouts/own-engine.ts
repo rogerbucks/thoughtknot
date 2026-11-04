@@ -133,13 +133,21 @@ export function ownSpots(
     const c = cheaperSpots(step, whole, sizes, rankdir, layoutOptions(options).spacing, MARGIN);
     return { ...c, via: new Map(), boxes: [], pick: pickLayout(whole), parts: 1, loose: 0, bands: new Map() };
   }
-  const { shape, trunks } = trunksOut(whole);
+  const { shape: bare, trunks } = trunksOut(whole);
+  // each thing with its kind, so a big flow of many kinds keeps its rows (pick.ts)
+  const kindOf = (k: string) => lanesBy?.get(k);
+  const shape = {
+    ...bare,
+    things: bare.things.map((t) => ({ ...t, kinds: kindOf(t.key) ? [kindOf(t.key) as string] : [] })),
+  };
   const { spacing } = layoutOptions(options);
   // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray
   const together = groups.map((g) => g.members);
   const grouped = new Set(together.flat());
   const keys = shape.things.map((t) => t.key);
-  const parts = partsOf(keys, shape.links, together);
+  // a graph placed by its levels is laid out whole, so its levels are those of the whole graph, as its clouds' are
+  const levelled = !chosenPick(shape, layoutOptions(options).strategy, placed) && pickLayout(shape).why === 'levels';
+  const parts = levelled ? [keys] : partsOf(keys, shape.links, together);
   const isLoose = (p: readonly string[]) =>
     p.length === 1 && !grouped.has(p[0] as string) && !(p[0] as string).startsWith(FOLDED_GROUP);
   const loose = parts.filter(isLoose).flat();
@@ -277,7 +285,12 @@ function laidBy(
   // one link as long as a typical box is wide, plus room, as long again as `linkLength` asks
   const ws = [...sizes.values()].map(([w, h]) => Math.hypot(w, h));
   const unit = ((ws.reduce((t, w) => t + w, 0) / Math.max(1, ws.length)) * 0.75 + 30) * linkLength;
-  const placed = pick.layout === 'given' ? givenSpots(shape, more.placed ?? new Map(), unit) : null;
+  // placed by its levels, each group keeps its own room: the seed is the layout, not only where it starts (level_layout)
+  const seeded = pick.why === 'levels' && !previous ? levelSeed(shape, 2, unit) : null;
+  const placed =
+    pick.layout === 'given'
+      ? givenSpots(shape, more.placed ?? new Map(), unit)
+      : seeded && new Map([...seeded].map(([k, [x = 0, y = 0]]) => [k, [x, y] as Point]));
   const spots =
     placed ??
     new Map(

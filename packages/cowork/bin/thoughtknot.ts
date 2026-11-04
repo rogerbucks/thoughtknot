@@ -4,11 +4,14 @@
 // - draw: an SVG and a PNG beside the note, and a card.
 // - propose: what an edit would change. Nothing is written.
 // - apply: writes the edit, only with the approval that propose gave for this edit of this note as it is now.
+// - text-to-graph: the library's instructions and message for a text (--text). With --answer, what the conversation's
+//   answer would write. With --approve too, the write itself, only with the approval it gave.
 // It reads the files it is named and writes beside the note. It makes no network call (cowork_no_server).
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
 import { word } from '@thoughtknot/core';
 import { apply, clear, draw, propose, read } from '../src/cowork.ts';
+import { textGraphApply, textGraphAsk, textGraphPropose } from '../src/text-graph.ts';
 import { svgToPng } from './raster.ts';
 import type { EditAsk } from '../src/cowork.ts';
 
@@ -23,7 +26,7 @@ const option = (name: string): string | undefined => {
   return at < 0 ? undefined : rest[at + 1];
 };
 
-if (!command || !notePath || !['read', 'check', 'draw', 'propose', 'apply'].includes(command))
+if (!command || !notePath || !['read', 'check', 'draw', 'propose', 'apply', 'text-to-graph'].includes(command))
   out({ error: word('cowork.usage') }, 2);
 
 let note: string;
@@ -79,6 +82,30 @@ if (command === 'draw') {
     ...(made.why ? { why: made.why } : {}),
     notes: made.notes,
   });
+}
+
+// a text to graph: the instructions and message, the proposal for the conversation's answer, or its write
+if (command === 'text-to-graph') {
+  const file = (name: string): string => {
+    try {
+      return readFileSync(option(name) ?? '', 'utf8');
+    } catch {
+      return out({ error: word('cowork.usage') }, 2);
+    }
+  };
+  const text = file('text');
+  const graph = option('graph');
+  if (!option('answer')) out({ read: true, level, ...textGraphAsk(note, text, graph) });
+  const answer = file('answer');
+  const approved = option('approve');
+  if (!approved) {
+    const made = textGraphPropose(note, text, answer, graph);
+    const { after: _after, ...shown } = 'after' in made ? made : { ...made, after: '' };
+    out({ read: true, level, ...shown });
+  }
+  const done = textGraphApply(note, text, answer, approved as string, graph);
+  if ('write' in done) writeFileSync(notePath as string, done.write);
+  out({ read: true, level, written: 'write' in done, said: 'write' in done ? done.said : done.refused });
 }
 
 // an edit: propose it, or apply it with the approval propose gave
