@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-metrics.test.js",
+  "test": "the workflows > a quality job measures, checks and runs the engine check, and the release waits for it",
+  "seen_failing_first": false,
+  "evidence": "The test only widens one pattern so the measuring step may read the suite's parts from a folder; the new workflow made the old pattern fail, and the old code still passes the wider one. The sharded suite itself is covered by the new tests in test/quality-suite.test.js."
+}
