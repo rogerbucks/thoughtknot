@@ -15,10 +15,12 @@
 //                                                     (no audit, build or suite).
 //   node scripts/quality-metrics.mjs --reuse <file>   keep an earlier run's instruction count for each benchmark
 //                                                     whose fingerprint is unchanged (scripts/instruction-counts.mjs).
-//   node scripts/quality-metrics.mjs --suite-shard 2/6 --out f.json  only the suite's two runs over that share of the
-//                                                     test files, to a part for --suite-from (a job of its own).
-//   node scripts/quality-metrics.mjs --suite-from <dir>  measure everything, the suite from the parts in a folder
-//                                                     instead of running it here.
+//   node scripts/quality-metrics.mjs --suite-shard 2/6 --out f.json
+//                                                     only the suite's two runs over that share of the test
+//                                                     files, as a part for --suite-from (a job of its own).
+//   node scripts/quality-metrics.mjs --suite-from <dir>
+//                                                     measure everything, taking the suite's figures from the
+//                                                     parts in a folder instead of running it here.
 //
 // The audit reaches the npm registry, and the suite runs twice (a minute or so): this is the release's job, not CI's.
 import { spawnSync } from 'node:child_process';

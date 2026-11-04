@@ -170,8 +170,8 @@ export function measureSuite(root) {
 
 /**
  * Both runs over one share of the test files (`shard` such as `2/6`), or over all of them without one. The part it
- * returns holds what `mergeSuiteShards` needs from the shards together: how long and whether each run took, the plain
- * run's quiet bytes, each run's tests by result, and the coverage report.
+ * returns is what `mergeSuiteShards` needs. That is how long each run took and whether it passed, the plain run's
+ * quiet bytes, each run's tests by result, and the coverage report.
  */
 export function measureSuiteShard(root, shard) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-suite-'));
