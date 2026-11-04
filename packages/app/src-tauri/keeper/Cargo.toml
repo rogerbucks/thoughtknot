@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-keeper"
-version = "0.8.0"
+version = "0.9.0"
 description = "ThoughtKnot's vault key, made at first launch and kept in the phone's own secure store."
 license = "MPL-2.0"
 edition = "2021"
