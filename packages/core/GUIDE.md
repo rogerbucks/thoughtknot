@@ -1856,8 +1856,8 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     (`quoteSpan`). Things already in the graph, by name, text or alias, are matched (`knownThings`), never added again.
   - The graph it would make is read by the graph format library. A new problem refuses the whole answer.
 - `text-to-graph-note.ts` — writing it. A note that holds the graph gets a change set (`holdsGraph`). Else only what the
-  person ticked (`tickedOnly`) is written into a new block (`noteWithTextGraphApplied`). `textGraphMessage` and
-  `textGraphProposal` serve a host with its own model, such as the skill.
+  person ticked (`tickedOnly`) is written into a new block (`noteWithTextGraphApplied`).
+- `textGraphMessage` and `textGraphProposal`, in `text-to-graph.ts`, serve a host with its own model, such as the skill.
 
 #### The AI query contract and write scoring (spec §37)
 

@@ -44,15 +44,10 @@ export {
   knownThings,
   quoteSpan,
   textGraphIn,
+  textGraphMessage,
+  textGraphProposal,
   textToGraphAsk,
   textToGraphInstructions,
 } from './text-to-graph.ts';
 export type { KnownThing, Matched, TextGraph, TextGraphFor, TextSpan } from './text-to-graph.ts';
-export {
-  holdsGraph,
-  noteWithTextGraphApplied,
-  textGraphMessage,
-  textGraphProposal,
-  tickedOnly,
-  withGraphHome,
-} from './text-to-graph-note.ts';
+export { holdsGraph, noteWithTextGraphApplied, tickedOnly, withGraphHome } from './text-to-graph-note.ts';

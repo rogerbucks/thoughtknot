@@ -10,13 +10,15 @@
 //   (text_to_graph_merge). Each new thing and link carries the span of text it came from (text_to_graph_sources).
 // - The text goes through the one way anything is sent (ai.ts): within the ceiling, seen and said yes to, recorded.
 import type { SendAsk, SendRefused } from './ai.ts';
-import { plainText } from './ai-request.ts';
+import { askedText, plainText } from './ai-request.ts';
 import type { AnswerShape } from './ai-request.ts';
+import { aiScope } from './ai-scope.ts';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { newProblems } from './proposals-apply.ts';
-import { linkChange, thingChange } from './proposals.ts';
-import type { ChangeInput } from './proposals.ts';
+import { basisOf } from './proposals-basis.ts';
+import { linkChange, makeProposal, thingChange } from './proposals.ts';
+import type { ChangeInput, Proposal } from './proposals.ts';
 import { word } from './words.ts';
 
 /** The most characters of text sent to make a graph of. */
@@ -297,4 +299,44 @@ export function textToGraphAsk(
   };
   const question = asked.trim() || word('ai.text-graph.question');
   return { ...base, choice: { graph, what: 'text' }, question, answers };
+}
+
+/**
+ * What a host with a model of its own sends it, such as the skill in a conversation. That is the library's
+ * instructions, and the message as the editor would send it (text_to_graph_one_contract). Or why there is none.
+ */
+export function textGraphMessage(
+  note: string,
+  graph: string,
+  text: string,
+  shared: string[] = [],
+): { instructions: string; message: string } | { refused: string } {
+  if (!text.trim()) return { refused: word('ai.text-graph.no-text') };
+  const scope = aiScope(note, { graph, what: 'text' }, shared);
+  if ('refused' in scope) return scope;
+  return { instructions: textToGraphInstructions(), message: askedText(scope, word('ai.text-graph.question'), text) };
+}
+
+/**
+ * A model's answer to `textGraphMessage`, read by the same reader the editor uses. It gives a proposal by `by`
+ * against the note as it is, and the things it matched in the graph. Or why it cannot be read, or the model's one question.
+ */
+export function textGraphProposal(
+  note: string,
+  graph: string,
+  text: string,
+  answer: string,
+  by: string,
+): { proposal: Proposal; matched: Matched[] } | { unread: string } | { asks: string } {
+  const texts = gqlBlocks(note).map((b) => b.text);
+  const read = textGraphIn(answer, { text, graph, known: knownThings(note, graph), texts });
+  if (!('changes' in read)) return read;
+  const made = makeProposal({
+    id: 'text-graph',
+    graph,
+    by: { name: by, kind: 'model' },
+    basis: basisOf(note, graph),
+    changes: read.changes,
+  });
+  return 'refused' in made ? { unread: made.refused } : { proposal: made, matched: read.matched };
 }

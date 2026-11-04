@@ -1,19 +1,13 @@
 // Text to graph into a note (editor spec §47). A note that holds the graph gets the proposal as a change set beside it
 // (ai-answer.ts), reviewed over the graph. A note with no such graph has nothing to show it over, and a change set
 // needs a graph to be made against. So the person ticks what to keep there, and only that is written, into a new block.
-// The skill writes a text graph the same way, but only the note its person approved (cowork_same_bytes).
-import { askedText } from './ai-request.ts';
-import { aiScope } from './ai-scope.ts';
-import { gqlBlocks, gqlSpans, graphOfBlock } from './blocks.ts';
+// The skill writes a text graph the same way, but only the note its person approved (cowork_same_bytes). What a host
+// with its own model sends, and how its answer is read, are in text-to-graph.ts.
+import { gqlSpans, graphOfBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { applyChange, namesOf } from './proposals-apply.ts';
-import { basisOf } from './proposals-basis.ts';
-import { makeProposal } from './proposals.ts';
 import type { Proposal } from './proposals.ts';
 import { replaceBlock } from './store.ts';
-import { knownThings, textGraphIn, textToGraphInstructions } from './text-to-graph.ts';
-import type { Matched } from './text-to-graph.ts';
-import { word } from './words.ts';
 
 /** The note with an empty block for `graph` at its end, when it has no block of that graph; else as it is. */
 export function withGraphHome(note: string, graph: string): string {
@@ -61,44 +55,4 @@ export function noteWithTextGraphApplied(note: string, proposal: Proposal): stri
     out = written.note;
   }
   return out;
-}
-
-/**
- * What a host with a model of its own sends it, such as the skill in a conversation. That is the library's
- * instructions, and the message as the editor would send it (text_to_graph_one_contract). Or why there is none.
- */
-export function textGraphMessage(
-  note: string,
-  graph: string,
-  text: string,
-  shared: string[] = [],
-): { instructions: string; message: string } | { refused: string } {
-  if (!text.trim()) return { refused: word('ai.text-graph.no-text') };
-  const scope = aiScope(note, { graph, what: 'text' }, shared);
-  if ('refused' in scope) return scope;
-  return { instructions: textToGraphInstructions(), message: askedText(scope, word('ai.text-graph.question'), text) };
-}
-
-/**
- * A model's answer to `textGraphMessage`, read by the same reader the editor uses. It gives a proposal by `by`
- * against the note as it is, and the things it matched in the graph. Or why it cannot be read, or the model's one question.
- */
-export function textGraphProposal(
-  note: string,
-  graph: string,
-  text: string,
-  answer: string,
-  by: string,
-): { proposal: Proposal; matched: Matched[] } | { unread: string } | { asks: string } {
-  const texts = gqlBlocks(note).map((b) => b.text);
-  const read = textGraphIn(answer, { text, graph, known: knownThings(note, graph), texts });
-  if (!('changes' in read)) return read;
-  const made = makeProposal({
-    id: 'text-graph',
-    graph,
-    by: { name: by, kind: 'model' },
-    basis: basisOf(note, graph),
-    changes: read.changes,
-  });
-  return 'refused' in made ? { unread: made.refused } : { proposal: made, matched: read.matched };
 }
