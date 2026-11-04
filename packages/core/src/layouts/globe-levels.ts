@@ -1,6 +1,6 @@
 // A big graph on the globe, placed by its levels (editor spec §68, globe_levels). Roger, 4 Nov 2026: bring the globe
-// mockup's design to the app's globe. So each subject has its own region of the globe, each area its own patch inside
-// that, and each topic its own patch inside the area. Its things sit in the topic's patch.
+// mockup's design to the app's globe. So each subject has its own region of the globe. Each area has its own patch
+// inside that, and each topic its own patch inside the area. Its things sit in the topic's patch.
 //
 // Each region's share of the surface is its share of the things. The biggest subject takes a cap round the pole,
 // which faces the camera. The rest of the globe is halved again and again, across its longer side, so each region is
@@ -46,8 +46,8 @@ function treeOf(levels: readonly DetailLevel[]): Part[] {
 }
 
 /**
- * A patch of the globe, round its pole: from `f0` to `f1` of the surface out from the pole, by area, and from angle
- * `a0` to `a1` round it. Measured by area, a patch's share of the things is its share of the surface.
+ * A patch of the globe, round its pole. It runs from `f0` to `f1` of the surface out from the pole, by area. It runs
+ * from angle `a0` to `a1` round it. Measured by area, a patch's share of the things is its share of the surface.
  */
 interface Patch {
   f0: number;

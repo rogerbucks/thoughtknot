@@ -11,7 +11,6 @@
 // surface, a little above it. Host-free and pure: the same graph gives the same globe every time.
 
 import { detailLevels } from '../detail-levels.ts';
-import type { GraphShape } from '../types-shape.ts';
 import { levelWays } from './globe-levels.ts';
 import { LEVELLED_FROM } from './level-seed.ts';
 
@@ -43,7 +42,7 @@ const levelsOfGlobe = (shape: GlobeShape) =>
   detailLevels({
     things: shape.things.map((t) => ({ key: t.key, text: t.key, kinds: [] })),
     links: shape.links.map((l) => ({ from: l.from, to: l.to, type: '' })),
-  } as unknown as GraphShape);
+  });
 
 /** The way the pole faces: toward the camera as the space view opens, from the front and above. */
 export const GLOBE_FACING: GlobeVec = unit([0, -Math.cos(0.9), Math.sin(0.9)]);

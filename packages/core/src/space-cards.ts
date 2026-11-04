@@ -351,8 +351,8 @@ export function frameOf(
 }
 
 /**
- * `frame` as it shows in `view`. Far out, the levels' clouds over it are marked far and hold its things (level_look):
- * they show each thing as a dot and its links in their roads, so no card, name, ball or link is painted. The picked
+ * `frame` as it shows in `view`. Far out, the levels' clouds over it are marked far, and they hold its things
+ * (level_look). They show each thing as a dot and its links in their roads. So no card, name, ball or link is painted. The picked
  * thing keeps its ring and its links. Near in, every thing shows as before.
  */
 export function farFrame(frame: SpaceFrame, view: { querySelector(q: string): unknown }): SpaceFrame {
