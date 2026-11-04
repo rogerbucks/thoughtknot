@@ -1124,3 +1124,13 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/versions-json.test.js` — `versions.json` lists only released versions, and its newest equals `manifest.json`.
   It spans `versions.json`, `manifest.json` and the git tags (community_listing, OPS-14).
+
+## Styles
+
+- `test/calm-hover.test.js` — a highlight waits, then fades, and a link is 2 px at rest and 3.2 px highlighted. It
+  reads `styles.css`, whose highlight classes `hover.ts` and `level-clouds-svg.ts` set (calm_hover).
+
+## Levels of detail
+
+- `test/levels-at-scale.test.js` — a graph of 2,000 things gets nested levels from `detail-levels.ts` and a spot each
+  from `layouts/level-seed.ts`. It gets clouds from `level-clouds.ts` and roads from `level-roads.ts` (level_scale).

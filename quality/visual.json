@@ -3,51 +3,51 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
@@ -75,123 +75,123 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "7104395fb35832995179f35790f558558df597bf11387f55c63103c7b01d91da",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "492356901371c1c28cc3e43081c671a61b1b0457014d036d1862a84308e554ad",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "ca8f30ffa00f082e976c92163c184faa839ed4e3805a24baa763ef8cf6ce0638",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "af4db8086f18dfb6dd782de7ab96c94cefd4fb2ef2d316a9b0ddd8eba3e08635",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "ca71884dc41d4c44458fdb99efb0d5bb8da1ab27d204f3fbfc97f38e9bc8e438",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "1fe1671dbb0ffb2bade8ff1c9be7df271ebd3f1d53cea7b87caaaee9a91a574e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "6d2b8d56a9f8165cfb09595e7e165047f967befe444db309030ab6c9e3774c4c",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "6d6d3507257461230c9251ff0e66701b67e89dbcd18e59edfcc7344b988e49d6",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "ca00f344f1433ffd07e7d7a0b91f0362c29de5c90485bb1a5498729419ddd9ef",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "df7a483d81f74a82597f210727d5e02ccd4a2447048ea5bedae12425912b2fef",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "354830f1207110f5fdcb4dab137bed4a08384b4bc2b9f75d79d3b60e9bbd2f72",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "aed7e52359b58fc475b44d4816b8cfef35a731bae7655deb982d9540a362bb3c",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "14c5b81f275bdb38dffe91bc9ef4a0c1a4f8477f3635bfe87635c1ccd0b132a4",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "a9f0d1a4ab1da7a739ce13bcc7247af2923c77b4fbf19a2fa3996f95123982fb",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "9766ead1253ef962dc60b497e4548a9a0e2039f71b6d566ce60156202a8dec2f",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "873bba417da95092938c92264090f35494e6001520f39c51464ee2d72cc88ba5",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "56bf65b930b541fc9f27d67a2a48c061663399148c886b42f4f138fc3f7eb892",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "2dc6c733c9be33556454a84a30ba38fb1acf04344faffc6b9796a90506d0caae",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -219,50 +219,50 @@
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "79c62c7ec38fe4725cbaa22f4a0b310cacd21e5ee5e2a4aad1e0244a96093648",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "fcbce2fd3746f7fb6a4c3e7b86754cc12e33478d33495912908916a994624af0",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "7dc8386cf1758b9c8f1139a990f5023b1bbe5f1e72f2216e38a64479c4487e45",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "74d5b3b8e1f8702678e8d11de82f21e1776d4a82ae669b069fa4eb25e5513350",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "eb9e46aa35d9d1e686f2d093bce02e5c7e2af09ba3c8b6e0618d795491e9d3c8",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "bf44942f00e6fce4fc16fe2c6a67539646f9975ebbda5d7909768a2ff009032e",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "773e1d77cf8f76188674462b3dce49574ee7209b049b794018bcf4e80439dc8a",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "9a61e2c6f004a5ed6ab40cbc7352e8de6ee0cce09a7d0b604e5f4f664e85c617",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "14a6e3909707c55e2d0f43b9c2519b54728fac47ed9814f611acf16df5629c6d",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "296219eb0bc382c55e4a4b9d05cf000a07f71f8529228da89739ff95ed864643",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "6d2b8d56a9f8165cfb09595e7e165047f967befe444db309030ab6c9e3774c4c",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "6d6d3507257461230c9251ff0e66701b67e89dbcd18e59edfcc7344b988e49d6",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "ca00f344f1433ffd07e7d7a0b91f0362c29de5c90485bb1a5498729419ddd9ef",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "df7a483d81f74a82597f210727d5e02ccd4a2447048ea5bedae12425912b2fef",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
@@ -291,75 +291,75 @@
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "f7a0bf12873837bd29bd79acc20771092b54b5cf758cd5b5c3b350973a53db3e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "f65fe64774345f856483228f8d241f7276f8273620f4c00ffd843aa69b4dc95b",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "571f059551c3c72eb8b3d68bbace8666dae7096736a41788a65f2e556778dc06",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "cc65b7b45be9b8f3e7db2379639f0f50a8d1eebf3744d174ab0913562e688130",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "9db974e4af838d3119d3a45e4b4403a7ce445369763c39dfbc023d790efc6d53",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "38f13fd5e5d0f395bccca11d6f9a74e8c663e0d8598f94046a3f0133d2407206",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "02420d468188e1cf66b5782a1ffa43f4d411fe176d208b67d1a1ddd5bb562e09",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "e9f4f221e361df72c0e4583366cec1781b0275853e7a9ff0a296d4b0ab146f05",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "bc21e086ba3b1d1b24db464de4494d8589d94f250a79dbfeebd8db396902c57f",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "171b49b401f0b695a794537b05d2ae9d5357876f02da6f472e3ec59f3b1463aa",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "947f5ed6e0a58a67a580b73a03da53a107ab170de00e2fe8434e64aad9f5807d",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
+      "sha256": "e8d7cb99934ca2078904036ef893b74b8abc6ae5aeb3340e0a0e306bd1780887",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
       "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "2dd48cd6840b994dfdb21ab3cece209f79b672e5789433c4b81baaf3a08d0d22",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "14a6e3909707c55e2d0f43b9c2519b54728fac47ed9814f611acf16df5629c6d",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "d33b9d1e4e7a5fffa048a086f16099b8dd355617fcb29eb82379a006581c0f14",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "296219eb0bc382c55e4a4b9d05cf000a07f71f8529228da89739ff95ed864643",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "9766ead1253ef962dc60b497e4548a9a0e2039f71b6d566ce60156202a8dec2f",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "873bba417da95092938c92264090f35494e6001520f39c51464ee2d72cc88ba5",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "56bf65b930b541fc9f27d67a2a48c061663399148c886b42f4f138fc3f7eb892",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "2dc6c733c9be33556454a84a30ba38fb1acf04344faffc6b9796a90506d0caae",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "8342894e6e2a265870214f4cf35c81e8ec4b194acc098e480338c0e38be558f0",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "fa6f277b7be24a5ad73d6eb2a2728ec77d3417a1b01184d3b1c3be8c86978297",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "40ddfd5fa1ca9724b0ec1f4f6c880ba5cc3a38c33c788555c8c0a2727f2a7dc3",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "9223f4c7e9c1cd7a8f84c3e260318656cc2e7047366339223dc0b2d5921b5ecc",
+      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
+      "day": "2026-11-03"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",

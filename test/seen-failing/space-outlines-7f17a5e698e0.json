@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/space-outlines.test.js",
+  "test": "each thing gets its box on the screen, bigger when nearer, and none behind the camera",
+  "seen_failing_first": false,
+  "evidence": "screenBoxes already shipped in an earlier commit of this PR; the test is named after its module so the unnamed-modules ratchet holds."
+}

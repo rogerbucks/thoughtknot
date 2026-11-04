@@ -258,8 +258,17 @@ describe('a highlight never moves, resizes or re-lays the drawing', () => {
   });
 
   test('what the style does to a highlighted thing is paint, never a size or a place', () => {
-    // an allow-list, so a property nobody thought of is refused until someone says it is paint
-    const paint = ['filter', 'text-decoration', 'opacity', 'fill-opacity', 'stroke-opacity'];
+    // an allow-list, so a property nobody thought of is refused until someone says it is paint.
+    // A line's weight is paint too: it moves nothing (Roger, 3 Nov 2026: 3.2 px on hover). A wait only times it
+    const paint = [
+      'filter',
+      'text-decoration',
+      'opacity',
+      'fill-opacity',
+      'stroke-opacity',
+      'stroke-width',
+      'transition-delay',
+    ];
     const mine = rules(styles, 'styles.css').filter((r) => r.selectors.some((s) => s.includes(HOT)));
     assert.ok(mine.length > 0, 'the highlight is styled');
     for (const r of mine)

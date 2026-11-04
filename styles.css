@@ -222,7 +222,7 @@
    sets itself, such as a trunk's, is kept. The selectors weigh less than the focus rules below, so a selected, kept or
    faded link still shows as they say. */
 .thoughtknot-svg g.edge > :where(path:not([stroke-width])) {
-  stroke-width: 1.6;
+  stroke-width: 2;
 }
 .thoughtknot-svg g.edge > :where(polygon:not([stroke-width])) {
   stroke-width: 2.2;
@@ -531,10 +531,15 @@
   background: var(--thoughtknot-swatch, var(--gn-text-muted));
 }
 /* The highlight (spec §25): under the pointer, with the keyboard focus, or from a touch's tap. It is a glow round the
-   outline and an underline on the words, never a size, a place or a weight, so nothing moves. It shows over any focus,
+   outline, an underline on the words and a heavier line, never a size or a place, so nothing moves. It shows over any focus,
    as the thing comes forward from the fade while it is highlighted. */
 .thoughtknot-svg g.thoughtknot-hot {
   filter: drop-shadow(0 0 3px var(--gn-accent));
+}
+/* A highlighted link is the same line, only heavier (Roger, 3 Nov 2026: 2 px at rest, 3.2 px on hover). A line's
+   weight moves nothing. */
+.thoughtknot-svg g.edge.thoughtknot-hot > :where(path:not([stroke-width])) {
+  stroke-width: 3.2;
 }
 .thoughtknot-svg g.thoughtknot-hot > text {
   text-decoration: underline;
@@ -1193,6 +1198,13 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   box-shadow: none;
 }
 .thoughtknot-find-kind {
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+/* where a thing found sits in the levels of detail, on its own line under its name (level_find) */
+.thoughtknot-find-where {
+  display: block;
+  inline-size: 100%;
   font-size: var(--gn-font-size-s);
   color: var(--gn-text-muted);
 }
@@ -3923,6 +3935,18 @@ body.thoughtknot-easier-reading
     transition: opacity var(--gn-motion-fade) var(--gn-ease-soft);
   }
 }
+/* The levels of detail over the view in space (spec §68, level_space): clouds, roads and gates round the things as
+   the camera sees them. The layer takes no pointer, so turning and picking in space work as before. */
+.thoughtknot-space-levels {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.thoughtknot-space-levels * {
+  pointer-events: none;
+}
 .thoughtknot-space-canvas {
   position: absolute;
   inset: 0;
@@ -4140,6 +4164,216 @@ img.thoughtknot-picture-hidden,
 /* a name hidden for now, as at this zoom it would cover another; zooming in brings it back (§3, names_readable_any_zoom) */
 .thoughtknot-svg text.thoughtknot-name-crowded {
   visibility: hidden;
+}
+/* the clouds of a level of detail, under the things they gather; far out the things fade so the clouds read first
+   (§68, level_clouds) */
+.thoughtknot-svg .thoughtknot-cloud {
+  fill: var(--gn-branch-0);
+  fill-opacity: 0.08;
+  stroke: var(--gn-branch-0);
+  stroke-opacity: 0.4;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.thoughtknot-svg .thoughtknot-cloud[data-hue='1'] {
+  fill: var(--gn-branch-1);
+  stroke: var(--gn-branch-1);
+}
+.thoughtknot-svg .thoughtknot-cloud[data-hue='2'] {
+  fill: var(--gn-branch-2);
+  stroke: var(--gn-branch-2);
+}
+.thoughtknot-svg .thoughtknot-cloud[data-hue='3'] {
+  fill: var(--gn-branch-3);
+  stroke: var(--gn-branch-3);
+}
+.thoughtknot-svg .thoughtknot-cloud[data-hue='4'] {
+  fill: var(--gn-branch-4);
+  stroke: var(--gn-branch-4);
+}
+.thoughtknot-svg .thoughtknot-cloud[data-hue='5'] {
+  fill: var(--gn-branch-5);
+  stroke: var(--gn-branch-5);
+}
+.thoughtknot-svg .thoughtknot-cloud-name {
+  fill: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-svg.thoughtknot-far :is(g.node, g.edge) {
+  opacity: 0.35;
+}
+/* Far out, links between clouds run as roads, one lane each way, round other clouds (spec §68, level_roads). A gate
+   at each end says where they go. The item links under them only fade: links never vanish. */
+.thoughtknot-svg .thoughtknot-road {
+  fill: none;
+  stroke: var(--gn-text-muted);
+  stroke-opacity: 0.7;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.thoughtknot-svg .thoughtknot-gate {
+  fill: var(--gn-text-muted);
+  font-style: italic;
+}
+.thoughtknot-level-badge {
+  position: absolute;
+  inset-block-start: var(--gn-space-2);
+  /* centred in either reading direction, never pushed off the card */
+  inset-inline: 0;
+  inline-size: fit-content;
+  max-inline-size: 90%;
+  margin-inline: auto;
+  padding: var(--gn-space-half-1) var(--gn-space-2);
+  border-radius: var(--gn-radius-l);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
+  pointer-events: none;
+}
+.thoughtknot-level-badge.is-hidden,
+.thoughtknot-level-back.is-hidden,
+.thoughtknot-level-hint.is-hidden,
+.thoughtknot-level-arrows.is-hidden,
+.thoughtknot-level-ai.is-hidden {
+  display: none;
+}
+.thoughtknot-level-badge {
+  display: flex;
+  gap: var(--gn-space-2);
+  align-items: center;
+}
+.thoughtknot-level-back,
+.thoughtknot-level-legend {
+  pointer-events: auto;
+}
+.thoughtknot-level-badge {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+/* The legend of subjects (spec §68, level_colours): a chip each, with its colour. Pointing at one spotlights it; a
+   click keeps it. Its colour button picks the next colour. */
+/* One short hint for each level, shown once, and what the gates' arrows mean (spec §68, level_hints) */
+.thoughtknot-level-hint,
+.thoughtknot-level-arrows {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-level-hint {
+  font-style: italic;
+}
+.thoughtknot-level-legend {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  justify-content: center;
+}
+.thoughtknot-level-own,
+.thoughtknot-level-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+  align-items: center;
+  justify-content: center;
+}
+.thoughtknot-level-legend.is-hidden {
+  display: none;
+}
+/* every control in the badge is at least 24 by 24 pixels, so a finger can hit it (WCAG 2.5.8) */
+.thoughtknot-level-badge :is(button, select) {
+  min-width: 24px;
+  min-height: 24px;
+}
+.thoughtknot-level-chip {
+  display: inline-flex;
+  gap: var(--gn-space-1);
+  align-items: center;
+}
+.thoughtknot-level-chip[aria-pressed='true'] {
+  outline: 2px solid var(--gn-accent);
+}
+.thoughtknot-level-swatch {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+}
+.thoughtknot-level-swatch[data-hue='0'] {
+  background: var(--gn-branch-0);
+}
+.thoughtknot-level-swatch[data-hue='1'] {
+  background: var(--gn-branch-1);
+}
+.thoughtknot-level-swatch[data-hue='2'] {
+  background: var(--gn-branch-2);
+}
+.thoughtknot-level-swatch[data-hue='3'] {
+  background: var(--gn-branch-3);
+}
+.thoughtknot-level-swatch[data-hue='4'] {
+  background: var(--gn-branch-4);
+}
+.thoughtknot-level-swatch[data-hue='5'] {
+  background: var(--gn-branch-5);
+}
+/* Areas and topics take lighter shades of their subject's colour. */
+.thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
+  fill-opacity: 0.06;
+}
+.thoughtknot-svg .thoughtknot-cloud[data-shade='2'] {
+  fill-opacity: 0.04;
+}
+/* The spotlight: the subject pointed at comes to the front, the rest fade. Only their look changes. */
+.thoughtknot-svg.thoughtknot-spotlit :is(g.node, .thoughtknot-cloud-unit):not(.is-spot) {
+  opacity: 0.15;
+}
+.thoughtknot-svg.thoughtknot-spotlit g.node.is-spot {
+  opacity: 1;
+}
+/* A cloud pointed at, picked or reached by Tab dashes its outline and previews the level in it (spec §68,
+   level_click_back, level_keys). The first tap picks it, the second flies in. */
+.thoughtknot-svg .thoughtknot-cloud-unit > .thoughtknot-cloud {
+  cursor: pointer;
+}
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, :focus-visible, .is-picked) > .thoughtknot-cloud {
+  stroke-dasharray: 6 4;
+  stroke-opacity: 0.9;
+}
+.thoughtknot-svg .thoughtknot-cloud-peek {
+  opacity: 0;
+  pointer-events: none;
+}
+.thoughtknot-svg .thoughtknot-cloud-unit:is(:hover, :focus-visible, .is-picked) > .thoughtknot-cloud-peek {
+  opacity: 1;
+}
+.thoughtknot-svg .thoughtknot-cloud-peek-name {
+  fill: var(--gn-text-muted);
+}
+.thoughtknot-svg .thoughtknot-cloud-hint {
+  fill: var(--gn-text-faint);
+  font-style: italic;
+}
+/* Calm hover (Roger, 3 Nov 2026): a highlight waits a moment, then fades in, and fades out when the pointer leaves. So
+   passing over a drawing does not flicker. With reduced motion it still waits, then shows at once. */
+.thoughtknot-svg g.thoughtknot-hot,
+.thoughtknot-svg .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
+  transition-delay: var(--gn-motion-fade);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .thoughtknot-svg :is(g.node, g.edge),
+  .thoughtknot-svg .thoughtknot-cloud-peek {
+    transition:
+      filter var(--gn-motion-fade) var(--gn-ease-soft),
+      opacity var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-svg g.edge > path {
+    transition: stroke-width var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-svg g.edge.thoughtknot-hot > path {
+    transition-delay: var(--gn-motion-fade);
+  }
 }
 /* every word in a drawing is edged in the page colour, the opposite of its own. So it reads over lines and other
    things: dark words get a light edge, light words a dark one (Roger, 2 Nov 2026). The edge is a share of the

@@ -9,6 +9,7 @@
 // The same shape gives the same spots. Given last time's spots, it starts from them and takes fewer, smaller steps, so
 // a small edit moves little (warm start). Things push apart only within nearby cubes of a grid. So each step costs
 // about as much as the number of things. Units: a link is about one long. Host-free and pure.
+import { levelSeed } from './level-seed.ts';
 import type { GraphShape } from '../types-shape.ts';
 import { DEFAULT_LAYOUT_OPTIONS, aspectOf, layoutOptions, roundsOf } from './layout-options.ts';
 import { SCREEN } from './folded-rows.ts';
@@ -37,10 +38,13 @@ const ROW = 1_000_003,
 /** Each thing's spot, by its key, in the layout's own units. */
 export type Spots3 = ReadonlyMap<string, readonly [number, number, number]>;
 
+/** A cold start of a big graph starts from its groups placed first, each in its own room (level-seed.ts). */
+const seedOf = (shape: GraphShape): Spots3 | undefined => (levelSeed(shape, 3, 1) ?? undefined) as Spots3 | undefined;
+
 /** Where each thing of `shape` sits in space, starting from `previous` where it has a spot. */
 export function forceLayout3d(
   shape: GraphShape,
-  previous?: Spots3,
+  previous: Spots3 | undefined = seedOf(shape),
   options: Partial<LayoutOptions> = {},
 ): Map<string, [number, number, number]> {
   const { spacing, linkLength, groupPull } = layoutOptions(options);

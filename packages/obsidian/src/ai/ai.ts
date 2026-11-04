@@ -69,6 +69,7 @@ export function expandFor(plugin: ThoughtKnotPlugin, path: string, graph: string
   return {
     ready: () => !('off' in aiReady(plugin.settings)),
     open: (key: string, thing: string, typed: string) => void expandWithAi(plugin, path, graph, key, thing, typed),
+    levels: () => void nameLevels(plugin, path, graph),
   };
 }
 
@@ -89,6 +90,17 @@ async function expandWithAi(
   const more = typed.trim() ? word('ai.expand-typed', { typed: typed.trim() }) : '';
   const question = word('ai.expand', { thing, typed: more });
   const start = { graph, things: [key], question };
+  new SendDialog(plugin, file, text, levelFor(plugin, file, text), await plugin.sharedSchemas(), start).open();
+}
+
+/** Opens the send dialog on note `path`, the whole of `graph` chosen, asking your AI to name its levels (ai_levels). */
+async function nameLevels(plugin: ThoughtKnotPlugin, path: string, graph: string): Promise<void> {
+  const ready = aiReady(plugin.settings);
+  if ('off' in ready) return void new Notice(ready.off);
+  const file = plugin.app.vault.getFileByPath(path);
+  if (!file) return;
+  const text = (await noteText(plugin.app, path)) ?? '';
+  const start = { graph, things: [], question: word('ai.suggest.levels-ask'), suggest: { ask: 'levels' as const } };
   new SendDialog(plugin, file, text, levelFor(plugin, file, text), await plugin.sharedSchemas(), start).open();
 }
 

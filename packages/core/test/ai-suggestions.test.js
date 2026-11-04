@@ -241,3 +241,50 @@ test('drawing a graph makes no AI call, and a suggestion not applied changes no 
   assert.deepEqual(drawn(note).boxes, drawn(NOTE).boxes);
   assert.deepEqual(drawn(note).links, drawn(NOTE).links);
 });
+
+const LEVELS = {
+  suggestions: [
+    { thing: 'login', subject: 'Product', area: 'Login', certainty: 'likely', reason: 'a page', read: ['login'] },
+    { thing: 'tests', subject: 'Product', area: 'Login', topic: 'Tests', certainty: 'likely', read: ['tests'] },
+    { thing: 'docs', subject: 'Help', certainty: 'very-likely', reason: 'help pages', read: ['docs'] },
+  ],
+};
+
+// ai_levels
+test('your AI names the levels: a subject, area and topic per thing, grouped by subject, applied and undone in one step', async () => {
+  const { prepared, run } = suggest({ kind: 'levels' }, LEVELS, 'Name the levels');
+  assert.match(prepared.body, /You name the levels of detail/);
+  const result = await run();
+  assert.ok('proposal' in result, result.failed);
+  assert.deepEqual(
+    result.proposal.changes.map((c) => [c.thing, c.key, c.value, c.group]),
+    [
+      ['login', 'subject', "'Product'", 'Subject Product'],
+      ['login', 'area', "'Login'", 'Subject Product'],
+      ['tests', 'subject', "'Product'", 'Subject Product'],
+      ['tests', 'area', "'Login'", 'Subject Product'],
+      ['tests', 'topic', "'Tests'", 'Subject Product'],
+      ['docs', 'subject', "'Help'", 'Subject Help'],
+    ],
+  );
+  const note = noteWithProposal(NOTE, result.proposal);
+  const review = new ProposalReview(result.proposal);
+  const applied = review.accept(note, { all: true }, { name: 'roger' }, { at: '2026-11-03T09:05:00Z' });
+  assert.ok(applied.ok, applied.reason);
+  // saved to the note as plain properties, so the levels and the index read them
+  const after = readNote(textsOf(applied.note)).world.work;
+  assert.equal(after.p('tests').topic, 'Tests');
+  assert.equal(after.p('docs').subject, 'Help');
+  const undone = review.undo(applied.note);
+  assert.ok(undone.ok, undone.reason);
+  assert.equal(readNote(textsOf(undone.note)).world.work.p('tests').subject, undefined);
+});
+
+// ai_levels
+test('a level name that is not text, or too long, refuses the whole answer', async () => {
+  for (const bad of [{ subject: 3 }, { subject: 'x'.repeat(61) }, { area: 'Login' }]) {
+    const answer = { suggestions: [{ thing: 'login', certainty: 'likely', read: ['login'], ...bad }] };
+    const result = await suggest({ kind: 'levels' }, answer, 'Name the levels').run();
+    assert.ok(!('proposal' in result), JSON.stringify(bad));
+  }
+});

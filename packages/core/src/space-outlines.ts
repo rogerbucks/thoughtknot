@@ -98,3 +98,26 @@ export function stripTap(
   const inside = space.blocks.filter((b) => b.of !== undefined && group.of.includes(b.of));
   return { fit: { ...space, blocks: inside, ...boundsOf(inside, [], []) } };
 }
+
+/**
+ * Each thing of `space` as the camera's `matrix` sees it: its box on the screen, in pixels, by its key. Things behind
+ * the camera are left out. The levels of detail draw their clouds round these (level_space).
+ */
+export function screenBoxes(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+): Map<string, { left: number; top: number; right: number; bottom: number }> {
+  const focal = height / 2 / Math.tan(FIELD / 2),
+    out = new Map<string, { left: number; top: number; right: number; bottom: number }>();
+  for (const b of space.blocks) {
+    const c = b.of === undefined ? null : projectPoint(matrix, middleOf(b), width, height);
+    if (!c || b.of === undefined) continue;
+    const scale = focal / c.far,
+      w = ((b.card?.width ?? b.width) * scale) / 2,
+      h = ((b.card?.height ?? b.depth) * scale) / 2;
+    out.set(b.of, { left: c.x - w, top: c.y - h, right: c.x + w, bottom: c.y + h });
+  }
+  return out;
+}

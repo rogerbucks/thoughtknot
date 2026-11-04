@@ -18,6 +18,8 @@ export const AI_SUGGEST_SOURCE_WORDS = {
   'ai.suggest.value': 'Suggestion {n} has no value, or a value that was not offered.',
   'ai.suggest.twice': 'The answer suggests twice for {thing}.',
   'ai.suggest.group-value': '{key} {value}',
+  'ai.suggest.group-levels': 'Subject {subject}',
+  'ai.suggest.levels': 'Suggestion {n} has no subject, or a name that is empty or longer than 60 characters.',
   'ai.suggest.group-supports': 'Supports {intent}',
   'ai.suggest.group-contradicts': 'Contradicts {intent}',
   'ai.suggest.reason': '{certainty}, read {read}: {why}',
@@ -28,6 +30,9 @@ export const AI_SUGGEST_SOURCE_WORDS = {
   'ai.suggest.ask-changes': 'Changes',
   'ai.suggest.ask-values': 'Suggested values, such as categories',
   'ai.suggest.ask-intent': 'What supports or contradicts an intent',
+  'ai.suggest.ask-levels': 'Names for the levels: subjects, areas and topics',
+  'ai.suggest.levels-ask':
+    'Name the subjects, areas and topics of this graph, so I see big groups first and detail as I zoom.',
   'ai.suggest.key': 'Property',
   'ai.suggest.key.sentence': 'The property to suggest a value of, such as category.',
   'ai.suggest.of': 'Of kind',
