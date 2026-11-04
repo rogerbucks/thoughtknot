@@ -305,4 +305,4 @@ jobs:
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-cowork-$GITHUB_REF_NAME.skill" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes
+        run: cd release && gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" "thoughtknot-cowork-$GITHUB_REF_NAME.skill" "graph_spec-$GITHUB_REF_NAME-py3-none-any.whl" "thoughtknot-sbom-$GITHUB_REF_NAME.cdx.json" SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md

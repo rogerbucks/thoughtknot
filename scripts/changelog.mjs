@@ -48,6 +48,13 @@ export function pullRequests(root, from) {
     }));
 }
 
+// GitHub refuses release notes over 125,000 characters. A long list stops at this many lines and says how many more.
+export const MOST_LINES = 300;
+const capped = (lines, what) =>
+  lines.length <= MOST_LINES
+    ? lines
+    : [...lines.slice(-MOST_LINES), `- … and ${lines.length - MOST_LINES} more ${what}, in the commit log`];
+
 // The exports added from `before` to `after`, as `entry name` text in each package.
 function added(before, after) {
   const names = [];
@@ -65,8 +72,12 @@ export function changelogText({ version, from, pulls, repo, before, after }) {
   const lines = [`## ${version}`, ''];
   lines.push(from ? `Changes since ${from}.` : 'The first release.', '', '### Pull requests', '');
   if (pulls.length === 0) lines.push('No pull requests were merged.');
-  for (const { number, title } of pulls)
-    lines.push(`- [#${number}](https://github.com/${repo}/pull/${number}) ${title}`);
+  lines.push(
+    ...capped(
+      pulls.map(({ number, title }) => `- [#${number}](https://github.com/${repo}/pull/${number}) ${title}`),
+      'pull requests',
+    ),
+  );
   lines.push('', LIBRARY, '', RULE, '');
   if (!before) {
     lines.push(
@@ -77,8 +88,25 @@ export function changelogText({ version, from, pulls, repo, before, after }) {
   const more = added(before, after);
   const broken = [...new Map(breakingChanges(before, after).map((change) => [where(change), change])).keys()];
   if (more.length === 0 && broken.length === 0) lines.push('Nothing was added, changed or removed.');
-  if (more.length) lines.push('Added:', '', ...more.map((change) => `- ${where(change)}`), '');
-  if (broken.length) lines.push('Changed or removed (a breaking change):', '', ...broken.map((text) => `- ${text}`));
+  if (more.length)
+    lines.push(
+      'Added:',
+      '',
+      ...capped(
+        more.map((change) => `- ${where(change)}`),
+        'exports',
+      ),
+      '',
+    );
+  if (broken.length)
+    lines.push(
+      'Changed or removed (a breaking change):',
+      '',
+      ...capped(
+        broken.map((text) => `- ${text}`),
+        'changes',
+      ),
+    );
   return `${lines.join('\n').trimEnd()}\n`;
 }
 
