@@ -259,9 +259,9 @@ export class Aids {
     const viewport = this.host.viewport,
       win = viewport.win ?? window;
     win.requestAnimationFrame(() => keepSlots(viewport));
-    const Watch = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
-    if (this.watching || typeof Watch !== 'function') return;
-    const watching = new Watch(() => keepSlots(viewport));
+    const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
+    if (this.watching || typeof resizeObserver !== 'function') return;
+    const watching = new resizeObserver(() => keepSlots(viewport));
     for (const el of [viewport, ...slotCards(viewport)]) watching.observe(el);
     this.watching = watching;
   }
