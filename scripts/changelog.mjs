@@ -49,7 +49,7 @@ export function pullRequests(root, from) {
 }
 
 // GitHub refuses release notes over 125,000 characters. A long list stops at this many lines and says how many more.
-export const MOST_LINES = 300;
+export const MOST_LINES = 150;
 const capped = (lines, what) =>
   lines.length <= MOST_LINES
     ? lines
