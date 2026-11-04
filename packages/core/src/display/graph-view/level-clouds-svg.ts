@@ -10,6 +10,7 @@ import type { DetailLevel } from '../../detail-levels.ts';
 import { cloudsAt } from '../../level-clouds.ts';
 import { roadsAt } from '../../level-roads.ts';
 import type { Cloud, Rect } from '../../level-clouds.ts';
+import { spreadTags, tagWidth } from '../../level-tags.ts';
 import { word } from '../../words.ts';
 import { hueOf, subjectOf } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
@@ -154,6 +155,7 @@ export function levelsInto(
     }
     held.set(svg, inside);
     roads(group, roadsAt(levels, at, f?.links ?? [], clouds, LANE_PX / k, GATE_PX / k), k);
+    unclash(group);
     top.prepend(group);
   }
   return levelBadge(levels, at);
@@ -185,6 +187,22 @@ function roads(group: Element, all: ReturnType<typeof roadsAt>, k: number): void
       group.appendChild(t);
     }
   }
+}
+
+/** The clouds' names and the gates' signposts in `group` moved down where they would overlap (level_tags). */
+export function unclash(group: Element): void {
+  const texts = [
+    ...Array.from(group.querySelectorAll('text.thoughtknot-cloud-name')),
+    ...Array.from(group.querySelectorAll('text.thoughtknot-gate')),
+  ];
+  const tags = texts.map((t) => {
+    const px = Number(t.getAttribute('font-size')) || 1;
+    const at = (name: string) => Number(t.getAttribute(name)) || 0;
+    return { x: at('x'), y: at('y'), width: tagWidth(t.textContent ?? '', px), height: px * 1.2 };
+  });
+  spreadTags(tags).forEach((y, i) => {
+    if (y !== tags[i]?.y) texts[i]?.setAttribute('y', String(Math.round(y * 100) / 100));
+  });
 }
 
 /** The most names a cloud previews of the level in it. */

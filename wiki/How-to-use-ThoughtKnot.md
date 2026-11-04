@@ -63,6 +63,23 @@ coming nearer with the camera shows more detail, just as zooming in does on a fl
 
 <!-- wiki:shot filter -->
 
+### Big things first, detail as you zoom
+
+A big drawing first shows its big groups as soft clouds. Each cloud has its name and how many things are in it. Zoom
+in, and the clouds open into smaller groups, then into every thing. The badge in the corner says which level you see,
+such as "Level 2 of 4 · Areas".
+
+- **Tap a cloud once** to see what is inside it. **Tap it again** to fly in. **Back** in the badge goes out again.
+- **Point at a cloud** and its highlight shows as soon as your pointer stops.
+- **Roads** between clouds show the links between groups. A signpost at each end says where the road goes.
+- **The colour chips** under the badge pick a colour for each subject. Point at a chip to bring that subject forward.
+- **The mini-map** shows every subject as a patch of its colour, so you always know where you are.
+- **✎ beside a subject**, or a right-click on a cloud, opens its card. Rename the group there, merge it into another,
+  or choose **Not a group** to take it apart.
+- **Undo** shows for a few seconds after you move a thing or change a group. Ctrl+Z (Cmd+Z on a Mac) does the same.
+
+With AI on, **Name with AI** asks your AI to name the subjects, areas and topics. The names are saved in your note.
+
 ## 3. Change the layout
 
 Press **Diagram type** (just above the drawing) to choose how it is laid out. It can be a network, a tree, a flow, a

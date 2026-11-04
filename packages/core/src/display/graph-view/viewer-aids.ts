@@ -206,7 +206,16 @@ export class Aids {
       const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
       this.hints?.show(layer ? levelShown(layer) : null);
       this.levelTaps?.mark();
-      this.legend?.show(drawing ? levelsOf(drawing, g) : null);
+      const levels = drawing ? levelsOf(drawing, g) : null;
+      this.legend?.show(levels);
+      // the subjects on the mini-map, by the id each thing's box has in the drawing (level_mini_map)
+      if (this.miniMap && svg.isConnected)
+        this.miniMap.clouds(levels, () => {
+          const ids = new Map<string, string>();
+          for (const n of Array.from(svg.querySelectorAll('g.node[data-key]')))
+            ids.set(n.getAttribute('data-key') ?? '', n.id);
+          return (key) => ids.get(key) ?? null;
+        });
     });
   }
 
