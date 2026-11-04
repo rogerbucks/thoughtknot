@@ -68,7 +68,8 @@ export class CloudCard {
         attr: { 'aria-label': word('levels.merge-label', { name: group.name }) },
       });
       into.createEl('option', { text: word('levels.merge-into'), attr: { value: '' } });
-      for (const p of others) into.createEl('option', { text: p.name, attr: { value: groupNamedBy(p.key)?.value ?? '' } });
+      for (const p of others)
+        into.createEl('option', { text: p.name, attr: { value: groupNamedBy(p.key)?.value ?? '' } });
       const go = merge.createEl('button', { text: word('levels.merge'), attr: { type: 'button' } });
       go.addEventListener('click', () => {
         if (into.value) write(into.value, word('levels.edited', { name: group.name }));
