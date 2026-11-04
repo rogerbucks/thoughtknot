@@ -1,39 +1,39 @@
 {
-  "about": "Recorded reasons for a quality metric that got worse than quality/baseline.json (spec \u00a712). Each entry covers one change: the metric, its baseline value (from), the value it may reach or anything better (to), why, and the day. Without an entry, scripts/quality-check.mjs fails the release. When the baseline is re-measured, entries for the old values simply stop applying.",
+  "about": "Recorded reasons for a quality metric that got worse than quality/baseline.json (spec §12). Each entry covers one change: the metric, its baseline value (from), the value it may reach or anything better (to), why, and the day. Without an entry, scripts/quality-check.mjs fails the release. When the baseline is re-measured, entries for the old values simply stop applying.",
   "accepted": [
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 407431,
-      "reason": "the layout runs in a Web Worker (spec \u00a79 layout_contained); the worker's own copy of the layout-source code is the cost of containing it",
+      "reason": "the layout runs in a Web Worker (spec §9 layout_contained); the worker's own copy of the layout-source code is the cost of containing it",
       "date": "2026-10-10"
     },
     {
       "metric": "bundle_bytes",
       "from": 1958060,
       "to": 2203239,
-      "reason": "Slice 2's views, style graph and export (core src 113 kB \u2192 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review.",
+      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review.",
       "date": "2026-10-11"
     },
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 632893,
-      "reason": "Slice 2's views, style graph and export (core src 113 kB \u2192 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review; raised to the final slice 2 size after #85, #91, #93 and #101; accepted by Roger, 12 Oct 2026.",
+      "reason": "Slice 2's views, style graph and export (core src 113 kB → 246 kB); accepted by Roger, 11 Oct 2026, at the end-of-slice review; raised to the final slice 2 size after #85, #91, #93 and #101; accepted by Roger, 12 Oct 2026.",
       "date": "2026-10-12"
     },
     {
       "metric": "bundle_bytes",
       "from": 1958060,
       "to": 2806887,
-      "reason": "Slice 3's features (core src 246 kB \u2192 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
+      "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     },
     {
       "metric": "bundle_bytes_without_viz",
       "from": 357577,
       "to": 1200306,
-      "reason": "Slice 3's features (core src 246 kB \u2192 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
+      "reason": "Slice 3's features (core src 246 kB → 512 kB); accepted by Roger, 15 Oct 2026, to release the Undo data-loss fix",
       "date": "2026-10-15"
     },
     {
@@ -132,6 +132,34 @@
       "from": 2672152969,
       "to": 4200000000,
       "reason": "R2 (0.8.0) ships now, privately, with this slower count; accepted by Roger, 3 Nov 2026. Main took many view and layout merges since the baseline was set, and the release runner counted 3.91 billion. The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "bundle_bytes",
+      "from": 1958060,
+      "to": 4600000,
+      "reason": "R2 (0.8.0) ships now, privately, with this size/count; accepted by Roger, 3 Nov 2026. Main took many view, layout and zoom merges since the last accepted size (20 Oct). The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "bundle_bytes_without_viz",
+      "from": 357577,
+      "to": 3000000,
+      "reason": "R2 (0.8.0) ships now, privately, with this size/count; accepted by Roger, 3 Nov 2026. Main took many view, layout and zoom merges since the last accepted size (20 Oct). The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "instructions_mesh_query",
+      "from": 27360517,
+      "to": 29500000,
+      "reason": "R2 (0.8.0) ships now, privately, with this size/count; accepted by Roger, 3 Nov 2026. Main took many view, layout and zoom merges since the last accepted size (20 Oct). The cause is not yet found; the follow-up is issue #1804.",
+      "date": "2026-11-03"
+    },
+    {
+      "metric": "audit_moderate",
+      "from": 0,
+      "to": 21,
+      "reason": "All 21 are one flaw (minimatch, GHSA-g3hv-75wg-m249) counted again for each lint tool that depends on it. Build machines only, never shipped; accepted as risk SEC-26 and by Roger, 3 Nov 2026. Undo when the lint tools accept minimatch 11.0.1 or later.",
       "date": "2026-11-03"
     }
   ]
