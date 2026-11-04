@@ -23,6 +23,8 @@ export interface BoxMoving {
   centre?: string;
   /** Writes the nudge into the style graph, and says `done` once it is written. */
   move: (nudge: NudgeWrite, done: string) => void;
+  /** Takes the last nudge written back, where the card can (move_undo). */
+  undo?: () => void;
 }
 
 /** Where a box let go goes: the box it lands by, if one is marked, what that says, and how to write it. */

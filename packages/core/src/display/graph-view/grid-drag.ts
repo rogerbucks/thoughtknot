@@ -10,13 +10,18 @@ import { button } from '../button';
 import type { DragHost } from './box-drag-view';
 import { moveHint } from './box-move-keys';
 import { accept } from './estimate-actions';
+import type { MoveUndo } from './move-undo';
 import type { ViewOptions } from './view-options';
 
 /** The type a grid is chosen by in the style graph. */
 const GRID_TYPE = `${CORE_DIAGRAMS_ID}.grid`;
 
 /** How a box let go moves a card on the grid `o` draws live, with the line in `viewport`; none for any other card. */
-export function gridDrops(o: ViewOptions, viewport: HTMLElement): Pick<DragHost, 'drop' | 'nowhere' | 'textOf'> | null {
+export function gridDrops(
+  o: ViewOptions,
+  viewport: HTMLElement,
+  undo?: MoveUndo,
+): Pick<DragHost, 'drop' | 'nowhere' | 'textOf'> | null {
   const p = o.diagram?.picture;
   if (!p?.live || p.type !== GRID_TYPE || !p.shape) return null;
   const shape = p.shape;
@@ -39,7 +44,15 @@ export function gridDrops(o: ViewOptions, viewport: HTMLElement): Pick<DragHost,
           };
           const m = gridMoved(o.reading.texts, o.graph, key, d);
           if ('reason' in m) say(m.reason);
-          else void accept(o, m.block, m.was, m.now).then(say);
+          else
+            void accept(o, m.block, m.was, m.now).then((why) => {
+              say(why);
+              // written: the move can be taken back, by writing the block as it was (move_undo)
+              if (!why)
+                undo?.offer(word('view.grid.moved', said), () =>
+                  accept(o, m.block, m.now, m.was).then((back) => say(back ?? word('move.undone'))),
+                );
+            });
         },
       };
     },

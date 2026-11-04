@@ -29,7 +29,7 @@ import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
-import { exploringFor, renderViewBlock, writeStyle, writeViewBlock } from './view-block';
+import { exploringFor, renderViewBlock, undoStyle, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
@@ -336,6 +336,7 @@ export async function renderBlock(
               written: styling.style.nudges,
               ...(drawing.diagram?.type === 'radial' ? { centre: drawing.diagram.centre } : {}),
               move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
+              undo: () => void undoStyle(plugin, target.path), // its toast and Ctrl+Z take it back (move_undo)
             },
           }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)

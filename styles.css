@@ -2464,6 +2464,31 @@ pre.thoughtknot-code {
 .thoughtknot-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
 }
+/* the undo of the last move (move_undo): a toast over the foot of the drawing, with its Undo button */
+.thoughtknot-undo-toast {
+  position: absolute;
+  bottom: var(--gn-space-2);
+  inset-inline: 0;
+  width: fit-content;
+  max-width: 90%;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-undo-toast.is-hidden {
+  display: none;
+}
+.thoughtknot-undo-toast > button {
+  min-width: 24px;
+  min-height: 24px;
+}
 
 /* A whiteboard (editor spec §45). The item the keyboard is on is ringed in the text colour, thicker and dashed, so it
    is told by more than colour. The help, the words said and the outline sit under the board in the note's own type. */

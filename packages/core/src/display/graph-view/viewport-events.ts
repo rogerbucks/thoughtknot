@@ -6,7 +6,8 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag, nudgeDrops, type DragHost } from './box-drag-view';
+import { BoxDrag, nudgeDrops, type BoxMoving, type DragHost } from './box-drag-view';
+import { MoveUndo } from './move-undo';
 import { BoxMoveKeys } from './box-move-keys';
 import { gridDrops } from './grid-drag';
 import { trackUse } from './card-in-use';
@@ -70,8 +71,10 @@ export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
   const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom }) : null,
     drag = movers?.drag ?? null,
-    keys = movers?.keys ?? null;
+    keys = movers?.keys ?? null,
+    undo = movers?.undo ?? null;
   if (drag) card.register(() => drag.onunload());
+  if (undo) card.register(() => undo.unload());
   // ? lists every keyboard shortcut, and the host's commands for the drawing act on the card used last (§44)
   const shortcuts = () => toggleShortcuts(host.root, vp);
   trackUse(card, host.root, {
@@ -295,6 +298,11 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
+    // Ctrl+Z or Cmd+Z takes the last move back while its toast shows (move_undo)
+    if (undo?.key(e)) {
+      e.preventDefault();
+      return;
+    }
     // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
     if (keys?.key(e)) {
       e.preventDefault();
@@ -364,17 +372,28 @@ function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
   host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): { drag: BoxDrag; keys: BoxMoveKeys | null } | null {
-  const grid = svg ? gridDrops(o, host.viewport) : null;
+): { drag: BoxDrag; keys: BoxMoveKeys | null; undo: MoveUndo | null } | null {
   const shared = {
     viewport: host.viewport,
     taps: host.taps,
     view: () => host.zoom.view(),
     readOnly: () => !!o.readOnly?.(),
   };
-  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null };
-  const moving = o.moving;
-  if (!moving || !svg) return null;
+  // each move written offers its undo, where the card can take one back (move_undo)
+  const undo = new MoveUndo(host.viewport, o.graph);
+  const grid = svg ? gridDrops(o, host.viewport, undo) : null;
+  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null, undo };
+  const given = o.moving;
+  if (!given || !svg) return null;
+  const moving: BoxMoving = given.undo
+    ? {
+        ...given,
+        move: (nudge, done) => {
+          given.move(nudge, done);
+          undo.offer(done, () => given.undo?.());
+        },
+      }
+    : given;
   const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
   const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
   const rankdir = () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir);
@@ -385,5 +404,6 @@ function boxMoversFor(
       ...nudgeDrops(moving, textOf, rankdir),
     }),
     keys: new BoxMoveKeys({ ...shared, moving, textOf }),
+    undo,
   };
 }
