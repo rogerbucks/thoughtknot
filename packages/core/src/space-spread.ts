@@ -151,9 +151,7 @@ export function spreadSpace(
   const options = layoutOptions(layout);
   // laid out afresh, a trunk's joints are set between its groups once the things are laid out (space-parts.ts)
   const things = drawn ? shape : withoutJoints(shape);
-  // opened in space for the first time, a network starts where the page drew each thing. So nothing is shuffled: it
-  // only spreads out in depth from there (things_stay_put)
-  const seeds = drawn?.seeds ?? previous ?? pageSeeds(shape, marks);
+  const seeds = drawn?.seeds ?? previous ?? pageSeeds(shape, marks); // first opened in space, from the page
   const laid = FORCE_3D.place(things, seeds, drawn ? options : roomier(options));
   // laid out again from last time's spots, each part stays where it was (cluster_in_place); afresh, they are packed
   const packed = drawn ? laid : jointsBetween(shape, seeds ? laid : partsNear(things, laid));
