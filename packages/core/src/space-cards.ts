@@ -355,7 +355,7 @@ export function frameOf(
  * they show each thing as a dot and its links in their roads, so no card, name, ball or link is painted. The picked
  * thing keeps its ring and its links. Near in, every thing shows as before.
  */
-export function farFrame(frame: SpaceFrame, view: ParentNode): SpaceFrame {
+export function farFrame(frame: SpaceFrame, view: { querySelector(q: string): unknown }): SpaceFrame {
   if (!view.querySelector('svg.thoughtknot-far')) return frame;
   const shapes = { ...frame.shapes, blocks: [], lines: [], labels: [], arrows: [] };
   return { ...frame, shapes, cards: [], faces: [], arrows: [], labels: [], shafts: [], outlines: [] };
