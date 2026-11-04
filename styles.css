@@ -4355,10 +4355,10 @@ img.thoughtknot-picture-hidden,
   fill: var(--gn-text-faint);
   font-style: italic;
 }
-/* Calm hover (Roger, 3 Nov 2026): a highlight waits a moment, then fades in, and fades out when the pointer leaves. So
-   passing over a drawing does not flicker. With reduced motion it still waits, then shows at once. */
-.thoughtknot-svg g.thoughtknot-hot,
-.thoughtknot-svg .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
+/* Calm hover (Roger, 3 Nov 2026): a highlight fades in, and fades out when the pointer leaves. It waits a moment only
+   while the pointer is still moving (pointer-moving.ts), so it opens at once where the pointer stops. */
+.thoughtknot-svg.is-moving g.thoughtknot-hot,
+.thoughtknot-svg.is-moving .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
   transition-delay: var(--gn-motion-fade);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -4371,7 +4371,7 @@ img.thoughtknot-picture-hidden,
   .thoughtknot-svg g.edge > path {
     transition: stroke-width var(--gn-motion-fade) var(--gn-ease-soft);
   }
-  .thoughtknot-svg g.edge.thoughtknot-hot > path {
+  .thoughtknot-svg.is-moving g.edge.thoughtknot-hot > path {
     transition-delay: var(--gn-motion-fade);
   }
 }

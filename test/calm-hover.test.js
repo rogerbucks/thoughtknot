@@ -12,14 +12,14 @@ const rule = (selector) => {
 };
 
 // proves: calm_hover
-test('a highlight waits a moment before it shows, with or without motion', () => {
+test('a highlight waits a moment while the pointer moves, with or without motion', () => {
   const waits = css.slice(
     0,
     css.indexOf('@media (prefers-reduced-motion: no-preference) {\n  .thoughtknot-svg :is(g.node'),
   );
   assert.match(
     waits,
-    /\.thoughtknot-svg g\.thoughtknot-hot,\n\.thoughtknot-svg \.thoughtknot-cloud-unit:hover > \.thoughtknot-cloud-peek \{\n  transition-delay: var\(--gn-motion-fade\);/,
+    /\.thoughtknot-svg\.is-moving g\.thoughtknot-hot,\n\.thoughtknot-svg\.is-moving \.thoughtknot-cloud-unit:hover > \.thoughtknot-cloud-peek \{\n  transition-delay: var\(--gn-motion-fade\);/,
   );
 });
 
