@@ -2,7 +2,7 @@
 // moves down just below it, never across. A tag that overlaps none stays where it is.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spreadTags, tagWidth } from '../src/level-tags.ts';
+import { TAG_GAP, spreadTags, tagWidth } from '../src/level-tags.ts';
 
 const overlaps = (a, b) =>
   Math.abs(a.x - b.x) < (a.width + b.width) / 2 - 1e-9 && Math.abs(a.y - b.y) < (a.height + b.height) / 2 - 1e-9;
@@ -22,7 +22,19 @@ test('tags that overlap move down below the one above, never across, and the res
   assert.equal(ys[3], 0, 'a tag far away stays');
   assert.ok(ys[0] < ys[1], 'order kept: the higher stays higher');
   assert.deepEqual(spreadTags([{ x: 0, y: 5, width: 10, height: 10 }]), [5]);
-  assert.deepEqual(spreadTags([tags[0], { ...tags[0] }]), [0, 12], 'the same spot parts them by order');
-  assert.deepEqual(ys.slice(0, 3), [0, 24, 12], 'each just below the one above it');
+  const step = 12 * (1 + TAG_GAP);
+  assert.deepEqual(spreadTags([tags[0], { ...tags[0] }]), [0, step], 'the same spot parts them by order');
+  assert.deepEqual(ys.slice(0, 3), [0, 2 * step, step], 'each just below the one above it');
   assert.equal(tagWidth('Money · 6', 10), 54);
+});
+
+// proves: level_tags
+test('two tags that would touch keep a clear gap, so their edges and shadows never meet', () => {
+  // Roger, 4 Nov 2026: cards on the globe sat edge to edge and read as one
+  const a = { x: 0, y: 0, width: 200, height: 40 },
+    b = { x: 30, y: 39, width: 200, height: 40 };
+  const [, y] = spreadTags([a, b]);
+  assert.ok(TAG_GAP >= 0.15, 'a gap of at least a sixth of a tag');
+  assert.ok(y - 40 >= 40 * TAG_GAP - 1e-9, `the lower tag starts clear of the upper: ${y - 40}`);
+  assert.deepEqual(spreadTags([a, { ...b, y: 60 }]), [0, 60], 'a tag already clear stays');
 });
