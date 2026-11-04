@@ -32,6 +32,7 @@ import { greyNotHere } from './controls-support.ts';
 import { lensIn, viewOf } from '../../view-support.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import type { Taps } from './taps';
+import { keepSlots, slotCards } from './controls-slots.ts';
 import type { ViewOptions } from './view-options';
 
 /** What a drawing's aids are set to. */
@@ -103,6 +104,8 @@ export class Aids {
   private naming = false;
   /** The badge that says which level of detail shows (§68, level_clouds), made the first time one shows. */
   private badge: HTMLElement | null = null;
+  /** Watches the corner cards' sizes, so the badge keeps clear of them. */
+  private watching: ResizeObserver | null = null;
   /** The badge's words, and its Back button, shown once a cloud was flown into. */
   private said: HTMLElement | null = null;
   private backButton: HTMLElement | null = null;
@@ -248,6 +251,19 @@ export class Aids {
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);
     this.badge.toggleClass('is-hidden', !text && !back);
+    this.keepClear();
+  }
+
+  /** Keeps the badge in its slot, clear of the corner cards, now and whenever they or the drawing change size. */
+  private keepClear(): void {
+    const viewport = this.host.viewport,
+      win = viewport.win ?? window;
+    win.requestAnimationFrame(() => keepSlots(viewport));
+    const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
+    if (this.watching || typeof resizeObserver !== 'function') return;
+    const watching = new resizeObserver(() => keepSlots(viewport));
+    for (const el of [viewport, ...slotCards(viewport)]) watching.observe(el);
+    this.watching = watching;
   }
 
   /**
@@ -296,6 +312,7 @@ export class Aids {
 
   /** The card is going: its tooltip goes with it. */
   unload(): void {
+    this.watching?.disconnect();
     this.info.onunload();
   }
 }
