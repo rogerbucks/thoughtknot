@@ -11,6 +11,12 @@ export interface Tag {
   height: number;
 }
 
+/**
+ * The share of a tag's height kept clear between two tags, one above the other. Roger, 4 Nov 2026: cards that sat edge
+ * to edge, their outlines and shadows meeting, read as one.
+ */
+export const TAG_GAP = 0.2;
+
 /** How near two tags may come before they overlap, so a sum that rounds a little short still parts them. */
 const EPSILON = 1e-6;
 
@@ -35,7 +41,7 @@ export function spreadTags(tags: readonly Tag[]): number[] {
         const o = tags[j] as Tag,
           oy = ys[j] as number;
         const across = (t.width + o.width) / 2 - Math.abs(t.x - o.x),
-          gap = (t.height + o.height) / 2;
+          gap = ((t.height + o.height) / 2) * (1 + TAG_GAP);
         if (across > 0 && Math.abs(y - oy) < gap - EPSILON) {
           y = oy + gap;
           again = true;
