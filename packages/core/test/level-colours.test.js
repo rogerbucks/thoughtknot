@@ -82,3 +82,28 @@ test('the legend spotlights a subject while pointed at, keeps it on a click, and
     uninstall();
   }
 });
+
+// proves: level_thing_hue
+test('near in, each thing takes its subject’s colour, but a thing a rule colours keeps its own', async () => {
+  // Roger, 4 Nov 2026: items keep their subject's colour when you zoom in, in 2D, 3D and on the globe
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const uninstall = installGlobals(fakeDocument(800));
+  try {
+    const { make } = await import('../src/display/graph-view/note-callouts.ts');
+    const { tintThings } = await import('../src/display/graph-view/level-colours.ts');
+    const fresh = structuredClone(levels);
+    const svg = make('svg', {});
+    for (const k of ['a', 'b', 'd', 'z']) svg.appendChild(make('g', { class: 'node', 'data-key': k }));
+    svg.children[1].classList.add('thoughtknot-look');
+    tintThings(svg, fresh);
+    const hues = () => svg.children.map((g) => g.getAttribute('data-hue'));
+    assert.deepEqual(hues(), ['0', null, '1', null], 'by subject; a rule’s look and a thing in no subject keep theirs');
+    nextHue(fresh, '0:0');
+    tintThings(svg, fresh);
+    assert.equal(svg.children[0].getAttribute('data-hue'), '1', 'a picked colour reaches its things');
+    tintThings(svg, null);
+    assert.deepEqual(hues(), [null, null, null, null], 'one level: the drawing’s own colours');
+  } finally {
+    uninstall();
+  }
+});
