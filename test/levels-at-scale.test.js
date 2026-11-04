@@ -36,11 +36,7 @@ test('2,000 things get nested levels, a spot each, clouds that fit and roads tha
   }
   const seed = levelSeed(shape, 2, 40);
   assert.equal(seed.size, N, 'a spot for every thing');
-  assert.equal(
-    new Set([...seed.values()].map(([x, y]) => `${x},${y}`)).size,
-    N,
-    'no two share',
-  );
+  assert.equal(new Set([...seed.values()].map(([x, y]) => `${x},${y}`)).size, N, 'no two share');
   const rects = new Map([...seed].map(([key, [x, y]]) => [key, { left: x, top: y, right: x + 40, bottom: y + 20 }]));
   const at = levelAt(levels, new Set(seed.keys()));
   assert.ok(at < levels.length - 1, 'far out, groups show, not every item');
