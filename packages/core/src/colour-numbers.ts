@@ -149,3 +149,16 @@ export function haloFor(behind: string, ink: string): string {
   if (b[3] && lightness(b) > MIDDLE !== light) return behind;
   return light ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
 }
+
+/**
+ * The ink of words painted on a thing of colour `behind`, and the edge round them (space_name_contrast). The ink is black
+ * or white, whichever stands out more on it, and the edge is the other. So a name reads on any ball, however lit, and
+ * where a line crosses it. Roger, 4 Nov 2026: "The text is illegible on the 3-D balls".
+ */
+export function inkOn(behind: string): { ink: string; edge: string } {
+  const l = lightness(rgbaOf(behind));
+  // white stands out more than black below the lightness where both give the same contrast
+  const white = (1 + 0.05) / (l + 0.05) > (l + 0.05) / 0.05;
+  const [black, bright] = ['rgb(0, 0, 0)', 'rgb(255, 255, 255)'];
+  return white ? { ink: bright, edge: black } : { ink: black, edge: bright };
+}

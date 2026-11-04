@@ -1,7 +1,7 @@
 // A colour as numbers, for a painter on the graphics chip (editor spec §53, scale_gpu_painters): colour-numbers.ts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FADED, haloFor, rgbaOf, seeThrough } from '../src/colour-numbers.ts';
+import { FADED, haloFor, inkOn, rgbaOf, seeThrough } from '../src/colour-numbers.ts';
 import { canvasSpacePainter } from '../src/display/graph-view/space-canvas-painter.ts';
 import { orbitFit, spaceMatrix } from '../src/space-view.ts';
 import { BLOCK_NUMBERS, spaceNumbers } from '../src/display/graph-view/space-painter.ts';
@@ -138,4 +138,22 @@ test('words in 3D keep a halo they stand out on, even where no page colour is pa
   assert.equal(haloFor('Canvas', 'rgb(34, 34, 34)'), 'rgb(255, 255, 255)', 'no page known: light round dark words');
   assert.equal(haloFor('rgb(250, 250, 250)', 'rgb(220, 221, 222)'), 'rgb(0, 0, 0)', 'never light round light words');
   assert.equal(haloFor('rgb(30, 30, 30)', 'CanvasText'), 'rgb(30, 30, 30)', 'words of no known colour keep the page');
+});
+
+// proves: space_name_contrast
+test('a name on a ball takes black or white, whichever reads on it, edged in the other', () => {
+  // Roger, 4 Nov 2026: "The text is illegible on the 3-D balls ... legible against all backgrounds"
+  const lum = (c) => {
+    const [r, g, b] = rgbaOf(c).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+  const balls = ['rgb(8, 109, 221)', 'rgb(0, 191, 188)', 'rgb(236, 117, 0)', 'rgb(8, 185, 78)', 'rgb(120, 82, 238)'];
+  for (const ball of [...balls, 'rgb(213, 57, 132)', 'rgb(255, 255, 0)', 'rgb(255, 255, 255)', 'rgb(0, 0, 0)']) {
+    const { ink, edge } = inkOn(ball);
+    assert.ok(contrast(ink, ball) >= 4.5, `${ink} on ${ball}`);
+    assert.ok(contrast(ink, edge) >= 15, 'the edge is the opposite of the ink, so lines and shading never swallow it');
+  }
+  assert.equal(inkOn('rgb(255, 255, 0)').ink, 'rgb(0, 0, 0)', 'black on yellow');
+  assert.equal(inkOn('rgb(8, 109, 221)').ink, 'rgb(255, 255, 255)', 'white on blue');
 });
