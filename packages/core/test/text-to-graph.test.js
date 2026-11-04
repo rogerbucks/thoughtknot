@@ -235,8 +235,8 @@ test('text to graph sends nothing without text, and keeps to the ceiling as any 
   const secret = { ...base(BARE), level: 'Secret' };
   const refused = prepareSend(textToGraphAsk(secret, 'notes', TEXT));
   assert.ok('refused' in refused);
-  // a key of a model set up here, found in the text, is never sent: made here so no scan reads it as a real one
-  const own = ['tk', 'test', 'key', '0123456789'].join('-');
+  // a model's own key found in the text is never sent. It is made here, so no scan takes it for a real one
+  const own = ['tk', 'test', 'key', 'qwerty'].join('-');
   const key = prepareSend({ ...textToGraphAsk(base(BARE), 'notes', `my key is ${own}`), secrets: [own] });
   assert.ok('refused' in key, 'a credential in the text is never sent');
 });
