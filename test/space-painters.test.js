@@ -137,6 +137,9 @@ window.readSvg = (marked = false) => {
 // link is a bundle of merged links, as the plugin marks one (drawing-svg.ts). A click on it tells the card to open it.
 // With \`cluster\`, Bob is a folded group's box instead: picked again, it tells the card to open it
 window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) => {
+  // the view's size, as styles.css sets it: unstyled, its canvases stack and it grows past its frame, out of the camera's fit
+  const sized = document.head.appendChild(document.createElement('style'));
+  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -155,7 +158,8 @@ window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) =>
     g.removeAttribute('data-key');
     g.id = 'fold_group_1';
     g.setAttribute('data-fold', 'group:Team');
-    holder.querySelector('[data-link]').remove(); // so the only thing a click opens is the group
+    // so the only thing a click opens is the group: a quick second click on Ada, found first, would fly to her
+    for (const g of holder.querySelectorAll('[data-link], [data-key="ada"]')) g.remove();
   }
   const told = [];
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
@@ -188,6 +192,7 @@ window.pickInSpace = async (hideBob = false, bundle = false, cluster = false) =>
   const said = view.querySelector('.thoughtknot-space-said')?.textContent;
   opened?.close();
   root.remove();
+  sized.remove();
   return { ...found, said, keys: [...keys] };
 };
 // the same view: a first click on a thing only picks it, and the view stays still. Another click on it, a moment
@@ -325,13 +330,13 @@ window.oneBar = async () => {
     for (let n = 0; n < 100 && (!view() !== !spaces.mode() || unlifted() !== noLift); n++) await frames();
     steps.push({ said: b.textContent, inFrame: !!view(), unlifted: unlifted() });
     if (spaces.mode() !== 'cards') continue;
-    // as cards: the bar's zoom moves the camera, not the flat drawing; a click on a card tells the card, past the frame
-    zoom.zoomIn();
+    // as cards: a click on a card tells the card, past the frame; tried while every card is in view, as it opens fitted
     const at = view().getBoundingClientRect();
     for (let y = 4; y < at.height && !told.length; y += 6)
       for (let x = 4; x < at.width && !told.length; x += 6)
         for (const type of ['pointerdown', 'pointerup'])
           view().dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
+    zoom.zoomIn(); // and the bar's zoom moves the camera, not the flat drawing
   }
   await spaces.show(null);
   zoom.zoomIn();
