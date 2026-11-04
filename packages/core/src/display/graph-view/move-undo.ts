@@ -17,7 +17,7 @@ export class MoveUndo {
   private readonly graph: string;
   /** The toast and its words, made the first time a move is offered. */
   private toast: { el: HTMLElement; said: HTMLElement } | null = null;
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private timer: number | null = null;
   /** The offer this toast shows: another card's later offer is never forgotten by this one. */
   private shown: typeof pending = null;
 
@@ -56,13 +56,13 @@ export class MoveUndo {
     if (pending && pending === this.shown) pending = null;
     this.shown = null;
     this.toast?.el.classList.add('is-hidden');
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
   }
 
   /** The card gone: its timer stopped, and the offer kept for the card drawn in its place. */
-  unload(): void {
-    if (this.timer) clearTimeout(this.timer);
+  onunload(): void {
+    if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
   }
 
@@ -71,8 +71,11 @@ export class MoveUndo {
     const t = (this.toast ??= this.made());
     t.said.textContent = said;
     t.el.classList.remove('is-hidden');
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.forget(), ms);
+    if (this.timer) window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => {
+      this.timer = null;
+      this.forget();
+    }, ms);
   }
 
   private made(): { el: HTMLElement; said: HTMLElement } {

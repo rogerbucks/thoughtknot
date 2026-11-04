@@ -13,8 +13,8 @@ export const MOVING_QUIET = 80;
 export function watchMoving(
   el: Element,
   quiet = MOVING_QUIET,
-  later: (fn: () => void, ms: number) => unknown = setTimeout,
-  cancel: (timer: unknown) => void = (t) => clearTimeout(t as ReturnType<typeof setTimeout>),
+  later: (fn: () => void, ms: number) => unknown = (fn, ms) => window.setTimeout(fn, ms),
+  cancel: (timer: unknown) => void = (t) => window.clearTimeout(t as number),
 ): () => void {
   let timer: unknown = null;
   const still = () => {

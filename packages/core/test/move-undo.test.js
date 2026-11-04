@@ -19,7 +19,7 @@ test('a move offers its undo by toast and Ctrl+Z, once, and in the card drawn ag
     assert.equal(toast.getAttribute('role'), 'status');
     assert.ok(!toast.classList.contains('is-hidden'));
     assert.equal(toast.querySelector('.thoughtknot-undo-said').textContent, 'Moved: Put Ann beside Cy');
-    first.unload();
+    first.onunload();
     // the note written, the card is drawn again: the new one offers the same undo
     const vp2 = doc.createElement('div');
     const again = new MoveUndo(vp2, 'team');

@@ -12,7 +12,7 @@ import type { MassiveOptions } from '@thoughtknot/core/display/graph-view/massiv
 import type ThoughtKnotPlugin from './main';
 import { showStoredThing } from './stored-edit';
 import type { StoredThing } from './stored-edit';
-import { writeStyle } from './view-block';
+import { writeStyle } from './style-write';
 
 /** Where the overview is drawn from: the note's file and graph, its reading and style, and if the card is read only. */
 export interface MassiveCard {

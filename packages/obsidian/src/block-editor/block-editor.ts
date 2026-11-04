@@ -12,7 +12,7 @@ import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-v
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
-import { writeStyle } from '../view-block';
+import { writeStyle } from '../style-write';
 import { word } from '@thoughtknot/core';
 
 export type { Layout };
