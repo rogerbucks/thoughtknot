@@ -73,7 +73,7 @@ export function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
   const { s, tx, ty } = frameOf(svg);
   const at = (x: number, y: number) => [x / s - tx, y / s - ty] as const;
   // zoomed in, the drawing grows past its viewport, which scrolls: only the part inside the viewport is shown
-  const [x0, y0, x1, y1] = scrolledIn(svg, left, top, width, height);
+  const [x0 = left, y0 = top, x1 = left + width, y1 = top + height] = scrolledIn(svg, left, top, width, height);
   const [l, t] = at(x0, y0),
     [r, b] = at(x1, y1);
   return { k: (shown / width) * s, view: { left: l, top: t, right: r, bottom: b } };
