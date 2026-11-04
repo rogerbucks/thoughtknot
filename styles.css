@@ -4015,7 +4015,8 @@ body.thoughtknot-easier-reading
    On a phone it rides above the control sheet, as the mini-map does. */
 .thoughtknot-space-pad {
   position: absolute;
-  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + var(--gn-space-2));
+  /* above the 3D mini-map, which holds the corner (panels_never_overlap) */
+  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + 2 * var(--gn-space-2) + var(--thoughtknot-space-mini, 0px));
   inset-inline-end: var(--gn-space-2);
   z-index: 1;
   display: flex;
@@ -4265,9 +4266,10 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-level-badge {
   position: absolute;
-  inset-block-start: var(--gn-space-2);
+  /* its own slot, the top middle, clear of the corner cards (panels_never_overlap, controls-slots.ts) */
+  inset-block-start: var(--thoughtknot-slot-top, var(--gn-space-2));
   /* centred in either reading direction, never pushed off the card */
-  inset-inline: 0;
+  inset-inline: var(--thoughtknot-slot-start, 0) var(--thoughtknot-slot-end, 0);
   inline-size: fit-content;
   max-inline-size: 90%;
   margin-inline: auto;
