@@ -33,6 +33,8 @@ export const INSTRUCTIONS = [
  */
 export interface AnswerShape {
   instructions: string;
+  /** Text sent with the graph, such as prose to make a graph of (text-to-graph.ts): in a fence of its own, as data. */
+  text?: string;
   read(content: string, sent: readonly string[]): ChangeInput[] | { unread: string } | { asks: string };
 }
 
@@ -44,12 +46,14 @@ function fenceFor(text: string): string {
 
 /**
  * The user's message, as written before it is put in the request. What was chosen goes in one fence named graph-data,
- * in words and as GQL. Names, properties and a view's wording all come from the note. The question follows the fence.
+ * in words and as GQL. Names, properties and a view's wording all come from the note. Text sent with it, if any, goes
+ * in a fence of its own named source-text. The question follows the fences.
  */
-export function askedText(scope: AiScope, question: string): string {
+export function askedText(scope: AiScope, question: string, text?: string): string {
   const data = `Graph ${scope.graph}, ${scope.said}:\n\n${scope.gql}`;
   const fence = fenceFor(data);
-  return `${fence}graph-data\n${data}\n${fence}\n\nQuestion: ${question.trim()}`;
+  const source = text === undefined ? '' : `${fenceFor(text)}source-text\n${text}\n${fenceFor(text)}\n\n`;
+  return `${fence}graph-data\n${data}\n${fence}\n\n${source}Question: ${question.trim()}`;
 }
 
 /** The body of the one wire format, as the exact text sent: the model, the instructions, and the asked text. */

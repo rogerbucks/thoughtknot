@@ -172,7 +172,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   if ('refused' in scope) return scope;
   let body: string;
   try {
-    const asked = askedText(scope, ask.question);
+    const asked = askedText(scope, ask.question, ask.answers?.text);
     const instructions = ask.answers?.instructions ?? INSTRUCTIONS;
     body = (provider ?? coreAiProvider()).shape({ model: model.model, instructions, asked });
   } catch (e) {
@@ -181,7 +181,10 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   // everything that goes is looked over as written, before it is put in the request. That is the address, and the whole
   // message (the graph's name, what was chosen in words, its GQL and the question). The body a provider shaped is
   // looked over too, as it may add to what it was given
-  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}\n${body}`, ask.secrets);
+  const held = credentialsIn(
+    `${model.endpoint}\n${askedText(scope, ask.question, ask.answers?.text)}\n${body}`,
+    ask.secrets,
+  );
   if (held.length) return { refused: word('ai.send.credential', { held: formatList(held) }) };
   const at = { model: model.name, name: model.model, address: model.endpoint.trim() };
   return {
