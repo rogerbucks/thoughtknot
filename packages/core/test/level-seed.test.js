@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { levelSeed } from '../src/layouts/level-seed.ts';
 import { detailLevels } from '../src/detail-levels.ts';
 import { stressLayout } from '../src/layouts/stress.ts';
+import { pickLayout } from '../src/layouts/pick.ts';
 
 /** `groups` clumps of `size` things, each clump a ring with a spoke, and one link between neighbouring clumps. */
 function clumped(groups, size) {
@@ -64,4 +65,20 @@ test('in space the seed has three numbers per thing, the groups spread in depth 
   const seed = levelSeed(clumped(8, 10), 3, 50);
   assert.ok([...seed.values()].every((p) => p.length === 3));
   assert.ok(new Set([...seed.values()].map((p) => Math.round(p[2]))).size > 1);
+});
+
+// proves: level_default
+test('a big graph is laid out by its levels, unless it is a tree, or a flow whose many kinds keep rows and lanes', () => {
+  const big = clumped(30, 8);
+  assert.equal(pickLayout(big).why, 'levels', 'a big network');
+  // every link one way: a flow of one kind, as a vault's notes
+  const flow = {
+    things: big.things.map((t) => ({ ...t, kinds: ['Note'] })),
+    links: big.links.map((l) => (l.from < l.to ? l : { from: l.to, to: l.from })),
+  };
+  assert.equal(pickLayout(flow).why, 'levels', 'a big flow of one kind');
+  const kinds = ['Section', 'Requirement', 'Decision'];
+  const laned = { ...flow, things: flow.things.map((t, i) => ({ ...t, kinds: [kinds[i % 3]] })) };
+  assert.equal(pickLayout(laned).why, 'flow', 'a big flow of three kinds keeps its rows');
+  assert.notEqual(pickLayout(clumped(10, 8)).why, 'levels', 'a graph of 80 things is laid out as before');
 });

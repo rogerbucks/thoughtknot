@@ -62,7 +62,8 @@ async function card() {
     taps,
     changed: () => changes++,
   });
-  const units = top.children[0].children.filter((c) => c.classList.contains('thoughtknot-cloud-unit'));
+  const clouds = top.children.find((c) => c.classList.contains('thoughtknot-clouds'));
+  const units = clouds.children.filter((c) => c.classList.contains('thoughtknot-cloud-unit'));
   return { level, units, sent, PICKED, heard, changes: () => changes, uninstall };
 }
 

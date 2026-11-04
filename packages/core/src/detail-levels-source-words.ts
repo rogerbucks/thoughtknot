@@ -15,6 +15,8 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.hint-mid': 'Zoom or tap to go deeper. Back goes up.',
   'levels.hint-near': 'Every item shows. Backspace goes up a level.',
   'levels.open': 'Click or tap again to open',
+  'levels.card-count': '{count} items',
+  'levels.road-count': '→ {count}',
   'levels.back': 'Back',
   'levels.back-label': 'Back to the level you were at',
   'levels.legend-label': 'Subjects: point at one to spotlight it, click to keep it',
