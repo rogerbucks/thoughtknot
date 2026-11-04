@@ -26,6 +26,8 @@ The skill is a `SKILL.md` and companion files. The same `SKILL.md` loads as a Cl
 - `bin/raster.ts` — the PNG. It sits in `bin/` because it needs node's zlib, and the shipped source holds no Node. Cowork's sandbox has no picture library, so this paints the SVG's shapes and text itself
   and writes the PNG with node's zlib. Its letters are a small built-in set (plain letters, digits and punctuation).
   Other characters are drawn as a question mark, and the card says how many. The SVG beside it shows every character.
+- `src/text-graph.ts` — text to graph (§47). The library's instructions and message for the conversation's model
+  (`textGraphAsk`), what its answer would write (`textGraphPropose`), and the write, only with its approval.
 - `bin/thoughtknot.ts` — the command line Cowork runs. It answers in JSON.
 - `esbuild.config.mjs` — bundles the script as one file. The release script (`scripts/cowork-release.mjs`) builds the
   `.skill` file from it and attaches it to each release, beside the library's packages.

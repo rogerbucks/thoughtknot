@@ -1,7 +1,8 @@
 # Text to graph design
 
 Give an AI a piece of text and get back a graph of the things, kinds and links it names. It comes as a proposal you
-accept or reject. Designed on 18 October 2026, against version 0.5.0, at Roger's request. Not built yet.
+accept or reject. Designed on 18 October 2026, against version 0.5.0, at Roger's request. Built on 4 November 2026,
+for version 0.9.0.
 
 The requirements are section 47 of
 [`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
@@ -25,6 +26,13 @@ is shown, and a bad answer is refused with the reason.
 - Each new thing, kind and link, marked as an addition (§17).
 - Things already in the note's graph, matched by name or alias and marked, never added twice.
 - For each item, the words of the text it came from, so it can be checked against the source.
+
+## How it works now
+
+- In Obsidian, the command Make a graph of the text with an AI model takes the text you selected, or the whole note.
+- The send dialog shows exactly what goes, as for any send. Each thing and link must quote the words it came from.
+- A note with a graph gets a change set, reviewed over the graph. A note with none gets a short list: tick what to keep.
+- In the skill, the conversation's own model makes the graph, and the script checks it and writes it on your yes.
 
 ## What it builds on
 
