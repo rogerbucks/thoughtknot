@@ -562,7 +562,7 @@ describe('the workflows', () => {
     const quality = runs('quality');
     const at = (re) => quality.findIndex((r) => re.test(r));
     assert.ok(at(/^npm ci\b/) >= 0 && at(/^npm audit signatures\b/) > at(/^npm ci\b/));
-    const measured = at(/^node scripts\/quality-metrics\.mjs --out quality\/metrics\.json\b/);
+    const measured = at(/^node scripts\/quality-metrics\.mjs (?:--suite-from \S+ )?--out quality\/metrics\.json\b/);
     assert.ok(measured > at(/^npm audit signatures\b/), 'the metrics are measured after the install is verified');
     assert.ok(at(/^node scripts\/quality-check\.mjs quality\/metrics\.json\b/) > measured, 'and then checked');
     assert.ok(at(/^node scripts\/engine-version\.mjs\b(?!.*--)/) >= 0, 'the engine check runs');

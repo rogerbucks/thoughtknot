@@ -192,7 +192,9 @@ describe('a baseline committed worse than its parent’s', () => {
       'os-check.yml suite',
       'quality-baseline.yml measure',
       'release-check.yml quality',
+      'release-check.yml quality-suite',
       'release.yml quality',
+      'release.yml quality-suite',
       'release.yml release',
     ]);
   });
