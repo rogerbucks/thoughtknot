@@ -67,6 +67,12 @@ test('the level badge drops below the corner card where the gap is too narrow', 
   assert.ok(!overlaps(landed(view, at, { width: 300, height: 60 }), corner));
 });
 
+test('in a drawing too short to drop it below them, the badge stays across the top, inside the drawing', () => {
+  const view = box(0, 0, 390, 160);
+  const at = middlePlace(view, [box(8, 8, 374, 120)], { width: 300, height: 60 }, 8);
+  assert.deepEqual(at, { start: 0, end: 0, top: 8 });
+});
+
 test('at a phone, tablet, laptop and large screen, the badge never overlaps the cards in the corners', () => {
   for (const width of [390, 768, 1280, 1920]) {
     const view = box(0, 0, width, 800);

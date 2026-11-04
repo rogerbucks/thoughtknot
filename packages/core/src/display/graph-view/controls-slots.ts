@@ -93,10 +93,12 @@ export function middlePlace(
     }
     if (best.right - best.left >= Math.min(want.width, width - 2 * gap) || !across.length)
       return { start: best.left - view.left, end: view.right - best.right, top: top - view.top };
-    // too narrow: below the card that ends highest, and again
+    // too narrow: below the card that ends highest, and again, while it still fits in the view
     top = Math.min(...across.map((c) => c.bottom)) + gap;
+    if (top + want.height > view.bottom - gap) break;
   }
-  return { start: gap, end: gap, top: top - view.top };
+  // a drawing too short to keep it clear: across the top, as it was
+  return { start: 0, end: 0, top: gap };
 }
 
 const shownIn = (root: ParentNode | null | undefined, cls: string): HTMLElement[] =>
@@ -118,8 +120,10 @@ export function keepSlots(viewport: HTMLElement, gap = 8): void {
 
 /** Keeps the level badge in `viewport` clear of the cards that hold the corners. */
 function keepMiddleClear(viewport: HTMLElement, gap: number): void {
-  const badge = viewport.querySelector<HTMLElement>(':scope > .thoughtknot-level-badge');
-  if (!badge || badge.hidden || badge.classList.contains('is-hidden')) return;
+  // a child of the viewport, found without a child selector, which the test DOM cannot match
+  const badge = Array.from(viewport.children).find((c) => c.classList.contains('thoughtknot-level-badge')) as
+    HTMLElement | undefined;
+  if (!badge?.style || badge.hidden || badge.classList.contains('is-hidden')) return;
   // measured at its natural width: as wide as its words, before any insets narrow it
   for (const name of ['start', 'end', 'top']) badge.style.removeProperty(`--thoughtknot-slot-${name}`);
   const v = viewport.getBoundingClientRect(),
