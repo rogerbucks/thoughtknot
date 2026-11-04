@@ -7,22 +7,24 @@ import { make } from './note-callouts.ts';
 
 /** The id of the blur that softens the puffs of a cloud into one shape. */
 export const CLOUD_BLUR = 'thoughtknot-cloud-blur';
+/** The id of the wider blur that softens a subject's region into a wash. */
+export const REGION_BLUR = 'thoughtknot-region-blur';
 /** The sizes of a card's name and count, its padding, and a dot's radius, in pixels of the screen. */
 const NAME_PX = 15,
   COUNT_PX = 11,
   PAD_PX = 8,
   DOT_PX = 2.6;
 
-/** The blur the clouds use, put once in `svg`'s defs, `soft` units wide in the drawing. */
-export function cloudBlur(svg: SVGSVGElement, soft: number): void {
+/** The blur `id` (the clouds' by default), put once in `svg`'s defs, `soft` units wide in the drawing. */
+export function cloudBlur(svg: SVGSVGElement, soft: number, id = CLOUD_BLUR): void {
   let defs = Array.from(svg.children).find((c) => c.tagName.toLowerCase() === 'defs');
   if (!defs) {
     defs = make('defs', {});
     svg.insertBefore(defs, svg.firstChild);
   }
-  let filter = Array.from(defs.children).find((c) => c.getAttribute('id') === CLOUD_BLUR);
+  let filter = Array.from(defs.children).find((c) => c.getAttribute('id') === id);
   if (!filter) {
-    filter = make('filter', { id: CLOUD_BLUR, x: '-50%', y: '-50%', width: '200%', height: '200%' });
+    filter = make('filter', { id, x: '-50%', y: '-50%', width: '200%', height: '200%' });
     filter.appendChild(make('feGaussianBlur', { stdDeviation: 1 }));
     defs.appendChild(filter);
   }
@@ -44,6 +46,24 @@ export function puffs(rects: readonly Rect[], pad: number): Element {
       }),
     );
   }
+  return g;
+}
+
+/**
+ * The region of a subject: a wide soft wash of its colour round each of `rects`, grown by `pad`. It lies under every
+ * level's clouds, so you always see whose ground you are on (level_regions).
+ */
+export function region(rects: readonly Rect[], pad: number, hue: number): Element {
+  const g = make('g', { class: 'thoughtknot-region', filter: `url(#${REGION_BLUR})`, 'data-hue': hue });
+  const at = (n: number) => Math.round(n * 100) / 100;
+  for (const r of rects)
+    g.appendChild(
+      make('circle', {
+        cx: at((r.left + r.right) / 2),
+        cy: at((r.top + r.bottom) / 2),
+        r: at(Math.max(r.right - r.left, r.bottom - r.top) / 2 + pad),
+      }),
+    );
   return g;
 }
 

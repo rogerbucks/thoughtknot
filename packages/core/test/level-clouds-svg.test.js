@@ -38,8 +38,13 @@ test('far out a drawing shows its groups as named clouds under its things, which
   try {
     const badge = levelClouds(svg, drawing);
     assert.match(badge, /^Level [12] of 3 · (Subjects|Areas)$/);
-    const clouds = top.children[0];
-    assert.ok(clouds.classList.contains(CLOUDS), 'the clouds are first, so under the things');
+    assert.ok(top.children[0].classList.contains('thoughtknot-regions'), "each subject's region first, under all");
+    assert.ok(
+      top.children[0].children.every((r) => r.getAttribute('filter') === 'url(#thoughtknot-region-blur)'),
+      'each region a soft wash (level_regions)',
+    );
+    const clouds = top.children[1];
+    assert.ok(clouds.classList.contains(CLOUDS), 'then the clouds, so under the things');
     const units = clouds.children.filter((c) => c.classList.contains('thoughtknot-cloud-unit'));
     const inCard = (u, cls) => u.querySelectorAll(`.${cls}`)[0];
     assert.ok(
@@ -71,6 +76,7 @@ test('far out a drawing shows its groups as named clouds under its things, which
     svg.setAttribute('viewBox', '0 0 120 80');
     assert.equal(levelClouds(svg, drawing), 'Level 3 of 3 · Every item', 'zoomed into a corner');
     assert.ok(!top.children.some((c) => c.classList.contains(CLOUDS)), 'near in, no clouds');
+    assert.ok(top.children[0].classList.contains('thoughtknot-regions'), 'but the regions stay');
     assert.ok(!svg.classList.contains(FAR), 'and every item as drawn');
     assert.equal(levelClouds(svg, { ...drawing, boxes: drawing.boxes.slice(0, 3) }), null, 'a handful has one level');
   } finally {
@@ -101,9 +107,36 @@ test('far out the links between clouds run as roads, one lane each way with its 
       gates.every((g) => /^[→←⇄] .+ · \d+$/.test(g.textContent)),
       'each signpost says where its links go',
     );
+    assert.ok(badge && gates.length === 0, 'with every cloud on screen, the roads show the way: no signposts');
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: level_roads, level_regions
+test('a signpost points the way only where a road leads to a cloud off screen', async () => {
+  const { svg, top, drawing, CLOUDS, levelClouds, uninstall } = await drawn(120, 1200);
+  try {
+    const port = svg.ownerDocument.createElement('div');
+    port.appendChild(svg);
+    const rect = (left, t, width, height) => () => ({
+      left,
+      top: t,
+      width,
+      height,
+      right: left + width,
+      bottom: t + height,
+    });
+    svg.getBoundingClientRect = rect(0, 0, 1200, 800);
+    port.getBoundingClientRect = rect(0, 0, 400, 800);
+    const badge = levelClouds(svg, drawing);
+    assert.match(badge, /Subjects|Areas/, 'a level of groups');
+    const clouds = top.children.find((c) => c.classList.contains(CLOUDS));
+    const gates = clouds.children[0].children.filter((c) => c.classList.contains('thoughtknot-gate'));
+    assert.ok(gates.length >= 1, 'roads to the clouds scrolled out of view get a signpost');
     assert.ok(
-      /Areas/.test(badge) ? gates.length >= 1 : gates.length === 0,
-      'signposts only inside a cloud a level out',
+      gates.every((g) => Number(g.getAttribute('x')) <= 400 + 1),
+      'each by a cloud on screen',
     );
   } finally {
     uninstall();
