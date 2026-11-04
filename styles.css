@@ -4313,27 +4313,27 @@ img.thoughtknot-picture-hidden,
 @media not (forced-colors: active) {
   .thoughtknot-svg g.node[data-hue='0'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-0) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-0) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-0) 75%, var(--gn-text-normal)) !important;
   }
   .thoughtknot-svg g.node[data-hue='1'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-1) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-1) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-1) 75%, var(--gn-text-normal)) !important;
   }
   .thoughtknot-svg g.node[data-hue='2'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-2) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-2) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-2) 75%, var(--gn-text-normal)) !important;
   }
   .thoughtknot-svg g.node[data-hue='3'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-3) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-3) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-3) 75%, var(--gn-text-normal)) !important;
   }
   .thoughtknot-svg g.node[data-hue='4'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-4) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-4) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-4) 75%, var(--gn-text-normal)) !important;
   }
   .thoughtknot-svg g.node[data-hue='5'] > :is(path:not([fill='white']), polygon, ellipse) {
     fill: color-mix(in srgb, var(--gn-branch-5) 16%, transparent) !important;
-    stroke: color-mix(in srgb, var(--gn-branch-5) 75%, var(--text-normal)) !important;
+    stroke: color-mix(in srgb, var(--gn-branch-5) 75%, var(--gn-text-normal)) !important;
   }
 }
 .thoughtknot-svg .thoughtknot-cloud-card-back {
