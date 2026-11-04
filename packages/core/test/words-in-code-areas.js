@@ -139,6 +139,8 @@ export const KEPT = {
   ],
   // said to a developer whose card option cannot be made read-only, in the console
   'packages/core/src/display/graph-view/read-only.ts': '*',
+  // why each pop-up may lie over the cards, for the developer who adds one: never shown
+  'packages/core/src/display/graph-view/controls-slots.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown
   'packages/core/src/display/graph-view/drawing-svg.ts': ['color-mix(in srgb, red 50%, blue)'],
   // the shaders the graphics chip runs, and a developer's error when it cannot build them: never shown
