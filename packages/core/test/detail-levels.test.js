@@ -75,7 +75,8 @@ test('far out the farthest level shows, nearer the nearest that fits, and a badg
   assert.equal(levelAt(levels, all, BRANCH), 0, 'far out, every thing on screen: the subjects');
   const area = levels[1].groups[0];
   assert.equal(levelAt(levels, new Set(area.things.slice(0, 10))), 2, 'zoomed into one area: every item');
-  const twoSubjects = new Set(levels[0].groups.slice(0, 2).flatMap((g) => g.things));
+  const smallest = [...levels[0].groups].sort((a, b) => a.things.length - b.things.length);
+  const twoSubjects = new Set(smallest.slice(0, 2).flatMap((g) => g.things));
   assert.equal(levelAt(levels, twoSubjects, 8), 1, 'a few subjects on screen: their areas');
   assert.equal(levelBadge(levels, 1), 'Level 2 of 3 · Areas');
   assert.equal(levelAt([{ name: everyItem(), groups: [] }], new Set()), 0);

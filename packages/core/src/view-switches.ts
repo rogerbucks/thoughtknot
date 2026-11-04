@@ -21,6 +21,7 @@ import { word } from './words.ts';
 import type { WordKey } from './words.ts';
 import { DEFAULT_LAYOUT_OPTIONS, isDefaultLayout, layoutOptions } from './layouts/layout-options.ts';
 import { EXPLORE_STRATEGY } from './explore-session.ts';
+import { pickLayout } from './layouts/pick.ts';
 import type { ExploreKept } from './explore-session.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { Lens } from './lenses.ts';
@@ -172,8 +173,6 @@ export class ViewState {
   private readonly openedBundles = new Set<string>();
   /** Whether the user has turned merging links on or off, so found groups no longer merge theirs on their own. */
   private mergeTurned = false;
-  /** Whether a big grouped drawing has been folded to its overview once, or the person turned groups folded. */
-  private overviewChosen = false;
   /** What the things are grouped by, from the View menu: as written or found until the person picks (untangle_group_by). */
   groupBy: GroupBy | undefined;
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
@@ -202,7 +201,6 @@ export class ViewState {
     if (this.switches[s] === on) return false;
     this.switches[s] = on;
     if (s === 'merge') this.mergeTurned = true;
-    if (s === 'groups') this.overviewChosen = true;
     if (s === 'hubs') {
       this.openedHubs.clear();
       this.foldedHubs.clear();
@@ -219,7 +217,6 @@ export class ViewState {
 
   /** Steps to the rung `level`, setting its switches as one. True when the drawing must be laid out again. */
   toDetail(level: DetailLevel): boolean {
-    this.overviewChosen = true;
     if (level === this.detail) return false;
     const on = { overview: [true, true], groups: [false, true], all: [false, false] }[level];
     this.turn('groups', on[0] as boolean);
@@ -277,13 +274,16 @@ export class ViewState {
       edges = edgesOf(d);
     this.things = keys.length;
     const { groups, found, instead } = groupsOf(d, keys, edges, this.groupBy);
-    // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups)
-    if (found.length && !this.mergeTurned) this.switches.merge = true;
-    // a big grouped drawing opens as its overview, once, until the person turns it (cluster_detail_ladder)
-    if (!this.overviewChosen && groups.length > 1) {
-      this.overviewChosen = true;
-      if (keys.length > OVERVIEW_THINGS) [this.switches.groups, this.switches.merge] = [true, true];
-    }
+    // found groups merge their links, a bundle between each two, until the user turns merging (untangle_found_groups).
+    // A big graph laid out by its levels keeps every link its own. Its roads run between its clouds (level_default)
+    if (
+      found.length &&
+      !this.mergeTurned &&
+      !(this.layout.strategy === 'auto' && levelled(d, this.switches.lanes !== false))
+    )
+      this.switches.merge = true;
+    // a big drawing opens with every thing shown, not folded. Its levels of detail draw clouds and roads over it
+    // instead, as Roger chose on 4 Nov 2026 (level_default). The overview is a rung the person picks
     this.plan = foldPlan(keys, edges, groups, {
       hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
@@ -366,3 +366,10 @@ export class ViewState {
     >;
   }
 }
+
+/** Whether drawing `d` is laid out by its levels, as a big network is; its kinds count only with `laned`, as in rows. */
+const levelled = (d: GraphDrawing, laned: boolean): boolean =>
+  pickLayout({
+    things: d.boxes.map((b) => ({ key: b.key, text: b.key, kinds: laned && b.kind ? [b.kind] : [] })),
+    links: edgesOf(d).map((e) => ({ from: e.from, to: e.to, type: e.type ?? '' })),
+  }).why === 'levels';

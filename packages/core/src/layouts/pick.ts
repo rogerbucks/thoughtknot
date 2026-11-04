@@ -9,6 +9,7 @@ import type { Size } from './layered.ts';
 import type { Placed } from './parts.ts';
 import { readability } from './readability.ts';
 import { placesMost } from './given.ts';
+import { LEVELLED_FROM } from './level-seed.ts';
 
 /** The layouts the engine picks from, and the spots a plug-in's layout gave (given.ts). */
 export type OwnLayout = 'layered' | 'stress' | 'given';
@@ -16,7 +17,7 @@ export type OwnLayout = 'layered' | 'stress' | 'given';
 /** What the engine picked, and why, in a few words for a developer; a host says it from the catalogue. */
 export interface Pick {
   layout: OwnLayout;
-  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview' | 'tried' | 'chosen';
+  why: 'flow' | 'tree' | 'network' | 'dense' | 'overview' | 'levels' | 'tried' | 'chosen';
 }
 
 /**
@@ -35,6 +36,8 @@ export function chosenPick(shape: GraphShape, strategy: string, placed?: Readonl
 export const FOLDED_GROUP = 'group: ';
 /** The share of links that may run back against the flow, for a graph still to be read as a flow. */
 const BACK_MOST = 0.1;
+/** How many kinds a big flow has for it to keep its rows, each kind in its lane. */
+const LANED_KINDS = 3;
 /** The most links per thing, on average, for a graph still to be drawn in rows. */
 const DENSE_MOST = 3;
 /**
@@ -51,7 +54,13 @@ export function pickLayout(shape: GraphShape): Pick {
   // with groups folded, each group is one box: the overview reads best in rows, its links kept off the boxes
   if (shape.things.some((t) => t.key.startsWith(FOLDED_GROUP))) return { layout: 'layered', why: 'overview' };
   if (pairs <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
-  if (m / n > DENSE_MOST) return { layout: 'stress', why: 'dense' };
+  // a big network, spread out, is placed by its levels instead: each subject in its own room (level_default)
+  const spread = (why: 'dense' | 'network'): Pick =>
+    n > LEVELLED_FROM ? { layout: 'stress', why: 'levels' } : { layout: 'stress', why };
+  if (m / n > DENSE_MOST) return spread('dense');
+  // a big flow of many kinds keeps its rows, a lane for each kind; of one or two, it is a vault's notes: by levels
+  if (n > LEVELLED_FROM && new Set(shape.things.flatMap((t) => t.kinds)).size < LANED_KINDS)
+    return { layout: 'stress', why: 'levels' };
   return backShare(shape) <= BACK_MOST ? { layout: 'layered', why: 'flow' } : { layout: 'stress', why: 'network' };
 }
 

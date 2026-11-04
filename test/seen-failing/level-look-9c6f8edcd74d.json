@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/level-look.test.js",
+  "test": "far out, each thing is a dot that keeps its size on screen",
+  "seen_failing_first": false,
+  "evidence": "a test of its own for level-look.ts, which passed 100 lines; its code came in the commits before"
+}

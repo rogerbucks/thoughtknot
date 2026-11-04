@@ -197,6 +197,8 @@ export class Aids {
     const win = this.host.viewport.win ?? window;
     win.requestAnimationFrame(() => {
       this.naming = false;
+      // the card closed, or its window went, before the frame came: nothing to name
+      if (!svg.isConnected || typeof activeDocument === 'undefined') return;
       const { reading, graph, switches } = this.host.o;
       readableNames(svg, reading.graphs.get(graph)?.links ?? [], !!switches?.state.switches.labels);
       const drawing = reading.graphs.get(graph),

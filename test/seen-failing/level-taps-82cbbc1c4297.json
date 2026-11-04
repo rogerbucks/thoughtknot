@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/level-taps.test.js",
+  "test": "Tab reaches each cloud, which says what it is; Enter flies in and Backspace goes back",
+  "seen_failing_first": false,
+  "evidence": "the test now finds the clouds by their class, as the region wash is drawn first; what it proves is unchanged"
+}

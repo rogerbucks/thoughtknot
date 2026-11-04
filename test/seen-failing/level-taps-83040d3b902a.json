@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/level-taps.test.js",
+  "test": "the first tap on a cloud picks it, the second flies in until it fills the screen, and Back flies out",
+  "seen_failing_first": false,
+  "evidence": "the test now finds the clouds by their class, as the region wash is drawn first; what it proves is unchanged"
+}
