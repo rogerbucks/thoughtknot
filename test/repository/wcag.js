@@ -105,7 +105,7 @@ export function obsidianVariables(theme) {
 /**
  * A stylesheet with each var(--name) replaced by the value `variables` gives it, or its fallback; others are left. Then
  * each `color-mix(in srgb, a p%, b)` of two colours is written out as the colour it makes, as a browser works it out.
- * That is because jsdom does not know the function.
+ * That is because jsdom does not know the function. Mixed with `transparent`, it is the colour at `p` of its opacity.
  */
 export function withVariables(css, variables) {
   let text = css;
@@ -113,10 +113,12 @@ export function withVariables(css, variables) {
     text = text.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (whole, name, fallback) =>
       Object.hasOwn(variables, name) ? variables[name] : (fallback?.trim() ?? whole),
     );
-  const colour = '(#[0-9a-fA-F]{3,8}|(?:rgba?|hsla?)\\([^)]*\\))';
+  const colour = '(#[0-9a-fA-F]{3,8}|(?:rgba?|hsla?)\\([^)]*\\)|transparent)';
   const mixed = new RegExp(`color-mix\\(\\s*in srgb\\s*,\\s*${colour}\\s+([\\d.]+)%\\s*,\\s*${colour}\\s*\\)`, 'g');
   const resolved = text.replace(mixed, (whole, a, percent, b) => {
-    const [x, y] = [parseColour(a), parseColour(b)];
+    const x = parseColour(a);
+    if (x && b === 'transparent') return `rgba(${x.slice(0, 3).join(', ')}, ${parseFloat(percent) / 100})`;
+    const y = parseColour(b);
     if (!x || !y) throw new Error(`color-mix with a colour this check cannot read: ${whole}`);
     const p = parseFloat(percent) / 100;
     const channels = [0, 1, 2].map((i) => Math.round(x[i] * p + y[i] * (1 - p)));
