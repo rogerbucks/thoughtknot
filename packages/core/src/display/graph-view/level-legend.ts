@@ -10,6 +10,7 @@ import { word } from '../../words.ts';
 import { hueOf, nextHue, spotlight } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { chooseOwnLevel, ownChoicesOf, ownLevelOf } from './level-clouds-svg.ts';
+import { CloudCard, type CloudCardHost } from './cloud-card.ts';
 
 /** What the legend needs from its card. */
 export interface LevelLegendHost {
@@ -22,6 +23,8 @@ export interface LevelLegendHost {
   drawing: () => GraphDrawing | undefined;
   /** What asks your AI to name the levels, while AI is on; null while it is off (ai_levels). */
   nameLevels?: () => (() => void) | null;
+  /** How a group's things are written, while the note can be written; null while it is only read (cloud_edit). */
+  editGroup?: () => CloudCardHost['edit'] | null;
 }
 
 /** The legend of one card's subjects. */
@@ -38,6 +41,8 @@ export class LevelLegend {
   private listed: GraphDrawing | undefined;
   /** The button that asks your AI to name the levels, shown only while AI is on. */
   private readonly ai: HTMLElement;
+  /** The card that renames, merges or takes apart a named group (cloud_edit). */
+  private readonly card: CloudCard;
 
   /** Made inside `parent`, the badge. */
   constructor(parent: HTMLElement, host: LevelLegendHost) {
@@ -60,6 +65,13 @@ export class LevelLegend {
     this.chips.setAttribute('aria-label', word('levels.legend-label'));
     // pointing at a cloud spotlights its subject too, for as long as the pointer stays on it
     host.viewport.addEventListener('pointerover', (e: Event) => this.pointed(e.target));
+    // right-clicking a named cloud opens its card (cloud_edit)
+    this.card = new CloudCard(host.viewport, { edit: (...a) => host.editGroup?.()?.(...a) });
+    host.viewport.addEventListener('contextmenu', (e: Event) => {
+      const unit = (e.target as Element | null)?.closest?.('g.thoughtknot-cloud-unit');
+      const key = unit?.getAttribute('data-cloud');
+      if (key && this.edit(key)) e.preventDefault();
+    });
   }
 
   /** Shows the chips of `levels`' subjects; none for a drawing of one level. */
@@ -91,7 +103,27 @@ export class LevelLegend {
         attr: { type: 'button', 'aria-label': word('levels.colour-label', { name: g.name }) },
       });
       colour.addEventListener('click', () => this.recolour(g.key));
+      if (!CloudCard.edits(g) || !this.host.editGroup?.()) continue;
+      const edit = this.chips.createEl('button', {
+        cls: 'thoughtknot-level-edit',
+        text: word('levels.edit'),
+        attr: { type: 'button', 'aria-label': word('levels.edit-label', { name: g.name }) },
+      });
+      edit.addEventListener('click', () => this.edit(g.key));
     }
+  }
+
+  /** Opens the card of the named group `key`, at whichever level it is. Says whether it opened. */
+  edit(key: string): boolean {
+    if (!this.host.editGroup?.()) return false;
+    for (const level of this.levels ?? []) {
+      const g = level.groups.find((x) => x.key === key);
+      if (g && CloudCard.edits(g)) {
+        this.card.open(g, level.groups);
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Keeps the subject `key` in the spotlight, or lets it go when it was kept already. */
