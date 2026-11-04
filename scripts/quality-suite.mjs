@@ -7,7 +7,7 @@
 // second, with coverage, is compared with the first to find the tests whose result differs. The readers of Node's
 // JUnit and lcov reports are here too.
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -165,19 +165,31 @@ export function nodeTest(root, args) {
  * with the test discovery a developer's and CI's runs have.
  */
 export function measureSuite(root) {
+  return mergeSuiteShards([measureSuiteShard(root)]);
+}
+
+/**
+ * Both runs over one share of the test files (`shard` such as `2/6`), or over all of them without one. The part it
+ * returns holds what `mergeSuiteShards` needs from the shards together: how long and whether each run took, the plain
+ * run's quiet bytes, each run's tests by result, and the coverage report.
+ */
+export function measureSuiteShard(root, shard) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-suite-'));
+  const split = shard ? [`--test-shard=${shard}`] : [];
   try {
     const quiet = join(dir, 'quiet.txt'),
       one = join(dir, 'one.xml'),
       two = join(dir, 'two.xml'),
       lcov = join(dir, 'lcov.info');
     const first = nodeTest(root, [
+      ...split,
       '--test-reporter=./scripts/quiet-reporter.mjs',
       `--test-reporter-destination=${quiet}`,
       '--test-reporter=junit',
       `--test-reporter-destination=${one}`,
     ]);
     const second = nodeTest(root, [
+      ...split,
       '--experimental-test-coverage',
       ...COVERAGE_INCLUDE,
       '--test-reporter=junit',
@@ -185,32 +197,67 @@ export function measureSuite(root) {
       '--test-reporter=lcov',
       `--test-reporter-destination=${lcov}`,
     ]);
-    const a = parseJunit(readFileSync(one, 'utf8'), root),
-      b = parseJunit(readFileSync(two, 'utf8'), root);
-    const failing = [...a].filter(([, r]) => r === 'fail').map(([name]) => name);
-    if (!first.passed && !failing.length) failing.push(unexplainedFailure('first', first.stderr));
-    const flaky = flakyBetween(a, b, second.passed, second.stderr);
-    const lcovText = readFileSync(lcov, 'utf8');
-    const coverage = parseLcov(lcovText, COVERAGE_PACKAGES.coverage_percent);
     return {
-      metrics: {
-        suite_seconds: Math.round(first.seconds * 10) / 10,
-        flaky_tests: flaky.length,
-        quiet_run_bytes: first.passed ? statSync(quiet).size : null,
-        ...coverageMetrics(lcovText),
-      },
-      details: {
-        tests: a.size,
-        failing,
-        flaky,
-        coverage_files: coverage.files,
-        coverage_lines: coverage.lines,
-        second_run_passed: second.passed,
-      },
+      seconds: first.seconds,
+      firstPassed: first.passed,
+      firstStderr: first.stderr ?? '',
+      secondPassed: second.passed,
+      secondStderr: second.stderr ?? '',
+      quietBytes: first.passed ? statSync(quiet).size : null,
+      first: [...parseJunit(readFileSync(one, 'utf8'), root)],
+      second: [...parseJunit(readFileSync(two, 'utf8'), root)],
+      lcov: readFileSync(lcov, 'utf8'),
     };
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+/**
+ * The suite's metrics from the parts of a suite split over machines (`measureSuiteShard`), or from the one part of a
+ * whole run. The suite takes as long as its slowest part; quiet bytes add up, and are null if any part failed.
+ */
+export function mergeSuiteShards(parts) {
+  const a = new Map(parts.flatMap((p) => p.first)),
+    b = new Map(parts.flatMap((p) => p.second));
+  const failing = [...a].filter(([, r]) => r === 'fail').map(([name]) => name);
+  for (const p of parts)
+    if (!p.firstPassed && !failing.length) failing.push(unexplainedFailure('first', p.firstStderr));
+  const secondFailed = parts.find((p) => !p.secondPassed);
+  const flaky = flakyBetween(a, b, !secondFailed, secondFailed?.secondStderr ?? '');
+  const lcovText = parts.length === 1 ? parts[0].lcov : mergeLcov(parts.map((p) => p.lcov));
+  const coverage = parseLcov(lcovText, COVERAGE_PACKAGES.coverage_percent);
+  const quietOk = parts.every((p) => p.quietBytes !== null);
+  return {
+    metrics: {
+      suite_seconds: Math.round(Math.max(...parts.map((p) => p.seconds)) * 10) / 10,
+      flaky_tests: flaky.length,
+      quiet_run_bytes: quietOk ? parts.reduce((n, p) => n + p.quietBytes, 0) : null,
+      ...coverageMetrics(lcovText),
+    },
+    details: {
+      tests: a.size,
+      failing,
+      flaky,
+      coverage_files: coverage.files,
+      coverage_lines: coverage.lines,
+      second_run_passed: !secondFailed,
+    },
+  };
+}
+
+/** Writes one shard's part to a file, for `readSuiteShards` in the job that merges them. */
+export function writeSuiteShard(part, file) {
+  writeFileSync(file, JSON.stringify(part));
+}
+
+/** Every shard part (`*.json`) under a folder, in name order; none is an error, as a missing shard means nothing. */
+export function readSuiteShards(dir) {
+  const files = readdirSync(dir, { recursive: true })
+    .filter((f) => String(f).endsWith('.json'))
+    .sort();
+  if (!files.length) throw new Error(`no suite shard in ${dir}`);
+  return files.map((f) => JSON.parse(readFileSync(join(dir, String(f)), 'utf8')));
 }
 
 /**

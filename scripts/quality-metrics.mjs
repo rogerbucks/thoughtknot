@@ -15,6 +15,10 @@
 //                                                     (no audit, build or suite).
 //   node scripts/quality-metrics.mjs --reuse <file>   keep an earlier run's instruction count for each benchmark
 //                                                     whose fingerprint is unchanged (scripts/instruction-counts.mjs).
+//   node scripts/quality-metrics.mjs --suite-shard 2/6 --out f.json  only the suite's two runs over that share of the
+//                                                     test files, to a part for --suite-from (a job of its own).
+//   node scripts/quality-metrics.mjs --suite-from <dir>  measure everything, the suite from the parts in a folder
+//                                                     instead of running it here.
 //
 // The audit reaches the npm registry, and the suite runs twice (a minute or so): this is the release's job, not CI's.
 import { spawnSync } from 'node:child_process';
@@ -23,7 +27,13 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { METRICS } from './quality-spec.mjs';
 import { scanRepo, scannedFiles } from './quality-secrets.mjs';
-import { measureSuite } from './quality-suite.mjs';
+import {
+  measureSuite,
+  measureSuiteShard,
+  mergeSuiteShards,
+  readSuiteShards,
+  writeSuiteShard,
+} from './quality-suite.mjs';
 import { speedIndex } from './speed-index.mjs';
 import { npmCommand } from './npm-command.mjs';
 
@@ -150,14 +160,14 @@ async function measureJourney() {
  * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the first-run journey, the
  * machine's speed, and the suite (twice). The machine's speed is by the wall clock, as the suite's duration is.
  */
-export async function measureAll({ reuse } = {}) {
+export async function measureAll({ reuse, suiteFrom } = {}) {
   const parts = [
     measureFast(),
     measureAudit(),
     await measureBundle(),
     await measureWork(reuse),
     await measureJourney(),
-    measureSuite(ROOT),
+    suiteFrom ? mergeSuiteShards(readSuiteShards(suiteFrom)) : measureSuite(ROOT),
   ];
   const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: speedIndex() });
   const details = Object.assign({}, ...parts.map((p) => p.details));
@@ -166,10 +176,18 @@ export async function measureAll({ reuse } = {}) {
 
 async function main(argv) {
   const fast = argv.includes('--fast');
+  const after = (flag) => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : null);
+  if (after('--suite-shard')) {
+    const part = measureSuiteShard(ROOT, after('--suite-shard'));
+    writeSuiteShard(part, resolve(ROOT, after('--out')));
+    return 0;
+  }
   const out = argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : null;
   const earlier = argv.includes('--reuse') ? argv[argv.indexOf('--reuse') + 1] : null;
   const reuse = earlier ? JSON.parse(readFileSync(resolve(ROOT, earlier), 'utf8')).details?.instructions : undefined;
-  const { metrics, details } = fast ? measureFast() : await measureAll({ reuse });
+  const { metrics, details } = fast
+    ? measureFast()
+    : await measureAll({ reuse, suiteFrom: after('--suite-from') && resolve(ROOT, after('--suite-from')) });
   if (details.failing?.length) {
     console.error(`the suite fails, so its metrics mean nothing:\n${details.failing.join('\n')}`);
     return 1;
