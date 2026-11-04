@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { buildLibrary, PACKAGES, assetName, releaseUrl, runNpm } from '../scripts/library-release.mjs';
-import { changelogText, pullRequests } from '../scripts/changelog.mjs';
+import { changelogText, pullRequests, MOST_LINES } from '../scripts/changelog.mjs';
 import { read, readJSON, jsPackages, workflowFiles } from './repository/repo.js';
 import { repository } from './repository/scratch-repository.js';
 
@@ -250,6 +250,17 @@ describe('the version rule is told to the people who use the library', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+  test('a very long list of pull requests stops short of GitHub’s 125,000 character limit', () => {
+    const pulls = Array.from({ length: 5000 }, (_, i) => ({
+      number: i + 1,
+      title: 'A change with a title of some length',
+    }));
+    const text = changelogText({ version: '0.8.0', from: '0.7.0', pulls, repo: 'o/r', before: null, after: {} });
+    assert.ok(text.length < 125000, `${text.length} characters`);
+    assert.equal(text.split('\n').filter((line) => line.startsWith('- [#')).length, MOST_LINES);
+    assert.match(text, /and 4850 more pull requests/);
+    assert.match(text, /#5000\]/, 'the newest stay');
   });
   test('the release checks its notes before it drafts, and the release check tries it first', () => {
     const release = read('.github/workflows/release.yml');
