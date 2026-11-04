@@ -14,6 +14,7 @@ import { classificationInText, classificationOf, higherClassification } from '..
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
 import { noteText } from '../storage/plugin-notes';
+import { TEXT_GRAPH_COMMAND, graphFor, proseOf } from './text-graph';
 
 /** The command's id and name. */
 export const AI_COMMAND = {
@@ -102,6 +103,32 @@ async function nameLevels(plugin: ThoughtKnotPlugin, path: string, graph: string
   const text = (await noteText(plugin.app, path)) ?? '';
   const start = { graph, things: [], question: word('ai.suggest.levels-ask'), suggest: { ask: 'levels' as const } };
   new SendDialog(plugin, file, text, levelFor(plugin, file, text), await plugin.sharedSchemas(), start).open();
+}
+
+/**
+ * Text to graph (§47): the command, offered only while AI is on. It opens the send dialog on the text selected in the
+ * note in front, or on the note's own words when nothing is selected.
+ */
+export function textGraphCommand(plugin: ThoughtKnotPlugin) {
+  return {
+    id: TEXT_GRAPH_COMMAND.id,
+    title: TEXT_GRAPH_COMMAND.name,
+    available: () => !('off' in aiReady(plugin.settings)),
+    run: async () => {
+      const ready = aiReady(plugin.settings);
+      if ('off' in ready) return void new Notice(ready.off);
+      const front = noteToRewrite(plugin.app.workspace, word('host.to-text-graph'));
+      if (!front) return;
+      const note = (await noteText(plugin.app, front.file.path)) ?? '';
+      const chosen = front.view.editor?.getSelection() ?? '';
+      const words = chosen.trim() ? chosen : proseOf(note);
+      if (!words.trim()) return void new Notice(word('ai.text-graph.no-text'));
+      const text = { graph: graphFor(note, front.file), words };
+      const start = { graph: text.graph, things: [], question: word('ai.text-graph.question'), text };
+      const level = levelFor(plugin, front.file, note);
+      new SendDialog(plugin, front.file, note, level, await plugin.sharedSchemas(), start).open();
+    },
+  };
 }
 
 /** Clears the record of sends, saying how many were let go. */

@@ -9,6 +9,7 @@
 //   then Show and Send again, as for any change (edit_ai_expand).
 // - It may ask for suggestions instead: a value of one property, or each thing's pull on an intent (suggest-rows.ts).
 // - Opened from Expand with AI, the thing's graph, the thing and the expand question are chosen already.
+// - Opened on a text (text-graph.ts, §47), the text and its graph are chosen, and the whole graph goes with it.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
@@ -18,10 +19,10 @@ import {
   modelChoices,
   noteWithProposal,
   prepareSend,
-  purposeWords,
   readNote,
   sendPrepared,
   suggestAsk,
+  textToGraphAsk,
   viewsOf,
   word,
 } from '@thoughtknot/core';
@@ -29,13 +30,13 @@ import type { MatrixRow, PreparedSend, ScopeChoice } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
+import { PURPOSE, drawModelRow } from './model-row';
+import { asChangeSet, drawTextRows } from './text-graph';
+import type { TextAsk } from './text-graph';
 import { obsidianTransport } from './send';
 import { NO_SUGGESTION, drawSuggestRows, suggestForOf } from './suggest-rows';
 import type { SuggestRows } from './suggest-rows';
 import { changeVaultNote } from '../storage/plugin-notes';
-
-/** The purpose a send from this dialog is for: the model set up for it is offered first. */
-const PURPOSE = 'Proposing changes';
 
 type What = ScopeChoice['what'];
 
@@ -64,6 +65,7 @@ export class SendDialog extends Modal {
   private readonly suggest = { ...NO_SUGGESTION };
   private shownEl: HTMLElement | null = null;
   private sendButton: ButtonComponent | null = null;
+  private readonly text: TextAsk | null;
 
   constructor(
     private readonly plugin: ThoughtKnotPlugin,
@@ -73,7 +75,7 @@ export class SendDialog extends Modal {
     private readonly levelOf: () => string | null,
     private readonly shared: string[],
     /** What is chosen as the dialog opens, if anything: a graph, things ticked, the question, what is asked for. */
-    start?: { graph: string; things: string[]; question: string; suggest?: Partial<SuggestRows> },
+    start?: { graph: string; things: string[]; question: string; suggest?: Partial<SuggestRows>; text?: TextAsk },
   ) {
     super(plugin.app);
     const reading = readNote(
@@ -99,6 +101,8 @@ export class SendDialog extends Modal {
       this.question = start.question;
       Object.assign(this.suggest, start.suggest);
     }
+    this.text = start?.text ?? null;
+    if (this.text) this.question = start?.question ?? '';
   }
 
   override onOpen(): void {
@@ -116,10 +120,37 @@ export class SendDialog extends Modal {
     const el = this.contentEl;
     el.empty();
     this.sendButton = null;
-    if (!this.things.size) {
-      el.createEl('p', { text: word('ai.nothing') });
-      return;
-    }
+    if (this.text) drawTextRows(el, this.text, () => this.changed(false));
+    else if (!this.things.size) return void el.createEl('p', { text: word('ai.nothing') });
+    else this.drawChoice(el);
+    drawModelRow(el, this.plugin.settings, this.model, (v) => {
+      this.model = v;
+      this.changed(true);
+    });
+    new Setting(el)
+      .setName(word('ai.your-question'))
+      .setDesc(word('ai.your-question.sentence'))
+      .addTextArea((t) =>
+        t.setValue(this.question).onChange((v) => {
+          this.question = v;
+          this.changed(false);
+        }),
+      );
+    this.shownEl = el.createDiv({ cls: 'thoughtknot-ai-shown' });
+    new Setting(el)
+      .addButton((b) => b.setButtonText(word('ai.show')).onClick(() => void this.show()))
+      .addButton((b) => {
+        this.sendButton = b
+          .setButtonText(word('ai.send'))
+          .setCta()
+          .onClick(() => void this.send());
+      })
+      .addButton((b) => b.setButtonText(word('ai.cancel')).onClick(() => this.close()));
+    this.drawShown();
+  }
+
+  /** What of the note's graph is sent, and what is asked for. */
+  private drawChoice(el: HTMLElement): void {
     new Setting(el).setName(word('ai.graph')).addDropdown((d) => {
       for (const g of this.things.keys()) d.addOption(g, g);
       d.setValue(this.graph).onChange((v) => {
@@ -150,27 +181,6 @@ export class SendDialog extends Modal {
     });
     if (this.what === 'view') this.drawViews(el);
     if (this.what === 'things') this.drawThings(el);
-    this.drawModel(el);
-    new Setting(el)
-      .setName(word('ai.your-question'))
-      .setDesc(word('ai.your-question.sentence'))
-      .addTextArea((t) =>
-        t.setValue(this.question).onChange((v) => {
-          this.question = v;
-          this.changed(false);
-        }),
-      );
-    this.shownEl = el.createDiv({ cls: 'thoughtknot-ai-shown' });
-    new Setting(el)
-      .addButton((b) => b.setButtonText(word('ai.show')).onClick(() => void this.show()))
-      .addButton((b) => {
-        this.sendButton = b
-          .setButtonText(word('ai.send'))
-          .setCta()
-          .onClick(() => void this.send());
-      })
-      .addButton((b) => b.setButtonText(word('ai.cancel')).onClick(() => this.close()));
-    this.drawShown();
   }
 
   /** The views of the graph to choose from, or that it has none. */
@@ -203,35 +213,6 @@ export class SendDialog extends Modal {
             this.changed(false);
           }),
         );
-  }
-
-  /** The models that may be asked, the one set up for proposing changes first. */
-  private drawModel(el: HTMLElement): void {
-    const choices = modelChoices(this.plugin.settings, PURPOSE);
-    const chosen = this.plugin.settings.aiModels.find((m) => m.name === this.model);
-    new Setting(el)
-      .setName(word('ai.model'))
-      .setDesc(
-        chosen
-          ? chosen.matrixRow
-            ? word('ai.model.matrix', {
-                purpose: purposeWords(chosen.purpose) || word('ai.model.no-purpose'),
-                row: chosen.matrixRow,
-              })
-            : word('ai.model.ceiling', {
-                purpose: purposeWords(chosen.purpose) || word('ai.model.no-purpose'),
-                ceiling: chosen.ceiling,
-              })
-          : '',
-      )
-      .addDropdown((d) => {
-        for (const c of choices)
-          d.addOption(c.name, c.forPurpose ? word('ai.model.for-proposing', { name: c.name }) : c.name);
-        d.setValue(this.model).onChange((v) => {
-          this.model = v;
-          this.changed(true);
-        });
-      });
   }
 
   /** Something chosen changed: what was shown is no longer what would be sent, so the yes waits until it is shown again. */
@@ -298,7 +279,11 @@ export class SendDialog extends Modal {
     };
     // suggestions are asked for in the person's own words, and read back only as suggestions (§59)
     const f = suggestForOf(this.suggest);
-    const ask = f ? suggestAsk(base, f, this.question) : { ...base, question: this.question };
+    const ask = this.text
+      ? textToGraphAsk(base, this.text.graph, this.text.words, this.question)
+      : f
+        ? suggestAsk(base, f, this.question)
+        : { ...base, question: this.question };
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;
@@ -363,6 +348,8 @@ export class SendDialog extends Modal {
     }
     const { proposal } = result,
       n = proposal.changes.length;
+    // a text for a note with no such graph is reviewed in a dialog of its own: nothing is written until then
+    if (this.text && !(await asChangeSet(this.plugin, this.file, proposal))) return this.close();
     const outcome: { refused: string | null } = { refused: null };
     try {
       await changeVaultNote(this.app, this.file.path, (now) => {

@@ -424,6 +424,8 @@ export function fakeObsidian(state = {}) {
           .reduce((a, l) => a + l.length + 1, 0) + p.ch;
       this.editor = {
         getValue: () => view.text,
+        // the text selected, which a test sets as `selection`; none when it sets nothing
+        getSelection: () => view.selection ?? '',
         offsetToPos: pos,
         posToOffset: offset,
         transaction: (tx) => {
