@@ -239,8 +239,7 @@ window.clickAgain = async () => {
   await frames();
   const after = hits(middle.x, middle.y) === hit.key;
   opened?.close();
-  root.remove();
-  sized.remove();
+  for (const el of [root, sized]) el.remove();
   return { hit, before, first, after };
 };
 // the view's mini-map (space_mini_map), and the drawing laid out again gliding in it (layout_glide): Bob moved on the
@@ -288,8 +287,7 @@ window.miniInSpace = async () => {
   await frames();
   const moved = seen() !== was;
   opened?.close();
-  root.remove();
-  sized.remove();
+  for (const el of [root, sized]) el.remove();
   return { shown, path, moved, told: told.length };
 };
 // a card's bar and drawing, as graph-view.ts builds them, with the one button that shows it flat or in space
