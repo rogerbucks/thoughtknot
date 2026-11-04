@@ -6,9 +6,7 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { BoxDrag, nudgeDrops, type DragHost } from './box-drag-view';
-import { BoxMoveKeys } from './box-move-keys';
-import { gridDrops } from './grid-drag';
+import { boxMoversFor } from './box-movers';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
 import { toggleOutline } from './drawing-svg';
@@ -68,7 +66,7 @@ export interface ViewportHost {
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
-  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom }) : null,
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card }) : null,
     drag = movers?.drag ?? null,
     keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
@@ -295,8 +293,8 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
-    // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
-    if (keys?.key(e)) {
+    // Ctrl+Z undoes a move (move_undo). A box picked up from the keyboard takes its keys until put down; M picks it up
+    if (movers?.undo?.key(e) || keys?.key(e)) {
       e.preventDefault();
       return;
     }
@@ -352,38 +350,4 @@ export function bindViewportEvents(host: ViewportHost): void {
     }
     use(e, { kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey });
   });
-}
-
-/**
- * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
- * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
- * On a grid, a card is dragged to another column instead, and no keys move it (§68). None when the card was given no
- * way to write a nudge, or draws a table. Nothing moves while the card is only read.
- */
-function boxMoversFor(
-  o: ViewOptions,
-  svg: SVGSVGElement | null,
-  host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): { drag: BoxDrag; keys: BoxMoveKeys | null } | null {
-  const grid = svg ? gridDrops(o, host.viewport) : null;
-  const shared = {
-    viewport: host.viewport,
-    taps: host.taps,
-    view: () => host.zoom.view(),
-    readOnly: () => !!o.readOnly?.(),
-  };
-  if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null };
-  const moving = o.moving;
-  if (!moving || !svg) return null;
-  const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
-  const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
-  const rankdir = () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir);
-  return {
-    drag: new BoxDrag({
-      ...shared,
-      textOf,
-      ...nudgeDrops(moving, textOf, rankdir),
-    }),
-    keys: new BoxMoveKeys({ ...shared, moving, textOf }),
-  };
 }

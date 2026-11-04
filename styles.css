@@ -2464,6 +2464,31 @@ pre.thoughtknot-code {
 .thoughtknot-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
 }
+/* the undo of the last move (move_undo): a toast over the foot of the drawing, with its Undo button */
+.thoughtknot-undo-toast {
+  position: absolute;
+  bottom: var(--gn-space-2);
+  inset-inline: 0;
+  width: fit-content;
+  max-width: 90%;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-undo-toast.is-hidden {
+  display: none;
+}
+.thoughtknot-undo-toast > button {
+  min-width: 24px;
+  min-height: 24px;
+}
 
 /* A whiteboard (editor spec §45). The item the keyboard is on is ringed in the text colour, thicker and dashed, so it
    is told by more than colour. The help, the words said and the outline sit under the board in the note's own type. */
@@ -4294,6 +4319,38 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-chip[aria-pressed='true'] {
   outline: 2px solid var(--gn-accent);
 }
+/* the cloud card (cloud_edit): a small dialog over the drawing that renames, merges or takes a group apart */
+.thoughtknot-cloud-card {
+  position: absolute;
+  top: var(--gn-space-4);
+  inset-inline-end: var(--gn-space-2);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  max-width: min(20rem, 90%);
+  padding: var(--gn-space-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-cloud-card.is-hidden {
+  display: none;
+}
+.thoughtknot-cloud-card-title {
+  font-weight: 600;
+}
+.thoughtknot-cloud-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-cloud-card :is(button, select, input) {
+  min-width: 24px;
+  min-height: 24px;
+}
 .thoughtknot-level-swatch {
   display: inline-block;
   width: 0.75em;
@@ -4355,10 +4412,10 @@ img.thoughtknot-picture-hidden,
   fill: var(--gn-text-faint);
   font-style: italic;
 }
-/* Calm hover (Roger, 3 Nov 2026): a highlight waits a moment, then fades in, and fades out when the pointer leaves. So
-   passing over a drawing does not flicker. With reduced motion it still waits, then shows at once. */
-.thoughtknot-svg g.thoughtknot-hot,
-.thoughtknot-svg .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
+/* Calm hover (Roger, 3 Nov 2026): a highlight fades in, and fades out when the pointer leaves. It waits a moment only
+   while the pointer is still moving (pointer-moving.ts), so it opens at once where the pointer stops. */
+.thoughtknot-svg.is-moving g.thoughtknot-hot,
+.thoughtknot-svg.is-moving .thoughtknot-cloud-unit:hover > .thoughtknot-cloud-peek {
   transition-delay: var(--gn-motion-fade);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -4371,7 +4428,7 @@ img.thoughtknot-picture-hidden,
   .thoughtknot-svg g.edge > path {
     transition: stroke-width var(--gn-motion-fade) var(--gn-ease-soft);
   }
-  .thoughtknot-svg g.edge.thoughtknot-hot > path {
+  .thoughtknot-svg.is-moving g.edge.thoughtknot-hot > path {
     transition-delay: var(--gn-motion-fade);
   }
 }

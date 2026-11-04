@@ -17,6 +17,10 @@ import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
+import { groupEdits } from '../../group-edit.ts';
+import { MoveUndo } from './move-undo.ts';
+import { moveHint } from './box-move-keys';
+import { accept } from './estimate-actions';
 import { levelSpace } from './level-space.ts';
 import type { SpaceScreen } from './space-view-options.ts';
 import { LevelTaps } from './level-taps.ts';
@@ -226,12 +230,42 @@ export class Aids {
         redraw: () => this.names(),
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
         nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
+        editGroup: () => this.groupEditor(),
       });
       this.hints = new LevelHints(this.badge);
     }
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);
     this.badge.toggleClass('is-hidden', !text && !back);
+  }
+
+  /**
+   * How a named group's things are written (cloud_edit): into the text being edited, else the note. Each edit offers its
+   * undo, and says why when nothing was written. None while the card is only read.
+   */
+  private groupEditor():
+    ((things: readonly string[], property: string, value: string | null, said: string) => void) | null {
+    const o = this.host.o;
+    if (o.readOnly?.() || (!o.writeBlock && !o.editing?.()?.session)) return null;
+    return (things, property, value, said) => {
+      const say = (why: string) => {
+        const line = moveHint(this.host.viewport);
+        line.hidden = false;
+        line.textContent = why;
+      };
+      const edits = groupEdits(o.reading.texts, o.graph, things, property, value);
+      if ('reason' in edits) return say(edits.reason);
+      const undo = new MoveUndo(this.host.viewport, o.graph);
+      void (async () => {
+        for (const e of edits) {
+          const why = await accept(o, e.block, e.was, e.now);
+          if (why) return say(why);
+        }
+        undo.offer(said, async () => {
+          for (const e of [...edits].reverse()) await accept(o, e.block, e.now, e.was);
+        });
+      })();
+    };
   }
 
   /** Kept open, the details are in the card from the start, with the graph's summary until a thing is chosen (§24). */

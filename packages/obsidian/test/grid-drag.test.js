@@ -2,6 +2,7 @@
 // - A card pressed and dragged over another column says the value it would take.
 // - Let go there, the value is written as its status in the data block, and the line says it was moved.
 // - Let go in its own column, nothing is written.
+// - A move written is taken back by its toast's Undo, the card as it was (move_undo).
 // - Each column has a button that adds a card to it, of its value and its cards' kind, its name open (edit_cells).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -55,6 +56,25 @@ async function board() {
 }
 
 describe('a card dragged on a kanban board', () => {
+  // proves: move_undo
+  test("a move to another column is taken back by the toast's Undo", async () => {
+    const { env, el, vp, boxOf, middleOf } = await board();
+    try {
+      const over = { ...middleOf('c'), clientY: middleOf('c').clientY + 40 };
+      vp.dispatch('pointerdown', mouse(5, boxOf('a'), middleOf('a')));
+      vp.dispatch('pointermove', mouse(5, vp, over));
+      vp.dispatch('pointerup', mouse(5, vp, over));
+      await until(() => env.state.files.get(PATH).includes("(a:Task {name: 'Plan', status: 'doing'})"));
+      await settled();
+      const toast = el.querySelectorAll('.thoughtknot-undo-toast').find((t) => !t.classList.contains('is-hidden'));
+      assert.equal(toast?.querySelector('.thoughtknot-undo-said').textContent, 'Moved Plan to doing');
+      toast.querySelector('button').click();
+      await until(() => env.state.files.get(PATH) === NOTE);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: projection_grid
   test('to another column, says where it would go, then writes that status where the card is written', async () => {
     const { env, el, vp, boxOf, middleOf } = await board();

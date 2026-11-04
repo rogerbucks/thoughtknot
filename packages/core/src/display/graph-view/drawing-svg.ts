@@ -12,6 +12,7 @@ import { markCertainty } from './certainty';
 import { markParked } from './parked';
 import { markCallouts } from './note-callouts';
 import { markLinks } from '../links/link-marks';
+import { watchMoving } from './pointer-moving';
 import { noInlineStyle } from '../host';
 import type { ViewOptions } from './view-options';
 
@@ -71,6 +72,7 @@ export function insertSvg(
   const svg = viewport.appendChild(parsedSvg(drawn));
   svg.removeAttribute('style');
   svg.classList.add('thoughtknot-svg');
+  watchMoving(svg); // a highlight waits only while the pointer moves
   decorate(svg, drawn, d, plan, o);
   return svg;
 }
