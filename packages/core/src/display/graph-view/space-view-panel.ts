@@ -13,7 +13,7 @@ import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../s
 import { GlobeLayout } from '../../space-globe.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { tellPickedAt } from './space-picked-at';
-import { cardAt, cardsOnScreen, clusterFilling, frameOf, isCluster } from '../../space-cards.ts';
+import { cardAt, cardsOnScreen, clusterFilling, farFrame, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
@@ -149,7 +149,7 @@ export async function openSpaceView(
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    const frame = frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id);
+    const frame = farFrame(frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id), el);
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
