@@ -6,6 +6,7 @@ import { gridDrops } from './grid-drag';
 import { MoveUndo } from './move-undo';
 import type { ViewOptions } from './view-options';
 import type { Zoom } from '@thoughtknot/core';
+import type { Lifecycle } from '../lifecycle';
 
 /**
  * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
@@ -16,7 +17,7 @@ import type { Zoom } from '@thoughtknot/core';
 export function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
-  host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
+  host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom; card: Lifecycle },
 ): { drag: BoxDrag; keys: BoxMoveKeys | null; undo: MoveUndo | null } | null {
   const shared = {
     viewport: host.viewport,
@@ -26,6 +27,7 @@ export function boxMoversFor(
   };
   // each move written offers its undo, where the card can take one back (move_undo)
   const undo = new MoveUndo(host.viewport, o.graph);
+  host.card.register(() => undo.onunload());
   const grid = svg ? gridDrops(o, host.viewport, undo) : null;
   if (grid) return { drag: new BoxDrag({ ...shared, ...grid }), keys: null, undo };
   const given = o.moving;

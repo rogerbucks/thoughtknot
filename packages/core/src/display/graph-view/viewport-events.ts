@@ -66,12 +66,10 @@ export interface ViewportHost {
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
-  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom }) : null,
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card }) : null,
     drag = movers?.drag ?? null,
-    keys = movers?.keys ?? null,
-    undo = movers?.undo ?? null;
+    keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
-  if (undo) card.register(() => undo.onunload());
   // ? lists every keyboard shortcut, and the host's commands for the drawing act on the card used last (§44)
   const shortcuts = () => toggleShortcuts(host.root, vp);
   trackUse(card, host.root, {
@@ -295,13 +293,8 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
-    // Ctrl+Z or Cmd+Z takes the last move back while its toast shows (move_undo)
-    if (undo?.key(e)) {
-      e.preventDefault();
-      return;
-    }
-    // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
-    if (keys?.key(e)) {
+    // Ctrl+Z undoes a move (move_undo). A box picked up from the keyboard takes its keys until put down; M picks it up
+    if (movers?.undo?.key(e) || keys?.key(e)) {
       e.preventDefault();
       return;
     }

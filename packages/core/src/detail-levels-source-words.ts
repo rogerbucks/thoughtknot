@@ -22,6 +22,10 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.kind': 'Kind',
   'levels.none': 'No {name}',
   'levels.edit': '✎',
+  // the undo of a move or of a group's edit (move_undo)
+  'move.undo': 'Undo',
+  'move.undo-label': 'Undo the last move',
+  'move.undone': 'Move undone',
   'levels.edit-label': 'Edit {name}',
   'levels.edit-title': 'Edit {name}',
   'levels.rename': 'Rename',

@@ -24,13 +24,13 @@ import {
   underStrictness,
   word,
 } from '@thoughtknot/core';
-import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/core';
+import type { Block, Drawn, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
-import { undoStyle, writeStyle } from './style-write';
+import { movingFor, writeStyle } from './style-write';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
@@ -332,14 +332,7 @@ export async function renderBlock(
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
       ...(diagram?.table || diagram?.picture
         ? {}
-        : {
-            moving: {
-              written: styling.style.nudges,
-              ...(drawing.diagram?.type === 'radial' ? { centre: drawing.diagram.centre } : {}),
-              move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
-              undo: () => void undoStyle(plugin, target.path), // its toast and Ctrl+Z take it back (move_undo)
-            },
-          }),
+        : { moving: movingFor(plugin, target.path, graph, styling, drawing) }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
       ...rulesOn(looked || styling, reading.world[graph], drawing, {}, problems, shown), // §56
       links,
