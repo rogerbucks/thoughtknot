@@ -1,12 +1,14 @@
 // The words of the AI send dialog, the AI models' settings and the question before leaving the app. They are in UK
 // English (editor spec §42, words_catalogue). The core's AI words follow: what is sent, its ceilings and its refusals.
-// source-words.ts keeps them with every other word. The words of AI suggestions are kept with them
-// (ai-suggest-source-words.ts).
+// source-words.ts keeps them with every other word. The words of AI suggestions (ai-suggest-source-words.ts) and of
+// text to graph (ai-text-graph-source-words.ts) are kept with them.
 import { AI_SUGGEST_SOURCE_WORDS } from './ai-suggest-source-words.ts';
+import { AI_TEXT_GRAPH_SOURCE_WORDS } from './ai-text-graph-source-words.ts';
 
 /** The AI dialog's, the AI models', leaving the app's and the core's AI words, by key, in UK English. */
 export const AI_SOURCE_WORDS = {
   ...AI_SUGGEST_SOURCE_WORDS,
+  ...AI_TEXT_GRAPH_SOURCE_WORDS,
   'ai.view': 'View',
   'ai.graph': 'Graph',
   'ai.title': 'Ask an AI model to propose changes',
@@ -169,6 +171,7 @@ export const AI_SOURCE_WORDS = {
     other: '{things} are not things of graph {graph}.',
   },
   'ai.scope.said-whole': 'the whole graph {graph}',
+  'ai.scope.said-new': 'no graph {graph} yet: the text makes a new one',
   'ai.scope.said-view': 'view {view} of graph {graph}: {reading}',
   'ai.scope.said-things': {
     one: '{count} thing chosen from graph {graph}: {things}',

@@ -17,7 +17,9 @@ import { word } from './words.ts';
 export type ScopeChoice =
   | { graph: string; what: 'graph' }
   | { graph: string; what: 'view'; view: string }
-  | { graph: string; what: 'things'; things: string[] };
+  | { graph: string; what: 'things'; things: string[] }
+  // text to graph (§47): the whole graph, to join the text to, or none yet when the note has no such graph
+  | { graph: string; what: 'text' };
 
 /** What is sent: the graph, what was chosen in words, the things in it, how many links, and the GQL that writes them. */
 export interface AiScope {
@@ -107,10 +109,20 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
   const base = reading.graphs.get(graph),
     g = reading.world[graph];
   if (reading.tooLarge) return { refused: word('ai.scope.too-large') };
+  if (choice.what === 'text' && (!base || !g || !base.boxes.length))
+    return {
+      graph,
+      kind: 'whole',
+      said: `no graph ${graph} yet`,
+      shown: word('ai.scope.said-new', { graph }),
+      things: [],
+      links: 0,
+      gql: '',
+    };
   if (!base || !g || !base.boxes.length) return { refused: word('ai.scope.empty', { graph }) };
   // `said` goes to the model and into the change set, so it stays in UK English; `shown` is what the person reads
   let keys: string[], links: Link[], said: string, shown: string;
-  if (choice.what === 'graph') {
+  if (choice.what === 'graph' || choice.what === 'text') {
     keys = base.boxes.map((b) => b.key);
     links = base.links;
     said = `the whole graph ${graph}`;
@@ -135,7 +147,7 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
   const chosen = new Set(keys);
   const things = base.boxes.filter((b) => chosen.has(b.key));
   const lines = [...things.map((b) => thingText(b.key, g, b.kind, b.text)), ...linkTexts(links, g)];
-  const kind = choice.what === 'graph' ? 'whole' : choice.what === 'view' ? 'view' : 'ticked';
+  const kind = choice.what === 'graph' || choice.what === 'text' ? 'whole' : choice.what === 'view' ? 'view' : 'ticked';
   return {
     graph,
     kind,
