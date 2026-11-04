@@ -5,7 +5,7 @@
 import { Notice } from 'obsidian';
 import { PLUGIN_API, pluginRegistry, word } from '@thoughtknot/core';
 import type { PluginCommand, PluginRegistry, ThoughtKnotPlugin as CorePlugin } from '@thoughtknot/core';
-import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends } from './ai/ai';
+import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends, textGraphCommand } from './ai/ai';
 import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { RECOVER_COMMAND, recoverDrafts } from './drafts';
 import { exampleCommand, tourCommand } from './first-run';
@@ -28,6 +28,7 @@ export function hostCommands(plugin: ThoughtKnotPlugin): HostCommand[] {
     tourCommand(),
     ...shortcutCommands(plugin.app),
     { id: AI_COMMAND.id, title: AI_COMMAND.name, run: () => askAi(plugin) },
+    textGraphCommand(plugin),
     { id: CLEAR_SENDS_COMMAND.id, title: CLEAR_SENDS_COMMAND.name, run: () => clearAiSends(plugin) },
     { id: IMPORT_COMMAND.id, title: IMPORT_COMMAND.name, run: () => importFromDatabase(plugin) },
     ...pictureCommands(plugin),

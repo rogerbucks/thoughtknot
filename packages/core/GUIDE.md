@@ -1846,6 +1846,19 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   it. A look only a suggestion gives is dashed, said to be suggested, and has a legend row (`SUGGESTED_TOKEN`). The
   change set card shows it for a model's proposal. Nothing is saved.
 
+#### Text to graph (spec §47)
+
+- `text-to-graph.ts` — an AI makes a graph of a text. `textToGraphInstructions` and `textGraphIn` are the one contract:
+  the editor and the skill both use them.
+  - `textToGraphAsk` makes the ask for `prepareSend`. The text goes in a fence of its own (`AnswerShape.text`). The
+    whole graph goes with it, or none when the note has no such graph yet (`what: 'text'`).
+  - `textGraphIn` reads the answer as things and links only. Each must quote the words of the text it came from
+    (`quoteSpan`). Things already in the graph, by name, text or alias, are matched (`knownThings`), never added again.
+  - The graph it would make is read by the graph format library. A new problem refuses the whole answer.
+- `text-to-graph-note.ts` — writing it. A note that holds the graph gets a change set (`holdsGraph`). Else only what the
+  person ticked (`tickedOnly`) is written into a new block (`noteWithTextGraphApplied`).
+- `textGraphMessage` and `textGraphProposal`, in `text-to-graph.ts`, serve a host with its own model, such as the skill.
+
 #### The AI query contract and write scoring (spec §37)
 
 - `ai-query.ts` — how an outside AI, a local one among them, asks the knowledge through the engine.

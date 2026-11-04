@@ -23,6 +23,8 @@ export const COWORK_SOURCE_WORDS = {
   'cowork.draw.kept':
     'These files are already there and differ, so they were left as they are. Ask the user, and run draw again with --replace to replace them.',
   'cowork.proposal': 'Proposal: {what}. Nothing is written until you approve it.',
+  'cowork.text-graph.proposal':
+    'Proposal: {count} changes to graph {graph} from the text. Nothing is written until you approve it.',
   'cowork.proposal.no-change': 'That edit changes nothing.',
   'cowork.proposal.refused': 'Nothing to propose: {why}',
   'cowork.apply.written': 'Written to the note.',
@@ -30,6 +32,6 @@ export const COWORK_SOURCE_WORDS = {
   'cowork.edit.unknown': 'Not an edit the skill knows: {edit}. It knows {known}.',
   'cowork.edit.missing': 'The {edit} edit needs {needs}.',
   'cowork.edit.block': 'block {block}, line {line}',
-  'cowork.usage': 'Usage: thoughtknot <read|check|draw|propose|apply> <note> [options].',
+  'cowork.usage': 'Usage: thoughtknot <read|check|draw|propose|apply|text-to-graph> <note> [options].',
   'cowork.note-unreadable': 'The note could not be read as text.',
 } as const;

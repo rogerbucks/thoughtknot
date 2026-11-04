@@ -27,6 +27,7 @@ describe('Obsidian’s commands', () => {
         'pictures-on',
         'recover-drafts',
         'shortcuts',
+        'text-to-graph-ai',
         'tour',
         'zoom-in',
         'zoom-out',
