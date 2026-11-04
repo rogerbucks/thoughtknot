@@ -382,30 +382,28 @@ describe('the ladder of detail (cluster_detail_ladder)', () => {
     );
   });
 
-  // proves: cluster_detail_ladder
-  test('a big grouped graph opens on its overview; a small one, or one the person turned, does not', () => {
+  // proves: level_default
+  test('a big grouped graph opens with every thing shown, none folded; the overview is a rung picked', () => {
     const big = new ViewState(OFF);
-    assert.ok(big.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.every(([, , folded]) => folded));
-    assert.equal(big.detail, 'overview');
+    assert.ok(
+      !big.folded(teams(OVERVIEW_THINGS + 1)).folding?.groups.some(([, , folded]) => folded),
+      'no group folded',
+    );
+    assert.notEqual(big.detail, 'overview');
     const small = new ViewState(OFF);
     assert.equal(small.folded(teams(10)).folding, undefined);
     assert.equal(small.detail, 'all');
-    const turned = new ViewState(OFF);
-    turned.toDetail('groups');
-    assert.ok(!turned.folded(teams(OVERVIEW_THINGS + 1)).folding?.groups.some(([, , folded]) => folded));
-    const kept = new ViewState(OFF);
-    assert.equal(kept.toDetail('all'), false, 'already on All: nothing to redraw');
-    assert.equal(kept.folded(teams(OVERVIEW_THINGS + 1)).folding, undefined, 'but All was chosen, so it stays');
-    const opened = new ViewState(OFF);
-    opened.folded(teams(OVERVIEW_THINGS + 1));
-    opened.open({ group: 'Odd' });
+    const picked = new ViewState(OFF);
+    picked.toDetail('overview');
+    assert.ok(picked.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.every(([, , folded]) => folded));
+    picked.open({ group: 'Odd' });
     assert.deepEqual(
-      opened.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.map(([g, , folded]) => [g, folded]),
+      picked.folded(teams(OVERVIEW_THINGS + 1)).folding.groups.map(([g, , folded]) => [g, folded]),
       [
         ['Even', true],
         ['Odd', false],
       ],
-      'a group opened stays open: the overview is chosen once',
+      'a group opened stays open',
     );
   });
 });

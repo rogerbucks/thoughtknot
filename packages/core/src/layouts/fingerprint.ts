@@ -156,6 +156,6 @@ export const lanesShown = (attribute: string | null | undefined): Map<string, nu
   new Map(Object.entries(pickShownOf(attribute)?.bands ?? {}));
 
 /** Every reason the engine gives for a layout (own-engine.ts `Pick`). */
-const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried', 'chosen'];
+const WHYS = ['flow', 'tree', 'network', 'dense', 'overview', 'tried', 'chosen', 'levels'];
 /** Every kind pattern. */
 const KIND_PATTERNS: readonly KindPattern[] = ['plain', 'ordered', 'two-sided', 'clustered'];

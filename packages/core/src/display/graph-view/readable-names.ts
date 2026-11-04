@@ -72,9 +72,25 @@ export function shownOf(svg: SVGSVGElement): { k: number; view: Box } | null {
   if (!(width > 0 && shown > 0)) return null;
   const { s, tx, ty } = frameOf(svg);
   const at = (x: number, y: number) => [x / s - tx, y / s - ty] as const;
-  const [l, t] = at(left, top),
-    [r, b] = at(left + width, top + height);
+  // zoomed in, the drawing grows past its viewport, which scrolls: only the part inside the viewport is shown
+  const [x0, y0, x1, y1] = scrolledIn(svg, left, top, width, height);
+  const [l, t] = at(x0, y0),
+    [r, b] = at(x1, y1);
   return { k: (shown / width) * s, view: { left: l, top: t, right: r, bottom: b } };
+}
+
+/** The part of `svg`'s view box its scrolling viewport shows, as left, top, right, bottom; all of it when unknown. */
+function scrolledIn(svg: SVGSVGElement, left: number, top: number, width: number, height: number): number[] {
+  const all = [left, top, left + width, top + height];
+  const port = svg.parentElement;
+  if (typeof svg.getBoundingClientRect !== 'function' || !port || typeof port.getBoundingClientRect !== 'function')
+    return all;
+  const a = svg.getBoundingClientRect(),
+    v = port.getBoundingClientRect();
+  if (!(a.width > 0 && a.height > 0 && v.width > 0 && v.height > 0)) return all;
+  const x = (px: number) => left + ((Math.min(Math.max(px, a.left), a.right) - a.left) / a.width) * width;
+  const y = (py: number) => top + ((Math.min(Math.max(py, a.top), a.bottom) - a.top) / a.height) * height;
+  return [x(v.left), y(v.top), x(v.right), y(v.bottom)];
 }
 
 /**

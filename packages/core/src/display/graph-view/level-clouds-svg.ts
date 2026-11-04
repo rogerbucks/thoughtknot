@@ -21,6 +21,7 @@ import { BY_KIND, ownChoices, withOwnLevel } from '../../own-levels.ts';
 import { namedLevels } from '../../named-levels.ts';
 import type { OwnLevel } from '../../own-levels.ts';
 import { make } from './note-callouts.ts';
+import { card, cloudBlur, dots, puffs } from './level-look.ts';
 import { outlineOf, shownOf } from './readable-names.ts';
 
 /** The class of the group that holds the clouds, the first in the drawing's top group so it is under everything. */
@@ -28,8 +29,7 @@ export const CLOUDS = 'thoughtknot-clouds';
 /** The class on the drawing while a level of groups shows: its things fade so the clouds read first. */
 export const FAR = 'thoughtknot-far';
 /** The room round a cloud's things, and the size of its name, in pixels of the screen. */
-const PAD_PX = 14,
-  NAME_PX = 14;
+const PAD_PX = 14;
 /** The size of a preview's names and of its hint, in pixels. */
 const PEEK_PX = 12,
   HINT_PX = 11;
@@ -147,6 +147,7 @@ export function levelsInto(
   if (at < levels.length - 1) {
     const group = make('g', { class: CLOUDS }),
       clouds = cloudsAt(levels, at, rects, PAD_PX / k);
+    cloudBlur(svg, (PAD_PX * 1.4) / k);
     const f = drawing ? foundOf(drawing) : null,
       inside = new Map<string, string[]>();
     for (const c of clouds) {
@@ -154,54 +155,143 @@ export function levelsInto(
       inside.set(c.key, levels[at]?.groups.find((x) => x.key === c.key)?.things ?? []);
     }
     held.set(svg, inside);
-    roads(group, roadsAt(levels, at, f?.links ?? [], clouds, LANE_PX / k, GATE_PX / k), k);
+    const parentOf = new Map((levels[at]?.groups ?? []).map((g) => [g.key, g.parent]));
+    roads(
+      group,
+      roadsAt(levels, at, f?.links ?? [], clouds, LANE_PX / k, GATE_PX / k),
+      clouds,
+      k,
+      (key) => hueOf(levels, subjectOf(levels, at, key)),
+      at > 0 ? (key) => parentOf.get(key) : undefined,
+      (key) => levels[at - 1]?.groups.find((g) => g.key === key)?.name ?? key,
+    );
     unclash(group);
     top.prepend(group);
   }
   return levelBadge(levels, at);
 }
 
-/** The roads between the clouds drawn into `group`, over the clouds: each lane, its width by its links, and its gates. */
-function roads(group: Element, all: ReturnType<typeof roadsAt>, k: number): void {
+/**
+ * The roads between the clouds drawn into `group`, under the cards. Each lane is a ribbon in the colour it leaves from.
+ * It is as wide as its links are many, with their count at its middle (level_look).
+ */
+function roads(
+  group: Element,
+  all: ReturnType<typeof roadsAt>,
+  clouds: readonly Cloud[],
+  k: number,
+  hue: (key: string) => number,
+  inside?: (key: string) => string | undefined,
+  outName?: (key: string) => string,
+): void {
   const round1 = (n: number) => Math.round(n * 10) / 10;
-  for (const r of all) {
-    for (const l of r.lanes)
-      group.appendChild(
+  const middle = new Map(clouds.map((c) => [c.key, [(c.box.left + c.box.right) / 2, (c.box.top + c.box.bottom) / 2]]));
+  const lanes = make('g', { class: 'thoughtknot-roads' });
+  for (const r of all)
+    for (const l of r.lanes) {
+      const a = middle.get(l.from),
+        b = middle.get(l.to);
+      // past the first level, roads join only the clouds of one cloud: the rest run on the highway a level out
+      if (!a || !b || (inside && inside(l.from) !== inside(l.to))) continue;
+      const wide = Math.min(13, 3 + Math.sqrt(l.count) * 2.4);
+      // one gentle bend to the right of the way it runs, so the lane back runs beside it, not on it
+      const [dx, dy] = [(b[0] as number) - (a[0] as number), (b[1] as number) - (a[1] as number)],
+        long = Math.hypot(dx, dy) || 1;
+      const [nx, ny] = [-dy / long, dx / long],
+        side = (wide * 0.6 + LANE_PX) / k,
+        bend = long * 0.12;
+      const [x1, y1, x2, y2] = [(a[0] as number) + nx * side, (a[1] as number) + ny * side,
+        (b[0] as number) + nx * side, (b[1] as number) + ny * side]; // prettier-ignore
+      const [cx, cy] = [(x1 + x2) / 2 + nx * bend, (y1 + y2) / 2 + ny * bend];
+      lanes.appendChild(
         make('path', {
           class: 'thoughtknot-road',
-          d: l.d,
+          d: `M${round1(x1)},${round1(y1)} Q${round1(cx)},${round1(cy)} ${round1(x2)},${round1(y2)}`,
           'data-from': l.from,
           'data-to': l.to,
-          'stroke-width': round1(2 + Math.log2(l.count)),
+          'data-hue': hue(l.from),
+          'stroke-width': round1(wide / k),
         }),
       );
-    for (const g of r.gates) {
       const t = make('text', {
-        class: 'thoughtknot-gate',
-        x: g.x,
-        y: g.y,
+        class: 'thoughtknot-road-count',
+        x: round1(0.25 * x1 + 0.5 * cx + 0.25 * x2),
+        y: round1(0.25 * y1 + 0.5 * cy + 0.25 * y2),
         'text-anchor': 'middle',
-        'font-size': GATE_NAME_PX / k,
       });
-      t.textContent = g.text;
-      group.appendChild(t);
+      t.setAttribute('font-size', String(round1(GATE_NAME_PX / k)));
+      t.setAttribute('data-hue', String(hue(l.from)));
+      t.setAttribute('stroke-width', String(round1(3 / k)));
+      t.textContent = word('levels.road-count', { count: l.count });
+      if (l.count > 1) lanes.appendChild(t); // a road of one link needs no count
+    }
+  // links to another cloud one level out go on its highway. Each cloud gets a signpost to the one it links to most,
+  // on its side facing it, as "→ Money · 4" (level_roads)
+  if (inside && outName) {
+    const posts = new Map<string, { from: string; to: string; out: number; back: number; at: number[] }>();
+    for (const r of all)
+      for (const l of r.lanes) {
+        const [p, q] = [inside(l.from), inside(l.to)];
+        if (p === q || !q || !p) continue;
+        for (const [own, other, way] of [
+          [l.from, q, 'out'],
+          [l.to, p, 'back'],
+        ] as const) {
+          const key = `${own}\u0000${other}`,
+            a = middle.get(own),
+            b = middle.get(way === 'out' ? l.to : l.from);
+          if (!a || !b) continue;
+          const post = posts.get(key) ?? { from: own, to: other, out: 0, back: 0, at: [0, 0] };
+          post[way] += l.count;
+          post.at = [
+            (a[0] as number) + Math.sign((b[0] as number) - (a[0] as number)) * (60 / k),
+            (a[1] as number) + 34 / k,
+          ];
+          posts.set(key, post);
+        }
+      }
+    // one signpost a cloud, to the cloud out there it links to most, so the signposts never crowd the names
+    const busiest = new Map<string, { from: string; to: string; out: number; back: number; at: number[] }>();
+    for (const post of posts.values()) {
+      const was = busiest.get(post.from);
+      if (!was || post.out + post.back > was.out + was.back) busiest.set(post.from, post);
+    }
+    for (const post of busiest.values()) {
+      const arrow = post.out && post.back ? '⇄' : post.out ? '→' : '←';
+      const t = make('text', { class: 'thoughtknot-gate', x: round1(post.at[0] ?? 0), y: round1(post.at[1] ?? 0) });
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', String(round1(GATE_NAME_PX / k)));
+      t.setAttribute('data-hue', String(hue(post.from)));
+      t.setAttribute('stroke-width', String(round1(3 / k)));
+      t.textContent = word('levels.gate', { arrow, name: outName(post.to), count: post.out + post.back });
+      lanes.appendChild(t);
     }
   }
+  // under the clouds' cards, so every name reads (level_look)
+  group.prepend(lanes);
 }
 
-/** The clouds' names and the gates' signposts in `group` moved down where they would overlap (level_tags). */
+/** Moves the cards and signposts in `group` down just below any they overlap, so no two names cover each other. */
 export function unclash(group: Element): void {
-  const texts = [
-    ...Array.from(group.querySelectorAll('text.thoughtknot-cloud-name')),
-    ...Array.from(group.querySelectorAll('text.thoughtknot-gate')),
+  const cards = Array.from(group.querySelectorAll('g.thoughtknot-cloud-card-svg')),
+    gates = Array.from(group.querySelectorAll('text.thoughtknot-gate'));
+  const tags = [
+    ...cards.map((c) => {
+      const back = c.querySelector('rect');
+      const at = (name: string) => Number(back?.getAttribute(name)) || 0;
+      return { x: at('x') + at('width') / 2, y: at('y') + at('height') / 2, width: at('width'), height: at('height') };
+    }),
+    ...gates.map((t) => {
+      const px = Number(t.getAttribute('font-size')) || 1;
+      const at = (name: string) => Number(t.getAttribute(name)) || 0;
+      return { x: at('x'), y: at('y'), width: tagWidth(t.textContent ?? '', px), height: px * 1.2 };
+    }),
   ];
-  const tags = texts.map((t) => {
-    const px = Number(t.getAttribute('font-size')) || 1;
-    const at = (name: string) => Number(t.getAttribute(name)) || 0;
-    return { x: at('x'), y: at('y'), width: tagWidth(t.textContent ?? '', px), height: px * 1.2 };
-  });
   spreadTags(tags).forEach((y, i) => {
-    if (y !== tags[i]?.y) texts[i]?.setAttribute('y', String(Math.round(y * 100) / 100));
+    const by = Math.round((y - (tags[i]?.y ?? y)) * 100) / 100;
+    if (!by) return;
+    if (i < cards.length) cards[i]?.setAttribute('transform', `translate(0 ${by})`);
+    else gates[i - cards.length]?.setAttribute('y', String(Math.round(y * 100) / 100));
   });
 }
 
@@ -232,13 +322,22 @@ function unitOf(
     'aria-label': word('levels.cloud-label', { name: c.name, count: c.count, level: levels[at]?.name ?? '' }),
   });
   const look = { 'data-hue': hueOf(levels, subject), 'data-shade': Math.min(at, 2) };
-  unit.appendChild(make('path', { class: 'thoughtknot-cloud', d: c.path, ...look }));
+  // soft puffs round its things, a dot for each, and its name on a frosted card, as the mockup draws them (level_look)
+  const inside = (levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []).flatMap((t) => rects.get(t) ?? []);
+  const soft = puffs(inside, PAD_PX / k);
+  for (const [name, value] of Object.entries(look)) soft.setAttribute(name, String(value));
+  unit.appendChild(soft);
+  const dotted = dots(inside, k);
+  dotted.setAttribute('data-hue', String(look['data-hue']));
+  unit.appendChild(dotted);
+  const label = card(c.x, (c.box.top + c.box.bottom) / 2, c.name, word('levels.card-count', { count: c.count }), k);
+  label.setAttribute('data-hue', String(look['data-hue']));
+  unit.appendChild(label);
   const text = (cls: string, x: number, y: number, px: number, words: string) => {
     const t = make('text', { class: cls, x, y, 'text-anchor': 'middle', 'font-size': px / k });
     t.textContent = words;
     return t;
   };
-  unit.appendChild(text('thoughtknot-cloud-name', c.x, c.y - 4 / k, NAME_PX, `${c.name} · ${c.count}`));
   const peek = make('g', { class: 'thoughtknot-cloud-peek' });
   const middle = (keys: readonly string[]) => {
     const rs = keys.flatMap((key) => rects.get(key) ?? []);
