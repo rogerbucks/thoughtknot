@@ -10,5 +10,11 @@
       "approved_by": "Roger Bucks",
       "rules_hash": "sha-256:a14ad627bc78cbaaf79c026c1f928d7a379eae73368386193a00e75aa043827e"
     }
+  ],
+  "withdrawn": [
+    {
+      "section": "2",
+      "note": "The graph spec has no section 2. The number is kept as withdrawn, so every citation of the other sections stays true."
+    }
   ]
 }
