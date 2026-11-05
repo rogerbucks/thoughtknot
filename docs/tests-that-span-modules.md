@@ -73,6 +73,11 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
   or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
 
+## The core: connectors
+
+- `packages/core/test/connector-files.test.js` — files other than GQL broken into cited statements (editor spec
+  §63, CN2). It spans the CSV reader, its mapping, its connector and the join.
+
 ## The core's views
 
 - `packages/core/test/stay-put.test.js` — a thing already shown stays where it is (editor spec §68, things_stay_put).

@@ -1,4 +1,4 @@
-// The connector for tables (editor spec §63, csv-connector.ts). It checks the ids a table's rows are given, the
+// The connector for tables (editor spec §63, connector_files_to_gql; csv-connector.ts). It checks the ids a table's rows are given, the
 // columns it skips or links, and a file it refuses.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
