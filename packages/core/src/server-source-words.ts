@@ -3,8 +3,12 @@
 // What the server tells Claude alone, or answers to a request its page never makes, stays in the code
 // (words-in-code.test.js). source-words.ts keeps these with every other word.
 
+import { REPO_SOURCE_WORDS } from './repo-source-words.ts';
+
 /** The editor server's own words, by key, in UK English. */
 export const SERVER_SOURCE_WORDS = {
+  // graphs kept in a GitHub repository, said by every host that keeps them there (repo-source-words.ts)
+  ...REPO_SOURCE_WORDS,
   'server.no-version-of-note': 'No such version of this note.',
   'server.no-change': 'No such change.',
   'server.note-changed':
