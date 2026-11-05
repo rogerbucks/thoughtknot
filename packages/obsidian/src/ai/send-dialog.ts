@@ -19,7 +19,6 @@ import {
   modelChoices,
   noteWithProposal,
   prepareSend,
-  ruleDescribeAsk,
   readNote,
   sendPrepared,
   suggestAsk,
@@ -27,7 +26,8 @@ import {
   viewsOf,
   word,
 } from '@thoughtknot/core';
-import type { MatrixRow, PreparedSend, RuleChoices, RuleWrite, ScopeChoice } from '@thoughtknot/core';
+import type { MatrixRow, PreparedSend, ScopeChoice } from '@thoughtknot/core';
+import type { RuleAsking } from './rule-describe';
 import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
@@ -68,7 +68,7 @@ export class SendDialog extends Modal {
   private sendButton: ButtonComponent | null = null;
   private readonly text: TextAsk | null;
   /** A rule asked for in words (rule-describe.ts): the graph's choices to read the answer by, and the form to fill. */
-  private readonly rule: { choices: RuleChoices; fill: (rule: RuleWrite) => void } | null;
+  private readonly rule: RuleAsking | null;
 
   constructor(
     private readonly plugin: ThoughtKnotPlugin,
@@ -84,7 +84,7 @@ export class SendDialog extends Modal {
       question: string;
       suggest?: Partial<SuggestRows>;
       text?: TextAsk;
-      rule?: { choices: RuleChoices; fill: (rule: RuleWrite) => void };
+      rule?: RuleAsking;
     },
   ) {
     super(plugin.app);
@@ -291,7 +291,7 @@ export class SendDialog extends Modal {
     // suggestions are asked for in the person's own words, and read back only as suggestions (§59)
     const f = suggestForOf(this.suggest);
     const ask = this.rule
-      ? ruleDescribeAsk(base, this.graph, this.rule.choices, this.question)
+      ? this.rule.ask(base, this.graph, this.question)
       : this.text
         ? textToGraphAsk(base, this.text.graph, this.text.words, this.question)
         : f
@@ -359,12 +359,7 @@ export class SendDialog extends Modal {
       this.drawShown();
       return;
     }
-    // a rule described only fills the form it was asked from: nothing is tried or saved (rule-describe.ts)
-    if ('rule' in result) {
-      this.rule?.fill(result.rule);
-      new Notice(word('ai.rule.filled', { model: p.model.name }));
-      return this.close();
-    }
+    if ('rule' in result) return this.rule?.fill(result.rule, p.model.name, () => this.close()); // only fills a form
     const { proposal } = result,
       n = proposal.changes.length;
     // a text for a note with no such graph is reviewed in a dialog of its own: nothing is written until then
