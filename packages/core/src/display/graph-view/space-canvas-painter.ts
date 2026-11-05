@@ -1,6 +1,7 @@
 // The 2D canvas painter of the 3D view (editor spec §53, scale_space_painters), for a device with neither WebGPU nor
 // WebGL 2. And the 3D view's text, which the 2D canvas always paints, on a canvas laid over the shapes. Which names
 // are painted, and how big, space-labels.ts picks.
+import { paintGround } from './space-view-steady.ts';
 import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
 import type { ScreenCard, SpaceFrame } from '../../space-cards.ts';
 import { FACE_ROW } from '../../space-faces.ts';
@@ -149,7 +150,7 @@ const NOTCH = 0.25;
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
   frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'> &
-    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts' | 'outlines'>>,
+    Partial<Pick<SpaceFrame, 'strong' | 'faces' | 'shafts' | 'outlines' | 'ground'>>,
   paints: Paints,
   ratio: number,
   halo: string,
@@ -161,6 +162,7 @@ export function paintSpaceLabels(
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  paintGround(ctx, frame.ground ?? [], ink);
   paintOutlines(ctx, frame.outlines ?? [], paints, halo, ink);
   // every link as a solid line, then the picked thing's links, or the picked link, thicker, under the cards in front
   const widest = Math.max(0, ...(frame.shafts ?? []).map((l) => l.width));

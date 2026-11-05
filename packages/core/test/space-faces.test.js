@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { facesOnScreen, fitWords } from '../src/space-faces.ts';
-import { frameOf } from '../src/space-cards.ts';
+import { LABEL_HOLD, frameOf } from '../src/space-cards.ts';
 import { NAME_TINY, READABLE_LEAST } from '../src/space-labels.ts';
 import { orbitFit, projectPoint, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
 
@@ -222,4 +222,26 @@ test('a box beside the camera, reaching behind it, still hides the names behind 
     ['b\nname'],
     'with the wall moved away, b shows its name',
   );
+});
+
+// proves: space_label_hold
+test('a name floated beside its ball stays beside it until plainly readable on it, so it never flips at the edge', () => {
+  const space = balls([ball('a', 0, 40, 'Thing a')]);
+  // the zoom where its name just fits on its ball, readable but under the size that brings a floated one back
+  const at = [...Array(400).keys()]
+    .map((i) => 0.05 + i * 0.005)
+    .map((z) => ({ z, f: frameOf(space, look(space, zoomBy(orbitFit(space, W / H), z)), W, H, null) }))
+    .find(({ f }) => f.faces[0]?.size >= READABLE_LEAST && f.faces[0].size < READABLE_LEAST * LABEL_HOLD);
+  assert.ok(at, 'a zoom just past the least readable size');
+  const m = look(space, zoomBy(orbitFit(space, W / H), at.z));
+  const fresh = { named: new Set(), beside: new Set() };
+  assert.equal(frameOf(space, m, W, H, null, undefined, fresh).faces[0]?.id, 'a\nname', 'met here first: on its ball');
+  const held = { named: new Set(), beside: new Set(['a\nname']) };
+  const kept = frameOf(space, m, W, H, null, undefined, held);
+  assert.ok(!kept.faces.some((f) => f.id === 'a\nname'), 'floated last frame: not back on its ball yet');
+  assert.ok(
+    kept.labels.some((l) => l.id === 'a\nname' && l.size >= READABLE_LEAST),
+    'still beside it, readable',
+  );
+  assert.ok(held.beside.has('a\nname'), 'and remembered for the next frame');
 });

@@ -8,12 +8,16 @@
 // opens (SPACE_UNFOLD). What the card selects or fades is so here (focus_space), and its lens bends it here (lenses.ts).
 import { paintersFrom, word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
-import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
-import { GlobeLayout } from '../../space-globe.ts';
+import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf } from '../../space-view.ts';
+import type { Block, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
+import { GlobeLayout, aboveGlobe, globeOf } from '../../space-globe.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
 import { tellPickedAt } from './space-picked-at';
 import { cardAt, cardsOnScreen, clusterFilling, farFrame, frameOf, isCluster } from '../../space-cards.ts';
+import type { LabelMemory } from '../../space-cards.ts';
+import { grounded, repaintOnLevel, zoomIn } from './space-view-steady.ts';
+import { GLOBE, depthFor, liftOf } from './space-view-depth.ts';
+import type { Depth } from './space-view-depth.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
@@ -50,26 +54,8 @@ const opened = new WeakMap<HTMLElement, () => void>();
 
 const FOLD = /^(bundle|hub|group):/; // a line's key that is a fold to open, not a link: a bundle, a stub, a group's box
 
-/** Where the globe is among the ways to show the view: the last, after cards, balls and the two lifts. */
-const GLOBE = 4;
-
-/** The way to show the view for the bar's `mode`: as cards, a globe, or 3D balls, lifted as its own button left it. */
-const depthFor = (mode: SpaceMode, now: number): number =>
-  mode === 'cards' ? 0 : mode === 'globe' ? GLOBE : now % GLOBE === 0 ? 1 : now;
-
 const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
 const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
-
-/**
- * A way to show the view: as cards (the first, Roger, 24 Oct 2026), as balls in space (null), or on a globe (§71).
- * Or lifted, with height by what DepthBy says.
- */
-type Depth = DepthBy | 'cards' | 'globe' | null;
-
-/** How `marks` shown `by` that way are lifted as they lie; none to lay them out afresh. So too a drawing of no things,
- * as a density view's squares, which has nothing to lay out (space_density_tiles). */
-const liftOf = (by: Depth, marks: readonly DrawMark[]): DepthBy | null =>
-  by && by !== 'cards' && by !== 'globe' ? by : marks.some((m) => m.of !== undefined) ? null : { by: 'group' };
 
 /** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
 const KEPT = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'click', 'dblclick', 'wheel', 'keydown'];
@@ -140,6 +126,8 @@ export async function openSpaceView(
   // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
   let [picked, pickedLine]: [Block | null, SpaceLine | null] = [null, null];
   let turning = 0;
+  // what the last frame named, so each name keeps its look from one frame to the next
+  const labelled: LabelMemory = { named: new Set(), beside: new Set() };
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
@@ -148,14 +136,20 @@ export async function openSpaceView(
   const paint = () => {
     asked = false;
     if (!open) return;
+    const ground = groundOf(); // however it moved, the camera stays above the globe's ground
+    if (ground) orbit = aboveGlobe(orbit, ground);
     const matrix = matrixNow();
-    const frame = farFrame(frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id), el);
+    const drawn = farFrame(frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id, labelled), el);
+    const frame = grounded(drawn, glide.shown, depth === GLOBE || !!ground, matrix, width, height); // the plane
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));
     more.moved?.(orbit, { boxes: () => screenBoxes(seen(), matrix, width, height), width, height, el }); // zoom, levels
+    painted();
     tellPickedAt(root, glide.match(picked), matrix, width, height); // the editor beside it follows it (§72)
   };
+  const painted = repaintOnLevel(el, () => again()); // a level's clouds came or went: paint again, never blank
+  const groundOf = () => (depth === GLOBE ? globeOf(glide.shown) : undefined);
   const again = () => {
     if (asked) return;
     asked = true;
@@ -220,7 +214,7 @@ export async function openSpaceView(
     if ('back' in m) return close();
     if ('turn' in m) orbit = turnRound(orbit, ...m.turn, pivot());
     else if ('pan' in m) orbit = panBy(orbit, ...m.pan, height);
-    else if ('zoom' in m) orbit = zoomBy(orbit, m.zoom);
+    else if ('zoom' in m) orbit = zoomIn(orbit, m.zoom, groundOf());
     else if ('reset' in m) orbit = fitIn(space, width, height);
     else if ('help' in m) showHelp(help.hidden !== false);
     again();
@@ -361,7 +355,10 @@ export async function openSpaceView(
       // pointer, as a map does
       const at = el.getBoundingClientRect(),
         times = Math.pow(e.ctrlKey ? 1.01 : 1.0015, -e.deltaY);
-      orbit = zoomAtPixel(orbit, times, e.clientX - at.left, e.clientY - at.top, width, height);
+      // a globe zooms straight in to the side facing you, as the mockup does, never toward the pointer and off it
+      orbit = groundOf()
+        ? zoomIn(orbit, times, groundOf())
+        : zoomAtPixel(orbit, times, e.clientX - at.left, e.clientY - at.top, width, height);
       again();
       // zoomed in until a folded group fills the screen: it opens (cluster_opens)
       const full =
