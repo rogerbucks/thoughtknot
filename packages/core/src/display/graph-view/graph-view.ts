@@ -255,7 +255,7 @@ export class GraphView extends Lifecycle {
       unfold = (fold: string, byKey?: boolean) =>
         foldInPlace(this.svg, this.zoom, fold, this.switching, byKey && focus);
     const host = { card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full };
-    bindViewportEvents({ ...host, space: this.spaces, sketch: this.sketcher });
+    bindViewportEvents({ ...host, space: this.spaces, sketch: this.sketcher, edits: this.edits.gestures });
     const observer = new ResizeObserver(() => (this.zoom.resize(this.size(zoomSize)), this.aids.placeDetails()));
     observer.observe(this.viewport);
     if (this.o.aids?.detailsOpen) observer.observe(root); // the card’s own width decides where the details go (§24)

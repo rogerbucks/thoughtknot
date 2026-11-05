@@ -1341,7 +1341,8 @@
       "edit_quick_line",
       "edit_ai_expand",
       "edit_undo",
-      "edit_delete_asks"
+      "edit_delete_asks",
+      "edit_gestures"
     ]
   }
 }

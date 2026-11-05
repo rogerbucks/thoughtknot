@@ -6,7 +6,8 @@
 // sheet is placed again as the window and the note move. The card (graph-view.ts) binds these once it has built them.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
-import { boxMoversFor } from './box-movers';
+import { boxMoversFor, type Linker } from './box-movers';
+import { moveHint } from './box-move-keys';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
 import { toggleOutline } from './drawing-svg';
@@ -61,12 +62,27 @@ export interface ViewportHost {
   /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
   space?: { move: (m: SpaceMove) => boolean };
   sketch?: SketchPointer | null; // the drawing tools: what they take draws or picks a drawing, never pans (§70)
+  /** The editor beside the selected thing: what a double click and a drop on a box do where it can write (§72). */
+  edits?: EditGestures;
 }
+
+/** What the drawing's gestures ask of the editor (edit_gestures): a name opened, a thing added, a link written. */
+export type EditGestures = Linker & {
+  renameOn: (key: string) => boolean;
+  addHere: (say: (why: string) => void) => boolean;
+};
+
+/**
+ * How long a second click's recentre waits for the double click that may follow it, in milliseconds. A browser sends
+ * the double click straight after that click, so this is only long enough to see it, and too short to feel.
+ */
+const DOUBLE_CLICK_WAIT_MS = 40;
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
-  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card }) : null,
+  const edits = host.edits;
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card, links: edits }) : null,
     drag = movers?.drag ?? null,
     keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
@@ -105,6 +121,9 @@ export function bindViewportEvents(host: ViewportHost): void {
   let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean; again: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
+  /** A second click's recentre, waiting to see whether a double click follows (edit_gestures). */
+  let recentre: number | null = null;
+  card.register(() => recentre !== null && window.clearTimeout(recentre));
   /** A press on a fold's stub or box: if it lifts where it came down, it opens the fold (§25). */
   let foldDown: { id: number; x: number; y: number; fold: string } | null = null;
   const point = (e: { clientX: number; clientY: number }) => {
@@ -192,8 +211,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
     // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
-    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3)
-    if (down.again && !e.shiftKey) sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target));
+    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3).
+    // A mouse's second click waits a moment for a double click, which opens the name instead (edit_gestures).
+    const centre = () => sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target));
+    if (down.again && !e.shiftKey && !down.touch && edits?.canWrite()) {
+      if (recentre !== null) window.clearTimeout(recentre);
+      recentre = window.setTimeout(() => ((recentre = null), centre()), DOUBLE_CLICK_WAIT_MS);
+    } else if (down.again && !e.shiftKey) centre();
     else {
       const chosen = taps.choose(down, nearTo(down));
       host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
@@ -278,11 +302,22 @@ export function bindViewportEvents(host: ViewportHost): void {
     e.preventDefault();
     e.stopPropagation();
   });
-  // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
+  // A double click on a thing opens its name for typing, where the card can write. On empty space it adds a thing
+  // there, its name open (edit_gestures). Else, on or near a box or link, it only selects; empty space zooms (§3)
+  const say = (why: string) => {
+    const line = moveHint(vp);
+    line.hidden = false;
+    line.textContent = why;
+  };
   card.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
     if (ownButton(e.target)) return;
     const p = point(e),
-      onBox = !!targetAt(e.target);
+      at = targetAt(e.target),
+      onBox = !!at;
+    if (recentre !== null) window.clearTimeout(recentre);
+    recentre = null;
+    const opened = at && 'key' in at && edits?.renameOn(at.key);
+    if (opened || (!onBox && !nearTo(p).length && edits?.addHere(say))) return void e.preventDefault();
     use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && nearTo(p).length > 0 });
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {

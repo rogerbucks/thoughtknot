@@ -47,12 +47,6 @@ describe('the editor beside a selected thing', () => {
       assert.match(card(el).textContent, /Kind: Question/);
       assert.ok(card(el).parentElement.classList.contains('thoughtknot-over'), 'it floats over the drawing');
       assert.notEqual(env.doc.activeElement, nameOf(el), 'a tap selects; it starts no typing');
-      el.querySelector('.thoughtknot-viewport').dispatch('dblclick', {
-        target: thing(el, 'q'),
-        clientX: 20,
-        clientY: 20,
-      });
-      assert.notEqual(env.doc.activeElement, nameOf(el), 'nor does a double click');
       tap(el, thing(el, 'large'));
       await until(() => nameOf(el)?.value === 'Large reader');
       assert.equal(el.querySelectorAll('.thoughtknot-edit-card').length, 1, 'one thing at a time');
