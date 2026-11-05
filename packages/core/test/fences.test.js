@@ -1,4 +1,4 @@
-// Where a gql block's closing fence is (spec §3). The close is read by string checks, never a regex built from the note.
+// Where a gql block's closing fence is (spec §3; security_fix_rule). The close is read by string checks, never a regex built from the note.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
