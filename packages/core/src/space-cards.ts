@@ -8,6 +8,8 @@
 // it covers no nearer card's name. Else its name is tiny inside it, unless it is picked. Plain cards are painted before
 // named ones, so no name lies over another (design review, 1 Nov 2026). Each arrowhead is painted at the
 // edge of the card it points to. Host-free and pure.
+import { CARD_MOST, LABEL_HOLD, WORDS_MOST, farFrame } from './space-steady.ts';
+import type { LabelMemory } from './space-steady.ts';
 import { FIELD, projectPoint } from './space-view.ts';
 import { isPlane } from './space-planes.ts';
 import type { Block, SpaceMarks, Vec3 } from './space-view.ts';
@@ -86,6 +88,7 @@ export function cardsOnScreen(
   width: number,
   height: number,
   picked?: string,
+  memory?: LabelMemory,
 ): ScreenCard[] {
   const focal = height / 2 / Math.tan(FIELD / 2);
   const names = new Map<string, string>();
@@ -96,9 +99,14 @@ export function cardsOnScreen(
   const seen = space.blocks.flatMap((b) => {
     const c = projectPoint(matrix, middle(b), width, height);
     const many = b.of === undefined ? 0 : (links.get(b.of) ?? 0);
-    return c ? [{ b, c, many, mine: picked !== undefined && b.of === picked }] : [];
+    return c
+      ? [{ b, c, many, mine: picked !== undefined && b.of === picked, was: memory?.named.has(b.id) ?? false }]
+      : [];
   });
-  seen.sort((p, q) => Number(q.mine) - Number(p.mine) || q.many - p.many || p.c.far - q.c.far);
+  // a card named last frame keeps its name before any other, so names never swap about as you zoom
+  seen.sort(
+    (p, q) => Number(q.mine) - Number(p.mine) || Number(q.was) - Number(p.was) || q.many - p.many || p.c.far - q.c.far,
+  );
   const named: { x: number; y: number; width: number; height: number }[] = [];
   const free = (x: number, y: number, w: number, h: number) =>
     named.length < NAMES_MOST &&
@@ -109,11 +117,15 @@ export function cardsOnScreen(
   for (const { b, c, many, mine } of seen) {
     const scale = focal / c.far;
     // a name scales with its card, the busiest larger, and the picked one stays readable (Roger, 2 Nov 2026)
-    const natural = WORDS_SIZE * scale * hubGrow(many, busiest);
+    const natural = Math.min(WORDS_MOST, WORDS_SIZE * scale * hubGrow(many, busiest));
     const text = (b.of === undefined ? undefined : names.get(b.of)) ?? b.name ?? '';
     const size = mine ? Math.max(READABLE_LEAST, natural) : natural;
-    const w = (b.card?.width ?? b.width) * scale,
-      h = (b.card?.height ?? b.tall) * scale;
+    // a near thing's card grows no wider than CARD_MOST, so close in it stays a card, not a wall (Roger, 5 Nov 2026).
+    // A folded group's card grows on, so it can fill the screen and open (cluster_opens)
+    const across = (b.card?.width ?? b.width) * scale,
+      held = isCluster(b.of) || isPlane(b.of) ? 1 : Math.min(1, CARD_MOST / Math.max(across, 1e-9));
+    const w = across * held,
+      h = (b.card?.height ?? b.tall) * scale * held;
     // its name wrapped to fit, and the card grown to hold it
     const room = size * PAD * 2;
     const wrapped = rowsOf(text, Math.max(ROW_LEAST, Math.floor((w * WIDER - room) / (size * LETTER_WIDTH))));
@@ -132,6 +144,7 @@ export function cardsOnScreen(
     if (mine) card.picked = true;
     out.push(card);
   }
+  if (memory) memory.named = new Set(out.filter((c) => c.named).map((c) => c.block.id));
   // plain cards first, so no name is ever covered; then named ones, the picked last; far ones first in each.
   // A tiny name is painted with the plain cards, so near ones still cover far ones.
   const rank = (c: ScreenCard) => (c.picked ? 2 : c.named ? 1 : 0);
@@ -200,6 +213,9 @@ export function cardArrows(
   return out;
 }
 
+export type { LabelMemory };
+export { CARD_MOST, LABEL_HOLD, WORDS_MOST, farFrame };
+
 /** What one frame of the 3D view paints: the shapes for the graphics chip, and over them cards, arrowheads and words. */
 export interface SpaceFrame {
   shapes: SpaceMarks;
@@ -215,6 +231,8 @@ export interface SpaceFrame {
   shafts: { style: string; points: { x: number; y: number }[]; width: number }[];
   /** Each open group outlined round its things on the screen, its name on its top edge (cluster_named_everywhere). */
   outlines: ScreenOutline[];
+  /** In 2.5D and 3D, the faint grid on the floor, as lines on the screen (space_ground). */
+  ground?: { x: number; y: number }[][];
 }
 
 /** An open group in the space: its id, its style, its name and the keys of the things in it. */
@@ -290,6 +308,7 @@ export function frameOf(
   height: number,
   picked: Block | null,
   pickedLink?: string,
+  memory?: LabelMemory,
 ): SpaceFrame {
   const chosen = {
     ...(picked?.of === undefined ? {} : { picked: picked.of }),
@@ -308,7 +327,7 @@ export function frameOf(
         blocks: space.blocks.filter((b) => !carded(b)),
         arrows: space.arrows.filter((a) => !edged.has(a.id)),
       };
-      const frame = frameOf(balls, matrix, width, height, carded(picked) ? null : picked, pickedLink);
+      const frame = frameOf(balls, matrix, width, height, carded(picked) ? null : picked, pickedLink, memory);
       const cards = cardsOnScreen({ ...space, blocks: clusters }, matrix, width, height, picked?.of);
       return { ...frame, cards, arrows: [...frame.arrows, ...cardArrows(space, matrix, width, height, cards)] };
     }
@@ -318,8 +337,11 @@ export function frameOf(
     const beside = new Set<string>();
     const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
     // a name too small to read on its thing floats beside it at a readable size. Where it has no room, it stays
-    // tiny on its thing (space_names_readable)
-    const small = new Set(faces.filter((f) => f.size < READABLE_LEAST).map((f) => f.id));
+    // tiny on its thing (space_names_readable).
+    // one floated last frame stays beside until it is plainly readable on its thing, so it never flips at the edge
+    const least = (id: string) => (memory?.beside.has(id) ? READABLE_LEAST * LABEL_HOLD : READABLE_LEAST);
+    const small = new Set(faces.filter((f) => f.size < least(f.id)).map((f) => f.id));
+    if (memory) memory.beside = new Set([...small, ...beside]);
     const onFace = new Set(faces.filter((f) => !small.has(f.id)).map((f) => f.id));
     const floats = space.labels.filter(
       (l) =>
@@ -344,7 +366,7 @@ export function frameOf(
       shafts: shaftsOf(space, matrix, width, height),
     };
   }
-  const cards = cardsOnScreen(space, matrix, width, height, picked?.of);
+  const cards = cardsOnScreen(space, matrix, width, height, picked?.of, memory);
   const words = { ...space, labels: space.labels.filter((l) => l.link !== undefined) };
   return {
     outlines: outlinesOf(space, matrix, width, height),
@@ -357,15 +379,4 @@ export function frameOf(
     strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),
     shafts: shaftsOf(space, matrix, width, height),
   };
-}
-
-/**
- * `frame` as it shows in `view`. Far out, the levels' clouds over it are marked far, and they hold its things
- * (level_look). They show each thing as a dot and its links in their roads. So no card, name, ball or link is painted. The picked
- * thing keeps its ring and its links. Near in, every thing shows as before.
- */
-export function farFrame(frame: SpaceFrame, view: { querySelector(q: string): unknown }): SpaceFrame {
-  if (!view.querySelector('svg.thoughtknot-far')) return frame;
-  const shapes = { ...frame.shapes, blocks: [], lines: [], labels: [], arrows: [] };
-  return { ...frame, shapes, cards: [], faces: [], arrows: [], labels: [], shafts: [], outlines: [] };
 }

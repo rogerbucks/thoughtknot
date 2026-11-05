@@ -2,9 +2,11 @@
 // mockup's design to the app's globe. So each subject has its own region of the globe. Each area has its own patch
 // inside that, and each topic its own patch inside the area. Its things sit in the topic's patch.
 //
-// Each region's share of the surface is its share of the things. The biggest subject takes a cap round the pole,
-// which faces the camera. The rest of the globe is halved again and again, across its longer side, so each region is
-// a patch near square. Inside a region its areas are laid the same way, and its things in rows.
+// Each region's share of the surface is its share of the things. The biggest subject takes a cap round a pole. The rest
+// of the globe is halved again and again, across its longer side, so each region is a patch near square. Inside a
+// region its areas are laid the same way, and its things in rows. Then the globe turns so the camera faces a point
+// where three subjects meet. So several show in the middle of the side facing you, as in the mockup. Roger, 5 Nov
+// 2026: it was all one subject, in one colour.
 // Host-free and pure: the same graph gives the same globe every time.
 import type { DetailLevel } from '../detail-levels.ts';
 import type { GlobeVec } from './globe.ts';
@@ -27,6 +29,20 @@ function along(c: GlobeVec, turn: number, angle: number): GlobeVec {
   const [cs, sn] = [Math.cos(turn), Math.sin(turn)];
   const t = (i: 0 | 1 | 2) => cs * c[i] + sn * (Math.cos(angle) * e1[i] + Math.sin(angle) * e2[i]);
   return unit([t(0), t(1), t(2)]);
+}
+
+/** The turn of the sphere that takes the way `from` to the way `to`, round the line square to both. */
+function turning(from: GlobeVec, to: GlobeVec): (w: GlobeVec) => GlobeVec {
+  const axis = cross(from, to),
+    sin = Math.hypot(...axis),
+    cos = from[0] * to[0] + from[1] * to[1] + from[2] * to[2];
+  if (sin < 1e-12) return (w) => w;
+  const k = unit(axis);
+  return (w) => {
+    const kw = cross(k, w),
+      kd = k[0] * w[0] + k[1] * w[1] + k[2] * w[2];
+    return unit([0, 1, 2].map((i) => w[i]! * cos + kw[i]! * sin + k[i]! * kd * (1 - cos)) as GlobeVec);
+  };
 }
 
 /** A part of the globe: its things, and its parts one level in, if it has any. */
@@ -118,16 +134,21 @@ function spread(things: readonly string[], patch: Patch, pole: GlobeVec, out: Ma
   });
 }
 
-/** Each thing's way from the middle of the globe, by `levels`, the biggest subject toward `facing`; null for none. */
+/** Each thing's way from the middle of the globe, by `levels`, every subject meeting at `facing`; null for none. */
 export function levelWays(levels: readonly DetailLevel[], facing: GlobeVec): Map<string, GlobeVec> | null {
   const tree = treeOf(levels);
   if (tree.length < 2) return null;
   const out = new Map<string, GlobeVec>(),
     pole = unit(facing);
-  // the biggest subject in a cap round the pole, facing the camera; the rest share the globe beyond it
+  // the biggest subject in a cap round the pole; the rest share the globe beyond it
   const [biggest, ...rest] = [...tree].sort((a, b) => b.things.length - a.things.length) as [Part, ...Part[]];
   const share = biggest.things.length / (sizeOf(tree) || 1);
   place([biggest], { f0: 0, f1: share, a0: 0, a1: 2 * Math.PI }, pole, out);
   place(rest, { f0: share, f1: 1, a0: 0, a1: 2 * Math.PI }, pole, out);
+  // then turned so the camera faces where the cap meets the first and last of the rest. So three subjects meet in
+  // the middle of the side facing you, not one alone
+  const meet = along(pole, angleAt(share), 0),
+    turn = turning(meet, pole);
+  for (const [k, w] of out) out.set(k, turn(w));
   return out;
 }

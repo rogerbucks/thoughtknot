@@ -14,7 +14,7 @@ import type { GlobeVec } from './layouts/globe.ts';
 import { isCluster } from './space-cards.ts';
 import { globeMarks } from './space-globe-graph.ts';
 import { radiusOf, shapeOfMarks } from './space-spread.ts';
-import { boundsOf, eyeOf } from './space-view.ts';
+import { boundsOf, eyeOf, zoomBy } from './space-view.ts';
 import type { Block, Orbit, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 import type { DrawMark } from './drawing-marks.ts';
 import type { GraphDrawing } from './note-reading.ts';
@@ -329,6 +329,42 @@ export function globeFacing(orbit: Orbit, g: GlobeOf, point: Vec3, dive = false)
     turn = way + 2 * Math.PI * Math.round((orbit.turn - way) / (2 * Math.PI));
   const distance = dive ? g.radius * GLOBE_DIVE : Math.max(orbit.distance, g.radius * GLOBE_OUTSIDE);
   return { target: [...g.middle], distance, turn, tilt: Math.asin(Math.max(-1, Math.min(1, z))) };
+}
+
+/**
+ * The nearest the camera comes to the globe's middle, in radii, however it zooms or moves. So it never goes under the
+ * ground, where every card on the far side shows at once (Roger, 5 Nov 2026: "zoom in on globe shouldn't be able to go
+ * underground").
+ */
+export const GLOBE_GROUND = 1.4;
+
+/**
+ * `orbit` kept above the globe's ground. Looking at the globe's middle, it stays as far off as the ground allows. Else
+ * it is lifted straight out from the middle, still looking the same way.
+ */
+export function aboveGlobe(orbit: Orbit, g: GlobeOf): Orbit {
+  const least = g.radius * GLOBE_GROUND;
+  if (gap(orbit.target, g.middle) <= g.radius * 1e-6)
+    return orbit.distance >= least ? orbit : { ...orbit, distance: least };
+  const eye = eyeOf(orbit),
+    now = gap(eye, g.middle);
+  if (now >= least) return orbit;
+  // straight out from the middle; at the very middle, back the way the camera looks from
+  const out = now > g.radius * 1e-6 ? sub(eye, g.middle) : sub(eyeOf({ ...orbit, target: [0, 0, 0] }), [0, 0, 0]);
+  const length = Math.hypot(...out) || 1,
+    lift = (least - now) / length;
+  return { ...orbit, target: [0, 1, 2].map((k) => (orbit.target[k] ?? 0) + (out[k] ?? 0) * lift) as Vec3 };
+}
+
+/**
+ * `orbit` zoomed by `times` toward the globe, as the mockup zooms. The camera's height above the ground shrinks by
+ * `times`. So each step of the wheel comes the same share nearer, and it slows as it nears. It stops at the ground.
+ */
+export function zoomGlobe(orbit: Orbit, g: GlobeOf, times: number): Orbit {
+  // looking at about the middle, as a globe's camera does unless moved aside
+  if (gap(orbit.target, g.middle) > g.radius * 0.05) return aboveGlobe(zoomBy(orbit, times), g);
+  const high = Math.max(0, orbit.distance - g.radius) / Math.max(0.01, times);
+  return { ...orbit, distance: g.radius + Math.max(g.radius * (GLOBE_GROUND - 1), high) };
 }
 
 /** The globe `space` is laid on, if it is laid on one. */

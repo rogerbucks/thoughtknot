@@ -1,5 +1,5 @@
 // A big graph on the globe, placed by its levels (editor spec §68, globe_levels): layouts/globe-levels.ts. Each subject
-// has its own region of the globe, the biggest facing the camera, its things together inside it.
+// has its own region of the globe, every subject showing on the side facing the camera, its things together inside it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { levelWays } from '../src/layouts/globe-levels.ts';
@@ -42,8 +42,16 @@ test('each subject has its own region of the globe: next to each thing are thing
     if (nearest[0] === k[0]) own++;
   }
   assert.ok(own / all.length > 0.95, `the nearest thing is of the same subject: ${own} of ${all.length}`);
-  const a = mean(all.filter(([k]) => k[0] === 'a').map(([, w]) => w));
-  assert.ok(dot(a, GLOBE_FACING) > 0.9, 'the biggest subject faces the camera');
+});
+
+// proves: globe_levels
+test('the subjects meet at the middle of the side of the globe facing the camera, not one subject alone', () => {
+  const ways = [...levelWays(levels(), GLOBE_FACING)];
+  for (const s of ['a', 'b', 'c']) {
+    const own = ways.filter(([k]) => k[0] === s).map(([, w]) => dot(w, GLOBE_FACING));
+    const front = own.filter((d) => d > 0.5).length;
+    assert.ok(front / own.length > 0.15, `subject ${s} has things near the middle of the side facing you: ${front}`);
+  }
 });
 
 test('the same levels give the same globe, and one subject gives none', () => {

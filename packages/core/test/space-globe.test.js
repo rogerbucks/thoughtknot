@@ -10,7 +10,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GLOBE_FACING } from '../src/layouts/globe.ts';
-import { GLOBE_DIVE, GlobeLayout, facingHalf, globeFacing, globeSpace } from '../src/space-globe.ts';
+import {
+  GLOBE_DIVE,
+  GLOBE_GROUND,
+  GlobeLayout,
+  aboveGlobe,
+  facingHalf,
+  globeFacing,
+  globeSpace,
+  zoomGlobe,
+} from '../src/space-globe.ts';
 import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
 import { turnRound } from '../src/space-controls.ts';
 
@@ -281,4 +290,24 @@ test('the points where a big drawing merges its links are no things on the globe
   assert.deepEqual(space.blocks.map((b) => b.of).sort(), ['a', 'b', 'c'], 'only the things are on the globe');
   assert.deepEqual(space.lines.map((l) => `${l.from}>${l.to}`).sort(), ['a>b', 'a>c'], 'each link thing to thing');
   assert.equal(space.arrows.length, 2, 'each with its arrowhead');
+});
+
+// proves: globe_ground
+test('zooming in on the globe slows as it nears the surface and stops above it, never going underground', () => {
+  const g = { middle: [0, 0, 0], radius: 1000 };
+  let orbit = { target: [0, 0, 0], distance: 3000, turn: 0, tilt: 0.5 };
+  const heights = [];
+  for (let i = 0; i < 40; i++) {
+    orbit = zoomGlobe(orbit, g, 1.6);
+    heights.push(orbit.distance - g.radius);
+  }
+  assert.ok(heights[1] < heights[0] && heights[0] < 2000, 'each step comes nearer');
+  assert.ok(Math.abs(heights[1] / heights[0] - 1 / 1.6) < 1e-9, 'by the same share of the height above the ground');
+  assert.equal(orbit.distance, g.radius * GLOBE_GROUND, 'it stops at the ground, outside the globe');
+  // a camera moved aside, or inside, is lifted back above the ground, still looking the same way
+  const aside = aboveGlobe({ target: [500, 0, 0], distance: 100, turn: 0, tilt: 0 }, g);
+  const eye = [aside.target[0] + aside.distance, aside.target[1], aside.target[2]];
+  assert.ok(Math.abs(Math.hypot(...eye) - g.radius * GLOBE_GROUND) < 1e-6, 'lifted to the ground');
+  assert.equal(aside.turn, 0);
+  assert.equal(aside.tilt, 0);
 });

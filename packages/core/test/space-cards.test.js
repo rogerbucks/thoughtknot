@@ -6,6 +6,8 @@ import {
   ZOOM_OPENS,
   cardArrows,
   cardAt,
+  CARD_MOST,
+  WORDS_MOST,
   cardsOnScreen,
   clusterFilling,
   farFrame,
@@ -363,4 +365,25 @@ test('laid out again, a group just opened starts where its box was, and one just
   const far = (p, q) => Math.hypot(...p.map((v, i) => v - q[i]));
   for (const k of ['a', 'b']) assert.ok(far(after.get(k), before.get('fold_group_1')) < 1.5, `${k} opens in place`);
   for (const k of ['c', 'd']) assert.ok(far(after.get(k), before.get(k)) < 1, `${k} stays put`);
+});
+
+// proves: space_label_hold
+test('near in, a card grows no bigger than a card, and a card named last frame keeps its name', () => {
+  const { space } = spreadSpace(MARKS, undefined, true);
+  const a = space.blocks.find((b) => b.of === 'a');
+  const near = zoomBy(orbitFit(space, W / H), 40);
+  const close = { ...near, target: middleOf(a) };
+  const cards = cardsOnScreen(space, spaceMatrix(close, W / H, close.distance * 4), W, H);
+  const card = cards.find((c) => c.block.of === 'a');
+  assert.ok(card.size <= WORDS_MOST, `its words ${card.size}px at most`);
+  assert.ok(card.width <= CARD_MOST || card.named, `no wall of a card: ${card.width}px`);
+  // two cards whose names would cover each other: the one named last frame keeps its name, whichever is busier
+  const { matrix } = seen();
+  const first = cardsOnScreen(space, matrix, W, H)
+    .filter((c) => c.named)
+    .map((c) => c.block.id);
+  const memory = { named: new Set([space.blocks.find((b) => b.of === 'b').id]), beside: new Set() };
+  const kept = cardsOnScreen(space, matrix, W, H, undefined, memory);
+  assert.ok(kept.find((c) => c.block.of === 'b').named, 'the card named before is named again');
+  assert.ok(memory.named.size >= 1 && first.length >= 1, 'and the frame writes what it named');
 });
