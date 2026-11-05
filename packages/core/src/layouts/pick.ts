@@ -36,8 +36,6 @@ export function chosenPick(shape: GraphShape, strategy: string, placed?: Readonl
 export const FOLDED_GROUP = 'group: ';
 /** The share of links that may run back against the flow, for a graph still to be read as a flow. */
 const BACK_MOST = 0.1;
-/** How many kinds a big flow has for it to keep its rows, each kind in its lane. */
-const LANED_KINDS = 3;
 /** The most links per thing, on average, for a graph still to be drawn in rows. */
 const DENSE_MOST = 3;
 /**
@@ -45,7 +43,7 @@ const DENSE_MOST = 3;
  * and few running back against it, found by a search from each start. A tree has about one link fewer than things. An
  * overview has groups folded, each one box.
  */
-export function pickLayout(shape: GraphShape): Pick {
+export function pickLayout(shape: GraphShape, levelled = true): Pick {
   const n = shape.things.length,
     m = shape.links.length;
   // for the tree rule, links count by the pair they join: two between the same things, or a loop, make no cycle
@@ -53,14 +51,11 @@ export function pickLayout(shape: GraphShape): Pick {
   if (!n) return { layout: 'stress', why: 'network' };
   // with groups folded, each group is one box: the overview reads best in rows, its links kept off the boxes
   if (shape.things.some((t) => t.key.startsWith(FOLDED_GROUP))) return { layout: 'layered', why: 'overview' };
+  // a big graph that is no tree is drawn by its levels: each subject in its own room, as its clouds show
+  // (level_default). Roger, 5 Nov 2026: a big flow in rows put every cloud in one thin column
   if (pairs <= n - 1 + Math.ceil(n * 0.05)) return { layout: 'layered', why: 'tree' };
-  // a big network, spread out, is placed by its levels instead: each subject in its own room (level_default)
-  const spread = (why: 'dense' | 'network'): Pick =>
-    n > LEVELLED_FROM ? { layout: 'stress', why: 'levels' } : { layout: 'stress', why };
-  if (m / n > DENSE_MOST) return spread('dense');
-  // a big flow of many kinds keeps its rows, a lane for each kind; of one or two, it is a vault's notes: by levels
-  if (n > LEVELLED_FROM && new Set(shape.things.flatMap((t) => t.kinds)).size < LANED_KINDS)
-    return { layout: 'stress', why: 'levels' };
+  if (levelled && n > LEVELLED_FROM) return { layout: 'stress', why: 'levels' };
+  if (m / n > DENSE_MOST) return { layout: 'stress', why: 'dense' };
   return backShare(shape) <= BACK_MOST ? { layout: 'layered', why: 'flow' } : { layout: 'stress', why: 'network' };
 }
 
