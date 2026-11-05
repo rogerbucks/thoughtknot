@@ -195,10 +195,17 @@ mod run {
     }
 
     /// Reads at most `MOST_BYTES` of an output, in its own thread, so a full pipe never holds gh up.
-    fn reader<R: Read + Send + 'static>(from: R) -> std::thread::JoinHandle<Vec<u8>> {
+    /// Past the most, the rest is read and dropped, so gh finishes and the call is refused at once, not at the time limit.
+    pub(super) fn reader<R: Read + Send + 'static>(
+        mut from: R,
+    ) -> std::thread::JoinHandle<Vec<u8>> {
         std::thread::spawn(move || {
             let mut kept = Vec::new();
-            let _ = from.take(MOST_BYTES as u64 + 1).read_to_end(&mut kept);
+            let _ = from
+                .by_ref()
+                .take(MOST_BYTES as u64 + 1)
+                .read_to_end(&mut kept);
+            let _ = std::io::copy(&mut from, &mut std::io::sink());
             kept
         })
     }
@@ -311,6 +318,15 @@ mod tests {
         assert!(refusal(&args, Some(&"x".repeat(MOST_BYTES + 1))).is_some());
     }
 
+    #[cfg(desktop)]
+    #[test]
+    fn an_output_past_the_most_is_read_to_its_end_and_cut() {
+        let big = vec![b'x'; MOST_BYTES + 100];
+        let kept = run::reader(std::io::Cursor::new(big)).join().unwrap();
+        assert_eq!(kept.len(), MOST_BYTES + 1);
+    }
+
+    #[cfg(desktop)]
     #[test]
     fn gh_is_found_only_by_an_absolute_path_to_a_file() {
         if let Some(p) = find() {
