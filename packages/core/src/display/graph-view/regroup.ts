@@ -117,7 +117,7 @@ export function glideAway(
     }
     const unit = here.width / (g.getBBox?.().width || here.width || 1),
       [a, b, c] = [middle(from), middle(into), middle(here)],
-      by = (p: { x: number; y: number }) => `${(p.x - c.x) / unit}px ${(p.y - c.y) / unit}px`;
+      by = (p: { x: number; y: number }) => [p.x - c.x, p.y - c.y].map((n) => `${n / unit}px`).join(' ');
     const glide = g.animate(
       [
         { translate: by(a), opacity: 1 },
