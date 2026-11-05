@@ -131,6 +131,14 @@ export const READING_SOURCE_WORDS = {
   'reading.table.not-text': '{place} is not a text file, so it was not read: save it as CSV text.',
   'reading.table.no-mapping':
     '{place} has no mapping yet, so it gives nothing to the graph: check the one proposed and save it as {mapping}.',
+  // a table drawn as one node: the line under its first rows (table-node.ts)
+  'reading.table.node-rows': { one: '{count} row', other: '{count} rows' },
+  'reading.table.node-more-rows': { one: '{count} more row not shown', other: '{count} more rows not shown' },
+  'reading.table.node-more-columns': {
+    one: '{count} more column not shown',
+    other: '{count} more columns not shown',
+  },
+  'reading.table.node-no-rows': 'No rows yet',
   'reading.table.mapping-said':
     'How {place} becomes things: one {row} for each row. Change a column’s "as" to change what it becomes.',
   'reading.table.faded-not-kept':
