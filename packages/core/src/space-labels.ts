@@ -90,13 +90,18 @@ export function labelsOnScreen(
   matrix: Float32Array,
   width: number,
   height: number,
-  { most = LABELS_MOST, picked, pickedLink }: { most?: number; picked?: string; pickedLink?: string } = {},
+  {
+    most = LABELS_MOST,
+    picked,
+    pickedLink,
+    readable,
+  }: { most?: number; picked?: string; pickedLink?: string; readable?: ReadonlySet<string> } = {},
 ): ScreenLabel[] {
   const focal = height / 2 / Math.tan(FIELD / 2),
     across = Math.hypot(width, height) / 2;
   const links = linkCounts(space),
     busiest = Math.max(1, ...links.values());
-  const wanted: (ScreenLabel & { rank: number })[] = [];
+  const wanted: (ScreenLabel & { rank: number; small?: number })[] = [];
   for (const l of space.labels) {
     const at = projectPoint(matrix, l.at, width, height);
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
@@ -108,9 +113,11 @@ export function labelsOnScreen(
     // a long name is painted smaller to fit across the view, and cut only where even the smallest size will not fit
     const text = shortened(l.text),
       room = width - 4 * GAP,
-      least = mine ? PICKED_LEAST : NAME_TINY;
+      least = mine ? PICKED_LEAST : readable?.has(l.id) ? READABLE_LEAST : NAME_TINY;
     // it scales with its thing: never blown up past it, but the picked one stays readable
     const size = Math.max(least, Math.min(natural, room / (text.length * LETTER_WIDTH)));
+    // one lifted to a readable size keeps its own small size, for where a readable one has no room
+    const small = Math.max(NAME_TINY, Math.min(natural, room / (text.length * LETTER_WIDTH)));
     const fits = Math.max(4, Math.floor(room / (size * LETTER_WIDTH) + 1e-9));
     // the picked name ranks before all, then the busiest; then nearer the middle of the screen and the camera
     const off = Math.hypot(at.x - width / 2, at.y - height / 2) / across;
@@ -118,7 +125,7 @@ export function labelsOnScreen(
     const rank = mine
       ? -Infinity
       : -many * 1e9 + at.far * (1 + 2 * off) * (l.link === undefined ? 1 : LINK_WORDS_LATER);
-    const label: ScreenLabel & { rank: number } = {
+    const label: ScreenLabel & { rank: number; small?: number } = {
       id: l.id,
       style: l.style,
       text: shortened(text, fits),
@@ -129,6 +136,7 @@ export function labelsOnScreen(
     };
     if (mine) label.picked = true;
     if (l.link !== undefined) label.link = true;
+    if (small < size && !mine) label.small = small;
     wanted.push(label);
   }
   wanted.sort((a, b) => a.rank - b.rank);
@@ -141,23 +149,28 @@ export function labelsOnScreen(
       for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) keys.push(`${cx},${cy}`);
     return keys;
   };
-  const shown: ScreenLabel[] = [];
-  for (const { rank: _rank, ...l } of wanted) {
-    if (shown.length >= most) break;
-    const half = (l.text.length * l.size * LETTER_WIDTH) / 2 + GAP,
-      tall = l.size / 2 + GAP;
+  // whether `l` at `size` has room; if so, its box is taken
+  const takes = (l: ScreenLabel, size: number) => {
+    const half = (l.text.length * size * LETTER_WIDTH) / 2 + GAP,
+      tall = size / 2 + GAP;
     const box = { x0: l.x - half, y0: l.y - tall, x1: l.x + half, y1: l.y + tall };
     const keys = cellsOf(box.x0, box.y0, box.x1, box.y1);
     const covers = keys.some((k) =>
       cells.get(k)?.some((o) => box.x0 < o.x1 && o.x0 < box.x1 && box.y0 < o.y1 && o.y0 < box.y1),
     );
-    if (covers) continue;
-    for (const k of keys) {
-      const list = cells.get(k);
-      if (list) list.push(box);
-      else cells.set(k, [box]);
-    }
-    shown.push(l);
+    if (!covers)
+      for (const k of keys) {
+        const list = cells.get(k);
+        if (list) list.push(box);
+        else cells.set(k, [box]);
+      }
+    return !covers;
+  };
+  const shown: ScreenLabel[] = [];
+  for (const { rank: _rank, small, ...l } of wanted) {
+    if (shown.length >= most) break;
+    if (takes(l, l.size)) shown.push(l);
+    else if (small !== undefined && takes(l, small)) shown.push({ ...l, size: small });
   }
   return shown;
 }

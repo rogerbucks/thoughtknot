@@ -317,18 +317,27 @@ export function frameOf(
     // named (Roger, 1 Nov 2026)
     const beside = new Set<string>();
     const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
-    const onFace = new Set(faces.map((f) => f.id));
+    // a name too small to read on its thing floats beside it at a readable size. Where it has no room, it stays
+    // tiny on its thing (space_names_readable)
+    const small = new Set(faces.filter((f) => f.size < READABLE_LEAST).map((f) => f.id));
+    const onFace = new Set(faces.filter((f) => !small.has(f.id)).map((f) => f.id));
     const floats = space.labels.filter(
       (l) =>
-        !onFace.has(l.id) && (l.of === undefined || l.link !== undefined || l.of === chosen.picked || beside.has(l.id)),
+        !onFace.has(l.id) &&
+        (l.of === undefined || l.link !== undefined || l.of === chosen.picked || beside.has(l.id) || small.has(l.id)),
     );
     const outlines = outlinesOf(space, matrix, width, height);
+    const labels = labelsOnScreen({ ...space, labels: outlined(floats, outlines) }, matrix, width, height, {
+      ...chosen,
+      readable: new Set([...small, ...beside]),
+    });
+    const lifted = new Set(labels.filter((l) => l.size >= READABLE_LEAST).map((l) => l.id));
     return {
       shapes: space,
       cards: [],
-      faces,
+      faces: faces.filter((f) => !lifted.has(f.id)),
       arrows: arrowsOnScreen(space, matrix, width, height),
-      labels: labelsOnScreen({ ...space, labels: outlined(floats, outlines) }, matrix, width, height, chosen),
+      labels: labels.filter((l) => !small.has(l.id) || lifted.has(l.id)),
       outlines,
       ring,
       strong: strongLines(space, matrix, width, height, picked?.of, pickedLink),

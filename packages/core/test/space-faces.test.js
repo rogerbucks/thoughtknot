@@ -168,6 +168,21 @@ test('with the whole graph in view, a small ball still wears its name, tiny, rat
   assert.deepEqual(picked, [], 'picked, it is never tiny: it floats beside the ball at a readable size');
 });
 
+// proves: space_names_readable
+test('a name too small to read on its ball floats beside it at a readable size, and stays tiny on it where crowded', () => {
+  const space = balls([ball('a', 0, 40, 'Thing a'), ball('b', 90, 40, 'Thing b')]);
+  const m = look(space, zoomBy(orbitFit(space, W / H), 0.1));
+  const frame = frameOf(space, m, W, H, null, undefined);
+  const [lifted] = frame.labels;
+  assert.equal(lifted?.id, 'a\nname', 'the first floats beside its ball');
+  assert.ok(lifted.size >= READABLE_LEAST, `readable, ${lifted.size}px`);
+  assert.ok(!frame.faces.some((f) => f.id === 'a\nname'), 'and is not also tiny on it');
+  const [tiny] = frame.faces;
+  assert.equal(tiny?.id, 'b\nname', 'its neighbour has no room beside it, so keeps its name tiny on its ball');
+  assert.ok(tiny.size < READABLE_LEAST && tiny.size >= NAME_TINY);
+  assert.equal(frame.labels.length, 1, 'no name covers another');
+});
+
 // proves: space_text_on_face
 test('a box beside the camera, reaching behind it, still hides the names behind it', () => {
   const block = (key, x, y, width, depth) => ({
