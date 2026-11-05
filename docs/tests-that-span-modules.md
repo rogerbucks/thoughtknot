@@ -328,6 +328,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `packages/graph-spec/test/format-version.test.mjs` — both readers read a block in their own format or none named.
   They refuse a newer major with GN106 (format_version_named; one table, `format-version-cases.json`).
+- `packages/graph-spec/test/grammar.test.mjs` — the notation's grammar, `requirements/graph-spec-grammar.json`, covers the
+  graph line, the containers and the value types. Cases made from it read to recorded answers, and text outside it is
+  refused with its code (spec_grammar; one table, `grammar-cases.json`).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
   older one, or none named. They refuse a newer major with GN107 and a fix that says to upgrade (spec_version_in_files;
   one table, `spec-version-cases.json`).
@@ -351,7 +354,7 @@ after a module nor listed here, and on a listed file that is missing.
 ## The Python library
 
 - `python/graph_spec/tests/test_readers_agree.py` — both readers give the same answer to blocks made at random from one
-  grammar, `statement-grammar.json`. A pull request reads a few hundred; the nightly readers-agree workflow reads 20000
+  grammar, `requirements/graph-spec-grammar.json`. A pull request reads a few hundred; the nightly readers-agree workflow reads 20000
   (spec_grammar; ARCH-5).
 - `python/graph_spec/tests/test_changeset_header.py` — a change set's first line is read as the reader reads a
   block's, in the engine's copy and the rules'. Lines end at LF only, and whitespace is GQL's set.
@@ -371,6 +374,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `python/graph_spec/tests/test_format_version.py` — the Python reader reads the cases of `format-version-cases.json`
   as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
+- `python/graph_spec/tests/test_grammar.py` — the Python reader gives the grammar's cases the JavaScript answers.
+  It reads each value type and refuses text outside the grammar (spec_grammar).
 - `python/graph_spec/tests/test_spec_version.py` — the Python reader reads `spec-version-cases.json` as the JavaScript
   reader does. It refuses a newer major Graph Spec with GN107 (spec_version_in_files).
 - `python/graph_spec/tests/test_mesh_parity.py` — every shared mesh case gives the same bytes as the JavaScript

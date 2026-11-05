@@ -1,0 +1,328 @@
+{
+  "about": "Made from requirements/graph-spec-grammar.json by packages/graph-spec/test/grammar.test.mjs, with a fixed seed. Each text with the JavaScript reader's answer. python/graph_spec/tests/test_grammar.py holds the Python reader to the same answers. Do not edit by hand.",
+  "seed": 20261105,
+  "cases": [
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(x_1:Person {name: 'a, b'})",
+      "answer": {
+        "graphs": {
+          "g": "fbe9061e66fbea4e4316ec7a8af82923d9048d7b8d2650f743dd03d2ae749dc7"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · format 1\n(a {title: 'it\\'s'})",
+      "answer": {
+        "graphs": {
+          "g": "88604505132cd9538021f5307b4eab1e1a64b4f839ef2d0ad2e4944706cdf005"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(b:Book)",
+      "answer": {
+        "graphs": {
+          "g": "fd7001672c25577e77c46e2dba0805cc2ae0108af452533d794f2b671c8a4a3a"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(b:Book:Thing {pages: 'Ada'}),\n(a:ElementType),\n(notes:ElementType),\n(a:ElementType)\nMATCH (b:Book {id: 'é ünï 😀'})\nSET a.year = ['a', 'two words']\nSET x_1.id = 'two words'",
+      "answer": {
+        "refused": ["GN210", 7]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(b:Person {kind: 'é ünï 😀'}),\n(a:Thing)\nSET a.year = ['it\\'s', '']",
+      "answer": {
+        "refused": ["GN207", 5]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\nINSERT\n(notes:ElementType:Thing {kind: 'it\\'s'})\nSET b.title = TRUE\n(b:Person)",
+      "answer": {
+        "refused": ["GN210", 5]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\n(b:Thing)",
+      "answer": {
+        "graphs": {
+          "g": "90abf14750c6ea96f36b1338503483bd164ee636222b759b86d94868df5d79c7"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\n(x_1)-[:PART_OF]->(notes),\n(ada)-[:PART_OF]->(a)\nMATCH (notes:Person {id: 'it\\'s'})\nSET a.id = ['it\\'s']",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\nINSERT\n(b)-[:READ]->(notes),\n(x_1:ElementType),\n(x_1:Person),\n(ada:Thing)\nINSERT\n(x_1)-[:READ]->(a),\n(b:Person),\n(b:ElementType)\nSET notes.title = 0.1",
+      "answer": {
+        "refused": ["GN210", 7]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(b)-[:PART_OF]->(x_1),\n(b:ElementType)\nINSERT\n(a)-[:WROTE]->(b),\n(notes:Thing)\nINSERT\n(a)-[:PART_OF]->(ada),\n(notes:Thing),\n(x_1:Thing)",
+      "answer": {
+        "refused": ["GN210", 5]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(x_1:Person),\n(b:Book)\nINSERT\n(b:Book)\n(x_1)-[:READ]->(a),\n(x_1:ElementType)",
+      "answer": {
+        "refused": ["GN210", 5]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\nINSERT\n(b {kind: 'a, b'}),\n(x_1)-[:READ]->(x_1)\nSET b.title = TRUE",
+      "answer": {
+        "refused": ["GN310", 4]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE\nINSERT\n(notes:Person {pages: 'a, b'}),\n(x_1)-[:WROTE]->(b)\nSET x_1.id = 1\n(x_1)-[:PART_OF]->(ada)",
+      "answer": {
+        "refused": ["GN209", 5]
+      }
+    },
+    {
+      "text": "// graph: g\nINSERT\n(ada:Thing {pages: 'a, b'})",
+      "answer": {
+        "graphs": {
+          "g": "334468b2a3f10488513d578a567d2de0e7a3090c3c94bef2d0f40c43242d6286"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(a {title: 'é ünï 😀'})\nMATCH (a:Book {id: 'two words'})\nSET notes.kind = ['é ünï 😀']",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\n(a {kind: 'Ada'}),\n(x_1)-[:WROTE]->(ada),\n(x_1:ElementType)\nSET x_1.id = ''\nSET b.pages = DATETIME '2026-10-07T09:30Z'",
+      "answer": {
+        "refused": ["GN209", 5]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\n(ada:Thing {id: 'a'})\nMATCH (notes:Thing {id: 'a, b'})\nSET a.title = -0",
+      "answer": {
+        "refused": ["GN210", 3]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(b:Person:ElementType {title: 'é ünï 😀'}),\n(ada:Thing),\n(notes:Thing)\nMATCH (notes:ElementType {id: 'two words'})\nSET ada.kind = FALSE",
+      "answer": {
+        "refused": ["GN210", 6]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(b:Person {id: 'it\\'s'}),\n(b)-[:PART_OF]->(b)\nMATCH (a:Thing {id: ''})\nSET notes.id = FALSE",
+      "answer": {
+        "refused": ["GN210", 5]
+      }
+    },
+    {
+      "text": "// graph: g\n(notes)-[:WROTE]->(notes)",
+      "answer": {
+        "refused": ["GN310", 2]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE\nINSERT\n(a:Person)\nINSERT\n(ada:Book)",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(notes:Thing:Person {name: 'back\\\\slash'})\nSET notes.name = DATETIME '2026-10-07T09:30Z'\n(b:Person),\n(x_1:ElementType)",
+      "answer": {
+        "refused": ["GN210", 5]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(a)-[:READ {id: 'Ada'}]->(a)\nSET b.kind = DATETIME '0050-06-01T00:00:00Z'",
+      "answer": {
+        "refused": ["GN310", 3]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\nINSERT\n(notes:Thing {title: 'two words'}),\n(x_1:ElementType),\n(x_1:Person),\n(x_1:Thing)\nMATCH (b:Person {id: ''})\nSET a.title = -9007199254740992\n(notes:Book)",
+      "answer": {
+        "refused": ["GN210", 7]
+      }
+    },
+    {
+      "text": "// graph: g · format 1\n(ada:Thing),\n(b:Thing)\nINSERT\n(x_1:Book),\n(notes:Book),\n(ada:Person)\nMATCH (b:Thing {id: 'two words'})\nSET b.year = 1",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(ada)-[:READ]->(x_1),\n(x_1:Thing),\n(b:Thing),\n(x_1:Thing)",
+      "answer": {
+        "refused": ["GN310", 3]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\n(ada {kind: 'a'})\n(x_1)-[:PART_OF]->(notes)",
+      "answer": {
+        "refused": ["GN310", 3]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE\nINSERT\n(x_1:Book {name: 'it\\'s'}),\n(ada:Person)",
+      "answer": {
+        "graphs": {
+          "g": "d5854e9b8b298c075bab570b457027b465640e24d1f9916411499a5b8b1f73e5"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · format 1\n(a:ElementType:Person {pages: 'Ada'})\nSET a.kind = DATETIME '2026-10-07T09:30:00Z'",
+      "answer": {
+        "graphs": {
+          "g": "b67a9d38c1c75668dcda8d53cc66fde1f5a64e4d1d9574a5fd35118b92743638"
+        }
+      }
+    },
+    {
+      "text": "// graph: g\n(a:Person {id: 'Ada'})\nSET notes.year = TRUE\nMATCH (b:Person {id: 'back\\\\slash'})\nSET ada.id = 'back\\\\slash'",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · spec 1.0\nINSERT\n(a)-[:WROTE {kind: 'a'}]->(ada)\nINSERT\n(b:Thing)\n(notes:ElementType)",
+      "answer": {
+        "refused": ["GN210", 4]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(b)-[:READ]->(b)\nSET notes.kind = TRUE",
+      "answer": {
+        "refused": ["GN310", 3]
+      }
+    },
+    {
+      "text": "// graph: g\n(notes)-[:READ]->(b)\nSET ada.year = 'back\\\\slash'",
+      "answer": {
+        "refused": ["GN310", 2]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE\n(b)-[:PART_OF]->(b)\nMATCH (ada:Thing {id: 'é ünï 😀'})\nSET notes.pages = FALSE\nMATCH (notes:ElementType {id: 'two words'})\nSET a.year = 0",
+      "answer": {
+        "refused": ["GN210", 3]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\n(a:ElementType),\n(a:Thing),\n(x_1:Person)\nSET notes.id = ['it\\'s', 'Ada']\nMATCH (x_1:Book {id: 'two words'})\nSET a.name = ['a, b']",
+      "answer": {
+        "refused": ["GN209", 5]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(x_1)-[:READ]->(b),\n(b:Person)",
+      "answer": {
+        "refused": ["GN310", 3]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\n(notes)-[:READ]->(ada),\n(notes)-[:PART_OF]->(ada)",
+      "answer": {
+        "refused": ["GN310", 2]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\nINSERT\n(ada:Person),\n(x_1:ElementType)\nSET a.year = 'two words'\nMATCH (notes:Person {id: 'two words'})\nSET a.kind = 'Ada'",
+      "answer": {
+        "refused": ["GN210", 6]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE · format 1 · spec 1.0\n(notes:ElementType)\nMATCH (a:Person {id: 'Ada'})\nSET ada.name = 'é ünï 😀'",
+      "answer": {
+        "refused": ["GN210", 3]
+      }
+    },
+    {
+      "text": "// graph: g · SOURCE\n(b:Person)\nINSERT\n(notes:Book)",
+      "answer": {
+        "refused": ["GN210", 3]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T)",
+      "answer": {
+        "graphs": {
+          "g": "9d5ba8b3ab0a1f5dd575be8d1835936fc6cb9b63acb540341b30f5032daf5ff4"
+        }
+      }
+    },
+    {
+      "text": "// graph: g · QUERY\nMATCH (a:T)",
+      "answer": {
+        "refused": ["GN303", 1]
+      }
+    },
+    {
+      "text": "// excerpt\n(a:T)",
+      "answer": {
+        "refused": ["GN304", 1]
+      }
+    },
+    {
+      "text": "(a:T)",
+      "answer": {
+        "refused": ["GN101", 1]
+      }
+    },
+    {
+      "text": "// graph: reader-choice\n(a:T)",
+      "answer": {
+        "refused": ["GN102", 1]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T) // note",
+      "answer": {
+        "refused": ["GN103", 2]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T),\n@oops",
+      "answer": {
+        "refused": ["GN104", 3]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T {v: 'a\\qb'})",
+      "answer": {
+        "refused": ["GN105", 2]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T {x: 1)",
+      "answer": {
+        "refused": ["GN201", 2]
+      }
+    },
+    {
+      "text": "// graph: g\n(a:T {x: [1, 2]})",
+      "answer": {
+        "refused": ["GN207", 2]
+      }
+    },
+    {
+      "text": "// graph: g · QUERY\nMATCH (a:T)",
+      "answer": {
+        "refused": ["GN303", 1]
+      }
+    }
+  ]
+}
