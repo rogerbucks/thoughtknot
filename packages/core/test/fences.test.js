@@ -1,0 +1,31 @@
+// Where a gql block's closing fence is (spec §3). The close is read by string checks, never a regex built from the note.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { gqlSpans } from '../src/fences.ts';
+
+test('a fence closes on a line of at least as many of the same mark, with up to 3 spaces before and only spaces after', () => {
+  const note = ['```gql', 'a', '  ````  ', 'b', '```gql', 'c', '    ```', '~~~', '```', 'tail'].join('\n');
+  const spans = gqlSpans(note);
+  assert.deepEqual(
+    spans.map((s) => [s.text, s.open, s.close]),
+    [
+      ['a', 0, 2],
+      ['c\n    ```\n~~~', 4, 8],
+    ],
+  );
+});
+
+test('a longer opening fence needs a long enough close, and a tilde fence is closed only by tildes', () => {
+  const note = ['~~~~gql', 'x', '~~~', '```', '~~~~~', 'y'].join('\n');
+  assert.deepEqual(
+    gqlSpans(note).map((s) => [s.text, s.close]),
+    [['x\n~~~\n```', 4]],
+  );
+});
+
+test('an unclosed block runs to the end of the note', () => {
+  assert.deepEqual(
+    gqlSpans('```gql\na\nb').map((s) => s.close),
+    [3],
+  );
+});
