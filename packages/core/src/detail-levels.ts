@@ -199,7 +199,7 @@ export function detailLevels(given: GraphShape): DetailLevel[] {
         const biggest = [...things].sort((a, b) => (score.get(b) ?? 0) - (score.get(a) ?? 0))[0] as string;
         const loose = things.every((t) => !ends.has(t));
         const key = `${depth}:${loose ? LOOSE : i}`;
-        const g: LevelGroup = { key, name: loose ? looseName() : (text.get(biggest) ?? biggest), things };
+        const g: LevelGroup = { key, name: loose ? looseName() : shortName(text.get(biggest) ?? biggest), things };
         const parent = parentOf.get(biggest);
         if (parent !== undefined) g.parent = parent;
         return g;
@@ -208,6 +208,21 @@ export function detailLevels(given: GraphShape): DetailLevel[] {
   });
   levels.push({ name: everyItem(), groups: [] });
   return levels;
+}
+
+/** The longest a group's name may be, in letters, as the mockup's short names are: a longer one is cut. */
+export const NAME_MOST = 28;
+
+/**
+ * `text` short enough to name a group on its card. It keeps the first part, before a dash, colon, comma or bracket.
+ * When still too long, it is cut at a word with "…". Roger, 5 Nov 2026: names were whole sentences, as long as the card was wide.
+ */
+export function shortName(text: string): string {
+  const head = text.split(/\s[—–-]\s|[:;,]\s|\s\(/)[0]?.trim() ?? text;
+  const name = text.length > NAME_MOST && head.length >= 3 ? head : text;
+  if (name.length <= NAME_MOST) return name;
+  const cut = name.slice(0, NAME_MOST).replace(/\s+\S*$/, '');
+  return `${cut.length >= 3 ? cut : name.slice(0, NAME_MOST - 1)}…`;
 }
 
 /** The most groups a level shows on screen at once: more, and the level a step out shows instead. Roger's mockup

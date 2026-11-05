@@ -12,6 +12,8 @@ import {
   levelBadge,
   levelCount,
   levelNames,
+  NAME_MOST,
+  shortName,
 } from '../src/detail-levels.ts';
 
 /** `clumps` clumps of `each` things, each clump a ring, the clumps joined in a ring by one link each. */
@@ -95,4 +97,15 @@ test('things linked to nothing gather in one group of loose ends, and a group is
   assert.equal(lone.length, 1, 'loose ends together');
   assert.equal(lone[0].name, looseName());
   assert.equal(lone[0].things.length, 12);
+});
+
+// proves: detail_levels
+test('a group is named short: a long name is cut at its first clause, or at a word, so it never covers the view', () => {
+  assert.equal(shortName('Working with AI'), 'Working with AI', 'a short name stays whole');
+  assert.equal(shortName('Working with AI: suggestions, describe and chat in every view'), 'Working with AI');
+  assert.equal(shortName('The readers (Obsidian, VS Code and the web app all read one note)'), 'The readers');
+  const cut = shortName('Suite wide checks that every package passes before any release goes out');
+  assert.ok(cut.length <= NAME_MOST, `at most ${NAME_MOST} letters: ${cut}`);
+  assert.ok(cut.endsWith('…') && !cut.includes(' …'), `cut at a word, and says so: ${cut}`);
+  assert.ok('Suite wide checks that every'.startsWith(cut.slice(0, -1)), cut);
 });

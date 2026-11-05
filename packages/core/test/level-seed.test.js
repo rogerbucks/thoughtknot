@@ -68,7 +68,7 @@ test('in space the seed has three numbers per thing, the groups spread in depth 
 });
 
 // proves: level_default
-test('a big graph is laid out by its levels, unless it is a tree, or a flow whose many kinds keep rows and lanes', () => {
+test('a big graph is laid out by its levels, whatever its shape, so each cloud is its own room', () => {
   const big = clumped(30, 8);
   assert.equal(pickLayout(big).why, 'levels', 'a big network');
   // every link one way: a flow of one kind, as a vault's notes
@@ -79,6 +79,10 @@ test('a big graph is laid out by its levels, unless it is a tree, or a flow whos
   assert.equal(pickLayout(flow).why, 'levels', 'a big flow of one kind');
   const kinds = ['Section', 'Requirement', 'Decision'];
   const laned = { ...flow, things: flow.things.map((t, i) => ({ ...t, kinds: [kinds[i % 3]] })) };
-  assert.equal(pickLayout(laned).why, 'flow', 'a big flow of three kinds keeps its rows');
+  assert.equal(
+    pickLayout(laned).why,
+    'levels',
+    'a big flow of three kinds too (Roger, 5 Nov 2026: not one thin column)',
+  );
   assert.notEqual(pickLayout(clumped(10, 8)).why, 'levels', 'a graph of 80 things is laid out as before');
 });
