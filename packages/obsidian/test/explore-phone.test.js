@@ -1,9 +1,9 @@
-// The exploration's controls on a phone, and for everyone who cannot see colour or wants no motion (editor spec §71,
-// explore_controls_on_screen, explore_controls_accessible). Roger, 31 Oct 2026: the controls are on screen with no menu to
-// open, and a strip on a phone. The built plugin, loaded against the stand-ins as a phone.
+// The exploration's controls on a phone, and for anyone who cannot see colour (editor spec §71,
+// explore_controls_on_screen, explore_controls_accessible). Roger, 31 Oct 2026: the controls are on screen with no menu
+// to open, and a strip on a phone. The built plugin, loaded against the stand-ins as a phone.
 // Requirements: explore_controls_on_screen and explore_controls_accessible.
-// - On a phone exploring puts the sidebar in the Controls tab of the sheet at the foot of the drawing, with its shapes
-//   and dials, in reach of a thumb.
+// - On a phone, exploring puts the sidebar in the Controls tab of the sheet at the foot of the drawing.
+// - It holds the shapes and dials, in reach of a thumb.
 // - Every dial and shape button keeps a target of at least 24 pixels, well past that at 44.
 // - Under forced colours every main branch is drawn in the text colour, the badges in the system's highlight.
 import { test, before, after } from 'node:test';
