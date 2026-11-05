@@ -3,51 +3,51 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
@@ -75,123 +75,123 @@
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "492356901371c1c28cc3e43081c671a61b1b0457014d036d1862a84308e554ad",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "af862566e2700f0771082d653b00684724f75181859fbed17cb35dfe293bde9b",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "af4db8086f18dfb6dd782de7ab96c94cefd4fb2ef2d316a9b0ddd8eba3e08635",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "ed3ffbae319442172b8fa273222d30adf195d0c3711b4869567c46d8bdf308fd",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "150fd55638f03d2cb2f0fe4df521dd42ead9dadf804989c0b4953821555d8139",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "82270e5d3ce53867f8b51af3cedf5bece3318ea20c5789eeb9bd8286841aba63",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "6d6d3507257461230c9251ff0e66701b67e89dbcd18e59edfcc7344b988e49d6",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "4144dc85a5277b7fe657110cab6aeea06234c5a1d9913c9f776ae1b35c8ef4e6",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "df7a483d81f74a82597f210727d5e02ccd4a2447048ea5bedae12425912b2fef",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "3f4600227cf34ae904effd4ef1f5ee70e5396fbb1b670a2a1c70a093508d8662",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "aed7e52359b58fc475b44d4816b8cfef35a731bae7655deb982d9540a362bb3c",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "0f52adead6f7611dcc6a15aba02dfa65ebc0fb4a9d943c6aff5fdd1d7aab435e",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "a9f0d1a4ab1da7a739ce13bcc7247af2923c77b4fbf19a2fa3996f95123982fb",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "4411a83b45cd8cccd93435bd720a91785a42bd7ba5ae539eeae2cff9bdd3fb8f",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "873bba417da95092938c92264090f35494e6001520f39c51464ee2d72cc88ba5",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "c0206734d7ca63dc81b3a92a3152b741855a07d0e069fef4a116899a5a35c088",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "2dc6c733c9be33556454a84a30ba38fb1acf04344faffc6b9796a90506d0caae",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "fb8ad384597822a118c671ae3fc84c6c3e0c4272943bdf7b2f0ce7be66d4a101",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -219,51 +219,51 @@
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "fcbce2fd3746f7fb6a4c3e7b86754cc12e33478d33495912908916a994624af0",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "40a37c6133046f9d5842296bb232f5fcd1ded41267446df52ef3a73d173d4af8",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "74d5b3b8e1f8702678e8d11de82f21e1776d4a82ae669b069fa4eb25e5513350",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "95204637813c644beb32c69047dc92734b4317c22cde77eca03e55219ed66b44",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "bf44942f00e6fce4fc16fe2c6a67539646f9975ebbda5d7909768a2ff009032e",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "dbb5af24caef2755ed4a7da43aa2564812f5ba1074a08bd9c043ac5d8edcb0bf",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "9a61e2c6f004a5ed6ab40cbc7352e8de6ee0cce09a7d0b604e5f4f664e85c617",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "72e9520a947d4f827e092cf7b1e90209617070870891fd673441105057721ae1",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "14a6e3909707c55e2d0f43b9c2519b54728fac47ed9814f611acf16df5629c6d",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "3639c5ac3addac49963e850f01c08ecd1ae17c8c1b49226b6c84d8cd3f06e198",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "296219eb0bc382c55e4a4b9d05cf000a07f71f8529228da89739ff95ed864643",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "21db124c322b79d8021fe8e362b715e995aa24302205636fe19caded25c468f2",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "6d6d3507257461230c9251ff0e66701b67e89dbcd18e59edfcc7344b988e49d6",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "4144dc85a5277b7fe657110cab6aeea06234c5a1d9913c9f776ae1b35c8ef4e6",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "df7a483d81f74a82597f210727d5e02ccd4a2447048ea5bedae12425912b2fef",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "3f4600227cf34ae904effd4ef1f5ee70e5396fbb1b670a2a1c70a093508d8662",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
@@ -291,75 +291,75 @@
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "f65fe64774345f856483228f8d241f7276f8273620f4c00ffd843aa69b4dc95b",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "b2a4838f75f02291fbcbbce84153025ee173afba8885500a7f338d0acf330ef2",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "cc65b7b45be9b8f3e7db2379639f0f50a8d1eebf3744d174ab0913562e688130",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "724744f3d8a376857033b01ca645e7873e30c46bed9931ee2b216e831e36d1b0",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "38f13fd5e5d0f395bccca11d6f9a74e8c663e0d8598f94046a3f0133d2407206",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "08c562c019696d2cd814e8a25ebb6ccd57982e04cd8518b3ba9c6f3f56711668",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "e9f4f221e361df72c0e4583366cec1781b0275853e7a9ff0a296d4b0ab146f05",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "02b6e0d91d99f8a7b1013350c498496bbe4f31fec080674cad551ab071ffb9ca",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "171b49b401f0b695a794537b05d2ae9d5357876f02da6f472e3ec59f3b1463aa",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "d88a8fa5976e11e0ce38b65f8d8b1706b09186a0fd0b24edcebe133973730fb3",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "e8d7cb99934ca2078904036ef893b74b8abc6ae5aeb3340e0a0e306bd1780887",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "788ef6faf967a9965b279818727e435207cbb6ff5d047f00d2fec70845025a54",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "14a6e3909707c55e2d0f43b9c2519b54728fac47ed9814f611acf16df5629c6d",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "3639c5ac3addac49963e850f01c08ecd1ae17c8c1b49226b6c84d8cd3f06e198",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "296219eb0bc382c55e4a4b9d05cf000a07f71f8529228da89739ff95ed864643",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "21db124c322b79d8021fe8e362b715e995aa24302205636fe19caded25c468f2",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "873bba417da95092938c92264090f35494e6001520f39c51464ee2d72cc88ba5",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "c0206734d7ca63dc81b3a92a3152b741855a07d0e069fef4a116899a5a35c088",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "2dc6c733c9be33556454a84a30ba38fb1acf04344faffc6b9796a90506d0caae",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "fb8ad384597822a118c671ae3fc84c6c3e0c4272943bdf7b2f0ce7be66d4a101",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "fa6f277b7be24a5ad73d6eb2a2728ec77d3417a1b01184d3b1c3be8c86978297",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "db3db3e94907330b5ea2ff307343f76f3d730c7db8016a800cb22098e46b3b1c",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "9223f4c7e9c1cd7a8f84c3e260318656cc2e7047366339223dc0b2d5921b5ecc",
-      "reason": "links 2px at rest, 3.2px highlighted (Roger 3 Nov 2026)",
-      "day": "2026-11-03"
+      "sha256": "ab2d79520f5ce65561a56f12dcb02a2d5cdf66df3191d079598605fbecdd8310",
+      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
+      "day": "2026-11-05"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
