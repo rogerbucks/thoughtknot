@@ -17,9 +17,13 @@ const EXCERPT = new RegExp(`^${S}*//${S}*excerpt\\b`, 'i'),
   EXCERPT_OF = new RegExp(`·${S}*excerpt\\b`, 'i'),
   QUERY = new RegExp(`·${S}*QUERY\\b`),
   CHANGE_SET = new RegExp(`·${S}*CHANGE SET\\b`),
-  FORMAT = new RegExp(`·${S}*format${S}+(\\d+(?:\\.\\d+)?)\\b`);
+  FORMAT = new RegExp(`·${S}*format${S}+(\\d+(?:\\.\\d+)?)\\b`),
+  SPEC = new RegExp(`·${S}*spec${S}+(\\d+(?:\\.\\d+)?)\\b`);
 // The newest major format this reader reads (§3). A block that names a newer one is refused plainly, its text kept.
 const FORMAT_READ = 1;
+// The newest major Graph Spec this reader implements (editor spec §51, spec_version_in_files). A block names the spec
+// it is written to as '· spec 1.0'. One that names a newer major is refused with a fix that says to upgrade.
+const SPEC_READ = 1;
 // A block's graph and its kind, 'data', 'schema', 'query', 'changeset' or 'excerpt', read from its first line (§3);
 // an excerpt need name no graph. Throws a ProfileError when the line names no graph, or a graph name that is not one
 // word.
@@ -55,6 +59,15 @@ function header(block) {
       'read it with a newer reader: its text is kept as written',
       undefined,
       'GN106',
+    );
+  const spec = SPEC.exec(m[2]);
+  if (spec && Number(spec[1].split('.')[0]) > SPEC_READ)
+    throw new ProfileError(
+      1,
+      `the block is written to Graph Spec ${spec[1]}, newer than this reader, which implements Graph Spec ${SPEC_READ}`,
+      'upgrade ThoughtKnot to read it: its text is kept as written',
+      undefined,
+      'GN107',
     );
   return [m[1], kind];
 }
