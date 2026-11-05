@@ -213,10 +213,10 @@ export function cardArrows(
   return out;
 }
 
-/** What one frame of the 3D view paints: the shapes for the graphics chip, and over them cards, arrowheads and words. */
 export type { LabelMemory };
 export { CARD_MOST, LABEL_HOLD, WORDS_MOST, farFrame };
 
+/** What one frame of the 3D view paints: the shapes for the graphics chip, and over them cards, arrowheads and words. */
 export interface SpaceFrame {
   shapes: SpaceMarks;
   cards: ScreenCard[];
