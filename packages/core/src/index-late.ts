@@ -95,3 +95,5 @@ export {
   type LineWritten,
   type ThingAdded as ThingAddedNear,
 } from './thing-edits.ts';
+// graphs kept in a GitHub repository (§48)
+export * from './index-repo.ts';

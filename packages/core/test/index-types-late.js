@@ -404,4 +404,15 @@ export const TYPES_LATE = [
   'CsvRefusal',
   'CsvTable',
   'TableMapping',
+  // graphs kept in a GitHub repository, and graph information pulled out of one (§48), 5 Nov 2026
+  'PullOutcome',
+  'RepoChange',
+  'RepoExtract',
+  'RepoFile',
+  'RepoHost',
+  'RepoOutgoing',
+  'RepoPull',
+  'RepoSent',
+  'RepoStoreOptions',
+  'RepoText',
 ];

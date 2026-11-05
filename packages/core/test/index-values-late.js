@@ -359,4 +359,11 @@ export const VALUES_LATE = [
   'tableConnector',
   'tableKindOf',
   'tableStatements',
+  // graphs kept in a GitHub repository, and graph information pulled out of one (§48), 5 Nov 2026
+  'githubRepoStorage',
+  'openRepoReview',
+  'REPO_EXTRACT_MOST',
+  'REPO_REFUSED',
+  'repoGraphProposal',
+  'repoRefusal',
 ];
