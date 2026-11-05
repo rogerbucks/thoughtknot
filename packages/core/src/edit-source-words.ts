@@ -67,6 +67,8 @@ export const EDIT_SOURCE_WORDS = {
     other: 'Delete {thing} and its {count} links?',
   },
   'edit.keep': 'Keep',
+  'edit.drop-link': 'Let go to link {thing} to {other}',
+  'edit.drop-nowhere': 'Let go on another thing to link {thing} to it',
   'edit.added': 'Added {thing}',
   'edit.set': 'Set {prop} to {value}',
   'edit.many-blocks': '{thing} is written in more than one block: change it in the text',

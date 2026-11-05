@@ -15,7 +15,7 @@
   "packages/core/src/display/graph-view/space-view-panel.ts#openSpaceView": 308,
   "packages/core/src/display/graph-view/svg-marks.ts#marksOfSvg": 139,
   "packages/core/src/display/graph-view/type-strip.ts#renderTypeStrip": 133,
-  "packages/core/src/display/graph-view/viewport-events.ts#bindViewportEvents": 287,
+  "packages/core/src/display/graph-view/viewport-events.ts#bindViewportEvents": 286,
   "packages/core/src/display/properties/properties.ts#renderProperties": 272,
   "packages/core/src/display/properties/properties.ts#renderProperties.row": 161,
   "packages/core/src/display/proposals/proposal-strip.ts#renderProposalStrip": 167,

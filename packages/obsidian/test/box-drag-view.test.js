@@ -271,8 +271,9 @@ describe('dragging a box in a radial drawing', () => {
       const hub = placeOf('sun'),
         a = placeOf('a'),
         c = placeOf('c');
-      // a little further round than A, clockwise as drawn (the drawing's y runs down the page)
-      const angle = Math.atan2(a.y - hub.y, a.x - hub.x) + 0.2,
+      // a little further round than A, clockwise as drawn (the drawing's y runs down the page). Past the middle of A's box,
+      // where a drop would link to it instead (edit_gestures)
+      const angle = Math.atan2(a.y - hub.y, a.x - hub.x) + 0.4,
         far = Math.hypot(a.x - hub.x, a.y - hub.y),
         drop = at(hub.x + far * Math.cos(angle), hub.y + far * Math.sin(angle));
       vp.dispatch('pointerdown', mouse(1, boxOf('c'), at(c.x, c.y)));

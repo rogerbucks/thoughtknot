@@ -7,6 +7,7 @@
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { boxMoversFor } from './box-movers';
+import { DoubleClicks, type EditGestures } from './edit-gestures';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
 import { toggleOutline } from './drawing-svg';
@@ -61,12 +62,20 @@ export interface ViewportHost {
   /** The view in space, if open: a host's zoom and fit commands move its camera (§53). */
   space?: { move: (m: SpaceMove) => boolean };
   sketch?: SketchPointer | null; // the drawing tools: what they take draws or picks a drawing, never pans (§70)
+  /** The editor beside the selected thing: what a double click and a drop on a box do where it can write (§72). */
+  edits?: EditGestures;
 }
+
+/** What a thing's menu offers: to put it in the centre, where the drawing can (radial_centre_menu). */
+const menuOf = (host: ViewportHost, key: string): MenuItem[] => {
+  const d = host.o?.diagram;
+  return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
+};
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
-  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card }) : null,
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom, card, links: host.edits }) : null,
     drag = movers?.drag ?? null,
     keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
@@ -91,20 +100,17 @@ export function bindViewportEvents(host: ViewportHost): void {
     };
   // a thing's menu: what can be done with it from here, opened by a right-click or the menu key (radial_centre_menu)
   const menu = new ThingMenu(card, host.root);
-  const menuOf = (key: string): MenuItem[] => {
-    const d = host.o?.diagram;
-    return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
-  };
   const openMenu = (key: string, at: { x: number; y: number }): boolean => {
-    const box = svg ? boxIn(svg, key) : undefined;
+    const box = (svg ? boxIn(svg, key) : undefined) as HTMLElement | undefined;
     host.info.hide();
-    return menu.show(at, host.o?.diagram?.textOf?.(key) ?? key, menuOf(key), (box as HTMLElement | undefined) ?? null);
+    return menu.show(at, host.o?.diagram?.textOf?.(key) ?? key, menuOf(host, key), box ?? null);
   };
   /** How the last press came: a finger held on a box opens its tooltip and picks it up, never the menu (§24, §6). */
   let lastPointer = 'mouse';
   let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean; again: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
+  const twice = new DoubleClicks(card, vp, host.edits); // a second click waits for a double click (edit_gestures)
   /** A press on a fold's stub or box: if it lifts where it came down, it opens the fold (§25). */
   let foldDown: { id: number; x: number; y: number; fold: string } | null = null;
   const point = (e: { clientX: number; clientY: number }) => {
@@ -192,8 +198,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     if (empty && empty.id === e.pointerId && Math.hypot(p.x - empty.x, p.y - empty.y) < 10) sel.clear();
     if (!down || down.id !== e.pointerId || Math.hypot(p.x - down.x, p.y - down.y) >= 10) return;
     // a tap again on what is selected brings it to the middle, readable. A second click in 3D turns to it the same way
-    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3)
-    if (down.again && !e.shiftKey) sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target));
+    // (Roger, 24 Oct 2026, second_tap_centres); a radial drawing fans out from it. Near several, a tap in the same place again chooses the next (§3).
+    if (down.again && !e.shiftKey)
+      twice.second(down.touch, () => sel.came('centre', () => fansOut(host.o, down.target) || host.open(down.target)));
     else {
       const chosen = taps.choose(down, nearTo(down));
       host.open((chosen && svg ? targetOf(svg, chosen) : null) ?? down.target, e.shiftKey);
@@ -278,11 +285,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     e.preventDefault();
     e.stopPropagation();
   });
-  // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
+  // a double click edits where the card can write; else on or near a box or link it only selects, empty space zooms
   card.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
     if (ownButton(e.target)) return;
     const p = point(e),
       onBox = !!targetAt(e.target);
+    if (twice.edited(targetAt(e.target), !onBox && !nearTo(p).length)) return void e.preventDefault();
     use(e, { kind: 'dblclick', ...p, onBox, near: !onBox && nearTo(p).length > 0 });
   });
   card.registerDomEvent(vp, 'keydown', (e: KeyboardEvent) => {

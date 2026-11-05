@@ -20,6 +20,7 @@ import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
 import { EditWrites } from './edit-writes';
+import { Gestures } from './edit-gestures';
 import { SPACE_PICKED_AT, type PickedAt } from './space-picked-at';
 import { gridAdds } from './grid-drag';
 import type { CellWrite } from './table-edit';
@@ -63,6 +64,16 @@ export class EditCard {
     write: (r, said) => ('reason' in r ? Promise.resolve(r.reason) : this.written(said, r.block, r.was, r.now)),
     say: (text) => this.said?.setText(text),
     hand: (key) => handed.set(this.o.graph, { key, rename: true, at: Date.now() }),
+  });
+  /** What a double click and a drop on a box do to the drawing, where the card can write (edit_gestures). */
+  readonly gestures = new Gestures({
+    o: () => this.o,
+    key: () => this.key,
+    writable: () => this.writable(),
+    rename: () => this.rename(),
+    written: (said, block, was, now) => this.written(said, block, was, now),
+    hand: (key, rename) => handed.set(this.o.graph, { key, rename, at: Date.now() }),
+    unhand: () => handed.delete(this.o.graph),
   });
 
   /** For the card `card`, and what of it the editor needs, got as the card builds it. */
