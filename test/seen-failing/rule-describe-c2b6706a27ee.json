@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/rule-describe.test.js",
+  "test": "rule_look_describe > with AI off the form offers no box",
+  "seen_failing_first": false,
+  "evidence": "guards the old behaviour: the form had no box before, and must still have none while AI is off"
+}

@@ -165,7 +165,6 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
     void vscode.window.showWarningMessage(word('ai.level-changed', { was: p.level ?? 'none', is: now ?? 'none' }));
     return;
   }
-
   const result = await sendPrepared(p, confirmSend(p), { transport: lmTransport(picked.value), key: null });
   if ('refused' in result) {
     void vscode.window.showWarningMessage(result.refused);
@@ -183,6 +182,7 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
     return;
   }
   // the proposal goes into the note as it is now; one the graph spec's check fails is not written
+  if (!('proposal' in result)) return; // a rule described is asked for in the rule form, never here
   const written = noteWithProposal(await disk.readText(note), result.proposal);
   if (typeof written !== 'string') {
     void vscode.window.showWarningMessage(word('ai.not-written', { model: host.name, why: written.refused }));

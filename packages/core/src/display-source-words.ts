@@ -287,6 +287,13 @@ export const DISPLAY_SOURCE_WORDS = {
   'rules.sample': 'A thing',
   'rules.means-hint': 'The name shown in the legend',
   'rules.close': 'Close the rule',
+  // a rule described in words, filled in by an AI the person asks and checks (§56, rule_look_describe)
+  'rules.describe': 'Or describe it in words',
+  'rules.describe-hint': 'For example: late tasks, in red with a clock',
+  'rules.describe-go': 'Ask AI to fill it in',
+  'rules.describe-empty': 'Write what you want to see first.',
+  'rules.describe-asking': 'You see what is sent first. Nothing is applied until you try or save it.',
+  'rules.describe-filled': 'Filled in from your words. Check what it finds, then try or save it.',
   'summary.recent': 'Recently opened',
   'summary.recent-graph': '{graph}, in {note}',
   'summary.recent-thing': '{thing}, in {graph}, in {note}',

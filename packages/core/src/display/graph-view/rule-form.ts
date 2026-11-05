@@ -18,6 +18,7 @@ import { BADGE_GLYPHS, hueColour, ruleRefusal, ruleStarts, sayDraft, testsOf, wh
 import type { WordKey, RuleAsk, RuleChoices, RuleDraft, RuleStart, RuleWrite } from '@thoughtknot/core';
 import { button } from '../button.ts';
 import { readOnlyHere } from './placement.ts';
+import { renderDescribe } from './rule-describe-box.ts';
 import { renderFind, renderLookPicks, renderPreview, renderWritten } from './rule-form-parts.ts';
 import type { FormState } from './rule-form-parts.ts';
 
@@ -84,6 +85,7 @@ function formParts(form: HTMLElement) {
     off: hidden(form, 'off'),
   };
   const starts = form.createDiv({ cls: 'thoughtknot-rule-starts' });
+  const describe = form.createDiv({ cls: 'thoughtknot-rule-describe' });
   step(form, 'rules.step.find');
   const find = form.createDiv({ cls: 'thoughtknot-rule-find' });
   const written = form.createDiv();
@@ -98,7 +100,7 @@ function formParts(form: HTMLElement) {
   const refused = form.createDiv({ cls: 'thoughtknot-rule-refused', attr: { role: 'alert' } });
   const actions = form.createDiv({ cls: 'thoughtknot-rule-actions' });
   const submit = actions.createEl('button', { cls: 'mod-cta', attr: { type: 'submit' } });
-  return { fields, starts, find, written, found, looks, preview, means, refused, actions, submit };
+  return { fields, starts, describe, find, written, found, looks, preview, means, refused, actions, submit };
 }
 
 /** Says what the rule finds as it is built: how many and which, nothing yet, or what to pick first. */
@@ -208,7 +210,8 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     whenTyped: false,
   };
   let view: string | undefined;
-  const { fields, starts, find, written, found, looks, preview, means, refused, actions, submit } = formParts(form);
+  const { fields, starts, describe, find, written, found, looks, preview, means, refused, actions, submit } =
+    formParts(form);
   const when = renderWritten(written, state, () => refresh());
   means.addEventListener('input', () => {
     state.meansTyped = means.value.trim() !== '';
@@ -256,6 +259,7 @@ export function renderRuleForm(slot: HTMLElement, ask: RuleAsk | undefined): voi
     if (built) return;
     built = true;
     if (ask) renderStarts(starts, ask, savedActs(box, ask, load));
+    if (ask) renderDescribe(describe, ask, load); // an AI fills the form; the person still tries or saves it
     renderLookPicks(looks, fields, () => refresh());
     refresh(true);
   }

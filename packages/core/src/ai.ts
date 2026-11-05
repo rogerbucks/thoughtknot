@@ -25,6 +25,7 @@ import type { ScopeChoice } from './ai-scope.ts';
 import { formatList } from './locale-formats.ts';
 import { basisOf } from './proposals-basis.ts';
 import type { Proposal } from './proposals.ts';
+import type { RuleWrite } from './rule-write.ts';
 import type { AiModel, Settings } from './settings.ts';
 import { word } from './words.ts';
 
@@ -135,6 +136,8 @@ export interface SendRecord {
 export type SendResult =
   | { record: SendRecord; proposal: Proposal }
   | { record: SendRecord; asks: string }
+  /** A rule described (rule-describe.ts): it fills a form and is never applied by the send. */
+  | { record: SendRecord; rule: RuleWrite }
   | { record: SendRecord; failed: string }
   | { refused: string };
 
@@ -296,6 +299,7 @@ export async function sendPrepared(
   const changes =
     'content' in read ? (p.answers ? p.answers.read(read.content, p.sent ?? []) : changesIn(read.content)) : read;
   if ('asks' in changes) return { record: { ...record, outcome: 'answered' }, asks: changes.asks };
+  if ('rule' in changes) return { record: { ...record, outcome: 'answered' }, rule: changes.rule };
   if (!Array.isArray(changes)) return cannot(changes.unread);
   const proposal = proposalFrom(changes, {
     id: record.id,

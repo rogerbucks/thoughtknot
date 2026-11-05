@@ -28,6 +28,7 @@ export {
   whenOf,
 } from './rule-builder.ts';
 export type { RuleChoices, RuleDraft, RuleField, RuleOp, RuleStart, RuleTest } from './rule-builder.ts';
+export { ruleDescribeAsk } from './rule-describe.ts';
 export { ruleMovedUp, ruleRemoved } from './rule-remove.ts';
 export type { RuleRemove } from './rule-remove.ts';
 export type { RuleAsk, RuleWrite } from './rule-write.ts';

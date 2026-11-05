@@ -123,6 +123,12 @@ export interface RuleAsk {
   undo?(): void;
   /** Moves a saved rule before the one above it, so it wins where two set one part (rule_look_order). */
   moveUp?(rule: RuleWrite): void;
+  /**
+   * Asks an AI to describe a rule from the person's words, where the host can (rule_look_describe). The host shows what
+   * is sent and waits for a yes. `fill` is told the rule that comes back and only fills the form: nothing is tried or
+   * saved by it.
+   */
+  describe?(words: string, fill: (rule: RuleWrite) => void): void;
   tryOut(rule: RuleWrite): void;
   save(rule: RuleWrite): void;
   /** Goes back to the rules as saved, forgetting those tried. */

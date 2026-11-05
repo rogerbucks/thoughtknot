@@ -53,7 +53,7 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
  * The note's classification, read from the text being sent as well as the metadata cache, which can be behind it. The
  * higher is taken. It is read again each time the dialog shows what will be sent, against the classifications then.
  */
-function levelFor(plugin: ThoughtKnotPlugin, file: TFile, text: string): () => string | null {
+export function levelFor(plugin: ThoughtKnotPlugin, file: TFile, text: string): () => string | null {
   return () => {
     const { classifications: levels, aiUnlabelled } = plugin.settings;
     return higherClassification(

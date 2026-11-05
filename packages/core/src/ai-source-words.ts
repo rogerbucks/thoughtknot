@@ -2,11 +2,13 @@
 // English (editor spec §42, words_catalogue). The core's AI words follow: what is sent, its ceilings and its refusals.
 // source-words.ts keeps them with every other word. The words of AI suggestions (ai-suggest-source-words.ts) and of
 // text to graph (ai-text-graph-source-words.ts) are kept with them.
+import { AI_RULE_SOURCE_WORDS } from './ai-rule-source-words.ts';
 import { AI_SUGGEST_SOURCE_WORDS } from './ai-suggest-source-words.ts';
 import { AI_TEXT_GRAPH_SOURCE_WORDS } from './ai-text-graph-source-words.ts';
 
 /** The AI dialog's, the AI models', leaving the app's and the core's AI words, by key, in UK English. */
 export const AI_SOURCE_WORDS = {
+  ...AI_RULE_SOURCE_WORDS,
   ...AI_SUGGEST_SOURCE_WORDS,
   ...AI_TEXT_GRAPH_SOURCE_WORDS,
   'ai.view': 'View',

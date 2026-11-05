@@ -6,6 +6,7 @@
 import { diagramFor, withTriedRules, word } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, RuleAsk, RuleWrite, StyleGraph } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
+import { describeFor } from './ai/rule-describe';
 import { writeStyle } from './style-write';
 import { moveRuleUp, putBack, removeRule } from './rule-removal';
 import type { Removal } from './rule-removal';
@@ -83,6 +84,7 @@ export class TriedTypes {
       removal = this.removals.get(key);
     return {
       tried: this.rules.has(key),
+      ...((d) => (d ? { describe: d } : {}))(this.plugin && describeFor(this.plugin, at.path, at.graph)),
       ...(last ? { last } : {}),
       ...(removal ? { removed: removal.means } : {}),
       tryOut: (rule) => this.tryRule(at, rule),

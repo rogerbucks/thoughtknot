@@ -69,6 +69,7 @@ export const READS = [
   'ruleAsk.tryOut',
   'ruleAsk.back',
   'ruleAsk.finds',
+  'ruleAsk.describe',
   'intent.choose',
   'profile',
 ] as const;

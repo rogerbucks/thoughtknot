@@ -44,6 +44,7 @@ export const VALUES_LATE = [
   'NUMBER_OPS',
   'RULE_OPS',
   'ruleChoices',
+  'ruleDescribeAsk',
   'ruleFinds',
   'ruleStarts',
   'sayDraft',
