@@ -5,3 +5,5 @@ export type { PullOutcome, RepoChange, RepoFile, RepoHost, RepoOutgoing, RepoPul
 export type { RepoSent, RepoStoreOptions } from './github-repo-store.ts';
 export { REPO_EXTRACT_MOST, repoGraphProposal } from './github-repo-extract.ts';
 export type { RepoExtract, RepoText } from './github-repo-extract.ts';
+export { ghRepoHost, isBranchName } from './github-repo-gh.ts';
+export type { GhOutput, GhRun } from './github-repo-gh.ts';

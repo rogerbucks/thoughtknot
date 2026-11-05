@@ -3,7 +3,7 @@
 // was sent was a given text without holding the note's content. Written here, as the core has no host's library.
 
 /** The text as UTF-8 bytes. */
-function utf8(text: string): number[] {
+export function utf8(text: string): number[] {
   const out: number[] = [];
   for (const ch of text) {
     // a lone surrogate has no UTF-8 form: it is sent as U+FFFD, the replacement character, as every encoder sends it
