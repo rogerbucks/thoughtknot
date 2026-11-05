@@ -43,11 +43,8 @@ export function drawView(parent: HTMLElement, view: View, picked?: Picked): void
   if (view.svg) {
     // Parsed as SVG, never as HTML, by the parser of the page's own frame. The core's allowlist has already taken out
     // any script, event or outside link.
-    const Parser = box.ownerDocument.defaultView?.DOMParser ?? DOMParser;
-    const svg = new Parser().parseFromString(
-      cleanSvg(picked ? withPicked(view.svg, picked) : view.svg),
-      'image/svg+xml',
-    );
+    const parser = new (box.ownerDocument.defaultView?.DOMParser ?? DOMParser)();
+    const svg = parser.parseFromString(cleanSvg(picked ? withPicked(view.svg, picked) : view.svg), 'image/svg+xml');
     box.append(box.ownerDocument.importNode(svg.documentElement, true));
     box.setAttribute('role', 'img');
     box.setAttribute('aria-label', view.alt);
