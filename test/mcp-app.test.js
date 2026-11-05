@@ -238,6 +238,130 @@ describe('mcp_app_page_bounded: the page’s calls pass the gate, write only pro
     await call('keep', { key: p._meta[KEY_META] });
     assert.match(readFileSync(join(folder, 'reader.md'), 'utf8'), /\/\/ graph: reader_tour_presentation/);
   });
+
+  /**
+   * The built page started in a DOM, as a host's frame holds it: what it posts to the host, and a way to hand it a
+   * message from the host. The host answers each `tools/call` with `answers`, in turn.
+   */
+  async function framed(answers = []) {
+    const dom = new JSDOM('<!doctype html><body></body>', { pretendToBeVisual: true });
+    const win = dom.window;
+    const posted = [];
+    win.postMessage = (m) => {
+      posted.push(m);
+      if (m.method === 'tools/call') {
+        const r = answers.shift() ?? { content: [{ type: 'text', text: 'Done.' }] };
+        queueMicrotask(() => fromHost({ jsonrpc: '2.0', id: m.id, result: r }));
+      }
+    };
+    const fromHost = (data, source = win) => win.dispatchEvent(new win.MessageEvent('message', { data, source }));
+    const { startPage } = await import('../packages/claude-code/page/mcp-page.ts');
+    startPage(win);
+    const settle = () => new Promise((r) => setTimeout(r, 0));
+    const buttons = () => [...win.document.querySelectorAll('button')];
+    const press = (label) =>
+      buttons()
+        .find((b) => b.getAttribute('aria-label')?.startsWith(label))
+        .click();
+    const said = () => win.document.querySelector('.thoughtknot-mcp-said')?.textContent ?? '';
+    return { win, posted, fromHost, settle, buttons, press, said };
+  }
+  const VIEW = { title: 'reader', svg: SVG, alt: 'reader: 3 things', lines: ['reader: 3 things'] };
+  const result = (structuredContent) => ({
+    method: 'ui/notifications/tool-result',
+    params: { structuredContent, _meta: { [KEY_META]: 'key-1' } },
+  });
+
+  test('the page says it is ready, draws only what its host hands it, and walks a presentation by button and key', async () => {
+    const page = await framed();
+    assert.equal(page.posted[0].method, 'ui/initialize');
+    // a message from any frame but its host is not drawn
+    page.fromHost(result({ kind: 'show', view: VIEW }), null);
+    assert.equal(page.win.document.querySelector('svg'), null);
+    page.fromHost({ method: 'ui/notifications/tool-result', params: {} });
+    assert.match(
+      page.win.document.body.textContent,
+      /\S/,
+      'a result with nothing to show says so, never a blank frame',
+    );
+    page.fromHost(result({ kind: 'show', view: VIEW }));
+    assert.equal(page.win.document.querySelector('[role=img]').getAttribute('aria-label'), 'reader: 3 things');
+
+    const steps = [
+      { caption: 'The question', picked: { nodes: [1], edges: [] } },
+      { caption: 'The answer', picked: { nodes: [], edges: [] } },
+    ];
+    page.fromHost(result({ kind: 'present', view: VIEW, steps }));
+    assert.match(page.said(), /1 of 2.*The question/);
+    const [back, next] = page.buttons();
+    assert.equal(back.disabled, true);
+    next.click();
+    assert.match(page.said(), /2 of 2.*The answer/);
+    assert.equal(next.disabled, true);
+    const root = page.win.document.querySelector('.thoughtknot-mcp');
+    root.dispatchEvent(new page.win.KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    assert.match(page.said(), /1 of 2/);
+    root.dispatchEvent(new page.win.KeyboardEvent('keydown', { key: 'PageUp' }));
+    assert.match(page.said(), /1 of 2/, 'nothing moves past the first step');
+    root.dispatchEvent(new page.win.KeyboardEvent('keydown', { key: 'PageDown' }));
+    assert.match(page.said(), /2 of 2/);
+    root.dispatchEvent(new page.win.KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    assert.match(page.said(), /2 of 2/);
+
+    page.press('Keep');
+    await page.settle();
+    const keep = page.posted.find((m) => m.method === 'tools/call');
+    assert.deepEqual(keep.params, { name: 'keep', arguments: { key: 'key-1' } });
+    assert.equal(page.said(), 'Done.');
+    assert.equal(page.posted.filter((m) => m.method === 'ui/message').length, 0, 'keeping adds nothing to the chat');
+  });
+
+  test('the page asks the question, and adds only the pick and its reason, once the server has taken it', async () => {
+    const page = await framed([
+      { content: [{ type: 'text', text: 'Refused.' }], isError: true },
+      { content: [{ type: 'text', text: 'You picked Large reader. Because: bigger text' }] },
+      {},
+    ]);
+    const options = [
+      { label: 'Large reader', things: ['large_reader'] },
+      { label: 'Small reader', things: ['small_reader'] },
+    ];
+    page.fromHost(result({ kind: 'decide', view: VIEW, question: 'Which device?', options }));
+    assert.match(page.said(), /Which device\?/);
+    assert.match(page.win.document.body.textContent, /large_reader/);
+    page.win.document.querySelector('textarea').value = 'bigger text';
+
+    page.press('Pick Large reader');
+    assert.ok(
+      page.buttons().every((b) => b.disabled),
+      'no second press while the server answers',
+    );
+    await page.settle();
+    assert.equal(page.said(), 'Refused.');
+    assert.ok(
+      page.buttons().every((b) => !b.disabled),
+      'a refused answer can be given again',
+    );
+    assert.equal(page.posted.filter((m) => m.method === 'ui/message').length, 0);
+
+    page.press('Pick Large reader');
+    await page.settle();
+    const calls = page.posted.filter((m) => m.method === 'tools/call');
+    assert.deepEqual(calls[1].params, {
+      name: 'answer',
+      arguments: { key: 'key-1', picked: 0, reason: 'bigger text' },
+    });
+    const added = page.posted.filter((m) => m.method === 'ui/message');
+    assert.equal(added.length, 1);
+    assert.deepEqual(added[0].params.content, [
+      { type: 'text', text: 'You picked Large reader. Because: bigger text' },
+    ]);
+
+    page.fromHost(result({ kind: 'decide', view: VIEW, question: 'Which device?', options }));
+    page.press('None');
+    await page.settle();
+    assert.equal(page.posted.filter((m) => m.method === 'tools/call').at(-1).params.arguments.picked, null);
+  });
 });
 
 describe('mcp_app_remote: no remote connector until a security review approves one', () => {
