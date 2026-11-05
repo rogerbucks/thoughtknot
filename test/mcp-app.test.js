@@ -240,8 +240,8 @@ describe('mcp_app_page_bounded: the page’s calls pass the gate, write only pro
   });
 
   /**
-   * The built page started in a DOM, as a host's frame holds it: what it posts to the host, and a way to hand it a
-   * message from the host. The host answers each `tools/call` with `answers`, in turn.
+   * The page started in a DOM, as a host's frame holds it. It gives what the page posts to the host, and a way to hand
+   * it a message from the host. The host answers each `tools/call` with `answers`, in turn.
    */
   async function framed(answers = []) {
     const dom = new JSDOM('<!doctype html><body></body>', { pretendToBeVisual: true });

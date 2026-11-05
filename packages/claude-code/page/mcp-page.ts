@@ -41,8 +41,8 @@ export interface PageHost {
 export function drawView(parent: HTMLElement, view: View, picked?: Picked): void {
   const box = parent.createDiv({ cls: 'thoughtknot-mcp-drawing' });
   if (view.svg) {
-    // parsed as SVG, never as HTML: the core's allowlist has already taken out any script, event or outside link
-    // the parser of the frame the page is drawn in
+    // Parsed as SVG, never as HTML, by the parser of the page's own frame. The core's allowlist has already taken out
+    // any script, event or outside link.
     const Parser = box.ownerDocument.defaultView?.DOMParser ?? DOMParser;
     const svg = new Parser().parseFromString(
       cleanSvg(picked ? withPicked(view.svg, picked) : view.svg),
