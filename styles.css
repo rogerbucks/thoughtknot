@@ -4093,6 +4093,10 @@ body.thoughtknot-easier-reading
   color: var(--gn-text-normal);
   font-size: var(--gn-font-size-xs);
 }
+.thoughtknot-space-help-close {
+  pointer-events: auto;
+  font-size: var(--gn-font-size-xs);
+}
 
 /* a graph too large to draw, as its overview (§53, massive-view.ts) */
 .thoughtknot-massive {

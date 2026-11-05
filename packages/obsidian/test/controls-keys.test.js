@@ -73,3 +73,40 @@ test('on a tablet a folded dock of key controls is a rail of their icons', () =>
   const hid = { tag: 'div', classes: ['thoughtknot-dock-body'], states: [], ancestors: [plain] };
   assert.equal(winner(all, hid, 'display').value, 'none', 'a dock of other controls still folds to its head');
 });
+
+// proves: controls_stay_closed
+test('a dock closed stays closed when drawn again, after a restart too, and the 3D tips close with their own button', async () => {
+  const kept = new Map();
+  const win = doc.defaultView;
+  win.localStorage = {
+    getItem: (k) => kept.get(k) ?? null,
+    setItem: (k, v) => kept.set(k, String(v)),
+  };
+  try {
+    renderDock(doc.body.createDiv(), 'Shut').fold(true);
+    // a fresh copy of the module, as after a restart: only the browser remembers
+    const again = await import('../../core/src/display/graph-view/controls-dock.ts?restart');
+    assert.ok(again.renderDock(doc.body.createDiv(), 'Shut').folded(), 'it opens closed, as it was left');
+    assert.ok(!again.renderDock(doc.body.createDiv(), 'Other').folded(), 'another dock keeps its own way');
+    kept.delete('thoughtknot-space-hints');
+    const el = doc.body.createDiv();
+    const { help } = spacePad(
+      el,
+      'Height by group',
+      () => {},
+      () => {},
+    );
+    assert.equal(help.hidden, false, 'the tips show the first time');
+    help.querySelector('.thoughtknot-space-help-close').click();
+    assert.equal(help.hidden, true, 'and close with their own button');
+    const { help: next } = spacePad(
+      doc.body.createDiv(),
+      'Height by group',
+      () => {},
+      () => {},
+    );
+    assert.equal(next.hidden, true, 'closed, they stay closed the next time');
+  } finally {
+    delete win.localStorage;
+  }
+});

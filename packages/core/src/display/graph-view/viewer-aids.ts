@@ -14,7 +14,7 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
-import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
+import { levelClouds, levelSettling, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
 import { groupEdits } from '../../group-edit.ts';
@@ -34,6 +34,9 @@ import type { SemanticRung } from '../../semantic-zoom.ts';
 import type { Taps } from './taps';
 import { keepSlots, slotCards } from './controls-slots.ts';
 import type { ViewOptions } from './view-options';
+
+/** How long each step of the levels waits for the next, in milliseconds: one level on at a time (level_one_step). */
+const LEVEL_STEP_MS = 180;
 
 /** What a drawing's aids are set to. */
 export interface ViewerAids {
@@ -210,6 +213,8 @@ export class Aids {
       this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
       const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
       this.hints?.show(layer ? levelShown(layer) : null);
+      // one level on at a time: still on the way to the one that fits, it draws again in a moment (level_one_step)
+      if (layer && levelSettling(layer)) win.setTimeout(() => this.names(), LEVEL_STEP_MS);
       this.levelTaps?.mark();
       const levels = drawing ? levelsOf(drawing, g) : null;
       this.legend?.show(levels);

@@ -186,7 +186,42 @@ test('zoomed in, the drawing grows past its viewport, and only the part the view
     port.getBoundingClientRect = rect(0, 0, 1200, 800);
     assert.match(levelClouds(svg, drawing), /Areas|Subjects/, 'the whole drawing in view');
     port.getBoundingClientRect = rect(0, 0, 120, 80);
-    assert.equal(levelClouds(svg, drawing), 'Level 3 of 3 · Every item', 'only its corner scrolled into view');
+    // one level on at a time, never two at once, until it reaches the one that fits (level_one_step)
+    let badge = levelClouds(svg, drawing);
+    for (let i = 0; i < 3 && badge !== 'Level 3 of 3 · Every item'; i++) badge = levelClouds(svg, drawing);
+    assert.equal(badge, 'Level 3 of 3 · Every item', 'only its corner scrolled into view');
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: level_one_step
+test('zoomed far in at once, the levels go one at a time, never two at once, and say when they are on the way', async () => {
+  const { svg, drawing, levelClouds, uninstall } = await drawn(240, 1200);
+  try {
+    const { levelSettling, levelShown, stepToward } = await import('../src/display/graph-view/level-clouds-svg.ts');
+    assert.equal(stepToward(undefined, 2), 2, 'the first time, straight to the level that fits');
+    assert.equal(stepToward(0, 2), 1, 'then one level on');
+    assert.equal(stepToward(2, 0), 1, 'and one level back');
+    assert.equal(stepToward(1, 1), 1);
+    const port = svg.ownerDocument.createElement('div');
+    port.appendChild(svg);
+    const rect = (width, height) => () => ({ left: 0, top: 0, width, height, right: width, bottom: height });
+    svg.getBoundingClientRect = rect(1200, 800);
+    port.getBoundingClientRect = rect(1200, 800);
+    levelClouds(svg, drawing);
+    const far = levelShown(svg).at;
+    assert.equal(far, 0, 'the whole drawing shows its subjects');
+    assert.equal(levelSettling(svg), false, 'drawn whole, it shows the level that fits at once');
+    port.getBoundingClientRect = rect(60, 40);
+    const seen = [far];
+    for (let i = 0; i < 5; i++) {
+      levelClouds(svg, drawing);
+      seen.push(levelShown(svg).at);
+    }
+    for (let i = 1; i < seen.length; i++) assert.ok(seen[i] - seen[i - 1] <= 1, `one level a step: ${seen}`);
+    assert.equal(seen.at(-1), levelShown(svg).count - 1, 'it gets to every item');
+    assert.equal(levelSettling(svg), false, 'and has arrived');
   } finally {
     uninstall();
   }

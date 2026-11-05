@@ -5,7 +5,7 @@
 // as clouds under the things (level-clouds.ts), each named with its count at a readable size. While a level of groups
 // shows, the things fade so the clouds read first (the class FAR). At the last level the clouds go, and every item shows
 // as drawn. Nothing moves: the things stay put and the drawing's own attributes are left as drawn.
-import { detailLevels, levelAt, levelBadge } from '../../detail-levels.ts';
+import { detailLevels, levelAt, levelBadge, stepToward } from '../../detail-levels.ts';
 import type { DetailLevel } from '../../detail-levels.ts';
 import { cloudsAt } from '../../level-clouds.ts';
 import { roadsAt } from '../../level-roads.ts';
@@ -49,10 +49,18 @@ const POSTS_MOST = 1;
 const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
 
 /** The level each drawing shows now, and how many it has: for the hints and the arrow legend (level_hints). */
-const shownAt = new WeakMap<Element, { at: number; count: number }>();
+const shownAt = new WeakMap<Element, { at: number; count: number; settling?: boolean }>();
 
 /** The level `svg` shows now, from 0 (farthest), and how many levels it has; null when it shows none. */
-export const levelShown = (svg: Element): { at: number; count: number } | null => shownAt.get(svg) ?? null;
+export const levelShown = (svg: Element): { at: number; count: number } | null => {
+  const shown = shownAt.get(svg);
+  return shown ? { at: shown.at, count: shown.count } : null;
+};
+
+export { stepToward };
+
+/** Whether `svg` is still on its way to the level that fits: draw it again soon, one more level on (level_one_step). */
+export const levelSettling = (svg: Element): boolean => shownAt.get(svg)?.settling ?? false;
 
 /** The things of the cloud `key` drawn in `svg` now; none when it shows no such cloud. */
 export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.get(svg)?.get(key) ?? [];
@@ -144,6 +152,7 @@ export function levelsInto(
 ): string | null {
   for (const old of Array.from(top.children))
     if (old.classList.contains(CLOUDS) || old.classList.contains(REGIONS)) old.remove();
+  const before = shownAt.get(svg);
   shownAt.delete(svg);
   if (levels.length < 2) return null;
   // the things on screen now: far out all of them, zoomed in fewer, so a nearer level fits
@@ -151,8 +160,9 @@ export function levelsInto(
   const inView = (x: number, y: number) => x >= view.left && x <= view.right && y >= view.top && y <= view.bottom;
   for (const [key, r] of rects)
     if (r.right >= view.left && r.left <= view.right && r.bottom >= view.top && r.top <= view.bottom) seen.add(key);
-  const at = levelAt(levels, seen);
-  shownAt.set(svg, { at, count: levels.length });
+  const goal = levelAt(levels, seen),
+    at = stepToward(before?.count === levels.length ? before.at : undefined, goal);
+  shownAt.set(svg, { at, count: levels.length, settling: at !== goal });
   svg.classList.toggle(FAR, at < levels.length - 1);
   if (at < levels.length - 1) {
     const group = make('g', { class: CLOUDS }),
