@@ -536,6 +536,8 @@ after a module nor listed here, and on a listed file that is missing.
   approval (spec §47, text_to_graph_skill). It spans `packages/cowork` and the core's text to graph.
 - `test/text-to-graph-contract.test.js` — the editor and the skill take one prompt and one reader from the library
   (spec §47, text_to_graph_one_contract). It spans the core, `packages/obsidian` and `packages/cowork`.
+- `test/mcp-app.test.js` — the MCP App: the local server's show, present and decide, its page, the folder it may read
+  and the gate (spec §49, workstream Y2). It spans the Claude Code host's tools, its page and the core.
 
 ## The library's release
 

@@ -218,6 +218,22 @@ Claude has three more tools, beside `propose`. None of them writes. Each goes th
 - Keep, on a walk, writes its steps as a `<graph>_tour_presentation` block. It plays again from the note with no AI.
 - The core does the rest: `presentation.ts` and `decision-recorded.ts`. The decision passes the change-set check first.
 
+### The MCP App: the same tools in Claude's desktop chat (spec §49, workstream Y2)
+
+A local MCP server offers `show`, `present` and `decide` as an MCP App. Claude's desktop app chat, and Claude Code, can
+add it.
+
+- Run it as `node mod/bin/mcp.mjs <folder>`. It speaks JSON-RPC over standard input and output, and opens no port.
+- `src/mcp-server.ts` holds it. It reads notes only inside the folder named, links settled. Every note passes the same
+  gate as the mod, then the AI ceiling. A note the mod would ask about is refused here, with the reason.
+- The person's settings are the Obsidian plugin's own, in `<folder>/.obsidian/plugins/thoughtknot/data.json`. With none,
+  the strictest defaults hold.
+- Each tool links to one page, `ui://thoughtknot/stage.html` (`page/mcp-page.ts`, built into `mod/bin/mcp-page.html`).
+  The host draws it in its sandboxed frame. It draws with the core and the display layer.
+- The page's own tools, `answer` and `keep`, are hidden from the model. Each needs the one-time key its tool's result
+  gave the page alone. Only the person's pick and its reason go into the conversation.
+- A remote connector, for Claude on the web, on mobile and in Cowork, waits for a security review. None is built.
+
 ## The process, `bin/`
 
 - `bin/render-process.ts` — the core's `loadEngine`, run by node: a JSON list of DOT on stdin, a JSON list of SVG on
