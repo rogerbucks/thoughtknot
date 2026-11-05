@@ -1,5 +1,5 @@
-// The connector for tables (editor spec §63, csv-connector.ts): the ids a table's rows are given, and what a table with
-// no mapping, or with cells beyond its header, says.
+// The connector for tables (editor spec §63, csv-connector.ts). It checks the ids a table's rows are given, the
+// columns it skips or links, and a file it refuses.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tableConnector, tableStatements } from '../src/csv-connector.ts';
