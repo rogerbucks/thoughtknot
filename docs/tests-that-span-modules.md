@@ -571,6 +571,9 @@ after a module nor listed here, and on a listed file that is missing.
   version and a changelog line. The line holds its decision and the owner's approval (spec §51, spec_versioned; GS2).
 - `test/release-notes.test.js` — release notes name the Graph Spec version and the conformance count. The library
   archive holds the spec, its version and its cases (spec §51, spec_version_released; GS2).
+- `test/section-citations.test.js` — a section number names its spec, GS§ or ES§. A new bare one fails, and the old
+  ones sit on a record that only shrinks. Section 2 is marked withdrawn, and a cited rule id names a rule
+  (spec_sections_named; GS2).
 - `test/graph-spec-index.test.js` — the graph spec file is true to itself (spec §51, spec_index_true; GS1): its counts,
   the paths it names, and no pending rule that a test proves.
 - `test/graph-spec-proved.test.js` — every graph-spec rule a test here cites by its id counts as proved (spec §51,
