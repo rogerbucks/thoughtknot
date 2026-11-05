@@ -4020,6 +4020,19 @@ body.thoughtknot-easier-reading
   height: 100%;
   pointer-events: none;
 }
+/* The line from the picked thing to the pointer, dragged to another thing to link to it (§72, edit_gestures). */
+.thoughtknot-space-link-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.thoughtknot-space-link-line line {
+  stroke: var(--gn-accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
 .thoughtknot-space-said {
   position: absolute;
   inset-block-start: var(--gn-space-2);

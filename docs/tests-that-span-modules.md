@@ -1088,6 +1088,8 @@ after a module nor listed here, and on a listed file that is missing.
   sketch_toggle, sketch_click_rule). It spans `space-sketch.ts`, the view in space and its painter.
 - `test/space-xr-view.test.js` — the view in space in a stand-in headset, in headless Chrome (editor spec §68,
   projection_spatial). It spans the view in space, its painter and `space-xr-view.ts`.
+- `test/space-edit.test.js` — editing by double click and drag in 2.5D, 3D and on the globe, in headless Chrome
+  (editor spec §72, edit_gestures). It spans `space-edit.ts`, the view in space and its painter.
 
 ### More checks in headless Chrome
 

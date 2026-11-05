@@ -104,6 +104,7 @@ export class EditCard {
   private listen(): void {
     if (this.keyed) return;
     this.keyed = true;
+    this.gestures.listen(this.card, this.viewport); // what the view in space asks for (edit_gestures)
     // in space, the editor follows the picked thing as the view turns
     this.card.registerDomEvent(this.viewport, SPACE_PICKED_AT, (e: CustomEvent<PickedAt | null>) => {
       this.pickedAt = e.detail;

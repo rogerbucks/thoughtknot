@@ -2,10 +2,12 @@
 // one way of editing in every view.
 // - A double click on a thing opens its name for typing, in the editor beside it.
 // - A double click on empty space adds a thing, of the kind of the one selected. Its name opens in the card drawn next.
-// - A box dropped right on another box links the first to the second (box-movers.ts).
+// - A box dropped in the middle of another box links the first to the second (box-links.ts).
+// - In 2.5D, 3D and on the globe, the view asks for the same edits (space-edit.ts).
 // Each is one edit, which one undo takes back (edit_undo). Nothing is offered where the card cannot write.
 import { details, word } from '@thoughtknot/core';
 import { addedInColumn, linkedTo } from '../../thing-edits.ts';
+import { SPACE_EDIT, type SpaceEdit } from './space-edit';
 import type { ViewOptions } from './view-options';
 import type { Linker } from './box-links.ts';
 import type { Lifecycle } from '../lifecycle';
@@ -31,6 +33,23 @@ export interface GestureHost {
 /** The gestures of one editor's drawing. */
 export class Gestures {
   constructor(private readonly host: GestureHost) {}
+
+  /** Takes the edits the view in space asks for in `viewport`, saying there why one wrote nothing. */
+  listen(card: Lifecycle, viewport: HTMLElement): void {
+    const say = (why: string) => {
+      const line = moveHint(viewport);
+      line.hidden = false;
+      line.textContent = why;
+    };
+    card.registerDomEvent(viewport, SPACE_EDIT, (e: CustomEvent<SpaceEdit>) => {
+      const d = e.detail;
+      if (!this.canWrite()) return;
+      if ('rename' in d && !this.renameOn(d.rename)) return;
+      if ('add' in d) this.addHere(say);
+      if ('link' in d) this.linkDrop(...d.link, say);
+      e.preventDefault();
+    });
+  }
 
   /** Whether a thing can be edited here now. */
   canWrite(): boolean {
