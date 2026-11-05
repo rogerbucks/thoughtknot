@@ -324,6 +324,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/graph-spec/test/problem-codes.test.mjs` — every problem the JavaScript reader raises passes a stable code
   from `src/reader/problem-codes.json`, with that code's message and fix. The blocks of `problem-code-cases.json` are
   refused with their codes (editor spec §42, problem_codes).
+## The graph format library: formats and versions
+
 - `packages/graph-spec/test/format-version.test.mjs` — both readers read a block in their own format or none named.
   They refuse a newer major with GN106 (format_version_named; one table, `format-version-cases.json`).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
@@ -365,6 +367,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `python/graph_spec/tests/test_problem_codes.py` — every problem the Python reader raises passes the stable code
   `problem-codes.json` gives it, the same as the JavaScript reader's. The blocks of `problem-code-cases.json` are
   refused with the same codes (editor spec §42, problem_codes).
+## The Python library: formats and versions
+
 - `python/graph_spec/tests/test_format_version.py` — the Python reader reads the cases of `format-version-cases.json`
   as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
 - `python/graph_spec/tests/test_spec_version.py` — the Python reader reads `spec-version-cases.json` as the JavaScript
