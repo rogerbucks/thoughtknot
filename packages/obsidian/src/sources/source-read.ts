@@ -178,7 +178,7 @@ export function watchSource(
 /**
  * Saves the mapping a person applies beside its table (connector_mapping_written): a .gql file, never a note. A file
  * already at `place` is never written over: it says false, and the person opens it instead. It is written as an export
- * is, by the vault's own API (vault-write.ts), as only a storage adapter or a writer of what is not a note may write.
+ * is, by the vault's own API (vault-write.ts). Only a storage adapter, or a writer of what is not a note, may write.
  */
 export async function saveMapping(plugin: ThoughtKnotPlugin, place: string, text: string): Promise<boolean> {
   if (plugin.app.vault.getAbstractFileByPath(place)) return false;
