@@ -40,8 +40,12 @@ test('far out a drawing shows its groups as named clouds under its things, which
     assert.match(badge, /^Level [12] of 3 · (Subjects|Areas)$/);
     assert.ok(top.children[0].classList.contains('thoughtknot-regions'), "each subject's region first, under all");
     assert.ok(
-      top.children[0].children.every((r) => r.getAttribute('filter') === 'url(#thoughtknot-region-blur)'),
-      'each region a soft wash (level_regions)',
+      top.children[0].children.every(
+        (r) =>
+          !r.getAttribute('filter') &&
+          r.children.every((c) => /^url\(#thoughtknot-cloud-fill-\d\)$/.test(c.getAttribute('fill'))),
+      ),
+      'each region a faint shape with a clear edge, never a blurred smear (level_regions)',
     );
     const clouds = top.children[1];
     assert.ok(clouds.classList.contains(CLOUDS), 'then the clouds, so under the things');
@@ -58,8 +62,15 @@ test('far out a drawing shows its groups as named clouds under its things, which
     );
     const soft = units.map((u) => u.children.find((c) => c.classList.contains('thoughtknot-cloud')));
     assert.ok(
-      soft.every((c) => c.getAttribute('filter') === 'url(#thoughtknot-cloud-blur)' && c.children.length >= 1),
-      'each a soft cloud: a blurred puff round each of its things, as the mockup draws it (level_look)',
+      soft.every(
+        (c) =>
+          !c.getAttribute('filter') &&
+          c.children.length >= 1 &&
+          c.children.every(
+            (p) => p.getAttribute('fill') === `url(#thoughtknot-cloud-fill-${c.getAttribute('data-hue')})`,
+          ),
+      ),
+      'each a soft cloud: a puff round each of its things, solid then fading in its hue, as the mockup paints it (level_look)',
     );
     assert.ok(
       units.every((u) => inCard(u, 'thoughtknot-cloud-dots')?.children.length >= 1),
