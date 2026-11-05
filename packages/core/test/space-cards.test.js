@@ -204,7 +204,7 @@ test('every link is drawn as a solid line, bolder near, with a wide arrowhead ne
 test('in 2D too, a link is a solid line with a bold, sharp arrowhead, under the focus rules', async () => {
   const { readFileSync } = await import('node:fs');
   const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
-  const width = (sel) => Number(new RegExp(`${sel}\\s*\\{[^}]*stroke-width:\\s*([\\d.]+)`).exec(css)?.[1]);
+  const width = (sel) => Number(new RegExp(`${sel}\\s*\\{[^}]*stroke-width:\\s*(?:max\\()?([\\d.]+)`).exec(css)?.[1]);
   assert.ok(width(String.raw`g\.edge > :where\(path:not\(\[stroke-width\]\)\)`) >= 1.5, 'a link is no hairline');
   assert.ok(width(String.raw`g\.edge > :where\(polygon:not\(\[stroke-width\]\)\)`) >= 2, 'its arrowhead bolder');
   // :where weighs nothing, so a selected, kept or faded link still shows as the focus rules say

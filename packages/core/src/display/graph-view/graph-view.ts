@@ -353,6 +353,7 @@ export class GraphView extends Lifecycle {
     this.svg?.setAttribute('height', String(v.height));
     // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)
     this.svg?.toggleClass('thoughtknot-labels-hidden', !!this.switching?.labelsHidden(v.scale));
+    this.svg?.toggleClass('thoughtknot-labels-small', !!this.switching?.labelsSmall(v.scale)); // names_links_legible_2d
     this.table?.setCssProps({ '--thoughtknot-scale': String(v.scale) });
     this.viewport.setCssProps({
       '--thoughtknot-x': `${v.x}px`,

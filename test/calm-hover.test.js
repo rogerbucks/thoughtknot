@@ -35,9 +35,12 @@ test('where motion is welcome, things, links and previews fade in and out', () =
 
 // proves: calm_hover
 test('a link is 2 px at rest and the same line at 3.2 px when highlighted', () => {
-  assert.match(rule('.thoughtknot-svg g.edge > :where(path:not([stroke-width]))'), /stroke-width: 2;/);
+  assert.match(
+    rule('.thoughtknot-svg g.edge > :where(path:not([stroke-width]))'),
+    /stroke-width: max\(2px, var\(--thoughtknot-link-least, 0px\)\);/,
+  );
   assert.match(
     rule('.thoughtknot-svg g.edge.thoughtknot-hot > :where(path:not([stroke-width]))'),
-    /stroke-width: 3\.2;/,
+    /stroke-width: max\(3\.2px, calc\(var\(--thoughtknot-link-least, 0px\) \* 1\.6\)\);/,
   );
 });

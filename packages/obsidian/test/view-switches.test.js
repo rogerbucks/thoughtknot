@@ -489,7 +489,12 @@ describe('labels by zoom', () => {
       assert.notEqual(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: highlighted');
       edge(el, 'edge15').classList.remove('thoughtknot-hot');
       turn(el, 'Hide labels too small to read').click();
-      assert.notEqual(painted(edge(el, 'edge15')), '0', 'switched off, every label is painted');
+      assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'switched off, the switch hides nothing');
+      assert.ok(
+        svg.hasClass('thoughtknot-labels-small'),
+        'but one too small to read still waits for a hover or a pick',
+      );
+      assert.equal(painted(edge(el, 'edge15')), '0', 'names_links_legible_2d: so Bob asks Dee stays quiet');
     } finally {
       env.uninstall();
     }

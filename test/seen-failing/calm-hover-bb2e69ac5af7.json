@@ -1,0 +1,6 @@
+{
+  "file": "test/calm-hover.test.js",
+  "test": "a link is 2 px at rest and the same line at 3.2 px when highlighted, never under the least thickness",
+  "seen_failing_first": false,
+  "evidence": "A commit that only renamed this existing test; the next commit puts its title back. The test itself failed first in the commit that changed the CSS."
+}

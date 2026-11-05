@@ -222,10 +222,10 @@
    sets itself, such as a trunk's, is kept. The selectors weigh less than the focus rules below, so a selected, kept or
    faded link still shows as they say. */
 .thoughtknot-svg g.edge > :where(path:not([stroke-width])) {
-  stroke-width: 2;
+  stroke-width: max(2px, var(--thoughtknot-link-least, 0px));
 }
 .thoughtknot-svg g.edge > :where(polygon:not([stroke-width])) {
-  stroke-width: 2.2;
+  stroke-width: max(2.2px, var(--thoughtknot-link-least, 0px));
   stroke-linejoin: miter;
 }
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
@@ -539,7 +539,7 @@
 /* A highlighted link is the same line, only heavier (Roger, 3 Nov 2026: 2 px at rest, 3.2 px on hover). A line's
    weight moves nothing. */
 .thoughtknot-svg g.edge.thoughtknot-hot > :where(path:not([stroke-width])) {
-  stroke-width: 3.2;
+  stroke-width: max(3.2px, calc(var(--thoughtknot-link-least, 0px) * 1.6));
 }
 .thoughtknot-svg g.thoughtknot-hot > text {
   text-decoration: underline;
@@ -1361,10 +1361,12 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
-.thoughtknot-svg.thoughtknot-labels-hidden g.edge text {
+.thoughtknot-svg:is(.thoughtknot-labels-hidden, .thoughtknot-labels-small) g.edge text {
   fill-opacity: 0;
 }
-.thoughtknot-svg.thoughtknot-labels-hidden g.edge:is(.thoughtknot-kept, .thoughtknot-hot, .is-selected) text {
+.thoughtknot-svg:is(.thoughtknot-labels-hidden, .thoughtknot-labels-small)
+  g.edge:is(.thoughtknot-kept, .thoughtknot-hot, .is-selected)
+  text {
   fill-opacity: 1;
 }
 .thoughtknot-svg g[data-fold] {
@@ -4214,7 +4216,26 @@ img.thoughtknot-picture-hidden,
 
 /* a name hidden for now, as at this zoom it would cover another; zooming in brings it back (§3, names_readable_any_zoom) */
 .thoughtknot-svg text.thoughtknot-name-crowded {
+  opacity: 0;
   visibility: hidden;
+  pointer-events: none;
+}
+/* the count of names left out beside the one that stands: "+3". It is a hint, not a target. */
+.thoughtknot-svg text.thoughtknot-name-more {
+  fill: var(--gn-text-muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+/* names fade in and out as you zoom, never jump (things_stay_put, never disorient) */
+@media (prefers-reduced-motion: no-preference) {
+  .thoughtknot-svg text {
+    transition: opacity var(--gn-motion-fade) var(--gn-ease-soft);
+  }
+  .thoughtknot-svg text.thoughtknot-name-crowded {
+    transition:
+      opacity var(--gn-motion-fade) var(--gn-ease-soft),
+      visibility 0s linear var(--gn-motion-fade);
+  }
 }
 /* The clouds of a level of detail, under the things they gather (§68, level_clouds). They look as their mockup draws
    them (level_look). Each cloud is soft, with no outline. Far out each thing is a dot. Each cloud's name sits on a
