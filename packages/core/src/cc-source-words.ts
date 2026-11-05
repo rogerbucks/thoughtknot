@@ -6,10 +6,12 @@
 // (words-in-code.test.js). source-words.ts keeps these with every other word.
 
 import { COWORK_SOURCE_WORDS } from './cowork-source-words.ts';
+import { PRESENT_SOURCE_WORDS } from './present-source-words.ts';
 
 /** The Claude Code mod's own words, by key, in UK English, and the Copilot Cowork skill's (cowork-source-words.ts). */
 export const CC_SOURCE_WORDS = {
   ...COWORK_SOURCE_WORDS,
+  ...PRESENT_SOURCE_WORDS,
   'cc.no-graph': 'No graph in this note.',
   'cc.empty-graph': 'The graph in this note has nothing in it yet.',
   'cc.instead': 'It is shown as text instead.',

@@ -12,6 +12,31 @@
 // ruleFinds, ruleStarts, sayDraft, testsOf and whenOf. ruleRemoved and ruleMovedUp (rule_look_remove) came the same day.
 // INTENT_LINK_TYPES, INTENT_MARKS, UNSTATED and the intent functions (§58, intents) came on 3 Nov 2026.
 export const VALUES_LATE = [
+  // Claude presents and decides (§49), 5 Nov 2026
+  'CAPTION_MOST',
+  'LABEL_MOST',
+  'OPTIONS_LEAST',
+  'OPTIONS_MOST',
+  'QUESTION_MOST',
+  'REASON_MOST',
+  'STEPS_MOST',
+  'Walk',
+  'answerForClaude',
+  'decisionItems',
+  'keepPresentation',
+  'lensFinds',
+  'linkSaid',
+  'pickOut',
+  'pickedCss',
+  'presentationBlock',
+  'presentationGraph',
+  'presentationsIn',
+  'readAsk',
+  'readReason',
+  'readSteps',
+  'recordDecision',
+  'stepsMissing',
+  'withPicked',
   // text to graph (§47), 4 Nov 2026
   'TEXT_MOST',
   'holdsGraph',

@@ -42,6 +42,13 @@ await esbuild.build({
   outfile: join(mod, 'bin/propose.mjs'),
   platform: 'node',
 });
+// the person's decision, or a presentation they kept, written into the note, which node does for the mod (spec §49)
+await esbuild.build({
+  ...common,
+  entryPoints: ['bin/record-process.ts'],
+  outfile: join(mod, 'bin/record.mjs'),
+  platform: 'node',
+});
 // the browser editor's local server, which node runs as a process of its own (spec §26)
 await esbuild.build({
   ...common,

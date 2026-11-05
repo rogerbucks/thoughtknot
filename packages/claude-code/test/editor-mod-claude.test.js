@@ -391,10 +391,12 @@ describe('Claude’s direct writes through the editor are refused (cc_claude_pro
     assert.equal(readFileSync(where.plan, 'utf8'), before);
   });
 
-  test('the mod gives Claude one tool, to propose, and its wiring writes no file and sends no text of a note', () => {
+  test('the mod gives Claude propose, and show, present and decide, and its wiring writes no file itself', () => {
     const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
     assert.match(register, /tool\.register\(/);
-    assert.equal((register.match(/tool\.register\(/g) ?? []).length, 1);
+    // propose, then the stage's three (spec §49), each written through node or by no one
+    assert.equal((register.match(/tool\.register\(/g) ?? []).length, 2);
+    for (const name of ['show', 'present', 'decide']) assert.match(register, new RegExp(`name: '${name}'`));
     assert.match(register, /'tool\.call'/);
     assert.match(register, /mcp__thoughtknot__propose/);
     assert.ok(!/\$\.fs\.write|fs\.write\(|\$\.tool\.call\(/.test(register), 'the mod writes no file itself');

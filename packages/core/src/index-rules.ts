@@ -53,3 +53,18 @@ export {
 export type { KnownThing, Matched, TextGraph, TextGraphFor, TextSpan } from './text-to-graph.ts';
 export { holdsGraph, noteWithTextGraphApplied, tickedOnly, withGraphHome } from './text-to-graph-note.ts';
 export * from './index-tables.ts';
+// Claude presents and decides (§49)
+export {
+  CAPTION_MOST,
+  linkSaid,
+  pickedCss,
+  pickOut,
+  presentationBlock,
+  presentationGraph,
+  presentationsIn,
+} from './presentation.ts';
+export { keepPresentation, lensFinds, readSteps, STEPS_MOST, stepsMissing, Walk, withPicked } from './presentation.ts';
+export type { KeptPresentation, Picked, PresentStep, StepLink } from './presentation.ts';
+export { answerForClaude, decisionItems, LABEL_MOST, OPTIONS_LEAST, OPTIONS_MOST } from './decision-recorded.ts';
+export { QUESTION_MOST, readAsk, readReason, REASON_MOST, recordDecision } from './decision-recorded.ts';
+export type { DecisionAnswer, DecisionAsk, DecisionOption, DecisionToRecord, Recorded } from './decision-recorded.ts';
