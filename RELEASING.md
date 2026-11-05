@@ -8,13 +8,13 @@ the licence and notice checks) are in [CONTRIBUTING.md](CONTRIBUTING.md); the de
 
 There are two channels.
 
-**Nightly**: `.github/workflows/nightly.yml` builds main each night at 16:00 UTC (2 am in Brisbane). It also builds when
+**Nightly**: `.github/workflows/nightly.yml` builds main each night at 18:00 UTC (4 am in Brisbane). It also builds when
 run by hand, if main moved since the last one. It runs the full suite and publishes only if every test passes. It
 publishes a GitHub pre-release named for the next patch and the day (`0.6.1-nightly.20261018`, from
 `scripts/nightly-version.mjs`), keeping the last seven.
 
 **Wave nightly**: `.github/workflows/wave-nightly.yml` builds a nightly the day a wave ends, so you can test without
-waiting for 16:00 UTC (Roger, 23 Oct 2026). To trigger it, the pull request that finishes a wave gets the label
+waiting for 18:00 UTC (Roger, 23 Oct 2026). To trigger it, the pull request that finishes a wave gets the label
 `wave-done` and a line of its own in its body, `Wave: 9`.
 
 When it merges to main, a gate (`scripts/wave-gate.mjs`) reads the board "ThoughtKnot requirements". Every item of that
