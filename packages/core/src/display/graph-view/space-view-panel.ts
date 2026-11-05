@@ -1,6 +1,6 @@
 // The 3D view of a card's drawing (editor spec §53, scale_space_view), switched to from the bar (Roger, 22 Oct 2026).
-// It lies over the drawing, under the bar, and goes by the bar's button or Escape. It only looks: nothing reaches the
-// note. It reads each box, group and link on screen, in the theme's colours. The sums are in space-view.ts and
+// It lies over the drawing, under the bar, and goes by the bar's button or Escape. Only edits asked of the card reach the
+// note (space-edit.ts, edit_gestures). It reads each box, group and link on screen, in the theme's colours. The sums are in space-view.ts and
 // space-spread.ts, the painters in space-painter.ts and space-gpu-painter.ts. It shows cards in space (2.5D), or 3D:
 // balls sized by their links, floors by group, or things as tall as their links. Moves are on screen
 // (space-controls.ts). 2D and 3D are two views of one graph (Roger, 24 Oct 2026). A first click picks a thing, its
@@ -9,11 +9,12 @@
 import { paintersFrom, word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
-import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
+import type { Block, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { GlobeLayout } from '../../space-globe.ts';
-import { blockAt, lineAt } from '../../space-pick.ts';
+import { lineAt } from '../../space-pick.ts';
+import { askEdit, blockHit, pointerAt, SpaceLinkDrag } from './space-edit';
 import { tellPickedAt } from './space-picked-at';
-import { cardAt, cardsOnScreen, clusterFilling, farFrame, frameOf, isCluster } from '../../space-cards.ts';
+import { clusterFilling, farFrame, frameOf, isCluster } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
@@ -31,6 +32,7 @@ import { haloFor } from '../../colour-numbers.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { offerHeadset } from './space-xr-view.ts';
 import { aimOf, glideIn, fitIn, linkCounts, pivotOf, spacePad, turnToward, ways } from './space-view-pad.ts';
+import { depthFor, GLOBE, liftOf, type Depth } from './space-view-pad.ts';
 import { heldIn } from './svg-marks.ts';
 import { sketchedSpace, sketchPainted } from './space-sketch.ts';
 import { linedUpLayout } from '../../space-glide.ts';
@@ -50,26 +52,8 @@ const opened = new WeakMap<HTMLElement, () => void>();
 
 const FOLD = /^(bundle|hub|group):/; // a line's key that is a fold to open, not a link: a bundle, a stub, a group's box
 
-/** Where the globe is among the ways to show the view: the last, after cards, balls and the two lifts. */
-const GLOBE = 4;
-
-/** The way to show the view for the bar's `mode`: as cards, a globe, or 3D balls, lifted as its own button left it. */
-const depthFor = (mode: SpaceMode, now: number): number =>
-  mode === 'cards' ? 0 : mode === 'globe' ? GLOBE : now % GLOBE === 0 ? 1 : now;
-
 const TAP_SLOP = 6; // how far a pointer may move, in pixels, and still be a click or tap rather than a drag
 const DOUBLE_TAP = 350; // how soon a second click or tap must follow the first to fly, in milliseconds
-
-/**
- * A way to show the view: as cards (the first, Roger, 24 Oct 2026), as balls in space (null), or on a globe (§71).
- * Or lifted, with height by what DepthBy says.
- */
-type Depth = DepthBy | 'cards' | 'globe' | null;
-
-/** How `marks` shown `by` that way are lifted as they lie; none to lay them out afresh. So too a drawing of no things,
- * as a density view's squares, which has nothing to lay out (space_density_tiles). */
-const liftOf = (by: Depth, marks: readonly DrawMark[]): DepthBy | null =>
-  by && by !== 'cards' && by !== 'globe' ? by : marks.some((m) => m.of !== undefined) ? null : { by: 'group' };
 
 /** The events the view keeps to itself, so the flat drawing under it never takes them for its own. */
 const KEPT = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'click', 'dblclick', 'wheel', 'keydown'];
@@ -280,6 +264,8 @@ export async function openSpaceView(
     lastTap: { at: number; x: number; y: number } | null = null;
   touchesStay(el, down);
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
+  const hitAt = (x: number, y: number) => blockHit(space, seen(), matrixNow(), width, height, x, y);
+  const linking = new SpaceLinkDrag(el, root, said, hitAt, () => picked); // dragged from the picked thing, it links
   el.addEventListener('pointerdown', (e) => {
     if ((e.target as Element | null)?.closest('.thoughtknot-space-pad')) return;
     down.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -306,6 +292,7 @@ export async function openSpaceView(
       const dx = now.x - was.x,
         dy = now.y - was.y;
       travel += Math.abs(dx) + Math.abs(dy);
+      if (linking.drag(e)) return;
       // a finger turns the way it goes, as fingerTurn does; a mouse drags the camera round. Both turn round the pivot
       orbit = pans || e.shiftKey ? panBy(orbit, dx, dy, height) : turnRound(orbit, touching ? -dx : dx, dy, pivot());
     }
@@ -316,13 +303,9 @@ export async function openSpaceView(
   const letGo = (e: PointerEvent) => {
     if (!down.delete(e.pointerId)) return;
     if (e.type !== 'pointerup' || down.size > 0 || travel > TAP_SLOP) return;
-    // a click or tap: picks the thing under it; a second one soon after, in the same place, flies to it
-    const at = el.getBoundingClientRect();
-    const x = e.clientX - at.left,
-      y = e.clientY - at.top;
-    const hit = space.cards
-      ? (cardAt(cardsOnScreen(seen(), matrixNow(), width, height), x, y)?.block ?? null)
-      : blockAt(seen(), matrixNow(), width, height, x, y);
+    // a click or tap picks the thing under it. A second soon after, in the same place, opens its name, or flies to it
+    const [x, y] = pointerAt(el, e);
+    const hit = hitAt(x, y);
     // an open group's name zooms to it, and the button beside folds it back (cluster_fold_back)
     const strip = stripTap(space, matrixNow(), width, height, x, y);
     if (strip) return 'folds' in strip ? unfold(strip.folds) : ((orbit = fitIn(strip.fit, width, height)), again());
@@ -334,7 +317,7 @@ export async function openSpaceView(
     lastTap = twice ? null : { at: e.timeStamp, x: e.clientX, y: e.clientY };
     // a click picks; another on what is picked turns to it, or opens it if a folded group (cluster_opens)
     if (hit && (twice || picked?.id === hit.id) && isCluster(hit.of)) unfold(hit.of ?? '');
-    else if (twice && hit) flyTo(hit);
+    else if (twice && hit) return void ((hit.of !== undefined && askEdit(root, { rename: hit.of })) || flyTo(hit));
     else if (hit) {
       if (picked?.id === hit.id) return turnTo(middleOf(hit), true); // on a globe, a second click dives to it
       pick(hit);
@@ -347,7 +330,7 @@ export async function openSpaceView(
       // a bundle or a hub's stub opens, as a tap on it in 2D does; a link opens its details
       if (FOLD.test(of)) unfold(of);
       else if (of !== '') tell({ link: Number(of) });
-    } else pick(null);
+    } else if (!(twice && askEdit(root, { add: true }))) pick(null); // a double click on nothing adds a thing there
   };
   el.addEventListener('pointerup', letGo);
   el.addEventListener('pointercancel', letGo);

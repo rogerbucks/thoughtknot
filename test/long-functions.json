@@ -12,7 +12,7 @@
   "packages/core/src/display/graph-view/massive-view.ts#massiveView": 320,
   "packages/core/src/display/graph-view/space-gpu-painter.ts#webgpuSpacePainter": 155,
   "packages/core/src/display/graph-view/space-painter.ts#webgl2SpacePainter": 113,
-  "packages/core/src/display/graph-view/space-view-panel.ts#openSpaceView": 308,
+  "packages/core/src/display/graph-view/space-view-panel.ts#openSpaceView": 307,
   "packages/core/src/display/graph-view/svg-marks.ts#marksOfSvg": 139,
   "packages/core/src/display/graph-view/type-strip.ts#renderTypeStrip": 133,
   "packages/core/src/display/graph-view/viewport-events.ts#bindViewportEvents": 286,

@@ -84,6 +84,30 @@ describe('double clicks and drops where things are drawn', () => {
     }
   });
 
+  // proves: edit_gestures, edit_every_view
+  test('what the view in space asks for is written as in 2D, and nothing is taken in reading view', async () => {
+    const { env, el } = await shown();
+    try {
+      const ask = (detail) => vpOf(el).dispatch('thoughtknot-space-edit', { detail });
+      click(el, thing(el, 'q'));
+      await until(() => !!nameOf(el));
+      assert.ok(ask({ rename: 'q' }).defaultPrevented, 'taken');
+      assert.ok(env.doc.activeElement === nameOf(el), 'the name is open for typing');
+      assert.ok(ask({ add: true }).defaultPrevented);
+      await until(() => note(env).includes("{title: 'New thing'}"));
+      const read = await showIn(env, 'reading');
+      await until(() => !!thing(read, 'q'));
+      await settled();
+      assert.ok(
+        !read.querySelector('.thoughtknot-viewport').dispatch('thoughtknot-space-edit', { detail: { add: true } })
+          .defaultPrevented,
+        'not taken where nothing is written',
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: edit_gestures, edit_undo
   test('a box dropped in the middle of another links the two, and goes back; Ctrl+Z takes the link back', async () => {
     const before = noteOf(TEAM);
