@@ -24,7 +24,6 @@ import { editButtonAs, overDrawing, renderBar } from './view-bar';
 import { SpaceSwitch } from './space-switch';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
-import { LABEL_SCALE } from '../../view-switches.ts';
 import { renderBesideFor } from './layout-step-line';
 import { Taps, boxIn, type Target } from './taps';
 import { foldInPlace } from './regroup';
@@ -354,8 +353,7 @@ export class GraphView extends Lifecycle {
     this.svg?.setAttribute('height', String(v.height));
     // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)
     this.svg?.toggleClass('thoughtknot-labels-hidden', !!this.switching?.labelsHidden(v.scale));
-    // too small to read, a link's label waits for a hover or a pick, whatever the switch says (names_links_legible_2d)
-    this.svg?.toggleClass('thoughtknot-labels-small', v.scale < LABEL_SCALE);
+    this.svg?.toggleClass('thoughtknot-labels-small', !!this.switching?.labelsSmall(v.scale)); // names_links_legible_2d
     this.table?.setCssProps({ '--thoughtknot-scale': String(v.scale) });
     this.viewport.setCssProps({
       '--thoughtknot-x': `${v.x}px`,

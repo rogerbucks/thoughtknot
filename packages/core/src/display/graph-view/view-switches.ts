@@ -24,7 +24,7 @@ import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, 
 import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
 import { dockHead, wideWindow } from './controls-dock';
-import { DETAIL_LEVELS, type DetailLevel } from '../../view-switches.ts';
+import { DETAIL_LEVELS, LABEL_SCALE, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { GROUP_BY_ROW, HINTS, OWN_HINT_CLASS, ladderAttributes } from '../../view-menu-rows.ts';
 import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
@@ -240,6 +240,11 @@ export class ViewSwitching {
   /** Whether the drawing's link labels are hidden at `scale` (untangle_labels). */
   labelsHidden(scale: number): boolean {
     return labelsHidden(this.o.state.switches, scale);
+  }
+
+  /** Whether a link's label is too small to read at `scale`: it waits for a hover or a pick, whatever the switch says. */
+  labelsSmall(scale: number): boolean {
+    return scale < LABEL_SCALE;
   }
 
   /** Turns a switch: labels by zoom at once in place, any other by laying the graph out again. */
