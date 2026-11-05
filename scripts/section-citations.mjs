@@ -17,8 +17,8 @@ import { VERSION_FILE, readVersion } from './graph-spec-version.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const RECORD = 'quality/bare-section-citations.json';
-// What may stand just before a section number to name its spec: GS or ES, or the words "graph spec", "editor spec", "spec".
-const NAMED = /(?:\b(?:GS|ES)|\b(?:graph|editor) spec(?:'s)?|\bspec)\s*$/i;
+// What may stand just before a section number to name its spec: GS or ES, or the words "graph spec" or "editor spec". A plain "spec" does not say which.
+const NAMED = /(?:\b(?:GS|ES)|\b[Gg]raph spec(?:'s)?|\b[Ee]ditor spec(?:'s)?)\s*$/;
 const TEXT = /\.(md|ya?ml|js|mjs|cjs|ts|py|json|gql)$/;
 // Not ours to rewrite: the owner's conformance suite, fixtures, generated files and the record itself.
 const SKIP =
@@ -33,7 +33,7 @@ export const textFiles = (root = ROOT) =>
 /** How many section numbers in `text` name no spec. */
 export function bareCount(text) {
   let n = 0;
-  for (const m of text.matchAll(/§\s?\d+/g)) if (!NAMED.test(text.slice(Math.max(0, m.index - 14), m.index))) n++;
+  for (const m of text.matchAll(/§\s?\d+/g)) if (!NAMED.test(text.slice(Math.max(0, m.index - 16), m.index))) n++;
   return n;
 }
 

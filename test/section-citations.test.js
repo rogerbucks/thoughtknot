@@ -8,8 +8,9 @@ import { bareCount, compareToRecord, problems, unmarkedGaps, unresolvedIds } fro
 describe('spec_sections_named', () => {
   test('a number that names its spec is not bare, and one that does not is', () => {
     assert.equal(bareCount('see GS§3 and ES§27'), 0);
-    assert.equal(bareCount('graph spec §3; editor spec §27; the spec §9'), 0);
+    assert.equal(bareCount("graph spec §3; editor spec §27; the editor spec's §9"), 0);
     assert.equal(bareCount('see §3 and (§4)'), 2);
+    assert.equal(bareCount('the spec §9 and SPEC §10 do not say which spec'), 2);
   });
 
   test('a new bare section number in a file fails, and so does a record left too high', () => {
