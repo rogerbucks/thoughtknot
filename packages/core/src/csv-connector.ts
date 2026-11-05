@@ -10,7 +10,7 @@
 import gs from '@thoughtknot/graph-spec';
 import { sha256 } from './ai-digest.ts';
 import type { Connected, Connector, Statement } from './connectors.ts';
-import { isNumber, mappingOf, mappingPlace, mappingText, nameOf, proposeMapping } from './csv-mapping.ts';
+import { isNumber, kindOf, mappingOf, mappingPlace, mappingText, nameOf, proposeMapping } from './csv-mapping.ts';
 import type { TableMapping } from './csv-mapping.ts';
 import { readCsv } from './csv-read.ts';
 import type { CsvTable } from './csv-read.ts';
@@ -55,7 +55,7 @@ export function tableStatements(table: CsvTable, mapping: TableMapping, version:
     for (const c of mapping.columns) {
       const cell = at(cells, c.column);
       if (c.as !== 'link' || !cell) continue;
-      const to = c.to ?? nameOf(c.column);
+      const to = c.to ?? kindOf(c.column);
       const type = c.type ?? nameOf(c.column).toUpperCase();
       out.push({
         text: `(${id})-[:${type}]->(${idOf(to, cell)}:${to} {name: ${gs.quote(cell)}})`,
