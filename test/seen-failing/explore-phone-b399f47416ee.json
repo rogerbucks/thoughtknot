@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-phone.test.js",
+  "test": "on a phone exploring puts the sidebar, with its shapes and dials, in the Controls tab of the sheet",
+  "seen_failing_first": false,
+  "evidence": "Proves a property that already held; the requirement was partial only for want of this evidence."
+}

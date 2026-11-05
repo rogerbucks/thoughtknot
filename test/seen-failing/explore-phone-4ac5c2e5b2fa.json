@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-phone.test.js",
+  "test": "every dial, shape and badge target keeps at least 24 pixels, and a dial is a control with a name and a value",
+  "seen_failing_first": false,
+  "evidence": "Proves a property that already held (44 px targets, named spinbuttons); evidence only."
+}
