@@ -19,8 +19,8 @@ import { addedInColumn, addedNear, deleted, propertySet, quickLine, renamed } fr
 import { button } from '../button';
 import type { Lifecycle } from '../lifecycle';
 import { EditLink } from './edit-link';
+import { EditWrites } from './edit-writes';
 import { SPACE_PICKED_AT, type PickedAt } from './space-picked-at';
-import { accept } from './estimate-actions';
 import { gridAdds } from './grid-drag';
 import type { CellWrite } from './table-edit';
 import { boxIn, type Target } from './taps';
@@ -53,12 +53,14 @@ export class EditCard {
   private keyed = false;
   /** Where the 3D view shows the thing picked there, in the drawing's pixels; none while it is flat. */
   private pickedAt: PickedAt | null = null;
+  /** How each edit is written, offering its undo, and how Delete asks first (edit_undo, edit_delete_asks). */
+  private readonly writes: EditWrites;
   /** The handle and search that link the thing shown to another. */
   private readonly linking = new EditLink({
     o: () => this.o,
     viewport: () => this.viewport,
     key: () => this.key,
-    write: (r) => ('reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now)),
+    write: (r, said) => ('reason' in r ? Promise.resolve(r.reason) : this.written(said, r.block, r.was, r.now)),
     say: (text) => this.said?.setText(text),
     hand: (key) => handed.set(this.o.graph, { key, rename: true, at: Date.now() }),
   });
@@ -68,6 +70,7 @@ export class EditCard {
     private readonly card: Lifecycle,
     private readonly parts: () => EditParts,
   ) {
+    this.writes = new EditWrites({ card, viewport: () => this.viewport, o: () => this.o });
     card.register(() => this.hide());
   }
 
@@ -99,6 +102,13 @@ export class EditCard {
       this.viewport,
       'keydown',
       (e: KeyboardEvent) => {
+        // Ctrl+Z undoes the last edit, and Ctrl+Shift+Z does it again; a field being typed in keeps its own (edit_undo)
+        const typing = !!(e.target as Element | null)?.closest?.('input, textarea, [contenteditable="true"]');
+        if ((e.ctrlKey || e.metaKey) && !typing && this.writable() && this.writes.undoes().key(e)) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         if (!this.el || e.ctrlKey || e.metaKey) return;
         // Insert adds a child, or Option+Enter on a Mac with no Insert key. Never Tab: it moves the focus on, so the keys
         // never trap it. Backspace deletes too, as a Mac's delete key sends it.
@@ -142,19 +152,26 @@ export class EditCard {
         column === 0
           ? renamed(this.o.reading.texts, this.o.graph, key, words)
           : propertySet(this.o.reading, this.o.graph, key, prop, words);
-      return 'reason' in r ? Promise.resolve(r.reason) : accept(this.o, r.block, r.was, r.now);
+      const said = column === 0 ? word('edit.renamed', { name: words }) : word('edit.set', { prop, value: words });
+      return 'reason' in r ? Promise.resolve(r.reason) : this.written(said, r.block, r.was, r.now);
     };
   }
 
-  /** Offers a button per column of a kanban board drawn on the card, each adding a card there, ready to name. */
+  /**
+   * Once the card is placed where it can be written, its keys are listened for. So Ctrl+Z undoes from the start, and
+   * the toast of an edit just made shows. A kanban board drawn on it gets a button per column, to add a card there.
+   */
   columns(): void {
+    if (!this.writable()) return;
+    this.listen();
+    this.writes.undoes();
     const layer = this.layer();
-    if (!layer || !this.writable()) return;
+    if (!layer) return;
     gridAdds(this.o, layer, this.viewport, async (column) => {
       const r = addedInColumn(this.o.reading, this.o.graph, column, word('edit.new-thing'));
       if ('reason' in r) return r.reason;
       handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
-      const why = await accept(this.o, r.block, r.was, r.now);
+      const why = await this.written(word('edit.added', { thing: r.name }), r.block, r.was, r.now);
       if (why) handed.delete(this.o.graph);
       return why;
     });
@@ -218,7 +235,7 @@ export class EditCard {
     for (const [label, icon, run, keys] of [
       [word('edit.add-child'), 'plus', () => void this.add('child'), 'add-child'],
       [word('edit.add-sibling'), 'list-plus', () => void this.add('sibling'), 'add-sibling'],
-      [word('edit.delete'), 'trash-2', () => void this.remove(), 'delete'],
+      [word('edit.delete'), 'trash-2', () => this.remove(), 'delete'],
     ] as const)
       button(row, label, icon, run, label).setAttribute(
         'title',
@@ -256,9 +273,8 @@ export class EditCard {
       const r = quickLine(this.o.reading, this.o.graph, line.value, this.key);
       if ('reason' in r) return void this.said?.setText(r.reason);
       handed.set(this.o.graph, { key: this.key, rename: false, at: Date.now() });
-      void accept(this.o, r.block, r.was, r.now).then((why) =>
-        this.said?.setText(why ?? word('edit.lined', { count: r.things.length })),
-      );
+      const said = word('edit.lined', { count: r.things.length });
+      void this.written(said, r.block, r.was, r.now).then((why) => this.said?.setText(why ?? said));
     });
   }
 
@@ -267,18 +283,36 @@ export class EditCard {
     if (!this.key) return;
     const r = addedNear(this.o.reading, this.o.graph, this.key, as, word('edit.new-thing'));
     if ('name' in r) handed.set(this.o.graph, { key: r.name, rename: true, at: Date.now() });
-    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
+    const why =
+      'reason' in r ? r.reason : await this.written(word('edit.added', { thing: r.name }), r.block, r.was, r.now);
     if (why) handed.delete(this.o.graph);
     this.said?.setText(why ?? '');
   }
 
-  /** Deletes the thing shown and its links, as one edit. */
-  private async remove(): Promise<void> {
-    if (!this.key) return;
-    const thing = details(this.o.reading, this.o.graph, this.key)?.text ?? this.key;
-    const r = deleted(this.o.reading.texts, this.o.graph, this.key);
-    const why = 'reason' in r ? r.reason : await accept(this.o, r.block, r.was, r.now);
-    this.said?.setText(why ?? word('edit.deleted', { thing }));
+  /** Asks first, in the card, then deletes the thing shown and its links, as one edit (edit_delete_asks). */
+  private remove(): void {
+    if (!this.key || !this.el) return;
+    const key = this.key,
+      thing = details(this.o.reading, this.o.graph, key)?.text ?? key;
+    const links = (this.o.reading.world[this.o.graph]?.edges ?? []).filter(([a, , b]) => a === key || b === key).length;
+    const yes = async (): Promise<void> => {
+      const r = deleted(this.o.reading.texts, this.o.graph, key);
+      const said = word('edit.deleted', { thing });
+      const why = 'reason' in r ? r.reason : await this.written(said, r.block, r.was, r.now);
+      this.said?.setText(why ?? said);
+    };
+    this.writes.ask(
+      this.el,
+      thing,
+      links,
+      () => void yes(),
+      () => this.backToBox(),
+    );
+  }
+
+  /** Writes an edit, offering its undo as `said`; resolves to why nothing was written (edit_undo). */
+  private written(said: string, block: number, was: string, now: string): Promise<string | null> {
+    return this.writes.written(said, block, was, now);
   }
 
   /** Opens the name of the thing shown for typing, all of it selected. Whether there was one to open. */
@@ -318,6 +352,7 @@ export class EditCard {
 
   /** Takes the card away. */
   hide(): void {
+    this.writes.forget();
     this.linking.close();
     this.el?.remove();
     this.el = this.said = null;
@@ -328,7 +363,7 @@ export class EditCard {
   private async write(text: string): Promise<string | null> {
     if (!this.key) return null;
     const r = renamed(this.o.reading.texts, this.o.graph, this.key, text);
-    return 'reason' in r ? r.reason : accept(this.o, r.block, r.was, r.now);
+    return 'reason' in r ? r.reason : this.written(word('edit.renamed', { name: text }), r.block, r.was, r.now);
   }
 
   /** The focus goes back to the thing's box, as the drawing had it. */

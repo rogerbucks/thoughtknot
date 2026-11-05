@@ -921,6 +921,17 @@
   min-width: 44px;
   min-height: 44px;
 }
+/* Delete asks first, in the editor itself, never in a window over the view (§72, edit_delete_asks). */
+.thoughtknot-edit-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-edit-ask > button {
+  min-width: 44px;
+  min-height: 44px;
+}
 /* Linking where things are drawn (§72, edit_link_drag). The handle is dragged to another box, and a line follows the
    pointer. The search finds a thing by name. */
 .thoughtknot-edit-handle {
@@ -2490,6 +2501,9 @@ pre.thoughtknot-code {
 .thoughtknot-undo-toast > button {
   min-width: 24px;
   min-height: 24px;
+}
+.thoughtknot-undo-toast > button.is-hidden {
+  display: none;
 }
 
 /* A whiteboard (editor spec §45). The item the keyboard is on is ringed in the text colour, thicker and dashed, so it

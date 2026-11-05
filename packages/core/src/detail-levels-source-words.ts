@@ -26,8 +26,12 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.edit': '✎',
   // the undo of a move or of a group's edit (move_undo)
   'move.undo': 'Undo',
-  'move.undo-label': 'Undo the last move',
+  'move.undo-label': 'Undo the last edit',
   'move.undone': 'Move undone',
+  // redo (edit_undo)
+  'move.undone-what': 'Undone: {said}',
+  'move.redo': 'Redo',
+  'move.redo-label': 'Do the last undone edit again',
   'levels.edit-label': 'Edit {name}',
   'levels.edit-title': 'Edit {name}',
   'levels.rename': 'Rename',

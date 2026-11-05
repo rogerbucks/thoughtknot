@@ -3,6 +3,7 @@
 // one is a decision: scripts/code-structure.mjs fails an unrecorded pair, and a stale record. Kept apart from the
 // architecture so that its picture draws the layers and parts, not this debt list. Untangling a pair is the work.
 (display_details)-[:CYCLES_WITH]->(display_graph_view),
+(display_editing)-[:CYCLES_WITH]->(display_graph_view),
 (display_graph_view)-[:CYCLES_WITH]->(display_links),
 (display_graph_view)-[:CYCLES_WITH]->(display_sketch),
 (display_graph_view)-[:CYCLES_WITH]->(display_levels),
