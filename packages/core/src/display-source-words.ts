@@ -132,6 +132,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.help-zoom': 'Scroll or pinch: zoom',
   'space.help-pick': 'Click: pick it. Click again: turn to it. Double-click: fly to it',
   'space.help-keys': 'Keys: arrows, Shift + arrows, + and -, Home, Esc',
+  'space.help-close': 'Hide tips',
   'space.help-finger': 'One finger: turn',
   'space.help-fingers': 'Two fingers: move, and pinch to zoom',
   'space.help-tap': 'Tap: pick it. Tap again: turn to it. Double-tap: fly to it',
