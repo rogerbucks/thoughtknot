@@ -22,6 +22,7 @@ import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { vaultSourceRegistry } from './host-sources';
 import { noteText } from '../storage/plugin-notes';
+import { vaultOps } from '../export/vault-write';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
 function nameOf(source: Pick<GraphSource, 'kind' | 'target'>): string {
@@ -176,10 +177,11 @@ export function watchSource(
 
 /**
  * Saves the mapping a person applies beside its table (connector_mapping_written): a .gql file, never a note. A file
- * already at `place` is never written over: it says false, and the person opens it instead.
+ * already at `place` is never written over: it says false, and the person opens it instead. It is written as an export
+ * is, by the vault's own API (vault-write.ts), as only a storage adapter or a writer of what is not a note may write.
  */
 export async function saveMapping(plugin: ThoughtKnotPlugin, place: string, text: string): Promise<boolean> {
   if (plugin.app.vault.getAbstractFileByPath(place)) return false;
-  await plugin.app.vault.create(place, text);
+  await vaultOps(plugin).write(place, text);
   return true;
 }
