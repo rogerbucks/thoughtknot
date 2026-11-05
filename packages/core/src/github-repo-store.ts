@@ -126,9 +126,12 @@ export function repoRefusal(
   return null;
 }
 
-/** The folder the notes sit in, as a prefix: '' or `docs/graphs/`. */
+/** The folder the notes sit in, as a prefix: '' or `docs/graphs/`. Slashes at either end are dropped, with no pattern. */
 function prefixOf(folder = ''): string {
-  const trimmed = folder.replace(/^\/+|\/+$/g, '');
+  const parts = folder.split('/');
+  while (parts[0] === '') parts.shift();
+  while (parts.at(-1) === '') parts.pop();
+  const trimmed = parts.join('/');
   if (!trimmed) return '';
   notePath(`${trimmed}/x.md`);
   return `${trimmed}/`;

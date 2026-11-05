@@ -94,7 +94,7 @@ const BACKENDS = {
   'a GitHub repository': () =>
     githubRepoStorage(repoOptions(fakeGitHub({ 'src/app.ts': 'code', 'data/x.csv': 'a,b', '.github/ci.md': '#' }))),
   'a GitHub repository, in a folder of it': () =>
-    githubRepoStorage(repoOptions(fakeGitHub({ 'README.md': '# Read me' }), { folder: 'docs/graphs' })),
+    githubRepoStorage(repoOptions(fakeGitHub({ 'README.md': '# Read me' }), { folder: '/docs/graphs//' })),
   'a plain folder, with its history kept': () => layered(folderStorage(emptyFolder()), historyLayer({ record() {} })),
 };
 
