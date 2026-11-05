@@ -197,6 +197,27 @@ So a change to the open note is never applied by Claude's own tools while `guard
   - Stopped by a copy of its block it cannot tell from it, undo says that in the core's words instead
     (block_followed_not_its_copy).
 
+### Claude shows, presents and asks (spec §49, workstream Y1)
+
+Claude has three more tools, beside `propose`. None of them writes. Each goes through the same gate as `/graph`.
+
+| Tool | Claude does | The person does |
+|---|---|---|
+| `show` | Opens a note's graph, or picks out things, links, a path or a lens | Looks |
+| `present` | Walks steps, each picking out things and links with a caption | Presses Back and Next, or types `/graph next` and `/graph back` |
+| `decide` | Asks a question with two to six options tied to things | Presses an option, or types `/graph pick 2 because …` or `/graph pick none` |
+
+- `claude-present.ts` reads `show` and `present` and makes the pane's view. Picking out fades the rest: only opacity and
+  stroke width change, so no box moves.
+- A step, or a `show`, naming something the graph lacks is reported, and nothing is shown (path_no_steps).
+- `claude-decide.ts` holds the question waiting. `Asking.answer` takes only the person: a pane press (`pressFromPerson`)
+  or the composer (`fromPerson`). Claude, a tool call, a hook, a plugin and Remote Control are refused.
+- The `decide` call waits for that answer. Claude is told only the pick and its reason, or that none was chosen.
+- `claude-record.ts` writes the answer into the note as a `decision@1` decision, in its judgement graph. Node does the
+  write (`bin/record-process.ts`, built to `mod/bin/record.mjs`), as a mod writes no file itself.
+- Keep, on a walk, writes its steps as a `<graph>_tour_presentation` block. It plays again from the note with no AI.
+- The core does the rest: `presentation.ts` and `decision-recorded.ts`. The decision passes the change-set check first.
+
 ## The process, `bin/`
 
 - `bin/render-process.ts` — the core's `loadEngine`, run by node: a JSON list of DOT on stdin, a JSON list of SVG on

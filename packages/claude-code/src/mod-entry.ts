@@ -11,3 +11,9 @@ export { readLinkVia, realPathVia } from './editor-realpath.ts';
 export type { EditOutcome, EditorPorts, Spawned } from './editor-launch.ts';
 export { layOut, nodeMissing, RENDER_SCRIPT } from './graphviz-process.ts';
 export type { Laid, ProcessResult, RunProcess } from './graphviz-process.ts';
+// Claude shows, presents and asks (spec §49)
+export { decideThrough, Asking, pickArgs, pressFromPerson } from './claude-decide.ts';
+export { pickedView, presentThrough, showThrough } from './claude-present.ts';
+export type { StagePorts } from './claude-present.ts';
+export { Walk } from '@thoughtknot/core';
+export type { DecisionAnswer, PresentStep } from '@thoughtknot/core';
