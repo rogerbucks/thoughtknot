@@ -326,6 +326,9 @@ after a module nor listed here, and on a listed file that is missing.
   refused with their codes (editor spec §42, problem_codes).
 - `packages/graph-spec/test/format-version.test.mjs` — both readers read a block in their own format or none named.
   They refuse a newer major with GN106 (format_version_named; one table, `format-version-cases.json`).
+- `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
+  older one, or none named. They refuse a newer major with GN107 and a fix that says to upgrade (spec_version_in_files;
+  one table, `spec-version-cases.json`).
 - `packages/graph-spec/test/mesh-parity.test.mjs` — every shared mesh case, joins included, gives the bytes whose hash
   `mesh-parity-cases.json` holds (mesh_engine_parity).
 - `packages/graph-spec/test/join-every-author.test.mjs` — identical edits from any author join alike. A text merge that
@@ -364,6 +367,8 @@ after a module nor listed here, and on a listed file that is missing.
   refused with the same codes (editor spec §42, problem_codes).
 - `python/graph_spec/tests/test_format_version.py` — the Python reader reads the cases of `format-version-cases.json`
   as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
+- `python/graph_spec/tests/test_spec_version.py` — the Python reader reads `spec-version-cases.json` as the JavaScript
+  reader does. It refuses a newer major Graph Spec with GN107 (spec_version_in_files).
 - `python/graph_spec/tests/test_mesh_parity.py` — every shared mesh case gives the same bytes as the JavaScript
   library, by the hashes of `mesh-parity-cases.json` (mesh_engine_parity).
 - `python/graph_spec/tests/test_join_every_author.py` — the Python library gives the answers of
@@ -558,6 +563,10 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
   graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
+- `test/graph-spec-version.test.js` — the graph spec is Graph Spec 1.0. A change to its rules needs a new
+  version and a changelog line. The line holds its decision and the owner's approval (spec §51, spec_versioned; GS2).
+- `test/release-notes.test.js` — release notes name the Graph Spec version and the conformance count. The library
+  archive holds the spec, its version and its cases (spec §51, spec_version_released; GS2).
 - `test/graph-spec-index.test.js` — the graph spec file is true to itself (spec §51, spec_index_true; GS1): its counts,
   the paths it names, and no pending rule that a test proves.
 - `test/graph-spec-proved.test.js` — every graph-spec rule a test here cites by its id counts as proved (spec §51,

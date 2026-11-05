@@ -19,6 +19,9 @@ export const READER_SOURCE_WORDS = {
   'reader.unknown-escape.fix': 'double the backslash to write a backslash: \\{escape}',
   'reader.newer-format': 'the block is written in format {version}, newer than this reader, which reads format {reads}',
   'reader.newer-format.fix': 'read it with a newer reader: its text is kept as written',
+  'reader.newer-spec':
+    'the block is written to Graph Spec {version}, newer than this reader, which implements Graph Spec {reads}',
+  'reader.newer-spec.fix': 'upgrade ThoughtKnot to read it: its text is kept as written',
   // GN2xx: the grammar and its values
   'reader.expected-found': "expected '{expected}', found '{found}'",
   'reader.expected-found.fix': "write '{expected}' here",
@@ -129,6 +132,7 @@ export const READER_KEYS = {
   GN104: 'reader.cannot-read',
   GN105: 'reader.unknown-escape',
   GN106: 'reader.newer-format',
+  GN107: 'reader.newer-spec',
   GN201: 'reader.expected-found',
   GN202: 'reader.expected-name',
   GN203: 'reader.not-a-date',

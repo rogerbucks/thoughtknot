@@ -246,7 +246,8 @@ describe('the version rule is told to the people who use the library', () => {
         }
       };
       assert.equal(run('## 0.8.0\n\n### Pull requests\n'), 1);
-      assert.equal(run('## 0.8.0\n\n### Library changes\n\nNothing.\n'), 0);
+      const spec = '### Graph Spec\n\nThis release implements Graph Spec 1.0. 23 conformance cases pass.\n\n';
+      assert.equal(run(`## 0.8.0\n\n${spec}### Library changes\n\nNothing.\n`), 0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
