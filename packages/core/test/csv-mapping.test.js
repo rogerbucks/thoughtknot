@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { kindOf, mappingOf, mappingPlace, mappingText, nameOf, proposeMapping } from '../src/csv-mapping.ts';
+import { isNumber, kindOf, mappingOf, mappingPlace, mappingText, nameOf, proposeMapping } from '../src/csv-mapping.ts';
 import { readCsv } from '../src/csv-read.ts';
 
 const CSV = `order_id,name,region,amount,customer
@@ -43,4 +43,10 @@ test('a mapping written as graph data reads back exactly, links and units too', 
   const graph = readNote([text]).world['mapping'];
   assert.deepEqual(mappingOf(graph, 'Data/sales.csv'), m);
   assert.equal(mappingOf(graph, 'Data/other.csv'), null);
+});
+
+test('a long cell names and reads at once, with no pattern that runs slow on it (js/polynomial-redos)', () => {
+  assert.equal(nameOf(`${'_'.repeat(50_000)}a${'_'.repeat(50_000)}`), 'a');
+  assert.equal(isNumber('0'.repeat(50_000) + 'x'), false);
+  assert.equal(isNumber('1.5e3'), true);
 });
