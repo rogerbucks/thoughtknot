@@ -91,11 +91,40 @@ describe('adding and deleting where things are drawn', () => {
   });
 
   // proves: edit_delete
-  test('Backspace, a Mac’s delete key, deletes too', async () => {
+  test('Backspace, a Mac’s delete key, deletes too, once the card’s question is answered yes', async () => {
     const { env, el } = await tapped('large');
     try {
       press(el, 'Backspace', { target: thing(el, 'large') });
+      await until(() => !!card(el).querySelector('.thoughtknot-edit-ask'));
+      press(el, 'Backspace', { target: thing(el, 'large') });
       await until(() => !note(env).includes('large'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_delete_asks
+  test('Delete asks first, in the card: Keep or Escape leaves the thing, Delete takes it out', async () => {
+    const { env, el } = await tapped('large');
+    try {
+      press(el, 'Delete', { target: thing(el, 'large') });
+      const ask = () => card(el)?.querySelector('.thoughtknot-edit-ask');
+      await until(() => !!ask());
+      assert.equal(ask().getAttribute('role'), 'alertdialog');
+      assert.match(ask().textContent, /Delete Large reader and its link\?/);
+      assert.equal(env.doc.activeElement?.textContent, 'Delete', 'its yes has the focus, so Enter says it');
+      ask().dispatch('keydown', { key: 'Escape' });
+      assert.equal(ask(), null, 'Escape keeps the thing');
+      await settled();
+      assert.equal(note(env), NOTE, 'nothing written');
+      press(el, 'Delete', { target: thing(el, 'large') });
+      await until(() => !!ask());
+      ask()
+        .querySelectorAll('button')
+        .find((b) => b.textContent === 'Keep')
+        .click();
+      await settled();
+      assert.equal(note(env), NOTE, 'Keep writes nothing');
     } finally {
       env.uninstall();
     }
@@ -109,9 +138,60 @@ describe('adding and deleting where things are drawn', () => {
         .querySelectorAll('button')
         .find((b) => b.getAttribute('aria-label') === 'Delete');
       del.click();
+      await until(() => !!card(el).querySelector('.thoughtknot-edit-ask'));
+      card(el).querySelector('.thoughtknot-edit-ask button.mod-warning').click();
       await until(() => !note(env).includes('large'));
       assert.equal(note(env), NOTE.replace(",\n(large:Option {name: 'Large reader'}),\n(large)-[:ANSWERS]->(q)", ''));
       await until(() => /Large reader deleted/.test(card(el).textContent));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_undo
+  test('Ctrl+Z puts a deleted thing back in the card drawn again, and Ctrl+Shift+Z deletes it again', async () => {
+    const { env, el } = await tapped('large');
+    try {
+      press(el, 'Delete', { target: thing(el, 'large') });
+      await until(() => !!card(el).querySelector('.thoughtknot-edit-ask'));
+      card(el).querySelector('.thoughtknot-edit-ask button.mod-warning').click();
+      await until(() => !note(env).includes('large'));
+      const gone = note(env);
+      const next = await redrawn(env);
+      const vp = () => next.querySelector('.thoughtknot-viewport');
+      const toast = () => vp()?.querySelector('.thoughtknot-undo-toast');
+      await until(() => !!toast() && !toast().classList.contains('is-hidden'));
+      assert.match(vp().querySelector('.thoughtknot-undo-said').textContent, /Large reader deleted/);
+      assert.ok(vp().dispatch('keydown', { key: 'z', ctrlKey: true }).defaultPrevented);
+      await until(() => note(env) === NOTE);
+      const back = await redrawn(env);
+      back.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'z', ctrlKey: true, shiftKey: true });
+      await until(() => note(env) === gone);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_undo
+  test('each edit undoes in turn, last first: a name typed, then a child added', async () => {
+    const { env, el } = await tapped('q');
+    try {
+      nameOf(el).value = 'Who reads it?';
+      nameOf(el).dispatch('keydown', { key: 'Enter' });
+      await until(() => note(env).includes('Who reads it?'));
+      const named = note(env);
+      const next = await redrawn(env);
+      await until(() => !!thing(next, 'q'));
+      await settled();
+      tap(next, thing(next, 'q'));
+      await until(() => !!card(next));
+      press(next, 'Insert');
+      await until(() => note(env).includes('New thing'));
+      const vp = (await redrawn(env)).querySelector('.thoughtknot-viewport');
+      vp.dispatch('keydown', { key: 'z', metaKey: true });
+      await until(() => note(env) === named);
+      vp.dispatch('keydown', { key: 'z', metaKey: true });
+      await until(() => note(env) === NOTE);
     } finally {
       env.uninstall();
     }

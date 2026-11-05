@@ -19,8 +19,8 @@ export interface LinkHost {
   viewport: () => HTMLElement;
   /** The thing selected, whose editor is shown, else none. */
   key: () => string | null;
-  /** Writes an edit; resolves to why nothing was written, or null. */
-  write: (edit: BlockEdit | ThingAdded) => Promise<string | null>;
+  /** Writes an edit, offering its undo as `said`; resolves to why nothing was written, or null. */
+  write: (edit: BlockEdit | ThingAdded, said: string) => Promise<string | null>;
   /** Says what an edit did, or why it wrote nothing, in the editor. */
   say: (text: string) => void;
   /** Hands thing `key` on to be selected in the card drawn next, its name open for typing. */
@@ -118,8 +118,9 @@ export class EditLink {
       o = this.host.o();
     if (!from) return;
     const thing = details(o.reading, o.graph, to)?.text ?? to;
-    const why = await this.host.write(linkedTo(o.reading, o.graph, from, to));
-    this.host.say(why ?? word('edit.linked', { thing }));
+    const said = word('edit.linked', { thing });
+    const why = await this.host.write(linkedTo(o.reading, o.graph, from, to), said);
+    this.host.say(why ?? said);
   }
 
   /** Makes a new thing named `text`, linked from the selected one, and hands it on with its name open if `rename`. */
@@ -129,8 +130,9 @@ export class EditLink {
     if (!from) return;
     const r = addedNear(o.reading, o.graph, from, 'child', text);
     if ('name' in r && rename) this.host.hand(r.name);
-    const why = await this.host.write(r);
-    this.host.say(why ?? word('edit.linked', { thing: text }));
+    const said = word('edit.linked', { thing: text });
+    const why = await this.host.write(r, said);
+    this.host.say(why ?? said);
   }
 
   /** Follows a drag from the handle: a line to the pointer, then a link where it is let go. */

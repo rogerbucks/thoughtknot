@@ -1339,7 +1339,9 @@
       "edit_cells",
       "edit_every_view",
       "edit_quick_line",
-      "edit_ai_expand"
+      "edit_ai_expand",
+      "edit_undo",
+      "edit_delete_asks"
     ]
   }
 }
