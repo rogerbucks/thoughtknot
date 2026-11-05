@@ -152,7 +152,7 @@ export function readableNames(
   });
 }
 
-/** Beside the name `text`, a count of the crowded names it stands for, so none is simply lost. */
+/** Beside the name `text`, a count of the crowded names it stands for, so none is lost. */
 function counted(text: Element, s: Shown): void {
   if (!s.moreAt || !text.parentElement) return;
   const c = make('text', { x: s.moreAt.x, y: s.moreAt.y, 'font-size': s.moreAt.size, 'text-anchor': 'start' });
