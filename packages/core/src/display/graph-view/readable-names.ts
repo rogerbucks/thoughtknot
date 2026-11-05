@@ -2,11 +2,14 @@
 // changes, and the names are sized again. Each scales with its thing up to NAME_CEILING pixels. With Hide labels too
 // small to read on, one under SHOWN_LEAST is hidden. One that would then cover another is hidden (readable-words.ts). The drawing's own attributes are left as drawn: a name grows by its style, moves
 // by its own transform, and is hidden by a class. So the lens, hit tests and export still see the drawing as laid out.
-import { readableWords, type Box, type Word } from '../../view-types/readable-words.ts';
+import { linkLeast, readableWords, type Box, type Shown, type Word } from '../../view-types/readable-words.ts';
+import { make } from './note-callouts.ts';
 
 /** The words whose size is kept readable: a thing's name, a group's and the drawing's own captions, such as an axis's.
  * A link's words follow labels by zoom. */
 const NAMES = 'g.graph text';
+/** The class of the count beside a name that stands for crowded names left out: "+3". */
+export const MORE = 'thoughtknot-name-more';
 /** The class of a name hidden for now, as it would cover another. */
 export const CROWDED = 'thoughtknot-name-crowded';
 /** What marks a thing to be named first: picked, under the pointer, or in focus. */
@@ -104,6 +107,9 @@ export function readableNames(
 ): void {
   const at = shownOf(svg);
   if (!at) return;
+  // a link never thins past reading, however far out; the style sheet reads this
+  svg.setCssProps({ '--thoughtknot-link-least': `${linkLeast(at.k)}px` });
+  for (const old of Array.from(svg.querySelectorAll(`.${MORE}`))) old.remove();
   // a name is a text straight in its thing's, its group's or the drawing's own element; a hidden thing's is left alone
   const texts = Array.from(svg.querySelectorAll(NAMES)).filter((t) => {
     const g = t.parentElement?.classList;
@@ -142,7 +148,18 @@ export function readableNames(
     const w = drawn.get(t) as Word,
       s = shown[i];
     if (s) shownAs(t, w, s);
+    if (s?.more) counted(t, s);
   });
+}
+
+/** Beside the name `text`, a count of the crowded names it stands for, so none is simply lost. */
+function counted(text: Element, s: Shown): void {
+  if (!s.moreAt || !text.parentElement) return;
+  const c = make('text', { x: s.moreAt.x, y: s.moreAt.y, 'font-size': s.moreAt.size, 'text-anchor': 'start' });
+  c.setAttribute('class', MORE);
+  c.setAttribute('aria-hidden', 'true');
+  c.textContent = `+${s.more}`;
+  text.parentElement.appendChild(c);
 }
 
 /** Names sized or moved here, so a name left as drawn is not touched at all. */

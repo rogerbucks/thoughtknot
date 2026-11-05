@@ -45,9 +45,34 @@ test('names keep their size as drawn; the busier of two that overlap is named, a
   const { boxed, a, b, CROWDED, uninstall } = await drawing(200);
   try {
     assert.equal(boxed.cssProps.fontSize, undefined, 'a name in its box is left as drawn');
-    assert.equal(b.cssProps.fontSize, '14px', 'the busiest thing is named larger, 10 units grown 1.4 times');
+    assert.equal(
+      b.cssProps.fontSize,
+      '33.6px',
+      'the busiest thing is named larger: 12 pixels at half a pixel a unit, 1.4 times',
+    );
     assert.ok(a.hasClass(CROWDED) && !b.hasClass(CROWDED), 'the quieter name it would cover is hidden');
     assert.equal(a.getAttribute('font-size'), '10', 'the drawing is left as drawn');
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: names_links_legible_2d
+test('a crowded name is counted beside the one that stands, and links keep a least thickness', async () => {
+  const { a, b, uninstall } = await drawing(200);
+  try {
+    const count = b.parentElement.querySelector('.thoughtknot-name-more');
+    assert.equal(count?.textContent, '+1', 'the name left out is counted beside the busiest');
+    assert.ok(!a.parentElement.querySelector('.thoughtknot-name-more'), 'the one left out has no count of its own');
+    const { readableNames } = await import('../src/display/graph-view/readable-names.ts');
+    const svg = b.parentElement.parentElement.parentElement;
+    readableNames(svg, []);
+    assert.equal(svg.querySelectorAll('.thoughtknot-name-more').length, 1, 'sized again, counts are not piled up');
+    assert.ok(
+      !b.parentElement.querySelector('.thoughtknot-name-more'),
+      'and follow the new order: no links, first drawn wins',
+    );
+    assert.equal(svg.cssProps['--thoughtknot-link-least'], '3px', 'a link is held at 1.5 pixels, 0.5 a unit');
   } finally {
     uninstall();
   }
