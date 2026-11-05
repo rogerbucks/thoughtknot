@@ -44,10 +44,13 @@ const NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 /** A header or a cell as a name GQL reads: letters, digits and underscores, never starting with a digit. */
 export function nameOf(text: string): string {
-  const word = text
-    .trim()
-    .replace(/[^A-Za-z0-9_]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+  // underscores taken off each end by counting, never by a pattern that could run slow on a long cell
+  const joined = text.trim().replace(/[^A-Za-z0-9_]+/g, '_');
+  let start = 0,
+    end = joined.length;
+  while (start < end && joined[start] === '_') start++;
+  while (end > start && joined[end - 1] === '_') end--;
+  const word = joined.slice(start, end);
   if (!word) return '_';
   return /^[0-9]/.test(word) ? `_${word}` : word;
 }
@@ -67,7 +70,7 @@ export function kindOf(place: string): string {
 export const mappingPlace = (place: string): string => `${place.replace(/\.[^./]*$/, '')}.mapping.gql`;
 
 /** Whether a cell reads as a number: an optional sign, digits, an optional point and an exponent, nothing else. */
-export const isNumber = (cell: string): boolean => /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(cell.trim());
+export const isNumber = (cell: string): boolean => /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(cell.trim());
 
 /**
  * A mapping proposed from a table's first read, for a person to apply. The key is the first column whose cells are

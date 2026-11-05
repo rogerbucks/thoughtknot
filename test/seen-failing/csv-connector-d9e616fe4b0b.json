@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/csv-connector.test.js",
+  "test": "reads only tables, and a file over its limits is refused with the reason",
+  "seen_failing_first": false,
+  "evidence": "The test was added after csv-connector.ts, to give that module a test named after it; the behaviour it checks was already proved through connector-files.test.js."
+}
