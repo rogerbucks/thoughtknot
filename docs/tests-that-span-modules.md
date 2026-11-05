@@ -1068,6 +1068,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/massive-graphs-design.test.js` — the research note on massive graphs (editor spec §53, scale_design). It is
   in the wiki, compares the ways with measured numbers, and records Roger's pick.
+- `test/data-tables-design.test.js` — the design note on data tables and cubes (editor spec §52, data_tables_design).
+  It is in the wiki, compares the ways to link, keep and cache a data set, and keeps a place for Roger's pick.
 - `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
   V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
 - `test/massive-graphs-limits.test.js` — the limits looked at again (editor spec §53, scale_limits_revisited). The
