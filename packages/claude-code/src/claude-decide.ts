@@ -38,7 +38,7 @@ export function pickArgs(args: string): { n: number | null; reason?: string } | 
 export type AnswerFrom = { press: unknown } | { origin: unknown };
 
 const isPerson = (from: AnswerFrom): boolean =>
-  'press' in from ? pressFromPerson(from.press) : fromPerson((from).origin);
+  'press' in from ? pressFromPerson(from.press) : fromPerson(from.origin);
 
 /** A question waiting in the pane for the person's answer. */
 export class Asking {
