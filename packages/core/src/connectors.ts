@@ -268,10 +268,22 @@ export function joinPlaces(
             }),
       )
       .join('; ');
+  // the join gives a day or an instant back as its text: each is made the day or instant a place wrote again
+  const times = new Map<string, Value>();
+  for (const { g, ctx } of places)
+    for (const [id, [, props]] of g.nodes)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, id)}\u0000${k}\u0000${v.s}`, v);
+  for (const { g, ctx } of places)
+    for (const [from, type, to, props] of g.edges)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, from)}>${type}>${idOf(ctx, to)}\u0000${k}\u0000${v.s}`, v);
   const things: DataThing[] = Object.entries(joined.nodes)
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([id, [labels, props]]) => {
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${id}\u0000${k}\u0000${v}`) ?? v;
       delete p['id'];
       const list = cites.get(id);
       if (list) p['cited_from'] = said(list);
@@ -286,6 +298,8 @@ export function joinPlaces(
     .map(([key, props]) => {
       const [from, type, to] = JSON.parse(key) as [string, string, string];
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${from}>${type}>${to}\u0000${k}\u0000${v}`) ?? v;
       const list = cites.get(`${from}-[:${type}]->${to}`);
       if (list) p['cited_from'] = said(list);
       return [from, type, to, p] as DataLink;

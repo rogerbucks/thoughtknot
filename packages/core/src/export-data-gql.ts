@@ -47,8 +47,8 @@ function namesOf(ids: string[]): Map<string, string> {
   return out;
 }
 
-/** The data as one GQL block of the graph it came from, its lines ending at LF, ending with one. */
-export function gqlBlock(data: ExportedData, info: DataInfo): string {
+/** Each thing, then each link, as the profile writes it on a line of its own: what a block holds, one statement each. */
+export function gqlLines(data: Pick<ExportedData, 'things' | 'links'>): { things: string[]; links: string[] } {
   const names = namesOf(data.things.map(([id]) => id));
   const things = data.things.map(([id, kinds, props]) => {
     const name = names.get(id) ?? id;
@@ -62,6 +62,12 @@ export function gqlBlock(data: ExportedData, info: DataInfo): string {
     ([from, type, to, props]) =>
       `(${names.get(from) ?? from})-[:${type}${propsText(Object.entries(props))}]->(${names.get(to) ?? to})`,
   );
+  return { things, links };
+}
+
+/** The data as one GQL block of the graph it came from, its lines ending at LF, ending with one. */
+export function gqlBlock(data: ExportedData, info: DataInfo): string {
+  const { things, links } = gqlLines(data);
   const what = data.view === undefined ? `graph ${data.graph}` : `view ${data.view} of graph ${data.graph}`;
   const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const said = `// Exported from ${oneLine(info.note)}, ${oneLine(what)}, ${saidDate(info.date)}: ${count(data.things.length, 'thing')} and ${count(data.links.length, 'link')}.`;
