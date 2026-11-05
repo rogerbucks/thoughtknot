@@ -7,6 +7,7 @@
 import { setLocale } from '@thoughtknot/core';
 import { directionOf, setDirection, setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
+import { githubButton, storeOf } from './app-github.ts';
 
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */
 export const editorAddress = (path: string): string => `editor.html#token=app&note=${encodeURIComponent(path)}`;
@@ -84,6 +85,8 @@ export async function startApp(
       list.appendChild(doc.createElement('li')).appendChild(link);
     }
     main.appendChild(pick);
+    // on a computer, where gh runs: the repositories notes may be sent to (spec §48)
+    main.append(' ', githubButton({ doc, invoke, store: storeOf(doc) }));
   };
   /** A phone's notes, each a link, and a button that makes a note and opens it. */
   const showOwn = (notes: string[]) => {

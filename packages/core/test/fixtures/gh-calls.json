@@ -1,0 +1,257 @@
+{
+  "about": "The gh calls an app may run (editor spec §48, github_repo_access). Read by packages/core/test/github-repo-send.test.js and by the desktop app's Rust tests (src-tauri/src/gh.rs), so both lists stay the same. Each case: args, input (null for none), and allowed.",
+  "cases": [
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/git/ref/heads/main"],
+      "input": null,
+      "allowed": true
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "GET",
+        "repos/ada/graphs/git/ref/heads/thoughtknot/graphs"
+      ],
+      "input": null,
+      "allowed": true
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "GET",
+        "repos/ada/graphs/git/trees/thoughtknot/graphs?recursive=1"
+      ],
+      "input": null,
+      "allowed": true
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "GET",
+        "repos/ada/graphs/contents/docs/My%20note.md?ref=main"
+      ],
+      "input": null,
+      "allowed": true
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "POST", "repos/ada/graphs/git/refs", "--input", "-"],
+      "input": "{\"ref\":\"refs/heads/x\"}",
+      "allowed": true
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "PUT",
+        "repos/ada/graphs/contents/docs/a.md",
+        "--input",
+        "-"
+      ],
+      "input": "{}",
+      "allowed": true
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "DELETE",
+        "repos/ada/graphs/contents/a.md",
+        "--input",
+        "-"
+      ],
+      "input": "{}",
+      "allowed": true
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "POST", "repos/ada/graphs/pulls", "--input", "-"],
+      "input": "{}",
+      "allowed": true
+    },
+
+    { "args": ["auth", "token"], "input": null, "allowed": false },
+    {
+      "args": ["api", "--hostname", "evil.example", "--method", "GET", "repos/ada/graphs/git/ref/heads/main"],
+      "input": null,
+      "allowed": false
+    },
+    { "args": ["api", "--method", "GET", "repos/ada/graphs/git/ref/heads/main"], "input": null, "allowed": false },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "PATCH",
+        "repos/ada/graphs/git/refs/heads/main",
+        "--input",
+        "-"
+      ],
+      "input": "{}",
+      "allowed": false
+    },
+    { "args": ["api", "--hostname", "github.com", "--method", "GET", "user"], "input": null, "allowed": false },
+    { "args": ["api", "--hostname", "github.com", "--method", "GET", "graphql"], "input": null, "allowed": false },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "POST", "graphql", "--input", "-"],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "DELETE", "repos/ada/graphs", "--input", "-"],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/../secrets?ref=main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/%2e%2e/x?ref=main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/a%2Fb?ref=main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/../graphs/git/ref/heads/main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/{owner}/{repo}/git/ref/heads/main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/a.md?ref=main&x=1"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/git/ref/heads/-x"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "GET",
+        "repos/ada/graphs/git/ref/heads/main",
+        "--input",
+        "-"
+      ],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "PUT", "repos/ada/graphs/contents/a.md"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "PUT",
+        "repos/ada/graphs/contents/a.md",
+        "--input",
+        "body.json"
+      ],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "PUT",
+        "repos/ada/graphs/contents/a.md",
+        "--input",
+        "-",
+        "-H",
+        "x: y"
+      ],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": [
+        "api",
+        "--hostname",
+        "github.com",
+        "--method",
+        "PUT",
+        "repos/ada/graphs/contents/a.md",
+        "-F",
+        "content=@/etc/passwd"
+      ],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "POST", "repos/ada/graphs/git/refs/x", "--input", "-"],
+      "input": "{}",
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/actions/secrets"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/git/trees/main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/git/ref/heads/a..b"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/git/ref/heads/x.lock"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/a.md?ref=main\nb"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/%FF.md?ref=main"],
+      "input": null,
+      "allowed": false
+    },
+    {
+      "args": ["api", "--hostname", "github.com", "--method", "GET", "repos/ada/graphs/contents/caf%C3%A9.md?ref=main"],
+      "input": null,
+      "allowed": true
+    },
+    { "args": [], "input": null, "allowed": false }
+  ]
+}

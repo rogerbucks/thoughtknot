@@ -7,3 +7,6 @@ export { REPO_EXTRACT_MOST, repoGraphProposal } from './github-repo-extract.ts';
 export type { RepoExtract, RepoText } from './github-repo-extract.ts';
 export { ghRepoHost, isBranchName } from './github-repo-gh.ts';
 export type { GhOutput, GhRun } from './github-repo-gh.ts';
+export { GH_INPUT_MOST, REPO_BRANCH_DEFAULT, askRepoReview, ghCallRefusal, outgoingShown } from './github-repo-send.ts';
+export { repoListFrom, repoSettingsFrom, repoSettingsProblems, sendNoteToRepo } from './github-repo-send.ts';
+export type { OutgoingShown, RepoSendOptions, RepoSendOutcome, RepoSettings } from './github-repo-send.ts';

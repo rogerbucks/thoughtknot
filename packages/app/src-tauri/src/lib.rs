@@ -1,12 +1,15 @@
 // The desktop app (spec §41, standalone_app): one window, and the notes of one folder the person picks. The window
-// runs the browser editor's page, which reads and writes notes through the eight commands below and nothing else.
+// runs the browser editor's page, which reads and writes notes through the eight folder commands below, and sends a
+// note to GitHub through the one gh command, and nothing else.
 // - Nothing is fetched: the window's pages come from inside the app, and its policy allows no other origin.
 // - Every path a command takes is relative to the picked folder. A path that climbs out (`..`), starts at a root, names
 //   a hidden part (`.git`) or reaches outside through a link is refused before anything is read or written.
 // - A note is written whole: to a new file beside it, then renamed over it. So a failed write leaves the note as it was.
 // - An export is only ever new files: never written over a file already there.
+// - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
+mod gh;
 mod place;
 
 use std::path::PathBuf;
@@ -115,6 +118,27 @@ fn write_new(
     place::write_new(&folder.root()?, &into, &files)
 }
 
+/// Runs the person's own gh for one call to a GitHub repository they picked (spec §48, github_repo_access). Only the
+/// calls on the list in gh.rs are run, by gh's own path, with no shell. The app holds no token: gh signs in itself.
+#[cfg(desktop)]
+#[tauri::command]
+async fn run_gh(args: Vec<String>, input: Option<String>) -> Result<gh::GhOutput, String> {
+    if let Some(why) = gh::refusal(&args, input.as_deref()) {
+        return Err(why.to_string());
+    }
+    tauri::async_runtime::spawn_blocking(move || gh::run(&args, input.as_deref()))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// A phone or tablet has no gh: sending to GitHub is a computer's alone.
+#[cfg(mobile)]
+#[tauri::command]
+async fn run_gh(args: Vec<String>, input: Option<String>) -> Result<gh::GhOutput, String> {
+    let _ = (args, input);
+    Err("computer-only".to_string())
+}
+
 /// The folder named as the first argument, such as `thoughtknot ~/Notes`, when it is one.
 #[cfg(desktop)]
 fn folder_named() -> Option<PathBuf> {
@@ -158,7 +182,8 @@ pub fn run() {
         write_text,
         remove_file,
         make_dir,
-        write_new
+        write_new,
+        run_gh
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");
