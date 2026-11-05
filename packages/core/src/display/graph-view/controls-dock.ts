@@ -3,8 +3,8 @@
 //
 // It is a card floating in a corner of the drawing (styles.css). Its head names it and folds it. Folded, only the head
 // shows, so the drawing is whole again and nothing is laid out anew. Its body holds the key controls. Under them, More
-// opens the controls used less often. The fold is kept for the session, by the dock's name, so a card drawn again
-// opens the same way. Its head also moves it, or docks it at either side (controls-place.ts). On a tablet-sized
+// opens the controls used less often. The fold is kept by the dock's name, in the browser too, so a card drawn again
+// opens the same way. Closed, a dock stays closed, even after a restart (Roger, 5 Nov 2026). Its head also moves it, or docks it at either side (controls-place.ts). On a tablet-sized
 // window a dock starts folded, as a tab at the edge. The [ key folds or opens the dock of the card in focus.
 import { word } from '@thoughtknot/core';
 import { frameDock } from './controls-place.ts';
@@ -23,6 +23,30 @@ export interface ControlDock {
 
 /** How each dock was left in this session, by its name: folded or not. */
 const kept = new Map<string, boolean>();
+
+/** Where each dock's fold is kept in the browser, by its name. */
+const FOLDS_KEPT = 'thoughtknot-dock-folds';
+
+/** The folds kept in the browser: none where it cannot keep them (a private window). */
+function keptFolds(): Record<string, boolean> {
+  try {
+    const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
+    const kept: unknown = JSON.parse(win?.localStorage.getItem(FOLDS_KEPT) ?? '{}');
+    return kept && typeof kept === 'object' ? (kept as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Keeps the dock `name` folded or open in the browser, where it can. */
+function keepFold(name: string, folded: boolean): void {
+  try {
+    const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
+    win?.localStorage.setItem(FOLDS_KEPT, JSON.stringify({ ...keptFolds(), [name]: folded }));
+  } catch {
+    // a private window keeps it for the session only
+  }
+}
 
 /** Whether a window this wide starts its docks folded: a tablet's, where the drawing needs the room. */
 const narrowWindow = (): boolean => {
@@ -57,7 +81,7 @@ export function dockHead(el: HTMLElement, name: string): Pick<ControlDock, 'fold
   head.createSpan({ cls: 'thoughtknot-dock-name', text: name });
   frameDock(el, head, name); // moved, and docked at either side (controls_panels)
   const toggle = head.createEl('button', { cls: 'thoughtknot-dock-fold', attr: { type: 'button' } });
-  let folded = kept.get(name) ?? narrowWindow();
+  let folded = kept.get(name) ?? keptFolds()[name] ?? narrowWindow();
   const show = () => {
     el.toggleClass('is-folded', folded);
     toggle.setText(folded ? '»' : '«');
@@ -67,6 +91,7 @@ export function dockHead(el: HTMLElement, name: string): Pick<ControlDock, 'fold
   const fold = (to: boolean) => {
     folded = to;
     kept.set(name, to);
+    keepFold(name, to);
     show();
   };
   toggle.addEventListener('click', () => fold(!folded));

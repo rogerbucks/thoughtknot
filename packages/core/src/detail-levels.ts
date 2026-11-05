@@ -248,6 +248,13 @@ export function levelAt(levels: readonly DetailLevel[], seen: ReadonlySet<string
   return 0;
 }
 
+/**
+ * The level to show after `was`, on the way to `goal`: one level on at most. So one notch of the wheel, or one
+ * pinch, never jumps two levels at once. You always see where you came from (Roger, 5 Nov 2026).
+ */
+export const stepToward = (was: number | undefined, goal: number): number =>
+  was === undefined ? goal : was + Math.max(-1, Math.min(1, goal - was));
+
 /** The badge that says where you are: "Level 2 of 4 · Areas". */
 export const levelBadge = (levels: readonly DetailLevel[], at: number): string =>
   word('levels.badge', { at: at + 1, count: levels.length, name: levels[at]?.name ?? everyItem() });
