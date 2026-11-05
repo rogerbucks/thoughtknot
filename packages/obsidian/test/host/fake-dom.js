@@ -371,10 +371,10 @@ function matchChain(e, parts) {
 
 function matchOne(e, sel) {
   if (e.tagName === '#TEXT') return false;
-  const m = /^([a-zA-Z0-9-]*)(#[\w-]+)?((?:\.[\w-]+)*)((?:\[[^\]]+\])*)$/.exec(sel);
+  const m = /^(\*|[a-zA-Z0-9-]*)(#[\w-]+)?((?:\.[\w-]+)*)((?:\[[^\]]+\])*)$/.exec(sel);
   if (!m) throw new Error(`the fake DOM cannot match ${sel}`);
   const [, tag, id, classes, attrs] = m;
-  if (tag && e.localName !== tag) return false;
+  if (tag && tag !== '*' && e.localName !== tag) return false;
   if (id && e.getAttribute('id') !== id.slice(1)) return false;
   for (const c of classes.split('.').filter(Boolean)) if (!e.classList.contains(c)) return false;
   for (const a of attrs.match(/\[[^\]]+\]/g) ?? []) {

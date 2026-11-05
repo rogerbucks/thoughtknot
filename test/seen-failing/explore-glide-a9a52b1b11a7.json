@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/explore-glide.test.js",
+  "test": "where motion is to be still, nothing glides",
+  "seen_failing_first": false,
+  "evidence": "It pins that the new parent lookup keeps the reduced-motion exit, which the old glide had too."
+}

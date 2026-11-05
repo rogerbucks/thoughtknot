@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/explore-glide.test.js",
+  "test": "without parents a new box just appears, and a box drawn before starts where it was",
+  "seen_failing_first": false,
+  "evidence": "It pins what glideBoxes already did without parents: a box drawn before glides from where it was, and a new one has nowhere to come from."
+}

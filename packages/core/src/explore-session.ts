@@ -21,6 +21,9 @@ export interface ExploreKept extends Kept {
   placed: Map<string, [number, number]>;
   /** The links shown that are not a step along a branch, drawn faint and dashed (explore_tree_from_centre). */
   cross: Set<number>;
+  /** The thing the exploration is centred on, and each thing's parent, which a new thing glides out of (explore_stays_put). */
+  centre: string;
+  parents: Map<string, string>;
 }
 
 /** A thing's badge: how many of its neighbours wait, and whether its branch is open. */
@@ -223,7 +226,12 @@ export class ExploreSession {
     const placed = new Map([...this.spots].map(([k, s]) => [k, [s[0], s[1]] as [number, number]]));
     const { edges: shown } = this.shown(edges);
     const cross = this.cross(edges);
-    return { things, edges: shown, placed, cross };
+    const parents = new Map<string, string>();
+    for (const k of things) {
+      const up = this.map.parentOf(k);
+      if (up !== undefined) parents.set(k, up);
+    }
+    return { things, edges: shown, placed, cross, centre: this.map.centre, parents };
   }
 
   /** The links shown that are not a step along a branch, numbered as `edges` numbers them: drawn faint and dashed. */

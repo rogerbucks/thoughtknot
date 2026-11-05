@@ -5,6 +5,7 @@
 // brief, and at once when the system asks for reduced motion (motion_reduced_respected). Only a shift and the
 // opacity move, for the length of the glide: nothing that places a box is changed. Nothing here reaches the note.
 import type { Kept, Size, View, Zoom } from '@thoughtknot/core';
+import type { ExploreKept } from '../../explore-session.ts';
 import { reducedMotion } from './details-nav.ts';
 import type { ViewSwitching } from './view-switches';
 import { boxIn } from './taps.ts';
@@ -25,12 +26,26 @@ export function boxPlaces(svg: SVGSVGElement | null): Map<string, DOMRect> {
 /** The middle of a rectangle on the screen. */
 const middle = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
 
-/** Glides each box in `svg` drawn before too from where it was (`was`), and fades in the links. */
-export function glideBoxes(svg: SVGSVGElement | null, was: Map<string, DOMRect>): void {
+/**
+ * Glides each box in `svg` drawn before too from where it was (`was`), and fades in the links. A box that is new glides
+ * out of its parent's (`parents`), or out of its nearest parent that was drawn (explore_stays_put).
+ */
+export function glideBoxes(
+  svg: SVGSVGElement | null,
+  was: Map<string, DOMRect>,
+  parents?: ReadonlyMap<string, string>,
+): void {
   if (!svg || !was.size || reducedMotion(svg.win)) return;
   const timing = { duration: GLIDE_MS, easing: 'ease-out' };
+  const placeOf = (key: string): DOMRect | undefined => {
+    for (let k: string | undefined = key, steps = 0; k !== undefined && steps < 64; k = parents?.get(k), steps++) {
+      const r = was.get(k);
+      if (r) return r;
+    }
+    return undefined;
+  };
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.node[data-key]'))) {
-    const from = was.get(g.getAttribute('data-key') ?? ''),
+    const from = placeOf(g.getAttribute('data-key') ?? ''),
       to = g.getBoundingClientRect(),
       // the screen's pixels in one of the drawing's units: a box is moved in the drawing's units
       unit = to.width / (g.getBBox?.().width || to.width || 1);
@@ -59,6 +74,8 @@ export interface RegroupHost {
 export class Regrouping {
   private readonly host: RegroupHost;
   private before: { view: View; height: number } | null = null;
+  /** The exploration drawn now, while one is, so a change to it keeps the camera still. */
+  private explored: ExploreKept | null = null;
 
   constructor(host: RegroupHost) {
     this.host = host;
@@ -78,16 +95,52 @@ export class Regrouping {
     const sw = this.host.switching(),
       svg = this.host.svg();
     if (!sw?.relays || !svg) return; // a view of the core's own keeps what is hidden in place
-    const back = only ? null : this.before;
+    const back = only ? null : this.before,
+      exploring = only && 'placed' in only ? (only as ExploreKept) : null,
+      // an exploration changed keeps the camera where it is: only a new centre moves it, to the middle (explore_stays_put)
+      stays = exploring && this.explored ? exploring : null,
+      recentred = !!stays && stays.centre !== this.explored?.centre;
+    this.explored = exploring;
     if (only) this.before ??= { view: this.host.zoom().view(), height: this.host.size().height };
     else this.before = null;
-    const was = boxPlaces(svg);
+    const was = boxPlaces(svg),
+      view = this.host.zoom().view();
     sw.regroup(only, () => {
       const zoom = this.host.zoom();
       if (back) zoom.restore(back.view.scale, back.view.x, back.view.y);
+      else if (stays) this.staying(zoom, view, was, stays, recentred);
       else zoom.fit();
-      glideBoxes(this.host.svg(), was);
+      glideBoxes(this.host.svg(), was, exploring?.parents);
     });
+  }
+
+  /**
+   * Puts the camera as it was, at the same zoom. A thing shown before is the mark to hold, so it stays where it was on
+   * the screen. New things that would land out of sight bring the view in with them. If they cannot all be in sight,
+   * the whole map is fitted. A new centre is put in the middle (explore_stays_put).
+   */
+  private staying(zoom: Zoom, view: View, was: Map<string, DOMRect>, now: ExploreKept, recentred: boolean): void {
+    const svg = this.host.svg(),
+      vp = svg?.parentElement?.getBoundingClientRect();
+    zoom.restore(view.scale, view.x, view.y);
+    const places = boxPlaces(svg),
+      held = [...was.keys()].find((k) => places.has(k));
+    if (held) {
+      const a = middle(was.get(held) as DOMRect),
+        b = middle(places.get(held) as DOMRect);
+      zoom.panBy(a.x - b.x, a.y - b.y);
+    }
+    if (!svg || !vp?.width) return;
+    const fresh = [...boxPlaces(svg)].filter(([k]) => (recentred ? k === now.centre : !was.has(k))).map(([, r]) => r);
+    if (!fresh.length) return;
+    const [left, top] = [Math.min(...fresh.map((r) => r.left)), Math.min(...fresh.map((r) => r.top))],
+      [right, bottom] = [Math.max(...fresh.map((r) => r.right)), Math.max(...fresh.map((r) => r.bottom))];
+    if (recentred) {
+      zoom.panBy(vp.left + vp.width / 2 - (left + right) / 2, vp.top + vp.height / 2 - (top + bottom) / 2);
+      return;
+    }
+    if (right - left > vp.width || bottom - top > vp.height) return zoom.fit();
+    zoom.panBy(intoView(left, right, vp.left, vp.right), intoView(top, bottom, vp.top, vp.bottom));
   }
 }
 
