@@ -1039,7 +1039,8 @@
       "rule_look_try_save",
       "rule_look_builder",
       "rule_look_remove",
-      "rule_look_off"
+      "rule_look_off",
+      "rule_look_describe"
     ]
   },
   "CV1": {

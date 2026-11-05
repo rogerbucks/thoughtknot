@@ -4625,3 +4625,14 @@ img.thoughtknot-picture-hidden,
   background: var(--gn-bg);
   font-weight: var(--gn-font-weight-semibold);
 }
+
+/* The describe box of the Highlight things form (§56, rule_look_describe): its words and the button beside them. */
+.thoughtknot-rule-describe-row {
+  display: flex;
+  gap: var(--gn-space-1);
+  align-items: center;
+}
+.thoughtknot-rule-describe-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}

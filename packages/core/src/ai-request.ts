@@ -4,6 +4,7 @@
 // The answer is read as changes only, never as an edit. The changes are things and links to add, a property to change,
 // a thing or link to remove.
 import type { AiScope } from './ai-scope.ts';
+import type { RuleWrite } from './rule-write.ts';
 import { linkChange, thingChange, valueGql } from './proposals.ts';
 import type { ChangeInput } from './proposals.ts';
 import type { AiModel } from './settings.ts';
@@ -35,7 +36,11 @@ export interface AnswerShape {
   instructions: string;
   /** Text sent with the graph, such as prose to make a graph of (text-to-graph.ts): in a fence of its own, as data. */
   text?: string;
-  read(content: string, sent: readonly string[]): ChangeInput[] | { unread: string } | { asks: string };
+  /** The changes the answer makes, or the one rule it describes (rule-describe.ts), or why it is neither. */
+  read(
+    content: string,
+    sent: readonly string[],
+  ): ChangeInput[] | { unread: string } | { asks: string } | { rule: RuleWrite };
 }
 
 /** A fence of backticks longer than any run of them in `text`, so no text of the note can close it (AI-3). */

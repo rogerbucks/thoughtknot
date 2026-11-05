@@ -19,6 +19,7 @@ import {
   modelChoices,
   noteWithProposal,
   prepareSend,
+  ruleDescribeAsk,
   readNote,
   sendPrepared,
   suggestAsk,
@@ -26,7 +27,7 @@ import {
   viewsOf,
   word,
 } from '@thoughtknot/core';
-import type { MatrixRow, PreparedSend, ScopeChoice } from '@thoughtknot/core';
+import type { MatrixRow, PreparedSend, RuleChoices, RuleWrite, ScopeChoice } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
@@ -66,6 +67,8 @@ export class SendDialog extends Modal {
   private shownEl: HTMLElement | null = null;
   private sendButton: ButtonComponent | null = null;
   private readonly text: TextAsk | null;
+  /** A rule asked for in words (rule-describe.ts): the graph's choices to read the answer by, and the form to fill. */
+  private readonly rule: { choices: RuleChoices; fill: (rule: RuleWrite) => void } | null;
 
   constructor(
     private readonly plugin: ThoughtKnotPlugin,
@@ -75,7 +78,14 @@ export class SendDialog extends Modal {
     private readonly levelOf: () => string | null,
     private readonly shared: string[],
     /** What is chosen as the dialog opens, if anything: a graph, things ticked, the question, what is asked for. */
-    start?: { graph: string; things: string[]; question: string; suggest?: Partial<SuggestRows>; text?: TextAsk },
+    start?: {
+      graph: string;
+      things: string[];
+      question: string;
+      suggest?: Partial<SuggestRows>;
+      text?: TextAsk;
+      rule?: { choices: RuleChoices; fill: (rule: RuleWrite) => void };
+    },
   ) {
     super(plugin.app);
     const reading = readNote(
@@ -102,6 +112,7 @@ export class SendDialog extends Modal {
       Object.assign(this.suggest, start.suggest);
     }
     this.text = start?.text ?? null;
+    this.rule = start?.rule ?? null;
     if (this.text) this.question = start?.question ?? '';
   }
 
@@ -122,7 +133,7 @@ export class SendDialog extends Modal {
     this.sendButton = null;
     if (this.text) drawTextRows(el, this.text, () => this.changed(false));
     else if (!this.things.size) return void el.createEl('p', { text: word('ai.nothing') });
-    else this.drawChoice(el);
+    else if (!this.rule) this.drawChoice(el);
     drawModelRow(el, this.plugin.settings, this.model, (v) => {
       this.model = v;
       this.changed(true);
@@ -279,11 +290,13 @@ export class SendDialog extends Modal {
     };
     // suggestions are asked for in the person's own words, and read back only as suggestions (§59)
     const f = suggestForOf(this.suggest);
-    const ask = this.text
-      ? textToGraphAsk(base, this.text.graph, this.text.words, this.question)
-      : f
-        ? suggestAsk(base, f, this.question)
-        : { ...base, question: this.question };
+    const ask = this.rule
+      ? ruleDescribeAsk(base, this.graph, this.rule.choices, this.question)
+      : this.text
+        ? textToGraphAsk(base, this.text.graph, this.text.words, this.question)
+        : f
+          ? suggestAsk(base, f, this.question)
+          : { ...base, question: this.question };
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;
@@ -345,6 +358,12 @@ export class SendDialog extends Modal {
       this.refusal = result.failed;
       this.drawShown();
       return;
+    }
+    // a rule described only fills the form it was asked from: nothing is tried or saved (rule-describe.ts)
+    if ('rule' in result) {
+      this.rule?.fill(result.rule);
+      new Notice(word('ai.rule.filled', { model: p.model.name }));
+      return this.close();
     }
     const { proposal } = result,
       n = proposal.changes.length;
