@@ -62,7 +62,6 @@ export const REPO_SOURCE_WORDS = {
   'repo.settings.allowed': 'Highest classification it may hold',
   'repo.settings.main-allowed': 'Changes may go straight onto the main branch',
   'repo.settings.pick': 'Repository',
-  'repo.settings.close': 'Close',
   'repo.send.open': 'Send this note',
   'repo.review.open': 'Ask for a review',
   'repo.review.default-title': 'Graphs from ThoughtKnot',

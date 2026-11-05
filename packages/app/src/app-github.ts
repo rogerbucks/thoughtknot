@@ -133,15 +133,9 @@ export function githubButton(o: GithubPanelOptions): HTMLButtonElement {
   return button;
 }
 
-function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
-  const { doc } = o;
-  const store = o.store;
-  let s = keptSettings(store);
-  const dialog = make(doc, 'dialog', { className: 'gn-app-github' });
-  const heading = make(doc, 'h2', { id: 'gn-github-title', textContent: word('repo.settings.heading') });
-  dialog.setAttribute('aria-labelledby', heading.id);
-  dialog.append(heading, make(doc, 'p', { textContent: word('repo.settings.sentence') }));
-
+/** The settings' fields, saved as they change: each change is kept, then `changed` is told. */
+function settingsForm(doc: Document, store: Storage | undefined, changed: (s: RepoSettings) => void) {
+  const s = keptSettings(store);
   const repos = make(doc, 'textarea', { rows: 3, value: s.repos.join('\n') });
   const branch = make(doc, 'input', { type: 'text', value: s.branch });
   const main = make(doc, 'input', { type: 'text', value: s.mainBranch });
@@ -150,13 +144,57 @@ function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
   for (const level of LEVELS) allowed.append(make(doc, 'option', { value: level, textContent: level }));
   allowed.value = s.allowed;
   const mainAllowed = make(doc, 'input', { type: 'checkbox', checked: s.mainAllowed });
+  const save = () => {
+    const next = repoSettingsFrom(
+      {
+        repos: repoListFrom(repos.value),
+        branch: branch.value,
+        mainBranch: main.value,
+        folder: folder.value,
+        allowed: allowed.value,
+        mainAllowed: mainAllowed.checked,
+      },
+      LEVELS,
+    );
+    keep(store, next);
+    changed(next);
+  };
+  for (const c of [repos, branch, main, folder]) c.addEventListener('input', save);
+  for (const c of [allowed, mainAllowed]) c.addEventListener('change', save);
+  const fields = [
+    field(doc, word('repo.settings.repos'), repos),
+    field(doc, word('repo.settings.branch'), branch),
+    field(doc, word('repo.settings.main'), main),
+    field(doc, word('repo.settings.folder'), folder),
+    field(doc, word('repo.settings.allowed'), allowed),
+    field(doc, word('repo.settings.main-allowed'), mainAllowed),
+  ];
+  return { settings: s, fields, first: repos };
+}
+
+/** Says how a send went, and turns the buttons back on, whatever failed on the way. */
+async function reported(what: () => Promise<RepoSendOutcome>, status: HTMLElement): Promise<void> {
+  status.textContent = word('repo.send.working');
+  // a failure anywhere, reading the note too, is said, and never leaves the buttons off
+  const done = await what().catch((e: unknown) => ({
+    ok: false as const,
+    reason: e instanceof Error ? e.message : String(e),
+  }));
+  status.textContent = done.ok ? done.message : done.reason;
+}
+
+function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
+  const { doc } = o;
+  const dialog = make(doc, 'dialog', { className: 'gn-app-github' });
+  const heading = make(doc, 'h2', { id: 'gn-github-title', textContent: word('repo.settings.heading') });
+  dialog.setAttribute('aria-labelledby', heading.id);
+  dialog.append(heading, make(doc, 'p', { textContent: word('repo.settings.sentence') }));
   const problems = make(doc, 'ul', { className: 'gn-app-problems' });
   problems.setAttribute('role', 'alert');
   const pick = make(doc, 'select');
   const pickField = field(doc, word('repo.settings.pick'), pick);
   const status = make(doc, 'p', { className: 'gn-app-status' });
   status.setAttribute('role', 'status');
-
   const actions = make(doc, 'p', { className: 'gn-app-buttons' });
   const sendNote = make(doc, 'button', { type: 'button', textContent: word('repo.send.open') });
   const review = make(doc, 'button', { type: 'button', textContent: word('repo.review.open') });
@@ -170,33 +208,12 @@ function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
     pickField.hidden = s.repos.length < 2;
     sendNote.disabled = review.disabled = said.length > 0;
   };
-  const save = () => {
-    s = repoSettingsFrom(
-      {
-        repos: repoListFrom(repos.value),
-        branch: branch.value,
-        mainBranch: main.value,
-        folder: folder.value,
-        allowed: allowed.value,
-        mainAllowed: mainAllowed.checked,
-      },
-      LEVELS,
-    );
-    keep(store, s);
+  const form = settingsForm(doc, o.store, (next) => {
+    s = next;
     refresh();
-  };
-  for (const c of [repos, branch, main, folder]) c.addEventListener('input', save);
-  for (const c of [allowed, mainAllowed]) c.addEventListener('change', save);
-
-  dialog.append(
-    field(doc, word('repo.settings.repos'), repos),
-    field(doc, word('repo.settings.branch'), branch),
-    field(doc, word('repo.settings.main'), main),
-    field(doc, word('repo.settings.folder'), folder),
-    field(doc, word('repo.settings.allowed'), allowed),
-    field(doc, word('repo.settings.main-allowed'), mainAllowed),
-    problems,
-  );
+  });
+  let s = form.settings;
+  dialog.append(...form.fields, problems);
 
   const sending = () => ({
     host: ghRepoHost(tauriGh(o.invoke), s.mainBranch, s.mainAllowed),
@@ -208,32 +225,24 @@ function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
   });
   const run = async (what: () => Promise<RepoSendOutcome>) => {
     sendNote.disabled = review.disabled = true;
-    status.textContent = word('repo.send.working');
-    // a failure anywhere, reading the note too, is said, and never leaves the buttons off
-    const done = await what().catch((e: unknown) => ({
-      ok: false as const,
-      reason: e instanceof Error ? e.message : String(e),
-    }));
-    status.textContent = done.ok ? done.message : done.reason;
+    await reported(what, status);
     refresh();
   };
   const note = o.note;
   if (note) {
     dialog.append(pickField);
-    sendNote.addEventListener(
-      'click',
-      () =>
-        void run(async () => {
-          const read = await tauriStorage(o.invoke).read(note);
-          if (!read) return { ok: false, reason: word('server.note-gone') };
-          return sendNoteToRepo(sending(), note, read.text);
-        }),
-    );
+    const sendIt = async (): Promise<RepoSendOutcome> => {
+      const read = await tauriStorage(o.invoke).read(note);
+      if (!read) return { ok: false, reason: word('server.note-gone') };
+      return sendNoteToRepo(sending(), note, read.text);
+    };
+    sendNote.addEventListener('click', () => void run(sendIt));
     review.addEventListener('click', () => void run(() => askRepoReview(sending(), word('repo.review.default-title'))));
     actions.append(sendNote, review);
   }
 
-  const close = make(doc, 'button', { type: 'button', textContent: word('repo.settings.close') });
+  // the editor's own word for leaving a panel, so it is said in every language the editor speaks
+  const close = make(doc, 'button', { type: 'button', textContent: word('editor.done') });
   const shut = () => {
     dialog.remove();
     opener.focus();
@@ -249,7 +258,7 @@ function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
   refresh();
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
-  repos.focus();
+  form.first.focus();
 }
 
 /** The window's storage, or none where it cannot be reached. */
