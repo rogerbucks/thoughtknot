@@ -37,8 +37,7 @@ test('the note says how a data set is linked, kept as a snapshot and cached', ()
 
 test('the note shows how to point at a row, a column and a cell', () => {
   const note = read(NOTE);
-  for (const pointer of ['#row=12', '#col=amount', '#row=12&col=amount'])
-    assert.ok(note.includes(pointer), pointer);
+  for (const pointer of ['#row=12', '#col=amount', '#row=12&col=amount']) assert.ok(note.includes(pointer), pointer);
 });
 
 test('the note has a decision section for the way Roger picks', () => {
