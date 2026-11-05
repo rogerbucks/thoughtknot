@@ -1,6 +1,6 @@
 // A closed branch folds into its parent, and the camera stays still (editor spec §71, explore_stays_put). Roger, 1 Nov
-// 2026: nodes must not jump. Closing a branch glides its things back into the thing they came from, fading, and the
-// things left stay where they are on the screen, even in a small drawing the zoom would otherwise centre.
+// 2026: nodes must not jump. Closing a branch glides its things back into the thing they came from, fading. The things
+// left stay where they are on the screen, even in a small drawing the zoom would otherwise centre.
 // Requirements: explore_stays_put.
 // - A box no longer drawn glides into its nearest parent still drawn, then its copy is taken away.
 // - One still drawn, or with no parent drawn, is left alone. Where motion is to be still, nothing glides.
@@ -12,7 +12,7 @@ import { Zoom } from '../src/zoom.ts';
 
 const rect = (x, y) => ({ left: x, top: y, right: x + 10, bottom: y + 10, width: 10, height: 10, x, y });
 
-/** A copy of a box that is put back in the drawing at `x`, `y`, noting how it is told to glide and when it ends. */
+/** A copy of a box, put back in the drawing at `x`, `y`. It notes how it is told to glide, and when it ends. */
 function copyAt(x, y) {
   const g = {
     classes: new Set(['thoughtknot-hidden']),
