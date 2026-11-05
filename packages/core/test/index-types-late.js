@@ -418,4 +418,9 @@ export const TYPES_LATE = [
   // the GitHub repository reached through the user's own gh (§48, github_repo_access), 5 Nov 2026
   'GhOutput',
   'GhRun',
+  // a note sent to GitHub from an app (§48), 5 Nov 2026
+  'OutgoingShown',
+  'RepoSendOptions',
+  'RepoSendOutcome',
+  'RepoSettings',
 ];

@@ -369,4 +369,14 @@ export const VALUES_LATE = [
   // the GitHub repository reached through the user's own gh (§48, github_repo_access), 5 Nov 2026
   'ghRepoHost',
   'isBranchName',
+  // a note sent to GitHub from an app: settings, the gh calls allowed, the show-before-send screen (§48), 5 Nov 2026
+  'GH_INPUT_MOST',
+  'REPO_BRANCH_DEFAULT',
+  'askRepoReview',
+  'ghCallRefusal',
+  'outgoingShown',
+  'repoListFrom',
+  'repoSettingsFrom',
+  'repoSettingsProblems',
+  'sendNoteToRepo',
 ];

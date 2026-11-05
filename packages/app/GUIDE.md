@@ -18,8 +18,9 @@ window (WebKit, WebView2 or WebKitGTK)
       core storage           workspaceStorage (packages/core/src/workspace-storage.ts)
         tauriFiles           the folder commands, through Tauri's invoke (src/tauri-files.ts)
 Rust (src-tauri/)
-  lib.rs                     the window, the picked folder, the eight commands
+  lib.rs                     the window, the picked folder, the nine commands
   place.rs                   every path checked to stay inside the folder
+  gh.rs                      the gh calls allowed, and gh run with no shell
 ```
 
 ## The source, `src/`
@@ -31,16 +32,30 @@ Rust (src-tauri/)
   - The change stream sends the note, then reads it again every 2 seconds (`FOLLOW_EVERY_MS`) for changes made by
     other programs.
   - An export goes beside the note. Its files are written as new files, never over a file (`saveNew`).
-  - Earlier versions and GitHub reviews are refused in words for now (`app.not-yet`).
+  - Earlier versions and GitHub review items are refused in words for now (`app.not-yet`).
 - `tauri-files.ts`: `tauriFiles` and `tauriStorage`. The core's workspace storage over the folder commands. Also
   `tauriSaveNew`, which writes an export. `invoke` is handed in, so nothing here imports Tauri.
 - `app-start.ts`: the first page. Pick a folder with the system's dialog, then each note is a link into the editor.
-- `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list.
+- `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list. On a
+  computer it also adds the GitHub button for the open note.
+- `app-github.ts`: the GitHub button and its panel (spec §48). The panel keeps the picked repositories, the branch and
+  the highest classification in the window's storage, never in a note. In the editor it sends the open note, or asks
+  for a review as a pull request. The show-before-send screen (`showOutgoing`) comes first: Cancel has the focus, and
+  Escape cancels. The core does the rest (`sendNoteToRepo`, `askRepoReview` in core/src/github-repo-send.ts).
+- `tauri-gh.ts`: `tauriGh`, gh run through the app's `run_gh` command. A call off the list is refused before it
+  reaches the Rust.
 
 ## The Rust, `src-tauri/`
 
-- Eight commands, and no others: `pick_folder`, `own_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`,
-  `make_dir`, `write_new`. The same eight are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists together.
+- Nine commands, and no others: `pick_folder`, `own_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`,
+  `make_dir`, `write_new`, and `run_gh`. The same nine are named in `lib.rs`, `build.rs` and
+  `capabilities/default.json`. A test holds the three lists together.
+- `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
+  repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
+  `packages/core/test/fixtures/gh-calls.json`, the cases the core checks too.
+- gh is started by its own path, found where it installs or on the PATH. Its arguments go as a list, with no shell,
+  and the body on standard input. A call is stopped after 60 seconds or 8 MiB of output. The app holds no token: gh
+  signs in itself. A phone runs no gh.
 - `place.rs` refuses any path that climbs out, starts at a root, names a hidden part (such as `.git`), or reaches
   outside through a link. A note is written to a new file beside it, then renamed over it.
 - `write_new` writes an export only as new files. A name taken gets the next number. All of the files or none.

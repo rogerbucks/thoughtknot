@@ -9,6 +9,7 @@ fn main() {
         "remove_file",
         "make_dir",
         "write_new",
+        "run_gh",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()
