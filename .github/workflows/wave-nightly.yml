@@ -1,6 +1,6 @@
 name: Wave nightly
 
-# A build for testing as soon as a wave ends, instead of at the next 16:00 UTC nightly (Roger, 23 Oct 2026).
+# A build for testing as soon as a wave ends, instead of at the next 18:00 UTC nightly (Roger, 23 Oct 2026).
 # The trigger is a label. The pull request that finishes a wave carries `wave-done` and, once it merges to main, this
 # workflow runs the nightly (nightly.yml) on it: the same suite, the same pre-release for BRAT, the same last-seven
 # rule. A label is simple and sure; it needs no reading of requirements/waves.json, and a person or a thread can add it

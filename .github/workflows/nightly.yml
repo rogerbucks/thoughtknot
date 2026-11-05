@@ -1,7 +1,7 @@
 name: Nightly
 
 # A nightly build from main, published as a GitHub pre-release (spec §41, nightly_prerelease), for those who want the
-# newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
+# newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 18:00 UTC (4 am AEST)
 # (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
 #
 # Seven jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
@@ -22,7 +22,7 @@ name: Nightly
 # builds, as one by hand does. A second build on the same day takes the next letter, as the version script says.
 on:
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '0 18 * * *'
   workflow_dispatch:
   # Called by wave-nightly.yml when a pull request labelled wave-done merges, so a wave can be tested the day it ends.
   workflow_call:
