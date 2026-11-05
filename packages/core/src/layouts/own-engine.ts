@@ -157,7 +157,7 @@ export function ownSpots(
     const one = laidParts.length === 1 && !loose.length;
     const [these, over] = one ? [shape, groups] : [partShape(shape, part), groupsOver(groups, part)];
     const bands = lanesBy && bandsOf(kindsOf(these, lanesBy), these, lanesBy);
-    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands, placed });
+    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands, placed, levelled });
     if (i === 0) way = piece.way;
     return piece;
   });
@@ -208,6 +208,8 @@ interface PartMore {
   bands?: ReadonlyMap<string, number> | undefined;
   /** Each thing's spot as a plug-in's layout gave it. */
   placed?: ReadonlyMap<string, [number, number]> | undefined;
+  /** Whether the whole drawing is laid out by its levels; a part of an overview never is. */
+  levelled: boolean;
 }
 
 /** Each thing's lane, its kind's place in `kinds`' order, where kinds link in order or across two sides. */
@@ -239,7 +241,7 @@ function placedPart(
   // the layout the person chose is used as it is, never tried against another (layout_plugins)
   const chosen = chosenPick(shape, layoutOptions(more.options).strategy, more.placed);
   if (chosen) return laidBy(chosen, shape, sizes, groups, rankdir, more);
-  const pick = pickLayout(shape);
+  const pick = pickLayout(shape, more.levelled);
   const first = laidBy(pick, shape, sizes, groups, rankdir, more);
   if ((pick.why !== 'flow' && pick.why !== 'network') || shape.things.length > TRY_MOST) return first;
   const other: Pick = { layout: pick.layout === 'layered' ? 'stress' : 'layered', why: 'tried' };
