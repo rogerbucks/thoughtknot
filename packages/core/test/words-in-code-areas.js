@@ -164,6 +164,9 @@ export const KEPT = {
   // what the editor server tells Claude alone: the answers to Claude's propose tool and the key it proposes with
   'packages/claude-code/server/editor-proposals.ts': '*',
   'packages/claude-code/bin/propose-process.ts': '*',
+  // what the MCP server's tools are and its protocol's errors, which only Claude and its host read (§49); the person's
+  // words come from the catalogue
+  'packages/claude-code/src/mcp-server.ts': '*',
   // a request only the mod sends, refused when it cannot be read: no person makes one (§49)
   'packages/claude-code/bin/record-process.ts': '*',
   'packages/claude-code/server/editor-store.ts': ['This key proposes changes and does nothing else.'],

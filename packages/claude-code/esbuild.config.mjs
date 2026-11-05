@@ -12,6 +12,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildPage } from './esbuild.page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/** The MCP App's page: one HTML file, its script inline, as a host's sandboxed frame loads nothing else. */
+function mcpPageHtml(script) {
+  const css =
+    'body{font:14px system-ui,sans-serif;margin:8px;color:CanvasText;background:Canvas}' +
+    '.thoughtknot-mcp-drawing svg{max-width:100%;height:auto}.thoughtknot-mcp-bar,.thoughtknot-mcp-option{display:flex;gap:8px;align-items:center;margin:6px 0}' +
+    'button{font:inherit;padding:4px 10px}textarea{width:100%;min-height:3em}';
+  const safe = script.replace(/<\/script/gi, '<\\/script');
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light dark"><style>${css}</style></head><body><script type="module">${safe}</script></body></html>\n`;
+}
 const mod = join(here, 'mod');
 const common = { absWorkingDir: here, bundle: true, format: 'esm', legalComments: 'inline', logLevel: 'warning' };
 
@@ -49,6 +59,23 @@ await esbuild.build({
   outfile: join(mod, 'bin/record.mjs'),
   platform: 'node',
 });
+// the local MCP server, which node runs over standard input and output, and its one page, inlined into one HTML file
+// (spec §49, mcp_app)
+await esbuild.build({
+  ...common,
+  entryPoints: ['bin/mcp-process.ts'],
+  outfile: join(mod, 'bin/mcp.mjs'),
+  platform: 'node',
+});
+const mcpPage = await esbuild.build({
+  ...common,
+  entryPoints: ['page/mcp-page.ts'],
+  platform: 'browser',
+  target: 'es2022',
+  write: false,
+  minify: true,
+});
+writeFileSync(join(mod, 'bin/mcp-page.html'), mcpPageHtml(mcpPage.outputFiles[0].text));
 // the browser editor's local server, which node runs as a process of its own (spec §26)
 await esbuild.build({
   ...common,
