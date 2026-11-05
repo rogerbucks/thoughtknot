@@ -324,4 +324,14 @@ export const VALUES_LATE = [
   'renamed',
   // the numbers a filter can total (§57, calc_set_totals), 3 Nov 2026
   'measuresOf',
+  // a CSV table read through its connector and written mapping (§63, connector_files_to_gql), 5 Nov 2026
+  'CSV_LIMITS',
+  'mappingOf',
+  'mappingPlace',
+  'mappingText',
+  'proposeMapping',
+  'readCsv',
+  'tableConnector',
+  'tableKindOf',
+  'tableStatements',
 ];

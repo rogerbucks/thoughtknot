@@ -21,6 +21,7 @@ import type { DataLink, DataThing } from './export-data-model.ts';
 import type { Problem } from './note-reading.ts';
 import { lineInSource, placeKey, readSource } from './sources.ts';
 import type { Fetched, Source, SourceRead, SourceRefusal } from './sources.ts';
+import { tableConnector } from './csv-connector.ts';
 import { word } from './words.ts';
 
 /** Where a statement was read: the place, the hash of its text, and the line (1-based) in it. */
@@ -28,6 +29,10 @@ export interface Citation {
   place: string;
   version: string;
   line: number;
+  /** For a table: the row (1-based, the header not counted). */
+  row?: number;
+  /** For a table: the column a link was read from. */
+  column?: string;
 }
 
 /** One GQL statement a place breaks into, with where it was read. */
@@ -43,6 +48,10 @@ export interface Connected {
   version: string;
   statements: Statement[];
   read: SourceRead;
+  /** A table with no mapping written: the mapping proposed, for a person to apply by saving it at `place`. */
+  proposal?: { place: string; text: string };
+  /** What the place could not give, in a sentence: no mapping yet, or cells beyond the header. */
+  note?: string;
 }
 
 /** The one contract every connector meets: given a place and what was fetched there, its statements or why not. */
@@ -91,7 +100,7 @@ export const gqlConnector: Connector = {
 };
 
 /** Every connector, by the kinds of place it reads. */
-export const CONNECTORS: readonly Connector[] = [gqlConnector];
+export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector];
 
 /** The connector that reads this kind of place. */
 export const connectorFor = (kind: Source['kind']): Connector | undefined =>
@@ -248,7 +257,16 @@ export function joinPlaces(
   }
   const said = (list: Citation[]) =>
     list
-      .map((c) => word('reading.source.cited', { place: c.place, line: String(c.line), version: short(c.version) }))
+      .map((c) =>
+        c.row === undefined
+          ? word('reading.source.cited', { place: c.place, line: String(c.line), version: short(c.version) })
+          : word(c.column ? 'reading.source.cited-cell' : 'reading.source.cited-row', {
+              place: c.place,
+              row: String(c.row),
+              column: c.column ?? '',
+              version: short(c.version),
+            }),
+      )
       .join('; ');
   const things: DataThing[] = Object.entries(joined.nodes)
     .sort(([a], [b]) => (a < b ? -1 : 1))

@@ -5,6 +5,7 @@
 import { word } from '@thoughtknot/core';
 import type { GraphSource } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { saveMapping } from './source-read';
 
 /** The source's name as the strip and its button say it: a note by its link, a file by its path. */
 const shortName = (s: GraphSource) => s.target.replace(/\.md$/i, '');
@@ -42,4 +43,33 @@ export function sourceStrip(
 /** A sentence saying why nothing is drawn, read out as it appears. */
 export function sourceAlert(parent: HTMLElement, text: string): HTMLElement {
   return parent.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' }, text });
+}
+
+/**
+ * A table with no mapping yet (connector_mapping_written). It shows the sentence saying so and the mapping proposed,
+ * in full. A button saves it beside the table. A person applies it; nothing is drawn from the table until then. A file
+ * already at that place is opened, never written over. `saved` draws the card again once it is written.
+ */
+export function mappingProposal(
+  parent: HTMLElement,
+  plugin: ThoughtKnotPlugin,
+  note: string,
+  proposal: { place: string; text: string },
+  saved?: () => void,
+): HTMLElement {
+  const box = sourceAlert(parent, note);
+  const shown = box.createEl('details');
+  shown.createEl('summary', { text: word('blocks.mapping-proposed') });
+  shown.createEl('pre', { text: proposal.text });
+  const save = box.createEl('button', {
+    text: word('blocks.mapping-save', { place: proposal.place }),
+    attr: { type: 'button' },
+  });
+  save.addEventListener('click', () => {
+    void (async () => {
+      if (await saveMapping(plugin, proposal.place, proposal.text)) saved?.();
+      else await plugin.app.workspace.openLinkText(proposal.place, '');
+    })();
+  });
+  return box;
 }

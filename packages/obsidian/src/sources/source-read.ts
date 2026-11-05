@@ -8,7 +8,15 @@
 import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';
 import type { BlockContext } from '../block-context';
-import { connect, joinPlaces, namesSharedSchema, placeKey, READ_LIMITS, readSource } from '@thoughtknot/core';
+import {
+  connect,
+  joinPlaces,
+  mappingPlace,
+  namesSharedSchema,
+  placeKey,
+  READ_LIMITS,
+  readSource,
+} from '@thoughtknot/core';
 import type { GraphSource, JoinedRead, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
 import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
@@ -44,7 +52,11 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
   let registry = registries.get(plugin);
   if (!registry) registries.set(plugin, (registry = vaultSourceRegistry((s, f) => fromVault(plugin, s, f))));
   const r = await registry.fetchSource(source.kind, source.target, from);
-  return r.ok ? r.value : { found: source.target, unreadable: r.message };
+  if (!r.ok) return { found: source.target, unreadable: r.message };
+  // a table is read with the mapping written beside it, when there is one (connector_mapping_written)
+  if (source.kind !== 'table' || !('text' in r.value)) return r.value;
+  const mapping = await fromVault(plugin, { kind: 'file', target: mappingPlace(r.value.found) }, from);
+  return 'text' in mapping ? { ...r.value, mapping: mapping.text } : r.value;
 }
 
 /** What the vault holds at the place `source` names, for the note at `from`. The vault's own sources read it so. */
@@ -65,7 +77,7 @@ async function fromVault(
   // A .gql file over the bytes a note's graph blocks may hold is never read (§9). Its size is the one the vault keeps.
   // A note is read through the vault's note storage, from Obsidian's cache, and only its graph blocks are held to the
   // limits. A .gql file is no note, so the vault reads it.
-  if (source.kind === 'file' && file.stat.size > READ_LIMITS.bytes)
+  if (source.kind !== 'note' && file.stat.size > READ_LIMITS.bytes)
     return { found: file.path, tooLarge: file.stat.size };
   try {
     const text =
@@ -87,7 +99,8 @@ export async function readFromVault(
   source: GraphSource,
   from: string,
 ): Promise<SourceRead | SourceRefusal> {
-  if (source.places) return readPlaces(plugin, source, from);
+  // a table is broken into statements by its connector, as a place of a FROM list is (csv-connector.ts)
+  if (source.places || source.kind === 'table') return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
   const read = readSource(source, held);
   if ('refused' in read || !read.texts.some(namesSharedSchema)) return read;
@@ -159,4 +172,14 @@ export function watchSource(
   watcher.registerEvent(vault.on('delete', (f) => ours(f) && again()));
   watcher.registerEvent(vault.on('rename', (f, old) => ours(f, old) && again()));
   ctx.addChild(watcher);
+}
+
+/**
+ * Saves the mapping a person applies beside its table (connector_mapping_written): a .gql file, never a note. A file
+ * already at `place` is never written over: it says false, and the person opens it instead.
+ */
+export async function saveMapping(plugin: ThoughtKnotPlugin, place: string, text: string): Promise<boolean> {
+  if (plugin.app.vault.getAbstractFileByPath(place)) return false;
+  await plugin.app.vault.create(place, text);
+  return true;
 }

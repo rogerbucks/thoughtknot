@@ -1,5 +1,5 @@
 // The names the core's entry exports for rules and looks (editor spec §56), intents (§58), AI suggestions (§59) and text to graph
-// (§47). Kept apart from index.ts so each file stays short.
+// (§47). Kept apart from index.ts so each file stays short. Tables of data are in index-tables.ts, exported from here.
 export { BADGES, BAND_HUES, isRule } from './rule-words.ts';
 export type { Badge, RuleParts } from './rule-words.ts';
 export {
@@ -52,3 +52,4 @@ export {
 } from './text-to-graph.ts';
 export type { KnownThing, Matched, TextGraph, TextGraphFor, TextSpan } from './text-to-graph.ts';
 export { holdsGraph, noteWithTextGraphApplied, tickedOnly, withGraphHome } from './text-to-graph-note.ts';
+export * from './index-tables.ts';
