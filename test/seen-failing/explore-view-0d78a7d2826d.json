@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-view.test.js",
+  "test": "every view draws only what an exploration has open, and everything again once it ends",
+  "seen_failing_first": false,
+  "evidence": "It proves a property that already held: every view hides what an exploration closes, in place. The requirement was marked planned only because nothing proved it. The probe found no gap."
+}

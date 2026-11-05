@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-view.test.js",
+  "test": "a lens picked on top of an exploration leaves what is hidden hidden",
+  "seen_failing_first": false,
+  "evidence": "It proves a property that already held; the fake page only needed the * selector the lens uses."
+}
