@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/edit-gestures.test.js",
+  "test": "double clicks and drops where things are drawn > in reading view, a double click on empty space zooms and writes nothing",
+  "seen_failing_first": false,
+  "evidence": "A guard: reading view already zoomed on a double click and wrote nothing. It keeps that true now that a double click edits where the card can be written."
+}
