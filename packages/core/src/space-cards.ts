@@ -317,8 +317,8 @@ export function frameOf(
     // named (Roger, 1 Nov 2026)
     const beside = new Set<string>();
     const faces = facesOnScreen(space, matrix, width, height, { ...chosen, beside });
-    // a name too small to read on its thing floats beside it at a readable size where it has room, and stays tiny on
-    // its thing where it has none (space_names_readable)
+    // a name too small to read on its thing floats beside it at a readable size. Where it has no room, it stays
+    // tiny on its thing (space_names_readable)
     const small = new Set(faces.filter((f) => f.size < READABLE_LEAST).map((f) => f.id));
     const onFace = new Set(faces.filter((f) => !small.has(f.id)).map((f) => f.id));
     const floats = space.labels.filter(
