@@ -387,4 +387,11 @@ export const TYPES_LATE = [
   'BlockEdit',
   'LineWritten',
   'ThingAddedNear',
+  // a CSV table read through its connector and written mapping (§63, connector_files_to_gql), 5 Nov 2026
+  'ColumnMap',
+  'ColumnRole',
+  'CsvLimits',
+  'CsvRefusal',
+  'CsvTable',
+  'TableMapping',
 ];

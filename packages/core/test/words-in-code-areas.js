@@ -214,6 +214,8 @@ export const KEPT = {
   // the first line of a change set and of a judgement block, written into the note: its bytes, never translated
   'packages/core/src/proposals-text.ts': ['// graph: {} · CHANGE SET {} · against {} · by {}'],
   'packages/core/src/proposals-judgement.ts': ['// graph: judgements\n{}'],
+  // the graph line of a table's mapping file, read by ThoughtKnot to find the mapping: its bytes, never translated
+  'packages/core/src/csv-mapping.ts': ['// graph: mapping'],
   // what the model is told and asked, which only the model reads: the instructions and the head of the graph's fence
   'packages/core/src/ai-request.ts': [
     'You help edit a graph written in GQL in a note. You are shown the part of the graph the user chose, and their question.',

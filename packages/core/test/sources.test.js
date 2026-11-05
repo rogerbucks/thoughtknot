@@ -90,11 +90,11 @@ describe('a block that draws its graph from a .gql file', () => {
   });
 
   // proves: gql_file_source
-  test('FROM followed by nothing, or by a place that is neither a .gql file nor a note, is a fault saying what may follow', () => {
+  test('FROM followed by nothing, or by a place that is not a .gql file, a .csv table or a note, is a fault saying what may follow', () => {
     const [empty] = sourcesOf(['// graph: trip · FROM']);
     assert.match(empty.fault, /after FROM/);
-    const [csv] = sourcesOf(['// graph: trip · FROM data/trip.csv']);
-    assert.match(csv.fault, /data\/trip\.csv is neither/);
+    const [xlsx] = sourcesOf(['// graph: trip · FROM data/trip.xlsx']);
+    assert.match(xlsx.fault, /data\/trip\.xlsx is none of them/);
     const [bad] = sourcesOf(['// graph: my-trip · FROM trip.gql']);
     assert.match(bad.fault, /not one word/);
   });

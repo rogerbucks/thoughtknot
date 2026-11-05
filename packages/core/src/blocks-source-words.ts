@@ -44,6 +44,9 @@ export const BLOCKS_SOURCE_WORDS = {
     'Graph {graph} has nothing to draw in this note, so the proposal is listed without a drawing.',
   'blocks.proposal-failed': 'Proposal {id} could not be drawn, so its change set is shown.',
   'blocks.source-strip': 'Drawn from the {kind} {name}, read where it is written: change the graph there.',
+  // a table with no mapping yet: the mapping proposed, and the button that saves it (source-strip.ts)
+  'blocks.mapping-proposed': 'The mapping proposed',
+  'blocks.mapping-save': 'Save this mapping as {place}',
   'blocks.source-strip-plugin':
     'Drawn from the plug-in source {name}, read each time from the plug-in: change the graph where the plug-in keeps it.',
   'blocks.source-open': 'Open {name}',
