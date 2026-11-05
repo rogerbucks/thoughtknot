@@ -32,6 +32,7 @@ import {
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
 import { layoutOptions } from './layouts/layout-options.ts';
+import { LEVELLED_FROM } from './layouts/level-seed.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -117,7 +118,9 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const ours =
     step ||
     (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct')) ||
-    (shapeable(drawing) && layoutOptions(drawing.layoutOptions).strategy !== 'auto');
+    (shapeable(drawing) && layoutOptions(drawing.layoutOptions).strategy !== 'auto') ||
+    // a big tree, flow or lanes has levels too: each subject goes in its own room, as its clouds show (level_default)
+    (shapeable(drawing) && drawing.boxes.length > LEVELLED_FROM);
   const cheap = quick || (step && step !== 'own');
   const ways = only ? [only] : cheap ? STYLE.directions.slice(0, 1) : STYLE.directions;
   const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));

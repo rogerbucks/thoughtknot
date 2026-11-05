@@ -33,7 +33,9 @@ const FLOORS = {
   'ethos.gql all LR': { clean: 0.9, clear: 0.98, flow: 0.85, near: 0.5, kinds: 0.35, hubs: 0.4 },
   'ethos.gql all TB': { clean: 0.9, clear: 0.98, flow: 0.65, near: 0.6, kinds: 0.35, hubs: 0.45 },
   'graph-spec.gql overview LR': { clean: 0.6, clear: 0.98, flow: 0.35, near: 0.35, kinds: 0.4, hubs: 0.45 },
-  'graph-spec.gql all LR': { clean: 0.1, clear: 0.98, flow: 0.85, near: 0.65, kinds: 0.4, hubs: 0.35 },
+  // laid out by its levels, each subject in its own room, not in rows (Roger, 5 Nov 2026). So its links run less one
+  // way and cross more boxes, and its things sit nearer their own
+  'graph-spec.gql all LR': { clean: 0.2, clear: 0.75, flow: 0.45, near: 0.75, kinds: 0.45, hubs: 0.4 },
   'architecture.gql overview LR': { clean: 0.9, clear: 0.98, flow: 0.1, near: 0.2, kinds: 0.4, hubs: 0.6 },
   'architecture.gql overview TB': { clean: 0.9, clear: 0.98, flow: 0.9, near: 0.2, kinds: 0.4, hubs: 0.6 },
   'architecture.gql all LR': { clean: 0.75, clear: 0.98, flow: 0.75, near: 0.5, kinds: 0.55, hubs: 0.3 },
@@ -120,6 +122,20 @@ describe('an optimised layout, on the real notes', () => {
       assert.ok(Math.max(...moves) <= CALM_MOST, `${file}: things moved ${Math.max(...moves).toFixed(3)} at most`);
     }
   });
+});
+
+// proves: level_default
+test('a big flow drawn as a flow is laid out by our own engine, by its levels, not in Graphviz rows', () => {
+  const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
+  const style = "// graph: requirements_style · STYLE requirements\n(diagram_1:Diagram {type: 'flow'})\n";
+  const note = readNote([text, style]);
+  const read = readStyle([text, style], 'requirements', note);
+  const drawing = styledDrawing(note.graphs.get('requirements'), read.style, note.world.requirements);
+  assert.equal(drawing.diagram?.type, 'flow', 'drawn as a flow');
+  const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, read.style), engine: true });
+  const [d] = directions(state.folded(drawing));
+  assert.ok(d.own, 'our own engine lays it out, so each subject gets its own room (Roger, 5 Nov 2026)');
+  assert.match(d.dot, /levels/, 'by its levels');
 });
 
 describe('the top two layouts', () => {
