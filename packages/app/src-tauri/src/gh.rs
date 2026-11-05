@@ -216,7 +216,9 @@ mod run {
             .env("GH_PROMPT_DISABLED", "1")
             .env("GH_NO_UPDATE_NOTIFIER", "1")
             .env("NO_COLOR", "1")
+            // debug output can print the request headers, the sign-in among them
             .env_remove("GH_DEBUG")
+            .env_remove("DEBUG")
             .env_remove("GH_HOST")
             .env_remove("GH_REPO");
         #[cfg(windows)]

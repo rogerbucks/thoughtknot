@@ -5,7 +5,7 @@
 // - A phone has no GitHub button: gh runs on a computer only.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { JSDOM } from 'jsdom';
 import { ghCallRefusal } from '@thoughtknot/core';
@@ -139,6 +139,18 @@ test('Cancel on the show-before-send screen sends nothing at all', async () => {
     'only reads were made',
   );
   assert.equal(p.app.branches.size, 1);
+});
+
+test('a note that cannot be read is said, and the buttons come back', async () => {
+  const folder = emptyFolder();
+  mkdirSync(join(folder, 'Odd.md')); // a folder by a note's name: reading it fails
+  const p = panel(folder, 'Odd.md');
+  p.type('Repositories', 'ada/graphs');
+  p.press('Send this note');
+  await until(() => p.status() && p.status() !== 'Asking GitHub…', 4000);
+  assert.equal(p.app.calls.length, 0);
+  const send = [...p.dialog.querySelectorAll('button')].find((b) => b.textContent === 'Send this note');
+  assert.equal(send.disabled, false);
 });
 
 test('a note above the allowed level is refused, and never shown or sent', async () => {

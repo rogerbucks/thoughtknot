@@ -209,7 +209,11 @@ function openPanel(o: GithubPanelOptions, opener: HTMLElement): void {
   const run = async (what: () => Promise<RepoSendOutcome>) => {
     sendNote.disabled = review.disabled = true;
     status.textContent = word('repo.send.working');
-    const done = await what();
+    // a failure anywhere, reading the note too, is said, and never leaves the buttons off
+    const done = await what().catch((e: unknown) => ({
+      ok: false as const,
+      reason: e instanceof Error ? e.message : String(e),
+    }));
     status.textContent = done.ok ? done.message : done.reason;
     refresh();
   };
