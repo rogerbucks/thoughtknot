@@ -7,6 +7,10 @@
 import { details, word } from '@thoughtknot/core';
 import { addedInColumn, linkedTo } from '../../thing-edits.ts';
 import type { ViewOptions } from './view-options';
+import type { Linker } from './box-links.ts';
+import type { Lifecycle } from '../lifecycle';
+import type { Target } from './taps';
+import { moveHint } from './box-move-keys';
 
 /** What the gestures need of the editor they belong to. */
 export interface GestureHost {
@@ -61,5 +65,59 @@ export class Gestures {
     if ('reason' in r) return say(r.reason);
     const thing = details(o.reading, o.graph, to)?.text ?? to;
     void this.host.written(word('edit.linked', { thing }), r.block, r.was, r.now).then((why) => why && say(why));
+  }
+}
+
+/** What the drawing's gestures ask of the editor (edit_gestures): a name opened, a thing added, a link written. */
+export type EditGestures = Linker & {
+  renameOn: (key: string) => boolean;
+  addHere: (say: (why: string) => void) => boolean;
+};
+
+/**
+ * How long a second click's recentre waits for the double click that may follow it, in milliseconds. A browser sends
+ * the double click straight after that click, so this is only long enough to see it, and too short to feel.
+ */
+const DOUBLE_CLICK_WAIT_MS = 40;
+
+/** A mouse's second click and the double click that may follow it, on one card's drawing (edit_gestures). */
+export class DoubleClicks {
+  private timer: number | null = null;
+
+  constructor(
+    card: Lifecycle,
+    private readonly viewport: HTMLElement,
+    private readonly edits: EditGestures | undefined,
+  ) {
+    card.register(() => this.onunload());
+  }
+
+  /** A second click on the thing selected: `centre` runs once no double click came, at once for a finger. */
+  second(touch: boolean, centre: () => void): void {
+    this.onunload();
+    if (touch || !this.edits?.canWrite()) return centre();
+    this.timer = window.setTimeout(() => ((this.timer = null), centre()), DOUBLE_CLICK_WAIT_MS);
+  }
+
+  /**
+   * A double click, which lets the second click's recentre go. On thing `at` it opens its name for typing. On empty
+   * space (`empty`) it adds a thing, its name open. Whether it was taken.
+   */
+  edited(at: Target | null, empty: boolean): boolean {
+    this.onunload();
+    const edits = this.edits;
+    if (!edits) return false;
+    const say = (why: string) => {
+      const line = moveHint(this.viewport);
+      line.hidden = false;
+      line.textContent = why;
+    };
+    return !!(at && 'key' in at && edits.renameOn(at.key)) || (empty && edits.addHere(say));
+  }
+
+  /** The recentre waiting let go. */
+  onunload(): void {
+    if (this.timer !== null) window.clearTimeout(this.timer);
+    this.timer = null;
   }
 }

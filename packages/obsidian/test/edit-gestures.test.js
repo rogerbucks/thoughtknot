@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
 import { NOTE, PATH, showIn } from './host/card-notes.js';
 import { PATH as TEAM_PATH, TEAM, card as dragCard, mouse, noteOf } from './host/drag-steps.js';
+import { clock } from './host/quick-info-steps.js';
 
 before(() => build());
 
@@ -41,10 +42,11 @@ describe('double clicks and drops where things are drawn', () => {
       await until(() => !!nameOf(el));
       assert.ok(env.doc.activeElement !== nameOf(el), 'one click selects, and starts no typing');
       const before = vpOf(el).cssProps['--thoughtknot-x'];
+      const timers = clock(env); // the second click's recentre waits on a timer, which the double click clears
       click(el, q, 4);
       vpOf(el).dispatch('dblclick', { target: q, clientX: 20, clientY: 20 });
       assert.ok(env.doc.activeElement === nameOf(el), 'the name is open for typing');
-      await new Promise((r) => setTimeout(r, 80));
+      timers.fire();
       assert.equal(vpOf(el).cssProps['--thoughtknot-x'], before, 'the view stayed where it was');
       assert.equal(note(env), NOTE, 'nothing written until Enter');
     } finally {

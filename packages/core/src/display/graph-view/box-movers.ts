@@ -7,8 +7,9 @@ import { BoxMoveKeys } from './box-move-keys';
 import { gridDrops } from './grid-drag';
 import { MoveUndo } from './move-undo';
 import type { ViewOptions } from './view-options';
-import { word, type PlacedBox, type Zoom } from '@thoughtknot/core';
+import { word, type Zoom } from '@thoughtknot/core';
 import { moveHint } from './box-move-keys';
+import { linkDrops, type Linker } from './box-links.ts';
 import type { Lifecycle } from '../lifecycle';
 
 /**
@@ -39,7 +40,7 @@ export function boxMoversFor(
   const textOf = (key: string) => boxes.find((b) => b.key === key)?.text ?? key;
   // where no box moves, a drag still links one thing to another
   if (!given && svg && links) {
-    const drops = linkDrops(links, textOf, host.viewport, {
+    const drops = linkDrops(links, textOf, say(host.viewport), {
       nowhere: (key) => word('edit.drop-nowhere', { thing: textOf(key) }),
       drop: () => null,
     });
@@ -62,7 +63,7 @@ export function boxMoversFor(
       ...shared,
       textOf,
       ...(links
-        ? linkDrops(links, textOf, host.viewport, nudgeDrops(moving, textOf, rankdir))
+        ? linkDrops(links, textOf, say(host.viewport), nudgeDrops(moving, textOf, rankdir))
         : nudgeDrops(moving, textOf, rankdir)),
     }),
     keys: new BoxMoveKeys({ ...shared, moving, textOf }),
@@ -70,41 +71,9 @@ export function boxMoversFor(
   };
 }
 
-/** What linking by a drop needs of the card's editor: whether it can write now, and how to write the link. */
-export interface Linker {
-  canWrite: () => boolean;
-  linkDrop: (from: string, to: string, say: (why: string) => void) => void;
-}
-
-/** How much of a box's width and height, at each side, is its edge: let go there, a box moves by it, not links. */
-const EDGE = 0.25;
-
-/** Whether `at` is in the middle of box `b`, inside its edges. */
-const inMiddle = (b: PlacedBox, at: { x: number; y: number }): boolean => {
-  const w = (b.right - b.left) * EDGE,
-    h = (b.bottom - b.top) * EDGE;
-  return at.x >= b.left + w && at.x <= b.right - w && at.y >= b.top + h && at.y <= b.bottom - h;
+/** Says `why` in the line under the drawing in `viewport`. */
+const say = (viewport: HTMLElement) => (why: string) => {
+  const line = moveHint(viewport);
+  line.hidden = false;
+  line.textContent = why;
 };
-
-/** The drops of `inner`, but a box let go in the middle of another links the two instead, where the card can write. */
-function linkDrops(
-  links: Linker,
-  textOf: (key: string) => string,
-  viewport: HTMLElement,
-  inner: Pick<DragHost, 'drop' | 'nowhere'>,
-): Pick<DragHost, 'drop' | 'nowhere'> {
-  const say = (why: string) => {
-    const line = moveHint(viewport);
-    line.hidden = false;
-    line.textContent = why;
-  };
-  return {
-    nowhere: inner.nowhere,
-    drop: (key, at, boxes: PlacedBox[]) => {
-      const on = links.canWrite() ? boxes.find((b) => b.key !== key && inMiddle(b, at)) : undefined;
-      if (!on) return inner.drop(key, at, boxes);
-      const said = word('edit.drop-link', { thing: textOf(key), other: textOf(on.key) });
-      return { other: on.key, said, write: () => links.linkDrop(key, on.key, say) };
-    },
-  };
-}
