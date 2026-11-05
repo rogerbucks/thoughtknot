@@ -10,13 +10,13 @@ import { paintersFrom, word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitFit, spaceMatrix, spaceOf } from '../../space-view.ts';
 import type { Block, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
-import { GlobeLayout, aboveGlobe, globeOf } from '../../space-globe.ts';
+import { GlobeLayout, globeOf } from '../../space-globe.ts';
 import { lineAt } from '../../space-pick.ts';
 import { askEdit, blockHit, pointerAt, SpaceLinkDrag } from './space-edit';
 import { tellPickedAt } from './space-picked-at';
 import { clusterFilling, farFrame, frameOf, isCluster } from '../../space-cards.ts';
 import type { LabelMemory } from '../../space-cards.ts';
-import { grounded, repaintOnLevel, zoomIn } from './space-view-steady.ts';
+import { grounded, keptAbove, repaintOnLevel, zoomIn } from './space-view-steady.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { spaceSeen } from '../../lenses.ts';
 import { PICK_ATTRIBUTE, lanesShown } from '../../layouts/fingerprint.ts';
@@ -126,8 +126,7 @@ export async function openSpaceView(
   // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
   let [picked, pickedLine]: [Block | null, SpaceLine | null] = [null, null];
   let turning = 0;
-  // what the last frame named, so each name keeps its look from one frame to the next
-  const labelled: LabelMemory = { named: new Set(), beside: new Set() };
+  const labelled: LabelMemory = { named: new Set(), beside: new Set() }; // names keep their look frame to frame
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
@@ -136,11 +135,10 @@ export async function openSpaceView(
   const paint = () => {
     asked = false;
     if (!open) return;
-    const ground = groundOf(); // however it moved, the camera stays above the globe's ground
-    if (ground) orbit = aboveGlobe(orbit, ground);
+    orbit = keptAbove(orbit, groundOf());
     const matrix = matrixNow();
     const drawn = farFrame(frameOf(seen(), matrix, width, height, glide.match(picked), pickedLine?.id, labelled), el);
-    const frame = grounded(drawn, glide.shown, depth === GLOBE || !!ground, matrix, width, height); // the plane
+    const frame = grounded(drawn, glide.shown, depth === GLOBE, matrix, width, height); // the plane
     painter.paint(frame.shapes, matrix, paints);
     paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
     map.update(glide.shown, orbit, matrix, [width, height], glide.match(picked));

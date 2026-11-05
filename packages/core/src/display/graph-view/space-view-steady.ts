@@ -3,10 +3,14 @@
 // 3D. A frame is painted again when its level changes, so it never stays blank.
 import type { SpaceFrame } from '../../space-cards.ts';
 import { groundGrid } from '../../space-ground.ts';
-import { zoomGlobe } from '../../space-globe.ts';
+import { aboveGlobe, zoomGlobe } from '../../space-globe.ts';
 import type { GlobeOf } from '../../space-globe.ts';
 import { zoomBy } from '../../space-view.ts';
 import type { Orbit, SpaceMarks } from '../../space-view.ts';
+
+/** The camera `orbit`, kept above the globe's ground where it shows one, however it moved (globe_ground). */
+export const keptAbove = (orbit: Orbit, globe: GlobeOf | undefined): Orbit =>
+  globe ? aboveGlobe(orbit, globe) : orbit;
 
 /** `orbit` zoomed by `times`: on a `globe`, toward its ground and never under it (globe_ground). */
 export function zoomIn(orbit: Orbit, times: number, globe: GlobeOf | undefined): Orbit {
