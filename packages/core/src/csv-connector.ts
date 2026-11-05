@@ -12,9 +12,12 @@ import { sha256 } from './ai-digest.ts';
 import type { Connected, Connector, Statement } from './connectors.ts';
 import { isNumber, kindOf, mappingOf, mappingPlace, mappingText, nameOf, proposeMapping } from './csv-mapping.ts';
 import type { TableMapping } from './csv-mapping.ts';
+import { exportRead, isExportTable } from './csv-export-read.ts';
+import type { ExportRead } from './csv-export-read.ts';
 import { readCsv } from './csv-read.ts';
 import type { CsvTable } from './csv-read.ts';
 import { readNote } from './drawing.ts';
+import { gqlLines } from './export-data-gql.ts';
 import { placeKey, readSource } from './sources.ts';
 import { word } from './words.ts';
 
@@ -66,6 +69,16 @@ export function tableStatements(table: CsvTable, mapping: TableMapping, version:
   return out;
 }
 
+/** The statements of ThoughtKnot's own export read back, each citing the row it was on. */
+function exportStatements(own: ExportRead, table: CsvTable, place: string, version: string): Statement[] {
+  const { things, links } = gqlLines(own.data);
+  const cite = (r: number) => ({ place, version, line: table.lines[r] ?? 0, row: r + 1 });
+  return [
+    ...things.map((text, i) => ({ text, cite: cite(own.thingRows[i] ?? 0) })),
+    ...links.map((text, i) => ({ text, cite: cite(own.linkRows[i] ?? 0) })),
+  ];
+}
+
 /**
  * The connector for a table: a .csv file read with the mapping written beside it. With no mapping, it gives no
  * statements and proposes one (`proposal`, the text of the mapping file) for a person to apply.
@@ -89,12 +102,20 @@ export const tableConnector: Connector = {
     const version = sha256(fetched.text);
     const written = fetched.mapping ? readNote([fetched.mapping], 0, shared).world['mapping'] : undefined;
     const mapping = written ? mappingOf(written, place) : null;
-    const statements = mapping ? tableStatements(table, mapping, version) : [];
+    // ThoughtKnot's own export says itself what each row is, so it reads back with no mapping (format_loss_stated)
+    const own = !mapping && isExportTable(table) ? exportRead(table) : null;
+    const statements = mapping
+      ? tableStatements(table, mapping, version)
+      : own
+        ? exportStatements(own, table, place, version)
+        : [];
     const block = [`// graph: ${source.graph}`, ...statements.map((s) => s.text)].join('\n');
     const reading = readNote([block], 0, shared);
     const read = { source, from: fetched.found, texts: [block], lines: [0], reading };
     const connected: Connected = { source, place, version, statements, read };
-    if (!mapping) {
+    if (own) {
+      if (own.faded) connected.note = word('reading.table.faded-not-kept', { place, rows: String(own.faded) });
+    } else if (!mapping) {
       connected.proposal = { place: mappingPlace(place), text: mappingText(proposeMapping(place, table)) };
       connected.note = word('reading.table.no-mapping', { place, mapping: mappingPlace(place) });
     } else if (table.uneven.length)

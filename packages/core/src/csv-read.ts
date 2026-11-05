@@ -26,6 +26,8 @@ export interface CsvTable {
   lines: number[];
   /** The character between cells: a comma, a semicolon or a tab. */
   delimiter: ',' | ';' | '\t';
+  /** The cells written `""`, an empty text, told apart from a missing one: `row:column`, both 0-based. */
+  quotedEmpty: Set<string>;
   /** Rows (0-based) holding more cells than the header has columns, with how many more. */
   uneven: { row: number; extra: number }[];
 }
@@ -73,7 +75,11 @@ export function readCsv(place: string, text: string, limits: CsvLimits = CSV_LIM
   let start = 1;
   let i = 0;
   let widest = 0;
+  let wasQuoted = false;
+  const empties: [number, number][] = [];
   const endCell = () => {
+    if (wasQuoted && cell === '') empties.push([rows.length - 1, row.length]);
+    wasQuoted = false;
     row.push(cell);
     widest = Math.max(widest, row.length);
     cell = '';
@@ -101,7 +107,7 @@ export function readCsv(place: string, text: string, limits: CsvLimits = CSV_LIM
       }
       i++;
     } else if (c === '"' && cell === '') {
-      quoted = true;
+      quoted = wasQuoted = true;
       i++;
     } else if (c === delimiter) {
       endCell();
@@ -125,5 +131,6 @@ export function readCsv(place: string, text: string, limits: CsvLimits = CSV_LIM
   const [header, ...data] = rows;
   if (!header || header.every((h) => h.trim() === '')) return refuse('no-header');
   const uneven = data.flatMap((r, row) => (r.length > header.length ? [{ row, extra: r.length - header.length }] : []));
-  return { header: header.map((h) => h.trim()), rows: data, lines: lines.slice(1), delimiter, uneven };
+  const quotedEmpty = new Set(empties.map(([r, c]) => `${r}:${c}`));
+  return { header: header.map((h) => h.trim()), rows: data, lines: lines.slice(1), delimiter, quotedEmpty, uneven };
 }

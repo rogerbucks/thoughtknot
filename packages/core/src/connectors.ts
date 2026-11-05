@@ -227,6 +227,26 @@ function contestedOf(claims: Record<string, readonly unknown[]>, byDoc: Map<stri
 }
 
 /**
+ * The days and instants the places wrote, by thing or link, key and text. The join gives each back as its text, so
+ * each is made the day or instant a place wrote again.
+ */
+function timesOf(
+  places: readonly { g: Graph; ctx: string }[],
+  idOf: (ctx: string, id: string) => string,
+): Map<string, Value> {
+  const times = new Map<string, Value>();
+  for (const { g, ctx } of places) {
+    for (const [id, [, props]] of g.nodes)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, id)}\u0000${k}\u0000${v.s}`, v);
+    for (const [from, type, to, props] of g.edges)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, from)}>${type}>${idOf(ctx, to)}\u0000${k}\u0000${v.s}`, v);
+  }
+  return times;
+}
+
+/**
  * The places of a FROM list joined into one graph, as the mesh joins documents (§21). The places are joined in the
  * order of their names, so the order they are listed in never changes the graph. A place that could not be read is
  * listed in `missing`, and the rest are drawn.
@@ -277,10 +297,13 @@ export function joinPlaces(
   });
   const joined = gs.joinDocs({ docs, config: {} });
   const contested = contestedOf(joined.claims, byDoc);
+  const times = timesOf(places, idOf);
   const things: DataThing[] = Object.entries(joined.nodes)
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([id, [labels, props]]) => {
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${id}\u0000${k}\u0000${v}`) ?? v;
       delete p['id'];
       const list = cites.get(id);
       if (list) p['cited_from'] = citedWords(list);
@@ -295,6 +318,8 @@ export function joinPlaces(
     .map(([key, props]) => {
       const [from, type, to] = JSON.parse(key) as [string, string, string];
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${from}>${type}>${to}\u0000${k}\u0000${v}`) ?? v;
       const list = cites.get(`${from}-[:${type}]->${to}`);
       if (list) p['cited_from'] = citedWords(list);
       return [from, type, to, p] as DataLink;

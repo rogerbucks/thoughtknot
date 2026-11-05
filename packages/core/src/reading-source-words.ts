@@ -133,6 +133,8 @@ export const READING_SOURCE_WORDS = {
     '{place} has no mapping yet, so it gives nothing to the graph: check the one proposed and save it as {mapping}.',
   'reading.table.mapping-said':
     'How {place} becomes things: one {row} for each row. Change a column’s "as" to change what it becomes.',
+  'reading.table.faded-not-kept':
+    '{place} is a ThoughtKnot export: its {rows} rows from a view’s faded context are read as the rest are, faded no longer.',
   'reading.table.uneven':
     '{place} has {rows} rows with more cells than its header has columns: the extra cells are left out.',
   'reading.source.file': 'The file {target}',
