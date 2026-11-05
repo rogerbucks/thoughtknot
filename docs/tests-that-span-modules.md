@@ -1134,6 +1134,10 @@ after a module nor listed here, and on a listed file that is missing.
   `regroup.ts` (explore_stays_put).
 - `packages/core/test/explore-fold.test.js` — a closed branch glides into its parent, and the zoom holds its view. It
   spans `regroup.ts` and `zoom.ts` (explore_stays_put).
+- `packages/core/test/explore-camera.test.js` — the camera holds its view while a map changes. It spans `regroup.ts`
+  and `zoom.ts` (explore_recentre, explore_stays_put).
+- `packages/obsidian/test/explore-phone.test.js` — on a phone the explore controls sit in the sheet, with named dials.
+  It spans `explore-sidebar.ts`, `explore-controls.ts` and the styles (explore_controls_on_screen).
 - `packages/obsidian/test/explore-view.test.js` — every view draws only what an exploration has open. It spans the
   views, `untangle.ts` and `explore-sidebar.ts` (explore_every_view).
 

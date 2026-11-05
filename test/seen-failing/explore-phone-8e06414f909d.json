@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/explore-phone.test.js",
+  "test": "under forced colours every main branch takes the text colour, and a badge the highlight",
+  "seen_failing_first": false,
+  "evidence": "Proves a property that already held in styles.css; evidence only."
+}

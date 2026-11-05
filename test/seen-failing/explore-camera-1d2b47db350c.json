@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/explore-camera.test.js",
+  "test": "the first exploration fits the drawing, and the next keeps the zoom and holds what was shown where it was",
+  "seen_failing_first": false,
+  "evidence": "It pins camera moves that already held after PR #1896; this evidence commit adds no code."
+}

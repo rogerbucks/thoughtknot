@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/explore-camera.test.js",
+  "test": "a new centre is put in the middle, the boxes gliding there, and ended, the view is as it was before",
+  "seen_failing_first": false,
+  "evidence": "It pins camera moves that already held after PR #1896; this evidence commit adds no code."
+}
