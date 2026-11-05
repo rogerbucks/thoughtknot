@@ -21,7 +21,7 @@ import { BY_KIND, ownChoices, withOwnLevel } from '../../own-levels.ts';
 import { namedLevels } from '../../named-levels.ts';
 import type { OwnLevel } from '../../own-levels.ts';
 import { make } from './note-callouts.ts';
-import { REGION_BLUR, card, cloudBlur, dots, puffs, region } from './level-look.ts';
+import { card, cloudFills, dots, puffs, region } from './level-look.ts';
 import { outlineOf, shownOf } from './readable-names.ts';
 
 /** The class of the group that holds the clouds, the first in the drawing's top group so it is under everything. */
@@ -157,7 +157,6 @@ export function levelsInto(
   if (at < levels.length - 1) {
     const group = make('g', { class: CLOUDS }),
       clouds = cloudsAt(levels, at, rects, PAD_PX / k);
-    cloudBlur(svg, (PAD_PX * 1.4) / k);
     const f = drawing ? foundOf(drawing) : null,
       inside = new Map<string, string[]>();
     for (const c of clouds) {
@@ -178,7 +177,7 @@ export function levelsInto(
   }
   // under every level, each subject's region in a soft wash of its colour (level_regions)
   const regions = make('g', { class: REGIONS });
-  cloudBlur(svg, (REGION_PX * 0.8) / k, REGION_BLUR);
+  cloudFills(svg);
   for (const g of levels[0]?.groups ?? []) {
     const rs = g.things.flatMap((t) => rects.get(t) ?? []);
     if (rs.length) regions.appendChild(region(rs, REGION_PX / k, hueOf(levels, g.key)));
@@ -346,7 +345,7 @@ function unitOf(
   const look = { 'data-hue': hueOf(levels, subject), 'data-shade': Math.min(at, 2) };
   // soft puffs round its things, a dot for each, and its name on a frosted card, as the mockup draws them (level_look)
   const inside = (levels[at]?.groups.find((g) => g.key === c.key)?.things ?? []).flatMap((t) => rects.get(t) ?? []);
-  const soft = puffs(inside, PAD_PX / k);
+  const soft = puffs(inside, PAD_PX / k, look['data-hue']);
   for (const [name, value] of Object.entries(look)) soft.setAttribute(name, String(value));
   unit.appendChild(soft);
   const dotted = dots(inside, k);

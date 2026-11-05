@@ -1,71 +1,93 @@
 // How the levels of detail look in 2D, as their mockup draws them (editor spec §68, level_look). Roger, 4 Nov 2026: the
-// app must look like the mockup. So a cloud is soft: one blurred puff round each thing in it, and no outline. Its name
+// app must look like the mockup. So a cloud is soft: one puff round each thing in it, solid then fading, no outline. Its name
 // sits on a frosted card in its colour, with its count. Far out each thing shows as a small dot of its colour. The
 // roads between clouds are wide ribbons with their count on a chip. Nothing moves: this only draws.
 import type { Rect } from '../../level-clouds.ts';
 import { make } from './note-callouts.ts';
+import { HUES } from './level-colours.ts';
 
-/** The id of the blur that softens the puffs of a cloud into one shape. */
-export const CLOUD_BLUR = 'thoughtknot-cloud-blur';
-/** The id of the wider blur that softens a subject's region into a wash. */
-export const REGION_BLUR = 'thoughtknot-region-blur';
+/** The id of the fill of each hue's puffs: a solid middle that fades out at its edge, as the mockup paints them. */
+export const CLOUD_FILL = 'thoughtknot-cloud-fill';
 /** The sizes of a card's name and count, its padding, and a dot's radius, in pixels of the screen. */
 const NAME_PX = 15,
   COUNT_PX = 11,
   PAD_PX = 8,
   DOT_PX = 2.6;
+/** How strong a puff's fill is from its middle out: solid, still nearly solid halfway, then gone at its edge. */
+const FADE: readonly [number, number][] = [
+  [0, 1],
+  [0.5, 0.9],
+  [1, 0],
+];
 
-/** The blur `id` (the clouds' by default), put once in `svg`'s defs, `soft` units wide in the drawing. */
-export function cloudBlur(svg: SVGSVGElement, soft: number, id = CLOUD_BLUR): void {
+/**
+ * Puts the puffs' fills in `svg`'s defs once, one for each hue: a solid middle that fades out at the edge. So a cloud
+ * has a clear shape, not a smear (Roger, 5 Nov 2026: the definition of the mockups).
+ */
+export function cloudFills(svg: SVGSVGElement): void {
   let defs = Array.from(svg.children).find((c) => c.tagName.toLowerCase() === 'defs');
   if (!defs) {
     defs = make('defs', {});
     svg.insertBefore(defs, svg.firstChild);
   }
-  let filter = Array.from(defs.children).find((c) => c.getAttribute('id') === id);
-  if (!filter) {
-    filter = make('filter', { id, x: '-50%', y: '-50%', width: '200%', height: '200%' });
-    filter.appendChild(make('feGaussianBlur', { stdDeviation: 1 }));
-    defs.appendChild(filter);
+  for (let hue = 0; hue < HUES; hue++) {
+    const id = `${CLOUD_FILL}-${hue}`;
+    if (Array.from(defs.children).some((c) => c.getAttribute('id') === id)) continue;
+    const fill = make('radialGradient', { id });
+    for (const [offset, opacity] of FADE)
+      fill.appendChild(
+        make('stop', { class: 'thoughtknot-cloud-stop', 'data-hue': hue, offset, 'stop-opacity': opacity }),
+      );
+    defs.appendChild(fill);
   }
-  filter.firstElementChild?.setAttribute('stdDeviation', String(Math.round(soft * 100) / 100));
 }
 
-/** One soft puff round each of `rects`, grown by `pad`, as a group the blur softens. */
-export function puffs(rects: readonly Rect[], pad: number): Element {
-  const g = make('g', { class: 'thoughtknot-cloud', filter: `url(#${CLOUD_BLUR})` });
-  for (const r of rects) {
-    const w = r.right - r.left,
-      h = r.bottom - r.top;
-    const at = (n: number) => Math.round(n * 100) / 100;
-    g.appendChild(
-      make('circle', {
-        cx: at(r.left + w / 2),
-        cy: at(r.top + h / 2),
-        r: at(Math.max(w, h) / 2 + pad),
-      }),
-    );
-  }
-  return g;
+/** How far each puff reaches toward its usual neighbour: past halfway, so neighbours merge into one shape. */
+const MERGE = 0.75;
+/** The most things measured for their spacing: enough to know a cloud's grain, and quick for a big one. */
+const SAMPLE = 300;
+
+/** How far apart the things of `rects` usually are: the middle of each one's distance to its nearest neighbour. */
+export function spacing(rects: readonly Rect[]): number {
+  const step = Math.max(1, Math.ceil(rects.length / SAMPLE));
+  const mids = rects
+    .filter((_, i) => i % step === 0)
+    .map((r): [number, number] => [(r.left + r.right) / 2, (r.top + r.bottom) / 2]);
+  if (mids.length < 2) return 0;
+  const nearest = mids.map(([x, y], i) =>
+    Math.min(...mids.map(([u, v], j) => (i === j ? Infinity : Math.hypot(u - x, v - y)))),
+  );
+  return nearest.sort((a, b) => a - b)[Math.floor(nearest.length / 2)] ?? 0;
 }
 
-/**
- * The region of a subject: a wide soft wash of its colour round each of `rects`, grown by `pad`. It lies under every
- * level's clouds, so you always see whose ground you are on (level_regions).
- */
-export function region(rects: readonly Rect[], pad: number, hue: number): Element {
-  const g = make('g', { class: 'thoughtknot-region', filter: `url(#${REGION_BLUR})`, 'data-hue': hue });
+/** One circle round each of `rects`, grown by `pad`, in the fill of `hue`: together they make one shape. */
+function round(cls: string, rects: readonly Rect[], pad: number, hue: number): Element {
+  const g = make('g', { class: cls, 'data-hue': hue });
   const at = (n: number) => Math.round(n * 100) / 100;
+  // each puff reaches most of the way to its neighbours, so a cloud stays one shape however near you zoom
+  pad = Math.max(pad, spacing(rects) * MERGE);
   for (const r of rects)
     g.appendChild(
       make('circle', {
         cx: at((r.left + r.right) / 2),
         cy: at((r.top + r.bottom) / 2),
         r: at(Math.max(r.right - r.left, r.bottom - r.top) / 2 + pad),
+        fill: `url(#${CLOUD_FILL}-${hue})`,
       }),
     );
   return g;
 }
+
+/** One puff round each of `rects`, grown by `pad`, in `hue`: the cloud is faded as a whole, so overlaps never darken. */
+export const puffs = (rects: readonly Rect[], pad: number, hue = 0): Element =>
+  round('thoughtknot-cloud', rects, pad, hue);
+
+/**
+ * The region of a subject: a wide faint shape of its colour round each of `rects`, grown by `pad`. It lies under
+ * every level's clouds, so you always see whose ground you are on (level_regions).
+ */
+export const region = (rects: readonly Rect[], pad: number, hue: number): Element =>
+  round('thoughtknot-region', rects, pad, hue);
 
 /** A small dot of its cloud's colour where each of `rects` is, `k` pixels a unit: far out, a thing shows as this. */
 export function dots(rects: readonly Rect[], k: number): Element {

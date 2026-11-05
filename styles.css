@@ -4268,15 +4268,32 @@ img.thoughtknot-picture-hidden,
    them (level_look). Each cloud is soft, with no outline. Far out each thing is a dot. Each cloud's name sits on a
    frosted card in its colour, and roads are wide ribbons with a count. */
 .thoughtknot-svg .thoughtknot-cloud {
-  fill: var(--gn-branch-0);
-  fill-opacity: 0.32;
+  opacity: 0.3;
   stroke: none;
 }
-/* each subject's region: one soft wash of its colour under every level, its puffs merged before it fades */
+/* each subject's region: one faint shape of its colour under every level, faded as a whole so overlaps never darken */
 .thoughtknot-svg .thoughtknot-region {
-  fill: var(--gn-branch-0);
-  opacity: 0.12;
+  opacity: 0.1;
   pointer-events: none;
+}
+/* each puff is solid in the middle and fades at its edge, in its hue (level_look) */
+.thoughtknot-svg .thoughtknot-cloud-stop {
+  stop-color: var(--gn-branch-0);
+}
+.thoughtknot-svg .thoughtknot-cloud-stop[data-hue='1'] {
+  stop-color: var(--gn-branch-1);
+}
+.thoughtknot-svg .thoughtknot-cloud-stop[data-hue='2'] {
+  stop-color: var(--gn-branch-2);
+}
+.thoughtknot-svg .thoughtknot-cloud-stop[data-hue='3'] {
+  stop-color: var(--gn-branch-3);
+}
+.thoughtknot-svg .thoughtknot-cloud-stop[data-hue='4'] {
+  stop-color: var(--gn-branch-4);
+}
+.thoughtknot-svg .thoughtknot-cloud-stop[data-hue='5'] {
+  stop-color: var(--gn-branch-5);
 }
 .thoughtknot-svg .thoughtknot-cloud-dots {
   fill: var(--gn-branch-0);
@@ -4578,10 +4595,10 @@ img.thoughtknot-picture-hidden,
 }
 /* Areas and topics take lighter shades of their subject's colour. */
 .thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
-  fill-opacity: 0.26;
+  opacity: 0.24;
 }
 .thoughtknot-svg .thoughtknot-cloud[data-shade='2'] {
-  fill-opacity: 0.22;
+  opacity: 0.22;
 }
 /* The spotlight: the subject pointed at comes to the front, the rest fade. Only their look changes. */
 .thoughtknot-svg.thoughtknot-spotlit :is(g.node, .thoughtknot-cloud-unit):not(.is-spot) {
