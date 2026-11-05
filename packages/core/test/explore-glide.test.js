@@ -1,6 +1,6 @@
 // A branch opened glides out of its parent (editor spec §71, explore_stays_put). Roger, 1 Nov 2026: nodes must not jump.
-// Opening a branch puts its new things where the layout gives them, but the eye follows them out of the thing they
-// came from, and the things already shown stay where they are on the screen.
+// Opening a branch puts its new things where the layout gives them. The eye follows them out of the thing they came
+// from. The things already shown stay where they are on the screen.
 // Requirements: explore_stays_put.
 // - The exploration tells the card each thing's parent and its centre, so new things know where to glide from.
 // - A new box starts on its parent's place; a deeper one, on its nearest parent that was drawn.

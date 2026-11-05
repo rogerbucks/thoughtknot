@@ -115,9 +115,9 @@ export class Regrouping {
   }
 
   /**
-   * Puts the camera as it was, at the same zoom, so what was on screen stays where it was: a thing shown before is
-   * the mark to hold. Things new to the screen that would land out of sight bring the view in with them, or the whole
-   * map is fitted when they cannot all be in sight. A new centre is put in the middle (explore_stays_put).
+   * Puts the camera as it was, at the same zoom. A thing shown before is the mark to hold, so it stays where it was on
+   * the screen. New things that would land out of sight bring the view in with them. If they cannot all be in sight,
+   * the whole map is fitted. A new centre is put in the middle (explore_stays_put).
    */
   private staying(zoom: Zoom, view: View, was: Map<string, DOMRect>, now: ExploreKept, recentred: boolean): void {
     const svg = this.host.svg(),
