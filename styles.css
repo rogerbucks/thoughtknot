@@ -4499,11 +4499,6 @@ img.thoughtknot-picture-hidden,
   padding: 0 var(--gn-space-1);
   font-size: var(--gn-font-size-xs);
 }
-.thoughtknot-level-chip > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .thoughtknot-level-badge:not(:hover, :focus-within) :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
   position: absolute;
   opacity: 0;
