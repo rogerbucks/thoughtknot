@@ -199,7 +199,8 @@ test('zoomed in, the drawing grows past its viewport, and only the part the view
 test('zoomed far in at once, the levels go one at a time, never two at once, and say when they are on the way', async () => {
   const { svg, drawing, levelClouds, uninstall } = await drawn(240, 1200);
   try {
-    const { levelSettling, levelShown, stepToward } = await import('../src/display/graph-view/level-clouds-svg.ts');
+    const { levelShown } = await import('../src/display/graph-view/level-clouds-svg.ts');
+    const { stepToward } = await import('../src/detail-levels.ts');
     assert.equal(stepToward(undefined, 2), 2, 'the first time, straight to the level that fits');
     assert.equal(stepToward(0, 2), 1, 'then one level on');
     assert.equal(stepToward(2, 0), 1, 'and one level back');
@@ -212,7 +213,7 @@ test('zoomed far in at once, the levels go one at a time, never two at once, and
     levelClouds(svg, drawing);
     const far = levelShown(svg).at;
     assert.equal(far, 0, 'the whole drawing shows its subjects');
-    assert.equal(levelSettling(svg), false, 'drawn whole, it shows the level that fits at once');
+    assert.equal(levelShown(svg).settling, false, 'drawn whole, it shows the level that fits at once');
     port.getBoundingClientRect = rect(60, 40);
     const seen = [far];
     for (let i = 0; i < 5; i++) {
@@ -221,7 +222,7 @@ test('zoomed far in at once, the levels go one at a time, never two at once, and
     }
     for (let i = 1; i < seen.length; i++) assert.ok(seen[i] - seen[i - 1] <= 1, `one level a step: ${seen}`);
     assert.equal(seen.at(-1), levelShown(svg).count - 1, 'it gets to every item');
-    assert.equal(levelSettling(svg), false, 'and has arrived');
+    assert.equal(levelShown(svg).settling, false, 'and has arrived');
   } finally {
     uninstall();
   }

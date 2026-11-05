@@ -7,9 +7,8 @@
 // as drawn. Nothing moves: the things stay put and the drawing's own attributes are left as drawn.
 import { detailLevels, levelAt, levelBadge, stepToward } from '../../detail-levels.ts';
 import type { DetailLevel } from '../../detail-levels.ts';
-import { cloudsAt } from '../../level-clouds.ts';
+import { cloudsAt, type Cloud, type Rect } from '../../level-clouds.ts';
 import { roadsAt } from '../../level-roads.ts';
-import type { Cloud, Rect } from '../../level-clouds.ts';
 import { spreadTags, tagWidth } from '../../level-tags.ts';
 import { word } from '../../words.ts';
 import { hueOf, subjectOf, tintThings } from './level-colours.ts';
@@ -51,16 +50,9 @@ const held = new WeakMap<SVGSVGElement, Map<string, string[]>>();
 /** The level each drawing shows now, and how many it has: for the hints and the arrow legend (level_hints). */
 const shownAt = new WeakMap<Element, { at: number; count: number; settling?: boolean }>();
 
-/** The level `svg` shows now, from 0 (farthest), and how many levels it has; null when it shows none. */
-export const levelShown = (svg: Element): { at: number; count: number } | null => {
-  const shown = shownAt.get(svg);
-  return shown ? { at: shown.at, count: shown.count } : null;
-};
-
-export { stepToward };
-
-/** Whether `svg` is still on its way to the level that fits: draw it again soon, one more level on (level_one_step). */
-export const levelSettling = (svg: Element): boolean => shownAt.get(svg)?.settling ?? false;
+/** The level `svg` shows now (0 farthest), of how many, and if still `settling` one by one (level_one_step). */
+export const levelShown = (svg: Element): { at: number; count: number; settling?: boolean } | null =>
+  shownAt.get(svg) ?? null;
 
 /** The things of the cloud `key` drawn in `svg` now; none when it shows no such cloud. */
 export const cloudThings = (svg: SVGSVGElement, key: string): string[] => held.get(svg)?.get(key) ?? [];

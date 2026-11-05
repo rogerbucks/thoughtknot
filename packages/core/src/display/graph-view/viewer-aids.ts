@@ -14,7 +14,7 @@ import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph,
 import type { DetailsPanel } from './details-panel';
 import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
-import { levelClouds, levelSettling, levelShown, levelsOf } from './level-clouds-svg.ts';
+import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
 import { groupEdits } from '../../group-edit.ts';
@@ -214,7 +214,7 @@ export class Aids {
       const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
       this.hints?.show(layer ? levelShown(layer) : null);
       // one level on at a time: still on the way to the one that fits, it draws again in a moment (level_one_step)
-      if (layer && levelSettling(layer)) win.setTimeout(() => this.names(), LEVEL_STEP_MS);
+      if (layer && levelShown(layer)?.settling) win.setTimeout(() => this.names(), LEVEL_STEP_MS);
       this.levelTaps?.mark();
       const levels = drawing ? levelsOf(drawing, g) : null;
       this.legend?.show(levels);

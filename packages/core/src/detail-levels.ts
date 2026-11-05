@@ -250,7 +250,7 @@ export function levelAt(levels: readonly DetailLevel[], seen: ReadonlySet<string
 
 /**
  * The level to show after `was`, on the way to `goal`: one level on at most. So one notch of the wheel, or one
- * pinch, never jumps two levels at once, and you always see where you came from (Roger, 5 Nov 2026).
+ * pinch, never jumps two levels at once. You always see where you came from (Roger, 5 Nov 2026).
  */
 export const stepToward = (was: number | undefined, goal: number): number =>
   was === undefined ? goal : was + Math.max(-1, Math.min(1, goal - was));
