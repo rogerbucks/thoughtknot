@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/fences.test.js",
+  "test": "an unclosed block runs to the end of the note",
+  "seen_failing_first": false,
+  "evidence": "The old code already behaved this way: this is a security fix with the same behaviour, so the three rule tests pass on the old code. The guard (no regex built) failed on the old code when run there, but the fix commit came first because the alert blocks the nightly."
+}
