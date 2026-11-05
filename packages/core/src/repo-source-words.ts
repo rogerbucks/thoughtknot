@@ -25,4 +25,9 @@ export const REPO_SOURCE_WORDS = {
   'repo.extract.folder': 'The folder {folder} holds docs.',
   'repo.extract.doc': 'The doc {path} is in the repository.',
   'repo.extract.nothing': 'The repository holds nothing the graph does not have already.',
+  'repo.gh.bad-branch':
+    'Not a branch name that can be used: “{branch}”. Use letters, digits, dots, dashes and slashes.',
+  'repo.gh.bad-path': 'Not a file’s path in the repository: “{path}”.',
+  'repo.gh.failed': 'GitHub did not answer as expected. Check that gh is installed and signed in, then try again.',
+  'repo.gh.no-main': 'The main branch {branch} could not be read, so no branch could be started from it.',
 } as const;

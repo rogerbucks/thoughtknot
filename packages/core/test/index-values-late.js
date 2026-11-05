@@ -366,4 +366,7 @@ export const VALUES_LATE = [
   'REPO_REFUSED',
   'repoGraphProposal',
   'repoRefusal',
+  // the GitHub repository reached through the user's own gh (§48, github_repo_access), 5 Nov 2026
+  'ghRepoHost',
+  'isBranchName',
 ];
