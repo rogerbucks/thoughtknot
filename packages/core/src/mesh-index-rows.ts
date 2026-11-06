@@ -89,6 +89,8 @@ export interface MeshBackend {
   links(note: string): LinkRow[];
   /** The links with both ends in group `group`, in order. Without it they are found among all the note's links. */
   inside?(note: string, group: string): LinkRow[];
+  /** The links with an end among `keys`, each once, in order. Without it they are found among all the note's links. */
+  touching?(note: string, keys: readonly string[]): LinkRow[];
 }
 
 /** A page of things: those after `after` (a key), at most `limit` of them. */

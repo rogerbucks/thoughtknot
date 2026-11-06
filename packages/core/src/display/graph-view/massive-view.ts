@@ -19,7 +19,7 @@ import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import { groupsOf, type Grouping } from '../../scale-groups.ts';
 import { Trail } from '../../explore-trail.ts';
-import { FLY_MS, ThingSearch, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
+import { FLY_MS, ThingSearch, fitView, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
 import type { FlyView, Match, Rect } from '../../search-fly.ts';
 import { reducedMotion } from './details-nav';
 import { webgl2Painter } from './gl-painter.ts';
@@ -61,7 +61,7 @@ let made = 0;
 
 /** Shows `drawing`, too large to draw whole, as its overview at the end of `parent`, the card. */
 export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: MassiveOptions): MassiveView {
-  const whole = groupsOf(drawing),
+  const whole = o.parts?.grouping ?? groupsOf(drawing),
     keys = drawing.boxes.map((b) => b.key);
   // each group box counts its things' looks, and the looks are a filter (§56, rule_look_massive)
   const looks = o.rules && groupLooks(o.rules),
@@ -81,6 +81,8 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   let gliding: LaidMarks | null = null;
   let index = new MarkIndex(laid);
   const opened = new Set<string>();
+  // a group's inside, the things a filter keeps: read from the store for a graph read in parts, else from the drawing
+  const partIn = (id: string) => partOf(o.parts?.group(id) ?? drawing, keysOf.get(id) ?? []);
 
   const el = parent.createDiv({ cls: 'thoughtknot-massive' });
   const id = `thoughtknot-massive-${++made}`;
@@ -130,10 +132,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     asked = true;
     win.requestAnimationFrame(paint);
   };
-  const fit = (space = laid.space): FlyView => {
-    const scale = Math.min(width / space.width, height / space.height);
-    return { x: (space.width - width / scale) / 2, y: (space.height - height / scale) / 2, scale };
-  };
+  const fit = (space = laid.space): FlyView => fitView(space, width, height);
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the overview goes with it
     if (!el.isConnected) return close();
@@ -187,7 +186,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     win,
     () => ({ open, moving: !!gliding, overview: laid, camera, screen: { width, height }, opened, grouping }),
     async (id) => {
-      const drawn = await layIn(id, partOf(drawing, keysOf.get(id) ?? []));
+      const drawn = await layIn(id, partIn(id));
       if (drawn) opened.add(id);
       again();
       return drawn;
@@ -323,7 +322,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   const flyTo = async (match: Match) => {
     const group = names.get(match.group) ?? match.group;
     said.setText(word('massive.opening', { group }));
-    const drawn = opened.has(match.group) || (await layIn(match.group, partOf(drawing, keysOf.get(match.group) ?? [])));
+    const drawn = opened.has(match.group) || (await layIn(match.group, partIn(match.group)));
     if (!open) return;
     if (drawn) opened.add(match.group);
     const box = laid.marks.find((m) => m.id === match.group);

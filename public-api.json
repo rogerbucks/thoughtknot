@@ -2570,6 +2570,7 @@
           "notes: () => string[]",
           "put: (rows: NoteRows) => void",
           "things: (note: string, groups: readonly string[]) => ThingRow[]",
+          "touching?: ((note: string, keys: readonly string[]) => LinkRow[]) | undefined",
           "version: (note: string) => string | null"
         ],
         "MeshFound": [
@@ -3056,6 +3057,7 @@
           "group: (id: string, keep?: boolean) => GraphDrawing | null",
           "holding: number",
           "letGo: (id: string) => void",
+          "near: LinksNear",
           "readonly note: string",
           "onScreen: (ids: Iterable<string>) => void",
           "open: Array<string>",
@@ -4928,6 +4930,7 @@
         "StoredGraph": [
           "interface",
           "drawing: GraphDrawing",
+          "parts: StoredParts",
           "props: (key: string) => Readonly<Record<string, unknown>>",
           "world: () => Graph"
         ],
