@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{@lang}}" dir="{{@dir}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{@page-title}}</title>
+    <meta name="description" content="{{@page-description}}" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="site.css" />
+    {{@page-head}}
+  </head>
+  <body>
+    <a class="skip" href="#content">{{site.skip}}</a>
+    <header class="top">
+      <a class="brand" href="index.html"><img src="icon.svg" alt="" width="28" height="28" />{{site.name}}</a>
+      <nav aria-label="{{nav.label}}">
+        <ul>
+          <li><a href="index.html">{{nav.home}}</a></li>
+          <li><a href="libraries.html">{{nav.libraries}}</a></li>
+          <li><a href="spec.html">{{nav.spec}}</a></li>
+          <li><a href="nightly.html">{{nav.nightly}}</a></li>
+          <li><a href="{{@product}}">{{nav.product}}</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="content">{{@content}}</main>
+    <footer class="bottom">
+      <p>{{footer.licence}}</p>
+      <p class="made">{{footer.made}}</p>
+    </footer>
+  </body>
+</html>

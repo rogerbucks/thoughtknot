@@ -1131,6 +1131,7 @@ after a module nor listed here, and on a listed file that is missing.
   It is in the wiki, compares the ways to link, keep and cache a data set, and keeps a place for Roger's pick.
 - `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
   V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
+- `test/developer-site.test.js` — the developer site, with its nightly page kept out of search engines.
 - `test/massive-graphs-limits.test.js` — the limits looked at again (editor spec §53, scale_limits_revisited). The
   design note gives each limit before and after. A hostile graph past a new limit is still refused, saying why.
 - `test/massive-graphs-parts.test.js` — a huge note read in parts within budget (editor spec ES§53, scale_parts_budget).

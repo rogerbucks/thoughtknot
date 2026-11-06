@@ -56,11 +56,11 @@ export function pngSize(bytes) {
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-const escapeHtml = (text) =>
+export const escapeHtml = (text) =>
   String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** `text` with each {name} filled from `values`; a name `values` lacks is left as it is. */
-const withPlaceholders = (text, values) =>
+export const withPlaceholders = (text, values) =>
   text.replace(/\{(\w+)\}/g, (whole, name) => (Object.hasOwn(values, name) ? values[name] : whole));
 
 /**
