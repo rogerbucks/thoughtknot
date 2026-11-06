@@ -11,6 +11,7 @@ import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { glyphNamed } from './board-glyphs.ts';
+import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
@@ -94,7 +95,8 @@ export function itemSaid(board: Board, item: BoardItem): string {
     joins.push(c.label ? word(`${key}-as`, { other: said, label: c.label }) : word(key, { other: said }));
   }
   const votes = tallySaid(item, (people, list) => word('board.vote.said', { people, list }));
-  return [named(item), ...joins, ...(votes ? [votes] : [])].join('. ');
+  const talk = commentsSaid(item, (open, done) => word('board.comment.said', { open, done }));
+  return [named(item), ...joins, ...(votes ? [votes] : []), ...(talk ? [talk] : [])].join('. ');
 }
 
 /** The outline: every item once, top to bottom then left to right, with what each frame holds under it. */
@@ -185,11 +187,15 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const words = text
     ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${item.kind === 'Frame' ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
+  const open = openThreads(item);
+  const talk = open
+    ? `<text x="${num(box.x + pad)}" y="${num(box.y + box.h - pad)}" font-family="${STYLE.font}" font-size="${num(STYLE.kind_font_size)}" fill="${palette.muted}" aria-hidden="true" data-comments="${open}">${isolated(escaped(word('board.comment.badge', { open })))}</text>`
+    : '';
   const tally = tallyOf(item);
   const votes = tally.total
     ? `<text x="${num(box.x + box.w - pad)}" y="${num(box.y + box.h - pad)}" font-family="${STYLE.font}" font-size="${num(STYLE.kind_font_size)}" text-anchor="end" fill="${palette.muted}" aria-hidden="true" data-votes="${tally.total}">${isolated(escaped(tally.reactions.map((r) => `${r.reaction} ${r.count}`).join('  ')))}</text>`
     : '';
-  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}</g>`;
+  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}</g>`;
 }
 
 /**
