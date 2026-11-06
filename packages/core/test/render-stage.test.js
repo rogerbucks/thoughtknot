@@ -333,3 +333,45 @@ test('a click on a signpost glides to the room off screen at the same zoom', asy
     uninstall();
   }
 });
+
+// proves: mini_map
+test('the mini-map paints the drawing in its own look, outlines the part in view, and a press moves the view there', async () => {
+  // Roger, 7 Nov 2026: the mini-map should reflect the overall look, not squares
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    const stage = new RenderStage(viewport, drawing, g);
+    const mini = stage.mini;
+    assert.ok(mini, 'shown by default');
+    assert.ok(mini.canvas.classList.contains('thoughtknot-mini-map'), 'in the mini-map’s corner slot');
+    // zoomed in: the outline is a small part of the copy
+    const [work, money] = stage.scene.named;
+    const w = stage.spots.get(work);
+    stage.view = { ...stage.view, scale: stage.view.scale * 6, x: w.x, y: w.y };
+    stage.draw();
+    const f = mini.frame();
+    assert.ok(f.w < 160 && f.h < 120, 'the part in view, outlined small');
+    // a press on Money's place on the copy brings Money to the middle, at the same zoom
+    const m = stage.spots.get(money);
+    const scale = stage.view.scale;
+    const whole = mini.whole;
+    mini.moveTo({ clientX: (m.x - whole.x) * whole.scale, clientY: (m.y - whole.y) * whole.scale });
+    assert.equal(stage.view.scale, scale);
+    const x = (m.x - stage.view.x) * scale,
+      y = (m.y - stage.view.y) * scale;
+    assert.ok(Math.abs(x - stage.view.w / 2) < 2 && Math.abs(y - stage.view.h / 2) < 2, 'Money is in the middle');
+    stage.unload();
+    assert.ok(!mini.canvas.parentElement, 'gone with the stage');
+    // the mini-map setting off: none
+    const off = new RenderStage(viewport, drawing, g, undefined, false);
+    assert.equal(off.mini, null);
+    off.unload();
+  } finally {
+    uninstall();
+  }
+});

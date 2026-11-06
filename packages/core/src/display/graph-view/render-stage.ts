@@ -29,6 +29,7 @@ import {
 } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { coverCards, overCover } from './controls-cover.ts';
+import { StageMiniMap } from './stage-mini-map.ts';
 
 /** How long a glide to a picked thing takes, in milliseconds. */
 export const GLIDE_MS = 260;
@@ -62,7 +63,8 @@ export function stageFor(
 ): RenderStage | null {
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
-  return o.aids?.newRendering && drawing && hasLevels(drawing, g) ? new RenderStage(viewport, drawing, g, hands) : null;
+  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g)) return null;
+  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap !== 'off');
 }
 
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -86,10 +88,12 @@ export class RenderStage {
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
+  /** The whole drawing small, in its corner, in the drawing's own look (Roger, 7 Nov 2026). */
+  readonly mini: StageMiniMap | null;
   /** The level the hands were last told, so they hear only of a change. */
   private said = '';
 
-  constructor(viewport: HTMLElement, drawing: GraphDrawing, g?: Graph, hands?: StageHands) {
+  constructor(viewport: HTMLElement, drawing: GraphDrawing, g?: Graph, hands?: StageHands, mini = true) {
     this.viewport = viewport;
     this.hands = hands;
     this.scene = sceneOf(shapeOf(drawing, g));
@@ -100,6 +104,22 @@ export class RenderStage {
     this.canvas.setAttribute('role', 'img');
     // what was painted last, as data, for the scoreboard to count (scripts/render-measure.mjs); nothing reads it back
     Object.defineProperty(this.canvas, 'thoughtknotDrawn', { value: () => ({ marks: this.marks, view: this.view }) });
+    // shown unless the mini-map setting is off (mini_map_setting)
+    this.mini = !mini
+      ? null
+      : new StageMiniMap(viewport, {
+          scene: this.scene,
+          spots: this.spots,
+          sizes: this.sizes,
+          look: () => this.look(),
+          own: (key) => this.hands?.own?.(key),
+          view: () => this.view,
+          lookAt: (x, y) => {
+            this.untouched = false;
+            this.view = centreOn(this.view, { x, y, r: 0 });
+            this.draw();
+          },
+        });
     this.view = this.fitted();
     // caught on the way down, so today's zoom underneath never takes the same notch
     viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });
@@ -279,6 +299,7 @@ export class RenderStage {
     const level = this.level();
     if (level !== this.said) this.hands?.drawn?.();
     this.said = level;
+    this.mini?.draw();
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
     if (!c) return;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -300,6 +321,7 @@ export class RenderStage {
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();
+    this.mini?.remove();
     this.viewport.removeClass('thoughtknot-new-rendering');
   }
 }
