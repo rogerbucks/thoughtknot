@@ -1,6 +1,5 @@
-// The editor's options (spec §21), each with its name, a sentence saying what it does, its choices and its default. So
-// a host's settings page shows every one. Saved settings are read back with anything unknown or out of range left out.
-// Nothing secret is kept: an AI model names its key in the host's own secret store (§19), never the key.
+// The editor's options (spec §21): each one's name, what it does, its choices and default, for a host's settings page.
+// Saved settings are read back without unknown or out-of-range values. AI keys stay in the host's secret store (§19).
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
@@ -8,7 +7,7 @@ import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
-import { RENDER_OPTION, SWITCH_OPTIONS } from './settings-switches.ts';
+import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
@@ -24,13 +23,11 @@ export type FocusDepthSetting = 'one' | 'two';
 
 /** The theme an exported image is drawn in, its colours fixed so it reads the same outside Obsidian (§16). */
 export type ExportTheme = 'light' | 'dark';
-
 /** Whether an export saved into the vault also gets a companion note (§16). */
 export type CompanionSetting = 'off' | 'on';
 
 /** Whether AI is used at all (§19, ai_off_until_chosen): off until the user turns it on. */
 export type AiUse = 'off' | 'on';
-
 /** A switch of the View menu as the settings hold its default (§25, view_switch_defaults): on or off. */
 export type SwitchSetting = 'on' | 'off';
 
@@ -77,7 +74,6 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
   easierReading: SwitchSetting;
-  /** Whether graphs with levels are drawn by the new rendering, as a preview (§73, render_switch). */
   newRendering: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
@@ -272,7 +268,6 @@ export const OPTIONS: Option[] = [
   },
   ...SWITCH_OPTIONS, // the View menu's switches' defaults (§25)
   ...AID_OPTIONS, // the mini-map and the details kept open (§24)
-  RENDER_OPTION, // the new rendering, as a preview (§73)
   {
     key: 'exportTheme',
     section: 'Export',
