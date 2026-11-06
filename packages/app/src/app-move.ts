@@ -1,4 +1,4 @@
-// Moving the notes to another folder from the desktop app (spec §55, storage_user_choice). The person picks the folder.
+// Moving the notes to another folder from the desktop app (ES§55, storage_user_choice). The person picks the folder.
 // Every note is copied there and read back, by the core's checked move. If a check fails, nothing is moved and the new
 // folder is left as it was found. Only once all is checked does the app open the new folder. The old copies stay where
 // they were until the person presses Remove, and a note changed since the move is kept. GitHub is not a place notes are

@@ -1,4 +1,4 @@
-// Moving the notes to another folder in the desktop app (editor spec §55, storage_user_choice). The person picks the
+// Moving the notes to another folder in the desktop app (ES§55, storage_user_choice). The person picks the
 // folder. Every note is copied there and read back before the app opens it. The old copies stay until the person
 // presses Remove, and a note changed after the move is kept. A move that would write over other notes moves nothing.
 import { test, after } from 'node:test';
