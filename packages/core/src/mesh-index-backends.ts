@@ -148,26 +148,28 @@ export function sqliteBackend(engine: SqlEngine): MeshBackend {
               span: span(r),
             })),
     links: (note) => engine.run('SELECT * FROM links WHERE note = ? ORDER BY place', [note]).map(linkRow),
-    inside: (note, group) =>
-      engine
-        .run('SELECT * FROM links WHERE note = ? AND src_grp = ? AND dst_grp = ? ORDER BY place', [note, group, group])
-        .map(linkRow),
-    touching: (note, keys) => {
-      // a few hundred keys a query, well under SQLite's limit on parameters
-      const places = new Map<number, Record<string, unknown>>();
-      for (let i = 0; i < keys.length; i += TOUCHING_MOST) {
-        const some = keys.slice(i, i + TOUCHING_MOST),
-          marks = some.map(() => '?').join(', ');
-        const sql = `SELECT * FROM links WHERE note = ? AND (src IN (${marks}) OR dst IN (${marks}))`;
-        for (const r of engine.run(sql, [note, ...some, ...some])) places.set(num(r['place']), r);
-      }
-      return [...places].sort(([a], [b]) => a - b).map(([, r]) => linkRow(r));
-    },
+    inside: (note, group) => engine.run(INSIDE, [note, group, group]).map(linkRow),
+    touching: (note, keys) => touchingIn(engine, note, keys),
   };
 }
 
+/** The links with both ends in one group. */
+const INSIDE = 'SELECT * FROM links WHERE note = ? AND src_grp = ? AND dst_grp = ? ORDER BY place';
+
 /** The most keys one query of the links touching some things names. */
 const TOUCHING_MOST = 400;
+
+/** The links of `note` with an end among `keys`, each once, in order: a few hundred keys a query, under SQLite's limit. */
+function touchingIn(engine: SqlEngine, note: string, keys: readonly string[]): LinkRow[] {
+  const places = new Map<number, Record<string, unknown>>();
+  for (let i = 0; i < keys.length; i += TOUCHING_MOST) {
+    const some = keys.slice(i, i + TOUCHING_MOST),
+      marks = some.map(() => '?').join(', ');
+    const sql = `SELECT * FROM links WHERE note = ? AND (src IN (${marks}) OR dst IN (${marks}))`;
+    for (const r of engine.run(sql, [note, ...some, ...some])) places.set(num(r['place']), r);
+  }
+  return [...places].sort(([a], [b]) => a - b).map(([, r]) => linkRow(r));
+}
 
 /** A link as SQLite gives it back. */
 function linkRow(r: Record<string, unknown>): LinkRow {

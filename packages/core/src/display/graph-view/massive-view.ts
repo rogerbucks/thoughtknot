@@ -19,7 +19,7 @@ import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import { groupsOf, type Grouping } from '../../scale-groups.ts';
 import { Trail } from '../../explore-trail.ts';
-import { FLY_MS, ThingSearch, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
+import { FLY_MS, ThingSearch, fitView, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
 import type { FlyView, Match, Rect } from '../../search-fly.ts';
 import { reducedMotion } from './details-nav';
 import { webgl2Painter } from './gl-painter.ts';
@@ -132,10 +132,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     asked = true;
     win.requestAnimationFrame(paint);
   };
-  const fit = (space = laid.space): FlyView => {
-    const scale = Math.min(width / space.width, height / space.height);
-    return { x: (space.width - width / scale) / 2, y: (space.height - height / scale) / 2, scale };
-  };
+  const fit = (space = laid.space): FlyView => fitView(space, width, height);
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the overview goes with it
     if (!el.isConnected) return close();
