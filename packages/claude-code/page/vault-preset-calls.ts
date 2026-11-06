@@ -13,7 +13,7 @@ export function vaultPresetCalls(token: string, fetcher: typeof fetch) {
   return {
     /** The starter the vault names, or null for none. A vault that cannot be asked has none. */
     read: async (): Promise<string | null> => {
-      const reply = await fetcher('/api/vault-preset', { headers: { authorization } }).catch(() => null);
+      const reply = await fetcher(`/api/vault-preset`, { headers: { authorization } }).catch(() => null);
       if (!reply?.ok) return null;
       const body = (await reply.json().catch(() => null)) as { id?: unknown } | null;
       return typeof body?.id === 'string' ? body.id : null;
@@ -21,13 +21,13 @@ export function vaultPresetCalls(token: string, fetcher: typeof fetch) {
     /** Makes starter `id` the vault's preset, or with null gives the vault none; never rejects. */
     write: async (id: string | null): Promise<PresetWritten> => {
       try {
-        const reply = await fetcher('/api/vault-preset', {
+        const reply = await fetcher(`/api/vault-preset`, {
           method: 'PUT',
           headers: { authorization, 'content-type': 'application/json' },
           body: JSON.stringify({ id }),
         });
         if (reply.ok) return { ok: true, id };
-        const body = await reply.json().catch(() => null);
+        const body = (await reply.json().catch(() => null)) as unknown;
         return { ok: false, why: whyOf(body) ?? word('page.write-refused', { status: reply.status }) };
       } catch (e) {
         return { ok: false, why: word('page.preset-not-sent', { why: e instanceof Error ? e.message : String(e) }) };
