@@ -54,7 +54,8 @@ export function readOwnList(text: string): ViewPreset[] {
 }
 
 /** The name `given` as it is kept: one line, cut short; else `fallback` when there is none. */
-const nameOf = (given: string, fallback: string): string => given.replace(/\s+/g, ' ').trim().slice(0, MOST_NAME) || fallback;
+const nameOf = (given: string, fallback: string): string =>
+  given.replace(/\s+/g, ' ').trim().slice(0, MOST_NAME) || fallback;
 
 /** The list text with a copy of `preset` added under `name`, as its own. Full lists take no more. */
 export function addOwn(text: string, preset: ViewPreset, name: string): string {

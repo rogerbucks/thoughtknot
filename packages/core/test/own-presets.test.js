@@ -42,7 +42,13 @@ describe('own presets', () => {
     const evil = JSON.stringify({
       format: 'thoughtknot-own-presets@1',
       items: [
-        { format: 'thoughtknot-view-preset@1', id: 'x', name: 'Bad', chain: { text: { wordSpacing: 0 }, formatting: { contrast: 'x' } }, settings: { evil: 'yes' } },
+        {
+          format: 'thoughtknot-view-preset@1',
+          id: 'x',
+          name: 'Bad',
+          chain: { text: { wordSpacing: 0 }, formatting: { contrast: 'x' } },
+          settings: { evil: 'yes' },
+        },
         'junk',
         null,
       ],
