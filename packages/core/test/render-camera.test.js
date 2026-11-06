@@ -3,7 +3,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { detailAt } from '../src/render/render-detail.ts';
-import { fitView, panView, stepView, stopsOf, zoomTo } from '../src/render/render-camera.ts';
+import {
+  centreOn,
+  fitView,
+  glideView,
+  panView,
+  pickAt,
+  stepView,
+  stopsOf,
+  zoomTo,
+} from '../src/render/render-camera.ts';
 
 const sizes = [400, 100, 17];
 
@@ -67,4 +76,49 @@ test('fitting keeps the drawing out of what the controls cover, unless that leav
   assert.deepEqual(v.clear, clear);
   const narrow = fitView(spots, 400, 400, clear);
   assert.deepEqual(narrow.clear, { top: 0, right: 0, bottom: 0, left: 0 }, 'a narrow card ignores the controls');
+});
+
+// A click picks from the marks, never from the page (rule 1). First the name on top, then a dot within reach, then the
+// smallest cloud round the point.
+// proves: render_one_camera
+test('a click picks the name on top, then the nearest dot, then the smallest cloud, and nothing on empty space', () => {
+  const marks = [
+    { kind: 'cloud', key: 'big', x: 100, y: 100, r: 80, fill: '#f00', alpha: 1 },
+    { kind: 'cloud', key: 'small', x: 120, y: 100, r: 30, fill: '#0f0', alpha: 1 },
+    { kind: 'dot', key: 'a', x: 125, y: 104, r: 3, fill: '#00f', alpha: 1 },
+    { kind: 'dot', key: 'b', x: 140, y: 104, r: 3, fill: '#00f', alpha: 1 },
+    {
+      kind: 'label',
+      key: 'named',
+      text: 'Named',
+      x: 60,
+      y: 60,
+      w: 50,
+      h: 20,
+      px: 12,
+      fill: '#fff',
+      ink: '#000',
+      alpha: 1,
+    },
+  ];
+  assert.equal(pickAt(marks, 70, 70), 'named');
+  assert.equal(pickAt(marks, 127, 104), 'a', 'the nearer dot');
+  assert.equal(pickAt(marks, 135, 104), 'b', 'a dot within a fingertip');
+  assert.equal(pickAt(marks, 120, 125), 'small', 'the smaller cloud round the point');
+  assert.equal(pickAt(marks, 40, 140), 'big');
+  assert.equal(pickAt(marks, 300, 300), null);
+});
+
+// proves: render_one_camera
+test('centring puts a spot in the middle of the clear part, and a glide runs evenly from one view to the other', () => {
+  const view = { x: 0, y: 0, scale: 2, w: 400, h: 300, clear: { top: 0, right: 0, bottom: 0, left: 100 } };
+  const to = centreOn(view, { x: 50, y: 40, r: 5 }, 4);
+  assert.equal(to.scale, 4);
+  assert.equal((50 - to.x) * to.scale, 250, 'across: the middle of the 300 pixels left clear');
+  assert.equal((40 - to.y) * to.scale, 150);
+  assert.deepEqual(glideView(view, to, 0), { ...to, x: view.x, y: view.y, scale: view.scale });
+  const end = glideView(view, to, 1);
+  assert.ok(Math.abs(end.x - to.x) < 1e-9 && Math.abs(end.y - to.y) < 1e-9 && end.scale === to.scale);
+  const half = glideView(view, to, 0.5);
+  assert.ok(Math.abs(half.scale - Math.sqrt(2 * 4)) < 1e-9, 'halfway in zoom to the eye');
 });

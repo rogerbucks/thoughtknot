@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-stage.test.js",
+  "test": "nothing moves on a zoom or a click: every dot stays on its own place in the drawing",
+  "seen_failing_first": false,
+  "evidence": "A guard for rule 4 (things stay put). The stage already kept every place, so it passes first; it fails if a zoom or click ever moves a thing"
+}
