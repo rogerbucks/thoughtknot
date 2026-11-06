@@ -436,7 +436,7 @@
           "value: (style: Pick<StyleGraph, 'diagrams'>, view?: string) => Diagram | undefined"
         ],
         "ChosenStorage": [
-          "type = { ok: true; choice: StorageChoice; chosen: boolean; } | { ok: false; reason: string; }"
+          "type = { ok: true; choice: StorageChoice; chosen: boolean; } | { ok: false; reason: NoPlace; name: string; }"
         ],
         "CHUNK_RANGE": [
           "value: { readonly least: 3; readonly most: 50; }"
@@ -2676,7 +2676,7 @@
           "value: 240"
         ],
         "MOVE_REFUSED": [
-          "value: { readonly clash: 'the new place already has notes at these paths, with other text'; readonly copy: 'these notes did not read back from the new place as they were'; readonly changed: 'these notes changed in the old place while they were copied'; readonly same: 'the new place is the old place'; }"
+          "value: { readonly clash: 'clash'; readonly copy: 'copy'; readonly changed: 'changed'; readonly same: 'same'; }"
         ],
         "MovedNote": [
           "interface",
@@ -2690,7 +2690,10 @@
           "value: (from: NoteStorage, to: NoteStorage, options?: { author?: string; }) => Promise<MoveOutcome>"
         ],
         "MoveOutcome": [
-          "type = { ok: true; moved: MovedNote[]; } | { ok: false; reason: string; paths: string[]; }"
+          "type = { ok: true; moved: MovedNote[]; } | { ok: false; reason: MoveRefused; paths: string[]; }"
+        ],
+        "MoveRefused": [
+          "type = 'changed' | 'clash' | 'copy' | 'same'"
         ],
         "Moving": [
           "type = 'dot' | 'dashes'"
@@ -2771,6 +2774,9 @@
         ],
         "noChanges": [
           "value: () => string"
+        ],
+        "NoPlace": [
+          "type = 'no-host-place' | 'chosen-gone'"
         ],
         "NoteAltitudeIndex": [
           "interface",
@@ -4432,7 +4438,7 @@
           "type = (id: string, inputs: readonly JoinedGraph[]) => Promise<PluginResult<JoinedGraph> | null>"
         ],
         "RunSource": [
-          "type = 'live' | 'snapshot' | 'copy'"
+          "type = 'copy' | 'live' | 'snapshot'"
         ],
         "runStep": [
           "value: (note: string, step: Step | StepFault, given: Readonly<Record<string, StepGiven>>, options: { at: string; shared?: string[]; }) => StepRun"
