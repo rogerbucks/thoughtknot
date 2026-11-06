@@ -34,34 +34,95 @@ const K = [
 
 const rotr = (x: number, n: number) => (x >>> n) | (x << (32 - n));
 
+/** The text as UTF-8 bytes in an array of `size` bytes, with room after them. As utf8, but quick on a huge note. */
+function utf8Into(text: string, size: number): Uint8Array {
+  const out = new Uint8Array(size);
+  let n = 0;
+  for (let i = 0; i < text.length; i++) {
+    let c = text.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length) {
+      const low = text.charCodeAt(i + 1);
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        c = 0x10000 + ((c - 0xd800) << 10) + (low - 0xdc00);
+        i++;
+      }
+    }
+    if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;
+    if (c < 0x80) out[n++] = c;
+    else if (c < 0x800) ((out[n++] = 0xc0 | (c >> 6)), (out[n++] = 0x80 | (c & 63)));
+    else if (c < 0x10000)
+      ((out[n++] = 0xe0 | (c >> 12)), (out[n++] = 0x80 | ((c >> 6) & 63)), (out[n++] = 0x80 | (c & 63)));
+    else
+      ((out[n++] = 0xf0 | (c >> 18)),
+        (out[n++] = 0x80 | ((c >> 12) & 63)),
+        (out[n++] = 0x80 | ((c >> 6) & 63)),
+        (out[n++] = 0x80 | (c & 63)));
+  }
+  return out;
+}
+
+/** The size of the text in bytes as UTF-8, without making the bytes. */
+function utf8Length(text: string): number {
+  let n = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length) {
+      const low = text.charCodeAt(i + 1);
+      if (low >= 0xdc00 && low <= 0xdfff) ((n += 4), i++);
+      else n += 3;
+    } else n += 3;
+  }
+  return n;
+}
+
+// the last text digested and its digest: a huge note is often digested several times in a row as it is opened
+let last: { text: string; digest: string } | null = null;
+
 /** SHA-256 of the text, as UTF-8, in sixty-four lowercase hexadecimal digits. */
 export function sha256(text: string): string {
-  const bytes = utf8(text);
-  const bits = bytes.length * 8;
-  bytes.push(0x80);
-  while (bytes.length % 64 !== 56) bytes.push(0);
+  if (last?.text === text) return last.digest;
+  const digest = digestOf(text);
+  last = { text, digest };
+  return digest;
+}
+
+/** The SHA-256 rounds over the text's padded bytes. */
+function digestOf(text: string): string {
+  const length = utf8Length(text);
+  const padded = Math.ceil((length + 9) / 64) * 64;
+  const bytes = utf8Into(text, padded);
+  bytes[length] = 0x80;
   // the length in bits, as a 64-bit big-endian number: a text sent is far below 2^53 bits
-  const high = Math.floor(bits / 0x100000000);
-  for (const word of [high, bits >>> 0])
-    bytes.push((word >>> 24) & 255, (word >>> 16) & 255, (word >>> 8) & 255, word & 255);
-  const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-  const w = new Array<number>(64).fill(0);
-  for (let at = 0; at < bytes.length; at += 64) {
-    for (let i = 0; i < 16; i++) {
-      const b = (j: number) => bytes[at + i * 4 + j] ?? 0;
-      w[i] = ((b(0) << 24) | (b(1) << 16) | (b(2) << 8) | b(3)) >>> 0;
-    }
+  const bits = length * 8;
+  const view = new DataView(bytes.buffer);
+  view.setUint32(padded - 8, Math.floor(bits / 0x100000000));
+  view.setUint32(padded - 4, bits >>> 0);
+  const h = new Uint32Array([
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+  ]);
+  const w = new Uint32Array(64);
+  const k = Uint32Array.from(K);
+  for (let at = 0; at < padded; at += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(at + i * 4);
     for (let i = 16; i < 64; i++) {
-      const a = w[i - 15] ?? 0,
-        d = w[i - 2] ?? 0;
+      const a = w[i - 15]!,
+        d = w[i - 2]!;
       const s0 = rotr(a, 7) ^ rotr(a, 18) ^ (a >>> 3),
         s1 = rotr(d, 17) ^ rotr(d, 19) ^ (d >>> 10);
-      w[i] = ((w[i - 16] ?? 0) + s0 + (w[i - 7] ?? 0) + s1) >>> 0;
+      w[i] = w[i - 16]! + s0 + w[i - 7]! + s1;
     }
-    let [a, b, c, d, e, f, g, hh] = h as [number, number, number, number, number, number, number, number];
+    let a = h[0]!,
+      b = h[1]!,
+      c = h[2]!,
+      d = h[3]!,
+      e = h[4]!,
+      f = h[5]!,
+      g = h[6]!,
+      hh = h[7]!;
     for (let i = 0; i < 64; i++) {
-      const t1 =
-        (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + (K[i] ?? 0) + (w[i] ?? 0)) >>> 0;
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + k[i]! + w[i]!) >>> 0;
       const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
       hh = g;
       g = f;
@@ -72,7 +133,7 @@ export function sha256(text: string): string {
       b = a;
       a = (t1 + t2) >>> 0;
     }
-    [a, b, c, d, e, f, g, hh].forEach((v, i) => (h[i] = ((h[i] ?? 0) + v) >>> 0));
+    [a, b, c, d, e, f, g, hh].forEach((v, i) => (h[i] = (h[i] ?? 0) + v));
   }
-  return h.map((v) => v.toString(16).padStart(8, '0')).join('');
+  return Array.from(h, (v) => v.toString(16).padStart(8, '0')).join('');
 }
