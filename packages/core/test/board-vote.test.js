@@ -1,5 +1,5 @@
-// board_vote (editor spec §45): each person votes on or reacts to an item, the votes are kept per person in the board
-// block, and the tally is shown per item.
+// board_vote (editor spec §45): each person votes on or reacts to an item. The votes are kept per person in the board
+// block. The tally is shown per item.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
