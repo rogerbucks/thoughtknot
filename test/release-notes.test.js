@@ -59,6 +59,7 @@ describe('spec_version_released', () => {
         'graph-spec-problem-codes.json',
         'graph-spec-formats.json',
         'graph-spec-ai-wire.json',
+        'graph-spec-decisions.json',
         'LICENSE-SPEC.md',
       ])
         assert.ok(

@@ -852,6 +852,7 @@
     "quality/risks.json": 1,
     "requirements/capacity.json": 1,
     "requirements/editor-requirements.md": 40,
+    "requirements/graph-spec-decisions.json": 1,
     "requirements/graph-spec.gql": 45,
     "requirements/hashes.md": 2,
     "scripts/bench-local.mjs": 1,
