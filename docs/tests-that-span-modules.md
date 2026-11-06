@@ -1230,5 +1230,7 @@ after a module nor listed here, and on a listed file that is missing.
   each picture from plain boxes, and the sheet that puts each picture beside its mockup.
 - `test/board-together.test.js` — boards worked on together (editor spec §45). The change log with its authors and undo of
   one's own changes, from `board-history.ts` and `board-edit.ts`.
+- `test/board-access.test.js` — who may do what on a board (editor spec §45). Rights from the permission rules in
+  `board-access.ts`, and an invitation sealed for one device in `board-invite.ts`.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
