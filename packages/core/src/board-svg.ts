@@ -9,6 +9,7 @@
 // Host-free and pure. The colours are the palette's, and every word is escaped.
 import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
+import { cardLines, cardOf, cardSaid } from './board-card.ts';
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
 import { STYLE_HUES } from './style-graph.ts';
@@ -70,8 +71,10 @@ const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x 
 const kindSaid = (kind: BoardKind) => word(`board.kind.${kind.toLowerCase() as Lowercase<BoardKind>}`);
 
 /** An item named in words: its kind and text, or its kind alone. */
-const named = (item: BoardItem) =>
-  item.text ? word('board.said', { kind: kindSaid(item.kind), text: item.text }) : kindSaid(item.kind);
+const named = (item: BoardItem) => {
+  const text = item.kind === 'Card' ? cardSaid(cardOf(item)) : item.text;
+  return text ? word('board.said', { kind: kindSaid(item.kind), text }) : kindSaid(item.kind);
+};
 
 /** What is said of an item: its kind, its text, and each item it leads to or comes from, with the connector's label. */
 export function itemSaid(board: Board, item: BoardItem): string {
@@ -157,14 +160,18 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
       : `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" rx="${num(corner)}" fill="${fill}" stroke="${stroke}"${dash}/>`;
   const size = item.kind === 'Frame' ? STYLE.kind_font_size : STYLE.font_size;
   const pad = 8;
-  const text = item.text
-    ? linesOf(item.text, box.w - 2 * pad, size)
-        .map(
-          (l, i) =>
-            `<tspan x="${num(box.x + pad)}" y="${num(box.y + pad + size * (1 + i * STYLE.line_height))}">${isolated(escaped(l))}</tspan>`,
-        )
-        .join('')
-    : '';
+  const rows =
+    item.kind === 'Card'
+      ? cardLines(cardOf(item)).flatMap((l) => linesOf(l.text, box.w - 2 * pad, size).map((t) => ({ ...l, text: t })))
+      : item.text
+        ? linesOf(item.text, box.w - 2 * pad, size).map((t) => ({ text: t, role: 'body' as const }))
+        : [];
+  const text = rows
+    .map(
+      (l, i) =>
+        `<tspan x="${num(box.x + pad)}" y="${num(box.y + pad + size * (1 + i * STYLE.line_height))}"${l.role === 'title' ? ' font-weight="bold"' : ''}${l.role === 'row' ? ` fill="${palette.muted}"` : ''}>${isolated(escaped(l.text))}</tspan>`,
+    )
+    .join('');
   const words = text
     ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${item.kind === 'Frame' ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
