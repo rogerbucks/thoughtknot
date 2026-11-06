@@ -2,7 +2,8 @@
 // - Made from the repository: the library docs, the graph format spec and the nightly builds.
 // - Its words come from one catalogue, every word used and none missing.
 // - WCAG 2.2 AA in the light and the dark scheme, by the same check as the home page.
-// - Its nightly page is kept out of search engines: a noindex tag, a Disallow, and no place in the sitemap.
+// - Its nightly page is kept out of search engines: a noindex tag here, and a Disallow and no sitemap place at the root.
+// - It is served from dev/ of the home page's site, at thoughtknot.app/dev/ (Roger, 6 Nov 2026).
 // - Mirrors for a right-to-left language.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { THEMES, audit, openWindow, pageStyleFor } from './repository/wcag.js';
 import { path, read, readJSON } from './repository/repo.js';
+import { renderSite } from '../scripts/site.mjs';
 import {
   DEV_SITE_URL,
   INDEXED,
@@ -109,8 +111,8 @@ describe('the nightly pages are kept out of search engines', () => {
     assert.equal(d.querySelector('link[rel="canonical"]'), null);
   });
 
-  test('the stable pages are indexed, each at its own canonical address, at thoughtknot.dev', () => {
-    assert.equal(DEV_SITE_URL, 'https://thoughtknot.dev/');
+  test('the stable pages are indexed, each at its own canonical address, under thoughtknot.app/dev/', () => {
+    assert.equal(DEV_SITE_URL, 'https://thoughtknot.app/dev/');
     for (const page of INDEXED) {
       const d = doc(files[page]);
       assert.equal(d.querySelector('meta[name="robots"]'), null, page);
@@ -119,10 +121,23 @@ describe('the nightly pages are kept out of search engines', () => {
     }
   });
 
-  test('robots.txt disallows the nightly page and the sitemap leaves it out', () => {
-    assert.match(files['robots.txt'], /^Disallow: \/nightly\.html$/m);
-    assert.doesNotMatch(files['sitemap.xml'], /nightly/);
-    for (const page of INDEXED.slice(1)) assert.ok(files['sitemap.xml'].includes(`<loc>${DEV_SITE_URL}${page}</loc>`));
+  test('the home page’s robots.txt disallows the nightly page and its sitemap lists the stable ones only', () => {
+    const root = renderSite({
+      template: read('site/index.html'),
+      privacy: read('site/privacy.html'),
+      demo: read('site/demo.html'),
+      catalogue: readJSON('site/words.json'),
+      version: '0.8.0',
+      sha: 'abc1234',
+      today: '2026-11-06',
+      minApp: readJSON('manifest.json').minAppVersion,
+    });
+    assert.match(root['robots.txt'], new RegExp(`^Disallow: /dev/${NIGHTLY.replace('.', '\\.')}$`, 'm'));
+    assert.doesNotMatch(root['sitemap.xml'], /nightly/);
+    for (const page of INDEXED) {
+      const loc = DEV_SITE_URL + (page === 'index.html' ? '' : page);
+      assert.ok(root['sitemap.xml'].includes(`<loc>${loc}</loc>`), loc);
+    }
   });
 });
 
@@ -150,7 +165,7 @@ describe('everyone can use it', () => {
 });
 
 describe('the command', () => {
-  test('writes the pages, the search files and the stylesheet', () => {
+  test('writes the pages and the stylesheet', () => {
     const out = mkdtempSync(join(tmpdir(), 'developer-site-'));
     try {
       const file = join(out, 'releases.json');
@@ -172,25 +187,35 @@ describe('the command', () => {
         { encoding: 'utf8' },
       );
       assert.equal(r.status, 0, r.stderr);
-      for (const f of [...PAGES, 'site.css', 'icon.svg', 'robots.txt', 'sitemap.xml', '.nojekyll'])
-        assert.ok(readFileSync(join(site, f)), f);
+      for (const f of [...PAGES, 'site.css', 'icon.svg']) assert.ok(readFileSync(join(site, f)), f);
     } finally {
       rmSync(out, { recursive: true, force: true });
     }
   });
-});
 
-describe('the workflow that makes it', () => {
-  const text = read('.github/workflows/developer-site.yml');
-
-  test('is woken by a push to main, each morning and by hand, never by a pull request', () => {
-    assert.match(text, /push:\s*\n\s*branches: \[main\]/);
-    assert.match(text, /schedule:/);
-    assert.match(text, /workflow_dispatch:/);
-    assert.doesNotMatch(text, /pull_request|workflow_run/);
-  });
-
-  test('only reads the repository: no job may write', () => {
-    assert.doesNotMatch(text, /(contents|pages|id-token|actions): write/);
+  test('the home page’s build puts the site in dev/, and leaves it out with --no-dev', () => {
+    const out = mkdtempSync(join(tmpdir(), 'developer-site-in-home-'));
+    try {
+      const run = (...more) =>
+        spawnSync(
+          process.execPath,
+          [path('scripts/site.mjs'), '--out', out, '--no-demo', '--date', '2026-11-06', ...more],
+          {
+            encoding: 'utf8',
+          },
+        );
+      assert.equal(run().status, 0);
+      const page = readFileSync(join(out, 'dev', 'libraries.html'), 'utf8');
+      assert.match(page, /<link rel="canonical" href="https:\/\/thoughtknot\.app\/dev\/libraries\.html" \/>/);
+      assert.match(
+        readFileSync(join(out, 'llms.txt'), 'utf8'),
+        /\[Developer site\]\(https:\/\/thoughtknot\.app\/dev\/\)/,
+      );
+      rmSync(join(out, 'dev'), { recursive: true });
+      assert.equal(run('--no-dev').status, 0);
+      assert.throws(() => readFileSync(join(out, 'dev', 'index.html')), /ENOENT/);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
   });
 });

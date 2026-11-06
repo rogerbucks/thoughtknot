@@ -1,24 +1,26 @@
 #!/usr/bin/env node
 // Makes the developer site from the repository (ES§41, developer_site). Its pages show the graph libraries'
-// operations, the graph format spec's version, changes and sections, and the nightly builds. It is the home page's
-// sibling. It takes its words from site-dev/words.json and its style from site/site.css, and it refuses a word that is
-// missing or unused. The stable pages are for search engines. The nightly page is kept out of them three ways: a
-// noindex tag, a Disallow in robots.txt and no place in the sitemap. .github/workflows/developer-site.yml runs it.
+// operations, the graph format spec's version, changes and sections, and the nightly builds. It takes its words from
+// site-dev/words.json and its style from site/site.css, and it refuses a word that is missing or unused. The stable
+// pages are for search engines. The nightly page is kept out of them: a noindex tag, a Disallow in the root robots.txt
+// and no place in the sitemap. The home page's build (scripts/site.mjs) puts the site in dev/. So it is served at
+// thoughtknot.app/dev/ (Roger, 6 Nov 2026), and thoughtknot.dev stays a temporary (302) redirect to it.
 //
 // Usage:
 //   node scripts/developer-site.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--url URL]
 //
-// --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file. --url is the site's address.
+// --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file. --url is the site's own
+// address, thoughtknot.app/dev/ unless given.
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { escapeHtml, fillPages, latestVersion, withPlaceholders } from './site.mjs';
+import { escapeHtml, fillPages, latestVersion, withPlaceholders } from './site-pages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'https://github.com/rogerbucks/thoughtknot';
 
-/** The developer site's address: the project's second domain, kept apart from the home page. */
-export const DEV_SITE_URL = 'https://thoughtknot.dev/';
+/** The developer site's address: a folder of the home page's site, kept apart from its pages. */
+export const DEV_SITE_URL = 'https://thoughtknot.app/dev/';
 /** The home page, which the site links to. */
 const PRODUCT_URL = 'https://thoughtknot.app/';
 /** The pages a search engine may index, and the one it may not. */
@@ -136,21 +138,32 @@ export function renderDeveloperSite({
   }
   values['raised-line'] = escapeHtml(filled('libraries.problem.raised', { raised: libraryApi.problem.raised_as }));
   const out = fillPages(templates, words, values);
-  return {
-    ...out,
-    'robots.txt': `User-agent: *\nAllow: /\nDisallow: /${NIGHTLY}\n\nSitemap: ${url}sitemap.xml\n`,
-    'sitemap.xml': [
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-      ...INDEXED.map(
-        (n) =>
-          `  <url>\n    <loc>${escapeHtml(url + (n === 'index.html' ? '' : n))}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`,
-      ),
-      '</urlset>',
-      '',
-    ].join('\n'),
-    '.nojekyll': '',
-  };
+  return out;
+}
+
+/**
+ * Writes the site into `out` from the repository's own files. `releases` is the parsed `gh release list` output, `sha`
+ * and `today` stamp the footer, and `url` is where the site is served.
+ */
+export function writeDeveloperSite({ out, releases = [], sha = 'main', today, url = DEV_SITE_URL }) {
+  const text = (rel) => readFileSync(join(ROOT, rel), 'utf8');
+  const files = renderDeveloperSite({
+    layout: text('site-dev/layout.html'),
+    pages: Object.fromEntries(
+      ['index.html', 'libraries.html', 'spec.html', NIGHTLY].map((n) => [n, text(`site-dev/${n}`)]),
+    ),
+    catalogue: JSON.parse(text('site-dev/words.json')),
+    libraryApi: JSON.parse(text('requirements/graph-spec-library-api.json')),
+    specVersion: JSON.parse(text('requirements/graph-spec-version.json')),
+    specGql: text('requirements/graph-spec.gql'),
+    releases,
+    sha: sha.slice(0, 7),
+    today: today ?? new Date().toISOString().slice(0, 10),
+    url,
+  });
+  mkdirSync(out, { recursive: true });
+  for (const [name, body] of Object.entries(files)) writeFileSync(join(out, name), body);
+  for (const name of ['site.css', 'icon.svg']) copyFileSync(join(ROOT, 'site', name), join(out, name));
 }
 
 const flag = (args, name) => {
@@ -162,23 +175,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const out = flag(args, '--out');
   if (!out) throw new Error('give the folder for the site: --out DIR');
-  const text = (rel) => readFileSync(join(ROOT, rel), 'utf8');
   const releasesFile = flag(args, '--releases');
-  const files = renderDeveloperSite({
-    layout: text('site-dev/layout.html'),
-    pages: Object.fromEntries(
-      ['index.html', 'libraries.html', 'spec.html', NIGHTLY].map((n) => [n, text(`site-dev/${n}`)]),
-    ),
-    catalogue: JSON.parse(text('site-dev/words.json')),
-    libraryApi: JSON.parse(text('requirements/graph-spec-library-api.json')),
-    specVersion: JSON.parse(text('requirements/graph-spec-version.json')),
-    specGql: text('requirements/graph-spec.gql'),
+  writeDeveloperSite({
+    out,
     releases: releasesFile ? JSON.parse(readFileSync(releasesFile, 'utf8')) : [],
-    sha: (flag(args, '--sha') ?? 'main').slice(0, 7),
-    today: flag(args, '--date') ?? new Date().toISOString().slice(0, 10),
+    sha: flag(args, '--sha') ?? 'main',
+    today: flag(args, '--date'),
     url: flag(args, '--url') ?? DEV_SITE_URL,
   });
-  mkdirSync(out, { recursive: true });
-  for (const [name, body] of Object.entries(files)) writeFileSync(join(out, name), body);
-  for (const name of ['site.css', 'icon.svg']) copyFileSync(join(ROOT, 'site', name), join(out, name));
 }

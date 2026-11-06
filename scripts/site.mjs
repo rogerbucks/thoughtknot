@@ -6,17 +6,21 @@
 //
 // Usage:
 //   node scripts/site.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--images DIR] [--url URL]
-//     [--no-demo]
+//     [--no-demo] [--no-dev]
 //
 // --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file; without it the version is
 // the manifest's. --images is the folder scripts/wiki-screens.mjs wrote: its card.png is shown when it is there. --url
 // is the page's address, for another domain; the project's own, thoughtknot.app, is the default. The live demo
-// (scripts/site-demo.mjs) is built into demo/ unless --no-demo is given.
+// (scripts/site-demo.mjs) is built into demo/ unless --no-demo is given. The developer site
+// (scripts/developer-site.mjs) is built into dev/ unless --no-dev is given.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SHOTS } from './wiki-screens.mjs';
 import { buildDemo } from './site-demo.mjs';
+import { escapeHtml, fillPages, fillTemplate, latestVersion, withPlaceholders } from './site-pages.mjs';
+
+export { escapeHtml, fillPages, fillTemplate, latestVersion, withPlaceholders };
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'https://github.com/rogerbucks/thoughtknot';
@@ -44,6 +48,9 @@ export const DEMO_POLICY = [
   "form-action 'none'",
 ].join('; ');
 
+/** The developer site's pages a search engine may index, in dev/ (scripts/developer-site.mjs). */
+const DEV_PAGES = ['', 'libraries.html', 'spec.html'];
+
 /** The languages written right to left, by their primary code. */
 const RIGHT_TO_LEFT = new Set(['ar', 'dv', 'fa', 'he', 'ps', 'ur', 'yi']);
 
@@ -54,48 +61,6 @@ const PICTURE = 'card';
 export function pngSize(bytes) {
   if (bytes.length < 24 || bytes.toString('latin1', 12, 16) !== 'IHDR') throw new Error('not a PNG picture');
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
-}
-
-export const escapeHtml = (text) =>
-  String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-/** `text` with each {name} filled from `values`; a name `values` lacks is left as it is. */
-export const withPlaceholders = (text, values) =>
-  text.replace(/\{(\w+)\}/g, (whole, name) => (Object.hasOwn(values, name) ? values[name] : whole));
-
-/**
- * Each of `templates`, by its file name, with each {{key}} replaced by the word `words` gives it and each {{@name}} by
- * `values[name]`. Words are escaped as text. Values are markup the site makes itself and are put in as they are.
- * Throws on a key or a name with nothing to fill it, and on a word no page uses. So the catalogue and the pages never
- * drift apart.
- */
-export function fillPages(templates, words, values) {
-  const used = new Set();
-  const fill = (template) =>
-    template.replace(/\{\{(@?)([\w.-]+)\}\}/g, (_whole, at, key) => {
-      if (at) {
-        if (!Object.hasOwn(values, key)) throw new Error(`the page names {{@${key}}}, which nothing fills`);
-        return values[key];
-      }
-      if (!Object.hasOwn(words, key)) throw new Error(`the page names {{${key}}}, which the catalogue lacks`);
-      used.add(key);
-      return escapeHtml(words[key]);
-    });
-  const pages = Object.fromEntries(Object.entries(templates).map(([name, template]) => [name, fill(template)]));
-  const unused = Object.keys(words).filter((k) => !used.has(k));
-  if (unused.length) throw new Error(`words not used by the page: ${unused.join(', ')}`);
-  return pages;
-}
-
-/** One page, `template`, filled as `fillPages` fills each. */
-export const fillTemplate = (template, words, values) => fillPages({ page: template }, words, values).page;
-
-/** The newest stable release's version from `gh release list` entries, never a pre-release; `fallback` if none. */
-export function latestVersion(releases, fallback) {
-  const stable = releases
-    .filter((r) => !r.isPrerelease && /^v?\d+\.\d+\.\d+$/.test(r.tagName))
-    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  return stable.length ? stable[0].tagName.replace(/^v/, '') : fallback;
 }
 
 /** JSON for inside a <script>: no "<" can end the element early. */
@@ -142,6 +107,7 @@ function llmsText({ words, url }) {
     '',
     `- [Home page](${url}): this page for people`,
     `- [Live demo](${url}demo.html): ThoughtKnot in the browser, drawing the project's own graphs`,
+    `- [Developer site](${url}dev/): the graph libraries, the graph format spec and the nightly builds`,
     `- [Privacy](${url}privacy.html): what ThoughtKnot keeps, where, and how to delete it`,
     `- [Licence](${LICENCE}): Mozilla Public License 2.0`,
     '',
@@ -189,11 +155,12 @@ export function renderSite({
   };
   return {
     ...fillPages({ 'index.html': template, 'privacy.html': privacy, 'demo.html': demo }, words, values),
-    'robots.txt': `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`,
+    // The developer site lives in dev/ (developer_site). Its nightly page is the one a search engine may not index.
+    'robots.txt': `User-agent: *\nAllow: /\nDisallow: /dev/nightly.html\n\nSitemap: ${url}sitemap.xml\n`,
     'sitemap.xml': [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-      ...[url, `${url}privacy.html`, `${url}demo.html`].map(
+      ...[url, `${url}privacy.html`, `${url}demo.html`, ...DEV_PAGES.map((page) => `${url}dev/${page}`)].map(
         (loc) => `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`,
       ),
       '</urlset>',
@@ -238,4 +205,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const name of ['site.css', 'icon.svg']) copyFileSync(join(ROOT, 'site', name), join(out, name));
   if (shown) copyFileSync(picture, join(out, `${PICTURE}.png`));
   if (!args.includes('--no-demo')) await buildDemo(join(out, 'demo'));
+  if (!args.includes('--no-dev')) {
+    const { writeDeveloperSite } = await import('./developer-site.mjs');
+    const url = flag(args, '--url') ?? SITE_URL;
+    writeDeveloperSite({
+      out: join(out, 'dev'),
+      releases,
+      sha: flag(args, '--sha') ?? 'main',
+      today: flag(args, '--date'),
+      url: `${url}dev/`,
+    });
+  }
 }
