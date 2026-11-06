@@ -348,8 +348,8 @@ function main(argv) {
   }
   if (flag('--setup') || since) problems.push(...setupProblems());
   const changed = since && !flag('--setup') ? setupInputsChangedSince(ROOT, since) : [];
-  const skipTests = flag('--no-tests');
-  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, { log: console.error, skipTests }));
+  const clone = { log: console.error, skipTests: flag('--no-tests'), shard: argv[argv.indexOf('--test-shard') + 1] };
+  if (flag('--setup') || changed.length) problems.push(...freshCloneProblems(ROOT, clone));
   else if (since)
     console.error(`No setup input changed since ${since}: the fresh clone runs on main and at the release.`);
   for (const p of problems) console.error(`  ${p.where} — ${p.rule}${p.detail ? `\n${p.detail}` : ''}`);
