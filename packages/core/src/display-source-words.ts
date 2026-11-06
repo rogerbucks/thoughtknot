@@ -336,6 +336,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.tpl.well': 'Went well',
   'board.tpl.improve': 'To improve',
   'board.tpl.actions': 'Actions',
+  'board.timer.left': '{time} left {label}',
+  'board.timer.up': "Time's up {label}",
   'board.capture.field': 'Quick note: Enter for the next, Tab for a child, Escape to stop',
   'board.capture.empty': 'Type something first, then press Enter.',
   'board.capture.nothing-before': 'There is no note before this one to go on from.',
