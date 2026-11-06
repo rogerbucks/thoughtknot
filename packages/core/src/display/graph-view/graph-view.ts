@@ -182,8 +182,7 @@ export class GraphView extends Lifecycle {
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
       : [];
-    // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
-    if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
+    if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal)); // a proposal's changes (§17), not in reading view
     const at = (v = this.zoom.view(), mid = middleThing(this.taps, v, this.viewport, this.svg)) =>
       typeLeftAt(v, this.details.selectedKey(), mode === 'full', this.spaces.mode(), mid);
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
