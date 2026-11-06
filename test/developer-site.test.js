@@ -193,4 +193,12 @@ describe('the workflow that makes it', () => {
   test('only reads the repository: no job may write', () => {
     assert.doesNotMatch(text, /(contents|pages|id-token|actions): write/);
   });
+
+  test('the deploy job is off until the owner sets the target, and runs no code of the repository', () => {
+    const deploy = text.split('\n  deploy:\n')[1]?.split('\n  report-failure:')[0] ?? '';
+    assert.match(deploy, /if: github\.ref == 'refs\/heads\/main' && vars\.DEVELOPER_SITE_REPO != ''/);
+    assert.doesNotMatch(deploy, /actions\/checkout|actions\/setup-node|npm |node scripts/);
+    assert.match(deploy, /secrets\.DEVELOPER_SITE_TOKEN/);
+    assert.match(deploy, /\^\[A-Za-z0-9_\.-\]\+\/\[A-Za-z0-9_\.-\]\+\$/, 'the target is checked as owner/name');
+  });
 });

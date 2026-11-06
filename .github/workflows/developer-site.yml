@@ -2,10 +2,13 @@ name: Developer site
 
 # Makes the developer site from the repository (ES§41, developer_site): the graph libraries, the graph format spec
 # and the nightly builds. It runs on every push to main and each morning, so it names the newest stable release and
-# lists the newest nightlies. It only builds and keeps the folder as a short-lived download. It does not publish it:
-# GitHub Pages allows one custom domain a repository, and thoughtknot.app already has this one, so thoughtknot.dev
-# needs a host of its own, which the owner chooses. Until then thoughtknot.dev stays a temporary (302) redirect.
-# The job only reads, and nothing of a pull request ever runs here.
+# lists the newest nightlies. It builds the folder and keeps it as a short-lived download. GitHub Pages allows one
+# custom domain a repository, and thoughtknot.app already has this one, so thoughtknot.dev needs a repository of its own.
+# The `deploy` job pushes the folder there, but only once the owner turns it on: set the repository variable
+# DEVELOPER_SITE_REPO (as owner/name) and the secret DEVELOPER_SITE_TOKEN (write access to that repository only).
+# With the variable unset the job is skipped. Until then thoughtknot.dev stays a temporary (302) redirect.
+# The build only reads. The deploy job runs no code of this repository: no checkout, no install, no Node.
+# Nothing of a pull request ever runs here.
 on:
   push:
     branches: [main]
@@ -42,14 +45,50 @@ jobs:
         run: gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,publishedAt,isPrerelease > "$RUNNER_TEMP/releases.json"
       - name: Write the site
         run: node scripts/developer-site.mjs --out developer-site-out --sha "$GITHUB_SHA" --releases "$RUNNER_TEMP/releases.json"
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
+          name: developer-site
           path: developer-site-out
+          include-hidden-files: true
           retention-days: 3
+
+  # Off until the owner sets DEVELOPER_SITE_REPO. The token reaches only that repository; this job holds no write
+  # permission on this one. It puts the folder on the target's default branch, whole, so a page that went is removed.
+  deploy:
+    needs: make
+    if: github.ref == 'refs/heads/main' && vars.DEVELOPER_SITE_REPO != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: developer-site
+          path: developer-site-out
+      - name: Push the site
+        env:
+          TARGET: ${{ vars.DEVELOPER_SITE_REPO }}
+          TOKEN: ${{ secrets.DEVELOPER_SITE_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ "$TARGET" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "::error::DEVELOPER_SITE_REPO must be owner/name"; exit 1; }
+          [ -n "$TOKEN" ] || { echo "::error::The secret DEVELOPER_SITE_TOKEN is not set"; exit 1; }
+          echo "::add-mask::$TOKEN"
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${TARGET}.git" target
+          # Keep the target's own files (its CNAME, README and .git), replace the rest with the new site.
+          find target -mindepth 1 -maxdepth 1 ! -name .git ! -name CNAME ! -name README.md -exec rm -rf {} +
+          cp -a developer-site-out/. target/
+          cd target
+          git add -A
+          if git diff --cached --quiet; then echo "The site has not changed."; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Update the developer site to ${GITHUB_SHA::7}"
+          git push -q origin HEAD
 
   # A failure here tells nobody otherwise (OPS-6): this keeps one open issue, labelled workflow-failure.
   report-failure:
-    needs: [make]
+    needs: [make, deploy]
     if: failure()
     permissions:
       issues: write
