@@ -1,6 +1,6 @@
 // The globe view, driven in a real browser the way a person drives it (editor spec, globe_view, globe_dive_detail).
-// It opens the Obsidian harness on a note of forty places, shows it full screen as a globe, and then turns the wheel,
-// pinches, and clicks. Smooth zoom, pinch in every view and the click rule are Roger's standing rules. What is shown on
+// It opens the Obsidian harness on a note of forty places and shows it full screen as a globe.
+// Then it turns the wheel, pinches, and clicks. Smooth zoom, pinch in every view and the click rule are Roger's standing rules. What is shown on
 // screen is compared by its picture, as the drawing is a canvas.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
