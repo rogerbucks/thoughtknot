@@ -169,6 +169,11 @@ export const SETTINGS_SOURCE_WORDS = {
     'Spreads out the text of the bar and the panels: a taller line, wider letters and wider words. It helps readers who find dense text tiring. Off unless you turn it on.',
   'settings.easier-reading.on': 'On',
   'settings.easier-reading.off': 'Off',
+  'settings.new-rendering.name': 'New rendering (preview)',
+  'settings.new-rendering.sentence':
+    'Draws graphs that have subjects and areas with the new rendering: clouds, roads and names, one level per scroll step. It is a preview and may change.',
+  'settings.new-rendering.off': 'Off',
+  'settings.new-rendering.on': 'On',
   'settings.export-theme.name': 'Export theme',
   'settings.export-theme.sentence':
     'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.',

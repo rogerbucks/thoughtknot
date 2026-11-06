@@ -57,7 +57,9 @@ export interface RoadMark {
   back: number;
   width: number;
   fill: string;
-  /** The ink of the count written on the road. */
+  /** The count written on the road, such as "3 ⇄ 1"; empty for a single link. */
+  count: string;
+  /** The ink of the count. */
   ink: string;
   alpha: number;
 }
@@ -88,7 +90,11 @@ export function coloursOf(scene: Scene, look: Look): Map<string, string> {
     const kids = scene.nodes.get(key)?.children ?? [];
     kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
   };
-  scene.roots.forEach((k, i) => paint(k, subjectColour(look, i)));
+  // the biggest subject takes the first colour, so a graph keeps its colours however its subjects are named
+  const bySize = [...scene.roots].sort(
+    (a, b) => (scene.nodes.get(b)?.items.length ?? 0) - (scene.nodes.get(a)?.items.length ?? 0) || (a < b ? -1 : 1),
+  );
+  bySize.forEach((k, i) => paint(k, subjectColour(look, i)));
   return colours;
 }
 
@@ -107,7 +113,17 @@ const inView = (s: Spot, view: View): boolean =>
 function showOf(node: SceneNode, detail: Detail, last: number): number {
   const own = detail.shown[node.depth] ?? 0;
   if (node.depth === last) return own;
-  return own * (1 - 0.55 * (detail.shown[node.depth + 1] ?? 0));
+  return own * (1 - 0.8 * (detail.shown[node.depth + 1] ?? 0));
+}
+
+/**
+ * How strong a cloud is: firm while it is the level being read, faint once the level inside is open. A cloud far
+ * bigger than the screen is the ground underfoot, so it fades further and never washes the screen out.
+ */
+export function cloudAlpha(show: number, s: Spot, view: View): number {
+  const screen = Math.max(view.w, view.h);
+  const ground = s.r > screen ? Math.max(0.3, screen / s.r) : 1;
+  return (0.06 + 0.3 * show) * ground;
 }
 
 /** The marks of `scene` at one zoom and theme. */
@@ -124,7 +140,7 @@ export function marksOf(scene: Scene, spots: Map<string, Spot>, detail: Detail, 
       fill = colours.get(node.key) ?? look.faint;
     if (!inView(s, view)) continue;
     const alpha = showOf(node, detail, last);
-    if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: 0.18 + 0.22 * alpha });
+    if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view) });
     else dots.push({ kind: 'dot', key: node.key, x: s.x, y: s.y, r: Math.max(2, Math.min(s.r, 6)), fill, alpha: 0.8 });
     if (alpha > 0.05) asks.push(askOf(node, s, fill, alpha, detail, last));
   }
@@ -197,6 +213,13 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
   return kept;
 }
 
+/** What a road says of its links: both ways, one way, or nothing for a single link. */
+export function countOf(forward: number, back: number): string {
+  if (forward + back < 2) return '';
+  if (forward && back) return `${forward} ⇄ ${back}`;
+  return forward ? `${forward} →` : `← ${back}`;
+}
+
 /** The roads at each open depth. A level's roads fade out as the level inside it opens, as its names do. */
 function roadsOf(
   scene: Scene,
@@ -208,12 +231,14 @@ function roadsOf(
 ): RoadMark[] {
   const roads: RoadMark[] = [];
   scene.roads.forEach((at, depth) => {
-    const alpha = (detail.shown[depth] ?? 0) * (1 - (detail.shown[depth + 1] ?? 0));
+    // a level's roads stay, fainter, while the level inside it opens: a road never just vanishes (R20)
+    const alpha = (detail.shown[depth] ?? 0) * (1 - 0.7 * (detail.shown[depth + 1] ?? 0));
     if (alpha < 0.05) return;
     for (const road of at) {
       const p = spots.get(road.a),
         q = spots.get(road.b);
-      if (!p || !q) continue;
+      // only neighbours in the same room: links that leave it ride on the road of the room itself
+      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
       const [s, t] = [onScreen(p, view), onScreen(q, view)];
       roads.push({
         kind: 'road',
@@ -225,6 +250,7 @@ function roadsOf(
         back: road.back,
         width: 2 + Math.log2(road.forward + road.back),
         fill: colours.get(road.a) ?? look.faint,
+        count: countOf(road.forward, road.back),
         ink: inkOn(colours.get(road.a) ?? look.faint),
         alpha,
       });

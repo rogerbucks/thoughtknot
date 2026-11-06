@@ -63,7 +63,8 @@ function paintRoad(c: Canvas2d, m: RoadMark): void {
   c.moveTo(m.from[0], m.from[1]);
   c.lineTo(m.to[0], m.to[1]);
   c.stroke();
-  const text = m.back ? `${m.forward} ⇄ ${m.back}` : `${m.forward} →`;
+  const text = m.count;
+  if (!text) return;
   const [x, y] = [(m.from[0] + m.to[0]) / 2, (m.from[1] + m.to[1]) / 2];
   c.globalAlpha = m.alpha;
   c.font = '600 11px system-ui, sans-serif';

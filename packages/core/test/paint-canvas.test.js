@@ -46,6 +46,7 @@ const marks = [
     back: 1,
     width: 3,
     fill: '#4b7bf5',
+    count: '2 ⇄ 1',
     ink: '#000000',
     alpha: 1,
   },

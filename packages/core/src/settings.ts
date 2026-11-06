@@ -1,6 +1,5 @@
-// The editor's options (spec §21), each with its name, a sentence saying what it does, its choices and its default. So
-// a host's settings page shows every one. Saved settings are read back with anything unknown or out of range left out.
-// Nothing secret is kept: an AI model names its key in the host's own secret store (§19), never the key.
+// The editor's options (spec §21): each one's name, what it does, its choices and default, for a host's settings page.
+// Saved settings are read back without unknown or out-of-range values. AI keys stay in the host's secret store (§19).
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
@@ -24,13 +23,11 @@ export type FocusDepthSetting = 'one' | 'two';
 
 /** The theme an exported image is drawn in, its colours fixed so it reads the same outside Obsidian (§16). */
 export type ExportTheme = 'light' | 'dark';
-
 /** Whether an export saved into the vault also gets a companion note (§16). */
 export type CompanionSetting = 'off' | 'on';
 
 /** Whether AI is used at all (§19, ai_off_until_chosen): off until the user turns it on. */
 export type AiUse = 'off' | 'on';
-
 /** A switch of the View menu as the settings hold its default (§25, view_switch_defaults): on or off. */
 export type SwitchSetting = 'on' | 'off';
 
@@ -77,6 +74,7 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
   easierReading: SwitchSetting;
+  newRendering: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -120,6 +118,7 @@ export const DEFAULT_SETTINGS: Settings = {
   detailsOpen: 'off',
   drawingHeight: 'most',
   easierReading: 'off',
+  newRendering: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -370,6 +369,7 @@ export function settingsFrom(saved: unknown): Settings {
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
     easierReading: oneOf<SwitchSetting>('easierReading', s.easierReading, d.easierReading),
+    newRendering: oneOf<SwitchSetting>('newRendering', s.newRendering, d.newRendering),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

@@ -1141,6 +1141,7 @@ It is built beside today's drawing, behind a switch, and is not drawn yet.
 - `render-look.ts` — part of L4: every colour, light and dark, from the mockups, with shades for each level.
 - `render-marks.ts` — layer L4, `marksOf`: clouds, dots, roads and labels on screen, and the one label placer.
 - `paint-canvas.ts` — a layer L5 painter, `paintCanvas`: draws the marks on a 2D canvas exactly as given.
+- `render-camera.ts` — layer L6: fits, pans, and zooms in stops, one level per notch.
 
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
