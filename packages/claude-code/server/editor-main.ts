@@ -18,6 +18,7 @@ import { NoteStore } from './editor-store.ts';
 import { loadPageAssets, PLUGIN_START, type PageAssets } from './page-assets.ts';
 import { Exporter, withExport } from './export-api.ts';
 import { pageSettings, withSettings } from './page-settings.ts';
+import { VaultPresetApi, withVaultPreset } from './vault-preset-api.ts';
 import { pagePlugins, withPlugins } from './page-plugins.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
@@ -105,7 +106,13 @@ export async function optionsFromEnvironment(
   // the plug-ins turned on in Obsidian, each file checked against the SHA-256 it was turned on with (page-plugins.ts)
   const plugins = await pagePlugins(vault, await pluginStart());
   return {
-    api: withPlugins(plugins.list, withSettings(env[EDITOR_ENVIRONMENT.settings], withExport(exporter, store.api))),
+    api: withPlugins(
+      plugins.list,
+      withSettings(
+        env[EDITOR_ENVIRONMENT.settings],
+        withVaultPreset(new VaultPresetApi(store.vault), withExport(exporter, store.api)),
+      ),
+    ),
     page: new Map([...(await pageFiles()), ...plugins.files]),
     drain: async () => void (await Promise.all([store.stop(), exporter.stop()])),
     note: opened.id,
