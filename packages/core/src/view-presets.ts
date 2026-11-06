@@ -71,11 +71,15 @@ const DEFAULT_TURNS: Partial<Settings> = {
   miniMap: 'always',
 };
 
-/** A starter: its words from the catalogue, the default chain and settings changed where it says. */
+/** A starter. Its words are read from the catalogue each time, so they follow the language chosen. */
 const starter = (id: string, chain: Partial<ViewChain>, settings: Partial<Settings>): ViewPreset => ({
   id,
-  name: word(`settings.view-preset.${id}` as WordKey),
-  sentence: word(`settings.view-preset.${id}.sentence` as WordKey),
+  get name(): string {
+    return word(`settings.view-preset.${id}` as WordKey);
+  },
+  get sentence(): string {
+    return word(`settings.view-preset.${id}.sentence` as WordKey);
+  },
   chain: { ...DEFAULT_CHAIN, ...chain },
   settings: { ...DEFAULT_TURNS, ...settings },
 });
