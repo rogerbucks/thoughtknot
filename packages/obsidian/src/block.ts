@@ -39,6 +39,7 @@ import { graphCard } from './graph-card';
 import { pictureStatus } from './pictures/picture-status';
 import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { vaultPresetOf } from './settings/vault-preset';
 import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { noViewMenu, pictureAgain as live } from '@thoughtknot/core/display/graph-view/view-drawn';
 import { withPicture } from './outside/outside-diagrams';
@@ -350,7 +351,7 @@ export async function renderBlock(
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
       profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
-      aids: aidsOf(plugin.settings, styling.style),
+      aids: aidsOf(plugin.settings, styling.style, undefined, vaultPresetOf(plugin)),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
         void plugin.openEditor(target);
