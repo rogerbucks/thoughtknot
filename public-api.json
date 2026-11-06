@@ -2564,6 +2564,7 @@
           "interface",
           "drop: (note: string) => void",
           "groups: (note: string) => { groups: GroupRow[]; between: BetweenRow[]; }",
+          "inside?: ((note: string, group: string) => LinkRow[]) | undefined",
           "readonly kind: 'memory' | 'sqlite'",
           "links: (note: string) => LinkRow[]",
           "notes: () => string[]",
@@ -3040,6 +3041,25 @@
         ],
         "parseView": [
           "value: (query: string) => ViewSpec | ViewRefusal"
+        ],
+        "PARTS_HELD_MOST": [
+          "value: 20000"
+        ],
+        "partsOf": [
+          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>, most?: number) => Promise<Map<string, PartsSource>>"
+        ],
+        "PartsSource": [
+          "class",
+          "static new (ix: MeshIndex, note: string, graph: string, version: string, most?: number): PartsSource",
+          "fresh: boolean",
+          "readonly graph: string",
+          "group: (id: string, keep?: boolean) => GraphDrawing | null",
+          "holding: number",
+          "letGo: (id: string) => void",
+          "readonly note: string",
+          "onScreen: (ids: Iterable<string>) => void",
+          "open: Array<string>",
+          "overview: () => Grouping"
         ],
         "pastLimit": [
           "value: ({ facts, size }: ImageAt, say?: Say) => string | null"

@@ -11,6 +11,7 @@ import { DRAW_TEXT_LIMIT } from './drawing-marks.ts';
 import type { DrawMark } from './drawing-marks.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import { louvain } from './louvain.ts';
+import { groupSize } from './scale-groups.ts';
 import type { Grouping } from './scale-groups.ts';
 
 /** The room one thing takes in the overview, in CSS pixels squared: a group of 500 is about 670 pixels across. */
@@ -102,7 +103,10 @@ function sets({ groups, between }: Grouping): number[][] {
 export function overviewOrder(grouping: Grouping): string[][] {
   const { groups } = grouping;
   // largest first, as the treemap needs to keep its boxes near square
-  const size = (g: number) => groups[g]?.keys.length ?? 0;
+  const size = (g: number) => {
+    const k = groups[g];
+    return k ? groupSize(k) : 0;
+  };
   return sets(grouping)
     .map((p) => p.sort((a, b) => size(b) - size(a) || a - b))
     .map((p) => ({ p, n: p.reduce((n, g) => n + size(g), 0) }))
@@ -122,12 +126,15 @@ export function overviewOf(
   looks?: (keys: readonly string[]) => string,
 ): LaidMarks {
   const { groups, between } = grouping;
-  const things = groups.reduce((n, g) => n + g.keys.length, 0);
+  const things = groups.reduce((n, g) => n + groupSize(g), 0);
   const side = Math.ceil(Math.sqrt(Math.max(1, things) * THING_ROOM));
   const space = { width: side, height: side };
   if (!groups.length) return { space, marks: [] };
   const room = (n: number) => (n / Math.max(1, things)) * side * side;
-  const size = (g: number) => groups[g]?.keys.length ?? 0;
+  const size = (g: number) => {
+    const k = groups[g];
+    return k ? groupSize(k) : 0;
+  };
   const at = new Map(groups.map((g, i) => [g.id, i]));
   const parts = order.map((p) => p.flatMap((id) => at.get(id) ?? [])).filter((p) => p.length);
   const named = new Set(parts.flat());
@@ -149,7 +156,8 @@ export function overviewOf(
     const r = place[i] as Rect;
     const gap = Math.min(GAP, r.width / 4, r.height / 4);
     const box = { x: r.x + gap, y: r.y + gap, width: r.width - gap * 2, height: r.height - gap * 2 };
-    const count = `${g.keys.length} ${g.keys.length === 1 ? 'thing' : 'things'}`,
+    const n = groupSize(g),
+      count = `${n} ${n === 1 ? 'thing' : 'things'}`,
       held = looks?.(g.keys) ?? '';
     centre[i] = [box.x + box.width / 2, box.y + box.height / 2];
     marks.push({
