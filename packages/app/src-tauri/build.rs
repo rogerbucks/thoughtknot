@@ -9,6 +9,8 @@ fn main() {
         "remove_file",
         "make_dir",
         "write_new",
+        "pick_target",
+        "swap_folders",
         "run_gh",
     ];
     tauri_build::try_build(
