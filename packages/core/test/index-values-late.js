@@ -406,4 +406,7 @@ export const VALUES_LATE = [
   'storageInUse',
   'storageOffered',
   'storageSettingFrom',
+  'accessRefused',
+  'boardEditInNote',
+  'mayChange',
 ];
