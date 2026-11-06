@@ -52,3 +52,19 @@ test('zooming keeps the point under the pointer still, and panning follows the p
   const p = panView(v, 50, -30);
   assert.deepEqual([p.x, p.y], [-40, 50]);
 });
+
+// proves: render_one_camera
+test('fitting keeps the drawing out of what the controls cover, unless that leaves too little', () => {
+  const spots = [
+    { x: 0, y: 0, r: 100 },
+    { x: 500, y: 0, r: 100 },
+  ];
+  const clear = { top: 0, right: 0, bottom: 0, left: 300 };
+  const v = fitView(spots, 1000, 400, clear);
+  const screen = (x) => (x - v.x) * v.scale;
+  assert.ok(screen(-100) >= 300, 'clear of the docks on the left');
+  assert.ok(screen(600) <= 1000);
+  assert.deepEqual(v.clear, clear);
+  const narrow = fitView(spots, 400, 400, clear);
+  assert.deepEqual(narrow.clear, { top: 0, right: 0, bottom: 0, left: 0 }, 'a narrow card ignores the controls');
+});

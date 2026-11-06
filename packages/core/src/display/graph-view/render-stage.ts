@@ -17,6 +17,7 @@ import { DARK, LIGHT } from '../../render/render-look.ts';
 import { marksOf, type View } from '../../render/render-marks.ts';
 import { fitView, panView, stepView, stopsOf } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
+import { coverCards, overCover } from './controls-cover.ts';
 
 /** The least time between two zoom steps, in milliseconds, so one swipe of a trackpad is one step. */
 export const STEP_MS = 160;
@@ -45,6 +46,8 @@ export class RenderStage {
   private stops: number[] = [];
   private view: View;
   private lastStep = -Infinity;
+  /** Whether the view is still the fitted one: no zoom or pan since. */
+  private untouched = true;
   private drag: { x: number; y: number } | null = null;
   private readonly watcher: ResizeObserver | null;
 
@@ -66,6 +69,7 @@ export class RenderStage {
     this.canvas.addEventListener('pointerup', () => (this.drag = null));
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
     this.watcher?.observe(viewport);
+    for (const card of coverCards(viewport)) this.watcher?.observe(card);
     this.draw();
   }
 
@@ -79,17 +83,25 @@ export class RenderStage {
     });
   }
 
-  /** The drawing fitted to the card as it is now, and the zoom stops from there. */
+  /** The drawing fitted to the part of the card the controls leave clear, and the zoom stops from there. */
   private fitted(): View {
     const r = this.viewport.getBoundingClientRect();
-    const view = fitView(this.spots.values(), r.width || 1, r.height || 1);
+    const view = fitView(this.spots.values(), r.width || 1, r.height || 1, overCover(this.viewport, r));
     this.stops = stopsOf(this.sizes, view.scale);
+    this.untouched = true;
     return view;
   }
 
-  /** The card changed size: fitted again, as a change of size is not a change of place the reader made. */
+  /**
+   * The card or a control changed size. A view the reader has not moved is fitted again. A moved one keeps its place
+   * and only learns the new cover. A change of size is not a change of place the reader made.
+   */
   resized(): void {
-    this.view = this.fitted();
+    if (this.untouched) this.view = this.fitted();
+    else {
+      const r = this.viewport.getBoundingClientRect();
+      this.view = { ...this.view, clear: overCover(this.viewport, r) };
+    }
     this.draw();
   }
 
@@ -103,6 +115,7 @@ export class RenderStage {
     const now = Date.now();
     if (now - this.lastStep < STEP_MS || !e.deltaY) return;
     this.lastStep = now;
+    this.untouched = false;
     const r = this.canvas.getBoundingClientRect();
     this.view = stepView(this.view, this.stops, e.deltaY < 0 ? 1 : -1, [e.clientX - r.left, e.clientY - r.top]);
     this.draw();
@@ -115,6 +128,7 @@ export class RenderStage {
   private move(e: PointerEvent): void {
     if (!this.drag) return;
     this.view = panView(this.view, e.clientX - this.drag.x, e.clientY - this.drag.y);
+    this.untouched = false;
     this.drag = { x: e.clientX, y: e.clientY };
     this.draw();
   }

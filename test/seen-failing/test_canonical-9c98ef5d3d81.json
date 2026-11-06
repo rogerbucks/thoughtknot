@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_canonical.py",
+  "test": "SpecCanonicalForm.test_different_graphs_give_different_hashes",
+  "seen_failing_first": false,
+  "evidence": "the canonical form already worked in the Python library; this test guards it against the cases and the new page, and the page is the new part"
+}

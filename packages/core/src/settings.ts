@@ -118,7 +118,7 @@ export const DEFAULT_SETTINGS: Settings = {
   detailsOpen: 'off',
   drawingHeight: 'most',
   easierReading: 'off',
-  newRendering: 'off',
+  newRendering: 'on',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',

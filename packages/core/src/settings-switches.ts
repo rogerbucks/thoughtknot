@@ -17,13 +17,13 @@ function switchOption(key: keyof Settings, name: string, sentence: string): Opti
   };
 }
 
-/** Whether graphs with levels are drawn by the new rendering, as a preview (ES§73, render_switch). Off until turned on. */
+/** Whether graphs with levels are drawn by the new rendering, (ES§73, render_switch). On until turned off. */
 export const RENDER_OPTION: Option = {
   key: 'newRendering',
   section: 'Drawing',
-  name: 'New rendering (preview)',
+  name: 'New rendering',
   sentence:
-    'Draws graphs that have subjects and areas with the new rendering: clouds, roads and names, one level per scroll step. It is a preview and may change.',
+    'Draws graphs that have subjects and areas with the new rendering: clouds, roads and names, one level per scroll step. On unless you turn it off; off draws them as before.',
   choices: [
     { value: 'off', name: 'Off' },
     { value: 'on', name: 'On' },

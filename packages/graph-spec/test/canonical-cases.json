@@ -1,0 +1,85 @@
+{
+  "about": "Editor spec §51, spec_canonical_form (requirements/graph-spec-canonical.md). Each group is one graph written several ways: every way gives the one hash recorded. Each pair is two different graphs: they give different hashes. Both libraries run these cases: packages/graph-spec/test/canonical.test.mjs and python/graph_spec/tests/test_canonical.py.",
+  "same": [
+    {
+      "name": "the order things are written in",
+      "blocks": ["// graph: g\n(a:T {id:'a'}),\n(b:T {id:'b'})", "// graph: g\n(b:T {id:'b'}),\n(a:T {id:'a'})"],
+      "hash": "7dfcaf0b01294b925e80deaf2b0f70da6409ab34cb751a67fe1cf7d19425e828"
+    },
+    {
+      "name": "the order of properties",
+      "blocks": ["// graph: g\n(a:T {id:'a', x: 1, y: 2})", "// graph: g\n(a:T {y: 2, id:'a', x: 1})"],
+      "hash": "ba467a7bdf85f2b54e0f48121de44afacd10cf22cce4ee6b44bc76c1f67f3fdb"
+    },
+    {
+      "name": "spaces, line breaks and a comment",
+      "blocks": ["// graph: g\n(a:T {id:'a', x: 1})", "// graph: g\n// a note\n(a:T\n  {id: 'a',\n   x: 1})"],
+      "hash": "00dd77322079e01fa79669cb48d35cca62d3e767648d1cb840ec7f3ac7890a92"
+    },
+    {
+      "name": "the order of labels",
+      "blocks": ["// graph: g\n(a:T:U {id:'a'})", "// graph: g\n(a:U:T {id:'a'})"],
+      "hash": "b0d5f6d1dd84d756f0cb0dd7c1d208236f900c1c404583f6bfd759d8e367dc4f"
+    },
+    {
+      "name": "INSERT in front or not",
+      "blocks": ["// graph: g\nINSERT\n(a:T {id:'a'})", "// graph: g\n(a:T {id:'a'})"],
+      "hash": "9d5ba8b3ab0a1f5dd575be8d1835936fc6cb9b63acb540341b30f5032daf5ff4"
+    },
+    {
+      "name": "a property set inline or by SET",
+      "blocks": ["// graph: g\n(a:T {id:'a', x: 1})", "// graph: g\n(a:T {id:'a'})\nSET a.x = 1"],
+      "hash": "00dd77322079e01fa79669cb48d35cca62d3e767648d1cb840ec7f3ac7890a92"
+    },
+    {
+      "name": "the order of links",
+      "blocks": [
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(a)-[:R]->(b),(b)-[:S]->(a)",
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(b)-[:S]->(a),(a)-[:R]->(b)"
+      ],
+      "hash": "8f83c7489fadd8710c3dd0984123d1b7a6263ac3cf7e525a38bbcb14e6f763cf"
+    },
+    {
+      "name": "1 or 1.0",
+      "blocks": ["// graph: g\n(a:T {id:'a', x: 1})", "// graph: g\n(a:T {id:'a', x: 1.0})"],
+      "hash": "00dd77322079e01fa79669cb48d35cca62d3e767648d1cb840ec7f3ac7890a92"
+    },
+    {
+      "name": "a time as Z, +00:00 or another offset",
+      "blocks": [
+        "// graph: g\n(a:T {id:'a', d: DATETIME '2026-01-01T00:00:00Z'})",
+        "// graph: g\n(a:T {id:'a', d: DATETIME '2026-01-01T00:00:00+00:00'})",
+        "// graph: g\n(a:T {id:'a', d: DATETIME '2026-01-01T10:00:00+10:00'})"
+      ],
+      "hash": "032e77ca8c9539b4d46f22fba115d209b49a4b19c0916d41447de9be8dc91ced"
+    }
+  ],
+  "different": [
+    {
+      "name": "one more property",
+      "blocks": ["// graph: g\n(a:T {id:'a'})", "// graph: g\n(a:T {id:'a', x: 1})"]
+    },
+    {
+      "name": "a different value",
+      "blocks": ["// graph: g\n(a:T {id:'a', x: 1})", "// graph: g\n(a:T {id:'a', x: 2})"]
+    },
+    {
+      "name": "a different label",
+      "blocks": ["// graph: g\n(a:T {id:'a'})", "// graph: g\n(a:U {id:'a'})"]
+    },
+    {
+      "name": "a link the other way round",
+      "blocks": [
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(a)-[:R]->(b)",
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(b)-[:R]->(a)"
+      ]
+    },
+    {
+      "name": "a different link type",
+      "blocks": [
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(a)-[:R]->(b)",
+        "// graph: g\n(a:T {id:'a'}),(b:T {id:'b'}),(a)-[:S]->(b)"
+      ]
+    }
+  ]
+}
