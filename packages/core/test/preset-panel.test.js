@@ -22,9 +22,16 @@ function panel(start = {}) {
   return { p, state, seen };
 }
 const row = (p, name) => p.rows().find((r) => r.name === name);
-const press = async (p, name) => {
+/** Waits, a turn at a time, for the state `ready` reads. */
+const until = async (ready) => {
+  for (let i = 0; i < 200 && !ready(); i++) await Promise.resolve();
+  assert.ok(ready(), 'the panel finished');
+};
+/** Presses a row, and waits until the panel has drawn itself again. */
+const press = async (p, seen, name) => {
+  const before = seen.drawn;
   row(p, name).action();
-  await new Promise((r) => setTimeout(r, 0));
+  await until(() => seen.drawn > before);
 };
 
 describe('the preset panel', () => {
@@ -45,12 +52,12 @@ describe('the preset panel', () => {
 
   // proves: view_presets_predictable
   test('is used when asked, and one press puts every setting back', async () => {
-    const { p, state } = panel({ viewPreset: 'default' });
+    const { p, state, seen } = panel({ viewPreset: 'default' });
     const before = { ...state.s };
     p.pick('focus');
-    await press(p, 'Use this preset');
+    await press(p, seen, 'Use this preset');
     assert.equal(state.s.viewPreset, 'focus');
-    await press(p, 'Undo the preset change');
+    await press(p, seen, 'Undo the preset change');
     assert.deepEqual(state.s, before);
     assert.equal(row(p, 'Undo the preset change'), undefined, 'one step back, not more');
   });
@@ -60,10 +67,10 @@ describe('the preset panel', () => {
     const { p, seen } = panel({ viewPreset: 'focus' });
     assert.match(row(p, 'View preset in use').desc, /chosen by your settings/);
     assert.equal(row(p, 'Stop using a vault preset'), undefined);
-    await press(p, 'Use this preset for the whole vault');
+    await press(p, seen, 'Use this preset for the whole vault');
     assert.equal(seen.vault, 'focus');
     assert.match(row(p, 'View preset in use').desc, /chosen by this vault/);
-    await press(p, 'Stop using a vault preset');
+    await press(p, seen, 'Stop using a vault preset');
     assert.equal(seen.vault, undefined);
   });
 
@@ -75,8 +82,7 @@ describe('the preset panel', () => {
     p.ownRows()
       .find((r) => r.action)
       .action();
-    await new Promise((r) => setTimeout(r, 0));
-    assert.equal(seen.shared.length, 1);
+    await until(() => seen.shared.length === 1);
     assert.match(seen.shared[0], /thoughtknot-view-preset@1/);
   });
 });
