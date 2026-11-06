@@ -116,6 +116,7 @@
 (display_export:Area {name: 'Export form', section: '16', does: 'The export form and its types.', files: 'packages/core/src/display/export/**'}),
 (display_images:Area {name: 'Images', section: '18', does: 'Image sources and still frames.', files: 'packages/core/src/display/images/**'}),
 (display_proposals:Area {name: 'Proposal strip', section: '17', does: 'Proposals marked on the drawing and the strip that reviews them.', files: 'packages/core/src/display/proposals/**'}),
+(core_render:Area {name: 'The rendering rebuild', section: '73', does: 'The new rendering, one way down: the scene of a graph, then rooms, detail, marks and the painters (wiki/Rendering-spec.md).', files: 'packages/core/src/render/*.ts'}),
 // ── Areas in their parts ──
 (lib_entry)-[:PART_OF]->(graph_spec_js),
 (lib_reading)-[:PART_OF]->(graph_spec_js),
@@ -167,6 +168,7 @@
 (core_altitude)-[:PART_OF]->(core_part),
 (core_process)-[:PART_OF]->(core_part),
 (core_drawing_trust)-[:PART_OF]->(core_part),
+(core_render)-[:PART_OF]->(core_part),
 (core_runs)-[:PART_OF]->(core_part),
 (core_profiles)-[:PART_OF]->(core_part),
 (core_discover)-[:PART_OF]->(core_part),

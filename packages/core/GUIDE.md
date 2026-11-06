@@ -1130,6 +1130,18 @@ little. A view fits the spots into its space and draws marks there. A new layout
 - `force-3d.ts` — the force layout in space: depth keeps apart the links a page would cross. A new thing on a warm
   start begins beside the things it links to.
 
+### The rendering rebuild, `src/render/` (editor spec §73)
+
+The new rendering, built one way down to wiki/Rendering-spec.md. Each layer takes only what the one above gives it.
+It is built beside today's drawing, behind a switch, and is not drawn yet.
+
+- `render-scene.ts` — layer L1, `sceneOf`: one tree of the graph, far to near, with links rolled up at each level.
+- `render-rooms.ts` — layer L2, `roomsOf`: each group a round room, rooms first, linked neighbours side by side.
+- `render-detail.ts` — layer L3, `detailAt`: how much of each level shows at a zoom, fading in level by level.
+- `render-look.ts` — part of L4: every colour, light and dark, from the mockups, with shades for each level.
+- `render-marks.ts` — layer L4, `marksOf`: clouds, dots, roads and labels on screen, and the one label placer.
+- `paint-canvas.ts` — a layer L5 painter, `paintCanvas`: draws the marks on a 2D canvas exactly as given.
+
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
 These views are not laid out by Graphviz. Each is a pure function from a graph's shape and a space to drawing marks
