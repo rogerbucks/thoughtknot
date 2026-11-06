@@ -7,7 +7,8 @@ export type GraphView = { title: string; svg?: string; alt: string; lines: strin
 declare module 'claude-code' {
   interface PluginState {
     // `editor` counts the changes of the editor pane (a server started, ended or stopped), so it is drawn again. It
-    // holds no address, token or note: those never enter state, which the host may keep.
-    thoughtknot: { view: GraphView | null; editor: number };
+    // holds no address, token or note: those never enter state, which the host may keep. `stage` counts the changes of
+    // what Claude shows, presents or asks, so the stage is drawn again.
+    thoughtknot: { view: GraphView | null; editor: number; stage: number };
   }
 }
