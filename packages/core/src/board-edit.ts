@@ -18,6 +18,10 @@ export type BoardChange =
   | { kind: 'move'; id: string; x: number; y: number }
   | { kind: 'size'; id: string; w: number; h: number }
   | { kind: 'text'; id: string; text: string }
+  | { kind: 'layer'; id: string; layer: number }
+  | { kind: 'lock'; id: string; locked: boolean }
+  | { kind: 'style'; id: string; style: string | null }
+  | { kind: 'group'; id: string; group: string | null }
   | { kind: 'add'; item: BoardItem }
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string };
@@ -31,11 +35,13 @@ export const GAP = 40;
 export function boardEdit(text: string, change: BoardChange): { text: string } | { refused: string } {
   const { board, problems } = readBoard(text);
   const find = (id: string) => board.items.find((i) => i.id === id);
-  if (change.kind === 'move' || change.kind === 'size' || change.kind === 'text') {
-    const item = find(change.id);
-    if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
-    if (item.locked && change.kind !== 'text') return { refused: word('board.edit.locked') };
-    return { text: itemChanged(text, item, patchOf(change)) };
+  if (isItemSet(change)) {
+    const set = change;
+    const item = find(set.id);
+    if (!item) return { refused: word('board.edit.gone', { id: set.id }) };
+    // text and the lock itself may change on a locked item; nothing else may
+    if (item.locked && set.kind !== 'text' && set.kind !== 'lock') return { refused: word('board.edit.locked') };
+    return { text: itemChanged(text, item, patchOf(set)) };
   }
   // a change to the board's shape writes it again whole: never over what the reader could not read
   if (problems.some((p) => p.severity === 'error')) return { refused: word('board.edit.problems') };
@@ -74,12 +80,32 @@ export function boardEditInNote(
   return { note: replaceSpan(note, span, r.text).note, text: r.text };
 }
 
-/** What a move, size or text change sets on its item: places and sizes as whole numbers, a size never too small. */
-function patchOf(change: Extract<BoardChange, { kind: 'move' | 'size' | 'text' }>): Partial<BoardItem> {
-  if (change.kind === 'move') return { x: Math.round(change.x), y: Math.round(change.y) };
-  if (change.kind === 'size')
-    return { w: Math.max(MIN_SIDE, Math.round(change.w)), h: Math.max(MIN_SIDE, Math.round(change.h)) };
-  return { text: change.text };
+// the changes that set properties of one item, which change that item's own text alone
+type ItemSet = Extract<BoardChange, { kind: 'move' | 'size' | 'text' | 'layer' | 'lock' | 'style' | 'group' }>;
+const SETS = new Set<string>(['move', 'size', 'text', 'layer', 'lock', 'style', 'group']);
+const isItemSet = (change: BoardChange): change is ItemSet => SETS.has(change.kind);
+
+/**
+ * What an item change sets on its item: places, sizes and layers as whole numbers, a size never too small. A style or a
+ * group of null takes it off; unlocking takes the lock off rather than writing `locked: false`.
+ */
+function patchOf(change: ItemSet): Partial<BoardItem> {
+  switch (change.kind) {
+    case 'move':
+      return { x: Math.round(change.x), y: Math.round(change.y) };
+    case 'size':
+      return { w: Math.max(MIN_SIDE, Math.round(change.w)), h: Math.max(MIN_SIDE, Math.round(change.h)) };
+    case 'text':
+      return { text: change.text };
+    case 'layer':
+      return { layer: Math.round(change.layer) };
+    case 'lock':
+      return { locked: change.locked ? true : undefined };
+    case 'style':
+      return { style: change.style ?? undefined };
+    case 'group':
+      return { group: change.group ?? undefined };
+  }
 }
 
 /** The block with one item's own text written again with `patch`; everything else stays as it was. */
@@ -116,4 +142,11 @@ export function newItem(board: Board, kind: BoardKind, near: BoardItem | null, c
   for (let tries = 0; tries < 200 && taken(); tries++) item.y += size.h / 2;
   item.y = Math.round(item.y);
   return item;
+}
+
+/** The layer that puts an item over every other (`front`) or under every other, as a whole number. */
+export function layerFor(board: Board, id: string, where: 'front' | 'back'): number {
+  const others = board.items.filter((i) => i.id !== id).map((i) => i.layer ?? 0);
+  if (!others.length) return 0;
+  return where === 'front' ? Math.max(...others) + 1 : Math.min(...others) - 1;
 }
