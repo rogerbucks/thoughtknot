@@ -11,7 +11,7 @@ const SHELF = 'rows';
 const answer = <T>(r: IDBRequest<T>): Promise<T> =>
   new Promise((done, fail) => {
     r.onsuccess = () => done(r.result);
-    r.onerror = () => fail(new Error('IndexedDB refused the request'));
+    r.onerror = () => fail(r.error ?? new Error());
   });
 
 /** The rows kept in `win`'s IndexedDB; undefined where it has none, as in some private windows. */
