@@ -439,4 +439,6 @@ export const TYPES_LATE = [
   'NoPlace',
   'StorageChoice',
   'StorageSetting',
+  'BoardChange',
+  'BoardRole',
 ];
