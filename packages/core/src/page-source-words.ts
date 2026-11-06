@@ -78,6 +78,7 @@ export const PAGE_SOURCE_WORDS = {
   'page.plugin-left': 'The plug-in {name} is not run here: {why}.',
   'page.plugin-not-started': 'The plug-in {name} could not be started: {why}',
   'page.no-worker': 'The layout worker could not be started, so the graph is shown as text.',
+  'page.preset-not-sent': 'The view preset could not be sent to the editor: {why}. Nothing was saved.',
   'page.export-not-sent': 'The export could not be sent to the editor: {why}. Nothing was saved.',
   'page.export-stopped': 'The export was stopped before the layout finished. Nothing was saved. Try again.',
   'page.export-not-made': 'The export was not made: {why}. Nothing was saved.',

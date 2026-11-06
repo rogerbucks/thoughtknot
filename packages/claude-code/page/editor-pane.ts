@@ -53,9 +53,14 @@ export function paneHost(
   layouts: LayoutRunner,
   note?: PageNote,
   pictures?: () => Promise<PictureStates>,
+  vault?: () => string | undefined,
 ): PaneHost {
   return {
-    settings: () => settings,
+    // the vault's own preset beats the settings' and loses to a graph's own, as in Obsidian (view_presets_scoped)
+    settings: () => {
+      const chosen = vault?.();
+      return chosen ? { ...settings, viewPreset: chosen } : settings;
+    },
     layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
     palette: PALETTES.system,
     again: () => layouts.resume(),
@@ -87,8 +92,9 @@ export async function openEditorPane(
   settings: Settings,
   layouts: LayoutRunner,
   pictures?: () => Promise<PictureStates>,
+  vault?: () => string | undefined,
 ): Promise<BlockEditor> {
-  const editor = new BlockEditor(paneHost(settings, layouts, note, pictures), 'pane', note);
+  const editor = new BlockEditor(paneHost(settings, layouts, note, pictures, vault), 'pane', note);
   editor.load();
   editor.mount(into);
   await editor.open('', -1);
