@@ -954,6 +954,7 @@
     "test/build-status-env.test.js": 1,
     "test/build-status-gh-lock.test.js": 1,
     "test/build-status-started.test.js": 1,
+    "test/changed-tests.test.js": 2,
     "test/cheap-checks.test.js": 1,
     "test/check-requirements-reworded.test.js": 1,
     "test/classification.test.js": 2,

@@ -1,0 +1,31 @@
+<section aria-labelledby="lib-title">
+  <h1 id="lib-title">{{libraries.heading}}</h1>
+  <p class="lede">{{libraries.lede}}</p>
+  <ul class="links">
+    <li><a href="{{@repo}}/blob/main/packages/graph-spec/GUIDE.md">{{libraries.js}}</a></li>
+    <li><a href="{{@repo}}/blob/main/python/graph_spec/GUIDE.md">{{libraries.py}}</a></li>
+    <li><a href="{{@repo}}/blob/main/examples/js/read-and-check.cjs">{{libraries.example}}</a></li>
+  </ul>
+</section>
+<section aria-labelledby="ops-title">
+  <h2 id="ops-title">{{libraries.ops}}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{{libraries.col.operation}}</th>
+        <th scope="col">{{libraries.col.js}}</th>
+        <th scope="col">{{libraries.col.py}}</th>
+        <th scope="col">{{libraries.col.takes}}</th>
+        <th scope="col">{{libraries.col.gives}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{@operations}}
+    </tbody>
+  </table>
+</section>
+<section aria-labelledby="problem-title">
+  <h2 id="problem-title">{{libraries.problem.title}}</h2>
+  <p>{{@raised-line}}</p>
+  <p>{{libraries.problem.never}}</p>
+</section>
