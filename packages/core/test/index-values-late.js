@@ -386,4 +386,5 @@ export const VALUES_LATE = [
   'keptName',
   'keptRows',
   'rowsKeptOrRead',
+  'partsRefusal',
 ];

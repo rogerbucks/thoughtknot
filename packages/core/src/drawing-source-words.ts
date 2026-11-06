@@ -43,6 +43,8 @@ export const DRAWING_SOURCE_WORDS = {
     other:
       'This graph has {count} things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
   },
+  // a note past even what is read a part at a time (store-drawing.ts, scale_parts_budget)
+  'refusal.past-parts': 'This note is too large to open even a part at a time: {over}.',
   // why a graph is not laid out: what is over its limit (hosts/refusal-words.ts)
   'refusal.over.text-bytes': 'the graph blocks here hold {size} of text, and at most {most} is read',
   'refusal.over.text-lines': 'the graph blocks here hold {size} lines, and at most {most} are read',
