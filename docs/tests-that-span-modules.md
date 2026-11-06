@@ -347,6 +347,8 @@ after a module nor listed here, and on a listed file that is missing.
   same list (spec_ai_wire).
 - `python/graph_spec/tests/test_process_versions.py` — a running instance keeps the process version it started on, and
   moves only by the mapping a new version gives (spec_process_versions).
+- `python/graph_spec/tests/test_conserved.py` — a quantity a graph declares as conserved is added up in any domain.
+  Each group that does not balance is reported (spec_conserved).
 - `packages/graph-spec/test/times.test.mjs` — both readers hold a time written with its zone as the same UTC instant.
   They refuse a time with no offset alike (spec_zoned_time).
 - `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
