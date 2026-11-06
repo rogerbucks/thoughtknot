@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/reader-picture-markdown.test.js",
+  "test": "a Markdown reader with no plug-in > shows the picture where the image line is, with the words as its alternative",
+  "seen_failing_first": false,
+  "evidence": "the picture and its image line were built in the RP1 PRs; this test only adds the missing proof"
+}

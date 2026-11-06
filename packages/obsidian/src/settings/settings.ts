@@ -20,7 +20,9 @@ import { readMatrix } from '../ai/matrix-note';
 import { PRESET_KEY, aiModelList, getModelValue, presetPicker, setModelValue, withPreset } from './ai-models';
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
-import { PresetChoice, sharePreset } from './preset-rows';
+import { PresetChoice, asSettings, sharePreset } from './preset-rows';
+import { setVaultPreset, vaultPresetOf } from './vault-preset';
+export { watchVaultPreset } from './vault-preset';
 import { STORAGE_KEY, setStorageValue, storageGroup, storageStoreOf, storageValue } from '../storage/storage-settings';
 
 const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
@@ -48,6 +50,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       save: (next) => this.owner.saveSettings(next),
       update: () => this.update(),
       share: (text) => sharePreset(this.owner, text),
+      vault: () => vaultPresetOf(this.owner),
+      setVault: (id) => setVaultPreset(this.owner, id),
     });
   }
 
@@ -111,7 +115,10 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
     if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'ownPreset')
-      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } }, ...this.preset.ownRows()];
+      return [
+        { name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } },
+        ...asSettings(this.preset.ownRows()),
+      ];
     if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
       return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
     if (o.key === 'aiClassMap')
@@ -148,7 +155,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         },
       ];
     const chosen = o.choices?.find((c) => c.value === (o.key === 'viewPreset' ? this.preset.shown() : s[o.key]));
-    const after = o.key === 'viewPreset' ? this.preset.rows() : [];
+    const after = o.key === 'viewPreset' ? asSettings(this.preset.rows()) : [];
     return [
       {
         name: o.name,
