@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-history.test.js",
+  "test": "the change log > says there is nothing to undo for someone who changed nothing",
+  "seen_failing_first": false,
+  "evidence": "the module's behaviour was already proved by test/board-together.test.js; this file only gives it a test named after it"
+}
