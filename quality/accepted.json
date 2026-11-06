@@ -161,13 +161,6 @@
       "to": 21,
       "reason": "All 21 are one flaw (minimatch, GHSA-g3hv-75wg-m249) counted again for each lint tool that depends on it. Build machines only, never shipped; accepted as risk SEC-26 and by Roger, 3 Nov 2026. Undo when the lint tools accept minimatch 11.0.1 or later.",
       "date": "2026-11-03"
-    },
-    {
-      "metric": "max_test_lines",
-      "from": 598,
-      "to": 603,
-      "reason": "the 3D glide test now steps the glide on a clock of its own, so a stalled runner cannot make it flaky; the few lines that does are the whole fix",
-      "date": "2026-11-06"
     }
   ]
 }

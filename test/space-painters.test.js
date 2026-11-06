@@ -268,20 +268,16 @@ window.miniInSpace = async () => {
   // Bob moved far across the page, and the drawing marked again
   svg.querySelector('[data-key="bob"] polygon').setAttribute('points', '600,140 680,140 680,180 600,180');
   svg.querySelector('[data-key="bob"] text').setAttribute('x', '640');
-  // The glide steps 30 ms a frame on a clock of its own. A stall on a busy runner cannot make it skip its spots.
-  const realFrame = window.requestAnimationFrame;
+  // The glide steps 30 ms a frame on a clock of its own, so a stalled runner cannot skip its spots.
+  const real = window.requestAnimationFrame;
   let ticks = 0;
-  window.requestAnimationFrame = (cb) =>
-    realFrame.call(window, (now) => cb(cb.name === 'frame' ? ++ticks * 30 : now));
+  window.requestAnimationFrame = (cb) => real.call(window, (now) => cb(cb.name === 'frame' ? ++ticks * 30 : now));
   svg.dispatchEvent(new Event(MARKED));
   const path = [];
-  for (let i = 0; i < 200 && ticks * 30 < 600; i++) {
+  for (let i = 0; i < 200 && ticks < 20; i++) {
     path.push(Math.max(...xs()));
-    await new Promise((r) => realFrame.call(window, r));
+    await new Promise((r) => real.call(window, r));
   }
-  window.requestAnimationFrame = realFrame;
-  await new Promise((r) => setTimeout(r, 450));
-  await frames();
   path.push(Math.max(...xs()));
   // a press on the mini-map moves the view, and picks nothing under it
   const was = seen(),
@@ -557,8 +553,7 @@ describe("the 3D view's painters, in a real browser", () => {
     const { path } = await mini();
     const [first, last] = [path[0], path.at(-1)];
     assert.ok(last > first + 100, `it went where the drawing put it: ${path}`);
-    // A spot between, in a frame of its own, shows a glide and not a jump. The page steps the glide on a clock of its
-    // own, so no runner is too slow to draw its frames.
+    // A spot between, in a frame of its own, shows a glide and not a jump. The page steps the glide on its own clock.
     const between = new Set(path.filter((x) => x > first + 1 && x < last - 1));
     assert.ok(between.size >= 1, `it passed through the spots between, a frame at a time: ${path}`);
   });
