@@ -34,7 +34,7 @@ test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloa
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
   try {
-    const { RenderStage, hasLevels } = await import('../src/display/graph-view/render-stage.ts');
+    const { RenderStage, STEP_MS, hasLevels } = await import('../src/display/graph-view/render-stage.ts');
     const { drawing, g } = drawingAndGraph();
     assert.ok(hasLevels(drawing, g));
     const viewport = doc.createElement('div');
@@ -45,11 +45,27 @@ test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloa
     const at = () => Number(/^Level (\d) of 3 · /.exec(stage.level())[1]);
     const start = at();
     assert.ok(start < 3, 'a small card does not open every level at once');
-    const notch = { ctrlKey: true, deltaY: -100, clientX: 400, clientY: 200, preventDefault() {} };
+    const notch = {
+      ctrlKey: true,
+      deltaY: -100,
+      clientX: 400,
+      clientY: 200,
+      preventDefault() {},
+      stopPropagation() {},
+    };
     stage.wheel({ ...notch, metaKey: false });
-    assert.equal(at(), start + 1);
+    const once = stage.canvas.getAttribute('aria-label');
     stage.wheel({ ...notch, metaKey: false });
-    assert.equal(at(), start + 1, 'a second notch too soon is the same swipe');
+    assert.equal(stage.canvas.getAttribute('aria-label'), once, 'a second notch too soon is the same swipe');
+    // notch by notch, the level goes up one at a time until the last
+    const seen = [start, at()];
+    for (let i = 0; i < 6; i++) {
+      await new Promise((r) => setTimeout(r, STEP_MS + 10));
+      stage.wheel({ ...notch, metaKey: false });
+      seen.push(at());
+    }
+    for (let i = 1; i < seen.length; i++) assert.ok([0, 1].includes(seen[i] - seen[i - 1]), seen.join());
+    assert.equal(seen.at(-1), 3);
     stage.wheel({ ...notch, ctrlKey: false, metaKey: false });
     stage.unload();
     assert.ok(!viewport.classList.contains('thoughtknot-new-rendering'));

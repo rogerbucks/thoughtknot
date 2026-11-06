@@ -23,23 +23,25 @@ test('fitting puts every spot on screen, in the middle', () => {
 });
 
 // proves: render_one_camera
-test('each notch in opens exactly one more level, and each notch out closes one', () => {
+test('a notch in never opens more than one level, and never zooms more than twice', () => {
   const stops = stopsOf(sizes, 0.2);
   let v = { x: 0, y: 0, scale: 0.2, w: 800, h: 600 };
   const levels = [detailAt(sizes, v.scale).level];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
+    const was = v.scale;
     v = stepView(v, stops, 1, [400, 300]);
+    assert.ok(v.scale <= was * 2 + 1e-9);
     levels.push(detailAt(sizes, v.scale).level);
   }
-  assert.deepEqual(levels, [0, 1, 2, 2, 2]);
-  for (let i = 1; i < levels.length; i++) assert.ok(levels[i] - levels[i - 1] <= 1);
-  const back = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 1; i < levels.length; i++) assert.ok([0, 1].includes(levels[i] - levels[i - 1]), levels.join());
+  assert.equal(levels.at(-1), 2, 'every level is reached');
+  const back = [levels.at(-1)];
+  for (let i = 0; i < 12; i++) {
     v = stepView(v, stops, -1, [400, 300]);
     back.push(detailAt(sizes, v.scale).level);
   }
-  for (let i = 1; i < back.length; i++) assert.ok(back[i - 1] - back[i] <= 1);
-  assert.equal(v.scale, 0.2);
+  for (let i = 1; i < back.length; i++) assert.ok([0, 1].includes(back[i - 1] - back[i]), back.join());
+  assert.equal(v.scale, 0.2, 'back out to the fitted view');
 });
 
 // proves: render_one_camera

@@ -11,6 +11,8 @@ const MARGIN = 24;
 /** Past the last level, each notch zooms in by this much, up to `DEEPEST` times the last stop. */
 const BEYOND = 1.5;
 const DEEPEST = 4;
+/** One notch zooms by at most this much, so the reader keeps their place; a deep level may take two notches. */
+const MOST = 2;
 
 /** The view that fits every spot in a screen `w` by `h`, in the middle. */
 export function fitView(spots: Iterable<Spot>, w: number, h: number): View {
@@ -42,12 +44,17 @@ export function zoomTo(view: View, scale: number, at: [number, number]): View {
   return { ...view, scale, x: view.x + px / view.scale - px / scale, y: view.y + py / view.scale - py / scale };
 }
 
-/** One notch in (`dir` 1) or out (`dir` -1) at `at`: to the next stop, so at most one level changes. */
+/** One notch in (`dir` 1) or out (`dir` -1) at `at`: toward the next stop, never past it, so at most one level changes. */
 export function stepView(view: View, stops: readonly number[], dir: 1 | -1, at: [number, number]): View {
   const last = stops[stops.length - 1] as number;
   let scale: number;
-  if (dir > 0) scale = stops.find((s) => s > view.scale * 1.01) ?? Math.min(view.scale * BEYOND, last * DEEPEST);
-  else scale = [...stops].reverse().find((s) => s < view.scale * 0.99) ?? (stops[0] as number);
+  if (dir > 0) {
+    const next = stops.find((s) => s > view.scale * 1.01) ?? Math.min(view.scale * BEYOND, last * DEEPEST);
+    scale = Math.min(next, view.scale * MOST);
+  } else {
+    const before = [...stops].reverse().find((s) => s < view.scale * 0.99) ?? stops[0] ?? view.scale;
+    scale = Math.max(before, view.scale / MOST);
+  }
   return zoomTo(view, scale, at);
 }
 

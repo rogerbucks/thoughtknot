@@ -59,7 +59,8 @@ export class RenderStage {
     this.canvas = viewport.createEl('canvas', { cls: 'thoughtknot-render-stage' });
     this.canvas.setAttribute('role', 'img');
     this.view = this.fitted();
-    this.canvas.addEventListener('wheel', (e) => this.wheel(e), { passive: false });
+    // caught on the way down, so today's zoom underneath never takes the same notch
+    viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });
     this.canvas.addEventListener('pointerdown', (e) => this.down(e));
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', () => (this.drag = null));
@@ -92,10 +93,13 @@ export class RenderStage {
     this.draw();
   }
 
+  private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
+
   /** One zoom step for a wheel notch with Ctrl or Cmd, or a pinch; plain scrolling is the page's. */
   wheel(e: WheelEvent): void {
     if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
+    e.stopPropagation();
     const now = Date.now();
     if (now - this.lastStep < STEP_MS || !e.deltaY) return;
     this.lastStep = now;
@@ -138,6 +142,7 @@ export class RenderStage {
 
   /** Takes the canvas away and shows today's drawing again. */
   unload(): void {
+    this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();
     this.viewport.removeClass('thoughtknot-new-rendering');
