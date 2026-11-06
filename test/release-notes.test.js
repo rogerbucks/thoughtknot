@@ -50,7 +50,15 @@ describe('spec_version_released', () => {
       execFileSync(process.execPath, ['scripts/library-release.mjs', '--out', out], { stdio: 'pipe' });
       const tgz = readdirSync(out).find((f) => f.startsWith('thoughtknot-graph-spec-'));
       const list = execFileSync('tar', ['-tzf', join(out, tgz)], { encoding: 'utf8' }).split('\n');
-      for (const file of ['graph-spec.gql', 'graph-spec-version.json', 'LICENSE-SPEC.md'])
+      for (const file of [
+        'graph-spec.gql',
+        'graph-spec-version.json',
+        'graph-spec-grammar.json',
+        'graph-spec-canonical.md',
+        'graph-spec-library-api.json',
+        'graph-spec-problem-codes.json',
+        'LICENSE-SPEC.md',
+      ])
         assert.ok(
           list.some((l) => l.endsWith(`spec/${file}`)),
           `${file} is in the archive`,
