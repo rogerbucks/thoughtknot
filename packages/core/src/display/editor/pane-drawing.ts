@@ -11,6 +11,7 @@ import {
   MeshIndex,
   memoryBackend,
   parked,
+  partsRefusal,
   readStyle,
   renderFor,
   savedExploreFor,
@@ -39,7 +40,7 @@ import type { Palette } from '../../palette.ts';
 import { massiveView } from '../graph-view/massive-view';
 import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
-import { refusalBanner } from '../refusal-banner';
+import { pastPartsHint, refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
 import { nothingYet } from './pane-empty';
 import { LAYOUT_WAIT, waitShown } from '../progress';
@@ -194,6 +195,8 @@ export class PaneDrawing extends Lifecycle {
     const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
     const was = s.text,
       text = `\`\`\`gql\n${was}\n\`\`\`\n`;
+    const past = partsRefusal(text);
+    if (past) return void pastPartsHint(host, past);
     // a change to a thing chosen: made on its lines in the block, then put in the pane's text, as a quick fix is
     const change = (key: string) => (prop: string, type: PropType, words: string) => {
       const edit = setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);

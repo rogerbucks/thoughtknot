@@ -14,7 +14,9 @@ import { sha256 } from './ai-digest.ts';
 import { gqlBlocks } from './fences.ts';
 import { parseValue, setProperty } from './inspector.ts';
 import type { Edit, PropType } from './inspector.ts';
-import { noteRowsPaced } from './mesh-index-rows.ts';
+import { dataTooLarge, noteRowsPaced } from './mesh-index-rows.ts';
+import { PARTS_LIMITS } from './layout-limits.ts';
+import type { Refusal } from './layout-limits.ts';
 import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
 import { facetsOf } from './facet-counts.ts';
 import type { Facet } from './facet-counts.ts';
@@ -69,11 +71,14 @@ function plainGraph(things: [string, string, Record<string, gs.Value>][], edges:
   };
 }
 
+/** Why a note is too large to read even in parts, naming the limit it is over; null when it is not. */
+export const partsRefusal = (text: string): Refusal | null => dataTooLarge(gqlBlocks(text), PARTS_LIMITS);
+
 /**
  * The graphs of a note, from the store. The note is read into the store first, if the store does not hold this text.
  * A huge note is read a part at a time. Between parts it waits on `pause`, which the host gives, so the page keeps
- * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read. Empty when no
- * graph of it could be read, or the note changed while it was read.
+ * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read. Empty when it is
+ * past what is read in parts, no graph of it could be read, or the note changed while it was read.
  */
 export async function storedGraphs(
   ix: MeshIndex,
@@ -82,6 +87,8 @@ export async function storedGraphs(
   pause: () => Promise<void>,
   kept?: KeptPlace,
 ): Promise<Map<string, StoredGraph>> {
+  // past what the store reads in parts, nothing is read (scale_parts_budget): partsRefusal says why
+  if (partsRefusal(text)) return new Map();
   // rows kept from an earlier session for this text are used, so the note is not read again (scale_parts_kept)
   if (ix.version(note) !== sha256(text))
     ix.backend.put(await rowsKeptOrRead(kept, note, text, () => noteRowsPaced(note, text, pause)));

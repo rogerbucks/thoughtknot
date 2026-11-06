@@ -1102,6 +1102,8 @@ after a module nor listed here, and on a listed file that is missing.
   V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
 - `test/massive-graphs-limits.test.js` — the limits looked at again (editor spec §53, scale_limits_revisited). The
   design note gives each limit before and after. A hostile graph past a new limit is still refused, saying why.
+- `test/massive-graphs-parts.test.js` — a huge note read in parts within budget (editor spec ES§53, scale_parts_budget).
+  Ten times V-10 opens in parts within its time budget. A note past the in-parts limit is refused before it is read.
 - `test/gpu-painters.test.js` — the WebGL 2 and WebGPU painters in headless Chrome (editor spec §53,
   scale_gpu_painters). WebGL 2 must paint the overview as the 2D canvas does. WebGPU's shaders must build, and a frame
   must paint with no error.

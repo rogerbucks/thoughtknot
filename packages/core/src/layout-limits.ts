@@ -23,6 +23,14 @@ export interface ReadLimits {
  */
 export const READ_LIMITS: ReadLimits = { bytes: 1_000_000, lines: 20_000 };
 
+/**
+ * The most of a note's graph blocks read in parts into the local store, past the read limits (editor spec ES§53,
+ * scale_parts_budget). 50 MB and a million lines hold one hundred copies of the V-10 huge graph: 43 MB, 756,000 lines
+ * and 266,600 things. The scale benchmark holds that size within its budgets. A note past them is refused before it is
+ * read, as a hostile one would hold the device for minutes.
+ */
+export const PARTS_LIMITS: ReadLimits = { bytes: 50_000_000, lines: 1_000_000 };
+
 /** How much a graph may be before it is shown as text instead of drawn, and how long its layout may take. */
 export interface LayoutLimits {
   things: number;
