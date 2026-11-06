@@ -11,6 +11,7 @@ import type { Drawn, Palette, View } from '@thoughtknot/core';
 import { boardOf, readBoard, type Board } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
 import { capture, type CaptureHow } from '../../board-capture.ts';
+import { groupNotes, isGroupKey } from './board-group.ts';
 import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
 import { boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
@@ -196,6 +197,12 @@ class BoardView {
   private key(e: KeyboardEvent): void {
     if (e.target !== this.vp) return;
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
+    if (isGroupKey(e) && !this.readOnly)
+      return void groupNotes(
+        this.board,
+        (c) => this.write(c),
+        (w) => this.say(w),
+      );
     const step = boardKey(this.board, this.cursor, press, this.centre(), this.readOnly);
     if (!step) {
       if (this.zoom.handle({ kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }))
@@ -203,7 +210,7 @@ class BoardView {
       // typing a key the zoom does not use, on an empty spot, starts quick capture (board_quick_capture)
       else if (!this.readOnly && !this.cursor.focus && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        return this.openCapture('spot', null, e.key);
+        return this.openCapture(null, e.key);
       }
       if (e.key === 'Tab') {
         this.cursor = NO_CURSOR; // past the last item: focus leaves the board
@@ -263,7 +270,7 @@ class BoardView {
    * A field to catch ideas in: Enter catches the note and opens the next beside it, Tab catches a child joined to it,
    * Escape ends. `last` is the note caught before; `first` is what was already typed.
    */
-  private openCapture(how: CaptureHow, last: string | null, first = ''): void {
+  private openCapture(last: string | null, first = ''): void {
     const { editor } = this;
     editor.empty();
     editor.hidden = false;
@@ -279,20 +286,15 @@ class BoardView {
       if ((e.key !== 'Enter' && e.key !== 'Tab') || e.shiftKey) return;
       e.preventDefault();
       const from = this.board.items.find((i) => i.id === last) ?? null;
-      const r = capture(
-        this.board,
-        last ? (e.key === 'Tab' ? 'child' : how === 'spot' ? 'next' : how) : 'spot',
-        field.value,
-        from,
-        this.centre(),
-      );
+      const how: CaptureHow = !from ? 'spot' : e.key === 'Tab' ? 'child' : 'next';
+      const r = capture(this.board, how, field.value, from, this.centre());
       if ('refused' in r) return this.say(r.refused);
       void r.changes
         .reduce((p, c) => p.then(() => this.write(c)), Promise.resolve())
         .then(() => {
           this.say(r.said);
           this.cursor = { ...this.cursor, focus: r.item.id };
-          this.openCapture(e.key === 'Tab' ? 'child' : 'next', r.item.id);
+          this.openCapture(r.item.id);
           this.reveal();
         });
     });
