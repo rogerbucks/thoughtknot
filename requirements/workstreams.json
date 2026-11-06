@@ -1023,7 +1023,12 @@
     "title": "Massive graphs read in parts",
     "size": "M",
     "requirements": [
-      "scale_in_parts"
+      "scale_in_parts",
+      "scale_parts_overview",
+      "scale_parts_find_filter",
+      "scale_parts_kept",
+      "scale_parts_budget",
+      "scale_parts_every_view"
     ]
   },
   "RL1": {
