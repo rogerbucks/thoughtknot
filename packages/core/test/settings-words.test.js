@@ -18,8 +18,8 @@ const wordsOf = (o) => [
   ...(o.choices ?? []).filter((c) => !c.own).flatMap((c) => [c.name, ...(c.sentence ? [c.sentence] : [])]),
 ];
 
-/** The page's own words, kept beside the options': the action that converts a note to standard GQL. */
-const OWN = ['settings.convert.sentence'];
+/** The page’s own words: the convert action, and the row that names the preset in use. */
+const OWN = ['settings.convert.sentence', 'settings.vault-preset.name'];
 
 describe('the settings page’s words', () => {
   test('every word of every option is in the catalogue, as the option says it', () => {
