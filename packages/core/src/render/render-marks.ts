@@ -198,6 +198,9 @@ function askOf(
 /** The width of `text` at `px`, near enough to keep names apart. */
 export const textWidth = (text: string, px: number): number => text.length * px * 0.56;
 
+/** The pixels kept between two names, and between a name and a control. */
+const GAP = 2;
+
 /** The longest name drawn, in letters; longer names end in an ellipsis. */
 const LONGEST = 28;
 
@@ -243,15 +246,19 @@ function spotFor(
   kept: readonly LabelMark[],
 ): { x: number; y: number; w: number; h: number } | null {
   const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  // the clear part, a gap in from each edge a control covers, as the painted edge of a name reaches past its box
+  const gap = (edge: number) => (edge > 0 ? edge + GAP : 0);
+  const [left, top, right, bottom] = [gap(c.left), gap(c.top), view.w - gap(c.right), view.h - gap(c.bottom)];
   const room = ask.room ?? 0;
-  const step = h + 2; // a name and the gap kept between names
+  const step = h + GAP; // a name and the gap kept between names
   for (const dy of [0, -step, step, -2 * step, 2 * step].filter((d) => Math.abs(d) <= room)) {
     // slid across to stay clear of the controls, if it still covers its spot
-    const x = Math.min(Math.max(ask.x - w / 2, c.left), view.w - c.right - w);
+    const x = Math.min(Math.max(ask.x - w / 2, left), right - w);
     const box = { x: x <= ask.x && ask.x <= x + w ? x : ask.x - w / 2, y: ask.y + dy - h / 2, w, h };
-    if (box.x < c.left || box.y < c.top || box.x + w > view.w - c.right || box.y + h > view.h - c.bottom) continue;
-    if (kept.some((k) => box.x < k.x + k.w + 2 && k.x < box.x + w + 2 && box.y < k.y + k.h + 2 && k.y < box.y + h + 2))
-      continue;
+    if (box.x < left || box.y < top || box.x + w > right || box.y + h > bottom) continue;
+    const apart = (k: LabelMark) =>
+      box.x >= k.x + k.w + GAP || k.x >= box.x + w + GAP || box.y >= k.y + k.h + GAP || k.y >= box.y + h + GAP;
+    if (!kept.every(apart)) continue;
     return box;
   }
   return null;

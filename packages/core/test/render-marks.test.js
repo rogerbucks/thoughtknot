@@ -91,7 +91,7 @@ test('a name at the edge of the controls slides clear of them while it still cov
   const view = { x: 0, y: 0, scale: 1, w: 400, h: 300, clear: { top: 0, right: 0, bottom: 0, left: 100 } };
   const ask = { key: 'side', text: 'Side projects', x: 130, y: 150, px: 16, fill: '#ccaa22', alpha: 1, weight: 1 };
   const [slid] = placeLabels([ask], view);
-  assert.equal(slid.x, 100, 'it starts where the controls end');
+  assert.equal(slid.x, 102, 'it starts a gap past where the controls end');
   assert.ok(slid.x <= 130 && 130 <= slid.x + slid.w, 'it still covers its spot');
   assert.deepEqual(placeLabels([{ ...ask, x: 20 }], view), [], 'a spot under the controls keeps no name');
 });
