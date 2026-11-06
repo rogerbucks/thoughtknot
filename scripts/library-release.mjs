@@ -100,6 +100,8 @@ function stageSpec(dir) {
     'graph-spec-version.json',
     'graph-spec-grammar.json',
     'graph-spec-canonical.md',
+    'graph-spec-library-api.json',
+    'graph-spec-problem-codes.json',
   ])
     copyFileSync(join(ROOT, 'requirements', file), join(dir, file));
   copyFileSync(join(ROOT, 'LICENSE-SPEC.md'), join(dir, 'LICENSE-SPEC.md'));

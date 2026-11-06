@@ -55,6 +55,8 @@ describe('spec_version_released', () => {
         'graph-spec-version.json',
         'graph-spec-grammar.json',
         'graph-spec-canonical.md',
+        'graph-spec-library-api.json',
+        'graph-spec-problem-codes.json',
         'LICENSE-SPEC.md',
       ])
         assert.ok(
