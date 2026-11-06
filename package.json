@@ -45,6 +45,15 @@
     "typescript-eslint": "8.72.0"
   },
   "overrides": {
-    "moment": "2.31.0"
+    "moment": "2.31.0",
+    "eslint-plugin-n": {
+      "minimatch": "^11.0.5"
+    },
+    "eslint-plugin-json-schema-validator": {
+      "minimatch": "^11.0.5"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.5"
+    }
   }
 }
