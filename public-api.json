@@ -435,6 +435,9 @@
         "chosenDiagram": [
           "value: (style: Pick<StyleGraph, 'diagrams'>, view?: string) => Diagram | undefined"
         ],
+        "ChosenStorage": [
+          "type = { ok: true; choice: StorageChoice; chosen: boolean; } | { ok: false; reason: string; }"
+        ],
         "CHUNK_RANGE": [
           "value: { readonly least: 3; readonly most: 50; }"
         ],
@@ -1612,6 +1615,14 @@
           "redo: () => string | null",
           "undo: () => string | null"
         ],
+        "HistoryCheck": [
+          "interface",
+          "name: string",
+          "run: () => Promise<void>"
+        ],
+        "historyContract": [
+          "value: (make: () => HistoryStore | Promise<HistoryStore>) => HistoryCheck[]"
+        ],
         "historyFrom": [
           "value: (saved: unknown) => NoteHistory"
         ],
@@ -1623,6 +1634,11 @@
         ],
         "historyOf": [
           "value: (graph: Graph, lens?: { tests?: boolean; }) => { runs: string[]; entries: string[]; }"
+        ],
+        "HistoryStore": [
+          "interface",
+          "changes: (path?: string) => Promise<StoredChange[]>",
+          "record: (change: StoredChange) => void | Promise<void>"
         ],
         "hitAreas": [
           "value: (svg: string) => HitAreas"
@@ -2212,6 +2228,14 @@
         "lensText": [
           "value: (d: LensDraft) => string"
         ],
+        "LetGo": [
+          "interface",
+          "kept: Array<string>",
+          "removed: Array<string>"
+        ],
+        "letGoOfOld": [
+          "value: (from: NoteStorage, moved: readonly MovedNote[], options?: { author?: string; }) => Promise<LetGo>"
+        ],
         "LibraryLens": [
           "interface",
           "altitude: string | null",
@@ -2569,6 +2593,9 @@
         "memoryBackend": [
           "value: () => MeshBackend"
         ],
+        "memoryHistory": [
+          "value: () => HistoryStore"
+        ],
         "memoryStorage": [
           "value: (seed?: Record<string, string>) => NoteStorage"
         ],
@@ -2648,6 +2675,23 @@
         "MOVE_MS": [
           "value: 240"
         ],
+        "MOVE_REFUSED": [
+          "value: { readonly clash: 'the new place already has notes at these paths, with other text'; readonly copy: 'these notes did not read back from the new place as they were'; readonly changed: 'these notes changed in the old place while they were copied'; readonly same: 'the new place is the old place'; }"
+        ],
+        "MovedNote": [
+          "interface",
+          "path: string",
+          "version: string"
+        ],
+        "moveHistory": [
+          "value: (from: HistoryStore, to: HistoryStore) => Promise<number>"
+        ],
+        "moveNotes": [
+          "value: (from: NoteStorage, to: NoteStorage, options?: { author?: string; }) => Promise<MoveOutcome>"
+        ],
+        "MoveOutcome": [
+          "type = { ok: true; moved: MovedNote[]; } | { ok: false; reason: string; paths: string[]; }"
+        ],
         "Moving": [
           "type = 'dot' | 'dashes'"
         ],
@@ -2722,6 +2766,9 @@
         "NO_BASIS": [
           "value: '0000000000000000'"
         ],
+        "NO_CHOICE": [
+          "value: StorageSetting"
+        ],
         "noChanges": [
           "value: () => string"
         ],
@@ -2774,6 +2821,9 @@
           "note: string",
           "things: Array<ThingRow>",
           "version: string"
+        ],
+        "notesHistory": [
+          "value: (storage: NoteStorage, folder?: string) => HistoryStore"
         ],
         "NoteStorage": [
           "interface",
@@ -4935,11 +4985,33 @@
           "name: string",
           "run: () => Promise<void>"
         ],
+        "StorageChoice": [
+          "interface",
+          "checked?: boolean | undefined",
+          "name: string",
+          "open: () => NoteStorage | Promise<NoteStorage>",
+          "title: string",
+          "trial?: (() => NoteStorage | Promise<NoteStorage>) | undefined"
+        ],
         "storageContract": [
           "value: (make: () => NoteStorage | Promise<NoteStorage>, { windows }?: StorageContractOptions) => StorageCheck[]"
         ],
+        "storageInUse": [
+          "value: (offered: readonly StorageChoice[], setting: StorageSetting, hostDefault: string) => ChosenStorage"
+        ],
         "StorageLayer": [
           "type = (inner: NoteStorage) => NoteStorage"
+        ],
+        "storageOffered": [
+          "value: (choices: readonly StorageChoice[]) => Promise<StorageChoice[]>"
+        ],
+        "StorageSetting": [
+          "interface",
+          "history: string | null",
+          "where: string | null"
+        ],
+        "storageSettingFrom": [
+          "value: (saved: unknown) => StorageSetting"
         ],
         "StoredChange": [
           "interface",
