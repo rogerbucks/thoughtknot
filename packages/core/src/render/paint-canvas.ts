@@ -94,11 +94,27 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
   c.beginPath();
   c.roundRect(m.x, m.y, m.w, m.h, m.h / 2);
   c.fill();
+  if (m.dot) {
+    // a white card on pale paper needs a thin edge of its colour to be seen
+    c.globalAlpha = m.alpha * 0.4;
+    c.strokeStyle = m.dot;
+    c.lineWidth = 1;
+    c.stroke();
+    c.globalAlpha = m.alpha;
+  }
+  // an item's card: a dot of its colour at the start, and the name after it
+  const shift = m.dot ? m.px / 2 : 0;
+  if (m.dot) {
+    c.fillStyle = m.dot;
+    c.beginPath();
+    c.arc(m.x + m.h / 2, m.y + m.h / 2, m.px * 0.3, 0, Math.PI * 2);
+    c.fill();
+  }
   c.fillStyle = m.ink;
   c.font = `600 ${m.px}px system-ui, sans-serif`;
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(m.text, m.x + m.w / 2, m.y + m.h / 2);
+  c.fillText(m.text, m.x + m.w / 2 + shift, m.y + m.h / 2);
 }
 
 /** Draws `marks` on `c`, which is `w` by `h`, in the order given. */
