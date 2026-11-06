@@ -1363,7 +1363,9 @@
       "render_one_label_placer",
       "render_chrome_slots",
       "render_big_graph_first",
-      "render_switch"
+      "render_switch",
+      "render_scene",
+      "render_rooms"
     ]
   }
 }

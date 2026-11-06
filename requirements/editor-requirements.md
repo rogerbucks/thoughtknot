@@ -1211,6 +1211,8 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (render_one_label_placer:Requirement {section: '73', slice: 10, level: 'must', rule: 'One label placer must place every label in every view: no label overlaps another, no word is cut, and every label shows at least 11 pixels high and inside the part of the screen left for the drawing.'}),
 (render_chrome_slots:Requirement {section: '73', slice: 10, level: 'must', rule: 'Controls, panels, the legend and the mini-map must sit in fixed places that leave a safe area for the drawing. The camera fits the drawing to the safe area, so no control covers it, and an icon must never show as its name.'}),
 (render_big_graph_first:Requirement {section: '73', slice: 10, level: 'should', rule: 'The big-graph view should be rebuilt first, from the 2D, 3D and globe mockups Roger approved on 3 and 4 Nov 2026, and match each at all four levels before the other views move over (D2, Roger 6 Nov 2026).'}),
+(render_scene:Requirement {section: '73', slice: 10, level: 'must', rule: 'The scene (layer L1) must be one tree of a graph, far to near: subjects, areas, topics, then items. The subject, area and topic each thing names must win over levels found from links. Links must be rolled up at each level and counted each way. The same graph in another order must give the same scene.'}),
+(render_rooms:Requirement {section: '73', slice: 10, level: 'must', rule: 'The layout (layer L2) must place each group as a room that holds its children, rooms first. Rooms must never overlap, items must sit at least a gap apart, the most linked neighbours must sit side by side, and the same scene must always give the same places (Roger: nodes stay put).'}),
 (render_switch:Requirement {section: '73', slice: 10, level: 'must', rule: 'The new rendering must be built beside today\'s behind a switch, and become the default only when the whole scoreboard passes on the nightly. Then the old path that reads marks off SVG, and the changes made to a drawing after it is drawn, must be deleted. Graphviz then gives positions only (D3, Roger 6 Nov 2026).'}),
 // ── Tests ──
 (test_layout_parity:Test {proves: 'the core layout source matches graph_svg.py for every vault graph', where: 'outside the repo', status: 'written'}),
@@ -2057,6 +2059,8 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_render_one_label_placer:Test {proves: 'on every scoreboard scene and zoom, label boxes never overlap, never leave the safe area and are never under 11 pixels', file: 'packages/core/test/render-labels.test.js', where: 'repo', status: 'planned'}),
 (test_render_chrome_slots:Test {proves: 'on laptop and phone, no control box enters the safe area after a fit, and no control shows an icon name as text', file: 'test/render-chrome.test.js', where: 'repo', status: 'planned'}),
 (test_render_big_graph_first:Test {proves: 'the 430-item sample, at each of four levels, matches its mockup on the scoreboard sheet in 2D, 3D and the globe', file: 'test/render-big-graph.test.js', where: 'repo', status: 'planned'}),
+(test_render_scene:Test {proves: 'a graph naming subjects and areas becomes that tree, links are rolled up and counted each way, order does not matter, and a handful of things is one level', file: 'packages/core/test/render-scene.test.js', where: 'repo', status: 'written'}),
+(test_render_rooms:Test {proves: 'every child sits inside its room, siblings never overlap, items keep a gap, order does not matter, and the most linked keys sit side by side', file: 'packages/core/test/render-rooms.test.js', where: 'repo', status: 'written'}),
 (test_render_switch:Test {proves: 'the switch picks the old or new rendering, the default flips only with a green scoreboard record, and after the flip no code reads marks off a drawn SVG', file: 'packages/core/test/render-switch.test.js', where: 'repo', status: 'planned'}),
 // ── Open questions ──
 (q_01_ai_interface:Question {num: 'Q-01', slice: 8, text: 'How does the graph mesh connect to external AI tools: through MCP, an API, or file export?', answer: 'Through MCP: a local MCP server built from the library release, with an MCP App for drawing graphs and taking decisions in Claude (mcp_app); an API or file export may follow.', answered: '2026-10-19'}),
@@ -3806,6 +3810,10 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (render_chrome_slots)-[:PROVED_BY]->(test_render_chrome_slots),
 (render_big_graph_first)-[:PART_OF]->(section_73),
 (render_big_graph_first)-[:PROVED_BY]->(test_render_big_graph_first),
+(render_scene)-[:PART_OF]->(section_73),
+(render_scene)-[:PROVED_BY]->(test_render_scene),
+(render_rooms)-[:PART_OF]->(section_73),
+(render_rooms)-[:PROVED_BY]->(test_render_rooms),
 (render_switch)-[:PART_OF]->(section_73),
 (render_switch)-[:PROVED_BY]->(test_render_switch),
 (format_html_sandboxed)-[:PROVED_BY]->(test_format_html_sandboxed),
