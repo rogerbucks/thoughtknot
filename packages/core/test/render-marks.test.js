@@ -6,7 +6,7 @@ import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
-import { MAX_PX, MIN_PX, coloursOf, marksOf, placeLabels } from '../src/render/render-marks.ts';
+import { MAX_PX, MIN_PX, coloursOf, cloudAlpha, countOf, marksOf, placeLabels } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
   key,
@@ -76,4 +76,29 @@ test('each subject has its own colour and its areas take shades of it', () => {
   const work = scene.nodes.get(scene.roots.find((k) => scene.nodes.get(k).name === 'Work'));
   const areas = work.children.map((k) => colours.get(k));
   assert.equal(new Set(areas).size, areas.length);
+});
+
+// proves: render_marks
+test('a road says its count each way, and a single link says nothing', () => {
+  assert.equal(countOf(3, 1), '3 ⇄ 1');
+  assert.equal(countOf(2, 0), '2 →');
+  assert.equal(countOf(0, 4), '← 4');
+  assert.equal(countOf(1, 0), '');
+});
+
+// proves: render_marks
+test('roads join only neighbours in the same room', () => {
+  const { scene, marks } = picture(2);
+  for (const r of marks.filter((m) => m.kind === 'road'))
+    assert.equal(scene.nodes.get(r.a).parent, scene.nodes.get(r.b).parent, `${r.a} to ${r.b}`);
+});
+
+// proves: render_look_in_marks
+test('a cloud fades once the level inside opens, and one bigger than the screen never washes it out', () => {
+  const view = { x: 0, y: 0, scale: 1, w: 800, h: 600 };
+  const small = { x: 400, y: 300, r: 100 };
+  assert.ok(cloudAlpha(1, small, view) > cloudAlpha(0.2, small, view));
+  const huge = { x: 400, y: 300, r: 8000 };
+  assert.ok(cloudAlpha(1, huge, view) < cloudAlpha(1, small, view) / 2);
+  assert.ok(cloudAlpha(1, huge, view) > 0, 'the ground still shows');
 });
