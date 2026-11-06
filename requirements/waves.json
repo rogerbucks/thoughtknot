@@ -539,16 +539,25 @@
       }
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 36 · Held: rendering rebuilt to a spec",
       "start": "2027-01-23",
-      "end": "2027-01-30",
+      "end": "2027-01-29",
+      "estimate": true,
+      "workstreams": [
+        "RR1"
+      ]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-01-30",
+      "end": "2027-02-06",
       "estimate": true,
       "workstreams": [],
       "earlier_plan": {
-        "start": "2027-10-11",
-        "end": "2027-10-24",
-        "replaced": "2026-10-19",
-        "why": "re-baselined to the measured rate"
+        "start": "2027-01-23",
+        "end": "2027-01-30",
+        "replaced": "2026-11-06",
+        "why": "Wave 36 added: rendering rebuilt to a spec (Roger, 6 Nov 2026)"
       }
     }
   ]

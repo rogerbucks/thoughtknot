@@ -76,6 +76,8 @@ flowchart LR
 - Who and what each part trusts, where that trust ends, and the gaps found: [trust model](Trust-model).
 - Opening, drawing and moving around a graph of 2,000 to 50,000 things in close to real time, measured:
   [massive graphs design](Massive-graphs-design).
+- How a graph gets onto the screen: eight layers with one job each, the rules, and the scoreboard that checks them:
+  [rendering spec](Rendering-spec).
 - Tables and cubes of data a graph names and reads, linked or kept as a snapshot, cached by hash:
   [data tables design](Data-tables-design).
 - Clusters a person writes or an algorithm finds, and the centroids that sum them up, on the big-graph groups engine:
