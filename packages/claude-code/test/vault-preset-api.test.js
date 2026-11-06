@@ -1,5 +1,5 @@
 // The vault's view preset in the browser editor (editor spec ES§69, view_presets_scoped, view_presets_portable). It is
-// the one thing besides an export the page may write, so each way it could write more is tried on a real vault on disk:
+// the one thing besides an export that the page may write. So each way it could write more is tried on a real vault:
 // - only a starter's id is taken, and the file is written by the server from the core's starters;
 // - the name is the server's own, at the vault's top, whatever the address says;
 // - a link is never read or written through;

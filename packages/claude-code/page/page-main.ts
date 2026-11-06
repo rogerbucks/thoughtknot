@@ -29,6 +29,8 @@ import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
+import { presetSection } from './preset-section.ts';
+import { vaultPresetCalls } from './vault-preset-calls.ts';
 import { textVersionKept } from './text-version.ts';
 import { renderMarkdown } from './markdown.ts';
 import { noteCalls } from './note-calls.ts';
@@ -174,7 +176,17 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const pane = doc.createElement('div');
     pane.setAttribute('class', 'gn-pane');
     graph.append(pane);
-    await openEditorPane(pane, page, settings, layouts, () => calls.pictures(note));
+    // the view preset: the vault's own file is read, and the drawing follows it when it changes (view_presets_scoped)
+    const presets = vaultPresetCalls(token, win.fetch.bind(win));
+    let editor: { changed: () => void } | null = null;
+    const preset = await presetSection(win, {
+      settings,
+      read: presets.read,
+      write: presets.write,
+      changed: () => editor?.changed(),
+    });
+    editor = await openEditorPane(pane, page, settings, layouts, () => calls.pictures(note), preset.vault);
+    graph.append(preset.el);
     if (!page.session) await showGraph(win, pane, page.text, layouts);
     // the changes view: the note now against an earlier version the user picks, read only when asked (changes_view)
     const shownGraph = readNote(gqlBlocks(page.text).map((b) => b.text))
