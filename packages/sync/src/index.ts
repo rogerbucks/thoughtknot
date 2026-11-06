@@ -3,6 +3,7 @@ export { MemoryStore, framed, unframed, type Shelf, type Store } from './store.t
 export { FolderStore, RECORDS_FILE, type FolderFiles } from './folder-store.ts';
 export { DeviceKeys, VaultKey } from './keys.ts';
 export { invite, join, newBoardKey, type Invitation, type InvitedAs } from './board-invite.ts';
+export { Sharing, fingerprint, fromHex, toHex, type Kept, type Keeper } from './sharing.ts';
 export { LiveBoard } from './live-board.ts';
 export { BoardSeat, type Who } from './board-seat.ts';
 export { SealedStore } from './sealed-store.ts';

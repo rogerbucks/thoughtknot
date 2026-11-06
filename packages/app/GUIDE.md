@@ -42,6 +42,11 @@ Rust (src-tauri/)
   the highest classification in the window's storage, never in a note. In the editor it sends the open note, or asks
   for a review as a pull request. The show-before-send screen (`showOutgoing`) comes first: Cancel has the focus, and
   Escape cancels. The core does the rest (`sendNoteToRepo`, `askRepoReview` in core/src/github-repo-send.ts).
+- `app-share.ts`: the Share button and its panel (spec §45, `board_access`). One press starts a shared vault. The keys are
+  made on this device. The panel shows only the public key and a fingerprint to read aloud. Another device is
+  trusted by pasting its public key. Nothing is sent from the panel.
+- `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
+  key is unexportable, and the vault key is kept sealed for this device itself.
 - `tauri-gh.ts`: `tauriGh`, gh run through the app's `run_gh` command. A call off the list is refused before it
   reaches the Rust.
 
