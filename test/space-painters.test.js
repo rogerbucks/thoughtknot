@@ -268,7 +268,7 @@ window.miniInSpace = async () => {
   // Bob moved far across the page, and the drawing marked again
   svg.querySelector('[data-key="bob"] polygon').setAttribute('points', '600,140 680,140 680,180 600,180');
   svg.querySelector('[data-key="bob"] text').setAttribute('x', '640');
-  // The glide steps 30 ms a frame on a clock of its own, so a stall on a busy runner cannot make it skip its spots
+  // The glide steps 30 ms a frame on a clock of its own. A stall on a busy runner cannot make it skip its spots.
   const realFrame = window.requestAnimationFrame;
   let ticks = 0;
   window.requestAnimationFrame = (cb) =>
