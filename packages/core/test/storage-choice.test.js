@@ -87,8 +87,8 @@ test('a choice made is used; one no longer there is refused, never quietly swapp
   const chosen = storageInUse(offered, storageSettingFrom({ where: 'github', history: 'vault' }), 'vault');
   assert.ok(chosen.ok && chosen.choice.name === 'github' && chosen.chosen);
   const gone = storageInUse(offered, storageSettingFrom({ where: 'cloud' }), 'vault');
-  assert.equal(gone.ok, false);
-  assert.match(gone.reason, /"cloud", is not there now/);
+  assert.deepEqual(gone, { ok: false, reason: 'chosen-gone', name: 'cloud' });
+  assert.deepEqual(storageInUse(offered, NO_CHOICE, 'folder'), { ok: false, reason: 'no-host-place', name: 'folder' });
 });
 
 test('a setting not understood is no choice', () => {

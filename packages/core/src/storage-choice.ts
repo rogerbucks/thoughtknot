@@ -68,8 +68,12 @@ export async function storageOffered(choices: readonly StorageChoice[]): Promise
   return offered;
 }
 
-/** The place in use, or why there is none. */
-export type ChosenStorage = { ok: true; choice: StorageChoice; chosen: boolean } | { ok: false; reason: string };
+/** Why there is no place in use: the host's own place is not offered, or the place chosen is not there now. */
+export type NoPlace = 'no-host-place' | 'chosen-gone';
+
+/** The place in use; or why there is none, by a code a host says from its catalogue, with the place's name. */
+export type ChosenStorage =
+  { ok: true; choice: StorageChoice; chosen: boolean } | { ok: false; reason: NoPlace; name: string };
 
 /**
  * The place notes are kept: the one chosen, or with no choice made the host's own place, `hostDefault`. A chosen place
@@ -84,13 +88,7 @@ export function storageInUse(
   const name = setting.where ?? hostDefault;
   const choice = offered.find((c) => c.name === name);
   if (choice) return { ok: true, choice, chosen: setting.where !== null };
-  return {
-    ok: false,
-    reason:
-      setting.where === null
-        ? `the host's own place, "${hostDefault}", is not offered`
-        : `the place chosen, "${setting.where}", is not there now; choose again in settings`,
-  };
+  return { ok: false, reason: setting.where === null ? 'no-host-place' : 'chosen-gone', name };
 }
 
 /** A note moved: its path, and the version of it left in the old place, which letting go checks against. */
@@ -100,15 +98,17 @@ export interface MovedNote {
 }
 
 /** A move made and checked; or why not, and the paths it was refused for. Nothing is changed in the old place. */
-export type MoveOutcome = { ok: true; moved: MovedNote[] } | { ok: false; reason: string; paths: string[] };
+export type MoveOutcome = { ok: true; moved: MovedNote[] } | { ok: false; reason: MoveRefused; paths: string[] };
+
+/**
+ * Why a move was refused, by a code a host says from its catalogue. `clash`: other text is already at a path in the new
+ * place. `copy`: a copy did not read back. `changed`: a note changed in the old place meanwhile. `same`: the two places
+ * are one.
+ */
+export const MOVE_REFUSED = { clash: 'clash', copy: 'copy', changed: 'changed', same: 'same' } as const;
 
 /** Why a move was refused. */
-export const MOVE_REFUSED = {
-  clash: 'the new place already has notes at these paths, with other text',
-  copy: 'these notes did not read back from the new place as they were',
-  changed: 'these notes changed in the old place while they were copied',
-  same: 'the new place is the old place',
-} as const;
+export type MoveRefused = (typeof MOVE_REFUSED)[keyof typeof MOVE_REFUSED];
 
 /**
  * Copies every note from `from` to `to`, then reads each back from both and checks the copy. The old place is not
