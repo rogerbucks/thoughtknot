@@ -423,6 +423,6 @@ export const TYPES_LATE = [
   'RepoSendOptions',
   'RepoSendOutcome',
   'RepoSettings',
-  // the rows of a note read in parts, kept between sessions (§53, scale_parts_kept), 6 Nov 2026
+  // the rows of a note read in parts, kept between sessions (ES§53, scale_parts_kept), 6 Nov 2026
   'KeptPlace',
 ];
