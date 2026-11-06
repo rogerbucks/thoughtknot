@@ -512,9 +512,13 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/prepare-pr.test.js` — FLOW-4: `npm run prepare-pr` writes every record a pull request carries. CI runs it in check
   mode and names every stale record at once. A change to words alone gets no Claude review.
 
+## Running only a change's tests
+
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
+- `test/changed-tests.test.js` — the order `npm run test:changed` runs in. The test files a change edits run first. They
+  are the likeliest to fail. The order never changes which tests run (editor spec §13, touched_tests_only).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests and the search ignore file.
 - `test/agents-guide.test.js` — the short AI guide, AGENTS.md, stays slim, and its handbook holds the detail.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
