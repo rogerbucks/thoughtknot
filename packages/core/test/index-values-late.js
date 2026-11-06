@@ -356,6 +356,7 @@ export const VALUES_LATE = [
   'mappingText',
   'proposeMapping',
   'readCsv',
+  'tableMeasures',
   'tableConnector',
   'tableKindOf',
   'tableStatements',
