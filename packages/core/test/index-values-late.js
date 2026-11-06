@@ -382,4 +382,8 @@ export const VALUES_LATE = [
   'PARTS_HELD_MOST',
   'PartsSource',
   'partsOf',
+  'KEPT_VERSION',
+  'keptName',
+  'keptRows',
+  'rowsKeptOrRead',
 ];

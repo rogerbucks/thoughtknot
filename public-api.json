@@ -1937,6 +1937,9 @@
         "KEPT": [
           "value: { readonly width: 2; }"
         ],
+        "KEPT_VERSION": [
+          "value: 1"
+        ],
         "KeptDescent": [
           "interface",
           "because: Consequence",
@@ -1944,11 +1947,23 @@
           "label: 'consequence-bearing'",
           "to: string"
         ],
+        "keptName": [
+          "value: (note: string) => string"
+        ],
+        "KeptPlace": [
+          "interface",
+          "read: (name: string) => Promise<string | null>",
+          "remove: (name: string) => Promise<void>",
+          "write: (name: string, text: string) => Promise<void>"
+        ],
         "KeptPresentation": [
           "interface",
           "graph: string",
           "name: string",
           "steps: Array<PresentStep>"
+        ],
+        "keptRows": [
+          "value: (text: string, note: string, version: string) => NoteRows | null"
         ],
         "KIND": [
           "value: { readonly Variable: 6; readonly Class: 7; readonly Interface: 8; }"
@@ -4156,6 +4171,9 @@
         "Routing": [
           "type = 'curved' | 'straight' | 'right-angled' | 'direct'"
         ],
+        "rowsKeptOrRead": [
+          "value: (place: KeptPlace | undefined, note: string, text: string, read: () => Promise<NoteRows>) => Promise<NoteRows>"
+        ],
         "RULE_OPS": [
           "value: readonly ['is', 'not', 'more', 'less', 'least', 'most']"
         ],
@@ -4935,7 +4953,7 @@
           "world: () => Graph"
         ],
         "storedGraphs": [
-          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>) => Promise<Map<string, StoredGraph>>"
+          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>, kept?: KeptPlace) => Promise<Map<string, StoredGraph>>"
         ],
         "StoredNote": [
           "interface",
