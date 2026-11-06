@@ -1366,7 +1366,8 @@
       "render_switch",
       "render_scene",
       "render_rooms",
-      "render_detail"
+      "render_detail",
+      "render_marks"
     ]
   }
 }
