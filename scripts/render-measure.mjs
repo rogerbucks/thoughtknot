@@ -106,8 +106,8 @@ export function passes(counts, movedKeys) {
 /**
  * Read in the page: the drawing's frame, its labels, its marks, the controls over it and the icons shown as words. The
  * first card is read. Its marks are the things shown and, while a level of groups shows, each group's cloud and each
- * road's count. Every thing's spot is read from its shape, shown or faded, so a zoom that moves a faded thing still
- * counts, and a name hidden by a zoom does not. A drawing painted on a canvas, as in space, is not read. Labels painted on a canvas cannot be read, so `labels` is null where the drawing is a canvas.
+ * road's count. Every thing's spot is read from its shape, shown or faded. So a faded thing that moves still counts,
+ * and a name a zoom hides does not. A drawing painted on a canvas, as in space, is not read. Labels painted on a canvas cannot be read, so `labels` is null where the drawing is a canvas.
  */
 export const PROBE = `(() => {
   const GROUP_MARKS = '.thoughtknot-cloud-unit, .thoughtknot-road-count';
