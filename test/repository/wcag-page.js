@@ -40,6 +40,8 @@ export function workerFor(window, file) {
     constructor() {
       this.thread = new Worker(code, { eval: true });
       threads.push(this.thread);
+      // made after the page was closed, it is ended at once: a thread left running keeps a whole CI shard waiting
+      if (window.stopped) void this.thread.terminate();
       this.thread.on('message', (data) => this.onmessage?.({ data }));
       this.thread.on('error', (e) => this.onerror?.({ message: e.message }));
     }
