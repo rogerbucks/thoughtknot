@@ -1,7 +1,7 @@
 // Grouping sticky notes on a board (editor spec §45, board_cluster). Notes that share a tag or a word are put in a frame
 // together. It is worked out on the device from the notes' own text, with no network call. An AI may name a group only
-// when the person chooses it. No note moves (nodes stay put): a frame is drawn round the notes where they already are,
-// and a group is left as it is when another note sits in the way. Pure and host-free.
+// when the person chooses it. No note moves (nodes stay put). A frame is drawn round the notes where they already are.
+// A group is left as it is when another note sits in the way. Pure and host-free.
 import type { Board, BoardItem } from './board.ts';
 import { freeId } from './board-edit.ts';
 import type { BoardChange } from './board-edit.ts';
@@ -19,11 +19,74 @@ export interface Cluster {
 /** The room left between a frame and the notes it holds. */
 export const FRAME_PAD = 24;
 // words too common to say two notes belong together
-const COMMON = new Set(
-  'the and for are but not you all can had her was one our out has his how its may new now see two way who did get let put say she too use with that this from have they will your what when been more some than them then were into over such only also just like about would there their which could other these'.split(
-    ' ',
-  ),
-);
+const COMMON = new Set([
+  'the',
+  'and',
+  'for',
+  'are',
+  'but',
+  'not',
+  'you',
+  'all',
+  'can',
+  'had',
+  'her',
+  'was',
+  'one',
+  'our',
+  'out',
+  'has',
+  'his',
+  'how',
+  'its',
+  'may',
+  'new',
+  'now',
+  'see',
+  'two',
+  'way',
+  'who',
+  'did',
+  'get',
+  'let',
+  'put',
+  'say',
+  'she',
+  'too',
+  'use',
+  'with',
+  'that',
+  'this',
+  'from',
+  'have',
+  'they',
+  'will',
+  'your',
+  'what',
+  'when',
+  'been',
+  'more',
+  'some',
+  'than',
+  'them',
+  'then',
+  'were',
+  'into',
+  'over',
+  'such',
+  'only',
+  'also',
+  'just',
+  'like',
+  'about',
+  'would',
+  'there',
+  'their',
+  'which',
+  'could',
+  'other',
+  'these',
+]);
 /** The notes that can be grouped: those that hold text and are not frames. */
 const groupable = (i: BoardItem) => (i.kind === 'Sticky' || i.kind === 'Card' || i.kind === 'Text') && !!i.text;
 
@@ -93,8 +156,8 @@ export interface ClusterPlan {
 }
 
 /**
- * The frames that group the board's notes. A frame goes round its notes where they are. A group is left alone when a note
- * of another group, or any other item, lies within its frame, so no note ends up in a frame it does not belong to.
+ * The frames that group the board's notes. A frame goes round its notes where they are. A group is left alone when
+ * another item lies within its frame. So no note ends up in a frame it does not belong to.
  */
 export function clusterPlan(board: Board): ClusterPlan {
   const framed: Cluster[] = [];
