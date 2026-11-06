@@ -1137,6 +1137,7 @@ It is built beside today's drawing, behind a switch, and is not drawn yet.
 
 - `render-scene.ts` — layer L1, `sceneOf`: one tree of the graph, far to near, with links rolled up at each level.
 - `render-rooms.ts` — layer L2, `roomsOf`: each group a round room, rooms first, linked neighbours side by side.
+- `render-detail.ts` — layer L3, `detailAt`: how much of each level shows at a zoom, fading in level by level.
 
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 

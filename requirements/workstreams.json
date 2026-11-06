@@ -1365,7 +1365,8 @@
       "render_big_graph_first",
       "render_switch",
       "render_scene",
-      "render_rooms"
+      "render_rooms",
+      "render_detail"
     ]
   }
 }
