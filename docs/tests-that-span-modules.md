@@ -334,9 +334,10 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/graph-spec/test/canonical.test.mjs` — a graph written two ways gives one canonical form and one hash. A
   second hash made from the steps of `requirements/graph-spec-canonical.md` matches the library's
   (spec_canonical_form; one table, `canonical-cases.json`).
-- `test/public-api.test.js` with `python/graph_spec/tests/test_library_api.py` — each operation in
-  `requirements/graph-spec-library-api.json` exists in both libraries with its listed shape. No problem code in
-  `graph-spec-problem-codes.json` changes meaning or goes missing (spec_library_api).
+- `test/public-api.test.js` — each operation in `requirements/graph-spec-library-api.json` exists in the JavaScript
+  library with its listed shape. No problem code in `graph-spec-problem-codes.json` changes meaning (spec_library_api).
+- `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
+  (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
   older one, or none named. They refuse a newer major with GN107 and a fix that says to upgrade (spec_version_in_files;
   one table, `spec-version-cases.json`).
