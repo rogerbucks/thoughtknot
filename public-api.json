@@ -3043,9 +3043,24 @@
         "PALETTES": [
           "value: { obsidian: Palette; light: Palette; dark: Palette; system: Palette; }"
         ],
+        "PanelOwner": [
+          "interface",
+          "save: (next: Settings) => Promise<void>",
+          "settings: () => Settings",
+          "setVault: (id: string | null) => Promise<void>",
+          "share: (text: string) => Promise<void>",
+          "update: () => void",
+          "vault: () => string | undefined"
+        ],
         "PanelRoot": [
           "interface",
           "dir: string"
+        ],
+        "PanelRow": [
+          "interface",
+          "action?: (() => void) | undefined",
+          "desc: string",
+          "name: string"
         ],
         "PaneSession": [
           "class",
@@ -3632,6 +3647,16 @@
           "key: keyof Settings",
           "name: string",
           "to: string"
+        ],
+        "PresetPanel": [
+          "class",
+          "static new (owner: PanelOwner): PresetPanel",
+          "offers: (id: string) => boolean",
+          "ownRows: () => PanelRow[]",
+          "pending: string | null",
+          "pick: (id: string) => void",
+          "rows: () => PanelRow[]",
+          "shown: () => string"
         ],
         "presetPreview": [
           "value: (s: Settings, id: string) => PresetLine[]"

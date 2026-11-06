@@ -8,3 +8,4 @@ export {
   vaultPresetId,
   type PresetScope,
 } from './vault-preset.ts';
+export { PresetPanel, type PanelOwner, type PanelRow } from './preset-panel.ts';
