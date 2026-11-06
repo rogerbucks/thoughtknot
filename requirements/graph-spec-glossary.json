@@ -1,0 +1,534 @@
+{
+  "note": "The graph spec's glossary (editor spec §51, spec_glossary). Each term a newcomer would not know has one plain sentence. usedIn lists the rules whose statement uses it, so a reader can follow the link both ways. test/graph-spec-glossary.test.js keeps usedIn exact. longRules lists the rule statements over 25 words that were there when the check came in. The list may shrink and may not grow.",
+  "terms": [
+    {
+      "term": "engine",
+      "words": [
+        "engine",
+        "engines"
+      ],
+      "means": "A database program that runs queries over a graph. The readers do not need one.",
+      "usedIn": [
+        "req:3.name-dialect",
+        "req:5.graphmeta",
+        "req:11.provenance",
+        "req:14.one-owner",
+        "req:14.certified",
+        "req:16.one-named-flow",
+        "req:17.checks",
+        "req:20.assessor-says",
+        "req:21.subflow-join",
+        "req:3.engine-gets-corrected",
+        "req:3.engine-text-keeps-lines",
+        "req:3.engine-reads-first",
+        "req:3.engine-keeps-comments",
+        "req:3.engine-gets-commas",
+        "req:14.no-engine-install",
+        "req:17.engine-agreement",
+        "req:7.machine-reads-plain",
+        "req:18.scxml-reads-plain",
+        "req:21.loan-balance-reads-plain",
+        "req:24.view-server-reads-plain",
+        "req:24.fill-reads-plain",
+        "req:27.tool-hints"
+      ]
+    },
+    {
+      "term": "reader",
+      "words": [
+        "reader",
+        "readers"
+      ],
+      "means": "Code that reads a graph's text and checks it. There is one in JavaScript and one in Python.",
+      "usedIn": [
+        "req:3.profile-reader",
+        "req:20.scale-in-graph",
+        "req:22.lift-zoom",
+        "req:24.cs-two-readers",
+        "req:3.graph-name-word",
+        "req:3.engine-gets-corrected",
+        "req:3.engine-reads-first",
+        "req:3.engine-gets-commas",
+        "req:3.reader-default",
+        "req:17.engine-agreement",
+        "req:7.machine-reads-plain",
+        "req:18.scxml-reads-plain",
+        "req:21.loan-balance-reads-plain",
+        "req:24.view-server-reads-plain",
+        "req:24.fill-reads-plain",
+        "req:25.two-readers",
+        "req:26.two-readers",
+        "req:27.two-readers"
+      ]
+    },
+    {
+      "term": "checker",
+      "words": [
+        "checker",
+        "checkers"
+      ],
+      "means": "The part of a library that tests a graph against the spec's rules.",
+      "usedIn": [
+        "req:24.ai-can",
+        "req:24.rule2",
+        "req:24.cs-two-readers",
+        "req:5.meta-schema",
+        "req:25.reports",
+        "req:25.two-readers"
+      ]
+    },
+    {
+      "term": "node",
+      "words": [
+        "node",
+        "nodes"
+      ],
+      "means": "One thing in a graph, such as a person, a loan or a decision.",
+      "usedIn": [
+        "req:3.id-once",
+        "req:3.match-finds",
+        "req:4.ref-resolves",
+        "req:5.graphmeta",
+        "req:5.kind",
+        "req:5.identified-by",
+        "req:5.declared",
+        "req:21.three-paradox",
+        "req:21.removal-meets-change",
+        "req:5.marker",
+        "req:3.written-before-used",
+        "req:3.name-is-id",
+        "req:3.set-keeps-id",
+        "req:3.id-is-text",
+        "req:25.schema-nodes"
+      ]
+    },
+    {
+      "term": "edge",
+      "words": [
+        "edge",
+        "edges",
+        "relationship",
+        "relationships"
+      ],
+      "means": "A named link between two nodes.",
+      "usedIn": [
+        "req:5.kind",
+        "req:5.name",
+        "req:5.reading",
+        "req:5.reverse-name",
+        "req:5.identified-by",
+        "req:5.declared",
+        "req:5.readings-in-views",
+        "req:5.dublin-core",
+        "req:18.no-list-property",
+        "req:20.claims-not-counted",
+        "req:21.paradox-cycle",
+        "req:21.removal-meets-change",
+        "req:3.written-before-used",
+        "req:3.bare-link-type",
+        "req:21.prefix-owner",
+        "req:25.card-carries"
+      ]
+    },
+    {
+      "term": "element",
+      "words": [
+        "element",
+        "elements"
+      ],
+      "means": "Any node or edge.",
+      "usedIn": [
+        "req:6.rule-remakes",
+        "req:10.natural-ids",
+        "req:11.provenance",
+        "req:11.had-plan",
+        "req:17.c-types",
+        "req:17.c-rebuild",
+        "req:26.owner",
+        "req:26.mixed-run",
+        "req:26.inside-brackets",
+        "req:27.tool-hints"
+      ]
+    },
+    {
+      "term": "schema",
+      "words": [
+        "schema",
+        "schemas"
+      ],
+      "means": "The list of kinds of node and edge a graph may hold.",
+      "usedIn": [
+        "req:5.graphmeta",
+        "req:5.shared-schema",
+        "req:5.draft",
+        "req:25.declared",
+        "req:25.schema-nodes",
+        "req:25.lock-carries",
+        "req:27.meaning"
+      ]
+    },
+    {
+      "term": "cache",
+      "words": [
+        "cache",
+        "caches"
+      ],
+      "means": "A figure kept for speed. It can always be worked out again from the facts.",
+      "usedIn": [
+        "req:11.cache-same-transaction",
+        "req:11.cache-proved",
+        "req:15.stored-membership",
+        "req:17.c-caches",
+        "req:22.rule5",
+        "req:23.review-cache",
+        "req:24.cs-adds",
+        "req:24.cs-model-adds"
+      ]
+    },
+    {
+      "term": "claim",
+      "words": [
+        "claim",
+        "claims"
+      ],
+      "means": "A statement that may be wrong. It is rated for how likely it is true.",
+      "usedIn": [
+        "req:17.c-calibration",
+        "req:17.c-claims",
+        "req:20.claims-not-counted",
+        "req:20.before-settlement",
+        "req:20.combine",
+        "req:20.independence",
+        "req:21.contested",
+        "req:21.incomplete",
+        "req:23.rule3",
+        "req:24.rule2"
+      ]
+    },
+    {
+      "term": "assessment",
+      "words": [
+        "assessment",
+        "assessments"
+      ],
+      "means": "A rating of how likely a claim is, with the evidence for it.",
+      "usedIn": [
+        "req:17.c-calibration",
+        "req:17.c-claims",
+        "req:20.assessor-says",
+        "req:20.before-settlement",
+        "req:24.rule2"
+      ]
+    },
+    {
+      "term": "judgement",
+      "words": [
+        "judgement",
+        "judgements"
+      ],
+      "means": "A decision with a pinned basis. An AI may draft it and a person decides.",
+      "usedIn": [
+        "req:23.judgement-call",
+        "req:23.logged-beside",
+        "req:23.rule1",
+        "req:23.rule5",
+        "req:23.rule7",
+        "req:24.ai-can",
+        "req:24.cs-rejected-out"
+      ]
+    },
+    {
+      "term": "proposal",
+      "words": [
+        "proposal",
+        "proposals",
+        "proposed"
+      ],
+      "means": "An idea an AI offers for a person to accept or reject.",
+      "usedIn": [
+        "req:24.prov-attributed",
+        "req:23.rule6",
+        "req:24.rule2",
+        "req:24.serving1",
+        "req:24.serving4",
+        "req:24.cs-model-things",
+        "req:24.cs-header-basis"
+      ]
+    },
+    {
+      "term": "serving",
+      "words": [
+        "serving",
+        "servings",
+        "served"
+      ],
+      "means": "A record of exactly what an AI was shown, and when.",
+      "usedIn": [
+        "req:24.rule3",
+        "req:24.rule5",
+        "req:24.serving1",
+        "req:24.serving2",
+        "req:24.serving4",
+        "req:24.serving5"
+      ]
+    },
+    {
+      "term": "change set",
+      "words": [
+        "change set",
+        "change sets"
+      ],
+      "means": "A block of additions, removals and changes offered to a graph together.",
+      "usedIn": [
+        "req:24.rule2",
+        "req:24.cs-linted",
+        "req:24.cs-current",
+        "req:24.cs-author",
+        "req:24.cs-adds",
+        "req:24.cs-rules-hold",
+        "req:24.cs-statements"
+      ]
+    },
+    {
+      "term": "altitude",
+      "words": [
+        "altitude"
+      ],
+      "means": "A level of zoom. Level 0 is the facts, and higher levels are bigger stories.",
+      "usedIn": [
+        "req:22.lift-zoom",
+        "req:22.rule1",
+        "req:24.rule6"
+      ]
+    },
+    {
+      "term": "lens",
+      "words": [
+        "lens",
+        "lenses"
+      ],
+      "means": "A way of grouping nodes by a rule so a reader sees a few big items first.",
+      "usedIn": [
+        "req:15.exclusive",
+        "req:15.stored-membership",
+        "req:17.c-lenses"
+      ]
+    },
+    {
+      "term": "paradox",
+      "words": [
+        "paradox",
+        "paradoxes"
+      ],
+      "means": "Two statements that cannot both hold. A join keeps both and reports it.",
+      "usedIn": [
+        "req:17.c-join",
+        "req:21.paradox-cycle",
+        "req:21.three-paradox"
+      ]
+    },
+    {
+      "term": "contested",
+      "words": [
+        "contested"
+      ],
+      "means": "A change that clashes with another and is left for a person to settle.",
+      "usedIn": [
+        "req:17.c-join",
+        "req:21.contested",
+        "req:21.incomplete",
+        "req:21.removal-meets-change",
+        "req:21.trust-counted"
+      ]
+    },
+    {
+      "term": "join",
+      "words": [
+        "join",
+        "joins",
+        "joined"
+      ],
+      "means": "Combining two or more graphs without losing what either says.",
+      "usedIn": [
+        "req:17.c-join",
+        "req:21.paradox-cycle",
+        "req:21.order-free",
+        "req:21.loses-nothing",
+        "req:21.subflow-join",
+        "req:14.no-engine-install",
+        "req:21.trust-counted",
+        "req:10.joins-global",
+        "req:26.text"
+      ]
+    },
+    {
+      "term": "path",
+      "words": [
+        "path",
+        "paths"
+      ],
+      "means": "A node whose ordered steps lead to facts, or to smaller paths below it.",
+      "usedIn": [
+        "req:22.rule1",
+        "req:22.rule2",
+        "req:22.rule3",
+        "req:22.rule4",
+        "req:22.rule5"
+      ]
+    },
+    {
+      "term": "sub-flow",
+      "words": [
+        "sub-flow",
+        "sub-flows"
+      ],
+      "means": "A smaller process that runs inside a state of a larger one.",
+      "usedIn": [
+        "req:16.subflow-first",
+        "req:16.no-restart",
+        "req:16.no-else-above",
+        "req:16.done",
+        "req:16.no-nesting-loop",
+        "req:17.c-subflows",
+        "req:21.subflow-join"
+      ]
+    },
+    {
+      "term": "completeness",
+      "words": [
+        "completeness"
+      ],
+      "means": "A check that a graph holds every fact its kinds say it must.",
+      "usedIn": [
+        "req:25.schema-nodes",
+        "req:25.never-refused",
+        "req:25.drafts-stay-drafts",
+        "req:25.lock-carries"
+      ]
+    },
+    {
+      "term": "cardinality",
+      "words": [
+        "cardinality"
+      ],
+      "means": "How many links of a kind a node may or must have.",
+      "usedIn": [
+        "req:25.schema-nodes",
+        "req:25.meta-schema",
+        "req:25.card-carries"
+      ]
+    },
+    {
+      "term": "dialect",
+      "words": [
+        "dialect"
+      ],
+      "means": "The version of GQL that one engine speaks, with its own reserved words.",
+      "usedIn": [
+        "req:3.reserved-words",
+        "req:3.name-dialect",
+        "req:24.cs-linted"
+      ]
+    },
+    {
+      "term": "hash",
+      "words": [
+        "hash",
+        "hashes"
+      ],
+      "means": "A short code made from content. If the content changes, the code changes.",
+      "usedIn": [
+        "req:12.archive-unchanged",
+        "req:23.rule7",
+        "req:24.rule4",
+        "req:24.serving5",
+        "req:14.no-engine-install",
+        "req:24.fill-reads-plain"
+      ]
+    },
+    {
+      "term": "known-answer",
+      "words": [
+        "known-answer"
+      ],
+      "means": "A test with a fixed input and an answer written down beforehand. An engine is certified when its digest matches.",
+      "usedIn": [
+        "req:14.certified",
+        "req:17.c-digest",
+        "req:24.rule8"
+      ]
+    },
+    {
+      "term": "record",
+      "words": [
+        "record",
+        "records"
+      ],
+      "means": "A fact that happened, kept as it was. It is never edited, only superseded.",
+      "usedIn": [
+        "req:20.scale-in-graph",
+        "req:24.cs-adds",
+        "req:24.cs-model-adds"
+      ]
+    },
+    {
+      "term": "derived",
+      "words": [
+        "derived",
+        "derives"
+      ],
+      "means": "Worked out from other things, with links back to its inputs.",
+      "usedIn": [
+        "req:5.rule",
+        "req:6.rule-remakes",
+        "req:11.provenance",
+        "req:11.had-plan",
+        "req:16.detail-ref",
+        "req:17.c-claims",
+        "req:22.rule5"
+      ]
+    },
+    {
+      "term": "flat projection",
+      "words": [
+        "flat projection",
+        "flat"
+      ],
+      "means": "A plain table made from a graph, one row for each thing.",
+      "usedIn": [
+        "req:17.c-projection",
+        "req:18.lossless",
+        "req:18.no-list-property"
+      ]
+    },
+    {
+      "term": "gap",
+      "words": [
+        "gap",
+        "gaps"
+      ],
+      "means": "A fact the graph should hold but does not.",
+      "usedIn": [
+        "req:22.rule2",
+        "req:25.card-counted",
+        "req:25.gap-explains",
+        "req:25.excuse-reason",
+        "req:25.never-refused",
+        "req:25.a-number",
+        "req:25.two-readers",
+        "req:25.three-states"
+      ]
+    }
+  ],
+  "longRules": [
+    "req:3.missing-comma",
+    "req:3.bare-link-type",
+    "req:3.engine-gets-corrected",
+    "req:3.name-is-id",
+    "req:3.engine-gets-commas",
+    "req:5.draft",
+    "req:14.no-engine-install",
+    "req:21.incomplete-missing",
+    "req:26.mixed-run"
+  ]
+}

@@ -60,6 +60,7 @@ describe('spec_version_released', () => {
         'graph-spec-formats.json',
         'graph-spec-ai-wire.json',
         'graph-spec-decisions.json',
+        'graph-spec-glossary.json',
         'LICENSE-SPEC.md',
       ])
         assert.ok(
