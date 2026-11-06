@@ -80,6 +80,12 @@ export function undoPlan(history: History, text: string, person: string): UndoPl
   const now = new Map(board.items.map((i) => [i.id, i]));
   const clashes: string[] = [];
   const changes: BoardChange[] = [];
+  // a link is as the author left it only if it is still there (made) or still gone (taken out), with its label
+  const now2 = new Map(board.connectors.map((c) => [linkKey(c), c]));
+  for (const l of entry.links) {
+    const cur = now2.get(linkKey(l));
+    if (l.added ? !cur || cur.label !== l.label : !!cur) clashes.push(`${l.from}-${l.to}`);
+  }
   for (const l of entry.links) if (l.added) changes.push({ kind: 'disconnect', from: l.from, to: l.to });
   for (const op of [...entry.items].reverse()) {
     const cur = now.get(op.id) ?? null;
@@ -103,7 +109,7 @@ export function undoPlan(history: History, text: string, person: string): UndoPl
 export function carryOut(text: string, plan: { changes: BoardChange[] }): { text: string } | { refused: string } {
   let now = text;
   for (const change of plan.changes) {
-    const r = boardEdit(now, change);
+    const r = boardEdit(now, change, true);
     if ('refused' in r) return r;
     now = r.text;
   }
