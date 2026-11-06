@@ -29,12 +29,12 @@ test('the setting is on until turned off, and the settings page offers it', () =
 });
 
 // proves: render_switch
-test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloads cleanly', async () => {
+test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloads cleanly', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
   try {
-    const { RenderStage, STEP_MS, hasLevels } = await import('../src/display/graph-view/render-stage.ts');
+    const { RenderStage, hasLevels } = await import('../src/display/graph-view/render-stage.ts');
     const { drawing, g } = drawingAndGraph();
     assert.ok(hasLevels(drawing, g));
     const viewport = doc.createElement('div');
@@ -49,28 +49,31 @@ test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloa
     const at = () => Number(/^Level (\d) of 3 · /.exec(stage.level())[1]);
     const start = at();
     assert.ok(start < 3, 'a small card does not open every level at once');
-    const notch = {
+    // a Mac trackpad's pinch: many Ctrl-wheel events of a few pixels each, every one heard and each a small zoom
+    let prevented = 0;
+    const pinch = {
       ctrlKey: true,
-      deltaY: -100,
+      metaKey: false,
+      deltaY: -3,
       clientX: 400,
       clientY: 200,
-      preventDefault() {},
+      preventDefault: () => prevented++,
       stopPropagation() {},
     };
-    stage.wheel({ ...notch, metaKey: false });
-    const once = stage.canvas.getAttribute('aria-label');
-    stage.wheel({ ...notch, metaKey: false });
-    assert.equal(stage.canvas.getAttribute('aria-label'), once, 'a second notch too soon is the same swipe');
-    // notch by notch, the level goes up one at a time until the last
-    const seen = [start, at()];
-    for (let i = 0; i < 6; i++) {
-      await new Promise((r) => setTimeout(r, STEP_MS + 10));
-      stage.wheel({ ...notch, metaKey: false });
+    const scales = [stage.view.scale],
+      seen = [start];
+    for (let i = 0; i < 600; i++) {
+      stage.wheel(pinch);
+      scales.push(stage.view.scale);
       seen.push(at());
     }
+    assert.equal(prevented, 600, 'the page does not zoom instead');
+    for (let i = 1; i < scales.length; i++) assert.ok(scales[i] / scales[i - 1] < 1.03, 'never a jump');
     for (let i = 1; i < seen.length; i++) assert.ok([0, 1].includes(seen[i] - seen[i - 1]), seen.join());
-    assert.equal(seen.at(-1), 3);
-    stage.wheel({ ...notch, ctrlKey: false, metaKey: false });
+    assert.equal(seen.at(-1), 3, 'every level opens on the way');
+    const still = stage.view;
+    stage.wheel({ ...pinch, ctrlKey: false });
+    assert.equal(stage.view, still, 'plain scrolling is the page’s');
     stage.unload();
     assert.ok(!viewport.classList.contains('thoughtknot-new-rendering'));
     assert.equal(viewport.querySelector('canvas'), null);
@@ -165,11 +168,10 @@ test('nothing moves on a zoom or a click: every dot stays on its own place in th
       }
     };
     check('when fitted');
-    const notch = { ctrlKey: true, metaKey: false, deltaY: -100, clientX: 300, clientY: 150 };
-    for (let i = 0; i < 4; i++) {
-      stage.lastStep = -Infinity; // each notch a new swipe
+    const notch = { ctrlKey: true, metaKey: false, deltaY: -40, clientX: 300, clientY: 150 };
+    for (let i = 0; i < 12; i++) {
       stage.wheel({ ...notch, preventDefault() {}, stopPropagation() {} });
-      check(`after ${i + 1} notches`);
+      check(`after ${i + 1} wheel movements`);
     }
     const cloud = stage.marks.find((m) => m.kind === 'cloud');
     if (cloud) stage.clicked(cloud.x, cloud.y);
@@ -182,7 +184,7 @@ test('nothing moves on a zoom or a click: every dot stays on its own place in th
 });
 
 // proves: render_one_camera
-test('on a touch screen, two fingers spread step one level in, drawn together step out, and never tap or pan', async () => {
+test('on a touch screen, the drawing follows two fingers: it zooms as they spread, and a pinch is never a tap', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -202,16 +204,49 @@ test('on a touch screen, two fingers spread step one level in, drawn together st
     const start = at();
     stage.down(finger(1, 300));
     stage.down(finger(2, 340));
-    stage.move(finger(2, 345)); // a little spread is not yet a step
+    stage.move(finger(2, 345)); // 40 to 45 pixels apart: a little nearer, at once
+    assert.ok(Math.abs(at() - start * 1.125) < 1e-9, 'a little spread zooms a little');
+    stage.move(finger(2, 360)); // 45 to 60
+    assert.ok(Math.abs(at() - start * 1.5) < 1e-9, 'the zoom follows the fingers');
+    stage.move(finger(2, 330)); // 60 to 30: out, but never past the fitted view
     assert.equal(at(), start);
-    stage.move(finger(2, 360)); // 40 to 60 pixels apart: one level in
-    assert.ok(at() > start * 1.01, 'one level in');
-    const nearer = at();
-    stage.move(finger(2, 330)); // 60 to 30: one level out
-    assert.ok(at() < nearer / 1.01, 'one level out');
     stage.up(finger(2, 330));
     stage.up(finger(1, 300));
     assert.deepEqual(said, [], 'a pinch is not a tap');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: render_one_camera
+test('while a view in space shows, the stage leaves the trackpad pinch and the pointer to it', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    let space = true;
+    const stage = new RenderStage(viewport, drawing, g, {
+      open() {},
+      clear() {},
+      selected: () => null,
+      away: () => space,
+    });
+    let heard = 0;
+    const pinch = { ctrlKey: true, metaKey: false, deltaY: -3, clientX: 400, clientY: 200 };
+    const event = { ...pinch, preventDefault: () => heard++, stopPropagation: () => heard++ };
+    const was = stage.view;
+    stage.wheel(event);
+    stage.down({ clientX: 1, clientY: 1, pointerId: 1, stopPropagation: () => heard++ });
+    assert.equal(heard, 0, 'the view in space hears the pinch and the press');
+    assert.equal(stage.view, was);
+    space = false;
+    stage.wheel(event);
+    assert.ok(stage.view.scale > was.scale, 'back in 2D, the stage zooms again');
     stage.unload();
   } finally {
     uninstall();

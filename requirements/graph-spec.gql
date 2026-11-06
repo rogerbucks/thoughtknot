@@ -1,4 +1,4 @@
-// graph: requirements · SOURCE · schema spec-requirements@1 · 212 requirements, 10 wordings
+// graph: requirements · SOURCE · schema spec-requirements@1 · 218 requirements, 10 wordings
 // The graph spec, frozen as it stood before the requirements moved to GitHub (Roger's vault, 19 Oct 2026).
 // Each Section is a § the code cites. Each Requirement's quote is the rule's own words. Do not edit by hand.
 // It came by a paste. Its escapes, underscores and the emphasis inside its quotes were put back from the spec's own text.
@@ -219,7 +219,7 @@ INSERT
 (r11_had_plan)-[:DECIDED_IN]->(dProv),
 (r12_prov_revision:Requirement {id: 'req:12.prov-revision', level: 'must', rests_on: 'A8', statement: 'A supersession satisfies the PROV-CONSTRAINTS ordering for a revision', quote: 'a supersession must satisfy PROV-CONSTRAINTS'}), (r12_prov_revision)-[:PART_OF]->(s12),
 (r12_prov_revision)-[:DECIDED_IN]->(dProv),
-(r24_prov_attributed:Requirement {id: 'req:24.prov-attributed', level: 'must', stands_alone: TRUE, statement: 'Who proposed, decided or wrote a thing is recorded with WAS_ATTRIBUTED_TO a typed agent', quote: 'Who proposed, decided or wrote a thing must be recorded with `WAS_ATTRIBUTED_TO`'}), (r24_prov_attributed)-[:PART_OF]->(s24),
+(r24_prov_attributed:Requirement {id: 'req:24.prov-attributed', level: 'must', stands_alone: TRUE, statement: 'Who decided or wrote a thing is recorded with WAS_ATTRIBUTED_TO a typed agent; who proposed it is stated once, in the change-set header', quote: 'Who proposed, decided or wrote a thing must be recorded with `WAS_ATTRIBUTED_TO`'}), (r24_prov_attributed)-[:PART_OF]->(s24),
 (r24_prov_attributed)-[:DECIDED_IN]->(dProv),
 (r13_embed_small:Requirement {id: 'req:13.embed-small', level: 'must', stands_alone: TRUE, statement: 'A file is embedded only when the graph must travel alone, and only small text files', quote: 'Embed only when the graph must travel alone'}), (r13_embed_small)-[:PART_OF]->(s13),
 (r13_embed_small)-[:DECIDED_IN]->(d2026_10_04_Issued_documents_keep_a_paylo),
@@ -535,7 +535,7 @@ INSERT
 (r24_cs_current)-[:PROVED_BY {test: 'X2'}]->(cchange_sets),
 (r24_cs_author:Requirement {id: 'req:24.cs-author', level: 'must', stands_alone: TRUE, statement: 'A change set author is a known Person or Model', quote: 'its author is a known `Person` or `Model`;'}), (r24_cs_author)-[:PART_OF]->(s24),
 (r24_cs_author)-[:DECIDED_IN]->(d2026_10_05_An_AI_writes_only_claims_and),
-(r24_cs_adds:Requirement {id: 'req:24.cs-adds', level: 'must', stands_alone: TRUE, statement: 'A change set never removes or changes a record or a cache', quote: 'it never removes or changes a record or a cache'}), (r24_cs_adds)-[:PART_OF]->(s24),
+(r24_cs_adds:Requirement {id: 'req:24.cs-adds', level: 'must', stands_alone: TRUE, statement: 'A change set never removes or changes a record or a cache, and may remove or change any other thing or link', quote: 'it never removes or changes a record or a cache'}), (r24_cs_adds)-[:PART_OF]->(s24),
 (r24_cs_adds)-[:DECIDED_IN]->(d2026_10_05_An_AI_writes_only_claims_and),
 (r24_cs_adds)-[:PROVED_BY {test: 'X5'}]->(cchange_sets),
 (r24_cs_model_adds:Requirement {id: 'req:24.cs-model-adds', level: 'must', stands_alone: TRUE, statement: 'A model never adds a record or a cache, and assesses only as itself', quote: 'a model never adds a record or a cache'}), (r24_cs_model_adds)-[:PART_OF]->(s24),
@@ -557,7 +557,7 @@ INSERT
 (r24_cs_two_readers)-[:DECIDED_IN]->(dCsRemovals),
 (r24_cs_rejected_out:Requirement {id: 'req:24.cs-rejected-out', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A rejected addition leaves the live graph, and the rejection is recorded as a decision in the judgement graph', quote: 'A rejected addition must never stay as live GQL.'}), (r24_cs_rejected_out)-[:PART_OF]->(s24),
 (r24_cs_rejected_out)-[:DECIDED_IN]->(dCsRemovals),
-(r24_cs_model_things:Requirement {id: 'req:24.cs-model-things', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A model may propose an ordinary new thing or link, and the accepting decision keeps who proposed it', quote: 'A change set from a model may add a new thing or link of any kind that is not a record or a cache'}), (r24_cs_model_things)-[:PART_OF]->(s24),
+(r24_cs_model_things:Requirement {id: 'req:24.cs-model-things', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A model may propose an ordinary new thing or link', quote: 'A change set from a model may add a new thing or link of any kind that is not a record or a cache'}), (r24_cs_model_things)-[:PART_OF]->(s24),
 (r24_cs_model_things)-[:DECIDED_IN]->(dCsRemovals),
 (r24_cs_header_basis:Requirement {id: 'req:24.cs-header-basis', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'The change-set header alone carries what a proposal was drafted against and who proposed it', quote: 'No other line may carry either.'}), (r24_cs_header_basis)-[:PART_OF]->(s24),
 (r24_cs_header_basis)-[:DECIDED_IN]->(dCsRemovals),
@@ -727,7 +727,7 @@ INSERT
 (r10_explicit_local)-[:DECIDED_IN]->(dIds),
 (r10_forced:Requirement {id: 'req:10.forced', level: 'must', rests_on: 'A1', statement: 'A graph that insists on explicit ids refuses bare ids and names its things local:', quote: 'In such a graph a bare id must be refused, and a thing written without an id must take `local:<name>`.'}), (r10_forced)-[:PART_OF]->(s10),
 (r10_forced)-[:DECIDED_IN]->(dIds),
-(r10_joins_global:Requirement {id: 'req:10.joins-global', level: 'must', rests_on: 'A1, A5', statement: 'Joined graphs match only global ids, and show local ids with their graph', quote: 'Graphs read together must match things by global ids, never by local ones, and must show a local id with its graph'}), (r10_joins_global)-[:PART_OF]->(s10),
+(r10_joins_global:Requirement {id: 'req:10.joins-global', level: 'must', rests_on: 'A1, A5', statement: 'Joined graphs match only global ids, never local ones', quote: 'Graphs read together must match things by global ids, never by local ones, and must show a local id with its graph'}), (r10_joins_global)-[:PART_OF]->(s10),
 (r10_joins_global)-[:DECIDED_IN]->(dIds),
 (r25_deferred_says:Requirement {id: 'req:25.deferred-says', level: 'must', stands_alone: TRUE, statement: 'A Deferred says what is needed and why it waits', quote: 'A `Deferred` must say what is still needed, in `what`, and why it waits, in `why`.'}), (r25_deferred_says)-[:PART_OF]->(s25),
 (r25_deferred_says)-[:DECIDED_IN]->(dDeferred),
@@ -805,6 +805,12 @@ INSERT
 (r27_tool_hints)-[:PROVED_BY {test: 'Y18', partial: TRUE}]->(creader),
 (r27_tool_hints)-[:PROVED_BY {test: 'Y19', partial: TRUE}]->(creader),
 (r27_tool_hints)-[:DECIDED_IN]->(dExtensions),
+(r27_local_id_shown:Requirement {id: 'req:27.local-id-shown', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A local id is shown with its graph', quote: 'must show a local id with its graph'}), (r27_local_id_shown)-[:PART_OF]->(s27),
+(r27_corrected_shown:Requirement {id: 'req:27.corrected-shown', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A judgement replaced by a newer one shows as corrected by the judgement that replaces it', quote: 'corrected by a new judgement that replaces it'}), (r27_corrected_shown)-[:PART_OF]->(s27),
+(r27_ai_challenges_asked:Requirement {id: 'req:27.ai-challenges-asked', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'The AI challenges a judgement only when asked', quote: 'AI challenges only when asked'}), (r27_ai_challenges_asked)-[:PART_OF]->(s27),
+(r27_gentle_words:Requirement {id: 'req:27.gentle-words', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'Shown names are gentle: a paradox shows as clash, an excuse as exception, overdue as past its revisit date; stored names do not change', quote: 'clash, exception, past its revisit date'}), (r27_gentle_words)-[:PART_OF]->(s27),
+(r27_likelihood_range:Requirement {id: 'req:27.likelihood-range', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'A likelihood word is always shown with its range', quote: 'a likelihood word always shows its range'}), (r27_likelihood_range)-[:PART_OF]->(s27),
+(r27_altitude_defined:Requirement {id: 'req:27.altitude-defined', level: 'must', stands_alone: TRUE, pending: TRUE, expected_by: '2027-01-31', statement: 'Altitude is how far a view stands back: high shows the whole, low shows the detail', quote: 'altitude is how far a view stands back'}), (r27_altitude_defined)-[:PART_OF]->(s27),
 (r27_appearance:Requirement {id: 'req:27.appearance', level: 'must', stands_alone: TRUE, statement: 'Appearance goes in the style graph in the same note', quote: 'Colour, layout and default view must be written in the style graph in the same note, never in the data graph or a sidecar file.'}), (r27_appearance)-[:PART_OF]->(s27),
 (r27_appearance)-[:PROVED_BY {test: 'Z11', partial: TRUE}]->(cplain),
 (r27_appearance)-[:DECIDED_IN]->(dExtensions),

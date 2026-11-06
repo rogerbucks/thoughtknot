@@ -234,7 +234,9 @@
         "req:23.rule5",
         "req:23.rule7",
         "req:24.ai-can",
-        "req:24.cs-rejected-out"
+        "req:24.cs-rejected-out",
+        "req:27.corrected-shown",
+        "req:27.ai-challenges-asked"
       ]
     },
     {
@@ -251,7 +253,6 @@
         "req:24.rule2",
         "req:24.serving1",
         "req:24.serving4",
-        "req:24.cs-model-things",
         "req:24.cs-header-basis"
       ]
     },
@@ -298,7 +299,8 @@
       "usedIn": [
         "req:22.lift-zoom",
         "req:22.rule1",
-        "req:24.rule6"
+        "req:24.rule6",
+        "req:27.altitude-defined"
       ]
     },
     {
@@ -324,7 +326,8 @@
       "usedIn": [
         "req:17.c-join",
         "req:21.paradox-cycle",
-        "req:21.three-paradox"
+        "req:21.three-paradox",
+        "req:27.gentle-words"
       ]
     },
     {

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
-import { LIGHT, inkOn, subjectColour } from '../src/render/render-look.ts';
+import { DARK, LIGHT, contrast, inkOn, subjectColour } from '../src/render/render-look.ts';
 import { MAX_PX, MIN_PX, coloursOf, cloudAlpha, countOf, marksOf, placeLabels } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
@@ -160,5 +160,35 @@ test('close in, an item is named on a white card with a dot of its colour', () =
   for (const l of items) {
     assert.equal(l.fill, LIGHT.card);
     assert.equal(l.ink, inkOn(LIGHT.card));
+  }
+});
+
+// proves: render_look_in_marks
+test('far out, a subject is a white card edged in its colour, its name in its colour, and how many items it holds', () => {
+  for (const look of [LIGHT, DARK]) {
+    const things = [];
+    for (const subject of ['Work', 'Money', 'Home'])
+      for (let i = 0; i < 8; i++) things.push(thing(`${subject[0]}${i}`, { subject, area: 'A' }));
+    const scene = sceneOf({ things, links: [link('W0', 'M0'), link('W1', 'M1'), link('M2', 'W2')] });
+    const spots = roomsOf(scene);
+    const marks = marksOf(scene, spots, detailAt(roomSizes(scene, spots), 0.3), look, {
+      x: 0,
+      y: 0,
+      scale: 0.3,
+      w: 1280,
+      h: 800,
+    });
+    const groups = marks.filter((m) => m.kind === 'label' && !m.dot);
+    assert.equal(groups.length, 3);
+    for (const l of groups) {
+      assert.equal(l.fill, look.card);
+      assert.equal(l.sub, '8 items');
+      assert.ok(l.subPx >= MIN_PX, 'the second line is still readable');
+      assert.ok(contrast(l.ink, look.card) >= 4.5, `${l.text} reads on its card`);
+      assert.ok(l.edge && l.edge !== look.card);
+    }
+    const road = marks.find((m) => m.kind === 'road' && m.count);
+    assert.equal(road.chip, look.card, 'the count sits on a white chip');
+    assert.ok(contrast(road.ink, look.card) >= 4.5);
   }
 });

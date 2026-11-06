@@ -6,10 +6,11 @@
 // would clash, the bigger thing keeps its name (Roger: big things first). Host-free and pure.
 import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
-import { inkOn, shadeOf, subjectColour } from './render-look.ts';
+import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
+import { word } from '../words.ts';
 
 /** The smallest name drawn, in pixels. */
 export const MIN_PX = 11;
@@ -62,8 +63,9 @@ export interface RoadMark {
   fill: string;
   /** The count written on the road, such as "3 ⇄ 1"; empty for a single link. */
   count: string;
-  /** The ink of the count. */
+  /** The ink of the count, on a chip of `chip` edged in the road's colour. */
   ink: string;
+  chip: string;
   alpha: number;
 }
 
@@ -82,6 +84,12 @@ export interface LabelMark {
   alpha: number;
   /** An item's name: a dot of this colour at the start of its card. */
   dot?: string;
+  /** The thin edge of the card, in its thing's colour. */
+  edge?: string;
+  /** A second, smaller line under the name, such as "13 items", in `subInk` at `subPx`. */
+  sub?: string;
+  subPx?: number;
+  subInk?: string;
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
@@ -159,6 +167,11 @@ export interface LabelAsk {
   fill: string;
   /** An item's colour, drawn as a dot at the start of its card. */
   dot?: string;
+  /** The name's ink, where it is not the plain ink on `fill`; the card's edge; a second line and its ink. */
+  ink?: string;
+  edge?: string;
+  sub?: string;
+  subInk?: string;
   alpha: number;
   /** Higher keeps its place when two names clash. */
   weight: number;
@@ -186,12 +199,21 @@ function askOf(
     x: s.x,
     y,
     px,
-    // an item sits on a white card with a dot of its colour, as in the mockups; a group's name is in its colour
-    ...(item ? { fill: look.card, dot: fill } : { fill }),
+    // a name sits on a white card edged in its colour, as in the mockups. An item's card has a dot of its colour. A
+    // group's name is written in its colour, with how many items it holds under it.
+    fill: look.card,
+    edge: fill,
+    ...(item
+      ? { dot: fill }
+      : {
+          ink: inkOf(fill, look.card, look),
+          sub: word('levels.card-count', { count: node.items.length }),
+          subInk: mix(look.ink, look.card, 0.45),
+        }),
     alpha,
     weight: (last - node.depth) * 1e6 + node.items.length,
     // a group's name may move within its cloud, and always by one line, so a small cloud's name still shows
-    ...(item ? {} : { room: Math.max(s.r * 0.8, px * 1.6 + 2) }),
+    ...(item ? {} : { room: Math.max(s.r * 0.8, px * 1.6 + MIN_PX * 1.2 + GAP) }),
   };
 }
 
@@ -214,8 +236,9 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
   for (const ask of order) {
     const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
     const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
-    const w = textWidth(text, px) + px + (ask.dot ? px : 0),
-      h = px * 1.6;
+    const subPx = MIN_PX;
+    const w = Math.max(textWidth(text, px), ask.sub ? textWidth(ask.sub, subPx) : 0) + px + (ask.dot ? px : 0),
+      h = px * 1.6 + (ask.sub ? subPx * 1.2 : 0);
     const box = spotFor(ask, w, h, view, kept);
     if (!box) continue;
     kept.push({
@@ -225,9 +248,11 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
       ...box,
       px,
       fill: ask.fill,
-      ink: inkOn(ask.fill),
+      ink: ask.ink ?? inkOn(ask.fill),
       alpha: ask.alpha,
       ...(ask.dot ? { dot: ask.dot } : {}),
+      ...(ask.edge ? { edge: ask.edge } : {}),
+      ...(ask.sub ? { sub: ask.sub, subPx, subInk: ask.subInk ?? ask.ink ?? inkOn(ask.fill) } : {}),
     });
   }
   return kept;
@@ -302,7 +327,9 @@ function roadsOf(
         width: 2 + Math.log2(road.forward + road.back),
         fill: colours.get(road.a) ?? look.faint,
         count: countOf(road.forward, road.back),
-        ink: inkOn(colours.get(road.a) ?? look.faint),
+        // the count on a white chip edged and written in the road's colour, as in the mockups
+        ink: inkOf(colours.get(road.a) ?? look.faint, look.card, look),
+        chip: look.card,
         alpha,
       });
     }
