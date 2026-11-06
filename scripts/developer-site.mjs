@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Makes the developer site from the repository (spec §41, developer_site). Its pages show the graph libraries'
+// Makes the developer site from the repository (ES§41, developer_site). Its pages show the graph libraries'
 // operations, the graph format spec's version, changes and sections, and the nightly builds. It is the home page's
 // sibling. It takes its words from site-dev/words.json and its style from site/site.css, and it refuses a word that is
 // missing or unused. The stable pages are for search engines. The nightly page is kept out of them three ways: a

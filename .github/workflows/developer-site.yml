@@ -1,6 +1,6 @@
 name: Developer site
 
-# Makes the developer site from the repository (spec §41, developer_site): the graph libraries, the graph format spec
+# Makes the developer site from the repository (ES§41, developer_site): the graph libraries, the graph format spec
 # and the nightly builds. It runs on every push to main and each morning, so it names the newest stable release and
 # lists the newest nightlies. It only builds and keeps the folder as a short-lived download. It does not publish it:
 # GitHub Pages allows one custom domain a repository, and thoughtknot.app already has this one, so thoughtknot.dev

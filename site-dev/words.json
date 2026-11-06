@@ -1,5 +1,5 @@
 {
-  "about": "The words of the developer site, in UK English, by key (spec §41, developer_site; §42, words_catalogue). The pages in site-dev/ name each by {{key}}; scripts/developer-site.mjs fills them in and refuses a key missing here or a word nothing uses.",
+  "about": "The words of the developer site, in UK English, by key (ES§41, developer_site; ES§42, words_catalogue). The pages in site-dev/ name each by {{key}}; scripts/developer-site.mjs fills them in and refuses a key missing here or a word nothing uses.",
   "language": "en-GB",
   "words": {
     "site.name": "ThoughtKnot for developers",

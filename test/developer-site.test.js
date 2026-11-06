@@ -1,4 +1,4 @@
-// The developer site (spec §41, developer_site):
+// The developer site (ES§41, developer_site):
 // - Made from the repository: the library docs, the graph format spec and the nightly builds.
 // - Its words come from one catalogue, every word used and none missing.
 // - WCAG 2.2 AA in the light and the dark scheme, by the same check as the home page.
@@ -80,7 +80,7 @@ describe('the site is made from the repository', () => {
   });
 
   test('escapes what the sources hold, so a title is text and never markup', () => {
-    const specGql = "(s1:Section {id: 'spec:§1', num: '1', title: '<b>x</b>'}),";
+    const specGql = "(s1:Section {id: 'spec:\u00a71', num: '1', title: '<b>x</b>'}),";
     const page = made({ specGql })['spec.html'];
     assert.match(page, /&lt;b&gt;x&lt;\/b&gt;/);
   });
