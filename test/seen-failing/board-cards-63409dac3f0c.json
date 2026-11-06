@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-cards.test.js",
+  "test": "board_cards_rich > nothing remote is loaded: no web address of the body reaches the picture",
+  "seen_failing_first": false,
+  "evidence": "The test only changed how it looks for a web address, to satisfy the code scan; the card code is unchanged."
+}
