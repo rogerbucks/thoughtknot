@@ -57,6 +57,8 @@ export interface RoadMark {
   back: number;
   width: number;
   fill: string;
+  /** The ink of the count written on the road. */
+  ink: string;
   alpha: number;
 }
 
@@ -223,6 +225,7 @@ function roadsOf(
         back: road.back,
         width: 2 + Math.log2(road.forward + road.back),
         fill: colours.get(road.a) ?? look.faint,
+        ink: inkOn(colours.get(road.a) ?? look.faint),
         alpha,
       });
     }

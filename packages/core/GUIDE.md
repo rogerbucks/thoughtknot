@@ -1140,6 +1140,7 @@ It is built beside today's drawing, behind a switch, and is not drawn yet.
 - `render-detail.ts` — layer L3, `detailAt`: how much of each level shows at a zoom, fading in level by level.
 - `render-look.ts` — part of L4: every colour, light and dark, from the mockups, with shades for each level.
 - `render-marks.ts` — layer L4, `marksOf`: clouds, dots, roads and labels on screen, and the one label placer.
+- `paint-canvas.ts` — a layer L5 painter, `paintCanvas`: draws the marks on a 2D canvas exactly as given.
 
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
