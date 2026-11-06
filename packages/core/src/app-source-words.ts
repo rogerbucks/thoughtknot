@@ -15,6 +15,22 @@ export const APP_SOURCE_WORDS = {
   'app.phone-no-notes': 'No notes yet. Make one here, or put Markdown files, ending in .md, in the app’s folder.',
   'app.new-note': 'New note',
   'app.privacy': 'ThoughtKnot keeps no data about you. Its privacy page: {address}',
+  // moving the notes to another folder (ES§55, storage_user_choice)
+  'app.move': 'Move my notes to another folder',
+  'app.move.old-folder': 'the old folder',
+  'app.move.copying': 'Copying your notes to {folder} and checking each copy…',
+  'app.move.done': {
+    one: 'Your note is now in {folder}. The old copy is still in {old}.',
+    other: 'Your {count} notes are now in {folder}. The old copies are still in {old}.',
+  },
+  'app.move.let-go': 'Remove the old copies',
+  'app.move.keep': 'Keep them',
+  'app.move.removed': { one: 'Removed {count} old copy from {old}.', other: 'Removed {count} old copies from {old}.' },
+  'app.move.kept': 'Kept in {old}, as they changed after the move: {paths}',
+  'app.move.clash': '{folder} already has other notes at these names: {paths}. Nothing was moved.',
+  'app.move.copy': 'These did not read back from {folder} as they were: {paths}. Nothing was moved.',
+  'app.move.changed': 'These notes changed while they were copied: {paths}. Nothing was moved, so try again.',
+  'app.move.cannot': 'Could not move the notes: {why}',
   'app.not-yet': 'This is not in the app yet. Open the note in Obsidian or the browser editor for it.',
   ...VSCODE_SOURCE_WORDS,
 } as const;

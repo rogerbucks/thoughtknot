@@ -1,5 +1,5 @@
 // The desktop app (spec §41, standalone_app): one window, and the notes of one folder the person picks. The window
-// runs the browser editor's page, which reads and writes notes through the eight folder commands below, and sends a
+// runs the browser editor's page, which reads and writes notes through the ten folder commands below, and sends a
 // note to GitHub through the one gh command, and nothing else.
 // - Nothing is fetched: the window's pages come from inside the app, and its policy allows no other origin.
 // - Every path a command takes is relative to the picked folder. A path that climbs out (`..`), starts at a root, names
@@ -7,6 +7,9 @@
 // - A note is written whole: to a new file beside it, then renamed over it. So a failed write leaves the note as it was.
 // - An export is only ever new files: never written over a file already there.
 // - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
+// - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
+//   The folder commands reach it only when asked to (`target`). Once every note is copied and checked, the two swap.
+//   So the old folder is the target, and its copies are removed only when the person says so.
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
 mod gh;
@@ -33,6 +36,78 @@ impl Folder {
             .clone()
             .ok_or_else(|| "no folder is open".to_string())
     }
+}
+
+/// The second folder notes are moved to, once the person picks one; and, after the move, the folder they came from.
+#[derive(Default)]
+struct Target(Mutex<Option<PathBuf>>);
+
+impl Target {
+    fn root(&self) -> Result<PathBuf, String> {
+        self.0
+            .lock()
+            .map_err(|_| "the folder is unreadable".to_string())?
+            .clone()
+            .ok_or_else(|| "no folder to move to is picked".to_string())
+    }
+}
+
+/// The folder a command reaches: the picked one, or with `target` the folder notes are moved to.
+fn root_of(folder: &Folder, to: &Target, target: Option<bool>) -> Result<PathBuf, String> {
+    if target == Some(true) {
+        to.root()
+    } else {
+        folder.root()
+    }
+}
+
+/// Asks the person for a folder to move the notes to, with the system's own dialog. Its name, or none when they
+/// cancelled. The open folder, or one inside it or around it, is refused, so a move never copies a note onto itself.
+#[cfg(desktop)]
+#[tauri::command]
+async fn pick_target(
+    app: tauri::AppHandle,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<Option<String>, String> {
+    let open = folder.root()?;
+    let Some(picked) = app.dialog().file().blocking_pick_folder() else {
+        return Ok(None);
+    };
+    let path = picked.into_path().map_err(|e| e.to_string())?;
+    let real = path.canonicalize().map_err(|e| e.to_string())?;
+    if real.starts_with(&open) || open.starts_with(&real) {
+        return Err("choose a folder outside the one open now".to_string());
+    }
+    let name = name_of(&real);
+    *to.0
+        .lock()
+        .map_err(|_| "the folder is unreadable".to_string())? = Some(real);
+    Ok(Some(name))
+}
+
+/// A phone keeps its notes in its own folder alone: there is nowhere else to move them.
+#[cfg(mobile)]
+#[tauri::command]
+async fn pick_target() -> Result<Option<String>, String> {
+    Err("a phone keeps its notes in the app's own folder".to_string())
+}
+
+/// After a checked move: the folder moved to becomes the open one, and the old one the target. Gives the new name.
+#[tauri::command]
+fn swap_folders(folder: State<'_, Folder>, to: State<'_, Target>) -> Result<String, String> {
+    let mut open = folder
+        .0
+        .lock()
+        .map_err(|_| "the folder is unreadable".to_string())?;
+    let mut other =
+        to.0.lock()
+            .map_err(|_| "the folder is unreadable".to_string())?;
+    if other.is_none() {
+        return Err("no folder to move to is picked".to_string());
+    }
+    std::mem::swap(&mut *open, &mut *other);
+    Ok(open.as_deref().map(name_of).unwrap_or_default())
 }
 
 /// Asks the person for a folder of notes, with the system's own dialog. Its name, or none when they cancelled.
@@ -79,33 +154,59 @@ fn name_of(path: &std::path::Path) -> String {
         .unwrap_or_default()
 }
 
-/// Each entry of a folder inside the picked one: its name, and whether it is a folder. `""` is the picked folder.
+/// Each entry of a folder inside the picked one, or the target: its name, and whether it is a folder. `""` is the top.
 #[tauri::command]
-fn read_dir(path: String, folder: State<'_, Folder>) -> Result<Vec<(String, bool)>, String> {
-    place::read_dir(&folder.root()?, &path)
+fn read_dir(
+    path: String,
+    target: Option<bool>,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<Vec<(String, bool)>, String> {
+    place::read_dir(&root_of(&folder, &to, target)?, &path)
 }
 
 /// A note's text. The error is `ENOENT` when there is no file.
 #[tauri::command]
-fn read_text(path: String, folder: State<'_, Folder>) -> Result<String, String> {
-    place::read_text(&folder.root()?, &path)
+fn read_text(
+    path: String,
+    target: Option<bool>,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<String, String> {
+    place::read_text(&root_of(&folder, &to, target)?, &path)
 }
 
 /// Writes a note whole: a new file beside it, renamed over it.
 #[tauri::command]
-fn write_text(path: String, text: String, folder: State<'_, Folder>) -> Result<(), String> {
-    place::write_text(&folder.root()?, &path, &text)
+fn write_text(
+    path: String,
+    text: String,
+    target: Option<bool>,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<(), String> {
+    place::write_text(&root_of(&folder, &to, target)?, &path, &text)
 }
 
 #[tauri::command]
-fn remove_file(path: String, folder: State<'_, Folder>) -> Result<(), String> {
-    place::remove_file(&folder.root()?, &path)
+fn remove_file(
+    path: String,
+    target: Option<bool>,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<(), String> {
+    place::remove_file(&root_of(&folder, &to, target)?, &path)
 }
 
 /// Makes a folder and the folders above it, inside the picked one.
 #[tauri::command]
-fn make_dir(path: String, folder: State<'_, Folder>) -> Result<(), String> {
-    place::make_dir(&folder.root()?, &path)
+fn make_dir(
+    path: String,
+    target: Option<bool>,
+    folder: State<'_, Folder>,
+    to: State<'_, Target>,
+) -> Result<(), String> {
+    place::make_dir(&root_of(&folder, &to, target)?, &path)
 }
 
 /// Writes an export's files as new files in a folder inside the picked one. Gives the names written.
@@ -164,16 +265,20 @@ pub fn run() {
     #[cfg(desktop)]
     let app = app
         .plugin(tauri_plugin_dialog::init())
-        .manage(Folder(Mutex::new(folder_named())));
+        .manage(Folder(Mutex::new(folder_named())))
+        .manage(Target::default());
     #[cfg(mobile)]
-    let app = app.manage(Folder::default()).setup(|app| {
-        let dir = own_documents(app.handle())?;
-        *app.state::<Folder>()
-            .0
-            .lock()
-            .map_err(|_| "the folder is unreadable")? = Some(dir);
-        Ok(())
-    });
+    let app = app
+        .manage(Folder::default())
+        .manage(Target::default())
+        .setup(|app| {
+            let dir = own_documents(app.handle())?;
+            *app.state::<Folder>()
+                .0
+                .lock()
+                .map_err(|_| "the folder is unreadable")? = Some(dir);
+            Ok(())
+        });
     app.invoke_handler(tauri::generate_handler![
         pick_folder,
         own_folder,
@@ -183,6 +288,8 @@ pub fn run() {
         remove_file,
         make_dir,
         write_new,
+        pick_target,
+        swap_folders,
         run_gh
     ])
     .run(tauri::generate_context!())
