@@ -5180,6 +5180,9 @@
           "place: string",
           "row: string"
         ],
+        "tableMeasures": [
+          "value: (table: CsvTable, mapping: TableMapping) => Measure[]"
+        ],
         "tableOf": [
           "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Graph) => DiagramTable"
         ],
