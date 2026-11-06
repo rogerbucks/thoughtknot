@@ -59,4 +59,4 @@ export function detailAt(sizes: readonly number[], scale: number): Detail {
 
 /** The zoom at which `depth` is fully shown: the scale its rooms need. Used to step one level per wheel notch. */
 export const scaleToOpen = (sizes: readonly number[], depth: number): number =>
-  depth <= 0 || !sizes[depth] ? 0 : (depth === sizes.length - 1 ? ITEMS_AT : OPEN_AT) / (sizes[depth] as number);
+  depth <= 0 || !sizes[depth] ? 0 : (depth === sizes.length - 1 ? ITEMS_AT : OPEN_AT) / sizes[depth];

@@ -65,7 +65,7 @@ export function sceneOf(shape: GraphShape): Scene {
   for (const t of things) {
     const path = pathOf.get(t.key) ?? [];
     const node: SceneNode = { key: t.key, name: t.text, depth: last, children: [], items: [t.key] };
-    if (path.length) node.parent = path[path.length - 1] as string;
+    if (path.length) node.parent = path[path.length - 1];
     nodes.set(t.key, node);
   }
   for (const node of nodes.values()) if (node.parent !== undefined) nodes.get(node.parent)?.children.push(node.key);
