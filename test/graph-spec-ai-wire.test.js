@@ -11,7 +11,8 @@ const C = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-
 const WIRE = JSON.parse(readFileSync(new URL('../requirements/graph-spec-ai-wire.json', import.meta.url), 'utf8'));
 const serving = readFileSync(new URL('../packages/graph-spec/src/rules/servings.js', import.meta.url), 'utf8');
 const HASH = 'a1b2c3d4e5f60718';
-const header = (extra = '') => `// graph: g1 · CHANGE SET cs-1 · against sha-256-64:${HASH} · by model:one${extra}\nINSERT (x:Fact {})`;
+const header = (extra = '') =>
+  `// graph: g1 · CHANGE SET cs-1 · against sha-256-64:${HASH} · by model:one${extra}\nINSERT (x:Fact {})`;
 
 describe('spec_ai_wire', () => {
   test('a change set header written as listed is read to the listed fields', () => {
@@ -30,7 +31,10 @@ describe('spec_ai_wire', () => {
     for (const k of WIRE.servingRecord.pinned) assert.ok(serving.includes(`'${k}'`), `${k} is compared`);
     const compared = /\[((?:'\w+',? ?)+)\]\.every/.exec(serving);
     assert.ok(compared, 'the rule lists the fields it compares');
-    assert.deepEqual([...compared[1].matchAll(/'(\w+)'/g)].map((m) => m[1]), WIRE.servingRecord.pinned);
+    assert.deepEqual(
+      [...compared[1].matchAll(/'(\w+)'/g)].map((m) => m[1]),
+      WIRE.servingRecord.pinned,
+    );
     for (const k of WIRE.servingRecord.pinned) assert.ok(WIRE.servingRecord.fields.includes(k));
   });
 
