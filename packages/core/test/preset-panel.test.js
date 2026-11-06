@@ -5,7 +5,7 @@ import { PresetPanel } from '../src/preset-panel.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
 
 /** A panel over settings kept in a variable, with a vault file kept in another, and what the host was asked to do. */
-function panel(start = {}) {
+function panel(start = {}, extra = {}) {
   const seen = { saved: 0, drawn: 0, shared: [], vault: undefined };
   const state = { s: { ...DEFAULT_SETTINGS, ...start } };
   const p = new PresetPanel({
@@ -18,6 +18,7 @@ function panel(start = {}) {
     share: async (text) => void seen.shared.push(text),
     vault: () => seen.vault,
     setVault: async (id) => void (seen.vault = id ?? undefined),
+    ...extra,
   });
   return { p, state, seen };
 }
@@ -84,5 +85,12 @@ describe('the preset panel', () => {
       .action();
     await until(() => seen.shared.length === 1);
     assert.match(seen.shared[0], /thoughtknot-view-preset@1/);
+  });
+
+  // proves: view_presets_portable
+  test('where the vault’s file is the only place a preset is kept, using one makes it the vault’s', () => {
+    const { p } = panel({ viewPreset: 'default' }, { vaultOnly: true });
+    assert.equal(row(p, 'Use this preset for the whole vault'), undefined, 'one way to use it, not two');
+    assert.ok(row(p, 'View preset in use'), 'and the panel still says which is in use');
   });
 });

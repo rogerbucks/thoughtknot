@@ -26,6 +26,8 @@ export interface PanelOwner {
   vault: () => string | undefined;
   /** Makes a starter the vault's preset, or with null gives the vault none. */
   setVault: (id: string | null) => Promise<void>;
+  /** Set where the vault's file is the only place a preset is kept, so using one is making it the vault's. */
+  vaultOnly?: boolean;
 }
 
 /** The preset picked but not yet used, and the one step back from the last one used. */
@@ -58,11 +60,15 @@ export class PresetPanel {
     return [
       { name: word('settings.vault-preset.name'), desc: presetInUse(where) },
       ...this.changeRows(),
-      {
-        name: word('settings.vault-preset.use'),
-        desc: word('settings.vault-preset.use.sentence'),
-        action: () => void this.owner.setVault(this.shown()).then(() => this.owner.update()),
-      },
+      ...(this.owner.vaultOnly
+        ? []
+        : [
+            {
+              name: word('settings.vault-preset.use'),
+              desc: word('settings.vault-preset.use.sentence'),
+              action: () => void this.owner.setVault(this.shown()).then(() => this.owner.update()),
+            },
+          ]),
       ...(vault
         ? [
             {
