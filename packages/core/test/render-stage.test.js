@@ -137,3 +137,79 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     uninstall();
   }
 });
+
+// Rule 4 of the rendering spec, things stay put: zooming and clicking move the camera, never a thing.
+// proves: render_one_camera
+test('nothing moves on a zoom or a click: every dot stays on its own place in the drawing', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = () => ({ matches: true });
+    const stage = new RenderStage(viewport, drawing, g, { open() {}, clear() {}, selected: () => null });
+    const places = new Map([...stage.spots].map(([k, s]) => [k, { x: s.x, y: s.y }]));
+    const check = (when) => {
+      const v = stage.view;
+      for (const m of stage.marks.filter((m) => m.kind === 'dot' || m.kind === 'cloud')) {
+        const p = places.get(m.key);
+        assert.ok(Math.abs(m.x / v.scale + v.x - p.x) < 1e-6, `${m.key} moved across ${when}`);
+        assert.ok(Math.abs(m.y / v.scale + v.y - p.y) < 1e-6, `${m.key} moved up or down ${when}`);
+      }
+    };
+    check('when fitted');
+    const notch = { ctrlKey: true, metaKey: false, deltaY: -100, clientX: 300, clientY: 150 };
+    for (let i = 0; i < 4; i++) {
+      stage.lastStep = -Infinity; // each notch a new swipe
+      stage.wheel({ ...notch, preventDefault() {}, stopPropagation() {} });
+      check(`after ${i + 1} notches`);
+    }
+    const cloud = stage.marks.find((m) => m.kind === 'cloud');
+    if (cloud) stage.clicked(cloud.x, cloud.y);
+    check('after a click');
+    assert.deepEqual(new Map([...stage.spots].map(([k, s]) => [k, { x: s.x, y: s.y }])), places);
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: render_one_camera
+test('on a touch screen, two fingers spread step one level in, drawn together step out, and never tap or pan', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    const said = [];
+    const stage = new RenderStage(viewport, drawing, g, {
+      open: (k) => said.push(k),
+      clear: () => said.push('clear'),
+      selected: () => null,
+    });
+    const at = () => stage.view.scale;
+    const finger = (pointerId, clientX, clientY = 200) => ({ pointerId, clientX, clientY, stopPropagation() {} });
+    const start = at();
+    stage.down(finger(1, 300));
+    stage.down(finger(2, 340));
+    stage.move(finger(2, 345)); // a little spread is not yet a step
+    assert.equal(at(), start);
+    stage.move(finger(2, 360)); // 40 to 60 pixels apart: one level in
+    assert.ok(at() > start * 1.01, 'one level in');
+    const nearer = at();
+    stage.move(finger(2, 330)); // 60 to 30: one level out
+    assert.ok(at() < nearer / 1.01, 'one level out');
+    stage.up(finger(2, 330));
+    stage.up(finger(1, 300));
+    assert.deepEqual(said, [], 'a pinch is not a tap');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

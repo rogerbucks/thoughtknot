@@ -3,8 +3,8 @@
 // marks and canvas painter do the work, and this file only wires them to the page. Today's SVG stays underneath,
 // hidden, so the old path keeps working until the switch flips for good.
 //
-// Ctrl or Cmd with the wheel, or a pinch, zooms one level per step at the pointer. Dragging pans. Plain scrolling is
-// left to the page. A click picks from the marks (layer L6). An item's first click selects it and opens its details.
+// Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms one level per step at the pointer.
+// Dragging pans. Plain scrolling is left to the page. A click picks from the marks (layer L6). An item's first click selects it and opens its details.
 // Its second glides it to the middle (second_tap_centres). A click on a group glides to it and opens its next level.
 // A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
@@ -27,6 +27,8 @@ export const STEP_MS = 160;
 export const GLIDE_MS = 260;
 /** How far a pointer may move, in pixels, and still be a click rather than a drag. */
 const CLICK_PX = 6;
+/** How much two fingers must spread, as a ratio, to step one level: one level per clear pinch. */
+const PINCH = 1.25;
 
 /** What a click on the stage does in its card: choose a thing (its details open), or clear the choice. */
 export interface StageHands {
@@ -64,6 +66,9 @@ export class RenderStage {
   /** Whether the view is still the fitted one: no zoom or pan since. */
   private untouched = true;
   private drag: { x: number; y: number; moved: boolean } | null = null;
+  /** The fingers or pointers down now, by id, and the spread a pinch is measured from. */
+  private readonly fingers = new Map<number, { x: number; y: number }>();
+  private pinch: { d: number; x: number; y: number } | null = null;
   private readonly watcher: ResizeObserver | null;
   /** The marks painted last, which a click picks from. */
   private marks: Mark[] = [];
@@ -87,6 +92,7 @@ export class RenderStage {
     this.canvas.addEventListener('pointerdown', (e) => this.down(e));
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
+    this.canvas.addEventListener('pointercancel', (e) => this.lift(e));
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
     this.watcher?.observe(viewport);
     for (const card of coverCards(viewport)) this.watcher?.observe(card);
@@ -135,10 +141,15 @@ export class RenderStage {
     const now = Date.now();
     if (now - this.lastStep < STEP_MS || !e.deltaY) return;
     this.lastStep = now;
+    this.step(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY);
+  }
+
+  /** One level nearer (1) or farther (-1), keeping the page point `x`, `y` where it is. */
+  private step(by: 1 | -1, x: number, y: number): void {
     this.untouched = false;
     this.gliding++; // the reader's own zoom stops a glide under way
     const r = this.canvas.getBoundingClientRect();
-    this.view = stepView(this.view, this.stops, e.deltaY < 0 ? 1 : -1, [e.clientX - r.left, e.clientY - r.top]);
+    this.view = stepView(this.view, this.stops, by, [x - r.left, y - r.top]);
     this.draw();
   }
 
@@ -146,10 +157,32 @@ export class RenderStage {
     // the press is the stage's own: today's drawing underneath would take the pointer and the click would be lost
     e.stopPropagation();
     this.canvas.setPointerCapture?.(e.pointerId);
-    this.drag = { x: e.clientX, y: e.clientY, moved: false };
+    this.fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.fingers.size === 2) {
+      // a second finger: a pinch, never a pan or a tap
+      this.drag = null;
+      this.pinch = this.spread();
+    } else if (this.fingers.size === 1) this.drag = { x: e.clientX, y: e.clientY, moved: false };
+  }
+
+  /** How far apart the two fingers are, and the point between them, in page pixels. */
+  private spread(): { d: number; x: number; y: number } {
+    const [a, b] = [...this.fingers.values()] as [{ x: number; y: number }, { x: number; y: number }];
+    return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
 
   private move(e: PointerEvent): void {
+    if (this.fingers.has(e.pointerId)) this.fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pinch && this.fingers.size === 2) {
+      // fingers spread by a quarter step one level in, drawn together by a fifth step one out
+      const now = this.spread(),
+        k = now.d / this.pinch.d;
+      if (k >= PINCH || k <= 1 / PINCH) {
+        this.step(k > 1 ? 1 : -1, now.x, now.y);
+        this.pinch = now;
+      }
+      return;
+    }
     const d = this.drag;
     if (!d || (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < CLICK_PX)) return;
     this.view = panView(this.view, e.clientX - d.x, e.clientY - d.y);
@@ -160,11 +193,20 @@ export class RenderStage {
   }
 
   private up(e: PointerEvent): void {
+    this.fingers.delete(e.pointerId);
+    if (this.fingers.size < 2) this.pinch = null;
     const d = this.drag;
     this.drag = null;
     if (!d || d.moved) return;
     const r = this.canvas.getBoundingClientRect();
     this.clicked(e.clientX - r.left, e.clientY - r.top);
+  }
+
+  /** A finger taken away without a tap, as when the system takes the touch. */
+  private lift(e: PointerEvent): void {
+    this.fingers.delete(e.pointerId);
+    if (this.fingers.size < 2) this.pinch = null;
+    this.drag = null;
   }
 
   /** A click at `x`, `y` on the canvas: what it picks is chosen, glided to, or opened. */
