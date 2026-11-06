@@ -409,7 +409,7 @@ describe('the settings on GitHub', () => {
 });
 
 describe('kept so, in CI and at every release', () => {
-  const COMMAND = /^node scripts\/public-readiness\.mjs --history --setup$/;
+  const COMMAND = /^node scripts\/public-readiness\.mjs --history --setup --test-shard "\$SHARD\/6"$/;
   const NIGHTLY_COMMAND = /^node scripts\/public-readiness\.mjs --history --setup --no-tests$/;
 
   test('CI runs the history and setup checks in a job of their own, from the whole history', () => {
