@@ -198,14 +198,13 @@ class BoardView {
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     const step = boardKey(this.board, this.cursor, press, this.centre(), this.readOnly);
     if (!step) {
-      // typing on an empty spot starts quick capture (board_quick_capture)
-      if (!this.readOnly && !this.cursor.focus && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        this.openCapture('spot', null, e.key);
-        return;
-      }
       if (this.zoom.handle({ kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }))
         e.preventDefault();
+      // typing a key the zoom does not use, on an empty spot, starts quick capture (board_quick_capture)
+      else if (!this.readOnly && !this.cursor.focus && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        return this.openCapture('spot', null, e.key);
+      }
       if (e.key === 'Tab') {
         this.cursor = NO_CURSOR; // past the last item: focus leaves the board
         this.draw();
