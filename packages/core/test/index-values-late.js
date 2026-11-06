@@ -387,7 +387,7 @@ export const VALUES_LATE = [
   'keptRows',
   'rowsKeptOrRead',
   'partsRefusal',
-  // storage of your choice and the history layer (§55, ST1), 6 Nov 2026
+  // storage of your choice and the history layer (ES§55, ST1), 6 Nov 2026
   'MOVE_REFUSED',
   'NO_CHOICE',
   'historyContract',

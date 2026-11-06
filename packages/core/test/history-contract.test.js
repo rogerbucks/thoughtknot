@@ -6,7 +6,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { historyLayer, layered, memoryStorage } from '../src/note-storage.ts';
 import { githubRepoStorage } from '../src/github-repo-store.ts';
-import { historyContract, memoryHistory, moveHistory, notesHistory } from '../src/history-store.ts';
+import { memoryHistory, moveHistory, notesHistory } from '../src/history-store.ts';
+import { historyContract } from '../src/history-contract.ts';
 import { fakeGitHub, repoOptions } from './fake-github.js';
 
 const stores = {
@@ -15,6 +16,7 @@ const stores = {
   'notes in a GitHub repository': () => notesHistory(githubRepoStorage(repoOptions(fakeGitHub()))),
 };
 
+// proves: storage_history_layer
 for (const [name, make] of Object.entries(stores)) {
   describe(`the history contract: ${name}`, () => {
     for (const check of historyContract(make)) test(check.name, check.run);

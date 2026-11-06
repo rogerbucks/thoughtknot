@@ -37,6 +37,7 @@ export const CORE_KEPT = {
   'packages/core/src/storage-contract.ts': '*',
   // the history contract, a developer's error, and the heading of a history note: bytes kept as written, never said
   'packages/core/src/history-store.ts': '*',
+  'packages/core/src/history-contract.ts': '*',
   // why an extension point refuses what a plug-in adds, or its manifest, or its file: told to its developer
   'packages/core/src/plugin-points.ts': '*',
   'packages/core/src/plugin-versions.ts': '*',

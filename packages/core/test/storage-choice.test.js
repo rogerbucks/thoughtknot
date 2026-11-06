@@ -45,6 +45,7 @@ function lossy() {
   return { ...inner, write: (p, t, o) => inner.write(p, t.replaceAll('\r\n', '\n'), o) };
 }
 
+// proves: storage_user_choice
 test('the setting offers each place that passes the contract, once, and none that fails or is unchecked', async () => {
   const offered = await storageOffered([
     unopened('vault'),
@@ -60,6 +61,7 @@ test('the setting offers each place that passes the contract, once, and none tha
   );
 });
 
+// proves: storage_defaults
 test('with no choice made, notes are kept where the host keeps them, open and change offline, and no other place is opened', async (t) => {
   const vault = memoryStorage({ 'Ideas.md': '# Ideas\n' });
   const offered = await storageOffered([
@@ -96,6 +98,7 @@ test('a setting not understood is no choice', () => {
     assert.deepEqual(storageSettingFrom(saved), NO_CHOICE);
 });
 
+// proves: storage_user_choice
 test('a move copies every note byte for byte and checks it; the old place is not changed until let go', async () => {
   const from = memoryStorage({ 'a.md': 'a\r\n', 'Folder/b.md': 'ünïcödé 😀', 'c.md': 'same' });
   const to = memoryStorage({ 'c.md': 'same', 'Other.md': 'theirs' });
