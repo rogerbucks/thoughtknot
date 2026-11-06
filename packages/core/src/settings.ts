@@ -8,7 +8,7 @@ import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
-import { SWITCH_OPTIONS } from './settings-switches.ts';
+import { RENDER_OPTION, SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
@@ -77,6 +77,8 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
   drawingHeight: DrawingHeightSetting;
   easierReading: SwitchSetting;
+  /** Whether graphs with levels are drawn by the new rendering, as a preview (§73, render_switch). */
+  newRendering: SwitchSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -120,6 +122,7 @@ export const DEFAULT_SETTINGS: Settings = {
   detailsOpen: 'off',
   drawingHeight: 'most',
   easierReading: 'off',
+  newRendering: 'off',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -269,6 +272,7 @@ export const OPTIONS: Option[] = [
   },
   ...SWITCH_OPTIONS, // the View menu's switches' defaults (§25)
   ...AID_OPTIONS, // the mini-map and the details kept open (§24)
+  RENDER_OPTION, // the new rendering, as a preview (§73)
   {
     key: 'exportTheme',
     section: 'Export',
@@ -370,6 +374,7 @@ export function settingsFrom(saved: unknown): Settings {
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
     drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
     easierReading: oneOf<SwitchSetting>('easierReading', s.easierReading, d.easierReading),
+    newRendering: oneOf<SwitchSetting>('newRendering', s.newRendering, d.newRendering),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

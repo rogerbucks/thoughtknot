@@ -8,6 +8,7 @@
 //   layout_concept_layers, projections_all_on).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
+import { RenderStage, stageFor } from './render-stage.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -52,6 +53,8 @@ export interface ViewerAids {
   painter?: Painter;
   /** The lens the card's drawing is seen through until the View menu picks another (lenses.ts). */
   lens?: Lens;
+  /** Whether a graph with levels is drawn by the new rendering, as a preview (render_switch). */
+  newRendering?: boolean;
 }
 
 /**
@@ -63,6 +66,7 @@ export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets' | 'render
   detailsOpen: s.detailsOpen === 'on',
   tallest: tallestOf(s.drawingHeight),
   preset: presetFor({ graph: style?.presets[0]?.preset, everywhere: s.viewPreset }).id,
+  newRendering: s.newRendering === 'on',
   ...(style ? renderFor(style, view) : {}),
 });
 
@@ -120,6 +124,8 @@ export class Aids {
   private badgeText: string | null = null;
   /** The badge's one-line hint and arrow legend (level_hints). */
   private hints: LevelHints | null = null;
+  /** The new rendering's canvas over the drawing, while its setting is on (render_switch); none for a table. */
+  private readonly stage: RenderStage | null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -176,6 +182,7 @@ export class Aids {
     });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
+    this.stage = host.svg() ? stageFor(viewport, o) : null;
   }
 
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
@@ -317,6 +324,7 @@ export class Aids {
 
   /** The card is going: its tooltip goes with it. */
   unload(): void {
+    this.stage?.unload();
     this.watching?.disconnect();
     this.info.onunload();
   }

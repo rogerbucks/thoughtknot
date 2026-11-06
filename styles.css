@@ -2405,6 +2405,18 @@ pre.thoughtknot-code {
   touch-action: var(--thoughtknot-touch, pan-x pan-y);
   border-radius: var(--gn-radius-s);
 }
+/* the new rendering (render_switch): its canvas covers the card, and today's drawing waits hidden underneath */
+.thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
+  visibility: hidden;
+}
+.thoughtknot-render-stage {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none;
+  cursor: grab;
+}
 /* names past the drawing's own edge show up to the panel's, which clips them (Roger, 2 Nov 2026) */
 .thoughtknot-viewport svg.thoughtknot-svg {
   overflow: visible;
