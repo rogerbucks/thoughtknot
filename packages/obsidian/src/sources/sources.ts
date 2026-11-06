@@ -21,6 +21,7 @@ import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { vaultPresetOf } from '../settings/vault-preset';
 import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { editInPane } from '../edit-in-pane';
@@ -132,7 +133,7 @@ export async function renderSourceBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
-      aids: aidsOf(plugin.settings, styling.style),
+      aids: aidsOf(plugin.settings, styling.style, undefined, vaultPresetOf(plugin)),
       lineOf: (at) => lineInSource(read, at),
       // The data is written in the source, so the drawing is read-only here.
       // The strip opens a note to change it there, and Edit opens this block in the pane.

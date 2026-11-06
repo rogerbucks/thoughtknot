@@ -58,14 +58,19 @@ export interface ViewerAids {
 }
 
 /**
- * The aids the settings give, with the preset the graph's style graph chooses winning over theirs (view_presets_scoped).
+ * The aids the settings give, with the preset the graph's style graph chooses winning over the vault's, and that over theirs.
  * The style graph's Render for `view`, or the whole graph, gives the space, painter and lens.
  */
-export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets' | 'renders'>, view?: string): ViewerAids => ({
+export const aidsOf = (
+  s: Settings,
+  style?: Pick<StyleGraph, 'presets' | 'renders'>,
+  view?: string,
+  vaultPreset?: string,
+): ViewerAids => ({
   miniMap: s.miniMap,
   detailsOpen: s.detailsOpen === 'on',
   tallest: tallestOf(s.drawingHeight),
-  preset: presetFor({ graph: style?.presets[0]?.preset, everywhere: s.viewPreset }).id,
+  preset: presetFor({ graph: style?.presets[0]?.preset, vault: vaultPreset, everywhere: s.viewPreset }).id,
   newRendering: s.newRendering === 'on',
   ...(style ? renderFor(style, view) : {}),
 });

@@ -191,6 +191,7 @@ export const TYPES_LATE = [
   'PreparedSend',
   'PresetChoice',
   'PresetLine',
+  'PresetScope',
   'Problem',
   'ProcessCore',
   'ProcessEdit',

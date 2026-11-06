@@ -21,6 +21,8 @@ import { PRESET_KEY, aiModelList, getModelValue, presetPicker, setModelValue, wi
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
 import { PresetChoice, sharePreset } from './preset-rows';
+import { setVaultPreset, vaultPresetOf } from './vault-preset';
+export { watchVaultPreset } from './vault-preset';
 import { STORAGE_KEY, setStorageValue, storageGroup, storageStoreOf, storageValue } from '../storage/storage-settings';
 
 const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
@@ -48,6 +50,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       save: (next) => this.owner.saveSettings(next),
       update: () => this.update(),
       share: (text) => sharePreset(this.owner, text),
+      vault: () => vaultPresetOf(this.owner),
+      setVault: (id) => setVaultPreset(this.owner, id),
     });
   }
 
