@@ -1179,3 +1179,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/levels-at-scale.test.js` — a graph of 2,000 things gets nested levels from `detail-levels.ts` and a spot each
   from `layouts/level-seed.ts`. It gets clouds from `level-clouds.ts` and roads from `level-roads.ts` (level_scale).
+
+## Rendering
+
+- `test/rendering-spec.test.js` — the rendering spec (editor spec §73): its version, the eight layers, the rules, the
+  scoreboard checks and a change log line for its version.

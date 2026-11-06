@@ -1349,5 +1349,21 @@
       "edit_delete_asks",
       "edit_gestures"
     ]
+  },
+  "RR1": {
+    "title": "Rendering rebuilt to a spec",
+    "size": "L",
+    "requirements": [
+      "render_spec_written",
+      "render_scoreboard",
+      "render_one_way",
+      "render_look_in_marks",
+      "render_painters_agree",
+      "render_one_camera",
+      "render_one_label_placer",
+      "render_chrome_slots",
+      "render_big_graph_first",
+      "render_switch"
+    ]
   }
 }
