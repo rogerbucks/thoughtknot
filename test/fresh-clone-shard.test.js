@@ -1,4 +1,4 @@
-// The fresh clone's `npm test` line can run over one share of the test files, so six machines split the suite.
+// The fresh clone can run one share of the test files (quality_ratchet, CODE-3): six machines split the suite.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { withTestShard } from '../scripts/fresh-clone.mjs';
