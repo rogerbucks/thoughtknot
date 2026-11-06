@@ -4751,7 +4751,7 @@
       "likelihood": "low",
       "impact": "low",
       "decision": "fix-now",
-      "fix": "Overrides in package.json lift minimatch to 11.0.5 under eslint-plugin-n, eslint-plugin-json-schema-validator and @typescript-eslint/typescript-estree. The 3.x copies ESLint needs are older than the flaw.",
+      "fix": "An override in package.json lifts every minimatch from 7.0.0 to before 11.0.1 to 11.0.5. The 3.x copies ESLint needs are older than the flaw, so they stay.",
       "check": "test/lint-minimatch.test.js fails on any locked minimatch in the flawed range. npm audit in CI and scripts/security-alerts.mjs fail on any advisory the lock carries.",
       "paths": [
         "package.json",
