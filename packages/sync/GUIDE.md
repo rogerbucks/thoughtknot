@@ -46,6 +46,10 @@ vault key. A `Keeper` keeps them between runs. It keeps the pair as a handle who
 vault key sealed for this device itself. The panel shows only the public half and a short fingerprint. Another device
 is trusted by its public key (`trust`), and only a trusted device is ever sent anything.
 
+An owner invites a trusted device with `invite`. The invitation is text that holds the vault key only sealed for that one
+device (`invitationText`). A device that only made its keys (`prepare`) takes it with `accept`, and then trusts the
+inviter. The guest reads the inviter's fingerprint first, as nothing else says who sent it.
+
 ## Graphs from many places
 
 `connected.ts` keeps a graph drawn from many places (the core's `connectors.ts`) in step between devices.
