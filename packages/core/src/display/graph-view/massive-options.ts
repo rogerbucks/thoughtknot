@@ -4,6 +4,7 @@ import type { Drawn, GraphDrawing, Painter, Refusal, RulesShown } from '@thought
 import type { Measure } from '../../facet-totals.ts';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { FilterKeep } from '../../filter-saved.ts';
+import type { StoredParts } from '../../store-drawing.ts';
 import type { Palette } from '../../palette.ts';
 import type { FlyView, Match } from '../../search-fly.ts';
 import type { PainterKind } from './mark-painter.ts';
@@ -34,6 +35,8 @@ export interface MassiveOptions {
   poles?: readonly string[];
   /** Told the poles chosen, with the filter kept, to save them where the note is edited; reading view only tries them. */
   chosePoles?: (poles: string[], keep: FilterKeep) => void;
+  /** A graph read in parts: its groups and links come from the store, and the drawing holds none of its links. */
+  parts?: StoredParts;
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */

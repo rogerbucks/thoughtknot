@@ -7,9 +7,27 @@
 // a stale store is never drawn (text_is_the_store).
 import { sha256 } from './ai-digest.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
-import type { GraphDrawing } from './note-reading.ts';
+import type { GraphDrawing, Link } from './note-reading.ts';
 import type { MeshIndex } from './mesh-index.ts';
 import type { Grouping } from './scale-groups.ts';
+
+/**
+ * The links touching some things, each once, with `edge` its place among its graph's links. Given for a graph read in
+ * parts, whose links are read from the store as they are needed, never all at once (scale_parts_overview).
+ */
+export type LinksNear = (keys: readonly string[]) => Link[];
+
+/** Where the links of a drawing read in parts are: its drawing holds none (store-drawing.ts). */
+const linksOf = new WeakMap<GraphDrawing, LinksNear>();
+
+/** Records that `drawing`'s links are read from the store by `near`, as a step growing from a thing needs them. */
+export function nearFrom(drawing: GraphDrawing, near: LinksNear): GraphDrawing {
+  linksOf.set(drawing, near);
+  return drawing;
+}
+
+/** How to read `drawing`'s links from the store, when it was read in parts; undefined when it holds its own links. */
+export const linksNear = (drawing: GraphDrawing): LinksNear | undefined => linksOf.get(drawing);
 
 /** The most rows (things and links) a drawing of a note read in parts holds at once, by default. */
 export const PARTS_HELD_MOST = 20_000;
@@ -110,6 +128,22 @@ export class PartsSource {
     this.makeRoom();
     return part;
   }
+
+  /**
+   * The links with an end among `keys`, each once, read from the store. Each carries its place among the graph's links as
+   * `edge`. Empty when not fresh.
+   */
+  near: LinksNear = (keys) => {
+    if (!this.fresh || !keys.length) return [];
+    const { backend } = this.ix;
+    const wanted = new Set(keys);
+    const rows = backend.touching
+      ? backend.touching(this.note, keys)
+      : backend.links(this.note).filter((l) => wanted.has(l.from) || wanted.has(l.to));
+    return rows
+      .filter((l) => l.graph === this.graph)
+      .map((l): Link => ({ from: l.from, type: l.type, reading: l.reading, to: l.to, edge: l.n }));
+  };
 
   /** Lets group `id` go: it is read from the store again when next needed. */
   letGo(id: string): void {

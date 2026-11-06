@@ -5,7 +5,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MeshIndex, memoryBackend, sqliteBackend } from '../src/mesh-index.ts';
 import { PartsSource, partsOf } from '../src/parts-source.ts';
-import { storedGraphs } from '../src/store-drawing.ts';
 import { overviewOf } from '../src/overview.ts';
 import { READ_LIMITS } from '../src/layout-limits.ts';
 import { sqlEngine } from './mesh-test-sql.js';
@@ -23,6 +22,14 @@ function huge() {
 }
 
 const text = huge();
+/** The whole graph, as the note above writes it. */
+const whole = {
+  boxes: Array.from({ length: N }, (_, i) => ({ key: `n${i}`, kind: KINDS[i % KINDS.length], text: `Item ${i}` })),
+  links: Array.from({ length: N - KINDS.length }, (_, j) => {
+    const i = j + KINDS.length;
+    return { from: `n${i}`, type: 'NEAR', reading: 'near', to: `n${i - KINDS.length}` };
+  }),
+};
 const plain = (d) => ({
   boxes: d.boxes.map((b) => [b.key, b.kind, b.text]).sort(),
   links: d.links.map((l) => [l.from, l.type, l.reading, l.to]).sort(),
@@ -51,7 +58,6 @@ test('a group read from the store is what a whole reading gives for it, from eit
   for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
     const ix = new MeshIndex(backend);
     const big = (await partsOf(ix, 'big.md', text, now)).get('big');
-    const whole = (await storedGraphs(ix, 'big.md', text, now)).get('big').drawing;
     for (const g of big.overview().groups) {
       const part = big.group(g.id);
       assert.equal(part.boxes.length, g.size);
@@ -91,6 +97,22 @@ test('the rows held follow the screen, never the size of the graph', async () =>
   big.letGo(ids[0]);
   big.letGo(ids[1]);
   assert.equal(big.holding, 0);
+});
+
+test('the links near some things are read from the store, each once, with their place', async () => {
+  for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
+    const big = (await partsOf(new MeshIndex(backend), 'big.md', text, now)).get('big');
+    const near = big.near(['n6', 'n12']);
+    assert.deepEqual(
+      near.map((l) => [l.from, l.to, l.edge]),
+      [
+        ['n6', 'n0', 0],
+        ['n12', 'n6', 6],
+        ['n18', 'n12', 12],
+      ],
+      backend.kind,
+    );
+  }
 });
 
 test('rows from other text are never drawn', async () => {

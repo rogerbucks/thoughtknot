@@ -213,6 +213,7 @@ export class PaneDrawing extends Lifecycle {
         palette,
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
+        parts: stored.parts,
         ...(saved ? { chosen: saved } : {}),
         ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),

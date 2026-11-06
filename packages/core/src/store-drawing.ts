@@ -15,7 +15,10 @@ import { gqlBlocks } from './fences.ts';
 import { parseValue, setProperty } from './inspector.ts';
 import type { Edit, PropType } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
-import type { MeshIndex } from './mesh-index.ts';
+import type { BetweenRow, GroupRow, MeshIndex, ThingRow } from './mesh-index.ts';
+import { PartsSource, nearFrom } from './parts-source.ts';
+import type { LinksNear } from './parts-source.ts';
+import type { Grouping } from './scale-groups.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
 import { styleOf } from './blocks.ts';
 import { readStyle } from './style.ts';
@@ -29,6 +32,19 @@ export interface StoredGraph {
   props: (key: string) => Readonly<Record<string, unknown>>;
   /** Its things and links as the style checks read a graph: each thing by its kind, each link without properties. */
   world: () => gs.Graph;
+  /**
+   * Read in parts: its groups as the store found them, and its links, read from the store as they are needed. The
+   * drawing then holds its things but none of its links (scale_parts_overview).
+   */
+  parts: StoredParts;
+}
+
+/** A graph read in parts: its groups, each group's inside, and the links near some things, all from the store. */
+export interface StoredParts {
+  grouping: Grouping;
+  /** A group's things and the links inside it, to lay out on its own; null once the store holds other text. */
+  group: (id: string) => GraphDrawing | null;
+  near: LinksNear;
 }
 
 /** A graph as the graph library's rules read one, from things (key, kind, properties) and links. */
@@ -62,22 +78,38 @@ export async function storedGraphs(
   if (ix.version(note) !== sha256(text)) ix.backend.put(await noteRowsPaced(note, text, pause));
   const out = new Map<string, StoredGraph>();
   if (ix.version(note) !== sha256(text)) return out;
-  const { groups } = ix.groups(note);
+  const { groups, between } = ix.groups(note);
   const byGraph = new Map<string, string[]>();
   for (const g of groups) byGraph.set(g.graph, [...(byGraph.get(g.graph) ?? []), g.id]);
-  const links = ix.backend.links(note);
+  const version = sha256(text);
   for (const [graph, ids] of byGraph) {
     const things = ix.backend.things(note, ids).filter((t) => t.graph === graph);
+    const source = new PartsSource(ix, note, graph, version);
+    const linksOf = () => ix.backend.links(note).filter((l) => l.graph === graph);
     const props = new Map(things.map((t) => [t.key, t.props]));
     const parsed = new Map<string, Record<string, unknown>>();
     out.set(graph, {
-      drawing: {
-        graph,
-        boxes: things.map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
-        links: links
-          .filter((l) => l.graph === graph)
-          .map((l) => ({ from: l.from, type: l.type, reading: l.reading, to: l.to })),
-        estimates: [],
+      drawing: nearFrom(
+        {
+          graph,
+          boxes: things.map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
+          links: [],
+          estimates: [],
+        },
+        source.near,
+      ),
+      parts: {
+        grouping: groupingOf(
+          groups.filter((g) => g.graph === graph),
+          between,
+          things,
+        ),
+        group: (id) => {
+          const part = source.group(id);
+          source.letGo(id); // the overview keeps the group's marks once laid out, never its rows
+          return part;
+        },
+        near: source.near,
       },
       // read from its JSON only when a filter asks for it
       props: (key) => {
@@ -87,11 +119,27 @@ export async function storedGraphs(
       world: () =>
         plainGraph(
           things.map((t) => [t.key, t.kind, JSON.parse(t.props) as Record<string, gs.Value>]),
-          links.filter((l) => l.graph === graph).map((l) => [l.from, l.type, l.to, {}]),
+          linksOf().map((l) => [l.from, l.type, l.to, {}]),
         ),
     });
   }
   return out;
+}
+
+/** The groups of a graph as the store holds them, each with its things' keys, and the links between them counted. */
+function groupingOf(groups: GroupRow[], between: BetweenRow[], things: ThingRow[]): Grouping {
+  const keys = new Map<string, string[]>(groups.map((g) => [g.id, []]));
+  for (const t of things) keys.get(t.group)?.push(t.key);
+  const at = new Map(groups.map((g, i) => [g.id, i]));
+  return {
+    by: groups[0]?.by ?? 'links',
+    groups: groups.map((g) => ({ id: g.id, label: g.label, by: g.by, keys: keys.get(g.id) ?? [] })),
+    between: between.flatMap((b) => {
+      const from = at.get(b.from),
+        to = at.get(b.to);
+      return from === undefined || to === undefined ? [] : [{ from, to, links: b.links }];
+    }),
+  };
 }
 
 /**

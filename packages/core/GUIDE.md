@@ -123,6 +123,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `storedStyle` reads the note's style blocks and checks them against the graph in the store.
 - `parts-source.ts` — a too-big note's graph drawn a group at a time (scale_parts_overview). The overview needs only
   the group rows. A group's things are read when it opens, and let go when it leaves the screen or the budget is full.
+  A stored graph's drawing holds its things but none of its links. Opening a group, or growing from a thing, reads the
+  links it needs from the store (`StoredGraph.parts`).
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 

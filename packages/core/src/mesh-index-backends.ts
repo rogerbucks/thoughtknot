@@ -38,6 +38,8 @@ const TABLES = [
   'CREATE TABLE IF NOT EXISTS group_links (note TEXT, graph TEXT, place INTEGER, src TEXT, dst TEXT, links INTEGER)',
   'CREATE INDEX IF NOT EXISTS things_by_group ON things (note, grp)',
   'CREATE INDEX IF NOT EXISTS links_by_group ON links (note, src_grp, dst_grp)',
+  'CREATE INDEX IF NOT EXISTS links_by_src ON links (note, src)',
+  'CREATE INDEX IF NOT EXISTS links_by_dst ON links (note, dst)',
 ];
 
 const str = (v: unknown): string => String(typeof v === 'string' || typeof v === 'number' ? v : '');
@@ -150,8 +152,22 @@ export function sqliteBackend(engine: SqlEngine): MeshBackend {
       engine
         .run('SELECT * FROM links WHERE note = ? AND src_grp = ? AND dst_grp = ? ORDER BY place', [note, group, group])
         .map(linkRow),
+    touching: (note, keys) => {
+      // a few hundred keys a query, well under SQLite's limit on parameters
+      const places = new Map<number, Record<string, unknown>>();
+      for (let i = 0; i < keys.length; i += TOUCHING_MOST) {
+        const some = keys.slice(i, i + TOUCHING_MOST),
+          marks = some.map(() => '?').join(', ');
+        const sql = `SELECT * FROM links WHERE note = ? AND (src IN (${marks}) OR dst IN (${marks}))`;
+        for (const r of engine.run(sql, [note, ...some, ...some])) places.set(num(r['place']), r);
+      }
+      return [...places].sort(([a], [b]) => a - b).map(([, r]) => linkRow(r));
+    },
   };
 }
+
+/** The most keys one query of the links touching some things names. */
+const TOUCHING_MOST = 400;
 
 /** A link as SQLite gives it back. */
 function linkRow(r: Record<string, unknown>): LinkRow {
