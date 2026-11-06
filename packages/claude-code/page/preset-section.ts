@@ -2,7 +2,7 @@
 // Code's tab, the desktop app and the web run. The panel is the core's, the same one Obsidian's settings page uses.
 // Here the settings are read only. So the vault's own preset file is the one place a preset is kept. Using a preset
 // makes it the vault's, and the drawing follows it at once. Export hands the preset in use over as a file to keep.
-import { PresetPanel, word } from '@thoughtknot/core';
+import { PresetPanel, STARTERS, presetFrom, word } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
 import { presetPanelView } from '@thoughtknot/core/display/preset-panel-view';
 import { notice } from '@thoughtknot/core/display/host';
@@ -33,6 +33,30 @@ function download(win: Window & typeof globalThis, text: string): void {
   win.setTimeout(() => win.URL.revokeObjectURL(url), 1000);
 }
 
+/** Reads a preset file's `text`: a built-in preset is shown as a pick to preview, anything else is said to be refused. */
+function bringIn(text: string, panel: PresetPanel): void {
+  const read = presetFrom(text);
+  if ('problems' in read) return notice(read.problems.join(' '));
+  if (!STARTERS.some((s) => s.id === read.id)) return notice(word('page.preset-import-own'));
+  panel.pick(read.id);
+}
+
+/** The control that takes a preset file: nothing leaves the page, the file is only read here. */
+function importControl(win: Window & typeof globalThis, taken: (text: string) => void): HTMLElement {
+  const label = win.document.createElement('label');
+  label.textContent = word('page.preset-import');
+  const input = win.document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (file) void file.text().then(taken);
+    input.value = '';
+  });
+  label.append(' ', input);
+  return label;
+}
+
 /** The panel, drawn once the vault's preset is read. */
 export async function presetSection(win: Window & typeof globalThis, deps: PresetSectionDeps): Promise<PresetSection> {
   let vault = (await deps.read()) ?? undefined;
@@ -56,5 +80,6 @@ export async function presetSection(win: Window & typeof globalThis, deps: Prese
   el.setAttribute('class', 'gn-presets');
   el.setAttribute('aria-label', word('settings.view-preset.name'));
   draw = presetPanelView(el, panel).refresh;
+  el.append(importControl(win, (text) => bringIn(text, panel)));
   return { el, vault: () => vault };
 }
