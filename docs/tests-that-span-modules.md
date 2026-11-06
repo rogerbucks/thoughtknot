@@ -338,6 +338,10 @@ after a module nor listed here, and on a listed file that is missing.
   library with its listed shape. No problem code in `graph-spec-problem-codes.json` changes meaning (spec_library_api).
 - `test/graph-spec-formats.test.js` — every format the code reads or writes is in `requirements/graph-spec-formats.json`.
   Each says what it keeps and drops, and names a round-trip test that exists (spec_formats_listed).
+- `test/graph-spec-ai-wire.test.js` — the change set header and the serving rule's pinned fields match
+  `requirements/graph-spec-ai-wire.json` (spec_ai_wire).
+- `python/graph_spec/tests/test_ai_wire.py` — the view server's serving record, fence marks and token budget match the
+  same list (spec_ai_wire).
 - `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
   (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
