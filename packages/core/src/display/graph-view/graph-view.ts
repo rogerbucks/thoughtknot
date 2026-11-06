@@ -214,6 +214,7 @@ export class GraphView extends Lifecycle {
       byKeyboard: () => this.sel.byKeyboard(),
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
       space: this.spaces, // its camera zooms semantic zoom as the flat zoom does
+      stage: { open: (key) => this.open({ key }), clear: () => void this.sel.clear() }, // a click on the new rendering
     });
     if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
     if (!this.sel.untangle.reopen() && view?.shown?.legend?.length) this.sel.refresh(); // its legend, or exploration (§25, §71)
@@ -380,8 +381,7 @@ export class GraphView extends Lifecycle {
       const e = this.drawing()?.estimates[t.estimate];
       if (e) this.details.showEstimate(e, t.estimate);
     }
-    // the selection is the focus: it, its links and what is at their other ends stay at full strength (§25)
-    this.sel.select(t);
+    this.sel.select(t); // the focus: it, its links and what is at their other ends stay at full strength (§25)
     this.edits.show(t); // and the editor beside it, where the note can be written (edit_card)
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);

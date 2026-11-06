@@ -13,7 +13,7 @@ function drawingAndGraph() {
     for (const area of ['A', 'B'])
       for (let i = 0; i < 4; i++) {
         const key = `${subject[0]}${area}${i}`;
-        boxes.push({ key, label: key, kinds: ['Item'] });
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
         props.set(key, { name: key, subject, area });
       }
   const g = { nodes: props, p: (k) => props.get(k) };
@@ -70,6 +70,64 @@ test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloa
     stage.unload();
     assert.ok(!viewport.classList.contains('thoughtknot-new-rendering'));
     assert.equal(viewport.querySelector('canvas'), null);
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: render_one_camera
+test('a click picks from the marks: a group opens a level, an item opens, a second click centres it', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { GLIDE_MS, RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { pickAt } = await import('../src/render/render-camera.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    const said = [];
+    let chosen = null;
+    const hands = {
+      open: (key) => (said.push(`open ${key}`), (chosen = key)),
+      clear: () => (said.push('clear'), (chosen = null)),
+      selected: () => chosen,
+    };
+    const win = viewport.win ?? globalThis;
+    win.matchMedia = (q) => ({ matches: q.includes('reduce') }); // less motion: each glide lands at once
+    const stage = new RenderStage(viewport, drawing, g, hands);
+    const view = () => stage.view;
+    stage.clicked(-50, -50);
+    assert.deepEqual(said, ['clear'], 'empty space clears the choice');
+    // groups: each click glides one level nearer
+    for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot'); i++) {
+      const cloud = stage.marks.find((m) => m.kind === 'cloud');
+      const before = view().scale;
+      stage.clicked(cloud.x, cloud.y);
+      assert.ok(view().scale > before, 'a click on a group opens its next level');
+    }
+    const dot = stage.marks.find((m) => m.kind === 'dot' && pickAt(stage.marks, m.x, m.y) === m.key);
+    assert.ok(dot, 'clicking groups reaches items a click can pick');
+    const where = { ...view() };
+    stage.clicked(dot.x, dot.y);
+    assert.equal(said.at(-1), `open ${dot.key}`);
+    assert.deepEqual(view(), where, 'the first click on an item moves nothing');
+    stage.clicked(dot.x, dot.y);
+    const again = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);
+    const c = view().clear ?? { left: 0, right: 0, top: 0, bottom: 0 };
+    const middle = c.left + (view().w - c.left - c.right) / 2;
+    assert.ok(Math.abs(again.x - middle) < 1, 'the second click centres it');
+    // with motion, the same click glides there over a moment rather than jumping
+    win.matchMedia = () => ({ matches: false });
+    const far = { ...view(), x: view().x + 200 / view().scale };
+    stage.view = far;
+    stage.draw();
+    stage.clicked(again.x - 200, again.y);
+    assert.deepEqual(view(), far, 'a glide starts where the view is');
+    await new Promise((r) => setTimeout(r, GLIDE_MS + 80));
+    const landed = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);
+    assert.ok(Math.abs(landed.x - middle) < 1, 'and lands centred');
+    stage.unload();
   } finally {
     uninstall();
   }

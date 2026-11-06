@@ -8,7 +8,7 @@
 //   layout_concept_layers, projections_all_on).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
-import { RenderStage, stageFor } from './render-stage.ts';
+import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -90,6 +90,8 @@ export interface AidsHost {
   lens: { selected: () => string | null; menu: () => LensMenu | null };
   /** The view in space, if the card has one: its camera zooms semantic zoom as the flat zoom does. */
   space?: { nearer: () => number; camera: (f: () => void) => void; screen?: () => SpaceScreen | null };
+  /** What a click on the new rendering chooses or clears, as a tap on today's drawing does. */
+  stage?: Omit<StageHands, 'selected'>;
 }
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
@@ -182,7 +184,8 @@ export class Aids {
     });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
-    this.stage = host.svg() ? stageFor(viewport, o) : null;
+    const hands = host.stage && { ...host.stage, selected: host.lens.selected };
+    this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
   }
 
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
