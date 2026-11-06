@@ -86,6 +86,8 @@ export class RenderStage {
     viewport.addClass('thoughtknot-new-rendering');
     this.canvas = viewport.createEl('canvas', { cls: 'thoughtknot-render-stage' });
     this.canvas.setAttribute('role', 'img');
+    // what was painted last, as data, for the scoreboard to count (scripts/render-measure.mjs); nothing reads it back
+    Object.defineProperty(this.canvas, 'thoughtknotDrawn', { value: () => ({ marks: this.marks, view: this.view }) });
     this.view = this.fitted();
     // caught on the way down, so today's zoom underneath never takes the same notch
     viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });
