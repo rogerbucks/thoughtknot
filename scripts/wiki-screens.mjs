@@ -92,7 +92,7 @@ export function serve(dir) {
 }
 
 // the harness's icon names, each swapped for its picture; a name with no picture stays as it was
-const ICONS_IN = `Promise.all([...document.querySelectorAll('[data-icon] > .harness-icon')].map(async (span) => {
+export const ICONS_IN = `Promise.all([...document.querySelectorAll('[data-icon] > .harness-icon')].map(async (span) => {
   const r = await fetch('/icons/' + span.parentElement.dataset.icon + '.svg');
   if (!r.ok) return;
   span.innerHTML = await r.text();
