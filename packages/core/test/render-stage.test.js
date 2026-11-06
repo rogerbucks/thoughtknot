@@ -21,10 +21,10 @@ function drawingAndGraph() {
 }
 
 // proves: render_switch
-test('the setting is off until turned on, and the settings page offers it', () => {
-  assert.equal(DEFAULT_SETTINGS.newRendering, 'off');
-  assert.equal(settingsFrom({ newRendering: 'on' }).newRendering, 'on');
-  assert.equal(settingsFrom({ newRendering: 'maybe' }).newRendering, 'off');
+test('the setting is on until turned off, and the settings page offers it', () => {
+  assert.equal(DEFAULT_SETTINGS.newRendering, 'on');
+  assert.equal(settingsFrom({ newRendering: 'off' }).newRendering, 'off');
+  assert.equal(settingsFrom({ newRendering: 'maybe' }).newRendering, 'on');
   assert.equal(OPTIONS.find((o) => o.key === 'newRendering')?.section, 'Drawing');
 });
 
