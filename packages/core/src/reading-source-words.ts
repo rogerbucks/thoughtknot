@@ -131,6 +131,11 @@ export const READING_SOURCE_WORDS = {
   'reading.table.not-text': '{place} is not a text file, so it was not read: save it as CSV text.',
   'reading.table.no-mapping':
     '{place} has no mapping yet, so it gives nothing to the graph: check the one proposed and save it as {mapping}.',
+  // a pointer inside a data set, and a data set changed since its reference (data-set-reference.ts)
+  'reading.table.no-row': '{place} has no row {name}: check the row number or key.',
+  'reading.table.no-column': '{place} has no column {name}: check its name in the header.',
+  'reading.table.no-measure': '{place} has no measure {name}: mark the column "as: measure" in its mapping.',
+  'reading.table.changed-since': '{place} changed since {name} was read: its values are the file’s as it is now.',
   // a table drawn as one node: the line under its first rows (table-node.ts)
   'reading.table.node-rows': { one: '{count} row', other: '{count} rows' },
   'reading.table.node-more-rows': { one: '{count} more row not shown', other: '{count} more rows not shown' },
