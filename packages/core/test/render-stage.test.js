@@ -42,6 +42,10 @@ test('the stage covers the card, steps one level per Ctrl-wheel notch, and unloa
     const stage = new RenderStage(viewport, drawing, g);
     assert.ok(viewport.classList.contains('thoughtknot-new-rendering'));
     assert.equal(viewport.querySelector('canvas.thoughtknot-render-stage'), stage.canvas);
+    // what it painted last, as data the scoreboard counts (scripts/render-measure.mjs)
+    const drawn = stage.canvas.thoughtknotDrawn();
+    assert.equal(drawn.view, stage.view);
+    assert.ok(drawn.marks.some((m) => m.kind === 'label'));
     const at = () => Number(/^Level (\d) of 3 · /.exec(stage.level())[1]);
     const start = at();
     assert.ok(start < 3, 'a small card does not open every level at once');
