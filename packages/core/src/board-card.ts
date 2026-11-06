@@ -1,7 +1,7 @@
 // A card on a board (editor spec §45, board_cards_rich). It holds a title, a Markdown body, properties, attachments and
-// links, and shows them as a thing's details do: the title first, then the body, the properties as rows, then what is
-// attached and what it links to. All of it is kept as the card's own properties in the board block, so the note stays the
-// only store. Pure and host-free. The Markdown is shown as plain words in the picture, with nothing remote loaded.
+// links. It shows them as a thing's details do: the title first, then the body. Next come the properties as rows, then
+// what is attached and what it links to. All of it is kept as the card's own properties in the board block. So the note
+// stays the only store. Pure and host-free. The Markdown is shown as plain words, with nothing remote loaded.
 import type { Value } from '@thoughtknot/graph-spec';
 import type { BoardItem } from './board.ts';
 import { word } from './words.ts';
@@ -17,7 +17,8 @@ export interface Card {
   links: string[];
 }
 
-// the item properties that are the card's body, attachments and links (the last two are texts told apart by semicolons); every other one is a property of the card
+// These item properties are the card's body, attachments and links. Every other one is a property of the card.
+// Attachments and links are texts told apart by semicolons.
 const OWN = new Set(['body', 'attachments', 'links']);
 
 /** A list of words from a value: one text, its parts told apart by a semicolon. Anything else is nothing. */
