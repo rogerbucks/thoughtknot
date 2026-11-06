@@ -288,19 +288,16 @@ class BoardView {
         this.centre(),
       );
       if ('refused' in r) return this.say(r.refused);
-      void this.catchAll(r.changes).then(() => {
-        this.say(r.said);
-        this.cursor = { ...this.cursor, focus: r.item.id };
-        this.openCapture(e.key === 'Tab' ? 'child' : 'next', r.item.id);
-        this.reveal();
-      });
+      void r.changes
+        .reduce((p, c) => p.then(() => this.write(c)), Promise.resolve())
+        .then(() => {
+          this.say(r.said);
+          this.cursor = { ...this.cursor, focus: r.item.id };
+          this.openCapture(e.key === 'Tab' ? 'child' : 'next', r.item.id);
+          this.reveal();
+        });
     });
     field.focus();
-  }
-
-  /** Writes edits one after the other, stopping at the first refusal. */
-  private async catchAll(changes: BoardChange[]): Promise<void> {
-    for (const c of changes) await this.write(c);
   }
 
   /** A press: a mouse or pen on an item starts to drag it; anything else pans, zooms and pinches, as on a drawing. */
