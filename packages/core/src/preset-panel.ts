@@ -1,6 +1,6 @@
-// The view preset panel, one for every host (editor spec ES§69, view_presets_portable, view_presets_scoped). It holds
-// what the panel says and does: which preset is in use and who chose it, the preset picked but not yet used with what
-// it would change, the one step back, and the vault's own preset. A host shows its rows its own way and brings its own
+// The view preset panel, one for every host (editor spec ES§69, view_presets_portable, view_presets_scoped).
+// It holds what the panel says and does. That is the preset in use and who chose it, the pick and what it would
+// change, the one step back, and the vault's own preset. A host shows the rows its own way. It brings its own
 // settings, vault file and share. Host-free.
 import { word } from './words.ts';
 import { OWN_PRESET, presetChange, presetFrom, presetToShare, starterOf } from './view-presets.ts';
