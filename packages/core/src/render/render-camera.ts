@@ -4,6 +4,7 @@
 // Host-free and pure.
 import { scaleToOpen } from './render-detail.ts';
 import type { View } from './render-marks.ts';
+import type { Clear } from '../zoom-fit.ts';
 import type { Spot } from './render-rooms.ts';
 
 /** The space left round the drawing when it is fitted, in pixels. */
@@ -14,8 +15,14 @@ const DEEPEST = 4;
 /** One notch zooms by at most this much, so the reader keeps their place; a deep level may take two notches. */
 const MOST = 2;
 
-/** The view that fits every spot in a screen `w` by `h`, in the middle. */
-export function fitView(spots: Iterable<Spot>, w: number, h: number): View {
+/** No edge covered. */
+const OPEN: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
+
+/**
+ * The view that fits every spot in a screen `w` by `h`, in the middle of the part the controls leave `clear`. The
+ * chrome never covers the drawing at fit (layer L7).
+ */
+export function fitView(spots: Iterable<Spot>, w: number, h: number, clear: Clear = OPEN): View {
   let [left, top, right, bottom] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const s of spots) {
     left = Math.min(left, s.x - s.r);
@@ -23,9 +30,14 @@ export function fitView(spots: Iterable<Spot>, w: number, h: number): View {
     right = Math.max(right, s.x + s.r);
     bottom = Math.max(bottom, s.y + s.r);
   }
-  if (!Number.isFinite(left)) return { x: 0, y: 0, scale: 1, w, h };
-  const scale = Math.min((w - 2 * MARGIN) / (right - left || 1), (h - 2 * MARGIN) / (bottom - top || 1));
-  return { x: (left + right) / 2 - w / 2 / scale, y: (top + bottom) / 2 - h / 2 / scale, scale, w, h };
+  // too little left clear, as on a narrow card: the controls are ignored rather than the drawing squeezed to nothing
+  const roomy = w - clear.left - clear.right > w / 3 && h - clear.top - clear.bottom > h / 3;
+  const c = roomy ? clear : OPEN;
+  const [iw, ih] = [w - c.left - c.right, h - c.top - c.bottom];
+  if (!Number.isFinite(left)) return { x: 0, y: 0, scale: 1, w, h, clear: c };
+  const scale = Math.min((iw - 2 * MARGIN) / (right - left || 1), (ih - 2 * MARGIN) / (bottom - top || 1));
+  const [cx, cy] = [c.left + iw / 2, c.top + ih / 2];
+  return { x: (left + right) / 2 - cx / scale, y: (top + bottom) / 2 - cy / scale, scale, w, h, clear: c };
 }
 
 /** The zoom stops: the fitted zoom, then the zoom that opens each level, smallest first. */

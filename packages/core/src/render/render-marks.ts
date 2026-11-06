@@ -9,6 +9,7 @@ import type { Look } from './render-look.ts';
 import { inkOn, shadeOf, subjectColour } from './render-look.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
+import type { Clear } from '../zoom-fit.ts';
 
 /** The smallest name drawn, in pixels. */
 export const MIN_PX = 11;
@@ -22,6 +23,8 @@ export interface View {
   scale: number;
   w: number;
   h: number;
+  /** How much of each edge the controls cover (layer L7); names are kept out of it. */
+  clear?: Clear;
 }
 
 /** A soft cloud: one group's room. */
@@ -184,8 +187,8 @@ export const textWidth = (text: string, px: number): number => text.length * px 
 const LONGEST = 28;
 
 /**
- * The one label placer. It takes names heaviest first and keeps each that fits: inside the view and clear of every
- * name kept before it. Sizes are held between MIN_PX and MAX_PX.
+ * The one label placer. It takes names heaviest first and keeps each that fits. A name fits inside the part of the
+ * view the controls leave clear, and away from every name kept before it. Sizes stay between MIN_PX and MAX_PX.
  */
 export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] {
   const order = [...asks].sort((a, b) => b.weight - a.weight || (a.key < b.key ? -1 : 1));
@@ -196,7 +199,8 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
     const w = textWidth(text, px) + px,
       h = px * 1.6;
     const box = { x: ask.x - w / 2, y: ask.y - h / 2, w, h };
-    if (box.x < 0 || box.y < 0 || box.x + w > view.w || box.y + h > view.h) continue;
+    const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    if (box.x < c.left || box.y < c.top || box.x + w > view.w - c.right || box.y + h > view.h - c.bottom) continue;
     if (kept.some((k) => box.x < k.x + k.w + 2 && k.x < box.x + w + 2 && box.y < k.y + k.h + 2 && k.y < box.y + h + 2))
       continue;
     kept.push({
