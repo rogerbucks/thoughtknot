@@ -1,5 +1,5 @@
 // The camera, layer L6 of the rendering spec (editor spec §73, render_one_camera): render/render-camera.ts. It fits the
-// drawing, pans with the pointer, and zooms in stops so one notch moves at most one level.
+// drawing, pans with the pointer, and zooms smoothly, never in steps (Roger, 6 Nov).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { detailAt } from '../src/render/render-detail.ts';
@@ -8,9 +8,10 @@ import {
   fitView,
   glideView,
   panView,
+  pinchView,
   pickAt,
-  stepView,
   stopsOf,
+  wheelView,
   zoomTo,
 } from '../src/render/render-camera.ts';
 
@@ -32,25 +33,30 @@ test('fitting puts every spot on screen, in the middle', () => {
 });
 
 // proves: render_one_camera
-test('a notch in never opens more than one level, and never zooms more than twice', () => {
+test('a trackpad zooms smoothly: small movements zoom a little each, never a jump to the next level', () => {
   const stops = stopsOf(sizes, 0.2);
   let v = { x: 0, y: 0, scale: 0.2, w: 800, h: 600 };
-  const levels = [detailAt(sizes, v.scale).level];
-  for (let i = 0; i < 8; i++) {
-    const was = v.scale;
-    v = stepView(v, stops, 1, [400, 300]);
-    assert.ok(v.scale <= was * 2 + 1e-9);
-    levels.push(detailAt(sizes, v.scale).level);
+  const scales = [v.scale];
+  // a pinch on a Mac trackpad: many wheel events of a few pixels each
+  for (let i = 0; i < 400; i++) {
+    v = wheelView(v, stops, -4, [400, 300]);
+    scales.push(v.scale);
   }
-  for (let i = 1; i < levels.length; i++) assert.ok([0, 1].includes(levels[i] - levels[i - 1]), levels.join());
-  assert.equal(levels.at(-1), 2, 'every level is reached');
-  const back = [levels.at(-1)];
-  for (let i = 0; i < 12; i++) {
-    v = stepView(v, stops, -1, [400, 300]);
-    back.push(detailAt(sizes, v.scale).level);
+  for (let i = 1; i < scales.length; i++) {
+    const k = scales[i] / scales[i - 1];
+    assert.ok(k >= 1 && k < 1.03, `one small movement zoomed by ${k}`);
   }
-  for (let i = 1; i < back.length; i++) assert.ok([0, 1].includes(back[i - 1] - back[i]), back.join());
-  assert.equal(v.scale, 0.2, 'back out to the fitted view');
+  assert.equal(detailAt(sizes, v.scale).level, 2, 'every level is reached');
+  assert.ok(v.scale <= stops.at(-1) * 4 + 1e-9, 'a little past the last level, no further');
+  // a mouse's big notch zooms by about half, never a leap
+  const notch = wheelView({ ...v, scale: 1 }, [0.1, 10], -100, [400, 300]);
+  assert.ok(notch.scale > 1.2 && notch.scale < 1.6, `${notch.scale}`);
+  for (let i = 0; i < 400; i++) v = wheelView(v, stops, 4, [400, 300]);
+  assert.equal(v.scale, 0.2, 'back out to the fitted view, no further');
+  assert.ok(
+    Math.abs(pinchView(v, stops, 1.5, [400, 300]).scale - 0.3) < 1e-9,
+    'fingers spread by half zoom in by half',
+  );
 });
 
 // proves: render_one_camera
