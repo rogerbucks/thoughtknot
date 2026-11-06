@@ -37,7 +37,7 @@ export function cardOf(item: BoardItem): Card {
     body: typeof body === 'string' ? body : '',
     properties: Object.entries(item.more)
       .filter(([key]) => !OWN.has(key))
-      .map(([key, v]) => [key, Array.isArray(v) ? v.join(', ') : String(v)] as [string, string]),
+      .map(([key, v]) => [key, typeof v === 'string' ? v : JSON.stringify(v)] as [string, string]),
     attachments: listOf(item.more.attachments),
     links: listOf(item.more.links),
   };
