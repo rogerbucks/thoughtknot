@@ -86,3 +86,21 @@ export function contrast(a: string, b: string): number {
 /** Black or white, whichever reads better on `fill`. */
 export const inkOn = (fill: string): string =>
   contrast(fill, '#000000') >= contrast(fill, '#ffffff') ? '#000000' : '#ffffff';
+
+/** `a` moved toward `b` by `t`, 0 to 1. */
+export function mix(a: string, b: string, t: number): string {
+  const [p, q] = [rgbOf(a), rgbOf(b)];
+  return hexOf(p.map((c, i) => c + ((q[i] as number) - c) * t) as Rgb);
+}
+
+/**
+ * `colour` as text on `card`, kept in its hue: moved toward the look's ink only as far as it must to read (WCAG 4.5).
+ * So a name keeps its subject's colour, as in the mockups, and a pale one is still readable.
+ */
+export function inkOf(colour: string, card: string, look: Look): string {
+  for (let t = 0; t < 1; t += 0.05) {
+    const ink = mix(colour, look.ink, t);
+    if (contrast(ink, card) >= 4.5) return ink;
+  }
+  return look.ink;
+}

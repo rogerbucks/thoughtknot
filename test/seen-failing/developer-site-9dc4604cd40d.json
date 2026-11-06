@@ -1,0 +1,6 @@
+{
+  "file": "test/developer-site.test.js",
+  "test": "the command > writes the pages and the stylesheet",
+  "seen_failing_first": false,
+  "evidence": "Renamed and narrowed: it no longer expects the search files, which the home page's build now writes, so it passes against the earlier code too."
+}

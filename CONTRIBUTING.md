@@ -597,7 +597,6 @@ in this table.
 | nightly | `report-failure` | issues | Opens an issue when the nightly fails. |
 | pages | `publish` | pages, id-token | Deploys the home page to GitHub Pages. |
 | pages | `report-failure` | issues | Opens an issue when Pages fails. |
-| developer-site | `report-failure` | issues | Opens an issue when the developer site fails to build. |
 | project-mirror | `mirror` | issues | Mirrors the requirements as issues and labels. |
 | release | `publish` | contents, id-token, attestations | Checks the files the build job made, attests them and drafts the release. |
 | report-failure | `report` | issues | Keeps one open issue per failing workflow, labelled `workflow-failure`. |

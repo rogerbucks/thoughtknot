@@ -345,6 +345,12 @@ after a module nor listed here, and on a listed file that is missing.
   `requirements/graph-spec-ai-wire.json` (spec_ai_wire).
 - `python/graph_spec/tests/test_ai_wire.py` — the view server's serving record, fence marks and token budget match the
   same list (spec_ai_wire).
+- `python/graph_spec/tests/test_process_versions.py` — a running instance keeps the process version it started on, and
+  moves only by the mapping a new version gives (spec_process_versions).
+- `python/graph_spec/tests/test_conserved.py` — a quantity a graph declares as conserved is added up in any domain.
+  Each group that does not balance is reported (spec_conserved).
+- `packages/graph-spec/test/times.test.mjs` — both readers hold a time written with its zone as the same UTC instant.
+  They refuse a time with no offset alike (spec_zoned_time).
 - `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
   one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
 - `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
