@@ -21,6 +21,7 @@ import {
   ViewState,
   word,
 } from '@thoughtknot/core';
+import { indexedPlace } from './kept-place.ts';
 import type {
   Drawn,
   ExploreSave,
@@ -200,7 +201,7 @@ export class PaneDrawing extends Lifecycle {
         edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason,
       );
     };
-    void storedGraphs(ix, 'pane', text, pause).then((graphs) => {
+    void storedGraphs(ix, 'pane', text, pause, indexedPlace(host.win)).then((graphs) => {
       const stored = graphs.get(s.graph);
       if (!stored || stale()) return;
       const slot = host.createDiv();

@@ -1,8 +1,10 @@
 // The local store of notes too big to read at once, in Obsidian (editor spec §53, scale_in_parts; way E, step 7). A
 // card past the read limits reads its note into the store a part at a time, and is drawn as its overview from there.
-// The store is kept in memory and built again on each load. A note gone or moved leaves it, and is read again when
-// next drawn.
-import { MeshIndex, memoryBackend, storedGraphs } from '@thoughtknot/core';
+// The store is kept in memory. Its rows are also kept in this device's own database, so a note seen before opens
+// without a reading. A note gone or moved leaves both, and is read again when next drawn.
+import { MeshIndex, keptName, memoryBackend, storedGraphs } from '@thoughtknot/core';
+import type { KeptPlace } from '@thoughtknot/core';
+import { indexedPlace } from '@thoughtknot/core/display/editor/kept-place';
 import type { Refusal } from '@thoughtknot/core';
 import { readOnlyHere } from '@thoughtknot/core/display/graph-view/placement';
 import { showStoredMassive } from './massive-card';
@@ -16,11 +18,20 @@ function storeOf(plugin: ThoughtKnotPlugin): MeshIndex {
   const kept = stores.get(plugin);
   if (kept) return kept;
   const made = new MeshIndex(memoryBackend());
-  plugin.registerEvent(plugin.app.vault.on('rename', (_, old) => made.remove(old)));
-  plugin.registerEvent(plugin.app.vault.on('delete', (f) => made.remove(f.path)));
+  // a note gone or moved leaves the store, and its kept rows go too
+  const forget = (path: string) => {
+    made.remove(path);
+    void keptPlace()?.remove(keptName(path)).catch(() => undefined);
+  };
+  plugin.registerEvent(plugin.app.vault.on('rename', (_, old) => forget(old)));
+  plugin.registerEvent(plugin.app.vault.on('delete', (f) => forget(f.path)));
   stores.set(plugin, made);
   return made;
 }
+
+/** Where the rows of notes read in parts are kept between sessions: this device's own database, never the vault. */
+let kept: KeptPlace | undefined | null = null;
+const keptPlace = (): KeptPlace | undefined => (kept === null ? (kept = indexedPlace(window)) : kept);
 
 /** A block on its own, written as a note of one block, as the store reads notes. */
 const fenced = (source: string): string => `\`\`\`gql\n${source}\n\`\`\`\n`;
@@ -54,7 +65,7 @@ export async function overviewInParts(
   const [note, text] = at.note === undefined ? [`${at.path} · ${at.graph}`, fenced(at.source)] : [at.path, at.note];
   try {
     const ix = storeOf(plugin);
-    const stored = (await storedGraphs(ix, note, text, pause)).get(at.graph);
+    const stored = (await storedGraphs(ix, note, text, pause, keptPlace())).get(at.graph);
     // a block shown on its own is not edited here: its note's text was not given
     const editing = at.note === undefined ? null : { ix, path: at.path, note: at.note, graph: at.graph };
     if (stored) showStoredMassive(plugin, slot, stored, editing && { ...editing, readOnly: readOnlyHere(card) });

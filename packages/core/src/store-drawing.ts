@@ -19,6 +19,8 @@ import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
 import { facetsOf } from './facet-counts.ts';
 import type { Facet } from './facet-counts.ts';
 import { PartsSource, nearFrom } from './parts-source.ts';
+import { rowsKeptOrRead } from './parts-kept.ts';
+import type { KeptPlace } from './parts-kept.ts';
 import type { LinksNear } from './parts-source.ts';
 import type { Grouping } from './scale-groups.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
@@ -70,16 +72,19 @@ function plainGraph(things: [string, string, Record<string, gs.Value>][], edges:
 /**
  * The graphs of a note, from the store. The note is read into the store first, if the store does not hold this text.
  * A huge note is read a part at a time. Between parts it waits on `pause`, which the host gives, so the page keeps
- * answering (§9). Empty
- * when no graph of it could be read, or the note changed while it was read.
+ * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read. Empty when no
+ * graph of it could be read, or the note changed while it was read.
  */
 export async function storedGraphs(
   ix: MeshIndex,
   note: string,
   text: string,
   pause: () => Promise<void>,
+  kept?: KeptPlace,
 ): Promise<Map<string, StoredGraph>> {
-  if (ix.version(note) !== sha256(text)) ix.backend.put(await noteRowsPaced(note, text, pause));
+  // rows kept from an earlier session for this text are used, so the note is not read again (scale_parts_kept)
+  if (ix.version(note) !== sha256(text))
+    ix.backend.put(await rowsKeptOrRead(kept, note, text, () => noteRowsPaced(note, text, pause)));
   const out = new Map<string, StoredGraph>();
   if (ix.version(note) !== sha256(text)) return out;
   const { groups, between } = ix.groups(note);

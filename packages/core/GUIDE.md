@@ -121,6 +121,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note
     again. `setInParts` sets one property that way, checked as a property field checks it.
   - `storedStyle` reads the note's style blocks and checks them against the graph in the store.
+- `parts-kept.ts` — the rows of a note read in parts, kept between sessions by the digest of its text
+  (scale_parts_kept). Rows from other text, or broken, are read again. The host's place is `display/editor/kept-place.ts`:
+  the device's own IndexedDB, never the vault.
 - `parts-source.ts` — a too-big note's graph drawn a group at a time (scale_parts_overview). The overview needs only
   the group rows. A group's things are read when it opens, and let go when it leaves the screen or the budget is full.
   A stored graph's drawing holds its things but none of its links. Opening a group, or growing from a thing, reads the
