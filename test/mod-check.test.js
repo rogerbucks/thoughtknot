@@ -48,4 +48,12 @@ describe('mod-check', () => {
     assert.match(yml, /npm ci --prefix tools\/claude-cli/);
     assert.match(read('tools/claude-cli/package.json'), /"@anthropic-ai\/claude-code": "\d+\.\d+\.\d+"/);
   });
+  test("the mod's types contract names every state key the mod stores", () => {
+    const keys = [
+      ...read('packages/claude-code/mod/hooks/register.tsx').matchAll(/plugin: 'thoughtknot', key: '(\w+)'/g),
+    ];
+    assert.ok(keys.length >= 3);
+    for (const [, key] of keys)
+      assert.match(read('packages/claude-code/mod/types/index.d.ts'), new RegExp(`\\b${key}:`));
+  });
 });
