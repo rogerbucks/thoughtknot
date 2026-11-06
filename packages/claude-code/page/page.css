@@ -298,6 +298,7 @@ textarea:focus-visible,
 .gn-graph .gn-export-bar button,
 .gn-graph .thoughtknot-export button,
 .gn-graph .thoughtknot-export select,
+.gn-graph .gn-presets input,
 .gn-graph .thoughtknot-presets button,
 .gn-graph .thoughtknot-presets select {
   min-height: 24px;
@@ -395,4 +396,15 @@ textarea:focus-visible,
 .gn-changes > button,
 .gn-review > button {
   min-height: 44px;
+}
+
+/* the preset file control wraps and never wider than the page (WCAG 2.2 reflow at 320) */
+.gn-presets label {
+  display: block;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.gn-presets input[type='file'] {
+  max-inline-size: 100%;
 }
