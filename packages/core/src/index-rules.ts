@@ -53,6 +53,7 @@ export {
 export type { KnownThing, Matched, TextGraph, TextGraphFor, TextSpan } from './text-to-graph.ts';
 export { holdsGraph, noteWithTextGraphApplied, tickedOnly, withGraphHome } from './text-to-graph-note.ts';
 export * from './index-tables.ts';
+export * from './index-presets.ts';
 // Claude presents and decides (§49)
 export {
   CAPTION_MOST,

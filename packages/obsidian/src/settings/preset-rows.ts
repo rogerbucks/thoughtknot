@@ -9,6 +9,7 @@ import {
   OWN_PRESET,
   presetChange,
   presetFrom,
+  presetInUse,
   presetPreview,
   presetToShare,
   presetUndo,
@@ -35,6 +36,10 @@ export interface PresetOwner {
   update: () => void;
   /** Writes a preset's file text where the person keeps their files. */
   share: (text: string) => Promise<void>;
+  /** The starter the vault's own preset file names, if any (view_presets_scoped). */
+  vault: () => string | undefined;
+  /** Makes a starter the vault's preset, or with null gives the vault none. */
+  setVault: (id: string | null) => Promise<void>;
 }
 
 /** The preset picked but not yet used, and the one step back from the last one used. */
@@ -55,8 +60,33 @@ export class PresetChoice {
     this.owner.update();
   }
 
-  /** The rows under the picker: what the pick would change and its two buttons, or the one undo. */
+  /** The rows under the picker: which preset is in use and where it comes from, then the change in hand. */
   rows(): SettingDefinition[] {
+    const s = this.owner.settings(),
+      vault = this.owner.vault();
+    const where = { vault, everywhere: s.viewPreset };
+    return [
+      { name: word('settings.vault-preset.name'), desc: presetInUse(where) },
+      ...this.changeRows(),
+      {
+        name: word('settings.vault-preset.use'),
+        desc: word('settings.vault-preset.use.sentence'),
+        action: () => void this.owner.setVault(this.shown()).then(() => this.owner.update()),
+      },
+      ...(vault
+        ? [
+            {
+              name: word('settings.vault-preset.clear'),
+              desc: word('settings.vault-preset.clear.sentence'),
+              action: () => void this.owner.setVault(null).then(() => this.owner.update()),
+            },
+          ]
+        : []),
+    ];
+  }
+
+  /** What the pick would change and its two buttons, or the one undo. */
+  private changeRows(): SettingDefinition[] {
     const s = this.owner.settings();
     if (this.pending) {
       const id = this.pending,

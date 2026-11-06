@@ -41,7 +41,7 @@ import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
 import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-images';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
-import { ThoughtKnotSettingTab } from './settings/settings';
+import { ThoughtKnotSettingTab, watchVaultPreset } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 export { obsidianHost } from './obsidian-host';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
@@ -96,7 +96,7 @@ export default class ThoughtKnotPlugin extends Plugin {
         await this.saveData(this.saved);
       },
     });
-    this.app.workspace.onLayoutReady(() => void this.outside.startAll());
+    this.app.workspace.onLayoutReady(() => void Promise.all([this.outside.startAll(), watchVaultPreset(this)]));
     this.profiles = new Profiles(this.saved.profile, (profile) =>
       this.saveData((this.saved = { ...this.saved, profile })),
     );
