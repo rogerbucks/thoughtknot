@@ -6,12 +6,12 @@
 import { readBoard, writeBoard } from './board.ts';
 import type { Board, BoardItem } from './board.ts';
 import type { Value } from '@thoughtknot/graph-spec';
+import { CLASH } from './board-clash.ts';
 import { GAP } from './board-edit.ts';
 import { itemBox } from './board-svg.ts';
 import { word } from './words.ts';
 
-/** The property that marks a clash on an item: it holds the name of the item it clashed with. */
-export const CLASH = 'clash';
+export { CLASH };
 
 /** One clash found in a merge: the item kept as it is, its copy holding the other side, and what clashed. */
 export interface Clash {

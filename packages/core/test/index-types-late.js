@@ -441,4 +441,7 @@ export const TYPES_LATE = [
   'StorageSetting',
   'BoardChange',
   'BoardRole',
+  'Here',
+  'Peer',
+  'Together',
 ];
