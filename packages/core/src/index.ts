@@ -375,7 +375,7 @@ export { TextHistory, type Change, type TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
-export { editInParts, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
+export { editInParts, partsRefusal, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
 export * from './index-mesh.ts';
 export * from './index-late.ts';
 export { altitudeIndexOf, searchAltitude, type NoteAltitudeIndex } from './altitude-index.ts';

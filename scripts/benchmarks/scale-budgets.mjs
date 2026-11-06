@@ -29,4 +29,17 @@ export const SCALE_BUDGETS = {
   // 1×: a note set on one thing and the note read again, about 0.7 s; 2×, about 1.3 s. 10× and 100×: refused, after
   // reading the block
   edit: { 1: { ms: 2500, mb: 50 }, 2: { ms: 4000, mb: 50 }, 10: { ms: 1200, mb: 20 }, 100: { ms: 12_000, mb: 20 } },
+  // a huge note opened in parts as the hosts open it (scale_parts_budget). It is read into the store a part at a
+  // time. Only each thing's key, kind, text and group are held. About 0.27 s, 0.56 s, 3.3 s and 46 s (6 Nov 2026).
+  // The MB counts the store too, as the memory backend holds it here: about 3, 9, 57 and 526 MB. Kept rows skip this
+  // on a reopen. CI's runner, busy with the test suite, took 12.3 s at 10×: the budgets leave room for that
+  parts: {
+    1: { ms: 1500, mb: 50 },
+    2: { ms: 2500, mb: 60 },
+    10: { ms: 30_000, mb: 180 },
+    100: { ms: 240_000, mb: 1600 },
+  },
+  // the values counted a group at a time, and the largest group read with its links. About 10 ms, 16 ms, 81 ms and
+  // 0.67 s: every value is counted once, so the time grows with the things
+  parts_filter: { 1: { ms: 100, mb: 20 }, 2: { ms: 100, mb: 20 }, 10: { ms: 300, mb: 20 }, 100: { ms: 2500, mb: 50 } },
 };

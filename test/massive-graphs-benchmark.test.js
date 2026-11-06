@@ -65,6 +65,8 @@ test('the real steps on the V-10 graph: read, refused as a drawing, grouped, pan
   assert.match(r.steps.pan.outcome, /^done: at most \d+ marks a frame/);
   assert.match(r.steps.filter.outcome, /^done: \d+ things kept/);
   assert.equal(r.steps.edit.outcome, 'done');
+  assert.match(r.steps.parts.outcome, /^done: \d+ things in \d+ groups/);
+  assert.match(r.steps.parts_filter.outcome, /^done: \d+ facets/);
   assert.ok(r.things > 2000);
   assert.deepEqual(Object.keys(r.steps), Object.keys(STEPS));
 });
@@ -86,7 +88,7 @@ test('a step over its budget in time or in memory is named, with what was measur
 });
 
 test('every size has a budget for each step that is built', () => {
-  for (const name of ['open', 'group', 'overview', 'pan', 'filter', 'edit'])
+  for (const name of ['open', 'group', 'overview', 'pan', 'filter', 'edit', 'parts', 'parts_filter'])
     for (const s of SIZES) assert.ok(SCALE_BUDGETS[name][s], `${name} at ${s}×`);
   assert.ok(SCALE_BUDGETS.draw[1]);
 });

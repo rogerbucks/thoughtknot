@@ -2,7 +2,8 @@
 // card past the read limits reads its note into the store a part at a time, and is drawn as its overview from there.
 // The store is kept in memory. Its rows are also kept in this device's own database, so a note seen before opens
 // without a reading. A note gone or moved leaves both, and is read again when next drawn.
-import { MeshIndex, keptName, memoryBackend, storedGraphs } from '@thoughtknot/core';
+import { MeshIndex, keptName, memoryBackend, partsRefusal, storedGraphs } from '@thoughtknot/core';
+import { pastPartsHint } from '@thoughtknot/core/display/refusal-banner';
 import type { KeptPlace } from '@thoughtknot/core';
 import { indexedPlace } from '@thoughtknot/core/display/editor/kept-place';
 import type { Refusal } from '@thoughtknot/core';
@@ -65,6 +66,8 @@ export async function overviewInParts(
   const pause = () => new Promise<void>((done) => window.setTimeout(done, 0));
   // a block shown on its own is kept apart from its note's other blocks, so they never take each other's place
   const [note, text] = at.note === undefined ? [`${at.path} · ${at.graph}`, fenced(at.source)] : [at.path, at.note];
+  const past = partsRefusal(text);
+  if (past) return void pastPartsHint(slot, past);
   try {
     const ix = storeOf(plugin);
     const stored = (await storedGraphs(ix, note, text, pause, keptPlace())).get(at.graph);
