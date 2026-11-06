@@ -344,6 +344,9 @@ after a module nor listed here, and on a listed file that is missing.
   same list (spec_ai_wire).
 - `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
   one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
+- `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
+  links to exactly the rules that use it. A rule statement over 25 words stays on a record that only shrinks
+  (spec_glossary).
 - `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
   (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
