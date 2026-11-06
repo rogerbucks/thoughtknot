@@ -21,7 +21,9 @@ function storeOf(plugin: ThoughtKnotPlugin): MeshIndex {
   // a note gone or moved leaves the store, and its kept rows go too
   const forget = (path: string) => {
     made.remove(path);
-    void keptPlace()?.remove(keptName(path)).catch(() => undefined);
+    void keptPlace()
+      ?.remove(keptName(path))
+      .catch(() => undefined);
   };
   plugin.registerEvent(plugin.app.vault.on('rename', (_, old) => forget(old)));
   plugin.registerEvent(plugin.app.vault.on('delete', (f) => forget(f.path)));
