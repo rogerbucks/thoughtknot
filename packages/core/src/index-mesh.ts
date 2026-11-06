@@ -13,6 +13,7 @@ export type {
   SqlEngine,
   ThingRow,
 } from './mesh-index.ts';
+export { PARTS_HELD_MOST, PartsSource, partsOf } from './parts-source.ts';
 export { MeshHistory, type LogEntry, type LogKind } from './mesh-history.ts';
 export { renameAcross, type NotRewritten, type RenameAcross } from './rename-across.ts';
 export { schemaMove, schemaVersions, type SchemaMove } from './schema-version-moves.ts';

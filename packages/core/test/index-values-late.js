@@ -379,4 +379,7 @@ export const VALUES_LATE = [
   'repoSettingsFrom',
   'repoSettingsProblems',
   'sendNoteToRepo',
+  'PARTS_HELD_MOST',
+  'PartsSource',
+  'partsOf',
 ];
