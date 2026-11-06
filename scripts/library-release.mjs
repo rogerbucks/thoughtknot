@@ -104,6 +104,7 @@ function stageSpec(dir) {
     'graph-spec-problem-codes.json',
     'graph-spec-formats.json',
     'graph-spec-ai-wire.json',
+    'graph-spec-decisions.json',
   ])
     copyFileSync(join(ROOT, 'requirements', file), join(dir, file));
   copyFileSync(join(ROOT, 'LICENSE-SPEC.md'), join(dir, 'LICENSE-SPEC.md'));
