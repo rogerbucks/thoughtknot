@@ -1,5 +1,5 @@
-// board_quick_capture (editor spec §45): typing makes a sticky note, Enter the next one beside it and Tab a child joined
-// to it, and nothing already on the board moves.
+// board_quick_capture (editor spec §45): typing makes a sticky note. Enter makes the next one beside it. Tab makes a
+// child joined to it. Nothing already on the board moves.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../src/board.ts';
