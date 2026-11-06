@@ -311,6 +311,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.kind.image': 'Picture',
   'board.kind.glyph': 'Icon',
   'board.said': '{kind}: {text}',
+  'board.cluster.none': 'No notes share a tag or a word yet.',
+  'board.cluster.done': 'Grouped notes in {frames} frames; {left} groups left as they are.',
   'board.capture.field': 'Quick note: Enter for the next, Tab for a child, Escape to stop',
   'board.capture.empty': 'Type something first, then press Enter.',
   'board.capture.nothing-before': 'There is no note before this one to go on from.',
