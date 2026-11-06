@@ -345,6 +345,8 @@ after a module nor listed here, and on a listed file that is missing.
   `requirements/graph-spec-ai-wire.json` (spec_ai_wire).
 - `python/graph_spec/tests/test_ai_wire.py` — the view server's serving record, fence marks and token budget match the
   same list (spec_ai_wire).
+- `python/graph_spec/tests/test_process_versions.py` — a running instance keeps the process version it started on, and
+  moves only by the mapping a new version gives (spec_process_versions).
 - `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
   one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
 - `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
