@@ -49,8 +49,8 @@ describe('board_cards_rich', () => {
     assert.ok(boardSvg(board, palette).includes('owner: Ann'));
   });
 
-  test('nothing remote is loaded: no address of the body reaches the picture', () => {
-    assert.ok(!boardSvg(board, palette).includes('example.org'));
+  test('nothing remote is loaded: no web address of the body reaches the picture', () => {
+    assert.doesNotMatch(boardSvg(board, palette), /https?:\/\/(?!www\.w3\.org)/);
   });
 
   test('a card with only a title is drawn as it was, and other kinds are untouched', () => {
