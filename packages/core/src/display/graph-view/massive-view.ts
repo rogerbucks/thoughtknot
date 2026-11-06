@@ -66,7 +66,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   // each group box counts its things' looks, and the looks are a filter (§56, rule_look_massive)
   const looks = o.rules && groupLooks(o.rules),
     byLook = o.rules && lookFacet(keys, o.rules);
-  const facets = [...facetsOf(drawing.boxes, o.props), ...(byLook ? [byLook] : [])];
+  const facets = [...(o.parts?.facets() ?? facetsOf(drawing.boxes, o.props)), ...(byLook ? [byLook] : [])];
   const live = new LiveFilter(whole, new FacetIndex(keys, facets), looks);
   let grouping = whole;
   let search = new ThingSearch(drawing.boxes, grouping);

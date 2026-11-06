@@ -15,7 +15,9 @@ import { gqlBlocks } from './fences.ts';
 import { parseValue, setProperty } from './inspector.ts';
 import type { Edit, PropType } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
-import type { BetweenRow, GroupRow, MeshIndex, ThingRow } from './mesh-index.ts';
+import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
+import { facetsOf } from './facet-counts.ts';
+import type { Facet } from './facet-counts.ts';
 import { PartsSource, nearFrom } from './parts-source.ts';
 import type { LinksNear } from './parts-source.ts';
 import type { Grouping } from './scale-groups.ts';
@@ -45,6 +47,8 @@ export interface StoredParts {
   /** A group's things and the links inside it, to lay out on its own; null once the store holds other text. */
   group: (id: string) => GraphDrawing | null;
   near: LinksNear;
+  /** Its filters, each property's value by thing in the drawing's order, read from the store a group at a time. */
+  facets: () => Facet[];
 }
 
 /** A graph as the graph library's rules read one, from things (key, kind, properties) and links. */
@@ -83,11 +87,14 @@ export async function storedGraphs(
   for (const g of groups) byGraph.set(g.graph, [...(byGraph.get(g.graph) ?? []), g.id]);
   const version = sha256(text);
   for (const [graph, ids] of byGraph) {
-    const things = ix.backend.things(note, ids).filter((t) => t.graph === graph);
+    // only what the overview draws is held: each thing's properties stay in the store (scale_parts_find_filter)
+    const things = ix.backend
+      .things(note, ids)
+      .filter((t) => t.graph === graph)
+      .map((t) => ({ key: t.key, kind: t.kind, text: t.text, group: t.group }));
     const source = new PartsSource(ix, note, graph, version);
     const linksOf = () => ix.backend.links(note).filter((l) => l.graph === graph);
-    const props = new Map(things.map((t) => [t.key, t.props]));
-    const parsed = new Map<string, Record<string, unknown>>();
+    const props = propsInParts(ix, note, graph, new Map(things.map((t) => [t.key, t.group])));
     out.set(graph, {
       drawing: nearFrom(
         {
@@ -110,15 +117,12 @@ export async function storedGraphs(
           return part;
         },
         near: source.near,
+        facets: () => facetsInParts(things, props),
       },
-      // read from its JSON only when a filter asks for it
-      props: (key) => {
-        if (!parsed.has(key)) parsed.set(key, JSON.parse(props.get(key) ?? '{}') as Record<string, unknown>);
-        return parsed.get(key) ?? {};
-      },
+      props,
       world: () =>
         plainGraph(
-          things.map((t) => [t.key, t.kind, JSON.parse(t.props) as Record<string, gs.Value>]),
+          things.map((t) => [t.key, t.kind, props(t.key) as Record<string, gs.Value>]),
           linksOf().map((l) => [l.from, l.type, l.to, {}]),
         ),
     });
@@ -126,8 +130,52 @@ export async function storedGraphs(
   return out;
 }
 
+/**
+ * A thing's properties, read from the store by its group. Only the rows of the group read last are held. So reading
+ * every thing, a group after another, reads each group once (scale_parts_find_filter).
+ */
+function propsInParts(
+  ix: MeshIndex,
+  note: string,
+  graph: string,
+  groupOf: ReadonlyMap<string, string>,
+): (key: string) => Readonly<Record<string, unknown>> {
+  let held: { group: string; rows: Map<string, string> } | null = null;
+  return (key) => {
+    const group = groupOf.get(key);
+    if (group === undefined) return {};
+    if (held?.group !== group) {
+      const rows = ix.backend.things(note, [group]).filter((t) => t.graph === graph);
+      held = { group, rows: new Map(rows.map((t) => [t.key, t.props])) };
+    }
+    return JSON.parse(held.rows.get(key) ?? '{}') as Record<string, unknown>;
+  };
+}
+
+/**
+ * The filters of a graph read in parts: what facetsOf gives for `things`, with their properties read a group at a time.
+ * The things are read group by group and the columns put back in the drawing's order, so the answers are the same.
+ */
+function facetsInParts(
+  things: readonly { key: string; kind: string; group: string }[],
+  props: (key: string) => Readonly<Record<string, unknown>>,
+): Facet[] {
+  const order = things.map((_, i) => i);
+  const rank = new Map<string, number>();
+  for (const t of things) if (!rank.has(t.group)) rank.set(t.group, rank.size);
+  order.sort((a, b) => (rank.get(things[a]?.group ?? '') ?? 0) - (rank.get(things[b]?.group ?? '') ?? 0) || a - b);
+  return facetsOf(
+    order.map((i) => things[i] as (typeof things)[number]),
+    props,
+  ).map((f) => {
+    const values = new Array<string | undefined>(things.length);
+    order.forEach((i, at) => (values[i] = f.values[at]));
+    return { ...f, values };
+  });
+}
+
 /** The groups of a graph as the store holds them, each with its things' keys, and the links between them counted. */
-function groupingOf(groups: GroupRow[], between: BetweenRow[], things: ThingRow[]): Grouping {
+function groupingOf(groups: GroupRow[], between: BetweenRow[], things: { key: string; group: string }[]): Grouping {
   const keys = new Map<string, string[]>(groups.map((g) => [g.id, []]));
   for (const t of things) keys.get(t.group)?.push(t.key);
   const at = new Map(groups.map((g, i) => [g.id, i]));
