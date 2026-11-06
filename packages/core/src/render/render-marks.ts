@@ -16,6 +16,11 @@ import { word } from '../words.ts';
 export const MIN_PX = 11;
 /** The largest name drawn, in pixels. */
 export const MAX_PX = 16;
+/** An item's name, and the smallest a group's name gets as its insides open: still easy to read (Roger, 7 Nov). */
+export const ITEM_PX = 13;
+export const HEADER_PX = 13;
+/** How clear a group's name stays while the level inside it shows. */
+const HEADER_ALPHA = 0.9;
 
 /** Where the drawing sits on screen: its own units times `scale`, less the point at the screen's top left. */
 export interface View {
@@ -95,8 +100,11 @@ export interface LabelMark {
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
 export type Mark = CloudMark | DotMark | RoadMark | LabelMark;
 
-/** The colour of every node: subjects in turn, their children shades of them. */
-export function coloursOf(scene: Scene, look: Look): Map<string, string> {
+/** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
+export type OwnColour = (subject: string) => number | undefined;
+
+/** The colour of every node: subjects in turn, or the one picked for them, their children shades of them. */
+export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string, string> {
   const colours = new Map<string, string>();
   const paint = (key: string, colour: string): void => {
     colours.set(key, colour);
@@ -104,7 +112,7 @@ export function coloursOf(scene: Scene, look: Look): Map<string, string> {
     kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
   };
   // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
-  scene.named.forEach((k, i) => paint(k, subjectColour(look, i)));
+  scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
   return colours;
 }
 
@@ -137,8 +145,15 @@ export function cloudAlpha(show: number, s: Spot, view: View): number {
 }
 
 /** The marks of `scene` at one zoom and theme. */
-export function marksOf(scene: Scene, spots: Map<string, Spot>, detail: Detail, look: Look, view: View): Mark[] {
-  const colours = coloursOf(scene, look);
+export function marksOf(
+  scene: Scene,
+  spots: Map<string, Spot>,
+  detail: Detail,
+  look: Look,
+  view: View,
+  own?: OwnColour,
+): Mark[] {
+  const colours = coloursOf(scene, look, own);
   const last = scene.depths.length - 1;
   const clouds: CloudMark[] = [],
     dots: DotMark[] = [],
@@ -152,10 +167,17 @@ export function marksOf(scene: Scene, spots: Map<string, Spot>, detail: Detail, 
     const alpha = showOf(node, detail, last);
     if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view) });
     else dots.push({ kind: 'dot', key: node.key, x: s.x, y: s.y, r: Math.max(2, Math.min(s.r, 6)), fill, alpha: 0.8 });
-    if (alpha > 0.05) asks.push(askOf(node, s, fill, alpha, detail, last, look));
+    // a group's name stays clear as its insides open: its cloud fades, its name does not (Roger, 7 Nov 2026)
+    const named = node.depth < last ? Math.max(alpha, (detail.shown[node.depth] ?? 0) * HEADER_ALPHA) : alpha;
+    // a name is clear or not drawn: never a ghost of text too faint to read (Roger, 7 Nov 2026)
+    const clear = crisp(named);
+    if (clear > 0.05) asks.push(askOf(node, s, fill, clear, detail, last, look));
   }
   return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
 }
+
+/** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
+export const crisp = (alpha: number): number => Math.min(1, Math.max(0, (alpha - 0.35) / 0.3));
 
 /** A name that would like to be drawn, and how much it matters. */
 export interface LabelAsk {
@@ -191,7 +213,7 @@ function askOf(
 ): LabelAsk {
   const item = node.depth === last;
   const inside = detail.shown[node.depth + 1] ?? 0;
-  const px = node.depth === last ? MIN_PX + 1 : MAX_PX - (MAX_PX - MIN_PX) * inside;
+  const px = node.depth === last ? ITEM_PX : MAX_PX - (MAX_PX - HEADER_PX) * inside;
   const y = node.depth === last ? s.y : s.y - s.r * inside * 0.82;
   return {
     key: node.key,

@@ -252,3 +252,51 @@ test('while a view in space shows, the stage leaves the trackpad pinch and the p
     uninstall();
   }
 });
+
+// proves: render_switch, level_colours
+test('the colour key shows over the new rendering: told each new level, with the colours the drawing paints', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { LIGHT } = await import('../src/render/render-look.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    const own = new Map();
+    let told = 0;
+    const stage = new RenderStage(viewport, drawing, g, {
+      open() {},
+      clear() {},
+      selected: () => null,
+      drawn: () => told++,
+      own: (key) => own.get(key),
+    });
+    assert.equal(told, 1, 'the badge hears the first level');
+    stage.draw();
+    assert.equal(told, 1, 'a drawing at the same level says nothing new');
+    const before = stage.level();
+    for (let i = 0; i < 400 && stage.level() === before; i++)
+      stage.wheel({
+        ctrlKey: true,
+        deltaY: -20,
+        clientX: 400,
+        clientY: 200,
+        preventDefault() {},
+        stopPropagation() {},
+      });
+    assert.notEqual(stage.level(), before);
+    assert.ok(told >= 2, 'the badge hears the new level');
+    // the chips take the drawing's colours: Work first, Money second, as the mockups do
+    const [work, money] = stage.scene.named;
+    assert.equal(stage.colourOf(work), LIGHT.subjects[0]);
+    assert.equal(stage.colourOf(money), LIGHT.subjects[1]);
+    // a colour picked on the key is the one the drawing paints
+    own.set(work, 2);
+    assert.equal(stage.colourOf(work), LIGHT.subjects[2]);
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

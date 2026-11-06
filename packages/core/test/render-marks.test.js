@@ -6,7 +6,18 @@ import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { DARK, LIGHT, contrast, inkOn, subjectColour } from '../src/render/render-look.ts';
-import { MAX_PX, MIN_PX, coloursOf, cloudAlpha, countOf, marksOf, placeLabels } from '../src/render/render-marks.ts';
+import {
+  HEADER_PX,
+  ITEM_PX,
+  MAX_PX,
+  MIN_PX,
+  coloursOf,
+  cloudAlpha,
+  countOf,
+  crisp,
+  marksOf,
+  placeLabels,
+} from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
   key,
@@ -190,5 +201,22 @@ test('far out, a subject is a white card edged in its colour, its name in its co
     const road = marks.find((m) => m.kind === 'road' && m.count);
     assert.equal(road.chip, look.card, 'the count sits on a white chip');
     assert.ok(contrast(road.ink, look.card) >= 4.5);
+  }
+});
+
+// proves: render_marks
+test('zoomed in, names stay as easy to read as at the top: clear or not drawn, never a faint ghost', () => {
+  // Roger, 7 Nov 2026: zooming below the top level lost the nice formatting
+  assert.equal(crisp(0.2), 0, 'a name half faded in is not drawn yet');
+  assert.equal(crisp(0.9), 1);
+  for (const scale of [0.6, 1, 2, 4, 8]) {
+    const { scene, marks } = picture(scale);
+    const last = scene.depths.length - 1;
+    for (const l of marks.filter((m) => m.kind === 'label')) {
+      const node = scene.nodes.get(l.key);
+      assert.ok(l.alpha > 0.05, `${l.text} is drawn only where it can be read`);
+      if (node.depth === last) assert.equal(l.px, ITEM_PX, 'an item reads at 13 px');
+      else assert.ok(l.px >= HEADER_PX, `${l.text}: a group's name keeps a readable size as it opens`);
+    }
   }
 });

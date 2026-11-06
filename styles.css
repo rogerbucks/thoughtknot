@@ -2409,7 +2409,7 @@ pre.thoughtknot-code {
 .thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
   visibility: hidden;
 }
-.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-level-badge, .thoughtknot-mini-map) {
+.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-mini-map) {
   display: none;
 }
 .thoughtknot-render-stage {
@@ -4611,6 +4611,10 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-level-swatch[data-hue='5'] {
   background: var(--gn-branch-5);
+}
+/* the new rendering paints its own colours, and its key shows them (Roger, 7 Nov 2026) */
+.thoughtknot-level-swatch.has-own {
+  background: var(--thoughtknot-swatch);
 }
 /* Areas and topics take lighter shades of their subject's colour. */
 .thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
