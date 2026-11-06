@@ -899,6 +899,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/secrets-recorded.test.js` — every secret a workflow reads has a row in RELEASING.md, with its owner and renewal
   (SEC-8, security_fix_rule).
 - `test/python-audit.test.js` — CI audits the locked Python dependencies by hash (SEC-10, security_release_gate).
+- `test/lint-minimatch.test.js` — no locked minimatch falls in the range a known flaw names (SEC-26,
+  security_release_gate). It reads `package-lock.json`.
 
 ## The nightly build, the home page and test files
 
