@@ -50,6 +50,15 @@ An owner invites a trusted device with `invite`. The invitation is text that hol
 device (`invitationText`). A device that only made its keys (`prepare`) takes it with `accept`, and then trusts the
 inviter. The guest reads the inviter's fingerprint first, as nothing else says who sent it.
 
+## A shared board across devices
+
+`shared-board.ts` joins a seat at a board (`board-seat.ts`) to a `Link` to the other devices. The link is whatever carries
+bytes between them: the mesh VPN in the apps, memory in a test. After the person changes the board, the link sends the
+new records at once. When the others' records arrive, the seat catches up and the screen redraws that change alone.
+Presence goes over the same link as short messages, and is never written to the note.
+
+`SyncedNotes` takes its edits and merges in turn, so a merge from the link never lands under an edit.
+
 ## Graphs from many places
 
 `connected.ts` keeps a graph drawn from many places (the core's `connectors.ts`) in step between devices.

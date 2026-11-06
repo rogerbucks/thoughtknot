@@ -23,6 +23,7 @@ export {
 } from './sharing.ts';
 export { LiveBoard } from './live-board.ts';
 export { BoardSeat, type Who } from './board-seat.ts';
+export { sharedBoard, type Link } from './shared-board.ts';
 export { SealedStore } from './sealed-store.ts';
 export { NoteCrdt, type Anchor, type Made, type NoteDoc } from './crdt.ts';
 export { Engine, errorsOf, joinMerge, newErrors, type Joined, type Refused } from './engine.ts';
