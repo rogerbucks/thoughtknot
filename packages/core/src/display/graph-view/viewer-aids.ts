@@ -184,7 +184,8 @@ export class Aids {
     });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
-    const hands = host.stage && { ...host.stage, selected: host.lens.selected };
+    // a view in space takes the pointer and the trackpad's pinch while it shows (Roger, 6 Nov)
+    const hands = host.stage && { ...host.stage, selected: host.lens.selected, away: () => !!host.space?.screen?.() };
     this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
   }
 

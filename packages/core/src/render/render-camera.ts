@@ -1,7 +1,8 @@
 // The camera: layer L6 of the rendering spec (wiki/Rendering-spec.md; editor spec §73, render_one_camera). One camera
-// for the new rendering: it fits the drawing, pans, and zooms in steps. Each wheel notch or pinch goes to the next stop,
-// and each stop is the zoom that opens one more level. So one notch moves one level, never two (Roger, 5 Nov). It
-// picks the mark under a click from the marks themselves, and glides between two views (rule 7, never disorient).
+// for the new rendering: it fits the drawing, pans, and zooms. Zoom is smooth: each wheel or trackpad movement zooms
+// in proportion to how far it moved, at the pointer, never in steps (Roger, 6 Nov). The detail still changes at each
+// level's zoom, so levels fade in as the zoom passes them. It picks the mark under a click from the marks themselves,
+// and glides between two views (rule 7, never disorient).
 // Host-free and pure.
 import { scaleToOpen } from './render-detail.ts';
 import type { Mark, View } from './render-marks.ts';
@@ -10,11 +11,12 @@ import type { Spot } from './render-rooms.ts';
 
 /** The space left round the drawing when it is fitted, in pixels. */
 const MARGIN = 24;
-/** Past the last level, each notch zooms in by this much, up to `DEEPEST` times the last stop. */
-const BEYOND = 1.5;
+/** How far past the last level the zoom may go, as a share of the last level's zoom. */
 const DEEPEST = 4;
-/** One notch zooms by at most this much, so the reader keeps their place; a deep level may take two notches. */
-const MOST = 2;
+/** How much one pixel of wheel movement zooms, as a power of e: a trackpad's small movements zoom a little each. */
+const PER_PIXEL = 0.006;
+/** The most one wheel event counts for, in pixels, so a mouse's big notch zooms by about half, never a leap. */
+const MOST_PIXELS = 60;
 
 /** No edge covered. */
 const OPEN: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -57,19 +59,23 @@ export function zoomTo(view: View, scale: number, at: [number, number]): View {
   return { ...view, scale, x: view.x + px / view.scale - px / scale, y: view.y + py / view.scale - py / scale };
 }
 
-/** One notch in (`dir` 1) or out (`dir` -1) at `at`: toward the next stop, never past it, so at most one level changes. */
-export function stepView(view: View, stops: readonly number[], dir: 1 | -1, at: [number, number]): View {
-  const last = stops[stops.length - 1] as number;
-  let scale: number;
-  if (dir > 0) {
-    const next = stops.find((s) => s > view.scale * 1.01) ?? Math.min(view.scale * BEYOND, last * DEEPEST);
-    scale = Math.min(next, view.scale * MOST);
-  } else {
-    const before = [...stops].reverse().find((s) => s < view.scale * 0.99) ?? stops[0] ?? view.scale;
-    scale = Math.max(before, view.scale / MOST);
-  }
-  return zoomTo(view, scale, at);
+/** `view` zoomed by `ratio` at `at`, kept between the fitted view and a little past the last level. */
+function zoomBy(view: View, stops: readonly number[], ratio: number, at: [number, number]): View {
+  const least = stops[0] ?? view.scale,
+    most = (stops[stops.length - 1] ?? view.scale) * DEEPEST;
+  return zoomTo(view, Math.min(most, Math.max(least, view.scale * ratio)), at);
 }
+
+/**
+ * `view` zoomed smoothly by a wheel or trackpad movement of `delta` pixels at `at` (negative is in). The point under
+ * the pointer stays where it is.
+ */
+export const wheelView = (view: View, stops: readonly number[], delta: number, at: [number, number]): View =>
+  zoomBy(view, stops, Math.exp(-Math.max(-MOST_PIXELS, Math.min(MOST_PIXELS, delta)) * PER_PIXEL), at);
+
+/** `view` zoomed by `ratio` at `at`, as two fingers spread or draw together. */
+export const pinchView = (view: View, stops: readonly number[], ratio: number, at: [number, number]): View =>
+  zoomBy(view, stops, ratio, at);
 
 /** `view` moved by `dx`, `dy` screen pixels: the drawing follows the pointer. */
 export const panView = (view: View, dx: number, dy: number): View => ({
