@@ -2409,6 +2409,10 @@ pre.thoughtknot-code {
 .thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
   visibility: hidden;
 }
+.thoughtknot-viewport.thoughtknot-new-rendering > .thoughtknot-level-badge,
+.thoughtknot-viewport.thoughtknot-new-rendering > .thoughtknot-mini-map {
+  display: none;
+}
 .thoughtknot-render-stage {
   position: absolute;
   inset: 0;
