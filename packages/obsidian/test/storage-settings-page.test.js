@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { page, row, set } from './host/profile-notes.js';
-// The plug-in's own module is not imported here: its source beside the built bundle skews the coverage report.
+// The module's own functions are tested directly in storage-settings.test.js.
 
 before(() => build());
 
