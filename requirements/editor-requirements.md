@@ -1598,7 +1598,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_board_templates:Test {proves: 'each built-in template opens as a board note and starts a new board', file: 'packages/core/test/board-templates.test.js', where: 'repo', status: 'written'}),
 (test_board_facilitation:Test {proves: 'the timer is shared and hidden notes show only on reveal', file: 'packages/core/test/board-facilitation.test.js', where: 'repo', status: 'written'}),
 (test_board_live_together:Test {proves: 'two and five peers editing one board converge within a second to the same board text', file: 'test/board-together.test.js', where: 'repo', status: 'planned'}),
-(test_board_offline_merge:Test {proves: 'offline edits merge on reconnect, and a clash keeps both sides and is flagged', file: 'test/board-together.test.js', where: 'repo', status: 'planned'}),
+(test_board_offline_merge:Test {proves: 'offline edits merge on reconnect, and a clash keeps both sides and is flagged', file: 'test/board-together.test.js', where: 'repo', status: 'written'}),
 (test_board_presence:Test {proves: 'pointers, selections and names show with a non-colour mark, follow works, and the note is unchanged by presence', file: 'test/board-presence.test.js', where: 'repo', status: 'planned'}),
 (test_board_access:Test {proves: 'view, comment and edit rights are enforced, invitations are encrypted, and no key leaves its device', file: 'test/board-access.test.js', where: 'repo', status: 'planned'}),
 (test_board_authorship:Test {proves: 'each change is logged with its author, and undo reverts only the undoer\'s changes', file: 'test/board-together.test.js', where: 'repo', status: 'written'}),

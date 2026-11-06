@@ -1,9 +1,11 @@
 // Boards worked on together (editor spec §45). board_authorship: each change is logged with its author, and undo
-// reverts only the undoer's own changes.
+// reverts only the undoer's own changes. board_offline_merge: edits made apart merge with nothing lost, and a clash
+// keeps both sides and is flagged.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../packages/core/src/board.ts';
 import { boardEdit } from '../packages/core/src/board-edit.ts';
+import { CLASH, mergeBoards } from '../packages/core/src/board-merge.ts';
 import { carryOut, logLines, markUndone, record, undoPlan } from '../packages/core/src/board-history.ts';
 
 const START = `// graph: ideas · BOARD
@@ -109,5 +111,97 @@ describe('board_authorship', () => {
       readBoard(back.text).board.connectors.map((c) => [c.from, c.to]),
       [['a', 'b']],
     );
+  });
+});
+
+describe('board_offline_merge', () => {
+  const edit = (text, ...changes) => changes.reduce((t, c) => boardEdit(t, c).text, text);
+  const items = (text) => readBoard(text).board.items;
+
+  test('changes made apart to different items are all kept', () => {
+    const ours = edit(START, { kind: 'move', id: 'a', x: 5, y: 5 });
+    const theirs = edit(START, { kind: 'text', id: 'b', text: 'Second' });
+    const m = mergeBoards(START, ours, theirs);
+    assert.deepEqual(m.clashes, []);
+    assert.deepEqual([item(m.text, 'a').x, item(m.text, 'b').text], [5, 'Second']);
+  });
+
+  test('different properties of one item are both kept, with no clash', () => {
+    const m = mergeBoards(
+      START,
+      edit(START, { kind: 'move', id: 'a', x: 7, y: 7 }),
+      edit(START, { kind: 'text', id: 'a', text: 'Uno' }),
+    );
+    assert.deepEqual(m.clashes, []);
+    assert.deepEqual([item(m.text, 'a').x, item(m.text, 'a').text], [7, 'Uno']);
+  });
+
+  test('a clash keeps both sides and flags both, and says so', () => {
+    const m = mergeBoards(
+      START,
+      edit(START, { kind: 'text', id: 'a', text: 'Mine' }),
+      edit(START, { kind: 'text', id: 'a', text: 'Yours' }),
+    );
+    assert.equal(m.clashes.length, 1);
+    assert.equal(item(m.text, 'a').text, 'Mine');
+    const copy = items(m.text).find((i) => i.text === 'Yours');
+    assert.ok(copy, 'the other side is kept');
+    assert.equal(item(m.text, 'a').more[CLASH], copy.id);
+    assert.equal(copy.more[CLASH], 'a');
+    assert.match(m.said, /1 clashes|flagged/);
+    assert.deepEqual(readBoard(m.text).problems, []);
+  });
+
+  test('the copy beside a clash does not sit on the item it clashed with', () => {
+    const m = mergeBoards(
+      START,
+      edit(START, { kind: 'text', id: 'a', text: 'Mine' }),
+      edit(START, { kind: 'text', id: 'a', text: 'Yours' }),
+    );
+    const [a, copy] = [item(m.text, 'a'), items(m.text).find((i) => i.text === 'Yours')];
+    assert.ok(copy.x >= a.x + 160);
+  });
+
+  test('an item both sides made is kept, and an item both sides took out is gone', () => {
+    const add = (id, text) => ({ kind: 'add', item: { id, kind: 'Sticky', x: 900, y: 0, text, more: {} } });
+    const m = mergeBoards(
+      START,
+      edit(START, add('c', 'From me'), { kind: 'remove', id: 'b' }),
+      edit(START, add('d', 'From you'), { kind: 'remove', id: 'b' }),
+    );
+    assert.deepEqual(
+      items(m.text)
+        .map((i) => i.id)
+        .sort(),
+      ['a', 'c', 'd'],
+    );
+    assert.deepEqual(m.clashes, []);
+  });
+
+  test('an item one side took out and the other changed is kept and flagged, never lost', () => {
+    const m = mergeBoards(
+      START,
+      edit(START, { kind: 'remove', id: 'a' }),
+      edit(START, { kind: 'text', id: 'a', text: 'Changed' }),
+    );
+    assert.equal(item(m.text, 'a').text, 'Changed');
+    assert.equal(m.clashes[0].why, 'removed');
+    assert.ok(CLASH in item(m.text, 'a').more);
+  });
+
+  test('a link one side made is kept; a link one side took out goes when the other left it', () => {
+    const linked = edit(START, { kind: 'connect', from: 'a', to: 'b' });
+    const m1 = mergeBoards(START, linked, START);
+    assert.equal(readBoard(m1.text).board.connectors.length, 1);
+    const m2 = mergeBoards(linked, START, linked);
+    assert.equal(readBoard(m2.text).board.connectors.length, 0);
+  });
+
+  test('merging the same version twice, or with nothing changed, changes nothing', () => {
+    const m = mergeBoards(START, START, START);
+    assert.deepEqual(m.clashes, []);
+    assert.equal(readBoard(m.text).board.items.length, 2);
+    const once = edit(START, { kind: 'move', id: 'a', x: 3, y: 3 });
+    assert.equal(mergeBoards(START, once, once).clashes.length, 0);
   });
 });
