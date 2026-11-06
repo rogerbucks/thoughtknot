@@ -89,8 +89,8 @@ const isItemSet = (change: BoardChange): change is ItemSet => SETS.has(change.ki
 
 /**
  * What an item change sets on its item: places, sizes and layers as whole numbers, a size never too small. A style or a
- * group of null takes it off; a vote is given, or taken back when given before; unlocking takes the lock off rather than
- * writing `locked: false`.
+ * group of null takes it off. A vote is given, or taken back when given before. Unlocking takes the lock off rather
+ * than writing `locked: false`.
  */
 function patchOf(change: ItemSet, item: BoardItem): Partial<BoardItem> {
   switch (change.kind) {
