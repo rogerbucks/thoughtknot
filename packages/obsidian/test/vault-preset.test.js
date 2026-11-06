@@ -1,5 +1,5 @@
-// The vault's own view preset in Obsidian (editor spec ES§69, view_presets_scoped): a file at the vault's top that a
-// card follows, that a graph's own preset beats, and that the settings page writes and removes.
+// The vault's own view preset in Obsidian (editor spec ES§69, view_presets_scoped). It is a file at the vault's top.
+// A card follows it, a graph's own preset beats it, and the settings page writes and removes it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
