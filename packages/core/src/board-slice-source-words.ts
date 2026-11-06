@@ -48,4 +48,7 @@ export const BOARD_SLICE_SOURCE_WORDS = {
   'board.presence.alone': 'You are the only one here.',
   'board.presence.here': '{name} is here',
   'board.presence.selecting': '{name} has {items} selected',
+  'board.access.none': 'You may not open this board.',
+  'board.access.view': 'You may look at this board but not change it.',
+  'board.access.comment': 'You may comment and vote on this board but not change it.',
 } as const;
