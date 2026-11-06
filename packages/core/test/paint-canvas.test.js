@@ -48,6 +48,7 @@ const marks = [
     fill: '#4b7bf5',
     count: '2 ⇄ 1',
     ink: '#000000',
+    chip: '#ffffff',
     alpha: 1,
   },
   { kind: 'dot', key: 'x', x: 90, y: 90, r: 3, fill: '#f2793a', alpha: 0.8 },
@@ -104,7 +105,15 @@ test('every colour and size it uses comes from the marks', () => {
 // proves: render_painters_agree
 test('an item card gets its dot and a thin edge in the dot’s colour, and its name moves past the dot', () => {
   const { c, calls, said } = fake();
-  const card = { ...marks[3], key: 'i', text: 'Item', fill: '#ffffff', ink: '#18202c', dot: '#2fb37a' };
+  const card = {
+    ...marks[3],
+    key: 'i',
+    text: 'Item',
+    fill: '#ffffff',
+    ink: '#18202c',
+    dot: '#2fb37a',
+    edge: '#2fb37a',
+  };
   paintCanvas(c, [card], 400, 300);
   assert.ok(said.stroke.includes('#2fb37a'));
   assert.deepEqual(
@@ -113,4 +122,29 @@ test('an item card gets its dot and a thin edge in the dot’s colour, and its n
   );
   const [, , x] = calls.find(([n]) => n === 'fillText');
   assert.ok(x > 80 + 20, 'the name sits after the dot');
+});
+
+// proves: render_look_in_marks
+test('a group card writes its name in its colour, with how many items it holds on a second, smaller line', () => {
+  const { c, calls, said } = fake();
+  const card = {
+    ...marks[3],
+    h: 34,
+    fill: '#ffffff',
+    ink: '#2a5bd8',
+    edge: '#4b7bf5',
+    sub: '13 items',
+    subPx: 11,
+    subInk: '#8a8f99',
+  };
+  paintCanvas(c, [card], 400, 300);
+  assert.ok(said.stroke.includes('#4b7bf5'), 'edged in its colour');
+  const texts = calls.filter(([n]) => n === 'fillText');
+  assert.deepEqual(
+    texts.map(([, t]) => t),
+    ['Work', '13 items'],
+  );
+  assert.ok(texts[1][3] > texts[0][3], 'the count sits under the name');
+  assert.ok(said.font.includes('500 11px system-ui, sans-serif'));
+  assert.ok(said.fill.includes('#2a5bd8') && said.fill.includes('#8a8f99'));
 });
