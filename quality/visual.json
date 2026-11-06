@@ -303,15 +303,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "08c562c019696d2cd814e8a25ebb6ccd57982e04cd8518b3ba9c6f3f56711668",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "325fdd13a1871a176d2bb90fd2800d2722626c0fbb9ea38fc9d9a758ae969831",
+      "reason": "The edit pane is now pictured once its names are sized, as the other cards are, so a busy machine no longer takes it first",
+      "day": "2026-11-06"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "02b6e0d91d99f8a7b1013350c498496bbe4f31fec080674cad551ab071ffb9ca",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "9bab4aa32b9bb99b7affde649195a131766ddc25de791b5d50f833c0b3c08c0d",
+      "reason": "The edit pane is now pictured once its names are sized, as the other cards are, so a busy machine no longer takes it first",
+      "day": "2026-11-06"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
