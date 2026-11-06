@@ -27,7 +27,7 @@
   "packages/core/src/layouts/layered.ts#layered": 255,
   "packages/core/src/layouts/readability.ts#readability": 120,
   "packages/core/src/link-scan.ts#lineLinks": 118,
-  "packages/core/src/mesh-index-backends.ts#sqliteBackend": 114,
+  "packages/core/src/mesh-index-backends.ts#sqliteBackend": 106,
   "packages/core/src/plugin-isolated.ts#isolatedPlugin": 113,
   "packages/core/src/plugin-serve.ts#servePlugin": 101,
   "packages/core/src/plugins.ts#pluginRegistry": 197,
