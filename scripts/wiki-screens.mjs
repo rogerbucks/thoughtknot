@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // Takes the user guide's screenshots (spec §41, user_guide_wiki) from the current build. They show the plugin drawing
 // the harness's sample note (packages/obsidian/harness) in a headless Chrome. Chrome is driven over the DevTools
-// protocol with Node's own WebSocket, so no browser library is installed. The harness draws icons as their names. Each
-// is swapped here for the same icon the browser editor's page ships (packages/claude-code/page/icons). So a picture
-// looks as the plugin does. Each shot is one state of the page, cut to the part a reader needs to see. SHOTS is the
+// protocol with Node's own WebSocket, so no browser library is installed. The harness draws each icon as the browser
+// editor's page ships it (packages/claude-code/page/icons). So a picture looks as the plugin does. Each shot is one state of the page, cut to the part a reader needs to see. SHOTS is the
 // one list of them, and the guide's pictures must match it (scripts/wiki.mjs, test/wiki.test.js).
 //
 // Usage:
@@ -91,15 +90,6 @@ export function serve(dir) {
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)));
 }
 
-// the harness's icon names, each swapped for its picture; a name with no picture stays as it was
-export const ICONS_IN = `Promise.all([...document.querySelectorAll('[data-icon] > .harness-icon')].map(async (span) => {
-  const r = await fetch('/icons/' + span.parentElement.dataset.icon + '.svg');
-  if (!r.ok) return;
-  span.innerHTML = await r.text();
-  span.querySelector('svg')?.setAttribute('width', '16');
-  span.querySelector('svg')?.setAttribute('height', '16');
-}))`;
-
 /** Opens the harness afresh and waits until it says it is ready, and the drawing has settled. */
 export async function open(send, url) {
   await send('Page.navigate', { url });
@@ -108,7 +98,6 @@ export async function open(send, url) {
     await new Promise((r) => setTimeout(r, 100));
   }
   await new Promise((r) => setTimeout(r, 800));
-  await run(send, ICONS_IN);
 }
 
 /** Takes every shot into out, and writes labels.json. */
@@ -127,7 +116,6 @@ export async function takeShots(out, { chrome } = {}) {
         await run(send, step);
         await new Promise((r) => setTimeout(r, 400));
       }
-      await run(send, ICONS_IN);
       const box = await run(
         send,
         `(() => { const el = document.querySelector('${shot.clip}'), r = el.getBoundingClientRect();
