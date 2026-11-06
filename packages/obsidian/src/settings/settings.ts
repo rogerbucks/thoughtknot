@@ -21,6 +21,7 @@ import { PRESET_KEY, aiModelList, getModelValue, presetPicker, setModelValue, wi
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
 import { PresetChoice, sharePreset } from './preset-rows';
+import { STORAGE_KEY, setStorageValue, storageGroup, storageStoreOf, storageValue } from '../storage/storage-settings';
 
 const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
@@ -65,6 +66,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       ...(heading === 'AI models' ? [presetPicker(), aiModelList(this.app, this.owner, this, this.matrix)] : []),
     ])
       .concat(profileGroup(this.owner.profiles, () => this.update()))
+      .concat(storageStoreOf(this.app) ? [storageGroup()] : [])
       .concat(outsideGroup(this.owner.outside, () => void this.addLink()));
   }
 
@@ -168,6 +170,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (key.startsWith(OUTSIDE_KEY)) return this.owner.outside.isOn(key.slice(OUTSIDE_KEY.length));
     if (key === LINK_KEY) return this.link;
     if (key.startsWith(PROFILE_KEY)) return profileValue(this.owner.profiles, key);
+    const store = storageStoreOf(this.app);
+    if (key.startsWith(STORAGE_KEY) && store) return storageValue(store, key);
     if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
     if (key === 'classifications') return s.classifications.join('\n');
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
@@ -185,6 +189,12 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       return this.update();
     }
     if (key.startsWith(PROFILE_KEY)) return setProfileValue(this.owner.profiles, key, value);
+    const store = storageStoreOf(this.app);
+    if (key.startsWith(STORAGE_KEY) && store) {
+      setStorageValue(store, key, value);
+      // the page is never drawn again under typing a folder
+      return key === `${STORAGE_KEY}history` ? this.update() : undefined;
+    }
     if (key === 'viewPreset') return this.preset.pick(String(value)); // shown first, used on asking (§69)
     let change: Partial<Settings>;
     if (key === PRESET_KEY) change = withPreset(s, String(value));

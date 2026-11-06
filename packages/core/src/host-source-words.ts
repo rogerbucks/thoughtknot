@@ -1,8 +1,12 @@
 // The words of the Obsidian host's own commands and notices, in UK English (editor spec §42, words_catalogue). They
-// name the commands and say what each did, or why it did nothing. source-words.ts keeps them with every other word.
+// name the commands and say what each did, or why it did nothing. The settings page's rows for where graphs are kept
+// join them (storage-source-words.ts). source-words.ts keeps them with every other word.
+
+import { STORAGE_SOURCE_WORDS } from './storage-source-words.ts';
 
 /** The words of the host's commands and notices, by key, in UK English. */
 export const HOST_SOURCE_WORDS = {
+  ...STORAGE_SOURCE_WORDS,
   'host.command.convert': 'Convert this note to standard GQL',
   'outside.heading': 'Plug-ins from outside',
   'outside.sentence':

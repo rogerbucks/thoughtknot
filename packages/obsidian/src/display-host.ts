@@ -10,6 +10,7 @@ import { detailsSidePane } from './details-pane';
 import { recentVisits } from './recent-visits';
 import type { SavedStore } from './recent-visits';
 import { keepHistory } from './storage/note-history';
+import { keepStorage } from './storage/storage-settings';
 
 export { chooseLanguage } from '@thoughtknot/core/display/language';
 
@@ -51,4 +52,5 @@ export function installObsidianHost(plugin: Plugin, store: SavedStore): void {
   });
   // the text of each note just before the plug-in changes it, for Compare with (risk NEURO-2); it follows a rename
   keepHistory(plugin, store);
+  keepStorage(plugin, store);
 }
