@@ -16,8 +16,9 @@ import { word } from '../words.ts';
 export const MIN_PX = 11;
 /** The largest name drawn, in pixels. */
 export const MAX_PX = 16;
-/** An item's name, and the smallest a group's name gets as its insides open: still easy to read (Roger, 7 Nov). */
+/** An item's name, in pixels: easy to read close in (Roger, 7 Nov 2026). */
 export const ITEM_PX = 13;
+/** The smallest a group's name gets as its insides open, in pixels: still easy to read. */
 export const HEADER_PX = 13;
 /** How clear a group's name stays while the level inside it shows. */
 const HEADER_ALPHA = 0.9;
