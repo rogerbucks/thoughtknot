@@ -143,6 +143,9 @@ export class RenderStage {
   }
 
   private down(e: PointerEvent): void {
+    // the press is the stage's own: today's drawing underneath would take the pointer and the click would be lost
+    e.stopPropagation();
+    this.canvas.setPointerCapture?.(e.pointerId);
     this.drag = { x: e.clientX, y: e.clientY, moved: false };
   }
 

@@ -97,6 +97,11 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     win.matchMedia = (q) => ({ matches: q.includes('reduce') }); // less motion: each glide lands at once
     const stage = new RenderStage(viewport, drawing, g, hands);
     const view = () => stage.view;
+    // the press is the stage's own, so today's drawing underneath does not take the pointer and lose the click
+    let stopped = false;
+    stage.down({ clientX: 1, clientY: 1, pointerId: 1, stopPropagation: () => (stopped = true) });
+    assert.ok(stopped, 'a press on the stage goes no further');
+    stage.drag = null;
     stage.clicked(-50, -50);
     assert.deepEqual(said, ['clear'], 'empty space clears the choice');
     // groups: each click glides one level nearer
