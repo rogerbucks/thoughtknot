@@ -6,3 +6,4 @@ export type { ColumnMap, ColumnRole, TableMapping } from './csv-mapping.ts';
 export { CSV_LIMITS, readCsv } from './csv-read.ts';
 export type { CsvLimits, CsvRefusal, CsvTable } from './csv-read.ts';
 export { tableMeasures } from './csv-measures.ts';
+export * from './index-board.ts';
