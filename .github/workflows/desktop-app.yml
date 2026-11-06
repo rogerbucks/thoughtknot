@@ -58,7 +58,9 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    # 90, not 45: the macOS build waits for Apple to notarise it, and Apple's first notarisations for a new
+    # team took over 40 minutes (6 Nov 2026). A hung step still stops well short of GitHub's six hours.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
