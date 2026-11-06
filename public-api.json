@@ -12,6 +12,9 @@
         "acceptNameFirst": [
           "value: (reading: SuggestedReading, graph: string, keys: readonly string[]) => string | null"
         ],
+        "accessRefused": [
+          "value: (role: BoardRole | null) => string"
+        ],
         "AcrossZoom": [
           "class",
           "static new (content: Size, viewport: Size, mode: Mode): AcrossZoom",
@@ -235,6 +238,15 @@
           "interface",
           "line: number",
           "text: string"
+        ],
+        "BoardChange": [
+          "type = { kind: 'move'; id: string; x: number; y: number; } | { kind: 'size'; id: string; w: number; h: number; } | { kind: 'text'; id: string; text: string; } | { kind: 'layer'; id: string; layer: number; } | { kind: 'lock'; id: string; locked: boolean; } | { kind: 'style'; id: string; style: string | null; } | { kind: 'group'; id: string; group: string | null; } | { kind: 'vote'; id: string; person: string; reaction: string | null; } | { kind: 'hide'; id: string; person: string; hidden: boolean; } | { kind: 'comment'; id: string; do: CommentOp; } | { kind: 'add'; item: BoardItem; } | { kind: 'remove'; id: string; } | { kind: 'connect'; from: string; to: string; label?: string; } | { kind: 'disconnect'; from: string; to: string; } | { kind: 'put'; item: BoardItem; }"
+        ],
+        "boardEditInNote": [
+          "value: (note: string, name: string, change: BoardChange) => { note: string; text: string; } | { refused: string; }"
+        ],
+        "BoardRole": [
+          "type = 'view' | 'comment' | 'edit'"
         ],
         "Bounded": [
           "interface",
@@ -998,10 +1010,10 @@
           "type = MarkCommon & ({ kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline; solid?: true; } | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline; headless?: true; } | { kind: 'label'; x: number; y: number; text: string; size: number; anchor: 'start' | 'middle' | 'end'; maxWidth?: number; font?: string; } | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline; } | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline; } | { kind: 'item'; x: number; y: number; width: number; height: number; item: string; name: string; } | { kind: 'fold'; x: number; y: number; width: number; height: number; folds: FoldKind; hides: number; name: string; })"
         ],
         "DrawMarkKind": [
-          "type = 'link' | 'box' | 'label' | 'arrowhead' | 'group' | 'item' | 'fold'"
+          "type = 'link' | 'group' | 'box' | 'label' | 'arrowhead' | 'item' | 'fold'"
         ],
         "DrawMarkRole": [
-          "type = 'link' | 'thing' | 'group' | 'picture'"
+          "type = 'link' | 'group' | 'thing' | 'picture'"
         ],
         "drawMarksOf": [
           "value: (raw: unknown, space: DiagramSpace) => DrawMark[] | string"
@@ -1193,7 +1205,7 @@
           "empty: boolean",
           "faded: { things: string[]; links: number[]; }",
           "graph: string",
-          "kind: 'diagram' | 'view'",
+          "kind: 'view' | 'diagram'",
           "linksAt?: Array<number> | undefined",
           "reading?: string | undefined",
           "view?: string | undefined",
@@ -2522,7 +2534,7 @@
           "value: (svg: string, shown: ChangesShown, palette: Palette) => string"
         ],
         "MarkKind": [
-          "type = 'add' | 'change' | 'remove'"
+          "type = 'add' | 'remove' | 'change'"
         ],
         "MarkOutline": [
           "interface",
@@ -2586,6 +2598,9 @@
         ],
         "MAX_SCALE": [
           "value: 4"
+        ],
+        "mayChange": [
+          "value: (role: BoardRole | null, change: BoardChange) => boolean"
         ],
         "measuresOf": [
           "value: (graph: Graph, keys: readonly string[]) => Measure[]"
@@ -2755,7 +2770,7 @@
           "value: (name: string) => boolean"
         ],
         "NewSketchItem": [
-          "type = { pin?: string | undefined; kind: SketchKind; text?: string | undefined; style?: string | undefined; x: number; y: number; w?: number | undefined; h?: number | undefined; shape?: SketchShape | undefined; points?: MarkPoint[] | undefined; }"
+          "type = { pin?: string | undefined; text?: string | undefined; style?: string | undefined; kind: SketchKind; x: number; y: number; w?: number | undefined; h?: number | undefined; shape?: SketchShape | undefined; points?: MarkPoint[] | undefined; }"
         ],
         "NewThing": [
           "interface",
@@ -3845,7 +3860,7 @@
           "type = 'person' | 'unknown' | 'model' | 'step'"
         ],
         "PropType": [
-          "type = 'number' | 'boolean' | 'date' | 'text' | 'datetime'"
+          "type = 'number' | 'boolean' | 'text' | 'date' | 'datetime'"
         ],
         "Provenance": [
           "interface",
@@ -5421,14 +5436,14 @@
         ],
         "Token": [
           "interface",
-          "c: 'string' | 'label' | 'type' | 'value' | 'edge' | 'arrow' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'op' | 'punct' | null",
+          "c: 'string' | 'comment' | 'label' | 'type' | 'value' | 'edge' | 'arrow' | 'kw' | 'prop' | 'fn' | 'param' | 'var' | 'op' | 'punct' | null",
           "s: string"
         ],
         "TOKEN_CLASSES": [
           "value: readonly ['kw', 'type', 'label', 'edge', 'prop', 'string', 'value', 'comment', 'fn', 'param', 'var', 'arrow', 'op', 'punct']"
         ],
         "TokenClass": [
-          "type = 'string' | 'label' | 'type' | 'value' | 'edge' | 'arrow' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'op' | 'punct'"
+          "type = 'string' | 'comment' | 'label' | 'type' | 'value' | 'edge' | 'arrow' | 'kw' | 'prop' | 'fn' | 'param' | 'var' | 'op' | 'punct'"
         ],
         "tokenize": [
           "value: (src: string) => Token[]"
@@ -5454,7 +5469,7 @@
           "value: readonly ['boxes', 'zoom', 'edit', 'again']"
         ],
         "TourStep": [
-          "type = 'boxes' | 'zoom' | 'edit' | 'again'"
+          "type = 'edit' | 'boxes' | 'zoom' | 'again'"
         ],
         "Trail": [
           "class",

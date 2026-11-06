@@ -30,15 +30,18 @@ export function mayChange(role: BoardRole | null, change: BoardChange): boolean 
   return role === 'comment' && JOINING_IN.includes(change.kind);
 }
 
+/** Why `role` may not change the board, in words. */
+export function accessRefused(role: BoardRole | null): string {
+  if (role === 'view') return word('board.access.view');
+  return word(role === 'comment' ? 'board.access.comment' : 'board.access.none');
+}
+
 /** The block with `change` made, if `role` allows it; else why not, in words. Every refusal leaves the block as it was. */
 export function boardEditAs(
   text: string,
   change: BoardChange,
   role: BoardRole | null,
 ): { text: string } | { refused: string } {
-  if (!mayChange(role, change)) {
-    if (role === 'view') return { refused: word('board.access.view') };
-    return { refused: word(role === 'comment' ? 'board.access.comment' : 'board.access.none') };
-  }
+  if (!mayChange(role, change)) return { refused: accessRefused(role) };
   return boardEdit(text, change);
 }

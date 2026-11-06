@@ -1230,5 +1230,7 @@ after a module nor listed here, and on a listed file that is missing.
   one's own changes, from `board-history.ts` and `board-edit.ts`.
 - `test/board-access.test.js` — who may do what on a board (editor spec §45). Rights from the permission rules in
   `board-access.ts`, and an invitation sealed for one device in `board-invite.ts`.
+- `test/board-live.test.js` — boards edited together at once (editor spec §45). Two and five people converge on one board
+  text through the note's CRDT, with `live-board.ts` checking each change against the person's role.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
