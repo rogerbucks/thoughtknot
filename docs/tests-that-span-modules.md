@@ -350,6 +350,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
   links to exactly the rules that use it. A rule statement over 25 words stays on a record that only shrinks
   (spec_glossary).
+- `test/graph-spec-conformance.test.js` — the engine catalogue names the spec's current version. Its known answers are
+  the suite's. The reference engine is pinned to the version in the Python lock file (spec_engine_catalogue).
 - `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
   (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
