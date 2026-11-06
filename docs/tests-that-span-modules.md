@@ -338,6 +338,12 @@ after a module nor listed here, and on a listed file that is missing.
   library with its listed shape. No problem code in `graph-spec-problem-codes.json` changes meaning (spec_library_api).
 - `test/graph-spec-formats.test.js` — every format the code reads or writes is in `requirements/graph-spec-formats.json`.
   Each says what it keeps and drops, and names a round-trip test that exists (spec_formats_listed).
+- `test/graph-spec-ai-wire.test.js` — the change set header and the serving rule's pinned fields match
+  `requirements/graph-spec-ai-wire.json` (spec_ai_wire).
+- `python/graph_spec/tests/test_ai_wire.py` — the view server's serving record, fence marks and token budget match the
+  same list (spec_ai_wire).
+- `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
+  one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
 - `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
   (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
@@ -910,6 +916,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/secrets-recorded.test.js` — every secret a workflow reads has a row in RELEASING.md, with its owner and renewal
   (SEC-8, security_fix_rule).
 - `test/python-audit.test.js` — CI audits the locked Python dependencies by hash (SEC-10, security_release_gate).
+- `test/lint-minimatch.test.js` — no locked minimatch falls in the range a known flaw names (SEC-26,
+  security_release_gate). It reads `package-lock.json`.
 
 ## The nightly build, the home page and test files
 

@@ -1,0 +1,6 @@
+{
+  "file": "test/fresh-clone.test.js",
+  "test": "the test shard of the fresh clone (quality_ratchet, CODE-3) > npm test gets the shard flag and other lines stay as they are",
+  "seen_failing_first": false,
+  "evidence": "The code came in an earlier commit; this commit only moves its test into the file named after the module."
+}

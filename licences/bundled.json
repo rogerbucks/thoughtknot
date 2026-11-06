@@ -305,6 +305,10 @@
       "licence": "BlueOak-1.0.0",
       "reason": "A permissive licence (Blue Oak Model License). Used by ESLint to match file names; never bundled."
     },
+    "@isaacs/nonrecursive-glob-match": {
+      "licence": "BlueOak-1.0.0",
+      "reason": "A permissive licence (Blue Oak Model License). Used by minimatch 11, which the lint tools match file names with; never bundled."
+    },
     "argparse": {
       "licence": "Python-2.0",
       "reason": "A permissive licence (Python Software Foundation License). Used by a lint dependency to read options; never bundled."

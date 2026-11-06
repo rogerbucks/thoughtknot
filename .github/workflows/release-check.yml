@@ -119,8 +119,13 @@ jobs:
   public-readiness:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # The fresh clone's `npm test` runs the whole suite at once, as ci.yml's public-readiness job does. That passed the
-    # default 4 GB ceiling (4.2 GB, 30 Oct 2026), so it gets CI's ceiling too: 8 GB.
+    # The fresh clone's `npm test` runs over six shares of the test files on machines of their own, as CI's suite
+    # shards do, so the job takes minutes, not the half hour the whole suite took. Each share passed the default 4 GB
+    # ceiling (4.2 GB, 30 Oct 2026) when it was the whole, so it gets CI's ceiling too: 8 GB.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
@@ -135,7 +140,9 @@ jobs:
         with:
           version: 0.12.17
           enable-cache: false
-      - run: node scripts/public-readiness.mjs --history --setup
+      - env:
+          SHARD: ${{ matrix.shard }}
+        run: node scripts/public-readiness.mjs --history --setup --test-shard "$SHARD/6"
   release-notes:
     # the notes the release writes, tried here first: they must tell users what the library changed
     runs-on: ubuntu-latest

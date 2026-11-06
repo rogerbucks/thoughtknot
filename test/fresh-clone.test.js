@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { changesSetup, isSetupInput, setupInputsChangedSince } from '../scripts/fresh-clone.mjs';
+import { changesSetup, isSetupInput, setupInputsChangedSince, withTestShard } from '../scripts/fresh-clone.mjs';
 
 const made = [];
 after(() => made.forEach((d) => rmSync(d, { recursive: true, force: true })));
@@ -113,5 +113,13 @@ describe('fresh-clone: the setup inputs', () => {
     const later = g('rev-parse', 'HEAD');
     g('checkout', '-q', 'main');
     assert.deepEqual(setupInputsChangedSince(dir, later), ['package.json']);
+  });
+});
+
+describe('the test shard of the fresh clone (quality_ratchet, CODE-3)', () => {
+  test('npm test gets the shard flag and other lines stay as they are', () => {
+    const steps = 'npm ci\nnpm test\nnpm run build';
+    assert.equal(withTestShard(steps, '2/6'), 'npm ci\nnpm test -- --test-shard=2/6\nnpm run build');
+    assert.equal(withTestShard('npm run test:ai', '2/6'), 'npm run test:ai');
   });
 });

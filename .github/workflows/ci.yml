@@ -386,11 +386,13 @@ jobs:
   # for: Node and uv.
   public-readiness:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     # The fresh clone's `npm test` runs the whole suite at once, browser drawing included. That passed the default 4 GB
-    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their ceiling too: 8 GB.
+    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their ceiling too: 8 GB. The whole suite
+    # now takes about 20 minutes, so its time ceiling is 30.
     env:
       THOUGHTKNOT_TEST_MEMORY_MB: 8192
+      THOUGHTKNOT_TEST_MINUTES: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

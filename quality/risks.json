@@ -4738,20 +4738,21 @@
       "role": "Senior security engineer",
       "area": "security",
       "title": "The lint tools carry a minimatch with a slow-matching flaw",
-      "risk": "Advisory GHSA-g3hv-75wg-m249 (medium): minimatch before 11.0.1 can be made slow by a crafted pattern. Our ESLint tools depend on it. It runs on build machines only, never in the shipped plugin, and no fixed release works with the lint tools yet.",
+      "risk": "Advisories GHSA-g3hv-75wg-m249 and a second one on the same code (medium): minimatch from 7.0.0 to before 11.0.1 can be made slow by a crafted pattern. Three of our ESLint tools carried such a copy. It ran on build machines only, never in the shipped plugin.",
       "evidence": [
         "package-lock.json",
         "https://github.com/advisories/GHSA-g3hv-75wg-m249"
       ],
       "alerts": [
         "npm/GHSA-g3hv-75wg-m249",
-        "dependabot/10"
+        "dependabot/10",
+        "dependabot/11"
       ],
       "likelihood": "low",
       "impact": "low",
-      "decision": "accept",
-      "fix": "When the lint tools accept minimatch 11.0.1 or later, update the lock file and close this risk.",
-      "check": "scripts/security-alerts.mjs lists the advisory while it is open, and the release check fails once this entry is removed and it is still there.",
+      "decision": "fix-now",
+      "fix": "An override in package.json lifts every minimatch from 7.0.0 to before 11.0.1 to 11.0.5. The 3.x copies ESLint needs are older than the flaw, so they stay.",
+      "check": "test/lint-minimatch.test.js fails on any locked minimatch in the flawed range. npm audit in CI and scripts/security-alerts.mjs fail on any advisory the lock carries.",
       "paths": [
         "package.json",
         "package-lock.json"
@@ -4759,12 +4760,15 @@
       "effort": "hours",
       "raised": "2026-10-31",
       "reviewed": {
-        "date": "2026-10-31",
-        "commit": "a69f6f58baf05f384172454342424b612951b3f4"
+        "date": "2026-11-06",
+        "commit": "c8033a0e8eb7b84f867dbc07d30bf8e24bd46195"
       },
-      "status": "accepted",
-      "accepted_by": "Roger, 31 Oct 2026 (asked in the R2 release thread)",
-      "accepted_reason": "It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later."
+      "status": "done",
+      "done_in": "#1945",
+      "prevented_by": [
+        "test/lint-minimatch.test.js",
+        "scripts/security-alerts.mjs"
+      ]
     },
     {
       "id": "SEC-27",
