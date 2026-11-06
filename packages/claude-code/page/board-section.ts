@@ -22,6 +22,12 @@ export interface WithSeats {
  */
 export type SeatFor = (name: string) => Together | undefined;
 
+/** The seats a host put on the page's window for the boards of the note `key`, or none when it put none. */
+export function seatsOf(win: Window, key: string): SeatFor | undefined {
+  const seat = (win as Window & WithSeats).thoughtknotSeat;
+  return seat && ((name) => seat(key, name));
+}
+
 /**
  * A section with each board of the note opened, or null when the note holds none. `key` names the note. A board with
  * a seat is edited together with the others there, and the others are drawn on it.
