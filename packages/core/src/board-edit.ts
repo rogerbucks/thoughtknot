@@ -40,8 +40,11 @@ export const MIN_SIDE = 20;
 /** The room left between an item and a new one made beside it. */
 export const GAP = 40;
 
-/** The block with `change` made, or why it was refused, in words. */
-export function boardEdit(text: string, change: BoardChange): { text: string } | { refused: string } {
+/**
+ * The block with `change` made, or why it was refused, in words. `undoing` is for taking back one's own change.
+ * The log has already checked it, so it may put back or take out an item that is locked now.
+ */
+export function boardEdit(text: string, change: BoardChange, undoing = false): { text: string } | { refused: string } {
   const { board, problems } = readBoard(text);
   const find = (id: string) => board.items.find((i) => i.id === id);
   if (isItemSet(change)) {
@@ -62,13 +65,13 @@ export function boardEdit(text: string, change: BoardChange): { text: string } |
   } else if (change.kind === 'remove') {
     const item = find(change.id);
     if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
-    if (item.locked) return { refused: word('board.edit.locked') };
+    if (item.locked && !undoing) return { refused: word('board.edit.locked') };
     board.items = board.items.filter((i) => i !== item);
     board.connectors = board.connectors.filter((c) => c.from !== item.id && c.to !== item.id);
   } else if (change.kind === 'put') {
     const at = board.items.findIndex((i) => i.id === change.item.id);
     if (at < 0) return { refused: word('board.edit.gone', { id: change.item.id }) };
-    if (board.items[at]?.locked) return { refused: word('board.edit.locked') };
+    if (board.items[at]?.locked && !undoing) return { refused: word('board.edit.locked') };
     board.items[at] = change.item;
   } else if (change.kind === 'disconnect') {
     const { from, to } = change;

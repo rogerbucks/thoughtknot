@@ -77,20 +77,53 @@ describe('board_authorship', () => {
 
   test('undo goes back through a person’s own changes, newest first, once each', () => {
     let { text, log } = session([
-      ['Ann', { kind: 'move', id: 'a', x: 10, y: 10 }],
-      ['Bea', { kind: 'text', id: 'b', text: 'Second' }],
       ['Ann', { kind: 'text', id: 'a', text: 'Mine' }],
+      ['Bea', { kind: 'text', id: 'b', text: 'Second' }],
+      ['Ann', { kind: 'text', id: 'a', text: 'Later' }],
     ]);
-    for (const expect of ['One', 'One']) {
+    for (const expect of ['Mine', 'One']) {
       const plan = undoPlan(log, text, 'Ann');
-      if ('refused' in plan) break;
+      assert.ok(!('refused' in plan));
       text = carryOut(text, plan).text;
       log = markUndone(log, plan.entry.n);
       assert.equal(item(text, 'a').text, expect);
     }
-    assert.equal(item(text, 'a').x, 0);
     assert.match(undoPlan(log, text, 'Ann').refused, /nothing of yours/);
     assert.equal(item(text, 'b').text, 'Second');
+  });
+
+  test('a lock can be undone by the person who made it, and others’ locks cannot', () => {
+    const mine = session([['Ann', { kind: 'lock', id: 'a', locked: true }]]);
+    assert.equal(item(mine.text, 'a').locked, true);
+    const back = carryOut(mine.text, undoPlan(mine.log, mine.text, 'Ann'));
+    assert.ok('text' in back);
+    assert.equal(item(back.text, 'a').locked, undefined);
+    const theirs = session([
+      ['Ann', { kind: 'text', id: 'a', text: 'Mine' }],
+      ['Bea', { kind: 'lock', id: 'a', locked: true }],
+    ]);
+    assert.match(undoPlan(theirs.log, theirs.text, 'Ann').refused, /Someone else/);
+  });
+
+  test('an item made and locked in one go can still be taken out by its maker', () => {
+    const made = session([
+      ['Ann', { kind: 'add', item: { id: 'c', kind: 'Sticky', x: 400, y: 0, locked: true, more: {} } }],
+    ]);
+    const back = carryOut(made.text, undoPlan(made.log, made.text, 'Ann'));
+    assert.ok('text' in back);
+    assert.equal(item(back.text, 'c'), undefined);
+  });
+
+  test('a link someone else has since re-made or taken out is a clash, said as one', () => {
+    const base = session([['Ann', { kind: 'connect', from: 'a', to: 'b' }]]);
+    const gone = boardEdit(base.text, { kind: 'disconnect', from: 'a', to: 'b' }).text;
+    assert.match(undoPlan(base.log, gone, 'Ann').refused, /Someone else/);
+    const withLabel = session([
+      ['Ann', { kind: 'connect', from: 'a', to: 'b' }],
+      ['Ann', { kind: 'disconnect', from: 'a', to: 'b' }],
+    ]);
+    const remade = boardEdit(withLabel.text, { kind: 'connect', from: 'a', to: 'b', label: 'Bea’s' }).text;
+    assert.match(undoPlan(withLabel.log, remade, 'Ann').refused, /Someone else/);
   });
 
   test('an item made is taken out, and an item taken out is brought back with its links', () => {
