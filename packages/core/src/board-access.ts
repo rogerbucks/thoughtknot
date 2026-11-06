@@ -1,4 +1,4 @@
-// Who may do what on a board (editor spec §45, board_access). Rights follow the permission rules of §39: read is to
+// Who may do what on a board (editor spec §45, board_access). Rights follow the permission rules of editor spec §39: read is to
 // view, write is to edit. Commenting and voting sit between the two, for someone who may read and was asked to join in.
 // Nothing here opens a note. A host asks first and edits only when the answer is yes. Pure and host-free.
 import type { BoardChange } from './board-edit.ts';
