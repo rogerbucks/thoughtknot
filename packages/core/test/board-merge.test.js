@@ -18,7 +18,10 @@ describe('merging boards', () => {
     const theirs = edit(BASE, { kind: 'text', id: 'b', text: 'Theirs' });
     const merged = mergeBoards(BASE, ours, theirs);
     assert.equal(merged.clashes.length, 0);
-    assert.deepEqual(items(merged.text).map((i) => i.text), ['Mine', 'Theirs']);
+    assert.deepEqual(
+      items(merged.text).map((i) => i.text),
+      ['Mine', 'Theirs'],
+    );
   });
 
   test('keeps both sides of a clash and flags it', () => {
