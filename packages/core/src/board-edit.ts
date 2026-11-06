@@ -11,6 +11,7 @@ import type { Board, BoardItem, BoardKind } from './board.ts';
 import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
+import { votedMore } from './board-vote.ts';
 import { word } from './words.ts';
 
 /** One edit to a board. */
@@ -22,6 +23,7 @@ export type BoardChange =
   | { kind: 'lock'; id: string; locked: boolean }
   | { kind: 'style'; id: string; style: string | null }
   | { kind: 'group'; id: string; group: string | null }
+  | { kind: 'vote'; id: string; person: string; reaction: string | null }
   | { kind: 'add'; item: BoardItem }
   | { kind: 'remove'; id: string }
   | { kind: 'connect'; from: string; to: string; label?: string };
@@ -39,9 +41,9 @@ export function boardEdit(text: string, change: BoardChange): { text: string } |
     const set = change;
     const item = find(set.id);
     if (!item) return { refused: word('board.edit.gone', { id: set.id }) };
-    // text and the lock itself may change on a locked item; nothing else may
-    if (item.locked && set.kind !== 'text' && set.kind !== 'lock') return { refused: word('board.edit.locked') };
-    return { text: itemChanged(text, item, patchOf(set)) };
+    // text, votes and the lock itself may change on a locked item; nothing else may
+    if (item.locked && !['text', 'lock', 'vote'].includes(set.kind)) return { refused: word('board.edit.locked') };
+    return { text: itemChanged(text, item, patchOf(set, item)) };
   }
   // a change to the board's shape writes it again whole: never over what the reader could not read
   if (problems.some((p) => p.severity === 'error')) return { refused: word('board.edit.problems') };
@@ -81,15 +83,16 @@ export function boardEditInNote(
 }
 
 // the changes that set properties of one item, which change that item's own text alone
-type ItemSet = Extract<BoardChange, { kind: 'move' | 'size' | 'text' | 'layer' | 'lock' | 'style' | 'group' }>;
-const SETS = new Set<string>(['move', 'size', 'text', 'layer', 'lock', 'style', 'group']);
+type ItemSet = Extract<BoardChange, { kind: 'move' | 'size' | 'text' | 'layer' | 'lock' | 'style' | 'group' | 'vote' }>;
+const SETS = new Set<string>(['move', 'size', 'text', 'layer', 'lock', 'style', 'group', 'vote']);
 const isItemSet = (change: BoardChange): change is ItemSet => SETS.has(change.kind);
 
 /**
  * What an item change sets on its item: places, sizes and layers as whole numbers, a size never too small. A style or a
- * group of null takes it off; unlocking takes the lock off rather than writing `locked: false`.
+ * group of null takes it off. A vote is given, or taken back when given before. Unlocking takes the lock off rather
+ * than writing `locked: false`.
  */
-function patchOf(change: ItemSet): Partial<BoardItem> {
+function patchOf(change: ItemSet, item: BoardItem): Partial<BoardItem> {
   switch (change.kind) {
     case 'move':
       return { x: Math.round(change.x), y: Math.round(change.y) };
@@ -105,6 +108,8 @@ function patchOf(change: ItemSet): Partial<BoardItem> {
       return { style: change.style ?? undefined };
     case 'group':
       return { group: change.group ?? undefined };
+    case 'vote':
+      return { more: votedMore(item, change.person, change.reaction) };
   }
 }
 

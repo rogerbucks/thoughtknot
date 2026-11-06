@@ -1594,7 +1594,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_board_arranged_by_graph:Test {proves: 'arranging by a diagram type moves linked items to its layout and undo puts them back', file: 'packages/core/test/board-arrange.test.js', where: 'repo', status: 'planned'}),
 (test_board_quick_capture:Test {proves: 'typing makes a sticky, Enter the next and Tab a joined child', file: 'packages/core/test/board-capture.test.js', where: 'repo', status: 'written'}),
 (test_board_cluster:Test {proves: 'stickies are grouped into frames by shared words and tags with no network call', file: 'packages/core/test/board-cluster.test.js', where: 'repo', status: 'written'}),
-(test_board_vote:Test {proves: 'votes and reactions are kept per person in the board block and tallied per item', file: 'packages/core/test/board-vote.test.js', where: 'repo', status: 'planned'}),
+(test_board_vote:Test {proves: 'votes and reactions are kept per person in the board block and tallied per item', file: 'packages/core/test/board-vote.test.js', where: 'repo', status: 'written'}),
 (test_board_templates:Test {proves: 'each built-in template opens as a board note and starts a new board', file: 'packages/core/test/board-templates.test.js', where: 'repo', status: 'planned'}),
 (test_board_facilitation:Test {proves: 'the timer is shared and hidden notes show only on reveal', file: 'packages/core/test/board-facilitation.test.js', where: 'repo', status: 'planned'}),
 (test_board_live_together:Test {proves: 'two and five peers editing one board converge within a second to the same board text', file: 'test/board-together.test.js', where: 'repo', status: 'planned'}),
