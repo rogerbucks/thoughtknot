@@ -1,9 +1,10 @@
 // The camera: layer L6 of the rendering spec (wiki/Rendering-spec.md; editor spec §73, render_one_camera). One camera
 // for the new rendering: it fits the drawing, pans, and zooms in steps. Each wheel notch or pinch goes to the next stop,
-// and each stop is the zoom that opens one more level. So one notch moves one level, never two (Roger, 5 Nov).
+// and each stop is the zoom that opens one more level. So one notch moves one level, never two (Roger, 5 Nov). It
+// picks the mark under a click from the marks themselves, and glides between two views (rule 7, never disorient).
 // Host-free and pure.
 import { scaleToOpen } from './render-detail.ts';
-import type { View } from './render-marks.ts';
+import type { Mark, View } from './render-marks.ts';
 import type { Clear } from '../zoom-fit.ts';
 import type { Spot } from './render-rooms.ts';
 
@@ -76,3 +77,49 @@ export const panView = (view: View, dx: number, dy: number): View => ({
   x: view.x - dx / view.scale,
   y: view.y - dy / view.scale,
 });
+
+/** How far past a dot, in screen pixels, a click or tap still picks it: about a fingertip. */
+const REACH = 8;
+
+/**
+ * What a click or tap at `x`, `y` (screen pixels) picks among `marks`, by key. The name on top comes first. Then the
+ * nearest dot within reach, then the smallest cloud round the point. Null on empty space. Picking reads the marks, never the
+ * page or the painter (rule 1, one way down).
+ */
+export function pickAt(marks: readonly Mark[], x: number, y: number): string | null {
+  for (let i = marks.length - 1; i >= 0; i--) {
+    const m = marks[i] as Mark;
+    if (m.kind === 'label' && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) return m.key;
+  }
+  let best: { key: string; d: number } | null = null;
+  for (const m of marks)
+    if (m.kind === 'dot') {
+      const d = Math.hypot(m.x - x, m.y - y);
+      if (d <= m.r + REACH && (!best || d < best.d)) best = { key: m.key, d };
+    }
+  if (best) return best.key;
+  let cloud: { key: string; r: number } | null = null;
+  for (const m of marks)
+    if (m.kind === 'cloud' && Math.hypot(m.x - x, m.y - y) <= m.r && (!cloud || m.r < cloud.r))
+      cloud = { key: m.key, r: m.r };
+  return cloud?.key ?? null;
+}
+
+/** `view` at `scale` (its own when none), with `spot` in the middle of the part the controls leave clear. */
+export function centreOn(view: View, spot: Spot, scale = view.scale): View {
+  const c = view.clear ?? OPEN;
+  const [cx, cy] = [c.left + (view.w - c.left - c.right) / 2, c.top + (view.h - c.top - c.bottom) / 2];
+  return { ...view, scale, x: spot.x - cx / scale, y: spot.y - cy / scale };
+}
+
+/** The view `t` of the way from `a` to `b` (0 to 1), eased, its zoom changing evenly to the eye: one glide. */
+export function glideView(a: View, b: View, t: number): View {
+  const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  const scale = a.scale * (b.scale / a.scale) ** e;
+  // the middle of the screen moves straight from where it was to where it goes
+  const [mx, my] = [a.w / 2, a.h / 2];
+  const from = [a.x + mx / a.scale, a.y + my / a.scale] as const,
+    to = [b.x + mx / b.scale, b.y + my / b.scale] as const;
+  const [px, py] = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
+  return { ...b, scale, x: px - mx / scale, y: py - my / scale };
+}

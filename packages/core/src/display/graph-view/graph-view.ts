@@ -182,8 +182,7 @@ export class GraphView extends Lifecycle {
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
       : [];
-    // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
-    if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
+    if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal)); // a proposal's changes (§17), not in reading view
     const at = (v = this.zoom.view(), mid = middleThing(this.taps, v, this.viewport, this.svg)) =>
       typeLeftAt(v, this.details.selectedKey(), mode === 'full', this.spaces.mode(), mid);
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at, placed.types)); // its types (§15)
@@ -214,6 +213,7 @@ export class GraphView extends Lifecycle {
       byKeyboard: () => this.sel.byKeyboard(),
       lens: { selected: () => this.details.selectedKey(), menu: () => this.switching }, // §68
       space: this.spaces, // its camera zooms semantic zoom as the flat zoom does
+      stage: { open: (key) => this.open({ key }), clear: () => void this.sel.clear() }, // a click on the new rendering
     });
     if (this.svg) markLooks(this.svg, this.o); // the links its style moves, a view's fade and looks (§7), its rules (§56)
     if (!this.sel.untangle.reopen() && view?.shown?.legend?.length) this.sel.refresh(); // its legend, or exploration (§25, §71)
@@ -380,8 +380,7 @@ export class GraphView extends Lifecycle {
       const e = this.drawing()?.estimates[t.estimate];
       if (e) this.details.showEstimate(e, t.estimate);
     }
-    // the selection is the focus: it, its links and what is at their other ends stay at full strength (§25)
-    this.sel.select(t);
+    this.sel.select(t); // the focus: it, its links and what is at their other ends stay at full strength (§25)
     this.edits.show(t); // and the editor beside it, where the note can be written (edit_card)
     // while the block is edited, where it is written is selected in the text — an estimate's misspelt word too (§4)
     this.o.onSelect?.('key' in t ? { thing: t.key } : t);
