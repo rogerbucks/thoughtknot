@@ -1,6 +1,6 @@
 // The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages,
-// reach no other origin and call only the app's eight folder commands and its one gh command. The Rust, the build
-// script and the window's capability must name the same nine commands. So a new command is never let through unseen.
+// reach no other origin and call only the app's ten folder commands and its one gh command. The Rust, the build
+// script and the window's capability must name the same eleven commands. So a new command is never let through unseen.
 // The gh command runs only the calls on its list, by gh's own path, with no shell (spec §48, github_repo_access).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,6 +17,8 @@ const COMMANDS = [
   'remove_file',
   'make_dir',
   'write_new',
+  'pick_target',
+  'swap_folders',
   'run_gh',
 ];
 
@@ -36,7 +38,7 @@ test("the window's policy allows its own pages and Tauri's calls, and no other o
   assert.equal(config.app.security.freezePrototype, true);
 });
 
-test('the commands in the Rust, the build script and the capability are the same nine', () => {
+test('the commands in the Rust, the build script and the capability are the same eleven', () => {
   const handled = /generate_handler!\[([^\]]*)\]/
     .exec(read('src-tauri/src/lib.rs'))[1]
     .split(',')
