@@ -253,7 +253,7 @@ export class Plugin extends Component {
   removeCommand() {}
   async loadData() {
     // settings may be given in the page's address, as ?settings={"newRendering":"on"}, so the scoreboard can turn one on
-    const given = new URLSearchParams(location.search).get('settings');
+    const given = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('settings');
     return given ? { settings: JSON.parse(given) } : null;
   }
   async saveData() {}
