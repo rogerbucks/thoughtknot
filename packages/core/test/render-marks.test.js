@@ -102,3 +102,16 @@ test('a cloud fades once the level inside opens, and one bigger than the screen 
   assert.ok(cloudAlpha(1, huge, view) < cloudAlpha(1, small, view) / 2);
   assert.ok(cloudAlpha(1, huge, view) > 0, 'the ground still shows');
 });
+
+// proves: render_marks
+test('no name is placed under the controls', () => {
+  const asks = [
+    { key: 'a', text: 'Under the docks', x: 100, y: 100, px: 14, fill: '#4b7bf5', alpha: 1, weight: 2 },
+    { key: 'b', text: 'In the clear', x: 600, y: 100, px: 14, fill: '#4b7bf5', alpha: 1, weight: 1 },
+  ];
+  const view = { x: 0, y: 0, scale: 1, w: 1000, h: 400, clear: { top: 0, right: 0, bottom: 0, left: 300 } };
+  assert.deepEqual(
+    placeLabels(asks, view).map((l) => l.key),
+    ['b'],
+  );
+});

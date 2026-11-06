@@ -37,13 +37,15 @@ export function coverByCards(view: ScreenBox, cards: readonly ScreenBox[]): Clea
   return clear;
 }
 
+/** The cards floating over `viewport` now, shown or hidden. */
+export function coverCards(viewport: HTMLElement): HTMLElement[] {
+  const card = viewport.parentElement;
+  return card ? CARDS.flatMap((sel) => Array.from(card.querySelectorAll<HTMLElement>(sel))) : [];
+}
+
 /** How much of the drawing's `viewport` (on the screen at `view`) the cards floating over it cover at each edge. */
 export function overCover(viewport: HTMLElement, view: ScreenBox): Clear {
-  const card = viewport.parentElement;
-  if (!card) return { top: 0, right: 0, bottom: 0, left: 0 };
-  const shown = CARDS.flatMap((sel) => Array.from(card.querySelectorAll<HTMLElement>(sel))).filter(
-    (el) => !el.hidden && !el.closest('[hidden]'),
-  );
+  const shown = coverCards(viewport).filter((el) => !el.hidden && !el.closest('[hidden]'));
   return coverByCards(
     view,
     shown.map((el) => el.getBoundingClientRect()),
