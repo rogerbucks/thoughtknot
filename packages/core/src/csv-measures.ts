@@ -1,6 +1,6 @@
 // A table's measures, read by the same code as a graph's (editor spec §57, calc_measures_shared; §63). A column the
 // mapping calls a measure is a number for each row, or nothing where the cell is empty or not a number. It is the
-// same `Measure` that calculated values and number properties give (measures.ts), so facet-totals.ts adds a table's
+// same `Measure` that calculated values and number properties give (measures.ts). So facet-totals.ts adds a table's
 // column up with the code that adds up a graph's. A missing cell is never counted as zero (calc_gaps_said).
 // Host-free and pure.
 import { isNumber, nameOf } from './csv-mapping.ts';
