@@ -146,6 +146,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/claude-code/test/editor-threats-process.test.js` — the same threat model tried on the server's process: no
   argument taken, and the token handed over once and kept nowhere. There is no start when orphaned, and every way the
   process stops is tried (editor spec §26, test_cc_threats).
+- `packages/claude-code/test/reader-picture-markdown.test.js` — the picture's image line, in a note, shown by a plain Markdown
+  renderer (editor spec ES§62, picture_for_readers).
 - `packages/claude-code/test/editor-export.test.js` — the browser editor's export written by the server (editor spec
   §26, test_cc_export). Only new files go in the export folder, never over a file or through a link. A name is only a
   name, and an export is written whole or not at all. Every change checks the token, Host, Origin and body limit.
