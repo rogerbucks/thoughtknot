@@ -10,6 +10,7 @@ import { word, Zoom } from '@thoughtknot/core';
 import type { Drawn, Palette, View } from '@thoughtknot/core';
 import { boardOf, readBoard, type Board } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
+import { capture, type CaptureHow } from '../../board-capture.ts';
 import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
 import { boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
@@ -197,6 +198,12 @@ class BoardView {
     const press = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey };
     const step = boardKey(this.board, this.cursor, press, this.centre(), this.readOnly);
     if (!step) {
+      // typing on an empty spot starts quick capture (board_quick_capture)
+      if (!this.readOnly && !this.cursor.focus && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        this.openCapture('spot', null, e.key);
+        return;
+      }
       if (this.zoom.handle({ kind: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }))
         e.preventDefault();
       if (e.key === 'Tab') {
@@ -251,6 +258,49 @@ class BoardView {
       else close();
     });
     field.focus();
+  }
+
+  /**
+   * A field to catch ideas in: Enter catches the note and opens the next beside it, Tab catches a child joined to it,
+   * Escape ends. `last` is the note caught before; `first` is what was already typed.
+   */
+  private openCapture(how: CaptureHow, last: string | null, first = ''): void {
+    const { editor } = this;
+    editor.empty();
+    editor.hidden = false;
+    const field = editor.createEl('textarea', { attr: { 'aria-label': word('board.capture.field'), rows: 2 } });
+    field.value = first;
+    const close = () => {
+      editor.hidden = true;
+      editor.empty();
+      this.vp.focus({ preventScroll: true });
+    };
+    field.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return (e.preventDefault(), close());
+      if ((e.key !== 'Enter' && e.key !== 'Tab') || e.shiftKey) return;
+      e.preventDefault();
+      const from = this.board.items.find((i) => i.id === last) ?? null;
+      const r = capture(
+        this.board,
+        last ? (e.key === 'Tab' ? 'child' : how === 'spot' ? 'next' : how) : 'spot',
+        field.value,
+        from,
+        this.centre(),
+      );
+      if ('refused' in r) return this.say(r.refused);
+      void this.catchAll(r.changes).then(() => {
+        this.say(r.said);
+        this.cursor = { ...this.cursor, focus: r.item.id };
+        this.openCapture(e.key === 'Tab' ? 'child' : 'next', r.item.id);
+        this.reveal();
+      });
+    });
+    field.focus();
+  }
+
+  /** Writes edits one after the other, stopping at the first refusal. */
+  private async catchAll(changes: BoardChange[]): Promise<void> {
+    for (const c of changes) await this.write(c);
   }
 
   /** A press: a mouse or pen on an item starts to drag it; anything else pans, zooms and pinches, as on a drawing. */
