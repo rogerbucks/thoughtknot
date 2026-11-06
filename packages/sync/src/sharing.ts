@@ -1,4 +1,4 @@
-// Starting a shared vault (editor spec §45, board_access; §40, encrypted_everywhere). A device makes its own key pair
+// Starting a shared vault (editor spec §45, board_access; ES§40, encrypted_everywhere). A device makes its own key pair
 // and a vault key, and says which other devices it trusts. The private half of the pair cannot be exported, and the
 // vault key is kept only sealed for this device itself. So what is kept between runs opens on this device alone, and
 // the one thing shown or shared is the public half. Web Crypto, so it runs in every host.

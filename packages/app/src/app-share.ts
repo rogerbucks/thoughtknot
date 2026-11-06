@@ -1,4 +1,4 @@
-// Starting a shared vault from the desktop and phone app (editor spec §45, board_access; §40, mesh_vpn_sync).
+// Starting a shared vault from the desktop and phone app (editor spec §45, board_access; ES§40, mesh_vpn_sync).
 // - A Share button opens a panel. One press starts a shared vault: the keys are made here, kept here, and never shown.
 // - The panel shows this device's public key and a fingerprint to read aloud. The owner gives the key to the people
 //   they invite, and checks it over the phone.
