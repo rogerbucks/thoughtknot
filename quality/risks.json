@@ -4764,7 +4764,7 @@
         "commit": "c8033a0e8eb7b84f867dbc07d30bf8e24bd46195"
       },
       "status": "done",
-      "done_in": "#TBD",
+      "done_in": "#1945",
       "prevented_by": [
         "test/lint-minimatch.test.js",
         "scripts/security-alerts.mjs"
