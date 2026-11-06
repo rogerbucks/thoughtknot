@@ -88,6 +88,11 @@ export function boardEdit(text: string, change: BoardChange, undoing = false): {
   return { text: writeBoard(board) };
 }
 
+/** The text of the board block named `name` in the note, or nothing when the note holds no such board. */
+export function boardBlockIn(note: string, name: string): string | undefined {
+  return gqlSpans(note).find((s) => boardOf(s.text)?.name === name)?.text;
+}
+
 /**
  * The note with `change` made to its board named `name`, and the board block as now written. Refused when the note no
  * longer holds that board, or the edit is refused. Every byte outside the block is kept.

@@ -8,12 +8,17 @@
 // that draws the block afresh after a write gets the same view and focus back, kept by its `key`.
 import { word, Zoom } from '@thoughtknot/core';
 import type { Drawn, Palette, View } from '@thoughtknot/core';
-import { boardOf, readBoard, type Board } from '../../board.ts';
+
+import { boardOf, readBoard, type Board, type BoardItem } from '../../board.ts';
 import { boardEditInNote, type BoardChange } from '../../board-edit.ts';
-import { capture, type CaptureHow } from '../../board-capture.ts';
 import { groupNotes, isGroupKey } from './board-group.ts';
 import { boardKey, NO_CURSOR, type BoardCursor } from '../../board-keys.ts';
-import { boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
+import { boardFrame, boardOutline, boardSvg, itemBox } from '../../board-svg.ts';
+import type { Box } from '../../board-svg.ts';
+import { BoardPeople } from './board-people.ts';
+import { openCapture, openEditor } from './board-fields.ts';
+import type { FieldsHost } from './board-fields.ts';
+import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
 
 export { boardEditInNote, boardOf };
@@ -26,6 +31,8 @@ export interface BoardHost {
   write?: (change: BoardChange) => Promise<{ text: string } | { refused: string }>;
   /** What names this board in its host, such as its note and name, so its view is kept when it is drawn again. */
   key: string;
+  /** The seat of this person at a shared board: the others are drawn over it, and the edits go through it. */
+  together?: Together;
 }
 
 /** The view and keyboard of each board drawn, by its host's key, for when it is drawn again. */
@@ -52,6 +59,10 @@ class BoardView {
   private readonly said: HTMLElement;
   private readonly editor: HTMLElement;
   private readonly list: HTMLElement;
+  /** The others at a shared board, and the clashes to settle. */
+  private readonly people: BoardPeople | null;
+  /** The text of the shared board as last read, to tell when someone else has changed it. */
+  private seen = '';
   private frame: Box;
   private readonly zoom: Zoom;
   private svg: SVGSVGElement | null = null;
@@ -66,9 +77,10 @@ class BoardView {
     private readonly host: BoardHost,
   ) {
     this.board = readBoard(source).board;
+    this.seen = source;
     const was = kept.get(host.key);
     this.cursor = was?.cursor ?? NO_CURSOR;
-    this.readOnly = !host.write;
+    this.readOnly = !host.write && !host.together;
     const root = el.createDiv({ cls: ['thoughtknot', 'thoughtknot-board'] });
     const helpId = `thoughtknot-board-help-${(boardsShown += 1)}`;
     this.vp = root.createDiv({
@@ -86,12 +98,14 @@ class BoardView {
     this.said = root.createDiv({ cls: 'thoughtknot-board-said', attr: { role: 'status', 'aria-live': 'polite' } });
     this.editor = root.createDiv({ cls: 'thoughtknot-board-edit' });
     this.editor.hidden = true;
+    this.people = host.together ? new BoardPeople(root, this.peopleHooks(host.together)) : null;
     const outline = root.createEl('details', { cls: 'thoughtknot-board-outline' });
     outline.createEl('summary', { text: word('board.outline') });
     this.list = outline.createEl('ul');
-    this.frame = frameOf(this.board);
+    this.frame = boardFrame(this.board);
     this.zoom = new Zoom({ width: this.frame.w, height: this.frame.h }, this.size(), 'note');
     this.zoom.onChange = (v) => this.apply(v);
+    host.together?.watch(() => this.othersChanged());
     this.draw();
     if (was) this.zoom.restore(was.place.scale, was.place.x, was.place.y);
     if (was?.focused) this.vp.focus({ preventScroll: true });
@@ -125,7 +139,7 @@ class BoardView {
   private draw(): void {
     const was = this.frame,
       v = this.zoom.view();
-    this.frame = frameOf(this.board);
+    this.frame = boardFrame(this.board);
     this.zoom.resize(this.size(), { width: this.frame.w, height: this.frame.h });
     this.zoom.restore(v.scale, v.x + (this.frame.x - was.x) * v.scale, v.y + (this.frame.y - was.y) * v.scale);
     const next = parsedSvg({ svg: boardSvg(this.board, this.host.palette) } as Drawn);
@@ -139,10 +153,69 @@ class BoardView {
       this.list.createEl('li', { text: line.said, attr: { 'data-item': line.id, 'data-depth': line.depth } });
     if (!this.board.items.length) this.list.createEl('li', { text: word('board.empty') });
     this.apply(this.zoom.view());
+    this.people?.paint(next);
+    this.people?.refresh();
+    this.people?.tell(undefined, this.cursor.focus, true);
+  }
+
+  /** What the fields under the board need of this view. */
+  private fields(): FieldsHost {
+    return {
+      editor: this.editor,
+      vp: this.vp,
+      readOnly: this.readOnly,
+      board: () => this.board,
+      write: (c) => this.write(c),
+      say: (w) => this.say(w),
+      centre: () => this.centre(),
+      focus: (id) => {
+        this.cursor = { ...this.cursor, focus: id };
+        this.reveal();
+      },
+    };
+  }
+
+  /** The hooks the lists under the board work by. */
+  private peopleHooks(together: Together) {
+    const { palette } = this.host;
+    return {
+      board: () => this.board,
+      together,
+      palette,
+      parse: (svg: string) => parsedSvg({ svg } as Drawn),
+      mayEdit: !this.readOnly,
+      show: (spot: [number, number]) =>
+        this.zoom.reveal(this.unit({ x: spot[0] - 100, y: spot[1] - 100, w: 200, h: 200 })),
+      settle: (item: BoardItem) => void this.write({ kind: 'put', item }),
+      say: (w: string) => this.say(w),
+    };
+  }
+
+  /** Someone arrived, moved or changed the board: their marks are drawn again, the board only if its text changed. */
+  private othersChanged(): boolean {
+    if (!this.vp.isConnected) return false;
+    const text = this.host.together?.text() ?? '';
+    if (text !== this.seen && !this.drag) {
+      this.seen = text;
+      this.board = readBoard(text).board;
+      this.draw();
+      return true;
+    }
+    if (this.svg) this.people?.paint(this.svg);
+    this.people?.refresh();
+    return true;
   }
 
   /** Writes an edit, then draws what was written; a refusal is said and changes nothing. */
   private async write(change: BoardChange): Promise<void> {
+    const t = this.host.together;
+    if (t) {
+      const why = await t.change(change).catch((e: unknown) => word('board.write-failed', { why: String(e) }));
+      if (why) return this.say(why);
+      this.seen = t.text();
+      this.board = readBoard(this.seen).board;
+      return this.draw();
+    }
     const r = await this.host
       .write?.(change)
       .catch((e: unknown) => ({ refused: word('board.write-failed', { why: String(e) }) }));
@@ -152,13 +225,16 @@ class BoardView {
     this.draw();
   }
 
+  /** A box of the board as a part of the whole board, as the zoom wants it. */
+  private unit(b: Box) {
+    const f = this.frame;
+    return { x: (b.x - f.x) / f.w, y: (b.y - f.y) / f.h, width: b.w / f.w, height: b.h / f.h };
+  }
+
   /** The item in focus brought into view; the view moves only when it is out of sight. */
   private reveal(): void {
     const item = this.board.items.find((i) => i.id === this.cursor.focus);
-    if (!item) return;
-    const b = itemBox(item),
-      f = this.frame;
-    this.zoom.reveal({ x: (b.x - f.x) / f.w, y: (b.y - f.y) / f.h, width: b.w / f.w, height: b.h / f.h });
+    if (item) this.zoom.reveal(this.unit(itemBox(item)));
   }
 
   /** The middle of the view, in board units. */
@@ -210,7 +286,7 @@ class BoardView {
       // typing a key the zoom does not use, on an empty spot, starts quick capture (board_quick_capture)
       else if (!this.readOnly && !this.cursor.focus && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        return this.openCapture(null, e.key);
+        return openCapture(this.fields(), null, e.key);
       }
       if (e.key === 'Tab') {
         this.cursor = NO_CURSOR; // past the last item: focus leaves the board
@@ -224,81 +300,13 @@ class BoardView {
     if (step.pan) this.zoom.panBy(...step.pan);
     const after = () => {
       this.reveal();
-      if (step.edit) this.openEditor(step.edit);
+      if (step.edit) openEditor(this.fields(), step.edit);
     };
     if (step.change) void this.write(step.change).then(after);
     else {
       this.draw();
       after();
     }
-  }
-
-  /** The text of an item, edited in a field under the board: Enter or Save writes it, Escape or Cancel leaves it. */
-  private openEditor(id: string): void {
-    const item = this.board.items.find((i) => i.id === id);
-    if (!item || this.readOnly) return;
-    const { editor } = this;
-    editor.empty();
-    editor.hidden = false;
-    const name = boardOutline(this.board).find((l) => l.id === id)?.said ?? id;
-    const field = editor.createEl('textarea', {
-      attr: { 'aria-label': word('board.text-of', { item: name }), rows: 2 },
-    });
-    field.value = item.text ?? '';
-    const close = () => {
-      editor.hidden = true;
-      editor.empty();
-      this.vp.focus({ preventScroll: true });
-    };
-    const save = () => {
-      const value = field.value;
-      close();
-      if (value !== (item.text ?? '')) void this.write({ kind: 'text', id, text: value });
-    };
-    editor.createEl('button', { text: word('board.save') }).addEventListener('click', save);
-    editor.createEl('button', { text: word('board.cancel') }).addEventListener('click', close);
-    field.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' && (e.key !== 'Enter' || e.shiftKey)) return;
-      e.preventDefault();
-      if (e.key === 'Enter') save();
-      else close();
-    });
-    field.focus();
-  }
-
-  /**
-   * A field to catch ideas in: Enter catches the note and opens the next beside it, Tab catches a child joined to it,
-   * Escape ends. `last` is the note caught before; `first` is what was already typed.
-   */
-  private openCapture(last: string | null, first = ''): void {
-    const { editor } = this;
-    editor.empty();
-    editor.hidden = false;
-    const field = editor.createEl('textarea', { attr: { 'aria-label': word('board.capture.field'), rows: 2 } });
-    field.value = first;
-    const close = () => {
-      editor.hidden = true;
-      editor.empty();
-      this.vp.focus({ preventScroll: true });
-    };
-    field.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return (e.preventDefault(), close());
-      if ((e.key !== 'Enter' && e.key !== 'Tab') || e.shiftKey) return;
-      e.preventDefault();
-      const from = this.board.items.find((i) => i.id === last) ?? null;
-      const how: CaptureHow = !from ? 'spot' : e.key === 'Tab' ? 'child' : 'next';
-      const r = capture(this.board, how, field.value, from, this.centre());
-      if ('refused' in r) return this.say(r.refused);
-      void r.changes
-        .reduce((p, c) => p.then(() => this.write(c)), Promise.resolve())
-        .then(() => {
-          this.say(r.said);
-          this.cursor = { ...this.cursor, focus: r.item.id };
-          this.openCapture(r.item.id);
-          this.reveal();
-        });
-    });
-    field.focus();
   }
 
   /** A press: a mouse or pen on an item starts to drag it; anything else pans, zooms and pinches, as on a drawing. */
@@ -333,7 +341,14 @@ class BoardView {
       e.preventDefault();
       return;
     }
+    this.people?.tell(this.onBoard(this.point(e)), this.cursor.focus);
     if (this.zoom.handle({ kind: 'move', id: e.pointerId, ...this.point(e) })) e.preventDefault();
+  }
+
+  /** A spot of the view in board units. */
+  private onBoard(p: Point): [number, number] {
+    const v = this.zoom.view();
+    return [Math.round(this.frame.x + (p.x - v.x) / v.scale), Math.round(this.frame.y + (p.y - v.y) / v.scale)];
   }
 
   /** A lift: a drag writes where the item went; a tap on an item chooses it; else the zoom takes it. */
@@ -369,20 +384,4 @@ class BoardView {
     this.say(boardOutline(this.board).find((l) => l.id === id)?.said);
     this.draw();
   }
-}
-
-/** A place and size on the board. */
-type Box = { x: number; y: number; w: number; h: number };
-
-/** The part of the board drawn: from the origin, or further up and left, to the furthest item. */
-function frameOf(board: Board): Box {
-  const boxes = board.items.map(itemBox);
-  const x = Math.min(0, ...boxes.map((b) => b.x)),
-    y = Math.min(0, ...boxes.map((b) => b.y));
-  return {
-    x,
-    y,
-    w: Math.max(1, ...boxes.map((b) => b.x + b.w)) - x,
-    h: Math.max(1, ...boxes.map((b) => b.y + b.h)) - y,
-  };
 }
