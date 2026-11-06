@@ -3,7 +3,7 @@
 // picture as every other painter.
 //
 // Clouds are soft: a solid middle that fades at a clear edge, never a blur (Roger, 5 Nov). Roads are ribbons with a
-// count chip. Labels are cards with their name. It takes only the few calls of a 2D canvas it needs, so a test can
+// count chip. Labels are cards with their name, and a second line where they have one. It takes only the few calls of a 2D canvas it needs, so a test can
 // hand it a fake one.
 import type { CloudMark, DotMark, LabelMark, Mark, RoadMark } from './render-marks.ts';
 
@@ -70,10 +70,13 @@ function paintRoad(c: Canvas2d, m: RoadMark): void {
   c.font = '600 11px system-ui, sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillStyle = m.fill;
+  c.fillStyle = m.chip;
+  c.strokeStyle = m.fill;
+  c.lineWidth = 1.2;
   c.beginPath();
   c.roundRect(x - text.length * 3.4 - 6, y - 9, text.length * 6.8 + 12, 18, 9);
   c.fill();
+  c.stroke();
   c.fillStyle = m.ink;
   c.fillText(text, x, y);
 }
@@ -87,17 +90,17 @@ function paintDot(c: Canvas2d, m: DotMark): void {
   c.fill();
 }
 
-/** A card with its name. */
+/** A card with its name, and a second line under it when it has one. */
 function paintLabel(c: Canvas2d, m: LabelMark): void {
   c.globalAlpha = m.alpha;
   c.fillStyle = m.fill;
   c.beginPath();
-  c.roundRect(m.x, m.y, m.w, m.h, m.h / 2);
+  c.roundRect(m.x, m.y, m.w, m.h, m.sub ? 8 : m.h / 2);
   c.fill();
-  if (m.dot) {
+  if (m.edge) {
     // a white card on pale paper needs a thin edge of its colour to be seen
-    c.globalAlpha = m.alpha * 0.4;
-    c.strokeStyle = m.dot;
+    c.globalAlpha = m.alpha * 0.5;
+    c.strokeStyle = m.edge;
     c.lineWidth = 1;
     c.stroke();
     c.globalAlpha = m.alpha;
@@ -114,7 +117,13 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
   c.font = `600 ${m.px}px system-ui, sans-serif`;
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(m.text, m.x + m.w / 2 + shift, m.y + m.h / 2);
+  const line = m.px * 1.6;
+  c.fillText(m.text, m.x + m.w / 2 + shift, m.y + line / 2);
+  if (m.sub && m.subPx && m.subInk) {
+    c.fillStyle = m.subInk;
+    c.font = `500 ${m.subPx}px system-ui, sans-serif`;
+    c.fillText(m.sub, m.x + m.w / 2, m.y + line + (m.h - line) / 2 - 1);
+  }
 }
 
 /** Draws `marks` on `c`, which is `w` by `h`, in the order given. */
