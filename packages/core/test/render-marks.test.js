@@ -67,6 +67,35 @@ test('when two names clash, the heavier keeps its place', () => {
   );
 });
 
+// The mockup shows every subject's name far out. A lighter group's name that would sit on a heavier one's moves
+// within its cloud; an item's name never leaves its dot.
+// proves: render_marks
+test('a group name that clashes moves up or down within its room, and an item name with none is dropped', () => {
+  const view = { x: 0, y: 0, scale: 1, w: 400, h: 300 };
+  const big = { key: 'big', text: 'Learning', x: 200, y: 150, px: 16, fill: '#22aacc', alpha: 1, weight: 9 };
+  const side = { key: 'side', text: 'Side projects', x: 150, y: 150, px: 16, fill: '#ccaa22', alpha: 1, weight: 1 };
+  const [first, moved] = placeLabels([big, { ...side, room: 40 }], view);
+  assert.equal(first.y + first.h / 2, 150, 'the heavier name keeps its place');
+  assert.equal(moved.key, 'side');
+  assert.equal(moved.x + moved.w / 2, 150, 'it keeps its place across');
+  assert.ok(Math.abs(moved.y + moved.h / 2 - 150) <= 40, 'it stays within its room');
+  assert.ok(moved.y + moved.h + 2 <= first.y || first.y + first.h + 2 <= moved.y, 'the two no longer meet');
+  assert.deepEqual(
+    placeLabels([big, side], view).map((l) => l.key),
+    ['big'],
+  );
+});
+
+// proves: render_marks
+test('a name at the edge of the controls slides clear of them while it still covers its spot', () => {
+  const view = { x: 0, y: 0, scale: 1, w: 400, h: 300, clear: { top: 0, right: 0, bottom: 0, left: 100 } };
+  const ask = { key: 'side', text: 'Side projects', x: 130, y: 150, px: 16, fill: '#ccaa22', alpha: 1, weight: 1 };
+  const [slid] = placeLabels([ask], view);
+  assert.equal(slid.x, 102, 'it starts a gap past where the controls end');
+  assert.ok(slid.x <= 130 && 130 <= slid.x + slid.w, 'it still covers its spot');
+  assert.deepEqual(placeLabels([{ ...ask, x: 20 }], view), [], 'a spot under the controls keeps no name');
+});
+
 // proves: render_marks
 test('each subject has its own colour and its areas take shades of it', () => {
   const { scene } = picture(1);

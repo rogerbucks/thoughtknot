@@ -138,6 +138,6 @@ export const PROBE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width * r.height > 0 && r.right > frame.x && r.left < frame.x + frame.w && r.bottom > frame.y && r.top < frame.y + frame.h) over.push(el);
   }
-  const iconWords = [...card.querySelectorAll('[data-icon] > .harness-icon')].filter((s) => seen(s) && s.textContent.trim() === s.parentElement.dataset.icon).length;
+  const iconWords = [...card.querySelectorAll('[data-icon]')].filter((el) => seen(el) && [...el.childNodes].some((n) => n.textContent.trim() === el.dataset.icon)).length;
   return { frame, labels, marks, spots, controls: over.map((el) => box(el.getBoundingClientRect())), iconWords };
 })()`;

@@ -162,6 +162,8 @@ export interface LabelAsk {
   alpha: number;
   /** Higher keeps its place when two names clash. */
   weight: number;
+  /** How far the name may move up or down, in pixels, to fit: a group's name may move within its cloud. */
+  room?: number;
 }
 
 /** What `node` asks of the label placer: groups shrink as the level inside opens, items sit on their dot. */
@@ -188,17 +190,22 @@ function askOf(
     ...(item ? { fill: look.card, dot: fill } : { fill }),
     alpha,
     weight: (last - node.depth) * 1e6 + node.items.length,
+    // a group's name may move within its cloud, and always by one line, so a small cloud's name still shows
+    ...(item ? {} : { room: Math.max(s.r * 0.8, px * 1.6 + 2) }),
   };
 }
 
 /** The width of `text` at `px`, near enough to keep names apart. */
 export const textWidth = (text: string, px: number): number => text.length * px * 0.56;
 
+/** The pixels kept between two names, and between a name and a control. */
+const GAP = 2;
+
 /** The longest name drawn, in letters; longer names end in an ellipsis. */
 const LONGEST = 28;
 
 /**
- * The one label placer. It takes names heaviest first and keeps each that fits. A name fits inside the part of the
+ * The one label placer. It takes names heaviest first and keeps each that fits (spotFor). A name fits inside the part of the
  * view the controls leave clear, and away from every name kept before it. Sizes stay between MIN_PX and MAX_PX.
  */
 export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] {
@@ -209,11 +216,8 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
     const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
     const w = textWidth(text, px) + px + (ask.dot ? px : 0),
       h = px * 1.6;
-    const box = { x: ask.x - w / 2, y: ask.y - h / 2, w, h };
-    const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
-    if (box.x < c.left || box.y < c.top || box.x + w > view.w - c.right || box.y + h > view.h - c.bottom) continue;
-    if (kept.some((k) => box.x < k.x + k.w + 2 && k.x < box.x + w + 2 && box.y < k.y + k.h + 2 && k.y < box.y + h + 2))
-      continue;
+    const box = spotFor(ask, w, h, view, kept);
+    if (!box) continue;
     kept.push({
       kind: 'label',
       key: ask.key,
@@ -227,6 +231,37 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
     });
   }
   return kept;
+}
+
+/**
+ * Where a name `w` by `h` fits: on its spot, else as near above or below it as its room allows. It may slide across
+ * while it still covers its spot. It must sit inside the clear part of the view and away from every name kept. Null
+ * when it fits nowhere.
+ */
+function spotFor(
+  ask: LabelAsk,
+  w: number,
+  h: number,
+  view: View,
+  kept: readonly LabelMark[],
+): { x: number; y: number; w: number; h: number } | null {
+  const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  // the clear part, a gap in from each edge a control covers, as the painted edge of a name reaches past its box
+  const gap = (edge: number) => (edge > 0 ? edge + GAP : 0);
+  const [left, top, right, bottom] = [gap(c.left), gap(c.top), view.w - gap(c.right), view.h - gap(c.bottom)];
+  const room = ask.room ?? 0;
+  const step = h + GAP; // a name and the gap kept between names
+  for (const dy of [0, -step, step, -2 * step, 2 * step].filter((d) => Math.abs(d) <= room)) {
+    // slid across to stay clear of the controls, if it still covers its spot
+    const x = Math.min(Math.max(ask.x - w / 2, left), right - w);
+    const box = { x: x <= ask.x && ask.x <= x + w ? x : ask.x - w / 2, y: ask.y + dy - h / 2, w, h };
+    if (box.x < left || box.y < top || box.x + w > right || box.y + h > bottom) continue;
+    const apart = (k: LabelMark) =>
+      box.x >= k.x + k.w + GAP || k.x >= box.x + w + GAP || box.y >= k.y + k.h + GAP || k.y >= box.y + h + GAP;
+    if (!kept.every(apart)) continue;
+    return box;
+  }
+  return null;
 }
 
 /** What a road says of its links: both ways, one way, or nothing for a single link. */
