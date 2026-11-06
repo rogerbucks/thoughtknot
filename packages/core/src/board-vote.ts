@@ -4,9 +4,6 @@
 // Pure and host-free.
 import type { BoardItem } from './board.ts';
 
-/** The reaction a plain vote is. */
-export const VOTE = '+1';
-
 /** One person's vote or reaction on an item. */
 export interface Vote {
   person: string;
