@@ -1184,3 +1184,5 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/rendering-spec.test.js` — the rendering spec (editor spec §73): its version, the eight layers, the rules, the
   scoreboard checks and a change log line for its version.
+- `test/render-scoreboard.test.js` — the rendering scoreboard (editor spec §73). Its fixed scenes, the counts it takes of
+  each picture from plain boxes, and the sheet that puts each picture beside its mockup.
