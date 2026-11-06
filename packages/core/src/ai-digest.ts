@@ -49,14 +49,19 @@ function utf8Into(text: string, size: number): Uint8Array {
     }
     if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;
     if (c < 0x80) out[n++] = c;
-    else if (c < 0x800) ((out[n++] = 0xc0 | (c >> 6)), (out[n++] = 0x80 | (c & 63)));
-    else if (c < 0x10000)
-      ((out[n++] = 0xe0 | (c >> 12)), (out[n++] = 0x80 | ((c >> 6) & 63)), (out[n++] = 0x80 | (c & 63)));
-    else
-      ((out[n++] = 0xf0 | (c >> 18)),
-        (out[n++] = 0x80 | ((c >> 12) & 63)),
-        (out[n++] = 0x80 | ((c >> 6) & 63)),
-        (out[n++] = 0x80 | (c & 63)));
+    else if (c < 0x800) {
+      out[n++] = 0xc0 | (c >> 6);
+      out[n++] = 0x80 | (c & 63);
+    } else if (c < 0x10000) {
+      out[n++] = 0xe0 | (c >> 12);
+      out[n++] = 0x80 | ((c >> 6) & 63);
+      out[n++] = 0x80 | (c & 63);
+    } else {
+      out[n++] = 0xf0 | (c >> 18);
+      out[n++] = 0x80 | ((c >> 12) & 63);
+      out[n++] = 0x80 | ((c >> 6) & 63);
+      out[n++] = 0x80 | (c & 63);
+    }
   }
   return out;
 }
@@ -70,8 +75,10 @@ function utf8Length(text: string): number {
     else if (c < 0x800) n += 2;
     else if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length) {
       const low = text.charCodeAt(i + 1);
-      if (low >= 0xdc00 && low <= 0xdfff) ((n += 4), i++);
-      else n += 3;
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        n += 4;
+        i++;
+      } else n += 3;
     } else n += 3;
   }
   return n;
