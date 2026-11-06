@@ -45,4 +45,7 @@ export const BOARD_SLICE_SOURCE_WORDS = {
   'board.capture.spot': 'Caught {item}',
   'board.capture.next': 'Next note: {item}',
   'board.capture.child': 'Child note, joined to the last: {item}',
+  'board.presence.alone': 'You are the only one here.',
+  'board.presence.here': '{name} is here',
+  'board.presence.selecting': '{name} has {items} selected',
 } as const;
