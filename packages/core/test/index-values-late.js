@@ -262,6 +262,7 @@ export const VALUES_LATE = [
   'presetInUse',
   'presetIn',
   'VAULT_PRESET_PLACE',
+  'PresetPanel',
   'presetFile',
   'presetFrom',
   'OWN_PRESET',
