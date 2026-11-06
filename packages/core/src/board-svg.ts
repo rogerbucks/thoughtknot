@@ -10,6 +10,7 @@
 import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
+import { clashOf } from './board-clash.ts';
 import { glyphNamed } from './board-glyphs.ts';
 import { commentsSaid, openThreads } from './board-comments.ts';
 import { tallyOf, tallySaid } from './board-vote.ts';
@@ -96,7 +97,15 @@ export function itemSaid(board: Board, item: BoardItem): string {
   }
   const votes = tallySaid(item, (people, list) => word('board.vote.said', { people, list }));
   const talk = commentsSaid(item, (open, done) => word('board.comment.said', { open, done }));
-  return [named(item), ...joins, ...(votes ? [votes] : []), ...(talk ? [talk] : [])].join('. ');
+  const clash = clashOf(item);
+  const flagged = clash ? word('board.clash.said', { other: clash }) : '';
+  return [
+    named(item),
+    ...joins,
+    ...(votes ? [votes] : []),
+    ...(talk ? [talk] : []),
+    ...(flagged ? [flagged] : []),
+  ].join('. ');
 }
 
 /** The outline: every item once, top to bottom then left to right, with what each frame holds under it. */
@@ -195,7 +204,23 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
   const votes = tally.total
     ? `<text x="${num(box.x + box.w - pad)}" y="${num(box.y + box.h - pad)}" font-family="${STYLE.font}" font-size="${num(STYLE.kind_font_size)}" text-anchor="end" fill="${palette.muted}" aria-hidden="true" data-votes="${tally.total}">${isolated(escaped(tally.reactions.map((r) => `${r.reaction} ${r.count}`).join('  ')))}</text>`
     : '';
-  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}</g>`;
+  const flag = clashOf(item)
+    ? `<g aria-hidden="true" data-clash="${escaped(clashOf(item) ?? '')}"><path d="M${num(box.x + box.w - 18)} ${num(box.y + 4)}h14l-7 12z" fill="${palette.text}"/><text x="${num(box.x + box.w - 11)}" y="${num(box.y + 14)}" font-size="9" text-anchor="middle" fill="${palette.page ?? '#fff'}">!</text></g>`
+    : '';
+  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}${votes}${talk}${flag}</g>`;
+}
+
+/** The part of the board drawn: from the origin, or further up and left, to the furthest item. */
+export function boardFrame(board: Board): Box {
+  const boxes = board.items.map(itemBox);
+  const x = Math.min(0, ...boxes.map((b) => b.x)),
+    y = Math.min(0, ...boxes.map((b) => b.y));
+  return {
+    x,
+    y,
+    w: Math.max(1, ...boxes.map((b) => b.x + b.w)) - x,
+    h: Math.max(1, ...boxes.map((b) => b.y + b.h)) - y,
+  };
 }
 
 /**
@@ -223,13 +248,7 @@ export function boardSvg(board: Board, palette: Palette, view?: Box): string {
       `<g data-connector="${escaped(`${c.from}-${c.to}`)}"><line x1="${num(x1)}" y1="${num(y1)}" x2="${num(x2)}" y2="${num(y2)}" stroke="${palette.edge}" marker-end="url(#board-arrow)"/>${label}</g>`,
     ];
   });
-  const all = [...boxes.values()];
-  const frame = view ?? {
-    x: Math.min(0, ...all.map((b) => b.x)),
-    y: Math.min(0, ...all.map((b) => b.y)),
-    w: Math.max(1, ...all.map((b) => b.x + b.w)) - Math.min(0, ...all.map((b) => b.x)),
-    h: Math.max(1, ...all.map((b) => b.y + b.h)) - Math.min(0, ...all.map((b) => b.y)),
-  };
+  const frame = view ?? boardFrame(board);
   const box = `${num(frame.x)} ${num(frame.y)} ${num(frame.w)} ${num(frame.h)}`;
   const page = palette.page ? ` style="background:${palette.page}"` : '';
   const sheet = palette.style ? `<style>${palette.style}</style>` : '';

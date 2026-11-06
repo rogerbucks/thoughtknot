@@ -409,4 +409,5 @@ export const VALUES_LATE = [
   'accessRefused',
   'boardEditInNote',
   'mayChange',
+  'boardBlockIn',
 ];
