@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
-import { LIGHT } from '../src/render/render-look.ts';
+import { LIGHT, inkOn, subjectColour } from '../src/render/render-look.ts';
 import { MAX_PX, MIN_PX, coloursOf, cloudAlpha, countOf, marksOf, placeLabels } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
@@ -76,6 +76,14 @@ test('each subject has its own colour and its areas take shades of it', () => {
   const work = scene.nodes.get(scene.roots.find((k) => scene.nodes.get(k).name === 'Work'));
   const areas = work.children.map((k) => colours.get(k));
   assert.equal(new Set(areas).size, areas.length);
+  const named = ['Work', 'Money', 'Home'].map((n) =>
+    colours.get(scene.roots.find((k) => scene.nodes.get(k).name === n)),
+  );
+  assert.deepEqual(
+    named,
+    [0, 1, 2].map((i) => subjectColour(LIGHT, i)),
+    'colours go in the order the note names them',
+  );
 });
 
 // proves: render_marks
@@ -114,4 +122,14 @@ test('no name is placed under the controls', () => {
     placeLabels(asks, view).map((l) => l.key),
     ['b'],
   );
+});
+
+// proves: render_look_in_marks
+test('close in, an item is named on a white card with a dot of its colour', () => {
+  const items = picture(4).marks.filter((m) => m.kind === 'label' && m.dot);
+  assert.ok(items.length > 0);
+  for (const l of items) {
+    assert.equal(l.fill, LIGHT.card);
+    assert.equal(l.ink, inkOn(LIGHT.card));
+  }
 });

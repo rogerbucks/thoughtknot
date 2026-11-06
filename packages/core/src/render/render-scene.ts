@@ -37,6 +37,8 @@ export interface Scene {
   depths: string[];
   nodes: Map<string, SceneNode>;
   roots: string[];
+  /** The nodes at depth 0 in the order the note first names them, so colours follow the writer's order. */
+  named: string[];
   roads: SceneRoad[][];
 }
 
@@ -71,7 +73,8 @@ export function sceneOf(shape: GraphShape): Scene {
   for (const node of nodes.values()) if (node.parent !== undefined) nodes.get(node.parent)?.children.push(node.key);
   for (const node of nodes.values()) node.children.sort(byText);
   const roots = [...nodes.values()].filter((n) => n.depth === 0).map((n) => n.key);
-  return { depths: levels.map((l) => l.name), nodes, roots, roads: roadsOf(shape, pathOf, last) };
+  const named = [...new Set(shape.things.map((t) => pathOf.get(t.key)?.[0] ?? t.key))].filter((k) => roots.includes(k));
+  return { depths: levels.map((l) => l.name), nodes, roots, named, roads: roadsOf(shape, pathOf, last) };
 }
 
 /** The roads at each depth: every link between two things, rolled up to the nodes each end sits in there. */

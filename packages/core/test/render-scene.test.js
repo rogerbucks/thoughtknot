@@ -57,11 +57,13 @@ test('links are rolled up at each level and counted each way', () => {
 });
 
 // proves: render_scene
-test('the same graph written in another order gives the same scene', () => {
+test('the same graph written in another order gives the same scene, but for the order subjects are first named', () => {
   const a = named(),
     b = { things: [...a.things].reverse(), links: [...a.links].reverse() };
-  const flat = (s) => JSON.stringify({ ...s, nodes: [...s.nodes.entries()] });
+  const flat = (s) => JSON.stringify({ ...s, named: undefined, nodes: [...s.nodes.entries()] });
   assert.equal(flat(sceneOf(a)), flat(sceneOf(b)));
+  // only the colour order follows the writer: the first subject named takes the first colour
+  assert.deepEqual(sceneOf(b).named, [...sceneOf(a).named].reverse());
 });
 
 // proves: render_scene

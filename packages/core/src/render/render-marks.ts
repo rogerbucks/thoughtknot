@@ -80,6 +80,8 @@ export interface LabelMark {
   fill: string;
   ink: string;
   alpha: number;
+  /** An item's name: a dot of this colour at the start of its card. */
+  dot?: string;
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
@@ -93,11 +95,8 @@ export function coloursOf(scene: Scene, look: Look): Map<string, string> {
     const kids = scene.nodes.get(key)?.children ?? [];
     kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
   };
-  // the biggest subject takes the first colour, so a graph keeps its colours however its subjects are named
-  const bySize = [...scene.roots].sort(
-    (a, b) => (scene.nodes.get(b)?.items.length ?? 0) - (scene.nodes.get(a)?.items.length ?? 0) || (a < b ? -1 : 1),
-  );
-  bySize.forEach((k, i) => paint(k, subjectColour(look, i)));
+  // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
+  scene.named.forEach((k, i) => paint(k, subjectColour(look, i)));
   return colours;
 }
 
@@ -145,7 +144,7 @@ export function marksOf(scene: Scene, spots: Map<string, Spot>, detail: Detail, 
     const alpha = showOf(node, detail, last);
     if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view) });
     else dots.push({ kind: 'dot', key: node.key, x: s.x, y: s.y, r: Math.max(2, Math.min(s.r, 6)), fill, alpha: 0.8 });
-    if (alpha > 0.05) asks.push(askOf(node, s, fill, alpha, detail, last));
+    if (alpha > 0.05) asks.push(askOf(node, s, fill, alpha, detail, last, look));
   }
   return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
 }
@@ -158,13 +157,24 @@ export interface LabelAsk {
   y: number;
   px: number;
   fill: string;
+  /** An item's colour, drawn as a dot at the start of its card. */
+  dot?: string;
   alpha: number;
   /** Higher keeps its place when two names clash. */
   weight: number;
 }
 
 /** What `node` asks of the label placer: groups shrink as the level inside opens, items sit on their dot. */
-function askOf(node: SceneNode, s: Spot, fill: string, alpha: number, detail: Detail, last: number): LabelAsk {
+function askOf(
+  node: SceneNode,
+  s: Spot,
+  fill: string,
+  alpha: number,
+  detail: Detail,
+  last: number,
+  look: Look,
+): LabelAsk {
+  const item = node.depth === last;
   const inside = detail.shown[node.depth + 1] ?? 0;
   const px = node.depth === last ? MIN_PX + 1 : MAX_PX - (MAX_PX - MIN_PX) * inside;
   const y = node.depth === last ? s.y : s.y - s.r * inside * 0.82;
@@ -174,7 +184,8 @@ function askOf(node: SceneNode, s: Spot, fill: string, alpha: number, detail: De
     x: s.x,
     y,
     px,
-    fill,
+    // an item sits on a white card with a dot of its colour, as in the mockups; a group's name is in its colour
+    ...(item ? { fill: look.card, dot: fill } : { fill }),
     alpha,
     weight: (last - node.depth) * 1e6 + node.items.length,
   };
@@ -196,7 +207,7 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
   for (const ask of order) {
     const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
     const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
-    const w = textWidth(text, px) + px,
+    const w = textWidth(text, px) + px + (ask.dot ? px : 0),
       h = px * 1.6;
     const box = { x: ask.x - w / 2, y: ask.y - h / 2, w, h };
     const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
@@ -212,6 +223,7 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
       fill: ask.fill,
       ink: inkOn(ask.fill),
       alpha: ask.alpha,
+      ...(ask.dot ? { dot: ask.dot } : {}),
     });
   }
   return kept;

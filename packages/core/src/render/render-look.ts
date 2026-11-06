@@ -12,6 +12,8 @@ export interface Look {
   ink: string;
   paper: string;
   faint: string;
+  /** The card an item's name sits on: white in the mockups, with a dot of its subject's colour. */
+  card: string;
 }
 
 /** The mockups' look in a light theme. */
@@ -20,6 +22,7 @@ export const LIGHT: Look = {
   ink: '#18202c',
   paper: '#f6f8fc',
   faint: '#d5dbe6',
+  card: '#ffffff',
 };
 
 /** The mockups' look in a dark theme. */
@@ -28,6 +31,7 @@ export const DARK: Look = {
   ink: '#eef2f8',
   paper: '#11151d',
   faint: '#2a3242',
+  card: '#1c2230',
 };
 
 /** `hex` as red, green and blue. */

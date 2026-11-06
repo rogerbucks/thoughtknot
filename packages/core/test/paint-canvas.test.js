@@ -100,3 +100,17 @@ test('every colour and size it uses comes from the marks', () => {
   }
   assert.ok(said.font.includes('600 12px system-ui, sans-serif'));
 });
+
+// proves: render_painters_agree
+test('an item card gets its dot and a thin edge in the dot’s colour, and its name moves past the dot', () => {
+  const { c, calls, said } = fake();
+  const card = { ...marks[3], key: 'i', text: 'Item', fill: '#ffffff', ink: '#18202c', dot: '#2fb37a' };
+  paintCanvas(c, [card], 400, 300);
+  assert.ok(said.stroke.includes('#2fb37a'));
+  assert.deepEqual(
+    calls.filter(([n]) => n === 'arc').map(([, x]) => x),
+    [80 + 10],
+  );
+  const [, , x] = calls.find(([n]) => n === 'fillText');
+  assert.ok(x > 80 + 20, 'the name sits after the dot');
+});
