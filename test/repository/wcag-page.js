@@ -52,7 +52,10 @@ export function workerFor(window, file) {
       void this.thread.terminate();
     }
   };
-  return () => Promise.all(threads.map((t) => t.terminate()));
+  return () => {
+    window.stopped = true;
+    return Promise.all(threads.map((t) => t.terminate()));
+  };
 }
 
 /** Whether a window `width` pixels wide matches `media`, a max-width query: a page's phone layout asks this. */
