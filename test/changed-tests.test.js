@@ -1,5 +1,5 @@
-// Requirement: touched_tests_only (editor spec ES§13).
-// Likely-to-fail-first order of the tests a change chooses (editor spec ES§13, touched_tests_only).
+// Requirement: touched_tests_only (ES§13).
+// Likely-to-fail-first order of the tests a change chooses (ES§13, touched_tests_only).
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { likelyFirst } from '../scripts/changed-tests.mjs';
