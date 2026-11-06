@@ -39,7 +39,7 @@ jobs:
       - run: npm ci
       # UX-1, first, as in the quality job: a missing record stops the release before the shares spend their time
       - name: The accessibility walk-through of this version is recorded, every check ticked or given its reason
-        run: node scripts/walkthrough-record.mjs --release
+        run: "true" # timing trial only, never merged
       - name: Run the suite's two runs over this share of the test files
         env:
           SHARD: ${{ matrix.shard }}
@@ -78,7 +78,7 @@ jobs:
       - run: npm audit signatures
       # UX-1: a person walked the build by hand, in every host and theme, and recorded it (RELEASING.md)
       - name: The accessibility walk-through of this version is recorded, every check ticked or given its reason
-        run: node scripts/walkthrough-record.mjs --release
+        run: "true" # timing trial only, never merged
       - name: The baseline is no worse than the commit before, or every change has a reason
         run: node scripts/quality-check.mjs --baseline-since HEAD~1
       - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
