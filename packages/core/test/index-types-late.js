@@ -425,4 +425,15 @@ export const TYPES_LATE = [
   'RepoSettings',
   // the rows of a note read in parts, kept between sessions (ES§53, scale_parts_kept), 6 Nov 2026
   'KeptPlace',
+  // storage of your choice and the history layer (ES§55, ST1), 6 Nov 2026
+  'ChosenStorage',
+  'HistoryCheck',
+  'HistoryStore',
+  'LetGo',
+  'MoveOutcome',
+  'MoveRefused',
+  'MovedNote',
+  'NoPlace',
+  'StorageChoice',
+  'StorageSetting',
 ];
