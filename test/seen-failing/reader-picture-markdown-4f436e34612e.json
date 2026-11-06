@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/reader-picture-markdown.test.js",
+  "test": "a Markdown reader with no plug-in > shows a picture in another folder by a link that works from the note",
+  "seen_failing_first": false,
+  "evidence": "the picture and its image line were built in the RP1 PRs; this test only adds the missing proof"
+}
