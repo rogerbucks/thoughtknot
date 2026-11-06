@@ -5,12 +5,12 @@ import assert from 'node:assert/strict';
 import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
+import { arrowOf, signsOf } from '../src/render/render-signs.ts';
 import { DARK, LIGHT, contrast, inkOn, subjectColour } from '../src/render/render-look.ts';
 import {
   HEADER_PX,
   ITEM_PX,
   MAX_PX,
-  arrowOf,
   MIN_PX,
   coloursOf,
   cloudAlpha,
@@ -18,7 +18,6 @@ import {
   crisp,
   marksOf,
   placeLabels,
-  signsOf,
 } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
