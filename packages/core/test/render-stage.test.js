@@ -300,3 +300,36 @@ test('the colour key shows over the new rendering: told each new level, with the
     uninstall();
   }
 });
+
+// proves: level_regions
+test('a click on a signpost glides to the room off screen at the same zoom', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing: plain, g } = drawingAndGraph();
+    const drawing = { ...plain, links: [{ from: 'WA0', type: 'TO', to: 'MA0' }] };
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(viewport, drawing, g, { open() {}, clear() {}, selected: () => null });
+    const [work, money] = stage.scene.named;
+    // close on Work, so Money is off screen
+    const w = stage.spots.get(work);
+    stage.view = { ...stage.view, scale: 3, x: w.x - stage.view.w / 6, y: w.y - stage.view.h / 6 };
+    stage.draw();
+    const sign = stage.marks.find((m) => m.kind === 'label' && m.key === money);
+    assert.ok(sign, 'a signpost to Money');
+    assert.match(sign.text, /^[→↘↓↙←↖↑↗] /);
+    stage.clicked(sign.x + sign.w / 2, sign.y + sign.h / 2);
+    assert.equal(stage.view.scale, 3, 'the same zoom');
+    const m = stage.spots.get(money);
+    const x = (m.x - stage.view.x) * 3,
+      y = (m.y - stage.view.y) * 3;
+    assert.ok(x > 0 && x < stage.view.w && y > 0 && y < stage.view.h, 'Money is on screen now');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

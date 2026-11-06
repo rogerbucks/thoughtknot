@@ -231,6 +231,10 @@ export class RenderStage {
       node = key ? this.scene.nodes.get(key) : undefined,
       spot = key ? this.spots.get(key) : undefined;
     if (!key || !spot) return this.hands?.clear();
+    // a signpost names a room off screen: glide there at the same zoom, so the reader sees where they went
+    const on = { x: (spot.x - this.view.x) * this.view.scale, y: (spot.y - this.view.y) * this.view.scale };
+    if (on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h)
+      return this.glideTo(centreOn(this.view, spot));
     const last = this.scene.depths.length - 1;
     if (node && node.depth < last) {
       // a group: glide to it, one level nearer, so what is in it opens

@@ -10,6 +10,7 @@ import {
   HEADER_PX,
   ITEM_PX,
   MAX_PX,
+  arrowOf,
   MIN_PX,
   coloursOf,
   cloudAlpha,
@@ -17,6 +18,7 @@ import {
   crisp,
   marksOf,
   placeLabels,
+  signsOf,
 } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
@@ -219,4 +221,44 @@ test('zoomed in, names stay as easy to read as at the top: clear or not drawn, n
       else assert.ok(l.px >= HEADER_PX, `${l.text}: a group's name keeps a readable size as it opens`);
     }
   }
+});
+
+// proves: level_regions
+test('a signpost at the edge points the way to a room off screen, and names it; a road on screen has none', () => {
+  // Roger, 7 Nov 2026: no signposts were shown for a link to something off screen (from the mockup)
+  assert.equal(arrowOf(1, 0), '→');
+  assert.equal(arrowOf(0, 1), '↓');
+  assert.equal(arrowOf(-1, -1), '↖');
+  const things = [];
+  for (const subject of ['Work', 'Money', 'Home'])
+    for (const area of ['A', 'B'])
+      for (let i = 0; i < 8; i++) things.push(thing(`${subject[0]}${area}${i}`, { subject, area }));
+  const scene = sceneOf({ things, links: [link('WA0', 'MA0'), link('MA1', 'WB1'), link('HA0', 'WA2')] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  // the whole drawing on screen: every road shows itself, so no signposts
+  const all = { x: -2000, y: -2000, scale: 0.15, w: 1280, h: 800 };
+  const at = (view) => signsOf(scene, spots, detailAt(sizes, view.scale), view, coloursOf(scene, LIGHT), LIGHT);
+  assert.deepEqual(at(all), [], 'every road shows itself, so no signposts');
+  // close on Work, with Money and Home off screen: a signpost to each, at the edge, pointing their way
+  const work = spots.get(scene.named[0]);
+  const near = { x: work.x - 640 / 3, y: work.y - 400 / 3, scale: 3, w: 1280, h: 800 };
+  const signs = at(near);
+  const onScreen = (s) => ({ x: (s.x - near.x) * near.scale, y: (s.y - near.y) * near.scale });
+  for (const sign of signs) {
+    const far = onScreen(spots.get(sign.key));
+    assert.ok(far.x < 0 || far.y < 0 || far.x > 1280 || far.y > 800, `${sign.text}: its room is off screen`);
+    assert.ok(sign.x > 0 && sign.x < 1280 && sign.y > 0 && sign.y < 800, `${sign.text} stands on screen`);
+    const edge = Math.min(sign.x, sign.y, 1280 - sign.x, 800 - sign.y);
+    assert.ok(edge < 120, `${sign.text} stands by the edge`);
+    assert.equal(
+      sign.text[0],
+      arrowOf(
+        far.x - Math.min(Math.max((work.x - near.x) * 3, 0), 1280),
+        far.y - Math.min(Math.max((work.y - near.y) * 3, 0), 800),
+      )[0],
+    );
+  }
+  assert.equal(signs.length, 2, 'the ways out of Work, to Money and to Home, are marked');
+  assert.equal(new Set(signs.map((s) => s.key)).size, signs.length, 'one signpost for each room');
 });

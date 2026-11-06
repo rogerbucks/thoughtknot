@@ -127,6 +127,9 @@ const onScreen = (spot: Spot, view: View): Spot => ({
 const inView = (s: Spot, view: View): boolean =>
   s.x + s.r > 0 && s.y + s.r > 0 && s.x - s.r < view.w && s.y - s.r < view.h;
 
+/** Whether the middle of `s`, where its name sits, is on the screen. */
+const onView = (s: Spot, view: View): boolean => s.x >= 0 && s.y >= 0 && s.x <= view.w && s.y <= view.h;
+
 /** How much a node shows: its depth's share, and a group fades back once the level inside it is open. */
 function showOf(node: SceneNode, detail: Detail, last: number): number {
   const own = detail.shown[node.depth] ?? 0;
@@ -173,6 +176,7 @@ export function marksOf(
     const clear = crisp(named);
     if (clear > 0.05) asks.push(askOf(node, s, fill, clear, detail, last, look));
   }
+  asks.push(...signsOf(scene, spots, detail, view, colours, look));
   return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
 }
 
@@ -311,6 +315,92 @@ function spotFor(
   return null;
 }
 
+/** How much a level's roads show: they stay, fainter, while the level inside opens, so a road never just vanishes (R20). */
+const roadAlpha = (detail: Detail, depth: number): number =>
+  (detail.shown[depth] ?? 0) * (1 - 0.7 * (detail.shown[depth + 1] ?? 0));
+
+/** The arrows a signpost points with, a turn of 45 degrees apart, clockwise from the right. */
+const ARROWS = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
+
+/** The arrow that points along `dx`, `dy` on the screen. */
+export const arrowOf = (dx: number, dy: number): string =>
+  ARROWS[(Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8] as string;
+
+/** How far in from the clear edge a signpost stands. */
+const SIGN_INSET = 6;
+
+/**
+ * Signposts: where a road leaves the screen for a room off it, a card at the edge points the way and names the room
+ * (Roger, 7 Nov 2026, from the mockup). A road whose far end is on screen shows itself, so it has none. One signpost
+ * for each room off screen; a click on it goes there, as on the room's own name.
+ */
+export function signsOf(
+  scene: Scene,
+  spots: Map<string, Spot>,
+  detail: Detail,
+  view: View,
+  colours: Map<string, string>,
+  look: Look,
+): LabelAsk[] {
+  const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const last = scene.depths.length - 1;
+  const signs = new Map<string, LabelAsk>();
+  scene.roads.forEach((at, depth) => {
+    // a signpost stands while its level shows at all, so zoomed deep into a room the ways out are still marked
+    const alpha = crisp(detail.shown[depth] ?? 0);
+    if (alpha < 0.05) return;
+    for (const road of at) {
+      const p = spots.get(road.a),
+        q = spots.get(road.b);
+      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
+      const [s, t] = [onScreen(p, view), onScreen(q, view)];
+      for (const [near, far, key] of [
+        [s, t, road.b],
+        [t, s, road.a],
+      ] as const) {
+        // the far room's name is off screen, though the edge of its cloud may show
+        if (!inView(near, view) || onView(far, view)) continue;
+        const node = scene.nodes.get(key);
+        if (!node) continue;
+        const nx = Math.min(Math.max(near.x, c.left), view.w - c.right),
+          ny = Math.min(Math.max(near.y, c.top), view.h - c.bottom);
+        const dx = far.x - nx,
+          dy = far.y - ny;
+        const name = node.name.length > LONGEST ? `${node.name.slice(0, LONGEST - 1)}…` : node.name;
+        const text = `${arrowOf(dx, dy)} ${name}`;
+        const px = ITEM_PX,
+          w = textWidth(text, px) + px,
+          h = px * 1.6;
+        const [left, right] = [c.left + w / 2 + SIGN_INSET, view.w - c.right - w / 2 - SIGN_INSET];
+        const [top, bottom] = [c.top + h / 2 + SIGN_INSET, view.h - c.bottom - h / 2 - SIGN_INSET];
+        if (left > right || top > bottom) continue;
+        // how far along the way out the line meets the edge kept clear
+        const k = Math.min(
+          dx > 0 ? (right - nx) / dx : dx < 0 ? (left - nx) / dx : Infinity,
+          dy > 0 ? (bottom - ny) / dy : dy < 0 ? (top - ny) / dy : Infinity,
+        );
+        if (!Number.isFinite(k) || k < 0) continue;
+        const weight = (last - depth) * 1e6 - 5e5 + road.forward + road.back;
+        if ((signs.get(key)?.weight ?? -Infinity) >= weight) continue;
+        const fill = colours.get(key) ?? look.faint;
+        signs.set(key, {
+          key,
+          text,
+          x: Math.min(Math.max(nx + dx * k, left), right),
+          y: Math.min(Math.max(ny + dy * k, top), bottom),
+          px,
+          fill: look.card,
+          edge: fill,
+          ink: inkOf(fill, look.card, look),
+          alpha,
+          weight,
+        });
+      }
+    }
+  });
+  return [...signs.values()];
+}
+
 /** What a road says of its links: both ways, one way, or nothing for a single link. */
 export function countOf(forward: number, back: number): string {
   if (forward + back < 2) return '';
@@ -329,8 +419,7 @@ function roadsOf(
 ): RoadMark[] {
   const roads: RoadMark[] = [];
   scene.roads.forEach((at, depth) => {
-    // a level's roads stay, fainter, while the level inside it opens: a road never just vanishes (R20)
-    const alpha = (detail.shown[depth] ?? 0) * (1 - 0.7 * (detail.shown[depth + 1] ?? 0));
+    const alpha = roadAlpha(detail, depth);
     if (alpha < 0.05) return;
     for (const road of at) {
       const p = spots.get(road.a),
