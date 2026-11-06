@@ -14,6 +14,9 @@ export type { ChangeLog, ChangeOutcome, NoteEdit, NoteStorage, StorageLayer, Sto
 export type { StoredNote, WriteOptions, WriteOutcome } from './note-storage.ts';
 export { storageContract } from './storage-contract.ts';
 export type { StorageCheck } from './storage-contract.ts';
+export { letGoOfOld, moveNotes, MOVE_REFUSED, NO_CHOICE, storageInUse, storageOffered } from './storage-choice.ts';
+export { storageSettingFrom } from './storage-choice.ts';
+export type { ChosenStorage, LetGo, MovedNote, MoveOutcome, StorageChoice, StorageSetting } from './storage-choice.ts';
 export { historyContract, memoryHistory, moveHistory, notesHistory } from './history-store.ts';
 export type { HistoryCheck, HistoryStore } from './history-store.ts';
 export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
