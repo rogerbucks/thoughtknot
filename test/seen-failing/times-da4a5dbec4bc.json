@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/times.test.mjs",
+  "test": "a time written with its zone is held as its UTC instant",
+  "seen_failing_first": false,
+  "evidence": "Both readers already read a zoned time. This test only adds the proof that they agree, so it passes on the old code."
+}
