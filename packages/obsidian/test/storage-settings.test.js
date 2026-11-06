@@ -1,5 +1,5 @@
-// Where graphs are kept: what was saved for it, read back (ES§55, ST1). The settings page itself, with the plug-in
-// loaded, is in storage-settings-page.test.js.
+// Where graphs are kept: what was saved for it, read back (ES§55, storage_history_layer). The settings page itself,
+// with the plug-in loaded, is in storage-settings-page.test.js.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { historyFolderOf, keptStorageFrom, HISTORY_FOLDER } from '../src/storage/storage-settings.ts';
