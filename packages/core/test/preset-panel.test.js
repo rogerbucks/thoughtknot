@@ -3,6 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PresetPanel } from '../src/preset-panel.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
+import { PRESET_SETTINGS, STARTERS } from '../src/view-presets.ts';
 
 /** A panel over settings kept in a variable, with a vault file kept in another, and what the host was asked to do. */
 function panel(start = {}, extra = {}) {
@@ -36,6 +37,19 @@ const press = async (p, seen, name) => {
 };
 
 describe('the preset panel', () => {
+  // proves: view_presets_predictable
+  test('using a preset changes only the drawing settings it names, so it moves nothing a person placed', async () => {
+    for (const starter of STARTERS) {
+      const { p, state, seen } = panel({ viewPreset: 'other' });
+      const before = { ...state.s };
+      p.pick(starter.id);
+      await press(p, seen, 'Use this preset');
+      const changed = Object.keys(state.s).filter((k) => JSON.stringify(state.s[k]) !== JSON.stringify(before[k]));
+      for (const key of changed)
+        assert.ok(key === 'viewPreset' || PRESET_SETTINGS.includes(key), `${starter.id} changed ${key}`);
+    }
+  });
+
   // proves: view_presets_predictable
   test('shows what a pick would change first, and changes nothing until it is used', () => {
     const { p, state, seen } = panel({ viewPreset: 'default' });

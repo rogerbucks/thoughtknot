@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { until } from '../../obsidian/test/host/load-plugin.js';
 import { vaultPresetFile } from '../../core/src/vault-preset.ts';
+import { presetFile, starterOf } from '../../core/src/view-presets.ts';
 import { cleanUp } from './editor-page-support.js';
 import { livePage } from './editor-page-live.js';
 
@@ -85,6 +86,23 @@ describe('the view preset panel on the browser editor’s page', () => {
       await until(() => kept.length === 2, 8000);
       assert.match(kept[0], /thoughtknot-view-preset@1/);
       assert.equal(kept[1], 'View preset.json');
+    } finally {
+      await page.stop();
+    }
+  });
+
+  // proves: view_presets_portable
+  test('takes a preset file brought in, and shows what it would change before anything is kept', async () => {
+    const page = await livePage(NOTE);
+    try {
+      await until(() => panel(page), 8000);
+      const input = panel(page).querySelector('input[type=file]');
+      assert.ok(input, 'a preset file can be brought in');
+      const file = { text: () => Promise.resolve(presetFile(starterOf('focus'))) };
+      Object.defineProperty(input, 'files', { value: [file] });
+      input.dispatchEvent(new page.window.Event('change', { bubbles: true }));
+      await until(() => /Before you use Focus support/.test(panel(page).textContent), 8000);
+      assert.equal(existsSync(join(page.vault, PLACE)), false, 'bringing a file in writes nothing');
     } finally {
       await page.stop();
     }
