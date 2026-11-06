@@ -10,6 +10,7 @@
 import { isolated } from './bidi.ts';
 import type { Board, BoardItem, BoardKind } from './board.ts';
 import { cardLines, cardOf, cardSaid } from './board-card.ts';
+import { glyphNamed } from './board-glyphs.ts';
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
 import { STYLE_HUES } from './style-graph.ts';
@@ -71,8 +72,11 @@ const inside = (a: Box, b: Box) => a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x 
 const kindSaid = (kind: BoardKind) => word(`board.kind.${kind.toLowerCase() as Lowercase<BoardKind>}`);
 
 /** An item named in words: its kind and text, or its kind alone. */
+const glyphOf = (item: BoardItem) =>
+  item.kind === 'Glyph' && typeof item.more.glyph === 'string' ? glyphNamed(item.more.glyph) : undefined;
+
 const named = (item: BoardItem) => {
-  const text = item.kind === 'Card' ? cardSaid(cardOf(item)) : item.text;
+  const text = item.kind === 'Card' ? cardSaid(cardOf(item)) : (glyphOf(item)?.said ?? item.text);
   return text ? word('board.said', { kind: kindSaid(item.kind), text }) : kindSaid(item.kind);
 };
 
@@ -172,10 +176,14 @@ function itemSvg(board: Board, item: BoardItem, palette: Palette): string {
         `<tspan x="${num(box.x + pad)}" y="${num(box.y + pad + size * (1 + i * STYLE.line_height))}"${l.role === 'title' ? ' font-weight="bold"' : ''}${l.role === 'row' ? ` fill="${palette.muted}"` : ''}>${isolated(escaped(l.text))}</tspan>`,
     )
     .join('');
+  const glyph = glyphOf(item);
+  const mark = glyph
+    ? `<text x="${num(box.x + box.w / 2)}" y="${num(box.y + box.h / 2)}" font-size="${num(Math.min(box.w, box.h) * 0.7)}" text-anchor="middle" dominant-baseline="central" aria-hidden="true">${glyph.char}</text>`
+    : '';
   const words = text
     ? `<text font-family="${STYLE.font}" font-size="${num(size)}" fill="${item.kind === 'Frame' ? palette.muted : palette.text}" aria-hidden="true">${text}</text>`
     : '';
-  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${words}</g>`;
+  return `<g data-item="${escaped(item.id)}" role="img"><title>${escaped(itemSaid(board, item))}</title>${shape}${mark}${words}</g>`;
 }
 
 /**
