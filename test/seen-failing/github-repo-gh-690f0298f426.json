@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/github-repo-gh.test.js",
+  "test": "a repository too large to list whole is never listed short (ARCH-15) > a complete listing still works",
+  "seen_failing_first": false,
+  "evidence": "A guard that must keep passing: a complete listing worked before the change and still must."
+}

@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (59)
+## Open (58)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -57,7 +57,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-16 | A board merge lets the other side's connector label silently win | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
 | CODE-17 | A failed history record turns a saved note into a failed write | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
 | CODE-18 | CSV limits count characters, and line numbers drift on a bare carriage return | ●○○ | ●○○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
-| ARCH-15 | A big GitHub repository lists as a short one, with no warning | ●○○ | ●●● | fix-now | hours |
 | ARCH-16 | A FROM list has no cap, and each draw rereads every place | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | ARCH-17 | A plain note name with a colon now reads as a plug-in place | ●○○ | ●○○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
 | UX-12 | Closing the cloud card leaves keyboard focus on nothing | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
@@ -551,16 +550,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test
 
-### ARCH-15 A big GitHub repository lists as a short one, with no warning
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/github-repo-gh.ts`, `packages/core/src/github-repo-store.ts`, `packages/core/test/fake-github.js`.
-
-**Risk:** The GitHub store lists notes from one recursive tree call. GitHub cuts that answer off for a very large repository and sets a 'truncated' flag. The code never reads the flag. So notes past the cut are missing from the list, with no message. A person sees an incomplete vault. A move into or out of the repository can then check its copy against a short list and call it complete.
-
-**Fix:** Read the tree's truncated flag. When it is set, refuse the listing with a plain sentence, or list folder by folder. Make a move check its copy against a complete list only.
-
-**Check:** A test in packages/core/test with fake-github.js returning truncated: true. It asserts list() refuses, and that a move to the repository does not report success.
-
 ### ARCH-16 A FROM list has no cap, and each draw rereads every place
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/src/connectors.ts`, `packages/core/src/layout-limits.ts`, `scripts/benchmarks/budgets.mjs`.
@@ -661,7 +650,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test in packages/claude-code/test calls decide twice and asserts the second is refused. Another waits past the limit and asserts answer is refused, and edits the note between decide and answer and asserts nothing is written.
 
-## Done or accepted (114)
+## Done or accepted (115)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -779,3 +768,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |
 | OPS-14 | versions.json lists 0.7.1, which was never tagged | done | #1633; kept out by `test/versions-json.test.js` |
+| ARCH-15 | A big GitHub repository lists as a short one, with no warning | done | #2063 |

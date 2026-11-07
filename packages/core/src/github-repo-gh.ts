@@ -144,6 +144,8 @@ export function ghRepoHost(run: GhRun, mainBranch: string, mainAllowed = false):
     async files(repo, branch): Promise<RepoFile[]> {
       const from = await readFrom(repoChecked(repo), branchChecked(branch));
       const tree = await call('GET', `repos/${repo}/git/trees/${from}?recursive=1`);
+      // GitHub cuts the answer short for a very large repository. A short list must never pass for the whole one.
+      if (field(tree, 'truncated') === true) throw new Error(word('repo.gh.truncated'));
       const entries = field(tree, 'tree');
       return (Array.isArray(entries) ? entries : [])
         .filter((e) => field(e, 'type') === 'blob')
