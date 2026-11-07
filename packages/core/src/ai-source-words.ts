@@ -74,6 +74,9 @@ export const AI_SOURCE_WORDS = {
   'models.held': 'held to the matrix row {row}',
   'models.ceiling': 'Ceiling',
   'models.ceiling.sentence': 'The highest classification of note this model may be sent.',
+  'models.private': 'Private reviewer',
+  'models.private.sentence':
+    'A model you run, on this device or your own network: it reads your notes for review without asking each time. Leave off for a cloud model.',
   'models.key': 'Key',
   'models.key.sentence': 'Kept in the app’s own secret store, never in the vault.',
   'models.add': 'Add a model',
@@ -111,6 +114,11 @@ export const AI_SOURCE_WORDS = {
   'ai.off': 'AI is off: turn on Use AI models in the settings, and set up a model, before anything is sent.',
   'ai.no-model':
     'No AI model is set up yet: set one up under AI models in the settings, with its name, model and address.',
+  // the private and public reviewers (editor spec §19, ai_two_reviewers, ai-reviewers.ts)
+  'ai.reviewer.not-own':
+    '{host} is not on this device or your own network, so it cannot be a private reviewer: mark it public, or give the address of a machine you run, such as one on your tailnet.',
+  'ai.reviewer.none-private':
+    'No private reviewer is set up, and this vault does not allow a public one: set up a model you run, such as LM Studio, and mark it private.',
   // a model's ceiling, and the credentials never sent (ai-ceiling.ts)
   'ai.level.unlabelled': 'This note has no classification, so it counts as {level}',
   'ai.level.classified': 'This note is classified {level}',
