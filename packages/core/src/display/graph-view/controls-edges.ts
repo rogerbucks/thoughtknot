@@ -119,7 +119,10 @@ export function watchEdges(view: HTMLElement, drawing: HTMLElement): () => void 
       for (const el of Array.from(
         view.querySelectorAll('.thoughtknot-corner, .thoughtknot-mini-map, .thoughtknot-space-pad'),
       ))
-        if (!watched.has(el)) (watched.add(el), sizes.observe(el));
+        if (!watched.has(el)) {
+          watched.add(el);
+          sizes.observe(el);
+        }
     });
   };
   sizes.observe(drawing);
