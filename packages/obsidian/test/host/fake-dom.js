@@ -468,8 +468,8 @@ export function fakeDocument(width = 700) {
       (doc.opened ??= []).push({ url, target });
       return null;
     },
-    // a frame is a timer, kept until it runs, so taking the globals down cancels the frames still to come: one that ran
-    // after a test ended would find no window, and fail the test file
+    // a frame is a timer, kept until it runs. Taking the globals down cancels the frames still to come. One that ran
+    // after a test ended would find no window, and fail the test file.
     requestAnimationFrame(f) {
       const id = setTimeout(() => {
         doc.frames.delete(id);
