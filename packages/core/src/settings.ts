@@ -11,7 +11,7 @@ import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
-import { ownFields } from './settings-own.ts';
+import { ownFields, OWN_PRESETS_OPTION } from './settings-own.ts';
 import { OWN_PRESET, STARTERS } from './view-presets.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
@@ -303,6 +303,7 @@ export const OPTIONS: Option[] = [
     sentence: 'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
   },
   ...PICTURE_OPTIONS, // the pictures for readers (§62)
+  ...OWN_PRESETS_OPTION, // the list of the person's own view presets
   {
     key: 'decider',
     section: 'Proposals',
