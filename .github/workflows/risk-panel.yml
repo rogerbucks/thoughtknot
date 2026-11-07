@@ -61,7 +61,33 @@ jobs:
     needs: scope
     if: needs.scope.outputs.changed == 'true' || inputs.all_roles
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
+    # One session for each role, one after another. A single session for all nine stopped itself after the first
+    # (7 Nov 2026: 45 turns, 100 seconds, "success", only Morgan's part written).
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - {
+              n: 1,
+              who: Morgan,
+              role: 'senior security engineer (also privacy)',
+              extra: 'the risks of roles "Trust model review" and "Code scanning (CodeQL)"',
+            }
+          - { n: 2, who: Dot, role: 'IT administrator and release engineer', extra: 'no others' }
+          - { n: 3, who: Bram, role: 'senior coder and QA', extra: 'no others' }
+          - { n: 4, who: Wren, role: 'enterprise, solution and data architect', extra: 'no others' }
+          - { n: 5, who: Pip, role: 'user experience and accessibility lead', extra: 'no others' }
+          - {
+              n: 6,
+              who: Juno,
+              role: 'senior user interface designer for neurodiversity and data management',
+              extra: 'no others',
+            }
+          - { n: 7, who: Tam, role: 'workflow designer and open-source maintainer', extra: 'no others' }
+          - { n: 8, who: Rory, role: 'API design expert', extra: 'no others' }
+          - { n: 9, who: Nell, role: 'AI product expert', extra: 'no others' }
     steps:
       - name: Check the token is set
         id: token
@@ -104,38 +130,36 @@ jobs:
             with no pipes or redirects, as piped and compound commands are refused.
             EVERY ROLE: ${{ inputs.all_roles }}
 
-            The roles: senior security engineer (also privacy), IT administrator and release engineer, senior coder
-            and QA, enterprise, solution and data architect, user experience and accessibility lead, senior user
-            interface designer for neurodiversity and data management, workflow designer and open-source maintainer,
-            API design expert, AI product expert. Take only the roles the scope names, unless EVERY ROLE is true.
+            You are one reviewer of a panel of nine, and the only one in this session: ${{ matrix.who }}, the ${{ matrix.role }}.
+            The other eight run in their own sessions. Do their work for none of them. If EVERY ROLE is false and the
+            scope's "roles" names nothing for you, write nothing and stop.
 
-            For each stale risk in the scope: read the files that moved and say whether the risk is now fixed, worse,
-            or the same, with path:line proof. For each role named: read the diff since the scope's "since" ref
-            (git diff --stat and the files it names) and interrogate it with that role's hardest questions. Praise is
-            not a finding. Do not report style a linter checks or what quality/risks.json already holds. Read a
-            requirement's proved status from `node scripts/check-requirements.mjs --done N`, never by counting tests.
+            For each stale risk in the scope whose role matches yours (plus ${{ matrix.extra }}): read the files that
+            moved and say whether the risk is now fixed, worse, or the same, with path:line proof. Then read the diff
+            since the scope's "since" ref (git diff --stat and the files it names) and interrogate it with your role's
+            hardest questions. Praise is not a finding. Do not report style a linter checks or what quality/risks.json
+            already holds. Read a requirement's proved status from `node scripts/check-requirements.mjs --done N`,
+            never by counting tests.
 
-            Each role is a character in docs/agents/ROLES.md, section "The review panel’s characters": Morgan
-            (security), Dot (release), Bram (coder and QA), Wren (architect), Pip (user experience), Juno
-            (neurodiversity), Tam (workflow), Rory (API) and Nell (AI). Open each role's part with a few dry, kind words
-            in that character's voice (humour setting 60%: often none), signed with its name. The risks table and the JSON stay plain: no jokes there.
+            You are a character in docs/agents/ROLES.md, section "The review panel’s characters". Open your part with
+            a few dry, kind words in that character's voice (humour setting 60%: often none), signed with your name
+            (${{ matrix.who }}). The risks table and the JSON stay plain: no jokes there.
 
-            Work in the foreground, on your own: start no subagents and no background tasks. The run ends when you
-            stop, and anything still running is lost with it (the 31 Oct 2026 run started seven reviewers, stopped
-            to wait for them, and wrote nothing). Take the roles one after another, and rewrite panel-out/panel.md
-            after each role, so a run that is cut short still leaves a report.
+            Work in the foreground, on your own: start no subagents and no background tasks. Rewrite your file as
+            you go, so a run that is cut short still leaves a report. Do not stop until both parts are written: your
+            proposed new risks, and one verdict line for each stale risk of yours.
 
-            Write your findings to panel-out/panel.md as plain language (sentences of 25 words or fewer): first a
-            table of proposed new risks, each as the JSON object quality/risks.json uses (id, role, area, title,
-            risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
-            with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
+            Write your findings to panel-out/${{ matrix.n }}-${{ matrix.who }}.md as plain language (sentences of 25
+            words or fewer): first your part's heading ("## ${{ matrix.who }}: your role"), a table of proposed new
+            risks, each as the JSON object quality/risks.json uses (id, role, area, title, risk, evidence,
+            likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
           claude_args: |
             --allowedTools "Read,Grep,Glob,Write,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
       # always(): a run that is cut short or fails still leaves what the panel wrote so far
       - if: always() && steps.token.outputs.set == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: risk-panel
+          name: risk-panel-${{ matrix.n }}
           path: panel-out
           if-no-files-found: ignore
           retention-days: 30
@@ -150,7 +174,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: risk-panel
+          pattern: risk-panel-*
+          merge-multiple: true
           path: panel-out
       - name: Keep the risk-panel issue up to date
         env:
@@ -158,6 +183,15 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          # one file for each role, in order; a role that wrote nothing is named, so a half-run never looks whole
+          {
+            printf '# Risk panel report\n\nEach role ran in its own session. The owner decides every decision below.\n\n'
+            for n in 1 2 3 4 5 6 7 8 9; do
+              f=$(ls panel-out/"$n"-*.md 2>/dev/null | head -n 1)
+              if [ -n "$f" ]; then cat "$f"; printf '\n\n'; else printf '## Role %s: nothing written (cut short or nothing in scope)\n\n' "$n"; fi
+            done
+          } > panel-out/panel.md
+          ls panel-out/*-*.md >/dev/null 2>&1 || : > panel-out/panel.md
           body=panel-out/panel.md
           # GitHub caps an issue body at 65,536 characters: keep the head and point to the run for the rest
           if [ -s "$body" ] && [ "$(wc -c < "$body")" -gt 60000 ]; then

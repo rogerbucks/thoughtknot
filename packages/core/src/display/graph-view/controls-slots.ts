@@ -54,6 +54,9 @@ const HOLDING: readonly Slot[] = ['top-start', 'top-end', 'bottom-end', 'end-sid
 /** The cards that hold a slot of their own, which a card in the middle must keep clear of. */
 const HELD = Object.keys(SLOTS).filter((c) => HOLDING.includes(SLOTS[c] as Slot));
 
+/** The narrowest gap between two cards at the top that the badge goes into, its words wrapped, in CSS pixels (8rem). */
+const MIDDLE_MIN = 128;
+
 /** Where a card in the top middle goes: its insets from the view's start and end, and how far down it sits. */
 export interface MiddlePlace {
   start: number;
@@ -78,6 +81,8 @@ export function middlePlace(
   const width = view.right - view.left;
   const cards = held.filter((c) => c.right - c.left > 0 && c.bottom - c.top > 0);
   let top = view.top + gap;
+  // the widest clear span across the top, where it goes, its words wrapped, when no clear place is wide enough
+  let first: { left: number; right: number } | null = null;
   for (let tries = 0; tries <= cards.length; tries++) {
     const band = { left: view.left, right: view.right, top, bottom: top + want.height };
     const across = cards.filter((c) => overlaps(c, band)).sort((a, b) => a.left - b.left);
@@ -91,13 +96,17 @@ export function middlePlace(
       if (c.left - from > best.right - best.left) best = { left: from, right: c.left };
       from = Math.max(from, c.right + gap);
     }
+    first ??= best;
     if (best.right - best.left >= Math.min(want.width, width - 2 * gap) || !across.length)
       return { start: best.left - view.left, end: view.right - best.right, top: top - view.top };
     // too narrow: below the card that ends highest, and again, while it still fits in the view
     top = Math.min(...across.map((c) => c.bottom)) + gap;
     if (top + want.height > view.bottom - gap) break;
   }
-  // a drawing too short to keep it clear: across the top, as it was
+  // a drawing too short to drop it below them. It goes between the cards at the top, its words wrapped, while that gap
+  // is wide enough to read. Else it goes across the top, as it was.
+  if (first && first.right - first.left >= MIDDLE_MIN)
+    return { start: first.left - view.left, end: view.right - first.right, top: gap };
   return { start: 0, end: 0, top: gap };
 }
 

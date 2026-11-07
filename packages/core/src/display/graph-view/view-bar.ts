@@ -7,6 +7,7 @@ import { button } from '../button';
 import { CHIP_LINES, renderChip } from './controls-chip';
 import { renderSheet } from './controls-sheet';
 import { keepPlace } from './controls-place';
+import { watchEdges } from './controls-edges';
 import { isPhone, setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { PictureStatus, ViewOptions } from './view-options';
@@ -224,6 +225,7 @@ export function overDrawing(
     watch.observe(viewport);
     card.register(() => watch.disconnect());
   }
+  card.register(watchEdges(root, viewport)); // the cards down each side stack, never overlap (panels_stack)
   return viewport;
 }
 
