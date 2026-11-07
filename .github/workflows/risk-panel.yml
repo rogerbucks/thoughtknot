@@ -69,12 +69,22 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { n: 1, who: Morgan, role: 'senior security engineer (also privacy)', extra: 'the risks of roles "Trust model review" and "Code scanning (CodeQL)"' }
+          - {
+              n: 1,
+              who: Morgan,
+              role: 'senior security engineer (also privacy)',
+              extra: 'the risks of roles "Trust model review" and "Code scanning (CodeQL)"',
+            }
           - { n: 2, who: Dot, role: 'IT administrator and release engineer', extra: 'no others' }
           - { n: 3, who: Bram, role: 'senior coder and QA', extra: 'no others' }
           - { n: 4, who: Wren, role: 'enterprise, solution and data architect', extra: 'no others' }
           - { n: 5, who: Pip, role: 'user experience and accessibility lead', extra: 'no others' }
-          - { n: 6, who: Juno, role: 'senior user interface designer for neurodiversity and data management', extra: 'no others' }
+          - {
+              n: 6,
+              who: Juno,
+              role: 'senior user interface designer for neurodiversity and data management',
+              extra: 'no others',
+            }
           - { n: 7, who: Tam, role: 'workflow designer and open-source maintainer', extra: 'no others' }
           - { n: 8, who: Rory, role: 'API design expert', extra: 'no others' }
           - { n: 9, who: Nell, role: 'AI product expert', extra: 'no others' }
