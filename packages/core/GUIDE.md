@@ -689,6 +689,12 @@ never data.
   - Each fault is a problem with its fix, GN905 to GN908. They are a kind that is not a drawing's, or a pin to a thing
     that is gone. They are also a shape it does not know, or points that are not pairs.
   - `writeSketch` writes the drawings in one fixed form.
+- `layout-block.ts` — where things sit, kept apart from the data (editor spec §2, layout_block): `// graph: trip_layout ·
+  LAYOUT ON trip`, one `(ann:Place {x: 120, y: 40, group: 'Team'})` per thing, named by its key.
+  - `layoutOf` (in `blocks.ts`) knows the block. `dataKind` leaves it out of the drawing.
+  - `readLayout` gives a Map of thing key to place. A place for a thing the graph does not hold is GN910. Its fix,
+    `forgetPlace`, drops it. A line that is not a Place is GN909.
+  - `placeThing` saves one place as one edit, making the block when there is none; `renamePlace` carries a rename.
 - `sketch-marks.ts` — the drawings drawn in every view.
   - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
     wraps it. A drawing pinned to a thing the view leaves out is not drawn.
@@ -1764,6 +1770,13 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     goes by https.
   - `modelChoices`: the host's own AI first, where it has one; then the models set up for the purpose; then the rest.
     There are none while AI is off.
+- `ai-reviewers.ts` — the private and public reviewers (ES§19, ai_two_reviewers).
+  - `privateProblem`: only an address on this device or the user's own network may be private.
+  - `reviewerFor`: a private reviewer first, sent the note. A public one only with the vault's consent, names only until
+    note text is allowed, each send confirmed.
+- `metadata-write.ts` — metadata written from Reading view (ES§3, reading_view_metadata).
+  - `metadataWrite` puts a layout or AI block after its graph, or replaces it where it is. It refuses when the graph
+    changed since it was shown, or when anything else of the note would change (`onlyMetadata`).
   - `AI_PURPOSES` are the spec's purposes.
 - `ai-ceiling.ts` — `clearance`, and the credentials a text holds.
   - A note with no classification counts as `aiUnlabelled`, the most sensitive level until the user chooses another

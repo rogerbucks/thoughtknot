@@ -104,7 +104,10 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     its card.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
-- `reading-view.ts` — reading view never changes the note.
+- `reading-view-metadata.ts` — the metadata reading view may write (ES§3, reading_view_metadata).
+  - `writeMetaBlock` writes a layout or AI block in one `Vault.process` step. `writeProperty` sets a property through
+    `processFrontMatter`. Each gives back the words to show and an undo that takes back exactly that write.
+- `reading-view.ts` — reading view never changes the graph or the prose.
   - Every command rewriting a note asks `noteToRewrite` first. It gives the note in the pane in front. It refuses with a
     notice when that pane is in reading view or holds no note.
   - `stillToRewrite` is asked again just before the write. It refuses the same way when that pane changed while the note
