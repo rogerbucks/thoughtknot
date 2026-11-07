@@ -5151,7 +5151,7 @@
       "role": "Senior security engineer",
       "area": "security",
       "title": "The shell gate judges by the spelling \"classification\"",
-      "risk": "gate-shell.ts refuses a Bash write to an existing note only when the command spells the word classification. A command that builds the word does not name it: printf '\\143lassification: public' or a sed back-reference such as s/\\(class\\)ification: secret/\\1ification: public/. Such a command is allowed as an unread write, or as a copy or move onto the note. sed -i is allowed the same way. A prompt-injected session could lower a note's class, then ask for it with /graph or the MCP show tool. The header of gate-shell.ts admits that unnamed changes are not seen. The 7 Nov 2026 ruling lets a write to a new file pass whatever it holds, which makes a sed to a new file then mv a short route.",
+      "risk": "gate-shell.ts refuses a Bash write to an existing note only when the command spells the word classification. A command can build the word instead: printf '\\143lassification: public', or a sed back-reference. Such a command, and sed -i, is allowed. A prompt-injected session could lower a note's class, then read it with /graph. Since a write to a new file passes, sed to a new file then mv is a short route.",
       "evidence": [
         "packages/claude-code/src/gate-shell.ts:194",
         "packages/claude-code/src/gate-shell.ts:197",
@@ -5184,7 +5184,7 @@
       "role": "Senior security engineer",
       "area": "supply-chain",
       "title": "The app's Rust code is outside every scan and advisory feed",
-      "risk": "Since 0.8.0 the Tauri app gained gh.rs (starts a program with the person's sign-in) and a larger lib.rs and place.rs. These guard file and process access. CodeQL in ci.yml reads javascript-typescript, python and actions only. Dependabot has no cargo entry. The release alert script audits npm and the Python lock file, not Cargo.lock. No cargo audit or clippy step exists in any workflow. A flaw in the Rust, or an advisory on a crate, is found by nobody.",
+      "risk": "Since 0.8.0 the Tauri app gained gh.rs (starts a program with the person's sign-in) and a larger lib.rs and place.rs. These guard file and process access. CodeQL in ci.yml reads javascript-typescript, python and actions only. Dependabot has no cargo entry. The release alert script audits npm and the Python lock file, not Cargo.lock. No cargo audit or clippy step exists. Nobody would see a flaw or an advisory.",
       "evidence": [
         ".github/workflows/ci.yml:374",
         ".github/dependabot.yml:6",
@@ -5218,7 +5218,7 @@
       "role": "IT administrator and release / DevOps engineer",
       "area": "release",
       "title": "A failed or cut-short risk panel closes the open risk-panel issue",
-      "risk": "The report job joins the nine role files. It closes the open risk-panel issue with 'The panel found nothing new to add' when no role file exists. That is also what happens when every role job fails or times out, for example a bad token or a quota stop. The owner then reads 'nothing new' for a panel that did not run. The job also prints the same 'nothing written' line for a role that failed and a role that had nothing in scope.",
+      "risk": "The report job joins the nine role files. It closes the open risk-panel issue with 'The panel found nothing new to add' when no role file exists. That also happens when every role job fails or times out. The owner then reads 'nothing new' for a panel that did not run. The job prints the same 'nothing written' line for a role that failed and a role with nothing in scope.",
       "evidence": [
         ".github/workflows/risk-panel.yml:169",
         ".github/workflows/risk-panel.yml:190",
@@ -5229,7 +5229,7 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "Pass needs.panel.result to the report step. When it is not 'success', or a role file is missing for a role that was in scope, keep the issue open and add a comment that names the failed roles and links the run. Say 'cut short' and 'nothing in scope' as two different lines.",
+      "fix": "Pass needs.panel.result to the report step. Keep the issue open when it is not 'success', or when a role in scope has no file. Add a comment that names the failed roles and links the run. Say 'cut short' and 'nothing in scope' as two different lines.",
       "check": "A test reads risk-panel.yml and asserts the close-with-'nothing new' branch is guarded by the panel result being success.",
       "paths": [
         ".github/workflows/risk-panel.yml",
@@ -5249,7 +5249,7 @@
       "role": "IT administrator and release / DevOps engineer",
       "area": "release",
       "title": "The release's shard count of 6 is written in five places and checked in none",
-      "risk": "The number 6 is in the quality-suite matrix, the quality-suite command, the public-readiness matrix and its command, in both release.yml and release-check.yml, and in SHARDS in scripts/ci-plan.mjs. If one place changes and another does not, a share of the test files is never run, or runs twice. Nothing fails, because every shard still passes.",
+      "risk": "The number 6 is in the quality-suite matrix and command, and the public-readiness matrix and command. It is in both release.yml and release-check.yml, and in SHARDS in scripts/ci-plan.mjs. If one place changes and another does not, a share of the test files never runs, or runs twice. Nothing fails, because every shard still passes.",
       "evidence": [
         ".github/workflows/release.yml:41",
         ".github/workflows/release.yml:69",
@@ -5284,7 +5284,7 @@
       "role": "IT administrator and release / DevOps engineer",
       "area": "release",
       "title": "The release's sharded suite can merge fewer parts than were run, without saying so",
-      "risk": "readSuiteShards reads every .json file in the download folder and its comment says a missing shard 'means nothing'. mergeSuiteShards does not check that it got the number of parts it expected. Today a lost part cannot get through, because the quality job needs quality-suite to succeed. But a later edit to that dependency, or to the artifact pattern, would let the quality gate pass on part of the suite. The merged test count is the only sign, and nothing compares it.",
+      "risk": "readSuiteShards reads every .json file in the download folder. Its comment says a missing shard 'means nothing'. mergeSuiteShards does not check that it got the number of parts it expected. Today a lost part cannot get through, because the quality job needs quality-suite to succeed. A later edit to that dependency, or to the artifact pattern, would let the gate pass on part of the suite. Nothing compares the merged test count.",
       "evidence": [
         "scripts/quality-suite.mjs:254",
         "scripts/quality-suite.mjs:259",
@@ -5375,7 +5375,7 @@
       "role": "Senior coder and QA / test engineer",
       "area": "data",
       "title": "A failed history record turns a saved note into a failed write",
-      "risk": "historyLayer writes the note first, then awaits log.record. notesHistory.record throws after three tries, for example when two changes land on the same day note at once or the history storage is down. The throw reaches the caller of write, though the note is already saved. The caller may report a failure, or retry against a changed version. Separately, the 'before' text is read before the write, not with it, so a concurrent write can record a wrong 'before'.",
+      "risk": "historyLayer writes the note first, then awaits log.record. notesHistory.record throws after three tries, for example when the history storage is down. The throw reaches the caller of write, though the note is already saved. The caller may report a failure, or retry against a changed version. Also, the 'before' text is read before the write, so a concurrent write can record a wrong 'before'.",
       "evidence": [
         "packages/core/src/note-storage.ts:185",
         "packages/core/src/note-storage.ts:191",
@@ -5405,7 +5405,7 @@
       "role": "Senior coder and QA / test engineer",
       "area": "data",
       "title": "CSV limits count characters, and line numbers drift on a bare carriage return",
-      "risk": "readCsv compares text.length with a limit named bytes, so a file of multi-byte text can be several times larger on disk than the limit says. Inside a quoted cell only a newline raises the line count, while outside it a bare carriage return does. A row's cited line is then wrong in files with old Mac line ends. The delimiter count toggles on every quote, so a stray quote in the header line can pick the wrong delimiter.",
+      "risk": "readCsv compares text.length with a limit named bytes. A file of multi-byte text can be several times larger on disk than the limit says. Inside a quoted cell only a newline raises the line count, but outside it a bare carriage return does. A row's cited line is then wrong in files with old Mac line ends. The delimiter count toggles on every quote, so a stray quote in the header can pick the wrong delimiter.",
       "evidence": [
         "packages/core/src/csv-read.ts:65",
         "packages/core/src/csv-read.ts:46",
@@ -5465,7 +5465,7 @@
       "role": "Enterprise, solution and data architect",
       "area": "architecture",
       "title": "A FROM list has no cap, and each draw rereads every place",
-      "risk": "A block may now name any number of places after FROM. Each place is fetched whole and joined by the mesh join on every draw. No limit on the number of places is stated or tested, and no cache or index is used. ARCH-7 asked for an index. The new mesh index is used by stored notes and parts, not by this path. Ten places is fine. Five hundred in one block, or a block reread on every edit, is not tested.",
+      "risk": "A block may now name any number of places after FROM. Each place is fetched whole and joined by the mesh join on every draw. No limit is stated or tested, and no cache or index is used. ARCH-7 asked for an index. The new mesh index serves stored notes and parts, not this path. Ten places is fine. Five hundred in one block, or a block reread on every edit, is not tested.",
       "evidence": [
         "packages/core/src/sources.ts:95-96",
         "packages/core/src/sources.ts:115-127",
@@ -5499,7 +5499,7 @@
       "role": "Enterprise, solution and data architect",
       "area": "data",
       "title": "A plain note name with a colon now reads as a plug-in place",
-      "risk": "FROM [[Note]] is safe. But FROM written without brackets takes any lowercase word of two letters or more, then a colon, as a plug-in scheme. A note once named by a bare name such as 'todo:later' in an older block now reads as plug-in 'todo', and fails or is refused. The note format gained this meaning with no format or spec version change. Older blocks are read differently by the newer reader.",
+      "risk": "FROM [[Note]] is safe. But FROM written without brackets takes any lowercase word of two letters or more, then a colon, as a plug-in scheme. An older block that named a note 'todo:later' now reads as plug-in 'todo', and fails or is refused. The note format gained this meaning with no format or spec version change. The newer reader reads older blocks differently.",
       "evidence": [
         "packages/core/src/sources.ts:78",
         "packages/core/src/sources.ts:128-133",
@@ -5510,7 +5510,7 @@
       "impact": "low",
       "decision": "fix-later",
       "fix": "Take a scheme only when a plug-in has registered it. Otherwise read the place as before, and say in the fault that a colon in a bare name needs brackets.",
-      "check": "A test that FROM todo:later with no plug-in of that scheme is read as the note it was, or refused with the sentence naming brackets.",
+      "check": "A test that FROM todo:later, with no plug-in of that scheme, is read as the note it was. Or it is refused with the sentence naming brackets.",
       "paths": [
         "packages/core/src/sources.ts",
         "packages/core/test/sources.test.js"
@@ -5559,7 +5559,7 @@
       "role": "User experience lead and accessibility specialist",
       "area": "accessibility",
       "title": "The new canvas drawing is announced as one picture, and is on by default",
-      "risk": "The newRendering setting defaults to on. When a drawing has levels, RenderStage paints it on a canvas with role img and an aria-label that names only the current level. The canvas has no tabindex and no key handler of its own. Boxes and links on it are not in the accessibility tree. Pointer-only edits (link drag, box move) have no stated key route in this path. A screen reader or keyboard user gets a worse drawing than the SVG path gives, with no way to switch back that they are told about.",
+      "risk": "The newRendering setting defaults to on. When a drawing has levels, RenderStage paints it on a canvas with role img and an aria-label that names only the current level. The canvas has no tabindex and no key handler. Boxes and links on it are not in the accessibility tree. A screen reader or keyboard user gets a worse drawing than the SVG path gives. Nothing tells them how to switch back.",
       "evidence": [
         "packages/core/src/settings.ts:121",
         "packages/core/src/display/graph-view/render-stage.ts:70",
@@ -5572,7 +5572,7 @@
       "impact": "high",
       "decision": "fix-later",
       "fix": "Offer a list of the groups and things shown, as UX-11 proposes for the overview. Keep the SVG path reachable when a screen reader or reduced-motion setting is on. Name the keys in the canvas label.",
-      "check": "test/wcag.test.js builds a levelled drawing with newRendering on and asserts every box is reachable by Tab or by a list with an accessible name.",
+      "check": "test/wcag.test.js builds a levelled drawing with newRendering on. It asserts every box is reachable by Tab, or by a list with an accessible name.",
       "paths": [
         "packages/core/src/display/graph-view/render-stage.ts",
         "packages/core/src/settings.ts"
@@ -5600,7 +5600,7 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "When the preset changes because the file changed outside the settings page, show one notice that says which starter now applies and how to give the vault none. Keep the redraw.",
+      "fix": "When the preset changes because the file changed outside the settings page, show one notice. It says which starter now applies and how to give the vault none. Keep the redraw.",
       "check": "A test changes the preset file through the vault's modify event and asserts one notice with the starter's name. Another asserts that choosing it on the settings page shows no second notice.",
       "paths": [
         "packages/obsidian/src/settings/vault-preset.ts"
@@ -5647,7 +5647,7 @@
       "role": "Workflow designer and open-source maintainer / community lead",
       "area": "release",
       "title": "A release can merge a partial set of suite shards without failing",
-      "risk": "The release suite now runs as six shards, and the quality job merges whatever shard files it finds. The merge only fails when there are none. A missing part would silently lower the test count and the coverage. It would also hide the slowest shard's time. Today the quality job waits for all six jobs to pass, so this needs a second fault to bite. A future edit to the job's needs, a retried job or a half-downloaded artifact would be enough.",
+      "risk": "The release suite now runs as six shards. The quality job merges whatever shard files it finds, and only fails when there are none. A missing part would silently lower the test count and the coverage. Today the quality job waits for all six jobs to pass, so this needs a second fault to bite. A future edit to the job's needs, a retried job or a half-downloaded artifact would be enough.",
       "evidence": [
         ".github/workflows/release.yml:36",
         ".github/workflows/release.yml:112",
@@ -5679,7 +5679,7 @@
       "role": "API design expert",
       "area": "architecture",
       "title": "The peer handshake changed shape with no version, and an old device is told the wrong reason",
-      "risk": "Since 0.8.0 the first message between two devices grew from the 65-byte public key to key, one-time key and salt (162 bytes). Sealed messages now carry a direction and a number as bound data. A 0.8 device and a 0.9 device cannot sync. Each refuses the other with 'a device that is not one of the owner's', which is false and sends the person to check their trust list. Nothing in the first message names a format, so the next change will fail the same way. The only version is the text 'thoughtknot mesh session 2', buried in the key derivation. A mismatch there shows as 'a message did not open', not as a format error.",
+      "risk": "Since 0.8.0 the first message between two devices grew from the 65-byte public key to key, one-time key and salt (162 bytes). A 0.8 device and a 0.9 device cannot sync. Each refuses the other with 'a device that is not one of the owner's', which is false. Nothing in the first message names a format, so the next change will fail the same way.",
       "evidence": [
         "packages/sync/src/peer.ts:68 (whole length test, then the not-one-of-the-owner's refusal)",
         "packages/sync/src/peer.ts:110 (hello is sent as key plus one-time key plus salt)",
@@ -5710,7 +5710,7 @@
       "role": "API design expert",
       "area": "release",
       "title": "The sync package is a wire contract that no break check covers",
-      "risk": "LIBRARY in scripts/public-api.mjs holds only core and graph-spec. The sync package now has a stored shape (Kept, kept in IndexedDB), an invitation shape (Invitation) and a session format. All three outlive one run, and the apps keep them on a person's device. A change to any of them passes CI with no major version and no note in the release. Host contract version 3 for DisplayHost is held now, so sync is the next gap of the same kind (API-3).",
+      "risk": "LIBRARY in scripts/public-api.mjs holds only core and graph-spec. The sync package now has a stored shape (Kept), an invitation shape (Invitation) and a session format. All three outlive one run, and the apps keep them on a person's device. A change to any of them passes CI with no major version and no note in the release. Host contract version 3 for DisplayHost is held now. Sync is the next gap of the same kind (API-3).",
       "evidence": [
         "scripts/public-api.mjs:32 (LIBRARY lists two packages)",
         "packages/sync/src/sharing.ts:8 (Kept)",
