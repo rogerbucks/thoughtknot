@@ -316,7 +316,6 @@ export const OPTIONS: Option[] = [
   },
 ];
 
-const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 const oneOf = <T extends string>(key: keyof Settings, v: unknown, fallback: T): T =>
   (OPTIONS.find((o) => o.key === key)?.choices ?? []).some((c) => c.value === v) ? (v as T) : fallback;
 
