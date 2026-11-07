@@ -212,4 +212,17 @@ export const READING_SOURCE_WORDS = {
   // a stroke, line or arrow whose points are not pairs of numbers
   'sketch.points': '{id} needs its points as pairs of numbers, two pairs at least, so it is not drawn',
   'sketch.points.fix': "write its points in pairs, such as points: '0 0 40 10'",
+  // a metadata write from Reading view (editor spec §3, reading_view_metadata_safe, metadata-write.ts)
+  'meta.graph-changed':
+    'The graph {graph} changed since it was shown, so nothing was saved: look again, then save once more',
+  'meta.outside': 'This would change more than the note’s metadata, so nothing was saved',
+  'meta.saved': 'Saved. Undo takes it back',
+  'meta.undone': 'Taken back',
+  'meta.undo-moved': 'The note changed since, so it was not taken back',
+  // a layout block (editor spec §2, layout_block_checked, layout-block.ts): a line that is not a place
+  'layout.kind-unknown': 'a layout holds places only, not {kind}, so {id} is left where the layout puts it',
+  'layout.kind-unknown.fix': 'write it as a Place, such as (ann:Place {x: 120, y: 40}), or remove it',
+  // a place for a thing the graph does not hold
+  'layout.thing-gone': '{thing} has a place, but the graph {graph} does not hold it, so the place is not used',
+  'layout.thing-gone.fix': 'forget the place of {thing}',
 } as const;
