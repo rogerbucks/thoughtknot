@@ -79,6 +79,7 @@ async function sendDialog() {
   const note = `---\nclassification: Public\n---\n# N\n\n${fence(GRAPH)}\n`;
   const settings = {
     aiUse: 'on',
+    aiPublic: 'note',
     aiModels: [
       {
         name: 'Local',

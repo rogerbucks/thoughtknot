@@ -129,6 +129,11 @@ export const AI_SOURCE_WORDS = {
   'ai.consent.keep': 'Keep private',
   'ai.consent.no-note': 'Open a note with a graph first, so you can see what it would send.',
   'ai.consent.off': 'Public reviewers are off. Notes go to private reviewers only.',
+  'ai.reviewer.public-off':
+    '{model} is a public reviewer, and this vault does not allow one: mark it private if you run it yourself, or allow public reviewers in the settings.',
+  'ai.reviewer.public-no-text':
+    '{model} is a public reviewer, and this vault lets one see names, kinds and links only, never your text.',
+  'ai.summary.names-only': 'Names, kinds and links only: this vault does not let a public reviewer see values or text.',
   // a model's ceiling, and the credentials never sent (ai-ceiling.ts)
   'ai.level.unlabelled': 'This note has no classification, so it counts as {level}',
   'ai.level.classified': 'This note is classified {level}',

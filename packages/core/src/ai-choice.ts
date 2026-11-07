@@ -92,8 +92,9 @@ export function aiReady(s: Settings): { ready: AiModel[] } | { off: string } {
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
- * The AIs that may be asked for `purpose`, in the order they are offered. The host's own comes first, where it has one;
- * then the models set up for that purpose; then the rest. None while AI is off, the host's own among them.
+ * The AIs that may be asked for `purpose`, in the order they are offered. The host's own comes first, where it has one.
+ * Then the models marked private, then the rest (ai_private_default), each with those set up for that purpose first.
+ * None while AI is off, the host's own among them.
  */
 export function modelChoices(s: Settings, purpose: string, hostAi: HostAi | null = null): ModelChoice[] {
   const ready = aiReady(s);
@@ -106,7 +107,9 @@ export function modelChoices(s: Settings, purpose: string, hostAi: HostAi | null
   }));
   return [
     ...(hostAi ? [{ name: hostAi.name, source: 'host' as const, forPurpose: true }] : []),
-    ...mine.filter((c) => c.forPurpose),
-    ...mine.filter((c) => !c.forPurpose),
+    ...mine.filter((c) => c.forPurpose && c.model.reach === 'private'),
+    ...mine.filter((c) => !c.forPurpose && c.model.reach === 'private'),
+    ...mine.filter((c) => c.forPurpose && c.model.reach !== 'private'),
+    ...mine.filter((c) => !c.forPurpose && c.model.reach !== 'private'),
   ];
 }

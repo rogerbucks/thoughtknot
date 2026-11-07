@@ -19,7 +19,7 @@ const OFFICE = {
   endpoint: 'http://localhost:11434/v1/chat/completions',
   model: 'm',
 };
-const ON = { aiUse: 'on', aiModels: [OFFICE] };
+const ON = { aiUse: 'on', aiPublic: 'note', aiModels: [OFFICE] };
 const front = (level) => `---\n${'classification'}: ${level}\n---\n`;
 
 describe('in Obsidian', () => {
