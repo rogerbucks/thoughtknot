@@ -689,6 +689,12 @@ never data.
   - Each fault is a problem with its fix, GN905 to GN908. They are a kind that is not a drawing's, or a pin to a thing
     that is gone. They are also a shape it does not know, or points that are not pairs.
   - `writeSketch` writes the drawings in one fixed form.
+- `layout-block.ts` — where things sit, kept apart from the data (editor spec §2, layout_block): `// graph: trip_layout ·
+  LAYOUT ON trip`, one `(ann:Place {x: 120, y: 40, group: 'Team'})` per thing, named by its key.
+  - `layoutOf` (in `blocks.ts`) knows the block. `dataKind` leaves it out of the drawing.
+  - `readLayout` gives a Map of thing key to place. A place for a thing the graph does not hold is GN910. Its fix,
+    `forgetPlace`, drops it. A line that is not a Place is GN909.
+  - `placeThing` saves one place as one edit, making the block when there is none; `renamePlace` carries a rename.
 - `sketch-marks.ts` — the drawings drawn in every view.
   - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
     wraps it. A drawing pinned to a thing the view leaves out is not drawn.

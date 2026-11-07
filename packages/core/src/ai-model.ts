@@ -24,6 +24,8 @@ export interface AiModel {
   matrixOn?: MatrixSwitch[];
   /** The AI provider a plug-in adds that shapes its requests, by name; with none, the one wire format. */
   provider?: string;
+  /** A private reviewer, a model the user runs (§19, ai_two_reviewers); with none, a public one. */
+  reach?: 'private';
 }
 
 /**
@@ -46,5 +48,7 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
       matrixOn: switchesFrom(given.matrixOn),
     }),
     ...(text(given.provider).trim() && { provider: text(given.provider).trim() }),
+    // kept only when private, so a public model is as it was
+    ...(given.reach === 'private' && { reach: 'private' as const }),
   };
 }
