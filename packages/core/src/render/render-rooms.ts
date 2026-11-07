@@ -25,8 +25,8 @@ const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 const RING_START = -Math.PI / 2 + 0.3;
 
 /**
- * The places of every node of `scene`, by key. An item a person placed (`placed`, from the layout block) sits there,
- * and every other node where the rooms put it: a saved place moves nothing else (layout_drag_saves).
+ * The places of every node of `scene`, by key. An item a person placed sits where `placed` says, from the layout
+ * block. Every other node sits where the rooms put it: a saved place moves nothing else (layout_drag_saves).
  */
 export function roomsOf(scene: Scene, placed?: ReadonlyMap<string, { x: number; y: number }>): Map<string, Spot> {
   const size = new Map<string, number>(),
