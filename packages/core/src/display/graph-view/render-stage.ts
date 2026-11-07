@@ -30,6 +30,7 @@ import {
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
+import type { MiniMapSetting } from '../../settings-aids.ts';
 
 /** How long a glide to a picked thing takes, in milliseconds. */
 export const GLIDE_MS = 260;
@@ -64,7 +65,7 @@ export function stageFor(
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
   if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g)) return null;
-  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap !== 'off');
+  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap);
 }
 
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -93,7 +94,13 @@ export class RenderStage {
   /** The level the hands were last told, so they hear only of a change. */
   private said = '';
 
-  constructor(viewport: HTMLElement, drawing: GraphDrawing, g?: Graph, hands?: StageHands, mini = true) {
+  constructor(
+    viewport: HTMLElement,
+    drawing: GraphDrawing,
+    g?: Graph,
+    hands?: StageHands,
+    mini: MiniMapSetting = 'always',
+  ) {
     this.viewport = viewport;
     this.hands = hands;
     this.scene = sceneOf(shapeOf(drawing, g));
@@ -104,23 +111,25 @@ export class RenderStage {
     this.canvas.setAttribute('role', 'img');
     // what was painted last, as data, for the scoreboard to count (scripts/render-measure.mjs); nothing reads it back
     Object.defineProperty(this.canvas, 'thoughtknotDrawn', { value: () => ({ marks: this.marks, view: this.view }) });
-    // shown unless the mini-map setting is off (mini_map_setting)
-    this.mini = !mini
-      ? null
-      : new StageMiniMap(viewport, {
-          scene: this.scene,
-          spots: this.spots,
-          sizes: this.sizes,
-          look: () => this.look(),
-          own: (key) => this.hands?.own?.(key),
-          view: () => this.view,
-          lookAt: (x, y) => {
-            this.untouched = false;
-            this.gliding++; // a press on the copy stops a glide under way, as the reader's own zoom does
-            this.view = centreOn(this.view, { x, y, r: 0 });
-            this.draw();
-          },
-        });
+    // none while the mini-map setting is off; on auto, shown only while the drawing does not fit (mini_map_setting)
+    this.mini =
+      mini === 'off'
+        ? null
+        : new StageMiniMap(viewport, {
+            auto: mini === 'auto',
+            scene: this.scene,
+            spots: this.spots,
+            sizes: this.sizes,
+            look: () => this.look(),
+            own: (key) => this.hands?.own?.(key),
+            view: () => this.view,
+            lookAt: (x, y) => {
+              this.untouched = false;
+              this.gliding++; // a press on the copy stops a glide under way, as the reader's own zoom does
+              this.view = centreOn(this.view, { x, y, r: 0 });
+              this.draw();
+            },
+          });
     this.view = this.fitted();
     // caught on the way down, so today's zoom underneath never takes the same notch
     viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });

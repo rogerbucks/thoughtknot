@@ -22,6 +22,8 @@ export interface MiniHost {
   sizes: readonly number[];
   look: () => Look;
   own?: OwnColour;
+  /** Shown only while the drawing does not fit its view (the setting's auto); else always. */
+  auto?: boolean;
   /** The stage's view now. */
   view: () => View;
   /** Shows the drawing's point `x`, `y` in the middle of the view, at the same zoom. */
@@ -81,15 +83,21 @@ export class StageMiniMap {
     const marks = marksOf(scene, spots, detailAt(sizes, whole.scale), look, whole, this.host.own).flatMap((m) =>
       m.kind === 'cloud' ? [m] : m.kind === 'road' ? [{ ...m, count: '', width: Math.min(m.width, 2) }] : [],
     );
+    const f = this.frame();
+    this.canvas.hidden = !!this.host.auto && this.fits(f, w, h);
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
     if (!c) return;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     paintCanvas(c, marks, w, h);
-    const f = this.frame();
     c.globalAlpha = 1;
     c.strokeStyle = look.ink;
     c.lineWidth = 1.5;
     c.strokeRect(f.x, f.y, f.w, f.h);
+  }
+
+  /** Whether the part in view `f` holds the whole copy, `w` by `h`: the drawing fits its view. */
+  private fits(f: { x: number; y: number; w: number; h: number }, w: number, h: number): boolean {
+    return f.x <= 0.5 && f.y <= 0.5 && f.x + f.w >= w - 0.5 && f.y + f.h >= h - 0.5;
   }
 
   /** The part in view, on the copy. */

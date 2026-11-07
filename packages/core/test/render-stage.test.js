@@ -341,7 +341,7 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
   try {
-    const { GLIDE_MS, RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { GLIDE_MS, RenderStage, stageFor } = await import('../src/display/graph-view/render-stage.ts');
     const { drawing, g } = drawingAndGraph();
     const viewport = doc.createElement('div');
     doc.body.appendChild(viewport);
@@ -375,10 +375,24 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
     assert.deepEqual(stage.view, pressed, 'the glide under way stopped');
     stage.unload();
     assert.ok(!mini.canvas.parentElement, 'gone with the stage');
-    // the mini-map setting off: none
-    const off = new RenderStage(viewport, drawing, g, undefined, false);
-    assert.equal(off.mini, null);
+    // the mini-map setting, through the card's own options: off has none; auto shows it only while the drawing does not fit
+    const o = (miniMap) => ({
+      aids: { newRendering: true, miniMap },
+      reading: { graphs: new Map([['x', drawing]]), world: { x: g } },
+      graph: 'x',
+    });
+    const off = stageFor(viewport, o('off'));
+    assert.equal(off.mini, null, 'off: none');
     off.unload();
+    const always = stageFor(viewport, o('always'));
+    assert.equal(always.mini.canvas.hidden, false, 'always: shown with the whole drawing in view');
+    always.unload();
+    const auto = stageFor(viewport, o('auto'));
+    assert.equal(auto.mini.canvas.hidden, true, 'auto: hidden while the drawing fits');
+    auto.view = { ...auto.view, scale: auto.view.scale * 4 };
+    auto.draw();
+    assert.equal(auto.mini.canvas.hidden, false, 'auto: shown once zoomed past the fit');
+    auto.unload();
   } finally {
     uninstall();
   }
