@@ -478,3 +478,12 @@ describe('a model that cannot be reached, or refuses, is said plainly and change
     assert.match(result.failed, /Nothing was changed\.$/);
   });
 });
+
+describe('a model whose address stops at its version is sent to its chat address (user_models)', () => {
+  test('LM Studio at …/v1 is sent to …/v1/chat/completions, and shown so', async () => {
+    const lm = { ...LOCAL, endpoint: 'http://localhost:1234/v1', reach: 'private' };
+    const { p, calls } = await sent({ settings: settingsFrom({ aiUse: 'on', aiModels: [lm] }) });
+    assert.equal(p.to, 'http://localhost:1234/v1/chat/completions');
+    assert.equal(calls[0]?.url, 'http://localhost:1234/v1/chat/completions');
+  });
+});
