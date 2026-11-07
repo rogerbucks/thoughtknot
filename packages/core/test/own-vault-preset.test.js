@@ -49,15 +49,15 @@ describe('a preset the vault names for itself', () => {
   });
 });
 
-describe('the vault\'s own preset takes its place in the order (view_presets_own_vault)', () => {
-  test('is chosen from the file, and the preset in use is the vault\'s own', () => {
+describe("the vault's own preset takes its place in the order (view_presets_own_vault)", () => {
+  test("is chosen from the file, and the preset in use is the vault's own", () => {
     assert.equal(vaultChoice(vaultOwnFile(mine)), 'vault:evening');
     assert.equal(starterOf('vault:evening').name, 'Evening');
     assert.deepEqual(presetIn({ vault: 'vault:evening', everywhere: 'calm' }), { id: 'vault:evening', scope: 'vault' });
     assert.equal(presetFor({ vault: 'vault:evening' }).name, 'Evening');
   });
 
-  test('still gives way to the graph\'s own choice, and a starter file still names a starter', () => {
+  test("still gives way to the graph's own choice, and a starter file still names a starter", () => {
     assert.equal(presetFor({ graph: 'calm', vault: 'vault:evening' }).id, 'calm');
     assert.equal(vaultChoice(vaultPresetFile('calm')), 'calm');
   });
