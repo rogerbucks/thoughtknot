@@ -1,4 +1,4 @@
-// How gate-guard.ts judges a Bash command (spec §26, risk TRUST-1): whether it could change an existing note's
+// How gate-guard.ts judges a Bash command (spec ES§26, risk TRUST-1): whether it could change an existing note's
 // classification. Bash cannot be fully parsed, so shell-steps.ts reads a command into its steps. The steps are followed
 // in order: where `cd` leads, and what each variable may hold, each value a `for` gives it among them. So the files
 // each step writes are known. What the shell may not set, or sets in a subshell, is not known.
