@@ -449,4 +449,5 @@ export const TYPES_LATE = [
   'LayoutPlace',
   'Reviewer',
   'VaultConsent',
+  'MetaKind',
 ];

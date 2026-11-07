@@ -410,7 +410,8 @@ export const VALUES_LATE = [
   'boardEditInNote',
   'mayChange',
   'boardBlockIn',
-  // the layout block and the private and public reviewers (layout_block, ai_two_reviewers), 7 Nov 2026
+  // the layout block, the reviewers and metadata from Reading view (layout_block, ai_two_reviewers,
+  // reading_view_metadata), 7 Nov 2026
   'forgetPlace',
   'layoutOf',
   'placeThing',
@@ -421,4 +422,7 @@ export const VALUES_LATE = [
   'isPrivate',
   'privateProblem',
   'reviewerFor',
+  'metaOf',
+  'metadataWrite',
+  'onlyMetadata',
 ];

@@ -156,6 +156,7 @@ export {
   type Reviewer,
   type VaultConsent,
 } from './ai-reviewers.ts';
+export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
 export { sketchEdit, sketchInNote, type NewSketchItem, type SketchChange } from './sketch-edit.ts';
 export { sketchProposal } from './sketch-proposals.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
