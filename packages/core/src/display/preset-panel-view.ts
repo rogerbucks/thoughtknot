@@ -27,6 +27,17 @@ export function presetPanelView(parent: HTMLElement, panel: PresetPanel): Preset
         attr: s.id === panel.shown() ? { selected: 'selected' } : {},
       });
     pick.addEventListener('change', () => panel.pick(pick.value));
+    const mine = panel.shownOwn();
+    if (mine) {
+      const call = section.createEl('p');
+      const name = call.createEl('input', {
+        type: 'text',
+        value: mine.name,
+        attr: { 'aria-label': word('settings.own-presets.rename.name') },
+      });
+      const label = word('settings.own-presets.rename');
+      button(call, label, 'check', () => panel.renameOwn(mine.id, name.value), label);
+    }
     const list = section.createEl('ul');
     for (const row of [...panel.rows(), ...panel.ownRows()]) {
       const item = list.createEl('li');

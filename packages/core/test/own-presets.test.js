@@ -126,6 +126,17 @@ describe('own presets in the settings and the panel', () => {
     await done(() => readOwnList(state.s.ownPresets).length === 0);
   });
 
+  test('say which own preset is shown, so the panel can ask for its name (view_presets_own_everywhere)', () => {
+    const text = made(['A', 'B']);
+    const [, b] = readOwnList(text);
+    const { p } = panelOver({ ownPresets: text });
+    assert.equal(p.shownOwn(), undefined, 'a starter has no name to change');
+    p.pick(b.id);
+    assert.deepEqual(p.shownOwn(), { id: b.id, name: 'B' });
+    p.pick('default');
+    assert.equal(p.shownOwn(), undefined);
+  });
+
   test('one in use that is deleted falls back to the default', async () => {
     const text = made(['A']);
     const [a] = readOwnList(text);
