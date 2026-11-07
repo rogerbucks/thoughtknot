@@ -433,4 +433,6 @@ export const VALUES_LATE = [
   'forgetInNote',
   'placeInNote',
   'savedPlaces',
+  // the address Test beside a model's address asks (user_models), 7 Nov 2026
+  'modelsAddress',
 ];

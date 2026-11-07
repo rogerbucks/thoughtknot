@@ -61,10 +61,21 @@ export const AI_SOURCE_WORDS = {
     'What it is for: {purposes}, or your own words. A send for that purpose offers this model first.',
   'models.model': 'Model',
   'models.model.sentence': 'The model’s own name at its address, as the service names it.',
-  'models.endpoint': 'Endpoint',
+  'models.endpoint': 'Address (URL)',
   'models.endpoint.sentence':
-    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any ' +
-    'other. A model on this device keeps what it is sent here; any other keeps it under its provider’s terms.',
+    'Where requests go, such as https://my-mac.tailnet.ts.net/v1 or a full chat completions address. https:// only; ' +
+    'http:// for a model on this device alone. A model you run keeps what it is sent; any other keeps it under its ' +
+    'provider’s terms.',
+  'models.endpoint.placeholder': 'https://my-mac.tailnet.ts.net/v1',
+  'models.test': 'Test connection',
+  'models.test.sentence': 'Asks the address for its list of models, with your key. No note is sent.',
+  'models.test.ok': '{address} answered. Models: {names}',
+  'models.test.ok-none': '{address} answered.',
+  'models.test.status': '{address} answered with status {status}: check the address and key.',
+  'models.test.failed': '{address} could not be reached: {why}',
+  'models.test.refused': 'Not tested: {why}',
+  'models.reach.private': 'private',
+  'models.reach.public': 'public',
   'models.none': 'No model is set up: nothing is ever sent.',
   'models.page': 'Model {n}',
   'models.said': '{name}: {purpose}, up to {ceiling}',
@@ -88,6 +99,7 @@ export const AI_SOURCE_WORDS = {
   'models.preset.gemini': 'Gemini',
   'models.preset.grok': 'Grok',
   'models.preset.chatgpt': 'ChatGPT',
+  'models.preset.lmstudio': 'LM Studio (your own, private)',
   'models.no-row': 'None: use the ceiling',
   'models.unmatched': ' (flagged: matches no classification)',
   'models.row-gone':
