@@ -17,24 +17,16 @@ import { roomsOf, type Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
 import { DARK, LIGHT } from '../../render/render-look.ts';
 import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
-import {
-  centreOn,
-  fitView,
-  glideView,
-  panView,
-  pickAt,
-  pinchView,
-  stopsOf,
-  wheelView,
-} from '../../render/render-camera.ts';
+import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
 import { coverCards, overCover } from './controls-cover.ts';
+import { glide } from './stage-glide.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
+import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
 
-/** How long a glide to a picked thing takes, in milliseconds. */
-export const GLIDE_MS = 260;
+export { GLIDE_MS } from './stage-glide.ts';
 /** How far a pointer may move, in pixels, and still be a click rather than a drag. */
 const CLICK_PX = 6;
 
@@ -65,13 +57,13 @@ const LIFTS: Record<string, number> = { cards: 0, balls: 1 };
 /** The stage for a card, when its setting is on and its graph has levels to show; else none. */
 export function stageFor(
   viewport: HTMLElement,
-  o: Pick<ViewOptions, 'aids' | 'reading' | 'graph'>,
+  o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places'>,
   hands?: StageHands,
 ): RenderStage | null {
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
   if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g)) return null;
-  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap);
+  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap, o.places);
 }
 
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -84,7 +76,7 @@ export class RenderStage {
   private view: View;
   /** Whether the view is still the fitted one: no zoom or pan since. */
   private untouched = true;
-  private drag: { x: number; y: number; moved: boolean; turning?: boolean } | null = null;
+  private drag: { x: number; y: number; moved: boolean; turning?: boolean; moving?: boolean } | null = null;
   /** The fingers or pointers down now, by id, and the spread a pinch is measured from. */
   private readonly fingers = new Map<number, { x: number; y: number }>();
   private pinch: { d: number; x: number; y: number } | null = null;
@@ -92,6 +84,7 @@ export class RenderStage {
   /** The marks painted last, which a click picks from. */
   private marks: Mark[] = [];
   private gliding = 0;
+  private readonly mover: StageMover | undefined;
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -108,11 +101,15 @@ export class RenderStage {
     g?: Graph,
     hands?: StageHands,
     mini: MiniMapSetting = 'always',
+    places?: PlacesHost,
   ) {
     this.viewport = viewport;
     this.hands = hands;
     this.scene = sceneOf(shapeOf(drawing, g));
-    this.spots = roomsOf(this.scene);
+    this.spots = roomsOf(this.scene, places?.saved);
+    const [save, stage] = [places?.place, { scene: this.scene, spots: this.spots, draw: () => this.draw() }];
+    // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
+    this.mover = save && new StageMover({ ...stage, marks: () => this.marks, view: () => this.view }, save);
     this.sizes = roomSizes(this.scene, this.spots);
     viewport.addClass('thoughtknot-new-rendering');
     this.canvas = viewport.createEl('canvas', { cls: 'thoughtknot-render-stage' });
@@ -237,8 +234,10 @@ export class RenderStage {
       this.pinch = this.spread();
     } else if (this.fingers.size === 1) {
       // seen from an angle, a drag with Shift or the right button turns and tips the camera; else it moves the drawing
-      const turning = isTilted(this.view) && (e.shiftKey || e.button === 2);
-      this.drag = { x: e.clientX, y: e.clientY, moved: false, turning };
+      const turning = isTilted(this.view) && (e.shiftKey || e.button === 2),
+        r = this.canvas.getBoundingClientRect();
+      const moving = !turning && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
+      this.drag = { x: e.clientX, y: e.clientY, moved: false, turning, moving };
     }
   }
 
@@ -262,7 +261,9 @@ export class RenderStage {
     const d = this.drag;
     if (!d || (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < CLICK_PX)) return;
     const [dx, dy] = [e.clientX - d.x, e.clientY - d.y];
-    this.view = d.turning ? turnedBy(this.view, dx, dy) : panView(this.view, ...groundShift(this.view, dx, dy));
+    if (d.moving) this.mover?.drag(dx, dy);
+    else if (d.turning) this.view = turnedBy(this.view, dx, dy);
+    else this.view = panView(this.view, ...groundShift(this.view, dx, dy));
     this.untouched = false;
     this.gliding++;
     this.drag = { ...d, x: e.clientX, y: e.clientY, moved: true };
@@ -274,6 +275,7 @@ export class RenderStage {
     if (this.fingers.size < 2) this.pinch = null;
     const d = this.drag;
     this.drag = null;
+    if (d?.moving) this.mover?.drop();
     if (!d || d.moved) return;
     const r = this.canvas.getBoundingClientRect();
     this.clicked(e.clientX - r.left, e.clientY - r.top);
@@ -283,6 +285,7 @@ export class RenderStage {
   private lift(e: PointerEvent): void {
     this.fingers.delete(e.pointerId);
     if (this.fingers.size < 2) this.pinch = null;
+    if (this.drag?.moving) this.mover?.drop();
     this.drag = null;
   }
 
@@ -327,23 +330,15 @@ export class RenderStage {
   /** Glides to `to`, or goes there at once when the reader asks for less motion (rule 7). */
   private glideTo(to: View): void {
     this.untouched = false;
-    const from = this.view,
-      win = this.viewport.win ?? (typeof window === 'undefined' ? undefined : window);
-    const still = win?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (still || !win?.requestAnimationFrame) {
-      this.view = to;
-      return this.draw();
-    }
     const run = ++this.gliding,
-      start = Date.now();
-    const frame = () => {
-      if (run !== this.gliding) return;
-      const t = Math.min(1, (Date.now() - start) / GLIDE_MS);
-      this.view = t < 1 ? glideView(from, to, t) : to;
-      this.draw();
-      if (t < 1) win.requestAnimationFrame(frame);
-    };
-    win.requestAnimationFrame(frame);
+      win = this.viewport.win ?? (typeof window === 'undefined' ? undefined : window);
+    glide(
+      win,
+      this.view,
+      to,
+      (v) => ((this.view = v), this.draw()),
+      () => run === this.gliding,
+    );
   }
 
   /** Paints a whole new frame, at the device's own pixels. */
@@ -352,11 +347,13 @@ export class RenderStage {
     const ratio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
-    this.canvas.setAttribute('aria-label', this.level());
     const detail = detailAt(this.sizes, this.view.scale);
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own);
     const level = this.level();
+    this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
+    // the level badge comes with the first drawing, so the cover cards are watched again (render_chrome_slots)
+    if (level !== this.said) for (const card of coverCards(this.viewport)) this.watcher?.observe(card);
     this.said = level;
     this.mini?.draw();
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;

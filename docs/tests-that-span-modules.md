@@ -1108,6 +1108,8 @@ after a module nor listed here, and on a listed file that is missing.
     first on made-up measures.
 - `packages/obsidian/test/panels-compact.test.js` — where a pointer hovers, the panels are compact (panels_compact).
   Their hints are tooltips, still heard by a screen reader. It spans the style sheet, the View menu and the docks.
+- `packages/obsidian/test/view-key.test.js` — the colour key waits in a Key section of the View panel (panels_key).
+  It spans the legend of subjects and the View panel.
 ## Languages laid out in a browser
 
 - `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
