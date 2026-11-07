@@ -119,7 +119,9 @@ Wave 6.
 - **Controls:** AI is off until chosen. The endpoint must be https, or http on the device. The ceiling is checked, the
   highest class is never sent, and an unlabelled note counts as strictest. Credentials are refused. Data goes inside a
   fence the note cannot close (AI-3).
-- **Code:** `packages/obsidian/src/ai/send.ts`, the one module that reaches the network.
+- **Code:** `packages/obsidian/src/ai/send.ts`, which sends a note. `packages/obsidian/src/settings/ai-check.ts` is
+  the Test button beside a model's address. It asks the address for its list of models, with the key, when pressed.
+  It sends no note, and refuses an unencrypted address first.
 - **Gaps:**
   - Shared schemas in the scope skip their own class (TRUST-13).
   - Answers are parsed loosely, and size and cost are not bounded (AI-4, AI-5).

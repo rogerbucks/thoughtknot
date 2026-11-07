@@ -3,8 +3,10 @@
 // lies on the ground. The camera tips back by `tilt` and turns round the screen's middle by `turn`. Far things are
 // smaller and near things bigger. Nothing moves in the drawing: only the eye does (nodes stay put). With no tilt and
 // no turn the picture is the flat one, pixel for pixel. Host-free and pure.
-import type { View } from './render-marks.ts';
+import type { GroundMark, View } from './render-marks.ts';
+import type { Look } from './render-look.ts';
 import type { Spot } from './render-rooms.ts';
+import { archOver, ballOf, isGlobe, onGlobe } from './render-globe.ts';
 
 /** How far the eye stands from the screen, as a share of the screen's longer side: far enough to look calm. */
 const EYE = 1.6;
@@ -56,6 +58,7 @@ const ARCH_LEVELS = 3;
  * stand. The arch rises a quarter of the road's length, at most three levels.
  */
 export function archOf(p: Spot, q: Spot, view: View, depth: number): [number, number] | undefined {
+  if (isGlobe(view)) return archOver(p, q, view); // on the globe every road arches over the ball
   const lift = view.lift ?? 0;
   if (!lift || !isTilted(view)) return undefined;
   const flat = (s: Spot): [number, number] => [(s.x - view.x) * view.scale, (s.y - view.y) * view.scale];
@@ -67,8 +70,12 @@ export function archOf(p: Spot, q: Spot, view: View, depth: number): [number, nu
   return [2 * top.x - (s.x + t.x) / 2, 2 * top.y - (s.y + t.y) / 2];
 }
 
-/** Where a spot of the drawing, `depth` levels down, is on the screen, and how big. Flat, it is only zoomed and moved. */
-export function onScreen(spot: Spot, view: View, depth = 0): Spot {
+/**
+ * Where a spot of the drawing, `depth` levels down, is on the screen, and how big. Flat, it is only zoomed and moved.
+ * On the globe it lies round the ball, and `behind` says it is on the far side, out of sight.
+ */
+export function onScreen(spot: Spot, view: View, depth = 0): Spot & { k?: number; behind?: boolean } {
+  if (isGlobe(view)) return onGlobe(spot, view);
   const [x, y, r] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale, spot.r * view.scale];
   if (!isTilted(view)) return { x, y, r };
   const seen = tilted(x, y, heightOf(view, depth), view);
@@ -80,7 +87,7 @@ export function onScreen(spot: Spot, view: View, depth = 0): Spot {
  * the drawing, so it moves as the drawing does, and its spacing halves or doubles as the zoom changes.
  */
 export function groundOf(view: View): [number, number, number, number][] {
-  if (!isTilted(view)) return [];
+  if (!isTilted(view) || isGlobe(view)) return [];
   const step = 2 ** Math.round(Math.log2(GRID_PX / view.scale)); // in the drawing's own units
   // the ground seen from an angle reaches past the screen's edges, the far side most
   const [x0, x1] = [view.x - view.w / view.scale, view.x + (2 * view.w) / view.scale];
@@ -125,4 +132,15 @@ export function fromTrackpad(e: { deltaMode: number; deltaX: number; deltaY: num
   if (e.deltaMode !== 0) return false;
   const y = Math.abs(e.deltaY);
   return e.deltaX !== 0 || (y > 0 && y % 100 !== 0 && y % 120 !== 0);
+}
+
+/** The ground under the marks: a faint grid seen from an angle, or the ball the globe wraps the drawing round. */
+export function floorOf(view: View, look: Look): GroundMark[] {
+  if (isGlobe(view)) {
+    const { disc, lines } = ballOf(view);
+    const [x, y, r] = disc;
+    return [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5, ball: { x, y, r, paper: look.card } }];
+  }
+  const lines = groundOf(view);
+  return lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
 }
