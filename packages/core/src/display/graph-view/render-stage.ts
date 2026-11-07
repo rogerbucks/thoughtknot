@@ -356,11 +356,9 @@ export class RenderStage {
     const detail = detailAt(this.sizes, this.view.scale);
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own);
     const level = this.level();
-    if (level !== this.said) {
-      this.hands?.drawn?.();
-      // the badge that says the level comes with the first drawing, so it is watched from then (render_chrome_slots)
-      for (const card of coverCards(this.viewport)) this.watcher?.observe(card);
-    }
+    if (level !== this.said) this.hands?.drawn?.();
+    // the level badge comes with the first drawing, so the cover cards are watched again (render_chrome_slots)
+    if (level !== this.said) for (const card of coverCards(this.viewport)) this.watcher?.observe(card);
     this.said = level;
     this.mini?.draw();
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
