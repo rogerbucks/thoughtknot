@@ -1298,31 +1298,6 @@
       "view_presets_own_everywhere"
     ]
   },
-  "LB1": {
-    "title": "Layout in its own block: places by thing name, optional and checked",
-    "size": "M",
-    "requirements": [
-      "layout_block",
-      "layout_block_optional",
-      "layout_block_checked",
-      "layout_drag_saves"
-    ]
-  },
-  "RM1": {
-    "title": "Reading view writes metadata, and a private and a public AI reviewer",
-    "size": "M",
-    "requirements": [
-      "reading_view_metadata",
-      "reading_view_metadata_safe",
-      "ai_block",
-      "ai_block_not_data",
-      "ai_private_default",
-      "ai_private_gets_note",
-      "ai_private_is_own",
-      "ai_public_names_only",
-      "ai_two_reviewers"
-    ]
-  },
   "DR1": {
     "title": "Drawings on the graph: ink, shapes and notes",
     "size": "M",
