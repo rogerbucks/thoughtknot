@@ -82,7 +82,8 @@ export function prePushPlan({ files, platform, base, cargo, whole = false, paths
     if (cargo) {
       steps.push(
         ['macOS app: compile', 'node', 'scripts/desktop-build.mjs', 'compile'],
-        ['macOS app: bundle, unsigned', 'node', 'scripts/desktop-build.mjs', 'bundle'],
+        // the .app alone: a disk image needs Finder scripted, and that waits on a prompt
+        ['macOS app: bundle, unsigned', 'node', 'scripts/desktop-build.mjs', 'bundle', 'app'],
       );
     } else {
       warnings.push(

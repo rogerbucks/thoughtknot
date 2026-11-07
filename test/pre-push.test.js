@@ -65,6 +65,15 @@ describe('the pre-push hook', () => {
   test('builds the macOS app on a Mac when the change is one the desktop workflow builds', () => {
     assert.ok(plan(['packages/app/src/app-start.ts']).includes('macOS app: bundle, unsigned'));
     assert.ok(plan(['packages/core/src/render/render-tilt.ts']).includes('macOS app: compile'));
+    // the .app alone: a disk image needs Finder scripted, which waits on a prompt the laptop may never show
+    const bundle = prePushPlan({
+      files: ['packages/app/src/app-start.ts'],
+      platform: 'darwin',
+      cargo: true,
+      base: 'b',
+    }).steps.find(([l]) => l === 'macOS app: bundle, unsigned');
+    assert.deepEqual(bundle.slice(1), ['node', 'scripts/desktop-build.mjs', 'bundle', 'app']);
+    assert.match(read('scripts/desktop-build.mjs'), /'--bundles', 'app'/);
     assert.ok(!plan(['README.md']).some((l) => l.startsWith('macOS')), 'not for words alone');
     assert.ok(!plan(['packages/app/src/app-start.ts'], 'linux').some((l) => l.startsWith('macOS')), 'not off a Mac');
   });
