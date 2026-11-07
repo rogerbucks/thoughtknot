@@ -142,8 +142,8 @@ test('roads join only neighbours in the same room', () => {
     assert.equal(scene.nodes.get(r.a).parent, scene.nodes.get(r.b).parent, `${r.a} to ${r.b}`);
 });
 
-// Roger, 7 Nov 2026 (nightly): highways went to the middle of a cluster, which confused, and stayed when zoomed in;
-// the circles faded out zoomed in, so a cluster's bounds and name were hard to see.
+// Roger, 7 Nov 2026 (nightly): highways went to the middle of a cluster, which confused. They stayed when zoomed in.
+// The circles faded out zoomed in, so a cluster's bounds and name were hard to see.
 // proves: render_marks
 test('a road runs edge to edge of its rooms and is gone once you are inside a room; a cloud keeps its edge', () => {
   const things = [];

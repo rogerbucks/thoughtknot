@@ -19,8 +19,8 @@ const INSIDE_FROM = 0.6;
 const INSIDE_AT = 1.1;
 
 /**
- * How much a road between rooms `s` and `t` on the screen still shows as the reader zooms into one of them: all of it
- * while both are smaller than the screen, fading to none as one comes to fill it (Roger).
+ * How much a road between rooms `s` and `t` on the screen still shows as the reader zooms into one of them. All of it
+ * shows while both are smaller than the screen. It fades to none as one comes to fill it (Roger).
  */
 export function insideFade(s: Spot, t: Spot, view: View): number {
   const big = (2 * Math.max(s.r, t.r)) / Math.max(1, Math.min(view.w, view.h));
