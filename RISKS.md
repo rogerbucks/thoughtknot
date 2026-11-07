@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (38)
+## Open (37)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -37,7 +37,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
-| SEC-22 | The desktop app's temp file can follow a planted link | ●○○ | ●●○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | SEC-23 | Kept drafts hold note text that Claude can read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | SEC-24 | A hand-started desktop build runs any branch with the signing keys | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
 | SEC-25 | The panel may write anywhere in its checkout | ●○○ | ●○○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
@@ -330,16 +329,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
 
-### SEC-22 The desktop app's temp file can follow a planted link
-
-**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
-
-**Risk:** A note is written to a temp file named after the note and the process number, made with File::create. That call follows a link and truncates what it finds. A notes folder that another device or person syncs into could hold a link at that name. The write would then go outside the folder, past the check that only looks at the note's own path.
-
-**Fix:** Make the temp file with create_new, so it never opens an existing name or link. Give it a random part in its name. Check the temp path inside the folder as the note's own path is checked.
-
-**Check:** A Rust test in place.rs plants a link at the temp name that leads outside the folder. It asserts write_text fails and leaves the outside file alone.
-
 ### SEC-23 Kept drafts hold note text that Claude can read
 
 **Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/server/note-drafts.ts`.
@@ -430,7 +419,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (112)
+## Done or accepted (113)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -539,6 +528,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-19 | Time-related attacks on history, sync and shared links are not yet reviewed | done | #1489; kept out by `packages/core/test/temporal-security.test.js`, `packages/core/src/temporal.ts` |
 | SEC-20 | The code scan read only the code, not the Python library or the workflows | done | #1367; kept out by `test/code-scan.test.js`, `scripts/code-scan.mjs`, `python/graph_spec/tests/test_graph_bidi.py` |
 | SEC-21 | The animated exports found each group of a drawing with a pattern that ran slow | done | #1553; kept out by `packages/core/test/export-motion-groups.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-22 | The desktop app's temp file can follow a planted link | done | #2012; kept out by `packages/app/src-tauri/src/place.rs` |
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | done | #1945; kept out by `test/lint-minimatch.test.js`, `scripts/security-alerts.mjs` |
