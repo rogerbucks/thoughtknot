@@ -101,6 +101,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.own-preset.problem': 'Not used: {why}',
   'settings.own-preset.export': 'Export the preset in use',
   'settings.own-preset.export.sentence': 'Writes it to one small file, to bring into ThoughtKnot on another device.',
+  'settings.own-presets.name': 'Your own view presets',
+  'settings.own-presets.sentence':
+    'The view presets you saved, each with the name you gave it. Pick, rename or delete them here.',
+  'settings.own-presets.save': 'Save the drawing settings as a preset of your own',
+  'settings.own-presets.save.sentence': 'Keeps the Drawing settings as they are now. Rename or delete it after.',
+  'settings.own-presets.default-name': 'My preset {n}',
   'settings.own-preset.exported': 'View preset written to {path}',
   'settings.vault-preset.name': 'View preset in use',
   'settings.vault-preset.active': 'In use: {name}, chosen by {where}.',
