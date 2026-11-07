@@ -1,10 +1,10 @@
 // How gate-guard.ts judges a Bash command (spec §26, risk TRUST-1): whether it could change an existing note's
-// classification. Bash cannot be fully parsed, so shell-steps.ts reads a command into its steps, and the steps are
-// followed in order: where `cd` leads, what each variable may hold (each value a `for` gives it), and so the files each
-// step writes. What the shell may not set, or sets in a subshell, is not known.
+// classification. Bash cannot be fully parsed, so shell-steps.ts reads a command into its steps. The steps are followed
+// in order: where `cd` leads, and what each variable may hold, each value a `for` gives it among them. So the files
+// each step writes are known. What the shell may not set, or sets in a subshell, is not known.
 //
-// A write to a file not yet made is allowed, whatever it holds (Roger's ruling, 7 Nov 2026: a new note, such as a
-// screenshot's sidecar, may carry a classification). A heredoc that `cat` sends to a note that exists is judged as a
+// A write to a file not yet made is allowed, whatever it holds. Roger ruled so on 7 Nov 2026: a new note may carry a
+// classification, such as a screenshot's sidecar does. A heredoc that `cat` sends to a note that exists is judged as a
 // Write is, whether the command names `classification` or not. Beyond that, a command that names it is refused unless
 // every step only reads, or writes only to files not yet made. What a command changes without naming it, such as
 // cutting the front matter by line numbers, is not seen. GUIDE.md says so.
@@ -310,12 +310,12 @@ function loopSets(steps: readonly ShellStep[], from: number): { names: string[];
 }
 
 /**
- * Whether a Bash command may run: false when it could change an existing note's classification, or names
- * `classification` (`named`) and does what is not read here. The steps are followed in order. A step is sure to run
- * when it follows `;`, a new line or a step sent to the background, outside any block. One after `&&` runs only when
- * those before it did, so what it sets holds to the end of their chain. One after `||` may run whichever failed, so
- * what the chain set before it is forgotten. A step in a pipeline or the background, or inside a block, runs in a
- * subshell or may not run at all, so what it sets is forgotten.
+ * Whether a Bash command may run. It may not when it could change an existing note's classification. Nor may it when
+ * it names `classification` (`named`) and does what is not read here. The steps are followed in order. A step is sure
+ * to run when it follows `;`, a new line or a step sent to the background, outside any block. One after `&&` runs only
+ * when those before it did, so what it sets holds to the end of their chain. One after `||` may run whichever failed,
+ * so what the chain set before it is forgotten. A step may run in a subshell, or not at all: in a pipeline, in the
+ * background, or inside a block. What it sets is forgotten.
  */
 export async function shellMayRun(command: string, named: boolean, ports: GatePorts): Promise<boolean> {
   const steps = shellSteps(command);

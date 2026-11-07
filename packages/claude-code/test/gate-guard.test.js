@@ -224,8 +224,8 @@ describe('a note’s classification line', () => {
     refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
   });
 
-  // The commands below are shaped on ones the guard refused in the vault, 7 Nov 2026 (Roger's ruling that day: a new
-  // note, a screenshot's sidecar among them, may carry a classification, and a command that only reads may name it).
+  // The commands below are shaped on ones the guard refused in the vault, 7 Nov 2026. Roger ruled that day that a new
+  // note may carry a classification, a screenshot's sidecar among them. A command that only reads may name it.
   test('a command that only reads is allowed, with substitutions, variables, git, and sed that only prints; one that could write is not', async () => {
     const v = vault();
     for (const command of [

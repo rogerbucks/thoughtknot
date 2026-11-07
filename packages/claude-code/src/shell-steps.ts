@@ -1,6 +1,6 @@
 // A Bash command read only far enough for gate-guard.ts to tell what each of its steps may write. This is not a shell.
 // It knows quotes, the separators, redirections, heredocs and `$(…)`. The steps a `$(…)` runs are read as steps of
-// their own, marked as run in a subshell, and where its output goes in a word stands UNKNOWN. A `$` in single quotes,
+// their own, marked as run in a subshell. Where its output goes in a word stands UNKNOWN. A `$` in single quotes,
 // or escaped, stands LITERAL_DOLLAR, so the guard expands only the variables the shell would. Some things could run
 // other code, or are not known here: backticks, `$((…))`, brackets, a comment or an unclosed quote. Any of them makes
 // the whole command unread: null, so the guard can refuse rather than guess. Zsh is held to this too, since its glob
