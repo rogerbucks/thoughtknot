@@ -98,3 +98,41 @@ test('the stage turns and tips by a step only while tilted, and nothing in the d
     uninstall();
   }
 });
+
+// proves: render_one_camera
+test('a two-finger twist, where the browser reports one, turns the tilted camera with the fingers', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { turnControls } = await import('../src/display/graph-view/stage-turn-keys.ts');
+    const root = doc.createElement('div');
+    doc.body.appendChild(root);
+    const viewport = root.createDiv({ cls: 'thoughtknot-viewport' });
+    const turns = [];
+    let tilted = false;
+    const stage = { turnBy: (dx, dy) => (tilted ? (turns.push([dx, dy]), true) : false) };
+    const controls = turnControls(root, viewport, stage);
+    const twist = (type, rotation) => viewport.dispatch(type, { rotation });
+    twist('gesturestart', 0);
+    assert.equal(twist('gesturechange', 10).defaultPrevented, false, 'flat: the twist is left to the page');
+    tilted = true;
+    twist('gesturestart', 0);
+    assert.ok(twist('gesturechange', 10).defaultPrevented);
+    twist('gesturechange', 15);
+    twist('gesturechange', 5);
+    const [a, b, c] = turns.map(([dx]) => dx);
+    assert.ok(a > 0 && b > 0 && b < a && c < 0, `clockwise turns right, by each change only: ${turns}`);
+    assert.ok(
+      turns.every(([, dy]) => dy === 0),
+      'a twist never tips the camera',
+    );
+    controls.unload();
+    twist('gesturechange', 40);
+    assert.equal(turns.length, 3, 'gone with the stage');
+  } finally {
+    uninstall();
+  }
+});
