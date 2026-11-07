@@ -116,7 +116,13 @@ export class EditCard {
       (e: KeyboardEvent) => {
         // Ctrl+Z undoes the last edit, and Ctrl+Shift+Z does it again; a field being typed in keeps its own (edit_undo)
         const typing = !!(e.target as Element | null)?.closest?.('input, textarea, [contenteditable="true"]');
-        if ((e.ctrlKey || e.metaKey) && !typing && !e.defaultPrevented && this.writable() && this.writes.undoes().key(e)) {
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          !typing &&
+          !e.defaultPrevented &&
+          this.writable() &&
+          this.writes.undoes().key(e)
+        ) {
           e.preventDefault();
           e.stopPropagation();
           return;

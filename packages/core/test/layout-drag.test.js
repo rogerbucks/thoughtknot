@@ -102,7 +102,7 @@ test('on the stage, dragging an item moves it alone and saves its place; draggin
   }
 });
 
-// proves: layout_drag_saves
+// proves: layout_drag_saves, move_undo
 test('one undo takes a saved place back: a new place is forgotten, a moved one goes back, and redo puts it again', async () => {
   // in the note: forgetting a place takes its line out, and nothing else
   const one = placeInNote(note(), 'trip', GRAPH, 'ann', 1, 2).text;
