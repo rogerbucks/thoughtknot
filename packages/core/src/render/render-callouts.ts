@@ -19,8 +19,8 @@ function inPlace(ask: LabelAsk, kept: LabelMark | undefined): boolean {
 }
 
 /**
- * Where each of a line of cards starts along one side, in order: `at` is where each would like its middle, `size` its
- * length along the line. Each comes as near its wish as the cards before it allow, and the line slides back from the
+ * Where each of a line of cards starts along one side, in order. `at` is where each would like its middle, and `size`
+ * its length along the line. Each comes as near its wish as the cards before it allow, and the line slides back from the
  * far end if it must. Null when they do not fit between `lo` and `hi`.
  */
 export function pack(rows: readonly { at: number; size: number }[], lo: number, hi: number): number[] | null {
@@ -118,9 +118,9 @@ const TRIES = (reach: number): { d: number; turn: number }[] =>
     .sort((p, q) => p.d + Math.abs(p.turn) * TURN_COST - (q.d + Math.abs(q.turn) * TURN_COST));
 
 /**
- * The cards round the drawing in the clear space left, where neither columns nor rows fit: each on the line from the
- * drawing's middle through its cloud, as near the drawing as it fits, turned a little either way if it must. Cards go
- * in the order their clouds lie round the middle, so neighbours stay neighbours.
+ * The cards round the drawing in the clear space left, where neither columns nor rows fit. Each goes on the line from
+ * the drawing's middle through its cloud, as near the drawing as it fits. It turns a little either way if it must.
+ * Cards go in the order their clouds lie round the middle, so neighbours stay neighbours.
  */
 function ring(
   cards: Callout[],
@@ -166,10 +166,10 @@ function ring(
 }
 
 /**
- * The names laid round the drawing, when the top level's names no longer fit on their clouds: `asks` are every name
+ * The names laid round the drawing, when the top level's names no longer fit on their clouds. `asks` are every name
  * asked for, `tops` the top level's clouds on the screen by key, and `placed` what the placer made of them. They
- * stand in columns beside the drawing, or rows above and below it, or else round it where there is room. Null while every
- * top-level name sits on its own cloud, or when neither fits.
+ * stand in columns beside the drawing, or rows above and below it, or else round it where there is room. Null while
+ * every top-level name sits on its own cloud.
  */
 export function calloutsOf(
   asks: readonly LabelAsk[],
