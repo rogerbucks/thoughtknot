@@ -69,9 +69,10 @@ function paintGround(c: Canvas2d, m: GroundMark): void {
   c.stroke();
 }
 
-/** A soft cloud: solid to two thirds out, then fading to nothing at its edge. In 3D its footprint lies faint below. */
+/** A soft cloud: solid to two thirds out, then fading, with a clear line at its edge. In 3D its footprint lies below. */
 function paintCloud(c: Canvas2d, m: CloudMark): void {
-  if (m.shadow) paintCloud(c, { ...m, ...m.shadow, alpha: m.alpha * 0.35, shadow: undefined });
+  if (m.shadow)
+    paintCloud(c, { ...m, ...m.shadow, alpha: m.alpha * 0.35, ring: (m.ring ?? 0) * 0.35, shadow: undefined });
   const g = c.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r);
   g.addColorStop(0, withAlpha(m.fill, m.alpha));
   g.addColorStop(0.68, withAlpha(m.fill, m.alpha));
@@ -81,6 +82,15 @@ function paintCloud(c: Canvas2d, m: CloudMark): void {
   c.beginPath();
   c.arc(m.x, m.y, m.r, 0, Math.PI * 2);
   c.fill();
+  if (!m.ring) return;
+  // a clear line round the edge, so the room's bounds show however faint its fill
+  c.globalAlpha = m.ring;
+  c.strokeStyle = m.fill;
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.arc(m.x, m.y, Math.max(1, m.r - 1), 0, Math.PI * 2);
+  c.stroke();
+  c.globalAlpha = 1;
 }
 
 /** A ribbon road, with a chip that counts its links each way. In 3D it arches. */

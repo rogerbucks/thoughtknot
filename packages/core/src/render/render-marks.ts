@@ -26,6 +26,8 @@ export const MAX_PX = 16;
 export const ITEM_PX = 13;
 /** The smallest a group's name gets as its insides open, in pixels: still easy to read. */
 export const HEADER_PX = 13;
+/** How strong the line round a cloud's edge is. */
+export const RING_ALPHA = 0.55;
 /** How clear a group's name stays while the level inside it shows. */
 const HEADER_ALPHA = 0.9;
 
@@ -56,6 +58,8 @@ export interface CloudMark {
   r: number;
   fill: string;
   alpha: number;
+  /** How strong the line round its edge is: it stays clear as the cloud fades, so the room's bounds always show. */
+  ring?: number;
   /** Where its room's footprint lies on the ground, when it stands above it in 3D. */
   shadow?: { x: number; y: number; r: number };
 }
@@ -195,7 +199,16 @@ export function marksOf(
     const alpha = showOf(node, detail, last) * (s.k === undefined ? 1 : 0.55 + 0.45 * s.k);
     const [at3d, r] = [ground ? { shadow: ground } : {}, Math.max(2, Math.min(s.r, 6))];
     if (node.depth < last)
-      clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view), ...at3d });
+      clouds.push({
+        kind: 'cloud',
+        key: node.key,
+        ...s,
+        fill,
+        alpha: cloudAlpha(alpha, s, view),
+        // its edge stays drawn while its level shows, even once its insides open and its fill fades (Roger)
+        ring: RING_ALPHA * crisp(detail.shown[node.depth] ?? 0),
+        ...at3d,
+      });
     else
       dots.push({
         kind: 'dot',

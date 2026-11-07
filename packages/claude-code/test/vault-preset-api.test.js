@@ -12,6 +12,8 @@ import { NoteStore } from '../server/editor-store.ts';
 import { startEditorServer } from '../server/start-server.ts';
 import { VaultPresetApi, withVaultPreset } from '../server/vault-preset-api.ts';
 import { vaultPresetFile } from '../../core/src/vault-preset.ts';
+import { vaultOwnFile } from '../../core/src/own-vault-preset.ts';
+import { STARTERS } from '../../core/src/view-presets.ts';
 import { ask } from './editor-threats-support.js';
 import { bearer, handWatch, tempVault, writing } from './editor-store-support.js';
 
@@ -132,5 +134,48 @@ describe('the vault preset’s route', () => {
     });
     assert.notEqual(strangers.status, 200, 'another origin does not write');
     assert.equal(existsSync(join(vault, PLACE)), false);
+  });
+});
+
+describe('a preset the vault names for itself, asked of the route (view_presets_own_vault)', () => {
+  const mine = { ...STARTERS.find((p) => p.id === 'calm'), id: 'own:evening', name: 'Evening' };
+
+  test('is told to the page with the file, so the page can read it as it does any untrusted file', async () => {
+    const v = tempVault();
+    const { server, vault } = await serving(v);
+    writeFileSync(join(vault, PLACE), vaultOwnFile(mine));
+    const got = JSON.parse((await get(server)).text);
+    assert.equal(got.id, 'vault:evening');
+    assert.equal(got.file, vaultOwnFile(mine));
+  });
+
+  test('is not told when it is over the limit, and a starter file carries no file text', async () => {
+    const v = tempVault();
+    const { server, vault } = await serving(v);
+    writeFileSync(join(vault, PLACE), JSON.stringify({ ...JSON.parse(vaultOwnFile(mine)), pad: 'x'.repeat(9000) }));
+    assert.deepEqual(JSON.parse((await get(server)).text), { id: null });
+    assert.equal((await put(server, { id: 'calm' })).status, 200);
+    assert.deepEqual(JSON.parse((await get(server)).text), { id: 'calm' });
+  });
+});
+
+describe('the page reads the vault’s own preset from the route’s answer (view_presets_own_vault)', () => {
+  const mine = { ...STARTERS.find((p) => p.id === 'calm'), id: 'own:evening', name: 'Evening' };
+  const said = (body) => async () => new Response(JSON.stringify(body), { status: 200 });
+
+  test('takes the id from the file it reads itself, and forgets the preset when the file goes', async () => {
+    const { vaultPresetCalls } = await import('../page/vault-preset-calls.ts');
+    const { starterOf } = await import('../../core/src/view-presets.ts');
+    const own = await vaultPresetCalls('t', said({ id: 'vault:other', file: vaultOwnFile(mine) })).read();
+    assert.equal(own, 'vault:evening', 'the page does not trust the id the server gave');
+    assert.equal(starterOf('vault:evening').name, 'Evening');
+    assert.equal(await vaultPresetCalls('t', said({ id: null })).read(), null);
+    assert.equal(starterOf('vault:evening').id, STARTERS[0].id, 'forgotten');
+    assert.equal(
+      await vaultPresetCalls('t', said({ id: 'vault:evening' })).read(),
+      null,
+      'an id with no file is nothing',
+    );
+    assert.equal(await vaultPresetCalls('t', said({ id: 'calm' })).read(), 'calm');
   });
 });
