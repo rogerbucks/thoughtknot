@@ -8,6 +8,7 @@ import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
 import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
+import { isTilted, tilted } from './render-tilt.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
@@ -33,6 +34,9 @@ export interface View {
   h: number;
   /** How much of each edge the controls cover (layer L7); names are kept out of it. */
   clear?: Clear;
+  /** How far the camera tips back from looking straight down, and turns round the screen's middle, in radians. */
+  tilt?: number;
+  turn?: number;
 }
 
 /** A soft cloud: one group's room. */
@@ -118,12 +122,13 @@ export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string
   return colours;
 }
 
-/** `spot` on screen. */
-export const onScreen = (spot: Spot, view: View): Spot => ({
-  x: (spot.x - view.x) * view.scale,
-  y: (spot.y - view.y) * view.scale,
-  r: spot.r * view.scale,
-});
+/** `spot` on screen, seen from the camera's angle when it is tilted (render-tilt.ts). */
+export function onScreen(spot: Spot, view: View): Spot {
+  const [x, y, r] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale, spot.r * view.scale];
+  if (!isTilted(view)) return { x, y, r };
+  const seen = tilted(x, y, 0, view);
+  return { x: seen.x, y: seen.y, r: r * seen.k };
+}
 
 /** Whether a circle on screen touches the view at all. */
 export const inView = (s: Spot, view: View): boolean =>
@@ -178,6 +183,10 @@ export function marksOf(
     const clear = crisp(named);
     if (clear > 0.05) asks.push(askOf(node, s, fill, clear, detail, last, look));
   }
+  // seen from an angle, far things are painted first, so near ones lie over them. A room still lies under what it
+  // holds
+  const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
+  if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
   asks.push(...signsOf(scene, spots, detail, view, colours, look));
   return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
 }
