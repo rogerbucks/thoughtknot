@@ -2,7 +2,6 @@
 // setting on, a graph is drawn here, on one canvas over the card, by the layers one way down. The scene, rooms, detail,
 // marks and canvas painter do the work, and this file only wires them to the page. Today's SVG stays underneath,
 // hidden, so the old path keeps working until the switch flips for good.
-//
 // Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms smoothly at the pointer (Roger, 6 Nov).
 // Dragging pans. Plain scrolling is left to the page. While a view in space shows, the stage stands aside. A click picks from the marks (layer L6). An item's first click selects it and opens its details.
 // Its second glides it to the middle (second_tap_centres). A click on a group glides to it and opens its next level.
@@ -324,6 +323,14 @@ export class RenderStage {
     const untouched = this.untouched;
     this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0, lift });
     this.untouched = untouched; // looking from another angle is not a move the reader made
+    return true;
+  }
+
+  /** Turns and tips a tilted camera, as a drag of `dx`, `dy` pixels would; says whether it could (flat, it cannot). */
+  turnBy(dx: number, dy: number): boolean {
+    if (!isTilted(this.view)) return false;
+    this.view = turnedBy(this.view, dx, dy);
+    this.draw();
     return true;
   }
 
