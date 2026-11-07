@@ -301,8 +301,7 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
-    // Ctrl+Z undoes a move (move_undo). A box picked up from the keyboard takes its keys until put down; M picks it up
-    // one press undoes once: a key the new rendering's stage already took is left alone
+    // Ctrl+Z undoes a move (move_undo), unless the stage took it. A box picked up by the keyboard keeps its keys; M lifts it
     if (!e.defaultPrevented && (movers?.undo?.key(e) || keys?.key(e))) {
       e.preventDefault();
       return;
