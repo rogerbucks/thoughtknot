@@ -2409,7 +2409,7 @@ pre.thoughtknot-code {
 .thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
   visibility: hidden;
 }
-.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-level-badge, .thoughtknot-mini-map) {
+.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-mini-map):not(.thoughtknot-stage-mini) {
   display: none;
 }
 .thoughtknot-render-stage {
@@ -3794,6 +3794,10 @@ body.thoughtknot-easier-reading
 .thoughtknot-view:has(.thoughtknot-phone-sheet.is-half) .thoughtknot-mini-map {
   inset-block-end: calc(50% + var(--gn-space-2));
 }
+.thoughtknot-stage-mini {
+  inline-size: 160px;
+  block-size: 120px;
+}
 .thoughtknot-mini-svg {
   display: block;
   max-width: none;
@@ -4611,6 +4615,10 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-level-swatch[data-hue='5'] {
   background: var(--gn-branch-5);
+}
+/* the new rendering paints its own colours, and its key shows them (Roger, 7 Nov 2026) */
+.thoughtknot-level-swatch.has-own {
+  background: var(--thoughtknot-swatch);
 }
 /* Areas and topics take lighter shades of their subject's colour. */
 .thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
