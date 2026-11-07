@@ -365,9 +365,9 @@ export class RenderStage {
     paintCanvas(c, this.marks, w, h);
   }
 
-  /** The look of the theme shown now. */
+  /** The look of the theme shown now, in the window the card is in. */
   private look(): typeof LIGHT {
-    return activeDocument.body.classList.contains('theme-dark') ? DARK : LIGHT;
+    return this.canvas.ownerDocument.body.classList.contains('theme-dark') ? DARK : LIGHT;
   }
 
   /** The colour the drawing gives `key` now, so the colour key shows the same one (Roger, 7 Nov 2026). */

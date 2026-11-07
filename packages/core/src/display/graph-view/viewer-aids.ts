@@ -102,6 +102,9 @@ export interface AidsHost {
   stage?: Omit<StageHands, 'selected'>;
 }
 
+/** The bar's Fit and zoom buttons. */
+type Zooms = { fit: () => void; zoomIn: () => void; zoomOut: () => void };
+
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
 interface LensMenu {
   menu: { el: HTMLElement; refresh: () => void };
@@ -210,9 +213,10 @@ export class Aids {
   }
 
   /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */
-  stageZoom(): { fit: () => void; zoomIn: () => void; zoomOut: () => void } | null {
-    const s = this.stage;
-    return s && { fit: () => s.zoomBy(0), zoomIn: () => s.zoomBy(ZOOM_STEP), zoomOut: () => s.zoomBy(1 / ZOOM_STEP) };
+  stageZoom(flat: Zooms): Zooms | null {
+    const s = this.stage; // the flat drawing under it zooms too, so the mini-map and labels keep up
+    const both = (r: number, k: keyof Zooms) => () => void (s?.zoomBy(r), flat[k]());
+    return s && { fit: both(0, 'fit'), zoomIn: both(ZOOM_STEP, 'zoomIn'), zoomOut: both(1 / ZOOM_STEP, 'zoomOut') };
   }
 
   /** Shows the drawing as the bar's 2D button says on the new rendering, where it can; says whether it did. */
