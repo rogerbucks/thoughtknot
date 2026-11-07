@@ -25,7 +25,7 @@ export class DeviceKeys {
 
   /** A new key pair for this device. Its private half cannot be exported. */
   static async create(): Promise<DeviceKeys> {
-    const pair = await subtle().generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveKey']);
+    const pair = await subtle().generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveKey', 'deriveBits']);
     return new DeviceKeys(pair, new Uint8Array(await subtle().exportKey('raw', pair.publicKey)));
   }
 
@@ -39,6 +39,23 @@ export class DeviceKeys {
       false,
       ['encrypt', 'decrypt'],
     );
+  }
+
+  /**
+   * The key for one session with the device whose public half is `theirs`. It comes from the key the two devices share,
+   * from `fresh` and from `salt`. The `fresh` bytes are what the two sides agreed on with one-time keys, thrown away
+   * after. So a session's messages open in that session alone. A device key stolen later cannot open one recorded
+   * before.
+   */
+  async sessionKey(theirs: Uint8Array, salt: Uint8Array, fresh: Uint8Array): Promise<CryptoKey> {
+    const pub = await subtle().importKey('raw', own(theirs), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+    const bits = await subtle().deriveBits({ name: 'ECDH', public: pub }, this.#pair.privateKey, 256);
+    const base = await subtle().importKey('raw', Uint8Array.from([...new Uint8Array(bits), ...fresh]), 'HKDF', false, [
+      'deriveKey',
+    ]);
+    const info = new TextEncoder().encode('thoughtknot mesh session 2');
+    const hkdf = { name: 'HKDF', hash: 'SHA-256', salt: own(salt), info };
+    return subtle().deriveKey(hkdf, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   }
 
   toJSON(): string {
@@ -120,18 +137,20 @@ export class VaultKey {
   }
 }
 
-/** `plain` sealed by `key`, AES-GCM, after a fresh nonce. */
-export async function sealWith(key: CryptoKey, plain: Uint8Array): Promise<Uint8Array> {
+/** `plain` sealed by `key`, AES-GCM, after a fresh nonce. `bound` is checked on opening but is not sent. */
+export async function sealWith(key: CryptoKey, plain: Uint8Array, bound?: Uint8Array): Promise<Uint8Array> {
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(IV_BYTES));
-  const body = new Uint8Array(await subtle().encrypt({ name: 'AES-GCM', iv }, key, own(plain)));
+  const algorithm = { name: 'AES-GCM', iv, ...(bound ? { additionalData: own(bound) } : {}) };
+  const body = new Uint8Array(await subtle().encrypt(algorithm, key, own(plain)));
   const out = new Uint8Array(IV_BYTES + body.length);
   out.set(iv);
   out.set(body, IV_BYTES);
   return out;
 }
 
-/** What `sealed` holds, sealed by `key`. Throws when it was changed or sealed by another key. */
-export async function openWith(key: CryptoKey, sealed: Uint8Array): Promise<Uint8Array> {
+/** What `sealed` holds, sealed by `key` and bound to `bound`. Throws when it was changed or sealed by another key. */
+export async function openWith(key: CryptoKey, sealed: Uint8Array, bound?: Uint8Array): Promise<Uint8Array> {
   const iv = sealed.slice(0, IV_BYTES);
-  return new Uint8Array(await subtle().decrypt({ name: 'AES-GCM', iv }, key, own(sealed.slice(IV_BYTES))));
+  const algorithm = { name: 'AES-GCM', iv, ...(bound ? { additionalData: own(bound) } : {}) };
+  return new Uint8Array(await subtle().decrypt(algorithm, key, own(sealed.slice(IV_BYTES))));
 }
