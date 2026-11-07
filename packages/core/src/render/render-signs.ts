@@ -5,17 +5,7 @@ import type { Scene } from './render-scene.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Detail } from './render-detail.ts';
 import { inkOf, type Look } from './render-look.ts';
-import {
-  ITEM_PX,
-  LONGEST,
-  crisp,
-  inView,
-  onScreen,
-  onView,
-  textWidth,
-  type LabelAsk,
-  type View,
-} from './render-marks.ts';
+import { LONGEST, crisp, inView, onScreen, onView, textWidth, type LabelAsk, type View } from './render-marks.ts';
 
 /** The arrows a signpost points with, a turn of 45 degrees apart, clockwise from the right. */
 const ARROWS = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
@@ -23,6 +13,9 @@ const ARROWS = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
 /** The arrow that points along `dx`, `dy` on the screen. */
 export const arrowOf = (dx: number, dy: number): string =>
   ARROWS[(Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8] as string;
+
+/** A signpost's name size: a little bigger than an item's, so its card is 24 pixels high, big enough to tap. */
+export const SIGN_PX = 15;
 
 /** How far in from the clear edge a signpost stands. */
 const SIGN_INSET = 6;
@@ -66,7 +59,7 @@ export function signsOf(
           dy = far.y - ny;
         const name = node.name.length > LONGEST ? `${node.name.slice(0, LONGEST - 1)}…` : node.name;
         const text = `${arrowOf(dx, dy)} ${name}`;
-        const px = ITEM_PX,
+        const px = SIGN_PX,
           w = textWidth(text, px) + px,
           h = px * 1.6;
         const [left, right] = [c.left + w / 2 + SIGN_INSET, view.w - c.right - w / 2 - SIGN_INSET];
