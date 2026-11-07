@@ -1,7 +1,7 @@
 // A person's own view presets, kept as a list (editor spec ES§69, view_presets_own_list).
 // The list is one small text, kept as a setting. Each item is a preset file, read as untrusted when the list is read.
 // Host-free and pure: every change gives the new text and keeps the old one as it was.
-import { presetFrom } from './view-presets.ts';
+import { presetFrom, setOwnList } from './view-presets.ts';
 import type { ViewPreset } from './view-presets.ts';
 
 /** The format the list says it is in. */
@@ -74,4 +74,17 @@ export function renameOwn(text: string, id: string, name: string): string {
 /** The list text without the preset `id`. */
 export function deleteOwn(text: string, id: string): string {
   return textOf(readOwnList(text).filter((p) => p.id !== id));
+}
+
+/** Takes the list in `text` as the person's own, for every host that reads the settings. Gives the list kept. */
+export function adoptOwnList(text: string): { list: ViewPreset[]; text: string } {
+  const list = readOwnList(text);
+  setOwnList(list);
+  return { list, text: list.length ? textOf(list) : '' };
+}
+
+/** The id `v` when it names a preset of `list`; `fallback` when it names one of the own kind that is gone; else none. */
+export function ownPick(v: unknown, list: readonly ViewPreset[], fallback: string): string | undefined {
+  if (typeof v !== 'string' || !v.startsWith(OWN_PREFIX)) return undefined;
+  return list.some((p) => p.id === v) ? v : fallback;
 }

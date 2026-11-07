@@ -113,7 +113,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       ];
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
-    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'aiModels' || o.key === 'ownPresets') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'ownPreset')
       return [
         { name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } },

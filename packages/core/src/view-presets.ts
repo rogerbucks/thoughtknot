@@ -145,9 +145,20 @@ export function adoptOwn(text: string): ViewPreset | null {
   return own;
 }
 
+// the presets of the person's own list, as last read in with the settings (view_presets_own_list)
+let ownList: readonly ViewPreset[] = [];
+
+/** Takes `list` as the person's own presets, so each is found by its id. The settings call this as they are read in. */
+export function setOwnList(list: readonly ViewPreset[]): void {
+  ownList = list;
+}
+
 /** The starter of `id`, or the person's own; else the default. */
 export const starterOf = (id: string): ViewPreset =>
-  (id === OWN_PRESET && own) || STARTERS.find((p) => p.id === id) || (STARTERS[0] as ViewPreset);
+  (id === OWN_PRESET && own) ||
+  ownList.find((p) => p.id === id) ||
+  STARTERS.find((p) => p.id === id) ||
+  (STARTERS[0] as ViewPreset);
 
 /** The preset `s` uses, as its file to take to another host: its Drawing settings as they are set now. */
 export const presetToShare = (s: Settings): string =>
