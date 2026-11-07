@@ -442,3 +442,34 @@ test('close in, an item with a long name shows it on two lines or more, apart fr
     for (let i = 0; i < labels.length; i++)
       for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].key);
 });
+
+// Roger, 7 Nov 2026: labels should not overlap roads of the same level or above, so it is plain what is what.
+// proves: render_marks
+test('a name keeps off a road of its own level or above where it can, still on its thing; a deeper road is left', () => {
+  const ask = {
+    key: 'g',
+    text: 'Group',
+    x: 200,
+    y: 100,
+    px: 14,
+    fill: '#ffffff',
+    alpha: 1,
+    weight: 1,
+    depth: 1,
+    room: 40,
+  };
+  const road = (depth) => ({ kind: 'road', a: 'p', b: 'q', from: [0, 100], to: [400, 100], width: 3, depth });
+  const view = { x: 0, y: 0, scale: 1, w: 400, h: 300 };
+  const [plain] = placeLabels([ask], view);
+  assert.ok(plain.y < 100 && plain.y + plain.h > 100, 'with no road it sits on its spot');
+  const [off] = placeLabels([ask], view, [road(0)]);
+  assert.ok(off.y > 100 + 2 || off.y + off.h < 100 - 2, 'moved clear of a road above its level');
+  assert.ok(off.x <= 200 && 200 <= off.x + off.w, 'still over its thing');
+  const [same] = placeLabels([ask], view, [road(1)]);
+  assert.ok(same.y > 100 + 2 || same.y + same.h < 100 - 2, 'and of a road at its own level');
+  const [deeper] = placeLabels([ask], view, [road(2)]);
+  assert.deepEqual(deeper, plain, 'a road deeper in is left to run under it');
+  // an item has no room to move: it keeps its name where it is, rather than losing it
+  const [item] = placeLabels([{ ...ask, room: undefined }], view, [road(1)]);
+  assert.deepEqual([item.x, item.y], [plain.x, plain.y]);
+});

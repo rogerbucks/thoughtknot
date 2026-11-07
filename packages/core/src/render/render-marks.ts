@@ -10,7 +10,7 @@ import { inkOf, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
 import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
-import { roadsOf } from './render-roads.ts';
+import { roadsOf, underBox } from './render-roads.ts';
 import { calloutsOf } from './render-callouts.ts';
 import { focusMarks, focusSigns, type Focus } from './render-focus.ts';
 export type { Focus } from './render-focus.ts';
@@ -227,8 +227,8 @@ export function marksOf(
     floor: GroundMark[] = lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
   // far out, where the top level's names crowd their small clouds, they stand in order round the drawing (Roger)
   const tops = new Map(clouds.filter((m) => scene.nodes.get(m.key)?.depth === 0).map((m) => [m.key, m]));
-  const placed = placeLabels(asks, view);
   const roads = roadsOf(scene, spots, detail, view, colours, look);
+  const placed = placeLabels(asks, view, roads);
   const all = [...floor, ...clouds, ...roads, ...dots, ...(calloutsOf(asks, tops, placed, view) ?? placed)];
   return focusMarks(all, scene, spots, view, colours, look, focus);
 }
@@ -252,6 +252,8 @@ export interface LabelAsk {
   sub?: string;
   subInk?: string;
   alpha: number;
+  /** The depth of its thing: it keeps off roads at that depth or nearer the top (Roger, 7 Nov 2026). */
+  depth?: number;
   /** The most lines a long name may wrap onto; one when none is given. */
   lines?: number;
   /** Higher keeps its place when two names clash. */
@@ -292,6 +294,7 @@ function askOf(
           subInk: mix(look.ink, look.card, 0.45),
         }),
     alpha,
+    depth: node.depth,
     weight: (last - node.depth) * 1e6 + node.items.length,
     // close in, an item's long name may wrap: two lines once items are fully shown, more as they spread apart
     ...(item && (detail.shown[last] ?? 0) >= 1 ? { lines: linesFor(detail.span?.[last] ?? 0) } : {}),
@@ -310,19 +313,26 @@ const GAP = 2;
  * The one label placer. It takes names heaviest first and keeps each that fits (spotFor). A name fits inside the part of the
  * view the controls leave clear, and away from every name kept before it. Sizes stay between MIN_PX and MAX_PX.
  */
-export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] {
+export function placeLabels(asks: readonly LabelAsk[], view: View, roads: readonly RoadMark[] = []): LabelMark[] {
   const order = [...asks].sort((a, b) => b.weight - a.weight || (a.key < b.key ? -1 : 1));
   const kept: LabelMark[] = [];
-  for (const ask of order)
+  for (const ask of order) {
+    // a name keeps off the roads of its own level and above, where it can; else it sits where it would (Roger)
+    const near = roads.filter((r) => ask.depth !== undefined && (r.depth ?? Infinity) <= ask.depth);
+    const tries = near.length ? [near, []] : [[]];
     // a long name close in may take several lines: as many as fit, down to one
-    for (let lines = ask.lines ?? 1; lines >= 1; lines--) {
-      const size = sizeOf(ask, lines);
-      const box = spotFor(ask, size.w, size.h, view, kept);
-      if (box) {
-        kept.push(labelOf(ask, size, box));
-        break;
+    tries.some((off) => {
+      for (let lines = ask.lines ?? 1; lines >= 1; lines--) {
+        const size = sizeOf(ask, lines);
+        const box = spotFor(ask, size.w, size.h, view, kept, off);
+        // moved off a road, it must still sit on its thing, or it would read as another thing's name
+        const on =
+          box && box.x <= ask.x && ask.x <= box.x + box.w && Math.abs(box.y + box.h / 2 - ask.y) <= box.h * 1.2;
+        if (box && (on || !off.length)) return kept.push(labelOf(ask, size, box));
       }
-    }
+      return false;
+    });
+  }
   return kept;
 }
 
@@ -337,6 +347,7 @@ function spotFor(
   h: number,
   view: View,
   kept: readonly LabelMark[],
+  roads: readonly RoadMark[] = [],
 ): { x: number; y: number; w: number; h: number } | null {
   const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
   // the clear part, a gap in from each edge a control covers, as the painted edge of a name reaches past its box
@@ -361,7 +372,7 @@ function spotFor(
     if (box.x < left || box.y < top || box.x + w > right || box.y + h > bottom) continue;
     const apart = (k: LabelMark) =>
       box.x >= k.x + k.w + GAP || k.x >= box.x + w + GAP || box.y >= k.y + k.h + GAP || k.y >= box.y + h + GAP;
-    if (kept.every(apart)) return box;
+    if (kept.every(apart) && !roads.some((r) => underBox(r, box))) return box;
   }
   return null;
 }
