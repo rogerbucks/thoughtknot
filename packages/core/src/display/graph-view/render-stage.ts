@@ -358,6 +358,8 @@ export class RenderStage {
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
+    // the level badge comes with the first drawing, so the cover cards are watched again (render_chrome_slots)
+    if (level !== this.said) for (const card of coverCards(this.viewport)) this.watcher?.observe(card);
     this.said = level;
     this.mini?.draw();
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
