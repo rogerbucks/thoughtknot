@@ -55,3 +55,60 @@ describe('board_access: starting a shared vault', () => {
     assert.equal(fromHex('xyz'), null);
   });
 });
+
+describe('board_access: invitations between two devices', () => {
+  /** An owner with a vault who trusts a second device that has made its keys and nothing more. */
+  async function pair() {
+    const owner = await Sharing.start(memory());
+    const guestKeeper = memory();
+    const guest = await Sharing.prepare(guestKeeper);
+    await owner.trust(guest.publicKey);
+    return { owner, guest, guestKeeper };
+  }
+
+  test('an owner invites a trusted device, who joins and then holds the same vault key', async () => {
+    const { owner, guest, guestKeeper } = await pair();
+    assert.equal(guest.hasVault, false, 'a device prepared to be invited has no vault yet');
+    const text = await owner.invite('ideas', 'edit', guest.publicKey);
+    const read = Sharing.read(text);
+    assert.deepEqual([read.board, read.as, read.fromKey], ['ideas', 'edit', owner.publicKey]);
+    assert.equal(await guest.accept(text), undefined);
+    assert.equal(guest.hasVault, true);
+    assert.deepEqual(guest.joined, { board: 'ideas', as: 'edit', from: owner.publicKey });
+    assert.deepEqual(guest.trusted, [owner.publicKey], 'the inviter is now trusted');
+    const sealedBy = (s) => s.held.vault.seal(new TextEncoder().encode('same'));
+    const opened = await owner.held.vault.open(await sealedBy(guest));
+    assert.equal(new TextDecoder().decode(opened), 'same', 'what one seals the other opens');
+    const later = await Sharing.open(guestKeeper);
+    assert.equal(later.hasVault, true, 'the joined vault is kept');
+    assert.equal(later.joined.as, 'edit');
+  });
+
+  test('only a trusted device can be invited, and only a vault can invite', async () => {
+    const { owner, guest } = await pair();
+    const stranger = toHex((await DeviceKeys.create()).publicKey);
+    assert.equal(await owner.invite('ideas', 'view', stranger), undefined);
+    assert.equal(await guest.invite('ideas', 'view', owner.publicKey), undefined, 'no vault, no invitation');
+  });
+
+  test('an invitation opens on the device it was sealed for and no other, and a device with a vault takes none', async () => {
+    const { owner, guest } = await pair();
+    const text = await owner.invite('ideas', 'view', guest.publicKey);
+    const other = await Sharing.prepare(memory());
+    assert.equal(await other.accept(text), 'not-for-this-device');
+    assert.equal(other.hasVault, false);
+    assert.equal(await other.accept('hello'), 'not-an-invitation');
+    assert.equal(await other.accept(text.slice(0, -8)), 'not-an-invitation');
+    assert.equal(await owner.accept(text), 'has-vault');
+    assert.equal(await guest.accept(text), undefined);
+  });
+
+  test('an invitation is text that carries no key in the clear, and a board name in any script survives', async () => {
+    const { owner, guest } = await pair();
+    const text = await owner.invite('Идеи ✨', 'comment', guest.publicKey);
+    assert.match(text, /^thoughtknot-invitation:[A-Za-z0-9+/=]+$/);
+    assert.equal(Sharing.read(text).board, 'Идеи ✨');
+    const shown = JSON.stringify(Sharing.read(text), (_, v) => (v instanceof Uint8Array ? `${v.length} bytes` : v));
+    assert.ok(!shown.includes('[ThoughtKnot key'), shown);
+  });
+});
