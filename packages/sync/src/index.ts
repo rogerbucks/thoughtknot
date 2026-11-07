@@ -4,6 +4,7 @@ export { FolderStore, RECORDS_FILE, type FolderFiles } from './folder-store.ts';
 export { DeviceKeys, VaultKey } from './keys.ts';
 export { invite, join, newBoardKey, type Invitation, type InvitedAs } from './board-invite.ts';
 export { LiveBoard } from './live-board.ts';
+export { BoardSeat, type Who } from './board-seat.ts';
 export { SealedStore } from './sealed-store.ts';
 export { NoteCrdt, type Anchor, type Made, type NoteDoc } from './crdt.ts';
 export { Engine, errorsOf, joinMerge, newErrors, type Joined, type Refused } from './engine.ts';

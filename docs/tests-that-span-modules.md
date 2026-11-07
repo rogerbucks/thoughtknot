@@ -1234,5 +1234,10 @@ after a module nor listed here, and on a listed file that is missing.
   `board-access.ts`, and an invitation sealed for one device in `board-invite.ts`.
 - `test/board-live.test.js` — boards edited together at once (editor spec §45). Two and five people converge on one board
   text through the note's CRDT, with `live-board.ts` checking each change against the person's role.
+- `test/board-seat.test.js` — a person's seat at a shared board (editor spec §45). Two seats share a board through the
+  note's CRDT in `live-board.ts`. `board-seat.ts` tells each where the other is, never writes it to the note, and checks
+  what arrives from outside.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
+- `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
+  forty places and turns the wheel and pinches. Then it clicks a place, to check the click rule.

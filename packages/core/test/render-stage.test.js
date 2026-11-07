@@ -252,3 +252,84 @@ test('while a view in space shows, the stage leaves the trackpad pinch and the p
     uninstall();
   }
 });
+
+// proves: render_switch, level_colours
+test('the colour key shows over the new rendering: told each new level, with the colours the drawing paints', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { LIGHT } = await import('../src/render/render-look.ts');
+    const { drawing, g } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    const own = new Map();
+    let told = 0;
+    const stage = new RenderStage(viewport, drawing, g, {
+      open() {},
+      clear() {},
+      selected: () => null,
+      drawn: () => told++,
+      own: (key) => own.get(key),
+    });
+    assert.equal(told, 1, 'the badge hears the first level');
+    stage.draw();
+    assert.equal(told, 1, 'a drawing at the same level says nothing new');
+    const before = stage.level();
+    for (let i = 0; i < 400 && stage.level() === before; i++)
+      stage.wheel({
+        ctrlKey: true,
+        deltaY: -20,
+        clientX: 400,
+        clientY: 200,
+        preventDefault() {},
+        stopPropagation() {},
+      });
+    assert.notEqual(stage.level(), before);
+    assert.ok(told >= 2, 'the badge hears the new level');
+    // the chips take the drawing's colours: Work first, Money second, as the mockups do
+    const [work, money] = stage.scene.named;
+    assert.equal(stage.colourOf(work), LIGHT.subjects[0]);
+    assert.equal(stage.colourOf(money), LIGHT.subjects[1]);
+    // a colour picked on the key is the one the drawing paints
+    own.set(work, 2);
+    assert.equal(stage.colourOf(work), LIGHT.subjects[2]);
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: level_regions
+test('a click on a signpost glides to the room off screen at the same zoom', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing: plain, g } = drawingAndGraph();
+    const drawing = { ...plain, links: [{ from: 'WA0', type: 'TO', to: 'MA0' }] };
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(viewport, drawing, g, { open() {}, clear() {}, selected: () => null });
+    const [work, money] = stage.scene.named;
+    // close on Work, so Money is off screen
+    const w = stage.spots.get(work);
+    stage.view = { ...stage.view, scale: 3, x: w.x - stage.view.w / 6, y: w.y - stage.view.h / 6 };
+    stage.draw();
+    const sign = stage.marks.find((m) => m.kind === 'label' && m.key === money);
+    assert.ok(sign, 'a signpost to Money');
+    assert.match(sign.text, /^[→↘↓↙←↖↑↗] /);
+    stage.clicked(sign.x + sign.w / 2, sign.y + sign.h / 2);
+    assert.equal(stage.view.scale, 3, 'the same zoom');
+    const m = stage.spots.get(money);
+    const x = (m.x - stage.view.x) * 3,
+      y = (m.y - stage.view.y) * 3;
+    assert.ok(x > 0 && x < stage.view.w && y > 0 && y < stage.view.h, 'Money is on screen now');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

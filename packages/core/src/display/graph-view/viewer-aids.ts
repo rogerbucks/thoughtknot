@@ -18,6 +18,7 @@ import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
+import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
 import { moveHint } from './box-move-keys';
@@ -190,7 +191,16 @@ export class Aids {
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
     // a view in space takes the pointer and the trackpad's pinch while it shows (Roger, 6 Nov)
-    const hands = host.stage && { ...host.stage, selected: host.lens.selected, away: () => !!host.space?.screen?.() };
+    const hands = host.stage && {
+      ...host.stage,
+      selected: host.lens.selected,
+      away: () => !!host.space?.screen?.(),
+      drawn: () => this.names(),
+      own: (key: string) => {
+        const levels = this.legend?.shown();
+        return levels ? ownHue(levels, key) : undefined;
+      },
+    };
     this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
   }
 
@@ -226,7 +236,9 @@ export class Aids {
       const drawing = reading.graphs.get(graph),
         g = reading.world[graph],
         screen = this.host.space?.screen?.();
-      this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
+      // the new rendering says its own level; the badge and its colour key show over it (Roger, 7 Nov 2026)
+      const stage = this.stage && !screen ? this.stage.level() : null;
+      this.level(screen ? levelSpace(screen, drawing, g) : (stage ?? levelClouds(svg, drawing, g)));
       const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
       this.hints?.show(layer ? levelShown(layer) : null);
       // one level on at a time: still on the way to the one that fits, it draws again in a moment (level_one_step)
@@ -262,8 +274,12 @@ export class Aids {
       this.legend = new LevelLegend(this.badge, {
         viewport: this.host.viewport,
         svg: this.host.svg,
-        redraw: () => this.names(),
+        redraw: () => {
+          this.stage?.draw();
+          this.names();
+        },
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
+        colourOf: (key) => this.stage?.colourOf(key),
         nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
         editGroup: () => this.groupEditor(),
       });

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/preset-panel.test.js",
+  "test": "the preset panel > using a preset changes only the drawing settings it names, so it moves nothing a person placed",
+  "seen_failing_first": false,
+  "evidence": "It proves a guarantee the panel already kept; it guards the panel against a later change."
+}
