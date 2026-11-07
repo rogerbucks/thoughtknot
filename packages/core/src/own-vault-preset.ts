@@ -37,8 +37,8 @@ export function vaultOwnPreset(text: string | null | undefined): ViewPreset | un
 export const vaultOwnFile = (preset: ViewPreset): string => presetFile(preset);
 
 /**
- * The preset id the vault's file chooses, a starter's or the vault's own, or nothing. The vault's own preset is kept
- * so the id can be turned into the preset; a file that names none makes the vault forget the one it had.
+ * The preset id the vault's file chooses, a starter's or the vault's own, or nothing. The vault's own preset is kept,
+ * so its id can be turned into the preset. A file that names none makes the vault forget the one it had.
  */
 export function vaultChoice(text: string | null | undefined): string | undefined {
   const mine = vaultOwnPreset(text);
