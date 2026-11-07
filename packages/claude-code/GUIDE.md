@@ -158,16 +158,32 @@ So a change to the open note is never applied by Claude's own tools while `guard
     after is compared. A change or removal is refused (`CLASSIFICATION_REFUSAL`). So is an edit that breaks the front
     matter around it. A note not yet made may be written.
   - When the note cannot be read, a call is refused if any text it carries holds a classification line.
-  - Bash is read into its steps by `shell-steps.ts`. A heredoc sent by `cat` to an absolute or home-relative path is judged as a
-    Write is, whether the command names `classification` or not. So a new note may carry one, and an existing note's
-    may not change.
-  - Other Bash that names `classification` is refused unless every step only reads, searches or prints. Such a step is
-    on the `READERS` list, has no argument that writes, and has no file to write to. `/dev/null` does not count.
-  - A command that names it is refused if it holds what `shell-steps.ts` does not read: a substitution, brackets, a
-    comment or an unclosed quote. So is a heredoc to a relative path, or one whose path the shell would choose.
   - The refusals name no level, path or text of the call.
-  - **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
-    the list under Bash limits above. The user changes a classification in the note themselves.
+
+#### Bash and the classification line
+
+`gate-shell.ts` judges Bash for `guardGateFiles`.
+
+- **Reading the command:** `shell-steps.ts` reads it into its steps, with the steps each `$(…)` runs. The steps are
+  followed in order: where `cd` leads, and each value a variable may hold. A `for` gives its variable each of its
+  values. So each file a step writes is known in full, or not known.
+- **What is not trusted:** a step may not run, or may run in a subshell. Then what it sets is not known. That is a step
+  after `||`, in a pipeline or the background, or inside `if`, `while` or a loop's body. A loop's body forgets, before
+  it starts, every variable it sets.
+- **A new file:** a write to a file not yet made is allowed, whatever it holds. Roger ruled so on 7 Nov 2026. So a new
+  note may carry a classification, such as a screenshot's `.png.md` sidecar.
+- **An existing note:** a heredoc sent by `cat` to a note that exists is judged as a Write is. That holds whether the
+  command names `classification` or not, so an existing note's may not change.
+- **Other Bash that names `classification`** is refused unless each step only reads, searches or prints, or writes
+  only to files not yet made. Such a step is on the `READERS` list with no argument that writes. Or it is `git` that
+  only reads, `sed` whose script only prints, or `cp` or `mv` to new files.
+- **What may be sent to a new file:** only `cat`, `echo` and `printf`; `/dev/null` does not count. A heredoc onto a
+  note that exists, whose text the shell would expand, is refused when the command names it.
+- **What is not read:** a command that names it is refused if it holds backticks, `$((…))`, brackets, a comment or an
+  unclosed quote. So is a write whose path is not known. That is a variable not set in the command, a pattern, or a
+  folder `cd` may not have reached.
+- **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
+  the list under Bash limits above. The user changes a classification in the note themselves.
 
 ### Proposals, the hooks entry and the page's session
 
