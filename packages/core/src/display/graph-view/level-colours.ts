@@ -25,6 +25,9 @@ export function hueOf(levels: readonly DetailLevel[], key: string): number {
   return Math.max(0, i) % HUES;
 }
 
+/** The hue the person picked for the subject `key` on the colour key, if any. */
+export const ownHue = (levels: readonly DetailLevel[], key: string): number | undefined => picked.get(levels)?.get(key);
+
 /** Picks the next hue for the subject `key`, and gives it back. */
 export function nextHue(levels: readonly DetailLevel[], key: string): number {
   const hue = (hueOf(levels, key) + 1) % HUES;

@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SCALE_BUDGETS } from '../scripts/benchmarks/scale-budgets.mjs';
-import { STEPS, hugeBlock, measure, overBudget } from '../scripts/scale-benchmark.mjs';
+import { STEPS, hugeBlock, measureMedian, overBudget } from '../scripts/scale-benchmark.mjs';
 import { PARTS_LIMITS } from '../packages/core/src/layout-limits.ts';
 import { MeshIndex, memoryBackend } from '../packages/core/src/mesh-index.ts';
 import { partsRefusal, storedGraphs } from '../packages/core/src/store-drawing.ts';
@@ -15,10 +15,11 @@ const fenced = (block) => `\`\`\`gql\n${block}\n\`\`\`\n`;
 
 test('ten times the V-10 graph opens in parts, is filtered and has a group opened, within budget', async () => {
   const { parts, parts_filter } = STEPS;
-  const r = await measure(hugeBlock(), 10, { parts, parts_filter });
+  const r = await measureMedian(hugeBlock(), 10, { parts, parts_filter });
   assert.match(r.steps.parts.outcome, /^done: 26660 things in \d+ groups$/);
   assert.match(r.steps.parts_filter.outcome, /^done: \d+ facets, a group of \d+ things and \d+ links$/);
-  // memory is measured only where garbage is collected first (--expose-gc), as in CI's lint run: here only the time
+  // the time is the middle of three runs, so one slow moment on a busy machine cannot fail it.
+  // Memory is measured only where garbage is collected first (--expose-gc), as in CI's lint run: here only the time
   assert.deepEqual(
     overBudget([r]).filter((line) => !line.includes(' MB kept')),
     [],

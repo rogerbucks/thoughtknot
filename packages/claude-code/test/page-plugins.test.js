@@ -95,6 +95,8 @@ function pluginWorkers(window, threads) {
       this.thread = fetch(`${window.location.origin}${url}`).then(async (r) => {
         this.csp = r.headers.get('content-security-policy');
         const t = new Thread(SELF + (await r.text()), { eval: true });
+        // made after the page was closed, it is ended at once: a thread left running keeps a whole CI shard waiting
+        if (window.stopped) void t.terminate();
         threads.push(t);
         t.on('message', (data) => this.onmessage?.({ data }));
         t.on('error', (e) => this.onerror?.({ message: e.message }));

@@ -1239,3 +1239,5 @@ after a module nor listed here, and on a listed file that is missing.
   what arrives from outside.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
+- `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
+  forty places and turns the wheel and pinches. Then it clicks a place, to check the click rule.
