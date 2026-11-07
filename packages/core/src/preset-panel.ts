@@ -133,6 +133,15 @@ export class PresetPanel {
         desc: word('settings.own-preset.export.sentence'),
         action: () => void this.owner.share(presetToShare(s)),
       },
+      ...(read && !('problems' in read)
+        ? [
+            {
+              name: word('settings.own-presets.bring'),
+              desc: word('settings.own-presets.bring.sentence'),
+              action: () => void this.bringIn(s.ownPreset).then(() => this.clearPasted()),
+            },
+          ]
+        : []),
       {
         name: word('settings.own-presets.save'),
         desc: word('settings.own-presets.save.sentence'),
@@ -154,6 +163,22 @@ export class PresetPanel {
     const mine = { ...shown, settings: Object.fromEntries(PRESET_SETTINGS.map((k) => [k, s[k]])) };
     const name = word('settings.own-presets.default-name', { n: String(held.length + 1) });
     await this.owner.save({ ...s, ownPresets: addOwn(s.ownPresets, mine, name) });
+    this.owner.update();
+  }
+
+  /** Adds the preset file `text` to the person's own list. Gives why it was not taken, else nothing. */
+  async bringIn(text: string): Promise<string | undefined> {
+    const read = presetFrom(text),
+      s = this.owner.settings();
+    if ('problems' in read) return read.problems.join(' ');
+    await this.owner.save({ ...s, ownPresets: addOwn(s.ownPresets, read, read.name) });
+    this.owner.update();
+    return undefined;
+  }
+
+  /** Empties the pasted text of Your own once it is in the list. */
+  private async clearPasted(): Promise<void> {
+    await this.owner.save({ ...this.owner.settings(), ownPreset: '' });
     this.owner.update();
   }
 
