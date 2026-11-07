@@ -13,6 +13,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { SUITE_MEMORY_MB, SUITE_SHARDS, desktopPaths, matches, prePushPlan } from '../scripts/pre-push.mjs';
 import { ROOT, jobs, read } from './repository/repo.js';
 
@@ -84,6 +87,24 @@ describe('the pre-push hook', () => {
 
   test('is the hook git runs', () => {
     assert.match(read('.githooks/pre-push'), /node scripts\/pre-push\.mjs/);
+  });
+
+  test('finds Rust and the Tauri tool where rustup and cargo install them, when they are there', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-hook-'));
+    try {
+      mkdirSync(join(dir, '.cargo', 'bin'), { recursive: true });
+      // the hook up to the line that starts node, then its PATH
+      const head = read('.githooks/pre-push').replace(/^exec node .*$/m, 'echo "$PATH"');
+      const run = (home) =>
+        spawnSync('sh', ['-c', head], { env: { HOME: home, PATH: '/usr/bin:/bin' }, encoding: 'utf8' }).stdout.split(
+          ':',
+        );
+      assert.ok(run(dir).includes(join(dir, '.cargo', 'bin')), 'cargo’s own folder, when it is there');
+      assert.ok(!run(join(dir, 'none')).includes(join(dir, 'none', '.cargo', 'bin')), 'and not when it is not');
+      if (existsSync('/opt/homebrew/opt/rustup/bin')) assert.ok(run(dir).includes('/opt/homebrew/opt/rustup/bin'));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

@@ -2,4 +2,10 @@
 # The laptop checks a push before GitHub does (scripts/pre-push.mjs): the build, the lint, the type check, the tests the
 # change reaches and, on a Mac, the macOS app when the change is one it builds.
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+# Rust and the Tauri tool: Homebrew's rustup keeps cargo out of /opt/homebrew/bin, and `cargo install` puts the Tauri
+# tool in ~/.cargo/bin. Each is added only when it is there.
+for d in /opt/homebrew/opt/rustup/bin "$HOME/.cargo/bin"; do
+  [ -d "$d" ] && PATH="$d:$PATH"
+done
+export PATH
 exec node scripts/pre-push.mjs
