@@ -8,7 +8,10 @@ import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
 import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
-import { isTilted, tilted } from './render-tilt.ts';
+import { groundOf, isTilted, onScreen } from './render-tilt.ts';
+export { onScreen } from './render-tilt.ts';
+import { roadsOf } from './render-roads.ts';
+export { countOf, roadAlpha } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
@@ -37,6 +40,8 @@ export interface View {
   /** How far the camera tips back from looking straight down, and turns round the screen's middle, in radians. */
   tilt?: number;
   turn?: number;
+  /** In 3D, how far each level stands above the one that holds it: 0 lies flat on the ground, 1 is full height. */
+  lift?: number;
 }
 
 /** A soft cloud: one group's room. */
@@ -46,6 +51,16 @@ export interface CloudMark {
   x: number;
   y: number;
   r: number;
+  fill: string;
+  alpha: number;
+  /** Where its room's footprint lies on the ground, when it stands above it in 3D. */
+  shadow?: { x: number; y: number; r: number };
+}
+
+/** The ground seen from an angle: the faint lines of a grid, each from one end to the other on the screen. */
+export interface GroundMark {
+  kind: 'ground';
+  lines: [number, number, number, number][];
   fill: string;
   alpha: number;
 }
@@ -59,6 +74,8 @@ export interface DotMark {
   r: number;
   fill: string;
   alpha: number;
+  /** Where it stands on the ground, when it stands above it in 3D: a thin stem joins them. */
+  foot?: [number, number];
 }
 
 /** A road between two rooms: the links between them, counted each way. */
@@ -68,6 +85,8 @@ export interface RoadMark {
   b: string;
   from: [number, number];
   to: [number, number];
+  /** In 3D, the control point of the arch the road bows up in; a straight road has none. */
+  via?: [number, number];
   forward: number;
   back: number;
   width: number;
@@ -104,7 +123,7 @@ export interface LabelMark {
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
-export type Mark = CloudMark | DotMark | RoadMark | LabelMark;
+export type Mark = GroundMark | CloudMark | DotMark | RoadMark | LabelMark;
 
 /** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
 export type OwnColour = (subject: string) => number | undefined;
@@ -120,14 +139,6 @@ export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string
   // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
   scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
   return colours;
-}
-
-/** `spot` on screen, seen from the camera's angle when it is tilted (render-tilt.ts). */
-export function onScreen(spot: Spot, view: View): Spot {
-  const [x, y, r] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale, spot.r * view.scale];
-  if (!isTilted(view)) return { x, y, r };
-  const seen = tilted(x, y, 0, view);
-  return { x: seen.x, y: seen.y, r: r * seen.k };
 }
 
 /** Whether a circle on screen touches the view at all. */
@@ -171,12 +182,25 @@ export function marksOf(
   for (const node of scene.nodes.values()) {
     const at = spots.get(node.key);
     if (!at) continue;
-    const s = onScreen(at, view),
+    const s = onScreen(at, view, node.depth),
+      ground = node.depth && view.lift ? onScreen(at, view) : undefined,
       fill = colours.get(node.key) ?? look.faint;
     if (!inView(s, view)) continue;
     const alpha = showOf(node, detail, last);
-    if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view) });
-    else dots.push({ kind: 'dot', key: node.key, x: s.x, y: s.y, r: Math.max(2, Math.min(s.r, 6)), fill, alpha: 0.8 });
+    const [at3d, r] = [ground ? { shadow: ground } : {}, Math.max(2, Math.min(s.r, 6))];
+    if (node.depth < last)
+      clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view), ...at3d });
+    else
+      dots.push({
+        kind: 'dot',
+        key: node.key,
+        x: s.x,
+        y: s.y,
+        r,
+        fill,
+        alpha: 0.8,
+        ...(ground ? { foot: [ground.x, ground.y] } : {}),
+      });
     // a group's name stays clear as its insides open: its cloud fades, its name does not (Roger, 7 Nov 2026)
     const named = node.depth < last ? Math.max(alpha, (detail.shown[node.depth] ?? 0) * HEADER_ALPHA) : alpha;
     // a name is clear or not drawn: never a ghost of text too faint to read (Roger, 7 Nov 2026)
@@ -188,7 +212,15 @@ export function marksOf(
   const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
   if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
   asks.push(...signsOf(scene, spots, detail, view, colours, look));
-  return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
+  const lines = groundOf(view),
+    floor: GroundMark[] = lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
+  return [
+    ...floor,
+    ...clouds,
+    ...roadsOf(scene, spots, detail, view, colours, look),
+    ...dots,
+    ...placeLabels(asks, view),
+  ];
 }
 
 /** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
@@ -333,55 +365,4 @@ function spotFor(
     if (kept.every(apart)) return box;
   }
   return null;
-}
-
-/** How much a level's roads show: they stay, fainter, while the level inside opens, so a road never just vanishes (R20). */
-export const roadAlpha = (detail: Detail, depth: number): number =>
-  (detail.shown[depth] ?? 0) * (1 - 0.7 * (detail.shown[depth + 1] ?? 0));
-
-/** What a road says of its links: both ways, one way, or nothing for a single link. */
-export function countOf(forward: number, back: number): string {
-  if (forward + back < 2) return '';
-  if (forward && back) return `${forward} ⇄ ${back}`;
-  return forward ? `${forward} →` : `← ${back}`;
-}
-
-/** The roads at each open depth. A level's roads fade out as the level inside it opens, as its names do. */
-function roadsOf(
-  scene: Scene,
-  spots: Map<string, Spot>,
-  detail: Detail,
-  view: View,
-  colours: Map<string, string>,
-  look: Look,
-): RoadMark[] {
-  const roads: RoadMark[] = [];
-  scene.roads.forEach((at, depth) => {
-    const alpha = roadAlpha(detail, depth);
-    if (alpha < 0.05) return;
-    for (const road of at) {
-      const p = spots.get(road.a),
-        q = spots.get(road.b);
-      // only neighbours in the same room: links that leave it ride on the road of the room itself
-      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
-      const [s, t] = [onScreen(p, view), onScreen(q, view)];
-      roads.push({
-        kind: 'road',
-        a: road.a,
-        b: road.b,
-        from: [s.x, s.y],
-        to: [t.x, t.y],
-        forward: road.forward,
-        back: road.back,
-        width: 2 + Math.log2(road.forward + road.back),
-        fill: colours.get(road.a) ?? look.faint,
-        count: countOf(road.forward, road.back),
-        // the count on a white chip edged and written in the road's colour, as in the mockups
-        ink: inkOf(colours.get(road.a) ?? look.faint, look.card, look),
-        chip: look.card,
-        alpha,
-      });
-    }
-  });
-  return roads;
 }

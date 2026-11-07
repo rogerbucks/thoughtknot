@@ -1,0 +1,176 @@
+// The private and public reviewers (editor spec §19). The rules: ai_two_reviewers, ai_private_is_own,
+// ai_private_default, ai_private_gets_note and ai_public_names_only. A note goes to a model the user runs, with its text. A cloud model is
+// asked only when the vault allows it, and gets names and links only until the vault allows more.
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { aiModel } from '../src/ai-model.ts';
+import {
+  NO_CONSENT,
+  consentOf,
+  isPrivate,
+  namesSent,
+  privateProblem,
+  publicPreview,
+  reviewerFor,
+} from '../src/ai-reviewers.ts';
+import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
+import { prepareSend } from '../src/ai.ts';
+import { modelChoices } from '../src/ai-choice.ts';
+
+const model = (name, endpoint, reach) =>
+  aiModel({ name, purpose: 'Proposing changes', endpoint, model: 'm', ...(reach && { reach }) });
+const LM = model('LM Studio', 'https://lmstudio.taila0fac4.ts.net/v1', 'private');
+const CLOUD = model('Cloud', 'https://api.example.com/v1');
+
+describe('each model is a private or a public reviewer (ai_two_reviewers)', () => {
+  test('public by default; private only when marked, and kept when read back', () => {
+    assert.equal(CLOUD.reach, undefined);
+    assert.equal(LM.reach, 'private');
+    assert.equal(aiModel({ ...LM }).reach, 'private');
+    assert.equal(aiModel({ ...CLOUD, reach: 'anything' }).reach, undefined);
+    assert.ok(!isPrivate(CLOUD));
+    assert.ok(isPrivate(LM));
+  });
+});
+
+describe('only a model the user runs may be private (ai_private_is_own)', () => {
+  test('this device, a private network address or the user’s own network name', () => {
+    for (const e of [
+      'http://localhost:1234/v1',
+      'http://127.0.0.1:1234/v1',
+      'https://10.0.0.5/v1',
+      'https://192.168.1.20:1234/v1',
+      'https://172.20.0.2/v1',
+      'https://100.101.102.103/v1',
+      'https://lmstudio.taila0fac4.ts.net/v1',
+      'https://studio.local/v1',
+    ])
+      assert.equal(privateProblem(e), null, e);
+  });
+
+  test('any other address is refused as private, saying why; so is one sent unencrypted off the device', () => {
+    assert.match(privateProblem('https://api.example.com/v1'), /api\.example\.com is not on this device or your own/);
+    assert.match(privateProblem('https://172.32.0.1/v1'), /not on this device/);
+    assert.match(privateProblem('https://100.128.0.1/v1'), /not on this device/);
+    assert.match(privateProblem('http://192.168.1.20/v1'), /https/);
+    const fake = model('Fake', 'https://api.example.com/v1', 'private');
+    assert.ok(!isPrivate(fake));
+  });
+});
+
+describe('a note goes to the private reviewer, with its text (ai_private_default, ai_private_gets_note)', () => {
+  test('the private reviewer wins, gets the note and is not asked each time', () => {
+    assert.deepEqual(reviewerFor([CLOUD, LM], { publicAllowed: true, noteTextAllowed: true }), {
+      model: LM,
+      reach: 'private',
+      sends: 'note',
+      confirm: false,
+    });
+  });
+
+  test('with no private reviewer and no consent, nothing is sent and the editor says why', () => {
+    const r = reviewerFor([CLOUD], NO_CONSENT);
+    assert.match(r.none, /No private reviewer is set up/);
+    assert.match(reviewerFor([], NO_CONSENT).none, /No private reviewer/);
+  });
+});
+
+describe('a public reviewer gets names and links only, until the vault allows more (ai_public_names_only)', () => {
+  test('allowed for the vault: names only, each send confirmed first', () => {
+    assert.deepEqual(reviewerFor([CLOUD], { publicAllowed: true, noteTextAllowed: false }), {
+      model: CLOUD,
+      reach: 'public',
+      sends: 'names',
+      confirm: true,
+    });
+  });
+
+  test('note text only once the vault allows it, and withdrawing it stops it at once', () => {
+    const allowed = { publicAllowed: true, noteTextAllowed: true };
+    assert.equal(reviewerFor([CLOUD], allowed).sends, 'note');
+    assert.equal(reviewerFor([CLOUD], { ...allowed, noteTextAllowed: false }).sends, 'names');
+  });
+});
+
+describe('the vault chooses what a public reviewer may have, off until chosen (ai_public_names_only)', () => {
+  const NOTE =
+    "# Trip\n\nPrivate prose.\n\n```gql\n// graph: trip\n(ann:Person {name: 'Ann', born: 1990}),\n(bob:Person),\n(ann)-[:KNOWS]->(bob)\n```\n";
+
+  test('off by default and when unknown; names, or note text as well, only as chosen', () => {
+    assert.equal(DEFAULT_SETTINGS.aiPublic, 'off');
+    assert.equal(settingsFrom({}).aiPublic, 'off');
+    assert.equal(settingsFrom({ aiPublic: 'everything' }).aiPublic, 'off');
+    assert.deepEqual(consentOf(settingsFrom({})), NO_CONSENT);
+    assert.deepEqual(consentOf(settingsFrom({ aiPublic: 'names' })), { publicAllowed: true, noteTextAllowed: false });
+    assert.deepEqual(consentOf(settingsFrom({ aiPublic: 'note' })), { publicAllowed: true, noteTextAllowed: true });
+  });
+
+  test('what one note would send is shown first: its names, kinds and links, never a value or its prose', () => {
+    const names = namesSent(NOTE);
+    assert.match(names, /ann: Person \(Ann\)/);
+    assert.match(names, /bob: Person/);
+    assert.match(names, /ann -\[KNOWS\]-> bob/);
+    assert.doesNotMatch(names, /1990|Private prose/);
+    assert.equal(publicPreview(NOTE, 'names'), names);
+    assert.equal(publicPreview(NOTE, 'note'), NOTE);
+    assert.equal(publicPreview(NOTE, 'off'), '');
+  });
+
+  test('withdrawn in one step: back to off, nothing is allowed', () => {
+    const was = settingsFrom({ aiPublic: 'note' });
+    const now = settingsFrom({ ...was, aiPublic: 'off' });
+    assert.deepEqual(consentOf(now), NO_CONSENT);
+  });
+});
+
+describe('every send is held to the reviewer rules (ai_private_default, ai_public_names_only)', () => {
+  const GRAPH =
+    "// graph: trip\n(ann:Person {name: 'Ann', born: 1990}),\n(bob:Person {name: 'Bob'}),\n(ann)-[:KNOWS {since: 2001}]->(bob)";
+  const NOTE = `# Trip\n\nPrivate prose.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n`;
+  const OWN = { ...LM, ceiling: 'Confidential' };
+  const PUBLIC = { ...CLOUD, ceiling: 'Confidential' };
+  const ask = (aiPublic, name, over = {}) => ({
+    settings: settingsFrom({ aiUse: 'on', aiPublic, aiModels: [PUBLIC, OWN] }),
+    model: name,
+    note: NOTE,
+    notePath: 'Trip.md',
+    level: 'Internal',
+    choice: { graph: 'trip', what: 'graph' },
+    question: 'What is missing?',
+    ...over,
+  });
+
+  test('the private reviewer is offered first, and is sent the graph with its values without any consent', () => {
+    assert.deepEqual(
+      modelChoices(ask('off', '').settings, 'Proposing changes').map((c) => c.name),
+      ['LM Studio', 'Cloud'],
+    );
+    const sent = prepareSend(ask('off', 'LM Studio'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /born: 1990/);
+  });
+
+  test('a public reviewer is refused, saying why, until the vault allows one', () => {
+    const r = prepareSend(ask('off', 'Cloud'));
+    assert.match(r.refused, /public reviewer, and this vault does not allow one/);
+  });
+
+  test('allowed names only: names, kinds and links go, never a value or the text, and it says so', () => {
+    const sent = prepareSend(ask('names', 'Cloud'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /ann:Person \{name: 'Ann'\}/);
+    assert.match(sent.body, /\(ann\)-\[:KNOWS\]->\(bob\)/);
+    assert.doesNotMatch(sent.body, /1990|2001|Private prose/);
+    assert.ok(sent.summary.some((s) => /Names, kinds and links only/.test(s)));
+    const text = prepareSend(
+      ask('names', 'Cloud', { choice: { graph: 'trip', what: 'text' }, answers: { text: 'Private prose.' } }),
+    );
+    assert.match(text.refused, /names, kinds and links only/);
+  });
+
+  test('allowed note text: the graph goes with its values, as for a private reviewer', () => {
+    const sent = prepareSend(ask('note', 'Cloud'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /born: 1990/);
+  });
+});

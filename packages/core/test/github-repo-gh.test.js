@@ -10,7 +10,7 @@ import { blobSha, repoOptions } from './fake-github.js';
 const MAIN_SHA = 'a'.repeat(40);
 
 /** A stand-in for gh: it answers the few GitHub API calls the host makes, from branches of files in memory. */
-function fakeGh(seed = {}) {
+function fakeGh(seed = {}, { truncated = false } = {}) {
   const branches = new Map([['main', new Map(Object.entries(seed))]]);
   const calls = [];
   const ok = (value) => ({ code: 0, stdout: JSON.stringify(value), stderr: '' });
@@ -32,7 +32,7 @@ function fakeGh(seed = {}) {
       const files = branches.get(rest.slice(1).join('/'));
       if (!files) return status(404);
       const tree = [...files].map(([path, text]) => ({ path, type: 'blob', sha: blobSha(text) }));
-      return ok({ tree: [...tree, { path: 'src', type: 'tree', sha: 'b'.repeat(40) }] });
+      return ok({ tree: [...tree, { path: 'src', type: 'tree', sha: 'b'.repeat(40) }], truncated });
     }
     if (area === 'contents') {
       const files = branches.get(method === 'GET' ? url.searchParams.get('ref') : body.branch);
@@ -135,4 +135,15 @@ test('a text goes to Base64 and back byte for byte, as GitHub keeps it', () => {
   assert.equal(toBase64('ünï 😀'), Buffer.from('ünï 😀').toString('base64'));
   assert.equal(fromBase64('aGVs\nbG8=\n'), 'hello', 'GitHub breaks its Base64 into lines');
   assert.equal(fromBase64(Buffer.from([0x61, 0xff, 0x62]).toString('base64')), 'a\ufffdb', 'a stray byte is U+FFFD');
+});
+
+describe('a repository too large to list whole is never listed short (ARCH-15)', () => {
+  test('a listing GitHub cut short is refused with a plain sentence', async () => {
+    const s = store(fakeGh({ 'a.md': 'a' }, { truncated: true }));
+    await assert.rejects(() => s.list(), /cut this repository’s file list short/);
+  });
+  test('a complete listing still works', async () => {
+    const s = store(fakeGh({ 'a.md': 'a' }));
+    assert.deepEqual(await s.list(), ['a.md']);
+  });
 });

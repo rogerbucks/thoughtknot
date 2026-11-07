@@ -8,3 +8,4 @@ export { memoryHistory, moveHistory, notesHistory } from './history-store.ts';
 export { historyContract } from './history-contract.ts';
 export type { HistoryStore } from './history-store.ts';
 export type { HistoryCheck } from './history-contract.ts';
+export * from './index-metadata.ts';

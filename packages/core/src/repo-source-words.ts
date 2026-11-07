@@ -30,6 +30,8 @@ export const REPO_SOURCE_WORDS = {
   'repo.gh.bad-path': 'Not a file’s path in the repository: “{path}”.',
   'repo.gh.failed': 'GitHub did not answer as expected. Check that gh is installed and signed in, then try again.',
   'repo.gh.no-main': 'The main branch {branch} could not be read, so no branch could be started from it.',
+  'repo.gh.truncated':
+    'GitHub cut this repository’s file list short because the repository is very large, so some notes would be missing. Nothing was listed.',
   'repo.gh.refused': 'This app may not run that gh call, so nothing was sent.',
   'repo.gh.missing':
     'gh, GitHub’s command line, is not installed. Install it from cli.github.com, sign in with “gh auth login”, then try again.',

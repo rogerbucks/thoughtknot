@@ -29,7 +29,7 @@ const LOCAL = {
   keyName: '',
 };
 const BASE = {
-  settings: settingsFrom({ aiUse: 'on', aiModels: [LOCAL] }),
+  settings: settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] }),
   model: 'Local',
   note: NOTE,
   notePath: 'Work.md',

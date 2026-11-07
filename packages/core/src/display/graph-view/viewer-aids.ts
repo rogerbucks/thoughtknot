@@ -9,6 +9,7 @@
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
 import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
+import { turnControls } from './stage-turn-keys.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -17,7 +18,7 @@ import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
-import { LevelLegend } from './level-legend.ts';
+import { keepKeyHome, keyHome, LevelLegend } from './level-legend.ts';
 import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
@@ -134,6 +135,8 @@ export class Aids {
   private hints: LevelHints | null = null;
   /** The new rendering's canvas over the drawing, while its setting is on (render_switch); none for a table. */
   private readonly stage: RenderStage | null;
+  /** The stage's turn buttons and keys, shown while it is tilted. */
+  private readonly turns: ReturnType<typeof turnControls> | null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -202,11 +205,14 @@ export class Aids {
       },
     };
     this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
+    this.turns = this.stage && turnControls(host.root, viewport, this.stage);
   }
 
   /** Shows the drawing as the bar's 2D button says on the new rendering, where it can; says whether it did. */
   tilted(mode: string | null): boolean {
-    return this.stage?.lookFrom(mode) ?? false;
+    const shown = this.stage?.lookFrom(mode) ?? false;
+    this.turns?.shown(shown && !!mode); // tilted: the dock's turn buttons show (controls_keys)
+    return shown;
   }
 
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
@@ -276,7 +282,8 @@ export class Aids {
       });
       this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
-      this.legend = new LevelLegend(this.badge, {
+      // the key of subjects waits in the View panel, shut, where there is one; else under the badge (panels_key)
+      this.legend = new LevelLegend(keyHome(this.host.viewport, this.badge), {
         viewport: this.host.viewport,
         svg: this.host.svg,
         redraw: () => {
@@ -290,6 +297,7 @@ export class Aids {
       });
       this.hints = new LevelHints(this.badge);
     }
+    keepKeyHome(this.host.viewport, this.badge); // a View panel built since takes the key
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);
     this.badge.toggleClass('is-hidden', !text && !back);
@@ -300,10 +308,17 @@ export class Aids {
   private keepClear(): void {
     const viewport = this.host.viewport,
       win = viewport.win ?? window;
-    win.requestAnimationFrame(() => keepSlots(viewport));
+    // a badge moved to a new place is not a change of size, so the drawing is fitted again here, clear of it
+    const keep = () => {
+      const was = this.badge?.getBoundingClientRect();
+      keepSlots(viewport);
+      const now = this.badge?.getBoundingClientRect();
+      if (was && now && (was.left !== now.left || was.top !== now.top)) this.stage?.resized();
+    };
+    win.requestAnimationFrame(keep);
     const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
     if (this.watching || typeof resizeObserver !== 'function') return;
-    const watching = new resizeObserver(() => keepSlots(viewport));
+    const watching = new resizeObserver(keep);
     for (const el of [viewport, ...slotCards(viewport)]) watching.observe(el);
     this.watching = watching;
   }
@@ -355,6 +370,7 @@ export class Aids {
   /** The card is going: its tooltip goes with it. */
   unload(): void {
     this.stage?.unload();
+    this.turns?.unload();
     this.watching?.disconnect();
     this.info.onunload();
   }

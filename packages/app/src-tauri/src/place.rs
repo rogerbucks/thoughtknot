@@ -88,7 +88,12 @@ fn write_text_with(root: &Path, path: &str, text: &str, nonce: &str) -> Result<(
         .create_new(true)
         .open(&temp)
         .map_err(said)?;
+    // a note that is there keeps its mode (an owner-only note stays owner-only)
+    let mode = fs::metadata(&file).ok().map(|m| m.permissions());
     let written = (|| {
+        if let Some(mode) = mode {
+            out.set_permissions(mode)?;
+        }
         out.write_all(text.as_bytes())?;
         out.sync_all()?;
         fs::rename(&temp, &file)
@@ -231,6 +236,19 @@ mod tests {
         assert!(inside(&root, "out/x.md").is_err());
         assert!(write_text(&root, "out/x.md", "no").is_err());
         assert!(!outside.join("x.md").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_note_keeps_its_file_mode_when_saved() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = folder();
+        write_text(&root, "n.md", "one").unwrap();
+        fs::set_permissions(root.join("n.md"), fs::Permissions::from_mode(0o600)).unwrap();
+        write_text(&root, "n.md", "two").unwrap();
+        let mode = fs::metadata(root.join("n.md")).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
+        assert_eq!(read_text(&root, "n.md").unwrap(), "two");
     }
 
     #[cfg(unix)]

@@ -3,7 +3,15 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
-import { AI_PURPOSES, aiModel, endpointProblem, formatSeries, purposeWords, word } from '@thoughtknot/core';
+import {
+  AI_PURPOSES,
+  aiModel,
+  endpointProblem,
+  formatSeries,
+  privateProblem,
+  purposeWords,
+  word,
+} from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { AI_PRESETS } from './ai-presets';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
@@ -52,6 +60,8 @@ export function aiModelList(
         // an address set but not usable is said, so a model that will never be offered says why (user_models)
         ...(m.endpoint.trim() ? [endpointProblem(m.endpoint) ?? ''].filter(Boolean) : []),
         ...(m.matrixRow ? [word('models.held', { row: m.matrixRow })] : []),
+        // a model marked private at an address that is not the user's own is said, and treated as public
+        ...(m.reach === 'private' && m.endpoint.trim() ? [privateProblem(m.endpoint) ?? ''].filter(Boolean) : []),
       ].join('. '),
       items: [
         {
@@ -72,6 +82,11 @@ export function aiModelList(
                   [...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c]),
                 ),
               },
+            },
+            {
+              name: word('models.private'),
+              desc: word('models.private.sentence'),
+              control: { type: 'toggle' as const, key: `aiModels.${i}.reach` },
             },
             ...matrixControls(s, m, i, matrix),
             {
@@ -143,6 +158,7 @@ const parts = (key: string): [number, Text] => {
 export function getModelValue(s: Settings, key: string, rows: MatrixRow[]): string | boolean {
   if (switchedClass(key)) return switchIsOn(s, rows, key);
   const [i, field] = parts(key);
+  if (field === 'reach') return s.aiModels[i]?.reach === 'private';
   return s.aiModels[i]?.[field] ?? '';
 }
 
@@ -151,5 +167,6 @@ export function setModelValue(s: Settings, key: string, value: unknown, rows: Ma
   const on = switchedClass(key);
   if (on) return { aiModels: changed(s, on.i, { matrixOn: withSwitch(s, rows, on.i, on.name, !!value) }) };
   const [i, field] = parts(key);
+  if (field === 'reach') return { aiModels: changed(s, i, { reach: value ? 'private' : undefined }) };
   return { aiModels: changed(s, i, { [field]: String(value), ...(field === 'matrixRow' ? { matrixOn: [] } : {}) }) };
 }

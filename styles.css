@@ -697,10 +697,19 @@
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-s);
 }
-@media (min-width: 1024px) {
+@media (min-width: 600px) {
+  /* side by side, the two corner cards never meet in the middle (panels_stack) */
   .thoughtknot-over > .thoughtknot-corner {
-    max-width: 20rem;
-    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+    max-width: min(20rem, calc(50% - 1.5 * var(--gn-space-2)));
+  }
+}
+@media (min-width: 1024px) {
+  /* down its side, it leaves the foot clear: the mini-map, and the head of the 3D view's pad (panels_stack) */
+  .thoughtknot-over > .thoughtknot-corner {
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2) - var(--thoughtknot-start-fixed, 0rem));
+  }
+  .thoughtknot-over > .thoughtknot-corner.thoughtknot-corner-end {
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2) - var(--thoughtknot-end-fixed, 0rem));
   }
 }
 /* A dock moved to the end side joins a card like it in the top end corner. One moved free is a card of its own where
@@ -2606,18 +2615,40 @@ pre.thoughtknot-code {
   .thoughtknot-fullscreen .thoughtknot-view {
     position: relative;
   }
+  /* down the end side, below the panels docked there and above the mini-map and the pad: never over them
+     (panels_stack). The panels docked there take at most 40% of the drawing while it shows, and the pad a quarter. */
   .thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-details {
     position: absolute;
     inset-inline-end: var(--gn-space-2);
-    inset-block-end: calc(200px + 3 * var(--gn-space-2));
+    inset-block-start: calc(
+      var(--thoughtknot-drawing-top, 0rem) + max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem))
+    );
     z-index: 5;
     min-width: min(18rem, 40%);
     max-width: min(24rem, 40%);
-    max-height: 60%;
+    max-height: calc(
+      100% - var(--thoughtknot-drawing-top, 0rem) - var(--thoughtknot-drawing-foot, 0rem) -
+        max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem)) -
+        max(var(--gn-space-2), var(--thoughtknot-end-foot, 0rem))
+    );
+    box-sizing: border-box;
     border: 1px solid var(--gn-border-focus);
     border-radius: var(--gn-radius-m);
     background: var(--gn-bg);
     box-shadow: var(--gn-shadow-l);
+  }
+}
+
+@media (min-width: 1024px) {
+  .thoughtknot-fullscreen
+    .thoughtknot-view:has(> .thoughtknot-details:not([hidden]))
+    > .thoughtknot-over
+    > .thoughtknot-corner.thoughtknot-corner-end {
+    max-height: calc(0.4 * var(--thoughtknot-room, 60vh));
+  }
+  /* the 3D view's pad gives way too, so the details always keep a third of the end side */
+  .thoughtknot-fullscreen .thoughtknot-view:has(> .thoughtknot-details:not([hidden])) .thoughtknot-space-pad {
+    max-height: calc(0.25 * var(--thoughtknot-drawing-height, 60vh));
   }
 }
 
@@ -4065,10 +4096,17 @@ body.thoughtknot-easier-reading
    On a phone it rides above the control sheet, as the mini-map does. */
 .thoughtknot-space-pad {
   position: absolute;
-  /* above the 3D mini-map, which holds the corner (panels_never_overlap) */
-  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + 2 * var(--gn-space-2) + var(--thoughtknot-space-mini, 0px));
+  /* in the bottom end corner: the 3D mini-map holds the bottom start. It is no taller than the room left below the
+     corner card on its side, and scrolls inside (panels_stack). */
+  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + var(--gn-space-2));
   inset-inline-end: var(--gn-space-2);
   z-index: 1;
+  max-height: calc(
+    var(--thoughtknot-drawing-height, 60vh) - var(--thoughtknot-sheet, 0rem) - var(--gn-space-2) -
+      max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem))
+  );
+  box-sizing: border-box;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-half-2);
@@ -4527,8 +4565,21 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }
+/* The key, folded into the View panel (panels_key, level-legend.ts): shut until opened, gone while there is no key. Its
+   chips line up from the start, as the panel's other rows do */
+.thoughtknot-view-key:not(:has(.thoughtknot-level-legend:not(.is-hidden))) {
+  display: none;
+}
+.thoughtknot-view-key > summary {
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.thoughtknot-view-key :is(.thoughtknot-level-legend, .thoughtknot-level-own, .thoughtknot-level-chips) {
+  justify-content: flex-start;
+}
 /* every control in the badge is at least 24 by 24 pixels, so a finger can hit it (WCAG 2.5.8) */
-.thoughtknot-level-badge :is(button, select) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key) :is(button, select) {
   min-width: 24px;
   min-height: 24px;
 }
@@ -4552,7 +4603,8 @@ img.thoughtknot-picture-hidden,
   padding: 0 var(--gn-space-1);
   font-size: var(--gn-font-size-xs);
 }
-.thoughtknot-level-badge:not(:hover, :focus-within) :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key):not(:hover, :focus-within)
+  :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -4747,4 +4799,68 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-rule-describe-row input {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* Compact panels (§25, panels_compact). Roger, 6 Nov 2026: the side panels are "way too big", and hold "a ton of text
+   … Not useful for daily use … Use tool tips". Where a mouse or trackpad hovers, the panels are dense, as a modern
+   app's are:
+   - each row and button is 28 pixels high, not the 44 a finger needs, still over the 24 of WCAG's SC 2.5.8;
+   - a switch's hint, and the ladder's, show as its tooltip, not as lines under it. A screen reader still hears each,
+     as the switch is described by it. The words on and off go too: the knob's side says which, and so does the switch
+     to a screen reader;
+   - the 2D card's dock shows its key controls as a row of icons, each named in its tooltip;
+   - their words are the small size.
+   A touch screen keeps the 44-point rows and the hints, as it has no hover to show a tooltip. */
+@media (hover: hover) and (pointer: fine) {
+  .thoughtknot-over :is(.thoughtknot-corner, .thoughtknot-dock.is-free),
+  .thoughtknot-space-pad,
+  .thoughtknot-view > .thoughtknot-details {
+    font-size: var(--gn-font-size-s);
+  }
+  .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip),
+  .thoughtknot-over > .thoughtknot-dock.is-free {
+    gap: var(--gn-space-1);
+    padding: var(--gn-space-1) var(--gn-space-2);
+  }
+  .thoughtknot-dock button,
+  .thoughtknot-untangle-offers button,
+  .thoughtknot-dock-fold,
+  .thoughtknot-dock-more > summary,
+  .thoughtknot-chip-fold,
+  .thoughtknot-view-menu button.thoughtknot-switch,
+  .thoughtknot-view-menu button.thoughtknot-detail-rung,
+  .thoughtknot-view-menu > :is(.thoughtknot-group-by, .thoughtknot-layout-option) {
+    min-width: 28px;
+    min-height: 28px;
+  }
+  .thoughtknot-dock-body,
+  .thoughtknot-dock-more-body {
+    gap: var(--gn-space-half-2);
+  }
+  .thoughtknot-view-menu :is(.thoughtknot-switch-hint, .thoughtknot-switch-state):not(.thoughtknot-own-hint) {
+    display: none;
+  }
+  .thoughtknot-view-menu > :is(.thoughtknot-layout-choice, .thoughtknot-lens-choice) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gn-space-2);
+    padding: 0 var(--gn-space-2);
+  }
+  .thoughtknot-untangle-offers > button.clickable-icon {
+    min-height: 28px;
+  }
+  .thoughtknot-view-menu .thoughtknot-switch-words {
+    padding: 0;
+  }
+  .thoughtknot-view-dock > .thoughtknot-dock-body {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .thoughtknot-view-dock.has-keys > .thoughtknot-dock-body > button {
+    width: auto;
+  }
+  .thoughtknot-view-dock > .thoughtknot-dock-body .thoughtknot-badge-text {
+    display: none;
+  }
 }

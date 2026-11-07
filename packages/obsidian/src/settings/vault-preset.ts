@@ -2,11 +2,11 @@
 // the vault, so it goes with the vault and syncs as the vault's other files do. The plugin reads it once the workspace
 // is ready and again whenever the file changes, and every drawing is told. A graph's own preset still wins over it.
 import { Notice, TFile } from 'obsidian';
-import { VAULT_PRESET_PLACE, starterOf, vaultPresetFile, vaultPresetId, word } from '@thoughtknot/core';
+import { VAULT_PRESET_PLACE, starterOf, vaultChoice, vaultPresetFile, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { exportText, vaultOps } from '../export/vault-write';
 
-/** The starter the vault's file names, by plugin: nothing until the file is read, or when there is none. */
+/** The preset the vault's file names, a starter's or its own, by plugin: nothing until the file is read, or when there is none. */
 const chosen = new WeakMap<ThoughtKnotPlugin, string | undefined>();
 
 /** The preset the vault chooses for itself, or nothing. */
@@ -15,7 +15,7 @@ export const vaultPresetOf = (plugin: ThoughtKnotPlugin): string | undefined => 
 /** Reads the vault's file again; every drawing is told when the answer changed. */
 async function reread(plugin: ThoughtKnotPlugin): Promise<void> {
   const was = chosen.get(plugin);
-  const now = vaultPresetId(await exportText(plugin, VAULT_PRESET_PLACE));
+  const now = vaultChoice(await exportText(plugin, VAULT_PRESET_PLACE));
   chosen.set(plugin, now);
   if (now !== was) plugin.profiles.redraw();
 }

@@ -27,7 +27,7 @@ const DEVICES = {
  * is in the frame's own pixels, and a pixel is painted when it is not clear. Then the icons that show their name.
  */
 const READ = `(() => {
-  const CARDS = ['.thoughtknot-corner', '.thoughtknot-dock.is-free', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map'];
+  const CARDS = ['.thoughtknot-corner', '.thoughtknot-dock.is-free', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map', '.thoughtknot-level-badge'];
   const seen = (el) => el.checkVisibility({ opacityProperty: true, visibilityProperty: true });
   const drawings = [...document.querySelectorAll('canvas.thoughtknot-render-stage')].filter(seen).map((c) => {
     const vp = c.closest('.thoughtknot-viewport'), v = vp.getBoundingClientRect();

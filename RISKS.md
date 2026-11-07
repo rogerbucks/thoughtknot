@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (40)
+## Open (58)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -43,12 +43,30 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-13 | The phone's vault key has no recovery path | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| SEC-29 | The desktop app drops a note's file mode on every save | ●●○ | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | SEC-30 | The MCP app's answer key is the only proof that a person answered | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-31 | The MCP server reads its gate settings from a file Claude's own tools may write | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | SEC-32 | The app's gh allow-list limits the call's shape, not the repository | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
+| SEC-33 | The shell gate judges by the spelling "classification" | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
+| SEC-34 | The app's Rust code is outside every scan and advisory feed | ●○○ | ●●○ | fix-later (Wave 15 · Obsidian community release) | hours |
+| OPS-15 | A failed or cut-short risk panel closes the open risk-panel issue | ●●○ | ●●○ | fix-later (Wave 15 · Obsidian community release) | hours |
+| OPS-16 | The release's shard count of 6 is written in five places and checked in none | ●○○ | ●●● | fix-later (Wave 15 · Obsidian community release) | hours |
+| OPS-17 | The release's sharded suite can merge fewer parts than were run, without saying so | ●○○ | ●●○ | fix-later (Wave 15 · Obsidian community release) | hours |
+| OPS-18 | The macOS desktop job now holds signing secrets for up to 90 minutes | ●○○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
+| CODE-16 | A board merge lets the other side's connector label silently win | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
+| CODE-17 | A failed history record turns a saved note into a failed write | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
+| CODE-18 | CSV limits count characters, and line numbers drift on a bare carriage return | ●○○ | ●○○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
+| ARCH-16 | A FROM list has no cap, and each draw rereads every place | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
+| ARCH-17 | A plain note name with a colon now reads as a plug-in place | ●○○ | ●○○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
+| UX-12 | Closing the cloud card leaves keyboard focus on nothing | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
+| UX-13 | The new canvas drawing is announced as one picture, and is on by default | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
+| NEURO-12 | A synced preset file silently restyles every graph | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
+| NEURO-13 | The level legend puts five kinds of control in one badge | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
+| FLOW-13 | A release can merge a partial set of suite shards without failing | ●○○ | ●●○ | fix-later (Wave 15 · Obsidian community release) | hours |
+| API-14 | The peer handshake changed shape with no version, and an old device is told the wrong reason | ●●● | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | hours |
+| API-15 | The sync package is a wire contract that no break check covers | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
+| AI-12 | The MCP server lets Claude pile up questions, and their keys never expire | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 
 ## Each open risk
 
@@ -392,16 +410,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.
 
-### SEC-29 The desktop app drops a note's file mode on every save
-
-**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
-
-**Risk:** The app writes a note through File::create and a rename, so the new file has the default mode. A note set to owner-only becomes readable by others after the first save. The Node server keeps the old mode.
-
-**Fix:** Read the note's permissions before the write and set them on the temp file before the rename. Do it with the SEC-22 change to the same lines.
-
-**Check:** A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.
-
 ### SEC-30 The MCP app's answer key is the only proof that a person answered
 
 **Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/mcp-server.ts`, `packages/claude-code/bin/mcp-process.ts`.
@@ -452,7 +460,197 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (113)
+### SEC-33 The shell gate judges by the spelling "classification"
+
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/gate-shell.ts`, `packages/claude-code/src/gate-guard.ts`.
+
+**Risk:** gate-shell.ts refuses a Bash write to an existing note only when the command spells the word classification. A command can build the word instead: printf '\143lassification: public', or a sed back-reference. Such a command, and sed -i, is allowed. A prompt-injected session could lower a note's class, then read it with /graph. Since a write to a new file passes, sed to a new file then mv is a short route.
+
+**Fix:** Do not judge by spelling. Hold the classification line of every note the session has opened. After each Bash call, read those lines again and refuse the next gated read when one has fallen. Or refuse any non-reading Bash command that can reach an existing note.
+
+**Check:** A test in packages/claude-code/test runs printf '\143lassification: public\n' > note.md, and sed with a back-reference then mv, on a note classed secret. It asserts both are refused or the next /graph is refused.
+
+### SEC-34 The app's Rust code is outside every scan and advisory feed
+
+**Who found it:** Senior security engineer. **Where:** `.github/workflows/ci.yml`, `.github/dependabot.yml`, `scripts/security-alerts.mjs`, `packages/app/src-tauri/**`.
+
+**Risk:** Since 0.8.0 the Tauri app gained gh.rs (starts a program with the person's sign-in) and a larger lib.rs and place.rs. These guard file and process access. CodeQL in ci.yml reads javascript-typescript, python and actions only. Dependabot has no cargo entry. The release alert script audits npm and the Python lock file, not Cargo.lock. No cargo audit or clippy step exists. Nobody would see a flaw or an advisory.
+
+**Fix:** Add rust to the CodeQL languages. Add a cargo entry to dependabot.yml. Have security-alerts.mjs send Cargo.lock to OSV as it does uv.lock. Run clippy in CI.
+
+**Check:** test/workflows.test.js asserts the CodeQL languages include rust and dependabot.yml names cargo. A test asserts security-alerts reads Cargo.lock.
+
+### OPS-15 A failed or cut-short risk panel closes the open risk-panel issue
+
+**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/risk-panel.yml`, `test/risk-panel-workflow.test.js`.
+
+**Risk:** The report job joins the nine role files. It closes the open risk-panel issue with 'The panel found nothing new to add' when no role file exists. That also happens when every role job fails or times out. The owner then reads 'nothing new' for a panel that did not run. The job prints the same 'nothing written' line for a role that failed and a role with nothing in scope.
+
+**Fix:** Pass needs.panel.result to the report step. Keep the issue open when it is not 'success', or when a role in scope has no file. Add a comment that names the failed roles and links the run. Say 'cut short' and 'nothing in scope' as two different lines.
+
+**Check:** A test reads risk-panel.yml and asserts the close-with-'nothing new' branch is guarded by the panel result being success.
+
+### OPS-16 The release's shard count of 6 is written in five places and checked in none
+
+**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/release.yml`, `.github/workflows/release-check.yml`, `scripts/ci-plan.mjs`, `test/public-readiness.test.js`.
+
+**Risk:** The number 6 is in the quality-suite matrix and command, and the public-readiness matrix and command. It is in both release.yml and release-check.yml, and in SHARDS in scripts/ci-plan.mjs. If one place changes and another does not, a share of the test files never runs, or runs twice. Nothing fails, because every shard still passes.
+
+**Fix:** Add one test that reads both release workflows. For each sharded job it asserts the matrix is exactly 1..N and every command says '/N' with the same N. Or hold N in one place and read it.
+
+**Check:** A test fails when a matrix list and a '$SHARD/N' command disagree in release.yml or release-check.yml.
+
+### OPS-17 The release's sharded suite can merge fewer parts than were run, without saying so
+
+**Who found it:** IT administrator and release / DevOps engineer. **Where:** `scripts/quality-suite.mjs`, `scripts/quality-metrics.mjs`, `test/quality-suite.test.js`.
+
+**Risk:** readSuiteShards reads every .json file in the download folder. Its comment says a missing shard 'means nothing'. mergeSuiteShards does not check that it got the number of parts it expected. Today a lost part cannot get through, because the quality job needs quality-suite to succeed. A later edit to that dependency, or to the artifact pattern, would let the gate pass on part of the suite. Nothing compares the merged test count.
+
+**Fix:** Pass the expected number of parts to --suite-from, and make readSuiteShards throw when it finds fewer. Alternatively write the shard index into each part and check that 1..N are all present.
+
+**Check:** A unit test gives readSuiteShards five of six parts and expects an error that names the missing share.
+
+### OPS-18 The macOS desktop job now holds signing secrets for up to 90 minutes
+
+**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/desktop-app.yml`.
+
+**Risk:** The desktop-app job timeout went from 45 to 90 minutes because Apple's first notarisations for a new team took over 40 minutes. The job holds the signing and notarisation credentials for that whole time. A hung or compromised step now has twice as long. The longer limit is also applied to the Linux and Windows jobs, which do not wait for Apple.
+
+**Fix:** Accept for now. When notarisation times settle, set the limit from the macOS row alone, for example with a per-entry timeout in the matrix, and lower it again.
+
+**Check:** A test asserts the Linux and Windows desktop jobs keep a timeout of 45 minutes or less.
+
+### CODE-16 A board merge lets the other side's connector label silently win
+
+**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/board-merge.ts`, `packages/core/test/board-merge.test.js`.
+
+**Risk:** mergeBoards keys connectors by from and to only. Both sides' connectors go into one map, and theirs is set last. If ours changed a label and theirs left it, ours is overwritten by the old label. If both changed it, theirs wins with no clash flag. The file header promises that neither side is silently picked. The test file has no case for connectors or labels at all.
+
+**Fix:** Compare each connector's label against the base. Take the side that changed it. When both changed it differently, keep ours and report a clash. Add tests for a one-sided label edit, a two-sided one, and a link removed on one side.
+
+**Check:** test
+
+### CODE-17 A failed history record turns a saved note into a failed write
+
+**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/note-storage.ts`, `packages/core/src/history-store.ts`.
+
+**Risk:** historyLayer writes the note first, then awaits log.record. notesHistory.record throws after three tries, for example when the history storage is down. The throw reaches the caller of write, though the note is already saved. The caller may report a failure, or retry against a changed version. Also, the 'before' text is read before the write, so a concurrent write can record a wrong 'before'.
+
+**Fix:** Catch the record error in historyLayer. Return the write's own outcome with a stated warning that the change was not logged. Queue records per store so same-day appends run one at a time.
+
+**Check:** test
+
+### CODE-18 CSV limits count characters, and line numbers drift on a bare carriage return
+
+**Who found it:** Senior coder and QA / test engineer. **Where:** `packages/core/src/csv-read.ts`.
+
+**Risk:** readCsv compares text.length with a limit named bytes. A file of multi-byte text can be several times larger on disk than the limit says. Inside a quoted cell only a newline raises the line count, but outside it a bare carriage return does. A row's cited line is then wrong in files with old Mac line ends. The delimiter count toggles on every quote, so a stray quote in the header can pick the wrong delimiter.
+
+**Fix:** Measure the limit in UTF-8 bytes. Count a bare carriage return as a line end inside quotes too. Treat a quote as opening only at the start of a cell when choosing the delimiter.
+
+**Check:** test
+
+### ARCH-16 A FROM list has no cap, and each draw rereads every place
+
+**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/src/connectors.ts`, `packages/core/src/layout-limits.ts`, `scripts/benchmarks/budgets.mjs`.
+
+**Risk:** A block may now name any number of places after FROM. Each place is fetched whole and joined by the mesh join on every draw. No limit is stated or tested, and no cache or index is used. ARCH-7 asked for an index. The new mesh index serves stored notes and parts, not this path. Ten places is fine. Five hundred in one block, or a block reread on every edit, is not tested.
+
+**Fix:** State a most-places limit in READ_LIMITS and refuse a longer list in sentences. Feed joinPlaces from the mesh index, keyed by each place's version hash, so an unchanged place is not reparsed.
+
+**Check:** A benchmark in scripts/benchmarks that joins the most places allowed, with a budget in budgets.mjs. A test that a list one over the limit is refused.
+
+### ARCH-17 A plain note name with a colon now reads as a plug-in place
+
+**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/test/sources.test.js`.
+
+**Risk:** FROM [[Note]] is safe. But FROM written without brackets takes any lowercase word of two letters or more, then a colon, as a plug-in scheme. An older block that named a note 'todo:later' now reads as plug-in 'todo', and fails or is refused. The note format gained this meaning with no format or spec version change. The newer reader reads older blocks differently.
+
+**Fix:** Take a scheme only when a plug-in has registered it. Otherwise read the place as before, and say in the fault that a colon in a bare name needs brackets.
+
+**Check:** A test that FROM todo:later, with no plug-in of that scheme, is read as the note it was. Or it is refused with the sentence naming brackets.
+
+### UX-12 Closing the cloud card leaves keyboard focus on nothing
+
+**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/graph-view/cloud-card.ts`.
+
+**Risk:** The cloud card is a dialog. Opening it moves focus to the name field. Closing it, by Escape, Rename, Merge, Not a group or Close, only hides the card. Focus is not given back to the cloud or the legend button that opened it. The focused field is hidden, so a keyboard or screen reader user loses their place and must tab in from the top. The card also has no aria-modal and does not hold Tab inside it.
+
+**Fix:** Remember document.activeElement when the card opens. Return focus to it on close, or to the renamed cloud when the old one is gone. Keep Tab inside the card while it is open.
+
+**Check:** test/a11y-keyboard.test.js opens the card from a cloud, presses Escape, and asserts document.activeElement is that cloud. A second case renames and asserts focus lands on a live element.
+
+### UX-13 The new canvas drawing is announced as one picture, and is on by default
+
+**Who found it:** User experience lead and accessibility specialist. **Where:** `packages/core/src/display/graph-view/render-stage.ts`, `packages/core/src/settings.ts`.
+
+**Risk:** The newRendering setting defaults to on. When a drawing has levels, RenderStage paints it on a canvas with role img and an aria-label that names only the current level. The canvas has no tabindex and no key handler. Boxes and links on it are not in the accessibility tree. A screen reader or keyboard user gets a worse drawing than the SVG path gives. Nothing tells them how to switch back.
+
+**Fix:** Offer a list of the groups and things shown, as UX-11 proposes for the overview. Keep the SVG path reachable when a screen reader or reduced-motion setting is on. Name the keys in the canvas label.
+
+**Check:** test/wcag.test.js builds a levelled drawing with newRendering on. It asserts every box is reachable by Tab, or by a list with an accessible name.
+
+### NEURO-12 A synced preset file silently restyles every graph
+
+**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/obsidian/src/settings/vault-preset.ts`.
+
+**Risk:** The vault's preset file is read again whenever it changes, and every drawing is redrawn at once. A sync from another device can change how all graphs look with no word to the person. For an autistic or ADHD reader a sudden change of look is a real cost.
+
+**Fix:** When the preset changes because the file changed outside the settings page, show one notice. It says which starter now applies and how to give the vault none. Keep the redraw.
+
+**Check:** A test changes the preset file through the vault's modify event and asserts one notice with the starter's name. Another asserts that choosing it on the settings page shows no second notice.
+
+### NEURO-13 The level legend puts five kinds of control in one badge
+
+**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/graph-view/level-legend.ts`.
+
+**Risk:** Under the level badge sit a level picker, a swap button, an AI button, one chip per subject and a colour button on each chip. Pointing at a chip or a cloud also changes the picture. Nothing caps the number of chips, so a large graph shows a wall of them. This is the clutter that costs an ADHD reader their place.
+
+**Fix:** Show the first few chips and fold the rest behind one More button. Show the swap, AI and colour buttons only when the person opens the legend. Keep the spotlight on click, and make hover opt in.
+
+**Check:** A test builds a drawing with 30 subjects and asserts that no more than a set number of chips show at first. Another asserts that the legend has one focus stop before it is opened.
+
+### FLOW-13 A release can merge a partial set of suite shards without failing
+
+**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `scripts/quality-suite.mjs`, `scripts/quality-metrics.mjs`, `.github/workflows/release.yml`.
+
+**Risk:** The release suite now runs as six shards. The quality job merges whatever shard files it finds, and only fails when there are none. A missing part would silently lower the test count and the coverage. Today the quality job waits for all six jobs to pass, so this needs a second fault to bite. A future edit to the job's needs, a retried job or a half-downloaded artifact would be enough.
+
+**Fix:** Have the shard part record its share (N of M). Make the merge fail unless it holds every share from 1 to M exactly once. Name the missing share in the error.
+
+**Check:** A unit test of mergeSuiteShards and readSuiteShards: five of six parts, and a repeated part, each throw and name the share.
+
+### API-14 The peer handshake changed shape with no version, and an old device is told the wrong reason
+
+**Who found it:** API design expert. **Where:** `packages/sync/src/peer.ts`, `packages/sync/src/session.ts`, `packages/sync/src/keys.ts`.
+
+**Risk:** Since 0.8.0 the first message between two devices grew from the 65-byte public key to key, one-time key and salt (162 bytes). A 0.8 device and a 0.9 device cannot sync. Each refuses the other with 'a device that is not one of the owner's', which is false. Nothing in the first message names a format, so the next change will fail the same way.
+
+**Fix:** Start the first message with a protocol number. Refuse an unknown number in words that say both devices need the same release. Keep it distinct from the untrusted-device refusal. This is the same fix as API-13, done at the handshake first.
+
+**Check:** A test sends the old 65-byte hello and a hello with a changed first byte. It asserts a refusal that names the protocol, not the trust list.
+
+### API-15 The sync package is a wire contract that no break check covers
+
+**Who found it:** API design expert. **Where:** `scripts/public-api.mjs`, `public-api.json`, `packages/sync/src/index.ts`.
+
+**Risk:** LIBRARY in scripts/public-api.mjs holds only core and graph-spec. The sync package now has a stored shape (Kept), an invitation shape (Invitation) and a session format. All three outlive one run, and the apps keep them on a person's device. A change to any of them passes CI with no major version and no note in the release. Host contract version 3 for DisplayHost is held now. Sync is the next gap of the same kind (API-3).
+
+**Fix:** Either add the sync package's index as an entry of LIBRARY, or give Kept and Invitation a format number that is checked on load. Choose one in the wave that adds a second app host.
+
+**Check:** test/lib-public-api.test.js: every package under packages/ that exports a persisted type is in LIBRARY or in an explicit list of private packages.
+
+### AI-12 The MCP server lets Claude pile up questions, and their keys never expire
+
+**Who found it:** AI product and engineering expert. **Where:** `packages/claude-code/src/mcp-server.ts`.
+
+**Risk:** The mod allows one waiting question at a time. The MCP server has no such limit. Each decide or present call stores a key that stays valid until used, with no expiry and no cap. Claude can put many questions in front of the person. An old key can still answer long after the note has changed.
+
+**Fix:** Refuse a second decide while one waits, as the mod does. Give each key a time limit and a cap on keys held. Re-check at answer time that the note still holds the things the question names, and refuse with a reason if not.
+
+**Check:** A test in packages/claude-code/test calls decide twice and asserts the second is refused. Another waits past the limit and asserts answer is refused, and edits the note between decide and answer and asserts nothing is written.
+
+## Done or accepted (115)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -565,7 +763,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | done | #1945; kept out by `test/lint-minimatch.test.js`, `scripts/security-alerts.mjs` |
+| SEC-29 | The desktop app drops a note's file mode on every save | done | #2035; kept out by `packages/app/src-tauri/src/place.rs` |
 | CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |
 | OPS-14 | versions.json lists 0.7.1, which was never tagged | done | #1633; kept out by `test/versions-json.test.js` |
+| ARCH-15 | A big GitHub repository lists as a short one, with no warning | done | #2063 |
