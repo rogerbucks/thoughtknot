@@ -11,7 +11,7 @@ import { NOTE, TEXT } from '../../sync/test/helpers.js';
 function wires() {
   const wire = [];
   const inbox = { a: [], b: [] };
-  const hang = { a: null, b: null };
+  const waiting = { a: [], b: [] };
   const side = (me, other) => async (command, args) => {
     if (command === 'mesh_listen') return [1, args.address];
     if (command === 'mesh_accept') return 11;
@@ -22,15 +22,17 @@ function wires() {
     if (command === 'mesh_send') {
       wire.push(Uint8Array.from(args.message));
       inbox[other].push(args.message);
+      waiting[other].splice(0).forEach((wake) => wake());
       return null;
     }
     if (command === 'mesh_receive') {
-      await new Promise((r) => setTimeout(r, 5));
+      // waits for a message to arrive, as the Rust waits on the socket
+      if (!inbox[me].length) await new Promise((wake) => waiting[me].push(wake));
       return inbox[me].shift() ?? null;
     }
     return null;
   };
-  return { wire, a: side('a', 'b'), b: side('b', 'a'), hang };
+  return { wire, a: side('a', 'b'), b: side('b', 'a') };
 }
 
 test('two apps sync over the mesh commands, and the wire holds sealed bytes only', async () => {
