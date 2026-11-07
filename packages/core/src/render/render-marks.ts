@@ -6,7 +6,8 @@
 // would clash, the bigger thing keeps its name (Roger: big things first). Host-free and pure.
 import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
-import { inkOf, mix, shadeOf, subjectColour } from './render-look.ts';
+import { coloursOf, inkOf, mix, type OwnColour } from './render-look.ts';
+export { coloursOf, type OwnColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
 import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
@@ -120,22 +121,6 @@ export interface LabelMark {
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
 export type Mark = GroundMark | CloudMark | DotMark | RoadMark | LabelMark;
-
-/** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
-export type OwnColour = (subject: string) => number | undefined;
-
-/** The colour of every node: subjects in turn, or the one picked for them, their children shades of them. */
-export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string, string> {
-  const colours = new Map<string, string>();
-  const paint = (key: string, colour: string): void => {
-    colours.set(key, colour);
-    const kids = scene.nodes.get(key)?.children ?? [];
-    kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
-  };
-  // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
-  scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
-  return colours;
-}
 
 /** Whether a circle on screen touches the view at all. */
 export const inView = (s: Spot, view: View): boolean =>
