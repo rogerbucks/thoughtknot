@@ -162,7 +162,7 @@ describe('own presets in the settings and the panel', () => {
     await done(() => readOwnList(state.s.ownPresets).length === 1 && state.s.ownPreset === '');
   });
 
-  test('say what a preset would hold before it is kept', () => {
+  test('say what a preset would hold before it is kept (view_presets_own_save)', () => {
     const { p } = panelOver({ miniMap: false });
     const row = p.ownRows().find((r) => r.name === word('settings.own-presets.save'));
     assert.match(row.desc, /Keeps the Drawing settings/);
