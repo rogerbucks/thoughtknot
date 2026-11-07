@@ -1,12 +1,16 @@
 // Turning and tipping the new rendering's tilted camera by keys and buttons (ES§25, controls_keys; ES§53,
 // space_turns_round_pick). A drag with Shift or the right button already turns it. Not everyone can drag, so Shift
 // with the arrow keys turns and tips it too. The card's dock shows four buttons that do the same, while the view is
-// tilted. Flat 2D shows none, and leaves the keys to the card. Plain arrows still walk from thing to thing.
+// tilted. Flat 2D shows none, and leaves the keys to the card. Plain arrows still walk from thing to thing. Where the
+// browser reports a two-finger twist (Safari's gesture events: a Mac trackpad, an iPad), the twist turns it too.
 import { word, type WordKey } from '../../words.ts';
 import { button } from '../button.ts';
+import { TURN_PER_PX } from '../../render/render-tilt.ts';
 
 /** How far one key press or button turns the camera, as a drag of this many pixels would. */
 const STEP_PX = 25;
+/** How far a twist of one degree turns the camera, as a drag of this many pixels would: the camera turns with it. */
+const TWIST_PX = Math.PI / 180 / TURN_PER_PX;
 
 /** What the controls ask of the stage: turn and tip it, saying whether it could, as only a tilted one can. */
 export interface Turnable {
@@ -45,12 +49,23 @@ export function turnControls(
     if (!t || !e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || typing || e.defaultPrevented) return;
     if (stage.turnBy(...t.by)) e.preventDefault();
   };
+  // Safari says how far the fingers have turned since they landed, in degrees clockwise; each change turns by the rest
+  let twisted = 0;
+  const onTwist = (e: Event & { rotation?: number }): void => {
+    if (e.type === 'gesturestart') return void (twisted = 0);
+    const by = (e.rotation ?? twisted) - twisted;
+    twisted += by;
+    if (by && stage.turnBy(by * TWIST_PX, 0)) e.preventDefault();
+  };
+  const gestures = ['gesturestart', 'gesturechange'] as const;
   viewport.addEventListener('keydown', onKey);
+  gestures.forEach((g) => viewport.addEventListener(g, onTwist));
   return {
     shown: (on) => buttons.forEach((b) => (b.hidden = !on)),
     unload: () => {
       buttons.forEach((b) => b.remove());
       viewport.removeEventListener('keydown', onKey);
+      gestures.forEach((g) => viewport.removeEventListener(g, onTwist));
     },
   };
 }
