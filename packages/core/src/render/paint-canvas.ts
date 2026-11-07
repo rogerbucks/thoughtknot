@@ -5,7 +5,7 @@
 // Clouds are soft: a solid middle that fades at a clear edge, never a blur (Roger, 5 Nov). Roads are ribbons with a
 // count chip. Labels are cards with their name, and a second line where they have one. It takes only the few calls of a 2D canvas it needs, so a test can
 // hand it a fake one.
-import type { CloudMark, DotMark, LabelMark, Mark, RoadMark } from './render-marks.ts';
+import type { CloudMark, DotMark, GroundMark, LabelMark, Mark, RoadMark } from './render-marks.ts';
 
 /** A colour stop of a gradient. */
 export interface Gradient {
@@ -40,8 +40,22 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
-/** A soft cloud: solid to two thirds out, then fading to nothing at its edge. */
+/** The ground seen from an angle: thin faint lines. */
+function paintGround(c: Canvas2d, m: GroundMark): void {
+  c.globalAlpha = m.alpha;
+  c.strokeStyle = m.fill;
+  c.lineWidth = 1;
+  c.beginPath();
+  for (const [x0, y0, x1, y1] of m.lines) {
+    c.moveTo(x0, y0);
+    c.lineTo(x1, y1);
+  }
+  c.stroke();
+}
+
+/** A soft cloud: solid to two thirds out, then fading to nothing at its edge. In 3D its footprint lies faint below. */
 function paintCloud(c: Canvas2d, m: CloudMark): void {
+  if (m.shadow) paintCloud(c, { ...m, ...m.shadow, alpha: m.alpha * 0.35, shadow: undefined });
   const g = c.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r);
   g.addColorStop(0, withAlpha(m.fill, m.alpha));
   g.addColorStop(0.68, withAlpha(m.fill, m.alpha));
@@ -81,8 +95,17 @@ function paintRoad(c: Canvas2d, m: RoadMark): void {
   c.fillText(text, x, y);
 }
 
-/** A dot. */
+/** A dot. In 3D a thin stem joins it to where it stands on the ground. */
 function paintDot(c: Canvas2d, m: DotMark): void {
+  if (m.foot) {
+    c.globalAlpha = m.alpha * 0.3;
+    c.strokeStyle = m.fill;
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(m.foot[0], m.foot[1]);
+    c.lineTo(m.x, m.y);
+    c.stroke();
+  }
   c.globalAlpha = m.alpha;
   c.fillStyle = m.fill;
   c.beginPath();
@@ -130,7 +153,8 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
 export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: number): void {
   c.clearRect(0, 0, w, h);
   for (const m of marks) {
-    if (m.kind === 'cloud') paintCloud(c, m);
+    if (m.kind === 'ground') paintGround(c, m);
+    else if (m.kind === 'cloud') paintCloud(c, m);
     else if (m.kind === 'road') paintRoad(c, m);
     else if (m.kind === 'dot') paintDot(c, m);
     else paintLabel(c, m);
