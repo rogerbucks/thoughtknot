@@ -4,7 +4,16 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { aiModel } from '../src/ai-model.ts';
-import { NO_CONSENT, isPrivate, privateProblem, reviewerFor } from '../src/ai-reviewers.ts';
+import {
+  NO_CONSENT,
+  consentOf,
+  isPrivate,
+  namesSent,
+  privateProblem,
+  publicPreview,
+  reviewerFor,
+} from '../src/ai-reviewers.ts';
+import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
 
 const model = (name, endpoint, reach) =>
   aiModel({ name, purpose: 'Proposing changes', endpoint, model: 'm', ...(reach && { reach }) });
@@ -78,5 +87,36 @@ describe('a public reviewer gets names and links only, until the vault allows mo
     const allowed = { publicAllowed: true, noteTextAllowed: true };
     assert.equal(reviewerFor([CLOUD], allowed).sends, 'note');
     assert.equal(reviewerFor([CLOUD], { ...allowed, noteTextAllowed: false }).sends, 'names');
+  });
+});
+
+describe('the vault chooses what a public reviewer may have, off until chosen (ai_public_names_only)', () => {
+  const NOTE =
+    "# Trip\n\nPrivate prose.\n\n```gql\n// graph: trip\n(ann:Person {name: 'Ann', born: 1990}),\n(bob:Person),\n(ann)-[:KNOWS]->(bob)\n```\n";
+
+  test('off by default and when unknown; names, or note text as well, only as chosen', () => {
+    assert.equal(DEFAULT_SETTINGS.aiPublic, 'off');
+    assert.equal(settingsFrom({}).aiPublic, 'off');
+    assert.equal(settingsFrom({ aiPublic: 'everything' }).aiPublic, 'off');
+    assert.deepEqual(consentOf(settingsFrom({})), NO_CONSENT);
+    assert.deepEqual(consentOf(settingsFrom({ aiPublic: 'names' })), { publicAllowed: true, noteTextAllowed: false });
+    assert.deepEqual(consentOf(settingsFrom({ aiPublic: 'note' })), { publicAllowed: true, noteTextAllowed: true });
+  });
+
+  test('what one note would send is shown first: its names, kinds and links, never a value or its prose', () => {
+    const names = namesSent(NOTE);
+    assert.match(names, /ann: Person \(Ann\)/);
+    assert.match(names, /bob: Person/);
+    assert.match(names, /ann -\[KNOWS\]-> bob/);
+    assert.doesNotMatch(names, /1990|Private prose/);
+    assert.equal(publicPreview(NOTE, 'names'), names);
+    assert.equal(publicPreview(NOTE, 'note'), NOTE);
+    assert.equal(publicPreview(NOTE, 'off'), '');
+  });
+
+  test('withdrawn in one step: back to off, nothing is allowed', () => {
+    const was = settingsFrom({ aiPublic: 'note' });
+    const now = settingsFrom({ ...was, aiPublic: 'off' });
+    assert.deepEqual(consentOf(now), NO_CONSENT);
   });
 });
