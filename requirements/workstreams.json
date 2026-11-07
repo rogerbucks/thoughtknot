@@ -1377,7 +1377,8 @@
       "render_scene",
       "render_rooms",
       "render_detail",
-      "render_marks"
+      "render_marks",
+      "render_focus"
     ]
   },
   "MR1": {

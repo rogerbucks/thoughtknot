@@ -71,24 +71,31 @@ function paintCloud(c: Canvas2d, m: CloudMark): void {
   // a clear line round the edge, so the room's bounds show however faint its fill
   c.globalAlpha = m.ring;
   c.strokeStyle = m.fill;
-  c.lineWidth = 1.5;
+  c.lineWidth = m.bold ? 3 : 1.5;
   c.beginPath();
-  c.arc(m.x, m.y, Math.max(1, m.r - 1), 0, Math.PI * 2);
+  c.arc(m.x, m.y, Math.max(1, m.r - (m.bold ? 2 : 1)), 0, Math.PI * 2);
   c.stroke();
   c.globalAlpha = 1;
 }
 
-/** A ribbon road, with a chip that counts its links each way. In 3D it arches. */
-function paintRoad(c: Canvas2d, m: RoadMark): void {
-  c.globalAlpha = m.alpha * 0.85;
-  c.strokeStyle = m.fill;
-  c.lineWidth = m.width;
+/** One stroke along road `m`'s line, in `colour`, `width` wide. */
+function strokeRoad(c: Canvas2d, m: RoadMark, colour: string, width: number, alpha: number): void {
+  c.globalAlpha = alpha;
+  c.strokeStyle = colour;
+  c.lineWidth = width;
   c.lineCap = 'round';
   c.beginPath();
   c.moveTo(m.from[0], m.from[1]);
   if (m.via) c.quadraticCurveTo(m.via[0], m.via[1], m.to[0], m.to[1]);
   else c.lineTo(m.to[0], m.to[1]);
   c.stroke();
+}
+
+/** A ribbon road, with a chip that counts its links each way. In 3D it arches. */
+function paintRoad(c: Canvas2d, m: RoadMark): void {
+  // a road in focus lies on a wider line of the paper's colour, so it stands clear of the roads it crosses
+  if (m.halo) strokeRoad(c, m, m.halo, m.width + 4, m.alpha);
+  strokeRoad(c, m, m.fill, m.width, m.alpha * 0.85);
   const text = m.count;
   if (!text) return;
   // the count sits half way along: on an arch, at its top
@@ -125,6 +132,13 @@ function paintDot(c: Canvas2d, m: DotMark): void {
   c.beginPath();
   c.arc(m.x, m.y, m.r, 0, Math.PI * 2);
   c.fill();
+  if (!m.ring) return;
+  // in focus, or linked to what is: a ring round it
+  c.strokeStyle = m.ring;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(m.x, m.y, m.r + 3, 0, Math.PI * 2);
+  c.stroke();
 }
 
 /** A card with its name, and a second line under it when it has one. */
@@ -151,9 +165,9 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
   c.fill();
   if (m.edge) {
     // a white card on pale paper needs a thin edge of its colour to be seen
-    c.globalAlpha = m.alpha * 0.5;
+    c.globalAlpha = m.alpha * (m.bold ? 1 : 0.5);
     c.strokeStyle = m.edge;
-    c.lineWidth = 1;
+    c.lineWidth = m.bold ? 2 : 1;
     c.stroke();
     c.globalAlpha = m.alpha;
   }

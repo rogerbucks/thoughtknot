@@ -18,7 +18,8 @@ import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } fro
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
 import { coverCards, overCover } from './controls-cover.ts';
-import { glide } from './stage-glide.ts';
+import { angleOf, glide } from './stage-glide.ts';
+import { StageFocus, pickRoad } from './stage-focus.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
@@ -45,11 +46,6 @@ export interface StageHands {
 export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
   return sceneOf(shapeOf(drawing, g)).depths.length > 1;
 }
-
-/** How far 2.5D and 3D tip the camera back, in radians: the ground at a slant, its far side still easy to read. */
-const TILTS: Record<string, number> = { cards: 0.6, balls: 0.8 };
-/** How high each level stands in 2.5D and 3D: 2.5D lies on the ground, 3D stands each level on the one that holds it. */
-const LIFTS: Record<string, number> = { cards: 0, balls: 1 };
 
 /** The stage for a card, when its setting is on and its graph has levels to show; else none. */
 export function stageFor(
@@ -82,6 +78,7 @@ export class RenderStage {
   private marks: Mark[] = [];
   private gliding = 0;
   private readonly mover: StageMover | undefined;
+  private readonly focus = new StageFocus(() => this.draw());
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -138,6 +135,7 @@ export class RenderStage {
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
     this.canvas.addEventListener('pointercancel', (e) => this.lift(e));
+    this.focus.watch(this.canvas, () => ({ marks: this.marks, busy: !!this.drag || this.fingers.size > 0 }));
     // seen from an angle, a right drag turns the camera: no menu comes up for it
     this.canvas.addEventListener('contextmenu', (e) => isTilted(this.view) && e.preventDefault());
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
@@ -290,7 +288,9 @@ export class RenderStage {
     const key = pickAt(this.marks, x, y),
       node = key ? this.scene.nodes.get(key) : undefined,
       spot = key ? this.spots.get(key) : undefined;
-    if (!key || !spot) return this.hands?.clear();
+    // a click on a road chooses it, and a click on anything else lets it go
+    const road = this.focus.choose(key ? null : pickRoad(this.marks, x, y));
+    if (!key || !spot) return road ? undefined : this.hands?.clear();
     // a signpost names a room off screen: glide there at the same zoom, so the reader sees where they went
     const on = { x: (spot.x - this.view.x) * this.view.scale, y: (spot.y - this.view.y) * this.view.scale };
     if (on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h)
@@ -301,8 +301,9 @@ export class RenderStage {
       const next = this.stops.find((s) => s > this.view.scale * 1.01) ?? this.view.scale;
       return this.glideTo(centreOn(this.view, spot, next));
     }
-    if (this.hands?.selected() === key) this.glideTo(centreOn(this.view, spot));
-    else this.hands?.open(key);
+    if (this.hands?.selected() === key) return this.glideTo(centreOn(this.view, spot));
+    this.hands?.open(key);
+    this.draw(); // chosen, its links show at once
   }
 
   /**
@@ -310,12 +311,9 @@ export class RenderStage {
    * marks, and flat looks straight down. Says whether the stage shows it. The globe is left to the view in space.
    */
   lookFrom(mode: string | null): boolean {
-    const tilt = mode ? TILTS[mode] : 0;
-    if (tilt === undefined) {
-      this.view = { ...this.view, tilt: 0, turn: 0, lift: 0 };
-      return false;
-    }
-    const lift = (mode && LIFTS[mode]) || 0;
+    const angle = angleOf(mode);
+    if (!angle) return ((this.view = { ...this.view, tilt: 0, turn: 0, lift: 0 }), false);
+    const { tilt, lift } = angle;
     if ((this.view.tilt ?? 0) === tilt && (this.view.lift ?? 0) === lift) return true; // already there: nothing to glide
     const untouched = this.untouched;
     this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0, lift });
@@ -352,7 +350,8 @@ export class RenderStage {
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
     const detail = detailAt(this.sizes, this.view.scale);
-    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own);
+    const focus = this.focus.of(this.hands?.selected());
+    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
@@ -380,6 +379,7 @@ export class RenderStage {
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
+    this.focus.cancel();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();

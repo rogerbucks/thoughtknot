@@ -12,6 +12,8 @@ import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
 import { calloutsOf } from './render-callouts.ts';
+import { focusMarks, focusSigns, type Focus } from './render-focus.ts';
+export type { Focus } from './render-focus.ts';
 import { MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf } from './render-labels.ts';
 export { LONGEST, MAX_PX, MIN_PX, labelOf, sizeOf, textWidth, wrapName } from './render-labels.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
@@ -56,6 +58,8 @@ export interface CloudMark {
   alpha: number;
   /** How strong the line round its edge is: it stays clear as the cloud fades, so the room's bounds always show. */
   ring?: number;
+  /** Its ring drawn thick, as it is in focus. */
+  bold?: boolean;
   /** Where its room's footprint lies on the ground, when it stands above it in 3D. */
   shadow?: { x: number; y: number; r: number };
 }
@@ -77,6 +81,8 @@ export interface DotMark {
   r: number;
   fill: string;
   alpha: number;
+  /** A ring round it of this colour, when it is in focus or linked to what is. */
+  ring?: string;
   /** Where it stands on the ground, when it stands above it in 3D: a thin stem joins them. */
   foot?: [number, number];
 }
@@ -100,6 +106,8 @@ export interface RoadMark {
   ink: string;
   chip: string;
   alpha: number;
+  /** A wider line of this colour under it, when it is in focus, so it stands out from the roads it crosses. */
+  halo?: string;
 }
 
 /** A name on a card. Its box is where it is drawn. */
@@ -119,6 +127,8 @@ export interface LabelMark {
   dot?: string;
   /** The thin edge of the card, in its thing's colour. */
   edge?: string;
+  /** Its edge drawn firm, as its thing is in focus. */
+  bold?: boolean;
   /** A long name wrapped onto lines, top to bottom, where it takes more than one; `text` is then the whole name. */
   lines?: string[];
   /** A thin line from the card to its thing, when the card stands away from it: from `x1`, `y1` to `x2`, `y2`. */
@@ -180,6 +190,7 @@ export function marksOf(
   look: Look,
   view: View,
   own?: OwnColour,
+  focus?: Focus,
 ): Mark[] {
   const colours = coloursOf(scene, look, own);
   const last = scene.depths.length - 1;
@@ -227,19 +238,20 @@ export function marksOf(
   // holds
   const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
   if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
-  asks.push(...signsOf(scene, spots, detail, view, colours, look));
+  // the name of what is in focus keeps its place over any other
+  for (const a of asks) if (focus?.keys.includes(a.key)) a.weight += 1e11;
+  // what is in focus points the way to each thing it links to off the screen, with no other sign for the same thing
+  const ways = focusSigns(scene, spots, view, colours, look, focus);
+  asks.push(...signsOf(scene, spots, detail, view, colours, look).filter((a) => !ways.some((w) => w.key === a.key)));
+  asks.push(...ways);
   const lines = groundOf(view),
     floor: GroundMark[] = lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
   // far out, where the top level's names crowd their small clouds, they stand in order round the drawing (Roger)
   const tops = new Map(clouds.filter((m) => scene.nodes.get(m.key)?.depth === 0).map((m) => [m.key, m]));
   const placed = placeLabels(asks, view);
-  return [
-    ...floor,
-    ...clouds,
-    ...roadsOf(scene, spots, detail, view, colours, look),
-    ...dots,
-    ...(calloutsOf(asks, tops, placed, view) ?? placed),
-  ];
+  const roads = roadsOf(scene, spots, detail, view, colours, look);
+  const all = [...floor, ...clouds, ...roads, ...dots, ...(calloutsOf(asks, tops, placed, view) ?? placed)];
+  return focusMarks(all, scene, spots, view, colours, look, focus);
 }
 
 /** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
