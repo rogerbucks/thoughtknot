@@ -198,14 +198,17 @@ export function roadsOf(
   const last = scene.depths.length - 1;
   scene.roads.forEach((at, depth) => {
     const shown = roadAlpha(detail, depth);
-    if (shown < 0.05) return;
+    // with Faint roads on, a level's roads stay faintly in sight while that level shows at all (Roger, 7 Nov 2026)
+    const least = (detail.shown[depth] ?? 0) > 0.05 ? (detail.faintRoads ?? 0) : 0;
+    if (Math.max(shown, least) < 0.05) return;
     for (const road of at) {
       const p = spots.get(road.a),
         q = spots.get(road.b);
       // only neighbours in the same room: links that leave it ride on the road of the room itself
       if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
       const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
-      const alpha = s.behind || t.behind ? 0 : shown * insideFade(s, t, view); // the globe's far side: signposts
+      // the globe's far side has signposts instead
+      const alpha = s.behind || t.behind ? 0 : Math.max(least, shown * insideFade(s, t, view));
       if (alpha < 0.05) continue;
       // a road runs from the edge of one room to the edge of the other, never into its middle (Roger)
       const [from, to] = edgesOf(s, t);

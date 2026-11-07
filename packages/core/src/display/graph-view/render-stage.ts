@@ -21,6 +21,7 @@ import { aNetwork, flatOf, hasLevels, levelSaid, lookedFrom, sameLook, turnedVie
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
 import { StageFocus, pickRoad } from './stage-focus.ts';
+import { FaintRoads } from './stage-faint.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
@@ -76,6 +77,7 @@ export class RenderStage {
   private gliding = 0;
   private readonly mover: StageMover | undefined;
   private readonly focus = new StageFocus(() => this.draw());
+  private readonly faint = new FaintRoads({ viewport: () => this.viewport, changed: () => this.draw() });
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -171,10 +173,7 @@ export class RenderStage {
     return view;
   }
 
-  /**
-   * The card or a control changed size. A view the reader has not moved is fitted again. A moved one keeps its place
-   * and only learns the new cover. A change of size is not a change of place the reader made.
-   */
+  /** The card or a control changed size: an unmoved view is fitted again, a moved one only learns the new cover. */
   resized(): void {
     if (this.untouched) this.view = this.fitted();
     else {
@@ -347,7 +346,7 @@ export class RenderStage {
     const ratio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
-    const detail = detailAt(this.sizes, this.view.scale);
+    const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected());
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
     const level = this.level();
@@ -378,6 +377,7 @@ export class RenderStage {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
     this.focus.cancel();
+    this.faint.remove();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();

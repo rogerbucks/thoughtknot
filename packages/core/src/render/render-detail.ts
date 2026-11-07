@@ -24,6 +24,8 @@ export interface Detail {
   level: number;
   /** How wide the typical room at each depth is on screen, in pixels: for items, how far apart they sit. */
   span?: number[];
+  /** The least a road of an open level shows, as the reader zooms past it: the View panel's Faint roads. */
+  faintRoads?: number;
 }
 
 /** The typical room at each depth: the middle diameter of its nodes, in the drawing's own units. */
