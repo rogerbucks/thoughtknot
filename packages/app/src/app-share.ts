@@ -5,7 +5,9 @@
 // - Another device is trusted by pasting its public key. Only a trusted device is ever sent anything.
 // - Nothing is sent from this panel. The keys are kept by a `Keeper`, in the window's IndexedDB (app-share-keeper.ts).
 import { word } from '@thoughtknot/core';
-import { Sharing, fingerprint, fromHex, type Keeper } from '@thoughtknot/sync/sharing';
+import { Sharing, type Keeper } from '@thoughtknot/sync/sharing';
+import { make, printOf } from './app-share-dom.ts';
+import { inviteView, joinView } from './app-share-invite.ts';
 
 export interface SharePanelOptions {
   doc: Document;
@@ -15,13 +17,7 @@ export interface SharePanelOptions {
   started?: (sharing: Sharing) => void;
 }
 
-const make = <K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, props: Record<string, unknown> = {}) =>
-  Object.assign(doc.createElement(tag), props);
-
 const why = (e: unknown): string => (e instanceof Error ? e.message : String(e));
-
-/** The fingerprint of a public key written in hexadecimal. */
-const printOf = async (hex: string): Promise<string> => fingerprint(fromHex(hex) ?? new Uint8Array());
 
 /** The Share button, and the panel it opens. */
 export function shareButton(o: SharePanelOptions): HTMLButtonElement {
@@ -59,9 +55,13 @@ async function openPanel(o: SharePanelOptions, opener: HTMLElement): Promise<voi
 
   let focus: HTMLElement = close;
   const show = async (sharing: Sharing): Promise<void> => {
-    body.replaceChildren(await vaultView(doc, sharing, status, () => show(sharing)));
+    const again = () => show(sharing);
+    body.replaceChildren(
+      await (sharing.hasVault ? vaultView(doc, sharing, status, again) : joinView(doc, sharing, status, again)),
+    );
     o.started?.(sharing);
   };
+  const joinButton = make(doc, 'button', { type: 'button', textContent: word('app.share.join') });
   const startButton = make(doc, 'button', { type: 'button', textContent: word('app.share.start') });
   startButton.addEventListener('click', () => {
     startButton.disabled = true;
@@ -75,13 +75,20 @@ async function openPanel(o: SharePanelOptions, opener: HTMLElement): Promise<voi
       }
     })();
   });
+  joinButton.addEventListener('click', () => {
+    joinButton.disabled = true;
+    void Sharing.prepare(keeper!).then(show, (e: unknown) => {
+      status.textContent = word('app.share.failed', { why: why(e) });
+      joinButton.disabled = false;
+    });
+  });
   try {
     if (!keeper) status.textContent = word('app.share.no-keeper');
     else {
       const kept = await Sharing.open(keeper);
       if (kept) await show(kept);
       else {
-        body.append(startButton);
+        body.append(startButton, ' ', joinButton);
         focus = startButton;
       }
     }
@@ -126,6 +133,6 @@ async function vaultView(doc: Document, sharing: Sharing, status: HTMLElement, a
       }
     })();
   });
-  view.append(label, print, trustedHeading, list, none, addLabel, trust);
+  view.append(label, print, trustedHeading, list, none, addLabel, trust, await inviteView(doc, sharing, status));
   return view;
 }
