@@ -1,13 +1,13 @@
 // The roads between rooms: part of layer L4 (wiki/Rendering-spec.md; editor spec §73, render_marks). A road is one
 // ribbon for the links between two rooms side by side, counted each way. In 3D it runs between its rooms where they
-// stand. Host-free and pure.
+// stand, arched up over the ground. Host-free and pure.
 import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
 import { inkOf } from './render-look.ts';
 import type { RoadMark, View } from './render-marks.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene } from './render-scene.ts';
-import { onScreen } from './render-tilt.ts';
+import { archOf, onScreen } from './render-tilt.ts';
 
 /** How much a level's roads show: they stay, fainter, while the level inside opens, so a road never just vanishes (R20). */
 export const roadAlpha = (detail: Detail, depth: number): number =>
@@ -45,6 +45,7 @@ export function roadsOf(
         b: road.b,
         from: [s.x, s.y],
         to: [t.x, t.y],
+        via: archOf(p, q, view, depth),
         forward: road.forward,
         back: road.back,
         width: 2 + Math.log2(road.forward + road.back),

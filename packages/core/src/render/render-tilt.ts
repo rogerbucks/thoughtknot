@@ -48,6 +48,25 @@ export function tilted(x: number, y: number, z: number, view: View): Seen {
 /** How high a thing `depth` levels down stands off the ground: in 3D each level stands on the one that holds it. */
 export const heightOf = (view: View, depth: number): number => (view.lift ?? 0) * LEVEL_PX * depth;
 
+/** The highest a road arches in 3D, in levels, however long it is. */
+const ARCH_LEVELS = 3;
+
+/**
+ * The control point of a road's arch on the screen, between two spots `depth` levels down. There is none unless levels
+ * stand. The arch rises a quarter of the road's length, at most three levels.
+ */
+export function archOf(p: Spot, q: Spot, view: View, depth: number): [number, number] | undefined {
+  const lift = view.lift ?? 0;
+  if (!lift || !isTilted(view)) return undefined;
+  const flat = (s: Spot): [number, number] => [(s.x - view.x) * view.scale, (s.y - view.y) * view.scale];
+  const [[ax, ay], [bx, by]] = [flat(p), flat(q)];
+  const rise = lift * Math.min(0.25 * Math.hypot(bx - ax, by - ay), ARCH_LEVELS * LEVEL_PX);
+  const top = tilted((ax + bx) / 2, (ay + by) / 2, heightOf(view, depth) + rise, view);
+  const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
+  // a curve through the top: its control point stands twice as far from the chord's middle
+  return [2 * top.x - (s.x + t.x) / 2, 2 * top.y - (s.y + t.y) / 2];
+}
+
 /** Where a spot of the drawing, `depth` levels down, is on the screen, and how big. Flat, it is only zoomed and moved. */
 export function onScreen(spot: Spot, view: View, depth = 0): Spot {
   const [x, y, r] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale, spot.r * view.scale];

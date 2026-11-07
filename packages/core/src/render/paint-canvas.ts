@@ -27,6 +27,7 @@ export interface Canvas2d {
   arc(x: number, y: number, r: number, from: number, to: number): void;
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
+  quadraticCurveTo(cx: number, cy: number, x: number, y: number): void;
   roundRect(x: number, y: number, w: number, h: number, r: number): void;
   fill(): void;
   stroke(): void;
@@ -67,7 +68,7 @@ function paintCloud(c: Canvas2d, m: CloudMark): void {
   c.fill();
 }
 
-/** A ribbon road, with a chip that counts its links each way. */
+/** A ribbon road, with a chip that counts its links each way. In 3D it arches. */
 function paintRoad(c: Canvas2d, m: RoadMark): void {
   c.globalAlpha = m.alpha * 0.85;
   c.strokeStyle = m.fill;
@@ -75,11 +76,14 @@ function paintRoad(c: Canvas2d, m: RoadMark): void {
   c.lineCap = 'round';
   c.beginPath();
   c.moveTo(m.from[0], m.from[1]);
-  c.lineTo(m.to[0], m.to[1]);
+  if (m.via) c.quadraticCurveTo(m.via[0], m.via[1], m.to[0], m.to[1]);
+  else c.lineTo(m.to[0], m.to[1]);
   c.stroke();
   const text = m.count;
   if (!text) return;
-  const [x, y] = [(m.from[0] + m.to[0]) / 2, (m.from[1] + m.to[1]) / 2];
+  // the count sits half way along: on an arch, at its top
+  const [mx, my] = [(m.from[0] + m.to[0]) / 2, (m.from[1] + m.to[1]) / 2];
+  const [x, y] = m.via ? [(mx + m.via[0]) / 2, (my + m.via[1]) / 2] : [mx, my];
   c.globalAlpha = m.alpha;
   c.font = '600 11px system-ui, sans-serif';
   c.textAlign = 'center';
