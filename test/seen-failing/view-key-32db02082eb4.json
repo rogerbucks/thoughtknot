@@ -1,6 +1,0 @@
-{
-  "file": "packages/obsidian/test/view-key.test.js",
-  "test": "in a View panel with no head, the Key section goes first of all",
-  "seen_failing_first": false,
-  "evidence": "a review asked to pin behaviour the Key section already had (2dd5780); the commit only made it explicit"
-}
