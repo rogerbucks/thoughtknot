@@ -237,6 +237,8 @@
         "PJ1",
         "VP1",
         "VP2",
+        "LB1",
+        "RM1",
         "MM1",
         "ED1"
       ],
@@ -545,7 +547,8 @@
       "end": "2027-01-29",
       "estimate": true,
       "workstreams": [
-        "RR1"
+        "RR1",
+        "MR1"
       ]
     },
     {
