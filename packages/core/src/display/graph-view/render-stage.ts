@@ -173,10 +173,7 @@ export class RenderStage {
     return view;
   }
 
-  /**
-   * The card or a control changed size. A view the reader has not moved is fitted again. A moved one keeps its place
-   * and only learns the new cover. A change of size is not a change of place the reader made.
-   */
+  /** The card or a control changed size: an unmoved view is fitted again, a moved one only learns the new cover. */
   resized(): void {
     if (this.untouched) this.view = this.fitted();
     else {
