@@ -276,7 +276,7 @@ export const DRAWING_SOURCE_WORDS = {
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',
-  // the colour key, folded into the View panel (editor spec §25, panels_key, view-key.ts)
+  // the colour key, folded into the View panel (editor spec §25, panels_key, level-legend.ts)
   'view.key': 'Key',
   'view.key-hint': 'What each colour stands for. Point at a subject to spotlight it; click it to keep it.',
   'view.hint.detail':

@@ -4565,7 +4565,7 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }
-/* The key, folded into the View panel (panels_key, view-key.ts): shut until opened, gone while there is no key. Its
+/* The key, folded into the View panel (panels_key, level-legend.ts): shut until opened, gone while there is no key. Its
    chips line up from the start, as the panel's other rows do */
 .thoughtknot-view-key:not(:has(.thoughtknot-level-legend:not(.is-hidden))) {
   display: none;

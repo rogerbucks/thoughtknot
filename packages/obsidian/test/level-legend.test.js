@@ -11,7 +11,7 @@ before(async () => {
   uninstall = installGlobals(doc);
   const { installHost } = await import('../../core/src/display/host.ts');
   installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
-  ({ keySection, viewMenuOf, keyHome, keepKeyHome } = await import('../../core/src/display/graph-view/view-key.ts'));
+  ({ keySection, viewMenuOf, keyHome, keepKeyHome } = await import('../../core/src/display/graph-view/level-legend.ts'));
 });
 after(() => uninstall());
 
