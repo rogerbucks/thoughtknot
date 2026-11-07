@@ -17,7 +17,8 @@ export async function testModel(m: AiModel, key: string | null): Promise<string>
       headers: key ? { Authorization: `Bearer ${key}` } : {},
       throw: false,
     });
-    if (reply.status >= 400) return word('models.test.status', { address, status: reply.status });
+    // anything but a 2xx, a redirect to a sign-in page among them, is not an answer from the model
+    if (reply.status < 200 || reply.status >= 300) return word('models.test.status', { address, status: reply.status });
     const names = modelNames(reply.text);
     return names.length
       ? word('models.test.ok', { address, names: names.join(', ') })

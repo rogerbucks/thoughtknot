@@ -91,6 +91,21 @@ describe('the address is easy to find, set and test (user_models)', () => {
     }
   });
 
+  test('a reply that is not a 2xx, such as a wrong key or a redirect, says to check the address and key', async () => {
+    const env = await load({ data: { settings: { aiModels: [LM] } } });
+    try {
+      for (const status of [401, 302]) {
+        env.state.notices.length = 0;
+        env.state.reply = () => ({ status, text: '' });
+        press(row(page(env), 'Test connection'));
+        await until(() => env.state.notices.length > 0);
+        assert.match(env.state.notices.at(-1), new RegExp(`status ${status}: check the address and key`));
+      }
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('an address that cannot be reached says so', async () => {
     const env = await load({ data: { settings: { aiModels: [LM] } } });
     try {

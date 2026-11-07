@@ -64,7 +64,8 @@ export const AI_SOURCE_WORDS = {
   'models.endpoint': 'Address (URL)',
   'models.endpoint.sentence':
     'Where requests go, such as https://my-mac.tailnet.ts.net/v1 or a full chat completions address. https:// only; ' +
-    'http:// for a model on this device alone.',
+    'http:// for a model on this device alone. A model you run keeps what it is sent; any other keeps it under its ' +
+    'provider’s terms.',
   'models.endpoint.placeholder': 'https://my-mac.tailnet.ts.net/v1',
   'models.test': 'Test connection',
   'models.test.sentence': 'Asks the address for its list of models, with your key. No note is sent.',
