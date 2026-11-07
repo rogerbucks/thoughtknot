@@ -79,6 +79,22 @@ export function endpointProblem(endpoint: string): string | null {
   return null;
 }
 
+/**
+ * The full address a chat request goes to. An address that stops at its version, such as LM Studio's
+ * https://host/v1, takes /chat/completions after it. Any other is used as written.
+ */
+export function chatAddress(endpoint: string): string {
+  const given = endpoint.trim();
+  const base = given.replace(/\/+$/, '');
+  return /\/v\d+(?:beta)?$/i.test(base) ? `${base}/chat/completions` : given;
+}
+
+/** The address that lists a service's models, asked by Test beside the address: it sends no note. */
+export function modelsAddress(endpoint: string): string {
+  const chat = chatAddress(endpoint).replace(/\/+$/, '');
+  return chat.endsWith('/chat/completions') ? `${chat.slice(0, -'/chat/completions'.length)}/models` : `${chat}/models`;
+}
+
 /** Whether a model is set up enough to be asked: a name, a model and an address requests can go to. */
 export const usable = (m: AiModel): boolean => !!m.name.trim() && !!m.model.trim() && !endpointProblem(m.endpoint);
 

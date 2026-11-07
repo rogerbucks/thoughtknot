@@ -62,3 +62,16 @@ test('each of the spec’s purposes is said in the test language; the saved valu
   }
   assert.deepEqual(AI_PURPOSES.map(purposeWords), AI_PURPOSES);
 });
+
+test('an address that stops at its version, such as LM Studio’s …/v1, is the base of its chat address', () => {
+  const { chatAddress, modelsAddress } = choice;
+  const tailnet = 'https://lmstudio.taila0fac4.ts.net/v1';
+  assert.equal(chatAddress(tailnet), `${tailnet}/chat/completions`);
+  assert.equal(chatAddress(`${tailnet}/ `), `${tailnet}/chat/completions`);
+  assert.equal(chatAddress('https://x.example/v1beta'), 'https://x.example/v1beta/chat/completions');
+  // a full address is used as written
+  const full = 'https://api.example.com/v1/chat/completions';
+  assert.equal(chatAddress(full), full);
+  assert.equal(modelsAddress(full), 'https://api.example.com/v1/models');
+  assert.equal(modelsAddress(tailnet), `${tailnet}/models`);
+});
