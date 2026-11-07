@@ -213,8 +213,7 @@ export function marksOf(
     const clear = crisp(named);
     if (clear > 0.05) asks.push(askOf(node, s, fill, clear, detail, last, look));
   }
-  // seen from an angle, far things are painted first, so near ones lie over them. A room still lies under what it
-  // holds
+  // seen from an angle, far things are painted first, so near ones lie over them, and a room under what it holds
   const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
   if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
   asks.push(...signsOf(scene, spots, detail, view, colours, look));
