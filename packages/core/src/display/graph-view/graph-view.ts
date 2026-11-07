@@ -127,7 +127,7 @@ export class GraphView extends Lifecycle {
         list.hidden = !list.hidden;
         badge.setAttribute('aria-expanded', String(!list.hidden));
       },
-      ...this.spaces.zooming(() => this.zoom), // in space, Fit and zoom move its camera (space_one_bar)
+      ...this.spaces.zooming(() => this.aids?.stageZoom() ?? this.zoom), // in space or on the stage, its camera
       find: (b) => this.sel.untangle.toggleFind(b),
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),

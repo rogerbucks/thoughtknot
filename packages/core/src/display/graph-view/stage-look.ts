@@ -2,13 +2,26 @@
 // and phase P3 of wiki/Rendering-spec.md. 2D looks straight down. 2.5D and 3D tip the camera back over the
 // same marks. The globe wraps them round a ball (ES§71, globe_view). One look at every zoom, never an old one beside it
 // (Roger, 7 Nov 2026). Host-free and pure.
+import type { Graph } from '@thoughtknot/graph-spec';
+import type { GraphDrawing } from '../../note-reading.ts';
+import { shapeOf } from '../../types-shape.ts';
+import { sceneOf } from '../../render/render-scene.ts';
 import { panView } from '../../render/render-camera.ts';
 import { bendOf, isGlobe } from '../../render/render-globe.ts';
 import type { View } from '../../render/render-marks.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { isTilted, turnedBy } from '../../render/render-tilt.ts';
 
-/** Whether a card's diagram is drawn as a network: no other type chosen, nor a table or a view's own picture. */
+/** Whether `drawing` has levels for the new rendering to show: more than one, so more than a flat list. */
+export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
+  return sceneOf(shapeOf(drawing, g)).depths.length > 1;
+}
+
+/**
+ * Whether a card's diagram is drawn as a network: no other type chosen, nor a table or a view's own picture. The stage
+ * draws only a network, so a card drawn as another type shows that type. Roger, 7 Nov 2026: "I click different diagram
+ * types and nothing happens".
+ */
 export const aNetwork = (d?: { choice: { drawn: string }; table?: unknown; picture?: unknown }): boolean =>
   !d || (d.choice.drawn === 'network' && !d.table && !d.picture);
 

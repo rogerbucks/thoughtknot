@@ -17,8 +17,8 @@ import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
-import { isGlobe } from '../../render/render-globe.ts';
-import { aNetwork, flatOf, lookedFrom, sameLook, turnedView } from './stage-look.ts';
+import { isGlobe, middleOf } from '../../render/render-globe.ts';
+import { aNetwork, flatOf, hasLevels, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
@@ -43,15 +43,8 @@ export interface StageHands {
   own?: OwnColour;
 }
 
-/** Whether `drawing` has levels for the new rendering to show: more than one, so more than a flat list. */
-export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
-  return sceneOf(shapeOf(drawing, g)).depths.length > 1;
-}
-
-/**
- * The stage for a card, when its setting is on and its graph has levels to show; else none. It draws a network only:
- * a card drawn as another type shows that type, as chosen (Roger, 7 Nov 2026: "I click diagram types and nothing happens").
- */
+export { hasLevels } from './stage-look.ts';
+/** The stage for a card, when its setting is on and its graph has levels to show and it is drawn as a network. */
 export function stageFor(
   viewport: HTMLElement,
   o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places' | 'diagram'>,
@@ -175,8 +168,7 @@ export class RenderStage {
     }
     // a fit keeps the angle the camera looks from: 2.5D stays 2.5D, and the globe a globe
     const { tilt, turn, lift, globe } = this.view ?? {};
-    if (tilt || turn || globe)
-      Object.assign(view, { tilt: tilt ?? 0, turn: turn ?? 0, lift: lift ?? 0, globe: globe ?? 0 });
+    if (tilt || turn || globe) Object.assign(view, { tilt, turn, lift, globe });
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
@@ -329,6 +321,13 @@ export class RenderStage {
     this.view = to;
     this.draw();
     return true;
+  }
+
+  /** The bar's Fit, Zoom in and Zoom out (`ratio` 0 fits): one glide, at the angle the camera looks from now. */
+  zoomBy(ratio: number): void {
+    const to = ratio ? pinchView(this.view, this.stops, ratio, middleOf(this.view)) : this.fitted();
+    this.glideTo(to);
+    this.untouched = !ratio;
   }
 
   /** Glides to `to`, or goes there at once when the reader asks for less motion (rule 7). */
