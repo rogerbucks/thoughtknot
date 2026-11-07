@@ -11,6 +11,7 @@
 // The style sheet then caps each card to the room left to it, and it scrolls inside. The corner card is capped by the
 // fixed foot alone, and the pad and the details by what is measured above and below them. So nothing waits on itself.
 import type { ScreenBox } from './controls-cover.ts';
+import { keepSlots } from './controls-slots.ts';
 
 /** The two sides of the drawing, as the page reads: the start is the left in a left-to-right page. */
 export type Side = 'start' | 'end';
@@ -115,6 +116,8 @@ export function watchEdges(view: HTMLElement, drawing: HTMLElement): () => void 
     win.requestAnimationFrame(() => {
       queued = false;
       keepEdges(view, drawing);
+      // the level badge between the corner cards is placed again too: a card it measured may since have been replaced
+      keepSlots(drawing);
       // a card that came since is watched too
       for (const el of Array.from(
         view.querySelectorAll('.thoughtknot-corner, .thoughtknot-mini-map, .thoughtknot-space-pad'),
