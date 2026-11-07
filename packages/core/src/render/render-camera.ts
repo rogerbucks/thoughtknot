@@ -4,7 +4,7 @@
 // level's zoom, so levels fade in as the zoom passes them. It picks the mark under a click from the marks themselves,
 // and glides between two views (rule 7, never disorient).
 // Host-free and pure.
-import { scaleToOpen } from './render-detail.ts';
+import { OPEN_FROM, ITEMS_FROM, scaleToOpen } from './render-detail.ts';
 import type { Mark, View } from './render-marks.ts';
 import type { Clear } from '../zoom-fit.ts';
 import type { Spot } from './render-rooms.ts';
@@ -43,9 +43,17 @@ export function fitView(spots: Iterable<Spot>, w: number, h: number, clear: Clea
   return { x: (left + right) / 2 - cx / scale, y: (top + bottom) / 2 - cy / scale, scale, w, h, clear: c };
 }
 
-/** The zoom stops: the fitted zoom, then the zoom that opens each level, smallest first. */
+/** How far past the zoom where only the first level shows the reader may still zoom out, as a share of it. */
+const PAST_FIRST = 0.9;
+
+/**
+ * The zoom stops, smallest first: the farthest out the reader may go, then the zoom that opens each level. The
+ * farthest out is the fitted zoom, or further where the fit already opens the second level. So zoomed right out,
+ * the reader always reaches the first level (Roger).
+ */
 export function stopsOf(sizes: readonly number[], fitted: number): number[] {
-  const stops = [fitted];
+  const second = sizes[1] ? (sizes.length === 2 ? ITEMS_FROM : OPEN_FROM) / sizes[1] : Infinity;
+  const stops = [Math.min(fitted, second * PAST_FIRST)];
   for (let depth = 1; depth < sizes.length; depth++) {
     const s = scaleToOpen(sizes, depth);
     if (s > (stops[stops.length - 1] as number) * 1.01) stops.push(s);

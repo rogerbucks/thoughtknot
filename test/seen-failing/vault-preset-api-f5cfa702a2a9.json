@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/vault-preset-api.test.js",
+  "test": "a preset the vault names for itself, asked of the route (view_presets_own_vault) > is not told when it is over the limit, and a starter file carries no file text",
+  "seen_failing_first": false,
+  "evidence": "It guards what did not change: an oversize file and a starter file read as before, so it passes against the old code. The first test in the group failed first."
+}

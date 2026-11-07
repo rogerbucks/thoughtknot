@@ -128,3 +128,16 @@ test('centring puts a spot in the middle of the clear part, and a glide runs eve
   const half = glideView(view, to, 0.5);
   assert.ok(Math.abs(half.scale - Math.sqrt(2 * 4)) < 1e-9, 'halfway in zoom to the eye');
 });
+
+// Roger, 7 Nov 2026 (nightly): zooming out did not reach level 1 where the fitted view already opened level 2.
+// proves: render_one_camera
+test('zoomed right out, the first level always shows, even where the fit opens the second', () => {
+  for (const fitted of [0.2, 0.6, 1.2, 3]) {
+    const stops = stopsOf(sizes, fitted);
+    let v = { x: 0, y: 0, scale: fitted, w: 800, h: 600 };
+    for (let i = 0; i < 400; i++) v = wheelView(v, stops, 40, [400, 300]);
+    assert.equal(detailAt(sizes, v.scale).shown[1], 0, `fitted at ${fitted}: only the first level shows`);
+    assert.ok(v.scale <= fitted, 'never nearer than the fit');
+    assert.ok(v.scale >= Math.min(fitted, (0.8 * 56) / sizes[1]), 'and no further out than it takes');
+  }
+});
