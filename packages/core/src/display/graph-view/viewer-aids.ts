@@ -305,8 +305,10 @@ export class Aids {
       win = viewport.win ?? window;
     // a badge moved to a new place is not a change of size, so the drawing is fitted again here, clear of it
     const keep = () => {
+      const was = this.badge?.getBoundingClientRect();
       keepSlots(viewport);
-      this.stage?.resized();
+      const now = this.badge?.getBoundingClientRect();
+      if (was && now && (was.left !== now.left || was.top !== now.top)) this.stage?.resized();
     };
     win.requestAnimationFrame(keep);
     const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
