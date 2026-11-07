@@ -131,8 +131,8 @@ export function glideView(a: View, b: View, t: number): View {
     to = [b.x + mx / b.scale, b.y + my / b.scale] as const;
   const [px, py] = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
   const glided = { ...b, scale, x: px - mx / scale, y: py - my / scale };
-  // the camera tips and turns on the way too, so going into 2.5D or back to flat is one glide
-  // and the drawing bends round the ball or flattens out again, so going onto the globe is one glide too
+  // the camera tips and turns on the way too, so going into 2.5D or back to flat is one glide. The drawing bends
+  // round the ball or flattens out again too, so going onto the globe is one glide
   if (!a.tilt && !b.tilt && !a.turn && !b.turn && !a.lift && !b.lift && !a.globe && !b.globe) return glided;
   const along = (p: number | undefined, q: number | undefined) => (p ?? 0) + ((q ?? 0) - (p ?? 0)) * e;
   const turned = { tilt: along(a.tilt, b.tilt), turn: along(a.turn, b.turn), lift: along(a.lift, b.lift) };

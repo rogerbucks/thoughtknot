@@ -310,7 +310,7 @@ export class RenderStage {
 
   /**
    * Looks at the drawing as the bar's 2D button says (space_one_bar). 2.5D and 3D tip the camera back over the same
-   * marks, flat looks straight down, and the globe wraps them round a ball (stage-look.ts). Says whether it shows it.
+   * marks. Flat looks straight down. The globe wraps them round a ball (stage-look.ts). Says whether it shows it.
    */
   lookFrom(mode: string | null): boolean {
     const to = lookedFrom(this.view, mode, this.spots.values());

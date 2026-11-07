@@ -15,7 +15,7 @@ const ARCH = 0.1;
 /** The highest a road's arch stands off the ball, in pixels, however long the road. */
 const ARCH_PX = 36;
 
-/** A point on the screen as the globe shows it: how much it is shrunk (1 in the middle), and whether it is out of sight. */
+/** A point on the screen as the globe shows it. It says how much it shrinks (1 in the middle), and if it is hidden. */
 export interface OnGlobe {
   x: number;
   y: number;
@@ -118,8 +118,8 @@ export function ballOf(view: View): { disc: [number, number, number]; lines: [nu
   const [cx, cy] = middleOf(view),
     radius = ballRadius(view);
   const step = 2 ** Math.round(Math.log2(GRID_PX / view.scale)); // in the drawing's own units
-  // the near side reaches a quarter turn from the middle: as far, on the flat drawing, as the ball's edge goes round
-  // and never far past the screen, however near the zoom brings the ball
+  // the near side reaches a quarter turn from the middle, as far as the ball's edge goes round. It never reaches far
+  // past the screen, however near the zoom brings the ball
   const reach = Math.min((Math.PI / 2) * radius, 3 * Math.max(view.w, view.h)) / view.scale;
   const [mx, my] = [view.x + cx / view.scale, view.y + cy / view.scale];
   const [x0, x1, y0, y1] = [mx - reach, mx + reach, my - reach, my + reach];
