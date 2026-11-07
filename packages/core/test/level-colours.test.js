@@ -44,7 +44,7 @@ test('the legend spotlights a subject while pointed at, keeps it on a click, and
   try {
     const { make } = await import('../src/display/graph-view/note-callouts.ts');
     const { LevelLegend } = await import('../src/display/graph-view/level-legend.ts');
-    const { SPOTLIT, SPOT } = await import('../src/display/graph-view/level-colours.ts');
+    const { SPOTLIT, SPOT, ownHue } = await import('../src/display/graph-view/level-colours.ts');
     const svg = make('svg', {});
     for (const k of ['a', 'b', 'c', 'd']) svg.appendChild(make('g', { class: 'node', 'data-key': k }));
     const fresh = structuredClone(levels);
@@ -56,8 +56,13 @@ test('the legend spotlights a subject while pointed at, keeps it on a click, and
       svg: () => svg,
       redraw: () => redrawn++,
       drawing: () => undefined,
+      // the new rendering paints its own colours, and the chips show them (Roger, 7 Nov 2026)
+      colourOf: (key) => (key === '0:0' ? ['#4b7bf5', '#f2793a'][ownHue(fresh, key) ?? 0] : undefined),
     });
     legend.show(fresh);
+    const swatch = () => parent.querySelector('.thoughtknot-level-swatch');
+    assert.equal(swatch().cssProps['--thoughtknot-swatch'], '#4b7bf5', 'the chip shows the colour the drawing paints');
+    assert.equal(legend.shown(), fresh);
     const chips = parent.querySelectorAll('.thoughtknot-level-chip');
     assert.deepEqual(
       chips.map((c) => c.textContent),
@@ -76,6 +81,7 @@ test('the legend spotlights a subject while pointed at, keeps it on a click, and
     parent.querySelectorAll('.thoughtknot-level-colour')[0].dispatch('click', {});
     assert.equal(hueOf(fresh, '0:0'), 1, 'the next colour');
     assert.equal(redrawn, 1, 'its clouds drawn again in it');
+    assert.equal(swatch().cssProps['--thoughtknot-swatch'], '#f2793a', 'and the chip takes the new one');
     legend.show(null);
     assert.ok(parent.querySelector('.thoughtknot-level-legend').hasClass('is-hidden'), 'none for one level');
   } finally {
