@@ -331,8 +331,7 @@ export async function renderBlock(
       exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
-      // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
-      ...(diagram?.table || diagram?.picture
+      ...(diagram?.table || diagram?.picture // a box dragged writes a nudge in the style graph (§6, drag_moves_box)
         ? {}
         : { moving: movingFor(plugin, target.path, graph, styling, drawing) }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
