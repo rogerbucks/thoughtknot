@@ -165,8 +165,8 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const address = host ? null : endpointProblem(model.endpoint);
   if (address) return { refused: word('ai.send.address', { model: model.name, why: address }) };
   if (!model.model.trim()) return { refused: word('ai.send.no-model-name', { model: model.name }) };
-  // a model the user does not run is asked only when the vault allows it, and then sees names only until it allows
-  // note text too (ai_private_default, ai_public_names_only). The host's own model is the host's to govern
+  // a model the user does not run is asked only when the vault allows it (ai_private_default). Then it sees names only,
+  // until the vault allows note text too (ai_public_names_only). The host's own model is the host's to govern
   const consent = consentOf(settings);
   const isPublic = !host && !isPrivate(model);
   if (isPublic && !consent.publicAllowed) return { refused: word('ai.reviewer.public-off', { model: model.name }) };
