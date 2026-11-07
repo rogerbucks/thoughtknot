@@ -20,6 +20,7 @@ import { coreAiProvider } from './core-ai.ts';
 import { keyHeader } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import type { MatrixRow } from './ai-matrix.ts';
+import { consentOf, isPrivate } from './ai-reviewers.ts';
 import { aiScope } from './ai-scope.ts';
 import type { ScopeChoice } from './ai-scope.ts';
 import { formatList } from './locale-formats.ts';
@@ -164,6 +165,14 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const address = host ? null : endpointProblem(model.endpoint);
   if (address) return { refused: word('ai.send.address', { model: model.name, why: address }) };
   if (!model.model.trim()) return { refused: word('ai.send.no-model-name', { model: model.name }) };
+  // a model the user does not run is asked only when the vault allows it, and then sees names only until it allows
+  // note text too (ai_private_default, ai_public_names_only). The host's own model is the host's to govern
+  const consent = consentOf(settings);
+  const isPublic = !host && !isPrivate(model);
+  if (isPublic && !consent.publicAllowed) return { refused: word('ai.reviewer.public-off', { model: model.name }) };
+  const namesOnly = isPublic && !consent.noteTextAllowed;
+  if (namesOnly && ask.answers?.text !== undefined)
+    return { refused: word('ai.reviewer.public-no-text', { model: model.name }) };
   const matrix = { rows: ask.matrix ?? [], classMap: settings.aiClassMap };
   const others = 'ready' in ready ? ready.ready : [];
   const cleared = clearance(ask.level, model, settings.classifications, others, settings.aiUnlabelled, matrix);
@@ -171,7 +180,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const provider = model.provider ? ask.provider : undefined;
   if (model.provider && provider?.name !== model.provider)
     return { refused: word('ai.send.no-provider', { model: model.name, provider: model.provider }) };
-  const scope = aiScope(ask.note, ask.choice, ask.shared);
+  const scope = aiScope(ask.note, ask.choice, ask.shared, namesOnly);
   if ('refused' in scope) return scope;
   let body: string;
   try {
@@ -210,6 +219,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
         level: ask.level?.trim() ? levelSaid(ask.level, false) : levelSaid(settings.aiUnlabelled, true),
       }),
       word('ai.summary.what', { said: scope.shown }),
+      ...(namesOnly ? [word('ai.summary.names-only')] : []),
     ],
     note: ask.notePath,
     level: ask.level,

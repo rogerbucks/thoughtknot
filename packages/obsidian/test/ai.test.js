@@ -44,7 +44,7 @@ const REMOTE = {
   model: 'big-1',
   keyName: 'thoughtknot-remote',
 };
-const ON = { data: { settings: { aiUse: 'on', aiModels: [LOCAL, REMOTE] } } };
+const ON = { data: { settings: { aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL, REMOTE] } } };
 // a key made here, so no line of this file has the shape of one
 const KEY = ['k', 'z'.repeat(24)].join('-');
 

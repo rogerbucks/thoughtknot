@@ -14,6 +14,8 @@ import {
   reviewerFor,
 } from '../src/ai-reviewers.ts';
 import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
+import { prepareSend } from '../src/ai.ts';
+import { modelChoices } from '../src/ai-choice.ts';
 
 const model = (name, endpoint, reach) =>
   aiModel({ name, purpose: 'Proposing changes', endpoint, model: 'm', ...(reach && { reach }) });
@@ -118,5 +120,57 @@ describe('the vault chooses what a public reviewer may have, off until chosen (a
     const was = settingsFrom({ aiPublic: 'note' });
     const now = settingsFrom({ ...was, aiPublic: 'off' });
     assert.deepEqual(consentOf(now), NO_CONSENT);
+  });
+});
+
+describe('every send is held to the reviewer rules (ai_private_default, ai_public_names_only)', () => {
+  const GRAPH =
+    "// graph: trip\n(ann:Person {name: 'Ann', born: 1990}),\n(bob:Person {name: 'Bob'}),\n(ann)-[:KNOWS {since: 2001}]->(bob)";
+  const NOTE = `# Trip\n\nPrivate prose.\n\n\`\`\`gql\n${GRAPH}\n\`\`\`\n`;
+  const OWN = { ...LM, ceiling: 'Confidential' };
+  const PUBLIC = { ...CLOUD, ceiling: 'Confidential' };
+  const ask = (aiPublic, name, over = {}) => ({
+    settings: settingsFrom({ aiUse: 'on', aiPublic, aiModels: [PUBLIC, OWN] }),
+    model: name,
+    note: NOTE,
+    notePath: 'Trip.md',
+    level: 'Internal',
+    choice: { graph: 'trip', what: 'graph' },
+    question: 'What is missing?',
+    ...over,
+  });
+
+  test('the private reviewer is offered first, and is sent the graph with its values without any consent', () => {
+    assert.deepEqual(
+      modelChoices(ask('off', '').settings, 'Proposing changes').map((c) => c.name),
+      ['LM Studio', 'Cloud'],
+    );
+    const sent = prepareSend(ask('off', 'LM Studio'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /born: 1990/);
+  });
+
+  test('a public reviewer is refused, saying why, until the vault allows one', () => {
+    const r = prepareSend(ask('off', 'Cloud'));
+    assert.match(r.refused, /public reviewer, and this vault does not allow one/);
+  });
+
+  test('allowed names only: names, kinds and links go, never a value or the text, and it says so', () => {
+    const sent = prepareSend(ask('names', 'Cloud'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /ann:Person \{name: 'Ann'\}/);
+    assert.match(sent.body, /\(ann\)-\[:KNOWS\]->\(bob\)/);
+    assert.doesNotMatch(sent.body, /1990|2001|Private prose/);
+    assert.ok(sent.summary.some((s) => /Names, kinds and links only/.test(s)));
+    const text = prepareSend(
+      ask('names', 'Cloud', { choice: { graph: 'trip', what: 'text' }, answers: { text: 'Private prose.' } }),
+    );
+    assert.match(text.refused, /names, kinds and links only/);
+  });
+
+  test('allowed note text: the graph goes with its values, as for a private reviewer', () => {
+    const sent = prepareSend(ask('note', 'Cloud'));
+    assert.ok(!('refused' in sent), sent.refused);
+    assert.match(sent.body, /born: 1990/);
   });
 });
