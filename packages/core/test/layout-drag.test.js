@@ -177,6 +177,13 @@ test('one undo takes a saved place back: a new place is forgotten, a moved one g
     await settle();
     assert.deepEqual(stage.spots.get(dot.key), moved);
     assert.deepEqual(writes.at(-1), ['place', dot.key, moved.x, moved.y]);
+    // the card's other Ctrl+Z on the same history sees the key taken: one press undoes once
+    let other = 0;
+    viewport.addEventListener('keydown', (e) => !e.defaultPrevented && other++);
+    drag(20);
+    key();
+    await settle();
+    assert.equal(other, 0, 'no second undo');
     // a field being typed in keeps its own Ctrl+Z, and a key another handler took is left alone
     const field = viewport.createEl('input');
     assert.equal(field.dispatch('keydown', { key: 'z', ctrlKey: true }).defaultPrevented, false);

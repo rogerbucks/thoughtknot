@@ -49,7 +49,8 @@ export class StageMover {
     this.host = host;
     this.placed = new Set(host.saved.keys());
     this.undoes = host.graph && host.forget ? new MoveUndo(stage.viewport, host.graph) : null;
-    if (this.undoes) stage.viewport.addEventListener('keydown', this.onKey);
+    // heard first, so the card's other Ctrl+Z, on the same history, sees it taken and leaves it
+    if (this.undoes) stage.viewport.addEventListener('keydown', this.onKey, { capture: true });
   }
 
   /** Takes the item drawn at `x`, `y` on the canvas, if there is one; says whether it took one. */
@@ -116,7 +117,7 @@ export class StageMover {
 
   /** The stage gone: the key no longer heard, and the history kept for the card drawn in its place. */
   unload(): void {
-    this.stage.viewport.removeEventListener('keydown', this.onKey);
+    this.stage.viewport.removeEventListener('keydown', this.onKey, { capture: true });
     this.undoes?.onunload();
   }
 }
