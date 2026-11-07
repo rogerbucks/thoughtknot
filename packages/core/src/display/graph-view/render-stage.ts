@@ -7,7 +7,6 @@
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
-import { word } from '../../words.ts';
 import type { ViewOptions } from './view-options.ts';
 import { sceneOf, type Scene } from '../../render/render-scene.ts';
 import { roomsOf, type Spot } from '../../render/render-rooms.ts';
@@ -16,9 +15,11 @@ import { DARK, LIGHT } from '../../render/render-look.ts';
 import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
-import { fromTrackpad, groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
+import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
+import { isGlobe, middleOf } from '../../render/render-globe.ts';
+import { aNetwork, flatOf, hasLevels, levelSaid, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import { coverCards, overCover } from './controls-cover.ts';
-import { angleOf, glide } from './stage-glide.ts';
+import { glide } from './stage-glide.ts';
 import { StageFocus, pickRoad } from './stage-focus.ts';
 import { FaintRoads } from './stage-faint.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
@@ -43,20 +44,16 @@ export interface StageHands {
   own?: OwnColour;
 }
 
-/** Whether `drawing` has levels for the new rendering to show: more than one, so more than a flat list. */
-export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
-  return sceneOf(shapeOf(drawing, g)).depths.length > 1;
-}
-
-/** The stage for a card, when its setting is on and its graph has levels to show; else none. */
+export { hasLevels } from './stage-look.ts';
+/** The stage for a card, when its setting is on and its graph has levels to show and it is drawn as a network. */
 export function stageFor(
   viewport: HTMLElement,
-  o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places'>,
+  o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places' | 'diagram'>,
   hands?: StageHands,
 ): RenderStage | null {
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
-  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g)) return null;
+  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g) || !aNetwork(o.diagram)) return null;
   return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap, o.places);
 }
 
@@ -148,12 +145,7 @@ export class RenderStage {
 
   /** The level shown now, as a reader is told it: "Level 2 of 3 · Areas". */
   level(): string {
-    const { level } = detailAt(this.sizes, this.view.scale);
-    return word('levels.badge', {
-      at: level + 1,
-      count: this.scene.depths.length,
-      name: this.scene.depths[level] ?? '',
-    });
+    return levelSaid(this.scene, detailAt(this.sizes, this.view.scale).level);
   }
 
   /** The drawing fitted to the part of the card the controls leave clear, and the zoom stops from there. */
@@ -173,9 +165,9 @@ export class RenderStage {
       this.mini.canvas.hidden = true;
       view = fit().view;
     }
-    // a fit keeps the angle the camera looks from: 2.5D stays 2.5D
-    const { tilt, turn, lift } = this.view ?? {};
-    if (tilt || turn) Object.assign(view, { tilt: tilt ?? 0, turn: turn ?? 0, lift: lift ?? 0 });
+    // a fit keeps the angle the camera looks from: 2.5D stays 2.5D, and the globe a globe
+    const { tilt, turn, lift, globe } = this.view ?? {};
+    if (tilt || turn || globe) Object.assign(view, { tilt, turn, lift, globe });
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
@@ -292,40 +284,49 @@ export class RenderStage {
     if (!key || !spot) return road ? undefined : this.hands?.clear();
     // a signpost names a room off screen: glide there at the same zoom, so the reader sees where they went
     const on = { x: (spot.x - this.view.x) * this.view.scale, y: (spot.y - this.view.y) * this.view.scale };
-    if (on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h)
-      return this.glideTo(centreOn(this.view, spot));
+    const off = on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h;
+    if (off || onScreen(spot, this.view).behind) return this.glideTo(centreOn(this.view, spot));
     const last = this.scene.depths.length - 1;
     if (node && node.depth < last) {
       // a group: glide to it, one level nearer, so what is in it opens
       const next = this.stops.find((s) => s > this.view.scale * 1.01) ?? this.view.scale;
       return this.glideTo(centreOn(this.view, spot, next));
     }
-    if (this.hands?.selected() === key) return this.glideTo(centreOn(this.view, spot));
-    this.hands?.open(key);
+    // the second click centres it; on the globe the first turns it to face you too (Roger, 24 Oct 2026)
+    const again = this.hands?.selected() === key;
+    if (!again) this.hands?.open(key);
+    if (again || isGlobe(this.view)) return this.glideTo(centreOn(this.view, spot));
     this.draw(); // chosen, its links show at once
   }
 
   /**
    * Looks at the drawing as the bar's 2D button says (space_one_bar). 2.5D and 3D tip the camera back over the same
-   * marks, and flat looks straight down. Says whether the stage shows it. The globe is left to the view in space.
+   * marks. Flat looks straight down. The globe wraps them round a ball (stage-look.ts). Says whether it shows it.
    */
   lookFrom(mode: string | null): boolean {
-    const angle = angleOf(mode);
-    if (!angle) return ((this.view = { ...this.view, tilt: 0, turn: 0, lift: 0 }), false);
-    const { tilt, lift } = angle;
-    if ((this.view.tilt ?? 0) === tilt && (this.view.lift ?? 0) === lift) return true; // already there: nothing to glide
+    const to = lookedFrom(this.view, mode, this.spots.values());
+    if (!to) return ((this.view = flatOf(this.view)), false);
+    if (sameLook(this.view, to)) return true; // already there: nothing to glide
     const untouched = this.untouched;
-    this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0, lift });
+    this.glideTo(to);
     this.untouched = untouched; // looking from another angle is not a move the reader made
     return true;
   }
 
-  /** Turns and tips a tilted camera, as a drag of `dx`, `dy` pixels would; says whether it could (flat, it cannot). */
+  /** Turns a tilted camera or spins the globe, as a drag of `dx`, `dy` would; says whether it could (flat, it cannot). */
   turnBy(dx: number, dy: number): boolean {
-    if (!isTilted(this.view)) return false;
-    this.view = turnedBy(this.view, dx, dy);
+    const to = turnedView(this.view, dx, dy);
+    if (!to) return false;
+    this.view = to;
     this.draw();
     return true;
+  }
+
+  /** The bar's Fit, Zoom in and Zoom out (`ratio` 0 fits): one glide, at the angle the camera looks from now. */
+  zoomBy(ratio: number): void {
+    const to = ratio ? pinchView(this.view, this.stops, ratio, middleOf(this.view)) : this.fitted();
+    this.glideTo(to);
+    this.untouched = !ratio;
   }
 
   /** Glides to `to`, or goes there at once when the reader asks for less motion (rule 7). */
@@ -364,9 +365,9 @@ export class RenderStage {
     paintCanvas(c, this.marks, w, h);
   }
 
-  /** The look of the theme shown now. */
+  /** The look of the theme shown now, in the window the card is in. */
   private look(): typeof LIGHT {
-    return activeDocument.body.classList.contains('theme-dark') ? DARK : LIGHT;
+    return this.canvas.ownerDocument.body.classList.contains('theme-dark') ? DARK : LIGHT;
   }
 
   /** The colour the drawing gives `key` now, so the colour key shows the same one (Roger, 7 Nov 2026). */

@@ -48,8 +48,8 @@ export function signsOf(
         [s, t, road.b],
         [t, s, road.a],
       ] as const) {
-        // the far room's name is off screen, though the edge of its cloud may show
-        if (!inView(near, view) || onView(far, view)) continue;
+        // the far room's name is off screen, or round the far side of the globe, though the edge of its cloud may show
+        if (!inView(near, view) || near.behind || (onView(far, view) && !far.behind)) continue;
         const node = scene.nodes.get(key);
         if (!node) continue;
         const weight = (last - depth) * 1e6 - 5e5 + road.forward + road.back;

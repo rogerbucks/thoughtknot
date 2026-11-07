@@ -22,14 +22,3 @@ export function glide(win: Window | undefined, from: View, to: View, show: (v: V
   };
   win.requestAnimationFrame(frame);
 }
-
-/** How far 2.5D and 3D tip the camera back, in radians: the ground at a slant, its far side still easy to read. */
-const TILTS: Record<string, number> = { cards: 0.6, balls: 0.8 };
-/** How high each level stands in 2.5D and 3D: 2.5D lies on the ground, 3D stands each level on the one that holds it. */
-const LIFTS: Record<string, number> = { cards: 0, balls: 1 };
-
-/** The angle the stage looks from for the bar's `mode`: flat for none, null for a mode the stage leaves to space. */
-export function angleOf(mode: string | null): { tilt: number; lift: number } | null {
-  const tilt = mode ? TILTS[mode] : 0;
-  return tilt === undefined ? null : { tilt, lift: (mode && LIFTS[mode]) || 0 };
-}
