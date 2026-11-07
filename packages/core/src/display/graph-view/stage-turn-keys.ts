@@ -1,4 +1,4 @@
-// Turning and tipping the new rendering's tilted camera by keys and buttons (editor spec §25, controls_keys; §53,
+// Turning and tipping the new rendering's tilted camera by keys and buttons (ES§25, controls_keys; ES§53,
 // space_turns_round_pick). A drag with Shift or the right button already turns it. Not everyone can drag, so Shift
 // with the arrow keys turns and tips it too. The card's dock shows four buttons that do the same, while the view is
 // tilted. Flat 2D shows none, and leaves the keys to the card. Plain arrows still walk from thing to thing.
