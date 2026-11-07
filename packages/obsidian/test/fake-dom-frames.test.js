@@ -1,5 +1,6 @@
 // The stand-in page's animation frames end with the page. Taking its globals down cancels every frame still to come,
 // so a frame asked for during a test never runs after it, where it would find no window and fail the whole file.
+// It keeps the proofs of sheet_side_wide, in details-sheet-dock.test.js, running on a Mac.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from './host/fake-dom.js';
