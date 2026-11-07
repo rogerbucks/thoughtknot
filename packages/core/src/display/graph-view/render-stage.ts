@@ -1,11 +1,9 @@
-// The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With the "New rendering"
-// setting on, a graph is drawn here, on one canvas over the card, by the layers one way down. The scene, rooms, detail,
-// marks and canvas painter do the work, and this file only wires them to the page. Today's SVG stays underneath,
-// hidden, so the old path keeps working until the switch flips for good.
+// The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With its setting on, a graph
+// is drawn here, on one canvas over the card, by the layers one way down. Today's SVG stays underneath, hidden.
 // Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms smoothly at the pointer (Roger, 6 Nov).
-// Dragging pans. Plain scrolling is left to the page. While a view in space shows, the stage stands aside. A click picks from the marks (layer L6). An item's first click selects it and opens its details.
-// Its second glides it to the middle (second_tap_centres). A click on a group glides to it and opens its next level.
-// A click on empty space clears the selection.
+// Dragging pans. Plain scrolling is left to the page. A click picks from the marks (layer L6). An item's first click
+// selects it and opens its details. Its second glides it to the middle (second_tap_centres). A click on a group glides
+// to it and opens its next level. A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
