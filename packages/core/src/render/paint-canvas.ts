@@ -33,6 +33,7 @@ export interface Canvas2d {
   stroke(): void;
   fillText(text: string, x: number, y: number): void;
   createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): Gradient;
+  setLineDash?(dash: number[]): void;
 }
 
 /** `hex` at `alpha`, as an rgba colour. */
@@ -110,7 +111,21 @@ function strokeRoad(c: Canvas2d, m: RoadMark, colour: string, width: number, alp
 function paintRoad(c: Canvas2d, m: RoadMark): void {
   // a road in focus lies on a wider line of the paper's colour, so it stands clear of the roads it crosses
   if (m.halo) strokeRoad(c, m, m.halo, m.width + 4, m.alpha);
+  // a road that crosses one drawn before it is dashed, so the two are easy to tell apart
+  if (m.dash) c.setLineDash?.(m.dash);
   strokeRoad(c, m, m.fill, m.width, m.alpha * 0.85);
+  if (m.dash) c.setLineDash?.([]);
+  // chevrons along it in its ink, pointing the way its links run
+  c.strokeStyle = m.ink;
+  c.lineWidth = 1.6;
+  for (const [x, y, a] of m.chevrons ?? []) {
+    const s = 3 + m.width / 2;
+    c.beginPath();
+    c.moveTo(x - Math.cos(a - 0.7) * s, y - Math.sin(a - 0.7) * s);
+    c.lineTo(x, y);
+    c.lineTo(x - Math.cos(a + 0.7) * s, y - Math.sin(a + 0.7) * s);
+    c.stroke();
+  }
   const text = m.count;
   if (!text) return;
   // the count sits half way along: on an arch, at its top

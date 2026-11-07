@@ -3,7 +3,7 @@
 // firm edge. Its links are drawn bold to each linked thing on the screen. A signpost at the edge points to each one
 // off it. Other roads fade back. A chosen road is marked the same way, and so are its two ends. Host-free and pure.
 import { inkOf, type Look } from './render-look.ts';
-import { countOf, edgesOf } from './render-roads.ts';
+import { chevronsOf, countOf, edgesOf, sayOf } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene } from './render-scene.ts';
 import { signAt } from './render-signs.ts';
@@ -33,6 +33,7 @@ interface Out {
   forward: number;
   back: number;
   depth: number;
+  types: string[];
 }
 
 /** The links out of each thing in `keys`, at its own depth, to things in any room. */
@@ -42,8 +43,8 @@ function linksOut(scene: Scene, keys: readonly string[]): Out[] {
     const depth = scene.nodes.get(key)?.depth;
     if (depth === undefined) continue;
     for (const r of scene.roads[depth] ?? []) {
-      if (r.a === key) out.push({ from: key, to: r.b, forward: r.forward, back: r.back, depth });
-      else if (r.b === key) out.push({ from: key, to: r.a, forward: r.back, back: r.forward, depth });
+      if (r.a === key) out.push({ from: key, to: r.b, forward: r.forward, back: r.back, depth, types: r.types });
+      else if (r.b === key) out.push({ from: key, to: r.a, forward: r.back, back: r.forward, depth, types: r.types });
     }
   }
   return out;
@@ -105,18 +106,22 @@ export function focusMarks(
     ends.add(l.to);
     const [from, to] = edgesOf(s, t);
     const fill = colours.get(l.from) ?? look.faint;
+    const [via, width] = [archOf(p, q, view, l.depth), 2 + Math.log2(l.forward + l.back) + WIDER];
+    const last = l.depth === scene.depths.length - 1;
+    const count = last ? sayOf(l.types, l.forward, l.back) : countOf(l.forward, l.back);
     bold.push({
       kind: 'road',
       a: l.from,
       b: l.to,
       from,
       to,
-      via: archOf(p, q, view, l.depth),
+      via,
       forward: l.forward,
       back: l.back,
-      width: 2 + Math.log2(l.forward + l.back) + WIDER,
+      width,
       fill,
-      count: countOf(l.forward, l.back),
+      count,
+      chevrons: chevronsOf({ from, to, via, forward: l.forward, back: l.back, width, count }),
       ink: inkOf(fill, look.card, look),
       chip: look.card,
       alpha: 1,
