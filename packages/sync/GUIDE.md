@@ -41,6 +41,13 @@ Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same be
 - So a relay carries ciphertext only. A message repeated, sent back, dropped or moved ends the sync.
 - Each store says what it holds file by file (`Shelf`), and each device sends the records the other lacks.
 
+## Starting a shared vault
+
+`sharing.ts` is one device's side of a shared vault (`board_access`). `Sharing.start` makes the device's key pair and a
+vault key. A `Keeper` keeps them between runs. It keeps the pair as a handle whose private half cannot be exported, and the
+vault key sealed for this device itself. The panel shows only the public half and a short fingerprint. Another device
+is trusted by its public key (`trust`), and only a trusted device is ever sent anything.
+
 ## Graphs from many places
 
 `connected.ts` keeps a graph drawn from many places (the core's `connectors.ts`) in step between devices.

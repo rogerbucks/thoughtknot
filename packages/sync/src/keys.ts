@@ -29,6 +29,16 @@ export class DeviceKeys {
     return new DeviceKeys(pair, new Uint8Array(await subtle().exportKey('raw', pair.publicKey)));
   }
 
+  /** The pair as a host keeps it between runs (in IndexedDB). Its private half is still unexportable. */
+  get kept(): CryptoKeyPair {
+    return this.#pair;
+  }
+
+  /** This device's keys again, from the pair a host kept. */
+  static async restore(pair: CryptoKeyPair): Promise<DeviceKeys> {
+    return new DeviceKeys(pair, new Uint8Array(await subtle().exportKey('raw', pair.publicKey)));
+  }
+
   /** The key this device shares with the device whose public half is `theirs`: the same on both. */
   async sharedWith(theirs: Uint8Array): Promise<CryptoKey> {
     const pub = await subtle().importKey('raw', own(theirs), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
