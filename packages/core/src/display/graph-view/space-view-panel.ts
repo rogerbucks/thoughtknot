@@ -264,14 +264,13 @@ export async function openSpaceView(
     { depthButton, showHelp, help, rare } = pad;
   depthButton.hidden = depth === 0;
   offerHeadset(el, rare, seen, () => paints, tell); // in a headset (projection_spatial)
-  // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
   const down = new Map<number, Touch>();
   let pans = false,
     touching = false,
     travel = 0,
     lastTap: { at: number; x: number; y: number } | null = null;
-  touchesStay(el, down);
+  touchesStay(el, down); // a touch goes no further, so Obsidian's swipes never take it (gestures_stay_in_drawing)
   const pinch = () => [...down.values()].slice(0, 2) as [Touch, Touch];
   const hitAt = (x: number, y: number) => blockHit(space, seen(), matrixNow(), width, height, x, y);
   const linking = new SpaceLinkDrag(el, root, said, hitAt, () => picked); // dragged from the picked thing, it links
@@ -349,11 +348,9 @@ export async function openSpaceView(
     'wheel',
     (e) => {
       e.preventDefault();
-      // two fingers on a trackpad turn the view side to side and tip it up and down; a mouse wheel zooms (Roger)
+      // two fingers on a trackpad turn and tip the view (Roger); a pinch (Ctrl) or a wheel zooms to the pointer
       if (!e.ctrlKey && fromTrackpad(e))
         return void ((orbit = turnRound(orbit, -e.deltaX, -e.deltaY, pivot())), again());
-      // a trackpad pinch comes as a scroll with Ctrl held, in small steps, so it zooms faster. Both zoom toward the
-      // pointer, as a map does
       const at = el.getBoundingClientRect(),
         times = Math.pow(e.ctrlKey ? 1.01 : 1.0015, -e.deltaY);
       // a globe zooms straight in to the side facing you, as the mockup does, never toward the pointer and off it
