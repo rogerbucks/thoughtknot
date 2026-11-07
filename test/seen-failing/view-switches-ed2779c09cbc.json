@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-switches.test.js",
+  "test": "the View menu > each switch says under its plain name what it does, and which engine lays out is left to the settings",
+  "seen_failing_first": false,
+  "evidence": "The Faint roads switch came in an earlier commit of this pull request; this commit only brings the View menu's own tests up to date with it."
+}
