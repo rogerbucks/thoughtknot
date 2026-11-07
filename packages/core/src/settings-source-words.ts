@@ -100,6 +100,8 @@ export const SETTINGS_SOURCE_WORDS = {
     'The view presets you saved, each with the name you gave it. Pick, rename or delete them here.',
   'settings.own-presets.save': 'Save the drawing settings as a preset of your own',
   'settings.own-presets.save.sentence': 'Keeps the Drawing settings as they are now. Rename or delete it after.',
+  'settings.own-presets.bring': 'Add it to your own view presets',
+  'settings.own-presets.bring.sentence': 'Puts the preset you pasted in the list, to pick, rename or delete.',
   'settings.own-presets.default-name': 'My preset {n}',
   'settings.own-preset.exported': 'View preset written to {path}',
   'settings.vault-preset.name': 'View preset in use',
