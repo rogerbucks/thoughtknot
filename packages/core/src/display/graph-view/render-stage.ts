@@ -16,7 +16,7 @@ import { sceneOf, type Scene } from '../../render/render-scene.ts';
 import { roomsOf, type Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
 import { DARK, LIGHT } from '../../render/render-look.ts';
-import { marksOf, type Mark, type View } from '../../render/render-marks.ts';
+import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
 import {
   centreOn,
   fitView,
@@ -43,6 +43,10 @@ export interface StageHands {
   selected: () => string | null;
   /** Whether another view shows in the card now, as in space, so the stage leaves the pointer and wheel to it. */
   away?: () => boolean;
+  /** Told after each drawing, so the level badge and its colour key say the level shown now. */
+  drawn?: () => void;
+  /** The colour each subject was given on the colour key, if any, so the drawing and its key agree. */
+  own?: OwnColour;
 }
 
 /** Whether `drawing` has levels for the new rendering to show: more than one, so more than a flat list. */
@@ -82,6 +86,8 @@ export class RenderStage {
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
+  /** The level the hands were last told, so they hear only of a change. */
+  private said = '';
 
   constructor(viewport: HTMLElement, drawing: GraphDrawing, g?: Graph, hands?: StageHands) {
     this.viewport = viewport;
@@ -225,6 +231,10 @@ export class RenderStage {
       node = key ? this.scene.nodes.get(key) : undefined,
       spot = key ? this.spots.get(key) : undefined;
     if (!key || !spot) return this.hands?.clear();
+    // a signpost names a room off screen: glide there at the same zoom, so the reader sees where they went
+    const on = { x: (spot.x - this.view.x) * this.view.scale, y: (spot.y - this.view.y) * this.view.scale };
+    if (on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h)
+      return this.glideTo(centreOn(this.view, spot));
     const last = this.scene.depths.length - 1;
     if (node && node.depth < last) {
       // a group: glide to it, one level nearer, so what is in it opens
@@ -264,12 +274,25 @@ export class RenderStage {
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
     this.canvas.setAttribute('aria-label', this.level());
-    const dark = activeDocument.body.classList.contains('theme-dark');
-    this.marks = marksOf(this.scene, this.spots, detailAt(this.sizes, this.view.scale), dark ? DARK : LIGHT, this.view);
+    const detail = detailAt(this.sizes, this.view.scale);
+    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own);
+    const level = this.level();
+    if (level !== this.said) this.hands?.drawn?.();
+    this.said = level;
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
     if (!c) return;
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     paintCanvas(c, this.marks, w, h);
+  }
+
+  /** The look of the theme shown now. */
+  private look(): typeof LIGHT {
+    return activeDocument.body.classList.contains('theme-dark') ? DARK : LIGHT;
+  }
+
+  /** The colour the drawing gives `key` now, so the colour key shows the same one (Roger, 7 Nov 2026). */
+  colourOf(key: string): string | undefined {
+    return coloursOf(this.scene, this.look(), this.hands?.own).get(key);
   }
 
   /** Takes the canvas away and shows today's drawing again. */
