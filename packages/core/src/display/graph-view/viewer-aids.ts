@@ -9,6 +9,7 @@
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
 import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
+import { ZOOM_STEP } from '../../space-controls.ts';
 import { turnControls } from './stage-turn-keys.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
@@ -100,6 +101,9 @@ export interface AidsHost {
   /** What a click on the new rendering chooses or clears, as a tap on today's drawing does. */
   stage?: Omit<StageHands, 'selected'>;
 }
+
+/** The bar's Fit and zoom buttons. */
+type Zooms = { fit: () => void; zoomIn: () => void; zoomOut: () => void };
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
 interface LensMenu {
@@ -206,6 +210,13 @@ export class Aids {
     };
     this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
+  }
+
+  /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */
+  stageZoom(flat: Zooms): Zooms | null {
+    const s = this.stage; // the flat drawing under it zooms too, so the mini-map and labels keep up
+    const both = (r: number, k: keyof Zooms) => () => void (s?.zoomBy(r), flat[k]());
+    return s && { fit: both(0, 'fit'), zoomIn: both(ZOOM_STEP, 'zoomIn'), zoomOut: both(1 / ZOOM_STEP, 'zoomOut') };
   }
 
   /** Shows the drawing as the bar's 2D button says on the new rendering, where it can; says whether it did. */
