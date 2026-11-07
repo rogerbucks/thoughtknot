@@ -738,6 +738,9 @@ after a module nor listed here, and on a listed file that is missing.
   it merges once CI is green like every other.
 - `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
   main, and comments once so its owner wakes.
+- `test/pre-push.test.js` — the laptop checks a push first, and pull requests build no macOS or Windows app on
+  GitHub. It covers the pre-push hook and the app builds' systems, paths and concurrency. It also covers the narrower
+  build status chain.
 
 ## Claude's workflows
 

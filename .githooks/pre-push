@@ -1,0 +1,5 @@
+#!/bin/sh
+# The laptop checks a push before GitHub does (scripts/pre-push.mjs): the build, the lint, the type check, the tests the
+# change reaches and, on a Mac, the macOS app when the change is one it builds.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+exec node scripts/pre-push.mjs
