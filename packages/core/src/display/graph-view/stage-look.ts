@@ -1,6 +1,6 @@
 // The angle the new rendering's stage looks from, as the bar's button says. It is editor spec §53, space_one_bar,
 // and phase P3 of wiki/Rendering-spec.md. 2D looks straight down. 2.5D and 3D tip the camera back over the
-// same marks. The globe wraps them round a ball (§71, globe_view). One look at every zoom, never an old one beside it
+// same marks. The globe wraps them round a ball (ES§71, globe_view). One look at every zoom, never an old one beside it
 // (Roger, 7 Nov 2026). Host-free and pure.
 import { panView } from '../../render/render-camera.ts';
 import { bendOf, isGlobe } from '../../render/render-globe.ts';
