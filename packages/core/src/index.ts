@@ -283,7 +283,7 @@ export type {
 export { CLAUDE, claudeGate, classificationOf, noteClassification } from './claude-gate.ts';
 export type { Gate, GateSettings, NoteClassification } from './claude-gate.ts';
 export { sha256 } from './ai-digest.ts';
-export { AI_PURPOSES, endpointProblem, modelChoices, purposeWords } from './ai-choice.ts';
+export { AI_PURPOSES, endpointProblem, modelChoices, modelsAddress, purposeWords } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
 export type { HostModel } from './ai-host.ts';

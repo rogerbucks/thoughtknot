@@ -107,7 +107,7 @@ test('tipped back in a small card beside a panel, every group still shows its na
 });
 
 // proves: space_one_bar
-test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks straight down, and the globe is left alone', async () => {
+test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks straight down, and the globe bends it round a ball', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -143,7 +143,11 @@ test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks 
     assert.ok(stage.view.tilt > 0.6, 'a fit keeps the angle');
     assert.equal(stage.lookFrom(null), true);
     assert.equal(isTilted(stage.view), false, 'flat again');
-    assert.equal(stage.lookFrom('globe'), false, 'the globe is the view in space');
+    // the globe is the stage's own too: one look at every zoom, never the old view in space (Roger, 7 Nov 2026)
+    assert.equal(stage.lookFrom('globe'), true, 'the stage shows the globe itself');
+    assert.ok(stage.view.globe > 0 && !isTilted(stage.view), 'round a ball, seen straight on');
+    assert.equal(stage.lookFrom(null), true);
+    assert.equal(stage.view.globe, 0, 'flat again');
     assert.deepEqual(stage.spots, kept, 'the camera moved, nothing in the drawing did');
     stage.unload();
   } finally {
