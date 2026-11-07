@@ -444,4 +444,9 @@ export const TYPES_LATE = [
   'Here',
   'Peer',
   'Together',
+  // the layout block and the reviewers, 7 Nov 2026
+  'Layout',
+  'LayoutPlace',
+  'Reviewer',
+  'VaultConsent',
 ];

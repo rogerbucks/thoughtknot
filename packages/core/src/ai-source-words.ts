@@ -74,6 +74,9 @@ export const AI_SOURCE_WORDS = {
   'models.held': 'held to the matrix row {row}',
   'models.ceiling': 'Ceiling',
   'models.ceiling.sentence': 'The highest classification of note this model may be sent.',
+  'models.private': 'Private reviewer',
+  'models.private.sentence':
+    'A model you run, on this device or your own network: it reads your notes for review without asking each time. Leave off for a cloud model.',
   'models.key': 'Key',
   'models.key.sentence': 'Kept in the app’s own secret store, never in the vault.',
   'models.add': 'Add a model',
