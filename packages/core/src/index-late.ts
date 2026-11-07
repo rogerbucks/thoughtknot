@@ -98,4 +98,3 @@ export {
 // graphs kept in a GitHub repository (§48)
 export * from './index-repo.ts';
 export * from './index-storage.ts';
-export * from './index-metadata.ts';
