@@ -123,6 +123,8 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     const where = { ...view() };
     stage.clicked(dot.x, dot.y);
     assert.equal(said.at(-1), `open ${dot.key}`);
+    const ringed = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);
+    assert.ok(ringed.ring, 'chosen, it is marked at once, with no wait (render_focus)');
     assert.deepEqual(view(), where, 'the first click on an item moves nothing');
     stage.clicked(dot.x, dot.y);
     const again = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);

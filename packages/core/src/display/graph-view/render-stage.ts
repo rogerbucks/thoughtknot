@@ -7,7 +7,6 @@
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
-import { word } from '../../words.ts';
 import type { ViewOptions } from './view-options.ts';
 import { sceneOf, type Scene } from '../../render/render-scene.ts';
 import { roomsOf, type Spot } from '../../render/render-rooms.ts';
@@ -18,9 +17,10 @@ import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } fro
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
 import { isGlobe, middleOf } from '../../render/render-globe.ts';
-import { aNetwork, flatOf, hasLevels, lookedFrom, sameLook, turnedView } from './stage-look.ts';
+import { aNetwork, flatOf, hasLevels, levelSaid, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
+import { StageFocus, pickRoad } from './stage-focus.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
@@ -75,6 +75,7 @@ export class RenderStage {
   private marks: Mark[] = [];
   private gliding = 0;
   private readonly mover: StageMover | undefined;
+  private readonly focus = new StageFocus(() => this.draw());
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -131,6 +132,7 @@ export class RenderStage {
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
     this.canvas.addEventListener('pointercancel', (e) => this.lift(e));
+    this.focus.watch(this.canvas, () => ({ marks: this.marks, busy: !!this.drag || this.fingers.size > 0 }));
     // seen from an angle, a right drag turns the camera: no menu comes up for it
     this.canvas.addEventListener('contextmenu', (e) => isTilted(this.view) && e.preventDefault());
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
@@ -141,12 +143,7 @@ export class RenderStage {
 
   /** The level shown now, as a reader is told it: "Level 2 of 3 · Areas". */
   level(): string {
-    const { level } = detailAt(this.sizes, this.view.scale);
-    return word('levels.badge', {
-      at: level + 1,
-      count: this.scene.depths.length,
-      name: this.scene.depths[level] ?? '',
-    });
+    return levelSaid(this.scene, detailAt(this.sizes, this.view.scale).level);
   }
 
   /** The drawing fitted to the part of the card the controls leave clear, and the zoom stops from there. */
@@ -189,14 +186,9 @@ export class RenderStage {
 
   private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
 
-  /** Whether another view, as in space, shows in the card now: then the stage leaves the pointer and wheel to it. */
-  private away(): boolean {
-    return !!this.hands?.away?.();
-  }
-
   /** A smooth zoom for the wheel with Ctrl or Cmd, as a trackpad pinch sends it; plain scrolling is the page's. */
   wheel(e: WheelEvent): void {
-    if ((!e.ctrlKey && !e.metaKey) || this.away()) return;
+    if ((!e.ctrlKey && !e.metaKey) || this.hands?.away?.()) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
@@ -212,7 +204,7 @@ export class RenderStage {
   }
 
   private down(e: PointerEvent): void {
-    if (this.away()) return;
+    if (this.hands?.away?.()) return; // another view, as in space, shows in the card: the pointer is its own
     // the press is the stage's own: today's drawing underneath would take the pointer and the click would be lost
     e.stopPropagation();
     this.canvas.setPointerCapture?.(e.pointerId);
@@ -283,7 +275,9 @@ export class RenderStage {
     const key = pickAt(this.marks, x, y),
       node = key ? this.scene.nodes.get(key) : undefined,
       spot = key ? this.spots.get(key) : undefined;
-    if (!key || !spot) return this.hands?.clear();
+    // a click on a road chooses it, and a click on anything else lets it go
+    const road = this.focus.choose(key ? null : pickRoad(this.marks, x, y));
+    if (!key || !spot) return road ? undefined : this.hands?.clear();
     // a signpost names a room off screen: glide there at the same zoom, so the reader sees where they went
     const on = { x: (spot.x - this.view.x) * this.view.scale, y: (spot.y - this.view.y) * this.view.scale };
     const off = on.x < 0 || on.y < 0 || on.x > this.view.w || on.y > this.view.h;
@@ -297,7 +291,8 @@ export class RenderStage {
     // the second click centres it; on the globe the first turns it to face you too (Roger, 24 Oct 2026)
     const again = this.hands?.selected() === key;
     if (!again) this.hands?.open(key);
-    if (again || isGlobe(this.view)) this.glideTo(centreOn(this.view, spot));
+    if (again || isGlobe(this.view)) return this.glideTo(centreOn(this.view, spot));
+    this.draw(); // chosen, its links show at once
   }
 
   /**
@@ -351,7 +346,8 @@ export class RenderStage {
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
     const detail = detailAt(this.sizes, this.view.scale);
-    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own);
+    const focus = this.focus.of(this.hands?.selected());
+    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
@@ -379,6 +375,7 @@ export class RenderStage {
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
+    this.focus.cancel();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();

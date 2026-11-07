@@ -200,7 +200,7 @@ export class Aids {
     // a view in space takes the pointer and the trackpad's pinch while it shows (Roger, 6 Nov)
     const hands = host.stage && {
       ...host.stage,
-      selected: host.lens.selected,
+      selected: () => (this.stage ? host.lens.selected() : null), // nothing is chosen while the card is built
       away: () => !!host.space?.screen?.(),
       drawn: () => this.names(),
       own: (key: string) => {

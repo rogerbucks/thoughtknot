@@ -33,7 +33,6 @@ export function signsOf(
   colours: Map<string, string>,
   look: Look,
 ): LabelAsk[] {
-  const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
   const last = scene.depths.length - 1;
   const signs = new Map<string, LabelAsk>();
   scene.roads.forEach((at, depth) => {
@@ -53,41 +52,59 @@ export function signsOf(
         if (!inView(near, view) || near.behind || (onView(far, view) && !far.behind)) continue;
         const node = scene.nodes.get(key);
         if (!node) continue;
-        const nx = Math.min(Math.max(near.x, c.left), view.w - c.right),
-          ny = Math.min(Math.max(near.y, c.top), view.h - c.bottom);
-        const dx = far.x - nx,
-          dy = far.y - ny;
-        const name = node.name.length > LONGEST ? `${node.name.slice(0, LONGEST - 1)}…` : node.name;
-        const text = `${arrowOf(dx, dy)} ${name}`;
-        const px = SIGN_PX,
-          w = textWidth(text, px) + px,
-          h = px * 1.6;
-        const [left, right] = [c.left + w / 2 + SIGN_INSET, view.w - c.right - w / 2 - SIGN_INSET];
-        const [top, bottom] = [c.top + h / 2 + SIGN_INSET, view.h - c.bottom - h / 2 - SIGN_INSET];
-        if (left > right || top > bottom) continue;
-        // how far along the way out the line meets the edge kept clear
-        const k = Math.min(
-          dx > 0 ? (right - nx) / dx : dx < 0 ? (left - nx) / dx : Infinity,
-          dy > 0 ? (bottom - ny) / dy : dy < 0 ? (top - ny) / dy : Infinity,
-        );
-        if (!Number.isFinite(k) || k < 0) continue;
         const weight = (last - depth) * 1e6 - 5e5 + road.forward + road.back;
         if ((signs.get(key)?.weight ?? -Infinity) >= weight) continue;
-        const fill = colours.get(key) ?? look.faint;
-        signs.set(key, {
-          key,
-          text,
-          x: Math.min(Math.max(nx + dx * k, left), right),
-          y: Math.min(Math.max(ny + dy * k, top), bottom),
-          px,
-          fill: look.card,
-          edge: fill,
-          ink: inkOf(fill, look.card, look),
-          alpha,
-          weight,
-        });
+        const sign = signAt(near, far, node, view, colours.get(key) ?? look.faint, look, alpha, weight);
+        if (sign) signs.set(key, sign);
       }
     }
   });
   return [...signs.values()];
+}
+
+/**
+ * The signpost at the clear edge of the screen, on the way from `near` to `far` (both on the screen), naming `node`.
+ * Null when the clear part is too small to hold it, or the way never meets its edge.
+ */
+export function signAt(
+  near: Spot,
+  far: Spot,
+  node: { key: string; name: string },
+  view: View,
+  fill: string,
+  look: Look,
+  alpha: number,
+  weight: number,
+): LabelAsk | null {
+  const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const nx = Math.min(Math.max(near.x, c.left), view.w - c.right),
+    ny = Math.min(Math.max(near.y, c.top), view.h - c.bottom);
+  const dx = far.x - nx,
+    dy = far.y - ny;
+  const name = node.name.length > LONGEST ? `${node.name.slice(0, LONGEST - 1)}…` : node.name;
+  const text = `${arrowOf(dx, dy)} ${name}`;
+  const px = SIGN_PX,
+    w = textWidth(text, px) + px,
+    h = px * 1.6;
+  const [left, right] = [c.left + w / 2 + SIGN_INSET, view.w - c.right - w / 2 - SIGN_INSET];
+  const [top, bottom] = [c.top + h / 2 + SIGN_INSET, view.h - c.bottom - h / 2 - SIGN_INSET];
+  if (left > right || top > bottom) return null;
+  // how far along the way out the line meets the edge kept clear
+  const k = Math.min(
+    dx > 0 ? (right - nx) / dx : dx < 0 ? (left - nx) / dx : Infinity,
+    dy > 0 ? (bottom - ny) / dy : dy < 0 ? (top - ny) / dy : Infinity,
+  );
+  if (!Number.isFinite(k) || k < 0) return null;
+  return {
+    key: node.key,
+    text,
+    x: Math.min(Math.max(nx + dx * k, left), right),
+    y: Math.min(Math.max(ny + dy * k, top), bottom),
+    px,
+    fill: look.card,
+    edge: fill,
+    ink: inkOf(fill, look.card, look),
+    alpha,
+    weight,
+  };
 }
