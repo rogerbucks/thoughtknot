@@ -4866,7 +4866,7 @@
       },
       "status": "done",
       "wave": "Wave 8 · Clusters, new views and the VS Code plugin",
-      "done_in": "#2013",
+      "done_in": "#2035",
       "prevented_by": [
         "packages/app/src-tauri/src/place.rs"
       ]

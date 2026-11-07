@@ -521,7 +521,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | done | #1945; kept out by `test/lint-minimatch.test.js`, `scripts/security-alerts.mjs` |
-| SEC-29 | The desktop app drops a note's file mode on every save | done | #2013; kept out by `packages/app/src-tauri/src/place.rs` |
+| SEC-29 | The desktop app drops a note's file mode on every save | done | #2035; kept out by `packages/app/src-tauri/src/place.rs` |
 | CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |
