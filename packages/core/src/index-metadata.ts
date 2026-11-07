@@ -12,10 +12,14 @@ export {
 } from './layout-block.ts';
 export {
   NO_CONSENT,
+  consentOf,
   isPrivate,
+  namesSent,
   privateProblem,
+  publicPreview,
   reviewerFor,
   type Reviewer,
   type VaultConsent,
 } from './ai-reviewers.ts';
+export type { AiPublic } from './settings-reach.ts';
 export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
