@@ -7,7 +7,7 @@
 // second, with coverage, is compared with the first to find the tests whose result differs. The readers of Node's
 // JUnit and lcov reports are here too.
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -278,9 +278,12 @@ export function measureCoverage(root, shard) {
       '--test-reporter=lcov',
       `--test-reporter-destination=${lcov}`,
     ]);
+    // what the quiet report says of a failed run: the tests that failed, for the log
+    const said = run.passed || !existsSync(join(dir, 'quiet.txt')) ? '' : readFileSync(join(dir, 'quiet.txt'), 'utf8');
     return {
       passed: run.passed,
       stderr: run.stderr,
+      said,
       metrics: run.passed ? coverageMetrics(readFileSync(lcov, 'utf8')) : {},
       // the raw report, for a split run: the parts are merged later, as one suite's
       lcov: run.passed ? readFileSync(lcov, 'utf8') : '',
