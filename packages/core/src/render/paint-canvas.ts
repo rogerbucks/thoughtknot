@@ -144,10 +144,25 @@ function paintDot(c: Canvas2d, m: DotMark): void {
 
 /** A card with its name, and a second line under it when it has one. */
 function paintLabel(c: Canvas2d, m: LabelMark): void {
+  if (m.lead) {
+    // a card away from its thing: a thin line in its colour joins them, with a dot where it meets the thing
+    const [x1, y1, x2, y2] = m.lead;
+    c.globalAlpha = m.alpha * 0.7;
+    c.strokeStyle = m.edge ?? m.ink;
+    c.lineWidth = 1.2;
+    c.beginPath();
+    c.moveTo(x1, y1);
+    c.lineTo(x2, y2);
+    c.stroke();
+    c.fillStyle = m.edge ?? m.ink;
+    c.beginPath();
+    c.arc(x2, y2, 2.5, 0, Math.PI * 2);
+    c.fill();
+  }
   c.globalAlpha = m.alpha;
   c.fillStyle = m.fill;
   c.beginPath();
-  c.roundRect(m.x, m.y, m.w, m.h, m.sub ? 8 : m.h / 2);
+  c.roundRect(m.x, m.y, m.w, m.h, m.sub || m.lines ? 8 : m.h / 2);
   c.fill();
   if (m.edge) {
     // a white card on pale paper needs a thin edge of its colour to be seen
@@ -162,7 +177,7 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
   if (m.dot) {
     c.fillStyle = m.dot;
     c.beginPath();
-    c.arc(m.x + m.h / 2, m.y + m.h / 2, m.px * 0.3, 0, Math.PI * 2);
+    c.arc(m.x + (m.lines ? m.px * 0.8 : m.h / 2), m.y + (m.px * 1.6) / 2, m.px * 0.3, 0, Math.PI * 2);
     c.fill();
   }
   c.fillStyle = m.ink;
@@ -170,11 +185,14 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   const line = m.px * 1.6;
-  c.fillText(m.text, m.x + m.w / 2 + shift, m.y + line / 2);
+  // a long name wrapped onto lines, each under the one before; the card is as tall as they need
+  const rows = m.lines ?? [m.text];
+  rows.forEach((row, i) => c.fillText(row, m.x + m.w / 2 + shift, m.y + line / 2 + i * m.px * 1.25));
+  const named = line + (rows.length - 1) * m.px * 1.25;
   if (m.sub && m.subPx && m.subInk) {
     c.fillStyle = m.subInk;
     c.font = `500 ${m.subPx}px system-ui, sans-serif`;
-    c.fillText(m.sub, m.x + m.w / 2, m.y + line + (m.h - line) / 2 - 1);
+    c.fillText(m.sub, m.x + m.w / 2, m.y + named + (m.h - named) / 2 - 1);
   }
 }
 

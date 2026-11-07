@@ -27,9 +27,15 @@ test('far out only the top level shows, and close in every level does', () => {
   const s = scene();
   const sizes = roomSizes(s, roomsOf(s));
   assert.equal(sizes.length, 3);
-  assert.deepEqual(detailAt(sizes, 0.01), { shown: [1, 0, 0], level: 0 });
+  const { shown, level } = detailAt(sizes, 0.01);
+  assert.deepEqual({ shown, level }, { shown: [1, 0, 0], level: 0 });
   const near = detailAt(sizes, 100);
-  assert.deepEqual(near, { shown: [1, 1, 1], level: 2 });
+  assert.deepEqual({ shown: near.shown, level: near.level }, { shown: [1, 1, 1], level: 2 });
+  assert.deepEqual(
+    near.span,
+    sizes.map((size) => size * 100),
+    "how wide each depth's rooms are on screen",
+  );
 });
 
 // proves: render_detail

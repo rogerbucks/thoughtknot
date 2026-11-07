@@ -149,6 +149,26 @@ test('a group card writes its name in its colour, with how many items it holds o
   assert.ok(said.fill.includes('#2a5bd8') && said.fill.includes('#8a8f99'));
 });
 
+// proves: render_painters_agree
+test('a card that stands away from its thing is joined to it by a thin line in its colour, ending in a dot', () => {
+  const { c, calls, said } = fake();
+  const card = { kind: 'label', key: 'w', text: 'Work', x: 10, y: 10, w: 60, h: 20, px: 13, fill: '#ffffff' };
+  paintCanvas(c, [{ ...card, ink: '#000000', alpha: 1, edge: '#4b7bf5', lead: [70, 20, 140, 60] }], 400, 300);
+  assert.deepEqual(
+    calls.find((k) => k[0] === 'moveTo'),
+    ['moveTo', 70, 20],
+  );
+  assert.deepEqual(
+    calls.find((k) => k[0] === 'lineTo'),
+    ['lineTo', 140, 60],
+  );
+  assert.ok(
+    calls.some((k) => k[0] === 'arc' && k[1] === 140 && k[2] === 60),
+    'a dot where it meets the thing',
+  );
+  assert.ok(said.stroke.includes('#4b7bf5'));
+});
+
 // Roger, 7 Nov 2026: a cluster's edge should be clearly defined, not fade out when zoomed in.
 // proves: render_painters_agree
 test('a cloud with a ring is edged with a line in its own colour, just inside its edge', () => {
