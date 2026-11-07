@@ -1,4 +1,4 @@
-// Moving an item on the new rendering's stage by dragging it (editor spec §2, layout_drag_saves; Roger, 7 Nov 2026,
+// Moving an item on the new rendering's stage by dragging it (editor spec, ES§2, layout_drag_saves; Roger, 7 Nov 2026,
 // R16). The item follows the pointer over the ground, in 2D, 2.5D and 3D alike. Let go, its place is saved in the
 // layout block, once. Nothing else moves, and the camera stays still (nodes stay put). Each place saved offers its
 // undo, as every edit on a drawing does (move_undo): a toast, and Ctrl+Z or Cmd+Z, with redo.

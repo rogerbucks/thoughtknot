@@ -1,4 +1,4 @@
-// The places people drag things to on the new rendering, saved in Obsidian (editor spec §2, layout_drag_saves; Roger,
+// The places people drag things to on the new rendering, saved in Obsidian (ES§2, layout_drag_saves; Roger,
 // 7 Nov 2026, R16). Each is written to the note's layout block, in Reading view too, against the note as it is then.
 // The graph block is never rewritten. When the graph changed since it was drawn, nothing is written, and a notice
 // says why. Each place offers its undo, which forgets a first place or puts back the one before.
