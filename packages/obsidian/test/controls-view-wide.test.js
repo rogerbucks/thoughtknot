@@ -1,7 +1,6 @@
-// The View panel on a large screen (editor spec §25, controls_view_panel_wide). Roger chose this design on 2 Nov 2026.
-// On a large screen the View panel is open from the start, docked at the end. Elsewhere it waits for the View button.
-// - At 1600 pixels wide or more a card opens with its View panel shown, and the View button says so.
-// - Shut from the bar, it stays shut on the next card drawn in this session.
+// The View panel on a large screen (editor spec §25, controls_view_panel_wide). It opened by itself on a screen 1600
+// pixels wide or more from 2 Nov 2026. Roger, 6 Nov 2026: "The side panels should be minimised by default." Now it
+// starts shut on every screen, a large one too. The bar's View button opens it.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -20,21 +19,22 @@ after(() => env.uninstall());
 const settle = () => new Promise((r) => setTimeout(r, 0));
 
 // proves: controls_view_panel_wide
-test('on a large screen the View panel is open from the start, and the View button says so', async () => {
+test('on a large screen the View panel starts shut, and the View button says so', async () => {
   const { el } = await show(env, fence(GRAPH));
   await settle();
   const panel = el.querySelector('.thoughtknot-view-menu');
-  assert.ok(!panel.hidden, 'open from the start');
-  assert.ok(panel.parentElement.classList.contains('thoughtknot-corner-end'), 'docked at the end');
-  assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'true');
-  labelled(el, 'View').click();
-  assert.ok(panel.hidden, 'the View button shuts it');
+  assert.ok(panel.hidden, 'shut from the start');
+  assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'false');
 });
 
 // proves: controls_view_panel_wide
-test('shut from the bar, it stays shut on the next card drawn in this session', async () => {
+test('the View button opens it whole, docked at the end', async () => {
   const { el } = await show(env, fence(GRAPH));
   await settle();
-  assert.ok(el.querySelector('.thoughtknot-view-menu').hidden);
-  assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'false');
+  labelled(el, 'View').click();
+  const panel = el.querySelector('.thoughtknot-view-menu');
+  assert.ok(!panel.hidden, 'opened');
+  assert.ok(!panel.classList.contains('is-folded'), 'whole, not folded');
+  assert.ok(panel.parentElement.classList.contains('thoughtknot-corner-end'), 'docked at the end');
+  assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'true');
 });

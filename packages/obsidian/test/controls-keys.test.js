@@ -58,8 +58,31 @@ test('the 3D view lists its moves in that dock: turn, tilt and how it is shown, 
   body.querySelector('button').click();
   assert.equal(nexts, 1);
   assert.ok(moves.length === 1 && 'turn' in moves[0]);
+  assert.ok(dock.classList.contains('is-folded'), 'it starts folded (panels_minimised)');
   el.dispatch('keydown', { key: '[' });
-  assert.ok(dock.classList.contains('is-folded'), 'its [ key folds it');
+  assert.ok(!dock.classList.contains('is-folded'), 'its [ key opens it');
+  el.dispatch('keydown', { key: '[' });
+  assert.ok(dock.classList.contains('is-folded'), 'and folds it');
+});
+
+// proves: panels_minimised
+test('a dock starts folded; one the person asked for opens whole; opened, it is open for the session only', async () => {
+  const kept = new Map();
+  const win = doc.defaultView;
+  win.localStorage = {
+    getItem: (k) => kept.get(k) ?? null,
+    setItem: (k, v) => kept.set(k, String(v)),
+  };
+  try {
+    assert.ok(renderDock(doc.body.createDiv(), 'Fresh').folded(), 'folded from the start');
+    assert.ok(!renderDock(doc.body.createDiv(), 'Asked', [], true).folded(), 'one asked for opens whole');
+    renderDock(doc.body.createDiv(), 'Opened').fold(false);
+    assert.ok(!renderDock(doc.body.createDiv(), 'Opened').folded(), 'open again for the rest of the session');
+    const again = await import('../../core/src/display/graph-view/controls-dock.ts?minimised');
+    assert.ok(again.renderDock(doc.body.createDiv(), 'Opened').folded(), 'after a restart, folded again');
+  } finally {
+    delete win.localStorage;
+  }
 });
 
 // proves: controls_keys
@@ -87,7 +110,7 @@ test('a dock closed stays closed when drawn again, after a restart too, and the 
     // a fresh copy of the module, as after a restart: only the browser remembers
     const again = await import('../../core/src/display/graph-view/controls-dock.ts?restart');
     assert.ok(again.renderDock(doc.body.createDiv(), 'Shut').folded(), 'it opens closed, as it was left');
-    assert.ok(!again.renderDock(doc.body.createDiv(), 'Other').folded(), 'another dock keeps its own way');
+    assert.ok(!again.renderDock(doc.body.createDiv(), 'Other', [], true).folded(), 'another dock keeps its own way');
     kept.delete('thoughtknot-space-hints');
     const el = doc.body.createDiv();
     const { help } = spacePad(
