@@ -1101,6 +1101,13 @@ after a module nor listed here, and on a listed file that is missing.
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+- `test/panels-stack.test.js` — the cards over the drawing never overlap, in a real Chrome (ES§25, panels_stack).
+  - It opens the browser page over the graph spec's own graph, every panel open and a thing picked.
+  - It runs a tablet's, a laptop's and a large screen's size, in the page and full screen, in 2D, 2.5D and 3D.
+  - No two cards may overlap, and none may run past the drawing (`scripts/panels-overlap.mjs`). The judging is tried
+    first on made-up measures.
+- `packages/obsidian/test/panels-compact.test.js` — where a pointer hovers, the panels are compact (panels_compact).
+  Their hints are tooltips, still heard by a screen reader. It spans the style sheet, the View menu and the docks.
 ## Languages laid out in a browser
 
 - `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
@@ -1242,3 +1249,5 @@ after a module nor listed here, and on a listed file that is missing.
   nothing.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
+- `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
+  forty places and turns the wheel and pinches. Then it clicks a place, to check the click rule.

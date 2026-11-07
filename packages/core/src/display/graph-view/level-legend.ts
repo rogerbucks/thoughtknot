@@ -25,6 +25,8 @@ export interface LevelLegendHost {
   nameLevels?: () => (() => void) | null;
   /** How a group's things are written, while the note can be written; null while it is only read (cloud_edit). */
   editGroup?: () => CloudCardHost['edit'] | null;
+  /** The colour the drawing gives a subject, where it paints its own (the new rendering), so the chip shows it. */
+  colourOf?: (key: string) => string | undefined;
 }
 
 /** The legend of one card's subjects. */
@@ -90,7 +92,11 @@ export class LevelLegend {
         cls: 'thoughtknot-level-chip',
         attr: { type: 'button', 'data-subject': g.key, 'aria-pressed': 'false' },
       });
-      chip.createSpan({ cls: 'thoughtknot-level-swatch', attr: { 'data-hue': String(hueOf(levels ?? [], g.key)) } });
+      const swatch = chip.createSpan({
+        cls: 'thoughtknot-level-swatch',
+        attr: { 'data-hue': String(hueOf(levels ?? [], g.key)) },
+      });
+      this.paintSwatch(swatch, g.key);
       chip.createSpan({ text: g.name });
       chip.addEventListener('pointerenter', () => this.spot(g.key));
       chip.addEventListener('pointerleave', () => this.spot(this.kept));
@@ -138,10 +144,25 @@ export class LevelLegend {
   recolour(key: string): void {
     if (!this.levels) return;
     const hue = nextHue(this.levels, key);
-    this.el
-      .querySelector(`.thoughtknot-level-chip[data-subject="${key}"] .thoughtknot-level-swatch`)
-      ?.setAttribute('data-hue', String(hue));
+    const swatch = this.el.querySelector<HTMLElement>(
+      `.thoughtknot-level-chip[data-subject="${key}"] .thoughtknot-level-swatch`,
+    );
+    swatch?.setAttribute('data-hue', String(hue));
     this.host.redraw();
+    if (swatch) this.paintSwatch(swatch, key);
+  }
+
+  /** The levels whose chips show now, if any. */
+  shown(): readonly DetailLevel[] | null {
+    return this.levels;
+  }
+
+  /** Gives a chip the drawing's own colour for its subject, where the drawing paints its own. */
+  private paintSwatch(swatch: HTMLElement, key: string): void {
+    const colour = this.host.colourOf?.(key);
+    if (!colour) return;
+    swatch.addClass('has-own');
+    swatch.setCssProps({ '--thoughtknot-swatch': colour });
   }
 
   /** Lists what the drawing's own level could group by, once for each drawing. */

@@ -73,6 +73,17 @@ test('in a drawing too short to drop it below them, the badge stays across the t
   assert.deepEqual(at, { start: 0, end: 0, top: 8 });
 });
 
+test('with both corner cards as tall as the drawing, the badge goes between them, its words wrapped, not over them', () => {
+  // a tablet with every panel open: each corner card nearly reaches the foot, so nothing is clear below them
+  const view = box(0, 0, 900, 800);
+  const start = box(8, 8, 320, 760),
+    end = box(900 - 8 - 320, 8, 320, 760);
+  const at = middlePlace(view, [start, end], { width: 650, height: 70 }, 8);
+  assert.deepEqual(at, { start: 336, end: 328, top: 8 });
+  const placed = landed(view, at, { width: 650, height: 70 });
+  assert.ok(!overlaps(placed, start) && !overlaps(placed, end));
+});
+
 test('at a phone, tablet, laptop and large screen, the badge never overlaps the cards in the corners', () => {
   for (const width of [390, 768, 1280, 1920]) {
     const view = box(0, 0, width, 800);

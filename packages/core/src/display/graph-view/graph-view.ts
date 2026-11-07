@@ -78,6 +78,7 @@ export class GraphView extends Lifecycle {
     () => this.o,
     () => this.sketcher?.shownSketch() ?? null, // the drawings over it, drawn in space too (§70)
     () => this.sel.untangle.explored(), // the globe faces you with an exploration's centre (§71)
+    (mode) => this.aids?.tilted(mode) ?? false, // the new rendering shows 2.5D and 3D itself (phase P3)
   );
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {

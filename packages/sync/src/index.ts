@@ -30,6 +30,7 @@ export { Engine, errorsOf, joinMerge, newErrors, type Joined, type Refused } fro
 export { Projection, type Read } from './projection.ts';
 export { SyncedNotes, spliceBetween, type Changed, type Splice } from './synced-notes.ts';
 export { syncedInFolder, syncedOver } from './stack.ts';
+export { Session } from './session.ts';
 export { MESH_VPNS, Peer, type Channel, type Synced } from './peer.ts';
 export {
   OVERLAY_GRAPH,

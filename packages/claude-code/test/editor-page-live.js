@@ -149,6 +149,8 @@ export async function livePage(
     },
     stop: async () => {
       for (const a of aborts) a.abort();
+      // a worker made from now on is ended as it starts (the test's worker stand-ins look at this)
+      window.stopped = true;
       window.close();
       await stopWorkers();
       await server.stop();

@@ -127,5 +127,9 @@ export function glideView(a: View, b: View, t: number): View {
   const from = [a.x + mx / a.scale, a.y + my / a.scale] as const,
     to = [b.x + mx / b.scale, b.y + my / b.scale] as const;
   const [px, py] = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
-  return { ...b, scale, x: px - mx / scale, y: py - my / scale };
+  const glided = { ...b, scale, x: px - mx / scale, y: py - my / scale };
+  // the camera tips and turns on the way too, so going into 2.5D or back to flat is one glide
+  if (!a.tilt && !b.tilt && !a.turn && !b.turn) return glided;
+  const along = (p: number | undefined, q: number | undefined) => (p ?? 0) + ((q ?? 0) - (p ?? 0)) * e;
+  return { ...glided, tilt: along(a.tilt, b.tilt), turn: along(a.turn, b.turn) };
 }

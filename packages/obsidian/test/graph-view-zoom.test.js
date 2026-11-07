@@ -282,13 +282,23 @@ describe('full screen', () => {
 
   // Roger chose the Zen-led refresh on 1 Nov 2026 (step 6): on a laptop, details sit in a card at the side.
   // proves: details_keep_view
+  // proves: panels_stack
   test('on a wide screen, full screen details float in a card at the end edge, clear of the mini-map', () => {
     const wide = styles.match(/@media \(min-width: 1024px\) \{([\s\S]*?)\n\}/g)?.join('\n') ?? '';
     const card =
       wide.match(/\.thoughtknot-fullscreen \.thoughtknot-view > \.thoughtknot-details \{([^}]*)\}/)?.[1] ?? '';
     assert.match(card, /position: absolute;/, 'over the drawing, which keeps its size');
     assert.match(card, /inset-inline-end: var\(--gn-space-2\);/, 'at the end edge');
-    assert.match(card, /inset-block-end: calc\(200px \+ 3 \* var\(--gn-space-2\)\);/, 'above the mini-map');
+    assert.match(
+      card,
+      /inset-block-start: calc\(\s*var\(--thoughtknot-drawing-top, 0rem\) \+ max\(var\(--gn-space-2\), var\(--thoughtknot-end-top, 0rem\)\)/,
+      'below the panels docked at the end',
+    );
+    assert.match(
+      card,
+      /max\(var\(--gn-space-2\), var\(--thoughtknot-end-foot, 0rem\)\)/,
+      'above the mini-map and the pad',
+    );
     assert.match(card, /border-radius: var\(--gn-radius-m\);/);
     assert.match(card, /box-shadow: var\(--gn-shadow-l\);/);
     assert.match(wide, /\.thoughtknot-fullscreen \.thoughtknot-view \{\s*position: relative;/);
