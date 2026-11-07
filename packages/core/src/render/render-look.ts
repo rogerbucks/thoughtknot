@@ -2,6 +2,7 @@
 // the new rendering paints comes from here, so the look lives in one place. Subjects take the approved mockups'
 // colours, light and dark. Their areas and topics take nearby shades, so a range reads as one family (Roger, 3 Nov).
 // Host-free and pure.
+import type { Scene } from './render-scene.ts';
 
 /** A colour as red, green and blue, 0 to 255. */
 export type Rgb = [number, number, number];
@@ -103,4 +104,20 @@ export function inkOf(colour: string, card: string, look: Look): string {
     if (contrast(ink, card) >= 4.5) return ink;
   }
   return look.ink;
+}
+
+/** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
+export type OwnColour = (subject: string) => number | undefined;
+
+/** The colour of every node: subjects in turn, or the one picked for them, their children shades of them. */
+export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string, string> {
+  const colours = new Map<string, string>();
+  const paint = (key: string, colour: string): void => {
+    colours.set(key, colour);
+    const kids = scene.nodes.get(key)?.children ?? [];
+    kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
+  };
+  // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
+  scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
+  return colours;
 }
