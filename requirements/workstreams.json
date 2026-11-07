@@ -1379,5 +1379,24 @@
       "render_detail",
       "render_marks"
     ]
+  },
+  "MR1": {
+    "title": "Metadata from Reading view, private AI review and the layout block",
+    "size": "M",
+    "requirements": [
+      "reading_view_metadata",
+      "reading_view_metadata_safe",
+      "layout_block",
+      "layout_block_optional",
+      "layout_block_checked",
+      "layout_drag_saves",
+      "ai_two_reviewers",
+      "ai_private_is_own",
+      "ai_private_default",
+      "ai_private_gets_note",
+      "ai_public_names_only",
+      "ai_block",
+      "ai_block_not_data"
+    ]
   }
 }
