@@ -156,6 +156,16 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         },
       ];
     const chosen = o.choices?.find((c) => c.value === (o.key === 'viewPreset' ? this.preset.shown() : s[o.key]));
+    const starters: [string, string][] = (o.choices ?? [])
+      .filter((c) => this.preset.offers(c.value))
+      .map((c) => [c.value, c.name]);
+    const own: [string, string][] =
+      o.key === 'viewPreset'
+        ? this.preset
+            .choices()
+            .filter((c) => c.id.startsWith('own:'))
+            .map((c) => [c.id, c.name])
+        : [];
     const after = o.key === 'viewPreset' ? asSettings(this.preset.rows()) : [];
     return [
       {
@@ -164,9 +174,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         control: {
           type: 'dropdown',
           key: o.key,
-          options: Object.fromEntries(
-            (o.choices ?? []).filter((c) => this.preset.offers(c.value)).map((c) => [c.value, c.name]),
-          ),
+          options: Object.fromEntries<string>([...starters, ...own]),
         },
       },
       ...after,

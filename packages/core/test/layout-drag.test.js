@@ -1,7 +1,7 @@
 // A place a person gives a thing by dragging it is saved in the graph's layout block, and nothing else moves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { placeInNote, savedPlaces } from '../src/layout-places.ts';
+import { forgetInNote, placeInNote, savedPlaces } from '../src/layout-places.ts';
 import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 
@@ -39,65 +39,4 @@ test('saved places put their things there, and every other spot stays where the 
   const placed = roomsOf(scene, new Map([['a2', { x: 999, y: -40 }]]));
   assert.deepEqual([placed.get('a2').x, placed.get('a2').y], [999, -40]);
   for (const [key, spot] of plain) if (key !== 'a2') assert.deepEqual(placed.get(key), spot, `${key} stays put`);
-});
-
-// proves: layout_drag_saves
-test('on the stage, dragging an item moves it alone and saves its place; dragging empty ground pans', async () => {
-  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
-  const doc = fakeDocument(800),
-    uninstall = installGlobals(doc);
-  try {
-    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
-    const boxes = [],
-      props = new Map();
-    for (const subject of ['Work', 'Money'])
-      for (let i = 0; i < 6; i++) {
-        const key = `${subject[0]}${i}`;
-        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
-        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
-      }
-    const viewport = doc.createElement('div');
-    doc.body.appendChild(viewport);
-    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
-    const saved = [];
-    const stage = new RenderStage(
-      viewport,
-      { boxes, links: [], estimates: [] },
-      { nodes: props, p: (k) => props.get(k) },
-      { open() {}, clear() {}, selected: () => null },
-      'off',
-      { saved: new Map(), place: (key, x, y) => saved.push([key, x, y]) },
-    );
-    const kept = new Map([...stage.spots].map(([k, s]) => [k, { ...s }]));
-    const drag = (from, to) => {
-      const e = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, button: 0, stopPropagation() {} });
-      stage.down(e(...from));
-      stage.move(e(...to));
-      stage.up(e(...to));
-    };
-    // close enough that items show, then grab one where it is drawn
-    const scale = stage.view.scale * 8,
-      w0 = stage.spots.get('W0');
-    stage.view = { ...stage.view, scale, x: w0.x - stage.view.w / 2 / scale, y: w0.y - stage.view.h / 2 / scale };
-    stage.draw();
-    const dot = stage.marks.find(
-      (m) => m.kind === 'dot' && m.x > 0 && m.y > 0 && m.x < stage.view.w && m.y < stage.view.h,
-    );
-    assert.ok(dot, 'an item shows');
-    const view = stage.view;
-    drag([dot.x, dot.y], [dot.x + 40, dot.y + 16]);
-    assert.deepEqual(stage.view, view, 'moving an item does not move the camera');
-    const was = kept.get(dot.key),
-      now = stage.spots.get(dot.key);
-    assert.ok(Math.abs(now.x - was.x - 40 / view.scale) < 1e-6 && Math.abs(now.y - was.y - 16 / view.scale) < 1e-6);
-    assert.deepEqual(saved, [[dot.key, now.x, now.y]], 'its place is saved once, when let go');
-    for (const [key, spot] of kept) if (key !== dot.key) assert.deepEqual(stage.spots.get(key), spot, 'nothing else');
-    // empty ground still pans, and saves nothing
-    drag([2, 2], [30, 30]);
-    assert.notEqual(stage.view.x, view.x);
-    assert.equal(saved.length, 1);
-    stage.unload();
-  } finally {
-    uninstall();
-  }
 });

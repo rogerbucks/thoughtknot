@@ -429,6 +429,7 @@ export const VALUES_LATE = [
   'metadataWrite',
   'onlyMetadata',
   // places saved by a drag on the new rendering (layout_drag_saves), 7 Nov 2026
+  'forgetInNote',
   'placeInNote',
   'savedPlaces',
 ];
