@@ -212,7 +212,6 @@ describe('a note’s classification line', () => {
       `cat > ${v.top}/a.md > ${v.plan} ${body}`,
       `cat > ${v.top}/a.md <<EOF\nclassification: public\n$(sed -i s/a/b/ ${v.plan})\nEOF`,
       `cat > ${v.top}/a.md <<EOF\nclassification: public\nnever closed`,
-      `cat - > ${v.top}/a.md ${body}`,
       `tee ${v.top}/a.md ${body}`,
       `cat > ${v.top}/a.md ${body}\nmv ${v.top}/a.md ${v.plan}`,
     ])
@@ -223,6 +222,99 @@ describe('a note’s classification line', () => {
     const v = vault({ read: false });
     const command = `cat > ${v.top}/new.md <<'EOF'\nclassification: own\nEOF`;
     refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  // The commands below are shaped on ones the guard refused in the vault, 7 Nov 2026 (Roger's ruling that day: a new
+  // note, a screenshot's sidecar among them, may carry a classification, and a command that only reads may name it).
+  test('a command that only reads is allowed, with substitutions, variables, git, and sed that only prints; one that could write is not', async () => {
+    const v = vault();
+    for (const command of [
+      `cd ${v.top}; grep -rn "refusal.classification" . | grep -v -e node_modules | cut -c1-200; echo ---; ` +
+        `f=$(grep -rln classification . | grep -v Settings | head -1); echo $f; ` +
+        `grep -n "classification" "$f" | cut -c1-220 | head -40; git log --oneline -3 -- "$f"`,
+      `sed -n 1,80p plan.md; grep -c classification plan.md`,
+      `sed -n '/classification/p' plan.md`,
+      `sed -n -e '1,3p' -e 's/classification: //p' plan.md | uniq`,
+      `git -C ${v.top} check-ignore plan.md; grep -rIl classification . 2>/dev/null | head -30`,
+      `n=$(grep -c classification plan.md) && [ "$n" -gt 0 ] && echo found`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+    for (const command of [
+      `f=$(sed -i '' s/classification:// plan.md)`,
+      `sed -n '1w plan.md' classification`,
+      `sed -n -i '' 1p plan.md classification`,
+      `sed -n 's/secret/public/w plan.md' classification`,
+      `git log --output=plan.md classification`,
+      `git -c core.pager=./change log classification`,
+      `uniq classification plan.md`,
+      `git commit -m classification`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a new note made by Bash may carry a classification, by a relative path, a variable or a loop', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, '+UK Move'));
+    mkdirSync(join(v.top, 'images'));
+    writeFileSync(join(v.top, 'images', '1.png'), 'png');
+    const sidecars =
+      `cd "${v.top}/+UK Move"; ts=$(date "+%Y-%m-%dT%H:%M"); echo $ts; src=${v.top}/images\n` +
+      `cp "$src/1.png" "Shot one.png" && cp "$src/1.png" "Shot two.png"\n` +
+      `for n in "Shot one" "Shot two"; do u=$(uuidgen | tr A-Z a-z); cat > "$n.png.md" <<EOF\n` +
+      `---\nuuid: "$u"\ncreated: $ts\nclassification: Personal\n---\n\n# $n\nEOF\ndone`;
+    for (const command of [
+      sidecars,
+      `T=$(date +%F); U=$(uuidgen); F="${v.top}/+UK Move/New task.md"; cat > "$F" <<EOF\n` +
+        `---\nuuid: $U\ncreated: $T\nclassification: Personal\n---\nEOF`,
+      `cd ${v.top} && D="New decision.md" && [ ! -e "$D" ] && cat > "$D" <<EOF\n---\nclassification: Own\n---\nEOF`,
+      `cat > new.md <<'EOF'\nclassification: own\nEOF`,
+      `printf 'classification: own\\n' > "${v.top}/new.md"`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('Bash that would change an existing note’s classification is still refused, however it names the note', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'other'));
+    writeFileSync(join(v.top, 'other', 'plan.md'), 'classification: public\n');
+    for (const command of [
+      `cd ${v.top}; F=plan.md; cat > "$F" <<EOF\n---\nclassification: $X\n---\nEOF`,
+      `for n in new plan; do cat > "$n.md" <<'EOF'\n---\nclassification: public\n---\nEOF\ndone`,
+      `cd /no/such/folder; cat > plan.md <<'EOF'\n---\nclassification: public\n---\nEOF`,
+      `cat > "$NOT_SET/plan.md" <<'EOF'\nclassification: public\nEOF`,
+      `echo classification; cp other/plan.md plan.md`,
+      `echo classification; cp other/plan.md .`,
+      `echo classification; mv other/plan.md ${v.top}`,
+      `echo 'classification: public' >> plan.md`,
+      `cd other && cd .. && sed -n 1p plan.md classification > plan.md`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+    const dropped = `cd ${v.top}; F=plan.md; cat > "$F" <<EOF\nThe plan, by $USER.\nEOF`;
+    refusedWith(await guardGateFiles('Bash', { command: dropped }, v.ports), classificationRefusal());
+  });
+
+  test('a cd or a variable the shell may not set is not trusted to point away from an existing note', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'away'));
+    const body = `<<'EOF'\n---\nclassification: public\n---\nEOF`;
+    for (const command of [
+      `[ -e nothing ] && cd away; cat > plan.md ${body}`,
+      `false || cd away; cat > plan.md ${body}`,
+      `true | cd away; cat > plan.md ${body}`,
+      `cd away & cat > plan.md ${body}`,
+      `if [ -e nothing ]; then cd away; fi; cat > plan.md ${body}`,
+      `F=new; [ -e nothing ] && F=new2; F=new && false || F=plan; cat > "$F.md" ${body}`,
+      `F=new; G=new; for n in a b; do cat > "$F.md" ${body}\nF=$G; G=plan; done`,
+      `for n in away ..; do cd $n; cat > plan.md ${body}\ndone`,
+      `F=new; true | F=plan; cat > "$F.md" ${body}`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+    for (const command of [
+      `cd away && cat > plan.md ${body}`,
+      `F=new && [ ! -e "$F.md" ] && cat > "$F.md" ${body}`,
+      `cd away; F=new; cat > "$F.md" ${body}`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
   });
 
   test('the refusals name no level, path or text of the call', () => {

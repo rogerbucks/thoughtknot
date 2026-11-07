@@ -1,13 +1,36 @@
 // A Bash command read only far enough for gate-guard.ts to tell what each of its steps may write. This is not a shell.
-// It knows quotes, the separators, redirections and heredocs. Some things could run other code, or are not known here:
-// a substitution, brackets, a comment or an unclosed quote. Any of them makes the whole command unread: null, so the
-// guard can refuse rather than guess. Zsh is held to this too, since its glob qualifiers run code from inside brackets.
+// It knows quotes, the separators, redirections, heredocs and `$(…)`. The steps a `$(…)` runs are read as steps of
+// their own, marked as run in a subshell, and where its output goes in a word stands UNKNOWN. A `$` in single quotes,
+// or escaped, stands LITERAL_DOLLAR, so the guard expands only the variables the shell would. Some things could run
+// other code, or are not known here: backticks, `$((…))`, brackets, a comment or an unclosed quote. Any of them makes
+// the whole command unread: null, so the guard can refuse rather than guess. Zsh is held to this too, since its glob
+// qualifiers run code from inside brackets.
+
+/** Where a substitution's output goes in a word: it is not known here. */
+export const UNKNOWN = '\u0000';
+
+/** A `$` the shell takes as it is, not as the start of a variable. */
+export const LITERAL_DOLLAR = '\u0001';
 
 /** A file a step sends its output to. */
 export type ShellWrite = { to: string; append: boolean };
 
-/** One simple command: its words, the files it writes, and the text of its heredoc (null when it has none). */
-export type ShellStep = { words: string[]; writes: ShellWrite[]; body: string | null };
+/** What joins a step to the one before it, when it is not `;` or a new line. */
+export type Joint = '&&' | '||' | '|' | '&';
+
+/**
+ * One simple command: its words, the files it writes, and the text of its heredoc (null when it has none). `literal` is
+ * false when the shell would expand a variable in that text. `sub` marks a step run inside a `$(…)`, in a subshell.
+ * `after` is what joins it to the step before, when that is not `;` or a new line.
+ */
+export type ShellStep = {
+  words: string[];
+  writes: ShellWrite[];
+  body: string | null;
+  literal: boolean;
+  sub?: true;
+  after?: Joint;
+};
 
 /** The heredoc waiting for the line after its command. */
 type Heredoc = { end: string; quoted: boolean; tabs: boolean; step: ShellStep };
@@ -27,10 +50,14 @@ type Reading = {
   waiting: Heredoc | null;
 };
 
-const newStep = (): ShellStep => ({ words: [], writes: [], body: null });
+const newStep = (): ShellStep => ({ words: [], writes: [], body: null, literal: true });
 
 /** The heredoc's text, and where the line after its last ends; null when it never closes or its text would run code. */
-function readHeredoc(command: string, from: number, doc: Heredoc): { body: string; next: number } | null {
+function readHeredoc(
+  command: string,
+  from: number,
+  doc: Heredoc,
+): { body: string; literal: boolean; next: number } | null {
   const lines: string[] = [];
   let at = from;
   while (at <= command.length) {
@@ -39,7 +66,8 @@ function readHeredoc(command: string, from: number, doc: Heredoc): { body: strin
     const line = doc.tabs ? command.slice(at, end).replace(/^\t+/, '') : command.slice(at, end);
     if (line === doc.end) {
       const body = lines.length ? `${lines.join('\n')}\n` : '';
-      return !doc.quoted && /[$`\\]/.test(body) ? null : { body, next: end + 1 };
+      if (doc.quoted) return { body, literal: true, next: end + 1 };
+      return /`|\\|\$[({]/.test(body) ? null : { body, literal: !body.includes('$'), next: end + 1 };
     }
     lines.push(line);
     at = end + 1;
@@ -47,17 +75,73 @@ function readHeredoc(command: string, from: number, doc: Heredoc): { body: strin
   return null;
 }
 
-/** The text inside double quotes from `from`, and where it ends; null when it never closes or holds a substitution. */
-function readDoubleQuoted(command: string, from: number): { text: string; next: number } | null {
-  let text = '';
+/** Where the `)` that closes a `$(` opened just before `from` is; null when none does. */
+function substitutionEnd(command: string, from: number): number | null {
+  let depth = 1;
   for (let at = from; at < command.length; at += 1) {
     const c = command.charAt(at);
-    if (c === '"') return { text, next: at + 1 };
-    if (c === '`' || (c === '$' && command.charAt(at + 1) === '(')) return null;
     if (c === '\\') at += 1;
-    text += command.charAt(at);
+    else if (c === "'" || c === '"') {
+      const end = c === "'" ? command.indexOf("'", at + 1) : quoteEnd(command, at + 1);
+      if (end < 0) return null;
+      at = end;
+    } else if (c === '(') depth += 1;
+    else if (c === ')' && (depth -= 1) === 0) return at;
   }
   return null;
+}
+
+/** Where the `"` that closes double quotes opened just before `from` is; -1 when none does. */
+function quoteEnd(command: string, from: number): number {
+  for (let at = from; at < command.length; at += 1) {
+    const c = command.charAt(at);
+    if (c === '\\') at += 1;
+    else if (c === '"') return at;
+  }
+  return -1;
+}
+
+/**
+ * Reads the `$(…)` at `at` into steps of their own, run in a subshell, and puts UNKNOWN in the word where its output
+ * goes. False when its text is not read, or it is `$((…))`.
+ */
+function readSubstitution(r: Reading): boolean {
+  if (r.command.charAt(r.at + 2) === '(') return false;
+  const end = substitutionEnd(r.command, r.at + 2);
+  const inner = end === null ? null : shellSteps(r.command.slice(r.at + 2, end));
+  if (end === null || !inner) return false;
+  for (const step of inner) r.steps.push({ ...step, sub: true });
+  r.word = (r.word ?? '') + UNKNOWN;
+  r.at = end + 1;
+  return true;
+}
+
+/** Reads the text inside the double quotes at `at`; false when they never close or hold backticks. */
+function readQuoted(r: Reading): boolean {
+  r.at += 1;
+  r.word = r.word ?? '';
+  r.quoted = true;
+  while (r.at < r.command.length) {
+    const c = r.command.charAt(r.at);
+    if (c === '"') {
+      r.at += 1;
+      return true;
+    }
+    if (c === '`') return false;
+    if (c === '$' && r.command.charAt(r.at + 1) === '(') {
+      if (!readSubstitution(r)) return false;
+      continue;
+    }
+    if (c === '\\') {
+      const then = r.command.charAt(r.at + 1);
+      r.word += then === '$' ? LITERAL_DOLLAR : then;
+      r.at += 2;
+      continue;
+    }
+    r.word += c;
+    r.at += 1;
+  }
+  return false;
 }
 
 /** Files the word as what `next` says it is. False when that is a second heredoc. */
@@ -78,10 +162,14 @@ function endWord(r: Reading): boolean {
 }
 
 /** Ends the step. False when a redirection has no word to go to. */
-function endStep(r: Reading): boolean {
+function endStep(r: Reading, joint?: Joint): boolean {
   if (!endWord(r) || r.next !== null) return false;
-  if (r.step.words.length || r.step.writes.length) r.steps.push(r.step);
-  r.step = newStep();
+  if (r.step.words.length || r.step.writes.length) {
+    r.steps.push(r.step);
+    r.step = newStep();
+  }
+  // a new line after `&&`, say, keeps it: the next step is still joined by it
+  if (joint) r.step.after = joint;
   return true;
 }
 
@@ -102,24 +190,15 @@ function redirect(r: Reading, kind: Next, length: number): boolean {
 function readSingleQuoted(r: Reading): boolean {
   const end = r.command.indexOf("'", r.at + 1);
   if (end < 0) return false;
-  r.word = (r.word ?? '') + r.command.slice(r.at + 1, end);
+  r.word = (r.word ?? '') + r.command.slice(r.at + 1, end).replaceAll('$', LITERAL_DOLLAR);
   r.quoted = true;
   r.at = end + 1;
   return true;
 }
 
-function readQuoted(r: Reading): boolean {
-  const inner = readDoubleQuoted(r.command, r.at + 1);
-  if (!inner) return false;
-  r.word = (r.word ?? '') + inner.text;
-  r.quoted = true;
-  r.at = inner.next;
-  return true;
-}
-
 function readEscape(r: Reading): boolean {
   const then = r.command.charAt(r.at + 1);
-  if (then !== '\n') r.word = (r.word ?? '') + then;
+  if (then !== '\n') r.word = (r.word ?? '') + (then === '$' ? LITERAL_DOLLAR : then);
   r.quoted = true;
   r.at += 2;
   return true;
@@ -133,6 +212,7 @@ function readNewline(r: Reading): boolean {
   const read = readHeredoc(r.command, r.at, r.waiting);
   if (!read) return false;
   r.waiting.step.body = read.body;
+  r.waiting.step.literal = read.literal;
   r.waiting = null;
   r.at = read.next;
   return true;
@@ -164,6 +244,7 @@ function readNext(r: Reading): boolean {
   const c = r.command.charAt(r.at);
   if (c === "'") return readSingleQuoted(r);
   if (c === '"') return readQuoted(r);
+  if (c === '$' && r.command.charAt(r.at + 1) === '(') return readSubstitution(r);
   if (c === '\\') return readEscape(r);
   if (c === '`' || c === '(' || c === ')' || (c === '#' && r.word === null)) return false;
   if (c === '\n') return readNewline(r);
@@ -173,9 +254,16 @@ function readNext(r: Reading): boolean {
     const append = r.command.charAt(r.at + 2) === '>';
     return redirect(r, append ? 'append' : 'write', append ? 3 : 2);
   }
-  if (c === ' ' || c === '\t' || c === ';' || c === '|' || c === '&') {
+  if (c === ' ' || c === '\t') {
     r.at += 1;
-    return c === ' ' || c === '\t' ? endWord(r) : endStep(r);
+    return endWord(r);
+  }
+  if (c === ';' || c === '|' || c === '&') {
+    const then = r.command.charAt(r.at + 1);
+    const double = (c !== ';' && then === c) || (c === '|' && then === '&');
+    r.at += double ? 2 : 1;
+    if (c === ';') return endStep(r);
+    return endStep(r, double && c === '&' ? '&&' : double && then === '|' ? '||' : c === '|' ? '|' : '&');
   }
   r.word = (r.word ?? '') + c;
   r.at += 1;
