@@ -24,7 +24,7 @@ export interface AiModel {
   matrixOn?: MatrixSwitch[];
   /** The AI provider a plug-in adds that shapes its requests, by name; with none, the one wire format. */
   provider?: string;
-  /** A private reviewer, a model the user runs (§19, ai_two_reviewers); with none, a public one. */
+  /** A private reviewer, a model the user runs (ES§19, ai_two_reviewers); with none, a public one. */
   reach?: 'private';
 }
 

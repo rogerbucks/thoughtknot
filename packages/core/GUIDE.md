@@ -1770,11 +1770,11 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     goes by https.
   - `modelChoices`: the host's own AI first, where it has one; then the models set up for the purpose; then the rest.
     There are none while AI is off.
-- `ai-reviewers.ts` — the private and public reviewers (§19, ai_two_reviewers).
+- `ai-reviewers.ts` — the private and public reviewers (ES§19, ai_two_reviewers).
   - `privateProblem`: only an address on this device or the user's own network may be private.
   - `reviewerFor`: a private reviewer first, sent the note. A public one only with the vault's consent, names only until
     note text is allowed, each send confirmed.
-- `metadata-write.ts` — metadata written from Reading view (§3, reading_view_metadata).
+- `metadata-write.ts` — metadata written from Reading view (ES§3, reading_view_metadata).
   - `metadataWrite` puts a layout or AI block after its graph, or replaces it where it is. It refuses when the graph
     changed since it was shown, or when anything else of the note would change (`onlyMetadata`).
   - `AI_PURPOSES` are the spec's purposes.

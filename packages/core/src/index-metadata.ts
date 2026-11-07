@@ -1,5 +1,5 @@
-// The names the core's entry exports for what a note keeps beside its graph (editor spec §2, §3, §19): the layout
-// block, the two AI reviewers, and writes from Reading view. Kept apart from index.ts so each file stays short.
+// What the core's entry exports for what a note keeps beside its graph (ES§2, ES§3, ES§19). That is the layout block,
+// the two AI reviewers, and writes from Reading view. Kept apart from index.ts so each file stays short.
 export {
   forgetPlace,
   layoutOf,
