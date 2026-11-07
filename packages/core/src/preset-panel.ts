@@ -186,6 +186,13 @@ export class PresetPanel {
     this.owner.update();
   }
 
+  /** The preset of the person's own that the picker shows, with its name, or nothing when it shows a starter. */
+  shownOwn(): { id: string; name: string } | undefined {
+    const id = this.shown();
+    const found = readOwnList(this.owner.settings().ownPresets).find((p) => p.id === id);
+    return found ? { id, name: found.name } : undefined;
+  }
+
   /** Renames the preset of the person's own `id`. */
   renameOwn(id: string, name: string): void {
     const s = this.owner.settings();

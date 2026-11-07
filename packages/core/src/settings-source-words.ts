@@ -109,6 +109,8 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.own-presets.bring': 'Add it to your own view presets',
   'settings.own-presets.bring.sentence': 'Puts the preset you pasted in the list, to pick, rename or delete.',
   'settings.own-presets.holds': 'It would hold these. {list}.',
+  'settings.own-presets.rename': 'Rename',
+  'settings.own-presets.rename.name': 'The new name of the preset',
   'settings.own-presets.default-name': 'My preset {n}',
   'settings.own-preset.exported': 'View preset written to {path}',
   'settings.vault-preset.name': 'View preset in use',
