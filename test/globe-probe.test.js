@@ -37,12 +37,31 @@ describe('the globe view, driven in a real browser', () => {
   let folder, server, browser, view;
   const errors = [];
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  /** Waits until `ready()` gives true, or fails after `ms`. It looks again at once, so a slow machine only waits longer. */
+  const until = async (ready, ms = 20_000) => {
+    const t0 = Date.now();
+    while (!(await ready())) {
+      if (Date.now() - t0 > ms) throw new Error('timed out waiting');
+      await wait(50);
+    }
+  };
   const eval_ = (js) => run(browser.send, js);
   /** A fingerprint of what the screen shows. */
   const picture = async () =>
     createHash('md5')
       .update((await browser.send('Page.captureScreenshot', { format: 'png' })).data)
       .digest('hex');
+  /** Waits until the screen stops changing: two looks in a row show the same picture. */
+  const settled = async () => {
+    let last = '';
+    await until(async () => {
+      const now = await picture();
+      const same = now === last;
+      last = now;
+      return same;
+    });
+    return last;
+  };
   const wheel = (deltaY, modifiers = 0) =>
     browser.send('Input.dispatchMouseEvent', {
       type: 'mouseWheel',
@@ -55,7 +74,7 @@ describe('the globe view, driven in a real browser', () => {
   const click = async (x, y) => {
     for (const type of ['mousePressed', 'mouseReleased'])
       await browser.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
-    await wait(1500);
+    await settled();
   };
   /** The name of the thing the details panel shows, or ''. */
   const picked = () =>
@@ -84,16 +103,29 @@ describe('the globe view, driven in a real browser', () => {
     browser.on('Runtime.exceptionThrown', (e) => errors.push(e.exceptionDetails?.text));
     await open(browser.send, `http://127.0.0.1:${server.address().port}/index.html`);
     await eval_(`document.querySelector('button[aria-label="Full screen"]').click()`);
-    await wait(600);
+    await until(
+      async () => !!(await eval_(`!!document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]')`)),
+    );
     for (let i = 0; i < 5; i++) {
       const label = await eval_(
         `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
       );
       if (/Globe/.test(label)) break;
       await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').click()`);
-      await wait(700);
+      await until(async () =>
+        /Globe|2D|2\.5D|3D/.test(
+          await eval_(
+            `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
+          ),
+        ),
+      );
     }
-    await wait(1500);
+    await until(async () =>
+      /Globe/.test(
+        await eval_(`document.querySelector('.thoughtknot-fullscreen .thoughtknot-space-said')?.textContent ?? ''`),
+      ),
+    );
+    await settled();
     view = await eval_(
       `(() => { const r = document.querySelector('.thoughtknot-fullscreen .thoughtknot-space-view').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`,
     );
@@ -115,16 +147,18 @@ describe('the globe view, driven in a real browser', () => {
   test('zooms a little at each turn of the wheel, and a pinch zooms the view, not the page', options, async () => {
     const seen = new Set();
     for (let i = 0; i < 6; i++) {
+      const before = await picture();
       await wheel(-60);
-      await wait(120);
-      seen.add(await picture());
+      await until(async () => (await picture()) !== before);
+      seen.add(await settled());
     }
     assert.equal(seen.size, 6, 'each turn of the wheel moves the view a step further');
     const pinched = new Set();
     for (let i = 0; i < 5; i++) {
+      const before = await picture();
       await wheel(40, 2); // ctrl, as a trackpad pinch arrives
-      await wait(120);
-      pinched.add(await picture());
+      await until(async () => (await picture()) !== before);
+      pinched.add(await settled());
     }
     assert.equal(pinched.size, 5, 'each step of a pinch moves the view');
     assert.equal(await eval_('window.visualViewport.scale'), 1, 'the page itself is not zoomed');
@@ -133,7 +167,7 @@ describe('the globe view, driven in a real browser', () => {
 
   test('the first click picks a thing and shows its properties; the next turns the globe to it', options, async () => {
     await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label="Fit"]').click()`);
-    await wait(2000);
+    await settled();
     // the first spot, going out from the middle of the view, where a thing can be picked
     let at;
     for (const [dx, dy] of [
