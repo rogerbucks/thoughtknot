@@ -5728,6 +5728,9 @@
         "VAULT_PRESET_PLACE": [
           "value: 'ThoughtKnot view preset.json'"
         ],
+        "vaultChoice": [
+          "value: (text: string | null | undefined) => string | undefined"
+        ],
         "VaultConsent": [
           "interface",
           "noteTextAllowed: boolean",
