@@ -375,7 +375,7 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
     assert.deepEqual(stage.view, pressed, 'the glide under way stopped');
     stage.unload();
     assert.ok(!mini.canvas.parentElement, 'gone with the stage');
-    // the mini-map setting, through the card's own options: off has none; auto shows it only while the drawing does not fit
+    // the mini-map setting, through the card's own options. Off has none. Auto shows it only while the drawing does not fit.
     // the fake page gives every element the viewport's size: here the mini-map is its own 160 by 120, in the corner
     const proto = Object.getPrototypeOf(viewport),
       box = proto.getBoundingClientRect;
