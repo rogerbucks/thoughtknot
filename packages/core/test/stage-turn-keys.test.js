@@ -125,7 +125,10 @@ test('a two-finger twist, where the browser reports one, turns the tilted camera
     twist('gesturechange', 5);
     const [a, b, c] = turns.map(([dx]) => dx);
     assert.ok(a > 0 && b > 0 && b < a && c < 0, `clockwise turns right, by each change only: ${turns}`);
-    assert.ok(turns.every(([, dy]) => dy === 0), 'a twist never tips the camera');
+    assert.ok(
+      turns.every(([, dy]) => dy === 0),
+      'a twist never tips the camera',
+    );
     controls.unload();
     twist('gesturechange', 40);
     assert.equal(turns.length, 3, 'gone with the stage');
