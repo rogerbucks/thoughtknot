@@ -260,4 +260,14 @@ test('a signpost at the edge points the way to a room off screen, and names it; 
   }
   assert.equal(signs.length, 2, 'the ways out of Work, to Money and to Home, are marked');
   assert.equal(new Set(signs.map((s) => s.key)).size, signs.length, 'one signpost for each room');
+  // common sense (Roger, 7 Nov 2026): legible, big enough to tap, and never over another name
+  const marks = marksOf(scene, spots, detailAt(sizes, near.scale), LIGHT, near);
+  const labels = marks.filter((m) => m.kind === 'label');
+  const posts = labels.filter((m) => /^[→↘↓↙←↖↑↗] /.test(m.text));
+  assert.equal(posts.length, 2, 'both signposts painted');
+  for (const post of posts) {
+    assert.ok(post.px >= ITEM_PX && post.h >= 24, `${post.text}: legible, and at least 24 px high to tap`);
+    for (const other of labels)
+      if (other !== post) assert.ok(!overlap(post, other), `${post.text} clear of ${other.text}`);
+  }
 });
