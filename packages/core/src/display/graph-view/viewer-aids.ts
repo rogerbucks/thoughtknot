@@ -18,6 +18,7 @@ import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
+import { keySection, viewMenuOf } from './view-key.ts';
 import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
@@ -276,7 +277,9 @@ export class Aids {
       });
       this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
-      this.legend = new LevelLegend(this.badge, {
+      // the key of subjects waits in the View panel, shut, where there is one; else under the badge (panels_key)
+      const menu = viewMenuOf(this.host.viewport);
+      this.legend = new LevelLegend(menu ? keySection(menu) : this.badge, {
         viewport: this.host.viewport,
         svg: this.host.svg,
         redraw: () => {
@@ -300,10 +303,15 @@ export class Aids {
   private keepClear(): void {
     const viewport = this.host.viewport,
       win = viewport.win ?? window;
-    win.requestAnimationFrame(() => keepSlots(viewport));
+    // a badge moved to a new place is not a change of size, so the drawing is fitted again here, clear of it
+    const keep = () => {
+      keepSlots(viewport);
+      this.stage?.resized();
+    };
+    win.requestAnimationFrame(keep);
     const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
     if (this.watching || typeof resizeObserver !== 'function') return;
-    const watching = new resizeObserver(() => keepSlots(viewport));
+    const watching = new resizeObserver(keep);
     for (const el of [viewport, ...slotCards(viewport)]) watching.observe(el);
     this.watching = watching;
   }

@@ -276,6 +276,9 @@ export const DRAWING_SOURCE_WORDS = {
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',
+  // the colour key, folded into the View panel (editor spec §25, panels_key, view-key.ts)
+  'view.key': 'Key',
+  'view.key-hint': 'What each colour stands for. Point at a subject to spotlight it; click it to keep it.',
   'view.hint.detail':
     'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
   // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)

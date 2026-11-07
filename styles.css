@@ -4565,8 +4565,21 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }
+/* The key, folded into the View panel (panels_key, view-key.ts): shut until opened, gone while there is no key. Its
+   chips line up from the start, as the panel's other rows do */
+.thoughtknot-view-key:not(:has(.thoughtknot-level-legend:not(.is-hidden))) {
+  display: none;
+}
+.thoughtknot-view-key > summary {
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.thoughtknot-view-key :is(.thoughtknot-level-legend, .thoughtknot-level-own, .thoughtknot-level-chips) {
+  justify-content: flex-start;
+}
 /* every control in the badge is at least 24 by 24 pixels, so a finger can hit it (WCAG 2.5.8) */
-.thoughtknot-level-badge :is(button, select) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key) :is(button, select) {
   min-width: 24px;
   min-height: 24px;
 }
@@ -4590,7 +4603,8 @@ img.thoughtknot-picture-hidden,
   padding: 0 var(--gn-space-1);
   font-size: var(--gn-font-size-xs);
 }
-.thoughtknot-level-badge:not(:hover, :focus-within) :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key):not(:hover, :focus-within)
+  :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
   position: absolute;
   opacity: 0;
   pointer-events: none;
