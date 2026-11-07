@@ -6,13 +6,13 @@
 // would clash, the bigger thing keeps its name (Roger: big things first). Host-free and pure.
 import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
-import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
+import { inkOf, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
 import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
 import { calloutsOf } from './render-callouts.ts';
-import { LONGEST, MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf, textWidth } from './render-labels.ts';
+import { MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf } from './render-labels.ts';
 export { LONGEST, MAX_PX, MIN_PX, labelOf, sizeOf, textWidth, wrapName } from './render-labels.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
