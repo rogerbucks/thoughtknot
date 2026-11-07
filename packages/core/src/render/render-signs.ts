@@ -5,7 +5,17 @@ import type { Scene } from './render-scene.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Detail } from './render-detail.ts';
 import { inkOf, type Look } from './render-look.ts';
-import { ITEM_PX, LONGEST, crisp, inView, onScreen, onView, textWidth, type LabelAsk, type View } from './render-marks.ts';
+import {
+  ITEM_PX,
+  LONGEST,
+  crisp,
+  inView,
+  onScreen,
+  onView,
+  textWidth,
+  type LabelAsk,
+  type View,
+} from './render-marks.ts';
 
 /** The arrows a signpost points with, a turn of 45 degrees apart, clockwise from the right. */
 const ARROWS = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
