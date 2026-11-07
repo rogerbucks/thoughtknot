@@ -10,15 +10,16 @@ export const VAULT_OWN_PREFIX = 'vault:';
 export const VAULT_PRESET_MOST = 8000;
 
 /**
- * The preset a vault's file holds in full, or nothing when there is no file, it is too big, it is not a preset file,
- * or it names a starter, which `vaultPresetId` reads instead. Settings are raised to the floor as for any imported file.
+ * The preset a vault's file holds in full, or nothing. Nothing means no file, a file over the limit in bytes,
+ * or a file that is not a preset. A file that names a starter is left to `vaultPresetId`.
+ * Settings are raised to the floor as for any imported file.
  */
 export function vaultOwnPreset(text: string | null | undefined): ViewPreset | undefined {
-  if (!text || text.length > VAULT_PRESET_MOST) return undefined;
+  if (!text || new TextEncoder().encode(text).length > VAULT_PRESET_MOST) return undefined;
   const read = presetFrom(text);
   if ('problems' in read || STARTERS.some((p) => p.id === read.id)) return undefined;
   const bare = read.id.replace(/^(own|vault):/, '');
-  return { ...read, id: `${VAULT_OWN_PREFIX}${bare}` };
+  return bare ? { ...read, id: `${VAULT_OWN_PREFIX}${bare}` } : undefined;
 }
 
 /** The text of the file that makes `preset` the vault's own. A preset file is small by its form. */

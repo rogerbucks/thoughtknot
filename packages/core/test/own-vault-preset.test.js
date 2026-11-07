@@ -40,4 +40,11 @@ describe('a preset the vault names for itself', () => {
     const padded = JSON.stringify({ ...JSON.parse(presetFile(mine)), pad: 'x'.repeat(VAULT_PRESET_MOST) });
     assert.equal(vaultOwnPreset(padded), undefined);
   });
+
+  test('counts bytes, not letters, and keeps no empty id', () => {
+    const wide = JSON.stringify({ ...JSON.parse(presetFile(mine)), pad: 'é'.repeat(VAULT_PRESET_MOST / 2) });
+    assert.ok(wide.length < VAULT_PRESET_MOST + 500);
+    assert.equal(vaultOwnPreset(wide), undefined);
+    assert.equal(vaultOwnPreset(presetFile({ ...mine, id: 'vault:' })), undefined);
+  });
 });
