@@ -3,7 +3,7 @@
 // rewritten, and nothing else moves (nodes stay put). Host-free and pure: the host reads the note, calls this, and
 // writes what it gives back in one step.
 import { gqlSpans, layoutOf } from './blocks.ts';
-import { placeThing, readLayout, type Place } from './layout-block.ts';
+import { forgetPlace, placeThing, readLayout, type Place } from './layout-block.ts';
 import { metadataWrite } from './metadata-write.ts';
 
 /** The layout block of `graph` in `note`, as written, if it has one. */
@@ -29,4 +29,16 @@ export function placeInNote(
   y: number,
 ): { text: string } | { refused: string } {
   return metadataWrite(note, graph, 'LAYOUT', placeThing(layoutText(note, graph), graph, thing, x, y), shown);
+}
+
+/** The note with the place of `thing` of `graph` forgotten, or why not: the undo of its first place (layout_drag_saves). */
+export function forgetInNote(
+  note: string,
+  graph: string,
+  shown: string,
+  thing: string,
+): { text: string } | { refused: string } {
+  const text = layoutText(note, graph);
+  if (text === null) return { text: note };
+  return metadataWrite(note, graph, 'LAYOUT', forgetPlace(text, thing), shown);
 }

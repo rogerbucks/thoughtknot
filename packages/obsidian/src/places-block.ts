@@ -1,9 +1,9 @@
 // The places people drag things to on the new rendering, saved in Obsidian (editor spec §2, layout_drag_saves; Roger,
 // 7 Nov 2026, R16). Each is written to the note's layout block, in Reading view too, against the note as it is then.
 // The graph block is never rewritten. When the graph changed since it was drawn, nothing is written, and a notice
-// says why.
+// says why. Each place offers its undo, which forgets a first place or puts back the one before.
 import { Notice } from 'obsidian';
-import { placeInNote, savedPlaces } from '@thoughtknot/core';
+import { forgetInNote, placeInNote, savedPlaces } from '@thoughtknot/core';
 import type { PlacesHost } from '@thoughtknot/core/display/graph-view/stage-places';
 import type ThoughtKnotPlugin from './main';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -21,13 +21,22 @@ export function placesFor(
 ): PlacesHost {
   const saved = note === undefined ? new Map() : savedPlaces(note, graph);
   if (note === undefined) return { saved };
-  const place = (key: string, x: number, y: number): void => {
-    void changeVaultNote(plugin.app, path, (now) => {
-      const r = placeInNote(now, graph, shown, key, x, y);
+  // one write of the note, against it as it is then; a refusal is said, and given back for the undo's toast
+  const write = async (edit: (now: string) => { text: string } | { refused: string }): Promise<string | null> => {
+    let refused: string | null = null;
+    await changeVaultNote(plugin.app, path, (now) => {
+      const r = edit(now);
       if ('text' in r) return r.text;
-      new Notice(r.refused);
+      refused = r.refused;
       return now;
     });
+    if (refused) new Notice(refused);
+    return refused;
   };
-  return { saved, place };
+  return {
+    saved,
+    graph,
+    place: (key, x, y) => write((now) => placeInNote(now, graph, shown, key, x, y)),
+    forget: (key) => write((now) => forgetInNote(now, graph, shown, key)),
+  };
 }

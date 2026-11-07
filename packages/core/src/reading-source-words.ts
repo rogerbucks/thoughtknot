@@ -225,4 +225,6 @@ export const READING_SOURCE_WORDS = {
   // a place for a thing the graph does not hold
   'layout.thing-gone': '{thing} has a place, but the graph {graph} does not hold it, so the place is not used',
   'layout.thing-gone.fix': 'forget the place of {thing}',
+  // a place saved by a drag, as its undo toast names it (layout_drag_saves)
+  'layout.placed': 'Placed {thing}',
 } as const;
