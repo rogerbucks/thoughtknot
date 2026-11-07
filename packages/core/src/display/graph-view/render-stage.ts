@@ -135,8 +135,7 @@ export class RenderStage {
             },
           });
     this.view = this.fitted();
-    // caught on the way down, so today's zoom underneath never takes the same notch
-    viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });
+    viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true }); // before today's zoom
     this.canvas.addEventListener('pointerdown', (e) => this.down(e));
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
