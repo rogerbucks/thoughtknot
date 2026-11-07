@@ -1,12 +1,9 @@
-// The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With the "New rendering"
-// setting on, a graph is drawn here, on one canvas over the card, by the layers one way down. The scene, rooms, detail,
-// marks and canvas painter do the work, and this file only wires them to the page. Today's SVG stays underneath,
-// hidden, so the old path keeps working until the switch flips for good.
-//
+// The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With its setting on, a graph
+// is drawn here, on one canvas over the card, by the layers one way down. Today's SVG stays underneath, hidden.
 // Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms smoothly at the pointer (Roger, 6 Nov).
-// Dragging pans. Plain scrolling is left to the page. While a view in space shows, the stage stands aside. A click picks from the marks (layer L6). An item's first click selects it and opens its details.
-// Its second glides it to the middle (second_tap_centres). A click on a group glides to it and opens its next level.
-// A click on empty space clears the selection.
+// Dragging pans. Plain scrolling is left to the page. A click picks from the marks (layer L6). An item's first click
+// selects it and opens its details. Its second glides it to the middle (second_tap_centres). A click on a group glides
+// to it and opens its next level. A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
@@ -107,9 +104,9 @@ export class RenderStage {
     this.hands = hands;
     this.scene = sceneOf(shapeOf(drawing, g));
     this.spots = roomsOf(this.scene, places?.saved);
-    const [save, stage] = [places?.place, { scene: this.scene, spots: this.spots, draw: () => this.draw() }];
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
-    this.mover = save && new StageMover({ ...stage, marks: () => this.marks, view: () => this.view }, save);
+    const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
+    this.mover = places?.place && new StageMover({ ...live, draw: () => this.draw() }, places);
     this.sizes = roomSizes(this.scene, this.spots);
     viewport.addClass('thoughtknot-new-rendering');
     this.canvas = viewport.createEl('canvas', { cls: 'thoughtknot-render-stage' });
@@ -136,8 +133,7 @@ export class RenderStage {
             },
           });
     this.view = this.fitted();
-    // caught on the way down, so today's zoom underneath never takes the same notch
-    viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true });
+    viewport.addEventListener('wheel', this.onWheel, { passive: false, capture: true }); // before today's zoom
     this.canvas.addEventListener('pointerdown', (e) => this.down(e));
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
@@ -327,6 +323,14 @@ export class RenderStage {
     return true;
   }
 
+  /** Turns and tips a tilted camera, as a drag of `dx`, `dy` pixels would; says whether it could (flat, it cannot). */
+  turnBy(dx: number, dy: number): boolean {
+    if (!isTilted(this.view)) return false;
+    this.view = turnedBy(this.view, dx, dy);
+    this.draw();
+    return true;
+  }
+
   /** Glides to `to`, or goes there at once when the reader asks for less motion (rule 7). */
   private glideTo(to: View): void {
     this.untouched = false;
@@ -375,6 +379,7 @@ export class RenderStage {
   /** Takes the canvas away and shows today's drawing again. */
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
+    this.mover?.unload();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();
