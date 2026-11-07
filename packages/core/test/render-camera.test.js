@@ -52,9 +52,9 @@ test('a trackpad zooms smoothly: small movements zoom a little each, never a jum
   const notch = wheelView({ ...v, scale: 1 }, [0.1, 10], -100, [400, 300]);
   assert.ok(notch.scale > 1.2 && notch.scale < 1.6, `${notch.scale}`);
   for (let i = 0; i < 400; i++) v = wheelView(v, stops, 4, [400, 300]);
-  assert.equal(v.scale, 0.2, 'back out to the fitted view, no further');
+  assert.equal(v.scale, 0.1, 'back out to half the fitted view, room for names round it, no further');
   assert.ok(
-    Math.abs(pinchView(v, stops, 1.5, [400, 300]).scale - 0.3) < 1e-9,
+    Math.abs(pinchView(v, stops, 1.5, [400, 300]).scale - 0.15) < 1e-9,
     'fingers spread by half zoom in by half',
   );
 });
@@ -138,6 +138,6 @@ test('zoomed right out, the first level always shows, even where the fit opens t
     for (let i = 0; i < 400; i++) v = wheelView(v, stops, 40, [400, 300]);
     assert.equal(detailAt(sizes, v.scale).shown[1], 0, `fitted at ${fitted}: only the first level shows`);
     assert.ok(v.scale <= fitted, 'never nearer than the fit');
-    assert.ok(v.scale >= Math.min(fitted, (0.8 * 56) / sizes[1]), 'and no further out than it takes');
+    assert.ok(v.scale >= Math.min(fitted * 0.5, (0.8 * 56) / sizes[1]), 'and no further out than it takes');
   }
 });

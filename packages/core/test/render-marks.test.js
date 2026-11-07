@@ -6,6 +6,7 @@ import { sceneOf } from '../src/render/render-scene.ts';
 import { roomsOf } from '../src/render/render-rooms.ts';
 import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { arrowOf, signsOf } from '../src/render/render-signs.ts';
+import { fitView, zoomTo } from '../src/render/render-camera.ts';
 import { DARK, LIGHT, contrast, inkOn, subjectColour } from '../src/render/render-look.ts';
 import {
   HEADER_PX,
@@ -270,4 +271,86 @@ test('a signpost at the edge points the way to a room off screen, and names it; 
     for (const other of labels)
       if (other !== post) assert.ok(!overlap(post, other), `${post.text} clear of ${other.text}`);
   }
+});
+
+// Roger, 7 Nov 2026 (nightly, with a picture): zoomed far out, the subjects' names piled up in a jumble over a tiny
+// drawing. They should stand in order round it.
+// proves: render_marks
+test('far out, crowded subject names stand in two ordered columns beside the drawing, each joined to its cloud', () => {
+  const subjects = ['Every graph carries its own', 'Two process views', 'Joining graphs', 'The lending demo'];
+  subjects.push('Notation and GQL', 'Paths and altitude', 'Working with AI', "The library's tools");
+  const things = [];
+  for (const subject of subjects) for (let i = 0; i < 6; i++) things.push(thing(`${subject}-${i}`, { subject }));
+  const scene = sceneOf({ things, links: [] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  const fit = fitView(spots.values(), 1280, 800);
+  const marks = (view) => marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view);
+  // at the fit the names sit on their clouds, with no lines
+  assert.ok(
+    marks(fit)
+      .filter((m) => m.kind === 'label')
+      .every((m) => !m.lead),
+  );
+  // zoomed far out about the middle: the drawing is small, its names would crowd it
+  const scale = fit.scale / 6;
+  const far = zoomTo(fit, scale, [640, 400]);
+  const labels = marks(far).filter((m) => m.kind === 'label');
+  const clouds = marks(far).filter((m) => m.kind === 'cloud');
+  assert.equal(labels.length, subjects.length, 'every subject is named');
+  const [x0, x1] = [Math.min(...clouds.map((c) => c.x - c.r)), Math.max(...clouds.map((c) => c.x + c.r))];
+  for (const l of labels) {
+    assert.ok(l.x + l.w <= x0 || l.x >= x1, `${l.text} stands beside the drawing, not over it`);
+    assert.ok(l.lead, `${l.text} is joined to its cloud`);
+    const cloud = clouds.find((c) => c.key === l.key);
+    assert.ok(
+      Math.abs(Math.hypot(l.lead[2] - cloud.x, l.lead[3] - cloud.y) - cloud.r) < 0.01,
+      'the line meets its edge',
+    );
+    assert.ok(l.x >= 0 && l.x + l.w <= 1280 && l.y >= 0 && l.y + l.h <= 800, `${l.text} is on screen`);
+  }
+  for (let i = 0; i < labels.length; i++)
+    for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].text);
+  // each column goes top to bottom in the order its clouds do, so the lines never cross
+  for (const side of [labels.filter((l) => l.x < x0), labels.filter((l) => l.x >= x1)]) {
+    const byName = [...side].sort((p, q) => p.y - q.y).map((l) => l.key);
+    const byCloud = [...side].sort(
+      (p, q) => clouds.find((c) => c.key === p.key).y - clouds.find((c) => c.key === q.key).y,
+    );
+    assert.deepEqual(
+      byName,
+      byCloud.map((l) => l.key),
+    );
+  }
+});
+
+// proves: render_marks
+test('in a small card, crowded subject names stand round the drawing where there is room, apart and joined', () => {
+  const subjects = ['Every graph carries its own', 'Two process views', 'Joining graphs', 'The lending demo'];
+  subjects.push('Notation and GQL', 'Paths and altitude', 'Working with AI', "The library's tools", 'Release notes');
+  const things = [];
+  for (const subject of subjects) for (let i = 0; i < 6; i++) things.push(thing(`${subject}-${i}`, { subject }));
+  const scene = sceneOf({ things, links: [] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  const fit = fitView(spots.values(), 600, 440);
+  const far = zoomTo(fit, fit.scale / 2.5, [300, 220]);
+  const marks = marksOf(scene, spots, detailAt(sizes, far.scale), LIGHT, far);
+  const labels = marks.filter((m) => m.kind === 'label');
+  const clouds = marks.filter((m) => m.kind === 'cloud');
+  const box = [
+    Math.min(...clouds.map((c) => c.x - c.r)),
+    Math.min(...clouds.map((c) => c.y - c.r)),
+    Math.max(...clouds.map((c) => c.x + c.r)),
+    Math.max(...clouds.map((c) => c.y + c.r)),
+  ];
+  assert.ok(labels.length >= subjects.length - 2, `${labels.length} of ${subjects.length} named`);
+  for (const l of labels) {
+    assert.ok(l.lead, `${l.text} is joined to its cloud`);
+    const outside = l.x + l.w <= box[0] || l.x >= box[2] || l.y + l.h <= box[1] || l.y >= box[3];
+    assert.ok(outside, `${l.text} stands clear of the drawing`);
+    assert.ok(l.x >= 0 && l.x + l.w <= 600 && l.y >= 0 && l.y + l.h <= 440, `${l.text} is on screen`);
+  }
+  for (let i = 0; i < labels.length; i++)
+    for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].text);
 });

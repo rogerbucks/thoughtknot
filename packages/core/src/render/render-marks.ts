@@ -11,6 +11,7 @@ import { signsOf } from './render-signs.ts';
 import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
+import { calloutsOf } from './render-callouts.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
@@ -116,6 +117,8 @@ export interface LabelMark {
   dot?: string;
   /** The thin edge of the card, in its thing's colour. */
   edge?: string;
+  /** A thin line from the card to its thing, when the card stands away from it: from `x1`, `y1` to `x2`, `y2`. */
+  lead?: [number, number, number, number];
   /** A second, smaller line under the name, such as "13 items", in `subInk` at `subPx`. */
   sub?: string;
   subPx?: number;
@@ -214,12 +217,15 @@ export function marksOf(
   asks.push(...signsOf(scene, spots, detail, view, colours, look));
   const lines = groundOf(view),
     floor: GroundMark[] = lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
+  // far out, where the top level's names crowd their small clouds, they stand in order round the drawing (Roger)
+  const tops = new Map(clouds.filter((m) => scene.nodes.get(m.key)?.depth === 0).map((m) => [m.key, m]));
+  const placed = placeLabels(asks, view);
   return [
     ...floor,
     ...clouds,
     ...roadsOf(scene, spots, detail, view, colours, look),
     ...dots,
-    ...placeLabels(asks, view),
+    ...(calloutsOf(asks, tops, placed, view) ?? placed),
   ];
 }
 
@@ -303,28 +309,43 @@ export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] 
   const order = [...asks].sort((a, b) => b.weight - a.weight || (a.key < b.key ? -1 : 1));
   const kept: LabelMark[] = [];
   for (const ask of order) {
-    const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
-    const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
-    const subPx = MIN_PX;
-    const w = Math.max(textWidth(text, px), ask.sub ? textWidth(ask.sub, subPx) : 0) + px + (ask.dot ? px : 0),
-      h = px * 1.6 + (ask.sub ? subPx * 1.2 : 0);
-    const box = spotFor(ask, w, h, view, kept);
-    if (!box) continue;
-    kept.push({
-      kind: 'label',
-      key: ask.key,
-      text,
-      ...box,
-      px,
-      fill: ask.fill,
-      ink: ask.ink ?? inkOn(ask.fill),
-      alpha: ask.alpha,
-      ...(ask.dot ? { dot: ask.dot } : {}),
-      ...(ask.edge ? { edge: ask.edge } : {}),
-      ...(ask.sub ? { sub: ask.sub, subPx, subInk: ask.subInk ?? ask.ink ?? inkOn(ask.fill) } : {}),
-    });
+    const size = sizeOf(ask);
+    const box = spotFor(ask, size.w, size.h, view, kept);
+    if (box) kept.push(labelOf(ask, size, box));
   }
   return kept;
+}
+
+/** How big a name's card is: its size held between MIN_PX and MAX_PX, its text cut to LONGEST letters. */
+export function sizeOf(ask: LabelAsk): { text: string; px: number; w: number; h: number } {
+  const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
+  const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
+  const w = Math.max(textWidth(text, px), ask.sub ? textWidth(ask.sub, SUB_PX) : 0) + px + (ask.dot ? px : 0),
+    h = px * 1.6 + (ask.sub ? SUB_PX * 1.2 : 0);
+  return { text, px, w, h };
+}
+
+const SUB_PX = MIN_PX; // the size of a card's second line, in pixels
+
+/** The card of `ask`, of `size`, at `box`. */
+export function labelOf(
+  ask: LabelAsk,
+  size: { text: string; px: number },
+  box: { x: number; y: number; w: number; h: number },
+): LabelMark {
+  return {
+    kind: 'label',
+    key: ask.key,
+    text: size.text,
+    ...box,
+    px: size.px,
+    fill: ask.fill,
+    ink: ask.ink ?? inkOn(ask.fill),
+    alpha: ask.alpha,
+    ...(ask.dot ? { dot: ask.dot } : {}),
+    ...(ask.edge ? { edge: ask.edge } : {}),
+    ...(ask.sub ? { sub: ask.sub, subPx: SUB_PX, subInk: ask.subInk ?? ask.ink ?? inkOn(ask.fill) } : {}),
+  };
 }
 
 /**

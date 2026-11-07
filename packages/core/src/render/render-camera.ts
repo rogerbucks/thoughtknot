@@ -45,15 +45,17 @@ export function fitView(spots: Iterable<Spot>, w: number, h: number, clear: Clea
 
 /** How far past the zoom where only the first level shows the reader may still zoom out, as a share of it. */
 const PAST_FIRST = 0.9;
+/** How far past the fit the reader may zoom out, as a share of it: room round the drawing for its names. */
+const PAST_FIT = 0.5;
 
 /**
  * The zoom stops, smallest first: the farthest out the reader may go, then the zoom that opens each level. The
- * farthest out is the fitted zoom, or further where the fit already opens the second level: zoomed right out, the
- * reader always reaches the first level (Roger).
+ * farthest out is half the fitted zoom, so the top level's names have room to stand round the drawing, or further
+ * where that still opens the second level: zoomed right out, the reader always reaches the first level (Roger).
  */
 export function stopsOf(sizes: readonly number[], fitted: number): number[] {
   const second = sizes[1] ? (sizes.length === 2 ? ITEMS_FROM : OPEN_FROM) / sizes[1] : Infinity;
-  const stops = [Math.min(fitted, second * PAST_FIRST)];
+  const stops = [Math.min(fitted * PAST_FIT, second * PAST_FIRST)];
   for (let depth = 1; depth < sizes.length; depth++) {
     const s = scaleToOpen(sizes, depth);
     if (s > (stops[stops.length - 1] as number) * 1.01) stops.push(s);

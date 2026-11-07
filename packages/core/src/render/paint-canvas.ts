@@ -119,6 +119,21 @@ function paintDot(c: Canvas2d, m: DotMark): void {
 
 /** A card with its name, and a second line under it when it has one. */
 function paintLabel(c: Canvas2d, m: LabelMark): void {
+  if (m.lead) {
+    // a card away from its thing: a thin line in its colour joins them, with a dot where it meets the thing
+    const [x1, y1, x2, y2] = m.lead;
+    c.globalAlpha = m.alpha * 0.7;
+    c.strokeStyle = m.edge ?? m.ink;
+    c.lineWidth = 1.2;
+    c.beginPath();
+    c.moveTo(x1, y1);
+    c.lineTo(x2, y2);
+    c.stroke();
+    c.fillStyle = m.edge ?? m.ink;
+    c.beginPath();
+    c.arc(x2, y2, 2.5, 0, Math.PI * 2);
+    c.fill();
+  }
   c.globalAlpha = m.alpha;
   c.fillStyle = m.fill;
   c.beginPath();
