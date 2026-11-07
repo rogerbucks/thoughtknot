@@ -8,7 +8,7 @@ import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
 import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
-import { groundOf, isTilted, onScreen } from './render-tilt.ts';
+import { floorOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
@@ -44,6 +44,8 @@ export interface View {
   turn?: number;
   /** In 3D, how far each level stands above the one that holds it: 0 lies flat on the ground, 1 is full height. */
   lift?: number;
+  /** On the globe, how much the drawing bends round the ball: one over its radius, in the drawing's units. */
+  globe?: number;
 }
 
 /** A soft cloud: one group's room. */
@@ -67,6 +69,8 @@ export interface GroundMark {
   lines: [number, number, number, number][];
   fill: string;
   alpha: number;
+  /** On the globe: the ball, its middle and radius on the screen, filled in `paper` and edged in `fill`. */
+  ball?: { x: number; y: number; r: number; paper: string };
 }
 
 /** An item far out: a dot in its subject's colour. */
@@ -189,8 +193,9 @@ export function marksOf(
     const s = onScreen(at, view, node.depth),
       ground = node.depth && view.lift ? onScreen(at, view) : undefined,
       fill = colours.get(node.key) ?? look.faint;
-    if (!inView(s, view)) continue;
-    const alpha = showOf(node, detail, last);
+    if (!inView(s, view) || s.behind) continue;
+    // on the globe, things toward the ball's edge fade a little, so its near middle reads first
+    const alpha = showOf(node, detail, last) * (s.k === undefined ? 1 : 0.55 + 0.45 * s.k);
     const [at3d, r] = [ground ? { shadow: ground } : {}, Math.max(2, Math.min(s.r, 6))];
     if (node.depth < last)
       clouds.push({
@@ -225,10 +230,8 @@ export function marksOf(
   const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
   if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
   asks.push(...signsOf(scene, spots, detail, view, colours, look));
-  const lines = groundOf(view),
-    floor: GroundMark[] = lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
   return [
-    ...floor,
+    ...floorOf(view, look),
     ...clouds,
     ...roadsOf(scene, spots, detail, view, colours, look),
     ...dots,

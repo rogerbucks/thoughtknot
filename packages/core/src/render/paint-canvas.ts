@@ -41,8 +41,23 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
-/** The ground seen from an angle: thin faint lines. */
+/** The ground seen from an angle: thin faint lines. On the globe, the ball under them, lit from the top left. */
 function paintGround(c: Canvas2d, m: GroundMark): void {
+  if (m.ball) {
+    const { x, y, r, paper } = m.ball;
+    const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.05, x, y, r);
+    g.addColorStop(0, withAlpha(paper, 1));
+    g.addColorStop(0.75, withAlpha(paper, 0.9));
+    g.addColorStop(1, withAlpha(m.fill, 0.9));
+    c.globalAlpha = 1;
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = m.fill;
+    c.lineWidth = 1.5;
+    c.stroke();
+  }
   c.globalAlpha = m.alpha;
   c.strokeStyle = m.fill;
   c.lineWidth = 1;
