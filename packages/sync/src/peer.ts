@@ -3,13 +3,13 @@
 // a channel that carries bytes. So Tailscale, Headscale, NetBird, Nebula and plain WireGuard all serve.
 // - Only the owner's devices. Each device says its public key first. A device whose key is not on the trusted list is
 //   sent nothing more, and the channel is closed.
-// - End to end. Each device sends a fresh salt with its key. Every message after that is sealed by a key made for this
-//   session alone, from the key the two share and both salts, and bound to its direction and its place in the order.
+// - End to end. Each device sends a fresh salt and a one-time key with its key. Every message after that is sealed by a key made for this
+//   session alone, from the key the two share, a one-time agreement thrown away after, and both salts, and bound to its direction and its place in the order.
 //   Their private keys never leave them. A relay, or the VPN itself, carries ciphertext only, and a message recorded,
 //   repeated, reflected, dropped or reordered does not open.
 // - Sealed twice. What is sent is what each store keeps: records already sealed by the vault key, under hidden names.
 // - Each device then sends the records the other lacks, file by file, and stops when both have said they are done.
-import { Session, SALT_BYTES } from './session.ts';
+import { Session, EPHEMERAL_BYTES, SALT_BYTES } from './session.ts';
 import type { DeviceKeys } from './keys.ts';
 import type { Shelf } from './store.ts';
 
@@ -52,7 +52,7 @@ export class Peer {
   sync(channel: Channel): Promise<Synced> {
     return new Promise((resolve, reject) => {
       let session: Session | undefined;
-      const salt = Session.salt();
+      const begun = Session.begin();
       let got = 0,
         theirsDone = false,
         mineDone = false;
@@ -68,12 +68,12 @@ export class Peer {
       const heard = async (message: Uint8Array) => {
         if (!session) {
           const theirs = message.slice(0, KEY_BYTES);
-          const whole = message.length === KEY_BYTES + SALT_BYTES;
+          const whole = message.length === KEY_BYTES + EPHEMERAL_BYTES + SALT_BYTES;
           if (!whole || same(theirs, this.#keys.publicKey) || !this.#trusted.some((t) => same(t, theirs))) {
             channel.close();
             return resolve({ refused: 'a device that is not one of the owner’s' });
           }
-          session = await Session.open(this.#keys, theirs, salt, message.slice(KEY_BYTES));
+          session = await Session.open(this.#keys, theirs, await begun, message.slice(KEY_BYTES));
           return say({ held: [...(await this.#shelf.held())].map(([note, d]) => [note, [...d]]) });
         }
         let said: Said;
@@ -106,7 +106,9 @@ export class Peer {
           queue = queue.then(closed);
         },
       );
-      channel.send(Uint8Array.from([...this.#keys.publicKey, ...salt]));
+      void begun.then((b) => {
+        channel.send(Uint8Array.from([...this.#keys.publicKey, ...b.hello]));
+      });
     });
   }
 

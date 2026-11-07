@@ -3,6 +3,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DeviceKeys, MemoryStore, Peer, Session, VaultKey, syncedOver } from '../src/index.ts';
+import { openWith } from '../src/keys.ts';
 import { NOTE, TEXT } from './helpers.js';
 
 const text = (s) => new TextEncoder().encode(s);
@@ -10,11 +11,25 @@ const text = (s) => new TextEncoder().encode(s);
 /** Two sessions, one for each side, between two fresh devices. */
 async function pair() {
   const [a, b] = [await DeviceKeys.create(), await DeviceKeys.create()];
-  const [sa, sb] = [Session.salt(), Session.salt()];
-  return { a: await Session.open(a, b.publicKey, sa, sb), b: await Session.open(b, a.publicKey, sb, sa) };
+  const [ba, bb] = [await Session.begin(), await Session.begin()];
+  return { a: await Session.open(a, b.publicKey, ba, bb.hello), b: await Session.open(b, a.publicKey, bb, ba.hello) };
 }
 
 describe('a mesh session', () => {
+  // proves: encrypted_everywhere
+  test('a recorded session stays shut even to someone who later holds both device keys', async () => {
+    const [a, b] = [await DeviceKeys.create(), await DeviceKeys.create()];
+    const [ba, bb] = [await Session.begin(), await Session.begin()];
+    const sa = await Session.open(a, b.publicKey, ba, bb.hello);
+    const recorded = await sa.seal(text('secret'));
+    // both device keys, and both salts, but not the one-time keys, which are gone
+    const salt = Uint8Array.from([...ba.hello.slice(65), ...bb.hello.slice(65)].sort(() => 0));
+    for (const order of [salt, Uint8Array.from([...bb.hello.slice(65), ...ba.hello.slice(65)])]) {
+      const key = await a.sessionKey(b.publicKey, order, new Uint8Array(32));
+      await assert.rejects(openWith(key, recorded, new Uint8Array(9)));
+    }
+  });
+
   // proves: mesh_vpn_sync
   test('opens each message once, in order, and refuses a copy, a reflection, a gap, a swap or another session', async () => {
     const { a, b } = await pair();

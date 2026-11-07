@@ -1,5 +1,7 @@
 // One session between two devices (editor spec §40, mesh_vpn_sync; encrypted_everywhere). Both sides make a fresh
-// salt, and the session key comes from the key they share and both salts. Every message is sealed and bound to its
+// salt and a one-time key pair. The session key comes from the key the devices share, the key the one-time pairs agree
+// on, and both salts. The one-time private keys are thrown away at once, so a device key stolen later cannot open a
+// session that was recorded before (forward secrecy), and no one without both device keys can take part. Every message is sealed and bound to its
 // direction and its place in the order. So a message recorded earlier, or in another session, does not open. Nor does
 // one sent back the way it came, one repeated, one dropped from the middle, or one moved out of order. A relay or a
 // listener on the network can do none of these without the session ending. Web Crypto, so it runs in every host.
@@ -15,6 +17,15 @@ const before = (a: Uint8Array, b: Uint8Array): boolean => {
   return a.length < b.length;
 };
 const join = (a: Uint8Array, b: Uint8Array): Uint8Array => Uint8Array.from([...a, ...b]);
+
+/** What a side sends to begin a session: its one-time public key and salt, and the private half it keeps. */
+export interface Begun {
+  hello: Uint8Array;
+  readonly private: CryptoKey;
+}
+
+/** Bytes of a one-time public key. */
+export const EPHEMERAL_BYTES = 65;
 
 export class Session {
   readonly #key: CryptoKey;
@@ -32,11 +43,32 @@ export class Session {
     return globalThis.crypto.getRandomValues(new Uint8Array(SALT_BYTES));
   }
 
-  /** The session of `keys` with the device whose public half is `theirs`; each side gave the salt it made. */
-  static async open(keys: DeviceKeys, theirs: Uint8Array, mine: Uint8Array, theirSalt: Uint8Array): Promise<Session> {
+  /** A new one-time key pair and salt: `hello` is what goes to the other device, after the device key. */
+  static async begin(): Promise<Begun> {
+    const pair = await globalThis.crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, [
+      'deriveBits',
+    ]);
+    const pub = new Uint8Array(await globalThis.crypto.subtle.exportKey('raw', pair.publicKey));
+    return { hello: join(pub, Session.salt()), private: pair.privateKey };
+  }
+
+  /** The session of `keys` with the device whose public half is `theirs`, from what each side began with. */
+  static async open(keys: DeviceKeys, theirs: Uint8Array, mine: Begun, theirHello: Uint8Array): Promise<Session> {
     const first = before(keys.publicKey, theirs);
-    const salt = first ? join(mine, theirSalt) : join(theirSalt, mine);
-    return new Session(await keys.sessionKey(theirs, salt), first);
+    const mySalt = mine.hello.slice(EPHEMERAL_BYTES);
+    const [theirEph, theirSalt] = [theirHello.slice(0, EPHEMERAL_BYTES), theirHello.slice(EPHEMERAL_BYTES)];
+    const other = await globalThis.crypto.subtle.importKey(
+      'raw',
+      new Uint8Array(theirEph),
+      { name: 'ECDH', namedCurve: 'P-256' },
+      false,
+      [],
+    );
+    const fresh = new Uint8Array(
+      await globalThis.crypto.subtle.deriveBits({ name: 'ECDH', public: other }, mine.private, 256),
+    );
+    const salt = first ? join(mySalt, theirSalt) : join(theirSalt, mySalt);
+    return new Session(await keys.sessionKey(theirs, salt, fresh), first);
   }
 
   /** What each message is bound to: who sent it, as the first or the second key, and its number. */

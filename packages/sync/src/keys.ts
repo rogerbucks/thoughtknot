@@ -42,15 +42,17 @@ export class DeviceKeys {
   }
 
   /**
-   * The key for one session with the device whose public half is `theirs`. It comes from the key the two devices share
-   * and from `salt`, which both sides made fresh for this session. So a session's sealed messages open in that session
-   * alone: one recorded earlier, or in another session, does not open.
+   * The key for one session with the device whose public half is `theirs`. It comes from the key the two devices share,
+   * from `fresh` (what the two sides agreed on with one-time keys, thrown away after) and from `salt`. So a session's
+   * messages open in that session alone, and a device key stolen later cannot open a session recorded before.
    */
-  async sessionKey(theirs: Uint8Array, salt: Uint8Array): Promise<CryptoKey> {
+  async sessionKey(theirs: Uint8Array, salt: Uint8Array, fresh: Uint8Array): Promise<CryptoKey> {
     const pub = await subtle().importKey('raw', own(theirs), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
     const bits = await subtle().deriveBits({ name: 'ECDH', public: pub }, this.#pair.privateKey, 256);
-    const base = await subtle().importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    const info = new TextEncoder().encode('thoughtknot mesh session 1');
+    const base = await subtle().importKey('raw', Uint8Array.from([...new Uint8Array(bits), ...fresh]), 'HKDF', false, [
+      'deriveKey',
+    ]);
+    const info = new TextEncoder().encode('thoughtknot mesh session 2');
     const hkdf = { name: 'HKDF', hash: 'SHA-256', salt: own(salt), info };
     return subtle().deriveKey(hkdf, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   }

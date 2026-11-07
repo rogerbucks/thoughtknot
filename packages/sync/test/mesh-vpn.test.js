@@ -122,13 +122,13 @@ describe('sync over a mesh VPN', () => {
       assert.ok('refused' in a, JSON.stringify(a));
       assert.ok('refused' in b, JSON.stringify(b));
       assert.equal((await stranger.store.held()).size, 0, 'the stranger got nothing');
-      // the laptop's first message is its public key and a fresh 32-byte salt, and nothing more
+      // the laptop's first message is its public key and a one-time key and a fresh 32-byte salt, and nothing more
       const key = [...laptop.keys.publicKey];
-      const head = [...framed([new Uint8Array(97)])].slice(0, 4);
+      const head = [...framed([new Uint8Array(162)])].slice(0, 4);
       const fromLaptop = r.sent.find((bytes) => [...head, ...key].every((b, i) => bytes[i] === b));
       assert.ok(fromLaptop, 'the laptop said hello');
       assert.deepEqual(fromLaptop.slice(0, 4), head);
-      assert.equal(fromLaptop.slice(4, 4 + 97).length, 97);
+      assert.equal(fromLaptop.slice(4, 4 + 162).length, 162);
     } finally {
       r.close();
     }

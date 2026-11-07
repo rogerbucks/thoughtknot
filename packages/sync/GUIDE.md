@@ -35,8 +35,8 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
 Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same between two devices that are on.
 
 - Any VPN that carries bytes serves: Tailscale, Headscale, NetBird, Nebula or plain WireGuard (`MESH_VPNS`).
-- Each device says its public key and a fresh salt first. One not on the trusted list is sent nothing more.
-- Every message after that is sealed by a key made for this session (`session.ts`), bound to its direction and its
+- Each device says its public key, a one-time key and a fresh salt first. One not on the trusted list is sent nothing more.
+- Every message after that is sealed by a key made for this session (`session.ts`) that a later theft of a device key cannot rebuild, bound to its direction and its
   number. So a relay carries ciphertext only, and a message repeated, sent back, dropped or moved ends the sync.
 - Each store says what it holds file by file (`Shelf`), and each device sends the records the other lacks.
 
@@ -71,4 +71,4 @@ Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same be
   and by overlay, and drawn the same on every device.
 - `test/mesh-vpn.test.js` — two devices sync through a real TCP relay, which sees ciphertext only; a stranger gets
   nothing.
-- `test/session-security.test.js` — a recorded, repeated, reflected, dropped or moved message does not open.
+- `test/session-security.test.js` — a recorded, repeated, reflected, dropped or moved message does not open, even to a thief of both device keys.
