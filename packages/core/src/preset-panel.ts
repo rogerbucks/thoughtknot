@@ -147,7 +147,7 @@ export class PresetPanel {
         desc: `${word('settings.own-presets.save.sentence')} ${word('settings.own-presets.holds', {
           list: presetHolds(s)
             .map((h) => `${h.name}: ${h.value}`)
-            .join('; '),
+            .join('. '),
         })}`,
         action: () => void this.saveOwn(),
       },
