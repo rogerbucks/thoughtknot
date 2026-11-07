@@ -65,7 +65,7 @@ export function metadataWrite(
   if (metaOf(block)?.kind !== kind || metaOf(block)?.on !== graph) return { refused: word('meta.outside') };
   const lines = note.split('\n');
   const own = gqlSpans(note).find((s) => metaOf(s.text)?.kind === kind && metaOf(s.text)?.on === graph);
-  const body = block.replace(/\s+$/, '').split('\n');
+  const body = block.trimEnd().split('\n');
   if (own) lines.splice(own.open + 1, own.close - own.open - 1, ...body);
   else lines.splice(data.close + 1, 0, '', '```gql', ...body, '```');
   const text = lines.join('\n');

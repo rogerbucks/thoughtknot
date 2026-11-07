@@ -116,7 +116,7 @@ export function placeThing(text: string | null, graph: string, thing: string, x:
   const keep = group ?? was?.group;
   const line = placeGql(thing, { ...at, ...(keep !== undefined && { group: keep }) });
   if (was && w) return text.slice(0, w.open) + line + text.slice(w.close + 1);
-  const body = text.replace(/\s+$/, '');
+  const body = text.trimEnd();
   return readLayout(text).layout.places.size ? `${body},\n${line}` : `${body}\n${line}`;
 }
 
@@ -134,7 +134,8 @@ export function forgetPlace(text: string, thing: string): string {
   for (let i = lines.length - 1; i > 0; i--) {
     const l = lines[i] ?? '';
     if (!l.trim() || l.trim().startsWith('//')) continue;
-    lines[i] = l.replace(/,\s*$/, '');
+    const kept = l.trimEnd();
+    lines[i] = kept.endsWith(',') ? kept.slice(0, -1) : l;
     break;
   }
   return lines.join('\n');
