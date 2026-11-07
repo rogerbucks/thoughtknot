@@ -44,11 +44,13 @@ Rust (src-tauri/)
   Escape cancels. The core does the rest (`sendNoteToRepo`, `askRepoReview` in core/src/github-repo-send.ts).
 - `tauri-gh.ts`: `tauriGh`, gh run through the app's `run_gh` command. A call off the list is refused before it
   reaches the Rust.
+- `tauri-mesh.ts`: `dialDevice` and `listenForDevice`, the mesh commands as a sync `Channel`. Sends go in order, and the
+  channel closes when the Rust says the connection ended.
 
 ## The Rust, `src-tauri/`
 
-- Nine commands, and no others: `pick_folder`, `own_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`,
-  `make_dir`, `write_new`, and `run_gh`. The same nine are named in `lib.rs`, `build.rs` and
+- Seventeen commands, and no others: the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, and six `mesh_` ones. The same seventeen are named in `lib.rs`, `build.rs` and
   `capabilities/default.json`. A test holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
@@ -56,6 +58,10 @@ Rust (src-tauri/)
 - gh is started by its own path, found where it installs or on the PATH. Its arguments go as a list, with no shell,
   and the body on standard input. A call is stopped after 60 seconds or 8 MiB of output. The app holds no token: gh
   signs in itself. A phone runs no gh.
+- `mesh.rs` carries bytes between the owner's devices over a mesh VPN: listen, accept, dial, send, receive and close.
+  Only private addresses are used (loopback, 10/8, 172.16/12, 192.168/16, 100.64/10, fc00::/7); a public address,
+  0.0.0.0 and a name are refused, and so is a device that reaches in from one. A message is whole, after its length, and
+  at most 16 MiB. The messages are sealed in JavaScript, so the Rust holds no key. `cargo test` checks all of it.
 - `place.rs` refuses any path that climbs out, starts at a root, names a hidden part (such as `.git`), or reaches
   outside through a link. A note is written to a new file beside it, then renamed over it.
 - `write_new` writes an export only as new files. A name taken gets the next number. All of the files or none.
