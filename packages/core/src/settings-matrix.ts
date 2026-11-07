@@ -20,3 +20,12 @@ export const MATRIX_OPTIONS: Option[] = [
       'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.',
   },
 ];
+
+/** The matrix settings read back from what was saved: the note's path trimmed, and only the classes mapped to a name. */
+export function matrixFrom(s: Record<string, unknown>): { aiMatrixNote: string; aiClassMap: Record<string, string> } {
+  const map = s.aiClassMap && typeof s.aiClassMap === 'object' ? s.aiClassMap : {};
+  return {
+    aiMatrixNote: typeof s.aiMatrixNote === 'string' ? s.aiMatrixNote.trim() : '',
+    aiClassMap: Object.fromEntries(Object.entries(map).filter((e): e is [string, string] => typeof e[1] === 'string')),
+  };
+}

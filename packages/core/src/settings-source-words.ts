@@ -47,6 +47,12 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-class-map.name': 'Matrix classes',
   'settings.ai-class-map.sentence':
     'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.',
+  'settings.ai-public.name': 'Public reviewers in this vault',
+  'settings.ai-public.sentence':
+    'What a cloud model may be sent from this vault. Off until you choose. You see what one of your notes would send first, and you can turn it off at any time.',
+  'settings.ai-public.off': 'Off: private reviewers only',
+  'settings.ai-public.names': 'Names, kinds and links only',
+  'settings.ai-public.note': 'Note text as well',
   'settings.section.language': 'Language',
   'settings.language.name': 'Language',
   'settings.language.sentence': 'The language the editor speaks: the same as the app it runs in, or one chosen here.',

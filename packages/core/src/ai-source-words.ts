@@ -119,6 +119,16 @@ export const AI_SOURCE_WORDS = {
     '{host} is not on this device or your own network, so it cannot be a private reviewer: mark it public, or give the address of a machine you run, such as one on your tailnet.',
   'ai.reviewer.none-private':
     'No private reviewer is set up, and this vault does not allow a public one: set up a model you run, such as LM Studio, and mark it private.',
+  // what a vault lets a public reviewer have, asked after showing one real note (ai_public_names_only, public-consent.ts)
+  'ai.consent.title': 'Let a public reviewer see this vault?',
+  'ai.consent.names':
+    'A cloud model would be sent the names, kinds and links of things, as below. Never their values or your text.',
+  'ai.consent.note': 'A cloud model would be sent the whole note, as below, under its provider’s terms.',
+  'ai.consent.from': 'This is what {path} would send.',
+  'ai.consent.allow': 'Allow',
+  'ai.consent.keep': 'Keep private',
+  'ai.consent.no-note': 'Open a note with a graph first, so you can see what it would send.',
+  'ai.consent.off': 'Public reviewers are off. Notes go to private reviewers only.',
   // a model's ceiling, and the credentials never sent (ai-ceiling.ts)
   'ai.level.unlabelled': 'This note has no classification, so it counts as {level}',
   'ai.level.classified': 'This note is classified {level}',

@@ -8,6 +8,9 @@
 // Ceilings (ai-ceiling.ts) and the record of every send still apply. Host-free and pure.
 import { endpointProblem, usable } from './ai-choice.ts';
 import type { AiModel } from './ai-model.ts';
+import { gqlBlocks } from './blocks.ts';
+import { readNote } from './drawing.ts';
+import type { AiPublic, ReachSettings } from './settings-reach.ts';
 import { word } from './words.ts';
 
 declare const URL: new (input: string) => { hostname: string };
@@ -22,6 +25,40 @@ export interface VaultConsent {
 
 /** No consent: the default for every vault. */
 export const NO_CONSENT: VaultConsent = { publicAllowed: false, noteTextAllowed: false };
+
+/** What the vault's setting allows a public reviewer. */
+export const consentOf = (s: ReachSettings): VaultConsent => ({
+  publicAllowed: s.aiPublic !== 'off',
+  noteTextAllowed: s.aiPublic === 'note',
+});
+
+/**
+ * The names, kinds and links of a note's things, one graph after another: all a public reviewer is sent without
+ * consent to note text. No property value, no prose and no note on a thing is in it. `shared` are the vault's schemas.
+ */
+export function namesSent(note: string, shared: string[] = []): string {
+  const { graphs } = readNote(
+    gqlBlocks(note).map((b) => b.text),
+    undefined,
+    shared,
+  );
+  const lines: string[] = [];
+  for (const [name, d] of graphs) {
+    lines.push(`graph ${name}`);
+    for (const b of d.boxes) lines.push(`  ${b.key}: ${b.kind}${b.text && b.text !== b.key ? ` (${b.text})` : ''}`);
+    for (const l of d.links) lines.push(`  ${l.from} -[${l.type}]-> ${l.to}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Exactly what one note would send a public reviewer at `level`, shown before the vault allows it. That is its names,
+ * kinds and links; or, with note text, the whole note. Nothing when off (ai_public_names_only).
+ */
+export function publicPreview(note: string, level: AiPublic, shared: string[] = []): string {
+  if (level === 'off') return '';
+  return level === 'note' ? note : namesSent(note, shared);
+}
 
 /** The reviewer a note goes to, and what it is sent: the note's text with its graph, or names, kinds and links only. */
 export interface Reviewer {
