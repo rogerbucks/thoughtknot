@@ -15,7 +15,7 @@ import { DARK, LIGHT } from '../../render/render-look.ts';
 import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
-import { groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
+import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
 import { isGlobe, middleOf } from '../../render/render-globe.ts';
 import { aNetwork, flatOf, hasLevels, levelSaid, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import { coverCards, overCover } from './controls-cover.ts';
@@ -188,10 +188,12 @@ export class RenderStage {
 
   /** A smooth zoom for the wheel with Ctrl or Cmd, as a trackpad pinch sends it; plain scrolling is the page's. */
   wheel(e: WheelEvent): void {
-    if ((!e.ctrlKey && !e.metaKey) || this.hands?.away?.()) return;
+    const plain = !e.ctrlKey && !e.metaKey;
+    // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
+    if (this.hands?.away?.() || (plain && !(fromTrackpad(e) && this.turnBy(-e.deltaX, -e.deltaY)))) return;
     e.preventDefault();
     e.stopPropagation();
-    if (e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
+    if (!plain && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
   }
 
   /** Zooms by `how`, keeping the page point `x`, `y` where it is. */

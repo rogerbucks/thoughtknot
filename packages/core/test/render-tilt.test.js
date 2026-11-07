@@ -8,7 +8,15 @@ import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf, onScreen } from '../src/render/render-marks.ts';
 import { fitView } from '../src/render/render-camera.ts';
-import { groundOf, groundShift, heightOf, isTilted, tilted, turnedBy } from '../src/render/render-tilt.ts';
+import {
+  fromTrackpad,
+  groundOf,
+  groundShift,
+  heightOf,
+  isTilted,
+  tilted,
+  turnedBy,
+} from '../src/render/render-tilt.ts';
 import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const thing = (key, names = {}) => ({
@@ -286,4 +294,60 @@ test('in 3D a road arches up between the rooms it joins; flat and 2.5D roads run
   );
   paintCanvas(c, arched, 1280, 800);
   assert.equal(calls.filter(([k]) => k === 'quadraticCurveTo').length, arched.length, 'each arch is one curve');
+});
+
+// Roger, 7 Nov 2026: on a Mac trackpad, two fingers dragged up and down tip the view, and side to side turn it.
+// proves: render_one_camera
+test('two fingers on a trackpad turn and tip the view seen from an angle; a mouse wheel and a flat view do not', async () => {
+  const wheel = (deltaX, deltaY, deltaMode = 0) => ({ deltaX, deltaY, deltaMode });
+  assert.ok(fromTrackpad(wheel(4, 0)), 'sideways is a trackpad');
+  assert.ok(fromTrackpad(wheel(0, 7)), 'small steps are a trackpad');
+  assert.ok(!fromTrackpad(wheel(0, 100)) && !fromTrackpad(wheel(0, -120)), 'whole notches are a mouse wheel');
+  assert.ok(!fromTrackpad(wheel(0, 3, 1)), 'a wheel counted in lines is a mouse');
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const boxes = [],
+      props = new Map();
+    for (const subject of ['Work', 'Money'])
+      for (let i = 0; i < 6; i++) {
+        const key = `${subject[0]}${i}`;
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
+        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
+      }
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(
+      viewport,
+      { boxes, links: [], estimates: [] },
+      { nodes: props, p: (k) => props.get(k) },
+    );
+    let held = 0;
+    const scroll = (deltaX, deltaY) => {
+      const e = { ...wheel(deltaX, deltaY), ctrlKey: false, metaKey: false, clientX: 200, clientY: 200 };
+      stage.wheel({ ...e, preventDefault: () => held++, stopPropagation() {} });
+    };
+    // flat, a two-finger scroll is the page's: there is no angle to turn
+    scroll(0, 7);
+    assert.equal(held, 0, 'flat, the page scrolls');
+    assert.equal(stage.view.tilt ?? 0, 0);
+    stage.lookFrom('cards');
+    const before = stage.view;
+    scroll(-30, 0);
+    assert.ok(stage.view.turn !== before.turn && stage.view.tilt === before.tilt, 'side to side turns it');
+    assert.equal(held, 1, 'and the page does not scroll');
+    const turned = stage.view;
+    scroll(0, 25);
+    assert.ok(stage.view.tilt !== turned.tilt && stage.view.turn === turned.turn, 'up and down tips it');
+    const tipped = stage.view;
+    scroll(0, 100);
+    assert.deepEqual(stage.view, tipped, 'a mouse wheel leaves the angle alone');
+    assert.equal(stage.view.scale, before.scale, 'and nothing zooms but a pinch');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
 });

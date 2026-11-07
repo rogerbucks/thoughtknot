@@ -124,6 +124,16 @@ export function groundShift(view: View, dx: number, dy: number): [number, number
   return [dx * Math.cos(u) + down * Math.sin(u), -dx * Math.sin(u) + down * Math.cos(u)];
 }
 
+/**
+ * Whether a wheel event is two fingers moving on a trackpad, not a mouse wheel turning. A trackpad moves in pixels
+ * and often sideways. A mouse wheel moves up and down only, in whole notches of 100 or 120.
+ */
+export function fromTrackpad(e: { deltaMode: number; deltaX: number; deltaY: number }): boolean {
+  if (e.deltaMode !== 0) return false;
+  const y = Math.abs(e.deltaY);
+  return e.deltaX !== 0 || (y > 0 && y % 100 !== 0 && y % 120 !== 0);
+}
+
 /** The ground under the marks: a faint grid seen from an angle, or the ball the globe wraps the drawing round. */
 export function floorOf(view: View, look: Look): GroundMark[] {
   if (isGlobe(view)) {
