@@ -99,6 +99,8 @@ export function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
 export function spacePad(el: HTMLElement, shown: string, move: (m: SpaceMove) => void, next: () => void) {
   // its key controls, in the dock every view shares (controls_keys): help waits under More
   const dock = renderDock(el, word('space.moves'), ['thoughtknot-space-pad']);
+  // the view says how it opened, as it says each change: 2.5D and 3D open flat now (phase P3)
+  el.querySelector('.thoughtknot-space-said')?.setText(shown);
   const [, , , , depthButton, helpButton] = fillDock(dock, [
     { name: word('space.turn-left'), icon: 'rotate-ccw', run: () => move({ turn: [-KEY_STEP * 2, 0] }) },
     { name: word('space.turn-right'), icon: 'rotate-cw', run: () => move({ turn: [KEY_STEP * 2, 0] }) },

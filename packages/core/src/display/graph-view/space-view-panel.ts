@@ -262,7 +262,6 @@ export async function openSpaceView(
   const pad = spacePad(el, depthWords(), move, () => showAs(ways.after(depth, globe))), // its key controls (§25)
     { depthButton, showHelp, help, rare } = pad;
   depthButton.hidden = depth === 0;
-  said.setText(depthWords()); // it says how it opened, as it says each change: 2.5D and 3D open flat now (phase P3)
   offerHeadset(el, rare, seen, () => paints, tell); // in a headset (projection_spatial)
   // a touch in the view goes no further, so Obsidian's side-panel swipes never take it (gestures_stay_in_drawing).
   // pointers down now, by id: one turns, or moves with Shift or the right button; two move, pinch and twist
