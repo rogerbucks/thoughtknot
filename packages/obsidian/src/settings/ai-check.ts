@@ -1,6 +1,6 @@
-// Test beside a model's address on the settings page (spec §19, user_models; §13, offline_and_mobile_apis). Pressing it
-// asks the address for its list of models, with the model's key, once. No note and no part of the vault is sent. An
-// address that would travel unencrypted is refused before anything goes (ai_private_is_own).
+// Test beside a model's address on the settings page (spec ES§19, user_models; ES§13, offline_and_mobile_apis).
+// Pressing it asks the address for its list of models, with the model's key, once. No note and no part of the vault is
+// sent. An address that would travel unencrypted is refused before anything goes (ai_private_is_own).
 import { Notice, requestUrl } from 'obsidian';
 import { endpointProblem, modelsAddress, word } from '@thoughtknot/core';
 import type { AiModel } from '@thoughtknot/core';

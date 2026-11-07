@@ -2,7 +2,7 @@
 // its name, address (with whether it is private, and a test), model, key, purpose and ceiling. The key is chosen in the
 // app's own secret store, by name. So it never reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
-import type { App, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
+import type { App, SettingDefinition, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
 import {
   AI_PURPOSES,
   aiModel,
@@ -67,58 +67,7 @@ export function aiModelList(
       items: [
         {
           type: 'group',
-          items: [
-            // the address first, with whether it is private and a test beside it: what most often needs setting
-            text(i, 'name', word('models.name')),
-            text(
-              i,
-              'endpoint',
-              word('models.endpoint'),
-              word('models.endpoint.sentence'),
-              word('models.endpoint.placeholder'),
-            ),
-            {
-              name: word('models.private'),
-              desc: word('models.private.sentence'),
-              control: { type: 'toggle' as const, key: `aiModels.${i}.reach` },
-            },
-            text(i, 'model', word('models.model'), word('models.model.sentence')),
-            {
-              name: word('models.key'),
-              desc: word('models.key.sentence'),
-              render: (setting) => {
-                new SecretComponent(app, setting.controlEl)
-                  .setValue(m.keyName)
-                  .onChange((name) => void save(changed(owner.settings, i, { keyName: name ?? undefined })));
-              },
-            },
-            {
-              name: word('models.test'),
-              desc: word('models.test.sentence'),
-              action: () => {
-                const now = owner.settings.aiModels[i];
-                if (now) void showTest(now, now.keyName ? app.secretStorage.getSecret(now.keyName) : null);
-              },
-            },
-            text(
-              i,
-              'purpose',
-              word('models.purpose'),
-              word('models.purpose.sentence', { purposes: formatSeries(AI_PURPOSES.map(purposeWords)) }),
-            ),
-            {
-              name: word('models.ceiling'),
-              desc: word('models.ceiling.sentence'),
-              control: {
-                type: 'dropdown' as const,
-                key: `aiModels.${i}.ceiling`,
-                options: Object.fromEntries(
-                  [...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c]),
-                ),
-              },
-            },
-            ...matrixControls(s, m, i, matrix),
-          ],
+          items: [...modelItems(app, owner, m, i, matrix, save)],
         },
       ],
     })),
@@ -128,6 +77,61 @@ export function aiModelList(
       action: () => void save([...owner.settings.aiModels, aiModel({}, owner.settings.classifications)]),
     },
   };
+}
+
+/** A model's page: the address first, with whether it is private and a test beside it; then its model, key and limits. */
+function modelItems(
+  app: App,
+  owner: ThoughtKnotPlugin,
+  m: AiModel,
+  i: number,
+  matrix: MatrixRow[],
+  save: (aiModels: AiModel[]) => Promise<void>,
+): SettingDefinition[] {
+  const s = owner.settings;
+  return [
+    text(i, 'name', word('models.name')),
+    text(i, 'endpoint', word('models.endpoint'), word('models.endpoint.sentence'), word('models.endpoint.placeholder')),
+    {
+      name: word('models.private'),
+      desc: word('models.private.sentence'),
+      control: { type: 'toggle' as const, key: `aiModels.${i}.reach` },
+    },
+    text(i, 'model', word('models.model'), word('models.model.sentence')),
+    {
+      name: word('models.key'),
+      desc: word('models.key.sentence'),
+      render: (setting) => {
+        new SecretComponent(app, setting.controlEl)
+          .setValue(m.keyName)
+          .onChange((name) => void save(changed(owner.settings, i, { keyName: name ?? undefined })));
+      },
+    },
+    {
+      name: word('models.test'),
+      desc: word('models.test.sentence'),
+      action: () => {
+        const now = owner.settings.aiModels[i];
+        if (now) void showTest(now, now.keyName ? owner.app.secretStorage.getSecret(now.keyName) : null);
+      },
+    },
+    text(
+      i,
+      'purpose',
+      word('models.purpose'),
+      word('models.purpose.sentence', { purposes: formatSeries(AI_PURPOSES.map(purposeWords)) }),
+    ),
+    {
+      name: word('models.ceiling'),
+      desc: word('models.ceiling.sentence'),
+      control: {
+        type: 'dropdown' as const,
+        key: `aiModels.${i}.ceiling`,
+        options: Object.fromEntries([...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c])),
+      },
+    },
+    ...matrixControls(s, m, i, matrix),
+  ];
 }
 
 /** The key of the picker that adds a model from a service. */
