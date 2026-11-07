@@ -18,11 +18,27 @@ export function keySection(menu: HTMLElement): HTMLElement {
   const fold = menu.createEl('details', { cls: KEY_CLASS });
   fold.createEl('summary', { text: word('view.key'), attr: { title: word('view.key-hint') } });
   const body = fold.createDiv({ cls: `${KEY_CLASS}-body` });
-  // just under the head, ahead of the switches and the lists
+  // just under the head, ahead of the switches and the lists; first of all in a panel with no head
   const kids = Array.from(menu.children),
     head = kids.findIndex((c) => c.classList.contains('thoughtknot-dock-head'));
-  menu.insertBefore(fold, kids[head + 1] ?? null);
+  menu.insertBefore(fold, (head < 0 ? kids[0] : kids[head + 1]) ?? null);
   return body;
+}
+
+/** Where the key of subjects of the drawing `viewport` goes: the Key section, where the view has a View panel; else `badge`. */
+export function keyHome(viewport: HTMLElement, badge: HTMLElement): HTMLElement {
+  const menu = viewMenuOf(viewport);
+  return menu ? keySection(menu) : badge;
+}
+
+/**
+ * Moves a key of subjects made under `badge` into the Key section, once the view of `viewport` has a View panel. A View
+ * panel built after the badge so still takes the key, and the badge stays one short line.
+ */
+export function keepKeyHome(viewport: HTMLElement, badge: HTMLElement): void {
+  const key = Array.from(badge.children).find((c) => c.classList.contains('thoughtknot-level-legend'));
+  const home = key && keyHome(viewport, badge);
+  if (key && home && home !== badge) home.appendChild(key);
 }
 
 /** The View panel of the view whose drawing is `viewport`, if it has one. */

@@ -18,7 +18,7 @@ import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
 import { LevelLegend } from './level-legend.ts';
-import { keySection, viewMenuOf } from './view-key.ts';
+import { keepKeyHome, keyHome } from './view-key.ts';
 import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
@@ -278,8 +278,7 @@ export class Aids {
       this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
       // the key of subjects waits in the View panel, shut, where there is one; else under the badge (panels_key)
-      const menu = viewMenuOf(this.host.viewport);
-      this.legend = new LevelLegend(menu ? keySection(menu) : this.badge, {
+      this.legend = new LevelLegend(keyHome(this.host.viewport, this.badge), {
         viewport: this.host.viewport,
         svg: this.host.svg,
         redraw: () => {
@@ -293,6 +292,7 @@ export class Aids {
       });
       this.hints = new LevelHints(this.badge);
     }
+    keepKeyHome(this.host.viewport, this.badge); // a View panel built since takes the key
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);
     this.badge.toggleClass('is-hidden', !text && !back);
