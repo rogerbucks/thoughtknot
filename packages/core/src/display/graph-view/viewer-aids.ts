@@ -204,6 +204,11 @@ export class Aids {
     this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
   }
 
+  /** Shows the drawing as the bar's 2D button says on the new rendering, where it can; says whether it did. */
+  tilted(mode: string | null): boolean {
+    return this.stage?.lookFrom(mode) ?? false;
+  }
+
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
   redrawn(drawn: Drawn): void {
     this.miniMap?.redrawn(drawn);
