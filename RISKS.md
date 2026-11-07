@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (36)
+## Open (39)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -43,6 +43,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-13 | The phone's vault key has no recovery path | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
+| SEC-30 | The MCP app's answer key is the only proof that a person answered | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
+| SEC-31 | The MCP server reads its gate settings from a file Claude's own tools may write | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| SEC-32 | The app's gh allow-list limits the call's shape, not the repository | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 
@@ -387,6 +390,36 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Mix a fresh random value from each side into the session key. Number each message. Let copyIn accept records only from the exact end of the file it holds. Refuse a second transport on one folder.
 
 **Check:** A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.
+
+### SEC-30 The MCP app's answer key is the only proof that a person answered
+
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/mcp-server.ts`, `packages/claude-code/bin/mcp-process.ts`.
+
+**Risk:** The MCP server writes a decision when answer is called with the key from a decide result. It marks the press as coming from a person itself. Its secrecy rests on the host passing _meta to the page and never to the model. The tool list also shows answer and keep to the model. A host that leaks the key lets the model answer its own question. The note then records the choice as the person's.
+
+**Fix:** Do not list answer and keep in tools/list for the model. Bind each key to the page's session. Record in the note that the answer came through the MCP page, not a pane press.
+
+**Check:** A test in packages/claude-code/test calls answer with a key taken from the decide result's text and content. It asserts the note is unchanged.
+
+### SEC-31 The MCP server reads its gate settings from a file Claude's own tools may write
+
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/bin/mcp-process.ts`, `packages/claude-code/src/data-guard.ts`.
+
+**Risk:** The MCP server reads the classification ceiling from .obsidian/plugins/thoughtknot/data.json inside the notes folder. The data-folder guard protects only the mod's own data folder. A session with Write or Bash can loosen the ceiling there, then call show on a note it was refused. SEC-3 covers the mod's folder only.
+
+**Fix:** Read the settings from outside the notes folder, such as the user's own config folder. Or add the plugin's data.json to the paths the data guard refuses to Claude's writing tools.
+
+**Check:** A test asks the data guard to judge a Write to <vault>/.obsidian/plugins/thoughtknot/data.json and asserts a refusal.
+
+### SEC-32 The app's gh allow-list limits the call's shape, not the repository
+
+**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/gh.rs`, `packages/app/src/app-github.ts`.
+
+**Risk:** gh.rs allows PUT and DELETE on any contents path and POST of pulls in any owner/repo. The picked repositories and the class ceiling live in the webview's own storage, which the Rust side does not read. Any script in the webview could write to any repository the person's gh can reach, workflow files included.
+
+**Fix:** Keep the picked repositories on the Rust side, set by a native dialog. Refuse any owner/repo not in that list. Refuse paths under .github.
+
+**Check:** A Rust test runs a PUT for a repository outside the saved list and for .github/workflows/x.yml. It asserts a refusal for both.
 
 ### API-13 Sync records and messages carry no format version
 
