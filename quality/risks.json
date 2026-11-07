@@ -4864,8 +4864,12 @@
         "date": "2026-10-31",
         "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
       },
-      "status": "open",
-      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+      "status": "done",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin",
+      "done_in": "#2013",
+      "prevented_by": [
+        "packages/app/src-tauri/src/place.rs"
+      ]
     },
     {
       "id": "CODE-14",

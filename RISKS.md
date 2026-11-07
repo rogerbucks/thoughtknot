@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (37)
+## Open (36)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -43,7 +43,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-13 | The phone's vault key has no recovery path | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| SEC-29 | The desktop app drops a note's file mode on every save | ●●○ | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 
@@ -389,16 +388,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.
 
-### SEC-29 The desktop app drops a note's file mode on every save
-
-**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
-
-**Risk:** The app writes a note through File::create and a rename, so the new file has the default mode. A note set to owner-only becomes readable by others after the first save. The Node server keeps the old mode.
-
-**Fix:** Read the note's permissions before the write and set them on the temp file before the rename. Do it with the SEC-22 change to the same lines.
-
-**Check:** A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.
-
 ### API-13 Sync records and messages carry no format version
 
 **Who found it:** API design expert. **Where:** `packages/sync/src/keys.ts`, `packages/sync/src/store.ts`, `packages/sync/src/peer.ts`.
@@ -419,7 +408,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (113)
+## Done or accepted (114)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -532,6 +521,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | done | #1945; kept out by `test/lint-minimatch.test.js`, `scripts/security-alerts.mjs` |
+| SEC-29 | The desktop app drops a note's file mode on every save | done | #2013; kept out by `packages/app/src-tauri/src/place.rs` |
 | CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |
