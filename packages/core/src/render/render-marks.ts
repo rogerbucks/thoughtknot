@@ -85,6 +85,8 @@ export interface RoadMark {
   b: string;
   from: [number, number];
   to: [number, number];
+  /** In 3D, the control point of the arch the road bows up in; a straight road has none. */
+  via?: [number, number];
   forward: number;
   back: number;
   width: number;

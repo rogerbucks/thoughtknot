@@ -253,3 +253,33 @@ test('seen from an angle, a drag moves the ground under the pointer, and Shift o
     uninstall();
   }
 });
+
+// proves: render_one_camera
+test('in 3D a road arches up between the rooms it joins; flat and 2.5D roads run straight', () => {
+  const { scene, spots, sizes } = drawing();
+  const fit = fitView(spots.values(), 1280, 800);
+  const detail = detailAt(sizes, fit.scale);
+  const roadsAt = (view) => marksOf(scene, spots, detail, LIGHT, view).filter((m) => m.kind === 'road');
+  assert.ok(roadsAt(fit).length > 0, 'the drawing has roads');
+  assert.ok(
+    roadsAt(fit).every((r) => !r.via),
+    'flat roads run straight',
+  );
+  assert.ok(
+    roadsAt({ ...fit, tilt: 0.6, lift: 0 }).every((r) => !r.via),
+    '2.5D roads lie on the ground',
+  );
+  const arched = roadsAt({ ...fit, tilt: 0.8, lift: 1 });
+  for (const r of arched) {
+    const mid = (r.from[1] + r.to[1]) / 2;
+    assert.ok(r.via && r.via[1] < mid, 'a 3D road bows up over the ground between its rooms');
+  }
+  // the painter draws the arch as a curve, with the count at its top
+  const calls = [];
+  const c = new Proxy(
+    { createRadialGradient: () => ({ addColorStop() {} }) },
+    { get: (t, k) => t[k] ?? ((...a) => calls.push([k, ...a])), set: () => true },
+  );
+  paintCanvas(c, arched, 1280, 800);
+  assert.equal(calls.filter(([k]) => k === 'quadraticCurveTo').length, arched.length, 'each arch is one curve');
+});
