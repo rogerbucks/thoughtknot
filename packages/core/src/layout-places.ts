@@ -1,4 +1,4 @@
-// The places people gave things by dragging, read from and saved to a note's layout block (editor spec §2,
+// The places people gave things by dragging, read from and saved to a note's layout block (editor spec, ES§2,
 // layout_drag_saves; Roger, 7 Nov 2026, R16). A drag saves one place, in Reading view too. The graph block is never
 // rewritten, and nothing else moves (nodes stay put). Host-free and pure: the host reads the note, calls this, and
 // writes what it gives back in one step.

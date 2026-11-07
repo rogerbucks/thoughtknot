@@ -137,7 +137,7 @@ export interface ViewOptions {
   diagram?: DiagramShown;
   /** The drawings over the graph (§70), and how to change them; none, no drawings are drawn and no Draw is offered. */
   sketching?: SketchHost;
-  /** The places people dragged things to, from the layout block, and how to save one (§2, layout_drag_saves). */
+  /** The places people dragged things to, from the layout block, and how to save one (ES§2, layout_drag_saves). */
   places?: PlacesHost;
   /** Moving a box by dragging it (spec §6): the nudges written, and how to write one; none, no box moves. */
   moving?: BoxMoving;
