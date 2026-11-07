@@ -19,3 +19,4 @@ export {
   type VaultConsent,
 } from './ai-reviewers.ts';
 export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
+export { placeInNote, savedPlaces } from './layout-places.ts';
