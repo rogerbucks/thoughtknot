@@ -80,7 +80,7 @@ describe('the globe view, driven in a real browser', () => {
     await settled();
   };
   /** How much the stage bends the drawing round a ball: more than none on the globe. */
-  const bent = () => eval_(`document.querySelector(${JSON.stringify(STAGE)})?.thoughtknotDrawn().view.globe ?? 0`);
+  const bent = () => eval_(`document.querySelector('${STAGE}')?.thoughtknotDrawn().view.globe ?? 0`);
   /** The name of the thing the details panel shows, or ''. */
   const picked = () =>
     eval_(`(document.querySelector('.thoughtknot-fullscreen .thoughtknot-details')?.textContent ?? '').slice(0, 40)`);
@@ -128,7 +128,7 @@ describe('the globe view, driven in a real browser', () => {
     await until(async () => (await bent()) > 0);
     await settled();
     view = await eval_(
-      `(() => { const r = document.querySelector(${JSON.stringify(STAGE)}).getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`,
+      `(() => { const r = document.querySelector('${STAGE}').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`,
     );
   });
   after(async () => {
