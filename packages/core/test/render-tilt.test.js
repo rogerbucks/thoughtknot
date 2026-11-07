@@ -8,7 +8,7 @@ import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf, onScreen } from '../src/render/render-marks.ts';
 import { fitView } from '../src/render/render-camera.ts';
-import { groundOf, heightOf, isTilted, tilted } from '../src/render/render-tilt.ts';
+import { groundOf, groundShift, heightOf, isTilted, tilted, turnedBy } from '../src/render/render-tilt.ts';
 import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const thing = (key, names = {}) => ({
@@ -187,4 +187,69 @@ test('in 3D each level stands on the one that holds it: items on stems, rooms ov
   const lines = calls.filter(([k]) => k === 'lineTo').length;
   assert.ok(lines >= ground.lines.length + dots.length, 'grid lines and stems drawn');
   assert.deepEqual(spots, kept, 'nothing in the drawing moved');
+});
+
+// proves: render_one_camera
+test('seen from an angle, a drag moves the ground under the pointer, and Shift or the right button turns and tips', async () => {
+  // the ground follows the pointer, however the camera is turned
+  const view = { x: 0, y: 0, scale: 1, w: 1000, h: 600, tilt: 0.7, turn: 0.9 };
+  const at = (v) => tilted(500 - v.x, 300 - v.y, 0, v);
+  const [gx, gy] = groundShift(view, 30, -20);
+  const moved = { ...view, x: view.x - gx, y: view.y - gy };
+  const [a, b] = [at(view), at(moved)];
+  assert.ok(Math.abs(b.x - a.x - 30) < 3 && Math.abs(b.y - a.y + 20) < 3, `${b.x - a.x}, ${b.y - a.y}`);
+  assert.deepEqual(groundShift({ ...view, tilt: 0, turn: 0 }, 30, -20), [30, -20], 'flat: as dragged');
+  // turning and tipping, never straight down and never edge on
+  const turned = turnedBy(view, 100, 0);
+  assert.ok(turned.turn > view.turn && turned.tilt === view.tilt);
+  assert.ok(turnedBy(view, 0, -1e4).tilt >= 0.2 && turnedBy(view, 0, 1e4).tilt <= 1.2);
+  // on the stage: Shift or the right button turns, a plain drag moves, and nothing in the drawing moves
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const boxes = [],
+      props = new Map();
+    for (const subject of ['Work', 'Money'])
+      for (let i = 0; i < 6; i++) {
+        const key = `${subject[0]}${i}`;
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
+        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
+      }
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(
+      viewport,
+      { boxes, links: [], estimates: [] },
+      { nodes: props, p: (k) => props.get(k) },
+    );
+    const kept = new Map([...stage.spots].map(([k, s]) => [k, { ...s }]));
+    const drag = (from, to, extra = {}) => {
+      const e = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, button: 0, stopPropagation() {}, ...extra });
+      stage.down(e(...from));
+      stage.move(e(...to));
+      stage.up(e(...to));
+    };
+    // flat, Shift does not turn: there is no angle to turn
+    drag([100, 100], [160, 100], { shiftKey: true });
+    assert.equal(stage.view.turn ?? 0, 0);
+    stage.lookFrom('cards');
+    const before = stage.view;
+    drag([100, 100], [160, 130], { shiftKey: true });
+    assert.ok(stage.view.turn > 0 && stage.view.tilt > before.tilt, 'Shift and a drag turn and tip');
+    assert.equal(stage.view.x, before.x, 'turning does not move the drawing');
+    const turned = stage.view;
+    drag([100, 100], [80, 100], { button: 2 });
+    assert.ok(stage.view.turn < turned.turn, 'the right button turns too');
+    const still = stage.view;
+    drag([100, 100], [160, 100]);
+    assert.equal(stage.view.turn, still.turn, 'a plain drag moves, it does not turn');
+    assert.notEqual(stage.view.x, still.x);
+    assert.deepEqual(stage.spots, kept, 'the camera moved, nothing in the drawing did');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
 });
