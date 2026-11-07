@@ -11,11 +11,13 @@ const LEAD_GAP = 28;
 /** The gap between two names in a column, in pixels. */
 const ROW_GAP = 6;
 
-/** Whether the placer left `ask`'s name where it belongs: on its cloud, its middle within a line of its spot. */
+/** Whether the placer left `ask`'s name where it belongs: on its cloud, its middle within a line or so of its spot. */
 function inPlace(ask: LabelAsk, kept: LabelMark | undefined): boolean {
   if (!kept) return false;
   const [mx, my] = [kept.x + kept.w / 2, kept.y + kept.h / 2];
-  return Math.abs(my - ask.y) <= kept.h && kept.x <= ask.x && ask.x <= kept.x + kept.w && Math.abs(mx - ask.x) < kept.w;
+  return (
+    Math.abs(my - ask.y) <= kept.h * 1.2 && kept.x <= ask.x && ask.x <= kept.x + kept.w && Math.abs(mx - ask.x) < kept.w
+  );
 }
 
 /**

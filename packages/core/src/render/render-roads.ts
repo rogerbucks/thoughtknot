@@ -34,6 +34,8 @@ export interface RoadMark {
   chevrons?: [number, number, number][];
   /** Dashes, where it crosses a road drawn before it, so the two are easy to tell apart. */
   dash?: number[];
+  /** The depth of the rooms it joins: names at this depth or deeper keep off it. */
+  depth?: number;
 }
 
 /** How much a level's roads show: they stay, fainter, while the level inside opens, so a road never just vanishes (R20). */
@@ -130,6 +132,39 @@ export function sayOf(types: readonly string[], forward: number, back: number): 
   return count ? `${wordsOf(types[0] as string)} · ${count}` : wordsOf(types[0] as string);
 }
 
+/** Whether the line from `p` to `q` passes through the box `x`, `y`, `w`, `h` grown by `pad` all round. */
+function throughBox(
+  p: [number, number],
+  q: [number, number],
+  b: { x: number; y: number; w: number; h: number },
+  pad: number,
+) {
+  let [lo, hi] = [0, 1];
+  const [dx, dy] = [q[0] - p[0], q[1] - p[1]];
+  // the line cut down to the part inside each pair of sides in turn
+  for (const [d, from, min, max] of [
+    [dx, p[0], b.x - pad, b.x + b.w + pad],
+    [dy, p[1], b.y - pad, b.y + b.h + pad],
+  ] as const) {
+    if (!d) {
+      if (from < min || from > max) return false;
+      continue;
+    }
+    const [t1, t2] = [(min - from) / d, (max - from) / d];
+    [lo, hi] = [Math.max(lo, Math.min(t1, t2)), Math.min(hi, Math.max(t1, t2))];
+    if (lo > hi) return false;
+  }
+  return true;
+}
+
+/** Whether road `m` runs under the box `b`: along its line, or its arch, and the width of its ribbon. */
+export function underBox(m: RoadMark, b: { x: number; y: number; w: number; h: number }): boolean {
+  const pad = m.width / 2 + 1;
+  if (!m.via) return throughBox(m.from, m.to, b, pad);
+  const top = along(m.from, m.to, m.via, 0.5);
+  return throughBox(m.from, [top[0], top[1]], b, pad) || throughBox([top[0], top[1]], m.to, b, pad);
+}
+
 /** Whether the lines from `p` to `q` and from `r` to `s` cross. */
 function cross(p: [number, number], q: [number, number], r: [number, number], s: [number, number]): boolean {
   const side = (a: [number, number], b: [number, number], c: [number, number]) =>
@@ -191,6 +226,7 @@ export function roadsOf(
         fill: colours.get(road.a) ?? look.faint,
         count,
         chevrons: chevronsOf({ from, to, via, forward, back, width, count }),
+        depth,
         // the count on a white chip edged and written in the road's colour, as in the mockups
         ink: inkOf(colours.get(road.a) ?? look.faint, look.card, look),
         chip: look.card,
