@@ -3472,6 +3472,9 @@
         "placeholdersOf": [
           "value: (entry: Words) => string[]"
         ],
+        "placeInNote": [
+          "value: (note: string, graph: string, shown: string, thing: string, x: number, y: number) => { text: string; } | { refused: string; }"
+        ],
         "placeKey": [
           "value: (s: Pick<Source, 'kind' | 'scheme' | 'target'>) => string"
         ],
@@ -4597,6 +4600,9 @@
         ],
         "savedExploreFor": [
           "value: (explores: readonly SavedExplore[], view?: string) => ExploreSave | undefined"
+        ],
+        "savedPlaces": [
+          "value: (note: string, graph: string, things?: Set<string>) => Map<string, Place>"
         ],
         "savedRules": [
           "value: (looks: readonly Look[]) => RuleWrite[]"
