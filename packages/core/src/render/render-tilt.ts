@@ -3,9 +3,10 @@
 // lies on the ground. The camera tips back by `tilt` and turns round the screen's middle by `turn`. Far things are
 // smaller and near things bigger. Nothing moves in the drawing: only the eye does (nodes stay put). With no tilt and
 // no turn the picture is the flat one, pixel for pixel. Host-free and pure.
-import type { View } from './render-marks.ts';
+import type { GroundMark, View } from './render-marks.ts';
+import type { Look } from './render-look.ts';
 import type { Spot } from './render-rooms.ts';
-import { archOver, isGlobe, onGlobe } from './render-globe.ts';
+import { archOver, ballOf, isGlobe, onGlobe } from './render-globe.ts';
 
 /** How far the eye stands from the screen, as a share of the screen's longer side: far enough to look calm. */
 const EYE = 1.6;
@@ -121,4 +122,15 @@ export function groundShift(view: View, dx: number, dy: number): [number, number
   const [t, u] = [view.tilt ?? 0, view.turn ?? 0];
   const down = dy / Math.max(0.2, Math.cos(t)); // the ground is foreshortened up the screen
   return [dx * Math.cos(u) + down * Math.sin(u), -dx * Math.sin(u) + down * Math.cos(u)];
+}
+
+/** The ground under the marks: a faint grid seen from an angle, or the ball the globe wraps the drawing round. */
+export function floorOf(view: View, look: Look): GroundMark[] {
+  if (isGlobe(view)) {
+    const { disc, lines } = ballOf(view);
+    const [x, y, r] = disc;
+    return [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5, ball: { x, y, r, paper: look.card } }];
+  }
+  const lines = groundOf(view);
+  return lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
 }

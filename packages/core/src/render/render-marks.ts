@@ -8,8 +8,7 @@ import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
 import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
-import { groundOf, isTilted, onScreen } from './render-tilt.ts';
-import { ballOf, isGlobe } from './render-globe.ts';
+import { floorOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
@@ -238,17 +237,6 @@ export function marksOf(
     ...dots,
     ...placeLabels(asks, view),
   ];
-}
-
-/** The ground under the marks: a faint grid seen from an angle, or the ball the globe wraps the drawing round. */
-function floorOf(view: View, look: Look): GroundMark[] {
-  if (isGlobe(view)) {
-    const { disc, lines } = ballOf(view);
-    const [x, y, r] = disc;
-    return [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5, ball: { x, y, r, paper: look.card } }];
-  }
-  const lines = groundOf(view);
-  return lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
 }
 
 /** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
