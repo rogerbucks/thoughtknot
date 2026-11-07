@@ -8,6 +8,7 @@ import { scaleToOpen } from './render-detail.ts';
 import type { Mark, View } from './render-marks.ts';
 import type { Clear } from '../zoom-fit.ts';
 import type { Spot } from './render-rooms.ts';
+import { unwrapped } from './render-globe.ts';
 
 /** The space left round the drawing when it is fitted, in pixels. */
 const MARGIN = 24;
@@ -53,10 +54,12 @@ export function stopsOf(sizes: readonly number[], fitted: number): number[] {
   return stops;
 }
 
-/** `view` zoomed to `scale`, keeping the point under `at` (screen pixels) where it is. */
+/** `view` zoomed to `scale`, keeping the point under `at` (screen pixels) where it is, on the globe as on the flat. */
 export function zoomTo(view: View, scale: number, at: [number, number]): View {
-  const [px, py] = at;
-  return { ...view, scale, x: view.x + px / view.scale - px / scale, y: view.y + py / view.scale - py / scale };
+  const to = { ...view, scale };
+  // the drawing's point under the pointer now, and where it must lie on the flat screen to show there after
+  const [[fx, fy], [px, py]] = [unwrapped(at[0], at[1], view), unwrapped(at[0], at[1], to)];
+  return { ...to, x: view.x + fx / view.scale - px / scale, y: view.y + fy / view.scale - py / scale };
 }
 
 /** `view` zoomed by `ratio` at `at`, kept between the fitted view and a little past the last level. */
@@ -129,7 +132,9 @@ export function glideView(a: View, b: View, t: number): View {
   const [px, py] = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
   const glided = { ...b, scale, x: px - mx / scale, y: py - my / scale };
   // the camera tips and turns on the way too, so going into 2.5D or back to flat is one glide
-  if (!a.tilt && !b.tilt && !a.turn && !b.turn && !a.lift && !b.lift) return glided;
+  // and the drawing bends round the ball or flattens out again, so going onto the globe is one glide too
+  if (!a.tilt && !b.tilt && !a.turn && !b.turn && !a.lift && !b.lift && !a.globe && !b.globe) return glided;
   const along = (p: number | undefined, q: number | undefined) => (p ?? 0) + ((q ?? 0) - (p ?? 0)) * e;
-  return { ...glided, tilt: along(a.tilt, b.tilt), turn: along(a.turn, b.turn), lift: along(a.lift, b.lift) };
+  const turned = { tilt: along(a.tilt, b.tilt), turn: along(a.turn, b.turn), lift: along(a.lift, b.lift) };
+  return { ...glided, ...turned, globe: along(a.globe, b.globe) };
 }

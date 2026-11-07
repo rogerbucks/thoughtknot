@@ -39,6 +39,7 @@ export function roadsOf(
       // only neighbours in the same room: links that leave it ride on the road of the room itself
       if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
       const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
+      if (s.behind || t.behind) continue; // round the far side of the globe: a signpost points the way instead
       roads.push({
         kind: 'road',
         a: road.a,
