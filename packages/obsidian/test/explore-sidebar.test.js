@@ -120,5 +120,9 @@ test('the sidebar floats over the drawing in its own card, taking no room from i
   assert.equal(winner(all, at, 'position').value, 'absolute');
   assert.equal(winner(all, at, 'overflow-y').value, 'auto');
   assert.match(winner(all, at, 'max-height').value, /--thoughtknot-room/);
-  assert.equal(winner(all, at, 'max-width').value, '20rem', 'a column on a wide card, as wide as its words need');
+  assert.match(
+    winner(all, at, 'max-width').value,
+    /^min\(20rem, /,
+    'a column on a wide card, as wide as its words need',
+  );
 });
