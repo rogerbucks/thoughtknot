@@ -98,6 +98,8 @@ export class Zoom {
   private clear: Clear = NO_CLEAR;
   /** Whether the drawing was fitted when its card was hidden, so it is fitted again when it shows (§25). */
   private refit = false;
+  /** While an exploration changes, a drawing laid out again keeps its view, though fitted (explore_stays_put). */
+  holdView = false;
 
   protected content: Size;
   protected viewport: Size;
@@ -211,12 +213,10 @@ export class Zoom {
 
   /**
    * A new viewport, and the drawing's size too when the View menu laid it out again (§25). A fitted drawing is fitted
-   * again. Any other keeps its zoom, raised about the viewport's middle to the new fit if that is above it
-   * (zoom_fit_recomputed). A viewport with no size (a hidden card's) is no resize: only the drawing's size is taken.
-   * The view is kept, or, fitted then (`refit`), fitted again at the next resize with a size.
+   * again; any other keeps its zoom, raised about the middle to the new fit if above it (zoom_fit_recomputed). No size: `refit`.
    */
   resize(viewport: Size, content = this.content): void {
-    const fitted = this.refit || this.isFitted();
+    const fitted = !this.holdView && (this.refit || this.isFitted());
     this.content = content;
     this.refit = fitted && !hasSize(viewport);
     if (!hasSize(viewport)) return;
