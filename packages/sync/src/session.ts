@@ -1,10 +1,10 @@
 // One session between two devices (editor spec §40, mesh_vpn_sync; encrypted_everywhere). Both sides make a fresh
 // salt and a one-time key pair. The session key comes from the key the devices share, the key the one-time pairs agree
-// on, and both salts. The one-time private keys are thrown away at once, so a device key stolen later cannot open a
-// session that was recorded before (forward secrecy), and no one without both device keys can take part. Every message is sealed and bound to its
-// direction and its place in the order. So a message recorded earlier, or in another session, does not open. Nor does
-// one sent back the way it came, one repeated, one dropped from the middle, or one moved out of order. A relay or a
-// listener on the network can do none of these without the session ending. Web Crypto, so it runs in every host.
+// on, and both salts. The one-time private keys are thrown away at once. So a device key stolen later cannot open a
+// session recorded before (forward secrecy). Every message is sealed and bound to its direction and its place in the
+// order. So a message recorded earlier, or in another session, does not open. Nor does one sent back the way it came,
+// one repeated, one dropped from the middle, or one moved out of order. A relay or a listener on the network can do
+// none of these without the session ending. Web Crypto, so it runs in every host.
 import { openWith, sealWith } from './keys.ts';
 import type { DeviceKeys } from './keys.ts';
 

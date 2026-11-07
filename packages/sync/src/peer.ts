@@ -3,9 +3,10 @@
 // a channel that carries bytes. So Tailscale, Headscale, NetBird, Nebula and plain WireGuard all serve.
 // - Only the owner's devices. Each device says its public key first. A device whose key is not on the trusted list is
 //   sent nothing more, and the channel is closed.
-// - End to end. Each device sends a fresh salt and a one-time key with its key. Every message after that is sealed by a key made for this
-//   session alone, from the key the two share, a one-time agreement thrown away after, and both salts, and bound to its direction and its place in the order.
-//   Their private keys never leave them. A relay, or the VPN itself, carries ciphertext only, and a message recorded,
+// - End to end. Each device sends a fresh salt and a one-time key with its key. Every message after that is sealed by
+//   a key made for this session alone. It comes from the key the two share, a one-time agreement thrown away after,
+//   and both salts. Each message is bound to its direction and its place in the order.
+//   Their private keys never leave them. A relay, or the VPN itself, carries ciphertext only. A message recorded,
 //   repeated, reflected, dropped or reordered does not open.
 // - Sealed twice. What is sent is what each store keeps: records already sealed by the vault key, under hidden names.
 // - Each device then sends the records the other lacks, file by file, and stops when both have said they are done.

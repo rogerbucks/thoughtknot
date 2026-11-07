@@ -43,8 +43,9 @@ export class DeviceKeys {
 
   /**
    * The key for one session with the device whose public half is `theirs`. It comes from the key the two devices share,
-   * from `fresh` (what the two sides agreed on with one-time keys, thrown away after) and from `salt`. So a session's
-   * messages open in that session alone, and a device key stolen later cannot open a session recorded before.
+   * from `fresh` and from `salt`. The `fresh` bytes are what the two sides agreed on with one-time keys, thrown away
+   * after. So a session's messages open in that session alone. A device key stolen later cannot open one recorded
+   * before.
    */
   async sessionKey(theirs: Uint8Array, salt: Uint8Array, fresh: Uint8Array): Promise<CryptoKey> {
     const pub = await subtle().importKey('raw', own(theirs), { name: 'ECDH', namedCurve: 'P-256' }, false, []);

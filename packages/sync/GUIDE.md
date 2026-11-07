@@ -36,8 +36,9 @@ Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same be
 
 - Any VPN that carries bytes serves: Tailscale, Headscale, NetBird, Nebula or plain WireGuard (`MESH_VPNS`).
 - Each device says its public key, a one-time key and a fresh salt first. One not on the trusted list is sent nothing more.
-- Every message after that is sealed by a key made for this session (`session.ts`) that a later theft of a device key cannot rebuild, bound to its direction and its
-  number. So a relay carries ciphertext only, and a message repeated, sent back, dropped or moved ends the sync.
+- Every message after that is sealed by a key made for this session (`session.ts`). It is bound to the message's
+  direction and number. A later theft of a device key cannot rebuild it.
+- So a relay carries ciphertext only. A message repeated, sent back, dropped or moved ends the sync.
 - Each store says what it holds file by file (`Shelf`), and each device sends the records the other lacks.
 
 ## Graphs from many places
