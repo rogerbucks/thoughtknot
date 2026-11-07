@@ -51,6 +51,7 @@ import { showMassive } from './massive-card';
 import { overviewInParts } from './note-store';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { placesFor } from './places-block';
 import { compareWith } from './changes/compare-with';
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
@@ -330,8 +331,7 @@ export async function renderBlock(
       exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
-      // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
-      ...(diagram?.table || diagram?.picture
+      ...(diagram?.table || diagram?.picture // a box dragged writes a nudge in the style graph (§6, drag_moves_box)
         ? {}
         : { moving: movingFor(plugin, target.path, graph, styling, drawing) }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
@@ -344,6 +344,7 @@ export async function renderBlock(
       picture: pictureStatus(plugin, target.path, graph), // the bar says whether its picture is up to date (§62)
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       sketching: sketchingFor(plugin, target.path, graph, info?.text),
+      places: placesFor(plugin, target.path, graph, source, info?.text), // a drag saves a place (ES§2)
       exporting,
       compare: () => compareWith(plugin, target.path, graph), // an earlier version drawn with it (risk NEURO-2)
       expand: plugin.expandFor(target.path, graph), // Expand with AI, from the editor beside a thing (§72)

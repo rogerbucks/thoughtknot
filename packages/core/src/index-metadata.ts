@@ -23,3 +23,4 @@ export {
 } from './ai-reviewers.ts';
 export type { AiPublic } from './settings-reach.ts';
 export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
+export { placeInNote, savedPlaces } from './layout-places.ts';
