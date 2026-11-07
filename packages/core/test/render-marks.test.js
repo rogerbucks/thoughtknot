@@ -143,6 +143,44 @@ test('roads join only neighbours in the same room', () => {
     assert.equal(scene.nodes.get(r.a).parent, scene.nodes.get(r.b).parent, `${r.a} to ${r.b}`);
 });
 
+// Roger, 7 Nov 2026 (nightly): highways went to the middle of a cluster, which confused. They stayed when zoomed in.
+// The circles faded out zoomed in, so a cluster's bounds and name were hard to see.
+// proves: render_marks
+test('a road runs edge to edge of its rooms and is gone once you are inside a room; a cloud keeps its edge', () => {
+  const things = [];
+  for (const subject of ['Work', 'Money', 'Home'])
+    for (const area of ['A', 'B'])
+      for (let i = 0; i < 8; i++) things.push(thing(`${subject[0]}${area}${i}`, { subject, area }));
+  const scene = sceneOf({ things, links: [link('WA0', 'MA0'), link('MA1', 'WB1'), link('HA0', 'WA2')] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  const view = (scale) => ({ x: 0, y: 0, scale, w: 1280, h: 800 });
+  const at = (scale) => marksOf(scene, spots, detailAt(sizes, scale), LIGHT, view(scale));
+  const far = 0.3;
+  const roads = at(far).filter((m) => m.kind === 'road' && scene.nodes.get(m.a).depth === 0);
+  assert.ok(roads.length >= 2);
+  for (const r of roads) {
+    const [p, q] = [spots.get(r.a), spots.get(r.b)];
+    const d = Math.hypot(p.x - q.x, p.y - q.y) * far;
+    const off = (end, s) => Math.hypot(end[0] - s.x * far, end[1] - s.y * far);
+    for (const [end, s] of [
+      [r.from, p],
+      [r.to, q],
+    ])
+      assert.ok(Math.abs(off(end, s) - Math.min(s.r * far, d * 0.4)) < 0.01, `${r.a}-${r.b} ends at its room's edge`);
+  }
+  // zoomed into Work until it fills the screen: its roads are gone, and signposts mark the ways out instead
+  const work = spots.get(scene.named[0]);
+  const scale = 900 / (2 * work.r);
+  const inside = { x: work.x - 640 / scale, y: work.y - 400 / scale, scale, w: 1280, h: 800 };
+  const marks = marksOf(scene, spots, detailAt(sizes, scale), LIGHT, inside);
+  const ways = marks.filter((m) => m.kind === 'road' && (m.a === scene.named[0] || m.b === scene.named[0]));
+  assert.deepEqual(ways, [], 'inside a room, its roads are gone');
+  // its cloud fades there, but keeps a clear line round its edge
+  const cloud = marks.find((m) => m.kind === 'cloud' && m.key === scene.named[0]);
+  assert.ok(cloud.alpha < 0.3 && cloud.ring >= 0.5, 'the room keeps its edge');
+});
+
 // proves: render_look_in_marks
 test('a cloud fades once the level inside opens, and one bigger than the screen never washes it out', () => {
   const view = { x: 0, y: 0, scale: 1, w: 800, h: 600 };
