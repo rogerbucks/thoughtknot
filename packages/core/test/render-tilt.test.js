@@ -76,3 +76,74 @@ test('tipped back, the same marks are drawn: far clouds first, rooms under what 
     for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].text);
   assert.deepEqual(spots, kept, 'the camera moved, nothing in the drawing did');
 });
+
+// proves: render_one_camera
+test('tipped back in a small card beside a panel, every group still shows its name, and none overlap', () => {
+  // the ground's gaps shrink as it tips, so a group's name may sit just clear of its neighbour's (Roger, 7 Nov 2026)
+  const subjects = ['Work', 'Money', 'Home', 'Health', 'Learning', 'Side projects'];
+  const things = [];
+  subjects.forEach((subject, n) => {
+    for (const area of ['A', 'B', 'C'])
+      for (let i = 0; i < 4 + n * 3; i++) things.push(thing(`${n}${area}${i}`, { subject, area }));
+  });
+  const scene = sceneOf({ things, links: [] });
+  const spots = roomsOf(scene),
+    sizes = roomSizes(scene, spots);
+  for (const tilt of [0.6, 0.8])
+    for (const turn of [0, 0.3]) {
+      const fit = fitView(spots.values(), 500, 330, { top: 0, right: 0, bottom: 0, left: 280 });
+      const view = { ...fit, tilt, turn };
+      const labels = marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view).filter((m) => m.kind === 'label');
+      const names = new Set(labels.map((m) => m.text));
+      assert.deepEqual(
+        subjects.filter((s) => !names.has(s)),
+        [],
+        `tilt ${tilt}, turn ${turn}`,
+      );
+      for (let i = 0; i < labels.length; i++)
+        for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].text);
+    }
+});
+
+// proves: space_one_bar
+test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks straight down, and the globe is left alone', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const boxes = [],
+      props = new Map();
+    for (const subject of ['Work', 'Money'])
+      for (let i = 0; i < 6; i++) {
+        const key = `${subject[0]}${i}`;
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
+        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
+      }
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(
+      viewport,
+      { boxes, links: [], estimates: [] },
+      { nodes: props, p: (k) => props.get(k) },
+    );
+    const kept = new Map([...stage.spots].map(([k, s]) => [k, { ...s }]));
+    const flat = stage.view;
+    assert.equal(stage.lookFrom('cards'), true, 'the stage shows 2.5D itself');
+    assert.equal(stage.view.tilt, 0.6);
+    assert.equal(stage.view.scale, flat.scale, 'the same zoom');
+    assert.ok(isTilted(stage.view));
+    assert.equal(stage.lookFrom('balls'), true);
+    assert.ok(stage.view.tilt > 0.6, '3D tips further back');
+    stage.resized();
+    assert.ok(stage.view.tilt > 0.6, 'a fit keeps the angle');
+    assert.equal(stage.lookFrom(null), true);
+    assert.equal(isTilted(stage.view), false, 'flat again');
+    assert.equal(stage.lookFrom('globe'), false, 'the globe is the view in space');
+    assert.deepEqual(stage.spots, kept, 'the camera moved, nothing in the drawing did');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});

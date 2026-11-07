@@ -67,6 +67,7 @@ export class SpaceSwitch {
     private readonly says: () => SpaceSays = () => ({}),
     private readonly sketch: () => Sketch | null = () => null,
     private readonly centre: () => string | null = () => null,
+    private readonly tilt: (mode: SpaceMode | null) => boolean = () => false,
   ) {}
 
   /** Where the camera starts as the view next opens: as the last card left it, drawn again in its place (NEURO-7). */
@@ -125,7 +126,9 @@ export class SpaceSwitch {
     // a view still opening is let open first; then only the last press is shown (space_press_kept)
     while (this.opening) await this.opening;
     if (turn !== this.turn) return;
-    if (!mode) {
+    // the new rendering shows 2.5D and 3D itself, over the same marks as flat (phase P3): the view in space goes
+    const tilted = this.tilt(mode);
+    if (!mode || tilted) {
       // it fades out over the flat drawing (space_glide)
       const view = this.view,
         el = this.svg()?.parentElement?.querySelector<HTMLElement>(':scope > .thoughtknot-space-view');

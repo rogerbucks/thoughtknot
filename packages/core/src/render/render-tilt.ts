@@ -22,11 +22,13 @@ export const isTilted = (view: View): boolean => !!view.tilt || !!view.turn;
 
 /**
  * The flat screen's point `x`, `y`, lifted `z` pixels off the ground, as the camera tipped back by `view.tilt` and
- * turned by `view.turn` sees it. The screen's middle stays where it is, so a tilt keeps what you look at in front.
+ * turned by `view.turn` sees it. The middle stays where it is, so a tilt keeps what you look at in front.
  */
 export function tilted(x: number, y: number, z: number, view: View): Seen {
   const [t, u] = [view.tilt ?? 0, view.turn ?? 0];
-  const [cx, cy] = [view.w / 2, view.h / 2];
+  // it turns about the middle of the part the controls leave clear, where the drawing was fitted
+  const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const [cx, cy] = [c.left + (view.w - c.left - c.right) / 2, c.top + (view.h - c.top - c.bottom) / 2];
   let [dx, dy] = [x - cx, y - cy];
   if (u) [dx, dy] = [dx * Math.cos(u) - dy * Math.sin(u), dx * Math.sin(u) + dy * Math.cos(u)];
   const eye = EYE * Math.max(view.w, view.h, 1);

@@ -33,6 +33,17 @@ describe('the workflow that runs the risk panel', () => {
     assert.match(job('panel'), /if: needs\.scope\.outputs\.changed == 'true' \|\| inputs\.all_roles/);
   });
 
+  test('runs one session for each of the nine roles, one after another, and the report joins their files', () => {
+    const panel = job('panel');
+    assert.match(panel, /max-parallel: 1/);
+    assert.match(panel, /fail-fast: false/);
+    assert.equal((panel.match(/who: \w+,/g) ?? []).length, 9);
+    assert.match(panel, /panel-out\/\$\{\{ matrix\.n \}\}-\$\{\{ matrix\.who \}\}\.md/);
+    assert.match(panel, /name: risk-panel-\$\{\{ matrix\.n \}\}/);
+    assert.match(job('report'), /pattern: risk-panel-\*/);
+    assert.match(job('report'), /merge-multiple: true/);
+  });
+
   test('the token is checked first, goes only to the action, and the action may read, diff and write its own folder', () => {
     const panel = job('panel');
     assert.match(panel, /secrets\.CLAUDE_CODE_OAUTH_TOKEN/);
