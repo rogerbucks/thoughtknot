@@ -2409,7 +2409,7 @@ pre.thoughtknot-code {
 .thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
   visibility: hidden;
 }
-.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-mini-map) {
+.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-mini-map):not(.thoughtknot-stage-mini) {
   display: none;
 }
 .thoughtknot-render-stage {
@@ -3793,6 +3793,10 @@ body.thoughtknot-easier-reading
 }
 .thoughtknot-view:has(.thoughtknot-phone-sheet.is-half) .thoughtknot-mini-map {
   inset-block-end: calc(50% + var(--gn-space-2));
+}
+.thoughtknot-stage-mini {
+  inline-size: 160px;
+  block-size: 120px;
 }
 .thoughtknot-mini-svg {
   display: block;
