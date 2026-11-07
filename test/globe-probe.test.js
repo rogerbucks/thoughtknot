@@ -1,7 +1,8 @@
 // The globe view, driven in a real browser the way a person drives it (editor spec, globe_view, globe_dive_detail).
-// It opens the Obsidian harness on a note of forty places and shows it full screen as a globe.
-// Then it turns the wheel, pinches, and clicks. Smooth zoom, pinch in every view and the click rule are Roger's standing rules. What is shown on
-// screen is compared by its picture, as the drawing is a canvas.
+// It opens the Obsidian harness on a note of forty places and shows it full screen as a globe. The new rendering draws
+// it (Roger, 7 Nov 2026: one look, never the old view in space beside it). Then it pinches, presses the bar's zoom and
+// clicks. Smooth zoom, pinch in every view and the click rule are Roger's standing rules. What is shown on screen is
+// compared by its picture, as the drawing is a canvas.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -14,6 +15,8 @@ import { open, serve } from '../scripts/wiki-screens.mjs';
 import { ROOT } from './repository/repo.js';
 
 const PLACES = 40;
+/** The new rendering's canvas in the full-screen card. */
+const STAGE = '.thoughtknot-fullscreen canvas.thoughtknot-render-stage';
 const NOTE = [
   '# Places',
   '```gql',
@@ -76,6 +79,8 @@ describe('the globe view, driven in a real browser', () => {
       await browser.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', clickCount: 1 });
     await settled();
   };
+  /** How much the stage bends the drawing round a ball: more than none on the globe. */
+  const bent = () => eval_(`document.querySelector('${STAGE}')?.thoughtknotDrawn().view.globe ?? 0`);
   /** The name of the thing the details panel shows, or ''. */
   const picked = () =>
     eval_(`(document.querySelector('.thoughtknot-fullscreen .thoughtknot-details')?.textContent ?? '').slice(0, 40)`);
@@ -120,14 +125,10 @@ describe('the globe view, driven in a real browser', () => {
         ),
       );
     }
-    await until(async () =>
-      /Globe/.test(
-        await eval_(`document.querySelector('.thoughtknot-fullscreen .thoughtknot-space-said')?.textContent ?? ''`),
-      ),
-    );
+    await until(async () => (await bent()) > 0);
     await settled();
     view = await eval_(
-      `(() => { const r = document.querySelector('.thoughtknot-fullscreen .thoughtknot-space-view').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`,
+      `(() => { const r = document.querySelector('${STAGE}').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`,
     );
   });
   after(async () => {
@@ -136,40 +137,57 @@ describe('the globe view, driven in a real browser', () => {
     if (folder) rmSync(folder, { recursive: true, force: true });
   });
 
-  test('is shown as a globe, its things named on cards, with no error', options, async () => {
+  test('is shown as a globe by the new rendering, with no old view in space and no error', options, async () => {
     assert.match(
-      await eval_(`document.querySelector('.thoughtknot-fullscreen .thoughtknot-space-said').textContent`),
+      await eval_(
+        `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
+      ),
       /Globe/,
     );
+    assert.ok((await bent()) > 0, 'the stage wraps the drawing round a ball');
+    assert.equal(await eval_(`!!document.querySelector('.thoughtknot-space-view')`), false, 'one look, never two');
     assert.deepEqual(errors, []);
   });
 
-  test('zooms a little at each turn of the wheel, and a pinch zooms the view, not the page', options, async () => {
-    const seen = new Set();
-    for (let i = 0; i < 6; i++) {
-      const before = await picture();
-      await wheel(-60);
-      await until(async () => (await picture()) !== before);
-      seen.add(await settled());
-    }
-    assert.equal(seen.size, 6, 'each turn of the wheel moves the view a step further');
-    const pinched = new Set();
-    for (let i = 0; i < 5; i++) {
-      const before = await picture();
-      await wheel(40, 2); // ctrl, as a trackpad pinch arrives
-      await until(async () => (await picture()) !== before);
-      pinched.add(await settled());
-    }
-    assert.equal(pinched.size, 5, 'each step of a pinch moves the view');
-    assert.equal(await eval_('window.visualViewport.scale'), 1, 'the page itself is not zoomed');
-    assert.equal(await eval_('window.scrollY'), 0, 'the page does not scroll');
-  });
+  test(
+    'a pinch zooms the view, not the page, a little at each step; the bar’s zoom and Fit move it too',
+    options,
+    async () => {
+      const seen = new Set();
+      for (let i = 0; i < 6; i++) {
+        const before = await picture();
+        await wheel(-60, 2); // ctrl, as a trackpad pinch arrives
+        await until(async () => (await picture()) !== before);
+        seen.add(await settled());
+      }
+      assert.equal(seen.size, 6, 'each step of a pinch moves the view a step further');
+      for (const button of ['Zoom in', 'Fit']) {
+        const before = await picture();
+        await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label="${button}"]').click()`);
+        await until(async () => (await picture()) !== before);
+        await settled();
+      }
+      for (let i = 0; i < 6; i++) await wheel(-60, 2);
+      await settled();
+      const pinched = new Set();
+      for (let i = 0; i < 5; i++) {
+        const before = await picture();
+        await wheel(40, 2); // ctrl, as a trackpad pinch arrives
+        await until(async () => (await picture()) !== before);
+        pinched.add(await settled());
+      }
+      assert.equal(pinched.size, 5, 'each step of a pinch moves the view');
+      assert.equal(await eval_('window.visualViewport.scale'), 1, 'the page itself is not zoomed');
+      assert.equal(await eval_('window.scrollY'), 0, 'the page does not scroll');
+    },
+  );
 
-  test('the first click picks a thing and shows its properties; the next turns the globe to it', options, async () => {
+  test('the first click picks a thing, shows its properties and turns the globe to it', options, async () => {
     await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label="Fit"]').click()`);
     await settled();
     // the first spot, going out from the middle of the view, where a thing can be picked
     let at;
+    let before;
     for (const [dx, dy] of [
       [0, 0],
       [60, 0],
@@ -182,6 +200,7 @@ describe('the globe view, driven in a real browser', () => {
     ]) {
       const x = view.x + view.width / 2 + dx,
         y = view.y + view.height / 2 + dy;
+      before = await picture();
       await click(x, y);
       if (/Town\d+/.test(await picked())) {
         at = [x, y];
@@ -190,13 +209,11 @@ describe('the globe view, driven in a real browser', () => {
     }
     assert.ok(at, 'a click on a thing picks it');
     const name = (await picked()).match(/Town\d+/)[0];
-    const before = await picture();
-    await click(...at);
-    assert.equal((await picked()).match(/Town\d+/)?.[0], name, 'the second click keeps it picked');
     const turned = await picture();
-    // clicked once more, now at the middle of the view where the thing stands, nothing moves
+    const middle = at[0] === view.x + view.width / 2 && at[1] === view.y + view.height / 2;
+    assert.ok(before !== turned || middle, 'the first click turned the globe to the thing (Roger, 24 Oct 2026)');
+    // clicked once more, now at the middle of the view where the thing stands, it stays picked
     await click(view.x + view.width / 2, view.y + view.height / 2);
-    assert.equal((await picked()).match(/Town\d+/)?.[0], name);
-    assert.ok(before !== turned || at[0] === view.x + view.width / 2, 'the second click turned the globe to the thing');
+    assert.equal((await picked()).match(/Town\d+/)?.[0], name, 'the next click keeps it picked');
   });
 });

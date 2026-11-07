@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-callouts.test.js",
+  "test": "a line of names keeps its order and gaps, each near its wish, sliding back from the far end if it must",
+  "seen_failing_first": false,
+  "evidence": "A test of its own for code already proved through render-marks.test.js, added so the module is named by a test."
+}
