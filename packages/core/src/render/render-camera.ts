@@ -48,8 +48,8 @@ const PAST_FIRST = 0.9;
 
 /**
  * The zoom stops, smallest first: the farthest out the reader may go, then the zoom that opens each level. The
- * farthest out is the fitted zoom, or further where the fit already opens the second level: zoomed right out, the
- * reader always reaches the first level (Roger).
+ * farthest out is the fitted zoom, or further where the fit already opens the second level. So zoomed right out,
+ * the reader always reaches the first level (Roger).
  */
 export function stopsOf(sizes: readonly number[], fitted: number): number[] {
   const second = sizes[1] ? (sizes.length === 2 ? ITEMS_FROM : OPEN_FROM) / sizes[1] : Infinity;
