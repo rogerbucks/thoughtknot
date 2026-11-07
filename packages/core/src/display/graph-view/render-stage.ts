@@ -116,6 +116,7 @@ export class RenderStage {
           view: () => this.view,
           lookAt: (x, y) => {
             this.untouched = false;
+            this.gliding++; // a press on the copy stops a glide under way, as the reader's own zoom does
             this.view = centreOn(this.view, { x, y, r: 0 });
             this.draw();
           },

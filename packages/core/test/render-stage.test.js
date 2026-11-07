@@ -341,7 +341,7 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
   try {
-    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { GLIDE_MS, RenderStage } = await import('../src/display/graph-view/render-stage.ts');
     const { drawing, g } = drawingAndGraph();
     const viewport = doc.createElement('div');
     doc.body.appendChild(viewport);
@@ -365,6 +365,14 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
     const x = (m.x - stage.view.x) * scale,
       y = (m.y - stage.view.y) * scale;
     assert.ok(Math.abs(x - stage.view.w / 2) < 2 && Math.abs(y - stage.view.h / 2) < 2, 'Money is in the middle');
+    // a press during a glide wins: the glide stops, and the view stays where the press put it
+    const win = viewport.win ?? globalThis;
+    win.matchMedia = () => ({ matches: false });
+    stage.glideTo({ ...stage.view, x: w.x, y: w.y });
+    mini.moveTo({ clientX: (m.x - whole.x) * whole.scale, clientY: (m.y - whole.y) * whole.scale });
+    const pressed = { ...stage.view };
+    await new Promise((r) => setTimeout(r, GLIDE_MS + 80));
+    assert.deepEqual(stage.view, pressed, 'the glide under way stopped');
     stage.unload();
     assert.ok(!mini.canvas.parentElement, 'gone with the stage');
     // the mini-map setting off: none
