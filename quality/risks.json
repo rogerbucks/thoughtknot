@@ -5458,7 +5458,8 @@
         "date": "2026-11-07",
         "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#2063"
     },
     {
       "id": "ARCH-16",
