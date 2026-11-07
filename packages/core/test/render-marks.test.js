@@ -19,6 +19,7 @@ import {
   crisp,
   marksOf,
   placeLabels,
+  wrapName,
 } from '../src/render/render-marks.ts';
 
 const thing = (key, names = {}) => ({
@@ -353,4 +354,53 @@ test('in a small card, crowded subject names stand round the drawing where there
   }
   for (let i = 0; i < labels.length; i++)
     for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].text);
+});
+
+// Roger, 7 Nov 2026 (nightly): zoomed in, give a node's name room for two lines, or its whole title across 5-6 lines.
+// proves: render_marks
+test('a long name wraps between words onto at most six lines, the last cut with an ellipsis', () => {
+  assert.deepEqual(wrapName('Short', 22, 6), ['Short']);
+  assert.deepEqual(wrapName('How the lending demo reads its own notes', 22, 6), [
+    'How the lending demo',
+    'reads its own notes',
+  ]);
+  assert.deepEqual(wrapName('Supercalifragilisticexpialidocious', 22, 6), ['Supercalifragilisticex', 'pialidocious']);
+  const long = 'one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen';
+  const six = wrapName(`${long} ${long}`, 22, 6);
+  assert.equal(six.length, 6);
+  assert.ok(six.every((l) => l.length <= 22));
+  assert.ok(six[5].endsWith('…'));
+});
+
+// proves: render_marks
+test('close in, an item with a long name shows it on two lines or more, apart from every other name', () => {
+  const name = 'How the lending demo reads its own notes and keeps them in step';
+  const things = [];
+  for (const subject of ['Work', 'Money'])
+    for (let i = 0; i < 6; i++) things.push({ ...thing(`${subject[0]}${i}`, { subject }), text: `${name} ${i}` });
+  const scene = sceneOf({ things, links: [] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  const item = spots.get('W0');
+  const at = (scale) => {
+    const view = { x: item.x - 640 / scale, y: item.y - 400 / scale, scale, w: 1280, h: 800 };
+    return marksOf(scene, spots, detailAt(sizes, scale), LIGHT, view).filter((m) => m.kind === 'label');
+  };
+  const open = (44 / sizes[1]) * 1.05;
+  const near = at(open).filter((m) => m.key.length === 2);
+  assert.ok(near.length > 0, 'items are named');
+  assert.ok(
+    near.some((m) => m.lines?.length >= 2),
+    'a long name takes two lines once items are fully shown',
+  );
+  const closer = at(open * 3).filter((m) => m.key.length === 2);
+  const most = Math.max(...closer.map((m) => m.lines?.length ?? 1));
+  assert.ok(most >= 3 && most <= 6, `closer in, more of it shows: ${most} lines`);
+  for (const m of closer.filter((l) => l.lines)) {
+    assert.ok(name.startsWith(m.lines.join(' ').replace('…', '').slice(0, 20)), `${m.key}: its own words, in order`);
+    assert.ok(m.h >= m.px * 1.6 + (m.lines.length - 1) * m.px, `${m.key}: the card is tall enough for its lines`);
+  }
+  for (const labels of [at(open), at(open * 3)])
+    for (let i = 0; i < labels.length; i++)
+      for (let j = i + 1; j < labels.length; j++) assert.ok(!overlap(labels[i], labels[j]), labels[i].key);
 });

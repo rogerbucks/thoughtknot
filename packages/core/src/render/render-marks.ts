@@ -12,16 +12,14 @@ import { groundOf, isTilted, onScreen } from './render-tilt.ts';
 export { onScreen } from './render-tilt.ts';
 import { roadsOf } from './render-roads.ts';
 import { calloutsOf } from './render-callouts.ts';
+import { LONGEST, MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf, textWidth } from './render-labels.ts';
+export { LONGEST, MAX_PX, MIN_PX, labelOf, sizeOf, textWidth, wrapName } from './render-labels.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
 import { word } from '../words.ts';
 
-/** The smallest name drawn, in pixels. */
-export const MIN_PX = 11;
-/** The largest name drawn, in pixels. */
-export const MAX_PX = 16;
 /** An item's name, in pixels: easy to read close in (Roger, 7 Nov 2026). */
 export const ITEM_PX = 13;
 /** The smallest a group's name gets as its insides open, in pixels: still easy to read. */
@@ -117,6 +115,8 @@ export interface LabelMark {
   dot?: string;
   /** The thin edge of the card, in its thing's colour. */
   edge?: string;
+  /** A long name wrapped onto lines, top to bottom, where it takes more than one; `text` is then the whole name. */
+  lines?: string[];
   /** A thin line from the card to its thing, when the card stands away from it: from `x1`, `y1` to `x2`, `y2`. */
   lead?: [number, number, number, number];
   /** A second, smaller line under the name, such as "13 items", in `subInk` at `subPx`. */
@@ -248,6 +248,8 @@ export interface LabelAsk {
   sub?: string;
   subInk?: string;
   alpha: number;
+  /** The most lines a long name may wrap onto; one when none is given. */
+  lines?: number;
   /** Higher keeps its place when two names clash. */
   weight: number;
   /** How far the name may move up or down, in pixels, to fit: a group's name may move within its cloud. */
@@ -287,19 +289,18 @@ function askOf(
         }),
     alpha,
     weight: (last - node.depth) * 1e6 + node.items.length,
+    // close in, an item's long name may wrap: two lines once items are fully shown, more as they spread apart
+    ...(item && (detail.shown[last] ?? 0) >= 1 ? { lines: linesFor(detail.span?.[last] ?? 0) } : {}),
     // a group's name may move within its cloud, and always by one line, so a small cloud's name still shows
     ...(item ? {} : { room: Math.max(s.r * 0.8, px * 1.6 + MIN_PX * 1.2 + GAP) }),
   };
 }
 
-/** The width of `text` at `px`, near enough to keep names apart. */
-export const textWidth = (text: string, px: number): number => text.length * px * 0.56;
+/** How many lines an item's name may take when items sit `span` pixels apart: two, up to six as they spread. */
+const linesFor = (span: number): number => Math.max(2, Math.min(MOST_LINES, Math.floor(span / (ITEM_PX * 1.6))));
 
 /** The pixels kept between two names, and between a name and a control. */
 const GAP = 2;
-
-/** The longest name drawn, in letters; longer names end in an ellipsis. */
-export const LONGEST = 28;
 
 /**
  * The one label placer. It takes names heaviest first and keeps each that fits (spotFor). A name fits inside the part of the
@@ -308,44 +309,17 @@ export const LONGEST = 28;
 export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] {
   const order = [...asks].sort((a, b) => b.weight - a.weight || (a.key < b.key ? -1 : 1));
   const kept: LabelMark[] = [];
-  for (const ask of order) {
-    const size = sizeOf(ask);
-    const box = spotFor(ask, size.w, size.h, view, kept);
-    if (box) kept.push(labelOf(ask, size, box));
-  }
+  for (const ask of order)
+    // a long name close in may take several lines: as many as fit, down to one
+    for (let lines = ask.lines ?? 1; lines >= 1; lines--) {
+      const size = sizeOf(ask, lines);
+      const box = spotFor(ask, size.w, size.h, view, kept);
+      if (box) {
+        kept.push(labelOf(ask, size, box));
+        break;
+      }
+    }
   return kept;
-}
-
-/** How big a name's card is: its size held between MIN_PX and MAX_PX, its text cut to LONGEST letters. */
-export function sizeOf(ask: LabelAsk): { text: string; px: number; w: number; h: number } {
-  const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
-  const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
-  const w = Math.max(textWidth(text, px), ask.sub ? textWidth(ask.sub, SUB_PX) : 0) + px + (ask.dot ? px : 0),
-    h = px * 1.6 + (ask.sub ? SUB_PX * 1.2 : 0);
-  return { text, px, w, h };
-}
-
-const SUB_PX = MIN_PX; // the size of a card's second line, in pixels
-
-/** The card of `ask`, of `size`, at `box`. */
-export function labelOf(
-  ask: LabelAsk,
-  size: { text: string; px: number },
-  box: { x: number; y: number; w: number; h: number },
-): LabelMark {
-  return {
-    kind: 'label',
-    key: ask.key,
-    text: size.text,
-    ...box,
-    px: size.px,
-    fill: ask.fill,
-    ink: ask.ink ?? inkOn(ask.fill),
-    alpha: ask.alpha,
-    ...(ask.dot ? { dot: ask.dot } : {}),
-    ...(ask.edge ? { edge: ask.edge } : {}),
-    ...(ask.sub ? { sub: ask.sub, subPx: SUB_PX, subInk: ask.subInk ?? ask.ink ?? inkOn(ask.fill) } : {}),
-  };
 }
 
 /**
