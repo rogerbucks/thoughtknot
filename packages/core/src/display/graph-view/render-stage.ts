@@ -56,6 +56,9 @@ export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
   return sceneOf(shapeOf(drawing, g)).depths.length > 1;
 }
 
+/** How far 2.5D and 3D tip the camera back, in radians: the ground at a slant, its far side still easy to read. */
+const TILTS: Record<string, number> = { cards: 0.6, balls: 0.8 };
+
 /** The stage for a card, when its setting is on and its graph has levels to show; else none. */
 export function stageFor(
   viewport: HTMLElement,
@@ -172,6 +175,9 @@ export class RenderStage {
       this.mini.canvas.hidden = true;
       view = fit().view;
     }
+    // a fit keeps the angle the camera looks from: 2.5D stays 2.5D
+    const { tilt, turn } = this.view ?? {};
+    if (tilt || turn) Object.assign(view, { tilt: tilt ?? 0, turn: turn ?? 0 });
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
@@ -290,6 +296,23 @@ export class RenderStage {
     else this.hands?.open(key);
   }
 
+  /**
+   * Looks at the drawing as the bar's 2D button says (space_one_bar). 2.5D and 3D tip the camera back over the same
+   * marks, and flat looks straight down. Says whether the stage shows it. The globe is left to the view in space.
+   */
+  lookFrom(mode: string | null): boolean {
+    const tilt = mode ? TILTS[mode] : 0;
+    if (tilt === undefined) {
+      this.view = { ...this.view, tilt: 0, turn: 0 };
+      return false;
+    }
+    if ((this.view.tilt ?? 0) === tilt) return true; // already looking from there: nothing to glide
+    const untouched = this.untouched;
+    this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0 });
+    this.untouched = untouched; // looking from another angle is not a move the reader made
+    return true;
+  }
+
   /** Glides to `to`, or goes there at once when the reader asks for less motion (rule 7). */
   private glideTo(to: View): void {
     this.untouched = false;
@@ -343,6 +366,7 @@ export class RenderStage {
 
   /** Takes the canvas away and shows today's drawing again. */
   unload(): void {
+    this.gliding++; // a glide still running stops with the stage
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();

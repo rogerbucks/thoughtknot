@@ -231,6 +231,22 @@ export async function measure(block, times, steps = STEPS, clock = () => perform
   return record;
 }
 
+/**
+ * `measure` repeated `runs` times, keeping the middle time of each step. One slow run on a busy machine cannot fail a
+ * budget, while a step that is really too slow is slow in every run. The budget itself is unchanged.
+ */
+export async function measureMedian(block, times, steps = STEPS, runs = 3) {
+  const all = [];
+  for (let i = 0; i < runs; i++) all.push(await measure(block, times, steps));
+  const record = all[0];
+  for (const name of Object.keys(record.steps)) {
+    const ms = all.map((r) => r.steps[name].ms);
+    if (ms.includes(null)) continue;
+    record.steps[name].ms = ms.sort((a, b) => a - b)[Math.floor(ms.length / 2)];
+  }
+  return record;
+}
+
 /** What is over budget in `records`, one line each, naming the size, the step, what was measured and what is allowed. */
 export function overBudget(records, budgets = SCALE_BUDGETS) {
   const over = [];

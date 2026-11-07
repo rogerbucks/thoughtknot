@@ -4864,8 +4864,101 @@
         "date": "2026-10-31",
         "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
       },
+      "status": "done",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin",
+      "done_in": "#2035",
+      "prevented_by": [
+        "packages/app/src-tauri/src/place.rs"
+      ]
+    },
+    {
+      "id": "SEC-30",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The MCP app's answer key is the only proof that a person answered",
+      "risk": "The MCP server writes a decision when answer is called with the key from a decide result. It marks the press as coming from a person itself. Its secrecy rests on the host passing _meta to the page and never to the model. The tool list also shows answer and keep to the model. A host that leaks the key lets the model answer its own question. The note then records the choice as the person's.",
+      "evidence": [
+        "packages/claude-code/src/mcp-server.ts:50",
+        "packages/claude-code/src/mcp-server.ts:232",
+        "packages/claude-code/src/mcp-server.ts:281",
+        "packages/claude-code/src/mcp-server.ts:323"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Do not list answer and keep in tools/list for the model. Bind each key to the page's session. Record in the note that the answer came through the MCP page, not a pane press.",
+      "check": "A test in packages/claude-code/test calls answer with a key taken from the decide result's text and content. It asserts the note is unchanged.",
+      "paths": [
+        "packages/claude-code/src/mcp-server.ts",
+        "packages/claude-code/bin/mcp-process.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
       "status": "open",
-      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-31",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The MCP server reads its gate settings from a file Claude's own tools may write",
+      "risk": "The MCP server reads the classification ceiling from .obsidian/plugins/thoughtknot/data.json inside the notes folder. The data-folder guard protects only the mod's own data folder. A session with Write or Bash can loosen the ceiling there, then call show on a note it was refused. SEC-3 covers the mod's folder only.",
+      "evidence": [
+        "packages/claude-code/bin/mcp-process.ts:35",
+        "packages/claude-code/src/mcp-server.ts:192",
+        "packages/claude-code/src/data-guard.ts:246"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Read the settings from outside the notes folder, such as the user's own config folder. Or add the plugin's data.json to the paths the data guard refuses to Claude's writing tools.",
+      "check": "A test asks the data guard to judge a Write to <vault>/.obsidian/plugins/thoughtknot/data.json and asserts a refusal.",
+      "paths": [
+        "packages/claude-code/bin/mcp-process.ts",
+        "packages/claude-code/src/data-guard.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-32",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The app's gh allow-list limits the call's shape, not the repository",
+      "risk": "gh.rs allows PUT and DELETE on any contents path and POST of pulls in any owner/repo. The picked repositories and the class ceiling live in the webview's own storage, which the Rust side does not read. Any script in the webview could write to any repository the person's gh can reach, workflow files included.",
+      "evidence": [
+        "packages/app/src-tauri/src/gh.rs:93",
+        "packages/app/src-tauri/src/gh.rs:110",
+        "packages/app/src-tauri/src/gh.rs:139",
+        "packages/app/src/app-github.ts:26"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Keep the picked repositories on the Rust side, set by a native dialog. Refuse any owner/repo not in that list. Refuse paths under .github.",
+      "check": "A Rust test runs a PUT for a repository outside the saved list and for .github/workflows/x.yml. It asserts a refusal for both.",
+      "paths": [
+        "packages/app/src-tauri/src/gh.rs",
+        "packages/app/src/app-github.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
     },
     {
       "id": "CODE-14",

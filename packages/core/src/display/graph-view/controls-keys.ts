@@ -20,5 +20,9 @@ export const KEYS_SHOWN = 5;
 export function fillDock(dock: ControlDock, keys: readonly KeyControl[]): HTMLButtonElement[] {
   dock.el.addClass('has-keys'); // a tablet folds it to a rail of these
   if (keys.length <= KEYS_SHOWN && dock.more.parentElement) dock.more.parentElement.hidden = true; // no empty More
-  return keys.map((k, i) => button(i < KEYS_SHOWN ? dock.body : dock.more, k.name, k.icon, k.run, k.name));
+  return keys.map((k, i) => {
+    const b = button(i < KEYS_SHOWN ? dock.body : dock.more, k.name, k.icon, k.run, k.name);
+    b.setAttribute('title', k.name); // where a dock shows its icons alone, its name is the tooltip (panels_compact)
+    return b;
+  });
 }

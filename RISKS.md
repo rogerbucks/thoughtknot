@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (37)
+## Open (39)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -43,7 +43,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-13 | The phone's vault key has no recovery path | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | SEC-27 | Claude's file tools can turn on a browser plug-in | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-28 | Sync accepts replayed or doubled records | ●○○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
-| SEC-29 | The desktop app drops a note's file mode on every save | ●●○ | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
+| SEC-30 | The MCP app's answer key is the only proof that a person answered | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
+| SEC-31 | The MCP server reads its gate settings from a file Claude's own tools may write | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| SEC-32 | The app's gh allow-list limits the call's shape, not the repository | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | API-13 | Sync records and messages carry no format version | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 | UX-11 | The overview card is announced as an image but takes keys | ●●○ | ●●○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 
@@ -389,15 +391,35 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test replays a captured records message into a second session and asserts the store is unchanged and the sync is refused.
 
-### SEC-29 The desktop app drops a note's file mode on every save
+### SEC-30 The MCP app's answer key is the only proof that a person answered
 
-**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/place.rs`.
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/src/mcp-server.ts`, `packages/claude-code/bin/mcp-process.ts`.
 
-**Risk:** The app writes a note through File::create and a rename, so the new file has the default mode. A note set to owner-only becomes readable by others after the first save. The Node server keeps the old mode.
+**Risk:** The MCP server writes a decision when answer is called with the key from a decide result. It marks the press as coming from a person itself. Its secrecy rests on the host passing _meta to the page and never to the model. The tool list also shows answer and keep to the model. A host that leaks the key lets the model answer its own question. The note then records the choice as the person's.
 
-**Fix:** Read the note's permissions before the write and set them on the temp file before the rename. Do it with the SEC-22 change to the same lines.
+**Fix:** Do not list answer and keep in tools/list for the model. Bind each key to the page's session. Record in the note that the answer came through the MCP page, not a pane press.
 
-**Check:** A Rust test makes a 0600 note, saves it, and asserts the mode is still 0600.
+**Check:** A test in packages/claude-code/test calls answer with a key taken from the decide result's text and content. It asserts the note is unchanged.
+
+### SEC-31 The MCP server reads its gate settings from a file Claude's own tools may write
+
+**Who found it:** Senior security engineer. **Where:** `packages/claude-code/bin/mcp-process.ts`, `packages/claude-code/src/data-guard.ts`.
+
+**Risk:** The MCP server reads the classification ceiling from .obsidian/plugins/thoughtknot/data.json inside the notes folder. The data-folder guard protects only the mod's own data folder. A session with Write or Bash can loosen the ceiling there, then call show on a note it was refused. SEC-3 covers the mod's folder only.
+
+**Fix:** Read the settings from outside the notes folder, such as the user's own config folder. Or add the plugin's data.json to the paths the data guard refuses to Claude's writing tools.
+
+**Check:** A test asks the data guard to judge a Write to <vault>/.obsidian/plugins/thoughtknot/data.json and asserts a refusal.
+
+### SEC-32 The app's gh allow-list limits the call's shape, not the repository
+
+**Who found it:** Senior security engineer. **Where:** `packages/app/src-tauri/src/gh.rs`, `packages/app/src/app-github.ts`.
+
+**Risk:** gh.rs allows PUT and DELETE on any contents path and POST of pulls in any owner/repo. The picked repositories and the class ceiling live in the webview's own storage, which the Rust side does not read. Any script in the webview could write to any repository the person's gh can reach, workflow files included.
+
+**Fix:** Keep the picked repositories on the Rust side, set by a native dialog. Refuse any owner/repo not in that list. Refuse paths under .github.
+
+**Check:** A Rust test runs a PUT for a repository outside the saved list and for .github/workflows/x.yml. It asserts a refusal for both.
 
 ### API-13 Sync records and messages carry no format version
 
@@ -419,7 +441,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/wcag.test.js names the massive card and asserts the stage has a non-img role and a list of groups.
 
-## Done or accepted (113)
+## Done or accepted (114)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -532,6 +554,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-13 | A panel that is cut short still leaves no report | done | #1587 |
 | CODE-13 | The desktop file commands read and write with no size cap | accepted | Roger Bucks: Low likelihood and low impact; chosen on 31 Oct 2026 from the risk panel's own proposal. |
 | SEC-26 | The lint tools carry a minimatch with a slow-matching flaw | done | #1945; kept out by `test/lint-minimatch.test.js`, `scripts/security-alerts.mjs` |
+| SEC-29 | The desktop app drops a note's file mode on every save | done | #2035; kept out by `packages/app/src-tauri/src/place.rs` |
 | CODE-14 | A connector edit can overwrite another thing's value | done | #1632; kept out by `packages/sync/test/connector-sync.test.js` |
 | CODE-15 | A failed headset start leaves the session open | accepted | Roger, 31 Oct 2026 (go on the panel's recommendations): Rare, low impact, and the person can take the headset off. Chosen from the risk panel's own proposal. |
 | ARCH-14 | The AI-made rule at the boundary reads a flag nothing writes | done | #1635 |

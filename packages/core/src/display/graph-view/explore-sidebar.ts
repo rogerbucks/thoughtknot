@@ -40,7 +40,7 @@ const BRANCH_STEP = 2;
 
 /** Builds the sidebar in `root`, hidden until the card explores. */
 export function renderSidebar(root: HTMLElement, acts: SidebarActs): ExploreSidebar {
-  const dock = renderDock(root, word('explore.sidebar'), ['thoughtknot-explore-sidebar']),
+  const dock = renderDock(root, word('explore.sidebar'), ['thoughtknot-explore-sidebar'], true),
     { el, body } = dock;
   el.hidden = true;
   root.addEventListener('keydown', (e: KeyboardEvent) => {

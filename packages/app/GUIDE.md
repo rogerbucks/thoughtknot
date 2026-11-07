@@ -47,6 +47,17 @@ Rust (src-tauri/)
 - `tauri-mesh.ts`: `dialDevice` and `listenForDevice`, the mesh commands as a sync `Channel`. Sends go in order, and the
   channel closes when the Rust says the connection ended.
 
+## Sharing, in `src/`
+
+- `app-share.ts`: the Share button and its panel (ES§45, `board_access`). One press starts a shared vault. The keys are
+  made on this device. The panel shows only the public key and a fingerprint to read aloud. Another device is
+  trusted by pasting its public key. Nothing is sent from the panel.
+- `app-share-invite.ts`: the invitation. The owner picks a trusted device, a role and a board, and gets text sealed for
+  that device alone. A guest pastes it and reads the inviter's fingerprint first. Joining is a press of its own.
+- `app-share-dom.ts`: the small helpers of the Share screens.
+- `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
+  key is unexportable, and the vault key is kept sealed for this device itself.
+
 ## The Rust, `src-tauri/`
 
 - Seventeen commands, and no others: the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,

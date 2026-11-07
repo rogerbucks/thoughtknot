@@ -35,9 +35,22 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
 Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same between two devices that are on.
 
 - Any VPN that carries bytes serves: Tailscale, Headscale, NetBird, Nebula or plain WireGuard (`MESH_VPNS`).
-- Each device says its public key first. One not on the trusted list is sent nothing more.
-- Every message after that is sealed by the key the two devices share. So a relay carries ciphertext only.
+- Each device says its public key, a one-time key and a fresh salt first. One not on the trusted list is sent nothing more.
+- Every message after that is sealed by a key made for this session (`session.ts`). It is bound to the message's
+  direction and number. A later theft of a device key cannot rebuild it.
+- So a relay carries ciphertext only. A message repeated, sent back, dropped or moved ends the sync.
 - Each store says what it holds file by file (`Shelf`), and each device sends the records the other lacks.
+
+## Starting a shared vault
+
+`sharing.ts` is one device's side of a shared vault (`board_access`). `Sharing.start` makes the device's key pair and a
+vault key. A `Keeper` keeps them between runs. It keeps the pair as a handle whose private half cannot be exported, and the
+vault key sealed for this device itself. The panel shows only the public half and a short fingerprint. Another device
+is trusted by its public key (`trust`), and only a trusted device is ever sent anything.
+
+An owner invites a trusted device with `invite`. The invitation is text that holds the vault key only sealed for that one
+device (`invitationText`). A device that only made its keys (`prepare`) takes it with `accept`, and then trusts the
+inviter. The guest reads the inviter's fingerprint first, as nothing else says who sent it.
 
 ## Graphs from many places
 
@@ -70,3 +83,4 @@ Syncthing copies each store's files. Over a mesh VPN, `peer.ts` does the same be
   and by overlay, and drawn the same on every device.
 - `test/mesh-vpn.test.js` — two devices sync through a real TCP relay, which sees ciphertext only; a stranger gets
   nothing.
+- `test/session-security.test.js` — a recorded, repeated, reflected, dropped or moved message does not open, even to a thief of both device keys.
