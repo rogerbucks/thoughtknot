@@ -6,7 +6,7 @@ import { word } from '../../words.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import type { Look } from '../../render/render-look.ts';
-import { marksOf, type OwnColour, type View } from '../../render/render-marks.ts';
+import { marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
 import { detailAt } from '../../render/render-detail.ts';
 import { fitView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
@@ -80,8 +80,9 @@ export class StageMiniMap {
     this.canvas.height = Math.round(h * ratio);
     const look = this.host.look();
     // the overview's clouds and roads, without names: too small to read at this size
-    const marks = marksOf(scene, spots, detailAt(sizes, whole.scale), look, whole, this.host.own).flatMap((m) =>
-      m.kind === 'cloud' ? [m] : m.kind === 'road' ? [{ ...m, count: '', width: Math.min(m.width, 2) }] : [],
+    const marks: Mark[] = marksOf(scene, spots, detailAt(sizes, whole.scale), look, whole, this.host.own).flatMap(
+      (m): Mark[] =>
+        m.kind === 'cloud' ? [m] : m.kind === 'road' ? [{ ...m, count: '', width: Math.min(m.width, 2) }] : [],
     );
     const f = this.frame();
     this.canvas.hidden = !!this.host.auto?.() && this.fits();
