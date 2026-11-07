@@ -2,7 +2,7 @@
 // space_turns_round_pick). A drag with Shift or the right button already turns it. Not everyone can drag, so Shift
 // with the arrow keys turns and tips it too. The card's dock shows four buttons that do the same, while the view is
 // tilted. Flat 2D shows none, and leaves the keys to the card. Plain arrows still walk from thing to thing.
-import { word } from '../../words.ts';
+import { word, type WordKey } from '../../words.ts';
 import { button } from '../button.ts';
 
 /** How far one key press or button turns the camera, as a drag of this many pixels would. */
@@ -14,7 +14,7 @@ export interface Turnable {
 }
 
 /** The turns each control and key gives, as a drag across and up or down would. */
-const TURNS: readonly { word: string; icon: string; key: string; by: [number, number] }[] = [
+const TURNS: readonly { word: WordKey; icon: string; key: string; by: [number, number] }[] = [
   { word: 'space.turn-left', icon: 'rotate-ccw', key: 'ArrowLeft', by: [-STEP_PX, 0] },
   { word: 'space.turn-right', icon: 'rotate-cw', key: 'ArrowRight', by: [STEP_PX, 0] },
   { word: 'space.tilt-up', icon: 'chevron-up', key: 'ArrowUp', by: [0, -STEP_PX] },
