@@ -3,7 +3,17 @@
 // would change, the one step back, and the vault's own preset. A host shows the rows its own way. It brings its own
 // settings, vault file and share. Host-free.
 import { word } from './words.ts';
-import { OWN_PRESET, presetChange, presetFrom, presetToShare, starterOf } from './view-presets.ts';
+import { addOwn, deleteOwn, readOwnList, renameOwn } from './own-presets.ts';
+import {
+  OWN_PRESET,
+  PRESET_SETTINGS,
+  STARTERS,
+  presetChange,
+  presetFrom,
+  presetToShare,
+  starterOf,
+} from './view-presets.ts';
+import type { ViewPreset } from './view-presets.ts';
 import { presetPreview, presetUndo } from './view-preset-preview.ts';
 import { presetInUse } from './vault-preset.ts';
 import type { Settings } from './settings.ts';
@@ -123,7 +133,47 @@ export class PresetPanel {
         desc: word('settings.own-preset.export.sentence'),
         action: () => void this.owner.share(presetToShare(s)),
       },
+      {
+        name: word('settings.own-presets.save'),
+        desc: word('settings.own-presets.save.sentence'),
+        action: () => void this.saveOwn(),
+      },
     ];
+  }
+
+  /** The presets the picker offers: the starters, then the person's own, in the order they were kept. */
+  choices(): ViewPreset[] {
+    return [...STARTERS.filter((p) => this.offers(p.id)), ...readOwnList(this.owner.settings().ownPresets)];
+  }
+
+  /** Keeps the drawing settings as they are now as a preset of the person's own, under a name chosen after. */
+  private async saveOwn(): Promise<void> {
+    const s = this.owner.settings(),
+      held = readOwnList(s.ownPresets),
+      shown = starterOf(s.viewPreset);
+    const mine = { ...shown, settings: Object.fromEntries(PRESET_SETTINGS.map((k) => [k, s[k]])) };
+    const name = word('settings.own-presets.default-name', { n: String(held.length + 1) });
+    await this.owner.save({ ...s, ownPresets: addOwn(s.ownPresets, mine, name) });
+    this.owner.update();
+  }
+
+  /** Renames the preset of the person's own `id`. */
+  renameOwn(id: string, name: string): void {
+    const s = this.owner.settings();
+    void this.owner.save({ ...s, ownPresets: renameOwn(s.ownPresets, id, name) }).then(() => this.owner.update());
+  }
+
+  /** Deletes the preset of the person's own `id`; one in use or picked gives way to the default. */
+  deleteOwn(id: string): void {
+    const s = this.owner.settings();
+    if (this.pending === id) this.pending = null;
+    void this.owner
+      .save({
+        ...s,
+        ownPresets: deleteOwn(s.ownPresets, id),
+        viewPreset: s.viewPreset === id ? 'default' : s.viewPreset,
+      })
+      .then(() => this.owner.update());
   }
 
   /** Whether Your own may be picked: only once a preset of the person's own is read in. */

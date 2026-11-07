@@ -2,7 +2,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { addOwn, deleteOwn, readOwnList, renameOwn, MOST_OWN } from '../src/own-presets.ts';
-import { STARTERS } from '../src/view-presets.ts';
+import { PresetPanel } from '../src/preset-panel.ts';
+import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
+import { STARTERS, starterOf } from '../src/view-presets.ts';
 
 const calm = STARTERS.find((p) => p.id === 'calm');
 const names = (text) => readOwnList(text).map((p) => p.name);
@@ -64,5 +66,72 @@ describe('own presets', () => {
     let text = '';
     for (let i = 0; i < MOST_OWN + 5; i++) text = addOwn(text, calm, `P${i}`);
     assert.equal(readOwnList(text).length, MOST_OWN);
+  });
+});
+
+describe('own presets in the settings and the panel', () => {
+  const made = (names) => names.reduce((text, n) => addOwn(text, calm, n), '');
+  const panelOver = (start = {}) => {
+    const state = { s: { ...DEFAULT_SETTINGS, ...start } };
+    const p = new PresetPanel({
+      settings: () => state.s,
+      save: async (next) => void (state.s = settingsFrom(next)),
+      update: () => {},
+      share: async () => {},
+      vault: () => undefined,
+      setVault: async () => {},
+    });
+    return { p, state };
+  };
+  const done = async (ready) => {
+    for (let i = 0; i < 200 && !ready(); i++) await Promise.resolve();
+    assert.ok(ready(), 'the panel finished');
+  };
+
+  test('are kept by the settings, and one picked is used only while it is in the list', () => {
+    const text = made(['Evening']);
+    const [mine] = readOwnList(text);
+    const kept = settingsFrom({ ownPresets: text, viewPreset: mine.id });
+    assert.equal(kept.viewPreset, mine.id);
+    assert.equal(starterOf(mine.id).name, 'Evening');
+    const gone = settingsFrom({ ownPresets: '', viewPreset: mine.id });
+    assert.equal(gone.viewPreset, 'default');
+  });
+
+  test('show beside the starters, and picking one shows what it would change', () => {
+    const text = made(['A', 'B']);
+    const { p } = panelOver({ ownPresets: text });
+    assert.deepEqual(
+      p.choices().map((c) => c.name),
+      [...STARTERS.map((s) => s.name), 'A', 'B'],
+    );
+    const [a] = readOwnList(text);
+    p.pick(a.id);
+    assert.equal(p.shown(), a.id);
+  });
+
+  test('are saved from the settings in use in one step, and renamed and deleted by the panel', async () => {
+    const { p, state } = panelOver({ labelsByZoom: 'on' });
+    p.ownRows()
+      .find((r) => r.name === 'Save the drawing settings as a preset of your own')
+      .action();
+    await done(() => readOwnList(state.s.ownPresets).length === 1);
+    const [mine] = readOwnList(state.s.ownPresets);
+    assert.equal(mine.settings.labelsByZoom, 'on', 'it holds the settings in use');
+    p.renameOwn(mine.id, 'Reading at night');
+    await done(() => readOwnList(state.s.ownPresets)[0]?.name === 'Reading at night');
+    p.deleteOwn(mine.id);
+    await done(() => readOwnList(state.s.ownPresets).length === 0);
+  });
+
+  test('one in use that is deleted falls back to the default', async () => {
+    const text = made(['A']);
+    const [a] = readOwnList(text);
+    const { p, state } = panelOver({ ownPresets: text, viewPreset: a.id });
+    p.deleteOwn(a.id);
+    await done(
+      () => state.s.ownPresets === settingsFrom({}).ownPresets || readOwnList(state.s.ownPresets).length === 0,
+    );
+    assert.equal(state.s.viewPreset, 'default');
   });
 });

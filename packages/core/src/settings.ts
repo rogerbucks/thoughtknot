@@ -11,6 +11,7 @@ import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
+import { adoptOwnList, ownPick } from './own-presets.ts';
 import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
@@ -53,6 +54,8 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   viewPreset: string; // the view preset last picked (§69)
   /** A preset of the person's own, as the text of the one file it moves in (view_presets_portable); none, empty. */
   ownPreset: string;
+  /** The presets of the person's own, as one small list text (view_presets_own_list); none, empty. */
+  ownPresets: string;
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
@@ -105,6 +108,7 @@ export const DEFAULT_SETTINGS: Settings = {
   indent: 'four',
   viewPreset: 'default',
   ownPreset: '',
+  ownPresets: '',
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'off',
@@ -324,6 +328,7 @@ export function settingsFrom(saved: unknown): Settings {
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
   // the person's own preset, taken as the settings are read in, so every host that reads them has it (§69)
   const own = adoptOwn(text(s.ownPreset));
+  const mine = adoptOwnList(text(s.ownPresets));
   return {
     language: oneOf('language', s.language, d.language),
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
@@ -354,8 +359,11 @@ export function settingsFrom(saved: unknown): Settings {
     ),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
     ownPreset: own ? text(s.ownPreset) : d.ownPreset,
+    ownPresets: mine.text,
     // Your own is picked only while there is one
-    viewPreset: s.viewPreset === OWN_PRESET && !own ? d.viewPreset : oneOf('viewPreset', s.viewPreset, d.viewPreset),
+    viewPreset:
+      ownPick(s.viewPreset, mine.list, d.viewPreset) ??
+      (s.viewPreset === OWN_PRESET && !own ? d.viewPreset : oneOf('viewPreset', s.viewPreset, d.viewPreset)),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),
