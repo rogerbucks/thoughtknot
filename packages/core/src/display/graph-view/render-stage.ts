@@ -16,7 +16,7 @@ import { DARK, LIGHT } from '../../render/render-look.ts';
 import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
-import { groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
+import { fromTrackpad, groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { angleOf, glide } from './stage-glide.ts';
 import { StageFocus, pickRoad } from './stage-focus.ts';
@@ -194,17 +194,14 @@ export class RenderStage {
 
   private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
 
-  /** Whether another view, as in space, shows in the card now: then the stage leaves the pointer and wheel to it. */
-  private away(): boolean {
-    return !!this.hands?.away?.();
-  }
-
   /** A smooth zoom for the wheel with Ctrl or Cmd, as a trackpad pinch sends it; plain scrolling is the page's. */
   wheel(e: WheelEvent): void {
-    if ((!e.ctrlKey && !e.metaKey) || this.away()) return;
+    const plain = !e.ctrlKey && !e.metaKey;
+    // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
+    if (this.hands?.away?.() || (plain && !(fromTrackpad(e) && this.turnBy(-e.deltaX, -e.deltaY)))) return;
     e.preventDefault();
     e.stopPropagation();
-    if (e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
+    if (!plain && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
   }
 
   /** Zooms by `how`, keeping the page point `x`, `y` where it is. */
@@ -217,7 +214,7 @@ export class RenderStage {
   }
 
   private down(e: PointerEvent): void {
-    if (this.away()) return;
+    if (this.hands?.away?.()) return; // another view, as in space, shows in the card: the pointer is its own
     // the press is the stage's own: today's drawing underneath would take the pointer and the click would be lost
     e.stopPropagation();
     this.canvas.setPointerCapture?.(e.pointerId);

@@ -24,6 +24,7 @@ import { spotsKept } from '../../space-parts.ts';
 import { screenBoxes, stripTap } from '../../space-outlines.ts';
 import type { Spots } from '../../layouts/layouts.ts';
 import { isPlane, stackedPlanes } from '../../space-planes.ts';
+import { fromTrackpad } from '../../render/render-tilt.ts';
 import { keyMove, orbitSwitched, panBy, pinchBy, touchesStay, turnRound, zoomAtPixel } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import type { SpaceMode, SpaceOptions, SpaceView } from './space-view-options.ts';
@@ -348,6 +349,9 @@ export async function openSpaceView(
     'wheel',
     (e) => {
       e.preventDefault();
+      // two fingers on a trackpad turn the view side to side and tip it up and down; a mouse wheel zooms (Roger)
+      if (!e.ctrlKey && fromTrackpad(e))
+        return void ((orbit = turnRound(orbit, -e.deltaX, -e.deltaY, pivot())), again());
       // a trackpad pinch comes as a scroll with Ctrl held, in small steps, so it zooms faster. Both zoom toward the
       // pointer, as a map does
       const at = el.getBoundingClientRect(),

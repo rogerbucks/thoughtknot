@@ -116,3 +116,13 @@ export function groundShift(view: View, dx: number, dy: number): [number, number
   const down = dy / Math.max(0.2, Math.cos(t)); // the ground is foreshortened up the screen
   return [dx * Math.cos(u) + down * Math.sin(u), -dx * Math.sin(u) + down * Math.cos(u)];
 }
+
+/**
+ * Whether a wheel event is two fingers moving on a trackpad, not a mouse wheel turning. A trackpad moves in pixels
+ * and often sideways. A mouse wheel moves up and down only, in whole notches of 100 or 120.
+ */
+export function fromTrackpad(e: { deltaMode: number; deltaX: number; deltaY: number }): boolean {
+  if (e.deltaMode !== 0) return false;
+  const y = Math.abs(e.deltaY);
+  return e.deltaX !== 0 || (y > 0 && y % 100 !== 0 && y % 120 !== 0);
+}
