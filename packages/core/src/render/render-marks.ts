@@ -313,15 +313,24 @@ function spotFor(
   const [left, top, right, bottom] = [gap(c.left), gap(c.top), view.w - gap(c.right), view.h - gap(c.bottom)];
   const room = ask.room ?? 0;
   const step = h + GAP; // a name and the gap kept between names
-  for (const dy of [0, -step, step, -2 * step, 2 * step].filter((d) => Math.abs(d) <= room)) {
+  // it may sit just clear of a name kept before it, within its room and half a line more
+  const snaps = room ? kept.flatMap((k) => [k.y + k.h + GAP + h / 2, k.y - GAP - h / 2].map((y) => y - ask.y)) : [];
+  const ups = [0, -step, step, -2 * step, 2 * step].filter((d) => Math.abs(d) <= room);
+  ups.push(...snaps.filter((d) => Math.abs(d) <= room + step / 2).sort((p, q) => Math.abs(p) - Math.abs(q)));
+  // a group's name may also slide half its width to a side, still over its spot, before it gives up its place
+  const tries = [
+    ...ups.map((dy) => [0, dy]),
+    ...(room ? ups.flatMap((dy) => [-w * 0.45, w * 0.45].map((dx) => [dx, dy])) : []),
+  ];
+  for (const [dx = 0, dy = 0] of tries) {
     // slid across to stay clear of the controls, if it still covers its spot
-    const x = Math.min(Math.max(ask.x - w / 2, left), right - w);
-    const box = { x: x <= ask.x && ask.x <= x + w ? x : ask.x - w / 2, y: ask.y + dy - h / 2, w, h };
+    const at = ask.x + dx;
+    const x = Math.min(Math.max(at - w / 2, left), right - w);
+    const box = { x: x <= ask.x && ask.x <= x + w ? x : at - w / 2, y: ask.y + dy - h / 2, w, h };
     if (box.x < left || box.y < top || box.x + w > right || box.y + h > bottom) continue;
     const apart = (k: LabelMark) =>
       box.x >= k.x + k.w + GAP || k.x >= box.x + w + GAP || box.y >= k.y + k.h + GAP || k.y >= box.y + h + GAP;
-    if (!kept.every(apart)) continue;
-    return box;
+    if (kept.every(apart)) return box;
   }
   return null;
 }
