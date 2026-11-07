@@ -208,8 +208,8 @@ test('on a touch screen, the drawing follows two fingers: it zooms as they sprea
     assert.ok(Math.abs(at() - start * 1.125) < 1e-9, 'a little spread zooms a little');
     stage.move(finger(2, 360)); // 45 to 60
     assert.ok(Math.abs(at() - start * 1.5) < 1e-9, 'the zoom follows the fingers');
-    stage.move(finger(2, 330)); // 60 to 30: out, but never past the fitted view
-    assert.equal(at(), start);
+    stage.move(finger(2, 330)); // 60 to 30: out by half, past the fit, which opens a second level here
+    assert.ok(Math.abs(at() - start * 0.75) < 1e-9, 'the zoom follows the fingers out too');
     stage.up(finger(2, 330));
     stage.up(finger(1, 300));
     assert.deepEqual(said, [], 'a pinch is not a tap');

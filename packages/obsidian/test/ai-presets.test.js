@@ -20,3 +20,10 @@ test('a model made from a preset has no model name and no key, so it is not yet 
   assert.equal(usable(m), false);
   assert.equal(usable({ ...m, model: 'a-model' }), true);
 });
+
+test('LM Studio is offered, on this device by default, and starts as a private reviewer', () => {
+  const p = AI_PRESETS.find((x) => x.id === 'lmstudio');
+  assert.equal(p?.endpoint, 'http://localhost:1234/v1');
+  assert.equal(p?.reach, 'private');
+  assert.equal(word(p?.name), 'LM Studio (your own, private)');
+});

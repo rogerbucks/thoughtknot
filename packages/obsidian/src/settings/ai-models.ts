@@ -1,33 +1,30 @@
-// The AI models on the settings page (spec §21, settings_ai_models; §19): a list with a page for each model — its name,
-// purpose, ceiling, model, endpoint and key. The key is chosen in the app's own secret store, by name. So it never
-// reaches the vault: the plugin's saved settings hold only that name.
+// The AI models on the settings page (spec §21, settings_ai_models; §19): a list with a page for each model. It holds
+// its name, address (with whether it is private, and a test), model, key, purpose and ceiling. The key is chosen in the
+// app's own secret store, by name. So it never reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
-import type { App, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
+import type { App, SettingDefinition, SettingDefinitionItem, SettingDefinitionList, SettingTab } from 'obsidian';
 import {
   AI_PURPOSES,
   aiModel,
   endpointProblem,
   formatSeries,
+  isPrivate,
   privateProblem,
   purposeWords,
   word,
 } from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { AI_PRESETS } from './ai-presets';
+import { showTest } from './ai-check';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type ThoughtKnotPlugin from '../main';
 
-/** Each text field of a model's page, with its name and sentence, said in the person's language when the page is drawn. */
-const texts = (): [keyof AiModel, string, string][] => [
-  ['name', word('models.name'), ''],
-  [
-    'purpose',
-    word('models.purpose'),
-    word('models.purpose.sentence', { purposes: formatSeries(AI_PURPOSES.map(purposeWords)) }),
-  ],
-  ['model', word('models.model'), word('models.model.sentence')],
-  ['endpoint', word('models.endpoint'), word('models.endpoint.sentence')],
-];
+/** A text field of a model's page, with its name, sentence and the hint shown while it is empty. */
+const text = (i: number, field: keyof AiModel, name: string, desc = '', placeholder = '') => ({
+  name,
+  ...(desc ? { desc } : {}),
+  control: { type: 'text' as const, key: `aiModels.${i}.${field}`, ...(placeholder ? { placeholder } : {}) },
+});
 
 /** The models, each a page of its own, with an affordance to add one and to remove each. */
 export function aiModelList(
@@ -55,6 +52,10 @@ export function aiModelList(
               ceiling: m.ceiling,
             })
           : word('models.unnamed'),
+        // where it goes, and whether it is private, read at a glance without opening its page
+        ...(m.endpoint.trim()
+          ? [`${m.endpoint.trim()} (${word(isPrivate(m) ? 'models.reach.private' : 'models.reach.public')})`]
+          : []),
         // a ceiling no longer among the classifications is kept as written, and said, until it is chosen again
         ...(s.classifications.includes(m.ceiling) ? [] : [word('models.ceiling-gone', { ceiling: m.ceiling })]),
         // an address set but not usable is said, so a model that will never be offered says why (user_models)
@@ -66,39 +67,7 @@ export function aiModelList(
       items: [
         {
           type: 'group',
-          items: [
-            ...texts().map(([field, name, desc]) => ({
-              name,
-              ...(desc ? { desc } : {}),
-              control: { type: 'text' as const, key: `aiModels.${i}.${field}` },
-            })),
-            {
-              name: word('models.ceiling'),
-              desc: word('models.ceiling.sentence'),
-              control: {
-                type: 'dropdown' as const,
-                key: `aiModels.${i}.ceiling`,
-                options: Object.fromEntries(
-                  [...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c]),
-                ),
-              },
-            },
-            {
-              name: word('models.private'),
-              desc: word('models.private.sentence'),
-              control: { type: 'toggle' as const, key: `aiModels.${i}.reach` },
-            },
-            ...matrixControls(s, m, i, matrix),
-            {
-              name: word('models.key'),
-              desc: word('models.key.sentence'),
-              render: (setting) => {
-                new SecretComponent(app, setting.controlEl)
-                  .setValue(m.keyName)
-                  .onChange((name) => void save(changed(owner.settings, i, { keyName: name ?? undefined })));
-              },
-            },
-          ],
+          items: [...modelItems(app, owner, m, i, matrix, save)],
         },
       ],
     })),
@@ -108,6 +77,61 @@ export function aiModelList(
       action: () => void save([...owner.settings.aiModels, aiModel({}, owner.settings.classifications)]),
     },
   };
+}
+
+/** A model's page: the address first, with whether it is private and a test beside it; then its model, key and limits. */
+function modelItems(
+  app: App,
+  owner: ThoughtKnotPlugin,
+  m: AiModel,
+  i: number,
+  matrix: MatrixRow[],
+  save: (aiModels: AiModel[]) => Promise<void>,
+): SettingDefinition[] {
+  const s = owner.settings;
+  return [
+    text(i, 'name', word('models.name')),
+    text(i, 'endpoint', word('models.endpoint'), word('models.endpoint.sentence'), word('models.endpoint.placeholder')),
+    {
+      name: word('models.private'),
+      desc: word('models.private.sentence'),
+      control: { type: 'toggle' as const, key: `aiModels.${i}.reach` },
+    },
+    text(i, 'model', word('models.model'), word('models.model.sentence')),
+    {
+      name: word('models.key'),
+      desc: word('models.key.sentence'),
+      render: (setting) => {
+        new SecretComponent(app, setting.controlEl)
+          .setValue(m.keyName)
+          .onChange((name) => void save(changed(owner.settings, i, { keyName: name ?? undefined })));
+      },
+    },
+    {
+      name: word('models.test'),
+      desc: word('models.test.sentence'),
+      action: () => {
+        const now = owner.settings.aiModels[i];
+        if (now) void showTest(now, now.keyName ? owner.app.secretStorage.getSecret(now.keyName) : null);
+      },
+    },
+    text(
+      i,
+      'purpose',
+      word('models.purpose'),
+      word('models.purpose.sentence', { purposes: formatSeries(AI_PURPOSES.map(purposeWords)) }),
+    ),
+    {
+      name: word('models.ceiling'),
+      desc: word('models.ceiling.sentence'),
+      control: {
+        type: 'dropdown' as const,
+        key: `aiModels.${i}.ceiling`,
+        options: Object.fromEntries([...new Set([...s.classifications, m.ceiling])].filter(Boolean).map((c) => [c, c])),
+      },
+    },
+    ...matrixControls(s, m, i, matrix),
+  ];
 }
 
 /** The key of the picker that adds a model from a service. */
@@ -139,7 +163,10 @@ export function withPreset(s: Settings, id: string): Partial<Settings> {
   const preset = AI_PRESETS.find((p) => p.id === id);
   if (!preset) return {};
   return {
-    aiModels: [...s.aiModels, aiModel({ name: word(preset.name), endpoint: preset.endpoint }, s.classifications)],
+    aiModels: [
+      ...s.aiModels,
+      aiModel({ name: word(preset.name), endpoint: preset.endpoint, reach: preset.reach }, s.classifications),
+    ],
   };
 }
 
