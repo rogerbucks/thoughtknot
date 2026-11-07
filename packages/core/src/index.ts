@@ -138,25 +138,6 @@ export { viewsOf, readingOf, type NamedView } from './views.ts';
 export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view-profile.ts';
 export { addView, makeView } from './view-write.ts';
 export { readSketch, sketchOf, writeSketch, type Sketch, type SketchItem } from './sketch.ts';
-export {
-  forgetPlace,
-  layoutOf,
-  placeThing,
-  readLayout,
-  renamePlace,
-  writeLayout,
-  type Layout,
-  type Place as LayoutPlace,
-} from './layout-block.ts';
-export {
-  NO_CONSENT,
-  isPrivate,
-  privateProblem,
-  reviewerFor,
-  type Reviewer,
-  type VaultConsent,
-} from './ai-reviewers.ts';
-export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
 export { sketchEdit, sketchInNote, type NewSketchItem, type SketchChange } from './sketch-edit.ts';
 export { sketchProposal } from './sketch-proposals.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
