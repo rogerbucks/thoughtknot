@@ -153,9 +153,18 @@ export function setOwnList(list: readonly ViewPreset[]): void {
   ownList = list;
 }
 
-/** The starter of `id`, or the person's own; else the default. */
+// the preset the open vault names for itself, as last read from its file (view_presets_own_vault)
+let vaultOwn: ViewPreset | undefined;
+
+/** Takes `preset` as the one the vault names for itself, or, with nothing, forgets it. */
+export function setVaultOwn(preset: ViewPreset | undefined): void {
+  vaultOwn = preset;
+}
+
+/** The starter of `id`, or the vault's or the person's own; else the default. */
 export const starterOf = (id: string): ViewPreset =>
   (id === OWN_PRESET && own) ||
+  (vaultOwn && id === vaultOwn.id && vaultOwn) ||
   ownList.find((p) => p.id === id) ||
   STARTERS.find((p) => p.id === id) ||
   (STARTERS[0] as ViewPreset);

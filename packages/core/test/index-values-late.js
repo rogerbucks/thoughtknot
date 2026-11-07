@@ -259,6 +259,7 @@ export const VALUES_LATE = [
   'presetFor',
   'vaultPresetId',
   'vaultPresetFile',
+  'vaultChoice',
   'presetInUse',
   'presetIn',
   'VAULT_PRESET_PLACE',

@@ -1,9 +1,9 @@
 // A vault names a preset of its own (view_presets_own_vault).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { vaultOwnFile, vaultOwnPreset, VAULT_PRESET_MOST } from '../src/own-vault-preset.ts';
-import { vaultPresetFile, vaultPresetId } from '../src/vault-preset.ts';
-import { STARTERS, presetFile } from '../src/view-presets.ts';
+import { vaultChoice, vaultOwnFile, vaultOwnPreset, VAULT_PRESET_MOST } from '../src/own-vault-preset.ts';
+import { presetIn, vaultPresetFile, vaultPresetId } from '../src/vault-preset.ts';
+import { STARTERS, presetFile, presetFor, starterOf } from '../src/view-presets.ts';
 
 const calm = STARTERS.find((p) => p.id === 'calm');
 const mine = { ...calm, id: 'own:evening', name: 'Evening' };
@@ -46,5 +46,25 @@ describe('a preset the vault names for itself', () => {
     assert.ok(wide.length < VAULT_PRESET_MOST + 500);
     assert.equal(vaultOwnPreset(wide), undefined);
     assert.equal(vaultOwnPreset(presetFile({ ...mine, id: 'vault:' })), undefined);
+  });
+});
+
+describe("the vault's own preset takes its place in the order (view_presets_own_vault)", () => {
+  test("is chosen from the file, and the preset in use is the vault's own", () => {
+    assert.equal(vaultChoice(vaultOwnFile(mine)), 'vault:evening');
+    assert.equal(starterOf('vault:evening').name, 'Evening');
+    assert.deepEqual(presetIn({ vault: 'vault:evening', everywhere: 'calm' }), { id: 'vault:evening', scope: 'vault' });
+    assert.equal(presetFor({ vault: 'vault:evening' }).name, 'Evening');
+  });
+
+  test("still gives way to the graph's own choice, and a starter file still names a starter", () => {
+    assert.equal(presetFor({ graph: 'calm', vault: 'vault:evening' }).id, 'calm');
+    assert.equal(vaultChoice(vaultPresetFile('calm')), 'calm');
+  });
+
+  test('is forgotten when the file goes, so the preset falls back to the default', () => {
+    vaultChoice(vaultOwnFile(mine));
+    assert.equal(vaultChoice(undefined), undefined);
+    assert.equal(starterOf('vault:evening').id, STARTERS[0].id);
   });
 });

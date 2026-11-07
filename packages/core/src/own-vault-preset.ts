@@ -1,7 +1,8 @@
 // A vault can name a view preset of its own, not only a starter (editor spec ES§69, view_presets_own_vault).
 // It stays the one small file at the vault top. The file is untrusted: it is read like any imported preset.
 // Host-free and pure: a host reads and writes the file, as it does for a starter.
-import { presetFile, presetFrom, STARTERS } from './view-presets.ts';
+import { presetFile, presetFrom, setVaultOwn, STARTERS } from './view-presets.ts';
+import { vaultPresetId } from './vault-preset.ts';
 import type { ViewPreset } from './view-presets.ts';
 
 /** The id of a preset a vault names for itself starts with this, so it is never taken for a starter or a person's own. */
@@ -34,3 +35,13 @@ export function vaultOwnPreset(text: string | null | undefined): ViewPreset | un
 
 /** The text of the file that makes `preset` the vault's own. A preset file is small by its form. */
 export const vaultOwnFile = (preset: ViewPreset): string => presetFile(preset);
+
+/**
+ * The preset id the vault's file chooses, a starter's or the vault's own, or nothing. The vault's own preset is kept,
+ * so its id can be turned into the preset. A file that names none makes the vault forget the one it had.
+ */
+export function vaultChoice(text: string | null | undefined): string | undefined {
+  const mine = vaultOwnPreset(text);
+  setVaultOwn(mine);
+  return mine ? mine.id : vaultPresetId(text);
+}
