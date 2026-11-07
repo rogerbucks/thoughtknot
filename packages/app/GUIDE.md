@@ -58,10 +58,12 @@ Rust (src-tauri/)
 - gh is started by its own path, found where it installs or on the PATH. Its arguments go as a list, with no shell,
   and the body on standard input. A call is stopped after 60 seconds or 8 MiB of output. The app holds no token: gh
   signs in itself. A phone runs no gh.
-- `mesh.rs` carries bytes between the owner's devices over a mesh VPN: listen, accept, dial, send, receive and close.
-  Only private addresses are used (loopback, 10/8, 172.16/12, 192.168/16, 100.64/10, fc00::/7); a public address,
-  0.0.0.0 and a name are refused, and so is a device that reaches in from one. A message is whole, after its length, and
-  at most 16 MiB. The messages are sealed in JavaScript, so the Rust holds no key. `cargo test` checks all of it.
+- `mesh.rs` carries bytes between the owner's devices over a mesh VPN. Its commands: listen, accept, dial, send,
+  receive and close.
+- It opens private addresses only: the home network, loopback and the mesh VPN ranges. A public address, 0.0.0.0 and a
+  name are refused. So is a device that reaches in from a public address.
+- A message is whole, after its length, and at most 16 MiB. The messages are sealed in JavaScript, so the Rust holds no
+  key. `cargo test` checks all of it.
 - `place.rs` refuses any path that climbs out, starts at a root, names a hidden part (such as `.git`), or reaches
   outside through a link. A note is written to a new file beside it, then renamed over it.
 - `write_new` writes an export only as new files. A name taken gets the next number. All of the files or none.
