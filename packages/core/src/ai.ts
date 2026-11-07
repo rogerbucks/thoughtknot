@@ -10,7 +10,7 @@
 // else here holds as for any model.
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
-import { aiReady, endpointProblem } from './ai-choice.ts';
+import { aiReady, chatAddress, endpointProblem } from './ai-choice.ts';
 import { hostAiModel } from './ai-host.ts';
 import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
@@ -198,10 +198,10 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     ask.secrets,
   );
   if (held.length) return { refused: word('ai.send.credential', { held: formatList(held) }) };
-  const at = { model: model.name, name: model.model, address: model.endpoint.trim() };
+  const at = { model: model.name, name: model.model, address: chatAddress(model.endpoint) };
   return {
     model,
-    to: model.endpoint.trim(),
+    to: chatAddress(model.endpoint),
     body,
     headersShown: {
       'Content-Type': 'application/json',
