@@ -107,9 +107,9 @@ export class RenderStage {
     this.hands = hands;
     this.scene = sceneOf(shapeOf(drawing, g));
     this.spots = roomsOf(this.scene, places?.saved);
-    const [save, stage] = [places?.place, { scene: this.scene, spots: this.spots, draw: () => this.draw() }];
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
-    this.mover = save && new StageMover({ ...stage, marks: () => this.marks, view: () => this.view }, save);
+    const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
+    this.mover = places?.place && new StageMover({ ...live, draw: () => this.draw() }, places);
     this.sizes = roomSizes(this.scene, this.spots);
     viewport.addClass('thoughtknot-new-rendering');
     this.canvas = viewport.createEl('canvas', { cls: 'thoughtknot-render-stage' });
@@ -375,6 +375,7 @@ export class RenderStage {
   /** Takes the canvas away and shows today's drawing again. */
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
+    this.mover?.unload();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });
     this.watcher?.disconnect();
     this.canvas.remove();
