@@ -8,7 +8,8 @@ import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf, onScreen } from '../src/render/render-marks.ts';
 import { fitView } from '../src/render/render-camera.ts';
-import { isTilted, tilted } from '../src/render/render-tilt.ts';
+import { groundOf, heightOf, isTilted, tilted } from '../src/render/render-tilt.ts';
+import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const thing = (key, names = {}) => ({
   key,
@@ -63,7 +64,7 @@ test('tipped back, the same marks are drawn: far clouds first, rooms under what 
   const flat = marksOf(scene, spots, detailAt(sizes, fit.scale), LIGHT, fit);
   const marks = marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view);
   const kinds = (ms) => [...new Set(ms.map((m) => m.kind))].sort();
-  assert.deepEqual(kinds(marks), kinds(flat), 'the same kinds of marks as flat');
+  assert.deepEqual(kinds(marks), [...kinds(flat), 'ground'].sort(), 'the same kinds of marks as flat, on a ground');
   const clouds = marks.filter((m) => m.kind === 'cloud');
   const depth = (m) => scene.nodes.get(m.key).depth;
   for (let i = 1; i < clouds.length; i++) {
@@ -132,10 +133,12 @@ test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks 
     const flat = stage.view;
     assert.equal(stage.lookFrom('cards'), true, 'the stage shows 2.5D itself');
     assert.equal(stage.view.tilt, 0.6);
+    assert.equal(stage.view.lift, 0, '2.5D lies on the ground');
     assert.equal(stage.view.scale, flat.scale, 'the same zoom');
     assert.ok(isTilted(stage.view));
     assert.equal(stage.lookFrom('balls'), true);
     assert.ok(stage.view.tilt > 0.6, '3D tips further back');
+    assert.equal(stage.view.lift, 1, '3D stands each level on the one that holds it');
     stage.resized();
     assert.ok(stage.view.tilt > 0.6, 'a fit keeps the angle');
     assert.equal(stage.lookFrom(null), true);
@@ -146,4 +149,42 @@ test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks 
   } finally {
     uninstall();
   }
+});
+
+// proves: render_one_camera
+test('in 3D each level stands on the one that holds it: items on stems, rooms over their footprints, on a ground', () => {
+  const { scene, spots, sizes } = drawing();
+  const kept = new Map([...spots].map(([k, s]) => [k, { ...s }]));
+  const fit = fitView(spots.values(), 1280, 800);
+  assert.deepEqual(groundOf(fit), [], 'flat: no ground drawn');
+  assert.equal(heightOf({ ...fit, lift: 0 }, 3), 0, '2.5D lies on the ground');
+  const view = { ...fit, tilt: 0.8, lift: 1 };
+  assert.ok(heightOf(view, 2) > heightOf(view, 1) && heightOf(view, 1) > 0, 'deeper stands higher');
+  const detail = detailAt(sizes, 1e6); // close enough that every level shows
+  const marks = marksOf(scene, spots, detail, LIGHT, view);
+  const ground = marks.find((m) => m.kind === 'ground');
+  assert.ok(ground && ground.lines.length > 4, 'a ground of grid lines');
+  assert.equal(marks[0], ground, 'the ground is painted first, under everything');
+  const dots = marks.filter((m) => m.kind === 'dot');
+  assert.ok(
+    dots.length > 0 && dots.every((d) => d.foot && d.foot[1] > d.y),
+    'each item stands on a stem above its foot',
+  );
+  const inner = marks.filter((m) => m.kind === 'cloud' && scene.nodes.get(m.key).depth > 0);
+  assert.ok(inner.length > 0 && inner.every((c) => c.shadow && c.shadow.y > c.y), 'a room stands over its footprint');
+  const top = marks.filter((m) => m.kind === 'cloud' && scene.nodes.get(m.key).depth === 0);
+  assert.ok(
+    top.every((c) => !c.shadow),
+    'the top level lies on the ground',
+  );
+  // the painter draws the ground, the stems and the footprints it is given, and nothing of its own
+  const calls = [];
+  const c = new Proxy(
+    { createRadialGradient: () => ({ addColorStop() {} }) },
+    { get: (t, k) => t[k] ?? ((...a) => calls.push([k, ...a])), set: () => true },
+  );
+  paintCanvas(c, marks, 1280, 800);
+  const lines = calls.filter(([k]) => k === 'lineTo').length;
+  assert.ok(lines >= ground.lines.length + dots.length, 'grid lines and stems drawn');
+  assert.deepEqual(spots, kept, 'nothing in the drawing moved');
 });

@@ -58,6 +58,8 @@ export function hasLevels(drawing: GraphDrawing, g?: Graph): boolean {
 
 /** How far 2.5D and 3D tip the camera back, in radians: the ground at a slant, its far side still easy to read. */
 const TILTS: Record<string, number> = { cards: 0.6, balls: 0.8 };
+/** How high each level stands in 2.5D and 3D: 2.5D lies on the ground, 3D stands each level on the one that holds it. */
+const LIFTS: Record<string, number> = { cards: 0, balls: 1 };
 
 /** The stage for a card, when its setting is on and its graph has levels to show; else none. */
 export function stageFor(
@@ -176,8 +178,8 @@ export class RenderStage {
       view = fit().view;
     }
     // a fit keeps the angle the camera looks from: 2.5D stays 2.5D
-    const { tilt, turn } = this.view ?? {};
-    if (tilt || turn) Object.assign(view, { tilt: tilt ?? 0, turn: turn ?? 0 });
+    const { tilt, turn, lift } = this.view ?? {};
+    if (tilt || turn) Object.assign(view, { tilt: tilt ?? 0, turn: turn ?? 0, lift: lift ?? 0 });
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
@@ -303,12 +305,13 @@ export class RenderStage {
   lookFrom(mode: string | null): boolean {
     const tilt = mode ? TILTS[mode] : 0;
     if (tilt === undefined) {
-      this.view = { ...this.view, tilt: 0, turn: 0 };
+      this.view = { ...this.view, tilt: 0, turn: 0, lift: 0 };
       return false;
     }
-    if ((this.view.tilt ?? 0) === tilt) return true; // already looking from there: nothing to glide
+    const lift = (mode && LIFTS[mode]) || 0;
+    if ((this.view.tilt ?? 0) === tilt && (this.view.lift ?? 0) === lift) return true; // already there: nothing to glide
     const untouched = this.untouched;
-    this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0 });
+    this.glideTo({ ...this.view, tilt, turn: this.view.turn ?? 0, lift });
     this.untouched = untouched; // looking from another angle is not a move the reader made
     return true;
   }
