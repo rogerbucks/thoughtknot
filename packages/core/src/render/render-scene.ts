@@ -30,6 +30,8 @@ export interface SceneRoad {
   b: string;
   forward: number;
   back: number;
+  /** The kinds of link along it, such as RELATES, each once, in order. */
+  types: string[];
 }
 
 /** A whole scene: the name of each depth, every node by key, the nodes at depth 0, and the roads at each depth. */
@@ -90,9 +92,10 @@ function roadsOf(shape: GraphShape, pathOf: Map<string, string[]>, last: number)
       if (x === undefined || y === undefined || x === y) continue;
       const [a, b] = byText(x, y) < 0 ? [x, y] : [y, x];
       const tally = tallies[depth] as Map<string, SceneRoad>;
-      const road = tally.get(`${a}\n${b}`) ?? { a, b, forward: 0, back: 0 };
+      const road = tally.get(`${a}\n${b}`) ?? { a, b, forward: 0, back: 0, types: [] };
       if (x === a) road.forward++;
       else road.back++;
+      if (!road.types.includes(l.type)) road.types = [...road.types, l.type].sort(byText);
       tally.set(`${a}\n${b}`, road);
     }
   }

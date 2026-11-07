@@ -17,6 +17,8 @@ export type { Focus } from './render-focus.ts';
 import { MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf } from './render-labels.ts';
 export { LONGEST, MAX_PX, MIN_PX, labelOf, sizeOf, textWidth, wrapName } from './render-labels.ts';
 export { countOf, roadAlpha } from './render-roads.ts';
+import type { RoadMark } from './render-roads.ts';
+export type { RoadMark } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
@@ -85,29 +87,6 @@ export interface DotMark {
   ring?: string;
   /** Where it stands on the ground, when it stands above it in 3D: a thin stem joins them. */
   foot?: [number, number];
-}
-
-/** A road between two rooms: the links between them, counted each way. */
-export interface RoadMark {
-  kind: 'road';
-  a: string;
-  b: string;
-  from: [number, number];
-  to: [number, number];
-  /** In 3D, the control point of the arch the road bows up in; a straight road has none. */
-  via?: [number, number];
-  forward: number;
-  back: number;
-  width: number;
-  fill: string;
-  /** The count written on the road, such as "3 ⇄ 1"; empty for a single link. */
-  count: string;
-  /** The ink of the count, on a chip of `chip` edged in the road's colour. */
-  ink: string;
-  chip: string;
-  alpha: number;
-  /** A wider line of this colour under it, when it is in focus, so it stands out from the roads it crosses. */
-  halo?: string;
 }
 
 /** A name on a card. Its box is where it is drawn. */
