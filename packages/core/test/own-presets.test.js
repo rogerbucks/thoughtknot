@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { addOwn, deleteOwn, readOwnList, renameOwn, MOST_OWN } from '../src/own-presets.ts';
 import { PresetPanel } from '../src/preset-panel.ts';
 import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
-import { STARTERS, starterOf } from '../src/view-presets.ts';
+import { STARTERS, presetFile, starterOf } from '../src/view-presets.ts';
+import { word } from '../src/words.ts';
 
 const calm = STARTERS.find((p) => p.id === 'calm');
 const names = (text) => readOwnList(text).map((p) => p.name);
@@ -133,5 +134,30 @@ describe('own presets in the settings and the panel', () => {
       () => state.s.ownPresets === settingsFrom({}).ownPresets || readOwnList(state.s.ownPresets).length === 0,
     );
     assert.equal(state.s.viewPreset, 'default');
+  });
+
+  test('take a preset file brought in into the list, instead of refusing it', async () => {
+    const { p, state } = panelOver();
+    const file = presetFile({ ...calm, id: 'travel', name: 'Travel' });
+    assert.equal(await p.bringIn(file), undefined);
+    assert.deepEqual(
+      readOwnList(state.s.ownPresets).map((c) => c.name),
+      ['Travel'],
+    );
+    assert.ok(p.choices().some((c) => c.name === 'Travel'));
+  });
+
+  test('say why a file brought in is not a preset, and keep the list as it was', async () => {
+    const text = made(['Evening']);
+    const { p, state } = panelOver({ ownPresets: text });
+    assert.match(await p.bringIn('not json'), /./);
+    assert.equal(state.s.ownPresets, text);
+  });
+
+  test('offer the text pasted as Your own to be added to the list', async () => {
+    const { p, state } = panelOver({ ownPreset: presetFile({ ...calm, id: 'pasted', name: 'Pasted' }) });
+    const row = p.ownRows().find((r) => r.name === word('settings.own-presets.bring'));
+    row.action();
+    await done(() => readOwnList(state.s.ownPresets).length === 1 && state.s.ownPreset === '');
   });
 });
