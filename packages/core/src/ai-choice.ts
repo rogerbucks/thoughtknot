@@ -79,19 +79,26 @@ export function endpointProblem(endpoint: string): string | null {
   return null;
 }
 
+/** The address without slashes at its end: trimmed by a walk, not a pattern, so a long run of slashes stays fast. */
+function withoutEndSlashes(address: string): string {
+  let end = address.length;
+  while (end > 0 && address[end - 1] === '/') end--;
+  return address.slice(0, end);
+}
+
 /**
  * The full address a chat request goes to. An address that stops at its version, such as LM Studio's
  * https://host/v1, takes /chat/completions after it. Any other is used as written.
  */
 export function chatAddress(endpoint: string): string {
   const given = endpoint.trim();
-  const base = given.replace(/\/+$/, '');
+  const base = withoutEndSlashes(given);
   return /\/v\d+(?:beta)?$/i.test(base) ? `${base}/chat/completions` : given;
 }
 
 /** The address that lists a service's models, asked by Test beside the address: it sends no note. */
 export function modelsAddress(endpoint: string): string {
-  const chat = chatAddress(endpoint).replace(/\/+$/, '');
+  const chat = withoutEndSlashes(chatAddress(endpoint));
   return chat.endsWith('/chat/completions') ? `${chat.slice(0, -'/chat/completions'.length)}/models` : `${chat}/models`;
 }
 
