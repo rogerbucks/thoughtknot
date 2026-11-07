@@ -376,6 +376,13 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
     stage.unload();
     assert.ok(!mini.canvas.parentElement, 'gone with the stage');
     // the mini-map setting, through the card's own options: off has none; auto shows it only while the drawing does not fit
+    // the fake page gives every element the viewport's size: here the mini-map is its own 160 by 120, in the corner
+    const proto = Object.getPrototypeOf(viewport),
+      box = proto.getBoundingClientRect;
+    proto.getBoundingClientRect = function () {
+      if (!this.classList?.contains('thoughtknot-stage-mini')) return box.call(this);
+      return { left: 630, top: 270, right: 790, bottom: 390, width: 160, height: 120 };
+    };
     const o = (miniMap) => ({
       aids: { newRendering: true, miniMap },
       reading: { graphs: new Map([['x', drawing]]), world: { x: g } },
@@ -393,6 +400,7 @@ test('the mini-map paints the drawing in its own look, outlines the part in view
     auto.draw();
     assert.equal(auto.mini.canvas.hidden, false, 'auto: shown once zoomed past the fit');
     auto.unload();
+    proto.getBoundingClientRect = box;
   } finally {
     uninstall();
   }

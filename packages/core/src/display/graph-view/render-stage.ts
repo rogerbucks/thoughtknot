@@ -93,6 +93,8 @@ export class RenderStage {
   readonly mini: StageMiniMap | null;
   /** The level the hands were last told, so they hear only of a change. */
   private said = '';
+  /** The card is too small for the drawing, the controls and the mini-map: the mini-map waits for a zoom. */
+  private cramped = false;
 
   constructor(
     viewport: HTMLElement,
@@ -116,7 +118,7 @@ export class RenderStage {
       mini === 'off'
         ? null
         : new StageMiniMap(viewport, {
-            auto: mini === 'auto',
+            auto: () => mini === 'auto' || this.cramped,
             scene: this.scene,
             spots: this.spots,
             sizes: this.sizes,
@@ -156,7 +158,20 @@ export class RenderStage {
   /** The drawing fitted to the part of the card the controls leave clear, and the zoom stops from there. */
   private fitted(): View {
     const r = this.viewport.getBoundingClientRect();
-    const view = fitView(this.spots.values(), r.width || 1, r.height || 1, overCover(this.viewport, r));
+    const fit = () => {
+      const cover = overCover(this.viewport, r);
+      const view = fitView(this.spots.values(), r.width || 1, r.height || 1, cover);
+      return { view, roomy: view.clear === cover };
+    };
+    // measured with the mini-map shown, so the answer is the same however the last fit left it
+    if (this.mini) this.mini.canvas.hidden = false;
+    let { view, roomy } = fit();
+    // too little room left clear with the mini-map shown: it waits until the reader zooms in, and the controls count
+    this.cramped = !roomy && !!this.mini;
+    if (this.cramped && this.mini) {
+      this.mini.canvas.hidden = true;
+      view = fit().view;
+    }
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;
