@@ -4,7 +4,7 @@
 import { OPTIONS } from './settings.ts';
 import type { Settings } from './settings.ts';
 import { optionSaid } from './settings-words.ts';
-import { presetChange } from './view-presets.ts';
+import { PRESET_SETTINGS, presetChange } from './view-presets.ts';
 
 /** One setting a preset would change: its key, its name, and what it is now and would be, in words. */
 export interface PresetLine {
@@ -34,4 +34,12 @@ export function presetPreview(s: Settings, id: string): PresetLine[] {
 /** What puts `s` back as it was before picking preset `id`: one step, each setting the preset changed. */
 export function presetUndo(s: Settings, id: string): Partial<Settings> {
   return Object.fromEntries(presetPreview(s, id).map((l) => [l.key, s[l.key]]));
+}
+
+/** Each Drawing setting a saved preset would keep, as it is now in `s`: its name and its value in words. */
+export function presetHolds(s: Settings): { name: string; value: string }[] {
+  return PRESET_SETTINGS.map((key) => {
+    const o = OPTIONS.find((x) => x.key === key);
+    return { name: o ? optionSaid(o).name : key, value: valueSaid(key, s[key]) };
+  });
 }

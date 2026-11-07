@@ -6,6 +6,7 @@ import { PresetPanel } from '../src/preset-panel.ts';
 import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
 import { STARTERS, presetFile, starterOf } from '../src/view-presets.ts';
 import { word } from '../src/words.ts';
+import { presetHolds } from '../src/view-preset-preview.ts';
 
 const calm = STARTERS.find((p) => p.id === 'calm');
 const names = (text) => readOwnList(text).map((p) => p.name);
@@ -159,5 +160,13 @@ describe('own presets in the settings and the panel', () => {
     const row = p.ownRows().find((r) => r.name === word('settings.own-presets.bring'));
     row.action();
     await done(() => readOwnList(state.s.ownPresets).length === 1 && state.s.ownPreset === '');
+  });
+
+  test('say what a preset would hold before it is kept (view_presets_own_save)', () => {
+    const { p } = panelOver({ miniMap: false });
+    const row = p.ownRows().find((r) => r.name === word('settings.own-presets.save'));
+    assert.match(row.desc, /Keeps the Drawing settings/);
+    for (const line of presetHolds(DEFAULT_SETTINGS)) assert.ok(row.desc.includes(line.name), line.name);
+    assert.equal(presetHolds(DEFAULT_SETTINGS).length, 8);
   });
 });

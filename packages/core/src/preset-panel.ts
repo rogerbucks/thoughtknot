@@ -14,7 +14,7 @@ import {
   starterOf,
 } from './view-presets.ts';
 import type { ViewPreset } from './view-presets.ts';
-import { presetPreview, presetUndo } from './view-preset-preview.ts';
+import { presetHolds, presetPreview, presetUndo } from './view-preset-preview.ts';
 import { presetInUse } from './vault-preset.ts';
 import type { Settings } from './settings.ts';
 
@@ -144,7 +144,11 @@ export class PresetPanel {
         : []),
       {
         name: word('settings.own-presets.save'),
-        desc: word('settings.own-presets.save.sentence'),
+        desc: `${word('settings.own-presets.save.sentence')} ${word('settings.own-presets.holds', {
+          list: presetHolds(s)
+            .map((h) => `${h.name}: ${h.value}`)
+            .join('. '),
+        })}`,
         action: () => void this.saveOwn(),
       },
     ];
