@@ -52,8 +52,8 @@ export const heightOf = (view: View, depth: number): number => (view.lift ?? 0) 
 const ARCH_LEVELS = 3;
 
 /**
- * The top of a road's arch between two spots `depth` levels down, as the control point of a curve on the screen: none
- * unless levels stand. The arch rises a quarter of the road's length, at most three levels.
+ * The control point of a road's arch on the screen, between two spots `depth` levels down. There is none unless levels
+ * stand. The arch rises a quarter of the road's length, at most three levels.
  */
 export function archOf(p: Spot, q: Spot, view: View, depth: number): [number, number] | undefined {
   const lift = view.lift ?? 0;
