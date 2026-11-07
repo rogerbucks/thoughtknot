@@ -28,6 +28,7 @@ import {
   wheelView,
 } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
+import { groundShift, isTilted, turnedBy } from '../../render/render-tilt.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
@@ -83,7 +84,7 @@ export class RenderStage {
   private view: View;
   /** Whether the view is still the fitted one: no zoom or pan since. */
   private untouched = true;
-  private drag: { x: number; y: number; moved: boolean } | null = null;
+  private drag: { x: number; y: number; moved: boolean; turning?: boolean } | null = null;
   /** The fingers or pointers down now, by id, and the spread a pinch is measured from. */
   private readonly fingers = new Map<number, { x: number; y: number }>();
   private pinch: { d: number; x: number; y: number } | null = null;
@@ -144,6 +145,8 @@ export class RenderStage {
     this.canvas.addEventListener('pointermove', (e) => this.move(e));
     this.canvas.addEventListener('pointerup', (e) => this.up(e));
     this.canvas.addEventListener('pointercancel', (e) => this.lift(e));
+    // seen from an angle, a right drag turns the camera: no menu comes up for it
+    this.canvas.addEventListener('contextmenu', (e) => isTilted(this.view) && e.preventDefault());
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
     this.watcher?.observe(viewport);
     for (const card of coverCards(viewport)) this.watcher?.observe(card);
@@ -232,7 +235,11 @@ export class RenderStage {
       // a second finger: a pinch, never a pan or a tap
       this.drag = null;
       this.pinch = this.spread();
-    } else if (this.fingers.size === 1) this.drag = { x: e.clientX, y: e.clientY, moved: false };
+    } else if (this.fingers.size === 1) {
+      // seen from an angle, a drag with Shift or the right button turns and tips the camera; else it moves the drawing
+      const turning = isTilted(this.view) && (e.shiftKey || e.button === 2);
+      this.drag = { x: e.clientX, y: e.clientY, moved: false, turning };
+    }
   }
 
   /** How far apart the two fingers are, and the point between them, in page pixels. */
@@ -247,17 +254,18 @@ export class RenderStage {
       // the drawing follows the fingers: it zooms as they spread or draw together, and pans as they move
       const was = this.pinch,
         now = this.spread();
-      this.view = panView(this.view, now.x - was.x, now.y - was.y);
+      this.view = panView(this.view, ...groundShift(this.view, now.x - was.x, now.y - was.y));
       this.zoom((v, at) => pinchView(v, this.stops, now.d / was.d, at), now.x, now.y);
       this.pinch = now;
       return;
     }
     const d = this.drag;
     if (!d || (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < CLICK_PX)) return;
-    this.view = panView(this.view, e.clientX - d.x, e.clientY - d.y);
+    const [dx, dy] = [e.clientX - d.x, e.clientY - d.y];
+    this.view = d.turning ? turnedBy(this.view, dx, dy) : panView(this.view, ...groundShift(this.view, dx, dy));
     this.untouched = false;
     this.gliding++;
-    this.drag = { x: e.clientX, y: e.clientY, moved: true };
+    this.drag = { ...d, x: e.clientX, y: e.clientY, moved: true };
     this.draw();
   }
 

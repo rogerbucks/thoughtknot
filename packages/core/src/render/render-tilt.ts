@@ -78,3 +78,22 @@ export function groundOf(view: View): [number, number, number, number][] {
   }
   return lines;
 }
+
+/** The least and most the reader may tip the camera back by hand: never straight down, never edge on. */
+const TIPS = [0.2, 1.2] as const;
+/** How far a drag of one pixel turns or tips the camera, in radians. */
+const PER_PX = 0.006;
+
+/** `view` turned by a drag of `dx` pixels across and tipped by `dy` down, as by a drag that turns the camera. */
+export function turnedBy(view: View, dx: number, dy: number): View {
+  const tilt = Math.min(TIPS[1], Math.max(TIPS[0], (view.tilt ?? 0) + dy * PER_PX));
+  return { ...view, tilt, turn: (view.turn ?? 0) + dx * PER_PX };
+}
+
+/** A drag of `dx`, `dy` on the screen, as a move on the ground the camera looks at: the drawing follows the pointer. */
+export function groundShift(view: View, dx: number, dy: number): [number, number] {
+  if (!isTilted(view)) return [dx, dy];
+  const [t, u] = [view.tilt ?? 0, view.turn ?? 0];
+  const down = dy / Math.max(0.2, Math.cos(t)); // the ground is foreshortened up the screen
+  return [dx * Math.cos(u) + down * Math.sin(u), -dx * Math.sin(u) + down * Math.cos(u)];
+}
