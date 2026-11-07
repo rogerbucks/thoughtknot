@@ -211,7 +211,7 @@ export function calloutsOf(
         : [x + card.w / 2, side === 't' ? y + card.h : y];
     const d = Math.hypot(sx - cloud.x, sy - cloud.y) || 1;
     const end: [number, number] = [cloud.x + ((sx - cloud.x) / d) * cloud.r, cloud.y + ((sy - cloud.y) / d) * cloud.r];
-    return { ...labelOf(card.ask, card, { x, y, w: card.w, h: card.h }), lead: [sx, sy, ...end] } as LabelMark;
+    return { ...labelOf(card.ask, card, { x, y, w: card.w, h: card.h }), lead: [sx, sy, ...end] };
   });
   // any other name is kept where the placer put it, if it stays clear of the cards round the drawing
   const apart = (p: LabelMark, q: LabelMark) =>
