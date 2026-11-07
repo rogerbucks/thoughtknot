@@ -1,6 +1,6 @@
-// The app's mesh channel (editor spec §40, mesh_vpn_sync, encrypted_everywhere): two apps sync over the app's mesh
-// commands, here answered by two in-memory relays. Only sealed bytes reach the commands, and an address that is not a
-// private one is refused by the Rust, so no channel opens.
+// The app's mesh channel (editor spec §40, mesh_vpn_sync, encrypted_everywhere). Two apps sync over the mesh commands,
+// here answered by two in-memory relays. Only sealed bytes reach the commands. The Rust refuses an address that is not
+// a private one, so no channel opens.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DeviceKeys, MemoryStore, Peer, VaultKey, syncedOver } from '@thoughtknot/sync';

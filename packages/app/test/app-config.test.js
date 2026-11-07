@@ -1,5 +1,5 @@
-// The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages,
-// reach no other origin and call only the app's ten folder commands, its one gh command and its six mesh commands. The Rust, the build
+// The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages and
+// reach no other origin. It calls only ten folder commands, one gh command and six mesh commands. The Rust, the build
 // script and the window's capability must name the same seventeen commands. So a new command is never let through unseen.
 // The gh command runs only the calls on its list, by gh's own path, with no shell (spec §48, github_repo_access).
 import { test } from 'node:test';
