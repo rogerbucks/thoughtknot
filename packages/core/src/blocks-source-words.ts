@@ -55,4 +55,10 @@ export const BLOCKS_SOURCE_WORDS = {
   'blocks.source-none': 'it names no source',
   'blocks.source-empty': 'Graph {graph} has nothing in it yet where it is written.',
   'blocks.source-engine-failed': 'The drawing engine could not start, so this graph is shown as text.',
+  'bases.name': 'Graph',
+  'bases.empty': 'No notes match this view, so there is nothing to draw. Change its filters to pick some.',
+  'bases.edit': 'These notes are picked by the base. Change its filters, or open a note to change it.',
+  'bases.edges': 'Links from property',
+  'bases.edges-links': 'Note links',
+  'bases.outside': 'Show linked notes outside this view',
 } as const;
