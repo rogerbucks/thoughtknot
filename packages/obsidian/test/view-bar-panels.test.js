@@ -1,7 +1,7 @@
 // The panels a card's bar opens lie over the drawing (editor spec §25, panels_over_drawing). Roger, 25 Oct 2026:
 // "option panels occasionally cause elements on the screen to be unavailable as they are offscreen. Suggest panels
 // overlay the main view and do not move other elements around".
-// - The View menu, Find, the filter, Diagram type's lists, the problems and Export sit in one layer.
+// - The View menu, Find, the filter, the problems and Export sit in one layer. The types' lists open from the side rail.
 // - That layer is just above the drawing, not in the card's flow.
 // - That layer takes no room, so opening a panel moves nothing: it lies over the drawing and scrolls inside it.
 import { test, describe, before } from 'node:test';
@@ -15,7 +15,7 @@ import { PATH, NOTE, show } from './host/card-notes.js';
 before(() => build());
 
 /** The card's panels that lie over the drawing, by their class. */
-const PANELS = ['thoughtknot-find', 'thoughtknot-filter', 'thoughtknot-type-list', 'thoughtknot-view-list'];
+const PANELS = ['thoughtknot-find', 'thoughtknot-filter'];
 
 describe('the panels the bar opens', () => {
   // proves: panels_over_drawing

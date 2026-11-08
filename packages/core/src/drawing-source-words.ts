@@ -180,6 +180,10 @@ export const DRAWING_SOURCE_WORDS = {
   'certainty.said.doubtful': 'doubtful',
   'certainty.said.contested': 'contested',
   // what the View menu groups things by (group-by.ts)
+  'rail.links': 'Links',
+  'rail.areas': 'Areas',
+  'rail.data': 'Data',
+  'rail.group-now': '{group}: {type} drawn now',
   'view.group-by': 'Group by',
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
@@ -272,7 +276,6 @@ export const DRAWING_SOURCE_WORDS = {
     'A fisheye enlarges what is round the pointer, or the selection. Hyperbolic and sphere lay the whole graph on a disc round the middle of the view: drag to bring a part there. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
-  'view.list.more': 'More views',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',

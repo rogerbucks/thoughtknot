@@ -7,6 +7,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Sync between devices
 
+- `packages/sync/test/kept-store.test.js` — a store over any place that keeps lists by name, as the window's database
+  does. It keeps its records across runs and loses none when several are added at once. It sends and takes in
+  records as a shelf does.
 - `packages/sync/test/local-encrypted-store.test.js` — devices apart then together agree, and what each keeps is sealed
   (editor spec §40, local_encrypted_store). It spans the stores, the keys and the CRDT.
 - `packages/sync/test/five-layers.test.js` — each layer holds only the one below. The engine refuses a bad edit before
