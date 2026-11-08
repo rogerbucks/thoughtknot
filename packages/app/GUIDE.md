@@ -62,9 +62,10 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Seventeen commands, and no others: the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
-  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, and six `mesh_` ones. The same seventeen are named in `lib.rs`, `build.rs` and
-  `capabilities/default.json`. A test holds the three lists together.
+- Twenty-four commands, and no others. These are the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, six `mesh_` ones and
+  seven `crdt_` ones. The same twenty-four are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test
+  holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
   `packages/core/test/fixtures/gh-calls.json`, the cases the core checks too.
@@ -83,6 +84,9 @@ Rust (src-tauri/)
 - The window's policy (`tauri.conf.json`) allows only the app's own pages and Tauri's calls. No other origin.
 - `thoughtknot-app <folder>` opens that folder without asking. The end-to-end check uses this.
 - The crates are pinned to exact versions. `Cargo.lock` is committed.
+- `crdt.rs` keeps the notes as Automerge texts, because the window may not run WebAssembly. Its commands open a note,
+  read its text, edit it, merge in records, ask whether it was ever a text, and make and find anchors. Bytes cross as
+  hexadecimal text. It writes the same bytes as the JavaScript build, which a shared fixture checks.
 
 ## Build and run
 

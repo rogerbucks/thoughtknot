@@ -81,3 +81,14 @@ test('a head shows its name and fold, its grip and dock buttons only once focuse
     /\.thoughtknot-corner > \.thoughtknot-chip:not\(:has\(> \.thoughtknot-chip-body > :not\(\[hidden\], :empty\)\)\) \{\s*display: none;/,
   );
 });
+
+// proves: panels_compact
+test('what can be done with the selected thing, and the editor beside it, are rows of icons named in tooltips', () => {
+  const css = hovering();
+  assert.match(css, /\.thoughtknot-untangle-offers \{\s*flex-direction: row;/);
+  assert.match(
+    css,
+    /:is\(\.thoughtknot-untangle-offers, \.thoughtknot-edit-actions\) > button \.thoughtknot-badge-text \{\s*display: none;/,
+  );
+  assert.match(css, /\.thoughtknot-edit-actions > button,[^{]*\.thoughtknot-edit-line-input \{\s*min-width: 28px;/);
+});

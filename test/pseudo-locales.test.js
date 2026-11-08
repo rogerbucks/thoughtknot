@@ -275,6 +275,9 @@ const CLIPS = {
 
 /** The rules with a fixed width that hold no words, each with why. */
 const HOLDS_NO_WORDS = {
+  '.thoughtknot-glyph': 'a type’s picture in the side rail; its name is its button’s words, or beside it',
+  '.thoughtknot-rail .thoughtknot-rail-button .thoughtknot-glyph':
+    'a type’s picture on a rail button, named by its label',
   '.thoughtknot-swatch': 'a line in a colour of the drawing',
   '.thoughtknot-rule-line': 'a sample of a rule’s line; its words sit beside it',
   '.thoughtknot-rule-swatch': 'a dot in a colour a rule may take; its name is the button’s label',

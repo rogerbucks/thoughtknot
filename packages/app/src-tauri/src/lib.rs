@@ -9,11 +9,14 @@
 // - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
 // - Bytes between the owner's devices over a mesh VPN (mesh.rs): listen, dial, send and receive whole messages on
 //   private addresses only. The messages are sealed before they get here, so Rust holds no key.
+// - The notes as Automerge texts (crdt.rs): open, edit, merge, ask the history, anchor. They are kept in Rust because the
+//   window may not run WebAssembly. Bytes cross as hexadecimal text, and no record leaves unsealed.
 // - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
 //   The folder commands reach it only when asked to (`target`). Once every note is copied and checked, the two swap.
 //   So the old folder is the target, and its copies are removed only when the person says so.
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
+mod crdt;
 mod gh;
 mod mesh;
 mod place;
@@ -309,6 +312,82 @@ async fn mesh_close(mesh: State<'_, Arc<mesh::Mesh>>, id: u32) -> Result<(), Str
     off(move || Ok(mesh.close(id))).await
 }
 
+/// Opens a note from its records, as the window's sync engine needs it. Notes are Automerge texts kept in Rust, because
+/// the window may not run WebAssembly. Bytes cross as hexadecimal text. The note starts as `text` when it has no record.
+#[tauri::command]
+async fn crdt_open(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    actor: String,
+    records: Vec<String>,
+    text: String,
+) -> Result<crdt::Opened, String> {
+    notes.open(&note, &actor, &records, &text)
+}
+
+/// The text of an open note.
+#[tauri::command]
+async fn crdt_text(notes: State<'_, crdt::Notes>, note: String) -> Result<String, String> {
+    notes.text(&note)
+}
+
+/// Replaces `from` to `to` of an open note by `insert`; the change made, to keep in the store.
+#[tauri::command]
+async fn crdt_splice(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    from: usize,
+    to: usize,
+    insert: String,
+    message: String,
+    time: i64,
+) -> Result<String, String> {
+    if to < from {
+        return Err("the end of the edit is before its start".into());
+    }
+    notes.splice(&note, from, to, &insert, &message, time)
+}
+
+/// Merges the records an open note lacks; nothing when none is new.
+#[tauri::command]
+async fn crdt_merge(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    records: Vec<String>,
+) -> Result<Option<crdt::Joined>, String> {
+    notes.merge(&note, &records)
+}
+
+/// Whether an open note was ever `text`.
+#[tauri::command]
+async fn crdt_has_been(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    text: String,
+) -> Result<bool, String> {
+    notes.has_been(&note, &text)
+}
+
+/// An anchor at `place` of an open note, which stays on its character.
+#[tauri::command]
+async fn crdt_anchor(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    place: usize,
+) -> Result<String, String> {
+    notes.anchor(&note, place)
+}
+
+/// Where an anchor is now in an open note.
+#[tauri::command]
+async fn crdt_place(
+    notes: State<'_, crdt::Notes>,
+    note: String,
+    anchor: String,
+) -> Result<usize, String> {
+    notes.place(&note, &anchor)
+}
+
 /// The folder named as the first argument, such as `thoughtknot ~/Notes`, when it is one.
 #[cfg(desktop)]
 fn folder_named() -> Option<PathBuf> {
@@ -332,7 +411,8 @@ fn own_documents<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<PathBuf, Strin
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_keeper::init())
-        .manage(Arc::new(mesh::Mesh::default()));
+        .manage(Arc::new(mesh::Mesh::default()))
+        .manage(crdt::Notes::default());
     #[cfg(desktop)]
     let app = app
         .plugin(tauri_plugin_dialog::init())
@@ -367,7 +447,14 @@ pub fn run() {
         mesh_dial,
         mesh_send,
         mesh_receive,
-        mesh_close
+        mesh_close,
+        crdt_open,
+        crdt_text,
+        crdt_splice,
+        crdt_merge,
+        crdt_has_been,
+        crdt_anchor,
+        crdt_place
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");

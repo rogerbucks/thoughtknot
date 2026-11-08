@@ -42,8 +42,8 @@ const press = (label) => `${VIEW}?.querySelector(${jsText(`.thoughtknot-bar [ari
 /** Opens full screen. */
 export const FULL = `document.querySelector('.thoughtknot-bar [aria-label="Full screen"]').click()`;
 
-/** Moves the space button on one step: 2D, then 2.5D, then 3D. */
-export const NEXT_SPACE = `${VIEW}.querySelector('.thoughtknot-bar [aria-label^="2D, 2.5D or 3D"]').click()`;
+/** Shows the drawing the `n`th way of the side rail: 2D, 2.5D, 3D or the globe (type_rail). */
+export const SPACE_AT = (n) => `${VIEW}.querySelectorAll('.thoughtknot-rail [data-space]')[${n}].click()`;
 
 /** Opens the View panel, and every dock and chip that is folded. */
 export const OPEN_ALL = `(() => {
@@ -129,7 +129,7 @@ export async function checkPanels(link, { chrome, sizes = SIZES, spaces = SPACES
         for (const [n, space] of spaces.entries()) {
           await openPage(browser, link);
           if (full) await step(FULL);
-          for (let i = 0; i < n; i++) await step(NEXT_SPACE);
+          if (n) await step(SPACE_AT(n));
           await step(OPEN_ALL);
           if (thing) {
             await step(FIND);

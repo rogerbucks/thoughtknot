@@ -18,6 +18,13 @@ fn main() {
         "mesh_send",
         "mesh_receive",
         "mesh_close",
+        "crdt_open",
+        "crdt_text",
+        "crdt_splice",
+        "crdt_merge",
+        "crdt_has_been",
+        "crdt_anchor",
+        "crdt_place",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()

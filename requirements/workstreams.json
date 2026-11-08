@@ -1401,5 +1401,21 @@
       "ai_block",
       "ai_block_not_data"
     ]
+  },
+  "ET1": {
+    "title": "Ethos rules from the neurodivergence report",
+    "size": "L",
+    "requirements": [
+      "routines_survive_update",
+      "no_condition_guess",
+      "ai_smallest_edit",
+      "presets_mix",
+      "no_hooks",
+      "ai_time_box",
+      "since_you_left",
+      "ai_says_how_sure",
+      "ai_both_sides",
+      "ai_guess_label"
+    ]
   }
 }

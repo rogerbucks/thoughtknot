@@ -29,6 +29,8 @@ import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from '../button';
+import { railTypes, renderRail } from './type-rail';
+import type { RailType } from './type-rail';
 import { FIRST_VIEW_TYPES } from '../../view-types/view-types.ts';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
 import type { TimelinePick, TimelineShown } from './timeline-choice';
@@ -247,21 +249,50 @@ export function drawnApart(viewport: HTMLElement, d: Shown, hands?: Hands): HTML
 export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: 'LR', ...tableSize(table) });
 
 /**
+ * Each type the card offers, for the side rail (type_rail). First come the core's types, with whether each fits and
+ * why. Then come the views drawn as marks, which always fit. `pick` draws a type chosen, `pickView` a view.
+ */
+export function railOffer(
+  d: DiagramShown,
+  pick: (type: DiagramType) => void,
+  pickView: (type: string) => void,
+): RailType[] {
+  const { choice, suggested } = d;
+  const viewNow = d.views.some((v) => v.now);
+  const types: RailType[] = d.fits.map((f) => {
+    const now = !viewNow && f.type === choice.drawn,
+      hint = f.fits && f.type === suggested.type;
+    const why = f.fits
+      ? [now ? word('type.drawn-now') : '', hint ? word('type.suggested', { because: suggested.because }) : '']
+          .filter(Boolean)
+          .join('; ')
+      : (f.why ?? '');
+    return { key: f.type, name: named(f.type), now, fits: f.fits, why, suggested: hint, pick: () => pick(f.type) };
+  });
+  for (const v of d.views) {
+    const why = v.now ? word('type.drawn-now') : '';
+    const key = v.type.slice(v.type.lastIndexOf('.') + 1);
+    types.push({ key, name: v.title, now: v.now, fits: true, why, suggested: false, pick: () => pickView(v.type) });
+  }
+  return types;
+}
+
+/**
  * The strip under a card's bar: how it is drawn, and Diagram type and its list. When there is one to say, it says the
  * type chosen has stopped fitting, or gives the way in to a large graph. Returns the controls that write, which a
  * read-only card takes away; what it says stays. Where the card can look at a type (`d.look`), its types stay offered
  * while `readOnly` says so, each drawn without being saved. A type looked at is said not saved, with Back to saved, and
  * Keep it where the note is edited. Each keeps where the card is (`where`) first, for the card drawn as the new type.
- * Given the card's bar (`inBar`), Diagram type sits there with the bar's other buttons, its list still under the strip.
+ * Given the card's side rail (`inBar.rail`), the types are offered there, a button for each group (type_rail).
  */
 export function renderTypeStrip(
   root: HTMLElement,
   d: DiagramShown,
   readOnly: () => boolean = () => false,
   where?: () => TypeLeftAt,
-  inBar?: { bar: HTMLElement; before: HTMLElement },
+  inBar?: { bar: HTMLElement; before: HTMLElement; rail?: HTMLElement },
 ): HTMLElement[] {
-  const { choice, suggested, look } = d,
+  const { choice, look } = d,
     writes: HTMLElement[] = [];
   // the type about to change: where the card is kept first, so the next card is full screen, selected and zoomed alike
   const leaving =
@@ -288,17 +319,20 @@ export function renderTypeStrip(
   // a plug-in's type that nothing here draws: which plug-in draws it, and that the graph is a network meanwhile
   if (choice.plugin && !d.picture)
     root.createDiv({ cls: 'thoughtknot-type-plugin', attr: { role: 'note' }, text: choice.plugin.why });
-  const list = root.createEl('ul', { cls: 'thoughtknot-type-list', attr: { 'aria-label': word('type.list') } });
-  list.hidden = true;
-  const open = () => {
-    list.hidden = !list.hidden;
-    toggle.setAttribute('aria-expanded', String(!list.hidden));
-  };
-  const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
-  toggle.setAttribute('aria-expanded', 'false');
-  inBar?.bar.insertBefore(toggle, inBar.before); // in the bar, with the rest that change how it is drawn (type_in_bar)
-  const around = aroundSelected(toggle, d, where, root); // Radial with a thing selected (radial_centre_anywhere)
-  picks(toggle, list);
+  // the side rail: a button for each group of types, each opening its list beside the rail (type_rail)
+  const rail = inBar?.rail ?? renderRail(root, null).rail;
+  let around: ReturnType<typeof aroundSelected> | null = null; // Radial around a thing selected (radial_centre_anywhere)
+  const offer = railOffer(
+    d,
+    (type) => (type === 'radial' && around?.put()) || pick(type),
+    (type) => leaving(() => (d.lookView && readOnly() ? d.lookView(type) : d.chooseView(type)))(),
+  );
+  const { controls, buttons, groups } = railTypes(rail, offer);
+  const links = groups.get('links'),
+    radial = buttons.get('radial');
+  if (links) around = aroundSelected(links, d, where, root);
+  if (around && radial) around.tile(radial, !radial.disabled);
+  picks(...controls);
   // a timeline's order and what it shows: looked at while the card is read-only, when it can be; else saved
   if (d.timeline) {
     const { chooseTimeline, lookTimeline } = d;
@@ -306,61 +340,6 @@ export function renderTypeStrip(
       leaving(() => (lookTimeline && readOnly() ? lookTimeline(p) : chooseTimeline?.(p)))(),
     );
     if (!lookTimeline) writes.push(row);
-  }
-  // the type drawn now first, then the one suggested, then the rest that fit, in reading and keyboard order alike (F7)
-  const rank = (f: (typeof d.fits)[number]) =>
-    f.type === choice.drawn ? 0 : f.fits && f.type === suggested.type ? 1 : f.fits ? 2 : 3;
-  // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
-  for (const f of [...d.fits].sort((a, b) => rank(a) - rank(b))) {
-    const li = list.createEl('li', {
-      cls: [
-        ...(f.type === choice.drawn ? ['thoughtknot-type-now'] : []),
-        ...(f.fits && f.type === suggested.type && f.type !== choice.drawn ? ['thoughtknot-type-suggested'] : []),
-        ...(f.fits ? [] : ['thoughtknot-type-unfit']),
-      ],
-    });
-    const b = li.createEl('button', {
-      text: named(f.type),
-      attr: { type: 'button', 'aria-pressed': String(f.type === choice.drawn) },
-    });
-    b.disabled = !f.fits;
-    if (f.type === 'radial') around.tile(b, f.fits);
-    b.addEventListener('click', () => {
-      if (!(f.type === 'radial' && around.put())) pick(f.type);
-    });
-    const why = f.fits
-      ? [
-          f.type === choice.drawn ? word('type.drawn-now') : '',
-          f.type === suggested.type ? word('type.suggested', { because: suggested.because }) : '',
-        ]
-          .filter(Boolean)
-          .join('; ')
-      : (f.why ?? '');
-    li.createSpan({ cls: 'thoughtknot-type-why', text: why });
-    if (!f.fits) li.setAttribute('title', why); // its reason on hover too (F7)
-  }
-  // the view types drawn as marks, in a list of their own under the types (view_types_offered)
-  const views = root.createEl('ul', { cls: 'thoughtknot-view-list', attr: { 'aria-label': word('view.list') } });
-  views.hidden = true;
-  toggle.addEventListener('click', () => (views.hidden = list.hidden));
-  picks(views);
-  const { lookView } = d;
-  // the first views shown, the rest folded under More views, open when one of them is drawn now (Q-12, option B)
-  const first = (v: { type: string }) => FIRST_VIEW_TYPES.some((t) => v.type === `${CORE_DIAGRAMS_ID}.${t}`);
-  let more: HTMLElement | null = null;
-  for (const v of d.views) {
-    if (!first(v) && !more) {
-      const fold = views.createEl('li', { cls: 'thoughtknot-view-more' }).createEl('details');
-      fold.open = d.views.some((w) => w.now && !first(w));
-      fold.createEl('summary', { text: word('view.list.more') });
-      more = fold.createEl('ul');
-    }
-    const li = (more ?? views).createEl('li', { cls: v.now ? ['thoughtknot-type-now'] : [] });
-    const b = li.createEl('button', { text: v.title, attr: { type: 'button', 'aria-pressed': String(v.now) } });
-    b.addEventListener('click', () =>
-      leaving(() => (lookView && readOnly() ? lookView(v.type) : d.chooseView(v.type)))(),
-    );
-    if (v.now) li.createSpan({ cls: 'thoughtknot-type-why', text: word('type.drawn-now') });
   }
   const stopped = choice.stopped;
   if (stopped) {

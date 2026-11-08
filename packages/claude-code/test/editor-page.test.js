@@ -464,7 +464,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
           .matchAll(/'([a-z][a-z0-9]*(?:-[a-z0-9]+)*)'/g))
           if (!n[1].startsWith('mod-')) names.add(n[1]); // `mod-cta` is a class of a text button, not an icon
     }
-    for (const n of ['copy', 'pencil', 'trash-2', 'layout-dashboard', 'panel-right-open'])
+    for (const n of ['copy', 'pencil', 'trash-2', 'eye-off', 'panel-right-open'])
       assert.ok(names.has(n), `${n} is one the layer asks for`);
     for (const n of names)
       if (!['text-button-icon'].includes(n)) assert.ok(existsSync(join(PACKAGE, 'page/icons', `${n}.svg`)), `${n}.svg`);
