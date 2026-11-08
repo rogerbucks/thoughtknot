@@ -69,9 +69,10 @@ get past the first message, and a message that does not open ends its channel.
 
 `shared-notes-layer.ts` shares chosen notes through the storage layers. The note's file stays the truth. A write to a
 shared note is also kept in the note's CRDT and sent over the link. What the other device sent is merged and written
-back to the file. A write made against an older text is refused as ever, so a clash is seen. A note is first
-taken in from the other device. A file that only lags behind takes the note's text. A file with an edit of its own
-keeps it, merged in.
+back to the file. A write made against an older text is refused as ever, so a clash is seen.
+
+A shared note is first taken in from the other device. A file that only lags behind takes the note's text. A file with
+an edit of its own keeps it, merged in.
 
 ## Graphs from many places
 
