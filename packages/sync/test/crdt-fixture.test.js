@@ -5,12 +5,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as A from '@automerge/automerge';
-import { fixture, genesis } from './crdt-fixture.js';
+import { concurrent, fixture, genesis } from './crdt-fixture.js';
 
 const kept = JSON.parse(readFileSync(new URL('./fixtures/crdt.json', import.meta.url), 'utf8'));
 
-test('the file holds what the JavaScript build makes now', () => {
-  assert.deepEqual(fixture(), kept);
+test('the file holds what the JavaScript build makes now', async () => {
+  assert.deepEqual({ ...fixture(), concurrent: await concurrent() }, kept);
 });
 
 test('the first change of a note is the same bytes every time', () => {
