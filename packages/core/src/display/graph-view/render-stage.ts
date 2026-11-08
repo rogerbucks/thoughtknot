@@ -18,6 +18,7 @@ import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../r
 import { isGlobe, middleOf } from '../../render/render-globe.ts';
 import { flatOf, hasLevels, laidOut, levelSaid, lookedFrom, sameLook, stageKind, turnedView } from './stage-look.ts';
 import type { StageKind } from './stage-look.ts';
+import { morphIn, seenOf, type Seen } from './stage-morph.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
 import { StageFocus, pickRoad } from './stage-focus.ts';
@@ -50,12 +51,22 @@ export function stageFor(
   viewport: HTMLElement,
   o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places' | 'diagram'>,
   hands?: StageHands,
+  seen?: Seen,
 ): RenderStage | null {
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
   const kind = stageKind(o.diagram); // only the network's places are dragged and saved
   if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g) || !kind) return null;
-  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap, kind === 'network' ? o.places : undefined, kind);
+  return new RenderStage(
+    viewport,
+    drawing,
+    g,
+    hands,
+    o.aids.miniMap,
+    kind === 'network' ? o.places : undefined,
+    kind,
+    seen,
+  );
 }
 
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -97,6 +108,7 @@ export class RenderStage {
     mini: MiniMapSetting = 'always',
     places?: PlacesHost,
     kind: StageKind = 'network',
+    seen?: Seen,
   ) {
     this.viewport = viewport;
     ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, kind, hands, places?.saved));
@@ -140,8 +152,10 @@ export class RenderStage {
     this.watcher = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.resized());
     this.watcher?.observe(viewport);
     for (const card of coverCards(viewport)) this.watcher?.observe(card);
-    this.draw();
+    morphIn(this.spots, this.view, seen, () => this.draw()); // from the type shown before, if any (render_type_morph)
   }
+  /** What this stage shows now, for the stage that takes its place when the diagram type changes. */
+  readonly seen = (): Seen => seenOf(this.view, this.spots);
 
   /** The level shown now, as a reader is told it: "Level 2 of 3 · Areas". */
   level(): string {
