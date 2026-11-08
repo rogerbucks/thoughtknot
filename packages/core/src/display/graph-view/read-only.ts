@@ -58,6 +58,7 @@ export const READS = [
   'links.render',
   'links.cameBack',
   'diagram.look',
+  'diagram.lookView',
   'diagram.lookTimeline',
   'diagram.back',
   'diagram.centreLook',

@@ -27,7 +27,8 @@ import {
 import type { Block, Drawn, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
-import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
+import { holdHeight, seenFor } from './kept-view';
+import { DRAWN_AT_ONCE_FROM, LAYOUT_WAIT, shownAtOnce, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
 import { movingFor, writeStyle } from './style-write';
@@ -51,6 +52,7 @@ import { showMassive } from './massive-card';
 import { overviewInParts } from './note-store';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
+import { placesFor } from './places-block';
 import { compareWith } from './changes/compare-with';
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
@@ -121,19 +123,19 @@ export async function renderShown(
   const local: BlockContext = {
     sourcePath: ctx.sourcePath,
     getSectionInfo: (at) => ctx.getSectionInfo(at),
-    addChild: (child) => {
-      mine.push(child);
-      ctx.addChild(child);
-    },
+    addChild: (child) => void (mine.push(child), ctx.addChild(child)),
   };
+  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (ES§44, drawing_shown_at_once)
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
+    const held = holdHeight(plugin, ctx.sourcePath, graphOfBlock(source), el); // the page keeps still (render_type_morph)
     el.empty();
     // edited in place with Redraw while typing set to Done, the card is drawn as the block was when editing began (NEURO-7)
     const line = ctx.getSectionInfo(el)?.lineStart ?? 0,
       shown = plugin.inlineFor(ctx.sourcePath, line)?.drawnFrom(source) ?? source;
     // a card drawn from another note or a file is drawn again when that source changes (§20)
-    await renderBlock(plugin, shown, el, local, owner, () => void draw());
+    const run = () => renderBlock(plugin, shown, el, local, owner, () => void draw());
+    await (first ? ((first = false), shownAtOnce(el, word('progress.drawing'), run)) : run()).finally(held);
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
@@ -294,11 +296,7 @@ export async function renderBlock(
     drawn = laid;
   } catch (e) {
     console.error('ThoughtKnot could not draw', graph, e);
-    root.createDiv({
-      cls: 'thoughtknot-banner',
-      attr: { role: 'alert' },
-      text: word('blocks.engine-failed'),
-    });
+    root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' }, text: word('blocks.engine-failed') });
     renderCode(root, source);
     return;
   }
@@ -327,11 +325,11 @@ export async function renderBlock(
       problems,
       mode: 'note',
       stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
+      seen: seenFor(plugin, target.path, graph), // a new type glides from what the last one showed (render_type_morph)
       exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
-      // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
-      ...(diagram?.table || diagram?.picture
+      ...(diagram?.table || diagram?.picture // a box dragged writes a nudge in the style graph (§6, drag_moves_box)
         ? {}
         : { moving: movingFor(plugin, target.path, graph, styling, drawing) }),
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
@@ -344,6 +342,7 @@ export async function renderBlock(
       picture: pictureStatus(plugin, target.path, graph), // the bar says whether its picture is up to date (§62)
       writeView: (block) => writeViewBlock(plugin, target.path, graph, block),
       sketching: sketchingFor(plugin, target.path, graph, info?.text),
+      places: placesFor(plugin, target.path, graph, source, info?.text), // a drag saves a place (ES§2)
       exporting,
       compare: () => compareWith(plugin, target.path, graph), // an earlier version drawn with it (risk NEURO-2)
       expand: plugin.expandFor(target.path, graph), // Expand with AI, from the editor beside a thing (§72)

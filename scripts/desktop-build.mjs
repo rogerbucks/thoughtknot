@@ -123,6 +123,7 @@ function signLinux(dir) {
  * The build comes in two steps, so no key is in the one that runs the repository's code (SEC-17):
  * - `compile` builds the app with every signing key taken out of its environment. A crate's build script runs here.
  * - `bundle` makes the installers from the compiled app. Only the macOS keys are given to it, for Tauri to sign and notarise.
+ *   `bundle app` makes the macOS .app alone, with no disk image, as the pre-push hook does.
  * The Linux .deb is signed apart, by `sign-linux <folder>` in a job of its own.
  */
 function main() {
@@ -141,7 +142,11 @@ function main() {
   const plan = signingPlan(os, process.env);
   for (const w of plan.warnings) console.log(`::warning::${w}`);
   const built = withApiKey(plan, () =>
-    spawnSync('cargo', ['tauri', 'bundle'], { cwd: TAURI, env: plan.env, stdio: 'inherit' }),
+    spawnSync('cargo', ['tauri', 'bundle', ...(dir === 'app' ? ['--bundles', 'app'] : [])], {
+      cwd: TAURI,
+      env: plan.env,
+      stdio: 'inherit',
+    }),
   );
   if (built.status !== 0) process.exit(built.status ?? 1);
   const said = Object.entries(plan.signed)

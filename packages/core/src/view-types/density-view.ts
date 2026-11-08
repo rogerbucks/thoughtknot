@@ -55,6 +55,16 @@ export function densityMarks({ shape, space }: DiagramGiven, previous?: Places):
 }
 
 /**
+ * Where each thing of `shape` sits in a density view of `space`, by key: the places its squares count. The new stage
+ * draws each thing there, over its square (render_every_type).
+ */
+export function densityPlaces({ shape, space }: DiagramGiven): Map<string, [number, number]> {
+  const top = densityKey(space).height;
+  const at = fitted(forceLayout(shape), space.width, space.height - top);
+  return new Map([...at].map(([k, [x, y]]) => [k, [x, y + top]] as const));
+}
+
+/**
  * The key to the shades, at the top end of `space`: "fewer things", a swatch of each shade, then "more". Gives back its
  * marks and the height of the strip it takes, which the squares leave clear.
  */

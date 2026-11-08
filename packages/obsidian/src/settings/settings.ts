@@ -13,7 +13,7 @@ import {
   unmatchedClasses,
   word,
 } from '@thoughtknot/core';
-import type { MatrixRow, Option, Settings } from '@thoughtknot/core';
+import type { AiPublic, MatrixRow, Option, Settings } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
@@ -22,6 +22,7 @@ import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
 import { PresetChoice, asSettings, sharePreset } from './preset-rows';
 import { setVaultPreset, vaultPresetOf } from './vault-preset';
+import { askPublicConsent, raises } from './public-consent';
 export { watchVaultPreset } from './vault-preset';
 import { STORAGE_KEY, setStorageValue, storageGroup, storageStoreOf, storageValue } from '../storage/storage-settings';
 
@@ -113,7 +114,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       ];
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
-    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'aiModels' || o.key === 'ownPresets') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'ownPreset')
       return [
         { name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } },
@@ -155,6 +156,16 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         },
       ];
     const chosen = o.choices?.find((c) => c.value === (o.key === 'viewPreset' ? this.preset.shown() : s[o.key]));
+    const starters: [string, string][] = (o.choices ?? [])
+      .filter((c) => this.preset.offers(c.value))
+      .map((c) => [c.value, c.name]);
+    const own: [string, string][] =
+      o.key === 'viewPreset'
+        ? this.preset
+            .choices()
+            .filter((c) => c.id.startsWith('own:'))
+            .map((c) => [c.id, c.name])
+        : [];
     const after = o.key === 'viewPreset' ? asSettings(this.preset.rows()) : [];
     return [
       {
@@ -163,9 +174,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
         control: {
           type: 'dropdown',
           key: o.key,
-          options: Object.fromEntries(
-            (o.choices ?? []).filter((c) => this.preset.offers(c.value)).map((c) => [c.value, c.name]),
-          ),
+          options: Object.fromEntries<string>([...starters, ...own]),
         },
       },
       ...after,
@@ -203,6 +212,13 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       return key === `${STORAGE_KEY}history` ? this.update() : undefined;
     }
     if (key === 'viewPreset') return this.preset.pick(String(value)); // shown first, used on asking (§69)
+    // more for a public reviewer is shown on one real note and allowed first; less is saved at once (ES§19)
+    if (
+      key === 'aiPublic' &&
+      raises(s.aiPublic, value as AiPublic) &&
+      !(await askPublicConsent(this.owner, value as AiPublic))
+    )
+      return this.update();
     let change: Partial<Settings>;
     if (key === PRESET_KEY) change = withPreset(s, String(value));
     else if (key.startsWith('allowed.')) {

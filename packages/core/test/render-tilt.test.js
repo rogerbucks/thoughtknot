@@ -8,7 +8,16 @@ import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf, onScreen } from '../src/render/render-marks.ts';
 import { fitView } from '../src/render/render-camera.ts';
-import { isTilted, tilted } from '../src/render/render-tilt.ts';
+import {
+  fromTrackpad,
+  groundOf,
+  groundShift,
+  heightOf,
+  isTilted,
+  tilted,
+  turnedBy,
+} from '../src/render/render-tilt.ts';
+import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const thing = (key, names = {}) => ({
   key,
@@ -63,7 +72,7 @@ test('tipped back, the same marks are drawn: far clouds first, rooms under what 
   const flat = marksOf(scene, spots, detailAt(sizes, fit.scale), LIGHT, fit);
   const marks = marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view);
   const kinds = (ms) => [...new Set(ms.map((m) => m.kind))].sort();
-  assert.deepEqual(kinds(marks), kinds(flat), 'the same kinds of marks as flat');
+  assert.deepEqual(kinds(marks), [...kinds(flat), 'ground'].sort(), 'the same kinds of marks as flat, on a ground');
   const clouds = marks.filter((m) => m.kind === 'cloud');
   const depth = (m) => scene.nodes.get(m.key).depth;
   for (let i = 1; i < clouds.length; i++) {
@@ -106,7 +115,7 @@ test('tipped back in a small card beside a panel, every group still shows its na
 });
 
 // proves: space_one_bar
-test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks straight down, and the globe is left alone', async () => {
+test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks straight down, and the globe bends it round a ball', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -132,16 +141,214 @@ test('the bar’s 2.5D and 3D tip the new rendering’s camera back, flat looks 
     const flat = stage.view;
     assert.equal(stage.lookFrom('cards'), true, 'the stage shows 2.5D itself');
     assert.equal(stage.view.tilt, 0.6);
+    assert.equal(stage.view.lift, 0, '2.5D lies on the ground');
     assert.equal(stage.view.scale, flat.scale, 'the same zoom');
     assert.ok(isTilted(stage.view));
     assert.equal(stage.lookFrom('balls'), true);
     assert.ok(stage.view.tilt > 0.6, '3D tips further back');
+    assert.equal(stage.view.lift, 1, '3D stands each level on the one that holds it');
     stage.resized();
     assert.ok(stage.view.tilt > 0.6, 'a fit keeps the angle');
     assert.equal(stage.lookFrom(null), true);
     assert.equal(isTilted(stage.view), false, 'flat again');
-    assert.equal(stage.lookFrom('globe'), false, 'the globe is the view in space');
+    // the globe is the stage's own too: one look at every zoom, never the old view in space (Roger, 7 Nov 2026)
+    assert.equal(stage.lookFrom('globe'), true, 'the stage shows the globe itself');
+    assert.ok(stage.view.globe > 0 && !isTilted(stage.view), 'round a ball, seen straight on');
+    assert.equal(stage.lookFrom(null), true);
+    assert.equal(stage.view.globe, 0, 'flat again');
     assert.deepEqual(stage.spots, kept, 'the camera moved, nothing in the drawing did');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: render_one_camera
+test('in 3D each level stands on the one that holds it: items on stems, rooms over their footprints, on a ground', () => {
+  const { scene, spots, sizes } = drawing();
+  const kept = new Map([...spots].map(([k, s]) => [k, { ...s }]));
+  const fit = fitView(spots.values(), 1280, 800);
+  assert.deepEqual(groundOf(fit), [], 'flat: no ground drawn');
+  assert.equal(heightOf({ ...fit, lift: 0 }, 3), 0, '2.5D lies on the ground');
+  const view = { ...fit, tilt: 0.8, lift: 1 };
+  assert.ok(heightOf(view, 2) > heightOf(view, 1) && heightOf(view, 1) > 0, 'deeper stands higher');
+  const detail = detailAt(sizes, 1e6); // close enough that every level shows
+  const marks = marksOf(scene, spots, detail, LIGHT, view);
+  const ground = marks.find((m) => m.kind === 'ground');
+  assert.ok(ground && ground.lines.length > 4, 'a ground of grid lines');
+  assert.equal(marks[0], ground, 'the ground is painted first, under everything');
+  const dots = marks.filter((m) => m.kind === 'dot');
+  assert.ok(
+    dots.length > 0 && dots.every((d) => d.foot && d.foot[1] > d.y),
+    'each item stands on a stem above its foot',
+  );
+  const inner = marks.filter((m) => m.kind === 'cloud' && scene.nodes.get(m.key).depth > 0);
+  assert.ok(inner.length > 0 && inner.every((c) => c.shadow && c.shadow.y > c.y), 'a room stands over its footprint');
+  const top = marks.filter((m) => m.kind === 'cloud' && scene.nodes.get(m.key).depth === 0);
+  assert.ok(
+    top.every((c) => !c.shadow),
+    'the top level lies on the ground',
+  );
+  // the painter draws the ground, the stems and the footprints it is given, and nothing of its own
+  const calls = [];
+  const c = new Proxy(
+    { createRadialGradient: () => ({ addColorStop() {} }) },
+    { get: (t, k) => t[k] ?? ((...a) => calls.push([k, ...a])), set: () => true },
+  );
+  paintCanvas(c, marks, 1280, 800);
+  const lines = calls.filter(([k]) => k === 'lineTo').length;
+  assert.ok(lines >= ground.lines.length + dots.length, 'grid lines and stems drawn');
+  assert.deepEqual(spots, kept, 'nothing in the drawing moved');
+});
+
+// proves: render_one_camera
+test('seen from an angle, a drag moves the ground under the pointer, and Shift or the right button turns and tips', async () => {
+  // the ground follows the pointer, however the camera is turned
+  const view = { x: 0, y: 0, scale: 1, w: 1000, h: 600, tilt: 0.7, turn: 0.9 };
+  const at = (v) => tilted(500 - v.x, 300 - v.y, 0, v);
+  const [gx, gy] = groundShift(view, 30, -20);
+  const moved = { ...view, x: view.x - gx, y: view.y - gy };
+  const [a, b] = [at(view), at(moved)];
+  assert.ok(Math.abs(b.x - a.x - 30) < 3 && Math.abs(b.y - a.y + 20) < 3, `${b.x - a.x}, ${b.y - a.y}`);
+  assert.deepEqual(groundShift({ ...view, tilt: 0, turn: 0 }, 30, -20), [30, -20], 'flat: as dragged');
+  // turning and tipping, never straight down and never edge on
+  const turned = turnedBy(view, 100, 0);
+  assert.ok(turned.turn > view.turn && turned.tilt === view.tilt);
+  assert.ok(turnedBy(view, 0, -1e4).tilt >= 0.2 && turnedBy(view, 0, 1e4).tilt <= 1.2);
+  // on the stage: Shift or the right button turns, a plain drag moves, and nothing in the drawing moves
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const boxes = [],
+      props = new Map();
+    for (const subject of ['Work', 'Money'])
+      for (let i = 0; i < 6; i++) {
+        const key = `${subject[0]}${i}`;
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
+        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
+      }
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(
+      viewport,
+      { boxes, links: [], estimates: [] },
+      { nodes: props, p: (k) => props.get(k) },
+    );
+    const kept = new Map([...stage.spots].map(([k, s]) => [k, { ...s }]));
+    const drag = (from, to, extra = {}) => {
+      const e = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, button: 0, stopPropagation() {}, ...extra });
+      stage.down(e(...from));
+      stage.move(e(...to));
+      stage.up(e(...to));
+    };
+    // flat, Shift does not turn: there is no angle to turn
+    drag([100, 100], [160, 100], { shiftKey: true });
+    assert.equal(stage.view.turn ?? 0, 0);
+    stage.lookFrom('cards');
+    const before = stage.view;
+    drag([100, 100], [160, 130], { shiftKey: true });
+    assert.ok(stage.view.turn > 0 && stage.view.tilt > before.tilt, 'Shift and a drag turn and tip');
+    assert.equal(stage.view.x, before.x, 'turning does not move the drawing');
+    const turned = stage.view;
+    drag([100, 100], [80, 100], { button: 2 });
+    assert.ok(stage.view.turn < turned.turn, 'the right button turns too');
+    const still = stage.view;
+    drag([100, 100], [160, 100]);
+    assert.equal(stage.view.turn, still.turn, 'a plain drag moves, it does not turn');
+    assert.notEqual(stage.view.x, still.x);
+    assert.deepEqual(stage.spots, kept, 'the camera moved, nothing in the drawing did');
+    stage.unload();
+  } finally {
+    uninstall();
+  }
+});
+
+// proves: render_one_camera
+test('in 3D a road arches up between the rooms it joins; flat and 2.5D roads run straight', () => {
+  const { scene, spots, sizes } = drawing();
+  const fit = fitView(spots.values(), 1280, 800);
+  const detail = detailAt(sizes, fit.scale);
+  const roadsAt = (view) => marksOf(scene, spots, detail, LIGHT, view).filter((m) => m.kind === 'road');
+  assert.ok(roadsAt(fit).length > 0, 'the drawing has roads');
+  assert.ok(
+    roadsAt(fit).every((r) => !r.via),
+    'flat roads run straight',
+  );
+  assert.ok(
+    roadsAt({ ...fit, tilt: 0.6, lift: 0 }).every((r) => !r.via),
+    '2.5D roads lie on the ground',
+  );
+  const arched = roadsAt({ ...fit, tilt: 0.8, lift: 1 });
+  for (const r of arched) {
+    const mid = (r.from[1] + r.to[1]) / 2;
+    assert.ok(r.via && r.via[1] < mid, 'a 3D road bows up over the ground between its rooms');
+  }
+  // the painter draws the arch as a curve, with the count at its top
+  const calls = [];
+  const c = new Proxy(
+    { createRadialGradient: () => ({ addColorStop() {} }) },
+    { get: (t, k) => t[k] ?? ((...a) => calls.push([k, ...a])), set: () => true },
+  );
+  paintCanvas(c, arched, 1280, 800);
+  assert.equal(calls.filter(([k]) => k === 'quadraticCurveTo').length, arched.length, 'each arch is one curve');
+});
+
+// Roger, 7 Nov 2026: on a Mac trackpad, two fingers dragged up and down tip the view, and side to side turn it.
+// proves: render_one_camera
+test('two fingers on a trackpad turn and tip the view seen from an angle; a mouse wheel and a flat view do not', async () => {
+  const wheel = (deltaX, deltaY, deltaMode = 0) => ({ deltaX, deltaY, deltaMode });
+  assert.ok(fromTrackpad(wheel(4, 0)), 'sideways is a trackpad');
+  assert.ok(fromTrackpad(wheel(0, 7)), 'small steps are a trackpad');
+  assert.ok(!fromTrackpad(wheel(0, 100)) && !fromTrackpad(wheel(0, -120)), 'whole notches are a mouse wheel');
+  assert.ok(!fromTrackpad(wheel(0, 3, 1)), 'a wheel counted in lines is a mouse');
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const boxes = [],
+      props = new Map();
+    for (const subject of ['Work', 'Money'])
+      for (let i = 0; i < 6; i++) {
+        const key = `${subject[0]}${i}`;
+        boxes.push({ key, text: key, label: key, kinds: ['Item'] });
+        props.set(key, { name: key, subject, area: `${subject}${i % 2}` });
+      }
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    (viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const stage = new RenderStage(
+      viewport,
+      { boxes, links: [], estimates: [] },
+      { nodes: props, p: (k) => props.get(k) },
+    );
+    let held = 0;
+    const scroll = (deltaX, deltaY) => {
+      const e = { ...wheel(deltaX, deltaY), ctrlKey: false, metaKey: false, clientX: 200, clientY: 200 };
+      stage.wheel({ ...e, preventDefault: () => held++, stopPropagation() {} });
+    };
+    // flat, a two-finger scroll is the page's: there is no angle to turn
+    scroll(0, 7);
+    assert.equal(held, 0, 'flat, the page scrolls');
+    assert.equal(stage.view.tilt ?? 0, 0);
+    stage.lookFrom('cards');
+    const before = stage.view;
+    scroll(-30, 0);
+    assert.ok(stage.view.turn !== before.turn && stage.view.tilt === before.tilt, 'side to side turns it');
+    assert.equal(held, 1, 'and the page does not scroll');
+    const turned = stage.view;
+    scroll(0, 25);
+    assert.ok(stage.view.tilt !== turned.tilt && stage.view.turn === turned.turn, 'up and down tips it');
+    const tipped = stage.view;
+    scroll(0, 100);
+    assert.ok(
+      stage.view.tilt === tipped.tilt && stage.view.turn === tipped.turn,
+      'a mouse wheel leaves the angle alone',
+    );
+    assert.ok(stage.view.scale < tipped.scale, 'and zooms, with no key held (note_still_scrolls)');
     stage.unload();
   } finally {
     uninstall();

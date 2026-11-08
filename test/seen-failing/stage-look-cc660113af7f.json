@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stage-look.test.js",
+  "test": "views drawn as a picture are drawn by the stage by their own name",
+  "seen_failing_first": false,
+  "evidence": "Written after stageKind to give stage-look.ts its named test (unnamed-modules); render-laid.test.js proved the behaviour first."
+}

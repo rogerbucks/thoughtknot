@@ -8,6 +8,8 @@ export interface AiPreset {
   id: string;
   name: WordKey;
   endpoint: string;
+  /** A model the person runs themselves, so it starts as a private reviewer (ES§19, ai_private_is_own). */
+  reach?: 'private';
 }
 
 /** The services, in the order they are offered. A subscription to an app is not a key: each needs its own API key. */
@@ -20,4 +22,6 @@ export const AI_PRESETS: readonly AiPreset[] = [
   },
   { id: 'grok', name: 'models.preset.grok', endpoint: 'https://api.x.ai/v1/chat/completions' },
   { id: 'chatgpt', name: 'models.preset.chatgpt', endpoint: 'https://api.openai.com/v1/chat/completions' },
+  // LM Studio's own address on this device; one on another of the person's machines is typed in its place
+  { id: 'lmstudio', name: 'models.preset.lmstudio', endpoint: 'http://localhost:1234/v1', reach: 'private' },
 ];

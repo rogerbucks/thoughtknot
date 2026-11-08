@@ -1,16 +1,23 @@
 name: Build status trigger
 
-# This workflow does nothing itself. It exists so that a pull request being opened, pushed to, reopened, edited (a draft
-# may add its Requirements line) or closed wakes
+# This workflow does nothing itself. It exists so that a pull request being opened, edited (a draft may add its
+# Requirements line) or closed wakes
 # the "Build status" workflow, which runs the copy of its script that is on main and holds the project token. A pull
 # request's own workflow files can never hold that token: this one has no token, no secret and no checkout, and reads
 # nothing from the pull request.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, closed]
+    # Not synchronize or reopened: CI runs on those, and its run wakes the Build status itself (Roger, 7 Nov 2026: two
+    # Build status runs for every push were a fifth of all runs).
+    types: [opened, edited, closed]
 
 permissions:
   contents: read
+
+# a burst of edits wakes the Build status once; the last edit is the one that counts
+concurrency:
+  group: build-status-trigger-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   # named as scripts/build-status-gh.mjs knows it (TRIGGER_JOB); only CI's run counts as the checks of a change

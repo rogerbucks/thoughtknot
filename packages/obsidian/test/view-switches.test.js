@@ -104,7 +104,7 @@ async function card(note = NOTE, options = {}) {
 }
 
 describe('the View menu', () => {
-  test('a View button in the bar opens the five switches, each on or off as the settings hold them', async () => {
+  test('a View button in the bar opens the switches, each on or off as the settings hold them, and Faint roads off', async () => {
     const { env, el } = await card();
     try {
       const menu = el.querySelector('.thoughtknot-view-menu');
@@ -118,6 +118,7 @@ describe('the View menu', () => {
         ['Fold groups', 'switch', 'false'],
         ['Bundle links between groups', 'switch', 'false'],
         ['Lanes by kind', 'switch', 'true'],
+        ['Faint roads', 'switch', 'false'],
       ]);
     } finally {
       env.uninstall();
@@ -159,6 +160,10 @@ describe('the View menu', () => {
         ['Fold groups', 'Each group shows as one box until you open it.'],
         ['Bundle links between groups', 'Links between the same two groups share one line.'],
         ['Lanes by kind', 'Kinds that link in order each get a lane, or a plane in space.'],
+        [
+          'Faint roads',
+          'Keeps the roads between bigger groups faintly in sight as you zoom in. Off unless you turn it on.',
+        ],
       ]);
       assert.ok(!turn(el, 'Lay out with ThoughtKnot'), 'no engine switch in the menu');
     } finally {
@@ -195,6 +200,7 @@ describe('the View menu', () => {
           ['Fold groups', 'true'],
           ['Bundle links between groups', 'false'],
           ['Lanes by kind', 'false'],
+          ['Faint roads', 'false'],
         ],
       );
       assert.ok(!node(el, 'fold_hub_1'), 'no hub folded');

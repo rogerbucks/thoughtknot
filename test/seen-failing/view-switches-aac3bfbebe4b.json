@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/view-switches.test.js",
+  "test": "the View menu > a View button in the bar opens the switches, each on or off as the settings hold them, and Faint roads off",
+  "seen_failing_first": false,
+  "evidence": "The Faint roads switch came in an earlier commit of this pull request; this commit only brings the View menu's own tests up to date with it."
+}

@@ -14,7 +14,14 @@ export interface ScreenBox {
 }
 
 /** The cards that float over the drawing and may cover a thing chosen. */
-const CARDS = ['.thoughtknot-corner', '.thoughtknot-dock.is-free', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map'];
+const CARDS = [
+  '.thoughtknot-corner',
+  '.thoughtknot-dock.is-free',
+  '.thoughtknot-phone-sheet',
+  '.thoughtknot-mini-map',
+  // the level badge in the top middle, so the fitted drawing starts below it (render_chrome_slots)
+  '.thoughtknot-level-badge',
+];
 
 /**
  * How much of `view` the `cards` cover at each edge. A card covers a strip from the edge that leaves the most of the
@@ -48,7 +55,9 @@ export function coverCards(viewport: HTMLElement): HTMLElement[] {
 
 /** How much of the drawing's `viewport` (on the screen at `view`) the cards floating over it cover at each edge. */
 export function overCover(viewport: HTMLElement, view: ScreenBox): Clear {
-  const shown = coverCards(viewport).filter((el) => !el.hidden && !el.closest('[hidden]'));
+  const shown = coverCards(viewport).filter(
+    (el) => !el.hidden && !el.closest('[hidden]') && !el.classList.contains('is-hidden'),
+  );
   return coverByCards(
     view,
     shown.map((el) => el.getBoundingClientRect()),

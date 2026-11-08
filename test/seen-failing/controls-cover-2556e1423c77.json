@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/controls-cover.test.js",
+  "test": "the level badge covers the drawing while it shows, and nothing while it is hidden",
+  "seen_failing_first": false,
+  "evidence": "a review asked for a unit test of behaviour added two commits earlier in this pull request (2dd5780), where the browser guard render-chrome proved it first"
+}
