@@ -1,6 +1,0 @@
-{
-  "file": "packages/core/test/render-globe-types.test.js",
-  "test": "plan wraps round the ball: the far side hides, and a spin brings it round",
-  "seen_failing_first": false,
-  "evidence": "A guard: the stage's marks wrap on the globe for every type, and this type's backdrop uses the tile fix tested first in render-backdrop.test.js."
-}
