@@ -136,6 +136,16 @@ impl Note {
         Ok(false)
     }
 
+    /// The message of each change of the note, oldest first: who made it. The note's first text has none.
+    pub fn history(&mut self) -> Vec<String> {
+        self.doc
+            .get_changes(&[])
+            .iter()
+            .filter_map(|c| c.message().map(str::to_string))
+            .filter(|m| !m.is_empty())
+            .collect()
+    }
+
     /// An anchor at `place` that stays on its character, written as text.
     pub fn anchor(&self, place: usize) -> Result<String, String> {
         let cursor = self
@@ -281,6 +291,11 @@ impl Notes {
         self.with(note, |n| n.anchor(place))
     }
 
+    /// Who made each change, as the messages kept with them.
+    pub fn history(&self, note: &str) -> Result<Vec<String>, String> {
+        self.with(note, |n| Ok(n.history()))
+    }
+
     pub fn place(&self, note: &str, anchor: &str) -> Result<usize, String> {
         self.with(note, |n| n.place(anchor))
     }
@@ -388,6 +403,12 @@ mod tests {
                 .is_none(),
             "nothing new, nothing merged"
         );
+        let made: Vec<Value> = note
+            .history()
+            .iter()
+            .map(|m| serde_json::from_str(m).unwrap())
+            .collect();
+        assert_eq!(Value::Array(made), f["history"]);
         for pair in f["hasBeen"].as_array().unwrap() {
             let text = pair[0].as_str().unwrap();
             assert_eq!(

@@ -28,7 +28,7 @@ export { sharedBoard, type Link } from './shared-board.ts';
 export { MeshLink, sealedChannel } from './mesh-link.ts';
 export { sharedNotesLayer, type SharedNotesOptions } from './shared-notes-layer.ts';
 export { SealedStore } from './sealed-store.ts';
-export { NoteCrdt, type Anchor, type Made, type NoteDoc } from './crdt.ts';
+export { NoteCrdt, type Anchor, type Crdt, type Made, type NoteDoc } from './crdt.ts';
 export { Engine, errorsOf, joinMerge, newErrors, type Joined, type Refused } from './engine.ts';
 export { Projection, type Read } from './projection.ts';
 export { SyncedNotes, spliceBetween, type Changed, type Splice } from './synced-notes.ts';

@@ -34,6 +34,16 @@
       ["hello world!", false],
       ["hello there!", true],
       ["nope", false]
+    ],
+    "history": [
+      {
+        "author": "roger",
+        "device": "laptop"
+      },
+      {
+        "author": "roger",
+        "device": "phone"
+      }
     ]
   }
 }

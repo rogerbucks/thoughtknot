@@ -40,7 +40,7 @@ export function sharedNotesLayer(
     // a file that only lags behind the note takes the note's text; a file with an edit of its own keeps it, merged in
     const kept = notes.read(path).text;
     if (here && here.text !== kept) {
-      if (notes.hasBeen(path, here.text)) await inner.write(path, kept, { author: options.author });
+      if (await notes.hasBeen(path, here.text)) await inner.write(path, kept, { author: options.author });
       else await notes.fromDisk(path, here.text, options.author);
     }
     notes.onChange(path, (change) => {
