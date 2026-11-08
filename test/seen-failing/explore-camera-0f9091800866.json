@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/explore-camera.test.js",
+  "test": "a thing that would land out of sight brings the view in, and a map too wide for it is fitted",
+  "seen_failing_first": false,
+  "evidence": "It pins camera moves that already held after PR #1896; this evidence commit adds no code."
+}
