@@ -251,9 +251,7 @@ export class Zoom {
       case 'key':
         return this.key(e);
       case 'wheel': {
-        // the wheel zooms, with no key held. With Alt or Option it scrolls the note, as does a trackpad drag in a note
-        // (note_still_scrolls, Roger 8 Nov 2026)
-        if (e.alt || (this.mode === 'note' && !e.ctrl && !e.meta && e.pad)) return false;
+        if (e.alt || (this.mode === 'note' && !e.ctrl && !e.meta && e.pad)) return false; // the note scrolls
         this.zoomAt(Math.exp(-e.dy * WHEEL_RATE), e.x, e.y);
         return true;
       }

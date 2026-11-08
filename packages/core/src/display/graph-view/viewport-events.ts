@@ -73,6 +73,9 @@ const menuOf = (host: ViewportHost, key: string): MenuItem[] => {
   return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
 };
 
+/** The keys held with the wheel, and whether a trackpad sent it (note_still_scrolls). */
+const wheelKeys = (e: WheelEvent) => ({ ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad: fromTrackpad(e) });
+
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
@@ -264,8 +267,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const pad = fromTrackpad(e);
-      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad });
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ...wheelKeys(e) });
       // zoomed in until a folded group fills the view: it opens (cluster_opens)
       const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
         r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),

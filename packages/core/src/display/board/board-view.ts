@@ -259,9 +259,8 @@ class BoardView {
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
     const wheel = (e: WheelEvent) => {
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const pad = fromTrackpad(e);
-      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad }))
-        e.preventDefault();
+      const keys = { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad: fromTrackpad(e) };
+      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ...keys })) e.preventDefault();
     };
     vp.addEventListener('wheel', wheel, { passive: false });
     vp.addEventListener('dblclick', (e: MouseEvent) => {
