@@ -82,7 +82,7 @@ export function backdropOf(
     const s = onScreen({ x, y, r: 0 }, view);
     return [s.x, s.y];
   };
-  const out_ = (x: number, y: number): boolean => !!view.globe && !!onScreen({ x, y, r: 0 }, view).behind;
+  const hidden = (x: number, y: number): boolean => !!view.globe && !!onScreen({ x, y, r: 0 }, view).behind;
   const out: BackdropMark = { kind: 'backdrop', tiles: [], lines: [], words: [], ink: look.ink };
   for (const m of drawn) {
     const own = (m.of && colours.get(m.of)) || look.faint;
@@ -91,7 +91,7 @@ export function backdropOf(
         [x2, y2] = at(m.x + m.width, m.y + m.height);
       const round = view.globe ? outlineOf(m, at) : undefined;
       // on the globe a tile round the back is out of sight (Roger, 8 Nov 2026: it wraps to the other side)
-      if (round && outlineOf(m, out_).every(Boolean)) continue;
+      if (round && outlineOf(m, hidden).every(Boolean)) continue;
       const shade = /^density\.(\d)/.exec(m.style)?.[1];
       const fill =
         m.kind === 'group'
@@ -110,12 +110,12 @@ export function backdropOf(
       });
     } else if (m.kind === 'link') {
       const from = (m.from && colours.get(m.from)) || look.faint;
-      if (m.points.every(([x, y]) => out_(x, y))) continue;
+      if (m.points.every(([x, y]) => hidden(x, y))) continue;
       out.lines.push({ points: m.points.map(([x, y]) => at(x, y)), colour: from, ...(m.curve ? { curve: true } : {}) });
     } else if (m.kind === 'label' && !names.has(m.text) && !(m.of && names.has(m.of))) {
       const px = m.size * view.scale;
       const [x, y] = at(m.x, m.y);
-      if (out_(m.x, m.y)) continue;
+      if (hidden(m.x, m.y)) continue;
       if (px >= WORD_LEAST) out.words.push({ x, y, text: m.text, px: Math.min(px, WORD_MOST), anchor: m.anchor });
     }
   }
