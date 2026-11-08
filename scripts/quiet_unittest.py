@@ -155,6 +155,12 @@ def load(files: list[str]) -> unittest.TestSuite:
     return suite
 
 
+def missing_node_modules() -> bool:
+    """True when the repository's Node packages are not installed; many tests call Node."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return not os.path.isdir(os.path.join(root, "node_modules", "@thoughtknot"))
+
+
 def main(files: list[str]) -> int:
     """Runs the tests quietly and prints the result; the exit status is 0 only when all passed."""
     # one line end everywhere: Windows would print each line with \r\n
@@ -167,6 +173,8 @@ def main(files: list[str]) -> int:
         print(entry)
     failed = len(result.failed)
     if failed:
+        if missing_node_modules():
+            print("hint: Node packages are not installed; run `npm ci` first, many tests need them")
         print(f"FAIL {failed} of {result.total} tests")
         return 1
     skipped = f", {result.skipped_count} skipped" if result.skipped_count else ""
