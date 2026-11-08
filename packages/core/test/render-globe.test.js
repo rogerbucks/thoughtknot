@@ -81,6 +81,12 @@ test('on the globe the marks are the 2D marks: a ball under them, arched roads, 
   assert.equal(ground.kind, 'ground', 'the ball is painted first, under everything');
   assert.ok(ground.ball && Math.abs(ground.ball.r - ballRadius(view)) < 1e-6, 'its outline is the ball’s edge');
   assert.ok(ground.lines.length > 10, 'with a faint grid on its skin');
+  assert.notEqual(
+    ground.ball.paper,
+    LIGHT.paper,
+    'its skin is tinted, so near in it still reads as a surface, not the page',
+  );
+  assert.ok(ground.alpha >= 0.7, 'the grid on the skin is clear enough to see');
   const roads = marks.filter((m) => m.kind === 'road');
   assert.ok(roads.length > 0 && roads.every((r) => r.via), 'every road arches over the ball');
   assert.ok(

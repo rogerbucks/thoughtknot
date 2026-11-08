@@ -4,7 +4,7 @@
 // smaller and near things bigger. Nothing moves in the drawing: only the eye does (nodes stay put). With no tilt and
 // no turn the picture is the flat one, pixel for pixel. Host-free and pure.
 import type { GroundMark, View } from './render-marks.ts';
-import type { Look } from './render-look.ts';
+import { mix, type Look } from './render-look.ts';
 import type { Spot } from './render-rooms.ts';
 import { archOver, ballOf, isGlobe, onGlobe } from './render-globe.ts';
 
@@ -139,7 +139,11 @@ export function floorOf(view: View, look: Look): GroundMark[] {
   if (isGlobe(view)) {
     const { disc, lines } = ballOf(view);
     const [x, y, r] = disc;
-    return [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5, ball: { x, y, r, paper: look.card } }];
+    // the ball's skin is a tint of its own, so near in, where it fills the screen, it still reads as a surface
+    const skin = mix(look.paper, look.faint, 0.6);
+    return [
+      { kind: 'ground', lines, fill: mix(look.faint, look.ink, 0.22), alpha: 0.7, ball: { x, y, r, paper: skin } },
+    ];
   }
   const lines = groundOf(view);
   return lines.length ? [{ kind: 'ground', lines, fill: look.faint, alpha: 0.5 }] : [];
