@@ -21,6 +21,7 @@ export { countOf, roadAlpha } from './render-roads.ts';
 import type { RoadMark } from './render-roads.ts';
 export type { RoadMark } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
+import { areasOf, type AreaMark } from './render-areas.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
 import { word } from '../words.ts';
@@ -128,7 +129,7 @@ export interface LabelMark {
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
-export type Mark = GroundMark | CloudMark | DotMark | RoadMark | LabelMark;
+export type Mark = GroundMark | AreaMark | CloudMark | DotMark | RoadMark | LabelMark;
 
 /** Whether a circle on screen touches the view at all. */
 export const inView = (s: Spot, view: View): boolean =>
@@ -224,6 +225,7 @@ export function marksOf(
   const placed = placeLabels(asks, view, roads);
   const all = [
     ...floorOf(view, look),
+    ...areasOf(scene.areas, spots, view, colours, look),
     ...clouds,
     ...roads,
     ...dots,

@@ -12,6 +12,7 @@ import { bendOf, isGlobe } from '../../render/render-globe.ts';
 import type { View } from '../../render/render-marks.ts';
 import { roomsOf, type Spot } from '../../render/render-rooms.ts';
 import { egoOf } from '../../render/render-ego.ts';
+import { isLaid, laidOf, type LaidType } from '../../render/render-laid.ts';
 import type { OwnColour } from '../../render/render-look.ts';
 import { isTilted, turnedBy } from '../../render/render-tilt.ts';
 
@@ -33,27 +34,39 @@ export const anEgo = (d?: { picture?: { type: string }; table?: unknown }): bool
   !!d?.picture && /(^|\.)ego$/.test(d.picture.type) && !d.table;
 
 /**
- * What the stage draws and where each node sits: the network's rooms, or with `ego` its rings round the busiest thing.
- * An ego view's things keep their subject's colour: `hands.own` is swapped for one that says it.
+ * What the stage draws and where each node sits. A network sits in its rooms, and an ego view on rings. Another type
+ * sits at its own places (render_every_type). Their things keep their subject's colour: `hands.own` is swapped.
  */
 export function laidOut<H extends { own?: OwnColour }>(
   drawing: GraphDrawing,
   g: Graph | undefined,
-  ego: boolean,
+  kind: StageKind,
   hands?: H,
   saved?: ReadonlyMap<string, { x: number; y: number }>,
 ): { scene: Scene; spots: Map<string, Spot>; hands: H | undefined } {
   const shape = shapeOf(drawing, g),
     scene = sceneOf(shape);
-  const rings = ego ? egoOf(shape, scene, undefined, hands?.own) : null;
+  const rings =
+    kind === 'ego'
+      ? egoOf(shape, scene, undefined, hands?.own)
+      : isLaid(kind)
+        ? laidOf(kind, shape, scene, hands?.own)
+        : null;
   if (!rings) return { scene, spots: roomsOf(scene, saved), hands };
   return { scene: rings.scene, spots: rings.spots, hands: hands && { ...hands, own: rings.own } };
 }
 
-/** What the stage draws a card's diagram as: an ego view, a network, or neither (today's drawing shows). */
-export const stageKind = (
-  d?: Parameters<typeof aNetwork>[0] & { picture?: { type: string } },
-): 'ego' | 'network' | null => (anEgo(d) ? 'ego' : aNetwork(d) ? 'network' : null);
+/** What the stage draws a card's diagram as: a network, an ego view, or another type it lays out itself. */
+export type StageKind = 'network' | 'ego' | LaidType;
+
+/** What the stage draws a card's diagram as, or none where today's drawing still shows it. */
+export function stageKind(d?: Parameters<typeof aNetwork>[0] & { picture?: { type: string } }): StageKind | null {
+  if (anEgo(d)) return 'ego';
+  if (aNetwork(d)) return 'network';
+  if (!d || d.table) return null;
+  const type = d.picture ? (d.picture.type.split('.').pop() ?? '') : d.choice.drawn;
+  return isLaid(type) ? type : null;
+}
 
 /** How far 2.5D and 3D tip the camera back, in radians: the ground at a slant, its far side still easy to read. */
 const TILTS: Record<string, number> = { cards: 0.6, balls: 0.8 };
