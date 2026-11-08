@@ -94,3 +94,45 @@ test("laidOf puts each subject's things on one patch, and the patch shows as an 
   assert.equal(marks.length, 2);
   assert.ok(marks.every((m) => m.kind === 'area' && m.blobs.every((b) => b.r > 0)));
 });
+
+// Matrix, Density and Plan keep their own drawing as the stage's backdrop (render_cells_timeline).
+test('matrix puts each thing on its own cell, where its row crosses its column', () => {
+  const p = placesOf('matrix', shape());
+  assert.equal(p.size, 8);
+  for (const q of p.values()) assert.ok(Math.abs(q.x - q.y) < 1, 'a thing off the diagonal');
+});
+
+test('density puts each thing inside a shaded square, so zooming in shows the things a square counts', async () => {
+  const { laidOf } = await import('../src/render/render-laid.ts');
+  const { sceneOf } = await import('../src/render/render-scene.ts');
+  const s = shape();
+  const laid = laidOf('density', s, sceneOf(s));
+  const squares = laid.scene.backdrop.marks.filter((m) => m.kind === 'box' && m.id.startsWith('square'));
+  for (const [k, q] of laid.spots) {
+    const inside = squares.some((m) => q.x >= m.x && q.x <= m.x + m.width && q.y >= m.y && q.y <= m.y + m.height);
+    assert.ok(inside, `${k} is not in any square`);
+  }
+});
+
+test('plan puts a thing with dates on its bar, and one with none at its prompt', async () => {
+  const { laidOf } = await import('../src/render/render-laid.ts');
+  const { sceneOf } = await import('../src/render/render-scene.ts');
+  const dated = (key, day) => ({
+    ...thing(key),
+    kinds: ['Task'],
+    date: `2026-01-0${day}`,
+    dates: new Map([
+      ['start', `2026-01-0${day}`],
+      ['end', `2026-01-1${day}`],
+    ]),
+  });
+  const s = { things: [dated('A', 1), dated('B', 2), { ...thing('C'), kinds: ['Task'] }], links: [link('A', 'B')] };
+  const laid = laidOf('plan', s, sceneOf(s));
+  const bars = laid.scene.backdrop.marks.filter((m) => m.kind === 'box' && m.style === 'bar');
+  assert.equal(bars.length, 2);
+  for (const b of bars) {
+    const q = laid.spots.get(b.of);
+    assert.ok(q.x > b.x && q.x < b.x + b.width && q.y > b.y && q.y < b.y + b.height, `${b.of} is off its bar`);
+  }
+  assert.ok(laid.spots.has('C'), 'a thing with no dates is left out');
+});
