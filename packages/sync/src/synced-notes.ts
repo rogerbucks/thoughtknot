@@ -86,6 +86,11 @@ export class SyncedNotes {
     return () => set.delete(follow);
   }
 
+  /** Whether the note's text was ever `text`. */
+  hasBeen(note: string, text: string): boolean {
+    return this.#below.hasBeen(note, text);
+  }
+
   anchor(note: string, place: number): Anchor {
     return this.#below.anchor(note, place);
   }

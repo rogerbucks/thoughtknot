@@ -91,14 +91,20 @@ export class NoteCrdt {
   async merge(note: string): Promise<{ base: string; ours: string; theirs: string; merged: string } | undefined> {
     const before = this.#doc(note);
     const [after] = A.applyChanges(before, await this.#store.records(note));
+    // `before` is spent by the apply, so `after` is kept even when nothing new came in
+    this.#docs.set(note, after);
     const had = A.getHeads(before);
     if (A.equals(A.getHeads(after), had)) return undefined;
-    this.#docs.set(note, after);
     const base = this.#merged.get(note) ?? [];
     this.#merged.set(note, A.getHeads(after));
     const theirs = A.getHeads(after).filter((h) => !had.includes(h));
     const textAt = (heads: A.Heads) => (A.view(after, heads) as NoteDoc).text ?? '';
     return { base: textAt(base), ours: before.text ?? '', theirs: textAt(theirs), merged: after.text ?? '' };
+  }
+
+  /** Whether the note's text was ever `text`: a file with that text is only behind, and holds no edit of its own. */
+  hasBeen(note: string, text: string): boolean {
+    return A.getHistory(this.#doc(note)).some((state) => (state.snapshot as NoteDoc).text === text);
   }
 
   /** An anchor at `place` in the note's text, which stays on its character through every device's edits. */
