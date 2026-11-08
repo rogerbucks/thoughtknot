@@ -5,6 +5,7 @@
 // agree once their files have been copied. An anchor is an Automerge cursor, which stays on its character through
 // others' edits. So a comment, a details panel or an AI edit still points at its statement.
 import * as A from '@automerge/automerge';
+import { actorOf } from './actor.ts';
 import type { Store } from './store.ts';
 
 /** A note as Automerge keeps it. */
@@ -26,15 +27,6 @@ function genesis(text: string): A.Doc<NoteDoc> {
   return A.change(A.init<NoteDoc>({ actor: '00'.repeat(16) }), { time: 0, message: '' }, (d) => {
     d.text = text;
   });
-}
-
-/** A device's Automerge actor: the same for the same device name, so its changes always run in one sequence. */
-export async function actorOf(device: string): Promise<string> {
-  const hash = await globalThis.crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(`thoughtknot device ${device}`),
-  );
-  return [...new Uint8Array(hash).slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -150,3 +142,5 @@ export class NoteCrdt implements Crdt {
     return doc;
   }
 }
+
+export { actorOf };

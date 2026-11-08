@@ -78,6 +78,8 @@ export function sharedNotesLayer(
 
   return {
     layer,
-    arrived: async () => void (await Promise.all([...following.keys()].map((path) => notes.sync(path)))),
+    // a note still opening is merged once it is open: what arrived while it opened is taken in then
+    arrived: async () =>
+      void (await Promise.all([...following].map(([path, opening]) => opening.then(() => notes.sync(path))))),
   };
 }

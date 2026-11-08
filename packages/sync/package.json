@@ -7,7 +7,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./sharing": "./src/sharing.ts"
+    "./sharing": "./src/sharing.ts",
+    "./remote": "./src/remote.ts"
   },
   "dependencies": {
     "@automerge/automerge": "3.5.0",
