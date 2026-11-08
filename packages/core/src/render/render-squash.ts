@@ -1,7 +1,7 @@
 // Round things on the globe: part of the globe, phase P3 of the rendering spec (wiki/Rendering-spec.md; editor spec
-// §71, globe_view). A circle or a card on the ball's skin is squeezed along the way to the ball's middle as it turns
-// from you, like a coin turning on a table. So rooms become ovals, and names lean away, as the ball spins (Roger,
-// 8 Nov 2026). Host-free and pure.
+// §71, globe_view). A circle or a card on the ball's skin is squeezed along the way to the ball's middle as the ball
+// turns it from you. It is like a coin turning on a table. So rooms become ovals, and names narrow as the ball spins
+// (Roger, 8 Nov 2026). Host-free and pure.
 import type { Mark, View } from './render-marks.ts';
 import { middleOf } from './render-globe.ts';
 
