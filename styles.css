@@ -832,10 +832,14 @@
 .thoughtknot-rail-list button:not(:disabled) {
   cursor: var(--gn-cursor-link);
 }
+/* the type drawn now: its row grounded and its name in bold, the picture alone in the accent, so its words keep their
+   contrast */
 .thoughtknot-rail-list li.thoughtknot-type-now {
   background: var(--gn-bg-alt);
-  color: var(--gn-accent);
   font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-rail-list li.thoughtknot-type-now .thoughtknot-glyph {
+  color: var(--gn-accent);
 }
 .thoughtknot-rail-list li.thoughtknot-type-unfit {
   color: var(--gn-text-faint);
