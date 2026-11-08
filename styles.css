@@ -2759,6 +2759,61 @@ pre.thoughtknot-code {
   inline-size: 8em;
   accent-color: var(--gn-accent);
 }
+/* A long block being drawn (§44, drawing_shown_at_once): a quiet frame the size of a card, with a moving bar. It
+   fades in after a moment, so a quick drawing never shows it. Both move on their own, even while the page is busy. */
+.thoughtknot-drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gn-space-2);
+  min-height: 16rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-muted);
+  opacity: 0;
+  animation: thoughtknot-drawing-in 200ms ease-out 250ms forwards;
+}
+.thoughtknot-drawing-bar {
+  overflow: hidden;
+  inline-size: 10rem;
+  block-size: 3px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+}
+.thoughtknot-drawing-bar::after {
+  content: '';
+  display: block;
+  block-size: 100%;
+  inline-size: 40%;
+  border-radius: 3px;
+  background: var(--gn-accent);
+  animation: thoughtknot-drawing-run 1.2s ease-in-out infinite;
+}
+/* once the card under it shows its own wait, that is the one shown */
+.thoughtknot-drawing:has(~ .thoughtknot > *) {
+  display: none;
+}
+@keyframes thoughtknot-drawing-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes thoughtknot-drawing-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thoughtknot-drawing-bar::after {
+    animation: none;
+    inline-size: 100%;
+  }
+}
 /* Every keyboard shortcut (§44, shortcuts_listed): a table for each place, keys first. In a card it sits under the
    bar, with its Close button; in Obsidian's dialog it is the dialog's content. */
 .thoughtknot-shortcuts {
