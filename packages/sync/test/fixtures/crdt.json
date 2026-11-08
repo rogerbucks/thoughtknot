@@ -29,26 +29,11 @@
       "merged": "hello there!"
     },
     "hasBeen": [
-      [
-        "hello world",
-        true
-      ],
-      [
-        "hello there",
-        true
-      ],
-      [
-        "hello world!",
-        false
-      ],
-      [
-        "hello there!",
-        true
-      ],
-      [
-        "nope",
-        false
-      ]
+      ["hello world", true],
+      ["hello there", true],
+      ["hello world!", false],
+      ["hello there!", true],
+      ["nope", false]
     ]
   }
 }
