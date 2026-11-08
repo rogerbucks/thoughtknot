@@ -42,6 +42,16 @@ export interface Scene {
   /** The nodes at depth 0 in the order the note first names them, so colours follow the writer's order. */
   named: string[];
   roads: SceneRoad[][];
+  /** For a type drawn at its own places: each subject's things, drawn on a patch of its colour (render-areas.ts). */
+  areas?: SceneArea[];
+}
+
+/** One subject's things, by the subject's key. */
+export interface SceneArea {
+  key: string;
+  items: string[];
+  /** How far its patch reaches round each thing, in the drawing's own units. */
+  reach: number;
 }
 
 const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);

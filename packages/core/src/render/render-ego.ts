@@ -56,7 +56,7 @@ export function egoOf(shape: GraphShape, full: Scene, middle?: string, own?: Own
 }
 
 /** The links among the things drawn, each pair once, counted each way. */
-function roadsAmong(shape: GraphShape, away: ReadonlyMap<string, number>): SceneRoad[] {
+export function roadsAmong(shape: GraphShape, away: ReadonlyMap<string, number>): SceneRoad[] {
   const tally = new Map<string, SceneRoad>();
   for (const l of shape.links) {
     if (!away.has(l.from) || !away.has(l.to) || l.from === l.to) continue;
@@ -94,7 +94,7 @@ function ringPlaces(order: readonly string[], away: ReadonlyMap<string, number>)
 }
 
 /** The colour of each thing: the index of its subject in the network's scene, or the one a person picked for it. */
-function subjectColour(full: Scene, own?: OwnColour): OwnColour {
+export function subjectColour(full: Scene, own?: OwnColour): OwnColour {
   const top = (key: string): string => {
     let at = full.nodes.get(key);
     while (at?.parent !== undefined) at = full.nodes.get(at.parent);
