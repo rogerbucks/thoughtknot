@@ -14,6 +14,9 @@
 //   So the old folder is the target, and its copies are removed only when the person says so.
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
+// not called until the commands are wired (the next slice)
+#[allow(dead_code)]
+mod crdt;
 mod gh;
 mod mesh;
 mod place;
