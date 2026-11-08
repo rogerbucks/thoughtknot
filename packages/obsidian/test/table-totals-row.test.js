@@ -5,7 +5,8 @@
 // - Rows hidden by a filter stay in the table, so sorting and the keys go on as they were.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load } from './host/load-plugin.js';
+import { readFileSync } from 'node:fs';
+import { build, load, root } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
@@ -71,5 +72,31 @@ describe('the table view with calculated columns and totals', () => {
     } finally {
       env.uninstall();
     }
+  });
+});
+
+// Roger, 8 Nov 2026 (the table on the new look): the table filled a third of the card, its filter boxes were squashed
+// flat, and the first column showed through the Total row.
+describe('the table fills the card, and its boxes and Total row are clear', () => {
+  const css = readFileSync(`${root}styles.css`, 'utf8');
+  const rule = (sel) =>
+    new RegExp(`(?:^|\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+
+  // proves: table_view
+  test('the filter boxes keep their height and share the width', () => {
+    assert.match(rule('.thoughtknot-table-filters'), /flex:\s*none/);
+    assert.match(rule('.thoughtknot-table-filter'), /min-block-size:\s*1\.75rem/);
+    assert.match(rule('.thoughtknot-table-filter'), /flex:\s*1 1/);
+  });
+
+  // proves: table_view
+  test('the table is as wide as the card until its columns are sized', () => {
+    assert.match(rule('.thoughtknot-table table:not(.is-sized)'), /min-inline-size:\s*100%/);
+  });
+
+  // proves: table_view
+  test('the Total row lies over the rows and the first column that scroll under it', () => {
+    assert.match(rule('.thoughtknot-total-row td,\n.thoughtknot-total-row th'), /z-index:\s*2/);
+    assert.match(rule('.thoughtknot-table .thoughtknot-total-row > th.thoughtknot-row-head'), /z-index:\s*3/);
   });
 });
