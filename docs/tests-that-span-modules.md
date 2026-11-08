@@ -1256,6 +1256,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/sync/test/mesh-link.test.js` — the live link between two devices (editor spec ES§45 and ES§40). Presence and
   records cross channels in memory that keep every byte. Both arrive, the wire holds nothing readable, and a device that
   is not trusted is turned away.
+- `packages/sync/test/shared-notes-layer.test.js` — notes shared through the storage layer (editor spec ES§41 and
+  ES§40). A write on one device reaches the other's file. A note that is not shared is left alone. A write made
+  against an older text is refused with the note as it now is.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
 - `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
