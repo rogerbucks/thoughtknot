@@ -61,6 +61,10 @@ Presence goes over the same link as short messages, and is never written to the 
 
 `SyncedNotes` takes its edits and merges in turn, so a merge from the link never lands under an edit.
 
+`mesh-link.ts` is the link the apps use. `MeshLink` dials the other device for each exchange, so each one gets a fresh
+sealed session. Presence goes over its own sealed channel. A device serves what the other dials. Only trusted devices
+get past the first message, and a message that does not open ends its channel.
+
 ## Graphs from many places
 
 `connected.ts` keeps a graph drawn from many places (the core's `connectors.ts`) in step between devices.
