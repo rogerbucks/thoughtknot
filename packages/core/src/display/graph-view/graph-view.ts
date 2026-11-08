@@ -72,7 +72,7 @@ export class GraphView extends Lifecycle {
   private readonly glide = new LayoutGlide(() => this.viewport); // laid out again, it glides there (layout_glide)
   private readonly edits = new EditCard(this, () => ({ viewport: this.viewport, o: this.o, svg: this.svg })); // §72
   private readonly tableHands = () => ({ open: (t: Target) => this.open(t, false, true), edit: this.edits.cells() });
-  // shown flat or in space by one button of the bar (§53), as its type drew it, unless a network (space_follows_type)
+  // shown flat or in space by the side rail's four ways (§53), as its type drew it, unless a network (space_follows_type)
   readonly spaces = new SpaceSwitch(
     () => this.svg,
     () => this.o,
@@ -132,7 +132,7 @@ export class GraphView extends Lifecycle {
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),
       fullScreen: (zen) => this.fullscreen.show(zen, root),
-      space: () => this.spaces.pressed(),
+      space: (m) => void this.spaces.show(m), // 2D, 2.5D, 3D or the globe, from the side rail (type_rail)
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.source.toggle(b),
       export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: played(this.o) }),

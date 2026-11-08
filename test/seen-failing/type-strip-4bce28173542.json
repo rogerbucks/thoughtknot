@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/type-strip.test.js",
+  "test": "in reading view > a view such as Force is looked at in reading view too, not left drawn as a network",
+  "seen_failing_first": false,
+  "evidence": "Main's test, moved onto the side rail: it now picks Force from the rail's Links list, not the old view list. The behaviour it proves came with #2090 and passed before the move, so it cannot fail first here."
+}

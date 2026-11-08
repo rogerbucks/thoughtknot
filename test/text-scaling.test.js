@@ -14,6 +14,9 @@ const FIXED = /(?<![\w.-])\d*\.?\d+(?:px|pt)\b/;
 
 /** The rules with a fixed height that hold no text, each with why. */
 const FIXED_HEIGHT = {
+  '.thoughtknot-glyph': 'a type’s picture in the side rail; its name is its button’s words, or beside it',
+  '.thoughtknot-rail .thoughtknot-rail-button .thoughtknot-glyph':
+    'a type’s picture on a rail button, named by its label',
   '.thoughtknot-image img': 'an image, shown whole within its height',
   '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.thoughtknot-switch-track':

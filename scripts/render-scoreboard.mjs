@@ -62,12 +62,12 @@ async function zoomIn(send) {
   await send('Input.dispatchMouseEvent', { type: 'mouseWheel', ...at, deltaX: 0, deltaY: -120, modifiers: 2 });
 }
 
-/** Presses the bar's space button until the drawing shows `space`. */
+/** Presses the side rail's way for `space` (type_rail), so the drawing shows it. */
 async function showSpace(send, space) {
-  for (let i = 0; i < SPACES.indexOf(space); i++) {
-    await run(send, `document.querySelector('.block-language-gql [aria-label^="2D, 2.5D or 3D"]')?.click()`);
-    await wait(SETTLE * 2);
-  }
+  const at = SPACES.indexOf(space);
+  if (at <= 0) return;
+  await run(send, `document.querySelectorAll('.block-language-gql .thoughtknot-rail [data-space]')[${at}]?.click()`);
+  await wait(SETTLE * 2);
 }
 
 /** Draws one scene on one device and theme, in every space and zoom step; returns a row per picture. */
