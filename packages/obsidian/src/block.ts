@@ -127,7 +127,7 @@ export async function renderShown(
       ctx.addChild(child);
     },
   };
-  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (§44, drawing_shown_at_once)
+  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (ES§44, drawing_shown_at_once)
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     el.empty();

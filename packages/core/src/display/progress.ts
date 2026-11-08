@@ -71,7 +71,7 @@ export async function waitShown<T>(
 export const DRAWN_AT_ONCE_FROM = 20_000;
 
 /**
- * Shows in `parent` at once that `what` is under way, then does `work` (§44, drawing_shown_at_once). The quiet frame,
+ * Shows in `parent` at once that `what` is under way, then does `work` (ES§44, drawing_shown_at_once). The quiet frame,
  * the size of a card, is on the page before the work starts, so a long wait is never a blank space. It fades in after
  * a moment, so a quick wait shows nothing. It goes when the work is done, or once what the work draws shows its own
  * progress.

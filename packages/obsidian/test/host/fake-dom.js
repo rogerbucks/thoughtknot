@@ -431,6 +431,7 @@ export function fakeDocument(width = 700) {
   doc.createElementNS = (_ns, t) => new FakeElement(t, doc);
   doc.importNode = (n) => n;
   doc.adoptedStyleSheets = [];
+  doc.frames = new Set();
   doc.adoptNode = (n) => n;
   doc.listeners = new Map();
   doc.addEventListener = (type, fn) => (doc.listeners.get(type) ?? doc.listeners.set(type, []).get(type)).push(fn);
@@ -467,8 +468,20 @@ export function fakeDocument(width = 700) {
       (doc.opened ??= []).push({ url, target });
       return null;
     },
-    requestAnimationFrame: (f) => setTimeout(() => f(performance.now()), 0),
-    cancelAnimationFrame: clearTimeout,
+    // a frame is a timer, kept until it runs. Taking the globals down cancels the frames still to come. One that ran
+    // after a test ended would find no window, and fail the test file.
+    requestAnimationFrame(f) {
+      const id = setTimeout(() => {
+        doc.frames.delete(id);
+        f(performance.now());
+      }, 0);
+      doc.frames.add(id);
+      return id;
+    },
+    cancelAnimationFrame(id) {
+      doc.frames.delete(id);
+      clearTimeout(id);
+    },
     // the page's clock, for a flight across a drawing too large to draw
     performance: { now: () => performance.now() },
     // a style sheet made in code, as a page adopts one: it keeps the CSS it was given, to be read back as `text`
@@ -564,6 +577,8 @@ export function installGlobals(doc) {
     },
   });
   return () => {
+    for (const id of doc.frames) clearTimeout(id);
+    doc.frames.clear();
     for (const [k, d] of Object.entries(saved)) {
       if (d) Object.defineProperty(globalThis, k, d);
       else delete globalThis[k];

@@ -269,6 +269,8 @@ const CLIPS = {
     'a link’s reading, one line of the details; its full words are read out and in the drawing',
   '.thoughtknot-link-row button.thoughtknot-link-thing':
     'a linked thing, one line of the details; its full name is its button’s words, read out whole',
+  '.thoughtknot-drawing-bar':
+    'a thin bar that runs while a long graph is drawn; it holds no words, and clips only its stripe',
 };
 
 /** The rules with a fixed width that hold no words, each with why. */
