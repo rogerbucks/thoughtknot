@@ -1,9 +1,12 @@
-// A drawing's bar (spec §3). In sight are Find a thing, View (§25), Diagram type (§15), 2D (§53), Fit and Full screen.
+// A drawing's bar (spec §3). In sight are Find a thing, View (§25), Fit and Full screen. The diagram types (§15) and
+// 2D, 2.5D, 3D and the globe (§53) sit in the side rail down the drawing's start edge (type_rail).
 // On a phone, Fit waits behind More (bar_one_row_phone).
 // Then come More and last the problems badge (bar_kept_short). More opens the rest: zoom out and zoom in,
 // Filter by kind or link and Export. Where the note is edited, it holds Edit here and Edit in pane; in reading view,
 // Source. The badge is calm unless there is an error. Each control says what it is in words as well as by its icon.
 import { button } from '../button';
+import { renderRail } from './type-rail';
+import type { SpaceMode } from './space-view-options.ts';
 import { CHIP_LINES, renderChip } from './controls-chip';
 import { renderSheet } from './controls-sheet';
 import { keepPlace } from './controls-place';
@@ -39,8 +42,8 @@ export interface BarActions {
   view: (b: HTMLButtonElement) => void;
   /** Opens full screen; in zen, with every panel hidden (controls_zen). */
   fullScreen: (zen?: boolean) => void;
-  /** 2D, 2.5D or 3D: shows the drawing the next way, flat or in space (§53, space-switch.ts). */
-  space: () => void;
+  /** 2D, 2.5D, 3D or the globe: shows the drawing that way, flat (null) or in space (§53, type_rail). */
+  space: (mode: SpaceMode | null) => void;
   editHere: () => void;
   toggleSource: (b: HTMLButtonElement) => void;
   /** Export: shows or hides the Export form. */
@@ -55,10 +58,10 @@ export interface BarPlaced {
   editing: HTMLElement[];
   /** Source, taken away where the note is edited. */
   source: HTMLButtonElement | null;
-  /** 2D, 2.5D or 3D, which says how the drawing is shown now; none for a table. */
-  space: HTMLButtonElement | null;
-  /** Where the type strip puts Diagram type in the bar: before 2D, 2.5D or 3D, or before Full screen (§15). */
-  types: { bar: HTMLElement; before: HTMLElement };
+  /** The rail's four ways, which say how the drawing is shown now; none for a table. */
+  space: HTMLElement | null;
+  /** The bar, and the side rail the type strip puts its groups of types in (§15, type_rail). */
+  types: { bar: HTMLElement; before: HTMLElement; rail: HTMLElement };
 }
 
 /** The badge: problems and gaps counted, and what is parked (§8). Calm unless one is an error (bar_kept_short). */
@@ -141,10 +144,9 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     const view = button(bar, word('bar.view'), 'layers', () => on.view(view));
     view.setAttribute('aria-expanded', 'false');
   }
-  // the view in space only looks, so it is offered wherever the drawing is; a table has no depth to show (§53)
-  const space = o.diagram?.table
-    ? null
-    : button(bar, word('bar.space'), 'box', () => on.space(), word('bar.space-flat'));
+  // the view in space only looks, so it is offered wherever the drawing is; a table has no depth to show (§53). Its four
+  // ways sit at the top of the side rail, each in sight, the types below them (type_rail)
+  const { rail, ways } = renderRail(root, o.diagram?.table ? null : on.space);
   // on a phone Fit waits behind More, so the bar keeps to one row; a pinch fits there too (bar_one_row_phone)
   const phone = isPhone();
   if (!phone) button(bar, word('bar.fit'), 'maximize', () => on.fit());
@@ -179,17 +181,11 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
       ? button(more, word('bar.show-source'), 'code', () => source && on.toggleSource(source), word('bar.show-source'))
       : null;
   badgeOf(bar, o, on);
-  return { editButton, editing, source, space, types: { bar, before: space ?? full } };
+  return { editButton, editing, source, space: ways, types: { bar, before: full, rail } };
 }
 
 /** The panels the bar opens, by their class: each lies over the drawing (panels_over_drawing). */
-const OVER = [
-  'thoughtknot-problems',
-  'thoughtknot-find',
-  'thoughtknot-filter',
-  'thoughtknot-type-list',
-  'thoughtknot-view-list',
-];
+const OVER = ['thoughtknot-problems', 'thoughtknot-find', 'thoughtknot-filter'];
 
 /**
  * Puts the panels the bar opens in one layer just above the card's drawing, `viewport`. Export opens there too
@@ -215,7 +211,9 @@ export function overDrawing(
     else if (is(el, ['thoughtknot-dock'])) {
       corner.appendChild(el); // controls_dock
       keepPlace(el as HTMLElement, el.getAttribute('aria-label') ?? ''); // where it was left (controls_panels)
-    } else if (is(el, CHIP_LINES)) chip.body.appendChild(el); // controls_chip
+    } else if (is(el, CHIP_LINES))
+      chip.body.appendChild(el); // controls_chip
+    else if (is(el, ['thoughtknot-rail'])) layer.insertBefore(el, layer.firstChild); // the side rail, at the start edge (type_rail)
   // as tall as the drawing at most, kept as it changes size
   const room = () =>
     viewport.clientHeight > 0 && layer.setCssProps({ '--thoughtknot-room': `${viewport.clientHeight}px` });

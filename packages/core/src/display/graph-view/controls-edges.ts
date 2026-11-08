@@ -62,6 +62,9 @@ export function edgeCardsIn(view: HTMLElement): EdgeCard[] {
     const r = el.getBoundingClientRect();
     return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
   };
+  // the side rail holds the start edge from the top, as the corner card beside it does (type_rail)
+  for (const el of Array.from(view.querySelectorAll('.thoughtknot-over > .thoughtknot-rail')))
+    if (shown(el)) cards.push({ side: 'start', at: 'top', box: box(el) });
   for (const el of Array.from(view.querySelectorAll('.thoughtknot-over > .thoughtknot-corner')))
     if (shown(el))
       cards.push({ side: el.classList.contains('thoughtknot-corner-end') ? 'end' : 'start', at: 'top', box: box(el) });

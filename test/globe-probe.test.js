@@ -108,23 +108,12 @@ describe('the globe view, driven in a real browser', () => {
     browser.on('Runtime.exceptionThrown', (e) => errors.push(e.exceptionDetails?.text));
     await open(browser.send, `http://127.0.0.1:${server.address().port}/index.html`);
     await eval_(`document.querySelector('button[aria-label="Full screen"]').click()`);
+    // the side rail's globe, one press away (type_rail)
     await until(
-      async () => !!(await eval_(`!!document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]')`)),
+      async () =>
+        !!(await eval_(`!!document.querySelector('.thoughtknot-fullscreen .thoughtknot-rail [data-space="globe"]')`)),
     );
-    for (let i = 0; i < 5; i++) {
-      const label = await eval_(
-        `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
-      );
-      if (/Globe/.test(label)) break;
-      await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').click()`);
-      await until(async () =>
-        /Globe|2D|2\.5D|3D/.test(
-          await eval_(
-            `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
-          ),
-        ),
-      );
-    }
+    await eval_(`document.querySelector('.thoughtknot-fullscreen .thoughtknot-rail [data-space="globe"]').click()`);
     await until(async () => (await bent()) > 0);
     await settled();
     view = await eval_(
@@ -138,11 +127,11 @@ describe('the globe view, driven in a real browser', () => {
   });
 
   test('is shown as a globe by the new rendering, with no old view in space and no error', options, async () => {
-    assert.match(
+    assert.equal(
       await eval_(
-        `document.querySelector('.thoughtknot-fullscreen button[aria-label^="2D, 2.5D"]').getAttribute('aria-label')`,
+        `document.querySelector('.thoughtknot-fullscreen .thoughtknot-rail [data-space="globe"]').getAttribute('aria-pressed')`,
       ),
-      /Globe/,
+      'true',
     );
     assert.ok((await bent()) > 0, 'the stage wraps the drawing round a ball');
     assert.equal(await eval_(`!!document.querySelector('.thoughtknot-space-view')`), false, 'one look, never two');

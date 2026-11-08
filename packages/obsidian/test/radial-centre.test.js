@@ -12,6 +12,10 @@ import { fakeContext } from './host/fake-obsidian.js';
 
 before(() => build());
 
+/** The side rail's Links button, whose list holds Radial (type_rail). */
+const linksGroup = (el) =>
+  el.querySelectorAll('.thoughtknot-rail-button').find((b) => b.getAttribute('data-group') === 'links');
+
 const PATH = 'Some note.md';
 const SKY = `// graph: sky
 (sun:Star {name: 'Sun'}),
@@ -127,11 +131,11 @@ describe('where the note is edited', () => {
     const { env } = await loaded(NETWORK);
     try {
       const { el } = await show(env, NETWORK, 0);
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       assert.ok(saying(el, 'Radial'), 'nothing selected: plain Radial');
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       select(el, 'earth');
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       saying(el, 'Radial, around Earth').click();
       await until(() => /type: 'radial', centre: 'earth'/.test(env.state.files.get(PATH)));
     } finally {
@@ -146,11 +150,11 @@ describe('where the note is edited', () => {
     const { env } = await loaded(apart);
     try {
       const { el } = await show(env, apart, 0);
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       assert.equal(saying(el, 'Radial').disabled, false, 'nothing selected: radial fits all the same');
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       select(el, 'mars');
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       const tile = saying(el, 'Radial, around Mars');
       assert.equal(tile.disabled, false, 'with a thing selected, Radial can be chosen');
       tile.click();
@@ -167,7 +171,7 @@ describe('where the note is edited', () => {
     const { env } = await loaded(apart);
     try {
       const { el } = await show(env, apart, 0);
-      labelled(el, 'Diagram type').click();
+      linksGroup(el).click();
       assert.ok(saying(el, 'Radial'), 'nothing selected: plain Radial');
       select(el, 'mars');
       await until(() => saying(el, 'Radial, around Mars')?.disabled === false);
