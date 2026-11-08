@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stage-look.test.js",
+  "test": "a table is left to today's drawing",
+  "seen_failing_first": false,
+  "evidence": "A rename only: Lanes moved to the stage, so this test now names the table alone. What it checks was true before."
+}

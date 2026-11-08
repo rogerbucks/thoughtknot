@@ -14,6 +14,7 @@ import { VIEW_DRAWERS } from '../view-types/view-types.ts';
 import { densityPlaces } from '../view-types/density-view.ts';
 import type { DiagramPlan } from '../note-reading.ts';
 import { timelineLaid } from './render-timeline.ts';
+import { lanesLaid } from './render-lanes.ts';
 import type { DrawMark } from '../drawing-marks.ts';
 import { ITEM_GAP } from './render-rooms.ts';
 import type { Spot } from './render-rooms.ts';
@@ -41,6 +42,7 @@ export const LAID_TYPES = [
   'density',
   'plan',
   'timeline',
+  'lanes',
 ] as const;
 /** One of them. */
 export type LaidType = (typeof LAID_TYPES)[number];
@@ -68,6 +70,7 @@ export const isLaid = (type: string): type is LaidType => (LAID_TYPES as readonl
 /** Where each thing of `shape` sits when drawn as `type`, by key. */
 export function placesOf(type: LaidType, shape: GraphShape, plan?: DiagramPlan): Map<string, Place> {
   if (type === 'timeline') return timelineLaid(shape, plan).places;
+  if (type === 'lanes') return lanesLaid(shape).places;
   if (type === 'force') return scaled(forceLayout(shape), FORCE_UNIT);
   if (type === 'radial') return radial(shape);
   if (type === 'flow') return rows(shape);
@@ -121,7 +124,7 @@ const TILED: ReadonlySet<string> = new Set([
   'plan',
 ]);
 /** A type the view's own drawing places. */
-type Drawn = Exclude<LaidType, 'force' | 'radial' | 'tree' | 'flow' | 'timeline'>;
+type Drawn = Exclude<LaidType, 'force' | 'radial' | 'tree' | 'flow' | 'timeline' | 'lanes'>;
 
 /** The marks a view draws `shape` with, in room enough for a name beside each thing. */
 function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {
@@ -254,7 +257,7 @@ function radial(shape: GraphShape): Map<string, Place> {
  */
 export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: OwnColour, plan?: DiagramPlan): Ego {
   const tiled = TILED.has(type) ? viewMarks(type as Drawn, shape) : undefined;
-  const line = type === 'timeline' ? timelineLaid(shape, plan) : undefined;
+  const line = type === 'timeline' ? timelineLaid(shape, plan) : type === 'lanes' ? lanesLaid(shape) : undefined;
   const places = tiled ? drawn(type as Drawn, shape, tiled) : (line?.places ?? placesOf(type, shape));
   const backdrop = tiled ?? line?.marks;
   const nodes = new Map<string, SceneNode>(
