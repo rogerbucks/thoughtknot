@@ -1,7 +1,7 @@
 // The app keeps its notes in Rust, so the layers above ask for them over calls (editor spec ES§40 and ES§41,
-// crdt_transport, standalone_app). `RemoteCrdt` is the CRDT that asks. Here the other side is stood in for by the
-// JavaScript build, which the Rust build matches byte for byte (crdt-fixture.test.js). So two devices that talk to it
-// must agree as two devices on the JavaScript build do, and the calls must carry what the Rust commands expect.
+// crdt_transport, standalone_app). `RemoteCrdt` is the CRDT that asks. Here the JavaScript build stands in for the other
+// side, and the Rust build matches it byte for byte (crdt-fixture.test.js). So two devices that talk to it must agree
+// as two devices on the JavaScript build do. The calls must also carry what the Rust commands expect.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryStore, NoteCrdt, RemoteCrdt, VaultKey, SealedStore } from '../src/index.ts';

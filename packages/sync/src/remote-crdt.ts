@@ -1,7 +1,7 @@
 // The CRDT for a host that cannot run it (editor spec ES§40 and ES§41, crdt_transport, standalone_app). The app window
 // may not run WebAssembly, so its notes are Automerge texts in Rust, and this class asks for them over calls. It keeps
-// what the layers above read at once, the text of each note, and keeps every change in the store as the other build
-// does, so a device on either build reads the other's records. Bytes cross as hexadecimal text.
+// the text of each note, which the layers above read at once. It also keeps every change in the store, as the other
+// build does. So a device on either build reads the other's records. Bytes cross as hexadecimal text.
 import type { Anchor, Crdt, Made } from './crdt.ts';
 import { actorOf } from './crdt.ts';
 import type { Store } from './store.ts';
