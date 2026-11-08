@@ -125,7 +125,7 @@ export async function renderShown(
     getSectionInfo: (at) => ctx.getSectionInfo(at),
     addChild: (child) => void (mine.push(child), ctx.addChild(child)),
   };
-  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (§44, drawing_shown_at_once)
+  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (ES§44, drawing_shown_at_once)
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     const held = holdHeight(plugin, ctx.sourcePath, graphOfBlock(source), el); // the page keeps still (render_type_morph)

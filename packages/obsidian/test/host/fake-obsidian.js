@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { fakeSettings } from './fake-settings.js';
 import { addVaultWrites, fakeFileManager, fakeMetadataCache, getFrontMatterInfo, parseYaml } from './fake-vault.js';
 import { fakeKeymap, fakeMarkdownRenderer } from './fake-markdown.js';
+import { fakeBases } from './fake-bases.js';
 
 // the CommonJS copies of CodeMirror, as the built plugin requires them: one copy, so its fields and facets are known
 const require = createRequire(import.meta.url);
@@ -198,6 +199,21 @@ export function fakeObsidian(state = {}) {
     const path = [...files.keys()].find((p) => ends(p, link) || ends(p, `${link}.md`));
     return path ? file(path) : null;
   };
+  // each note's links to notes found, as Obsidian keeps them, read from its [[links]] when asked
+  Object.defineProperty(app.metadataCache, 'resolvedLinks', {
+    get: () =>
+      Object.fromEntries(
+        [...files].map(([p, text]) => [
+          p,
+          Object.fromEntries(
+            [...String(text).matchAll(/\[\[([^\]|#]+)/g)].flatMap((m) => {
+              const to = app.metadataCache.getFirstLinkpathDest(m[1]);
+              return to ? [[to.path, 1]] : [];
+            }),
+          ),
+        ]),
+      ),
+  });
   const settings = fakeSettings(state, app);
   class WorkspaceLeaf {
     constructor(app_, how) {
@@ -289,6 +305,8 @@ export function fakeObsidian(state = {}) {
     }
   }
   state.hoverSources = new Map();
+  const { BasesView, registerBasesView } = fakeBases(state, Component);
+  Plugin.prototype.registerBasesView = registerBasesView;
   class Notice {
     constructor(message, duration) {
       state.notices.push(String(message));
@@ -444,6 +462,7 @@ export function fakeObsidian(state = {}) {
   }
   return {
     Component,
+    BasesView,
     MarkdownRenderChild,
     MarkdownView,
     editorLivePreviewField,

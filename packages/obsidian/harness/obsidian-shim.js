@@ -108,6 +108,9 @@ export class Component {
   }
   registerEvent() {}
 }
+/** Bases' view base class, for the plugin to extend; the page never makes one. */
+export class BasesView extends Component {}
+
 export class MarkdownRenderChild extends Component {
   constructor(el) {
     super();
@@ -240,6 +243,10 @@ export class Plugin extends Component {
   }
   registerView(type, f) {
     views.set(type, f);
+  }
+  // the page has no Bases: a Bases view is not added, as in a vault with Bases turned off
+  registerBasesView() {
+    return false;
   }
   registerEditorExtension(ext) {
     editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
