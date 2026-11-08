@@ -283,6 +283,7 @@ const HOLDS_NO_WORDS = {
   '.gn-icon': 'an icon',
   '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',
   '.thoughtknot-switch-track::before': 'the toggle’s knob',
+  '.thoughtknot-table-scroll::-webkit-scrollbar': 'the table’s scroll bar; it holds no words',
   '.is-dock-left > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
   '.is-dock-right > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
   '.is-dock-bottom > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',

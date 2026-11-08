@@ -100,3 +100,13 @@ describe('the table fills the card, and its boxes and Total row are clear', () =
     assert.match(rule('.thoughtknot-table .thoughtknot-total-row > th.thoughtknot-row-head'), /z-index:\s*3/);
   });
 });
+
+// Roger, 8 Nov 2026: "Table should have scroll bars." A Mac hides them until a scroll starts, so they are drawn always.
+describe('the table shows its scroll bars', () => {
+  // proves: table_view
+  test('its scroll area draws its own bars, which the Mac does not hide', () => {
+    const css = readFileSync(`${root}styles.css`, 'utf8');
+    assert.match(css, /\.thoughtknot-table-scroll::-webkit-scrollbar\s*\{[^}]*width:\s*\d+px/);
+    assert.match(css, /\.thoughtknot-table-scroll::-webkit-scrollbar-thumb\s*\{[^}]*background/);
+  });
+});
