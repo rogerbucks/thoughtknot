@@ -1220,6 +1220,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `packages/core/test/explore-glide.test.js` — a new box glides out of its parent. It spans `explore-session.ts` and
   `regroup.ts` (explore_stays_put).
+- `packages/core/test/explore-fold.test.js` — a closed branch glides into its parent, and the zoom holds its view. It
+  spans `regroup.ts` and `zoom.ts` (explore_stays_put).
 - `packages/obsidian/test/explore-view.test.js` — every view draws only what an exploration has open. It spans the
   views, `untangle.ts` and `explore-sidebar.ts` (explore_every_view).
 

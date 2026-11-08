@@ -60,6 +60,78 @@ export function glideBoxes(
     if (typeof g.animate === 'function') g.animate([{ opacity: 0 }, { opacity: 1 }], timing);
 }
 
+/** A box as it was drawn: a copy of it, and where it was on the screen. */
+export interface BoxCopy {
+  g: SVGGElement;
+  at: DOMRect;
+}
+
+/**
+ * A copy of each box in `svg`, by its thing's key, taken before the drawing is laid out again (see `glideAway`). A box
+ * already marked hidden is shown for the moment it is measured, as it was a moment ago.
+ */
+export function boxCopies(svg: SVGSVGElement | null): Map<string, BoxCopy> {
+  const out = new Map<string, BoxCopy>();
+  for (const g of Array.from(svg?.querySelectorAll<SVGGElement>('g.node[data-key]') ?? [])) {
+    if (typeof g.animate !== 'function') continue; // a box that cannot glide needs no copy
+    const hidden = g.classList.contains('thoughtknot-hidden');
+    g.classList.remove('thoughtknot-hidden');
+    const at = g.getBoundingClientRect(),
+      copy = g.cloneNode(true) as SVGGElement;
+    if (hidden) g.classList.add('thoughtknot-hidden');
+    if (at.width) out.set(g.getAttribute('data-key') ?? '', { g: copy, at });
+  }
+  return out;
+}
+
+/**
+ * Glides each box the drawing no longer shows back into its parent, fading, as a closed branch folds (explore_stays_put).
+ * `copies` are the boxes as they were, with where each was on the screen, and `parents` how they were joined. A box
+ * goes into its nearest parent still drawn. A copy is only for the glide: it is taken out when it ends.
+ */
+export function glideAway(
+  svg: SVGSVGElement | null,
+  copies: ReadonlyMap<string, BoxCopy>,
+  parents: ReadonlyMap<string, string>,
+): void {
+  if (!svg || reducedMotion(svg.win)) return;
+  const now = boxPlaces(svg),
+    layer = svg.querySelector('g.graph') ?? svg;
+  for (const [key, { g, at: from }] of copies) {
+    if (now.has(key) || typeof g.animate !== 'function') continue;
+    let into: DOMRect | undefined;
+    for (let k = parents.get(key), steps = 0; k !== undefined && !into && steps < 64; k = parents.get(k), steps++)
+      into = now.get(k);
+    if (!into) continue;
+    g.classList.remove('thoughtknot-hidden');
+    g.classList.add('thoughtknot-ghost');
+    g.removeAttribute('data-key');
+    g.removeAttribute('id');
+    g.setAttribute('aria-hidden', 'true');
+    g.setAttribute('pointer-events', 'none');
+    layer.appendChild(g);
+    const here = g.getBoundingClientRect();
+    if (!here.width) {
+      g.remove();
+      continue;
+    }
+    const unit = here.width / (g.getBBox?.().width || here.width || 1),
+      [a, b, c] = [middle(from), middle(into), middle(here)],
+      by = (p: { x: number; y: number }) => [p.x - c.x, p.y - c.y].map((n) => `${n / unit}px`).join(' ');
+    const glide = g.animate(
+      [
+        { translate: by(a), opacity: 1 },
+        { translate: by(b), opacity: 0 },
+      ],
+      {
+        duration: GLIDE_MS,
+        easing: 'ease-in',
+      },
+    );
+    glide.onfinish = () => g.remove();
+  }
+}
+
 /** What regrouping needs of its card. */
 export interface RegroupHost {
   svg: () => SVGSVGElement | null;
@@ -100,17 +172,22 @@ export class Regrouping {
       // an exploration changed keeps the camera where it is: only a new centre moves it, to the middle (explore_stays_put)
       stays = exploring && this.explored ? exploring : null,
       recentred = !!stays && stays.centre !== this.explored?.centre;
+    const prior = this.explored,
+      copies = stays ? boxCopies(svg) : null;
     this.explored = exploring;
     if (only) this.before ??= { view: this.host.zoom().view(), height: this.host.size().height };
     else this.before = null;
     const was = boxPlaces(svg),
       view = this.host.zoom().view();
+    // laid out again, a drawing fitted is not fitted again while an exploration changes: the camera stays (explore_stays_put)
+    this.host.zoom().holdView = !!stays;
     sw.regroup(only, () => {
       const zoom = this.host.zoom();
       if (back) zoom.restore(back.view.scale, back.view.x, back.view.y);
       else if (stays) this.staying(zoom, view, was, stays, recentred);
       else zoom.fit();
       glideBoxes(this.host.svg(), was, exploring?.parents);
+      if (copies && prior) glideAway(this.host.svg(), copies, prior.parents);
     });
   }
 
