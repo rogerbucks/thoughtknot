@@ -1,7 +1,8 @@
 // The View menu (editor spec §25, view_switches), under the bar's View button. It is a panel over the drawing, docked
-// at the end until moved, with every choice in sight (controls_view_panel, Roger 2 Nov 2026). The ladder of detail and
-// the switch that hides small labels are on screen in the card's dock too (controls_keys). Each starts as the
-// settings hold it (view_switch_defaults). Nothing here reaches the note (view_switch_view_only).
+// at the end until moved (controls_view_panel). Its everyday choices are in sight; its fine-tuning waits in a Layout
+// section (cluster_menu_plain). The ladder of detail and the switch that hides small labels are on screen in the
+// card's dock too (controls_keys). Each starts as the settings hold it (view_switch_defaults). Nothing here reaches
+// the note (view_switch_view_only).
 import {
   BY_KIND,
   OPTIONS,
@@ -131,9 +132,15 @@ export function renderViewMenu(
   const label = grouping && rowIn(el, 'thoughtknot-group-by', word('view.group-by'), GROUP_BY_ROW);
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
-  const { sliders, lists } = layoutControls(() => el, spaced); // all in sight, none under More
+  // the fine-tuning waits in a Layout section, shut until opened (cluster_menu_plain, Roger 8 Nov 2026: "chunky")
+  const tuning = el.createEl('details', { cls: 'thoughtknot-view-tuning' });
+  tuning.createEl('summary', { text: word('view.tuning'), attr: { title: word('view.tuning-hint') } });
+  const { sliders, lists } = layoutControls(() => tuning, spaced);
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
-  const ownHint = el.createDiv({ cls: ['thoughtknot-switch-hint', OWN_HINT_CLASS], text: word('view.hint.own-only') });
+  const ownHint = tuning.createDiv({
+    cls: ['thoughtknot-switch-hint', OWN_HINT_CLASS],
+    text: word('view.hint.own-only'),
+  });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];

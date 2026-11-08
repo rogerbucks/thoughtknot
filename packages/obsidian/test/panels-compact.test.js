@@ -2,7 +2,9 @@
 // of text in the side panels. Not useful for daily use … Use tool tips (where appropriate)". Where a pointer hovers:
 // - a switch's hint and its on/off words are hidden, and its hint is its tooltip and still its description;
 // - rows and buttons are 28 pixels high, over WCAG's 24;
-// - the 2D dock shows its key controls as icons, each named in its tooltip.
+// - the 2D dock shows its key controls as icons, each named in its tooltip, on one row with its name.
+// Roger, 8 Nov 2026: "I don't get the View panel / detail panel. Seems really chunky". So a head shows only its name
+// and its fold, and a chip with nothing to say is gone.
 // A touch screen keeps its 44-point rows and its hints: the rules sit in a hover media query.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -62,4 +64,20 @@ test('each switch keeps its hint as its tooltip and its description; each key co
   assert.ok(keys.length > 0);
   for (const b of keys)
     assert.ok(b.getAttribute('aria-label').startsWith(b.getAttribute('title') || '-'), 'named in its tooltip');
+});
+
+// proves: panels_compact
+test('a head shows its name and fold, its grip and dock buttons only once focused, and an empty chip is gone', () => {
+  const css = hovering();
+  assert.match(
+    css,
+    /\.thoughtknot-dock-head:not\(:focus-within\) :is\(\.thoughtknot-dock-grip, \.thoughtknot-dock-place\) \{[^}]*position: absolute;[^}]*opacity: 0;[^}]*pointer-events: none;/,
+    'out of sight, yet still reached by a key',
+  );
+  assert.match(css, /\.thoughtknot-corner > \.thoughtknot-view-dock:not\(\.is-folded\) \{\s*flex-direction: row;/);
+  const all = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
+  assert.match(
+    all,
+    /\.thoughtknot-corner > \.thoughtknot-chip:not\(:has\(> \.thoughtknot-chip-body > :not\(\[hidden\], :empty\)\)\) \{\s*display: none;/,
+  );
 });

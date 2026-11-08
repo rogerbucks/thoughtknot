@@ -801,6 +801,11 @@
   > :not(.thoughtknot-untangle, .thoughtknot-type-plugin, [role='status'], [role='alert']) {
   display: none;
 }
+/* With nothing to say, the chip is gone, so no "View" opens on nothing (panels_compact, Roger 8 Nov 2026: "I don't get
+   the View panel") */
+.thoughtknot-corner > .thoughtknot-chip:not(:has(> .thoughtknot-chip-body > :not([hidden], :empty))) {
+  display: none;
+}
 .thoughtknot-chip-body {
   display: flex;
   flex-direction: column;
@@ -1309,7 +1314,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   color: var(--gn-text-normal);
 }
 /* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
-.thoughtknot-view-menu > .thoughtknot-layout-option {
+.thoughtknot-view-tuning > .thoughtknot-layout-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1318,7 +1323,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   min-height: 44px;
   color: var(--gn-text-normal);
 }
-.thoughtknot-view-menu > .thoughtknot-layout-option > input {
+.thoughtknot-view-tuning > .thoughtknot-layout-option > input {
   flex: 1;
   min-width: 96px;
   max-width: 160px;
@@ -4631,7 +4636,17 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-view-key:not(:has(.thoughtknot-level-legend:not(.is-hidden))) {
   display: none;
 }
-.thoughtknot-view-key > summary {
+/* The Layout section (cluster_menu_plain): the fine-tuning, shut until opened. Roger, 8 Nov 2026: the View panel was
+   "really chunky". Its summary reads as the Key's does, and its rows stack as the panel's other rows do */
+.thoughtknot-view-tuning {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-view-tuning:not([open]) > :not(summary) {
+  display: none;
+}
+:is(.thoughtknot-view-key, .thoughtknot-view-tuning) > summary {
   min-height: 24px;
   font-weight: 600;
   cursor: pointer;
@@ -4890,7 +4905,8 @@ img.thoughtknot-picture-hidden,
   .thoughtknot-chip-fold,
   .thoughtknot-view-menu button.thoughtknot-switch,
   .thoughtknot-view-menu button.thoughtknot-detail-rung,
-  .thoughtknot-view-menu > :is(.thoughtknot-group-by, .thoughtknot-layout-option) {
+  .thoughtknot-view-menu > .thoughtknot-group-by,
+  .thoughtknot-view-tuning > .thoughtknot-layout-option {
     min-width: 28px;
     min-height: 28px;
   }
@@ -4901,7 +4917,8 @@ img.thoughtknot-picture-hidden,
   .thoughtknot-view-menu :is(.thoughtknot-switch-hint, .thoughtknot-switch-state):not(.thoughtknot-own-hint) {
     display: none;
   }
-  .thoughtknot-view-menu > :is(.thoughtknot-layout-choice, .thoughtknot-lens-choice) {
+  .thoughtknot-view-menu > .thoughtknot-lens-choice,
+  .thoughtknot-view-tuning > .thoughtknot-layout-choice {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4923,6 +4940,18 @@ img.thoughtknot-picture-hidden,
   }
   .thoughtknot-view-dock > .thoughtknot-dock-body .thoughtknot-badge-text {
     display: none;
+  }
+  /* A panel's head is its name and its fold (panels_compact). The head drags it, and dropped near a side it docks
+     there. So the grip and the dock buttons wait out of sight, taking no room. A key that brings focus shows them. */
+  .thoughtknot-dock-head:not(:focus-within) :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* the 2D card's Detail dock, open, is one line: its name, its fold, then its icons */
+  .thoughtknot-corner > .thoughtknot-view-dock:not(.is-folded) {
+    flex-direction: row;
+    align-items: center;
   }
 }
 
