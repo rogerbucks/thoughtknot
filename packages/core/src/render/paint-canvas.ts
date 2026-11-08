@@ -6,6 +6,7 @@
 // count chip. Labels are cards with their name, and a second line where they have one. It takes only the few calls of a 2D canvas it needs, so a test can
 // hand it a fake one.
 import { paintArea } from './render-areas.ts';
+import { paintBackdrop } from './render-backdrop.ts';
 import type { CloudMark, DotMark, GroundMark, LabelMark, Mark, RoadMark } from './render-marks.ts';
 
 /** A colour stop of a gradient. */
@@ -232,6 +233,7 @@ export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: n
   for (const m of marks) {
     if (m.kind === 'ground') paintGround(c, m);
     else if (m.kind === 'area') paintArea(c, m);
+    else if (m.kind === 'backdrop') paintBackdrop(c, m);
     else if (m.kind === 'cloud') paintCloud(c, m);
     else if (m.kind === 'road') paintRoad(c, m);
     else if (m.kind === 'dot') paintDot(c, m);

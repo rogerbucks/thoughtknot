@@ -11,6 +11,7 @@ import { busiest } from '../view-types/ego-view.ts';
 import { tidyTree } from '../layouts/tidy-tree.ts';
 import { layeredLayout } from '../layouts/layered.ts';
 import { VIEW_DRAWERS } from '../view-types/view-types.ts';
+import type { DrawMark } from '../drawing-marks.ts';
 import { ITEM_GAP } from './render-rooms.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene, SceneArea, SceneNode } from './render-scene.ts';
@@ -18,7 +19,19 @@ import type { OwnColour } from './render-look.ts';
 import { roadsAmong, subjectColour, type Ego } from './render-ego.ts';
 
 /** The diagram types whose places come from here. */
-export const LAID_TYPES = ['force', 'radial', 'tree', 'flow', 'chord', 'centroid', 'pole'] as const;
+export const LAID_TYPES = [
+  'force',
+  'radial',
+  'tree',
+  'flow',
+  'chord',
+  'centroid',
+  'pole',
+  'treemap',
+  'containment',
+  'block',
+  'grid',
+] as const;
 /** One of them. */
 export type LaidType = (typeof LAID_TYPES)[number];
 
@@ -83,15 +96,26 @@ function rows(shape: GraphShape): Map<string, Place> {
 /** The room a drawn view is given: wide enough for a name beside each thing. */
 const ROOM_EACH = ITEM_GAP * 9;
 
-/**
- * Chord, Centroid and Pole: each thing where the view's own drawing puts its card. So the shape a reader knows from
- * that view is kept: a ring, clusters or poles.
- */
-function drawn(type: 'chord' | 'centroid' | 'pole', shape: GraphShape): Map<string, Place> {
+/** The types drawn with tiles or boxes round their things: the stage keeps those as a backdrop. */
+const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid']);
+/** A type the view's own drawing places. */
+type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid';
+
+/** The marks a view draws `shape` with, in room enough for a name beside each thing. */
+function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {
   const side = Math.max(600, Math.sqrt(shape.things.length) * ROOM_EACH);
+  return VIEW_DRAWERS[type]({ shape, space: { width: side, height: side } });
+}
+
+/**
+ * Each thing where the view's own drawing puts its card or tile. So the shape a reader knows from that view is
+ * kept: a ring, clusters, poles, tiles or rows.
+ */
+function drawn(type: Drawn, shape: GraphShape, marks = viewMarks(type, shape)): Map<string, Place> {
+  const keys = new Set(shape.things.map((t) => t.key));
   const out = new Map<string, Place>();
-  for (const m of VIEW_DRAWERS[type]({ shape, space: { width: side, height: side } }))
-    if (m.kind === 'box' && m.role === 'thing' && m.of && !out.has(m.of))
+  for (const m of marks)
+    if (m.kind === 'box' && m.of && keys.has(m.of) && !out.has(m.of))
       out.set(m.of, { x: m.x + m.width / 2, y: m.y + m.height / 2 });
   return out;
 }
@@ -182,7 +206,8 @@ function radial(shape: GraphShape): Map<string, Place> {
  * `full`, the network's scene. `own` is the colour a person picked for a subject, if any.
  */
 export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: OwnColour): Ego {
-  const places = placesOf(type, shape);
+  const tiled = TILED.has(type) ? viewMarks(type as Drawn, shape) : undefined;
+  const places = tiled ? drawn(type as Drawn, shape, tiled) : placesOf(type, shape);
   const nodes = new Map<string, SceneNode>(
     shape.things.map((t) => [t.key, { key: t.key, name: t.text, depth: 0, children: [], items: [t.key] }]),
   );
@@ -192,8 +217,11 @@ export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: Own
     nodes,
     roots: [...keys].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
     named: keys,
-    roads: [roadsAmong(shape, new Map(keys.map((k) => [k, 0])))],
-    areas: areasIn(full, keys, reachOf(places)),
+    // a tiled type draws its own links and colours, in its backdrop
+    roads: [tiled ? [] : roadsAmong(shape, new Map(keys.map((k) => [k, 0])))],
+    ...(tiled
+      ? { backdrop: { marks: tiled, names: new Set(shape.things.map((t) => t.text)) } }
+      : { areas: areasIn(full, keys, reachOf(places)) }),
   };
   const spots = new Map<string, Spot>();
   for (const [k, p] of places) spots.set(k, { ...p, r: ITEM_GAP / 2 });

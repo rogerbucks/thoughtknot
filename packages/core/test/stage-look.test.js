@@ -18,12 +18,12 @@ test('types laid out by a layout are drawn at their own places', () => {
 
 test('views drawn as a picture are drawn by the stage by their own name', () => {
   assert.equal(stageKind(picture('thoughtknot.diagrams.ego')), 'ego');
-  for (const t of ['force', 'chord', 'centroid', 'pole'])
+  for (const t of ['force', 'chord', 'centroid', 'pole', 'treemap', 'containment', 'block', 'grid'])
     assert.equal(stageKind(picture(`thoughtknot.diagrams.${t}`)), t);
 });
 
 test("a table, and a type not moved yet, are left to today's drawing", () => {
   assert.equal(stageKind({ choice: { drawn: 'network' }, table: {} }), null);
-  assert.equal(stageKind(picture('thoughtknot.diagrams.treemap')), null);
+  assert.equal(stageKind(picture('thoughtknot.diagrams.matrix')), null);
   assert.equal(stageKind(chosen('timeline')), null);
 });
