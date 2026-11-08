@@ -15,8 +15,6 @@ export interface ScreenBox {
 
 /** The cards that float over the drawing and may cover a thing chosen. */
 const CARDS = [
-  // the side rail down the start edge, or across the top on a phone (type_rail)
-  '.thoughtknot-rail',
   '.thoughtknot-corner',
   '.thoughtknot-dock.is-free',
   '.thoughtknot-phone-sheet',

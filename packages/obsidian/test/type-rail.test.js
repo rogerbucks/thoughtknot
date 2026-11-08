@@ -1,4 +1,4 @@
-// The side rail on a drawing's card (editor spec §15 and §53, type_rail). Roger chose it on 8 Nov 2026.
+// The side rail on a drawing's card (ES§15 and ES§53, type_rail). Roger chose it on 8 Nov 2026.
 // - Every type in its groups, and every way to show the drawing, has a picture of its own.
 // - A picture is a mask of plain lines and dots: no script, no link, nothing but its shapes.
 // - A group with no type offered is left out. Each list keeps its types in one order, whatever is drawn now.
