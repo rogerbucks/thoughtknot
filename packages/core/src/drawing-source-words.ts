@@ -279,6 +279,8 @@ export const DRAWING_SOURCE_WORDS = {
   // the colour key, folded into the View panel (editor spec §25, panels_key, level-legend.ts)
   'view.key': 'Key',
   'view.key-hint': 'What each colour stands for. Point at a subject to spotlight it; click it to keep it.',
+  'view.tuning': 'Layout',
+  'view.tuning-hint': 'Fine-tune how the drawing is laid out: spacing, link length, direction and shape.',
   'view.hint.detail':
     'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
   // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)
