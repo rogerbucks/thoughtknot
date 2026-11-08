@@ -228,6 +228,12 @@
   stroke-width: max(2.2px, var(--thoughtknot-link-least, 0px));
   stroke-linejoin: miter;
 }
+/* Zoomed in, the drawing is shown bigger than drawn, and its lines would swell with it. At five times, a 2 px link
+   is 10 px and box edges pile up (Roger, 8 Nov 2026: "crazy busy"). So a line and an outline keep their weight on the
+   screen, as the new rendering's do. A link stays 2 px, 3.2 px highlighted, and a box's edge stays 1 px. */
+.thoughtknot-svg.thoughtknot-near :is(g.edge, g.node, g.cluster) > :is(path, polygon, ellipse, polyline, rect) {
+  vector-effect: non-scaling-stroke;
+}
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
    lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to
