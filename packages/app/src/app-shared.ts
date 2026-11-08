@@ -1,8 +1,8 @@
-// Sharing at work in the app's window (editor spec ES§40 and ES§41; mesh_vpn_sync, board_live_together). When this
-// device holds a shared vault and the person has set where the link runs, the notes are kept in Rust (the `crdt_*`
-// commands) and shared over the mesh commands, sealed. A write to a note is sent to the other device. A board in a note
-// gets a seat, so the people there edit it together. With no vault, no keeper or no link, nothing here runs and the
-// window stays as it was. `invoke` is handed in, so nothing here imports Tauri and the tests hand in their own.
+// Sharing at work in the app's window (editor spec ES§40 and ES§41; mesh_vpn_sync, board_live_together).
+// When this device holds a shared vault and a link, the notes are kept in Rust (the `crdt_*` commands). They are
+// shared over the mesh commands, sealed. A write to a note is sent to the other device. A board in a note gets a seat,
+// so the people there edit it together. With no vault, keeper or link, nothing here runs and the window stays as it
+// was. `invoke` is handed in, so nothing here imports Tauri and the tests hand in their own.
 import type { StorageLayer } from '@thoughtknot/core';
 import {
   KeptStore,
