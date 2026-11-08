@@ -37,9 +37,10 @@ export function holdHeight(owner: object, path: string, graph: string | null, el
   if (!graph) return () => {};
   const one = shownOf(owner, `${path}\n${graph}`);
   const tall = el.offsetHeight || one.height;
-  if (tall) el.style.minHeight = `${tall}px`;
+  if (tall) el.setCssProps({ '--thoughtknot-held': `${tall}px` });
+  if (tall) el.addClass('thoughtknot-held');
   const free = () => {
-    if (tall) el.style.minHeight = '';
+    el.removeClass('thoughtknot-held');
     one.height = el.offsetHeight || one.height;
   };
   // the page may be gone by the time the card is drawn, as when a note is closed at once

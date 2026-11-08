@@ -7,10 +7,22 @@ import { holdHeight, seenFor } from '../src/kept-view.ts';
 
 afterEach(() => mock.timers.reset());
 
-/** A card's element as tall as `height`, its min-height written as a page would. */
+/** A card's element as tall as `height`. Its min-height is what the held class and its variable give it. */
 function card(height) {
-  const style = { minHeight: '', removeProperty: (p) => p === 'min-height' && (style.minHeight = '') };
-  return { offsetHeight: height, style };
+  const props = {},
+    classes = new Set();
+  const style = {
+    get minHeight() {
+      return classes.has('thoughtknot-held') ? (props['--thoughtknot-held'] ?? '') : '';
+    },
+  };
+  return {
+    offsetHeight: height,
+    style,
+    setCssProps: (p) => Object.assign(props, p),
+    addClass: (c) => classes.add(c),
+    removeClass: (c) => classes.delete(c),
+  };
 }
 
 describe('a card drawn again keeps its room', () => {

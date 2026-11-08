@@ -4925,3 +4925,8 @@ img.thoughtknot-picture-hidden,
     display: none;
   }
 }
+
+/* A card drawn again keeps its height until its things have glided to their places (type_change_keeps_size). */
+.thoughtknot-held {
+  min-height: var(--thoughtknot-held);
+}
