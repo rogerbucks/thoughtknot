@@ -62,6 +62,7 @@ import { Profiles } from './profile/profiles';
 import type { Drafts, Saved } from './saved';
 import { noteText, shownNotes } from './storage/plugin-notes';
 import { expandFor } from './ai/ai';
+import { registerBaseView } from './bases/base-view';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -110,6 +111,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     addCommands(this); // all of them, through the plug-in interface; nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerView(DETAILS_PANE, (leaf) => new DetailsPaneView(leaf)); // a card's details, beside (§25)
+    registerBaseView(this); // the Graph view of Obsidian Bases: notes a .base file picks, drawn as a graph
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
     this.registerEditorExtension(graphBlocks(this));
