@@ -48,6 +48,10 @@ export class Projection {
     return this.#engine.merge(note);
   }
 
+  hasBeen(note: string, text: string): boolean {
+    return this.#engine.hasBeen(note, text);
+  }
+
   anchor(note: string, place: number): Anchor {
     return this.#engine.anchor(note, place);
   }

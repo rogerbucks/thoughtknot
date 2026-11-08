@@ -21,15 +21,28 @@ export function sharedNotesLayer(
   notes: SyncedNotes,
   options: SharedNotesOptions,
 ): { layer: StorageLayer; arrived(): Promise<void> } {
-  const following = new Set<string>();
+  /** Each shared note this device has touched, and the work of opening it, which a second touch waits for. */
+  const following = new Map<string, Promise<void>>();
   let inner: NoteStorage | undefined;
 
   /** Opens the shared note in the CRDT from its file, and writes each merge back to the file. */
-  const follow = async (path: string): Promise<void> => {
-    if (!inner || following.has(path)) return;
-    following.add(path);
+  const follow = (path: string): Promise<void> => {
+    const opening = following.get(path) ?? open(path);
+    following.set(path, opening);
+    return opening;
+  };
+  const open = async (path: string): Promise<void> => {
+    if (!inner) return;
+    // what the other device holds is taken in first, so a note both have is never started twice
+    await options.exchange().catch(() => undefined);
     const here = await inner.read(path);
     await notes.open(path, here?.text);
+    // a file that only lags behind the note takes the note's text; a file with an edit of its own keeps it, merged in
+    const kept = notes.read(path).text;
+    if (here && here.text !== kept) {
+      if (notes.hasBeen(path, here.text)) await inner.write(path, kept, { author: options.author });
+      else await notes.fromDisk(path, here.text, options.author);
+    }
     notes.onChange(path, (change) => {
       if (!change.joined) return;
       void (async () => {
@@ -63,5 +76,8 @@ export function sharedNotesLayer(
     };
   };
 
-  return { layer, arrived: async () => void (await Promise.all([...following].map((path) => notes.sync(path)))) };
+  return {
+    layer,
+    arrived: async () => void (await Promise.all([...following.keys()].map((path) => notes.sync(path)))),
+  };
 }

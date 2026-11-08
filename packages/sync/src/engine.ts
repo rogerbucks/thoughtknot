@@ -114,6 +114,10 @@ export class Engine {
     return m && joinMerge(m);
   }
 
+  hasBeen(note: string, text: string): boolean {
+    return this.#crdt.hasBeen(note, text);
+  }
+
   anchor(note: string, place: number): Anchor {
     return this.#crdt.anchor(note, place);
   }

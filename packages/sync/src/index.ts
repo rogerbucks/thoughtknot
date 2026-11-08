@@ -1,6 +1,7 @@
 // The sync package's one entry (editor spec §40). Everything a host uses is exported from here, and only from here.
 export { MemoryStore, framed, unframed, type Shelf, type Store } from './store.ts';
 export { FolderStore, RECORDS_FILE, type FolderFiles } from './folder-store.ts';
+export { KeptStore, type Shelves } from './kept-store.ts';
 export { DeviceKeys, VaultKey } from './keys.ts';
 export {
   invitationFrom,

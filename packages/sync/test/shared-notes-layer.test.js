@@ -48,6 +48,31 @@ describe('the shared notes layer', () => {
   });
 
   // proves: mesh_vpn_sync
+  test('a device that opens the note after the other wrote it starts from what the other holds', async () => {
+    const all = await devices('d0', 'd1');
+    const files = [memoryStorage({ [PATH]: TEXT }), memoryStorage({ [PATH]: TEXT })];
+    const layers = [];
+    const storages = all.map((d, i) => {
+      const made = sharedNotesLayer(d.notes, {
+        shared: () => true,
+        author: d.name,
+        exchange: async () => {
+          copyAll(all);
+          await layers[1 - i]?.arrived();
+        },
+      });
+      layers.push(made);
+      return made.layer(files[i]);
+    });
+    await storages[0].write(PATH, '# Shop\n\nMilk\nBread\n');
+    // the second device has not opened the note, so it has nothing of its own to clash with
+    await storages[1].read(PATH);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal((await files[1].read(PATH)).text, '# Shop\n\nMilk\nBread\n');
+    assert.equal(all[1].notes.read(PATH).text, all[0].notes.read(PATH).text);
+  });
+
+  // proves: mesh_vpn_sync
   test('a note that is not shared is left alone', async () => {
     const { files, storages } = await pair((path) => path === PATH);
     await storages[0].write('Private.md', 'changed');
