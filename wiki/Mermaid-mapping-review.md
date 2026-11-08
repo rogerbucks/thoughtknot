@@ -29,10 +29,10 @@ What already writes Mermaid:
 
 | Where | What it writes |
 | --- | --- |
-| `packages/graph-spec/src/views/mermaid.js` (`mermaidGraph`, `mermaidPath`, `legend`) | A flowchart of every thing and link, labelled by reading (§5); a path at an altitude (§22) |
+| `packages/graph-spec/src/views/mermaid.js` (`mermaidGraph`, `mermaidPath`, `legend`) | A flowchart of every thing and link, labelled by reading (GS§5); a path at an altitude (GS§22) |
 | `python/graph_spec/src/graphspec/rules/views.py` | The same text, byte for byte |
 | `python/graph_spec/conformance/scripts/graph_spec_diagrams.py` | The spec's example flowcharts, and a state diagram of the lending process (`TRANSITION` links) |
-| `packages/core/src/data-formats.ts` | Mermaid (`.mmd`) listed as a format: source, content, layout and export all **planned** (§67, DF1, #1301) |
+| `packages/core/src/data-formats.ts` | Mermaid (`.mmd`) listed as a format: source, content, layout and export all **planned** (ES§67, DF1, #1301) |
 
 ## The matrix
 
@@ -43,13 +43,13 @@ Key: **Full** = writable from today's data. **Partial** = writable with the conv
 | `flowchart` | **Full** (shipped) | Every thing and link; Flow, Network, Tree views | Groups as `subgraph`; shape and colour by kind (`classDef` from rules and looks) |
 | `mindmap` | **Full** | Tree or Radial along one relationship (tree_fits) | Only when the graph is a tree; other links are left out, and the doc must say so |
 | `timeline` | **Full** | Timeline view, ordered by date (timeline_order) | Things grouped into periods (year, month) for Mermaid's `section` |
-| `erDiagram` | **Full** | The schema: `ElementType` per kind and property, `Cardinality` (§25) for the crow's feet | Property value types, where a schema does not declare them |
+| `erDiagram` | **Full** | The schema: `ElementType` per kind and property, `Cardinality` (GS§25) for the crow's feet | Property value types, where a schema does not declare them |
 | `requirementDiagram` | **Full** | Requirement-shaped graphs, like our own spec (`Requirement`, `Test`, `proves`, `level`) | A fixed map from our link types to Mermaid's seven (satisfies, verifies, traces and so on) |
 | `pie` | **Full** | Group by (DX1) with counts or totals (CV1) | Nothing; it is a total, not the graph |
 | `stateDiagram-v2` | Partial | Process graphs: states and `TRANSITION` links with event and guard (lending demo, SCXML export) | Needs the process convention; a general graph has no states |
 | `gantt` | Partial | Things with dates (`dates`), links for "after" | A start and an end (or a length) per thing; done or active status; milestones |
 | `classDiagram` | Partial | Kinds as classes, properties as fields, a subtype link as inheritance | Methods and visibility have no meaning in ThoughtKnot; leave them out |
-| `quadrantChart` | Partial | Two numbers per thing; likelihood and impact (§20) is the obvious pair | Which two numbers, and scaling them to 0 to 1 |
+| `quadrantChart` | Partial | Two numbers per thing; likelihood and impact (GS§20) is the obvious pair | Which two numbers, and scaling them to 0 to 1 |
 | `xychart-beta` | Partial | A number per thing, the Table view | Which number, and which order along the bottom |
 | `sankey-beta` | Partial | Flow view and its links | A number on each link (the amount that flows) |
 | `kanban` | Partial | Lanes view, the whiteboard | Lanes by a status property, not only by kind |
@@ -70,7 +70,7 @@ Five small conventions would turn most Partial rows Full. Each one is a choice t
 
 | Gap | Turns on | Proposal | Challenge it |
 | --- | --- | --- | --- |
-| **G1 Groups out** | flowchart, block, architecture, C4 | `mermaidGraph` writes groups (§6) as `subgraph` | Nested groups get deep fast; cap the depth? |
+| **G1 Groups out** | flowchart, block, architecture, C4 | `mermaidGraph` writes groups (ES§6) as `subgraph` | Nested groups get deep fast; cap the depth? |
 | **G2 A span of time** | gantt, timeline | A thing with two dates reads as start and end; a `length` number as days | Which two dates, when a thing has three? |
 | **G3 Status** | kanban, gantt, state | One property named in the style graph is "the status" | Is a named property better than a kind? |
 | **G4 Numbers on links** | sankey | A link's first number is its amount | Links hold properties in GQL, but the view's shape does not carry them yet |
@@ -78,8 +78,8 @@ Five small conventions would turn most Partial rows Full. Each one is a choice t
 
 ## The other way: Mermaid in
 
-Mermaid is also a source (§67, format_*). Flowchart, mindmap, ER, class, state and requirement text all read
-straight into things and links, each citing its line (§63). Pasting a Mermaid block into a note and getting a live
+Mermaid is also a source (ES§67, format_*). Flowchart, mindmap, ER, class, state and requirement text all read
+straight into things and links, each citing its line (ES§63). Pasting a Mermaid block into a note and getting a live
 graph is likely the biggest win for new users. It is the same plug-in, the other direction.
 
 ## Care points
