@@ -16,6 +16,8 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
    - Each device adds only to its own file of each note. So no two devices write one file, and Syncthing never makes a
      conflict copy.
 2. **The CRDT.** `crdt.ts` keeps each note as one Automerge text. Every edit is a splice of it, in its author's name.
+   The layers above hold the `Crdt` interface, not the class. Some answers cannot come from the text alone: anchors,
+   history and whether a text was ever there. They come back as a promise, so the app can answer from Rust.
    - A merge gives the base, ours and theirs, so the engine can join them by meaning.
    - An anchor is an Automerge cursor. It stays on its character through every device's edits.
 3. **The engine.** `engine.ts` refuses an edit that would bring in an error, so it never replicates. An error already in

@@ -32,13 +32,7 @@ describe('crdt_transport', () => {
       .boxes.map((b) => b.key);
     assert.ok(things.includes('g'), 'the note is read again from the merged text: the AI author’s thing is there');
     assert.deepEqual(joined.contested, ['claim:join/w/price=12@ours', 'claim:join/w/price=14@theirs']);
-    assert.deepEqual(
-      desk.notes
-        .history(NOTE)
-        .map((m) => m.author)
-        .sort(),
-      ['Claude', 'Roger', 'Roger'],
-    );
+    assert.deepEqual((await desk.notes.history(NOTE)).map((m) => m.author).sort(), ['Claude', 'Roger', 'Roger']);
   });
 
   // proves: crdt_transport
@@ -54,7 +48,7 @@ describe('crdt_transport', () => {
     const joined = await desk.notes.sync(NOTE);
     assert.deepEqual(joined.contested, []);
     assert.ok(desk.notes.read(NOTE).text.startsWith('Prices for autumn.\n# Shop'));
-    const made = desk.notes.history(NOTE).map((m) => `${m.author} on ${m.device}`);
+    const made = (await desk.notes.history(NOTE)).map((m) => `${m.author} on ${m.device}`);
     assert.deepEqual(made.sort(), ['Claude on phone', 'Roger on desktop']);
   });
 
@@ -64,12 +58,12 @@ describe('crdt_transport', () => {
     await desk.notes.open(NOTE, TEXT);
     copyAll([desk, phone]);
     await phone.notes.open(NOTE, TEXT);
-    const pinned = desk.notes.anchor(NOTE, at(TEXT, '(w:'));
+    const pinned = await desk.notes.anchor(NOTE, at(TEXT, '(w:'));
     await phone.notes.edit(NOTE, 0, 0, 'A line written on the phone.\n\n', 'Roger');
     copyAll([desk, phone]);
     await desk.notes.sync(NOTE);
     const now = desk.notes.read(NOTE).text;
-    assert.equal(desk.notes.place(NOTE, pinned), at(now, '(w:'));
+    assert.equal(await desk.notes.place(NOTE, pinned), at(now, '(w:'));
   });
 
   // proves: crdt_transport
@@ -98,10 +92,10 @@ describe('crdt_transport', () => {
     await desk.notes.open(NOTE, TEXT);
     assert.deepEqual(spliceBetween('abcdef', 'abXYef'), { from: 2, to: 4, text: 'XY' });
     assert.equal(await desk.notes.fromDisk(NOTE, TEXT, 'git'), undefined);
-    assert.equal(desk.notes.history(NOTE).length, 0);
+    assert.equal((await desk.notes.history(NOTE)).length, 0);
     await desk.notes.fromDisk(NOTE, TEXT.replace('Widget', 'Sprocket'), 'git');
     assert.equal(desk.notes.read(NOTE).text, TEXT.replace('Widget', 'Sprocket'));
-    assert.deepEqual(desk.notes.history(NOTE), [{ author: 'git', device: 'desktop' }]);
+    assert.deepEqual(await desk.notes.history(NOTE), [{ author: 'git', device: 'desktop' }]);
   });
 
   // proves: crdt_transport

@@ -5,7 +5,7 @@
 // pick is never the decision. The join holds the dispute as contested claims, for a person to decide.
 import { gqlBlocks, readNote } from '@thoughtknot/core';
 import gs from '@thoughtknot/graph-spec';
-import type { Anchor, Made, NoteCrdt } from './crdt.ts';
+import type { Anchor, Crdt, Made } from './crdt.ts';
 
 /** An edit the engine refused, and the problems it would have brought in. */
 export interface Refused {
@@ -82,8 +82,8 @@ export function joinMerge(m: { base: string; ours: string; theirs: string; merge
 
 /** The engine over one device's CRDT: every edit checked before it replicates, every merge joined by meaning. */
 export class Engine {
-  readonly #crdt: NoteCrdt;
-  constructor(crdt: NoteCrdt) {
+  readonly #crdt: Crdt;
+  constructor(crdt: Crdt) {
     this.#crdt = crdt;
   }
 
@@ -114,19 +114,19 @@ export class Engine {
     return m && joinMerge(m);
   }
 
-  hasBeen(note: string, text: string): boolean {
+  hasBeen(note: string, text: string): Promise<boolean> {
     return this.#crdt.hasBeen(note, text);
   }
 
-  anchor(note: string, place: number): Anchor {
+  anchor(note: string, place: number): Promise<Anchor> {
     return this.#crdt.anchor(note, place);
   }
 
-  place(note: string, anchor: Anchor): number {
+  place(note: string, anchor: Anchor): Promise<number> {
     return this.#crdt.place(note, anchor);
   }
 
-  history(note: string): Made[] {
+  history(note: string): Promise<Made[]> {
     return this.#crdt.history(note);
   }
 }

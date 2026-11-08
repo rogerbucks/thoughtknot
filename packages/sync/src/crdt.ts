@@ -37,8 +37,25 @@ async function actorOf(device: string): Promise<string> {
   return [...new Uint8Array(hash).slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * What the layers above need of the CRDT. Two builds have it. This file's runs Automerge here. The app's
+ * (remote-crdt.ts) asks Rust, because the app window may not run WebAssembly. What cannot be read from the text alone
+ * is asked for with a promise, so either build can answer.
+ */
+export interface Crdt {
+  readonly device: string;
+  open(note: string, text?: string): Promise<string>;
+  text(note: string): string;
+  splice(note: string, from: number, to: number, text: string, author: string): Promise<void>;
+  merge(note: string): Promise<{ base: string; ours: string; theirs: string; merged: string } | undefined>;
+  hasBeen(note: string, text: string): Promise<boolean>;
+  anchor(note: string, place: number): Promise<Anchor>;
+  place(note: string, anchor: Anchor): Promise<number>;
+  history(note: string): Promise<Made[]>;
+}
+
 /** The notes of one device, as Automerge texts kept in `store`. */
-export class NoteCrdt {
+export class NoteCrdt implements Crdt {
   readonly #store: Store;
   readonly device: string;
   readonly #docs = new Map<string, A.Doc<NoteDoc>>();
@@ -103,26 +120,28 @@ export class NoteCrdt {
   }
 
   /** Whether the note's text was ever `text`: a file with that text is only behind, and holds no edit of its own. */
-  hasBeen(note: string, text: string): boolean {
-    return A.getHistory(this.#doc(note)).some((state) => state.snapshot.text === text);
+  hasBeen(note: string, text: string): Promise<boolean> {
+    return Promise.resolve(A.getHistory(this.#doc(note)).some((state) => state.snapshot.text === text));
   }
 
   /** An anchor at `place` in the note's text, which stays on its character through every device's edits. */
-  anchor(note: string, place: number): Anchor {
-    return A.getCursor(this.#doc(note), ['text'], place);
+  anchor(note: string, place: number): Promise<Anchor> {
+    return Promise.resolve(A.getCursor(this.#doc(note), ['text'], place));
   }
 
   /** Where `anchor` is in the note's text now. */
-  place(note: string, anchor: Anchor): number {
-    return A.getCursorPosition(this.#doc(note), ['text'], anchor);
+  place(note: string, anchor: Anchor): Promise<number> {
+    return Promise.resolve(A.getCursorPosition(this.#doc(note), ['text'], anchor));
   }
 
   /** Who made each change of the note, oldest first: the note's first text is no one's. */
-  history(note: string): Made[] {
-    return A.getHistory(this.#doc(note))
-      .map((s) => s.change.message)
-      .filter((m): m is string => !!m)
-      .map((m) => JSON.parse(m) as Made);
+  history(note: string): Promise<Made[]> {
+    return Promise.resolve(
+      A.getHistory(this.#doc(note))
+        .map((s) => s.change.message)
+        .filter((m): m is string => !!m)
+        .map((m) => JSON.parse(m) as Made),
+    );
   }
 
   #doc(note: string): A.Doc<NoteDoc> {

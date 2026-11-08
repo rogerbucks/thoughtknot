@@ -25,6 +25,7 @@ fn main() {
         "crdt_has_been",
         "crdt_anchor",
         "crdt_place",
+        "crdt_history",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()

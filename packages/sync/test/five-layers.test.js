@@ -24,7 +24,7 @@ import { NOTE, TEXT, at, copyAll, devices, nodeFiles } from './helpers.js';
 const LAYERS = [
   ['synced-notes.ts', 'Projection'],
   ['projection.ts', 'Engine'],
-  ['engine.ts', 'NoteCrdt'],
+  ['engine.ts', 'Crdt'],
   ['crdt.ts', 'Store'],
   ['store.ts', undefined],
 ];

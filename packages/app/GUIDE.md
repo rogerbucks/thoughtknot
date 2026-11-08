@@ -62,9 +62,9 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Twenty-four commands, and no others. These are the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+- Twenty-five commands, and no others. These are the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
   `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, six `mesh_` ones and
-  seven `crdt_` ones. The same twenty-four are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test
+  eight `crdt_` ones. The same twenty-five are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test
   holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against

@@ -9,7 +9,7 @@
 // - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
 // - Bytes between the owner's devices over a mesh VPN (mesh.rs): listen, dial, send and receive whole messages on
 //   private addresses only. The messages are sealed before they get here, so Rust holds no key.
-// - The notes as Automerge texts (crdt.rs): open, edit, merge, ask the history, anchor. They are kept in Rust because the
+// - The notes as Automerge texts (crdt.rs): open, edit, merge, ask the history and who made each change, anchor. They are kept in Rust because the
 //   window may not run WebAssembly. Bytes cross as hexadecimal text, and no record leaves unsealed.
 // - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
 //   The folder commands reach it only when asked to (`target`). Once every note is copied and checked, the two swap.
@@ -378,6 +378,12 @@ async fn crdt_anchor(
     notes.anchor(&note, place)
 }
 
+/// Who made each change of an open note: the message kept with each, oldest first.
+#[tauri::command]
+async fn crdt_history(notes: State<'_, crdt::Notes>, note: String) -> Result<Vec<String>, String> {
+    notes.history(&note)
+}
+
 /// Where an anchor is now in an open note.
 #[tauri::command]
 async fn crdt_place(
@@ -454,7 +460,8 @@ pub fn run() {
         crdt_merge,
         crdt_has_been,
         crdt_anchor,
-        crdt_place
+        crdt_place,
+        crdt_history
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");

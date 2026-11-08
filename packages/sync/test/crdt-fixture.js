@@ -37,7 +37,7 @@ async function concurrentEdits() {
   const [first, mine] = store.files.get('n').get('laptop');
   const [theirs] = store.files.get('n').get('phone');
   const merged = await laptop.merge('n');
-  const had = (text) => [text, laptop.hasBeen('n', text)];
+  const had = async (text) => [text, await laptop.hasBeen('n', text)];
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('thoughtknot device laptop'));
   return {
     actor: Buffer.from(digest).subarray(0, 16).toString('hex'),
@@ -45,7 +45,8 @@ async function concurrentEdits() {
     mine: hex(mine),
     theirs: hex(theirs),
     merged,
-    hasBeen: [had('hello world'), had('hello there'), had('hello world!'), had('hello there!'), had('nope')],
+    hasBeen: await Promise.all(['hello world', 'hello there', 'hello world!', 'hello there!', 'nope'].map(had)),
+    history: await laptop.history('n'),
   };
 }
 

@@ -87,15 +87,15 @@ export class SyncedNotes {
   }
 
   /** Whether the note's text was ever `text`. */
-  hasBeen(note: string, text: string): boolean {
+  hasBeen(note: string, text: string): Promise<boolean> {
     return this.#below.hasBeen(note, text);
   }
 
-  anchor(note: string, place: number): Anchor {
+  anchor(note: string, place: number): Promise<Anchor> {
     return this.#below.anchor(note, place);
   }
 
-  place(note: string, anchor: Anchor): number {
+  place(note: string, anchor: Anchor): Promise<number> {
     return this.#below.place(note, anchor);
   }
 
@@ -103,7 +103,7 @@ export class SyncedNotes {
     return this.#below.read(note);
   }
 
-  history(note: string): Made[] {
+  history(note: string): Promise<Made[]> {
     return this.#below.history(note);
   }
 
