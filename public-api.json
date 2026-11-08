@@ -6060,7 +6060,7 @@
           "zoomOut: () => void"
         ],
         "ZoomEvent": [
-          "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; } & Mods) | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; } & { onBox?: boolean; near?: boolean; }) | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | ({ kind: 'dblclick'; x: number; y: number; } & { onBox?: boolean; near?: boolean; })"
+          "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; pad?: boolean; } & Mods) | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; } & { onBox?: boolean; near?: boolean; }) | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | ({ kind: 'dblclick'; x: number; y: number; } & { onBox?: boolean; near?: boolean; })"
         ]
       },
       "./display/host": {

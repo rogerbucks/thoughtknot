@@ -1,0 +1,25 @@
+# actionlint's settings (Roger, 7 Nov 2026: the workflows must lint clean). Each line below lets through one of
+# shellcheck's "info" notes where the script means it, file by file, so a new one anywhere else still fails:
+# - SC2016: a `$` in single quotes is meant literally (a jq or GraphQL query, a line of Markdown).
+# - SC2086: the list of test files is split into words on purpose, one argument each.
+# - SC2012: `ls` lists files the job itself wrote, with plain names.
+paths:
+  .github/workflows/ci.yml:
+    ignore:
+      - 'SC2086:'
+      - 'SC2012:'
+  .github/workflows/risk-panel.yml:
+    ignore:
+      - 'SC2012:'
+  .github/workflows/idea-to-board.yml:
+    ignore:
+      - 'SC2016:'
+  .github/workflows/mobile-app.yml:
+    ignore:
+      - 'SC2016:'
+  .github/workflows/working-group.yml:
+    ignore:
+      - 'SC2016:'
+  .github/workflows/working-group-reply.yml:
+    ignore:
+      - 'SC2016:'

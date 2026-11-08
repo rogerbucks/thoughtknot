@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom.test.js",
+  "test": "the mouse wheel and the trackpad > in a note, two fingers dragged on a trackpad scroll the note and never zoom the drawing",
+  "seen_failing_first": false,
+  "evidence": "Kept behaviour, split out of the old wheel-scrolls test: a trackpad drag scrolled the note before too. The new wheel test beside it failed first."
+}
