@@ -28,6 +28,10 @@ for (const type of LAID_TYPES) {
     const keysSeen = (v) => new Set(shown(v).map((m) => m.key));
     for (const m of shown(view)) assert.ok(Number.isFinite(m.x) && Number.isFinite(m.y), `${type} ${m.key}`);
     // spin to each side: whatever is behind is not drawn, and what was hidden before comes into sight
+    // what a type draws round its things bends with the ball too: tiles follow it, and none is flat or finite-less
+    const round = marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view).filter((m) => m.kind === 'backdrop');
+    for (const b of round)
+      for (const t of b.tiles) assert.ok(t.poly && t.poly.every(([x, y]) => Number.isFinite(x + y)), `${type} tile`);
     const first = keysSeen(view);
     const step = (fit.w / fit.scale) * 0.9;
     const spun = { ...view, x: view.x + step };
