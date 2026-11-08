@@ -1377,7 +1377,10 @@
       "render_scene",
       "render_rooms",
       "render_detail",
-      "render_marks"
+      "render_marks",
+      "render_focus",
+      "render_road_ways",
+      "render_faint_roads"
     ]
   },
   "MR1": {

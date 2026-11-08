@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-signs.test.js",
+  "test": "a signpost stands at the clear edge on the way out, points that way, and fits the screen or is not made",
+  "seen_failing_first": false,
+  "evidence": "A test of its own for code already proved through render-marks.test.js and render-focus.test.js, added so the module is named by a test."
+}

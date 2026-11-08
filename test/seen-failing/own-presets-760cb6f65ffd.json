@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/own-presets.test.js",
+  "test": "own presets in the settings and the panel > say what a preset would hold before it is kept (view_presets_own_save)",
+  "seen_failing_first": false,
+  "evidence": "only the title changed, to name the requirement; the test itself failed first in the earlier commit"
+}

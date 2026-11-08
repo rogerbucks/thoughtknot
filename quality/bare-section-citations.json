@@ -600,7 +600,7 @@
     "packages/obsidian/src/layout-worker/worker-entry.ts": 1,
     "packages/obsidian/src/links/link-host.ts": 1,
     "packages/obsidian/src/live-preview.ts": 3,
-    "packages/obsidian/src/main.ts": 38,
+    "packages/obsidian/src/main.ts": 37,
     "packages/obsidian/src/massive-card.ts": 7,
     "packages/obsidian/src/outside/outside-diagrams.ts": 2,
     "packages/obsidian/src/outside/outside-link.ts": 2,

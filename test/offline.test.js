@@ -62,7 +62,7 @@ test('the core’s AI send reaches no network of its own: only the transport it 
       model: 'm',
     };
     const p = prepareSend({
-      settings: settingsFrom({ aiUse: 'on', aiModels: [model] }),
+      settings: settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [model] }),
       model: 'Local',
       note: "```gql\n// graph: g\n(a:Thing {name: 'A'})\n```\n",
       notePath: 'A.md',

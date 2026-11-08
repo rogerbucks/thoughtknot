@@ -1,6 +1,6 @@
 // A wait is shown (editor spec §44, progress_shown). A wait longer than a second shows its progress, said to a screen
 // reader too. One longer than ten seconds offers to stop it. A layout's wait shows after 0.3 seconds, and offers Stop at once. Stopped, it leaves nothing half done. The two long waits
-// are a drawing being laid out and an export.
+// are a drawing being laid out and an export. A long block shows at once that it is being drawn (drawing_shown_at_once).
 import { test, describe, before, mock, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -101,6 +101,46 @@ describe('a wait is shown', () => {
       assert.ok(el.querySelector('code')?.textContent.includes("(home:Place {name: 'Home'})"), 'the graph as text');
     } finally {
       mock.timers.reset();
+      env.uninstall();
+    }
+  });
+
+  // proves: drawing_shown_at_once
+  test('a long block shows at once that it is being drawn, and the frame goes once its card is drawn', async () => {
+    const things = Array.from({ length: 400 }, (_, i) => `(t${i}:Place {name: 'A place called number ${i} in town'}),`);
+    const links = Array.from({ length: 399 }, (_, i) => `(t${i})-[:NEAR]->(t${i + 1})`);
+    const long = `// graph: big\n${things.join('\n')}\n${links.join(',\n')}`;
+    assert.ok(long.length >= 20_000, 'long enough to be shown at once');
+    const note = ['# Big', '', fence(long), ''].join('\n');
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      let release;
+      const real = env.plugin.layout.bind(env.plugin);
+      env.plugin.layout = (...a) => new Promise((done) => (release = () => done(real(...a))));
+      const shown = show(env, note, 0);
+      const el = env.doc.body.querySelector('.block-language-gql');
+      const frame = [...el.children].find((c) => c.classList.contains('thoughtknot-drawing'));
+      assert.ok(frame, 'the frame is on the page before any of the work is done');
+      assert.equal(frame.getAttribute('role'), 'status');
+      assert.match(frame.textContent, /Drawing the graph/);
+      await until(() => release);
+      release();
+      await shown;
+      assert.equal(el.querySelector('.thoughtknot-drawing'), null, 'drawn, the frame goes');
+      assert.ok(el.querySelector('.thoughtknot'), 'and the card is there');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: drawing_shown_at_once
+  test('a short block is drawn with no frame', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      void show(env, NOTE, 0);
+      const el = env.doc.body.querySelector('.block-language-gql');
+      assert.equal(el.querySelector('.thoughtknot-drawing'), null);
+    } finally {
       env.uninstall();
     }
   });

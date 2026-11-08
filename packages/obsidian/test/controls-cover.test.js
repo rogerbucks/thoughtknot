@@ -9,10 +9,11 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from './host/fake-dom.js';
 
-let uninstall, coverByCards, widest, Zoom;
+let uninstall, coverByCards, widest, overCover, Zoom, doc;
 before(async () => {
-  uninstall = installGlobals(fakeDocument());
-  ({ coverByCards, widest } = await import('../../core/src/display/graph-view/controls-cover.ts'));
+  doc = fakeDocument();
+  uninstall = installGlobals(doc);
+  ({ coverByCards, widest, overCover } = await import('../../core/src/display/graph-view/controls-cover.ts'));
   ({ Zoom } = await import('../../core/src/zoom.ts'));
 });
 after(() => uninstall());
@@ -68,4 +69,18 @@ test('a thing under the docks is aimed at the part they leave clear', () => {
   assert.ok(to, 'kept clear of the docks, it moves');
   const left = to.x + thing.x * 2000 * to.scale;
   assert.ok(left >= 296, `it lands clear of the docks (at ${left})`);
+});
+
+// The level badge lies over the top middle of the drawing, so the fit keeps clear of it too, while it shows.
+// proves: render_chrome_slots
+test('the level badge covers the drawing while it shows, and nothing while it is hidden', () => {
+  const card = doc.body.createDiv({ cls: 'thoughtknot-view' });
+  const viewport = card.createDiv({ cls: 'thoughtknot-viewport' });
+  const at = { left: 0, top: 0, right: 700, bottom: 400 };
+  const none = { top: 0, right: 0, bottom: 0, left: 0 };
+  assert.deepEqual(overCover(viewport, at), none);
+  const badge = viewport.createDiv({ cls: 'thoughtknot-level-badge' });
+  assert.notDeepEqual(overCover(viewport, at), none, 'a badge shown covers a strip');
+  badge.addClass('is-hidden');
+  assert.deepEqual(overCover(viewport, at), none, 'a badge hidden covers nothing');
 });

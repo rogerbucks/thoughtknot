@@ -229,6 +229,7 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Obsidian plugin
 
+- `packages/obsidian/test/fake-dom-frames.test.js` — the stand-in page's animation frames, which end with its globals.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/focus-support.test.js` — the Focus support view preset (editor spec §69). The rest is
   blurred, not hidden, and a trail of picks is kept to go back along (view_focus_support).
@@ -738,6 +739,9 @@ after a module nor listed here, and on a listed file that is missing.
   it merges once CI is green like every other.
 - `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
   main, and comments once so its owner wakes.
+- `test/pre-push.test.js` — the laptop checks a push first, and pull requests build no macOS or Windows app on
+  GitHub. It covers the pre-push hook and the app builds' systems, paths and concurrency. It also covers the narrower
+  build status chain.
 
 ## Claude's workflows
 
@@ -1108,6 +1112,8 @@ after a module nor listed here, and on a listed file that is missing.
     first on made-up measures.
 - `packages/obsidian/test/panels-compact.test.js` — where a pointer hovers, the panels are compact (panels_compact).
   Their hints are tooltips, still heard by a screen reader. It spans the style sheet, the View menu and the docks.
+- `packages/obsidian/test/view-key.test.js` — the colour key waits in a Key section of the View panel (panels_key).
+  It spans the legend of subjects and the View panel.
 ## Languages laid out in a browser
 
 - `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,

@@ -22,6 +22,10 @@ export interface Detail {
   shown: number[];
   /** The deepest depth that is fully shown: the badge's level. */
   level: number;
+  /** How wide the typical room at each depth is on screen, in pixels: for items, how far apart they sit. */
+  span?: number[];
+  /** The least a road of an open level shows, as the reader zooms past it: the View panel's Faint roads. */
+  faintRoads?: number;
 }
 
 /** The typical room at each depth: the middle diameter of its nodes, in the drawing's own units. */
@@ -54,7 +58,7 @@ export function detailAt(sizes: readonly number[], scale: number): Detail {
   });
   let level = 0;
   while (level + 1 < shown.length && (shown[level + 1] as number) >= 1) level++;
-  return { shown, level };
+  return { shown, level, span: sizes.map((size) => size * scale) };
 }
 
 /** The zoom at which `depth` is fully shown: the scale its rooms need. Used to step one level per wheel notch. */

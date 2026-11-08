@@ -54,6 +54,8 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
     const pinch = {
       ctrlKey: true,
       metaKey: false,
+      deltaMode: 0,
+      deltaX: 0,
       deltaY: -3,
       clientX: 400,
       clientY: 200,
@@ -73,7 +75,12 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
     assert.equal(seen.at(-1), 3, 'every level opens on the way');
     const still = stage.view;
     stage.wheel({ ...pinch, ctrlKey: false });
-    assert.equal(stage.view, still, 'plain scrolling is the page’s');
+    assert.equal(stage.view, still, 'two fingers dragged on a trackpad scroll the page');
+    stage.wheel({ ...pinch, ctrlKey: false, deltaY: 100 });
+    assert.ok(stage.view.scale < still.scale, 'a mouse wheel zooms with no key held (note_still_scrolls)');
+    const zoomed = stage.view;
+    stage.wheel({ ...pinch, ctrlKey: false, altKey: true, deltaY: 100 });
+    assert.equal(stage.view, zoomed, 'with Alt or Option the wheel scrolls the page');
     stage.unload();
     assert.ok(!viewport.classList.contains('thoughtknot-new-rendering'));
     assert.equal(viewport.querySelector('canvas'), null);
@@ -112,8 +119,8 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     stage.clicked(-50, -50);
     assert.deepEqual(said, ['clear'], 'empty space clears the choice');
     // groups: each click glides one level nearer
-    for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot'); i++) {
-      const cloud = stage.marks.find((m) => m.kind === 'cloud');
+    for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot' && m.pick !== false); i++) {
+      const cloud = stage.marks.find((m) => m.kind === 'cloud' && m.pick !== false);
       const before = view().scale;
       stage.clicked(cloud.x, cloud.y);
       assert.ok(view().scale > before, 'a click on a group opens its next level');
@@ -123,6 +130,8 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     const where = { ...view() };
     stage.clicked(dot.x, dot.y);
     assert.equal(said.at(-1), `open ${dot.key}`);
+    const ringed = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);
+    assert.ok(ringed.ring, 'chosen, it is marked at once, with no wait (render_focus)');
     assert.deepEqual(view(), where, 'the first click on an item moves nothing');
     stage.clicked(dot.x, dot.y);
     const again = stage.marks.find((m) => m.kind === 'dot' && m.key === dot.key);
@@ -208,8 +217,8 @@ test('on a touch screen, the drawing follows two fingers: it zooms as they sprea
     assert.ok(Math.abs(at() - start * 1.125) < 1e-9, 'a little spread zooms a little');
     stage.move(finger(2, 360)); // 45 to 60
     assert.ok(Math.abs(at() - start * 1.5) < 1e-9, 'the zoom follows the fingers');
-    stage.move(finger(2, 330)); // 60 to 30: out, but never past the fitted view
-    assert.equal(at(), start);
+    stage.move(finger(2, 330)); // 60 to 30: out by half, past the fit, which opens a second level here
+    assert.ok(Math.abs(at() - start * 0.75) < 1e-9, 'the zoom follows the fingers out too');
     stage.up(finger(2, 330));
     stage.up(finger(1, 300));
     assert.deepEqual(said, [], 'a pinch is not a tap');

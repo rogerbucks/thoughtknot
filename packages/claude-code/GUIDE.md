@@ -185,6 +185,17 @@ So a change to the open note is never applied by Claude's own tools while `guard
 - **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
   the list under Bash limits above. The user changes a classification in the note themselves.
 
+#### Python heredocs
+
+`gate-python.ts` reads a Python heredoc (`python3 - <<'PY'`) for `gate-shell.ts`. Roger ruled on 8 Nov 2026 that it
+may make new notes, as `cat` may.
+
+- **Allowed:** a script whose every write goes to a file not yet made.
+- **What is read:** writes by `open(…)` or `.write_text(…)`. The path is made of string literals, `Path`,
+  `os.path.join`, `expanduser` and `/`. Or it is a name given one such path once.
+- **What is not read:** a script that defines a function, imports an unlisted module or renames an import. Nor one
+  that could run code or move a file. Such a script is judged as any other program.
+
 ### Proposals, the hooks entry and the page's session
 
 - `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes).

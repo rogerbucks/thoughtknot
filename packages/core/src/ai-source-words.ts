@@ -61,10 +61,21 @@ export const AI_SOURCE_WORDS = {
     'What it is for: {purposes}, or your own words. A send for that purpose offers this model first.',
   'models.model': 'Model',
   'models.model.sentence': 'The model’s own name at its address, as the service names it.',
-  'models.endpoint': 'Endpoint',
+  'models.endpoint': 'Address (URL)',
   'models.endpoint.sentence':
-    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any ' +
-    'other. A model on this device keeps what it is sent here; any other keeps it under its provider’s terms.',
+    'Where requests go, such as https://my-mac.tailnet.ts.net/v1 or a full chat completions address. https:// only; ' +
+    'http:// for a model on this device alone. A model you run keeps what it is sent; any other keeps it under its ' +
+    'provider’s terms.',
+  'models.endpoint.placeholder': 'https://my-mac.tailnet.ts.net/v1',
+  'models.test': 'Test connection',
+  'models.test.sentence': 'Asks the address for its list of models, with your key. No note is sent.',
+  'models.test.ok': '{address} answered. Models: {names}',
+  'models.test.ok-none': '{address} answered.',
+  'models.test.status': '{address} answered with status {status}: check the address and key.',
+  'models.test.failed': '{address} could not be reached: {why}',
+  'models.test.refused': 'Not tested: {why}',
+  'models.reach.private': 'private',
+  'models.reach.public': 'public',
   'models.none': 'No model is set up: nothing is ever sent.',
   'models.page': 'Model {n}',
   'models.said': '{name}: {purpose}, up to {ceiling}',
@@ -74,6 +85,9 @@ export const AI_SOURCE_WORDS = {
   'models.held': 'held to the matrix row {row}',
   'models.ceiling': 'Ceiling',
   'models.ceiling.sentence': 'The highest classification of note this model may be sent.',
+  'models.private': 'Private reviewer',
+  'models.private.sentence':
+    'A model you run, on this device or your own network: it reads your notes for review without asking each time. Leave off for a cloud model.',
   'models.key': 'Key',
   'models.key.sentence': 'Kept in the app’s own secret store, never in the vault.',
   'models.add': 'Add a model',
@@ -85,6 +99,7 @@ export const AI_SOURCE_WORDS = {
   'models.preset.gemini': 'Gemini',
   'models.preset.grok': 'Grok',
   'models.preset.chatgpt': 'ChatGPT',
+  'models.preset.lmstudio': 'LM Studio (your own, private)',
   'models.no-row': 'None: use the ceiling',
   'models.unmatched': ' (flagged: matches no classification)',
   'models.row-gone':
@@ -111,6 +126,26 @@ export const AI_SOURCE_WORDS = {
   'ai.off': 'AI is off: turn on Use AI models in the settings, and set up a model, before anything is sent.',
   'ai.no-model':
     'No AI model is set up yet: set one up under AI models in the settings, with its name, model and address.',
+  // the private and public reviewers (editor spec §19, ai_two_reviewers, ai-reviewers.ts)
+  'ai.reviewer.not-own':
+    '{host} is not on this device or your own network, so it cannot be a private reviewer: mark it public, or give the address of a machine you run, such as one on your tailnet.',
+  'ai.reviewer.none-private':
+    'No private reviewer is set up, and this vault does not allow a public one: set up a model you run, such as LM Studio, and mark it private.',
+  // what a vault lets a public reviewer have, asked after showing one real note (ai_public_names_only, public-consent.ts)
+  'ai.consent.title': 'Let a public reviewer see this vault?',
+  'ai.consent.names':
+    'A cloud model would be sent the names, kinds and links of things, as below. Never their values or your text.',
+  'ai.consent.note': 'A cloud model would be sent the whole note, as below, under its provider’s terms.',
+  'ai.consent.from': 'This is what {path} would send.',
+  'ai.consent.allow': 'Allow',
+  'ai.consent.keep': 'Keep private',
+  'ai.consent.no-note': 'Open a note with a graph first, so you can see what it would send.',
+  'ai.consent.off': 'Public reviewers are off. Notes go to private reviewers only.',
+  'ai.reviewer.public-off':
+    '{model} is a public reviewer, and this vault does not allow one: mark it private if you run it yourself, or allow public reviewers in the settings.',
+  'ai.reviewer.public-no-text':
+    '{model} is a public reviewer, and this vault lets one see names, kinds and links only, never your text.',
+  'ai.summary.names-only': 'Names, kinds and links only: this vault does not let a public reviewer see values or text.',
   // a model's ceiling, and the credentials never sent (ai-ceiling.ts)
   'ai.level.unlabelled': 'This note has no classification, so it counts as {level}',
   'ai.level.classified': 'This note is classified {level}',

@@ -297,7 +297,8 @@ describe('the AI models of §19', () => {
       el = page(env);
       const r = row(el, 'Model 1');
       assert.ok(r);
-      const [name, purpose] = r.querySelectorAll('input');
+      const name = row(r, 'Name').querySelector('input');
+      const purpose = row(r, 'Purpose').querySelector('input');
       name.value = 'Drafts';
       name.dispatch('input');
       purpose.value = 'Suggest links';
@@ -365,7 +366,7 @@ describe('the AI models of §19', () => {
       const desc = (r) => r.querySelector('.setting-item-description').textContent;
       assert.match(desc(row(el, 'Model 1')), /reached over https only/);
       assert.match(desc(row(el, 'Purpose')), /Research questions, Proposing changes, Restricted processing/);
-      assert.match(desc(row(el, 'Endpoint')), /http:\/\/ for a model on this device/);
+      assert.match(desc(row(el, 'Address (URL)')), /http:\/\/ for a model on this device/);
     } finally {
       env.uninstall();
     }

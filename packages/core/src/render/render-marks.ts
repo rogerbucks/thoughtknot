@@ -6,22 +6,33 @@
 // would clash, the bigger thing keeps its name (Roger: big things first). Host-free and pure.
 import type { Detail } from './render-detail.ts';
 import type { Look } from './render-look.ts';
-import { inkOf, inkOn, mix, shadeOf, subjectColour } from './render-look.ts';
+import { coloursOf, inkOf, mix, type OwnColour } from './render-look.ts';
+export { coloursOf, type OwnColour } from './render-look.ts';
 import { signsOf } from './render-signs.ts';
-import { isTilted, tilted } from './render-tilt.ts';
+import { floorOf, isTilted, onScreen } from './render-tilt.ts';
+export { onScreen } from './render-tilt.ts';
+import { roadsOf, underBox } from './render-roads.ts';
+import { calloutsOf } from './render-callouts.ts';
+import { focusMarks, focusSigns, type Focus } from './render-focus.ts';
+export type { Focus } from './render-focus.ts';
+import { MAX_PX, MIN_PX, MOST_LINES, labelOf, sizeOf } from './render-labels.ts';
+export { LONGEST, MAX_PX, MIN_PX, labelOf, sizeOf, textWidth, wrapName } from './render-labels.ts';
+export { countOf, roadAlpha } from './render-roads.ts';
+import type { RoadMark } from './render-roads.ts';
+export type { RoadMark } from './render-roads.ts';
 import type { Spot } from './render-rooms.ts';
+import { areasOf, type AreaMark } from './render-areas.ts';
+import { backdropOf, type BackdropMark } from './render-backdrop.ts';
 import type { Scene, SceneNode } from './render-scene.ts';
 import type { Clear } from '../zoom-fit.ts';
 import { word } from '../words.ts';
 
-/** The smallest name drawn, in pixels. */
-export const MIN_PX = 11;
-/** The largest name drawn, in pixels. */
-export const MAX_PX = 16;
 /** An item's name, in pixels: easy to read close in (Roger, 7 Nov 2026). */
 export const ITEM_PX = 13;
 /** The smallest a group's name gets as its insides open, in pixels: still easy to read. */
 export const HEADER_PX = 13;
+/** How strong the line round a cloud's edge is. */
+export const RING_ALPHA = 0.55;
 /** How clear a group's name stays while the level inside it shows. */
 const HEADER_ALPHA = 0.9;
 
@@ -37,6 +48,10 @@ export interface View {
   /** How far the camera tips back from looking straight down, and turns round the screen's middle, in radians. */
   tilt?: number;
   turn?: number;
+  /** In 3D, how far each level stands above the one that holds it: 0 lies flat on the ground, 1 is full height. */
+  lift?: number;
+  /** On the globe, how much the drawing bends round the ball: one over its radius, in the drawing's units. */
+  globe?: number;
 }
 
 /** A soft cloud: one group's room. */
@@ -48,6 +63,24 @@ export interface CloudMark {
   r: number;
   fill: string;
   alpha: number;
+  /** How strong the line round its edge is: it stays clear as the cloud fades, so the room's bounds always show. */
+  ring?: number;
+  /** Its ring drawn thick, as it is in focus. */
+  bold?: boolean;
+  /** Where its room's footprint lies on the ground, when it stands above it in 3D. */
+  shadow?: { x: number; y: number; r: number };
+  /** False while its level is not the one being read: the pointer passes through it (Roger, 8 Nov 2026). */
+  pick?: boolean;
+}
+
+/** The ground seen from an angle: the faint lines of a grid, each from one end to the other on the screen. */
+export interface GroundMark {
+  kind: 'ground';
+  lines: [number, number, number, number][];
+  fill: string;
+  alpha: number;
+  /** On the globe: the ball, its middle and radius on the screen, filled in `paper` and edged in `fill`. */
+  ball?: { x: number; y: number; r: number; paper: string };
 }
 
 /** An item far out: a dot in its subject's colour. */
@@ -59,25 +92,12 @@ export interface DotMark {
   r: number;
   fill: string;
   alpha: number;
-}
-
-/** A road between two rooms: the links between them, counted each way. */
-export interface RoadMark {
-  kind: 'road';
-  a: string;
-  b: string;
-  from: [number, number];
-  to: [number, number];
-  forward: number;
-  back: number;
-  width: number;
-  fill: string;
-  /** The count written on the road, such as "3 ⇄ 1"; empty for a single link. */
-  count: string;
-  /** The ink of the count, on a chip of `chip` edged in the road's colour. */
-  ink: string;
-  chip: string;
-  alpha: number;
+  /** A ring round it of this colour, when it is in focus or linked to what is. */
+  ring?: string;
+  /** Where it stands on the ground, when it stands above it in 3D: a thin stem joins them. */
+  foot?: [number, number];
+  /** False while items are not yet a level being read: the pointer passes through it. */
+  pick?: boolean;
 }
 
 /** A name on a card. Its box is where it is drawn. */
@@ -97,6 +117,12 @@ export interface LabelMark {
   dot?: string;
   /** The thin edge of the card, in its thing's colour. */
   edge?: string;
+  /** Its edge drawn firm, as its thing is in focus. */
+  bold?: boolean;
+  /** A long name wrapped onto lines, top to bottom, where it takes more than one; `text` is then the whole name. */
+  lines?: string[];
+  /** A thin line from the card to its thing, when the card stands away from it: from `x1`, `y1` to `x2`, `y2`. */
+  lead?: [number, number, number, number];
   /** A second, smaller line under the name, such as "13 items", in `subInk` at `subPx`. */
   sub?: string;
   subPx?: number;
@@ -104,31 +130,7 @@ export interface LabelMark {
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
-export type Mark = CloudMark | DotMark | RoadMark | LabelMark;
-
-/** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
-export type OwnColour = (subject: string) => number | undefined;
-
-/** The colour of every node: subjects in turn, or the one picked for them, their children shades of them. */
-export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string, string> {
-  const colours = new Map<string, string>();
-  const paint = (key: string, colour: string): void => {
-    colours.set(key, colour);
-    const kids = scene.nodes.get(key)?.children ?? [];
-    kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
-  };
-  // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
-  scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
-  return colours;
-}
-
-/** `spot` on screen, seen from the camera's angle when it is tilted (render-tilt.ts). */
-export function onScreen(spot: Spot, view: View): Spot {
-  const [x, y, r] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale, spot.r * view.scale];
-  if (!isTilted(view)) return { x, y, r };
-  const seen = tilted(x, y, 0, view);
-  return { x: seen.x, y: seen.y, r: r * seen.k };
-}
+export type Mark = GroundMark | BackdropMark | AreaMark | CloudMark | DotMark | RoadMark | LabelMark;
 
 /** Whether a circle on screen touches the view at all. */
 export const inView = (s: Spot, view: View): boolean =>
@@ -162,6 +164,7 @@ export function marksOf(
   look: Look,
   view: View,
   own?: OwnColour,
+  focus?: Focus,
 ): Mark[] {
   const colours = coloursOf(scene, look, own);
   const last = scene.depths.length - 1;
@@ -171,25 +174,73 @@ export function marksOf(
   for (const node of scene.nodes.values()) {
     const at = spots.get(node.key);
     if (!at) continue;
-    const s = onScreen(at, view),
+    const s = onScreen(at, view, node.depth),
+      ground = node.depth && view.lift ? onScreen(at, view) : undefined,
       fill = colours.get(node.key) ?? look.faint;
-    if (!inView(s, view)) continue;
-    const alpha = showOf(node, detail, last);
-    if (node.depth < last) clouds.push({ kind: 'cloud', key: node.key, ...s, fill, alpha: cloudAlpha(alpha, s, view) });
-    else dots.push({ kind: 'dot', key: node.key, x: s.x, y: s.y, r: Math.max(2, Math.min(s.r, 6)), fill, alpha: 0.8 });
+    if (!inView(s, view) || s.behind) continue;
+    // on the globe, things toward the ball's edge fade a little, so its near middle reads first
+    const alpha = showOf(node, detail, last) * (s.k === undefined ? 1 : 0.55 + 0.45 * s.k);
+    const [at3d, r] = [ground ? { shadow: ground } : {}, Math.max(2, Math.min(s.r, 6))];
+    if (node.depth < last)
+      clouds.push({
+        kind: 'cloud',
+        key: node.key,
+        ...s,
+        fill,
+        alpha: cloudAlpha(alpha, s, view),
+        // its edge stays drawn while its level shows, even once its insides open and its fill fades (Roger)
+        ring: RING_ALPHA * crisp(detail.shown[node.depth] ?? 0),
+        ...at3d,
+        pick: picks(alpha),
+      });
+    else
+      dots.push({
+        kind: 'dot',
+        key: node.key,
+        x: s.x,
+        y: s.y,
+        r,
+        fill,
+        alpha: 0.8,
+        ...(ground ? { foot: [ground.x, ground.y] } : {}),
+        pick: picks(alpha),
+      });
     // a group's name stays clear as its insides open: its cloud fades, its name does not (Roger, 7 Nov 2026)
     const named = node.depth < last ? Math.max(alpha, (detail.shown[node.depth] ?? 0) * HEADER_ALPHA) : alpha;
     // a name is clear or not drawn: never a ghost of text too faint to read (Roger, 7 Nov 2026)
     const clear = crisp(named);
     if (clear > 0.05) asks.push(askOf(node, s, fill, clear, detail, last, look));
   }
-  // seen from an angle, far things are painted first, so near ones lie over them. A room still lies under what it
-  // holds
+  // seen from an angle, far things are painted first, so near ones lie over them, and a room under what it holds
   const depth = (key: string) => scene.nodes.get(key)?.depth ?? 0;
   if (isTilted(view)) for (const m of [clouds, dots]) m.sort((a, b) => depth(a.key) - depth(b.key) || a.y - b.y);
-  asks.push(...signsOf(scene, spots, detail, view, colours, look));
-  return [...clouds, ...roadsOf(scene, spots, detail, view, colours, look), ...dots, ...placeLabels(asks, view)];
+  // the name of what is in focus keeps its place over any other
+  for (const a of asks) if (focus?.keys.includes(a.key)) a.weight += 1e11;
+  // what is in focus points the way to each thing it links to off the screen, with no other sign for the same thing
+  const ways = focusSigns(scene, spots, view, colours, look, focus);
+  asks.push(...signsOf(scene, spots, detail, view, colours, look).filter((a) => !ways.some((w) => w.key === a.key)));
+  asks.push(...ways);
+  // far out, where the top level's names crowd their small clouds, they stand in order round the drawing (Roger)
+  const tops = new Map(clouds.filter((m) => scene.nodes.get(m.key)?.depth === 0).map((m) => [m.key, m]));
+  const roads = roadsOf(scene, spots, detail, view, colours, look);
+  const placed = placeLabels(asks, view, roads);
+  const all = [
+    ...floorOf(view, look),
+    ...backdropOf(scene.backdrop, view, colours, look),
+    ...areasOf(scene.areas, spots, view, colours, look),
+    ...clouds,
+    ...roads,
+    ...dots,
+    ...(calloutsOf(asks, tops, placed, view) ?? placed),
+  ];
+  return focusMarks(all, scene, spots, view, colours, look, focus);
 }
+
+/**
+ * Whether a thing that shows `alpha` of itself may be hovered or clicked. Its level must be at least half in. A group
+ * stops once the level inside it opens. So the pointer finds what the reader sees, never a hidden layer.
+ */
+export const picks = (alpha: number): boolean => alpha >= 0.5;
 
 /** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
 export const crisp = (alpha: number): number => Math.min(1, Math.max(0, (alpha - 0.35) / 0.3));
@@ -210,6 +261,10 @@ export interface LabelAsk {
   sub?: string;
   subInk?: string;
   alpha: number;
+  /** The depth of its thing: it keeps off roads at that depth or nearer the top (Roger, 7 Nov 2026). */
+  depth?: number;
+  /** The most lines a long name may wrap onto; one when none is given. */
+  lines?: number;
   /** Higher keeps its place when two names clash. */
   weight: number;
   /** How far the name may move up or down, in pixels, to fit: a group's name may move within its cloud. */
@@ -248,48 +303,43 @@ function askOf(
           subInk: mix(look.ink, look.card, 0.45),
         }),
     alpha,
+    depth: node.depth,
     weight: (last - node.depth) * 1e6 + node.items.length,
+    // close in, an item's long name may wrap: two lines once items are fully shown, more as they spread apart
+    ...(item && (detail.shown[last] ?? 0) >= 1 ? { lines: linesFor(detail.span?.[last] ?? 0) } : {}),
     // a group's name may move within its cloud, and always by one line, so a small cloud's name still shows
     ...(item ? {} : { room: Math.max(s.r * 0.8, px * 1.6 + MIN_PX * 1.2 + GAP) }),
   };
 }
 
-/** The width of `text` at `px`, near enough to keep names apart. */
-export const textWidth = (text: string, px: number): number => text.length * px * 0.56;
+/** How many lines an item's name may take when items sit `span` pixels apart: two, up to six as they spread. */
+const linesFor = (span: number): number => Math.max(2, Math.min(MOST_LINES, Math.floor(span / (ITEM_PX * 1.6))));
 
 /** The pixels kept between two names, and between a name and a control. */
 const GAP = 2;
-
-/** The longest name drawn, in letters; longer names end in an ellipsis. */
-export const LONGEST = 28;
 
 /**
  * The one label placer. It takes names heaviest first and keeps each that fits (spotFor). A name fits inside the part of the
  * view the controls leave clear, and away from every name kept before it. Sizes stay between MIN_PX and MAX_PX.
  */
-export function placeLabels(asks: readonly LabelAsk[], view: View): LabelMark[] {
+export function placeLabels(asks: readonly LabelAsk[], view: View, roads: readonly RoadMark[] = []): LabelMark[] {
   const order = [...asks].sort((a, b) => b.weight - a.weight || (a.key < b.key ? -1 : 1));
   const kept: LabelMark[] = [];
   for (const ask of order) {
-    const px = Math.min(MAX_PX, Math.max(MIN_PX, ask.px));
-    const text = ask.text.length > LONGEST ? `${ask.text.slice(0, LONGEST - 1)}…` : ask.text;
-    const subPx = MIN_PX;
-    const w = Math.max(textWidth(text, px), ask.sub ? textWidth(ask.sub, subPx) : 0) + px + (ask.dot ? px : 0),
-      h = px * 1.6 + (ask.sub ? subPx * 1.2 : 0);
-    const box = spotFor(ask, w, h, view, kept);
-    if (!box) continue;
-    kept.push({
-      kind: 'label',
-      key: ask.key,
-      text,
-      ...box,
-      px,
-      fill: ask.fill,
-      ink: ask.ink ?? inkOn(ask.fill),
-      alpha: ask.alpha,
-      ...(ask.dot ? { dot: ask.dot } : {}),
-      ...(ask.edge ? { edge: ask.edge } : {}),
-      ...(ask.sub ? { sub: ask.sub, subPx, subInk: ask.subInk ?? ask.ink ?? inkOn(ask.fill) } : {}),
+    // a name keeps off the roads of its own level and above, where it can; else it sits where it would (Roger)
+    const near = roads.filter((r) => ask.depth !== undefined && (r.depth ?? Infinity) <= ask.depth);
+    const tries = near.length ? [near, []] : [[]];
+    // a long name close in may take several lines: as many as fit, down to one
+    tries.some((off) => {
+      for (let lines = ask.lines ?? 1; lines >= 1; lines--) {
+        const size = sizeOf(ask, lines);
+        const box = spotFor(ask, size.w, size.h, view, kept, off);
+        // moved off a road, it must still sit on its thing, or it would read as another thing's name
+        const on =
+          box && box.x <= ask.x && ask.x <= box.x + box.w && Math.abs(box.y + box.h / 2 - ask.y) <= box.h * 1.2;
+        if (box && (on || !off.length)) return kept.push(labelOf(ask, size, box));
+      }
+      return false;
     });
   }
   return kept;
@@ -306,6 +356,7 @@ function spotFor(
   h: number,
   view: View,
   kept: readonly LabelMark[],
+  roads: readonly RoadMark[] = [],
 ): { x: number; y: number; w: number; h: number } | null {
   const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
   // the clear part, a gap in from each edge a control covers, as the painted edge of a name reaches past its box
@@ -330,58 +381,7 @@ function spotFor(
     if (box.x < left || box.y < top || box.x + w > right || box.y + h > bottom) continue;
     const apart = (k: LabelMark) =>
       box.x >= k.x + k.w + GAP || k.x >= box.x + w + GAP || box.y >= k.y + k.h + GAP || k.y >= box.y + h + GAP;
-    if (kept.every(apart)) return box;
+    if (kept.every(apart) && !roads.some((r) => underBox(r, box))) return box;
   }
   return null;
-}
-
-/** How much a level's roads show: they stay, fainter, while the level inside opens, so a road never just vanishes (R20). */
-export const roadAlpha = (detail: Detail, depth: number): number =>
-  (detail.shown[depth] ?? 0) * (1 - 0.7 * (detail.shown[depth + 1] ?? 0));
-
-/** What a road says of its links: both ways, one way, or nothing for a single link. */
-export function countOf(forward: number, back: number): string {
-  if (forward + back < 2) return '';
-  if (forward && back) return `${forward} ⇄ ${back}`;
-  return forward ? `${forward} →` : `← ${back}`;
-}
-
-/** The roads at each open depth. A level's roads fade out as the level inside it opens, as its names do. */
-function roadsOf(
-  scene: Scene,
-  spots: Map<string, Spot>,
-  detail: Detail,
-  view: View,
-  colours: Map<string, string>,
-  look: Look,
-): RoadMark[] {
-  const roads: RoadMark[] = [];
-  scene.roads.forEach((at, depth) => {
-    const alpha = roadAlpha(detail, depth);
-    if (alpha < 0.05) return;
-    for (const road of at) {
-      const p = spots.get(road.a),
-        q = spots.get(road.b);
-      // only neighbours in the same room: links that leave it ride on the road of the room itself
-      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
-      const [s, t] = [onScreen(p, view), onScreen(q, view)];
-      roads.push({
-        kind: 'road',
-        a: road.a,
-        b: road.b,
-        from: [s.x, s.y],
-        to: [t.x, t.y],
-        forward: road.forward,
-        back: road.back,
-        width: 2 + Math.log2(road.forward + road.back),
-        fill: colours.get(road.a) ?? look.faint,
-        count: countOf(road.forward, road.back),
-        // the count on a white chip edged and written in the road's colour, as in the mockups
-        ink: inkOf(colours.get(road.a) ?? look.faint, look.card, look),
-        chip: look.card,
-        alpha,
-      });
-    }
-  });
-  return roads;
 }

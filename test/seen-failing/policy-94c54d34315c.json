@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the shipped source > no source makes a network request, except the AI send module, the address test and the plug-in link",
+  "seen_failing_first": false,
+  "evidence": "A rename of an existing test: it adds the address test to the allowed list, so it passed before the code as it does after"
+}

@@ -33,12 +33,13 @@ function download(win: Window & typeof globalThis, text: string): void {
   win.setTimeout(() => win.URL.revokeObjectURL(url), 1000);
 }
 
-/** Reads a preset file's `text`: a built-in preset is shown as a pick to preview, anything else is said to be refused. */
-function bringIn(text: string, panel: PresetPanel): void {
+/** Reads a preset file's `text`: a built-in preset is shown as a pick to preview, any other joins the person's list. */
+async function bringIn(text: string, panel: PresetPanel): Promise<void> {
   const read = presetFrom(text);
   if ('problems' in read) return notice(read.problems.join(' '));
-  if (!STARTERS.some((s) => s.id === read.id)) return notice(word('page.preset-import-own'));
-  panel.pick(read.id);
+  if (STARTERS.some((s) => s.id === read.id)) return panel.pick(read.id);
+  const why = await panel.bringIn(text);
+  if (why) notice(why);
 }
 
 /** The control that takes a preset file: nothing leaves the page, the file is only read here. */
@@ -80,6 +81,6 @@ export async function presetSection(win: Window & typeof globalThis, deps: Prese
   el.setAttribute('class', 'gn-presets');
   el.setAttribute('aria-label', word('settings.view-preset.name'));
   draw = presetPanelView(el, panel).refresh;
-  el.append(importControl(win, (text) => bringIn(text, panel)));
+  el.append(importControl(win, (text) => void bringIn(text, panel)));
   return { el, vault: () => vault };
 }

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-reviewers.test.js",
+  "test": "every send is held to the reviewer rules (ai_private_default, ai_public_names_only) > allowed note text: the graph goes with its values, as for a private reviewer",
+  "seen_failing_first": false,
+  "evidence": "It pins down that a vault allowing note text keeps today's send unchanged, so it passes before the gate by design."
+}

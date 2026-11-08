@@ -1,13 +1,14 @@
 // The vault's view preset (editor spec ES§69, view_presets_scoped, view_presets_portable). It is the one thing the
 // browser editor's page may write, besides an export. Everything else the page is told stays read only
 // (cc_settings_shared).
-//   GET vault-preset   {id}: the starter the vault's preset file names, or null when it has none.
+//   GET vault-preset   {id}: the starter the vault's preset file names, or null when it has none. A preset of the
+//                      vault's own comes as {id: 'vault:…', file}, the file text, for the page to read.
 //   PUT vault-preset   {id} makes that starter the vault's preset; {id: null} gives the vault none.
 // The file name is the server's own and never comes from the page. It sits at the vault's top. The page sends a
 // starter's id and nothing else. The server writes the file itself from the core's starters. So no text of the page's
 // is ever written. A link is never read or written through. The write is a new file renamed over the old.
 import { word } from '@thoughtknot/core';
-import { VAULT_PRESET_PLACE, vaultPresetFile, vaultPresetId } from '@thoughtknot/core';
+import { VAULT_PRESET_PLACE, vaultChoice, vaultPresetFile, vaultPresetId } from '@thoughtknot/core';
 import { constants, promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import type { ApiAnswer, ApiHandler, ApiRequest } from './start-server.ts';
@@ -54,7 +55,10 @@ export class VaultPresetApi {
     if ((await found(this.place)) !== 'file') return json({ id: null });
     const handle = await fs.open(this.place, constants.O_RDONLY | constants.O_NOFOLLOW);
     try {
-      return json({ id: vaultPresetId(await handle.readFile('utf8')) ?? null });
+      const text = await handle.readFile('utf8');
+      const id = vaultChoice(text) ?? null;
+      // a preset of the vault's own goes with its file text, so the page reads it as it reads any untrusted file
+      return json(id?.startsWith('vault:') ? { id, file: text } : { id });
     } finally {
       await handle.close();
     }

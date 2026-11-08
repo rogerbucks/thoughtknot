@@ -71,5 +71,5 @@ test('a handful of things is one level, every item at the top', () => {
   const scene = sceneOf({ things: [thing('a'), thing('b'), thing('c')], links: [link('a', 'b')] });
   assert.equal(scene.depths.length, 1);
   assert.deepEqual(scene.roots, ['a', 'b', 'c']);
-  assert.deepEqual(scene.roads[0], [{ a: 'a', b: 'b', forward: 1, back: 0 }]);
+  assert.deepEqual(scene.roads[0], [{ a: 'a', b: 'b', forward: 1, back: 0, types: ['RELATES'] }]);
 });

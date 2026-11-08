@@ -79,10 +79,16 @@ export class StageMiniMap {
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
     const look = this.host.look();
-    // the overview's clouds and roads, without names: too small to read at this size
+    // the overview's clouds, patches, tiles and roads, without names: too small to read at this size
     const marks: Mark[] = marksOf(scene, spots, detailAt(sizes, whole.scale), look, whole, this.host.own).flatMap(
       (m): Mark[] =>
-        m.kind === 'cloud' ? [m] : m.kind === 'road' ? [{ ...m, count: '', width: Math.min(m.width, 2) }] : [],
+        m.kind === 'cloud' || m.kind === 'area'
+          ? [m]
+          : m.kind === 'backdrop'
+            ? [{ ...m, words: [] }]
+            : m.kind === 'road'
+              ? [{ ...m, count: '', width: Math.min(m.width, 2) }]
+              : [],
     );
     const f = this.frame();
     this.canvas.hidden = !!this.host.auto?.() && this.fits();

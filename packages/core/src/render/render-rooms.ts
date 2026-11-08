@@ -24,8 +24,11 @@ const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 /** Where a ring starts, as the mockup's rings do: a little past the top. */
 const RING_START = -Math.PI / 2 + 0.3;
 
-/** The places of every node of `scene`, by key. */
-export function roomsOf(scene: Scene): Map<string, Spot> {
+/**
+ * The places of every node of `scene`, by key. An item a person placed sits where `placed` says, from the layout
+ * block. Every other node sits where the rooms put it: a saved place moves nothing else (layout_drag_saves).
+ */
+export function roomsOf(scene: Scene, placed?: ReadonlyMap<string, { x: number; y: number }>): Map<string, Spot> {
   const size = new Map<string, number>(),
     local = new Map<string, Spot>();
   const linked = linkWeights(scene.roads);
@@ -50,6 +53,11 @@ export function roomsOf(scene: Scene): Map<string, Spot> {
       const offset = local.get(child) as Spot;
       spots.set(child, { x: at.x + offset.x, y: at.y + offset.y, r: offset.r });
     }
+  }
+  const last = scene.depths.length - 1;
+  for (const [key, p] of placed ?? []) {
+    const spot = spots.get(key);
+    if (spot && scene.nodes.get(key)?.depth === last) spots.set(key, { ...spot, x: p.x, y: p.y });
   }
   return spots;
 }

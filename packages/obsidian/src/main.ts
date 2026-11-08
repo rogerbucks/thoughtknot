@@ -47,8 +47,8 @@ export { obsidianHost } from './obsidian-host';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { TriedTypes } from './tried-types';
-import { GraphPane, PANE } from './pane';
-import { DETAILS_PANE, DetailsPaneView } from './details-pane';
+import { PANE } from './pane';
+import { registerViews } from './views';
 import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
@@ -108,8 +108,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     addCommands(this); // all of them, through the plug-in interface; nothing is sent to an AI or read from a database until Send or Import
-    this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
-    this.registerView(DETAILS_PANE, (leaf) => new DetailsPaneView(leaf)); // a card's details, beside (§25)
+    registerViews(this); // the edit pane, the details pane and the Graph view of Bases
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
     this.registerEditorExtension(graphBlocks(this));

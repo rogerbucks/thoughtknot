@@ -10,6 +10,7 @@
 // cutting the front matter by line numbers, is not seen. GUIDE.md says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
+import { pythonHeredocWrites } from './gate-python.ts';
 import { LITERAL_DOLLAR, UNKNOWN, shellSteps } from './shell-steps.ts';
 import type { ShellStep } from './shell-steps.ts';
 
@@ -198,6 +199,16 @@ async function mayWrite(path: string, how: Writing, named: boolean, ports: GateP
   return sameClassification(before, how.append ? before + how.body : how.body);
 }
 
+/** Whether a Python heredoc writes only files not yet made (Roger, 8 Nov 2026): gate-python.ts reads the script. */
+async function pythonOnlyMakes(step: ShellStep, command: readonly string[], scope: Scope, ports: GatePorts) {
+  const writes = step.writes.length || !step.literal ? null : pythonHeredocWrites(command, step.body, ports.home);
+  for (const write of writes ?? []) {
+    const path = PATH_NOT_KNOWN.test(write) || write.includes('\\') ? null : pathsOf(write, scope)?.[0];
+    if (!path || (await stateOf(path, ports)) !== MISSING) return false;
+  }
+  return writes !== null;
+}
+
 /** The keywords before a step's command, and the command after them. */
 function split(words: readonly string[]): { keywords: string[]; rest: string[] } {
   let at = 0;
@@ -273,6 +284,7 @@ async function judgeStep(step: ShellStep, scope: Scope, named: boolean, ports: G
     for (const target of targets) if (!(await mayWrite(target, how, named, ports))) return false;
     return true;
   }
+  if (named && (await pythonOnlyMakes(step, command, scope, ports))) return true;
   const reads = !program || SETTERS.has(program) || program === 'read' || programOnlyReads(command);
   if (!reads) return !named;
   if (!step.writes.length) return true;

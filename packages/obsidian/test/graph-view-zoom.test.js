@@ -1,6 +1,6 @@
 // Zooming a drawing (spec §3). It is fitted to the note to start with. It zooms by button, key, and Ctrl or Command with
-// the wheel; one finger is left to scroll the note. Full screen is checked too. There the wheel alone zooms, and the
-// keyboard stays in it and is given back on leaving.
+// the wheel, and by the wheel alone. The wheel with Alt or Option, a trackpad drag and one finger scroll the note.
+// Full screen is checked too. There the wheel alone zooms, and the keyboard stays in it and is given back on leaving.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -49,14 +49,21 @@ describe('zoom in the note', () => {
     assert.equal(widthOf(el), fitted);
   });
 
-  test('the wheel alone scrolls the note; with Ctrl or Command it zooms the drawing', async () => {
+  test('a trackpad drag scrolls the note; the mouse wheel, alone or with Ctrl or Command, zooms the drawing', async () => {
     const { el } = await show(env, fence(GRAPH));
     const vp = el.querySelector('.thoughtknot-viewport'),
       fitted = widthOf(el);
-    assert.equal(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, false);
+    assert.equal(vp.dispatch('wheel', { deltaY: -3, deltaMode: 0, clientX: 10, clientY: 10 }).defaultPrevented, false);
+    assert.equal(
+      vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10, altKey: true }).defaultPrevented,
+      false,
+    );
     assert.equal(widthOf(el), fitted);
+    assert.ok(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, 'a wheel notch');
+    const notched = widthOf(el);
+    assert.ok(notched > fitted);
     assert.ok(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10, ctrlKey: true }).defaultPrevented);
-    assert.ok(widthOf(el) > fitted);
+    assert.ok(widthOf(el) > notched);
   });
 
   test('one finger on a fitted drawing is left to scroll the note', async () => {

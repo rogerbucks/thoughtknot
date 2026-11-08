@@ -8,13 +8,17 @@ name: Phone and tablet app
 #   Apple account, which waits for Apple to fix his developer name (docs/app-signing.md). No Apple key is used here.
 # Tauri writes the Android Studio and Xcode projects (src-tauri/gen/, never committed) at the start of each run.
 on:
+  # main, and a release tag (GitHub reads no paths filter for a tag, so every release builds)
   push:
     branches: [main]
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
     paths:
       - 'packages/app/**'
       - 'packages/claude-code/page/**'
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/mobile-app.yml'
   pull_request:
     paths:
@@ -22,6 +26,8 @@ on:
       - 'packages/claude-code/page/**'
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/mobile-app.yml'
   workflow_dispatch:
   # the nightly. It builds the commit the nightly woke at: a ref handed in here would be a checkout CodeQL cannot
@@ -89,7 +95,10 @@ jobs:
           if-no-files-found: error
           path: packages/app/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
 
+  # Off pull requests only: main, a release tag, a run by hand and the nightly build it (Roger, 7 Nov 2026: macOS minutes were most of the
+  # runner bill). A pull request still builds and tests the Android app above.
   ios-simulator:
+    if: ${{ !contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) }}
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
