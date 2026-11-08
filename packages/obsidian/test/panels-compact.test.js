@@ -90,8 +90,5 @@ test('what can be done with the selected thing, and the editor beside it, are ro
     css,
     /:is\(\.thoughtknot-untangle-offers, \.thoughtknot-edit-actions\) > button \.thoughtknot-badge-text \{\s*display: none;/,
   );
-  assert.match(
-    css,
-    /\.thoughtknot-edit-actions > button,[^{]*\.thoughtknot-edit-line-input,[^{]*\{\s*min-width: 28px;/,
-  );
+  assert.match(css, /\.thoughtknot-edit-actions > button,[^{]*\.thoughtknot-edit-line-input \{\s*min-width: 28px;/);
 });

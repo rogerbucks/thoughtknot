@@ -60,7 +60,8 @@ export function untangleOffers(
 
 /** Whether a pointer hovers here, so the rail is one row of icons (panels_compact); on touch it is a column. */
 const across = (el: HTMLElement): boolean =>
-  el.win?.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches ?? false;
+  (el.win?.matchMedia?.('(hover:hover)')?.matches ?? false) &&
+  (el.win?.matchMedia?.('(pointer:fine)')?.matches ?? false);
 
 /** How each Show only button brings its row of one step fewer or more up to date, by the button. */
 const reachSyncs = new WeakMap<HTMLElement, () => void>();

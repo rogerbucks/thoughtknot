@@ -5010,8 +5010,7 @@ img.thoughtknot-picture-hidden,
   }
   .thoughtknot-edit-actions > button,
   .thoughtknot-edit-name,
-  .thoughtknot-edit-line-input,
-  .thoughtknot-details-head > button {
+  .thoughtknot-edit-line-input {
     min-width: 28px;
     min-height: 28px;
   }
