@@ -6,7 +6,6 @@
 // to it and opens its next level. A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
-import type { ViewOptions } from './view-options.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import type { Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
@@ -16,7 +15,7 @@ import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } fro
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
 import { isGlobe, middleOf } from '../../render/render-globe.ts';
-import { flatOf, hasLevels, laidOut, levelSaid, lookedFrom, sameLook, stageKind, turnedView } from './stage-look.ts';
+import { flatOf, laidOut, levelSaid, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import type { StageKind } from './stage-look.ts';
 import { morphIn, seenOf, type Seen } from './stage-morph.ts';
 import { coverCards, overCover } from './controls-cover.ts';
@@ -46,29 +45,7 @@ export interface StageHands {
 }
 
 export { hasLevels } from './stage-look.ts';
-/** The stage for a card, when its setting is on and its graph has levels to show and it is drawn as a network. */
-export function stageFor(
-  viewport: HTMLElement,
-  o: Pick<ViewOptions, 'aids' | 'reading' | 'graph' | 'places' | 'diagram'>,
-  hands?: StageHands,
-  seen?: Seen,
-): RenderStage | null {
-  const drawing = o.reading.graphs.get(o.graph),
-    g = o.reading.world[o.graph];
-  const kind = stageKind(o.diagram); // only the network's places are dragged and saved
-  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g) || !kind) return null;
-  return new RenderStage(
-    viewport,
-    drawing,
-    g,
-    hands,
-    o.aids.miniMap,
-    kind === 'network' ? o.places : undefined,
-    kind,
-    seen,
-  );
-}
-
+export { stageFor } from './stage-for.ts';
 /** One graph drawn by the new rendering, on a canvas over its card. */
 export class RenderStage {
   readonly canvas: HTMLCanvasElement;

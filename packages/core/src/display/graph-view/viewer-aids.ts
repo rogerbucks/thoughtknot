@@ -340,8 +340,7 @@ export class Aids {
    * undo, and says why when nothing was written. None while the card is only read.
    */
   private groupEditor():
-    | ((things: readonly string[], property: string, value: string | null, said: string) => void)
-    | null {
+    ((things: readonly string[], property: string, value: string | null, said: string) => void) | null {
     const o = this.host.o;
     if (o.readOnly?.() || (!o.writeBlock && !o.editing?.()?.session)) return null;
     return (things, property, value, said) => {
