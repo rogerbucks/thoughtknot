@@ -14,6 +14,8 @@ import type { LabelAsk, Mark, RoadMark, View } from './render-marks.ts';
 export interface Focus {
   keys: readonly string[];
   road?: { a: string; b: string };
+  /** The thing the pointer only crosses, not yet rested on: marked faintly, and nothing else changes (hover_calm). */
+  near?: string;
 }
 
 /** How much the other roads still show while something is in focus. */
@@ -94,7 +96,8 @@ export function focusMarks(
   look: Look,
   focus: Focus | undefined,
 ): Mark[] {
-  if (!focusing(focus)) return [...marks];
+  const near = focus?.near;
+  if (!focusing(focus)) return near ? nearMarked(marks, near) : [...marks];
   const own = new Set(focus.keys);
   const ends = new Set<string>(focus.road ? [focus.road.a, focus.road.b] : []);
   const bold: RoadMark[] = [];
@@ -145,7 +148,16 @@ export function focusMarks(
   // the bold roads lie over the other roads and clouds, under the dots and names
   const at = out.findIndex((m) => m.kind === 'dot' || m.kind === 'label');
   out.splice(at < 0 ? out.length : at, 0, ...bold);
-  return out;
+  return near ? nearMarked(out, near) : out;
+}
+
+/** `marks` with the thing at `near` marked faintly: its dot ringed in its own colour, its cloud's edge shown. */
+function nearMarked(marks: readonly Mark[], near: string): Mark[] {
+  return marks.map((m) => {
+    if (m.kind === 'dot' && m.key === near) return { ...m, ring: m.ring ?? m.fill };
+    if (m.kind === 'cloud' && m.key === near) return { ...m, ring: m.ring ?? 1 };
+    return m;
+  });
 }
 
 /** Distance from `x`, `y` to the segment from `p` to `q`. */

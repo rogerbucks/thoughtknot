@@ -6,10 +6,9 @@
 // to it and opens its next level. A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
-import { shapeOf } from '../../types-shape.ts';
 import type { ViewOptions } from './view-options.ts';
-import { sceneOf, type Scene } from '../../render/render-scene.ts';
-import { roomsOf, type Spot } from '../../render/render-rooms.ts';
+import type { Scene } from '../../render/render-scene.ts';
+import type { Spot } from '../../render/render-rooms.ts';
 import { detailAt, roomSizes } from '../../render/render-detail.ts';
 import { DARK, LIGHT } from '../../render/render-look.ts';
 import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../render/render-marks.ts';
@@ -17,7 +16,7 @@ import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } fro
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
 import { isGlobe, middleOf } from '../../render/render-globe.ts';
-import { aNetwork, flatOf, hasLevels, levelSaid, lookedFrom, sameLook, turnedView } from './stage-look.ts';
+import { flatOf, hasLevels, laidOut, levelSaid, lookedFrom, sameLook, stageKind, turnedView } from './stage-look.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
 import { StageFocus, pickRoad } from './stage-focus.ts';
@@ -53,8 +52,10 @@ export function stageFor(
 ): RenderStage | null {
   const drawing = o.reading.graphs.get(o.graph),
     g = o.reading.world[o.graph];
-  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g) || !aNetwork(o.diagram)) return null;
-  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap, o.places);
+  const kind = stageKind(o.diagram), // an ego view's rings are not the network's places: nothing is dragged there
+    ego = kind === 'ego';
+  if (!o.aids?.newRendering || !drawing || !hasLevels(drawing, g) || !kind) return null;
+  return new RenderStage(viewport, drawing, g, hands, o.aids.miniMap, ego ? undefined : o.places, ego);
 }
 
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -95,11 +96,10 @@ export class RenderStage {
     hands?: StageHands,
     mini: MiniMapSetting = 'always',
     places?: PlacesHost,
+    ego = false,
   ) {
     this.viewport = viewport;
-    this.hands = hands;
-    this.scene = sceneOf(shapeOf(drawing, g));
-    this.spots = roomsOf(this.scene, places?.saved);
+    ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, ego, hands, places?.saved));
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
     const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
     this.mover = places?.place && new StageMover({ ...live, draw: () => this.draw() }, places);

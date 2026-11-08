@@ -228,6 +228,12 @@
   stroke-width: max(2.2px, var(--thoughtknot-link-least, 0px));
   stroke-linejoin: miter;
 }
+/* Zoomed in, the drawing is shown bigger than drawn, and its lines would swell with it. At five times, a 2 px link
+   is 10 px and box edges pile up (Roger, 8 Nov 2026: "crazy busy"). So a line and an outline keep their weight on the
+   screen, as the new rendering's do. A link stays 2 px, 3.2 px highlighted, and a box's edge stays 1 px. */
+.thoughtknot-svg.thoughtknot-near :is(g.edge, g.node, g.cluster) > :is(path, polygon, ellipse, polyline, rect) {
+  vector-effect: non-scaling-stroke;
+}
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
    lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to
@@ -2752,6 +2758,61 @@ pre.thoughtknot-code {
 .thoughtknot-progress progress {
   inline-size: 8em;
   accent-color: var(--gn-accent);
+}
+/* A long block being drawn (§44, drawing_shown_at_once): a quiet frame the size of a card, with a moving bar. It
+   fades in after a moment, so a quick drawing never shows it. Both move on their own, even while the page is busy. */
+.thoughtknot-drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gn-space-2);
+  min-height: 16rem;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-muted);
+  opacity: 0;
+  animation: thoughtknot-drawing-in var(--gn-motion-fade) var(--gn-ease-soft) var(--gn-motion-fade) forwards;
+}
+.thoughtknot-drawing-bar {
+  overflow: hidden;
+  inline-size: 10rem;
+  block-size: 3px;
+  border-radius: 3px;
+  background: var(--gn-border);
+}
+.thoughtknot-drawing-bar::after {
+  content: '';
+  display: block;
+  block-size: 100%;
+  inline-size: 40%;
+  border-radius: 3px;
+  background: var(--gn-accent);
+  animation: thoughtknot-drawing-run var(--gn-motion-pulse) var(--gn-ease-soft) infinite;
+}
+/* once the card under it shows its own wait, that is the one shown */
+.thoughtknot-drawing:has(~ .thoughtknot > *) {
+  display: none;
+}
+@keyframes thoughtknot-drawing-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes thoughtknot-drawing-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thoughtknot-drawing-bar::after {
+    animation: none;
+    inline-size: 100%;
+  }
 }
 /* Every keyboard shortcut (§44, shortcuts_listed): a table for each place, keys first. In a card it sits under the
    bar, with its Close button; in Obsidian's dialog it is the dialog's content. */

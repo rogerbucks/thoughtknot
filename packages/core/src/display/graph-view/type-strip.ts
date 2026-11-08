@@ -9,6 +9,7 @@
 // (type_try_reading). Under the types, Views lists the core's view types drawn as marks. Each is chosen and written
 // the same way, and said by its title once drawn (view_types_offered).
 import { CORE_DIAGRAMS_ID, VIEW_TYPES, chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
+import { triedType } from './view-drawn';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -117,7 +118,7 @@ const carried = (d: Partial<Record<(typeof CARRIED)[number], string>>): Record<s
  */
 export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
   const tried: Diagram = {
-    type: change.type as DiagramType,
+    ...triedType(change.type),
     ...(change.view === undefined ? {} : { view: change.view }),
     ...(carried(change) as Partial<Diagram>),
     at: { block: -1, line: 0, id: 'tried' },

@@ -200,12 +200,15 @@ describe('the globe view, driven in a real browser', () => {
     ]) {
       const x = view.x + view.width / 2 + dx,
         y = view.y + view.height / 2 + dy;
-      before = await picture();
-      await click(x, y);
-      if (/Town\d+/.test(await picked())) {
-        at = [x, y];
-        break;
+      // only the level being read is picked (render_pick_shown). A click on a group glides one level nearer, so the
+      // spot is clicked again once it opens.
+      for (let tries = 0; tries < 4 && !at; tries++) {
+        before = await picture();
+        await click(x, y);
+        if (/Town\d+/.test(await picked())) at = [x, y];
+        else await settled();
       }
+      if (at) break;
     }
     assert.ok(at, 'a click on a thing picks it');
     const name = (await picked()).match(/Town\d+/)[0];

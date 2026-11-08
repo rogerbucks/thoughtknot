@@ -4,6 +4,8 @@
 import { CORE_DIAGRAMS_ID } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, LayoutOptions } from '@thoughtknot/core';
 import { viewOf, viewSupport } from '../../view-support.ts';
+import { pluginTypeOf } from '../../plugin-type.ts';
+import type { DiagramType } from '../../style-graph.ts';
 import type { DiagramShown, PluginPicture } from './type-strip';
 
 /** `o` with a view of the core's own as its drawing, its picture marked live so it is not shown again apart. */
@@ -61,3 +63,10 @@ export function pictureAgain(
   const folded = drawing && menu.folded(drawing, card);
   return redraw(spaced, folded).then((svg) => pictureLive(svg ? { ...p, svg } : p));
 }
+
+/**
+ * A type looked at, as the style graph reads it. A view, such as Force, is a plug-in's type of the core's own: drawn
+ * over a network. Written as a type, it is dropped as unknown and nothing changes on screen (Roger, 8 Nov 2026).
+ */
+export const triedType = (type: string): { type: DiagramType; plugin?: string } =>
+  pluginTypeOf(type) ? { type: 'network', plugin: type } : { type: type as DiagramType };

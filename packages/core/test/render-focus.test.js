@@ -1,4 +1,4 @@
-// Focus, part of layer L4 (editor spec §73, render_focus): render/render-focus.ts and the stage's stage-focus.ts.
+// Focus, part of layer L4 (editor spec §73, render_focus): render/render-focus.ts; the stage's side is in stage-focus.test.js.
 // What the reader chooses or rests the pointer on is clearly marked, with its links and the ways to them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,6 @@ import { fitView } from '../src/render/render-camera.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf } from '../src/render/render-marks.ts';
 import { pickRoad } from '../src/render/render-focus.ts';
-import { HOVER_MS, StageFocus } from '../src/display/graph-view/stage-focus.ts';
 import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const thing = (key, names = {}) => ({
@@ -109,33 +108,6 @@ test('a click on a road chooses it, and it is drawn bold with both its ends mark
   const chosen = marks.find((m) => m.kind === 'road' && joins(m, road.a, road.b));
   assert.ok(chosen.halo && chosen.width > road.width, 'the chosen road is drawn bold');
   for (const key of [road.a, road.b]) assert.equal(marks.find((m) => m.kind === 'cloud' && m.key === key).ring, 1);
-});
-
-// Roger, 7 Nov 2026: on hover, after a short time; on select, at once.
-// proves: render_focus
-test('a hover shows its focus only after a short wait, a choice shows at once, and leaving clears it', () => {
-  const timers = [];
-  const clock = {
-    setTimeout: (run, ms) => timers.push({ run, ms }) - 1,
-    clearTimeout: (id) => (timers[id].run = null),
-  };
-  let drawn = 0;
-  const focus = new StageFocus(() => drawn++, clock);
-  assert.deepEqual(focus.of('a').keys, ['a'], 'a chosen thing is in focus at once');
-  focus.hover('b');
-  assert.deepEqual(focus.of(null).keys, [], 'a hovered thing waits');
-  assert.equal(timers.at(-1).ms, HOVER_MS);
-  focus.hover('c'); // the pointer moved on before the wait was over: only the last thing shows
-  assert.equal(timers[0].run, null, 'the first wait is called off');
-  timers.at(-1).run();
-  assert.deepEqual(focus.of('a').keys, ['a', 'c']);
-  assert.equal(drawn, 1, 'drawn again once it shows');
-  focus.hover(null);
-  assert.deepEqual(focus.of(null).keys, [], 'leaving clears it at once');
-  assert.ok(focus.choose({ a: 'x', b: 'y' }));
-  assert.deepEqual(focus.of(null).road, { a: 'x', b: 'y' });
-  assert.equal(focus.choose(null), false);
-  assert.equal(focus.of(null).road, undefined);
 });
 
 // proves: render_painters_agree

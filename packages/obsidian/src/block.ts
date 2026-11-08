@@ -27,7 +27,7 @@ import {
 import type { Block, Drawn, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
-import { LAYOUT_WAIT, waitShown } from '@thoughtknot/core/display/progress';
+import { DRAWN_AT_ONCE_FROM, LAYOUT_WAIT, shownAtOnce, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
 import { movingFor, writeStyle } from './style-write';
@@ -127,6 +127,7 @@ export async function renderShown(
       ctx.addChild(child);
     },
   };
+  let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (ES§44, drawing_shown_at_once)
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
     el.empty();
@@ -134,7 +135,8 @@ export async function renderShown(
     const line = ctx.getSectionInfo(el)?.lineStart ?? 0,
       shown = plugin.inlineFor(ctx.sourcePath, line)?.drawnFrom(source) ?? source;
     // a card drawn from another note or a file is drawn again when that source changes (§20)
-    await renderBlock(plugin, shown, el, local, owner, () => void draw());
+    const run = () => renderBlock(plugin, shown, el, local, owner, () => void draw());
+    await (first ? ((first = false), shownAtOnce(el, word('progress.drawing'), run)) : run());
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
