@@ -208,7 +208,8 @@ export class Aids {
         return levels ? ownHue(levels, key) : undefined;
       },
     };
-    this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
+    this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
+    if (this.stage) o.seen?.keep(this.stage.seen);
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
   }
 
@@ -339,7 +340,8 @@ export class Aids {
    * undo, and says why when nothing was written. None while the card is only read.
    */
   private groupEditor():
-    ((things: readonly string[], property: string, value: string | null, said: string) => void) | null {
+    | ((things: readonly string[], property: string, value: string | null, said: string) => void)
+    | null {
     const o = this.host.o;
     if (o.readOnly?.() || (!o.writeBlock && !o.editing?.()?.session)) return null;
     return (things, property, value, said) => {

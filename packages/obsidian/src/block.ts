@@ -27,6 +27,7 @@ import {
 import type { Block, Drawn, Problem, Refusal } from '@thoughtknot/core';
 import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
+import { holdHeight, seenFor } from './kept-view';
 import { DRAWN_AT_ONCE_FROM, LAYOUT_WAIT, shownAtOnce, waitShown } from '@thoughtknot/core/display/progress';
 import { renderFoldedBlock, sketchingFor } from './sketch-block';
 import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
@@ -122,21 +123,19 @@ export async function renderShown(
   const local: BlockContext = {
     sourcePath: ctx.sourcePath,
     getSectionInfo: (at) => ctx.getSectionInfo(at),
-    addChild: (child) => {
-      mine.push(child);
-      ctx.addChild(child);
-    },
+    addChild: (child) => void (mine.push(child), ctx.addChild(child)),
   };
   let first = source.length >= DRAWN_AT_ONCE_FROM; // a long block shows at once that it is drawn (§44, drawing_shown_at_once)
   const draw = async () => {
     for (const child of mine.splice(0)) child.unload();
+    const held = holdHeight(plugin, ctx.sourcePath, graphOfBlock(source), el); // the page keeps still (render_type_morph)
     el.empty();
     // edited in place with Redraw while typing set to Done, the card is drawn as the block was when editing began (NEURO-7)
     const line = ctx.getSectionInfo(el)?.lineStart ?? 0,
       shown = plugin.inlineFor(ctx.sourcePath, line)?.drawnFrom(source) ?? source;
     // a card drawn from another note or a file is drawn again when that source changes (§20)
     const run = () => renderBlock(plugin, shown, el, local, owner, () => void draw());
-    await (first ? ((first = false), shownAtOnce(el, word('progress.drawing'), run)) : run());
+    await (first ? ((first = false), shownAtOnce(el, word('progress.drawing'), run)) : run()).finally(held);
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
@@ -297,11 +296,7 @@ export async function renderBlock(
     drawn = laid;
   } catch (e) {
     console.error('ThoughtKnot could not draw', graph, e);
-    root.createDiv({
-      cls: 'thoughtknot-banner',
-      attr: { role: 'alert' },
-      text: word('blocks.engine-failed'),
-    });
+    root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' }, text: word('blocks.engine-failed') });
     renderCode(root, source);
     return;
   }
@@ -330,6 +325,7 @@ export async function renderBlock(
       problems,
       mode: 'note',
       stay: plugin.tried.stay(at, target.line), // drawn again as typed, it stays where it was (NEURO-7)
+      seen: seenFor(plugin, target.path, graph), // a new type glides from what the last one showed (render_type_morph)
       exploring: exploringFor(plugin, target.path, graph, styling.style, () => readOnly(root)), // §71, explore_saved
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: laidOut, asDrawn: !!diagram?.picture } } : {}),
