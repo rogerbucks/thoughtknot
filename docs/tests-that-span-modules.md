@@ -1253,6 +1253,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/shared-board.test.js` — a shared board across devices (editor spec §45). `shared-board.ts` joins a seat to a link. A
   change reaches the other person at once, presence passes on and is never written to the note, and a refused change sends
   nothing.
+- `packages/sync/test/mesh-link.test.js` — the live link between two devices (editor spec §45 and §40). Presence and
+  records cross channels in memory that keep every byte. Both arrive, the wire holds nothing readable, and a device that
+  is not trusted is turned away.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
 - `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
