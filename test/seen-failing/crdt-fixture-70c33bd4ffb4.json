@@ -1,0 +1,6 @@
+{
+  "file": "packages/sync/test/crdt-fixture.test.js",
+  "test": "the file holds what the JavaScript build makes now",
+  "seen_failing_first": false,
+  "evidence": "The test pins the JavaScript build's bytes, which already existed. The new code is the Rust build, which the Rust tests check against this file."
+}
