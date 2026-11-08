@@ -1,8 +1,8 @@
 // A storage layer that shares chosen notes between devices (editor spec ES§41 and ES§40; storage_contract,
 // mesh_vpn_sync). The note's file stays the truth: the Obsidian plug-in and the editor read and write it as ever. A
 // write to a shared note is also kept in the note's CRDT and sent to the other device. What the other device sent is
-// merged and written back to the file. A person's write that was made against an older text is refused as ever, with
-// the note as it now is, so a clash is seen and nothing picks a side silently. Notes that are not shared pass through.
+// merged and written back to the file. A write made against an older text is refused as ever, with the note as it
+// now is. So a clash is seen and nothing picks a side silently. Notes that are not shared pass through.
 import type { NoteStorage, StorageLayer } from '@thoughtknot/core';
 import type { SyncedNotes } from './synced-notes.ts';
 
