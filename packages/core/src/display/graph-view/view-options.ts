@@ -40,6 +40,7 @@ import type { ViewerAids } from './viewer-aids';
 import type { SpaceMode } from './space-switch';
 import type { SketchHost } from './sketch-tool';
 import type { PlacesHost } from './stage-places';
+import type { Seen } from './stage-morph';
 import type { StayedAt } from './type-place';
 
 /** What declaring Deferred and DEFERS in the graph's schema gave: the text to park into, and the graph as the note now reads it. */
@@ -184,6 +185,8 @@ export interface ViewOptions {
   readOnly?: () => boolean;
   /** Where the card drawn before this one was left: drawn again, as typing redraws it, it stays there (NEURO-7). */
   stay?: Stay;
+  /** What the card drawn before this one showed, to glide from, and how this one keeps its own (render_type_morph). */
+  seen?: { before?: Seen; keep(seen: () => Seen): void };
   /** The exploration its style graph saved, which it opens on, and how its sidebar saves one (§71, explore_saved). */
   exploring?: Exploring;
 }

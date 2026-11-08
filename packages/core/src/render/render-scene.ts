@@ -9,6 +9,7 @@ import { detailLevels } from '../detail-levels.ts';
 import type { DetailLevel } from '../detail-levels.ts';
 import { namedLevels } from '../named-levels.ts';
 import type { GraphShape } from '../types-shape.ts';
+import type { DrawMark } from '../drawing-marks.ts';
 
 /** One place in the tree: a group at some level, or one item at the last. */
 export interface SceneNode {
@@ -44,6 +45,8 @@ export interface Scene {
   roads: SceneRoad[][];
   /** For a type drawn at its own places: each subject's things, drawn on a patch of its colour (render-areas.ts). */
   areas?: SceneArea[];
+  /** For a type that draws tiles or boxes round its things: its own marks, and its things' names (render-backdrop.ts). */
+  backdrop?: { marks: DrawMark[]; names: Set<string> };
 }
 
 /** One subject's things, by the subject's key. */

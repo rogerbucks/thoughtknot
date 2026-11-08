@@ -208,7 +208,8 @@ export class Aids {
         return levels ? ownHue(levels, key) : undefined;
       },
     };
-    this.stage = host.svg() ? stageFor(viewport, o, hands) : null;
+    this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
+    if (this.stage) o.seen?.keep(this.stage.seen);
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
   }
 
