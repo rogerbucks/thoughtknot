@@ -81,7 +81,7 @@ export function backdropOf(
     } else if (m.kind === 'link') {
       const from = (m.from && colours.get(m.from)) || look.faint;
       out.lines.push({ points: m.points.map(([x, y]) => at(x, y)), colour: from, ...(m.curve ? { curve: true } : {}) });
-    } else if (m.kind === 'label' && !names.has(m.text)) {
+    } else if (m.kind === 'label' && !names.has(m.text) && !(m.of && names.has(m.of))) {
       const px = m.size * view.scale;
       const [x, y] = at(m.x, m.y);
       if (px >= WORD_LEAST) out.words.push({ x, y, text: m.text, px: Math.min(px, WORD_MOST), anchor: m.anchor });

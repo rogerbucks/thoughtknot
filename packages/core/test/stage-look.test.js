@@ -18,7 +18,7 @@ test('types laid out by a layout are drawn at their own places', () => {
 
 test('views drawn as a picture are drawn by the stage by their own name', () => {
   assert.equal(stageKind(picture('thoughtknot.diagrams.ego')), 'ego');
-  for (const t of ['force', 'chord', 'centroid', 'pole', 'treemap', 'containment', 'block', 'grid', 'hive', 'arc'])
+  for (const t of ['force', 'chord', 'centroid', 'pole', 'treemap', 'containment', 'block', 'grid', 'hive', 'arc', 'map'])
     assert.equal(stageKind(picture(`thoughtknot.diagrams.${t}`)), t);
 });
 

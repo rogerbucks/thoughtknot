@@ -33,6 +33,7 @@ export const LAID_TYPES = [
   'grid',
   'hive',
   'arc',
+  'map',
 ] as const;
 /** One of them. */
 export type LaidType = (typeof LAID_TYPES)[number];
@@ -99,9 +100,9 @@ function rows(shape: GraphShape): Map<string, Place> {
 const ROOM_EACH = ITEM_GAP * 9;
 
 /** The types drawn with tiles or boxes round their things: the stage keeps those as a backdrop. */
-const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid', 'hive', 'arc']);
+const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid', 'hive', 'arc', 'map']);
 /** A type the view's own drawing places. */
-type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid' | 'hive' | 'arc';
+type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid' | 'hive' | 'arc' | 'map';
 
 /** The marks a view draws `shape` with, in room enough for a name beside each thing. */
 function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {
@@ -222,7 +223,7 @@ export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: Own
     // a tiled type draws its own links and colours, in its backdrop
     roads: [tiled ? [] : roadsAmong(shape, new Map(keys.map((k) => [k, 0])))],
     ...(tiled
-      ? { backdrop: { marks: tiled, names: new Set(shape.things.map((t) => t.text)) } }
+      ? { backdrop: { marks: tiled, names: new Set(shape.things.flatMap((t) => [t.text, t.key])) } }
       : { areas: areasIn(full, keys, reachOf(places)) }),
   };
   const spots = new Map<string, Spot>();
