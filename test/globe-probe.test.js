@@ -200,8 +200,8 @@ describe('the globe view, driven in a real browser', () => {
     ]) {
       const x = view.x + view.width / 2 + dx,
         y = view.y + view.height / 2 + dy;
-      // a click on a group glides one level nearer, as only the level being read is picked (render_pick_shown), so a
-      // spot is clicked again once the group has opened
+      // only the level being read is picked (render_pick_shown). A click on a group glides one level nearer, so the
+      // spot is clicked again once it opens.
       for (let tries = 0; tries < 4 && !at; tries++) {
         before = await picture();
         await click(x, y);
