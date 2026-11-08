@@ -344,8 +344,11 @@ test('two fingers on a trackpad turn and tip the view seen from an angle; a mous
     assert.ok(stage.view.tilt !== turned.tilt && stage.view.turn === turned.turn, 'up and down tips it');
     const tipped = stage.view;
     scroll(0, 100);
-    assert.deepEqual(stage.view, tipped, 'a mouse wheel leaves the angle alone');
-    assert.equal(stage.view.scale, before.scale, 'and nothing zooms but a pinch');
+    assert.ok(
+      stage.view.tilt === tipped.tilt && stage.view.turn === tipped.turn,
+      'a mouse wheel leaves the angle alone',
+    );
+    assert.ok(stage.view.scale < tipped.scale, 'and zooms, with no key held (note_still_scrolls)');
     stage.unload();
   } finally {
     uninstall();

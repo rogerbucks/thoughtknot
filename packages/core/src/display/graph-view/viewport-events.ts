@@ -20,6 +20,7 @@ import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
 import { onTableControl, tableScrolls, tableTookKey } from './table-keys';
+import { fromTrackpad } from '../../render/render-tilt';
 import type { QuickInfo } from './quick-info';
 import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
@@ -263,7 +264,8 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      const pad = fromTrackpad(e);
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad });
       // zoomed in until a folded group fills the view: it opens (cluster_opens)
       const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
         r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),

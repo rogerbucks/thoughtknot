@@ -47,7 +47,7 @@ The buttons along the top of each drawing:
 | Button | What it does |
 |---|---|
 | **Fit** | Shows the whole drawing at once |
-| **Zoom out** and **Zoom in** | Make the drawing smaller or bigger. You can also pinch, or use the scroll wheel |
+| **Zoom out** and **Zoom in** | Make the drawing smaller or bigger. You can also pinch, or turn the scroll wheel. Hold Alt or Option to scroll the note instead |
 | **Find a thing** | Type part of a name to jump to it |
 | **Filter by kind or link** | Show only some kinds of thing or link |
 | **View** | Turn helpers on or off, such as labels that appear only when you zoom in |

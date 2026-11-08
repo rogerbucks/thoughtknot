@@ -54,6 +54,8 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
     const pinch = {
       ctrlKey: true,
       metaKey: false,
+      deltaMode: 0,
+      deltaX: 0,
       deltaY: -3,
       clientX: 400,
       clientY: 200,
@@ -73,7 +75,12 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
     assert.equal(seen.at(-1), 3, 'every level opens on the way');
     const still = stage.view;
     stage.wheel({ ...pinch, ctrlKey: false });
-    assert.equal(stage.view, still, 'plain scrolling is the page’s');
+    assert.equal(stage.view, still, 'two fingers dragged on a trackpad scroll the page');
+    stage.wheel({ ...pinch, ctrlKey: false, deltaY: 100 });
+    assert.ok(stage.view.scale < still.scale, 'a mouse wheel zooms with no key held (note_still_scrolls)');
+    const zoomed = stage.view;
+    stage.wheel({ ...pinch, ctrlKey: false, altKey: true, deltaY: 100 });
+    assert.equal(stage.view, zoomed, 'with Alt or Option the wheel scrolls the page');
     stage.unload();
     assert.ok(!viewport.classList.contains('thoughtknot-new-rendering'));
     assert.equal(viewport.querySelector('canvas'), null);

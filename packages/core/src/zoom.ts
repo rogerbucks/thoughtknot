@@ -50,7 +50,7 @@ type Near = { onBox?: boolean; near?: boolean };
 /** An input the host passes in: a key, the wheel, a pointer, or a double click. */
 export type ZoomEvent =
   | ({ kind: 'key'; key: string } & Mods)
-  | ({ kind: 'wheel'; x: number; y: number; dy: number } & Mods)
+  | ({ kind: 'wheel'; x: number; y: number; dy: number; pad?: boolean } & Mods)
   | ({ kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number } & Near)
   | { kind: 'move'; id: number; x: number; y: number }
   | { kind: 'up'; id: number; x: number; y: number; time: number }
@@ -251,7 +251,9 @@ export class Zoom {
       case 'key':
         return this.key(e);
       case 'wheel': {
-        if (this.mode === 'note' && !e.ctrl && !e.meta) return false;
+        // the wheel zooms, with no key held. With Alt or Option it scrolls the note, as does a trackpad drag in a note
+        // (note_still_scrolls, Roger 8 Nov 2026)
+        if (e.alt || (this.mode === 'note' && !e.ctrl && !e.meta && e.pad)) return false;
         this.zoomAt(Math.exp(-e.dy * WHEEL_RATE), e.x, e.y);
         return true;
       }

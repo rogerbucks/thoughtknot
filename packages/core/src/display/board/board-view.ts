@@ -20,6 +20,7 @@ import { openCapture, openEditor } from './board-fields.ts';
 import type { FieldsHost } from './board-fields.ts';
 import type { Together } from '../../board-together.ts';
 import { parsedSvg } from '../graph-view/drawing-svg';
+import { fromTrackpad } from '../../render/render-tilt.ts';
 
 export { boardEditInNote, boardOf };
 
@@ -258,7 +259,9 @@ class BoardView {
     vp.addEventListener('pointercancel', (e: PointerEvent) => this.lift(e));
     const wheel = (e: WheelEvent) => {
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey })) e.preventDefault();
+      const pad = fromTrackpad(e);
+      if (zoom.handle({ kind: 'wheel', ...this.point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad }))
+        e.preventDefault();
     };
     vp.addEventListener('wheel', wheel, { passive: false });
     vp.addEventListener('dblclick', (e: MouseEvent) => {
