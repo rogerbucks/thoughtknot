@@ -4986,6 +4986,35 @@ img.thoughtknot-picture-hidden,
     flex-direction: row;
     align-items: center;
   }
+  /* Roger, 8 Nov 2026: the detail panel "seems really chunky". So what can be done with the selected thing is one row
+     of icons, each named in its tooltip, as the editor's buttons are. Its fields are 28 pixels high */
+  .thoughtknot-untangle-offers {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: fit-content;
+  }
+  .thoughtknot-untangle-offers > button.clickable-icon {
+    width: auto;
+    padding-inline: var(--gn-space-1);
+  }
+  :is(.thoughtknot-untangle-offers, .thoughtknot-edit-actions) > button .thoughtknot-badge-text {
+    display: none;
+  }
+  .thoughtknot-untangle-reach {
+    flex-basis: 100%;
+    margin-inline-start: 0;
+  }
+  .thoughtknot-edit-card {
+    padding: var(--gn-space-1);
+    font-size: var(--gn-font-size-s);
+  }
+  .thoughtknot-edit-actions > button,
+  .thoughtknot-edit-name,
+  .thoughtknot-edit-line-input,
+  .thoughtknot-details-head > button {
+    min-width: 28px;
+    min-height: 28px;
+  }
 }
 
 /* A card drawn again keeps its height until its things have glided to their places (type_change_keeps_size). */

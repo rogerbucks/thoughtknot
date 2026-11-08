@@ -198,6 +198,17 @@ describe('adding and deleting where things are drawn', () => {
   });
 
   // proves: edit_quick_line
+  test('the quick line, empty, says what it is for in a grey example', async () => {
+    const { env, el } = await tapped('large');
+    try {
+      const line = card(el).querySelector('input.thoughtknot-edit-line-input');
+      assert.equal(line.getAttribute('placeholder'), 'Quick line: Idea -> Plan, Risk');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: edit_quick_line
   test('the quick line writes what it names from the selected thing, reusing those already there', async () => {
     const { env, el } = await tapped('large');
     try {

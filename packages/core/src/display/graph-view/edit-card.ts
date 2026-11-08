@@ -278,6 +278,7 @@ export class EditCard {
       cls: 'thoughtknot-edit-line-input',
       attr: { type: 'text', 'aria-label': word('edit.line', { thing }), title: word('edit.line-hint') },
     });
+    line.setAttribute('placeholder', word('edit.line-placeholder')); // an empty field says what it is for
     line.addEventListener('keydown', (e: KeyboardEvent) => {
       e.stopPropagation(); // what is typed is the line's alone
       if (e.key === 'Escape') return void (e.preventDefault(), (line.value = ''), this.backToBox());
