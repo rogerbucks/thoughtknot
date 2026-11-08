@@ -171,7 +171,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - `watchSource` draws the card again when the source is changed, made, moved or deleted.
 - `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
 
-### `src/bases/` — the Graph view of Obsidian Bases (spec §20, bases_graph_view)
+### `src/bases/` — the Graph view of Obsidian Bases (ES§20, bases_graph_view)
 
 A .base file picks notes with its filters. The Graph view draws them as a graph, beside Bases' own views.
 
