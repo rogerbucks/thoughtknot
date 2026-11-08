@@ -3,7 +3,7 @@
 // the text of each note, which the layers above read at once. It also keeps every change in the store, as the other
 // build does. So a device on either build reads the other's records. Bytes cross as hexadecimal text.
 import type { Anchor, Crdt, Made } from './crdt.ts';
-import { actorOf } from './crdt.ts';
+import { actorOf } from './actor.ts';
 import type { Store } from './store.ts';
 
 /** A call to the host: the command, and its arguments by name. The app gives one over Tauri's invoke. */
