@@ -2768,19 +2768,19 @@ pre.thoughtknot-code {
   justify-content: center;
   gap: var(--gn-space-2);
   min-height: 16rem;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m, 8px);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
   background: var(--gn-bg-alt);
   color: var(--gn-text-muted);
   opacity: 0;
-  animation: thoughtknot-drawing-in 200ms ease-out 250ms forwards;
+  animation: thoughtknot-drawing-in var(--gn-motion-fade) var(--gn-ease-soft) var(--gn-motion-fade) forwards;
 }
 .thoughtknot-drawing-bar {
   overflow: hidden;
   inline-size: 10rem;
   block-size: 3px;
   border-radius: 3px;
-  background: var(--background-modifier-border);
+  background: var(--gn-border);
 }
 .thoughtknot-drawing-bar::after {
   content: '';
@@ -2789,7 +2789,7 @@ pre.thoughtknot-code {
   inline-size: 40%;
   border-radius: 3px;
   background: var(--gn-accent);
-  animation: thoughtknot-drawing-run 1.2s ease-in-out infinite;
+  animation: thoughtknot-drawing-run var(--gn-motion-pulse) var(--gn-ease-soft) infinite;
 }
 /* once the card under it shows its own wait, that is the one shown */
 .thoughtknot-drawing:has(~ .thoughtknot > *) {
