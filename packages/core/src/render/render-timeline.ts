@@ -1,4 +1,4 @@
-// Where each thing sits in a Timeline, for the new stage (editor spec §73, render_every_type; §15, timeline_order).
+// Where each thing sits in a Timeline, for the new stage (editor spec §73, render_every_type; ES§15, timeline_order).
 // The timeline's plan gives its places, first first, and the things in each. Places run left to right along a line.
 // Things that share a place stack under it. A long timeline folds into rows, so it keeps nearer a card's shape. Each
 // place on a timeline by date is named with its day. The line and the days are drawn as the stage's backdrop.
@@ -81,7 +81,7 @@ export function timelineLaid(shape: GraphShape, plan?: DiagramPlan): { places: M
     const tick = top + HEAD / 2;
     marks.push({
       kind: 'link',
-      id: `timeline\ntick\n${i}`,
+      id: `timeline.tick.${i}`,
       style: 'timeline.tick',
       points: [
         [x, tick - 4],
@@ -93,7 +93,7 @@ export function timelineLaid(shape: GraphShape, plan?: DiagramPlan): { places: M
     if (day !== undefined)
       days.push({
         kind: 'label',
-        id: `timeline\nday\n${i}`,
+        id: `timeline.day.${i}`,
         style: 'text',
         x,
         y: tick - 8,
@@ -111,7 +111,7 @@ export function timelineLaid(shape: GraphShape, plan?: DiagramPlan): { places: M
     const y = r * rowHeight + HEAD / 2;
     marks.push({
       kind: 'link',
-      id: `timeline\nline\n${r}`,
+      id: `timeline.line.${r}`,
       style: 'timeline.line',
       points: [
         [-STEP / 3, y],
