@@ -10,13 +10,14 @@
 // - A newer push cancels a pull request's older run; a run on main or the nightly is never cancelled.
 // - The build status runs for a pull request's checks alone, and skips a CI run that was cancelled.
 // - The hook can be skipped in an emergency, and on a change that reaches everything it runs the whole suite gently.
+// - Its steps get none of git's hook variables, such as GIT_DIR, nor the signing keys.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SUITE_MEMORY_MB, SUITE_SHARDS, desktopPaths, matches, prePushPlan } from '../scripts/pre-push.mjs';
+import { SUITE_MEMORY_MB, SUITE_SHARDS, desktopPaths, matches, prePushPlan, stepEnv } from '../scripts/pre-push.mjs';
 import { ROOT, jobs, read } from './repository/repo.js';
 
 const plan = (files, platform = 'darwin', cargo = true) =>
@@ -38,7 +39,7 @@ describe('the pre-push hook', () => {
     assert.equal(parts[0].slice(1).join(' '), 'npm run test:ai -- --test-concurrency=3 --test-shard=1/6');
     assert.ok(!steps.some(([l]) => l === 'tests the change reaches'));
     assert.equal(SUITE_MEMORY_MB, '8192', 'the ceiling CI gives each of its machines');
-    assert.match(read('scripts/pre-push.mjs'), /THOUGHTKNOT_TEST_MEMORY_MB: SUITE_MEMORY_MB/);
+    assert.equal(stepEnv(parts[0][0], {}).THOUGHTKNOT_TEST_MEMORY_MB, SUITE_MEMORY_MB, 'each part gets that ceiling');
     const py = prePushPlan({
       files: ['python/graph_spec/x.py'],
       platform: 'linux',
@@ -92,6 +93,20 @@ describe('the pre-push hook', () => {
     assert.ok(!matches('packages/core/src/**', 'packages/core/test/a.js'));
     assert.ok(matches('scripts/desktop-build.mjs', 'scripts/desktop-build.mjs'));
     assert.ok(!matches('scripts/desktop-build.mjs', 'scripts/desktop-buildXmjs'));
+  });
+
+  test('gives its steps no GIT_DIR or other hook variable of git’s, and no signing key', () => {
+    const hook = {
+      GIT_DIR: '/repo/.git/worktrees/w',
+      GIT_INDEX_FILE: 'i',
+      GIT_WORK_TREE: 'w',
+      GIT_PREFIX: '',
+      HOME: 'h',
+    };
+    const env = stepEnv('tests the change reaches', { ...hook, APPLE_CERTIFICATE: 'c', GIT_EDITOR: 'vi' });
+    assert.deepEqual(env, { HOME: 'h', GIT_EDITOR: 'vi' });
+    assert.equal(stepEnv('the whole suite, part 1 of 6', hook).THOUGHTKNOT_TEST_MEMORY_MB, SUITE_MEMORY_MB);
+    assert.ok(!('GIT_DIR' in stepEnv('the whole suite, part 1 of 6', hook)));
   });
 
   test('is the hook git runs', () => {
