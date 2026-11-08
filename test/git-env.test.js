@@ -1,5 +1,6 @@
-// git exports GIT_DIR and its kin to a hook. On 8 Nov 2026 a push from a worktree ran a test whose `git init` and
-// `git config` in a folder of its own wrote to the real .git/config, and git broke in every checkout. Checked here:
+// git exports GIT_DIR and its kin to a hook. On 8 Nov 2026 a push from a worktree ran a test that ran git in a folder
+// of its own. It wrote to the real .git/config, and git broke in every checkout. The pre-push hook is part of how CI
+// runs what changed (ES§13, ci_runs_what_changed). Checked here:
 // - The env a child gets carries none of git's repository variables, and keeps those that only reach a remote.
 // - run-ceiling, which every npm test script runs through, hands its command no GIT_DIR.
 // - The scratch repository a test makes stays in its own folder when GIT_DIR names another repository.
