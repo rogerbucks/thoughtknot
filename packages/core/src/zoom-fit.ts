@@ -15,7 +15,7 @@ export const MAX_SCALE = 4;
 /** One press of zoom in or zoom out: three presses from Fit read the text (Roger, 25 Oct 2026). */
 export const STEP = 1.6;
 
-/** Where the drawing is shown: in a note, full-screen, or in the edit pane. Only in a note does the wheel alone scroll. */
+/** Where the drawing is shown: in a note, full-screen, or in the edit pane. Only in a note does a trackpad drag scroll. */
 export type Mode = 'note' | 'full' | 'pane';
 
 /** A width and a height, in CSS pixels. */

@@ -80,13 +80,19 @@ describe('pan and zoom, as a drawing', () => {
     }
   });
 
-  test('the wheel with Ctrl zooms about the pointer; alone it leaves the note to scroll', async () => {
+  test('the wheel zooms about the pointer, alone or with Ctrl; a trackpad drag or Alt leaves the note to scroll', async () => {
     const { env, vp, place } = await board();
     try {
       const fit = place().w;
-      const plain = vp.dispatch('wheel', { clientX: 100, clientY: 100, deltaY: -100, deltaMode: 0 });
-      assert.equal(plain.defaultPrevented, false);
-      assert.equal(place().w, fit);
+      for (const leave of [{ deltaY: -3 }, { deltaY: -100, altKey: true }]) {
+        const plain = vp.dispatch('wheel', { clientX: 100, clientY: 100, deltaX: 0, deltaMode: 0, ...leave });
+        assert.equal(plain.defaultPrevented, false);
+        assert.equal(place().w, fit);
+      }
+      assert.ok(
+        vp.dispatch('wheel', { clientX: 100, clientY: 100, deltaY: -100, deltaX: 0, deltaMode: 0 }).defaultPrevented,
+      );
+      assert.ok(place().w > fit, 'a mouse wheel notch zooms in (note_still_scrolls)');
       const zoomed = vp.dispatch('wheel', { clientX: 100, clientY: 100, deltaY: -200, deltaMode: 0, ctrlKey: true });
       assert.ok(zoomed.defaultPrevented);
       assert.ok(place().w > fit);

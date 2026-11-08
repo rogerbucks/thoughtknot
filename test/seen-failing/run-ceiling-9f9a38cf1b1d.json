@@ -1,0 +1,6 @@
+{
+  "file": "test/run-ceiling.test.js",
+  "test": "a test run under the ceiling > unset, the ceilings are 8 GB, CI’s own, and 20 minutes: the whole suite peaks at about 5.8 GB",
+  "seen_failing_first": false,
+  "evidence": "Added after review to pin a default already raised in this PR (7c0527c7): it fails with the old 4096 default, checked by reverting the constant"
+}
