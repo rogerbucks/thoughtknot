@@ -35,8 +35,8 @@ export const SHOTS = [
   { name: 'card', alt: 'A graph drawn in a note, with its toolbar above it', steps: [], clip: CARD },
   {
     name: 'diagram-types',
-    alt: 'The list of diagram types: network, tree, flow, radial, lanes, timeline and table',
-    steps: [click('Diagram type')],
+    alt: 'The side rail: 2D, 2.5D, 3D and the globe, then the list of link types, each with its picture',
+    steps: [click('Links: Network drawn now')],
     clip: CARD,
   },
   { name: 'find', alt: 'Finding a thing by typing part of its name', steps: [click('Find a thing')], clip: CARD },

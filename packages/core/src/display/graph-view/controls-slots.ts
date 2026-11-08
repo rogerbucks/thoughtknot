@@ -1,17 +1,27 @@
 // Every card over the drawing has its own slot, so no two ever overlap (editor spec §25, panels_never_overlap). Roger,
-// 4 Nov 2026: panels overlapped, so fix it for every future change. The controls card holds the top start corner, a
-// dock moved there the top end. The mini-map holds the bottom end corner. A card sharing a slot says in SHARING how it
-// keeps clear. The level badge takes the top middle, between whatever holds the corners, or drops below them. A new
-// card claims a slot in SLOTS, or says in ON_DEMAND why it may lie over the others. A test fails any card with neither.
+// 4 Nov 2026: panels overlapped, so fix it for every future change. The side rail holds the start edge (type_rail).
+// The controls card holds the top start corner beside it, a dock moved there the top end. The mini-map holds the
+// bottom end corner. A card sharing a slot says in SHARING how it keeps clear. The level badge takes the top middle,
+// between whatever holds the corners, or drops below them. A new card claims a slot in SLOTS, or says in ON_DEMAND why
+// it may lie over the others. A test fails any card with neither.
 import type { ScreenBox } from './controls-cover.ts';
 
 /** Where a card over the drawing sits. `free` is a dock the person moved; `sheet` is the phone's control sheet. */
 export type Slot =
-  'top-start' | 'top-end' | 'top-middle' | 'bottom-end' | 'bottom-middle' | 'end-side' | 'free' | 'sheet';
+  | 'top-start'
+  | 'top-end'
+  | 'top-middle'
+  | 'bottom-end'
+  | 'bottom-middle'
+  | 'start-side'
+  | 'end-side'
+  | 'free'
+  | 'sheet';
 
 /** Each card that floats over the drawing, by its class, and its slot. */
 export const SLOTS: Readonly<Record<string, Slot>> = {
   'thoughtknot-corner': 'top-start',
+  'thoughtknot-rail': 'start-side',
   'thoughtknot-corner-end': 'top-end',
   'thoughtknot-zen-exit': 'top-end',
   'thoughtknot-mini-map': 'bottom-end',
@@ -37,8 +47,7 @@ export const ON_DEMAND: Readonly<Record<string, string>> = {
   'thoughtknot-move-hint': 'a hint for a moment after a move',
   'thoughtknot-pointer': 'the pointer of another person, on the drawing',
   'thoughtknot-sr': 'words for screen readers, never shown',
-  'thoughtknot-type-list': 'a mark on a button, inside its list',
-  'thoughtknot-view-list': 'a mark on a button, inside its list',
+  'thoughtknot-rail-list': 'a group’s list of types, beside the side rail, closed by Escape or a pick',
   'thoughtknot-sheet-resizer': 'the grip on the edge of the details',
 };
 
@@ -49,7 +58,7 @@ export const SHARING: Readonly<Record<string, string>> = {
 };
 
 /** The slots that hold a corner or a side. */
-const HOLDING: readonly Slot[] = ['top-start', 'top-end', 'bottom-end', 'end-side'];
+const HOLDING: readonly Slot[] = ['top-start', 'top-end', 'bottom-end', 'start-side', 'end-side'];
 
 /** The cards that hold a slot of their own, which a card in the middle must keep clear of. */
 const HELD = Object.keys(SLOTS).filter((c) => HOLDING.includes(SLOTS[c] as Slot));

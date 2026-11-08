@@ -283,8 +283,10 @@ export const OBSIDIAN = {
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
-    labelled(el, word('type.choose')).click();
-    assert.equal(el.querySelector('.thoughtknot-type-list').hidden, false, 'the list');
+    const links = el.querySelectorAll('.thoughtknot-rail-button').find((b) => b.getAttribute('data-group') === 'links');
+    links.click(); // the side rail's Links list (type_rail)
+    const list = el.querySelectorAll('.thoughtknot-rail-list').find((l) => l.getAttribute('data-group') === 'links');
+    assert.equal(list.hidden, false, 'the list');
     return { env, el };
   },
   'the Live Preview card': async () => livePreviewCard(noteOf(GRAPH)),

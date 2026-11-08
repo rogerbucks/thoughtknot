@@ -14,6 +14,9 @@ const CUE =
 
 /** Each state rule that is colour alone in the sheet, with where its word or icon is made: [file, text the file holds]. */
 const CARRIED = {
+  '.thoughtknot-rail .thoughtknot-rail-button.is-now': [
+    ['packages/core/src/drawing-source-words.ts', "'rail.group-now': '{group}: {type} drawn now'"],
+  ],
   '.thoughtknot-proposal-checked.is-failed': [
     ['packages/core/src/display/proposals/proposal-strip.ts', "word('proposal.check-fails'"],
     [

@@ -145,8 +145,8 @@ async function focusRing(page, { plant } = {}) {
   return found;
 }
 
-/** The buttons of the card's bar that open a panel, by their labels. */
-export const PANEL_BUTTONS = ['Diagram type', 'Find a thing', 'Filter by kind or link', 'Export'];
+/** The buttons that open a panel, by their labels: the side rail's Links list (type_rail), then the bar's. */
+export const PANEL_BUTTONS = ['Links: Network drawn now', 'Find a thing', 'Filter by kind or link', 'Export'];
 
 /**
  * Opens each panel from the keyboard, closes it with Escape, and asks where the focus is. A panel opened from behind More
@@ -239,7 +239,7 @@ const BIG_MEASURE = `(() => [...document.querySelectorAll('#note .block-language
   .map((el) => { const r = el.getBoundingClientRect(), s = getComputedStyle(el);
     const cuts = (s.overflowX !== 'visible' && el.scrollWidth > el.clientWidth + 1) || (s.overflowY !== 'visible' && el.scrollHeight > el.clientHeight + 1);
     return { name: el.tagName.toLowerCase() + ' ' + (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().replace(/\\s+/g, ' ').slice(0, 30),
-      left: r.left, right: r.right, top: r.top, bottom: r.bottom, cuts, layer: el.closest('.thoughtknot-over-panels') ? 'panel' : el.closest('.thoughtknot-corner') ? 'corner' : el.closest('.thoughtknot-over') ? 'panel' : 'card' }; }))()`;
+      left: r.left, right: r.right, top: r.top, bottom: r.bottom, cuts, layer: el.closest('.thoughtknot-over-panels') ? 'panel' : el.closest('.thoughtknot-rail-list') ? 'panel' : el.closest('.thoughtknot-corner, .thoughtknot-rail') ? 'corner' : el.closest('.thoughtknot-over') ? 'panel' : 'card' }; }))()`;
 
 /** What is wrong with the controls as measured: a control over another, and words cut off. Nested controls are left out. */
 export function crowdFindings(view, controls) {
@@ -249,7 +249,8 @@ export function crowdFindings(view, controls) {
   controls.forEach((a, i) => {
     if (a.cuts) found.push(`${view}: ${a.name} cuts its words off`);
     for (const b of controls.slice(i + 1)) {
-      // A panel lies over the drawing on purpose. It also lies over the corner's chip and docks (controls_chip).
+      // A panel lies over the drawing on purpose. It also lies over the corner's chip and docks (controls_chip), and
+      // over the side rail (type_rail).
       // So only controls of the same layer are held apart.
       if (a.layer !== b.layer || inside(a, b) || inside(b, a)) continue;
       const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
