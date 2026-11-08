@@ -2,6 +2,9 @@
 // without WebAssembly, which its window does not allow. It must write the very same bytes as the JavaScript build in
 // packages/sync/src/crdt.ts, so devices of either kind read each other's records. `test/fixtures/crdt.json` in the
 // sync package holds the JavaScript bytes, and the tests below check this build against them.
+use std::collections::HashMap;
+use std::sync::Mutex;
+
 use automerge::transaction::{CommitOptions, Transactable};
 use automerge::{ActorId, AutoCommit, Change, ChangeHash, Cursor, ObjId, ObjType, ReadDoc, ROOT};
 
@@ -151,6 +154,138 @@ impl Note {
     }
 }
 
+fn unhex(s: &str) -> Result<Vec<u8>, String> {
+    if s.len() % 2 != 0 || !s.is_ascii() {
+        return Err("the bytes are not written as hexadecimal".into());
+    }
+    (0..s.len())
+        .step_by(2)
+        .map(|i| {
+            u8::from_str_radix(&s[i..i + 2], 16)
+                .map_err(|_| "the bytes are not written as hexadecimal".to_string())
+        })
+        .collect()
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// What opening a note gave: its text, and the first change when the note was new (to keep in the store).
+#[derive(Debug, PartialEq, serde::Serialize)]
+pub struct Opened {
+    pub text: String,
+    pub first: Option<String>,
+}
+
+/// What a merge brought, with the texts as the window reads them.
+#[derive(Debug, PartialEq, serde::Serialize)]
+pub struct Joined {
+    pub base: String,
+    pub ours: String,
+    pub theirs: String,
+    pub merged: String,
+}
+
+/// The notes open on this device. Bytes go in and out as hexadecimal, so they pass through the window as plain text.
+#[derive(Default)]
+pub struct Notes(Mutex<HashMap<String, Note>>);
+
+impl Notes {
+    fn with<T>(
+        &self,
+        note: &str,
+        f: impl FnOnce(&mut Note) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let mut open = self
+            .0
+            .lock()
+            .map_err(|_| "the notes are unreadable".to_string())?;
+        f(open.get_mut(note).ok_or("the note is not open")?)
+    }
+
+    /// Opens `note` from its records. With none, the note starts as `text` and its first change is given back.
+    pub fn open(
+        &self,
+        note: &str,
+        actor: &str,
+        records: &[String],
+        text: &str,
+    ) -> Result<Opened, String> {
+        let mut open = self
+            .0
+            .lock()
+            .map_err(|_| "the notes are unreadable".to_string())?;
+        if let Some(have) = open.get(note) {
+            return Ok(Opened {
+                text: have.text()?,
+                first: None,
+            });
+        }
+        let mut bytes = records
+            .iter()
+            .map(|r| unhex(r))
+            .collect::<Result<Vec<_>, _>>()?;
+        let first = bytes.is_empty().then(|| genesis(text)).transpose()?;
+        if let Some(g) = &first {
+            bytes.push(g.clone());
+        }
+        let opened = Note::open(&unhex(actor)?, &bytes)?;
+        let out = Opened {
+            text: opened.text()?,
+            first: first.map(|g| hex(&g)),
+        };
+        open.insert(note.to_string(), opened);
+        Ok(out)
+    }
+
+    pub fn text(&self, note: &str) -> Result<String, String> {
+        self.with(note, |n| n.text())
+    }
+
+    /// Replaces `from` to `to` by `insert`; the change made, to keep in the store.
+    pub fn splice(
+        &self,
+        note: &str,
+        from: usize,
+        to: usize,
+        insert: &str,
+        message: &str,
+        time: i64,
+    ) -> Result<String, String> {
+        self.with(note, |n| {
+            n.splice(from, to, insert, message, time).map(|c| hex(&c))
+        })
+    }
+
+    pub fn merge(&self, note: &str, records: &[String]) -> Result<Option<Joined>, String> {
+        let bytes = records
+            .iter()
+            .map(|r| unhex(r))
+            .collect::<Result<Vec<_>, _>>()?;
+        self.with(note, |n| {
+            Ok(n.merge(&bytes)?.map(|m| Joined {
+                base: m.base,
+                ours: m.ours,
+                theirs: m.theirs,
+                merged: m.merged,
+            }))
+        })
+    }
+
+    pub fn has_been(&self, note: &str, text: &str) -> Result<bool, String> {
+        self.with(note, |n| n.has_been(text))
+    }
+
+    pub fn anchor(&self, note: &str, place: usize) -> Result<String, String> {
+        self.with(note, |n| n.anchor(place))
+    }
+
+    pub fn place(&self, note: &str, anchor: &str) -> Result<usize, String> {
+        self.with(note, |n| n.place(anchor))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -261,5 +396,47 @@ mod tests {
                 "{text}"
             );
         }
+    }
+    #[test]
+    fn the_notes_open_edit_and_merge_through_text_alone() {
+        let f = fixture();
+        let c = &f["concurrent"];
+        let (actor, first, theirs) = (
+            c["actor"].as_str().unwrap(),
+            c["first"].as_str().unwrap(),
+            c["theirs"].as_str().unwrap(),
+        );
+        let notes = Notes::default();
+        let new = notes.open("n", actor, &[], "hello world").unwrap();
+        assert_eq!(
+            new.first.as_deref(),
+            Some(first),
+            "a new note gives the first change to keep"
+        );
+        assert_eq!(new.text, "hello world");
+        let again = notes.open("n", actor, &[], "other").unwrap();
+        assert_eq!(
+            (again.text.as_str(), again.first),
+            ("hello world", None),
+            "an open note is not started twice"
+        );
+        notes.splice("n", 6, 11, "there", "{}", 0).unwrap();
+        let joined = notes
+            .merge("n", &[first.to_string(), theirs.to_string()])
+            .unwrap()
+            .unwrap();
+        assert_eq!(joined.merged, c["merged"]["merged"].as_str().unwrap());
+        assert!(notes.has_been("n", "hello there").unwrap());
+        let anchor = notes.anchor("n", 8).unwrap();
+        assert_eq!(notes.place("n", &anchor).unwrap(), 8);
+        assert_eq!(notes.text("n").unwrap(), "hello there!");
+    }
+
+    #[test]
+    fn a_note_that_is_not_open_and_bytes_that_are_not_hexadecimal_are_refused() {
+        let notes = Notes::default();
+        assert!(notes.text("none").is_err());
+        assert!(notes.open("n", "zz", &[], "x").is_err());
+        assert!(notes.open("n", "00", &["abc".to_string()], "x").is_err());
     }
 }
