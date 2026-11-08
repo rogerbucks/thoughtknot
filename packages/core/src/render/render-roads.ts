@@ -207,8 +207,8 @@ export function roadsOf(
       // only neighbours in the same room: links that leave it ride on the road of the room itself
       if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
       const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
-      // the globe's far side has signposts instead
-      const alpha = s.behind || t.behind ? 0 : Math.max(least, shown * insideFade(s, t, view));
+      // the globe's far side has signposts instead. A road with one end round the back still runs to the ball's edge.
+      const alpha = s.behind && t.behind ? 0 : Math.max(least, shown * insideFade(s, t, view));
       if (alpha < 0.05) continue;
       // a road runs from the edge of one room to the edge of the other, never into its middle (Roger)
       const [from, to] = edgesOf(s, t);

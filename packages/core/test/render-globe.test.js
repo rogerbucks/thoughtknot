@@ -104,7 +104,20 @@ test('on the globe the marks are the 2D marks: a ball under them, arched roads, 
   const seen = marksOf(scene, spots, detailAt(sizes, turned.scale), LIGHT, turned);
   for (const m of seen) if (m.kind === 'cloud' || m.kind === 'dot') assert.ok(!behind.includes(m.key), m.key);
   const signs = seen.filter((m) => m.kind === 'label' && /^[→↘↓↙←↖↑↗] /.test(m.text));
-  assert.ok(signs.length > 0, 'a signpost points round the ball to a room out of sight');
+  // a room whose middle is round the back but whose body reaches over the edge is drawn, cut at the edge, not dropped
+  const radius = ballRadius(turned),
+    [bx, by] = middleOf(turned);
+  const edge = seen.filter((m) => m.kind === 'cloud' && Math.abs(Math.hypot(m.x - bx, m.y - by) - radius) < 1);
+  assert.ok(
+    signs.length > 0 || edge.length > 0,
+    'a room out of sight has a signpost, or shows partly at the ball’s edge',
+  );
+  assert.ok(edge.length > 0, 'a room part way over the edge is drawn, as a room is part way off a flat screen');
+  const touches = (p) => radius - Math.hypot(p[0] - bx, p[1] - by) < 0.15 * radius;
+  assert.ok(
+    seen.some((m) => m.kind === 'road' && (touches(m.from) || touches(m.to))),
+    'a road with one end round the back runs as far as the ball’s edge',
+  );
   // the painter draws the ball and its marks without deciding anything
   const calls = [];
   const c = new Proxy(
@@ -115,6 +128,13 @@ test('on the globe the marks are the 2D marks: a ball under them, arched roads, 
   assert.ok(
     calls.some(([k]) => k === 'arc'),
     'the ball is painted',
+  );
+  const names = calls.map(([k]) => k);
+  assert.ok(names.includes('clip'), 'what reaches over the ball’s edge is cut there');
+  assert.equal(
+    names.filter((k) => k === 'save').length,
+    names.filter((k) => k === 'restore').length,
+    'each cut is undone',
   );
 });
 

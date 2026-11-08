@@ -42,6 +42,7 @@ export interface Canvas2d {
   translate(x: number, y: number): void;
   rotate(angle: number): void;
   scale(x: number, y: number): void;
+  clip(): void;
 }
 
 /** `hex` at `alpha`, as an rgba colour. */
@@ -236,7 +237,16 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
 /** Draws `marks` on `c`, which is `w` by `h`, in the order given. */
 export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: number): void {
   c.clearRect(0, 0, w, h);
+  let ball: GroundMark['ball'];
   for (const m of marks) {
+    // on the globe a thing that reaches over the ball's edge is cut there, as the ball hides the rest
+    const cut = ball && m.kind !== 'ground' && m.kind !== 'label';
+    if (cut && ball) {
+      c.save();
+      c.beginPath();
+      c.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      c.clip();
+    }
     // on the globe a circle or card is squeezed along the way to the ball's middle, as if turning from you
     const [x, y] =
       m.kind === 'label'
@@ -254,14 +264,17 @@ export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: n
       if (m.kind === 'label') c.rotate(-angle);
       c.translate(-x, -y);
     }
-    if (m.kind === 'ground') paintGround(c, m);
-    else if (m.kind === 'area') paintArea(c, m);
+    if (m.kind === 'ground') {
+      paintGround(c, m);
+      ball = m.ball;
+    } else if (m.kind === 'area') paintArea(c, m);
     else if (m.kind === 'backdrop') paintBackdrop(c, m);
     else if (m.kind === 'cloud') paintCloud(c, m);
     else if (m.kind === 'road') paintRoad(c, m);
     else if (m.kind === 'dot') paintDot(c, m);
     else paintLabel(c, m);
     if (m.squash) c.restore();
+    if (cut) c.restore();
   }
   c.globalAlpha = 1;
 }

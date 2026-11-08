@@ -16,6 +16,8 @@ interface Tile {
   h: number;
   fill: string;
   edge: string;
+  /** On the globe its outline, bent round the ball, where a plain box would not follow it. */
+  poly?: [number, number][];
 }
 /** A line, on the screen, through its points. */
 interface Line {
@@ -48,6 +50,22 @@ const TINT = 0.18;
 const WORD_LEAST = 9;
 const WORD_MOST = 15;
 
+/** How many points along each side of a box make its outline on the globe, so its edges curve round the ball. */
+const SIDE = 6;
+
+/** `f` at the points round the outline of box `m`, a few along each side, so on the globe the edges bend. */
+function outlineOf<T>(m: { x: number; y: number; width: number; height: number }, f: (x: number, y: number) => T): T[] {
+  const pts: T[] = [];
+  for (let i = 0; i < SIDE; i++) {
+    const t = i / SIDE;
+    pts.push(f(m.x + m.width * t, m.y));
+  }
+  for (let i = 0; i < SIDE; i++) pts.push(f(m.x + m.width, m.y + m.height * (i / SIDE)));
+  for (let i = 0; i < SIDE; i++) pts.push(f(m.x + m.width * (1 - i / SIDE), m.y + m.height));
+  for (let i = 0; i < SIDE; i++) pts.push(f(m.x, m.y + m.height * (1 - i / SIDE)));
+  return pts;
+}
+
 /**
  * The backdrop of a view's own marks, as `view` shows it. A tile takes the colour of the thing it draws. A label
  * that only says a thing's name is left out, as the stage names things itself.
@@ -64,12 +82,16 @@ export function backdropOf(
     const s = onScreen({ x, y, r: 0 }, view);
     return [s.x, s.y];
   };
+  const out_ = (x: number, y: number): boolean => !!view.globe && !!onScreen({ x, y, r: 0 }, view).behind;
   const out: BackdropMark = { kind: 'backdrop', tiles: [], lines: [], words: [], ink: look.ink };
   for (const m of drawn) {
     const own = (m.of && colours.get(m.of)) || look.faint;
     if (m.kind === 'box' || m.kind === 'group') {
       const [x, y] = at(m.x, m.y),
         [x2, y2] = at(m.x + m.width, m.y + m.height);
+      const round = view.globe ? outlineOf(m, at) : undefined;
+      // on the globe a tile round the back is out of sight (Roger, 8 Nov 2026: it wraps to the other side)
+      if (round && outlineOf(m, out_).every(Boolean)) continue;
       const shade = /^density\.(\d)/.exec(m.style)?.[1];
       const fill =
         m.kind === 'group'
@@ -77,13 +99,23 @@ export function backdropOf(
           : shade !== undefined
             ? mix(look.paper, look.ink, 0.08 * Number(shade))
             : mix(own, look.paper, 1 - TINT);
-      out.tiles.push({ x, y, w: x2 - x, h: y2 - y, fill, edge: m.kind === 'group' ? look.faint : own });
+      out.tiles.push({
+        x,
+        y,
+        w: x2 - x,
+        h: y2 - y,
+        fill,
+        edge: m.kind === 'group' ? look.faint : own,
+        ...(round ? { poly: round } : {}),
+      });
     } else if (m.kind === 'link') {
       const from = (m.from && colours.get(m.from)) || look.faint;
+      if (m.points.every(([x, y]) => out_(x, y))) continue;
       out.lines.push({ points: m.points.map(([x, y]) => at(x, y)), colour: from, ...(m.curve ? { curve: true } : {}) });
     } else if (m.kind === 'label' && !names.has(m.text) && !(m.of && names.has(m.of))) {
       const px = m.size * view.scale;
       const [x, y] = at(m.x, m.y);
+      if (out_(m.x, m.y)) continue;
       if (px >= WORD_LEAST) out.words.push({ x, y, text: m.text, px: Math.min(px, WORD_MOST), anchor: m.anchor });
     }
   }
@@ -114,11 +146,16 @@ export function paintBackdrop(c: Pen, m: BackdropMark): void {
     c.globalAlpha = 1;
     c.fillStyle = t.fill;
     c.beginPath();
-    c.moveTo(t.x, t.y);
-    c.lineTo(t.x + t.w, t.y);
-    c.lineTo(t.x + t.w, t.y + t.h);
-    c.lineTo(t.x, t.y + t.h);
-    c.lineTo(t.x, t.y);
+    if (t.poly?.length) {
+      t.poly.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      c.lineTo(t.poly[0]![0], t.poly[0]![1]);
+    } else {
+      c.moveTo(t.x, t.y);
+      c.lineTo(t.x + t.w, t.y);
+      c.lineTo(t.x + t.w, t.y + t.h);
+      c.lineTo(t.x, t.y + t.h);
+      c.lineTo(t.x, t.y);
+    }
     c.fill();
     c.globalAlpha = 0.7;
     c.strokeStyle = t.edge;
