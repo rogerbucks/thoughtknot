@@ -171,6 +171,17 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - `watchSource` draws the card again when the source is changed, made, moved or deleted.
 - `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
 
+### `src/bases/` — the Graph view of Obsidian Bases (spec §20, bases_graph_view)
+
+A .base file picks notes with its filters. The Graph view draws them as a graph, beside Bases' own views.
+
+- `base-view.ts` — the view Bases makes for a .base file's view. It draws the notes picked by the same card as a graph
+  block, and again when they change. It says so when none are picked.
+- `base-graph.ts` — the notes picked, as one gql block. A note is a thing, and a link between two of them a link. Links
+  come from the notes' own links, or from one property. A linked note outside the view shows only when asked.
+- `base-style.ts` — where boxes go and the diagram type, kept as a style graph in the .base file under the view. No
+  note is ever written for it (R16).
+
 ### The inspector's properties, now the shared layer's `properties/` (packages/core/src/display/properties/)
 
 - `properties.ts` — `renderProperties`: a row for each property, its type menu, and the rows of the lists a thing holds.
