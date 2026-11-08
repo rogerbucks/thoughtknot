@@ -428,10 +428,7 @@ describe('in reading view', () => {
     const env = await load({ files: { [PATH]: note } });
     try {
       const el = await readCard(env, note);
-      labelled(el, 'Diagram type').click();
-      el.querySelectorAll('.thoughtknot-view-list button')
-        .find((b) => b.textContent === 'Force')
-        .click();
+      pick(el, 'Force');
       await until(() => !!el.querySelector('.thoughtknot-type-tried'));
       await until(() => !/Drawn as a network/.test(el.querySelector('.thoughtknot-type-drawn')?.textContent ?? ''));
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Force/);

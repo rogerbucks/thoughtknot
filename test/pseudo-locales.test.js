@@ -253,8 +253,6 @@ describe('the browser editor’s page: every state, in each test language', () =
 
 /** The rules that clip words or keep them on one line, each with why: a longer language would be cut off in any other. */
 const CLIPS = {
-  '.thoughtknot-rail-list .thoughtknot-type-why':
-    'why beside a type in the side rail, one line; its row says it whole on hover, and it is read out whole',
   '.thoughtknot-badge-text[data-room]::after':
     'a hidden copy of the widest word, no height, that only holds its room; the word shown wraps as before',
   '.thoughtknot-view': 'the card, whose words wrap inside it; it clips only its rounded corners',

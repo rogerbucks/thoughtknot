@@ -682,54 +682,50 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
-/* The side rail (type_rail, Roger 8 Nov 2026). One thin card down the start edge of the drawing, as Obsidian's ribbon.
-   At its top: 2D, 2.5D, 3D and the globe, two by two, in sight, the one shown now pressed. Below: a button for each
-   group of diagram types, two to a row, each opening its list beside the rail. Two to a row keeps it short enough for
-   a short drawing. The controls card moves along to make room, so the two never
-   meet. Its buttons are 44-point targets, 32 under a fine pointer. */
+/* The side rail (type_rail, Roger 8 Nov 2026). A strip down the start edge of the drawing, flush with it, as Obsidian's
+   ribbon is: the bar's ground and line, no card, no shadow. At its top: 2D, 2.5D, 3D and the globe, the one shown now
+   marked in the accent. Below a line: a button for each group of diagram types, each opening its list beside the rail.
+   Every card on the start side moves along by its width, so nothing over the drawing meets it. Its buttons are
+   44-point targets, 32 under a fine pointer. */
 .thoughtknot-over {
   --thoughtknot-rail-button: 44px;
-  --thoughtknot-rail-width: calc(2 * var(--thoughtknot-rail-button) + 2 * var(--gn-space-1) + 8px);
+  --thoughtknot-rail-width: calc(var(--thoughtknot-rail-button) + 2 * var(--gn-space-half-1) + 1px);
 }
 .thoughtknot-over > .thoughtknot-rail {
   position: absolute;
-  top: var(--gn-space-2);
-  inset-inline-start: var(--gn-space-2);
-  display: grid;
-  grid-template-columns: repeat(2, var(--thoughtknot-rail-button));
-  align-content: start;
+  top: 0;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
   gap: var(--gn-space-half-1);
   width: var(--thoughtknot-rail-width);
-  padding: var(--gn-space-1);
-  border: 1px solid var(--gn-border-focus);
-  border-radius: var(--gn-radius-m);
-  background: var(--gn-bg);
-  box-shadow: var(--gn-shadow-s);
+  height: var(--thoughtknot-room, 60vh);
+  border-inline-end: 1px solid var(--gn-border-focus);
+  background: var(--gn-bg-alt);
+  padding: var(--gn-space-half-1);
 }
 .thoughtknot-over > .thoughtknot-rail:not(:has(button)) {
   display: none;
 }
 .thoughtknot-over:has(> .thoughtknot-rail button) > .thoughtknot-corner:not(.thoughtknot-corner-end) {
-  inset-inline-start: calc(2 * var(--gn-space-2) + var(--thoughtknot-rail-width));
+  inset-inline-start: calc(var(--gn-space-2) + var(--thoughtknot-rail-width));
 }
 .thoughtknot-rail-space {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
-  margin-bottom: var(--gn-space-1);
-  border-radius: var(--gn-radius-s);
-  background: var(--gn-bg-alt);
-  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-half-1);
+  border-bottom: 1px solid var(--gn-border);
+  padding-bottom: var(--gn-space-half-1);
 }
 .thoughtknot-rail .thoughtknot-rail-button {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: var(--thoughtknot-rail-button);
   min-width: 0;
   height: var(--thoughtknot-rail-button);
-  border: 1px solid transparent;
+  border: 0;
   border-radius: var(--gn-radius-s);
   background: none;
   box-shadow: none;
@@ -741,49 +737,51 @@
   background: var(--gn-bg-hover);
   color: var(--gn-text-normal);
 }
+/* the way shown now and the group open: a mark on the edge, as the bar underlines; the group drawn now, the accent */
 .thoughtknot-rail .thoughtknot-rail-button[aria-pressed='true'] {
-  border-color: var(--gn-border);
-  background: var(--gn-bg);
+  box-shadow: inset 2px 0 0 var(--gn-accent);
   color: var(--gn-accent);
 }
 .thoughtknot-rail .thoughtknot-rail-button.is-now {
   color: var(--gn-accent);
 }
 .thoughtknot-rail .thoughtknot-rail-button[aria-expanded='true'] {
-  border-color: var(--gn-border);
+  box-shadow: inset 2px 0 0 var(--gn-accent);
+}
+.thoughtknot-rail .thoughtknot-rail-button[aria-expanded='true'] {
   background: var(--gn-bg-hover);
 }
 .thoughtknot-glyph {
   display: inline-block;
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   background: currentColor;
   -webkit-mask: var(--thoughtknot-glyph) center / contain no-repeat;
   mask: var(--thoughtknot-glyph) center / contain no-repeat;
   pointer-events: none;
 }
 .thoughtknot-rail .thoughtknot-rail-button .thoughtknot-glyph {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
-/* A group's list: beside the rail, over the drawing until a type is picked or Escape is pressed */
+/* A group's list: a menu beside its button, as the bar's More list looks, until a type is picked or Escape is pressed.
+   Each row is a picture and a name. Why a type does not fit, or is suggested, is its tooltip and is read out. */
 .thoughtknot-rail > .thoughtknot-rail-list {
   position: absolute;
-  top: calc(-1 * var(--gn-space-half-1));
-  inset-inline-start: calc(100% + var(--gn-space-2));
+  top: var(--thoughtknot-list-top, 0);
+  inset-inline-start: calc(100% + var(--gn-space-1));
   z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;
-  gap: 1px;
   width: max-content;
-  min-width: 12rem;
-  max-width: min(22rem, 80vw);
+  min-width: 10rem;
+  max-width: min(16rem, 80vw);
   max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
   overflow-y: auto;
   margin: 0;
-  border: 1px solid var(--gn-border-focus);
-  border-radius: var(--gn-radius-m);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-s);
   padding: var(--gn-space-1);
@@ -807,14 +805,13 @@
   background: var(--gn-bg-hover);
 }
 .thoughtknot-rail-list button {
-  flex: none;
+  flex: 1 1 auto;
   border: none;
   background: none;
   box-shadow: none;
   padding: 0;
   height: auto;
   color: inherit;
-  font-weight: var(--gn-font-weight-semibold);
   text-align: start;
 }
 /* the whole row takes the click of its button, and shows its focus */
@@ -835,57 +832,49 @@
 .thoughtknot-rail-list button:not(:disabled) {
   cursor: var(--gn-cursor-link);
 }
-.thoughtknot-rail-list .thoughtknot-type-why {
-  overflow: hidden;
-  margin-inline-start: auto;
-  padding-inline-start: var(--gn-space-3);
-  max-width: 12rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--gn-text-faint);
-  font-size: var(--gn-font-size-xs);
-  text-align: end;
-}
-.thoughtknot-rail-list .thoughtknot-type-why:empty {
-  display: none;
-}
 .thoughtknot-rail-list li.thoughtknot-type-now {
   background: var(--gn-bg-alt);
   color: var(--gn-accent);
-}
-.thoughtknot-rail-list li.thoughtknot-type-suggested .thoughtknot-type-why {
-  color: var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
 }
 .thoughtknot-rail-list li.thoughtknot-type-unfit {
   color: var(--gn-text-faint);
 }
-/* On a phone the drawing is short, so the rail lies across its top in one row, and a group's list opens below it */
+/* On a phone the drawing is narrow, so the rail lies across its top start in one row, and a list opens below it. It
+   leaves the rest of the top free, for the level badge beside it. */
 @media (max-width: 599px) {
   .thoughtknot-over {
     --thoughtknot-rail-button: 36px;
+    --thoughtknot-rail-height: calc(var(--thoughtknot-rail-button) + 2 * var(--gn-space-half-1) + 1px);
   }
   .thoughtknot-over > .thoughtknot-rail {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: var(--thoughtknot-rail-button);
+    flex-direction: row;
     width: auto;
+    height: var(--thoughtknot-rail-height);
+    border-bottom: 1px solid var(--gn-border-focus);
+    border-end-end-radius: var(--gn-radius-m);
   }
   .thoughtknot-rail-space {
-    grid-column: span 4;
-    grid-template-columns: repeat(4, 1fr);
-    margin: 0 var(--gn-space-1) 0 0;
+    flex-direction: row;
+    border-bottom: 0;
+    border-inline-end: 1px solid var(--gn-border);
+    padding: 0 var(--gn-space-half-1) 0 0;
   }
-  /* the controls card goes below the rail, not beside it, so at 320 pixels it stays in reach */
+  .thoughtknot-rail .thoughtknot-rail-button:is([aria-pressed='true'], [aria-expanded='true']) {
+    box-shadow: inset 0 -2px 0 var(--gn-accent);
+  }
+  /* every card on the drawing starts below the rail, so none meets it */
+  .thoughtknot-over:has(> .thoughtknot-rail button) > :is(.thoughtknot-corner, .thoughtknot-dock.is-free) {
+    top: calc(var(--gn-space-2) + var(--thoughtknot-rail-height));
+  }
   .thoughtknot-over:has(> .thoughtknot-rail button) > .thoughtknot-corner:not(.thoughtknot-corner-end) {
-    top: calc(2 * var(--gn-space-2) + var(--thoughtknot-rail-button) + 2 * var(--gn-space-1) + 6px);
     inset-inline-start: var(--gn-space-2);
   }
   .thoughtknot-rail > .thoughtknot-rail-list {
     top: calc(100% + var(--gn-space-1));
-    inset-inline-start: 0;
-    min-width: 0;
-    max-width: min(20rem, calc(100vw - 6 * var(--gn-space-2)));
-    max-height: calc(var(--thoughtknot-room, 60vh) - var(--thoughtknot-rail-button) - 4 * var(--gn-space-2));
+    inset-inline-start: var(--thoughtknot-list-start, 0);
+    max-width: min(16rem, calc(100vw - 4 * var(--gn-space-2)));
+    max-height: calc(var(--thoughtknot-room, 60vh) - var(--thoughtknot-rail-height) - 2 * var(--gn-space-2));
   }
 }
 /* The top start corner of the drawing (§25, controls_chip, controls_dock). It holds the chip that says what the

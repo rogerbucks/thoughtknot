@@ -272,6 +272,7 @@ export function railTypes(rail: HTMLElement, types: readonly RailType[]): RailTy
       shut(list);
       list.hidden = !list.hidden;
       toggle.setAttribute('aria-expanded', String(!list.hidden));
+      if (!list.hidden) besideOf(list, toggle, rail);
     });
     rail.insertBefore(toggle, list);
     toggle.setAttribute('data-group', group);
@@ -304,6 +305,16 @@ export function railTypes(rail: HTMLElement, types: readonly RailType[]): RailTy
   return out;
 }
 
+/**
+ * Puts an open list level with its button: beside it down the rail, or below it across a phone's. It is kept on the
+ * card, so a short drawing never cuts it off.
+ */
+function besideOf(list: HTMLElement, toggle: HTMLElement, rail: HTMLElement): void {
+  const start = Math.max(0, Math.min(toggle.offsetLeft, rail.clientWidth - list.offsetWidth)),
+    top = Math.max(0, Math.min(toggle.offsetTop, rail.clientHeight - list.offsetHeight));
+  list.setCssProps({ '--thoughtknot-list-top': `${top}px`, '--thoughtknot-list-start': `${start}px` });
+}
+
 /** One type's row in a group's list: its picture, its name, and why when there is something to say. */
 function typeRow(list: HTMLElement, t: RailType, done: () => void): HTMLButtonElement {
   const li = list.createEl('li', {
@@ -321,7 +332,7 @@ function typeRow(list: HTMLElement, t: RailType, done: () => void): HTMLButtonEl
     done();
     t.pick();
   });
-  li.createSpan({ cls: 'thoughtknot-type-why', text: t.why });
+  li.createSpan({ cls: ['thoughtknot-type-why', 'thoughtknot-sr'], text: t.why }); // read out; its tooltip on hover
   if (t.why) li.setAttribute('title', t.why); // its reason whole on hover too, where the row cuts it short
   return b;
 }
