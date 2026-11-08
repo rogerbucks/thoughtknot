@@ -27,7 +27,7 @@ for (const type of LAID_TYPES) {
       marksOf(scene, spots, detailAt(sizes, v.scale), LIGHT, v).filter((m) => m.kind === 'dot' || m.kind === 'cloud');
     const keysSeen = (v) => new Set(shown(v).map((m) => m.key));
     for (const m of shown(view)) assert.ok(Number.isFinite(m.x) && Number.isFinite(m.y), `${type} ${m.key}`);
-    // spin to each side: whatever is behind is not drawn, and what was hidden before comes into sight
+    // spin to one side. What is behind is not drawn. What was hidden before may come into sight.
     // what a type draws round its things bends with the ball too: tiles follow it, and none is flat or finite-less
     const round = marksOf(scene, spots, detailAt(sizes, view.scale), LIGHT, view).filter((m) => m.kind === 'backdrop');
     for (const b of round)
