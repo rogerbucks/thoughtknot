@@ -37,6 +37,12 @@ concurrency:
 
 jobs:
   update:
+    # Only the checks of a pull request move the board: a CI run of a push to main does nothing here (the push itself
+    # wakes this), and a run cancelled by a newer push is stale, as the newer run wakes this again when it finishes
+    # (about one CI run in three on 6 Nov 2026). Neither takes a runner.
+    if: >-
+      github.event_name != 'workflow_run'
+      || (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
