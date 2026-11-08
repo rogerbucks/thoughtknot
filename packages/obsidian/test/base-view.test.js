@@ -75,6 +75,27 @@ describe('the Graph view of Bases', () => {
     }
   });
 
+  test('linked notes outside the view, when shown, are faded with their links; Hide turns the option off (B5)', async () => {
+    const env = await load({ files: FILES });
+    try {
+      const { el, view, config } = openBaseView(env, 'thoughtknot-graph', PICKED, { thoughtknotOutside: true });
+      await until(() => drawnIn(el));
+      const o = view.card.o;
+      const map = o.reading.graphs.get('base').boxes.find((b) => b.kind === 'Outside').key;
+      assert.deepEqual(o.view.faded.things, [map], 'the outside note is faded');
+      const toMap = o.reading.graphs.get('base').links.flatMap((l, i) => (l.to === map ? [i] : []));
+      assert.deepEqual(o.view.faded.links, toMap, 'and the link to it');
+      const shown = view.card;
+      o.view.setOutside('hide');
+      assert.equal(config.values.thoughtknotOutside, false, 'the option is off');
+      await until(() => view.card && view.card !== shown);
+      assert.equal(view.card.o.view, undefined, 'nothing is faded');
+      assert.equal(view.card.o.reading.graphs.get('base').boxes.length, 3, 'and the outside note is gone');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('a box moved is kept in the .base file under the view, no note is written, and it stays when redrawn (R16)', async () => {
     const env = await load({ files: FILES });
     try {

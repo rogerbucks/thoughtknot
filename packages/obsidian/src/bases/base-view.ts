@@ -9,7 +9,8 @@
 import { BasesView, Notice, TFile } from 'obsidian';
 import type { BasesAllOptions, BasesPropertyId, MarkdownRenderChild, QueryController } from 'obsidian';
 import { brokenLinks, depthOf, readNote, readStyle, styledDrawing, word } from '@thoughtknot/core';
-import type { StyleChange } from '@thoughtknot/core';
+import type { GraphDrawing, StyleChange } from '@thoughtknot/core';
+import type { ViewShown } from '@thoughtknot/core/display/graph-view/view-strip';
 import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { noViewMenu } from '@thoughtknot/core/display/graph-view/view-drawn';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
@@ -97,6 +98,31 @@ export class BaseGraphView extends BasesView {
     void this.draw();
   }
 
+  /**
+   * With linked notes outside the view shown (B5), what fades them: each Outside thing, and each link to one. Its
+   * strip's Hide turns the option off again. Otherwise nothing is faded.
+   */
+  private faded(plain: GraphDrawing): ViewShown | undefined {
+    if (this.config.get(OUTSIDE) !== true) return undefined;
+    const outside = new Set(plain.boxes.filter((b) => b.kind === 'Outside').map((b) => b.key));
+    return {
+      name: this.config.name,
+      reading: word('bases.reading'),
+      outside: 'fade',
+      faded: {
+        things: [...outside],
+        links: plain.links.flatMap((l, i) => (outside.has(l.from) || outside.has(l.to) ? [i] : [])),
+      },
+      looks: { things: new Map(), links: new Map() },
+      legend: [],
+      setOutside: (o) => {
+        this.config.set(OUTSIDE, o === 'fade');
+        void this.draw();
+      },
+      saveShown: () => new Notice(word('bases.shown-kept')),
+    };
+  }
+
   /** Draws the notes picked now, or says why nothing is drawn. A newer drawing asked meanwhile wins. */
   async draw(): Promise<void> {
     const ask = ++this.drawing;
@@ -130,6 +156,7 @@ export class BaseGraphView extends BasesView {
       refusalBanner(root, drawn, () => this.plugin.resumeLayouts(true));
       return;
     }
+    const faded = this.faded(plain);
     const followed = linkHost(this.plugin, '', BASE_GRAPH);
     const links = { ...followed, broken: brokenLinks(reading, BASE_GRAPH, { found: followed.found, names: [] }) };
     this.card = this.addChild(
@@ -145,6 +172,7 @@ export class BaseGraphView extends BasesView {
           ? {}
           : { moving: { written: styling.style.nudges, move: (nudge, done) => write({ nudge }, done) } }),
         links,
+        ...(faded ? { view: faded } : {}),
         focusDepth: depthOf(this.plugin.settings.focusDepth),
         aids: aidsOf(this.plugin.settings, styling.style, undefined, vaultPresetOf(this.plugin)),
         lineOf: () => 0,

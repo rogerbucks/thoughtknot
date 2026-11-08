@@ -61,4 +61,6 @@ export const BLOCKS_SOURCE_WORDS = {
   'bases.edges': 'Links from property',
   'bases.edges-links': 'Note links',
   'bases.outside': 'Show linked notes outside this view',
+  'bases.reading': 'the notes this base picks, with the notes they link to faded',
+  'bases.shown-kept': 'A Bases graph keeps its places and type in the .base file; zoom and selection are not saved.',
 } as const;
