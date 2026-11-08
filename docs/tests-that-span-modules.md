@@ -1250,6 +1250,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/board-seat.test.js` — a person's seat at a shared board (editor spec §45). Two seats share a board through the
   note's CRDT in `live-board.ts`. `board-seat.ts` tells each where the other is, never writes it to the note, and checks
   what arrives from outside.
+- `test/shared-board.test.js` — a shared board across devices (editor spec §45). `shared-board.ts` joins a seat to a link. A
+  change reaches the other person at once, presence passes on and is never written to the note, and a refused change sends
+  nothing.
 - `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
   render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
 - `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
