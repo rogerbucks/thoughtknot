@@ -54,6 +54,8 @@ Rust (src-tauri/)
   trusted by pasting its public key. Nothing is sent from the panel.
 - `app-share-invite.ts`: the invitation. The owner picks a trusted device, a role and a board, and gets text sealed for
   that device alone. A guest pastes it and reads the inviter's fingerprint first. Joining is a press of its own.
+- `app-share-link.ts`: where the link runs. The person writes the address this device listens at and the other
+  device's address, both on their mesh VPN. They are kept with the keys. Nothing is sent from this screen.
 - `app-share-dom.ts`: the small helpers of the Share screens.
 - `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
   key is unexportable, and the vault key is kept sealed for this device itself.

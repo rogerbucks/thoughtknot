@@ -18,6 +18,7 @@ export {
   fromHex,
   toHex,
   type JoinedTo,
+  type LinkTo,
   type Kept,
   type Keeper,
   type NotJoined,
