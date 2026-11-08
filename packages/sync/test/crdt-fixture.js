@@ -1,5 +1,6 @@
 // The note CRDT's bytes, as the JavaScript build makes them. The Rust build in the app must make the same ones
 // (packages/app/src-tauri/src/crdt.rs reads this file). Run with `--write` to make the file again.
+// Then run `npx prettier --write` on it.
 import * as A from '@automerge/automerge';
 import { writeFileSync } from 'node:fs';
 import { MemoryStore, NoteCrdt } from '../src/index.ts';
