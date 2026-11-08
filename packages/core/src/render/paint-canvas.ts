@@ -37,6 +37,11 @@ export interface Canvas2d {
   fillText(text: string, x: number, y: number): void;
   createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): Gradient;
   setLineDash?(dash: number[]): void;
+  save(): void;
+  restore(): void;
+  translate(x: number, y: number): void;
+  rotate(angle: number): void;
+  scale(x: number, y: number): void;
 }
 
 /** `hex` at `alpha`, as an rgba colour. */
@@ -232,6 +237,23 @@ function paintLabel(c: Canvas2d, m: LabelMark): void {
 export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: number): void {
   c.clearRect(0, 0, w, h);
   for (const m of marks) {
+    // on the globe a circle or card is squeezed along the way to the ball's middle, as if turning from you
+    const [x, y] =
+      m.kind === 'label'
+        ? [m.x + m.w / 2, m.y + m.h / 2]
+        : m.kind === 'cloud' || m.kind === 'dot'
+          ? [m.x, m.y]
+          : [0, 0];
+    if (m.squash) {
+      const [angle, k] = m.squash;
+      c.save();
+      c.translate(x, y);
+      c.rotate(angle);
+      c.scale(k, 1);
+      // a name leans back upright after the squeeze, so only its width along that way shrinks
+      if (m.kind === 'label') c.rotate(-angle);
+      c.translate(-x, -y);
+    }
     if (m.kind === 'ground') paintGround(c, m);
     else if (m.kind === 'area') paintArea(c, m);
     else if (m.kind === 'backdrop') paintBackdrop(c, m);
@@ -239,6 +261,7 @@ export function paintCanvas(c: Canvas2d, marks: readonly Mark[], w: number, h: n
     else if (m.kind === 'road') paintRoad(c, m);
     else if (m.kind === 'dot') paintDot(c, m);
     else paintLabel(c, m);
+    if (m.squash) c.restore();
   }
   c.globalAlpha = 1;
 }
