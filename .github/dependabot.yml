@@ -36,11 +36,12 @@ updates:
     # Held back: Grafeo 0.5.43 is the GQL dialect the graph spec names and the reference the Python reader is proved
     # against (python/graph_spec/pyproject.toml). 0.6.0 is a breaking release: numbers with a point come back as exact
     # decimals, a path returns its nodes and links in full, and an INSERT that binds a variable twice is refused. So a
-    # new minor or major of Grafeo comes in the change that moves the dialect to it (30 Oct 2026: #1555 bumped it and
-    # sat red for three days; the move is issue #1747). Patches and security fixes still come through.
+    # new version of Grafeo comes in the change that moves the dialect to it (30 Oct 2026: #1555 bumped it and sat red
+    # for three days; the move is issue #1747). Patches are held too: 0.5.44 already brings the breaks of 0.6 (#1808).
+    # Security fixes still come through, as update-types holds back version updates only.
     ignore:
       - dependency-name: grafeo
-        update-types: ['version-update:semver-minor', 'version-update:semver-major']
+        update-types: ['version-update:semver-patch', 'version-update:semver-minor', 'version-update:semver-major']
     groups:
       uv-version-updates:
         applies-to: version-updates
