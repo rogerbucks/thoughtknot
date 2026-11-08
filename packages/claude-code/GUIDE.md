@@ -196,6 +196,18 @@ may make new notes, as `cat` may.
 - **What is not read:** a script that defines a function, imports an unlisted module or renames an import. Nor one
   that could run code or move a file. Such a script is judged as any other program.
 
+#### Known node scripts
+
+`gate-node.ts` lists the repo scripts node may run in a command that names `classification`. A node script cannot be
+read here, so each is trusted by name. Its arguments must make it write only a new file that is no note.
+
+- **Listed:** `scripts/tests-first.mjs --excuse [--fault] <test file> <test> <reason>`. It writes one new JSON record
+  in `test/seen-failing/`, and refuses to write over one kept already.
+- **Refused:** `--force` or `--repo`, any option to node itself, `node -e`, and a redirection. So is a script whose
+  real path does not end in its listed name, such as a link to another file.
+- **What it does not check:** what the script holds. A script Claude made could be named so. But such a script could
+  run anyway in a command that does not name the word, so the list opens no new way.
+
 ### Proposals, the hooks entry and the page's session
 
 - `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes).

@@ -5,6 +5,7 @@
 // One label placer serves every view. Names are never under 11 px, never over 16 px, and never overlap. When two
 // would clash, the bigger thing keeps its name (Roger: big things first). Host-free and pure.
 import type { Detail } from './render-detail.ts';
+import { squashed, type Squashable } from './render-squash.ts';
 import type { Look } from './render-look.ts';
 import { coloursOf, inkOf, mix, type OwnColour } from './render-look.ts';
 export { coloursOf, type OwnColour } from './render-look.ts';
@@ -130,7 +131,7 @@ export interface LabelMark {
 }
 
 /** Any mark, in the order a painter draws them: clouds, roads, dots, then labels on top. */
-export type Mark = GroundMark | BackdropMark | AreaMark | CloudMark | DotMark | RoadMark | LabelMark;
+export type Mark = (GroundMark | BackdropMark | AreaMark | CloudMark | DotMark | RoadMark | LabelMark) & Squashable;
 
 /** Whether a circle on screen touches the view at all. */
 export const inView = (s: Spot, view: View): boolean =>
@@ -233,7 +234,7 @@ export function marksOf(
     ...dots,
     ...(calloutsOf(asks, tops, placed, view) ?? placed),
   ];
-  return focusMarks(all, scene, spots, view, colours, look, focus);
+  return focusMarks(squashed(all, view), scene, spots, view, colours, look, focus);
 }
 
 /**

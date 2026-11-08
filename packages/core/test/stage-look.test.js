@@ -30,12 +30,15 @@ test('views drawn as a picture are drawn by the stage by their own name', () => 
     'hive',
     'arc',
     'map',
+    'matrix',
+    'density',
+    'plan',
   ])
     assert.equal(stageKind(picture(`thoughtknot.diagrams.${t}`)), t);
+  assert.equal(stageKind(chosen('timeline')), 'timeline');
+  assert.equal(stageKind(chosen('lanes')), 'lanes');
 });
 
-test("a table, and a type not moved yet, are left to today's drawing", () => {
+test("a table is left to today's drawing", () => {
   assert.equal(stageKind({ choice: { drawn: 'network' }, table: {} }), null);
-  assert.equal(stageKind(picture('thoughtknot.diagrams.matrix')), null);
-  assert.equal(stageKind(chosen('timeline')), null);
 });

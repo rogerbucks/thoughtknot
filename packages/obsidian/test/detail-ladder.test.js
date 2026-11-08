@@ -66,13 +66,17 @@ describe('the ladder of detail', () => {
   });
 
   // proves: cluster_menu_plain
-  test('the menu shows the ladder first, then every switch and the layout sliders in sight, none under More', async () => {
+  test('the menu shows the ladder first, then every switch in sight, and the layout sliders in a shut Layout section', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       const { el } = await show(env, NOTE);
       labelled(el, 'View').click();
       const menu = el.querySelector('.thoughtknot-view-menu');
-      assert.ok(!menu.querySelector('details'), 'nothing folded away under More');
+      const tuning = [...menu.children].find(
+        (k) => k.tagName === 'DETAILS' && k.classList.contains('thoughtknot-view-tuning'),
+      );
+      assert.ok(tuning && !tuning.open, 'the fine-tuning waits in a shut Layout section');
+      assert.equal(tuning.querySelector('summary').textContent, 'Layout');
       const kids = menu.children;
       const at = (cls) => kids.findIndex((k) => k.classList.contains(cls));
       assert.ok(at('thoughtknot-detail') < at('thoughtknot-switch'), 'the ladder comes first');
@@ -81,9 +85,10 @@ describe('the ladder of detail', () => {
       assert.ok(['Fold busy things', 'Fold groups', 'Bundle links between groups'].every(inSight));
       assert.ok(inSight('Hide labels too small to read'));
       assert.ok(
-        kids.some((k) => k.classList.contains('thoughtknot-layout-option')),
-        'and the layout sliders',
+        [...tuning.children].some((k) => k.classList.contains('thoughtknot-layout-option')),
+        'the layout sliders are in it',
       );
+      assert.ok(!kids.some((k) => k.classList.contains('thoughtknot-layout-option')), 'not loose in the panel');
       turn(el, 'Overview').click();
       await until(() => !!node(el, 'fold_group_1'));
       assert.equal(turn(el, 'Fold groups').getAttribute('aria-checked'), 'true', 'a switch follows the ladder');

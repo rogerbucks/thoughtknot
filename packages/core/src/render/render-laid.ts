@@ -11,6 +11,10 @@ import { busiest } from '../view-types/ego-view.ts';
 import { tidyTree } from '../layouts/tidy-tree.ts';
 import { layeredLayout } from '../layouts/layered.ts';
 import { VIEW_DRAWERS } from '../view-types/view-types.ts';
+import { densityPlaces } from '../view-types/density-view.ts';
+import type { DiagramPlan } from '../note-reading.ts';
+import { timelineLaid } from './render-timeline.ts';
+import { lanesLaid } from './render-lanes.ts';
 import type { DrawMark } from '../drawing-marks.ts';
 import { ITEM_GAP } from './render-rooms.ts';
 import type { Spot } from './render-rooms.ts';
@@ -34,6 +38,11 @@ export const LAID_TYPES = [
   'hive',
   'arc',
   'map',
+  'matrix',
+  'density',
+  'plan',
+  'timeline',
+  'lanes',
 ] as const;
 /** One of them. */
 export type LaidType = (typeof LAID_TYPES)[number];
@@ -59,7 +68,9 @@ const PART_GAP = ITEM_GAP * 4;
 export const isLaid = (type: string): type is LaidType => (LAID_TYPES as readonly string[]).includes(type);
 
 /** Where each thing of `shape` sits when drawn as `type`, by key. */
-export function placesOf(type: LaidType, shape: GraphShape): Map<string, Place> {
+export function placesOf(type: LaidType, shape: GraphShape, plan?: DiagramPlan): Map<string, Place> {
+  if (type === 'timeline') return timelineLaid(shape, plan).places;
+  if (type === 'lanes') return lanesLaid(shape).places;
   if (type === 'force') return scaled(forceLayout(shape), FORCE_UNIT);
   if (type === 'radial') return radial(shape);
   if (type === 'flow') return rows(shape);
@@ -100,14 +111,30 @@ function rows(shape: GraphShape): Map<string, Place> {
 const ROOM_EACH = ITEM_GAP * 9;
 
 /** The types drawn with tiles or boxes round their things: the stage keeps those as a backdrop. */
-const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid', 'hive', 'arc', 'map']);
+const TILED: ReadonlySet<string> = new Set([
+  'treemap',
+  'containment',
+  'block',
+  'grid',
+  'hive',
+  'arc',
+  'map',
+  'matrix',
+  'density',
+  'plan',
+]);
 /** A type the view's own drawing places. */
-type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid' | 'hive' | 'arc' | 'map';
+type Drawn = Exclude<LaidType, 'force' | 'radial' | 'tree' | 'flow' | 'timeline' | 'lanes'>;
 
 /** The marks a view draws `shape` with, in room enough for a name beside each thing. */
 function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {
+  return VIEW_DRAWERS[type]({ shape, space: spaceFor(shape) });
+}
+
+/** The square a drawn view is given for `shape`. */
+function spaceFor(shape: GraphShape): { width: number; height: number } {
   const side = Math.max(600, Math.sqrt(shape.things.length) * ROOM_EACH);
-  return VIEW_DRAWERS[type]({ shape, space: { width: side, height: side } });
+  return { width: side, height: side };
 }
 
 /**
@@ -117,9 +144,29 @@ function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {
 function drawn(type: Drawn, shape: GraphShape, marks = viewMarks(type, shape)): Map<string, Place> {
   const keys = new Set(shape.things.map((t) => t.key));
   const out = new Map<string, Place>();
+  if (type === 'density')
+    for (const [k, [x, y]] of densityPlaces({ shape, space: spaceFor(shape) })) out.set(k, { x, y });
+  if (type === 'matrix') return diagonal(marks, keys);
   for (const m of marks)
     if (m.kind === 'box' && m.of && keys.has(m.of) && !out.has(m.of))
       out.set(m.of, { x: m.x + m.width / 2, y: m.y + m.height / 2 });
+  // a thing the view draws no box for sits at its own words, as Plan's things with no dates do
+  for (const m of marks)
+    if (m.kind === 'label' && m.of && keys.has(m.of) && !out.has(m.of)) out.set(m.of, { x: m.x, y: m.y });
+  return out;
+}
+
+/** Matrix: each thing on its own cell, where its row crosses its column, so its row and column stay named. */
+function diagonal(marks: readonly DrawMark[], keys: ReadonlySet<string>): Map<string, Place> {
+  const rows = new Map<string, number>(),
+    columns = new Map<string, number>();
+  for (const m of marks)
+    if (m.kind === 'label' && m.of && keys.has(m.of)) {
+      if (m.id.endsWith('.row')) rows.set(m.of, m.y - m.size / 3);
+      else if (m.id.endsWith('.column')) columns.set(m.of, m.x);
+    }
+  const out = new Map<string, Place>();
+  for (const [k, y] of rows) out.set(k, { x: columns.get(k) ?? 0, y });
   return out;
 }
 
@@ -208,9 +255,11 @@ function radial(shape: GraphShape): Map<string, Place> {
  * `shape` drawn as `type`: a scene of one level holding every thing, each at its place, in its subject's colour from
  * `full`, the network's scene. `own` is the colour a person picked for a subject, if any.
  */
-export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: OwnColour): Ego {
+export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: OwnColour, plan?: DiagramPlan): Ego {
   const tiled = TILED.has(type) ? viewMarks(type as Drawn, shape) : undefined;
-  const places = tiled ? drawn(type as Drawn, shape, tiled) : placesOf(type, shape);
+  const line = type === 'timeline' ? timelineLaid(shape, plan) : type === 'lanes' ? lanesLaid(shape) : undefined;
+  const places = tiled ? drawn(type as Drawn, shape, tiled) : (line?.places ?? placesOf(type, shape));
+  const backdrop = tiled ?? line?.marks;
   const nodes = new Map<string, SceneNode>(
     shape.things.map((t) => [t.key, { key: t.key, name: t.text, depth: 0, children: [], items: [t.key] }]),
   );
@@ -222,9 +271,10 @@ export function laidOf(type: LaidType, shape: GraphShape, full: Scene, own?: Own
     named: keys,
     // a tiled type draws its own links and colours, in its backdrop
     roads: [tiled ? [] : roadsAmong(shape, new Map(keys.map((k) => [k, 0])))],
-    ...(tiled
-      ? { backdrop: { marks: tiled, names: new Set(shape.things.flatMap((t) => [t.text, t.key])) } }
-      : { areas: areasIn(full, keys, reachOf(places)) }),
+    ...(backdrop
+      ? { backdrop: { marks: backdrop, names: new Set(shape.things.flatMap((t) => [t.text, t.key])) } }
+      : {}),
+    ...(tiled ? {} : { areas: areasIn(full, keys, reachOf(places)) }),
   };
   const spots = new Map<string, Spot>();
   for (const [k, p] of places) spots.set(k, { ...p, r: ITEM_GAP / 2 });

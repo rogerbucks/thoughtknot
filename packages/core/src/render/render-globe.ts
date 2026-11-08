@@ -88,7 +88,12 @@ export function onGlobe(spot: Spot, view: View): Spot & { k: number; behind: boo
   const [x, y] = [(spot.x - view.x) * view.scale, (spot.y - view.y) * view.scale];
   const w = wrapped(x, y, view);
   // a thing shrinks toward the edge, never to nothing, so it stays easy to see until it turns away
-  return { x: w.x, y: w.y, r: spot.r * view.scale * (0.35 + 0.65 * w.k), k: w.k, behind: w.behind };
+  const r = spot.r * view.scale * (0.35 + 0.65 * w.k);
+  // a thing may have its middle round the back and its body over the edge (Roger, 8 Nov 2026). It is part in sight:
+  // it sits at the ball's edge, and the painter cuts it there.
+  const [cx, cy] = middleOf(view);
+  const past = Math.hypot(x - cx, y - cy) * perPixel(view) - Math.PI / 2;
+  return { x: w.x, y: w.y, r, k: w.k, behind: w.behind && past > spot.r * view.scale * perPixel(view) };
 }
 
 /** The control point of a road's arch over the ball, between `p` and `q`: its middle stands off the skin. */

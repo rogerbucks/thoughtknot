@@ -70,3 +70,22 @@ test('a curved link keeps its curve', () => {
   const [m] = backdropOf({ marks: [curve], names: new Set() }, view(1), new Map(), LIGHT);
   assert.equal(m.lines[0].curve, true);
 });
+
+// proves: globe_view
+test('on the globe a tile bends round the ball, and one round the back is not drawn', () => {
+  const globe = { ...view(1), globe: 0.004 };
+  const [near] = backdropOf(backdrop, globe, new Map([['A', '#3366cc']]), LIGHT);
+  assert.ok(
+    near.tiles.every((t) => t.poly && t.poly.length >= 8),
+    'an outline follows the ball, not a plain box',
+  );
+  const away = { ...globe, x: 2000 };
+  const [gone] = backdropOf(backdrop, away, new Map([['A', '#3366cc']]), LIGHT);
+  assert.equal(gone.tiles.length, 0, 'tiles round the back are out of sight');
+  assert.equal(gone.lines.length, 0, 'and so are their links');
+  const [flat] = backdropOf(backdrop, view(1), new Map(), LIGHT);
+  assert.ok(
+    flat.tiles.every((t) => !t.poly),
+    'flat, a box is a box',
+  );
+});
