@@ -1,5 +1,6 @@
-// A stand-in for Obsidian Bases, enough to open a plugin's Bases view in Node: the view's base class, its options as a
-// .base file keeps them, and the notes a base picks. A test opens a view with `openBaseView` and changes what it picks.
+// A stand-in for Obsidian Bases, enough to open a plugin's Bases view in Node. It has the view's base class, its
+// options as a .base file keeps them, and the notes a base picks. A test opens a view with `openBaseView`, and changes
+// what it picks.
 
 /** Bases' view base class and the plugin's registration, recording each view type in `state.basesViews`. */
 export function fakeBases(state, Component) {
