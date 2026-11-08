@@ -104,7 +104,7 @@ export class NoteCrdt {
 
   /** Whether the note's text was ever `text`: a file with that text is only behind, and holds no edit of its own. */
   hasBeen(note: string, text: string): boolean {
-    return A.getHistory(this.#doc(note)).some((state) => (state.snapshot as NoteDoc).text === text);
+    return A.getHistory(this.#doc(note)).some((state) => state.snapshot.text === text);
   }
 
   /** An anchor at `place` in the note's text, which stays on its character through every device's edits. */
