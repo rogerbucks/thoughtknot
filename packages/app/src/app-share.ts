@@ -8,6 +8,7 @@ import { word } from '@thoughtknot/core';
 import { Sharing, type Keeper } from '@thoughtknot/sync/sharing';
 import { make, printOf } from './app-share-dom.ts';
 import { inviteView, joinView } from './app-share-invite.ts';
+import { linkView } from './app-share-link.ts';
 
 export interface SharePanelOptions {
   doc: Document;
@@ -133,6 +134,16 @@ async function vaultView(doc: Document, sharing: Sharing, status: HTMLElement, a
       }
     })();
   });
-  view.append(label, print, trustedHeading, list, none, addLabel, trust, await inviteView(doc, sharing, status));
+  view.append(
+    label,
+    print,
+    trustedHeading,
+    list,
+    none,
+    addLabel,
+    trust,
+    await inviteView(doc, sharing, status),
+    linkView(doc, sharing, status),
+  );
   return view;
 }

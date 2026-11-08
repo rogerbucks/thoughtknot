@@ -49,6 +49,13 @@ export const APP_SOURCE_WORDS = {
   'app.share.not-an-invitation': 'That is not an invitation. Paste the whole text you were sent.',
   'app.share.not-for-you': 'That invitation was not made for this device, so it cannot be opened here.',
   'app.share.has-vault': 'This device already holds a vault.',
+  'app.share.link': 'Link to the other device',
+  'app.share.link-sentence':
+    'Both addresses are on your mesh VPN, written as address:port. Leave one empty if this device only listens or only calls.',
+  'app.share.link-listen': 'This device listens at',
+  'app.share.link-dial': 'The other device is at',
+  'app.share.link-save': 'Save the link',
+  'app.share.link-saved': 'The link is saved. It starts the next time a note opens.',
   'app.share.invite': 'Invite someone',
   'app.share.invite-device': 'Which trusted device',
   'app.share.invite-role': 'They may',

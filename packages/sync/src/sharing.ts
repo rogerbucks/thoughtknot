@@ -14,9 +14,17 @@ export interface Kept {
   trusted: string[];
   /** What this device was invited to, when it joined someone else's vault. */
   joined?: JoinedTo;
+  /** Where the link to the other device runs, once the person has set it. */
+  link?: LinkTo;
 }
 
 /** The invitation a device accepted: which board, as whom, from which device (its public key in hexadecimal). */
+/** Where this device listens for the other, and where the other is: private addresses on the owner's mesh VPN. */
+export interface LinkTo {
+  listen?: string;
+  dial?: string;
+}
+
 export interface JoinedTo {
   board: string;
   as: InvitedAs;
@@ -56,18 +64,20 @@ export class Sharing {
   #vault: VaultKey | null;
   #sealed: Uint8Array | null;
   #joined: JoinedTo | undefined;
+  #link: LinkTo;
   readonly #trusted: Set<string>;
   readonly #keeper: Keeper;
   private constructor(
     keys: DeviceKeys,
     vault: VaultKey | null,
-    kept: Pick<Kept, 'sealed' | 'trusted' | 'joined'>,
+    kept: Pick<Kept, 'sealed' | 'trusted' | 'joined' | 'link'>,
     k: Keeper,
   ) {
     this.#keys = keys;
     this.#vault = vault;
     this.#sealed = kept.sealed;
     this.#joined = kept.joined;
+    this.#link = kept.link ?? {};
     this.#trusted = new Set(kept.trusted);
     this.#keeper = k;
   }
@@ -103,6 +113,19 @@ export class Sharing {
   /** What this device was invited to, when it joined someone else's vault. */
   get joined(): JoinedTo | undefined {
     return this.#joined;
+  }
+
+  /** Where the link to the other device runs; nothing set yet is an empty object. */
+  get link(): LinkTo {
+    return { ...this.#link };
+  }
+
+  /** Sets where this device listens and where the other device is. An empty text clears it. */
+  async setLink(link: LinkTo): Promise<void> {
+    this.#link = {};
+    if (link.listen?.trim()) this.#link.listen = link.listen.trim();
+    if (link.dial?.trim()) this.#link.dial = link.dial.trim();
+    await this.#save();
   }
 
   /** The public half of this device's key, in hexadecimal: the one thing to give to the people invited. */
@@ -183,6 +206,7 @@ export class Sharing {
   #save(): Promise<void> {
     const kept: Kept = { pair: this.#keys.kept, sealed: this.#sealed, trusted: this.trusted };
     if (this.#joined) kept.joined = this.#joined;
+    if (this.#link.listen || this.#link.dial) kept.link = this.#link;
     return this.#keeper.save(kept);
   }
 }
