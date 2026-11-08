@@ -1,6 +1,6 @@
 // The files a Python script given as a heredoc would write, for gate-shell.ts (spec ES§26, risk TRUST-1). Python cannot
-// be fully read here, so only a plain script is: one that writes with `open(…)` or `.write_text(…)` to a path made of
-// string literals, `Path`, `os.path.join`, `expanduser` and `/`, or to a name given such a path once. Anything that
+// be fully read here, so only a plain script is. It writes with `open(…)` or `.write_text(…)`. Its path is made of
+// string literals, `Path`, `os.path.join`, `expanduser` and `/`, or is a name given such a path once. Anything that
 // could write, run code or reach a file another way is not read, and the files it writes are not known. So is a script
 // that defines functions or classes, imports a module not listed below, or renames one it imports.
 //
@@ -52,8 +52,8 @@ const LITERAL = new RegExp(`^${OPEN}(\\d+)${CLOSE}$`);
 const PREFIX = /^(r|u|b|f|br|rb|fr|rf)$/i;
 
 /**
- * The code with each string literal put as a mark, and comments taken out; and each literal's text, null when it holds
- * an escape or is an f-string. Null when a literal never closes, or an f-string's braces would call anything.
+ * The code with each string literal put as a mark, and comments taken out. And each literal's text: null when it
+ * holds an escape or is an f-string. Null when a literal never closes, or an f-string's braces would call anything.
  */
 function marked(source: string): { code: string; strings: (string | null)[] } | null {
   const strings: (string | null)[] = [];
@@ -246,8 +246,8 @@ function receiverBefore(code: string, dot: number): string | null {
 }
 
 /**
- * Every file the script would write, as the text of its path (relative to the folder Python runs in, or full), or null
- * when the script is not plain enough for that to be known.
+ * Every file the script would write, as the text of its path: full, or from the folder Python runs in. Null when the
+ * script is not plain enough for that to be known.
  */
 export function pythonWrites(script: string, home?: string): string[] | null {
   const read = marked(script);

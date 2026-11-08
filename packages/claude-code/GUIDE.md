@@ -177,11 +177,6 @@ So a change to the open note is never applied by Claude's own tools while `guard
 - **Other Bash that names `classification`** is refused unless each step only reads, searches or prints, or writes
   only to files not yet made. Such a step is on the `READERS` list with no argument that writes. Or it is `git` that
   only reads, `sed` whose script only prints, or `cp` or `mv` to new files.
-- **A Python heredoc** (`python3 - <<'PY'`), read by `gate-python.ts`, is allowed when every file it writes is not
-  there yet. Roger ruled so on 8 Nov 2026. Only a plain script is read: it writes with `open(…)` or `.write_text(…)`
-  to a path made of string literals, `Path`, `os.path.join`, `expanduser` and `/`, or to a name given one such path
-  once. One that defines a function, imports an unlisted module, renames an import, or could run code or move a file
-  is judged as any other program, so refused when it names `classification`.
 - **What may be sent to a new file:** only `cat`, `echo` and `printf`; `/dev/null` does not count. A heredoc onto a
   note that exists, whose text the shell would expand, is refused when the command names it.
 - **What is not read:** a command that names it is refused if it holds backticks, `$((…))`, brackets, a comment or an
@@ -189,6 +184,17 @@ So a change to the open note is never applied by Claude's own tools while `guard
   folder `cd` may not have reached.
 - **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
   the list under Bash limits above. The user changes a classification in the note themselves.
+
+#### Python heredocs
+
+`gate-python.ts` reads a Python heredoc (`python3 - <<'PY'`) for `gate-shell.ts`. Roger ruled on 8 Nov 2026 that it
+may make new notes, as `cat` may.
+
+- **Allowed:** a script whose every write goes to a file not yet made.
+- **What is read:** writes by `open(…)` or `.write_text(…)`. The path is made of string literals, `Path`,
+  `os.path.join`, `expanduser` and `/`. Or it is a name given one such path once.
+- **What is not read:** a script that defines a function, imports an unlisted module or renames an import. Nor one
+  that could run code or move a file. Such a script is judged as any other program.
 
 ### Proposals, the hooks entry and the page's session
 
