@@ -1,4 +1,4 @@
-// One button on the card's bar shows the drawing flat (2D), as cards in space (2.5D) or as balls in space (3D). It also
+// The side rail's four ways show the drawing flat (2D), as cards in space (2.5D) or as balls in space (3D) (type_rail). It also
 // shows it on a globe (§71, globe_view; Roger, 31 Oct 2026). It is editor spec §53, space_one_bar. Roger, 24 Oct 2026: "The move between 2d/2.5d and 3d should just be another
 // toolbar button. All of the toolbar/options in the 2d view now should also be in the other views".
 //
@@ -15,6 +15,7 @@ import type { Orbit } from '../../space-view.ts';
 import { openSpaceView } from './space-view-panel';
 import type { SpaceMode, SpaceScreen, SpaceView } from './space-view-options.ts';
 import { fadeOut } from './space-view-pad.ts';
+import { sayWay } from './type-rail';
 import { flatAgain } from './lens-svg';
 import type { Lens } from '../../lenses.ts';
 import { lensIn, viewOf } from '../../view-support.ts';
@@ -37,7 +38,7 @@ const WORDS = ['bar.space-flat', 'bar.space-cards', 'bar.space-balls', 'bar.spac
 export class SpaceSwitch {
   private view: SpaceView | null = null;
   private now: SpaceMode | null = null;
-  private button: HTMLButtonElement | null = null;
+  private button: HTMLElement | null = null;
   /** Counts each press, so only the last one is shown once a view still opening is open. */
   private turn = 0;
   /** The view open or opening now, so the close of one already gone is not taken for this one's (space_press_kept). */
@@ -67,6 +68,7 @@ export class SpaceSwitch {
     private readonly says: () => SpaceSays = () => ({}),
     private readonly sketch: () => Sketch | null = () => null,
     private readonly centre: () => string | null = () => null,
+    private readonly tilt: (mode: SpaceMode | null) => boolean = () => false,
   ) {}
 
   /** Where the camera starts as the view next opens: as the last card left it, drawn again in its place (NEURO-7). */
@@ -105,8 +107,11 @@ export class SpaceSwitch {
     return spaceMode(this.says().aids?.space);
   }
 
-  /** The bar's button, which says how the drawing is shown now, none for a table; and the graph's name. */
-  bar(b: HTMLButtonElement | null, graph: string): void {
+  /**
+   * What says how the drawing is shown now, none for a table; and the graph's name. It is the side rail's four ways
+   * (type_rail), or one button that goes through them in turn.
+   */
+  bar(b: HTMLElement | null, graph: string): void {
     this.button = b;
     this.graph = graph;
     this.label();
@@ -125,7 +130,9 @@ export class SpaceSwitch {
     // a view still opening is let open first; then only the last press is shown (space_press_kept)
     while (this.opening) await this.opening;
     if (turn !== this.turn) return;
-    if (!mode) {
+    // the new rendering shows 2.5D and 3D itself, over the same marks as flat (phase P3): the view in space goes
+    const tilted = this.tilt(mode);
+    if (!mode || tilted) {
       // it fades out over the flat drawing (space_glide)
       const view = this.view,
         el = this.svg()?.parentElement?.querySelector<HTMLElement>(':scope > .thoughtknot-space-view');
@@ -226,6 +233,7 @@ export class SpaceSwitch {
   private label(): void {
     const b = this.button;
     if (!b) return;
+    if (b.querySelector('[data-space]')) return sayWay(b, this.now); // the rail's four ways: the one shown now is pressed
     const now = word(WORDS[MODES.indexOf(this.now)] ?? 'bar.space-flat');
     b.setAttribute('aria-label', `${word('bar.space')}: ${now}`);
     b.setAttribute('aria-pressed', String(this.now !== null));

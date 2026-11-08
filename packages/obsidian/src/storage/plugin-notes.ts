@@ -3,15 +3,18 @@
 // encryption or history, plugs in here alone. Files that are not notes, such as an export or an image, are not here.
 import type { App } from 'obsidian';
 import type { ChangeOutcome, NoteEdit, NoteStorage } from '@thoughtknot/core';
-import { changeNote } from '@thoughtknot/core';
+import { changeNote, layered } from '@thoughtknot/core';
 import { vaultStorage } from './vault-storage.ts';
 import { keeperOf } from './note-history.ts';
+import { storageLayers } from './storage-settings.ts';
 
 /**
  * The vault's notes, read as they are on disk: for a note about to be changed, or one a check reads afresh. The text a
- * note had before each change is kept for Compare with (note-history.ts).
+ * note had before each change is kept for Compare with (note-history.ts). When the person turns it on, who changed what
+ * is kept too (storage-settings.ts).
  */
-export const vaultNotes = (app: App): NoteStorage => vaultStorage(app, { kept: keeperOf(app) });
+export const vaultNotes = (app: App): NoteStorage =>
+  layered(vaultStorage(app, { kept: keeperOf(app) }), ...storageLayers(app, () => vaultStorage(app)));
 
 /** The vault's notes, read from Obsidian's cache: for a note only shown. */
 export const shownNotes = (app: App): NoteStorage => vaultStorage(app, { cached: true });

@@ -9,6 +9,7 @@ import { detailLevels } from '../detail-levels.ts';
 import type { DetailLevel } from '../detail-levels.ts';
 import { namedLevels } from '../named-levels.ts';
 import type { GraphShape } from '../types-shape.ts';
+import type { DrawMark } from '../drawing-marks.ts';
 
 /** One place in the tree: a group at some level, or one item at the last. */
 export interface SceneNode {
@@ -30,6 +31,8 @@ export interface SceneRoad {
   b: string;
   forward: number;
   back: number;
+  /** The kinds of link along it, such as RELATES, each once, in order. */
+  types: string[];
 }
 
 /** A whole scene: the name of each depth, every node by key, the nodes at depth 0, and the roads at each depth. */
@@ -37,7 +40,21 @@ export interface Scene {
   depths: string[];
   nodes: Map<string, SceneNode>;
   roots: string[];
+  /** The nodes at depth 0 in the order the note first names them, so colours follow the writer's order. */
+  named: string[];
   roads: SceneRoad[][];
+  /** For a type drawn at its own places: each subject's things, drawn on a patch of its colour (render-areas.ts). */
+  areas?: SceneArea[];
+  /** For a type that draws tiles or boxes round its things: its own marks, and its things' names (render-backdrop.ts). */
+  backdrop?: { marks: DrawMark[]; names: Set<string> };
+}
+
+/** One subject's things, by the subject's key. */
+export interface SceneArea {
+  key: string;
+  items: string[];
+  /** How far its patch reaches round each thing, in the drawing's own units. */
+  reach: number;
 }
 
 const byText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
@@ -71,7 +88,8 @@ export function sceneOf(shape: GraphShape): Scene {
   for (const node of nodes.values()) if (node.parent !== undefined) nodes.get(node.parent)?.children.push(node.key);
   for (const node of nodes.values()) node.children.sort(byText);
   const roots = [...nodes.values()].filter((n) => n.depth === 0).map((n) => n.key);
-  return { depths: levels.map((l) => l.name), nodes, roots, roads: roadsOf(shape, pathOf, last) };
+  const named = [...new Set(shape.things.map((t) => pathOf.get(t.key)?.[0] ?? t.key))].filter((k) => roots.includes(k));
+  return { depths: levels.map((l) => l.name), nodes, roots, named, roads: roadsOf(shape, pathOf, last) };
 }
 
 /** The roads at each depth: every link between two things, rolled up to the nodes each end sits in there. */
@@ -87,9 +105,10 @@ function roadsOf(shape: GraphShape, pathOf: Map<string, string[]>, last: number)
       if (x === undefined || y === undefined || x === y) continue;
       const [a, b] = byText(x, y) < 0 ? [x, y] : [y, x];
       const tally = tallies[depth] as Map<string, SceneRoad>;
-      const road = tally.get(`${a}\n${b}`) ?? { a, b, forward: 0, back: 0 };
+      const road = tally.get(`${a}\n${b}`) ?? { a, b, forward: 0, back: 0, types: [] };
       if (x === a) road.forward++;
       else road.back++;
+      if (!road.types.includes(l.type)) road.types = [...road.types, l.type].sort(byText);
       tally.set(`${a}\n${b}`, road);
     }
   }

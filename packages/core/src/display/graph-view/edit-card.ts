@@ -115,8 +115,9 @@ export class EditCard {
       'keydown',
       (e: KeyboardEvent) => {
         // Ctrl+Z undoes the last edit, and Ctrl+Shift+Z does it again; a field being typed in keeps its own (edit_undo)
-        const typing = !!(e.target as Element | null)?.closest?.('input, textarea, [contenteditable="true"]');
-        if ((e.ctrlKey || e.metaKey) && !typing && this.writable() && this.writes.undoes().key(e)) {
+        const free =
+          !e.defaultPrevented && !(e.target as Element | null)?.closest?.('input, textarea, [contenteditable="true"]');
+        if ((e.ctrlKey || e.metaKey) && free && this.writable() && this.writes.undoes().key(e)) {
           e.preventDefault();
           e.stopPropagation();
           return;
@@ -277,6 +278,7 @@ export class EditCard {
       cls: 'thoughtknot-edit-line-input',
       attr: { type: 'text', 'aria-label': word('edit.line', { thing }), title: word('edit.line-hint') },
     });
+    line.setAttribute('placeholder', word('edit.line-placeholder')); // an empty field says what it is for
     line.addEventListener('keydown', (e: KeyboardEvent) => {
       e.stopPropagation(); // what is typed is the line's alone
       if (e.key === 'Escape') return void (e.preventDefault(), (line.value = ''), this.backToBox());

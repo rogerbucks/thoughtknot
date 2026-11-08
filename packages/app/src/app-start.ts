@@ -8,6 +8,9 @@ import { setLocale } from '@thoughtknot/core';
 import { directionOf, setDirection, setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
 import { githubButton, storeOf } from './app-github.ts';
+import { moveButton } from './app-move.ts';
+import { shareButton } from './app-share.ts';
+import { indexedKeeper } from './app-share-keeper.ts';
 
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */
 export const editorAddress = (path: string): string => `editor.html#token=app&note=${encodeURIComponent(path)}`;
@@ -49,6 +52,8 @@ export async function startApp(
   const say = (text: string, tag = 'p') =>
     main.appendChild(Object.assign(doc.createElement(tag), { textContent: text }));
   const own = await ownFolder(invoke);
+  // on a computer and on a phone: start a shared vault, over the owner's mesh VPN (ES§45, board_access)
+  const sharing = () => shareButton({ doc, keeper: indexedKeeper(doc.defaultView ?? {}) });
   const show = async (folder: string | null) => {
     main.replaceChildren();
     let notes: string[] | null = null;
@@ -85,8 +90,12 @@ export async function startApp(
       list.appendChild(doc.createElement('li')).appendChild(link);
     }
     main.appendChild(pick);
+    // on a computer: the notes moved to another folder, checked, the old copies kept until removed (ES§55)
+    const from = folder ?? word('app.move.old-folder');
+    main.append(' ', moveButton({ doc, invoke, from, reopen: (now) => show(now), say }));
     // on a computer, where gh runs: the repositories notes may be sent to (spec §48)
     main.append(' ', githubButton({ doc, invoke, store: storeOf(doc) }));
+    main.append(' ', sharing());
   };
   /** A phone's notes, each a link, and a button that makes a note and opens it. */
   const showOwn = (notes: string[]) => {
@@ -115,6 +124,7 @@ export async function startApp(
       })();
     });
     main.appendChild(make);
+    main.append(' ', sharing());
   };
   await show(own);
 }

@@ -42,7 +42,7 @@ describe('by default an unlabelled note counts as the most sensitive level, so i
   });
 
   test('it is refused for every model, even one cleared for everything, saying why and what to change', () => {
-    const s = settingsFrom({ aiUse: 'on', aiModels: MODELS });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: MODELS });
     for (const m of MODELS) {
       const r = prepareSend(ask(s, m.name));
       assert.ok(r.refused, m.name);
@@ -65,7 +65,7 @@ describe('by default an unlabelled note counts as the most sensitive level, so i
 });
 
 describe('with a lower default set, an unlabelled note counts as that level', () => {
-  const s = settingsFrom({ aiUse: 'on', aiModels: MODELS, aiUnlabelled: 'Internal' });
+  const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: MODELS, aiUnlabelled: 'Internal' });
 
   test('it goes to the models cleared for that level, and is said to count as it', () => {
     for (const name of ['Office', 'Vault']) {

@@ -1,0 +1,6 @@
+{
+  "file": "test/board-live.test.js",
+  "test": "board_live_together > 5 people editing at once converge, after two rounds of catching up, to the same board text",
+  "seen_failing_first": false,
+  "evidence": "only the test's name and a clock assertion changed; the code was written with the first version of the test"
+}

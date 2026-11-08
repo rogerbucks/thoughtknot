@@ -44,24 +44,52 @@ Rust (src-tauri/)
   Escape cancels. The core does the rest (`sendNoteToRepo`, `askRepoReview` in core/src/github-repo-send.ts).
 - `tauri-gh.ts`: `tauriGh`, gh run through the app's `run_gh` command. A call off the list is refused before it
   reaches the Rust.
+- `tauri-mesh.ts`: `dialDevice` and `listenForDevice`, the mesh commands as a sync `Channel`. Sends go in order, and the
+  channel closes when the Rust says the connection ended.
+
+## Sharing, in `src/`
+
+- `app-share.ts`: the Share button and its panel (ES§45, `board_access`). One press starts a shared vault. The keys are
+  made on this device. The panel shows only the public key and a fingerprint to read aloud. Another device is
+  trusted by pasting its public key. Nothing is sent from the panel.
+- `app-share-invite.ts`: the invitation. The owner picks a trusted device, a role and a board, and gets text sealed for
+  that device alone. A guest pastes it and reads the inviter's fingerprint first. Joining is a press of its own.
+- `app-share-link.ts`: where the link runs. The person writes the address this device listens at and the other
+  device's address, both on their mesh VPN. They are kept with the keys. Nothing is sent from this screen.
+- `app-share-dom.ts`: the small helpers of the Share screens.
+- `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
+  key is unexportable, and the vault key is kept sealed for this device itself.
+- `app-shared.ts`: `startShared`. When this device holds a vault and a link, notes are kept in Rust and shared over the
+  mesh, sealed. It gives the storage layer and the seat at a board. With no vault or link, nothing runs.
+- `app-shelves.ts`: `indexedShelves`. The sealed records of shared notes are kept in the window's IndexedDB.
 
 ## The Rust, `src-tauri/`
 
-- Nine commands, and no others: `pick_folder`, `own_folder`, `read_dir`, `read_text`, `write_text`, `remove_file`,
-  `make_dir`, `write_new`, and `run_gh`. The same nine are named in `lib.rs`, `build.rs` and
-  `capabilities/default.json`. A test holds the three lists together.
+- Twenty-five commands, and no others. These are the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, six `mesh_` ones and
+  eight `crdt_` ones. The same twenty-five are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test
+  holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
   `packages/core/test/fixtures/gh-calls.json`, the cases the core checks too.
 - gh is started by its own path, found where it installs or on the PATH. Its arguments go as a list, with no shell,
   and the body on standard input. A call is stopped after 60 seconds or 8 MiB of output. The app holds no token: gh
   signs in itself. A phone runs no gh.
+- `mesh.rs` carries bytes between the owner's devices over a mesh VPN. Its commands: listen, accept, dial, send,
+  receive and close.
+- It opens private addresses only: the home network, loopback and the mesh VPN ranges. A public address, 0.0.0.0 and a
+  name are refused. So is a device that reaches in from a public address.
+- A message is whole, after its length, and at most 16 MiB. The messages are sealed in JavaScript, so the Rust holds no
+  key. `cargo test` checks all of it.
 - `place.rs` refuses any path that climbs out, starts at a root, names a hidden part (such as `.git`), or reaches
   outside through a link. A note is written to a new file beside it, then renamed over it.
 - `write_new` writes an export only as new files. A name taken gets the next number. All of the files or none.
 - The window's policy (`tauri.conf.json`) allows only the app's own pages and Tauri's calls. No other origin.
 - `thoughtknot-app <folder>` opens that folder without asking. The end-to-end check uses this.
 - The crates are pinned to exact versions. `Cargo.lock` is committed.
+- `crdt.rs` keeps the notes as Automerge texts, because the window may not run WebAssembly. Its commands open a note,
+  read its text, edit it, merge in records, ask whether it was ever a text, and make and find anchors. Bytes cross as
+  hexadecimal text. It writes the same bytes as the JavaScript build, which a shared fixture checks.
 
 ## Build and run
 

@@ -1,0 +1,522 @@
+{
+  "about": "Every problem code the document profile reader has ever raised, with where its rule comes from, the parts its message and fix fill in, and which libraries raise it (editor spec \u00a751, spec_library_api). A code is never reused: one here must stay in problem-codes.json with the same section and parts, or be listed under 'retired'. A new code is added here when it is added there. test/public-api.test.js holds the table to this record.",
+  "codes": {
+    "GN101": {
+      "section": "3",
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN102": {
+      "section": "3",
+      "parts": [
+        "name"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN103": {
+      "section": "3",
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN104": {
+      "section": null,
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN105": {
+      "section": null,
+      "parts": [
+        "escape"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN106": {
+      "section": "3",
+      "parts": [
+        "reads",
+        "version"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN107": {
+      "section": "3",
+      "parts": [
+        "reads",
+        "version"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN201": {
+      "section": "3",
+      "parts": [
+        "expected",
+        "found"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN202": {
+      "section": "3",
+      "parts": [
+        "found"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN203": {
+      "section": null,
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN204": {
+      "section": null,
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN205": {
+      "section": "9",
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN206": {
+      "section": null,
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN207": {
+      "section": null,
+      "parts": [
+        "token"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN208": {
+      "section": "3",
+      "parts": [
+        "quoted",
+        "written"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN209": {
+      "section": "3",
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN210": {
+      "section": "3",
+      "parts": [
+        "token"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN211": {
+      "section": "9",
+      "parts": [
+        "text"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN301": {
+      "section": null,
+      "parts": [
+        "graph",
+        "type",
+        "written"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN302": {
+      "section": null,
+      "parts": [
+        "graph",
+        "last",
+        "type",
+        "types",
+        "written"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN303": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN304": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN305": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN306": {
+      "section": null,
+      "parts": [
+        "graph",
+        "id",
+        "labels"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN307": {
+      "section": null,
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN308": {
+      "section": "10",
+      "parts": [
+        "graph",
+        "id"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN309": {
+      "section": "3",
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN310": {
+      "section": null,
+      "parts": [
+        "graph",
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN311": {
+      "section": null,
+      "parts": [
+        "graph",
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN401": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN402": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN403": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN404": {
+      "section": "24",
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN405": {
+      "section": "24",
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN406": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN407": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN408": {
+      "section": "24",
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN409": {
+      "section": null,
+      "parts": [
+        "token"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN410": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN411": {
+      "section": null,
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN412": {
+      "section": "24",
+      "parts": [],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN413": {
+      "section": "3",
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN414": {
+      "section": null,
+      "parts": [
+        "key"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN415": {
+      "section": null,
+      "parts": [
+        "token"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN416": {
+      "section": "3",
+      "parts": [
+        "graph",
+        "named"
+      ],
+      "libraries": [
+        "py"
+      ]
+    },
+    "GN501": {
+      "section": "10",
+      "parts": [
+        "id"
+      ],
+      "libraries": [
+        "py"
+      ]
+    },
+    "GN502": {
+      "section": null,
+      "parts": [
+        "var"
+      ],
+      "libraries": [
+        "py"
+      ]
+    },
+    "GN503": {
+      "section": null,
+      "parts": [
+        "type",
+        "written"
+      ],
+      "libraries": [
+        "py"
+      ]
+    },
+    "GN601": {
+      "section": null,
+      "parts": [
+        "limit",
+        "size"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN602": {
+      "section": null,
+      "parts": [
+        "graph",
+        "limit"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN603": {
+      "section": null,
+      "parts": [
+        "limit"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN604": {
+      "section": null,
+      "parts": [
+        "count",
+        "limit"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    },
+    "GN605": {
+      "section": null,
+      "parts": [
+        "limit"
+      ],
+      "libraries": [
+        "js",
+        "py"
+      ]
+    }
+  },
+  "retired": []
+}

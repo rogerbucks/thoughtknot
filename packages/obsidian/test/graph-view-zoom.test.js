@@ -1,6 +1,6 @@
 // Zooming a drawing (spec §3). It is fitted to the note to start with. It zooms by button, key, and Ctrl or Command with
-// the wheel; one finger is left to scroll the note. Full screen is checked too. There the wheel alone zooms, and the
-// keyboard stays in it and is given back on leaving.
+// the wheel, and by the wheel alone. The wheel with Alt or Option, a trackpad drag and one finger scroll the note.
+// Full screen is checked too. There the wheel alone zooms, and the keyboard stays in it and is given back on leaving.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -49,14 +49,21 @@ describe('zoom in the note', () => {
     assert.equal(widthOf(el), fitted);
   });
 
-  test('the wheel alone scrolls the note; with Ctrl or Command it zooms the drawing', async () => {
+  test('a trackpad drag scrolls the note; the mouse wheel, alone or with Ctrl or Command, zooms the drawing', async () => {
     const { el } = await show(env, fence(GRAPH));
     const vp = el.querySelector('.thoughtknot-viewport'),
       fitted = widthOf(el);
-    assert.equal(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, false);
+    assert.equal(vp.dispatch('wheel', { deltaY: -3, deltaMode: 0, clientX: 10, clientY: 10 }).defaultPrevented, false);
+    assert.equal(
+      vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10, altKey: true }).defaultPrevented,
+      false,
+    );
     assert.equal(widthOf(el), fitted);
+    assert.ok(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10 }).defaultPrevented, 'a wheel notch');
+    const notched = widthOf(el);
+    assert.ok(notched > fitted);
     assert.ok(vp.dispatch('wheel', { deltaY: -100, clientX: 10, clientY: 10, ctrlKey: true }).defaultPrevented);
-    assert.ok(widthOf(el) > fitted);
+    assert.ok(widthOf(el) > notched);
   });
 
   test('one finger on a fitted drawing is left to scroll the note', async () => {
@@ -282,13 +289,23 @@ describe('full screen', () => {
 
   // Roger chose the Zen-led refresh on 1 Nov 2026 (step 6): on a laptop, details sit in a card at the side.
   // proves: details_keep_view
+  // proves: panels_stack
   test('on a wide screen, full screen details float in a card at the end edge, clear of the mini-map', () => {
     const wide = styles.match(/@media \(min-width: 1024px\) \{([\s\S]*?)\n\}/g)?.join('\n') ?? '';
     const card =
       wide.match(/\.thoughtknot-fullscreen \.thoughtknot-view > \.thoughtknot-details \{([^}]*)\}/)?.[1] ?? '';
     assert.match(card, /position: absolute;/, 'over the drawing, which keeps its size');
     assert.match(card, /inset-inline-end: var\(--gn-space-2\);/, 'at the end edge');
-    assert.match(card, /inset-block-end: calc\(200px \+ 3 \* var\(--gn-space-2\)\);/, 'above the mini-map');
+    assert.match(
+      card,
+      /inset-block-start: calc\(\s*var\(--thoughtknot-drawing-top, 0rem\) \+ max\(var\(--gn-space-2\), var\(--thoughtknot-end-top, 0rem\)\)/,
+      'below the panels docked at the end',
+    );
+    assert.match(
+      card,
+      /max\(var\(--gn-space-2\), var\(--thoughtknot-end-foot, 0rem\)\)/,
+      'above the mini-map and the pad',
+    );
     assert.match(card, /border-radius: var\(--gn-radius-m\);/);
     assert.match(card, /box-shadow: var\(--gn-shadow-l\);/);
     assert.match(wide, /\.thoughtknot-fullscreen \.thoughtknot-view \{\s*position: relative;/);

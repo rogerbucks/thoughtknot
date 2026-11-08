@@ -1,6 +1,6 @@
 # Z-01 Desktop wheel and pinch
 
-**You should see:** the mouse wheel alone scrolling the note, not the drawing. With Ctrl or Command held, the wheel zooms the drawing about the pointer, and a trackpad pinch does the same. The pinch, and the wheel with Ctrl or Command, zoom a little quicker than they used to: about 1.4 times the old rate, so a small pinch makes a clear change, and one notch of the wheel zooms by about a third. The wheel alone in full screen and in the edit pane is quicker by the same amount, as it cannot be told from a pinch. Zoom still stops at four times natural size and, going out, where the whole drawing fits.
+**You should see:** the mouse wheel alone zooming the drawing about the pointer, with no key held. With Alt or Option held, the wheel scrolls the note instead, and so do two fingers dragged on a trackpad. A trackpad pinch, and the wheel with Ctrl or Command, zoom too. The pinch, and the wheel with Ctrl or Command, zoom a little quicker than they used to: about 1.4 times the old rate, so a small pinch makes a clear change, and one notch of the wheel zooms by about a third. The wheel alone in full screen and in the edit pane is quicker by the same amount, as it cannot be told from a pinch. Zoom still stops at four times natural size and, going out, where the whole drawing fits.
 
 **Test diagram:**
 
@@ -27,12 +27,12 @@
 
 **Do this:**
 
-1. With the pointer over the drawing, turn the mouse wheel alone and watch the note scroll.
-2. Hold Ctrl or Command and turn the wheel over a box, and watch the drawing zoom about the pointer.
+1. With the pointer over the drawing, turn the mouse wheel alone and watch the drawing zoom about the pointer.
+2. Hold Alt or Option and turn the wheel, and watch the note scroll.
 3. On a trackpad, pinch over a box, in and out, and check it feels a little quicker than the fingers, not sluggish.
 
 **Checklist line:**
 
-> **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a trackpad pinch, a little quicker than the fingers move.
+> **Z-01** Desktop: the mouse wheel alone zooms about the pointer, and so does a trackpad pinch, a little quicker than the fingers move. With Alt or Option the wheel scrolls the note.
 
 **Back to the checklist:** [Z-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-01 in its list.

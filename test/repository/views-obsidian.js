@@ -79,6 +79,7 @@ async function sendDialog() {
   const note = `---\nclassification: Public\n---\n# N\n\n${fence(GRAPH)}\n`;
   const settings = {
     aiUse: 'on',
+    aiPublic: 'note',
     aiModels: [
       {
         name: 'Local',
@@ -168,10 +169,13 @@ export const OBSIDIAN = {
   },
   'the edit pane': async () => {
     const env = await paneNotes.open();
-    // on a phone the pane opens on its text tab, the drawing kept until its tab is chosen
+    // on a phone the pane opens on its text tab, the drawing kept until its tab is chosen. The names are sized a
+    // frame after the drawing, which then holds the least link width (readable-names.ts). The picture waits for that.
+    // Else a busy machine took it before the names were sized, one time in three.
+    const sized = () => !!env.el.querySelector('svg')?.cssProps?.['--thoughtknot-link-least'];
     await until(
       () =>
-        env.el.querySelectorAll('g.node').length === 3 ||
+        (env.el.querySelectorAll('g.node').length === 3 && sized()) ||
         (!!env.el.querySelector('.thoughtknot-tabs') && !!env.el.querySelector('textarea')),
     );
     return { env, el: env.el };
@@ -279,8 +283,10 @@ export const OBSIDIAN = {
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
-    labelled(el, word('type.choose')).click();
-    assert.equal(el.querySelector('.thoughtknot-type-list').hidden, false, 'the list');
+    const links = el.querySelectorAll('.thoughtknot-rail-button').find((b) => b.getAttribute('data-group') === 'links');
+    links.click(); // the side rail's Links list (type_rail)
+    const list = el.querySelectorAll('.thoughtknot-rail-list').find((l) => l.getAttribute('data-group') === 'links');
+    assert.equal(list.hidden, false, 'the list');
     return { env, el };
   },
   'the Live Preview card': async () => livePreviewCard(noteOf(GRAPH)),

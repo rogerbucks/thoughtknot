@@ -14,11 +14,16 @@ function asError(e: unknown): Error {
   return Object.assign(new Error(said), said === 'ENOENT' ? { code: 'ENOENT' } : {});
 }
 
+/** Which folder the commands reach: the open one, or with `target` the folder notes are being moved to (ES§55). */
+export interface FolderChoice {
+  target?: boolean;
+}
+
 /** The folder's files as the core's workspace storage reads them. */
-export function tauriFiles(invoke: Invoke): WorkspaceFiles {
+export function tauriFiles(invoke: Invoke, { target = false }: FolderChoice = {}): WorkspaceFiles {
   const call = async <T>(command: string, args: Record<string, unknown>): Promise<T> => {
     try {
-      return (await invoke(command, args)) as T;
+      return (await invoke(command, target ? { ...args, target } : args)) as T;
     } catch (e) {
       throw asError(e);
     }
@@ -33,8 +38,9 @@ export function tauriFiles(invoke: Invoke): WorkspaceFiles {
   };
 }
 
-/** The notes of the picked folder. */
-export const tauriStorage = (invoke: Invoke): NoteStorage => workspaceStorage(tauriFiles(invoke));
+/** The notes of the picked folder; with `target`, of the folder they are being moved to. */
+export const tauriStorage = (invoke: Invoke, choice: FolderChoice = {}): NoteStorage =>
+  workspaceStorage(tauriFiles(invoke, choice));
 
 /** Writes an export's files as new files in `folder`, never over one (`write_new`); gives the names written. */
 export const tauriSaveNew =

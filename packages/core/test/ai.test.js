@@ -44,7 +44,7 @@ const REMOTE = {
   model: 'big-1',
   keyName: 'thoughtknot-remote',
 };
-const ON = settingsFrom({ aiUse: 'on', aiModels: [LOCAL, REMOTE] });
+const ON = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL, REMOTE] });
 // a key made here, so no line of this file has the shape of one
 const KEY = ['k', 'q'.repeat(24)].join('-');
 const CLOCK = () => new Date('2026-10-13T09:30:00Z');
@@ -146,7 +146,7 @@ describe('models of the user’s own, each by its address (user_models)', () => 
 
   test('a model whose address cannot be used is never offered or sent to', () => {
     const plain = { ...REMOTE, name: 'Plain', endpoint: 'http://api.example.com/v1/chat/completions' };
-    const s = settingsFrom({ aiUse: 'on', aiModels: [LOCAL, plain] });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL, plain] });
     assert.ok(!modelChoices(s, 'Proposing changes', null).some((c) => c.name === 'Plain'));
     assert.match(prepareSend(ask({ settings: s, model: 'Plain' })).refused, /https/);
   });
@@ -227,7 +227,7 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
   });
 
   test('with no model cleared for it, that is said', () => {
-    const s = settingsFrom({ aiUse: 'on', aiModels: [REMOTE] });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [REMOTE] });
     const r = prepareSend(ask({ settings: s, model: 'Remote', level: 'Confidential' }));
     assert.deepEqual(r.cleared, []);
     assert.match(r.refused, /No model set up is cleared for Confidential/);
@@ -238,7 +238,7 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
   });
 
   test('a ceiling no longer among the classifications sends nothing until it is chosen again', () => {
-    const s = settingsFrom({ aiUse: 'on', aiModels: [{ ...LOCAL, ceiling: 'Old' }] });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [{ ...LOCAL, ceiling: 'Old' }] });
     assert.match(prepareSend(ask({ settings: s, level: 'Public' })).refused, /choose it again/);
   });
 
@@ -255,7 +255,7 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
 
 describe('nothing credential-like is ever sent (never_credential)', () => {
   test('nothing at the highest classification set goes to any model, whatever its ceiling', () => {
-    const s = settingsFrom({ aiUse: 'on', aiModels: [{ ...LOCAL, ceiling: 'Restricted' }] });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [{ ...LOCAL, ceiling: 'Restricted' }] });
     const r = prepareSend(ask({ settings: s, level: 'Restricted' }));
     assert.match(r.refused, /highest classification/);
     assert.deepEqual(r.cleared, []);
@@ -283,7 +283,7 @@ describe('nothing credential-like is ever sent (never_credential)', () => {
       name: 'Odd',
       endpoint: `https://api.example.com/${['s', 'k'].join('')}-${'Q'.repeat(24)}/v1`,
     };
-    const s = settingsFrom({ aiUse: 'on', aiModels: [odd] });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [odd] });
     assert.match(prepareSend(ask({ settings: s, model: 'Odd', level: 'Public' })).refused, /API key/);
   });
 
@@ -335,7 +335,7 @@ describe('the user sees exactly what is sent, and to which model, first (seen_be
 
   test('what is shown stays as it was shown, whatever the settings do after, and names the key by its name', async () => {
     const models = [{ ...LOCAL }, { ...REMOTE }];
-    const s = settingsFrom({ aiUse: 'on', aiModels: models });
+    const s = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: models });
     const p = prepared({ settings: s, model: 'Remote' });
     s.aiModels[1].endpoint = 'https://elsewhere.example.com/v1';
     s.aiModels[1].keyName = 'another-key';
@@ -476,5 +476,14 @@ describe('a model that cannot be reached, or refuses, is said plainly and change
     const { result } = await sent({}, { status: 200, text: 'not json at all' });
     assert.match(result.failed, /^Local answered, but not with changes this editor can read/);
     assert.match(result.failed, /Nothing was changed\.$/);
+  });
+});
+
+describe('a model whose address stops at its version is sent to its chat address (user_models)', () => {
+  test('LM Studio at …/v1 is sent to …/v1/chat/completions, and shown so', async () => {
+    const lm = { ...LOCAL, endpoint: 'http://localhost:1234/v1', reach: 'private' };
+    const { p, calls } = await sent({ settings: settingsFrom({ aiUse: 'on', aiModels: [lm] }) });
+    assert.equal(p.to, 'http://localhost:1234/v1/chat/completions');
+    assert.equal(calls[0]?.url, 'http://localhost:1234/v1/chat/completions');
   });
 });

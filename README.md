@@ -141,6 +141,16 @@ The second line turns on the pre-commit check. It refuses any staged file that l
 
 CI runs the same check over every file, so a commit that skipped the hook is still caught.
 
+It also turns on the pre-push check, `scripts/pre-push.mjs`. Before anything is pushed it runs the build, the lint, the
+type check and the tests the change reaches.
+
+On a Mac, a change to the desktop app also builds the macOS app, unsigned. That needs Rust and the Tauri tool.
+
+Pull requests build Linux alone on GitHub. Main builds every system.
+
+In an emergency, skip the check with `git push --no-verify`. From a tool that cannot pass the flag, use
+`THOUGHTKNOT_SKIP_PRE_PUSH=1 git push`. CI still checks the pull request.
+
 A fresh clone needs only these steps. CI runs them exactly as written here, in a fresh clone:
 
 - on every merge to main;

@@ -1,0 +1,77 @@
+{
+  "note": "The graph spec's list of formats (editor spec §51, spec_formats_listed). Every format a graph is read from or written to is here. Each says what it keeps, what it drops, and the test that round-trips it. test/graph-spec-formats.test.js holds the code to this list.",
+  "formats": [
+    {
+      "id": "gql",
+      "reads": true,
+      "writes": true,
+      "code": "DATA_FORMATS",
+      "keeps": "every thing and link, each kind and property, and the notes written on them",
+      "drops": "layout, and a guess the drawing made",
+      "roundTrip": "packages/core/test/export-data.test.js"
+    },
+    {
+      "id": "csv",
+      "reads": true,
+      "writes": true,
+      "code": "DATA_FORMATS",
+      "keeps": "every thing and link, each kind and property with the kind of its values",
+      "drops": "the notes on things and links, which CSV has no comments for, and layout",
+      "roundTrip": "packages/core/test/export-data.test.js"
+    },
+    {
+      "id": "graphml",
+      "reads": true,
+      "writes": true,
+      "code": "DATA_FORMATS",
+      "keeps": "every thing and link, each kind and property, and the notes written on them",
+      "drops": "layout, and a guess the drawing made",
+      "roundTrip": "packages/core/test/export-data.test.js"
+    },
+    {
+      "id": "svg",
+      "reads": false,
+      "writes": true,
+      "code": "EXPORT_FORMATS",
+      "keeps": "the picture as drawn, with the id of each thing it shows",
+      "drops": "properties and notes: a picture is not data, so it does not read back",
+      "roundTrip": "packages/core/test/export.test.js"
+    },
+    {
+      "id": "png",
+      "reads": false,
+      "writes": true,
+      "code": "EXPORT_FORMATS",
+      "keeps": "the picture as drawn",
+      "drops": "everything but pixels: it does not read back",
+      "roundTrip": "packages/core/test/export.test.js"
+    },
+    {
+      "id": "csv-table",
+      "reads": true,
+      "writes": false,
+      "code": "csv-read.ts",
+      "keeps": "every cell, the line each row starts on, and cells past the header, listed as uneven",
+      "drops": "nothing from a file within the limits; a file over them is refused whole",
+      "roundTrip": "packages/core/test/csv-read.test.js"
+    },
+    {
+      "id": "sqlite",
+      "reads": true,
+      "writes": false,
+      "code": "db-import.ts",
+      "keeps": "each row of the things query as a thing, each row of the links query as a link, written as a GQL block copy",
+      "drops": "any live link to the database: the copy is text and nothing in it runs again",
+      "roundTrip": "packages/core/test/db-import.test.js"
+    },
+    {
+      "id": "text",
+      "reads": true,
+      "writes": false,
+      "code": "text-to-graph.ts",
+      "keeps": "the things and links the text states",
+      "drops": "wording that states neither a thing nor a link",
+      "roundTrip": "packages/core/test/text-to-graph.test.js"
+    }
+  ]
+}

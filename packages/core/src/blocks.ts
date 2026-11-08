@@ -18,7 +18,9 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`),
   FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`),
   BOARDS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*BOARD(?:${S}+ON${S}+(${N}+))?${S}*$`),
-  SKETCHES = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*SKETCH${S}+ON${S}+(${N}+)${S}*$`);
+  SKETCHES = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*SKETCH${S}+ON${S}+(${N}+)${S}*$`),
+  LAYOUTS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*LAYOUT${S}+ON${S}+(${N}+)${S}*$`),
+  AIS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*AI${S}+ON${S}+(${N}+)${S}*$`);
 
 /**
  * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts). Its graph line says FROM and a
@@ -78,14 +80,41 @@ export function sketchOf(text: string): { name: string; on: string } | null {
 }
 
 /**
+ * Where things of a graph sit on screen (editor spec §2, layout_block). Its graph line says LAYOUT ON and the graph it
+ * places: `// graph: trip_layout · LAYOUT ON trip`. Null for any other block. A layout is never data to draw as a graph
+ * (`dataKind`): layout-block.ts reads it.
+ */
+export function layoutOf(text: string): { name: string; on: string } | null {
+  const m = LAYOUTS.exec(firstLine(text));
+  return m ? { name: m[1] ?? '', on: m[2] ?? '' } : null;
+}
+
+/**
+ * What an AI review found for a graph (editor spec §19, ai_block). Its graph line says AI ON and the graph:
+ * `// graph: trip_ai · AI ON trip`. Null for any other block. It is never data to draw as a graph (`dataKind`).
+ */
+export function aiBlockOf(text: string): { name: string; on: string } | null {
+  const m = AIS.exec(firstLine(text));
+  return m ? { name: m[1] ?? '', on: m[2] ?? '' } : null;
+}
+
+/**
  * The kind of a block, or null when it holds no data to draw. A query holds none (a view or a step among them), nor
  * does an excerpt or a change set. Nor does a style block, read only by style.ts, or a board, read only by board.ts.
- * Nor do drawings over a graph, read only by sketch.ts. Nor does a block drawn FROM elsewhere, read only by sources.ts.
- * Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is a problem, never
+ * Nor do drawings over a graph, read only by sketch.ts, a layout, read only by layout-block.ts, or an AI block. Nor
+ * does a block drawn FROM elsewhere, read only by sources.ts. Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is a problem, never
  * data.
  */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
-  if (styleOf(text) !== null || isSourceBlock(text) || boardOf(text) || sketchOf(text)) return null;
+  if (
+    styleOf(text) !== null ||
+    isSourceBlock(text) ||
+    boardOf(text) ||
+    sketchOf(text) ||
+    layoutOf(text) ||
+    aiBlockOf(text)
+  )
+    return null;
   if (STYLE_WORD.test(firstLine(text))) {
     const own = graphOf(text) ?? '<name>';
     return {

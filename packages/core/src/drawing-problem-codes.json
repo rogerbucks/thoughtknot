@@ -234,6 +234,18 @@
       "section": "70",
       "words": ["sketch.points"],
       "libraries": ["core"]
+    },
+    {
+      "code": "GN909",
+      "section": "2",
+      "words": ["layout.kind-unknown"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN910",
+      "section": "2",
+      "words": ["layout.thing-gone"],
+      "libraries": ["core"]
     }
   ]
 }

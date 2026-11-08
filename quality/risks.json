@@ -3,9 +3,9 @@
   "panel": {
     "about": "The last time every role looked at the whole project. A release that starts a new version line (0.7 to 0.8) waits for a new one.",
     "last_full": {
-      "date": "2026-10-31",
-      "commit": "c4c249610389881421da548e4f68ca83ab4526bc",
-      "version": "0.8.0"
+      "date": "2026-11-07",
+      "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1",
+      "version": "0.9.0"
     }
   },
   "risks": [
@@ -4557,8 +4557,12 @@
         "date": "2026-10-31",
         "commit": "9b6e6bfb930d08c3eeb6abc14b4bfa33b2a073aa"
       },
-      "status": "open",
-      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+      "status": "done",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin",
+      "done_in": "#2012",
+      "prevented_by": [
+        "packages/app/src-tauri/src/place.rs"
+      ]
     },
     {
       "id": "SEC-23",
@@ -4738,20 +4742,21 @@
       "role": "Senior security engineer",
       "area": "security",
       "title": "The lint tools carry a minimatch with a slow-matching flaw",
-      "risk": "Advisory GHSA-g3hv-75wg-m249 (medium): minimatch before 11.0.1 can be made slow by a crafted pattern. Our ESLint tools depend on it. It runs on build machines only, never in the shipped plugin, and no fixed release works with the lint tools yet.",
+      "risk": "Advisories GHSA-g3hv-75wg-m249 and a second one on the same code (medium): minimatch from 7.0.0 to before 11.0.1 can be made slow by a crafted pattern. Three of our ESLint tools carried such a copy. It ran on build machines only, never in the shipped plugin.",
       "evidence": [
         "package-lock.json",
         "https://github.com/advisories/GHSA-g3hv-75wg-m249"
       ],
       "alerts": [
         "npm/GHSA-g3hv-75wg-m249",
-        "dependabot/10"
+        "dependabot/10",
+        "dependabot/11"
       ],
       "likelihood": "low",
       "impact": "low",
-      "decision": "accept",
-      "fix": "When the lint tools accept minimatch 11.0.1 or later, update the lock file and close this risk.",
-      "check": "scripts/security-alerts.mjs lists the advisory while it is open, and the release check fails once this entry is removed and it is still there.",
+      "decision": "fix-now",
+      "fix": "An override in package.json lifts every minimatch from 7.0.0 to before 11.0.1 to 11.0.5. The 3.x copies ESLint needs are older than the flaw, so they stay.",
+      "check": "test/lint-minimatch.test.js fails on any locked minimatch in the flawed range. npm audit in CI and scripts/security-alerts.mjs fail on any advisory the lock carries.",
       "paths": [
         "package.json",
         "package-lock.json"
@@ -4759,12 +4764,15 @@
       "effort": "hours",
       "raised": "2026-10-31",
       "reviewed": {
-        "date": "2026-10-31",
-        "commit": "a69f6f58baf05f384172454342424b612951b3f4"
+        "date": "2026-11-06",
+        "commit": "c8033a0e8eb7b84f867dbc07d30bf8e24bd46195"
       },
-      "status": "accepted",
-      "accepted_by": "Roger, 31 Oct 2026 (asked in the R2 release thread)",
-      "accepted_reason": "It runs only in our lint tools on build machines. A hostile pattern would have to be fed to our own tools. Undo when the lint tools accept minimatch 11.0.1 or later."
+      "status": "done",
+      "done_in": "#1945",
+      "prevented_by": [
+        "test/lint-minimatch.test.js",
+        "scripts/security-alerts.mjs"
+      ]
     },
     {
       "id": "SEC-27",
@@ -4856,8 +4864,101 @@
         "date": "2026-10-31",
         "commit": "e3f6b8ad486c2e9061ae5d70dbb4ffa0f9475dbc"
       },
+      "status": "done",
+      "wave": "Wave 8 · Clusters, new views and the VS Code plugin",
+      "done_in": "#2035",
+      "prevented_by": [
+        "packages/app/src-tauri/src/place.rs"
+      ]
+    },
+    {
+      "id": "SEC-30",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The MCP app's answer key is the only proof that a person answered",
+      "risk": "The MCP server writes a decision when answer is called with the key from a decide result. It marks the press as coming from a person itself. Its secrecy rests on the host passing _meta to the page and never to the model. The tool list also shows answer and keep to the model. A host that leaks the key lets the model answer its own question. The note then records the choice as the person's.",
+      "evidence": [
+        "packages/claude-code/src/mcp-server.ts:50",
+        "packages/claude-code/src/mcp-server.ts:232",
+        "packages/claude-code/src/mcp-server.ts:281",
+        "packages/claude-code/src/mcp-server.ts:323"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Do not list answer and keep in tools/list for the model. Bind each key to the page's session. Record in the note that the answer came through the MCP page, not a pane press.",
+      "check": "A test in packages/claude-code/test calls answer with a key taken from the decide result's text and content. It asserts the note is unchanged.",
+      "paths": [
+        "packages/claude-code/src/mcp-server.ts",
+        "packages/claude-code/bin/mcp-process.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
       "status": "open",
-      "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-31",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The MCP server reads its gate settings from a file Claude's own tools may write",
+      "risk": "The MCP server reads the classification ceiling from .obsidian/plugins/thoughtknot/data.json inside the notes folder. The data-folder guard protects only the mod's own data folder. A session with Write or Bash can loosen the ceiling there, then call show on a note it was refused. SEC-3 covers the mod's folder only.",
+      "evidence": [
+        "packages/claude-code/bin/mcp-process.ts:35",
+        "packages/claude-code/src/mcp-server.ts:192",
+        "packages/claude-code/src/data-guard.ts:246"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Read the settings from outside the notes folder, such as the user's own config folder. Or add the plugin's data.json to the paths the data guard refuses to Claude's writing tools.",
+      "check": "A test asks the data guard to judge a Write to <vault>/.obsidian/plugins/thoughtknot/data.json and asserts a refusal.",
+      "paths": [
+        "packages/claude-code/bin/mcp-process.ts",
+        "packages/claude-code/src/data-guard.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-32",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The app's gh allow-list limits the call's shape, not the repository",
+      "risk": "gh.rs allows PUT and DELETE on any contents path and POST of pulls in any owner/repo. The picked repositories and the class ceiling live in the webview's own storage, which the Rust side does not read. Any script in the webview could write to any repository the person's gh can reach, workflow files included.",
+      "evidence": [
+        "packages/app/src-tauri/src/gh.rs:93",
+        "packages/app/src-tauri/src/gh.rs:110",
+        "packages/app/src-tauri/src/gh.rs:139",
+        "packages/app/src/app-github.ts:26"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Keep the picked repositories on the Rust side, set by a native dialog. Refuse any owner/repo not in that list. Refuse paths under .github.",
+      "check": "A Rust test runs a PUT for a repository outside the saved list and for .github/workflows/x.yml. It asserts a refusal for both.",
+      "paths": [
+        "packages/app/src-tauri/src/gh.rs",
+        "packages/app/src/app-github.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "8d61f173c5ec9497ba6e59a4fdc3004696267be6"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
     },
     {
       "id": "CODE-14",
@@ -5044,6 +5145,627 @@
       },
       "status": "open",
       "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "SEC-33",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "The shell gate judges by the spelling \"classification\"",
+      "risk": "gate-shell.ts refuses a Bash write to an existing note only when the command spells the word classification. A command can build the word instead: printf '\\143lassification: public', or a sed back-reference. Such a command, and sed -i, is allowed. A prompt-injected session could lower a note's class, then read it with /graph. Since a write to a new file passes, sed to a new file then mv is a short route.",
+      "evidence": [
+        "packages/claude-code/src/gate-shell.ts:194",
+        "packages/claude-code/src/gate-shell.ts:197",
+        "packages/claude-code/src/gate-shell.ts:276",
+        "packages/claude-code/src/gate-shell.ts:277",
+        "packages/claude-code/src/gate-shell.ts:279",
+        "packages/claude-code/src/gate-guard.ts:100",
+        "unverified: no test was run; the reading is from the code"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Do not judge by spelling. Hold the classification line of every note the session has opened. After each Bash call, read those lines again and refuse the next gated read when one has fallen. Or refuse any non-reading Bash command that can reach an existing note.",
+      "check": "A test in packages/claude-code/test runs printf '\\143lassification: public\\n' > note.md, and sed with a back-reference then mv, on a note classed secret. It asserts both are refused or the next /graph is refused.",
+      "paths": [
+        "packages/claude-code/src/gate-shell.ts",
+        "packages/claude-code/src/gate-guard.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "SEC-34",
+      "role": "Senior security engineer",
+      "area": "supply-chain",
+      "title": "The app's Rust code is outside every scan and advisory feed",
+      "risk": "Since 0.8.0 the Tauri app gained gh.rs (starts a program with the person's sign-in) and a larger lib.rs and place.rs. These guard file and process access. CodeQL in ci.yml reads javascript-typescript, python and actions only. Dependabot has no cargo entry. The release alert script audits npm and the Python lock file, not Cargo.lock. No cargo audit or clippy step exists. Nobody would see a flaw or an advisory.",
+      "evidence": [
+        ".github/workflows/ci.yml:374",
+        ".github/dependabot.yml:6",
+        ".github/dependabot.yml:30",
+        ".github/dependabot.yml:49",
+        "scripts/security-alerts.mjs:7",
+        "packages/app/src-tauri/src/gh.rs:214"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Add rust to the CodeQL languages. Add a cargo entry to dependabot.yml. Have security-alerts.mjs send Cargo.lock to OSV as it does uv.lock. Run clippy in CI.",
+      "check": "test/workflows.test.js asserts the CodeQL languages include rust and dependabot.yml names cargo. A test asserts security-alerts reads Cargo.lock.",
+      "paths": [
+        ".github/workflows/ci.yml",
+        ".github/dependabot.yml",
+        "scripts/security-alerts.mjs",
+        "packages/app/src-tauri/**"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "OPS-15",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "A failed or cut-short risk panel closes the open risk-panel issue",
+      "risk": "The report job joins the nine role files. It closes the open risk-panel issue with 'The panel found nothing new to add' when no role file exists. That also happens when every role job fails or times out. The owner then reads 'nothing new' for a panel that did not run. The job prints the same 'nothing written' line for a role that failed and a role with nothing in scope.",
+      "evidence": [
+        ".github/workflows/risk-panel.yml:169",
+        ".github/workflows/risk-panel.yml:190",
+        ".github/workflows/risk-panel.yml:194",
+        ".github/workflows/risk-panel.yml:203",
+        ".github/workflows/risk-panel.yml:204"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Pass needs.panel.result to the report step. Keep the issue open when it is not 'success', or when a role in scope has no file. Add a comment that names the failed roles and links the run. Say 'cut short' and 'nothing in scope' as two different lines.",
+      "check": "A test reads risk-panel.yml and asserts the close-with-'nothing new' branch is guarded by the panel result being success.",
+      "paths": [
+        ".github/workflows/risk-panel.yml",
+        "test/risk-panel-workflow.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "OPS-16",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "The release's shard count of 6 is written in five places and checked in none",
+      "risk": "The number 6 is in the quality-suite matrix and command, and the public-readiness matrix and command. It is in both release.yml and release-check.yml, and in SHARDS in scripts/ci-plan.mjs. If one place changes and another does not, a share of the test files never runs, or runs twice. Nothing fails, because every shard still passes.",
+      "evidence": [
+        ".github/workflows/release.yml:41",
+        ".github/workflows/release.yml:69",
+        ".github/workflows/release.yml:149",
+        ".github/workflows/release.yml:168",
+        ".github/workflows/release-check.yml:22",
+        "scripts/ci-plan.mjs:31",
+        "test/public-readiness.test.js:412"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Add one test that reads both release workflows. For each sharded job it asserts the matrix is exactly 1..N and every command says '/N' with the same N. Or hold N in one place and read it.",
+      "check": "A test fails when a matrix list and a '$SHARD/N' command disagree in release.yml or release-check.yml.",
+      "paths": [
+        ".github/workflows/release.yml",
+        ".github/workflows/release-check.yml",
+        "scripts/ci-plan.mjs",
+        "test/public-readiness.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "OPS-17",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "The release's sharded suite can merge fewer parts than were run, without saying so",
+      "risk": "readSuiteShards reads every .json file in the download folder. Its comment says a missing shard 'means nothing'. mergeSuiteShards does not check that it got the number of parts it expected. Today a lost part cannot get through, because the quality job needs quality-suite to succeed. A later edit to that dependency, or to the artifact pattern, would let the gate pass on part of the suite. Nothing compares the merged test count.",
+      "evidence": [
+        "scripts/quality-suite.mjs:254",
+        "scripts/quality-suite.mjs:259",
+        "scripts/quality-suite.mjs:220",
+        ".github/workflows/release.yml:76",
+        ".github/workflows/release.yml:113"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Pass the expected number of parts to --suite-from, and make readSuiteShards throw when it finds fewer. Alternatively write the shard index into each part and check that 1..N are all present.",
+      "check": "A unit test gives readSuiteShards five of six parts and expects an error that names the missing share.",
+      "paths": [
+        "scripts/quality-suite.mjs",
+        "scripts/quality-metrics.mjs",
+        "test/quality-suite.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "OPS-18",
+      "role": "IT administrator and release / DevOps engineer",
+      "area": "release",
+      "title": "The macOS desktop job now holds signing secrets for up to 90 minutes",
+      "risk": "The desktop-app job timeout went from 45 to 90 minutes because Apple's first notarisations for a new team took over 40 minutes. The job holds the signing and notarisation credentials for that whole time. A hung or compromised step now has twice as long. The longer limit is also applied to the Linux and Windows jobs, which do not wait for Apple.",
+      "evidence": [
+        ".github/workflows/desktop-app.yml:58",
+        ".github/workflows/desktop-app.yml:61"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Accept for now. When notarisation times settle, set the limit from the macOS row alone, for example with a per-entry timeout in the matrix, and lower it again.",
+      "check": "A test asserts the Linux and Windows desktop jobs keep a timeout of 45 minutes or less.",
+      "paths": [
+        ".github/workflows/desktop-app.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "CODE-16",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "A board merge lets the other side's connector label silently win",
+      "risk": "mergeBoards keys connectors by from and to only. Both sides' connectors go into one map, and theirs is set last. If ours changed a label and theirs left it, ours is overwritten by the old label. If both changed it, theirs wins with no clash flag. The file header promises that neither side is silently picked. The test file has no case for connectors or labels at all.",
+      "evidence": [
+        "packages/core/src/board-merge.ts:127",
+        "packages/core/src/board-merge.ts:129",
+        "packages/core/src/board-merge.ts:133",
+        "packages/core/src/board-merge.ts:2",
+        "packages/core/src/board.ts:45",
+        "packages/core/test/board-merge.test.js:1"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Compare each connector's label against the base. Take the side that changed it. When both changed it differently, keep ours and report a clash. Add tests for a one-sided label edit, a two-sided one, and a link removed on one side.",
+      "check": "test",
+      "paths": [
+        "packages/core/src/board-merge.ts",
+        "packages/core/test/board-merge.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "CODE-17",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "A failed history record turns a saved note into a failed write",
+      "risk": "historyLayer writes the note first, then awaits log.record. notesHistory.record throws after three tries, for example when the history storage is down. The throw reaches the caller of write, though the note is already saved. The caller may report a failure, or retry against a changed version. Also, the 'before' text is read before the write, so a concurrent write can record a wrong 'before'.",
+      "evidence": [
+        "packages/core/src/note-storage.ts:185",
+        "packages/core/src/note-storage.ts:191",
+        "packages/core/src/history-store.ts:67",
+        "packages/core/src/history-store.ts:77"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Catch the record error in historyLayer. Return the write's own outcome with a stated warning that the change was not logged. Queue records per store so same-day appends run one at a time.",
+      "check": "test",
+      "paths": [
+        "packages/core/src/note-storage.ts",
+        "packages/core/src/history-store.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "CODE-18",
+      "role": "Senior coder and QA / test engineer",
+      "area": "data",
+      "title": "CSV limits count characters, and line numbers drift on a bare carriage return",
+      "risk": "readCsv compares text.length with a limit named bytes. A file of multi-byte text can be several times larger on disk than the limit says. Inside a quoted cell only a newline raises the line count, but outside it a bare carriage return does. A row's cited line is then wrong in files with old Mac line ends. The delimiter count toggles on every quote, so a stray quote in the header can pick the wrong delimiter.",
+      "evidence": [
+        "packages/core/src/csv-read.ts:65",
+        "packages/core/src/csv-read.ts:46",
+        "packages/core/src/csv-read.ts:105",
+        "packages/core/src/csv-read.ts:115"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Measure the limit in UTF-8 bytes. Count a bare carriage return as a line end inside quotes too. Treat a quote as opening only at the start of a cell when choosing the delimiter.",
+      "check": "test",
+      "paths": [
+        "packages/core/src/csv-read.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "ARCH-15",
+      "role": "Enterprise, solution and data architect",
+      "area": "data",
+      "title": "A big GitHub repository lists as a short one, with no warning",
+      "risk": "The GitHub store lists notes from one recursive tree call. GitHub cuts that answer off for a very large repository and sets a 'truncated' flag. The code never reads the flag. So notes past the cut are missing from the list, with no message. A person sees an incomplete vault. A move into or out of the repository can then check its copy against a short list and call it complete.",
+      "evidence": [
+        "packages/core/src/github-repo-gh.ts:146-151",
+        "packages/core/src/github-repo-store.ts:186-190",
+        "packages/core/src/github-repo-send.ts:100",
+        "packages/core/src/storage-choice.ts:1-5",
+        "unverified: any use of the word truncated in packages/core/src or packages/app (searched, none found)"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Read the tree's truncated flag. When it is set, refuse the listing with a plain sentence, or list folder by folder. Make a move check its copy against a complete list only.",
+      "check": "A test in packages/core/test with fake-github.js returning truncated: true. It asserts list() refuses, and that a move to the repository does not report success.",
+      "paths": [
+        "packages/core/src/github-repo-gh.ts",
+        "packages/core/src/github-repo-store.ts",
+        "packages/core/test/fake-github.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "done",
+      "done_in": "#2063"
+    },
+    {
+      "id": "ARCH-16",
+      "role": "Enterprise, solution and data architect",
+      "area": "architecture",
+      "title": "A FROM list has no cap, and each draw rereads every place",
+      "risk": "A block may now name any number of places after FROM. Each place is fetched whole and joined by the mesh join on every draw. No limit is stated or tested, and no cache or index is used. ARCH-7 asked for an index. The new mesh index serves stored notes and parts, not this path. Ten places is fine. Five hundred in one block, or a block reread on every edit, is not tested.",
+      "evidence": [
+        "packages/core/src/sources.ts:95-96",
+        "packages/core/src/sources.ts:115-127",
+        "packages/core/src/connectors.ts:254-300",
+        "packages/core/src/layout-limits.ts:1-50",
+        "scripts/benchmarks/mesh-query.mjs:9-10",
+        "unverified: a READ_LIMITS entry for places per FROM list (searched layout-limits.ts for places and sources, none found)"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "State a most-places limit in READ_LIMITS and refuse a longer list in sentences. Feed joinPlaces from the mesh index, keyed by each place's version hash, so an unchanged place is not reparsed.",
+      "check": "A benchmark in scripts/benchmarks that joins the most places allowed, with a budget in budgets.mjs. A test that a list one over the limit is refused.",
+      "paths": [
+        "packages/core/src/sources.ts",
+        "packages/core/src/connectors.ts",
+        "packages/core/src/layout-limits.ts",
+        "scripts/benchmarks/budgets.mjs"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "ARCH-17",
+      "role": "Enterprise, solution and data architect",
+      "area": "data",
+      "title": "A plain note name with a colon now reads as a plug-in place",
+      "risk": "FROM [[Note]] is safe. But FROM written without brackets takes any lowercase word of two letters or more, then a colon, as a plug-in scheme. An older block that named a note 'todo:later' now reads as plug-in 'todo', and fails or is refused. The note format gained this meaning with no format or spec version change. The newer reader reads older blocks differently.",
+      "evidence": [
+        "packages/core/src/sources.ts:78",
+        "packages/core/src/sources.ts:128-133",
+        "packages/graph-spec/src/reader/tokens.js:27-29",
+        "unverified: whether any test holds a bare lowercase name with a colon in FROM (searched packages/core/test, none read)"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Take a scheme only when a plug-in has registered it. Otherwise read the place as before, and say in the fault that a colon in a bare name needs brackets.",
+      "check": "A test that FROM todo:later, with no plug-in of that scheme, is read as the note it was. Or it is refused with the sentence naming brackets.",
+      "paths": [
+        "packages/core/src/sources.ts",
+        "packages/core/test/sources.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "UX-12",
+      "role": "User experience lead and accessibility specialist",
+      "area": "accessibility",
+      "title": "Closing the cloud card leaves keyboard focus on nothing",
+      "risk": "The cloud card is a dialog. Opening it moves focus to the name field. Closing it, by Escape, Rename, Merge, Not a group or Close, only hides the card. Focus is not given back to the cloud or the legend button that opened it. The focused field is hidden, so a keyboard or screen reader user loses their place and must tab in from the top. The card also has no aria-modal and does not hold Tab inside it.",
+      "evidence": [
+        "packages/core/src/display/graph-view/cloud-card.ts:24",
+        "packages/core/src/display/graph-view/cloud-card.ts:85",
+        "packages/core/src/display/graph-view/cloud-card.ts:89",
+        "packages/core/src/display/graph-view/cloud-card.ts:25",
+        "unverified: rg 'focus\\(' in cloud-card.ts, level-legend.ts and level-taps.ts found only the one call at cloud-card.ts:85; no test was run in a browser"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Remember document.activeElement when the card opens. Return focus to it on close, or to the renamed cloud when the old one is gone. Keep Tab inside the card while it is open.",
+      "check": "test/a11y-keyboard.test.js opens the card from a cloud, presses Escape, and asserts document.activeElement is that cloud. A second case renames and asserts focus lands on a live element.",
+      "paths": [
+        "packages/core/src/display/graph-view/cloud-card.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "UX-13",
+      "role": "User experience lead and accessibility specialist",
+      "area": "accessibility",
+      "title": "The new canvas drawing is announced as one picture, and is on by default",
+      "risk": "The newRendering setting defaults to on. When a drawing has levels, RenderStage paints it on a canvas with role img and an aria-label that names only the current level. The canvas has no tabindex and no key handler. Boxes and links on it are not in the accessibility tree. A screen reader or keyboard user gets a worse drawing than the SVG path gives. Nothing tells them how to switch back.",
+      "evidence": [
+        "packages/core/src/settings.ts:121",
+        "packages/core/src/display/graph-view/render-stage.ts:70",
+        "packages/core/src/display/graph-view/render-stage.ts:116",
+        "packages/core/src/display/graph-view/render-stage.ts:344",
+        "packages/core/src/display/graph-view/level-clouds-svg.ts:343",
+        "unverified: whether the SVG clouds (focusable, role button) sit over the canvas as the reachable layer was not traced; if so, boxes inside a cloud are still unreachable"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Offer a list of the groups and things shown, as UX-11 proposes for the overview. Keep the SVG path reachable when a screen reader or reduced-motion setting is on. Name the keys in the canvas label.",
+      "check": "test/wcag.test.js builds a levelled drawing with newRendering on. It asserts every box is reachable by Tab, or by a list with an accessible name.",
+      "paths": [
+        "packages/core/src/display/graph-view/render-stage.ts",
+        "packages/core/src/settings.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "NEURO-12",
+      "role": "Senior UI designer, neurodiversity and personal data management",
+      "area": "ux",
+      "title": "A synced preset file silently restyles every graph",
+      "risk": "The vault's preset file is read again whenever it changes, and every drawing is redrawn at once. A sync from another device can change how all graphs look with no word to the person. For an autistic or ADHD reader a sudden change of look is a real cost.",
+      "evidence": [
+        "packages/obsidian/src/settings/vault-preset.ts:16-22",
+        "packages/obsidian/src/settings/vault-preset.ts:25-35",
+        "packages/claude-code/server/vault-preset-api.ts:63-94"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "When the preset changes because the file changed outside the settings page, show one notice. It says which starter now applies and how to give the vault none. Keep the redraw.",
+      "check": "A test changes the preset file through the vault's modify event and asserts one notice with the starter's name. Another asserts that choosing it on the settings page shows no second notice.",
+      "paths": [
+        "packages/obsidian/src/settings/vault-preset.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "NEURO-13",
+      "role": "Senior UI designer, neurodiversity and personal data management",
+      "area": "ux",
+      "title": "The level legend puts five kinds of control in one badge",
+      "risk": "Under the level badge sit a level picker, a swap button, an AI button, one chip per subject and a colour button on each chip. Pointing at a chip or a cloud also changes the picture. Nothing caps the number of chips, so a large graph shows a wall of them. This is the clutter that costs an ADHD reader their place.",
+      "evidence": [
+        "packages/core/src/display/graph-view/level-legend.ts:50-69",
+        "packages/core/src/display/graph-view/level-legend.ts:118",
+        "unverified: whether the chip row folds or scrolls past a set number of subjects (read the chips code after line 80, and a test with 30 subjects)"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Show the first few chips and fold the rest behind one More button. Show the swap, AI and colour buttons only when the person opens the legend. Keep the spotlight on click, and make hover opt in.",
+      "check": "A test builds a drawing with 30 subjects and asserts that no more than a set number of chips show at first. Another asserts that the legend has one focus stop before it is opened.",
+      "paths": [
+        "packages/core/src/display/graph-view/level-legend.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "FLOW-13",
+      "role": "Workflow designer and open-source maintainer / community lead",
+      "area": "release",
+      "title": "A release can merge a partial set of suite shards without failing",
+      "risk": "The release suite now runs as six shards. The quality job merges whatever shard files it finds, and only fails when there are none. A missing part would silently lower the test count and the coverage. Today the quality job waits for all six jobs to pass, so this needs a second fault to bite. A future edit to the job's needs, a retried job or a half-downloaded artifact would be enough.",
+      "evidence": [
+        ".github/workflows/release.yml:36",
+        ".github/workflows/release.yml:112",
+        "scripts/quality-suite.mjs:220",
+        "scripts/quality-suite.mjs:254",
+        "scripts/quality-suite.mjs:259"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Have the shard part record its share (N of M). Make the merge fail unless it holds every share from 1 to M exactly once. Name the missing share in the error.",
+      "check": "A unit test of mergeSuiteShards and readSuiteShards: five of six parts, and a repeated part, each throw and name the share.",
+      "paths": [
+        "scripts/quality-suite.mjs",
+        "scripts/quality-metrics.mjs",
+        ".github/workflows/release.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 15 · Obsidian community release"
+    },
+    {
+      "id": "API-14",
+      "role": "API design expert",
+      "area": "architecture",
+      "title": "The peer handshake changed shape with no version, and an old device is told the wrong reason",
+      "risk": "Since 0.8.0 the first message between two devices grew from the 65-byte public key to key, one-time key and salt (162 bytes). A 0.8 device and a 0.9 device cannot sync. Each refuses the other with 'a device that is not one of the owner's', which is false. Nothing in the first message names a format, so the next change will fail the same way.",
+      "evidence": [
+        "packages/sync/src/peer.ts:68 (whole length test, then the not-one-of-the-owner's refusal)",
+        "packages/sync/src/peer.ts:110 (hello is sent as key plus one-time key plus salt)",
+        "packages/sync/src/keys.ts:65 (version only inside the HKDF info string)",
+        "packages/sync/src/session.ts:28 (fixed EPHEMERAL_BYTES and SALT_BYTES)"
+      ],
+      "likelihood": "high",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Start the first message with a protocol number. Refuse an unknown number in words that say both devices need the same release. Keep it distinct from the untrusted-device refusal. This is the same fix as API-13, done at the handshake first.",
+      "check": "A test sends the old 65-byte hello and a hello with a changed first byte. It asserts a refusal that names the protocol, not the trust list.",
+      "paths": [
+        "packages/sync/src/peer.ts",
+        "packages/sync/src/session.ts",
+        "packages/sync/src/keys.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "API-15",
+      "role": "API design expert",
+      "area": "release",
+      "title": "The sync package is a wire contract that no break check covers",
+      "risk": "LIBRARY in scripts/public-api.mjs holds only core and graph-spec. The sync package now has a stored shape (Kept), an invitation shape (Invitation) and a session format. All three outlive one run, and the apps keep them on a person's device. A change to any of them passes CI with no major version and no note in the release. Host contract version 3 for DisplayHost is held now. Sync is the next gap of the same kind (API-3).",
+      "evidence": [
+        "scripts/public-api.mjs:32 (LIBRARY lists two packages)",
+        "packages/sync/src/sharing.ts:8 (Kept)",
+        "packages/sync/src/board-invite.ts:10 (Invitation)",
+        "packages/sync/src/index.ts (five new exports since 0.8.0)"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Either add the sync package's index as an entry of LIBRARY, or give Kept and Invitation a format number that is checked on load. Choose one in the wave that adds a second app host.",
+      "check": "test/lib-public-api.test.js: every package under packages/ that exports a persisted type is in LIBRARY or in an explicit list of private packages.",
+      "paths": [
+        "scripts/public-api.mjs",
+        "public-api.json",
+        "packages/sync/src/index.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
+    },
+    {
+      "id": "AI-12",
+      "role": "AI product and engineering expert",
+      "area": "code",
+      "title": "The MCP server lets Claude pile up questions, and their keys never expire",
+      "risk": "The mod allows one waiting question at a time. The MCP server has no such limit. Each decide or present call stores a key that stays valid until used, with no expiry and no cap. Claude can put many questions in front of the person. An old key can still answer long after the note has changed.",
+      "evidence": [
+        "packages/claude-code/mod/hooks/register.tsx:371",
+        "packages/claude-code/src/mcp-server.ts:161",
+        "packages/claude-code/src/mcp-server.ts:203-207",
+        "packages/claude-code/src/mcp-server.ts:235-259",
+        "packages/claude-code/src/mcp-server.ts:264-296"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Refuse a second decide while one waits, as the mod does. Give each key a time limit and a cap on keys held. Re-check at answer time that the note still holds the things the question names, and refuse with a reason if not.",
+      "check": "A test in packages/claude-code/test calls decide twice and asserts the second is refused. Another waits past the limit and asserts answer is refused, and edits the note between decide and answer and asserts nothing is written.",
+      "paths": [
+        "packages/claude-code/src/mcp-server.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-11-07",
+      "reviewed": {
+        "date": "2026-11-07",
+        "commit": "dbd7b07ffe5e9d0be42475f8395c6f697ffacfd1"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
     }
   ]
 }

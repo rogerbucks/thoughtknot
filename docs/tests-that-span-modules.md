@@ -7,6 +7,9 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## Sync between devices
 
+- `packages/sync/test/kept-store.test.js` — a store over any place that keeps lists by name, as the window's database
+  does. It keeps its records across runs and loses none when several are added at once. It sends and takes in
+  records as a shelf does.
 - `packages/sync/test/local-encrypted-store.test.js` — devices apart then together agree, and what each keeps is sealed
   (editor spec §40, local_encrypted_store). It spans the stores, the keys and the CRDT.
 - `packages/sync/test/five-layers.test.js` — each layer holds only the one below. The engine refuses a bad edit before
@@ -146,6 +149,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/claude-code/test/editor-threats-process.test.js` — the same threat model tried on the server's process: no
   argument taken, and the token handed over once and kept nowhere. There is no start when orphaned, and every way the
   process stops is tried (editor spec §26, test_cc_threats).
+- `packages/claude-code/test/reader-picture-markdown.test.js` — the picture's image line, in a note, shown by a plain Markdown
+  renderer (editor spec ES§62, picture_for_readers).
 - `packages/claude-code/test/editor-export.test.js` — the browser editor's export written by the server (editor spec
   §26, test_cc_export). Only new files go in the export folder, never over a file or through a link. A name is only a
   name, and an export is written whole or not at all. Every change checks the token, Host, Origin and body limit.
@@ -227,6 +232,7 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The Obsidian plugin
 
+- `packages/obsidian/test/fake-dom-frames.test.js` — the stand-in page's animation frames, which end with its globals.
 - `packages/obsidian/test/accessibility.test.js` — contrast in both themes, and a keyboard path for every action.
 - `packages/obsidian/test/focus-support.test.js` — the Focus support view preset (editor spec §69). The rest is
   blurred, not hidden, and a trail of picks is kept to go back along (view_focus_support).
@@ -331,6 +337,35 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/graph-spec/test/grammar.test.mjs` — the notation's grammar, `requirements/graph-spec-grammar.json`, covers the
   graph line, the containers and the value types. Cases made from it read to recorded answers, and text outside it is
   refused with its code (spec_grammar; one table, `grammar-cases.json`).
+- `packages/graph-spec/test/canonical.test.mjs` — a graph written two ways gives one canonical form and one hash. A
+  second hash made from the steps of `requirements/graph-spec-canonical.md` matches the library's
+  (spec_canonical_form; one table, `canonical-cases.json`).
+- `test/public-api.test.js` — each operation in `requirements/graph-spec-library-api.json` exists in the JavaScript
+  library with its listed shape. No problem code in `graph-spec-problem-codes.json` changes meaning (spec_library_api).
+
+## The graph format library: the written spec
+
+- `test/graph-spec-formats.test.js` — every format the code reads or writes is in `requirements/graph-spec-formats.json`.
+  Each says what it keeps and drops, and names a round-trip test that exists (spec_formats_listed).
+- `test/graph-spec-ai-wire.test.js` — the change set header and the serving rule's pinned fields match
+  `requirements/graph-spec-ai-wire.json` (spec_ai_wire).
+- `python/graph_spec/tests/test_ai_wire.py` — the view server's serving record, fence marks and token budget match the
+  same list (spec_ai_wire).
+- `python/graph_spec/tests/test_process_versions.py` — a running instance keeps the process version it started on, and
+  moves only by the mapping a new version gives (spec_process_versions).
+- `python/graph_spec/tests/test_conserved.py` — a quantity a graph declares as conserved is added up in any domain.
+  Each group that does not balance is reported (spec_conserved).
+- `packages/graph-spec/test/times.test.mjs` — both readers hold a time written with its zone as the same UTC instant.
+  They refuse a time with no offset alike (spec_zoned_time).
+- `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
+  one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
+- `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
+  links to exactly the rules that use it. A rule statement over 25 words stays on a record that only shrinks
+  (spec_glossary).
+- `test/graph-spec-conformance.test.js` — the engine catalogue names the spec's current version. Its known answers are
+  the suite's. The reference engine is pinned to the version in the Python lock file (spec_engine_catalogue).
+- `python/graph_spec/tests/test_library_api.py` — the same list and the same codes, checked against the Python library
+  (spec_library_api).
 - `packages/graph-spec/test/spec-version.test.mjs` — both readers read a block written to their own Graph Spec major, an
   older one, or none named. They refuse a newer major with GN107 and a fix that says to upgrade (spec_version_in_files;
   one table, `spec-version-cases.json`).
@@ -376,6 +411,8 @@ after a module nor listed here, and on a listed file that is missing.
   as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
 - `python/graph_spec/tests/test_grammar.py` — the Python reader gives the grammar's cases the JavaScript answers.
   It reads each value type and refuses text outside the grammar (spec_grammar).
+- `python/graph_spec/tests/test_canonical.py` — the Python reader gives the canonical cases the recorded hashes
+  and tells different graphs apart (spec_canonical_form).
 - `python/graph_spec/tests/test_spec_version.py` — the Python reader reads `spec-version-cases.json` as the JavaScript
   reader does. It refuses a newer major Graph Spec with GN107 (spec_version_in_files).
 - `python/graph_spec/tests/test_mesh_parity.py` — every shared mesh case gives the same bytes as the JavaScript
@@ -487,9 +524,13 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/prepare-pr.test.js` — FLOW-4: `npm run prepare-pr` writes every record a pull request carries. CI runs it in check
   mode and names every stale record at once. A change to words alone gets no Claude review.
 
+## Running only a change's tests
+
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
+- `test/changed-tests.test.js` — the order `npm run test:changed` runs in. The test files a change edits run first. They
+  are the likeliest to fail. The order never changes which tests run (editor spec §13, touched_tests_only).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests and the search ignore file.
 - `test/agents-guide.test.js` — the short AI guide, AGENTS.md, stays slim, and its handbook holds the detail.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
@@ -701,6 +742,9 @@ after a module nor listed here, and on a listed file that is missing.
   it merges once CI is green like every other.
 - `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
   main, and comments once so its owner wakes.
+- `test/pre-push.test.js` — the laptop checks a push first, and pull requests build no macOS or Windows app on
+  GitHub. It covers the pre-push hook and the app builds' systems, paths and concurrency. It also covers the narrower
+  build status chain.
 
 ## Claude's workflows
 
@@ -899,6 +943,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/secrets-recorded.test.js` — every secret a workflow reads has a row in RELEASING.md, with its owner and renewal
   (SEC-8, security_fix_rule).
 - `test/python-audit.test.js` — CI audits the locked Python dependencies by hash (SEC-10, security_release_gate).
+- `test/lint-minimatch.test.js` — no locked minimatch falls in the range a known flaw names (SEC-26,
+  security_release_gate). It reads `package-lock.json`.
 
 ## The nightly build, the home page and test files
 
@@ -1062,6 +1108,15 @@ after a module nor listed here, and on a listed file that is missing.
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+- `test/panels-stack.test.js` — the cards over the drawing never overlap, in a real Chrome (ES§25, panels_stack).
+  - It opens the browser page over the graph spec's own graph, every panel open and a thing picked.
+  - It runs a tablet's, a laptop's and a large screen's size, in the page and full screen, in 2D, 2.5D and 3D.
+  - No two cards may overlap, and none may run past the drawing (`scripts/panels-overlap.mjs`). The judging is tried
+    first on made-up measures.
+- `packages/obsidian/test/panels-compact.test.js` — where a pointer hovers, the panels are compact (panels_compact).
+  Their hints are tooltips, still heard by a screen reader. It spans the style sheet, the View menu and the docks.
+- `packages/obsidian/test/view-key.test.js` — the colour key waits in a Key section of the View panel (panels_key).
+  It spans the legend of subjects and the View panel.
 ## Languages laid out in a browser
 
 - `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
@@ -1100,6 +1155,7 @@ after a module nor listed here, and on a listed file that is missing.
   It is in the wiki, compares the ways to link, keep and cache a data set, and keeps a place for Roger's pick.
 - `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
   V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
+- `test/developer-site.test.js` — the developer site, with its nightly page kept out of search engines.
 - `test/massive-graphs-limits.test.js` — the limits looked at again (editor spec §53, scale_limits_revisited). The
   design note gives each limit before and after. A hostile graph past a new limit is still refused, saying why.
 - `test/massive-graphs-parts.test.js` — a huge note read in parts within budget (editor spec ES§53, scale_parts_budget).
@@ -1188,3 +1244,25 @@ after a module nor listed here, and on a listed file that is missing.
   scoreboard checks and a change log line for its version.
 - `test/render-scoreboard.test.js` — the rendering scoreboard (editor spec §73). Its fixed scenes, the counts it takes of
   each picture from plain boxes, and the sheet that puts each picture beside its mockup.
+- `test/board-together.test.js` — boards worked on together (editor spec §45). The change log with its authors and undo of
+  one's own changes, from `board-history.ts` and `board-edit.ts`.
+- `test/board-access.test.js` — who may do what on a board (editor spec §45). Rights from the permission rules in
+  `board-access.ts`, and an invitation sealed for one device in `board-invite.ts`.
+- `test/board-live.test.js` — boards edited together at once (editor spec §45). Two and five people converge on one board
+  text through the note's CRDT, with `live-board.ts` checking each change against the person's role.
+- `test/board-seat.test.js` — a person's seat at a shared board (editor spec §45). Two seats share a board through the
+  note's CRDT in `live-board.ts`. `board-seat.ts` tells each where the other is, never writes it to the note, and checks
+  what arrives from outside.
+- `test/shared-board.test.js` — a shared board across devices (editor spec §45). `shared-board.ts` joins a seat to a link. A
+  change reaches the other person at once, presence passes on and is never written to the note, and a refused change sends
+  nothing.
+- `packages/sync/test/mesh-link.test.js` — the live link between two devices (editor spec ES§45 and ES§40). Presence and
+  records cross channels in memory that keep every byte. Both arrive, the wire holds nothing readable, and a device that
+  is not trusted is turned away.
+- `packages/sync/test/shared-notes-layer.test.js` — notes shared through the storage layer (editor spec ES§41 and
+  ES§40). A write on one device reaches the other's file. A note that is not shared is left alone. A write made
+  against an older text is refused with the note as it now is.
+- `test/render-chrome.test.js` — the controls beside the new rendering in headless Chrome (editor spec §73,
+  render_chrome_slots). On a laptop and a phone, no control covers the fitted drawing and no icon shows as its name.
+- `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
+  forty places and turns the wheel and pinches. Then it clicks a place, to check the click rule.

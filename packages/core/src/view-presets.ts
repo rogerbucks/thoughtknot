@@ -71,11 +71,15 @@ const DEFAULT_TURNS: Partial<Settings> = {
   miniMap: 'always',
 };
 
-/** A starter: its words from the catalogue, the default chain and settings changed where it says. */
+/** A starter. Its words are read from the catalogue each time, so they follow the language chosen. */
 const starter = (id: string, chain: Partial<ViewChain>, settings: Partial<Settings>): ViewPreset => ({
   id,
-  name: word(`settings.view-preset.${id}` as WordKey),
-  sentence: word(`settings.view-preset.${id}.sentence` as WordKey),
+  get name(): string {
+    return word(`settings.view-preset.${id}` as WordKey);
+  },
+  get sentence(): string {
+    return word(`settings.view-preset.${id}.sentence` as WordKey);
+  },
   chain: { ...DEFAULT_CHAIN, ...chain },
   settings: { ...DEFAULT_TURNS, ...settings },
 });
@@ -141,9 +145,29 @@ export function adoptOwn(text: string): ViewPreset | null {
   return own;
 }
 
-/** The starter of `id`, or the person's own; else the default. */
+// the presets of the person's own list, as last read in with the settings (view_presets_own_list)
+let ownList: readonly ViewPreset[] = [];
+
+/** Takes `list` as the person's own presets, so each is found by its id. The settings call this as they are read in. */
+export function setOwnList(list: readonly ViewPreset[]): void {
+  ownList = list;
+}
+
+// the preset the open vault names for itself, as last read from its file (view_presets_own_vault)
+let vaultOwn: ViewPreset | undefined;
+
+/** Takes `preset` as the one the vault names for itself, or, with nothing, forgets it. */
+export function setVaultOwn(preset: ViewPreset | undefined): void {
+  vaultOwn = preset;
+}
+
+/** The starter of `id`, or the vault's or the person's own; else the default. */
 export const starterOf = (id: string): ViewPreset =>
-  (id === OWN_PRESET && own) || STARTERS.find((p) => p.id === id) || (STARTERS[0] as ViewPreset);
+  (id === OWN_PRESET && own) ||
+  (vaultOwn && id === vaultOwn.id && vaultOwn) ||
+  ownList.find((p) => p.id === id) ||
+  STARTERS.find((p) => p.id === id) ||
+  (STARTERS[0] as ViewPreset);
 
 /** The preset `s` uses, as its file to take to another host: its Drawing settings as they are set now. */
 export const presetToShare = (s: Settings): string =>

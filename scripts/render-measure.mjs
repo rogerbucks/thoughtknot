@@ -83,14 +83,16 @@ export function moved(before, after, by = MOVED_BY) {
 
 /** The counts of one reading of the page, as the scoreboard reports them. Null where the page could not be measured. */
 export function countsOf(reading) {
-  const { frame, labels, marks, controls, iconWords } = reading;
+  const { frame, labels, marks, controls, iconWords, paintedUnder } = reading;
   if (!frame) return null;
+  const under = covered(marks, controls, frame);
   return {
     labels: labels ? labels.length : null,
     overlaps: labels ? overlaps(labels).length : null,
     cut: labels ? cut(labels, frame).length : null,
     tiny: labels ? tiny(labels, frame).length : null,
-    covered: covered(marks, controls, frame),
+    // on a canvas, the pixels actually painted under a control; else the frame under a control
+    covered: paintedUnder === undefined ? under : { marks: under.marks, pixels: paintedUnder },
     iconWords,
   };
 }
@@ -107,7 +109,11 @@ export function passes(counts, movedKeys) {
  * Read in the page: the drawing's frame, its labels, its marks, the controls over it and the icons shown as words. The
  * first card is read. Its marks are the things shown and, while a level of groups shows, each group's cloud and each
  * road's count. Every thing's spot is read from its shape, shown or faded. So a faded thing that moves still counts,
- * and a name a zoom hides does not. A drawing painted on a canvas, as in space, is not read. Labels painted on a canvas cannot be read, so `labels` is null where the drawing is a canvas.
+ * and a name a zoom hides does not.
+ *
+ * The new rendering paints on a canvas, and hands its last marks and view to the page (render-stage.ts). Its labels,
+ * marks and spots are read from those, and its cover counts the painted pixels under a control. Any other canvas, as in
+ * space, is not read, so `labels` is null there.
  */
 export const PROBE = `(() => {
   const GROUP_MARKS = '.thoughtknot-cloud-unit, .thoughtknot-road-count';
@@ -120,6 +126,8 @@ export const PROBE = `(() => {
   const svg = vp.querySelector('svg');
   const canvas = [...vp.querySelectorAll('canvas')].some((c) => seen(c) && c.getBoundingClientRect().width > frame.w / 2);
   const painted = canvas || !svg || !seen(svg);
+  const stage = [...vp.querySelectorAll('canvas.thoughtknot-render-stage')].find(seen);
+  const drawn = stage?.thoughtknotDrawn?.();
   const labels = painted ? null : [...svg.querySelectorAll('text')].filter((t) => seen(t) && t.textContent.trim()).map((t) => {
     const r = t.getBoundingClientRect(), m = t.getScreenCTM();
     return { ...box(r), text: t.textContent.trim(), px: parseFloat(getComputedStyle(t).fontSize) * (m ? Math.hypot(m.a, m.b) : 1) };
@@ -138,6 +146,28 @@ export const PROBE = `(() => {
     const r = el.getBoundingClientRect();
     if (r.width * r.height > 0 && r.right > frame.x && r.left < frame.x + frame.w && r.bottom > frame.y && r.top < frame.y + frame.h) over.push(el);
   }
-  const iconWords = [...card.querySelectorAll('[data-icon] > .harness-icon')].filter((s) => seen(s) && s.textContent.trim() === s.parentElement.dataset.icon).length;
-  return { frame, labels, marks, spots, controls: over.map((el) => box(el.getBoundingClientRect())), iconWords };
+  const controls = over.map((el) => box(el.getBoundingClientRect()));
+  if (drawn) {
+    const { marks: all, view } = drawn, at = (m) => ({ x: frame.x + m.x, y: frame.y + m.y, w: m.w, h: m.h });
+    const round = (m) => ({ x: frame.x + m.x - m.r, y: frame.y + m.y - m.r, w: 2 * m.r, h: 2 * m.r });
+    const g = stage.getContext('2d'), d = g.getImageData(0, 0, stage.width, stage.height).data, k = stage.width / frame.w;
+    let paintedUnder = 0;
+    for (const c of controls) {
+      const [l, t] = [Math.max(0, Math.floor((c.x - frame.x) * k)), Math.max(0, Math.floor((c.y - frame.y) * k))];
+      const [r, b] = [Math.min(stage.width, Math.ceil((c.x + c.w - frame.x) * k)), Math.min(stage.height, Math.ceil((c.y + c.h - frame.y) * k))];
+      for (let y = t; y < b; y++) for (let x = l; x < r; x++) if (d[(y * stage.width + x) * 4 + 3] > 8) paintedUnder++;
+    }
+    const iconWords = [...card.querySelectorAll('[data-icon]')].filter((el) => seen(el) && [...el.childNodes].some((n) => n.textContent.trim() === el.dataset.icon)).length;
+    return {
+      frame,
+      labels: all.filter((m) => m.kind === 'label').map((m) => ({ ...at(m), text: m.text, px: m.px })),
+      marks: all.filter((m) => m.kind === 'label' || m.kind === 'dot').map((m) => ({ ...(m.kind === 'dot' ? round(m) : at(m)), text: m.key })),
+      spots: Object.fromEntries(all.filter((m) => m.kind === 'dot' || m.kind === 'cloud').map((m) => [m.key, { x: m.x / view.scale + view.x, y: m.y / view.scale + view.y }])),
+      controls,
+      paintedUnder: Math.round(paintedUnder / (k * k)),
+      iconWords,
+    };
+  }
+  const iconWords = [...card.querySelectorAll('[data-icon]')].filter((el) => seen(el) && [...el.childNodes].some((n) => n.textContent.trim() === el.dataset.icon)).length;
+  return { frame, labels, marks, spots, controls, iconWords };
 })()`;

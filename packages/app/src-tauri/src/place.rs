@@ -59,16 +59,41 @@ pub fn read_text(root: &Path, path: &str) -> Result<String, String> {
     String::from_utf8(bytes).map_err(|_| format!("not UTF-8 text: {path:?}"))
 }
 
+/// A part for a temp file's name that no other write shares: the process, the time and a count.
+fn nonce() -> String {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNT: AtomicU64 = AtomicU64::new(0);
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let count = COUNT.fetch_add(1, Ordering::Relaxed);
+    format!("{}-{nanos:x}-{count}", std::process::id())
+}
+
 pub fn write_text(root: &Path, path: &str, text: &str) -> Result<(), String> {
+    write_text_with(root, path, text, &nonce())
+}
+
+/// Writes through a temp file made new: a name that is taken, a link among them, is refused and never opened.
+fn write_text_with(root: &Path, path: &str, text: &str, nonce: &str) -> Result<(), String> {
     let file = inside(root, path)?;
     let parent = file.parent().ok_or("a note needs a folder")?;
     let name = file
         .file_name()
         .ok_or("a note needs a name")?
         .to_string_lossy();
-    let temp = parent.join(format!(".{name}.thoughtknot-{}", std::process::id()));
+    let temp = parent.join(format!(".{name}.thoughtknot-{nonce}"));
+    let mut out = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temp)
+        .map_err(said)?;
+    // a note that is there keeps its mode (an owner-only note stays owner-only)
+    let mode = fs::metadata(&file).ok().map(|m| m.permissions());
     let written = (|| {
-        let mut out = fs::File::create(&temp)?;
+        if let Some(mode) = mode {
+            out.set_permissions(mode)?;
+        }
         out.write_all(text.as_bytes())?;
         out.sync_all()?;
         fs::rename(&temp, &file)
@@ -211,6 +236,33 @@ mod tests {
         assert!(inside(&root, "out/x.md").is_err());
         assert!(write_text(&root, "out/x.md", "no").is_err());
         assert!(!outside.join("x.md").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_note_keeps_its_file_mode_when_saved() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = folder();
+        write_text(&root, "n.md", "one").unwrap();
+        fs::set_permissions(root.join("n.md"), fs::Permissions::from_mode(0o600)).unwrap();
+        write_text(&root, "n.md", "two").unwrap();
+        let mode = fs::metadata(root.join("n.md")).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
+        assert_eq!(read_text(&root, "n.md").unwrap(), "two");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_link_planted_at_the_temp_name_is_never_written_through() {
+        let root = folder();
+        let outside = folder().with_extension("outside-file");
+        fs::write(&outside, "kept").unwrap();
+        std::os::unix::fs::symlink(&outside, root.join(".n.md.thoughtknot-fixed")).unwrap();
+        assert!(write_text_with(&root, "n.md", "no", "fixed").is_err());
+        assert_eq!(fs::read_to_string(&outside).unwrap(), "kept");
+        assert!(!root.join("n.md").exists());
+        write_text(&root, "n.md", "yes").unwrap();
+        assert_eq!(read_text(&root, "n.md").unwrap(), "yes");
     }
 
     #[test]

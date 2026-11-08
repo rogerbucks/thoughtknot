@@ -11,7 +11,7 @@ import { changelogText, graphSpecFacts, hasGraphSpec } from '../scripts/changelo
 describe('spec_version_released', () => {
   test('the notes name the spec version and the conformance count', () => {
     const spec = graphSpecFacts();
-    assert.equal(spec.version, '1.0');
+    assert.equal(spec.version, '1.1');
     assert.ok(spec.cases >= 20, `${spec.cases} cases`);
     const text = changelogText({
       version: '0.9.0',
@@ -23,7 +23,7 @@ describe('spec_version_released', () => {
       spec,
     });
     assert.match(text, /^### Graph Spec$/m);
-    assert.match(text, new RegExp(`implements Graph Spec 1\\.0\\. ${spec.cases} conformance cases pass`));
+    assert.match(text, new RegExp(`implements Graph Spec 1\\.1\\. ${spec.cases} conformance cases pass`));
     assert.ok(hasGraphSpec(text));
   });
 
@@ -50,7 +50,20 @@ describe('spec_version_released', () => {
       execFileSync(process.execPath, ['scripts/library-release.mjs', '--out', out], { stdio: 'pipe' });
       const tgz = readdirSync(out).find((f) => f.startsWith('thoughtknot-graph-spec-'));
       const list = execFileSync('tar', ['-tzf', join(out, tgz)], { encoding: 'utf8' }).split('\n');
-      for (const file of ['graph-spec.gql', 'graph-spec-version.json', 'LICENSE-SPEC.md'])
+      for (const file of [
+        'graph-spec.gql',
+        'graph-spec-version.json',
+        'graph-spec-grammar.json',
+        'graph-spec-canonical.md',
+        'graph-spec-library-api.json',
+        'graph-spec-problem-codes.json',
+        'graph-spec-formats.json',
+        'graph-spec-ai-wire.json',
+        'graph-spec-decisions.json',
+        'graph-spec-glossary.json',
+        'graph-spec-engine-catalogue.json',
+        'LICENSE-SPEC.md',
+      ])
         assert.ok(
           list.some((l) => l.endsWith(`spec/${file}`)),
           `${file} is in the archive`,

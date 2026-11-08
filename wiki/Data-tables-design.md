@@ -113,7 +113,13 @@ charts add them up with the same code.
 
 ## Decision
 
-Recorded here once picked.
+**Picked: B and C together** (Roger, 6 Nov 2026).
+
+- **B reads the data.** A graph says `FROM Data/sales.csv`, and the mapping file beside it says what each column becomes.
+- **C names it.** A `DataSet` thing names the place and its version. It lets anything point inside it, such as
+  `Data/sales.csv#row=12&col=amount`.
+- The data is linked by default. A snapshot (A) is taken only when a person asks for one.
+- E, the table node, is how a data set is drawn as itself. D waits for SQLite and cubes.
 
 ## Built on
 

@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run, startChrome } from './chrome.mjs';
-import { ICONS_IN, open, serve } from './wiki-screens.mjs';
+import { open, serve } from './wiki-screens.mjs';
 import { SCENES } from './render-scenes.mjs';
 import { PROBE, countsOf, moved, passes } from './render-measure.mjs';
 
@@ -62,12 +62,12 @@ async function zoomIn(send) {
   await send('Input.dispatchMouseEvent', { type: 'mouseWheel', ...at, deltaX: 0, deltaY: -120, modifiers: 2 });
 }
 
-/** Presses the bar's space button until the drawing shows `space`. */
+/** Presses the side rail's way for `space` (type_rail), so the drawing shows it. */
 async function showSpace(send, space) {
-  for (let i = 0; i < SPACES.indexOf(space); i++) {
-    await run(send, `document.querySelector('.block-language-gql [aria-label^="2D, 2.5D or 3D"]')?.click()`);
-    await wait(SETTLE * 2);
-  }
+  const at = SPACES.indexOf(space);
+  if (at <= 0) return;
+  await run(send, `document.querySelectorAll('.block-language-gql .thoughtknot-rail [data-space]')[${at}]?.click()`);
+  await wait(SETTLE * 2);
 }
 
 /** Draws one scene on one device and theme, in every space and zoom step; returns a row per picture. */
@@ -85,7 +85,6 @@ async function drawScene(send, url, out, { scene, device, theme, spaces }) {
     for (const zoom of ZOOMS) {
       if (zoom) await zoomIn(send);
       await wait(SETTLE);
-      await run(send, ICONS_IN);
       const reading = await run(send, PROBE);
       const spots = new Map(Object.entries(reading.spots ?? {}));
       const movedKeys = before ? moved(before, spots) : [];

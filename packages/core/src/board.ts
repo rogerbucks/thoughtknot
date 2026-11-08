@@ -34,6 +34,8 @@ export interface BoardItem {
   style?: string;
   /** The thing of the board's graph this item became (board_graph_linked). */
   graph?: string;
+  /** The group this item belongs to: items with the same name move and layer as one (board_items). */
+  group?: string;
   locked?: boolean;
   /** Any other property, kept as written, in the order written. */
   more: Record<string, Value>;
@@ -57,7 +59,7 @@ export interface Board {
 
 // the properties every item may have, in the order they are written
 const NUMBERS = ['x', 'y', 'w', 'h', 'layer'] as const;
-const TEXTS = ['text', 'style', 'graph'] as const;
+const TEXTS = ['text', 'style', 'graph', 'group'] as const;
 const OWN = new Set<string>([...NUMBERS, ...TEXTS, 'locked']);
 const KINDS = new Set<string>(BOARD_KINDS);
 

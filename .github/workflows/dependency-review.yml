@@ -12,6 +12,12 @@ on:
 permissions:
   contents: read
 
+# a newer push to a pull request cancels the older run; anything else (main, the merge queue, a schedule) has a group of
+# its own commit or run, and is never cancelled
+concurrency:
+  group: dependency-review-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   dependency-review:
     if: ${{ !github.event.repository.private }}

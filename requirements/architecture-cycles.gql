@@ -63,4 +63,5 @@
 (core_export)-[:CYCLES_WITH]->(core_proposals),
 (core_style)-[:CYCLES_WITH]->(core_views),
 (core_settings)-[:CYCLES_WITH]->(core_words),
-(core_massive)-[:CYCLES_WITH]->(core_mesh)
+(core_massive)-[:CYCLES_WITH]->(core_mesh),
+(core_board)-[:CYCLES_WITH]->(core_entry)

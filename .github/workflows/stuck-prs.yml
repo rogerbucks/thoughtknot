@@ -19,9 +19,10 @@ on:
 permissions:
   contents: read
 
+# One at a time, and a run on main is never cancelled (Roger, 7 Nov 2026); a newer one waits, and replaces any that waits.
 concurrency:
   group: stuck-prs
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   flag:

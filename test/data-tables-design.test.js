@@ -40,6 +40,10 @@ test('the note shows how to point at a row, a column and a cell', () => {
   for (const pointer of ['#row=12', '#col=amount', '#row=12&col=amount']) assert.ok(note.includes(pointer), pointer);
 });
 
-test('the note has a decision section for the way Roger picks', () => {
-  assert.ok(section(read(NOTE), '## Decision').trim().length > 0);
+test('the note records the way Roger picked: B and C together, linked, with a snapshot only on request', () => {
+  const decision = section(read(NOTE), '## Decision');
+  assert.match(decision, /\*\*Picked: B and C together\*\* \(Roger, 6 Nov 2026\)/);
+  assert.match(decision, /FROM Data\/sales\.csv/);
+  assert.match(decision, /`DataSet` thing/);
+  assert.match(decision, /snapshot \(A\) is taken only when a person asks/);
 });

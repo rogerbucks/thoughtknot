@@ -95,7 +95,19 @@ function pack(stage, out, short, version) {
 // The graph spec with its version and its conformance cases, in the package's spec folder (spec_version_released).
 function stageSpec(dir) {
   mkdirSync(join(dir, 'conformance'), { recursive: true });
-  for (const file of ['graph-spec.gql', 'graph-spec-version.json'])
+  for (const file of [
+    'graph-spec.gql',
+    'graph-spec-version.json',
+    'graph-spec-grammar.json',
+    'graph-spec-canonical.md',
+    'graph-spec-library-api.json',
+    'graph-spec-problem-codes.json',
+    'graph-spec-formats.json',
+    'graph-spec-ai-wire.json',
+    'graph-spec-decisions.json',
+    'graph-spec-glossary.json',
+    'graph-spec-engine-catalogue.json',
+  ])
     copyFileSync(join(ROOT, 'requirements', file), join(dir, file));
   copyFileSync(join(ROOT, 'LICENSE-SPEC.md'), join(dir, 'LICENSE-SPEC.md'));
   const cases = join(ROOT, 'python/graph_spec/conformance/Standards');

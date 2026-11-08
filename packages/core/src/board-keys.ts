@@ -8,6 +8,7 @@
 // - Enter opens the text of the item in focus.
 // - C starts a connector from the item in focus; C again on another item joins the two. Escape stops it.
 // - Delete or Backspace takes the item in focus out, with its connectors.
+// - G puts notes that share a tag or a word into frames (the host does it, board-cluster.ts).
 // - Escape lets go of the item in focus.
 import { writeBoard } from './board.ts';
 import type { Board, BoardItem } from './board.ts';

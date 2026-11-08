@@ -22,6 +22,8 @@ export interface Saved {
   visits?: RecentVisit[];
   /** The text of each note just before the plug-in last changed it, by path, newest first (risk NEURO-2). */
   history?: NoteHistory;
+  /** Where graphs are kept: whether who changed what is kept, and in which folder (ES§55, storage_history_layer). */
+  storage?: unknown;
   /** The person's own profile, the personal layer: never in a note (§39). */
   profile?: KeptProfile;
 }

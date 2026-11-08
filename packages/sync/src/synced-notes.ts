@@ -38,6 +38,8 @@ export function spliceBetween(before: string, after: string): Splice {
 export class SyncedNotes {
   readonly #below: Projection;
   readonly #followers = new Map<string, Set<(c: Changed) => void>>();
+  /** What is being done to the notes now. Edits and merges take turns, so a merge never lands under an edit. */
+  #turn: Promise<unknown> = Promise.resolve();
   constructor(below: Projection) {
     this.#below = below;
   }
@@ -52,10 +54,12 @@ export class SyncedNotes {
   }
 
   /** Replaces the text from `from` to `to` by `text`, in `author`'s name: refused when it brings in an error. */
-  async edit(note: string, from: number, to: number, text: string, author: string): Promise<Refused | undefined> {
-    const refused = await this.#below.edit(note, from, to, text, author);
-    if (!refused) this.#tell(note, { read: this.#below.read(note), splice: { from, to, text } });
-    return refused;
+  edit(note: string, from: number, to: number, text: string, author: string): Promise<Refused | undefined> {
+    return this.#inTurn(async () => {
+      const refused = await this.#below.edit(note, from, to, text, author);
+      if (!refused) this.#tell(note, { read: this.#below.read(note), splice: { from, to, text } });
+      return refused;
+    });
   }
 
   /** The note's text was changed outside the editor to `text`: kept as one splice in `author`'s name. */
@@ -65,12 +69,14 @@ export class SyncedNotes {
   }
 
   /** Merges in what other devices wrote, and tells the note's followers. Nothing when no change came. */
-  async sync(note: string): Promise<Joined | undefined> {
-    const before = this.#below.read(note).text;
-    const joined = await this.#below.merge(note);
-    if (joined)
-      this.#tell(note, { read: this.#below.read(note), splice: spliceBetween(before, joined.merged), joined });
-    return joined;
+  sync(note: string): Promise<Joined | undefined> {
+    return this.#inTurn(async () => {
+      const before = this.#below.read(note).text;
+      const joined = await this.#below.merge(note);
+      if (joined)
+        this.#tell(note, { read: this.#below.read(note), splice: spliceBetween(before, joined.merged), joined });
+      return joined;
+    });
   }
 
   /** Calls `follow` each time the note's text changes, here or by a merge. Gives the way to stop. */
@@ -80,11 +86,16 @@ export class SyncedNotes {
     return () => set.delete(follow);
   }
 
-  anchor(note: string, place: number): Anchor {
+  /** Whether the note's text was ever `text`. */
+  hasBeen(note: string, text: string): Promise<boolean> {
+    return this.#below.hasBeen(note, text);
+  }
+
+  anchor(note: string, place: number): Promise<Anchor> {
     return this.#below.anchor(note, place);
   }
 
-  place(note: string, anchor: Anchor): number {
+  place(note: string, anchor: Anchor): Promise<number> {
     return this.#below.place(note, anchor);
   }
 
@@ -92,8 +103,15 @@ export class SyncedNotes {
     return this.#below.read(note);
   }
 
-  history(note: string): Made[] {
+  history(note: string): Promise<Made[]> {
     return this.#below.history(note);
+  }
+
+  /** Runs `work` after what was started before it is done, whether that went well or not. */
+  #inTurn<T>(work: () => Promise<T>): Promise<T> {
+    const done = this.#turn.then(work, work);
+    this.#turn = done.catch(() => undefined);
+    return done;
   }
 
   #tell(note: string, c: Changed): void {

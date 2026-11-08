@@ -228,6 +228,12 @@
   stroke-width: max(2.2px, var(--thoughtknot-link-least, 0px));
   stroke-linejoin: miter;
 }
+/* Zoomed in, the drawing is shown bigger than drawn, and its lines would swell with it. At five times, a 2 px link
+   is 10 px and box edges pile up (Roger, 8 Nov 2026: "crazy busy"). So a line and an outline keep their weight on the
+   screen, as the new rendering's do. A link stays 2 px, 3.2 px highlighted, and a box's edge stays 1 px. */
+.thoughtknot-svg.thoughtknot-near :is(g.edge, g.node, g.cluster) > :is(path, polygon, ellipse, polyline, rect) {
+  vector-effect: non-scaling-stroke;
+}
 /* Focus (spec §25): what a selection keeps stands out by strength and outline, never by colour alone and never by moving
    or hiding anything. A faded box has no fill and an outline no heavier than the drawing's ordinary line. Its words and
    lines keep their colour, so they keep the contrast of §11. The words are at 0.95, which the core's FADE holds to
@@ -676,6 +682,205 @@
   stroke: var(--gn-text-normal);
   stroke-width: 3px;
 }
+/* The side rail (type_rail, Roger 8 Nov 2026). A strip down the start edge of the drawing, flush with it, as Obsidian's
+   ribbon is: the bar's ground and line, no card, no shadow. At its top: 2D, 2.5D, 3D and the globe, the one shown now
+   marked in the accent. Below a line: a button for each group of diagram types, each opening its list beside the rail.
+   Every card on the start side moves along by its width, so nothing over the drawing meets it. Its buttons are
+   44-point targets, 32 under a fine pointer. */
+.thoughtknot-over {
+  --thoughtknot-rail-button: 44px;
+  --thoughtknot-rail-width: calc(var(--thoughtknot-rail-button) + 2 * var(--gn-space-half-1) + 1px);
+}
+.thoughtknot-over > .thoughtknot-rail {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-half-1);
+  width: var(--thoughtknot-rail-width);
+  height: var(--thoughtknot-room, 60vh);
+  border-inline-end: 1px solid var(--gn-border-focus);
+  background: var(--gn-bg-alt);
+  padding: var(--gn-space-half-1);
+}
+.thoughtknot-over > .thoughtknot-rail:not(:has(button)) {
+  display: none;
+}
+.thoughtknot-over:has(> .thoughtknot-rail button) > .thoughtknot-corner:not(.thoughtknot-corner-end) {
+  inset-inline-start: calc(var(--gn-space-2) + var(--thoughtknot-rail-width));
+}
+.thoughtknot-rail-space {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-half-1);
+  border-bottom: 1px solid var(--gn-border);
+  padding-bottom: var(--gn-space-half-1);
+}
+.thoughtknot-rail .thoughtknot-rail-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--thoughtknot-rail-button);
+  min-width: 0;
+  height: var(--thoughtknot-rail-button);
+  border: 0;
+  border-radius: var(--gn-radius-s);
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--gn-text-muted);
+  cursor: var(--gn-cursor-link);
+}
+.thoughtknot-rail .thoughtknot-rail-button:hover {
+  background: var(--gn-bg-hover);
+  color: var(--gn-text-normal);
+}
+/* the way shown now and the group open: a mark on the edge, as the bar underlines; the group drawn now, the accent */
+.thoughtknot-rail .thoughtknot-rail-button[aria-pressed='true'] {
+  box-shadow: inset 2px 0 0 var(--gn-accent);
+  color: var(--gn-accent);
+}
+.thoughtknot-rail .thoughtknot-rail-button.is-now {
+  color: var(--gn-accent);
+}
+.thoughtknot-rail .thoughtknot-rail-button[aria-expanded='true'] {
+  box-shadow: inset 2px 0 0 var(--gn-accent);
+}
+.thoughtknot-rail .thoughtknot-rail-button[aria-expanded='true'] {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-glyph {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--thoughtknot-glyph) center / contain no-repeat;
+  mask: var(--thoughtknot-glyph) center / contain no-repeat;
+  pointer-events: none;
+}
+.thoughtknot-rail .thoughtknot-rail-button .thoughtknot-glyph {
+  width: 18px;
+  height: 18px;
+}
+/* A group's list: a menu beside its button, as the bar's More list looks, until a type is picked or Escape is pressed.
+   Each row is a picture and a name. Why a type does not fit, or is suggested, is its tooltip and is read out. */
+.thoughtknot-rail > .thoughtknot-rail-list {
+  position: absolute;
+  top: var(--thoughtknot-list-top, 0);
+  inset-inline-start: calc(100% + var(--gn-space-1));
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 10rem;
+  max-width: min(16rem, 80vw);
+  max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+  overflow-y: auto;
+  margin: 0;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  padding: var(--gn-space-1);
+  list-style: none;
+}
+.thoughtknot-rail > .thoughtknot-rail-list[hidden] {
+  display: none;
+}
+.thoughtknot-rail-list li {
+  display: flex;
+  position: relative;
+  flex: none; /* the list scrolls; a row never shrinks below its words */
+  align-items: center;
+  gap: var(--gn-space-2);
+  border-radius: var(--gn-radius-s);
+  padding: 0 var(--gn-space-2);
+  min-height: 44px;
+  color: var(--gn-text-normal);
+}
+.thoughtknot-rail-list li:not(.thoughtknot-type-unfit):hover {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-rail-list button {
+  flex: 1 1 auto;
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  height: auto;
+  color: inherit;
+  text-align: start;
+}
+/* the whole row takes the click of its button, and shows its focus */
+.thoughtknot-rail-list button::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--gn-radius-s);
+  content: '';
+}
+.thoughtknot-rail-list button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.thoughtknot-rail-list button:focus-visible::after {
+  outline: 2px solid var(--gn-border-focus);
+  outline-offset: -2px;
+}
+.thoughtknot-rail-list button:not(:disabled) {
+  cursor: var(--gn-cursor-link);
+}
+/* the type drawn now: its row grounded and its name in bold, the picture alone in the accent, so its words keep their
+   contrast */
+.thoughtknot-rail-list li.thoughtknot-type-now {
+  background: var(--gn-bg-alt);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-rail-list li.thoughtknot-type-now .thoughtknot-glyph {
+  color: var(--gn-accent);
+}
+.thoughtknot-rail-list li.thoughtknot-type-unfit {
+  color: var(--gn-text-faint);
+}
+/* On a phone the drawing is narrow, so the rail lies across its top start in one row, and a list opens below it. It
+   leaves the rest of the top free, for the level badge beside it. */
+@media (max-width: 599px) {
+  .thoughtknot-over {
+    --thoughtknot-rail-button: 36px;
+    --thoughtknot-rail-height: calc(var(--thoughtknot-rail-button) + 2 * var(--gn-space-half-1) + 1px);
+  }
+  .thoughtknot-over > .thoughtknot-rail {
+    flex-direction: row;
+    width: auto;
+    height: var(--thoughtknot-rail-height);
+    border-bottom: 1px solid var(--gn-border-focus);
+    border-end-end-radius: var(--gn-radius-m);
+  }
+  .thoughtknot-rail-space {
+    flex-direction: row;
+    border-bottom: 0;
+    border-inline-end: 1px solid var(--gn-border);
+    padding: 0 var(--gn-space-half-1) 0 0;
+  }
+  .thoughtknot-rail .thoughtknot-rail-button:is([aria-pressed='true'], [aria-expanded='true']) {
+    box-shadow: inset 0 -2px 0 var(--gn-accent);
+  }
+  /* every card on the drawing starts below the rail, so none meets it */
+  .thoughtknot-over:has(> .thoughtknot-rail button) > :is(.thoughtknot-corner, .thoughtknot-dock.is-free) {
+    top: calc(var(--gn-space-2) + var(--thoughtknot-rail-height));
+  }
+  .thoughtknot-over:has(> .thoughtknot-rail button) > .thoughtknot-corner:not(.thoughtknot-corner-end) {
+    inset-inline-start: var(--gn-space-2);
+  }
+  .thoughtknot-rail > .thoughtknot-rail-list {
+    top: calc(100% + var(--gn-space-1));
+    inset-inline-start: var(--thoughtknot-list-start, 0);
+    max-width: min(16rem, calc(100vw - 4 * var(--gn-space-2)));
+    max-height: calc(var(--thoughtknot-room, 60vh) - var(--thoughtknot-rail-height) - 2 * var(--gn-space-2));
+  }
+}
 /* The top start corner of the drawing (§25, controls_chip, controls_dock). It holds the chip that says what the
    drawing shows, then the docks, stacked in one card. Roger chose the Zen-led refresh on 1 Nov 2026: one controls
    card, not two. It floats over the drawing, never shrinking it or pushing it down. It is as wide as its words need.
@@ -697,10 +902,19 @@
   background: var(--gn-bg);
   box-shadow: var(--gn-shadow-s);
 }
-@media (min-width: 1024px) {
+@media (min-width: 600px) {
+  /* side by side, the two corner cards never meet in the middle (panels_stack) */
   .thoughtknot-over > .thoughtknot-corner {
-    max-width: 20rem;
-    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2));
+    max-width: min(20rem, calc(50% - 1.5 * var(--gn-space-2)));
+  }
+}
+@media (min-width: 1024px) {
+  /* down its side, it leaves the foot clear: the mini-map, and the head of the 3D view's pad (panels_stack) */
+  .thoughtknot-over > .thoughtknot-corner {
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2) - var(--thoughtknot-start-fixed, 0rem));
+  }
+  .thoughtknot-over > .thoughtknot-corner.thoughtknot-corner-end {
+    max-height: calc(var(--thoughtknot-room, 60vh) - 2 * var(--gn-space-2) - var(--thoughtknot-end-fixed, 0rem));
   }
 }
 /* A dock moved to the end side joins a card like it in the top end corner. One moved free is a card of its own where
@@ -784,6 +998,11 @@
 .thoughtknot-chip.is-folded
   > .thoughtknot-chip-body
   > :not(.thoughtknot-untangle, .thoughtknot-type-plugin, [role='status'], [role='alert']) {
+  display: none;
+}
+/* With nothing to say, the chip is gone, so no "View" opens on nothing (panels_compact, Roger 8 Nov 2026: "I don't get
+   the View panel") */
+.thoughtknot-corner > .thoughtknot-chip:not(:has(> .thoughtknot-chip-body > :not([hidden], :empty))) {
   display: none;
 }
 .thoughtknot-chip-body {
@@ -1294,7 +1513,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   color: var(--gn-text-normal);
 }
 /* the layout's options (layout_saved_with_view): each its name, then a slider, its touch target 44 pixels high */
-.thoughtknot-view-menu > .thoughtknot-layout-option {
+.thoughtknot-view-tuning > .thoughtknot-layout-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1303,7 +1522,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   min-height: 44px;
   color: var(--gn-text-normal);
 }
-.thoughtknot-view-menu > .thoughtknot-layout-option > input {
+.thoughtknot-view-tuning > .thoughtknot-layout-option > input {
   flex: 1;
   min-width: 96px;
   max-width: 160px;
@@ -1579,127 +1798,6 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   outline: 2px solid var(--gn-border-focus);
   outline-offset: -2px;
 }
-:is(.thoughtknot-type-list, .thoughtknot-view-list) {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
-  gap: var(--gn-space-2);
-  margin: 0;
-  border-top: 1px solid var(--gn-border);
-  border-bottom: 1px solid var(--gn-border);
-  background: var(--gn-bg-alt);
-  padding: var(--gn-space-3);
-  list-style: none;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list)[hidden] {
-  display: none;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) li {
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  gap: var(--gn-space-half-2);
-  border: 1px solid var(--gn-border);
-  border-radius: var(--gn-radius-m);
-  background: var(--gn-bg);
-  padding: var(--gn-space-2) var(--gn-space-3);
-  min-height: 44px;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) li:not(.thoughtknot-type-unfit):hover {
-  border-color: var(--gn-border-hover);
-  background: var(--gn-bg-hover);
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) button {
-  display: block;
-  box-shadow: none;
-  border: none;
-  background: transparent;
-  padding: 0;
-  width: 100%;
-  height: auto;
-  min-height: 1.6em;
-  color: var(--gn-text-normal);
-  font-weight: var(--gn-font-weight-semibold);
-  text-align: start;
-}
-/* the whole tile takes the click of its button, and shows its focus */
-:is(.thoughtknot-type-list, .thoughtknot-view-list) button::after {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--gn-radius-m);
-  content: '';
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) button:focus-visible::after {
-  outline: 2px solid var(--gn-border-focus);
-  outline-offset: 1px;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) button:not(:disabled) {
-  cursor: var(--gn-cursor-link);
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) .thoughtknot-type-why:empty {
-  display: none;
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now {
-  border: 2px solid var(--gn-accent);
-  padding: calc(var(--gn-space-2) - 1px) calc(var(--gn-space-3) - 1px);
-}
-:is(.thoughtknot-type-list, .thoughtknot-view-list) li.thoughtknot-type-now button {
-  font-weight: var(--gn-font-weight-bold);
-}
-/* One grid for every type and view (F7). The views follow the types in the same panel, with no second rule. */
-.thoughtknot-type-list li.thoughtknot-type-suggested {
-  border-style: dashed;
-  border-color: var(--gn-accent);
-}
-.thoughtknot-type-list:not([hidden]) + .thoughtknot-view-list {
-  border-top: none;
-  padding-top: 0;
-}
-/* the rarer views, folded under More views across the whole panel: their tiles a grid of their own (Q-12, option B) */
-.thoughtknot-view-list li.thoughtknot-view-more {
-  grid-column: 1 / -1;
-  border: none;
-  background: none;
-  padding: 0;
-  min-height: 0;
-}
-.thoughtknot-view-list li.thoughtknot-view-more:hover {
-  background: none;
-}
-.thoughtknot-view-more summary {
-  cursor: pointer;
-  padding: var(--gn-space-2) 0;
-  min-height: 44px;
-}
-.thoughtknot-view-more ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
-  gap: var(--gn-space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-/* a type that does not fit cannot be chosen, so it is never focused. It is shown after those that fit, a slim row
-   across the panel with why beside its name */
-.thoughtknot-type-list li.thoughtknot-type-unfit {
-  flex-direction: row;
-  flex-wrap: wrap;
-  order: 1;
-  align-items: baseline;
-  column-gap: var(--gn-space-3);
-  grid-column: 1 / -1;
-  border-style: dashed;
-  background: transparent;
-  padding-block: var(--gn-space-1);
-}
-.thoughtknot-type-list li.thoughtknot-type-unfit button {
-  width: auto;
-  color: var(--gn-text-faint);
-  font-weight: normal;
-}
 .thoughtknot-type-stopped {
   display: flex;
   flex-wrap: wrap;
@@ -1768,6 +1866,23 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   --thoughtknot-row-h: 2.25em;
   --thoughtknot-gutter: 3.5em;
 }
+/* its scroll bars are always drawn: a Mac hides plain ones until a scroll starts (Roger, 8 Nov 2026) */
+.thoughtknot-table-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background-color: var(--gn-bg-alt);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--gn-text-faint);
+  border: 2px solid var(--gn-bg-alt);
+  border-radius: var(--gn-radius-m);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gn-text-muted);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-corner {
+  background-color: var(--gn-bg-alt);
+}
 .thoughtknot-table-scroll.thoughtknot-rows-short {
   --thoughtknot-row-h: 1.75em;
 }
@@ -1783,6 +1898,10 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   margin-bottom: var(--gn-space-3);
   font-size: calc(var(--gn-font-size-s) * var(--thoughtknot-text-scale, 1));
   color: var(--gn-text-normal);
+}
+/* the table fills the card's width, so its rows and stripes run the whole way across */
+.thoughtknot-table table:not(.is-sized) {
+  min-inline-size: 100%;
 }
 .thoughtknot-table table.is-sized {
   table-layout: fixed;
@@ -1843,7 +1962,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   z-index: 1;
 }
 .thoughtknot-table tbody td:nth-child(2) {
-  font-weight: var(--gn-font-weight-bold);
+  font-weight: var(--gn-font-weight-semibold);
 }
 .thoughtknot-table thead :is(.thoughtknot-row-head, th[data-col='0']) {
   z-index: 3;
@@ -2409,7 +2528,7 @@ pre.thoughtknot-code {
 .thoughtknot-viewport.thoughtknot-new-rendering > svg.thoughtknot-svg {
   visibility: hidden;
 }
-.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-level-badge, .thoughtknot-mini-map) {
+.thoughtknot-viewport.thoughtknot-new-rendering > :is(.thoughtknot-mini-map):not(.thoughtknot-stage-mini) {
   display: none;
 }
 .thoughtknot-render-stage {
@@ -2606,18 +2725,40 @@ pre.thoughtknot-code {
   .thoughtknot-fullscreen .thoughtknot-view {
     position: relative;
   }
+  /* down the end side, below the panels docked there and above the mini-map and the pad: never over them
+     (panels_stack). The panels docked there take at most 40% of the drawing while it shows, and the pad a quarter. */
   .thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-details {
     position: absolute;
     inset-inline-end: var(--gn-space-2);
-    inset-block-end: calc(200px + 3 * var(--gn-space-2));
+    inset-block-start: calc(
+      var(--thoughtknot-drawing-top, 0rem) + max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem))
+    );
     z-index: 5;
     min-width: min(18rem, 40%);
     max-width: min(24rem, 40%);
-    max-height: 60%;
+    max-height: calc(
+      100% - var(--thoughtknot-drawing-top, 0rem) - var(--thoughtknot-drawing-foot, 0rem) -
+        max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem)) -
+        max(var(--gn-space-2), var(--thoughtknot-end-foot, 0rem))
+    );
+    box-sizing: border-box;
     border: 1px solid var(--gn-border-focus);
     border-radius: var(--gn-radius-m);
     background: var(--gn-bg);
     box-shadow: var(--gn-shadow-l);
+  }
+}
+
+@media (min-width: 1024px) {
+  .thoughtknot-fullscreen
+    .thoughtknot-view:has(> .thoughtknot-details:not([hidden]))
+    > .thoughtknot-over
+    > .thoughtknot-corner.thoughtknot-corner-end {
+    max-height: calc(0.4 * var(--thoughtknot-room, 60vh));
+  }
+  /* the 3D view's pad gives way too, so the details always keep a third of the end side */
+  .thoughtknot-fullscreen .thoughtknot-view:has(> .thoughtknot-details:not([hidden])) .thoughtknot-space-pad {
+    max-height: calc(0.25 * var(--thoughtknot-drawing-height, 60vh));
   }
 }
 
@@ -2721,6 +2862,61 @@ pre.thoughtknot-code {
 .thoughtknot-progress progress {
   inline-size: 8em;
   accent-color: var(--gn-accent);
+}
+/* A long block being drawn (§44, drawing_shown_at_once): a quiet frame the size of a card, with a moving bar. It
+   fades in after a moment, so a quick drawing never shows it. Both move on their own, even while the page is busy. */
+.thoughtknot-drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gn-space-2);
+  min-height: 16rem;
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+  color: var(--gn-text-muted);
+  opacity: 0;
+  animation: thoughtknot-drawing-in var(--gn-motion-fade) var(--gn-ease-soft) var(--gn-motion-fade) forwards;
+}
+.thoughtknot-drawing-bar {
+  overflow: hidden;
+  inline-size: 10rem;
+  block-size: 3px;
+  border-radius: 3px;
+  background: var(--gn-border);
+}
+.thoughtknot-drawing-bar::after {
+  content: '';
+  display: block;
+  block-size: 100%;
+  inline-size: 40%;
+  border-radius: 3px;
+  background: var(--gn-accent);
+  animation: thoughtknot-drawing-run var(--gn-motion-pulse) var(--gn-ease-soft) infinite;
+}
+/* once the card under it shows its own wait, that is the one shown */
+.thoughtknot-drawing:has(~ .thoughtknot > *) {
+  display: none;
+}
+@keyframes thoughtknot-drawing-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes thoughtknot-drawing-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thoughtknot-drawing-bar::after {
+    animation: none;
+    inline-size: 100%;
+  }
 }
 /* Every keyboard shortcut (§44, shortcuts_listed): a table for each place, keys first. In a card it sits under the
    bar, with its Close button; in Obsidian's dialog it is the dialog's content. */
@@ -2877,8 +3073,7 @@ body.thoughtknot-reading .thoughtknot-view,
 .thoughtknot-find,
 .thoughtknot-filter,
 .thoughtknot-view-menu,
-.thoughtknot-type-list,
-.thoughtknot-view-list,
+.thoughtknot-rail-list,
 .thoughtknot-suggestions,
 .thoughtknot-editor {
   line-height: var(--gn-line-height);
@@ -3794,6 +3989,10 @@ body.thoughtknot-easier-reading
 .thoughtknot-view:has(.thoughtknot-phone-sheet.is-half) .thoughtknot-mini-map {
   inset-block-end: calc(50% + var(--gn-space-2));
 }
+.thoughtknot-stage-mini {
+  inline-size: 160px;
+  block-size: 120px;
+}
 .thoughtknot-mini-svg {
   display: block;
   max-width: none;
@@ -4061,10 +4260,17 @@ body.thoughtknot-easier-reading
    On a phone it rides above the control sheet, as the mini-map does. */
 .thoughtknot-space-pad {
   position: absolute;
-  /* above the 3D mini-map, which holds the corner (panels_never_overlap) */
-  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + 2 * var(--gn-space-2) + var(--thoughtknot-space-mini, 0px));
+  /* in the bottom end corner: the 3D mini-map holds the bottom start. It is no taller than the room left below the
+     corner card on its side, and scrolls inside (panels_stack). */
+  inset-block-end: calc(var(--thoughtknot-sheet, 0px) + var(--gn-space-2));
   inset-inline-end: var(--gn-space-2);
   z-index: 1;
+  max-height: calc(
+    var(--thoughtknot-drawing-height, 60vh) - var(--thoughtknot-sheet, 0rem) - var(--gn-space-2) -
+      max(var(--gn-space-2), var(--thoughtknot-end-top, 0rem))
+  );
+  box-sizing: border-box;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--gn-space-half-2);
@@ -4523,8 +4729,31 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-level-legend.is-hidden {
   display: none;
 }
+/* The key, folded into the View panel (panels_key, level-legend.ts): shut until opened, gone while there is no key. Its
+   chips line up from the start, as the panel's other rows do */
+.thoughtknot-view-key:not(:has(.thoughtknot-level-legend:not(.is-hidden))) {
+  display: none;
+}
+/* The Layout section (cluster_menu_plain): the fine-tuning, shut until opened. Roger, 8 Nov 2026: the View panel was
+   "really chunky". Its summary reads as the Key's does, and its rows stack as the panel's other rows do */
+.thoughtknot-view-tuning {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-view-tuning:not([open]) > :not(summary) {
+  display: none;
+}
+:is(.thoughtknot-view-key, .thoughtknot-view-tuning) > summary {
+  min-height: 24px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.thoughtknot-view-key :is(.thoughtknot-level-legend, .thoughtknot-level-own, .thoughtknot-level-chips) {
+  justify-content: flex-start;
+}
 /* every control in the badge is at least 24 by 24 pixels, so a finger can hit it (WCAG 2.5.8) */
-.thoughtknot-level-badge :is(button, select) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key) :is(button, select) {
   min-width: 24px;
   min-height: 24px;
 }
@@ -4548,7 +4777,8 @@ img.thoughtknot-picture-hidden,
   padding: 0 var(--gn-space-1);
   font-size: var(--gn-font-size-xs);
 }
-.thoughtknot-level-badge:not(:hover, :focus-within) :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
+:is(.thoughtknot-level-badge, .thoughtknot-view-key):not(:hover, :focus-within)
+  :is(.thoughtknot-level-colour, .thoughtknot-level-edit) {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -4611,6 +4841,10 @@ img.thoughtknot-picture-hidden,
 }
 .thoughtknot-level-swatch[data-hue='5'] {
   background: var(--gn-branch-5);
+}
+/* the new rendering paints its own colours, and its key shows them (Roger, 7 Nov 2026) */
+.thoughtknot-level-swatch.has-own {
+  background: var(--thoughtknot-swatch);
 }
 /* Areas and topics take lighter shades of their subject's colour. */
 .thoughtknot-svg .thoughtknot-cloud[data-shade='1'] {
@@ -4705,6 +4939,7 @@ img.thoughtknot-picture-hidden,
 }
 /* the table's filters and Total row (§57, table_view): rows off screen are not drawn until they scroll into view */
 .thoughtknot-table-filters {
+  flex: none; /* the scrolling rows under it give way, never the boxes */
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -4712,8 +4947,13 @@ img.thoughtknot-picture-hidden,
   padding-block: var(--gn-space-1);
 }
 .thoughtknot-table-filter {
-  flex: 0 0 8em;
-  min-width: 0;
+  flex: 1 1 8em;
+  min-width: 6em;
+  max-width: 16em;
+  min-block-size: 1.75rem;
+  box-sizing: border-box;
+  padding: 2px var(--gn-space-2);
+  font-size: var(--gn-font-size-s);
 }
 .thoughtknot-grid tbody tr {
   content-visibility: auto;
@@ -4722,12 +4962,18 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-grid tbody tr[hidden] {
   display: none;
 }
+/* the Total row stays at the foot, over the rows and the first column that scroll under it, never beside them */
 .thoughtknot-total-row td,
 .thoughtknot-total-row th {
   position: sticky;
   bottom: 0;
+  z-index: 2;
   background: var(--gn-bg);
+  border-block-start: 1px solid var(--gn-border);
   font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-table .thoughtknot-total-row > th.thoughtknot-row-head {
+  z-index: 3;
 }
 
 /* The describe box of the Highlight things form (§56, rule_look_describe): its words and the button beside them. */
@@ -4739,4 +4985,121 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-rule-describe-row input {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* Compact panels (§25, panels_compact). Roger, 6 Nov 2026: the side panels are "way too big", and hold "a ton of text
+   … Not useful for daily use … Use tool tips". Where a mouse or trackpad hovers, the panels are dense, as a modern
+   app's are:
+   - each row and button is 28 pixels high, not the 44 a finger needs, still over the 24 of WCAG's SC 2.5.8;
+   - a switch's hint, and the ladder's, show as its tooltip, not as lines under it. A screen reader still hears each,
+     as the switch is described by it. The words on and off go too: the knob's side says which, and so does the switch
+     to a screen reader;
+   - the 2D card's dock shows its key controls as a row of icons, each named in its tooltip;
+   - their words are the small size.
+   A touch screen keeps the 44-point rows and the hints, as it has no hover to show a tooltip. */
+@media (hover: hover) and (pointer: fine) {
+  .thoughtknot-over {
+    --thoughtknot-rail-button: 32px; /* the side rail (type_rail) */
+  }
+  .thoughtknot-rail-list li {
+    min-height: 30px;
+  }
+  .thoughtknot-over :is(.thoughtknot-corner, .thoughtknot-dock.is-free),
+  .thoughtknot-space-pad,
+  .thoughtknot-view > .thoughtknot-details {
+    font-size: var(--gn-font-size-s);
+  }
+  .thoughtknot-corner > :is(.thoughtknot-dock, .thoughtknot-chip),
+  .thoughtknot-over > .thoughtknot-dock.is-free {
+    gap: var(--gn-space-1);
+    padding: var(--gn-space-1) var(--gn-space-2);
+  }
+  .thoughtknot-dock button,
+  .thoughtknot-untangle-offers button,
+  .thoughtknot-dock-fold,
+  .thoughtknot-dock-more > summary,
+  .thoughtknot-chip-fold,
+  .thoughtknot-view-menu button.thoughtknot-switch,
+  .thoughtknot-view-menu button.thoughtknot-detail-rung,
+  .thoughtknot-view-menu > .thoughtknot-group-by,
+  .thoughtknot-view-tuning > .thoughtknot-layout-option {
+    min-width: 28px;
+    min-height: 28px;
+  }
+  .thoughtknot-dock-body,
+  .thoughtknot-dock-more-body {
+    gap: var(--gn-space-half-2);
+  }
+  .thoughtknot-view-menu :is(.thoughtknot-switch-hint, .thoughtknot-switch-state):not(.thoughtknot-own-hint) {
+    display: none;
+  }
+  .thoughtknot-view-menu > .thoughtknot-lens-choice,
+  .thoughtknot-view-tuning > .thoughtknot-layout-choice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gn-space-2);
+    padding: 0 var(--gn-space-2);
+  }
+  .thoughtknot-untangle-offers > button.clickable-icon {
+    min-height: 28px;
+  }
+  .thoughtknot-view-menu .thoughtknot-switch-words {
+    padding: 0;
+  }
+  .thoughtknot-view-dock > .thoughtknot-dock-body {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .thoughtknot-view-dock.has-keys > .thoughtknot-dock-body > button {
+    width: auto;
+  }
+  .thoughtknot-view-dock > .thoughtknot-dock-body .thoughtknot-badge-text {
+    display: none;
+  }
+  /* A panel's head is its name and its fold (panels_compact). The head drags it, and dropped near a side it docks
+     there. So the grip and the dock buttons wait out of sight, taking no room. A key that brings focus shows them. */
+  .thoughtknot-dock-head:not(:focus-within) :is(.thoughtknot-dock-grip, .thoughtknot-dock-place) {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* the 2D card's Detail dock, open, is one line: its name, its fold, then its icons */
+  .thoughtknot-corner > .thoughtknot-view-dock:not(.is-folded) {
+    flex-direction: row;
+    align-items: center;
+  }
+  /* Roger, 8 Nov 2026: the detail panel "seems really chunky". So what can be done with the selected thing is one row
+     of icons, each named in its tooltip, as the editor's buttons are. Its fields are 28 pixels high */
+  .thoughtknot-untangle-offers {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: fit-content;
+  }
+  .thoughtknot-untangle-offers > button.clickable-icon {
+    width: auto;
+    padding-inline: var(--gn-space-1);
+  }
+  :is(.thoughtknot-untangle-offers, .thoughtknot-edit-actions) > button .thoughtknot-badge-text {
+    display: none;
+  }
+  .thoughtknot-untangle-reach {
+    flex-basis: 100%;
+    margin-inline-start: 0;
+  }
+  .thoughtknot-edit-card {
+    padding: var(--gn-space-1);
+    font-size: var(--gn-font-size-s);
+  }
+  .thoughtknot-edit-actions > button,
+  .thoughtknot-edit-name,
+  .thoughtknot-edit-line-input {
+    min-width: 28px;
+    min-height: 28px;
+  }
+}
+
+/* A card drawn again keeps its height until its things have glided to their places (type_change_keeps_size). */
+.thoughtknot-held {
+  min-height: var(--thoughtknot-held);
 }

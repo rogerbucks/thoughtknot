@@ -180,6 +180,10 @@ export const DRAWING_SOURCE_WORDS = {
   'certainty.said.doubtful': 'doubtful',
   'certainty.said.contested': 'contested',
   // what the View menu groups things by (group-by.ts)
+  'rail.links': 'Links',
+  'rail.areas': 'Areas',
+  'rail.data': 'Data',
+  'rail.group-now': '{group}: {type} drawn now',
   'view.group-by': 'Group by',
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
@@ -272,10 +276,14 @@ export const DRAWING_SOURCE_WORDS = {
     'A fisheye enlarges what is round the pointer, or the selection. Hyperbolic and sphere lay the whole graph on a disc round the middle of the view: drag to bring a part there. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
-  'view.list.more': 'More views',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',
+  // the colour key, folded into the View panel (editor spec §25, panels_key, level-legend.ts)
+  'view.key': 'Key',
+  'view.key-hint': 'What each colour stands for. Point at a subject to spotlight it; click it to keep it.',
+  'view.tuning': 'Layout',
+  'view.tuning-hint': 'Fine-tune how the drawing is laid out: spacing, link length, direction and shape.',
   'view.hint.detail':
     'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
   // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)

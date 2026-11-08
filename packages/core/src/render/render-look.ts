@@ -2,6 +2,7 @@
 // the new rendering paints comes from here, so the look lives in one place. Subjects take the approved mockups'
 // colours, light and dark. Their areas and topics take nearby shades, so a range reads as one family (Roger, 3 Nov).
 // Host-free and pure.
+import type { Scene } from './render-scene.ts';
 
 /** A colour as red, green and blue, 0 to 255. */
 export type Rgb = [number, number, number];
@@ -12,6 +13,8 @@ export interface Look {
   ink: string;
   paper: string;
   faint: string;
+  /** The card an item's name sits on: white in the mockups, with a dot of its subject's colour. */
+  card: string;
 }
 
 /** The mockups' look in a light theme. */
@@ -20,6 +23,7 @@ export const LIGHT: Look = {
   ink: '#18202c',
   paper: '#f6f8fc',
   faint: '#d5dbe6',
+  card: '#ffffff',
 };
 
 /** The mockups' look in a dark theme. */
@@ -28,6 +32,7 @@ export const DARK: Look = {
   ink: '#eef2f8',
   paper: '#11151d',
   faint: '#2a3242',
+  card: '#1c2230',
 };
 
 /** `hex` as red, green and blue. */
@@ -82,3 +87,37 @@ export function contrast(a: string, b: string): number {
 /** Black or white, whichever reads better on `fill`. */
 export const inkOn = (fill: string): string =>
   contrast(fill, '#000000') >= contrast(fill, '#ffffff') ? '#000000' : '#ffffff';
+
+/** `a` moved toward `b` by `t`, 0 to 1. */
+export function mix(a: string, b: string, t: number): string {
+  const [p, q] = [rgbOf(a), rgbOf(b)];
+  return hexOf(p.map((c, i) => c + ((q[i] as number) - c) * t) as Rgb);
+}
+
+/**
+ * `colour` as text on `card`, kept in its hue: moved toward the look's ink only as far as it must to read (WCAG 4.5).
+ * So a name keeps its subject's colour, as in the mockups, and a pale one is still readable.
+ */
+export function inkOf(colour: string, card: string, look: Look): string {
+  for (let t = 0; t < 1; t += 0.05) {
+    const ink = mix(colour, look.ink, t);
+    if (contrast(ink, card) >= 4.5) return ink;
+  }
+  return look.ink;
+}
+
+/** A subject's own colour, as an index into the look's, where the person picked one on the colour key. */
+export type OwnColour = (subject: string) => number | undefined;
+
+/** The colour of every node: subjects in turn, or the one picked for them, their children shades of them. */
+export function coloursOf(scene: Scene, look: Look, own?: OwnColour): Map<string, string> {
+  const colours = new Map<string, string>();
+  const paint = (key: string, colour: string): void => {
+    colours.set(key, colour);
+    const kids = scene.nodes.get(key)?.children ?? [];
+    kids.forEach((k, i) => paint(k, shadeOf(colour, i, kids.length, look)));
+  };
+  // subjects take colours in the order the note first names them, as the mockups do: Work blue, Money orange
+  scene.named.forEach((k, i) => paint(k, subjectColour(look, own?.(k) ?? i)));
+  return colours;
+}

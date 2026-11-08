@@ -8,10 +8,12 @@ import { vaultFolder } from './vault-folder.ts';
 import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './settings-aids.ts';
 import { SWITCH_OPTIONS } from './settings-switches.ts';
-import { MATRIX_OPTIONS } from './settings-matrix.ts';
+import { MATRIX_OPTIONS, matrixFrom } from './settings-matrix.ts';
+import { DEFAULT_REACH, REACH_OPTIONS, reachFrom, type ReachSettings } from './settings-reach.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
-import { OWN_PRESET, STARTERS, adoptOwn } from './view-presets.ts';
+import { ownFields, OWN_PRESETS_OPTION } from './settings-own.ts';
+import { OWN_PRESET, STARTERS } from './view-presets.ts';
 
 export { aiModel, type AiModel } from './ai-model.ts';
 
@@ -32,7 +34,7 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings {
+export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings, ReachSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -51,8 +53,8 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   indent: Indent;
   /** The best fit of the locked style's directions, or one of them. */
   viewPreset: string; // the view preset last picked (§69)
-  /** A preset of the person's own, as the text of the one file it moves in (view_presets_portable); none, empty. */
-  ownPreset: string;
+  ownPreset: string; // a preset brought in from a file, as that file's text (view_presets_portable)
+  ownPresets: string; // the list of the person's own presets, as one small text (view_presets_own_list)
   direction: string;
   /** How far focus reaches from a selected thing: one step, or two (§25). */
   focusDepth: FocusDepthSetting;
@@ -105,6 +107,7 @@ export const DEFAULT_SETTINGS: Settings = {
   indent: 'four',
   viewPreset: 'default',
   ownPreset: '',
+  ownPresets: '',
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'off',
@@ -118,7 +121,7 @@ export const DEFAULT_SETTINGS: Settings = {
   detailsOpen: 'off',
   drawingHeight: 'most',
   easierReading: 'off',
-  newRendering: 'off',
+  newRendering: 'on',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -126,6 +129,7 @@ export const DEFAULT_SETTINGS: Settings = {
   decider: '',
   ...DEFAULT_PICTURES,
   ...DEFAULT_TYPING,
+  ...DEFAULT_REACH,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -219,6 +223,7 @@ export const OPTIONS: Option[] = [
       'Each AI model the editor may ask, and its purpose. Each has a ceiling: the highest classification of note it may be sent, or a row of the destination matrix.',
   },
   ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
+  ...REACH_OPTIONS, // what a public reviewer may have (ES§19)
   {
     key: 'indent',
     section: 'Formatting',
@@ -301,6 +306,7 @@ export const OPTIONS: Option[] = [
     sentence: 'Exports of a note above this classification ask you first. Choose one of the classifications set above.',
   },
   ...PICTURE_OPTIONS, // the pictures for readers (§62)
+  ...OWN_PRESETS_OPTION, // the list of the person's own view presets
   {
     key: 'decider',
     section: 'Proposals',
@@ -310,7 +316,6 @@ export const OPTIONS: Option[] = [
   },
 ];
 
-const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 const oneOf = <T extends string>(key: keyof Settings, v: unknown, fallback: T): T =>
   (OPTIONS.find((o) => o.key === key)?.choices ?? []).some((c) => c.value === v) ? (v as T) : fallback;
 
@@ -322,8 +327,6 @@ export function settingsFrom(saved: unknown): Settings {
   const given: unknown[] = Array.isArray(s.classifications) ? s.classifications : [];
   const levels = given.filter((c): c is string => typeof c === 'string');
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
-  // the person's own preset, taken as the settings are read in, so every host that reads them has it (§69)
-  const own = adoptOwn(text(s.ownPreset));
   return {
     language: oneOf('language', s.language, d.language),
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
@@ -346,16 +349,10 @@ export function settingsFrom(saved: unknown): Settings {
           .filter((m): m is Record<string, unknown> => !!m && typeof m === 'object')
           .map((m) => aiModel(m, classifications))
       : [],
-    aiMatrixNote: text(s.aiMatrixNote).trim(),
-    aiClassMap: Object.fromEntries(
-      Object.entries(s.aiClassMap && typeof s.aiClassMap === 'object' ? s.aiClassMap : {}).filter(
-        (e): e is [string, string] => typeof e[1] === 'string',
-      ),
-    ),
+    ...matrixFrom(s),
     indent: oneOf<Indent>('indent', s.indent, d.indent),
-    ownPreset: own ? text(s.ownPreset) : d.ownPreset,
-    // Your own is picked only while there is one
-    viewPreset: s.viewPreset === OWN_PRESET && !own ? d.viewPreset : oneOf('viewPreset', s.viewPreset, d.viewPreset),
+    // the person's own presets, taken as the settings are read in (§69)
+    ...ownFields(s, d.viewPreset, (v) => oneOf('viewPreset', v, d.viewPreset)),
     direction: oneOf('direction', s.direction, d.direction),
     focusDepth: oneOf<FocusDepthSetting>('focusDepth', s.focusDepth, d.focusDepth),
     labelsByZoom: oneOf<SwitchSetting>('labelsByZoom', s.labelsByZoom, d.labelsByZoom),
@@ -382,6 +379,7 @@ export function settingsFrom(saved: unknown): Settings {
     decider: typeof s.decider === 'string' ? s.decider.replace(/[\r\n]+/g, ' ').slice(0, MOST_NAME) : d.decider,
     ...picturesFrom(s),
     ...typingFrom(s),
+    ...reachFrom(s),
   };
 }
 

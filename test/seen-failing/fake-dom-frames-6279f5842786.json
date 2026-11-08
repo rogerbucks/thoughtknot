@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/fake-dom-frames.test.js",
+  "test": "a frame runs as before while the globals are up, and a cancelled one does not",
+  "seen_failing_first": false,
+  "evidence": "The fix is in the test stand-in (test/host/fake-dom.js), which the replay keeps, so both pass against the code before. Seen failing by hand before the fix: 2 of 2 failed, and details-sheet-dock.test.js failed as a file on macOS."
+}

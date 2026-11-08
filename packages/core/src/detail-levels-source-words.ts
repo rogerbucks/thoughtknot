@@ -51,4 +51,7 @@ export const DETAIL_LEVELS_SOURCE_WORDS = {
   'levels.ai': 'Name with AI',
   'levels.cloud-label': '{name}, {count} things, in {level}. Enter opens it; Backspace goes back.',
   'levels.ai-label': 'Ask your AI to name the subjects, areas and topics',
+  'levels.faint-roads': 'Faint roads',
+  'levels.faint-roads-hint':
+    'Keeps the roads between bigger groups faintly in sight as you zoom in. Off unless you turn it on.',
 } as const;

@@ -99,6 +99,16 @@ describe('the counts', () => {
     assert.deepEqual(covered(marks, [], frame), { marks: 0, pixels: 0 });
   });
 
+  // proves: render_chrome_slots
+  test('on the new rendering’s canvas, the cover is the painted pixels under a control, not the frame under it', () => {
+    const marks = [{ x: 300, y: 200, w: 50, h: 50, text: 'clear' }];
+    const controls = [{ x: 0, y: 0, w: 150, h: 50 }];
+    const reading = { frame, labels: [], marks, controls, iconWords: 0 };
+    assert.deepEqual(countsOf(reading).covered, { marks: 0, pixels: 7500 }, 'today: the frame under the control');
+    assert.deepEqual(countsOf({ ...reading, paintedUnder: 0 }).covered, { marks: 0, pixels: 0 }, 'a canvas: clear');
+    assert.deepEqual(countsOf({ ...reading, paintedUnder: 12 }).covered, { marks: 0, pixels: 12 });
+  });
+
   test('a thing moved when its spot in the drawing shifts by more than a pixel; one that came or went did not', () => {
     const before = new Map([
       ['a', { x: 0, y: 0 }],
