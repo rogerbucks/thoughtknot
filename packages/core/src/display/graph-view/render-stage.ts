@@ -45,7 +45,7 @@ export interface StageHands {
 }
 
 export { hasLevels } from './stage-look.ts';
-export { stageFor } from './stage-for.ts';
+export { stageFor } from './render-stage-for.ts';
 /** One graph drawn by the new rendering, on a canvas over its card. */
 export class RenderStage {
   readonly canvas: HTMLCanvasElement;
