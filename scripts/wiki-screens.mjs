@@ -36,7 +36,8 @@ export const SHOTS = [
   {
     name: 'diagram-types',
     alt: 'The side rail: 2D, 2.5D, 3D and the globe, then the list of link types, each with its picture',
-    steps: [click('Links: Network drawn now')],
+    // by its group, as its name says the type drawn now and so is no catalogue word a test language can find
+    steps: [`document.querySelector('${CARD} .thoughtknot-rail-button[data-group="links"]').click()`],
     clip: CARD,
   },
   { name: 'find', alt: 'Finding a thing by typing part of its name', steps: [click('Find a thing')], clip: CARD },
