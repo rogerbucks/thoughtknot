@@ -38,9 +38,9 @@ export async function actorOf(device: string): Promise<string> {
 }
 
 /**
- * What the layers above need of the CRDT. Two builds have it: this file's, which runs Automerge here, and the app's
- * (remote-crdt.ts), which asks Rust because the app window may not run WebAssembly. What cannot be read from the text
- * alone is asked for with a promise, so either build can answer.
+ * What the layers above need of the CRDT. Two builds have it. This file's runs Automerge here. The app's
+ * (remote-crdt.ts) asks Rust, because the app window may not run WebAssembly. What cannot be read from the text alone
+ * is asked for with a promise, so either build can answer.
  */
 export interface Crdt {
   readonly device: string;
