@@ -59,6 +59,9 @@ Rust (src-tauri/)
 - `app-share-dom.ts`: the small helpers of the Share screens.
 - `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
   key is unexportable, and the vault key is kept sealed for this device itself.
+- `app-shared.ts`: `startShared`. When this device holds a vault and a link, notes are kept in Rust and shared over the
+  mesh, sealed. It gives the storage layer and the seat at a board. With no vault or link, nothing runs.
+- `app-shelves.ts`: `indexedShelves`. The sealed records of shared notes are kept in the window's IndexedDB.
 
 ## The Rust, `src-tauri/`
 
