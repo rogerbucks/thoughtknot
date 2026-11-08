@@ -1,7 +1,8 @@
 // The View menu (editor spec §25, view_switches), under the bar's View button. It is a panel over the drawing, docked
-// at the end until moved, with every choice in sight (controls_view_panel, Roger 2 Nov 2026). The ladder of detail and
-// the switch that hides small labels are on screen in the card's dock too (controls_keys). Each starts as the
-// settings hold it (view_switch_defaults). Nothing here reaches the note (view_switch_view_only).
+// at the end until moved (controls_view_panel). Its everyday choices are in sight; its fine-tuning waits in a Layout
+// section (cluster_menu_plain). The ladder of detail and the switch that hides small labels are on screen in the
+// card's dock too (controls_keys). Each starts as the settings hold it (view_switch_defaults). Nothing here reaches
+// the note (view_switch_view_only).
 import {
   BY_KIND,
   OPTIONS,
@@ -23,7 +24,7 @@ const nameOf = (s: ViewSwitch, o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS
 import type { Drawn, GraphDrawing, Kept, LayoutOptions, NoteReading, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 import { viewDock } from './controls-view';
-import { dockHead, wideWindow } from './controls-dock';
+import { dockHead } from './controls-dock';
 import { DETAIL_LEVELS, LABEL_SCALE, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { GROUP_BY_ROW, HINTS, OWN_HINT_CLASS, ladderAttributes } from '../../view-menu-rows.ts';
@@ -41,9 +42,6 @@ export interface ViewMenu {
   /** Says how the last turn went, such as why the drawing could not be redrawn; empty, nothing. */
   say: (words: string) => void;
 }
-
-/** Whether the View panel was last opened (true) or shut (false) from the bar in this session; unset until then. */
-let leftOpen: boolean | undefined;
 
 /** How many hints have been drawn, so each has an id of its own its switch is described by. */
 let hints = 0;
@@ -68,7 +66,10 @@ export interface Grouping {
  */
 function detailLadder(el: HTMLElement, stepped: (level: DetailLevel) => void) {
   const ladderHint = `thoughtknot-switch-hint-${++hints}`;
-  const ladder = el.createDiv({ cls: 'thoughtknot-detail', attr: ladderAttributes(ladderHint) });
+  const ladder = el.createDiv({
+    cls: 'thoughtknot-detail',
+    attr: { ...ladderAttributes(ladderHint), title: word('view.hint.detail') },
+  });
   ladder.createSpan({ cls: 'thoughtknot-detail-name', text: word('view.detail'), attr: { 'aria-hidden': 'true' } });
   const rungs = DETAIL_LEVELS.map((level) => {
     const b = ladder.createEl('button', {
@@ -111,7 +112,8 @@ export function renderViewMenu(
     const hint = `thoughtknot-switch-hint-${++hints}`;
     const b = el.createEl('button', {
       cls: 'thoughtknot-switch',
-      attr: { type: 'button', role: 'switch', 'aria-describedby': hint, 'data-option': s },
+      // its hint is its tooltip too, where a pointer can hover, which shows the hint only then (panels_compact)
+      attr: { type: 'button', role: 'switch', 'aria-describedby': hint, 'data-option': s, title: word(HINTS[s]) },
     });
     // the name is the switch's name, and its hint under it says what it does. The toggle and its words show its state,
     // which aria-checked says to a screen reader
@@ -130,9 +132,15 @@ export function renderViewMenu(
   const label = grouping && rowIn(el, 'thoughtknot-group-by', word('view.group-by'), GROUP_BY_ROW);
   const list = label?.createEl('select');
   list?.addEventListener('change', () => grouping?.pick(list.value));
-  const { sliders, lists } = layoutControls(() => el, spaced); // all in sight, none under More
+  // the fine-tuning waits in a Layout section, shut until opened (cluster_menu_plain, Roger 8 Nov 2026: "chunky")
+  const tuning = el.createEl('details', { cls: 'thoughtknot-view-tuning' });
+  tuning.createEl('summary', { text: word('view.tuning'), attr: { title: word('view.tuning-hint') } });
+  const { sliders, lists } = layoutControls(() => tuning, spaced);
   const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
-  const ownHint = el.createDiv({ cls: ['thoughtknot-switch-hint', OWN_HINT_CLASS], text: word('view.hint.own-only') });
+  const ownHint = tuning.createDiv({
+    cls: ['thoughtknot-switch-hint', OWN_HINT_CLASS],
+    text: word('view.hint.own-only'),
+  });
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
@@ -161,17 +169,10 @@ export function renderViewMenu(
     fill();
   };
   refresh();
-  // a large screen opens it from the start, unless it was shut in this session (controls_view_panel_wide)
-  if (leftOpen !== false && wideWindow())
-    queueMicrotask(() => {
-      const b = root.querySelector<HTMLElement>(`.thoughtknot-bar button[aria-label="${word('bar.view')}"]`);
-      if (b && el.hidden) menu.toggle(b);
-    });
   const menu: ViewMenu = {
     el,
     toggle: (b) => {
       el.hidden = !el.hidden;
-      leftOpen = !el.hidden;
       if (!el.hidden) {
         folds.fold(false); // opened from the bar, it opens whole
         fill();

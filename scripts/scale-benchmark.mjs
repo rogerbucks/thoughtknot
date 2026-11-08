@@ -27,6 +27,8 @@ import { FacetIndex } from '../packages/core/src/facet-counts.ts';
 import { LiveFilter, glide } from '../packages/core/src/filter-live.ts';
 import { overviewOf } from '../packages/core/src/overview.ts';
 import { groupsOf } from '../packages/core/src/scale-groups.ts';
+import { MeshIndex, memoryBackend } from '../packages/core/src/mesh-index.ts';
+import { partsRefusal, storedGraphs } from '../packages/core/src/store-drawing.ts';
 import { SCALE_BUDGETS } from './benchmarks/scale-budgets.mjs';
 import { NOTE } from './make-huge-graph.mjs';
 
@@ -152,6 +154,27 @@ export const STEPS = {
     const reading = readNote([edit.text]);
     return { outcome: reading.tooLarge ? `refused: over the read limit on ${reading.tooLarge.limit}` : 'done' };
   },
+  async parts({ block }) {
+    // the note opened as the hosts open a huge note: read into the store a part at a time (scale_parts_budget). Only
+    // the slim things are held, and links and values stay in the store
+    const note = `\`\`\`gql\n${block}\n\`\`\`\n`;
+    const refusal = partsRefusal(note);
+    if (refusal) return { outcome: `refused: over the in-parts limit on ${refusal.limit}` };
+    const stored = (await storedGraphs(new MeshIndex(memoryBackend()), 'huge.md', note, () => Promise.resolve())).get(
+      'huge',
+    );
+    const groups = stored.parts.grouping.groups.length;
+    return { outcome: `done: ${stored.drawing.boxes.length} things in ${groups} groups`, stored };
+  },
+  parts_filter({ stored }) {
+    if (!stored) return { outcome: 'not built: nothing was read in parts' };
+    // the values counted a group at a time, and then the largest group read from the store, its links with it
+    const facets = stored.parts.facets();
+    const largest = stored.parts.grouping.groups.reduce((a, g) => (g.keys.length > a.keys.length ? g : a));
+    const open = stored.parts.group(largest.id);
+    const near = stored.parts.near(largest.keys).length;
+    return { outcome: `done: ${facets.length} facets, a group of ${open.boxes.length} things and ${near} links` };
+  },
 };
 
 /** The space the overview's marks fill. */
@@ -205,6 +228,22 @@ export async function measure(block, times, steps = STEPS, clock = () => perform
   }
   record.things = made.things ?? null;
   record.links = made.links ?? null;
+  return record;
+}
+
+/**
+ * `measure` repeated `runs` times, keeping the middle time of each step. One slow run on a busy machine cannot fail a
+ * budget, while a step that is really too slow is slow in every run. The budget itself is unchanged.
+ */
+export async function measureMedian(block, times, steps = STEPS, runs = 3) {
+  const all = [];
+  for (let i = 0; i < runs; i++) all.push(await measure(block, times, steps));
+  const record = all[0];
+  for (const name of Object.keys(record.steps)) {
+    const ms = all.map((r) => r.steps[name].ms);
+    if (ms.includes(null)) continue;
+    record.steps[name].ms = ms.sort((a, b) => a - b)[Math.floor(ms.length / 2)];
+  }
   return record;
 }
 

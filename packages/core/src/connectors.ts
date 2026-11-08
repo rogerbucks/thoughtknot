@@ -21,6 +21,7 @@ import type { DataLink, DataThing } from './export-data-model.ts';
 import type { Problem } from './note-reading.ts';
 import { lineInSource, placeKey, readSource } from './sources.ts';
 import type { Fetched, Source, SourceRead, SourceRefusal } from './sources.ts';
+import { tableConnector } from './csv-connector.ts';
 import { word } from './words.ts';
 
 /** Where a statement was read: the place, the hash of its text, and the line (1-based) in it. */
@@ -28,6 +29,10 @@ export interface Citation {
   place: string;
   version: string;
   line: number;
+  /** For a table: the row (1-based, the header not counted). */
+  row?: number;
+  /** For a table: the column a link was read from. */
+  column?: string;
 }
 
 /** One GQL statement a place breaks into, with where it was read. */
@@ -43,6 +48,10 @@ export interface Connected {
   version: string;
   statements: Statement[];
   read: SourceRead;
+  /** A table with no mapping written: the mapping proposed, for a person to apply by saving it at `place`. */
+  proposal?: { place: string; text: string };
+  /** What the place could not give, in a sentence: no mapping yet, or cells beyond the header. */
+  note?: string;
 }
 
 /** The one contract every connector meets: given a place and what was fetched there, its statements or why not. */
@@ -91,7 +100,7 @@ export const gqlConnector: Connector = {
 };
 
 /** Every connector, by the kinds of place it reads. */
-export const CONNECTORS: readonly Connector[] = [gqlConnector];
+export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector];
 
 /** The connector that reads this kind of place. */
 export const connectorFor = (kind: Source['kind']): Connector | undefined =>
@@ -187,6 +196,56 @@ function idsOf(places: { c: Connected; g: Graph; ctx: string }[]): Map<string, s
   return out;
 }
 
+/** Where each statement of a list was read, in words: a place's line, or a table's row or cell. */
+function citedWords(list: Citation[]): string {
+  return list
+    .map((c) =>
+      c.row === undefined
+        ? word('reading.source.cited', { place: c.place, line: String(c.line), version: short(c.version) })
+        : word(c.column ? 'reading.source.cited-cell' : 'reading.source.cited-row', {
+            place: c.place,
+            row: String(c.row),
+            column: c.column ?? '',
+            version: short(c.version),
+          }),
+    )
+    .join('; ');
+}
+
+/** The values places disagree on, from the join's claims: each thing's key, and each value with the place it is from. */
+function contestedOf(claims: Record<string, readonly unknown[]>, byDoc: Map<string, string>): JoinedRead['contested'] {
+  const contested: JoinedRead['contested'] = [];
+  for (const [claim, [status]] of Object.entries(claims)) {
+    const m = /^claim:join\/([^/]+)\/([^=]+)=(.*)@([^@]+)$/.exec(claim);
+    if (status !== 'contested' || !m) continue;
+    const [, thing = '', key = '', value = '', from = ''] = m;
+    let entry = contested.find((x) => x.thing === thing && x.key === key);
+    if (!entry) contested.push((entry = { thing, key, values: [] }));
+    for (const d of from.split('+')) entry.values.push({ value, place: byDoc.get(d) ?? d });
+  }
+  return contested;
+}
+
+/**
+ * The days and instants the places wrote, by thing or link, key and text. The join gives each back as its text, so
+ * each is made the day or instant a place wrote again.
+ */
+function timesOf(
+  places: readonly { g: Graph; ctx: string }[],
+  idOf: (ctx: string, id: string) => string,
+): Map<string, Value> {
+  const times = new Map<string, Value>();
+  for (const { g, ctx } of places) {
+    for (const [id, [, props]] of g.nodes)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, id)}\u0000${k}\u0000${v.s}`, v);
+    for (const [from, type, to, props] of g.edges)
+      for (const [k, v] of Object.entries(props))
+        if (v instanceof gs.GTime) times.set(`${idOf(ctx, from)}>${type}>${idOf(ctx, to)}\u0000${k}\u0000${v.s}`, v);
+  }
+  return times;
+}
+
 /**
  * The places of a FROM list joined into one graph, as the mesh joins documents (§21). The places are joined in the
  * order of their names, so the order they are listed in never changes the graph. A place that could not be read is
@@ -237,26 +296,17 @@ export function joinPlaces(
     return `// graph: ${graph} · document ${doc} · schema ${graph} · as of 1970-01-01\n${body}`.replace(/\n$/, '');
   });
   const joined = gs.joinDocs({ docs, config: {} });
-  const contested: JoinedRead['contested'] = [];
-  for (const [claim, [status]] of Object.entries(joined.claims)) {
-    const m = /^claim:join\/([^/]+)\/([^=]+)=(.*)@([^@]+)$/.exec(claim);
-    if (status !== 'contested' || !m) continue;
-    const [, thing = '', key = '', value = '', from = ''] = m;
-    let entry = contested.find((x) => x.thing === thing && x.key === key);
-    if (!entry) contested.push((entry = { thing, key, values: [] }));
-    for (const d of from.split('+')) entry.values.push({ value, place: byDoc.get(d) ?? d });
-  }
-  const said = (list: Citation[]) =>
-    list
-      .map((c) => word('reading.source.cited', { place: c.place, line: String(c.line), version: short(c.version) }))
-      .join('; ');
+  const contested = contestedOf(joined.claims, byDoc);
+  const times = timesOf(places, idOf);
   const things: DataThing[] = Object.entries(joined.nodes)
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([id, [labels, props]]) => {
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${id}\u0000${k}\u0000${v}`) ?? v;
       delete p['id'];
       const list = cites.get(id);
-      if (list) p['cited_from'] = said(list);
+      if (list) p['cited_from'] = citedWords(list);
       const disputed = contested.filter((x) => x.thing === id);
       if (disputed.length)
         p['contested'] = disputed
@@ -268,8 +318,10 @@ export function joinPlaces(
     .map(([key, props]) => {
       const [from, type, to] = JSON.parse(key) as [string, string, string];
       const p: Record<string, Value> = { ...props };
+      for (const [k, v] of Object.entries(p))
+        if (typeof v === 'string') p[k] = times.get(`${from}>${type}>${to}\u0000${k}\u0000${v}`) ?? v;
       const list = cites.get(`${from}-[:${type}]->${to}`);
-      if (list) p['cited_from'] = said(list);
+      if (list) p['cited_from'] = citedWords(list);
       return [from, type, to, p] as DataLink;
     })
     .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));

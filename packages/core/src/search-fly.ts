@@ -169,6 +169,12 @@ export const FLY_MS = 700;
 /** The share of the screen the place flown to fills. */
 const FILLS = 0.5;
 
+/** The view that shows all of `space`, centred, on a screen `width` by `height`. */
+export function fitView(space: { width: number; height: number }, width: number, height: number): FlyView {
+  const scale = Math.min(width / space.width, height / space.height);
+  return { x: (space.width - width / scale) / 2, y: (space.height - height / scale) / 2, scale };
+}
+
 /** The view that shows `place` in the middle of a screen `width` by `height`, filling about half of it. */
 export function viewOnto(place: Rect, width: number, height: number, most = 4): FlyView {
   const scale = Math.min(

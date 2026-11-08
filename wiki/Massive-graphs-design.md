@@ -206,6 +206,22 @@ Step 7 comes in four parts:
    properties show under the overview, and a change to one is written as in part 3. In reading view they are only
    shown.
 
+### Wave 34: holding only what is on screen
+
+Step 7 reads a too-big note in parts, but then draws it from every thing at once. Wave 34 (Z2) makes the drawing hold
+only what is on screen, as way F planned:
+
+1. **The overview from group rows** (`scale_parts_overview`). The store gives each group, its size and the links
+   between groups. A group's things come from the store only when it opens or comes on screen, and go when it leaves.
+2. **Find and filter in the store** (`scale_parts_find_filter`). Search, counts and the filter ask the store a page at a
+   time, and give the same answers as a whole reading.
+3. **Kept between sessions** (`scale_parts_kept`). Where a host has a lasting store, a note seen before opens without
+   a reading. Rows from other text are read again, never drawn.
+4. **Budgets held** (`scale_parts_budget`). The benchmark opens 10× and 100× V-10 in parts within time and memory
+   budgets. A note past that is still refused, with the limit it is over.
+5. **Every host, 2D and 3D** (`scale_parts_every_view`). One core path for every host. A group that opens never moves
+   what is already drawn.
+
 ## Decision
 
 On 22 October 2026 Roger chose way E, with three additions.

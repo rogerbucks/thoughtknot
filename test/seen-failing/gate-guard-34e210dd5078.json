@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/gate-guard.test.js",
+  "test": "a note’s classification line > node is refused when it names it, unless it runs a known script in a way that only makes a record",
+  "seen_failing_first": false,
+  "evidence": "It pins refusals that held before 4e35027, so the new list of node scripts cannot loosen them; it is meant to pass first. The test beside it, that a known repo script making only a new record is allowed, failed first."
+}

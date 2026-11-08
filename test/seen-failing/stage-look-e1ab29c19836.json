@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/stage-look.test.js",
+  "test": "a card with no other type chosen is drawn as a network",
+  "seen_failing_first": false,
+  "evidence": "Written after stageKind to give stage-look.ts its named test (unnamed-modules); render-laid.test.js proved the behaviour first."
+}

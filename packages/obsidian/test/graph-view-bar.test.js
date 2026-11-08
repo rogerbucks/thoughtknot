@@ -42,7 +42,7 @@ describe('the bar', () => {
   test('the bar is slim: its buttons are quiet until pointed at, and on a phone they sit edge to edge', async () => {
     const { el } = await show(env, fence(GRAPH));
     const bar = el.querySelector('.thoughtknot-bar');
-    for (const name of ['Diagram type', 'No problems'])
+    for (const name of ['Find a thing', 'No problems'])
       assert.ok(labelled(bar, name).hasAttribute('aria-expanded'), `${name} opens a panel, so a phone shows its icon`);
     const quiet = styles.match(/:is\(\.thoughtknot-bar, \.thoughtknot-bar-more\) > button \{([^}]*)\}/);
     assert.ok(quiet, 'one rule for the bar’s own buttons');

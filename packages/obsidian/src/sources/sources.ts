@@ -21,11 +21,12 @@ import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { vaultPresetOf } from '../settings/vault-preset';
 import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { editInPane } from '../edit-in-pane';
 import { readFromVault, watchSource } from './source-read';
-import { sourceAlert, sourceStrip } from './source-strip';
+import { mappingProposal, sourceAlert, sourceStrip } from './source-strip';
 
 /**
  * The reading a graph of a note is drawn from when the note says it is written elsewhere (`· FROM`). It is one of:
@@ -79,6 +80,11 @@ export async function renderSourceBlock(
   // a FROM list names each place it drew from, and each it could not, with why (connector_source_missing)
   for (const place of s.places ?? [s]) sourceStrip(root, plugin, { ...place, places: undefined }, ctx.sourcePath);
   if ('missing' in read) for (const gone of (read as JoinedRead).missing) sourceAlert(root, gone.refused);
+  // a table with no mapping is said, with the mapping proposed for a person to apply (connector_mapping_written)
+  for (const place of 'places' in read ? (read as JoinedRead).places : []) {
+    if (place.proposal && place.note) mappingProposal(root, plugin, place.note, place.proposal, redraw);
+    else if (place.note) sourceAlert(root, place.note);
+  }
   const graph = s.graph;
   if (read.reading.tooLarge) {
     // too large to read (spec §9): nothing of it was read, as a note's own blocks over the limits are not
@@ -127,7 +133,7 @@ export async function renderSourceBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
-      aids: aidsOf(plugin.settings, styling.style),
+      aids: aidsOf(plugin.settings, styling.style, undefined, vaultPresetOf(plugin)),
       lineOf: (at) => lineInSource(read, at),
       // The data is written in the source, so the drawing is read-only here.
       // The strip opens a note to change it there, and Edit opens this block in the pane.

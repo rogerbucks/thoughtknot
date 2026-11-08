@@ -79,6 +79,29 @@ export function endpointProblem(endpoint: string): string | null {
   return null;
 }
 
+/** The address without slashes at its end: trimmed by a walk, not a pattern, so a long run of slashes stays fast. */
+function withoutEndSlashes(address: string): string {
+  let end = address.length;
+  while (end > 0 && address[end - 1] === '/') end--;
+  return address.slice(0, end);
+}
+
+/**
+ * The full address a chat request goes to. An address that stops at its version, such as LM Studio's
+ * https://host/v1, takes /chat/completions after it. Any other is used as written.
+ */
+export function chatAddress(endpoint: string): string {
+  const given = endpoint.trim();
+  const base = withoutEndSlashes(given);
+  return /\/v\d+(?:beta)?$/i.test(base) ? `${base}/chat/completions` : given;
+}
+
+/** The address that lists a service's models, asked by Test beside the address: it sends no note. */
+export function modelsAddress(endpoint: string): string {
+  const chat = withoutEndSlashes(chatAddress(endpoint));
+  return chat.endsWith('/chat/completions') ? `${chat.slice(0, -'/chat/completions'.length)}/models` : `${chat}/models`;
+}
+
 /** Whether a model is set up enough to be asked: a name, a model and an address requests can go to. */
 export const usable = (m: AiModel): boolean => !!m.name.trim() && !!m.model.trim() && !endpointProblem(m.endpoint);
 
@@ -92,8 +115,9 @@ export function aiReady(s: Settings): { ready: AiModel[] } | { off: string } {
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
- * The AIs that may be asked for `purpose`, in the order they are offered. The host's own comes first, where it has one;
- * then the models set up for that purpose; then the rest. None while AI is off, the host's own among them.
+ * The AIs that may be asked for `purpose`, in the order they are offered. The host's own comes first, where it has one.
+ * Then the models marked private, then the rest (ai_private_default), each with those set up for that purpose first.
+ * None while AI is off, the host's own among them.
  */
 export function modelChoices(s: Settings, purpose: string, hostAi: HostAi | null = null): ModelChoice[] {
   const ready = aiReady(s);
@@ -106,7 +130,9 @@ export function modelChoices(s: Settings, purpose: string, hostAi: HostAi | null
   }));
   return [
     ...(hostAi ? [{ name: hostAi.name, source: 'host' as const, forPurpose: true }] : []),
-    ...mine.filter((c) => c.forPurpose),
-    ...mine.filter((c) => !c.forPurpose),
+    ...mine.filter((c) => c.forPurpose && c.model.reach === 'private'),
+    ...mine.filter((c) => !c.forPurpose && c.model.reach === 'private'),
+    ...mine.filter((c) => c.forPurpose && c.model.reach !== 'private'),
+    ...mine.filter((c) => !c.forPurpose && c.model.reach !== 'private'),
   ];
 }

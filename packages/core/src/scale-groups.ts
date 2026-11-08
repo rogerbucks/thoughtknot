@@ -34,7 +34,12 @@ export interface ThingGroup {
   label: string;
   by: GroupedBy;
   keys: string[];
+  /** How many things it holds, where `keys` is not given: a group of a note read in parts (parts-source.ts). */
+  size?: number;
 }
+
+/** How many things a group holds: its size where given, else its keys counted. */
+export const groupSize = (g: ThingGroup): number => g.size ?? g.keys.length;
 
 /** The links running between two groups, by the groups' places in the list, and how many there are. */
 export interface GroupLink {

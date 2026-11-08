@@ -11,6 +11,7 @@ import {
   MeshIndex,
   memoryBackend,
   parked,
+  partsRefusal,
   readStyle,
   renderFor,
   savedExploreFor,
@@ -21,6 +22,7 @@ import {
   ViewState,
   word,
 } from '@thoughtknot/core';
+import { indexedPlace } from './kept-place.ts';
 import type {
   Drawn,
   ExploreSave,
@@ -38,7 +40,7 @@ import type { Palette } from '../../palette.ts';
 import { massiveView } from '../graph-view/massive-view';
 import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
-import { refusalBanner } from '../refusal-banner';
+import { pastPartsHint, refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
 import { nothingYet } from './pane-empty';
 import { LAYOUT_WAIT, waitShown } from '../progress';
@@ -193,6 +195,8 @@ export class PaneDrawing extends Lifecycle {
     const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
     const was = s.text,
       text = `\`\`\`gql\n${was}\n\`\`\`\n`;
+    const past = partsRefusal(text);
+    if (past) return void pastPartsHint(host, past);
     // a change to a thing chosen: made on its lines in the block, then put in the pane's text, as a quick fix is
     const change = (key: string) => (prop: string, type: PropType, words: string) => {
       const edit = setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);
@@ -200,7 +204,7 @@ export class PaneDrawing extends Lifecycle {
         edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason,
       );
     };
-    void storedGraphs(ix, 'pane', text, pause).then((graphs) => {
+    void storedGraphs(ix, 'pane', text, pause, indexedPlace(host.win)).then((graphs) => {
       const stored = graphs.get(s.graph);
       if (!stored || stale()) return;
       const slot = host.createDiv();
@@ -213,6 +217,7 @@ export class PaneDrawing extends Lifecycle {
         palette,
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
+        parts: stored.parts,
         ...(saved ? { chosen: saved } : {}),
         ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),

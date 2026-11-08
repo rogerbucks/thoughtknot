@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/times.test.mjs",
+  "test": "both readers read a zoned time alike",
+  "seen_failing_first": false,
+  "evidence": "Both readers already read a zoned time. This test only adds the proof that they agree, so it passes on the old code."
+}

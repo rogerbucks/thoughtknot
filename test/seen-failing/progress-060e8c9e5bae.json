@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/progress.test.js",
+  "test": "a wait is shown > a short block is drawn with no frame",
+  "seen_failing_first": false,
+  "evidence": "It guards the old path: a short block was drawn with no frame before, and the frame must not reach it."
+}

@@ -22,13 +22,15 @@ import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
-import { boardsKept } from './board-section.ts';
+import { boardsKept, seatsOf } from './board-section.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';
 import { keepFocus, skipLink } from './keyboard.ts';
 import { PNG_PIXEL_LIMIT, rasterise } from './png.ts';
 import { pageLayouts } from './layout-runner.ts';
+import { presetSection } from './preset-section.ts';
+import { vaultPresetCalls } from './vault-preset-calls.ts';
 import { textVersionKept } from './text-version.ts';
 import { renderMarkdown } from './markdown.ts';
 import { noteCalls } from './note-calls.ts';
@@ -43,6 +45,31 @@ import { serverCalls, takeFragment } from './server-calls.ts';
 function markPage(doc: Document, settings: { indent: string; easierReading: string }): void {
   doc.documentElement.dataset.indent = settings.indent;
   doc.body.classList.toggle(EASIER_READING_CLASS, settings.easierReading === 'on');
+}
+
+/** The editor pane with the view preset under it: the vault's file is read, and the drawing follows it (view_presets_scoped). */
+async function paneWithPreset(
+  win: Window & typeof globalThis,
+  graph: HTMLElement,
+  pane: HTMLElement,
+  token: string,
+  [page, settings, layouts, pictures]: [
+    Parameters<typeof openEditorPane>[1],
+    Parameters<typeof openEditorPane>[2],
+    Parameters<typeof openEditorPane>[3],
+    Parameters<typeof openEditorPane>[4],
+  ],
+): Promise<void> {
+  const presets = vaultPresetCalls(token, win.fetch.bind(win));
+  let editor: { changed: () => void } | null = null;
+  const preset = await presetSection(win, {
+    settings,
+    read: presets.read,
+    write: presets.write,
+    changed: () => editor?.changed(),
+  });
+  editor = await openEditorPane(pane, page, settings, layouts, pictures, preset.vault);
+  graph.append(preset.el);
 }
 
 /** Starts the page in `win`: its host, then the note. */
@@ -131,7 +158,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     // the graph as plain-language sentences, under the editor, made again with the note (cc_text_version)
     const addTextVersion = textVersionKept(graph, () => page.text);
     // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
-    const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches);
+    const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches, seatsOf(win, note));
     // the plug-ins turned on in Obsidian, each in its own sealed worker, and the note's graph by a type one adds
     // (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
@@ -174,7 +201,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const pane = doc.createElement('div');
     pane.setAttribute('class', 'gn-pane');
     graph.append(pane);
-    await openEditorPane(pane, page, settings, layouts, () => calls.pictures(note));
+    await paneWithPreset(win, graph, pane, token, [page, settings, layouts, () => calls.pictures(note)]);
     if (!page.session) await showGraph(win, pane, page.text, layouts);
     // the changes view: the note now against an earlier version the user picks, read only when asked (changes_view)
     const shownGraph = readNote(gqlBlocks(page.text).map((b) => b.text))

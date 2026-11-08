@@ -32,6 +32,9 @@ const plain = (d) => ({
   links: d.links.map((l) => [l.from, l.type, l.reading, l.to]),
 });
 
+/** A stored graph's things, and its links as the store gives them near its things: none are held in its drawing. */
+const fromStore = (g) => ({ ...g.drawing, links: g.parts.near(g.drawing.boxes.map((b) => b.key)) });
+
 test('a graph from the store is drawn as a whole reading draws it, from either backend', async () => {
   const blocks = SHOP.split('```')
     .filter((_, i) => i % 2 === 1)
@@ -39,7 +42,8 @@ test('a graph from the store is drawn as a whole reading draws it, from either b
   const whole = readNote(blocks).graphs.get('shop');
   for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
     const shop = (await storedGraphs(new MeshIndex(backend), 'shop.md', SHOP, now)).get('shop');
-    assert.deepEqual(plain(shop.drawing), plain(whole), backend.kind);
+    assert.deepEqual(plain(fromStore(shop)), plain(whole), backend.kind);
+    assert.deepEqual(shop.drawing.links, [], 'its links stay in the store (scale_parts_overview)');
     assert.deepEqual(shop.props('widget'), { id: 'widget', name: 'Widget', price: 10 });
   }
 });
@@ -53,7 +57,13 @@ test('a huge note is read a part at a time, with the page’s turn between parts
   const big = (await storedGraphs(new MeshIndex(memoryBackend()), 'big.md', text, async () => void turns++)).get('big');
   assert.ok(turns >= 3, `${turns} turns`);
   assert.equal(big.drawing.boxes.length, 12_000);
-  assert.equal(big.drawing.links.length, 11_999);
+  assert.equal(big.drawing.links.length, 0, 'no link is held');
+  assert.equal(fromStore(big).links.length, 11_999);
+  assert.equal(
+    big.parts.grouping.groups.reduce((n, g) => n + g.keys.length, 0),
+    12_000,
+    'every thing is in a group',
+  );
 });
 
 test('rows built from other text than the note has now are never drawn', async () => {

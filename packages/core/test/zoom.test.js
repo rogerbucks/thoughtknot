@@ -178,10 +178,19 @@ describe('buttons and keys', () => {
 });
 
 describe('the mouse wheel and the trackpad', () => {
-  test('in a note, the wheel alone scrolls the note and never zooms the drawing', () => {
+  test('in a note, two fingers dragged on a trackpad scroll the note and never zoom the drawing', () => {
     const z = make();
-    assert.equal(z.handle({ kind: 'wheel', x: 100, y: 100, dy: -100 }), false);
+    assert.equal(z.handle({ kind: 'wheel', x: 100, y: 100, dy: -3, pad: true }), false);
     close(z.view().scale, 0.5);
+  });
+
+  test('in a note, the mouse wheel alone zooms the drawing, with no key held (Roger, 8 Nov 2026)', () => {
+    const z = make();
+    assert.equal(z.handle({ kind: 'wheel', x: 100, y: 100, dy: -100 }), true);
+    assert.ok(z.view().scale > 0.5, 'wheel up zooms in');
+    const s = z.view().scale;
+    assert.equal(z.handle({ kind: 'wheel', x: 100, y: 100, dy: -100, alt: true }), false, 'with Alt it scrolls');
+    close(z.view().scale, s);
   });
 
   test('with Ctrl or Command held — and a trackpad pinch, which arrives as Ctrl and the wheel — it zooms about the pointer', () => {
@@ -529,7 +538,7 @@ describe('telling the host', () => {
     z.onChange = (v) => seen.push(v.scale);
     z.zoomIn();
     z.fit();
-    z.handle({ kind: 'wheel', x: 1, y: 1, dy: -10 });
+    z.handle({ kind: 'wheel', x: 1, y: 1, dy: -10, pad: true }); // a trackpad drag, the note's
     assert.equal(seen.length, 2);
   });
 });

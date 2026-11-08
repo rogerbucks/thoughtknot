@@ -11,6 +11,10 @@ import type { Board, BoardItem, BoardKind } from './board.ts';
 import { itemBox } from './board-svg.ts';
 import { replaceSpan } from './store.ts';
 import { writtenIn } from './written-things.ts';
+import { commentedMore } from './board-comments.ts';
+import type { CommentOp } from './board-comments.ts';
+import { hiddenMore } from './board-session.ts';
+import { votedMore } from './board-vote.ts';
 import { word } from './words.ts';
 
 /** One edit to a board. */
@@ -18,24 +22,40 @@ export type BoardChange =
   | { kind: 'move'; id: string; x: number; y: number }
   | { kind: 'size'; id: string; w: number; h: number }
   | { kind: 'text'; id: string; text: string }
+  | { kind: 'layer'; id: string; layer: number }
+  | { kind: 'lock'; id: string; locked: boolean }
+  | { kind: 'style'; id: string; style: string | null }
+  | { kind: 'group'; id: string; group: string | null }
+  | { kind: 'vote'; id: string; person: string; reaction: string | null }
+  | { kind: 'hide'; id: string; person: string; hidden: boolean }
+  | { kind: 'comment'; id: string; do: CommentOp }
   | { kind: 'add'; item: BoardItem }
   | { kind: 'remove'; id: string }
-  | { kind: 'connect'; from: string; to: string; label?: string };
+  | { kind: 'connect'; from: string; to: string; label?: string }
+  | { kind: 'disconnect'; from: string; to: string }
+  | { kind: 'put'; item: BoardItem };
 
 /** The smallest an item's side may be made, so it can still be seen and pointed at. */
 export const MIN_SIDE = 20;
 /** The room left between an item and a new one made beside it. */
 export const GAP = 40;
 
-/** The block with `change` made, or why it was refused, in words. */
-export function boardEdit(text: string, change: BoardChange): { text: string } | { refused: string } {
+/**
+ * The block with `change` made, or why it was refused, in words. `undoing` is for taking back one's own change.
+ * The log has already checked it, so it may put back or take out an item that is locked now.
+ */
+export function boardEdit(text: string, change: BoardChange, undoing = false): { text: string } | { refused: string } {
   const { board, problems } = readBoard(text);
   const find = (id: string) => board.items.find((i) => i.id === id);
-  if (change.kind === 'move' || change.kind === 'size' || change.kind === 'text') {
-    const item = find(change.id);
-    if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
-    if (item.locked && change.kind !== 'text') return { refused: word('board.edit.locked') };
-    return { text: itemChanged(text, item, patchOf(change)) };
+  if (isItemSet(change)) {
+    const set = change;
+    const item = find(set.id);
+    if (!item) return { refused: word('board.edit.gone', { id: set.id }) };
+    // text, votes and the lock itself may change on a locked item; nothing else may
+    if (item.locked && !['text', 'lock', 'vote', 'hide', 'comment'].includes(set.kind))
+      return { refused: word('board.edit.locked') };
+    if (set.kind === 'comment' && !commentedMore(item, set.do)) return { refused: word('board.edit.no-thread') };
+    return { text: itemChanged(text, item, patchOf(set, item)) };
   }
   // a change to the board's shape writes it again whole: never over what the reader could not read
   if (problems.some((p) => p.severity === 'error')) return { refused: word('board.edit.problems') };
@@ -45,9 +65,19 @@ export function boardEdit(text: string, change: BoardChange): { text: string } |
   } else if (change.kind === 'remove') {
     const item = find(change.id);
     if (!item) return { refused: word('board.edit.gone', { id: change.id }) };
-    if (item.locked) return { refused: word('board.edit.locked') };
+    if (item.locked && !undoing) return { refused: word('board.edit.locked') };
     board.items = board.items.filter((i) => i !== item);
     board.connectors = board.connectors.filter((c) => c.from !== item.id && c.to !== item.id);
+  } else if (change.kind === 'put') {
+    const at = board.items.findIndex((i) => i.id === change.item.id);
+    if (at < 0) return { refused: word('board.edit.gone', { id: change.item.id }) };
+    if (board.items[at]?.locked && !undoing) return { refused: word('board.edit.locked') };
+    board.items[at] = change.item;
+  } else if (change.kind === 'disconnect') {
+    const { from, to } = change;
+    if (!board.connectors.some((c) => c.from === from && c.to === to))
+      return { refused: word('board.edit.gone', { id: `${from}-${to}` }) };
+    board.connectors = board.connectors.filter((c) => !(c.from === from && c.to === to));
   } else {
     const { from, to } = change;
     if (!find(from) || !find(to)) return { refused: word('board.edit.gone', { id: find(from) ? to : from }) };
@@ -56,6 +86,11 @@ export function boardEdit(text: string, change: BoardChange): { text: string } |
     board.connectors.push(change.label === undefined ? { from, to } : { from, to, label: change.label });
   }
   return { text: writeBoard(board) };
+}
+
+/** The text of the board block named `name` in the note, or nothing when the note holds no such board. */
+export function boardBlockIn(note: string, name: string): string | undefined {
+  return gqlSpans(note).find((s) => boardOf(s.text)?.name === name)?.text;
 }
 
 /**
@@ -74,12 +109,42 @@ export function boardEditInNote(
   return { note: replaceSpan(note, span, r.text).note, text: r.text };
 }
 
-/** What a move, size or text change sets on its item: places and sizes as whole numbers, a size never too small. */
-function patchOf(change: Extract<BoardChange, { kind: 'move' | 'size' | 'text' }>): Partial<BoardItem> {
-  if (change.kind === 'move') return { x: Math.round(change.x), y: Math.round(change.y) };
-  if (change.kind === 'size')
-    return { w: Math.max(MIN_SIDE, Math.round(change.w)), h: Math.max(MIN_SIDE, Math.round(change.h)) };
-  return { text: change.text };
+// the changes that set properties of one item, which change that item's own text alone
+type ItemSet = Extract<
+  BoardChange,
+  { kind: 'move' | 'size' | 'text' | 'layer' | 'lock' | 'style' | 'group' | 'vote' | 'hide' | 'comment' }
+>;
+const SETS = new Set<string>(['move', 'size', 'text', 'layer', 'lock', 'style', 'group', 'vote', 'hide', 'comment']);
+const isItemSet = (change: BoardChange): change is ItemSet => SETS.has(change.kind);
+
+/**
+ * What an item change sets on its item: places, sizes and layers as whole numbers, a size never too small. A style or a
+ * group of null takes it off. A vote is given, or taken back when given before. A note is hidden or revealed. Unlocking takes the lock off rather
+ * than writing `locked: false`.
+ */
+function patchOf(change: ItemSet, item: BoardItem): Partial<BoardItem> {
+  switch (change.kind) {
+    case 'move':
+      return { x: Math.round(change.x), y: Math.round(change.y) };
+    case 'size':
+      return { w: Math.max(MIN_SIDE, Math.round(change.w)), h: Math.max(MIN_SIDE, Math.round(change.h)) };
+    case 'text':
+      return { text: change.text };
+    case 'layer':
+      return { layer: Math.round(change.layer) };
+    case 'lock':
+      return { locked: change.locked ? true : undefined };
+    case 'style':
+      return { style: change.style ?? undefined };
+    case 'group':
+      return { group: change.group ?? undefined };
+    case 'vote':
+      return { more: votedMore(item, change.person, change.reaction) };
+    case 'hide':
+      return { more: hiddenMore(item, change.person, change.hidden) };
+    case 'comment':
+      return { more: commentedMore(item, change.do) ?? item.more };
+  }
 }
 
 /** The block with one item's own text written again with `patch`; everything else stays as it was. */
@@ -116,4 +181,11 @@ export function newItem(board: Board, kind: BoardKind, near: BoardItem | null, c
   for (let tries = 0; tries < 200 && taken(); tries++) item.y += size.h / 2;
   item.y = Math.round(item.y);
   return item;
+}
+
+/** The layer that puts an item over every other (`front`) or under every other, as a whole number. */
+export function layerFor(board: Board, id: string, where: 'front' | 'back'): number {
+  const others = board.items.filter((i) => i.id !== id).map((i) => i.layer ?? 0);
+  if (!others.length) return 0;
+  return where === 'front' ? Math.max(...others) + 1 : Math.min(...others) - 1;
 }

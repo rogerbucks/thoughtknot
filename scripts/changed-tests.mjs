@@ -136,6 +136,15 @@ export function testsForChanges(changed, tracked, reach) {
   return { all: false, files: [...files].sort() };
 }
 
+/**
+ * The order to run the chosen tests in. The test files the change itself edits come first, as they are the likeliest
+ * to fail. The rest follow in their sorted order. Only the order changes, never which tests run.
+ */
+export const likelyFirst = (files, changed) => [
+  ...files.filter((f) => changed.includes(f)),
+  ...files.filter((f) => !changed.includes(f)),
+];
+
 /** Runs a command in the repository with its output going straight through; the exit status. */
 const execute = (command, args) => spawnSync(command, args, { cwd: ROOT, stdio: 'inherit' }).status ?? 1;
 
@@ -198,8 +207,9 @@ function main(argv) {
     const js = execute(process.execPath, ['--test', timeout, reporter]);
     return (python ? execute('uv', pyRunner) : 0) || js;
   }
-  const js = plan.files.filter((f) => JS_TEST.test(f));
-  const py = plan.files.filter((f) => PY_TEST.test(f));
+  const ordered = likelyFirst(plan.files, changed);
+  const js = ordered.filter((f) => JS_TEST.test(f));
+  const py = ordered.filter((f) => PY_TEST.test(f));
   const jsStatus = js.length ? execute(process.execPath, ['--test', timeout, reporter, ...js]) : 0;
   const pyStatus = py.length ? execute('uv', [...pyRunner, ...py.map(base)]) : 0;
   return jsStatus || pyStatus;

@@ -44,9 +44,12 @@ EXCERPT_OF = re.compile(rf"·{S}*excerpt\b", re.I | re.ASCII)
 QUERY = re.compile(rf"·{S}*QUERY\b", re.ASCII)
 CHANGE_SET = re.compile(rf"·{S}*CHANGE SET\b", re.ASCII)
 FORMAT = re.compile(rf"·{S}*format{S}+(\d+(?:\.\d+)?)\b", re.ASCII)
+SPEC = re.compile(rf"·{S}*spec{S}+(\d+(?:\.\d+)?)\b", re.ASCII)
 # The newest major format this reader reads (§3). A block that names a newer one is refused
 # plainly, its text kept.
 FORMAT_READ = 1
+# The newest major Graph Spec this reader implements (editor spec §51, spec_version_in_files).
+SPEC_READ = 1
 
 
 def header(block: str) -> tuple[str | None, str]:
@@ -89,6 +92,15 @@ def header(block: str) -> tuple[str | None, str]:
             f" which reads format {FORMAT_READ}",
             "read it with a newer reader: its text is kept as written",
             code="GN106",
+        )
+    spec = SPEC.search(rest)
+    if spec and int(spec.group(1).split(".")[0]) > SPEC_READ:
+        raise ProfileError(
+            1,
+            f"the block is written to Graph Spec {spec.group(1)}, newer than this reader,"
+            f" which implements Graph Spec {SPEC_READ}",
+            "upgrade ThoughtKnot to read it: its text is kept as written",
+            code="GN107",
         )
     return m.group(1), kind
 

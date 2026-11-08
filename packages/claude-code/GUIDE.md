@@ -158,16 +158,55 @@ So a change to the open note is never applied by Claude's own tools while `guard
     after is compared. A change or removal is refused (`CLASSIFICATION_REFUSAL`). So is an edit that breaks the front
     matter around it. A note not yet made may be written.
   - When the note cannot be read, a call is refused if any text it carries holds a classification line.
-  - Bash is read into its steps by `shell-steps.ts`. A heredoc sent by `cat` to an absolute or home-relative path is judged as a
-    Write is, whether the command names `classification` or not. So a new note may carry one, and an existing note's
-    may not change.
-  - Other Bash that names `classification` is refused unless every step only reads, searches or prints. Such a step is
-    on the `READERS` list, has no argument that writes, and has no file to write to. `/dev/null` does not count.
-  - A command that names it is refused if it holds what `shell-steps.ts` does not read: a substitution, brackets, a
-    comment or an unclosed quote. So is a heredoc to a relative path, or one whose path the shell would choose.
   - The refusals name no level, path or text of the call.
-  - **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
-    the list under Bash limits above. The user changes a classification in the note themselves.
+
+#### Bash and the classification line
+
+`gate-shell.ts` judges Bash for `guardGateFiles`.
+
+- **Reading the command:** `shell-steps.ts` reads it into its steps, with the steps each `$(…)` runs. The steps are
+  followed in order: where `cd` leads, and each value a variable may hold. A `for` gives its variable each of its
+  values. So each file a step writes is known in full, or not known.
+- **What is not trusted:** a step may not run, or may run in a subshell. Then what it sets is not known. That is a step
+  after `||`, in a pipeline or the background, or inside `if`, `while` or a loop's body. A loop's body forgets, before
+  it starts, every variable it sets.
+- **A new file:** a write to a file not yet made is allowed, whatever it holds. Roger ruled so on 7 Nov 2026. So a new
+  note may carry a classification, such as a screenshot's `.png.md` sidecar.
+- **An existing note:** a heredoc sent by `cat` to a note that exists is judged as a Write is. That holds whether the
+  command names `classification` or not, so an existing note's may not change.
+- **Other Bash that names `classification`** is refused unless each step only reads, searches or prints, or writes
+  only to files not yet made. Such a step is on the `READERS` list with no argument that writes. Or it is `git` that
+  only reads, `sed` whose script only prints, or `cp` or `mv` to new files.
+- **What may be sent to a new file:** only `cat`, `echo` and `printf`; `/dev/null` does not count. A heredoc onto a
+  note that exists, whose text the shell would expand, is refused when the command names it.
+- **What is not read:** a command that names it is refused if it holds backticks, `$((…))`, brackets, a comment or an
+  unclosed quote. So is a write whose path is not known. That is a variable not set in the command, a pattern, or a
+  folder `cd` may not have reached.
+- **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
+  the list under Bash limits above. The user changes a classification in the note themselves.
+
+#### Python heredocs
+
+`gate-python.ts` reads a Python heredoc (`python3 - <<'PY'`) for `gate-shell.ts`. Roger ruled on 8 Nov 2026 that it
+may make new notes, as `cat` may.
+
+- **Allowed:** a script whose every write goes to a file not yet made.
+- **What is read:** writes by `open(…)` or `.write_text(…)`. The path is made of string literals, `Path`,
+  `os.path.join`, `expanduser` and `/`. Or it is a name given one such path once.
+- **What is not read:** a script that defines a function, imports an unlisted module or renames an import. Nor one
+  that could run code or move a file. Such a script is judged as any other program.
+
+#### Known node scripts
+
+`gate-node.ts` lists the repo scripts node may run in a command that names `classification`. A node script cannot be
+read here, so each is trusted by name. Its arguments must make it write only a new file that is no note.
+
+- **Listed:** `scripts/tests-first.mjs --excuse [--fault] <test file> <test> <reason>`. It writes one new JSON record
+  in `test/seen-failing/`, and refuses to write over one kept already.
+- **Refused:** `--force` or `--repo`, any option to node itself, `node -e`, and a redirection. So is a script whose
+  real path does not end in its listed name, such as a link to another file.
+- **What it does not check:** what the script holds. A script Claude made could be named so. But such a script could
+  run anyway in a command that does not name the word, so the list opens no new way.
 
 ### Proposals, the hooks entry and the page's session
 
@@ -196,6 +235,43 @@ So a change to the open note is never applied by Claude's own tools while `guard
     (`UNDO_OVER_THEIRS`). The typing history starts again from the block as reloaded (cc_undo_safe).
   - Stopped by a copy of its block it cannot tell from it, undo says that in the core's words instead
     (block_followed_not_its_copy).
+
+### Claude shows, presents and asks (spec §49, workstream Y1)
+
+Claude has three more tools, beside `propose`. None of them writes. Each goes through the same gate as `/graph`.
+
+| Tool | Claude does | The person does |
+|---|---|---|
+| `show` | Opens a note's graph, or picks out things, links, a path or a lens | Looks |
+| `present` | Walks steps, each picking out things and links with a caption | Presses Back and Next, or types `/graph next` and `/graph back` |
+| `decide` | Asks a question with two to six options tied to things | Presses an option, or types `/graph pick 2 because …` or `/graph pick none` |
+
+- `claude-present.ts` reads `show` and `present` and makes the pane's view. Picking out fades the rest: only opacity and
+  stroke width change, so no box moves.
+- A step, or a `show`, naming something the graph lacks is reported, and nothing is shown (path_no_steps).
+- `claude-decide.ts` holds the question waiting. `Asking.answer` takes only the person: a pane press (`pressFromPerson`)
+  or the composer (`fromPerson`). Claude, a tool call, a hook, a plugin and Remote Control are refused.
+- The `decide` call waits for that answer. Claude is told only the pick and its reason, or that none was chosen.
+- `claude-record.ts` writes the answer into the note as a `decision@1` decision, in its judgement graph. Node does the
+  write (`bin/record-process.ts`, built to `mod/bin/record.mjs`), as a mod writes no file itself.
+- Keep, on a walk, writes its steps as a `<graph>_tour_presentation` block. It plays again from the note with no AI.
+- The core does the rest: `presentation.ts` and `decision-recorded.ts`. The decision passes the change-set check first.
+
+### The MCP App: the same tools in Claude's desktop chat (spec §49, workstream Y2)
+
+A local MCP server offers `show`, `present` and `decide` as an MCP App. Claude's desktop app chat, and Claude Code, can
+add it.
+
+- Run it as `node mod/bin/mcp.mjs <folder>`. It speaks JSON-RPC over standard input and output, and opens no port.
+- `src/mcp-server.ts` holds it. It reads notes only inside the folder named, links settled. Every note passes the same
+  gate as the mod, then the AI ceiling. A note the mod would ask about is refused here, with the reason.
+- The person's settings are the Obsidian plugin's own, in `<folder>/.obsidian/plugins/thoughtknot/data.json`. With none,
+  the strictest defaults hold.
+- Each tool links to one page, `ui://thoughtknot/stage.html` (`page/mcp-page.ts`, built into `mod/bin/mcp-page.html`).
+  The host draws it in its sandboxed frame. It draws with the core and the display layer.
+- The page's own tools, `answer` and `keep`, are hidden from the model. Each needs the one-time key its tool's result
+  gave the page alone. Only the person's pick and its reason go into the conversation.
+- A remote connector, for Claude on the web, on mobile and in Cowork, waits for a security review. None is built.
 
 ## The process, `bin/`
 

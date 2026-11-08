@@ -43,6 +43,8 @@ export const DRAWING_SOURCE_WORDS = {
     other:
       'This graph has {count} things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
   },
+  // a note past even what is read a part at a time (store-drawing.ts, scale_parts_budget)
+  'refusal.past-parts': 'This note is too large to open even a part at a time: {over}.',
   // why a graph is not laid out: what is over its limit (hosts/refusal-words.ts)
   'refusal.over.text-bytes': 'the graph blocks here hold {size} of text, and at most {most} is read',
   'refusal.over.text-lines': 'the graph blocks here hold {size} lines, and at most {most} are read',
@@ -178,6 +180,10 @@ export const DRAWING_SOURCE_WORDS = {
   'certainty.said.doubtful': 'doubtful',
   'certainty.said.contested': 'contested',
   // what the View menu groups things by (group-by.ts)
+  'rail.links': 'Links',
+  'rail.areas': 'Areas',
+  'rail.data': 'Data',
+  'rail.group-now': '{group}: {type} drawn now',
   'view.group-by': 'Group by',
   'view.group-by.auto': 'As written or found',
   'view.group-by.none': 'No groups',
@@ -270,10 +276,14 @@ export const DRAWING_SOURCE_WORDS = {
     'A fisheye enlarges what is round the pointer, or the selection. Hyperbolic and sphere lay the whole graph on a disc round the middle of the view: drag to bring a part there. Semantic zoom shows more detail as you zoom in.',
   // the ladder of detail at the top of the View menu (view-switches.ts, cluster_detail_ladder)
   'view.detail': 'Detail',
-  'view.list.more': 'More views',
   'view.detail.overview': 'Overview',
   'view.detail.groups': 'Groups',
   'view.detail.all': 'All',
+  // the colour key, folded into the View panel (editor spec §25, panels_key, level-legend.ts)
+  'view.key': 'Key',
+  'view.key-hint': 'What each colour stands for. Point at a subject to spotlight it; click it to keep it.',
+  'view.tuning': 'Layout',
+  'view.tuning-hint': 'Fine-tune how the drawing is laid out: spacing, link length, direction and shape.',
   'view.hint.detail':
     'Overview shows each group as one box. Groups shows every thing in its group. All shows every link.',
   // drawings over a graph, said to a screen reader (editor spec §70, sketch_keyboard, sketch-marks.ts)

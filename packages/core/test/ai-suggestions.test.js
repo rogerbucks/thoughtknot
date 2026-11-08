@@ -35,7 +35,7 @@ const LOCAL = {
   model: 'llama3',
   keyName: '',
 };
-const ON = settingsFrom({ aiUse: 'on', aiModels: [LOCAL] });
+const ON = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] });
 const CLOCK = () => new Date('2026-11-03T09:00:00Z');
 const BASE = {
   settings: ON,

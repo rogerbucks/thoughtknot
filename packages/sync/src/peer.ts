@@ -3,11 +3,14 @@
 // a channel that carries bytes. So Tailscale, Headscale, NetBird, Nebula and plain WireGuard all serve.
 // - Only the owner's devices. Each device says its public key first. A device whose key is not on the trusted list is
 //   sent nothing more, and the channel is closed.
-// - End to end. Every message after that is sealed by the key the two devices share, which only they can make. Their
-//   private keys never leave them. A relay, or the VPN itself, carries ciphertext only.
+// - End to end. Each device sends a fresh salt and a one-time key with its key. Every message after that is sealed by
+//   a key made for this session alone. It comes from the key the two share, a one-time agreement thrown away after,
+//   and both salts. Each message is bound to its direction and its place in the order.
+//   Their private keys never leave them. A relay, or the VPN itself, carries ciphertext only. A message recorded,
+//   repeated, reflected, dropped or reordered does not open.
 // - Sealed twice. What is sent is what each store keeps: records already sealed by the vault key, under hidden names.
 // - Each device then sends the records the other lacks, file by file, and stops when both have said they are done.
-import { openWith, sealWith } from './keys.ts';
+import { Session, EPHEMERAL_BYTES, SALT_BYTES } from './session.ts';
 import type { DeviceKeys } from './keys.ts';
 import type { Shelf } from './store.ts';
 
@@ -28,6 +31,8 @@ export type Synced = { got: number } | { refused: string };
 /** One message after the keys: what a device holds, the records the other lacks, or that it has sent all. */
 type Said = { held: [string, [string, number][]][] } | { records: [string, string, string[]] } | { done: true };
 
+/** Bytes of a P-256 public key, as sent. */
+const KEY_BYTES = 65;
 const b64 = (b: Uint8Array): string => btoa(Array.from(b, (x) => String.fromCharCode(x)).join(''));
 const unb64 = (s: string): Uint8Array => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const same = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((x, i) => x === b[i]);
@@ -47,13 +52,14 @@ export class Peer {
   /** Syncs over `channel`: each device gets what the other holds that it lacks. */
   sync(channel: Channel): Promise<Synced> {
     return new Promise((resolve, reject) => {
-      let key: CryptoKey | undefined;
+      let session: Session | undefined;
+      const begun = Session.begin();
       let got = 0,
         theirsDone = false,
         mineDone = false;
       let queue = Promise.resolve();
       const say = async (said: Said) => {
-        if (key) channel.send(await sealWith(key, new TextEncoder().encode(JSON.stringify(said))));
+        if (session) channel.send(await session.seal(new TextEncoder().encode(JSON.stringify(said))));
       };
       const finish = () => {
         if (!theirsDone || !mineDone) return;
@@ -61,15 +67,23 @@ export class Peer {
         resolve({ got });
       };
       const heard = async (message: Uint8Array) => {
-        if (!key) {
-          if (!this.#trusted.some((t) => same(t, message))) {
+        if (!session) {
+          const theirs = message.slice(0, KEY_BYTES);
+          const whole = message.length === KEY_BYTES + EPHEMERAL_BYTES + SALT_BYTES;
+          if (!whole || same(theirs, this.#keys.publicKey) || !this.#trusted.some((t) => same(t, theirs))) {
             channel.close();
             return resolve({ refused: 'a device that is not one of the owner’s' });
           }
-          key = await this.#keys.sharedWith(message);
+          session = await Session.open(this.#keys, theirs, await begun, message.slice(KEY_BYTES));
           return say({ held: [...(await this.#shelf.held())].map(([note, d]) => [note, [...d]]) });
         }
-        const said = JSON.parse(new TextDecoder().decode(await openWith(key, message))) as Said;
+        let said: Said;
+        try {
+          said = JSON.parse(new TextDecoder().decode(await session.open(message))) as Said;
+        } catch {
+          channel.close();
+          return resolve({ refused: 'a message did not open: it was changed, repeated, or out of order' });
+        }
         if ('held' in said) {
           await this.#sendLacking(new Map(said.held.map(([note, d]) => [note, new Map(d)])), say);
           mineDone = true;
@@ -93,7 +107,9 @@ export class Peer {
           queue = queue.then(closed);
         },
       );
-      channel.send(this.#keys.publicKey);
+      void begun.then((b) => {
+        channel.send(Uint8Array.from([...this.#keys.publicKey, ...b.hello]));
+      });
     });
   }
 

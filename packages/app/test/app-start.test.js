@@ -70,7 +70,8 @@ test("on a phone the first page lists the app's own notes, with no folder to pic
     [...doc.querySelectorAll('#gn-app li a')].map((a) => a.getAttribute('href')),
     [editorAddress('Reader.md')],
   );
-  assert.equal(doc.querySelectorAll('#gn-app button').length, 1, 'one button, and it is not the folder picker');
+  const buttons = [...doc.querySelectorAll('#gn-app button')].map((b) => b.textContent);
+  assert.deepEqual(buttons, ['New note', 'Share'], 'a note to make and a vault to share, and no folder picker');
   assert.equal(button(doc).textContent, 'New note');
 });
 

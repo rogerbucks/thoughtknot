@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-globe-types.test.js",
+  "test": "centroid wraps round the ball: the far side hides, and a spin brings it round",
+  "seen_failing_first": false,
+  "evidence": "A guard over every type: the marks of these types already wrapped; the tile fix has its own test, seen failing first, in render-backdrop.test.js."
+}

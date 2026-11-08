@@ -236,6 +236,7 @@
         "LE2",
         "PJ1",
         "VP1",
+        "VP2",
         "MM1",
         "ED1"
       ],
@@ -539,16 +540,35 @@
       }
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 36 · Held: rendering rebuilt to a spec",
       "start": "2027-01-23",
-      "end": "2027-01-30",
+      "end": "2027-01-29",
+      "estimate": true,
+      "workstreams": [
+        "RR1",
+        "MR1"
+      ]
+    },
+    {
+      "title": "Wave 37 · Held: ethos rules from the neurodivergence report",
+      "start": "2027-01-30",
+      "end": "2027-02-12",
+      "estimate": true,
+      "workstreams": [
+        "ET1"
+      ]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-02-13",
+      "end": "2027-02-20",
       "estimate": true,
       "workstreams": [],
       "earlier_plan": {
-        "start": "2027-10-11",
-        "end": "2027-10-24",
-        "replaced": "2026-10-19",
-        "why": "re-baselined to the measured rate"
+        "start": "2027-01-30",
+        "end": "2027-02-06",
+        "replaced": "2026-11-08",
+        "why": "Wave 37 added: ethos rules from the neurodivergence report (Roger, 8 Nov 2026)"
       }
     }
   ]

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window may call the app's eight folder commands and Tauri's core events, nothing else.",
+  "description": "The main window may call the app's ten folder commands, the gh call (checked against its list in gh.rs), the six mesh commands (private addresses only, mesh.rs), the eight note commands (crdt.rs) and Tauri's core events, nothing else.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -12,6 +12,23 @@
     "allow-write-text",
     "allow-remove-file",
     "allow-make-dir",
-    "allow-write-new"
+    "allow-write-new",
+    "allow-pick-target",
+    "allow-swap-folders",
+    "allow-run-gh",
+    "allow-mesh-listen",
+    "allow-mesh-accept",
+    "allow-mesh-dial",
+    "allow-mesh-send",
+    "allow-mesh-receive",
+    "allow-mesh-close",
+    "allow-crdt-open",
+    "allow-crdt-text",
+    "allow-crdt-splice",
+    "allow-crdt-merge",
+    "allow-crdt-has-been",
+    "allow-crdt-anchor",
+    "allow-crdt-place",
+    "allow-crdt-history"
   ]
 }

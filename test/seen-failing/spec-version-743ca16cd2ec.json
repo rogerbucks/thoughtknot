@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/spec-version.test.mjs",
+  "test": "spec_version_in_files > a block written to this spec",
+  "seen_failing_first": false,
+  "evidence": "a case that the reader already read: it guards that naming a spec version of this major or older stays readable"
+}

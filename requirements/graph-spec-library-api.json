@@ -1,0 +1,242 @@
+{
+  "about": "The graph spec's library operations (editor spec §51, spec_library_api). Each is in both libraries: the JavaScript name is read from packages/graph-spec/src/graph-spec-check.js, the Python one is module.name in python/graph_spec/src. 'required' is how many arguments a call must give; the rest have defaults. A problem is a ProfileError: JavaScript names its fields line, msg, fix, at and code; Python names them line, message, fix, at and code. Its code is in packages/graph-spec/src/reader/problem-codes.json, and a code is never reused. test/public-api.test.js and python/graph_spec/tests/test_library_api.py hold both libraries to this file.",
+  "operations": [
+    {
+      "operation": "read",
+      "js": "read",
+      "py": "gql_profile.Store.apply",
+      "required": 1,
+      "takes": [
+        "a data block's text"
+      ],
+      "gives": "nothing; the graph is added to the store",
+      "problems": "ProfileError"
+    },
+    {
+      "operation": "world",
+      "js": "worldFromStore",
+      "py": "graph_rules.World.from_store",
+      "required": 1,
+      "takes": [
+        "a store"
+      ],
+      "gives": "each graph by name, ready for the rules"
+    },
+    {
+      "operation": "header",
+      "js": "header",
+      "py": "gql_profile.header",
+      "required": 1,
+      "takes": [
+        "a block's text"
+      ],
+      "gives": "the graph's name and the block's kind: data, schema, query, changeset or excerpt",
+      "problems": "ProfileError"
+    },
+    {
+      "operation": "tokens",
+      "js": "tokens",
+      "py": "gql_profile.tokens",
+      "required": 1,
+      "takes": [
+        "a block's text"
+      ],
+      "gives": "every token: kind, text, line, as written, and where it ends",
+      "problems": "ProfileError"
+    },
+    {
+      "operation": "check_syntax",
+      "js": "checkSyntax",
+      "py": "gql_profile.check_syntax",
+      "required": 1,
+      "takes": [
+        "a block's text"
+      ],
+      "gives": "nothing when the block is in the profile, else the ProfileError (returned, not raised)"
+    },
+    {
+      "operation": "canon",
+      "js": "canon",
+      "py": "graph_rules.canon",
+      "required": 1,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it"
+      ],
+      "gives": "the graph's canonical hash, 64 lower-case hex digits (requirements/graph-spec-canonical.md)"
+    },
+    {
+      "operation": "jcs",
+      "js": "jcs",
+      "py": "graph_rules.jcs",
+      "required": 1,
+      "takes": [
+        "a value"
+      ],
+      "gives": "its RFC 8785 JSON text",
+      "problems": "a refusal for NaN and infinity"
+    },
+    {
+      "operation": "hash16",
+      "js": "hash16",
+      "py": "graph_rules.hash16",
+      "required": 1,
+      "takes": [
+        "a value"
+      ],
+      "gives": "the first 16 hex digits of the SHA-256 of its RFC 8785 JSON"
+    },
+    {
+      "operation": "basis_hash",
+      "js": "basisHash",
+      "py": "graph_rules.basis_hash",
+      "required": 2,
+      "takes": [
+        "a thing's properties",
+        "the property names read, comma-separated"
+      ],
+      "gives": "the short hash of only those properties"
+    },
+    {
+      "operation": "named",
+      "js": "named",
+      "py": "graph_rules.named",
+      "required": 1,
+      "takes": [
+        "a hash's digits"
+      ],
+      "gives": "the digits with their algorithm's name in front (requirements/hashes.md)"
+    },
+    {
+      "operation": "is_named",
+      "js": "isNamed",
+      "py": "graph_rules.is_named",
+      "required": 1,
+      "takes": [
+        "a value"
+      ],
+      "gives": "whether it is a hash that names its algorithm"
+    },
+    {
+      "operation": "changeset_header",
+      "js": "changesetHeader",
+      "py": "graph_rules.changeset_header",
+      "required": 1,
+      "takes": [
+        "a change set's text"
+      ],
+      "gives": "its header fields, or nothing when it has none"
+    },
+    {
+      "operation": "check_changeset",
+      "js": "checkChangeset",
+      "py": "graph_rules.check_changeset",
+      "required": 2,
+      "takes": [
+        "the base graphs",
+        "a change set's text",
+        "the type matrix (optional)"
+      ],
+      "gives": "the rules' verdicts, the change set read, and a problem if it was refused"
+    },
+    {
+      "operation": "check",
+      "js": "check",
+      "py": "graph_rules.check",
+      "required": 2,
+      "takes": [
+        "a world",
+        "a graph's name",
+        "the type matrix (optional)"
+      ],
+      "gives": "a verdict for each rule: its name, whether it holds, and why"
+    },
+    {
+      "operation": "section20",
+      "js": "section20",
+      "py": "graph_rules.section20",
+      "required": 1,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it",
+        "the rule switches (optional)"
+      ],
+      "gives": "a verdict for each certainty rule"
+    },
+    {
+      "operation": "paths_rules",
+      "js": "pathsRules",
+      "py": "graph_rules.paths_rules",
+      "required": 1,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it"
+      ],
+      "gives": "a verdict for each path and altitude rule"
+    },
+    {
+      "operation": "completeness",
+      "js": "completeness",
+      "py": "graph_rules.completeness",
+      "required": 1,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it",
+        "today's date (optional)"
+      ],
+      "gives": "the gaps found, by kind"
+    },
+    {
+      "operation": "project",
+      "js": "project",
+      "py": "graph_rules.project",
+      "required": 1,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it"
+      ],
+      "gives": "the graph's blocks and links as plain data"
+    },
+    {
+      "operation": "rebuild",
+      "js": "rebuild",
+      "py": "graph_rules.rebuild",
+      "required": 3,
+      "takes": [
+        "a graph's name",
+        "its blocks",
+        "its links"
+      ],
+      "gives": "the graph's text, written from them"
+    },
+    {
+      "operation": "projects_back",
+      "js": "projectsBack",
+      "py": "graph_rules.projects_back",
+      "required": 2,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it",
+        "its name"
+      ],
+      "gives": "whether projecting and rebuilding gives the graph back"
+    },
+    {
+      "operation": "lens_buckets",
+      "js": "lensBuckets",
+      "py": "graph_rules.lens_buckets",
+      "required": 2,
+      "takes": [
+        "a graph, as worldFromStore / World.from_store gives it",
+        "a lens rule"
+      ],
+      "gives": "which bucket each thing falls in, or nothing without a rule"
+    }
+  ],
+  "problem": {
+    "raised_as": "ProfileError",
+    "fields": {
+      "line": "the line, counted from 1",
+      "message": "what is wrong (JavaScript: msg)",
+      "fix": "what to do",
+      "at": "where on the line the fix goes, when it is one insertion (left out otherwise)",
+      "code": "the stable code, GN and three digits"
+    },
+    "codes": "packages/graph-spec/src/reader/problem-codes.json",
+    "never_reused": "A code is never reused or renumbered. A problem that goes keeps its code in 'retired'. A code's place in the spec and the parts its message and fix fill in ({name}) never change."
+  }
+}

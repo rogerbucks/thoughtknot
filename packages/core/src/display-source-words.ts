@@ -1,9 +1,13 @@
 // The words of the display layer, in UK English (editor spec §42, words_catalogue). They are said on the drawing's card,
 // its details, the editor pane and the property rows. source-words.ts keeps them with every other word.
 // packages/core/test/words-in-code.test.js checks that the layer's code says none itself.
+import { BOARD_GLYPH_SOURCE_WORDS } from './board-glyph-source-words.ts';
+import { BOARD_SLICE_SOURCE_WORDS } from './board-slice-source-words.ts';
 
 /** The words of the display layer, by key, in UK English. */
 export const DISPLAY_SOURCE_WORDS = {
+  ...BOARD_GLYPH_SOURCE_WORDS,
+  ...BOARD_SLICE_SOURCE_WORDS,
   'pane.no-block': 'This note has no graph block to edit.',
   'table.row': 'Row',
   'table.total': 'Total',
@@ -309,6 +313,9 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.kind.image': 'Picture',
   'board.kind.glyph': 'Icon',
   'board.said': '{kind}: {text}',
+  'board.card.property': '{key}: {value}',
+  'board.card.attached': 'Attached: {names}',
+  'board.card.links': 'Links: {names}',
   'board.leads-to': 'leads to {other}',
   'board.leads-to-as': 'leads to {other}, {label}',
   'board.comes-from': 'comes from {other}',

@@ -35,6 +35,7 @@ const registered = (provider = echo) => {
 const settings = (over = {}) =>
   settingsFrom({
     aiUse: 'on',
+    aiPublic: 'note',
     aiModels: [
       {
         name: 'Echo',

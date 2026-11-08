@@ -44,6 +44,9 @@ export const BLOCKS_SOURCE_WORDS = {
     'Graph {graph} has nothing to draw in this note, so the proposal is listed without a drawing.',
   'blocks.proposal-failed': 'Proposal {id} could not be drawn, so its change set is shown.',
   'blocks.source-strip': 'Drawn from the {kind} {name}, read where it is written: change the graph there.',
+  // a table with no mapping yet: the mapping proposed, and the button that saves it (source-strip.ts)
+  'blocks.mapping-proposed': 'The mapping proposed',
+  'blocks.mapping-save': 'Save this mapping as {place}',
   'blocks.source-strip-plugin':
     'Drawn from the plug-in source {name}, read each time from the plug-in: change the graph where the plug-in keeps it.',
   'blocks.source-open': 'Open {name}',
@@ -52,4 +55,12 @@ export const BLOCKS_SOURCE_WORDS = {
   'blocks.source-none': 'it names no source',
   'blocks.source-empty': 'Graph {graph} has nothing in it yet where it is written.',
   'blocks.source-engine-failed': 'The drawing engine could not start, so this graph is shown as text.',
+  'bases.name': 'Graph',
+  'bases.empty': 'No notes match this view, so there is nothing to draw. Change its filters to pick some.',
+  'bases.edit': 'These notes are picked by the base. Change its filters, or open a note to change it.',
+  'bases.edges': 'Links from property',
+  'bases.edges-links': 'Note links',
+  'bases.outside': 'Show linked notes outside this view',
+  'bases.reading': 'the notes this base picks, with the notes they link to faded',
+  'bases.shown-kept': 'A Bases graph keeps its places and type in the .base file; zoom and selection are not saved.',
 } as const;

@@ -1,0 +1,20 @@
+{
+  "about": "Editor spec §51, spec_version_in_files: a graph may name the Graph Spec version it is written to on its graph line, as '· spec 1.0'. A reader reads a block written to its own major Graph Spec, an older one, or none named. It refuses a newer major with GN107 and a fix that says to upgrade, and the note's text is kept as written. One table for both readers: spec-version.test.mjs and python/graph_spec/tests/test_spec_version.py.",
+  "implements": 1,
+  "cases": [
+    { "name": "a block that names no spec version", "block": "// graph: g\n(a:T),\n(b:T)", "things": 2 },
+    { "name": "a block written to this spec", "block": "// graph: g · spec 1.0\n(a:T)", "things": 1 },
+    { "name": "a block written to a newer minor", "block": "// graph: g · SOURCE · spec 1.7\n(a:T)", "things": 1 },
+    {
+      "name": "a block beside a format it can read",
+      "block": "// graph: g · format 1 · spec 1.0\n(a:T)",
+      "things": 1
+    },
+    { "name": "a block written to a newer major", "block": "// graph: g · spec 2.0\n(a:T)", "code": "GN107" },
+    {
+      "name": "a newer major beside a shared schema",
+      "block": "// graph: g · schema decision@1 · spec 3\n(a:T)",
+      "code": "GN107"
+    }
+  ]
+}

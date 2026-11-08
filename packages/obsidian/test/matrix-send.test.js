@@ -23,6 +23,7 @@ const model = (name, matrixRow) => ({
 });
 const SETTINGS = {
   aiUse: 'on',
+  aiPublic: 'note',
   aiMatrixNote: 'Matrix.md',
   aiModels: [model('Local', 'Local row'), model('Other', 'Other row')],
 };

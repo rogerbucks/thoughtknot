@@ -104,7 +104,10 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
     its card.
 - `editor.ts` — the comma and the colon added for you in the note's own editor.
 - `pane.ts` — the edit pane, which holds a block editor.
-- `reading-view.ts` — reading view never changes the note.
+- `reading-view-metadata.ts` — the metadata reading view may write (ES§3, reading_view_metadata).
+  - `writeMetaBlock` writes a layout or AI block in one `Vault.process` step. `writeProperty` sets a property through
+    `processFrontMatter`. Each gives back the words to show and an undo that takes back exactly that write.
+- `reading-view.ts` — reading view never changes the graph or the prose.
   - Every command rewriting a note asks `noteToRewrite` first. It gives the note in the pane in front. It refuses with a
     notice when that pane is in reading view or holds no note.
   - `stillToRewrite` is asked again just before the write. It refuses the same way when that pane changed while the note
@@ -167,6 +170,17 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - One that cannot be read is said with its reason.
   - `watchSource` draws the card again when the source is changed, made, moved or deleted.
 - `source-strip.ts` — the line naming where the data comes from, and Open for a note, as a tap on a link opens it.
+
+### `src/bases/` — the Graph view of Obsidian Bases (ES§20, bases_graph_view)
+
+A .base file picks notes with its filters. The Graph view draws them as a graph, beside Bases' own views.
+
+- `base-view.ts` — the view Bases makes for a .base file's view. It draws the notes picked by the same card as a graph
+  block, and again when they change. It says so when none are picked.
+- `base-graph.ts` — the notes picked, as one gql block. A note is a thing, and a link between two of them a link. Links
+  come from the notes' own links, or from one property. A linked note outside the view shows only when asked.
+- `base-style.ts` — where boxes go and the diagram type, kept as a style graph in the .base file under the view. No
+  note is ever written for it (R16).
 
 ### The inspector's properties, now the shared layer's `properties/` (packages/core/src/display/properties/)
 

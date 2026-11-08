@@ -1,0 +1,27 @@
+<section aria-labelledby="spec-title">
+  <h1 id="spec-title">{{spec.heading}}</h1>
+  <p class="lede">{{spec.lede}}</p>
+  <p class="version">{{spec.version}}</p>
+  <p><a href="{{@repo}}/blob/main/requirements/graph-spec.gql">{{spec.source}}</a></p>
+</section>
+<section aria-labelledby="changes-title">
+  <h2 id="changes-title">{{spec.changes}}</h2>
+  <ul class="links">
+    {{@changes}}
+  </ul>
+</section>
+<section aria-labelledby="sections-title">
+  <h2 id="sections-title">{{spec.sections}}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{{spec.col.num}}</th>
+        <th scope="col">{{spec.col.title}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{@sections}}
+    </tbody>
+  </table>
+  <p class="note">{{@withdrawn}}</p>
+</section>

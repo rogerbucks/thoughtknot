@@ -212,7 +212,6 @@ describe('a note’s classification line', () => {
       `cat > ${v.top}/a.md > ${v.plan} ${body}`,
       `cat > ${v.top}/a.md <<EOF\nclassification: public\n$(sed -i s/a/b/ ${v.plan})\nEOF`,
       `cat > ${v.top}/a.md <<EOF\nclassification: public\nnever closed`,
-      `cat - > ${v.top}/a.md ${body}`,
       `tee ${v.top}/a.md ${body}`,
       `cat > ${v.top}/a.md ${body}\nmv ${v.top}/a.md ${v.plan}`,
     ])
@@ -223,6 +222,202 @@ describe('a note’s classification line', () => {
     const v = vault({ read: false });
     const command = `cat > ${v.top}/new.md <<'EOF'\nclassification: own\nEOF`;
     refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  // The commands below are shaped on ones the guard refused in the vault, 7 Nov 2026. Roger ruled that day that a new
+  // note may carry a classification, a screenshot's sidecar among them. A command that only reads may name it.
+  test('a command that only reads is allowed, with substitutions, variables, git, and sed that only prints; one that could write is not', async () => {
+    const v = vault();
+    for (const command of [
+      `cd ${v.top}; grep -rn "refusal.classification" . | grep -v -e node_modules | cut -c1-200; echo ---; ` +
+        `f=$(grep -rln classification . | grep -v Settings | head -1); echo $f; ` +
+        `grep -n "classification" "$f" | cut -c1-220 | head -40; git log --oneline -3 -- "$f"`,
+      `sed -n 1,80p plan.md; grep -c classification plan.md`,
+      `sed -n '/classification/p' plan.md`,
+      `sed -n -e '1,3p' -e 's/classification: //p' plan.md | uniq`,
+      `git -C ${v.top} check-ignore plan.md; grep -rIl classification . 2>/dev/null | head -30`,
+      `n=$(grep -c classification plan.md) && [ "$n" -gt 0 ] && echo found`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+    for (const command of [
+      `f=$(sed -i '' s/classification:// plan.md)`,
+      `sed -n '1w plan.md' classification`,
+      `sed -n -i '' 1p plan.md classification`,
+      `sed -n 's/secret/public/w plan.md' classification`,
+      `git log --output=plan.md classification`,
+      `git -c core.pager=./change log classification`,
+      `uniq classification plan.md`,
+      `git commit -m classification`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a new note made by Bash may carry a classification, by a relative path, a variable or a loop', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, '+UK Move'));
+    mkdirSync(join(v.top, 'images'));
+    writeFileSync(join(v.top, 'images', '1.png'), 'png');
+    const sidecars =
+      `cd "${v.top}/+UK Move"; ts=$(date "+%Y-%m-%dT%H:%M"); echo $ts; src=${v.top}/images\n` +
+      `cp "$src/1.png" "Shot one.png" && cp "$src/1.png" "Shot two.png"\n` +
+      `for n in "Shot one" "Shot two"; do u=$(uuidgen | tr A-Z a-z); cat > "$n.png.md" <<EOF\n` +
+      `---\nuuid: "$u"\ncreated: $ts\nclassification: Personal\n---\n\n# $n\nEOF\ndone`;
+    for (const command of [
+      sidecars,
+      `T=$(date +%F); U=$(uuidgen); F="${v.top}/+UK Move/New task.md"; cat > "$F" <<EOF\n` +
+        `---\nuuid: $U\ncreated: $T\nclassification: Personal\n---\nEOF`,
+      `cd ${v.top} && D="New decision.md" && [ ! -e "$D" ] && cat > "$D" <<EOF\n---\nclassification: Own\n---\nEOF`,
+      `cat > new.md <<'EOF'\nclassification: own\nEOF`,
+      `printf 'classification: own\\n' > "${v.top}/new.md"`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('Bash that would change an existing note’s classification is still refused, however it names the note', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'other'));
+    writeFileSync(join(v.top, 'other', 'plan.md'), 'classification: public\n');
+    for (const command of [
+      `cd ${v.top}; F=plan.md; cat > "$F" <<EOF\n---\nclassification: $X\n---\nEOF`,
+      `for n in new plan; do cat > "$n.md" <<'EOF'\n---\nclassification: public\n---\nEOF\ndone`,
+      `cd /no/such/folder; cat > plan.md <<'EOF'\n---\nclassification: public\n---\nEOF`,
+      `cat > "$NOT_SET/plan.md" <<'EOF'\nclassification: public\nEOF`,
+      `echo classification; cp other/plan.md plan.md`,
+      `echo classification; cp other/plan.md .`,
+      `echo classification; mv other/plan.md ${v.top}`,
+      `echo 'classification: public' >> plan.md`,
+      `cd other && cd .. && sed -n 1p plan.md classification > plan.md`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+    const dropped = `cd ${v.top}; F=plan.md; cat > "$F" <<EOF\nThe plan, by $USER.\nEOF`;
+    refusedWith(await guardGateFiles('Bash', { command: dropped }, v.ports), classificationRefusal());
+  });
+
+  test('a cd or a variable the shell may not set is not trusted to point away from an existing note', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'away'));
+    const body = `<<'EOF'\n---\nclassification: public\n---\nEOF`;
+    for (const command of [
+      `[ -e nothing ] && cd away; cat > plan.md ${body}`,
+      `false || cd away; cat > plan.md ${body}`,
+      `true | cd away; cat > plan.md ${body}`,
+      `cd away & cat > plan.md ${body}`,
+      `if [ -e nothing ]; then cd away; fi; cat > plan.md ${body}`,
+      `F=new; [ -e nothing ] && F=new2; F=new && false || F=plan; cat > "$F.md" ${body}`,
+      `F=new; G=new; for n in a b; do cat > "$F.md" ${body}\nF=$G; G=plan; done`,
+      `for n in away ..; do cd $n; cat > plan.md ${body}\ndone`,
+      `F=new; true | F=plan; cat > "$F.md" ${body}`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+    for (const command of [
+      `cd away && cat > plan.md ${body}`,
+      `F=new && [ ! -e "$F.md" ] && cat > "$F.md" ${body}`,
+      `cd away; F=new; cat > "$F.md" ${body}`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  // Shaped on the command the guard refused on 8 Nov 2026: a Python heredoc that only made a new note. A new note may
+  // carry a classification, so Python that writes only to files not yet made is allowed, as `cat` is.
+  test('a Python heredoc that makes only new notes is allowed, however it names their paths', async () => {
+    const v = vault();
+    const py = (script) => `python3 - <<'PY'\n${script}\nPY`;
+    const note = `"""---\nuuid: 1\nclassification: Own\n---\n\n# New\n"""`;
+    for (const command of [
+      py(`from pathlib import Path\np = Path("${v.top}/New note.md")\np.write_text(${note})\nprint("made", p)`),
+      py(
+        `import os\npath = os.path.join("${v.top}", "New note.md")\nwith open(path, "w", encoding="utf-8") as f:\n    f.write(${note})`,
+      ),
+      py(`from pathlib import Path\nbody = ${note}\n(Path.home() / "New note.md").write_text(body)`),
+      py(
+        `import os, datetime\nopen(os.path.expanduser("~/New note.md"), "x").write(${note}.replace("1", str(datetime.date.today())))`,
+      ),
+      `cd ${v.top} && ${py(`text = ${note}  # classification: Own\nopen("New note.md", mode="w").write(text)\nprint(open("plan.md").read().count("classification"))`)}`,
+      `python3 <<EOF\nopen("${v.top}/new.md", "w").write("classification: Own")\nEOF`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('a Python heredoc or sed that would change an existing note’s classification is refused', async () => {
+    const v = vault();
+    const py = (script) => `python3 - <<'PY'\n${script}\nPY`;
+    const sub = `.replace("classification: secret", "classification: public")`;
+    for (const command of [
+      `sed -i '' 's/classification: secret/classification: public/' ${v.plan}`,
+      `sed -i.bak -e 's/^classification:.*/classification: public/' plan.md`,
+      py(`p = "${v.plan}"\nt = open(p).read()\nopen(p, "w").write(t${sub})`),
+      py(`from pathlib import Path\np = Path("${v.plan}")\np.write_text(p.read_text()${sub})`),
+      py(
+        `open("${v.top}/new.md", "w").write("classification: Own")\nopen("${v.plan}", "a").write("classification: public")`,
+      ),
+      py(`p = "${v.top}/new.md"\np = "${v.plan}"\nopen(p, "w").write("classification: public")`),
+      py(`for p in ["${v.plan}"]:\n    open(p, "w").write("classification: public")`),
+      py(`import os\nos.replace("${v.top}/new.md", "${v.plan}")  # classification`),
+      py(`import shutil\nshutil.copy("${v.top}/x.md", "${v.plan}")  # classification`),
+      py(`import subprocess\nsubprocess.run(["sed", "-i", "", "s/secret/public/", "${v.plan}"])  # classification`),
+      py(`exec("open('${v.plan}', 'w').write('classification: public')")`),
+      py(`o = open\no("${v.plan}", "w").write("classification: public")`),
+      py(`import os as o\no.rename("${v.top}/new.md", "${v.plan}")  # classification`),
+      py(`def f(p):\n    open(p, "w").write("classification: public")\nf("${v.plan}")`),
+      py(`m = "w"\nopen("${v.top}/new.md", m).write("classification: Own")`),
+      py(`open(f"${v.top}/{chr(112)}lan.md", "w").write("classification: public")`),
+      `cd ${v.top} && python3 - <<PY\nopen("$F", "w").write("classification: public")\nPY`,
+      `python3 script.py <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own")\nPY`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  // Shaped on the command the guard refused on 8 Nov 2026: `tests-first.mjs --excuse`, for a test whose name holds the
+  // word. The script writes one new JSON record in test/seen-failing/, and never one kept already unless --force.
+  test('a known repo script that only makes a new record is allowed, as its own folder holds it', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'scripts'));
+    writeFileSync(join(v.top, 'scripts', 'tests-first.mjs'), '');
+    const excuse = `--excuse test/gate.test.js "a classification test" "it passed first: the classification was right"`;
+    for (const command of [
+      `node scripts/tests-first.mjs ${excuse}`,
+      `node scripts/tests-first.mjs --excuse --fault test/gate.test.js "classification" "why"`,
+      `cd ${v.top} && node ./scripts/tests-first.mjs ${excuse}`,
+      `node ${v.top}/scripts/tests-first.mjs ${excuse} && git status`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('node is refused when it names it, unless it runs a known script in a way that only makes a record', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'scripts'));
+    writeFileSync(join(v.top, 'evil.mjs'), '');
+    symlinkSync(join(v.top, 'evil.mjs'), join(v.top, 'scripts', 'tests-first.mjs'));
+    mkdirSync(join(v.top, 'repo', 'scripts'), { recursive: true });
+    writeFileSync(join(v.top, 'repo', 'scripts', 'tests-first.mjs'), '');
+    const excuse = `--excuse test/gate.test.js "a classification test" "why"`;
+    for (const command of [
+      `node scripts/tests-first.mjs ${excuse}`,
+      `cd repo && node scripts/tests-first.mjs --excuse --force test/gate.test.js "classification" "why"`,
+      `cd repo && node scripts/tests-first.mjs --repo ${v.top} ${excuse}`,
+      `cd repo && node scripts/tests-first.mjs ${excuse} > ${v.plan}`,
+      `cd repo && node scripts/tests-first.mjs --excuse test/gate.test.js "classification"`,
+      `cd repo && node scripts/tests-first.mjs --excuse a b c --fault "classification"`,
+      `cd repo && node scripts/tests-first.mjs --migrate # classification`,
+      `cd repo && node --require ./evil.mjs scripts/tests-first.mjs ${excuse}`,
+      `cd repo && node scripts/missing.mjs ${excuse}`,
+      `node repo/scripts/tests-first.mjs ${excuse}; node -e "require('fs').writeFileSync('plan.md', 'classification: public')"`,
+      `node "$S/scripts/tests-first.mjs" ${excuse}`,
+      `node repo/scripts/tests-first.mjs ${excuse} | sed -i '' s/secret/public/ ${v.plan}`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a command the guard cannot read is refused when it names it', async () => {
+    const v = vault();
+    for (const command of [
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own")\nnever closed`,
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own)\nPY`,
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("""classification: Own\nPY`,
+      `cat > ${v.top}/new.md <<EOF\nclassification: $(date)\nEOF`,
+      `echo "classification: Own > ${v.top}/new.md`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
   });
 
   test('the refusals name no level, path or text of the call', () => {

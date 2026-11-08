@@ -53,6 +53,11 @@ export function bareNames(text: string): { line: number; character: number; end:
   });
 }
 
+const LETTER = /[A-Za-z]/,
+  WORD = /\w/,
+  // a keyword that starts an item, read where the scan is: sticky, so the text is never sliced
+  KEYWORD = /(?:SET|MATCH|INSERT)(?![A-Za-z])/iy;
+
 /** Splits a block into its top-level items: at commas outside brackets, strings and comments, and before SET, MATCH and INSERT. */
 export function items(text: string): Item[] {
   const out: Item[] = [];
@@ -70,9 +75,9 @@ export function items(text: string): Item[] {
       continue;
     }
     if (isSpace(c)) continue;
-    if (depth === 0 && /[A-Za-z]/.test(c) && (i === 0 || !/\w/.test(text[i - 1] ?? ''))) {
-      const w = /^[A-Za-z]+/.exec(text.slice(i))?.[0].toUpperCase();
-      if ((w === 'SET' || w === 'MATCH' || w === 'INSERT') && start !== -1) end(-1);
+    if (depth === 0 && start !== -1 && LETTER.test(c) && (i === 0 || !WORD.test(text[i - 1] ?? ''))) {
+      KEYWORD.lastIndex = i;
+      if (KEYWORD.test(text)) end(-1);
     }
     if (c === ',' && depth === 0) {
       end(i);

@@ -24,7 +24,11 @@ export function untangleOffers(
   if (!on) return;
   const rail = el.createDiv({
     cls: 'thoughtknot-untangle-offers',
-    attr: { role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': word('details.controls', { thing: text }) },
+    attr: {
+      role: 'toolbar',
+      'aria-orientation': across(el) ? 'horizontal' : 'vertical',
+      'aria-label': word('details.controls', { thing: text }),
+    },
   });
   const offer = (words: string, icon: string, run: () => void) => button(rail, words, icon, run, words);
   // drawn radial around this thing, from any type, if it is not the centre already (§15, radial_centre_anywhere)
@@ -53,6 +57,11 @@ export function untangleOffers(
       () => on.toggleHub?.(key),
     );
 }
+
+/** Whether a pointer hovers here, so the rail is one row of icons (panels_compact); on touch it is a column. */
+const across = (el: HTMLElement): boolean =>
+  (el.win?.matchMedia?.('(hover:hover)')?.matches ?? false) &&
+  (el.win?.matchMedia?.('(pointer:fine)')?.matches ?? false);
 
 /** How each Show only button brings its row of one step fewer or more up to date, by the button. */
 const reachSyncs = new WeakMap<HTMLElement, () => void>();

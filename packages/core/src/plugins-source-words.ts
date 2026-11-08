@@ -53,5 +53,6 @@ export const PLUGINS_SOURCE_WORDS = {
   // the host's own graph sources, by their titles (host-sources.ts)
   'plugins.source.file': 'Graph file',
   'plugins.source.note': 'Note',
+  'plugins.source.table': 'Table (CSV)',
   'plugins.source.unread': 'Nothing could be read at "{target}".',
 } as const;

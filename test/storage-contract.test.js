@@ -1,6 +1,7 @@
 // Every note storage backend passes the one storage contract (editor spec §41, storage_contract). The backends are an
 // Obsidian vault, a plain folder and a VS Code workspace, each run against its real code. Memory is one too. A backend
-// with layers on is still a backend: encryption and history each plug in, and the contract still holds.
+// with layers on is still a backend: encryption and history each plug in, and the contract still holds. So is a GitHub
+// repository, its notes plain files beside its code (github_repo_store).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
@@ -18,6 +19,8 @@ import {
 import { folderStorage } from '../packages/claude-code/server/folder-storage.ts';
 import { vaultStorage } from '../packages/obsidian/src/storage/vault-storage.ts';
 import { fakeObsidian } from '../packages/obsidian/test/host/fake-obsidian.js';
+import { githubRepoStorage } from '../packages/core/src/index.ts';
+import { fakeGitHub, repoOptions } from '../packages/core/test/fake-github.js';
 
 /** A stand-in for `vscode.workspace.fs` over files in memory, each by its path; folders are kept as made. */
 function fakeWorkspace() {
@@ -87,6 +90,11 @@ const BACKENDS = {
   'an Obsidian vault': () => vaultStorage(fakeObsidian({}).app),
   'a VS Code workspace': () => workspaceStorage(fakeWorkspace()),
   'memory, encrypted': () => layered(memoryStorage(), reversing),
+  // the repository's other files sit beside the notes, and none of them is listed as a note (github_repo_store)
+  'a GitHub repository': () =>
+    githubRepoStorage(repoOptions(fakeGitHub({ 'src/app.ts': 'code', 'data/x.csv': 'a,b', '.github/ci.md': '#' }))),
+  'a GitHub repository, in a folder of it': () =>
+    githubRepoStorage(repoOptions(fakeGitHub({ 'README.md': '# Read me' }), { folder: '/docs/graphs//' })),
   'a plain folder, with its history kept': () => layered(folderStorage(emptyFolder()), historyLayer({ record() {} })),
 };
 

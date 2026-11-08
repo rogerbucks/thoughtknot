@@ -4,7 +4,7 @@
 // script and the browser editor's page, unchanged. Test code only: `cleanUpApp` puts away what was built and opened.
 import { promises as fs, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { openWindow } from '../../../test/repository/wcag.js';
 import { workerFor } from '../../../test/repository/wcag-page.js';
 import { until } from '../../obsidian/test/host/load-plugin.js';
@@ -41,20 +41,30 @@ const numbered = (name, n) => (n === 1 ? name : name.replace(/(\.[^.]+)$/, `-${n
 
 /**
  * Tauri's invoke, answered as the app's commands answer, over `root`. `picked` is what the folder dialog gives. `own`
- * is the name of the app's own folder on a phone, and none on a computer.
+ * is the name of the app's own folder on a phone, and none on a computer. `target` is the folder the dialog gives to
+ * move the notes to (ES§55). A command asked with `target` reaches it, and the two swap after a move.
  */
-export function fakeInvoke(root, picked = null, own = null) {
-  const at = (path) => join(root, ...path.split('/').filter(Boolean));
+export function fakeInvoke(root, picked = null, own = null, target = null) {
+  const roots = { open: root, target: null };
+  const at = (path, args) => join(args?.target ? roots.target : roots.open, ...path.split('/').filter(Boolean));
   const said = (e) => Promise.reject(e?.code === 'ENOENT' ? 'ENOENT' : String(e?.message ?? e));
   const commands = {
     pick_folder: async () => picked,
     own_folder: async () => own,
-    read_dir: async ({ path }) =>
-      (await fs.readdir(at(path), { withFileTypes: true })).map((d) => [d.name, d.isDirectory()]),
-    read_text: async ({ path }) => fs.readFile(at(path), 'utf8'),
-    write_text: async ({ path, text }) => fs.writeFile(at(path), text),
-    remove_file: async ({ path }) => fs.rm(at(path)),
-    make_dir: async ({ path }) => void (await fs.mkdir(at(path), { recursive: true })),
+    read_dir: async (args) =>
+      (await fs.readdir(at(args.path, args), { withFileTypes: true })).map((d) => [d.name, d.isDirectory()]),
+    read_text: async (args) => fs.readFile(at(args.path, args), 'utf8'),
+    write_text: async (args) => fs.writeFile(at(args.path, args), args.text),
+    remove_file: async (args) => fs.rm(at(args.path, args)),
+    make_dir: async (args) => void (await fs.mkdir(at(args.path, args), { recursive: true })),
+    pick_target: async () => {
+      roots.target = target;
+      return target && basename(target);
+    },
+    swap_folders: async () => {
+      [roots.open, roots.target] = [roots.target, roots.open];
+      return basename(roots.open);
+    },
     write_new: async ({ into, files }) => {
       await fs.mkdir(at(into), { recursive: true });
       for (let n = 1; ; n++) {

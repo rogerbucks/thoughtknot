@@ -8,6 +8,9 @@
 //   layout_concept_layers, projections_all_on).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
+import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
+import { ZOOM_STEP } from '../../space-controls.ts';
+import { turnControls } from './stage-turn-keys.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -16,7 +19,8 @@ import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
-import { LevelLegend } from './level-legend.ts';
+import { keepKeyHome, keyHome, LevelLegend } from './level-legend.ts';
+import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
 import { moveHint } from './box-move-keys';
@@ -52,17 +56,25 @@ export interface ViewerAids {
   painter?: Painter;
   /** The lens the card's drawing is seen through until the View menu picks another (lenses.ts). */
   lens?: Lens;
+  /** Whether a graph with levels is drawn by the new rendering, as a preview (render_switch). */
+  newRendering?: boolean;
 }
 
 /**
- * The aids the settings give, with the preset the graph's style graph chooses winning over theirs (view_presets_scoped).
+ * The aids the settings give, with the preset the graph's style graph chooses winning over the vault's, and that over theirs.
  * The style graph's Render for `view`, or the whole graph, gives the space, painter and lens.
  */
-export const aidsOf = (s: Settings, style?: Pick<StyleGraph, 'presets' | 'renders'>, view?: string): ViewerAids => ({
+export const aidsOf = (
+  s: Settings,
+  style?: Pick<StyleGraph, 'presets' | 'renders'>,
+  view?: string,
+  vaultPreset?: string,
+): ViewerAids => ({
   miniMap: s.miniMap,
   detailsOpen: s.detailsOpen === 'on',
   tallest: tallestOf(s.drawingHeight),
-  preset: presetFor({ graph: style?.presets[0]?.preset, everywhere: s.viewPreset }).id,
+  preset: presetFor({ graph: style?.presets[0]?.preset, vault: vaultPreset, everywhere: s.viewPreset }).id,
+  newRendering: s.newRendering === 'on',
   ...(style ? renderFor(style, view) : {}),
 });
 
@@ -86,7 +98,12 @@ export interface AidsHost {
   lens: { selected: () => string | null; menu: () => LensMenu | null };
   /** The view in space, if the card has one: its camera zooms semantic zoom as the flat zoom does. */
   space?: { nearer: () => number; camera: (f: () => void) => void; screen?: () => SpaceScreen | null };
+  /** What a click on the new rendering chooses or clears, as a tap on today's drawing does. */
+  stage?: Omit<StageHands, 'selected'>;
 }
+
+/** The bar's Fit and zoom buttons. */
+type Zooms = { fit: () => void; zoomIn: () => void; zoomOut: () => void };
 
 /** The View menu a lens is picked in, and its ladder, which semantic zoom steps. */
 interface LensMenu {
@@ -120,6 +137,10 @@ export class Aids {
   private badgeText: string | null = null;
   /** The badge's one-line hint and arrow legend (level_hints). */
   private hints: LevelHints | null = null;
+  /** The new rendering's canvas over the drawing, while its setting is on (render_switch); none for a table. */
+  private readonly stage: RenderStage | null;
+  /** The stage's turn buttons and keys, shown while it is tilted. */
+  private readonly turns: ReturnType<typeof turnControls> | null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -176,6 +197,34 @@ export class Aids {
     });
     if (this.lens && menu) renderLensChoice(menu.menu.el, this.lens, host.svg, () => this.semantic?.picked());
     if (menu) greyNotHere(host.root, menu.menu, view); // greyed with why, never gone (view_options_everywhere)
+    // a view in space takes the pointer and the trackpad's pinch while it shows (Roger, 6 Nov)
+    const hands = host.stage && {
+      ...host.stage,
+      selected: () => (this.stage ? host.lens.selected() : null), // nothing is chosen while the card is built
+      away: () => !!host.space?.screen?.(),
+      drawn: () => this.names(),
+      own: (key: string) => {
+        const levels = this.legend?.shown();
+        return levels ? ownHue(levels, key) : undefined;
+      },
+    };
+    this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
+    if (this.stage) o.seen?.keep(this.stage.seen);
+    this.turns = this.stage && turnControls(host.root, viewport, this.stage);
+  }
+
+  /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */
+  stageZoom(flat: Zooms): Zooms | null {
+    const s = this.stage; // the flat drawing under it zooms too, so the mini-map and labels keep up
+    const both = (r: number, k: keyof Zooms) => () => void (s?.zoomBy(r), flat[k]());
+    return s && { fit: both(0, 'fit'), zoomIn: both(ZOOM_STEP, 'zoomIn'), zoomOut: both(1 / ZOOM_STEP, 'zoomOut') };
+  }
+
+  /** Shows the drawing as the bar's 2D button says on the new rendering, where it can; says whether it did. */
+  tilted(mode: string | null): boolean {
+    const shown = this.stage?.lookFrom(mode) ?? false;
+    this.turns?.shown(shown && !!mode); // tilted: the dock's turn buttons show (controls_keys)
+    return shown;
   }
 
   /** Laid out again: the mini-map is a copy of the layout as it is now, the lens bends it anew, semantic zoom waits. */
@@ -210,7 +259,9 @@ export class Aids {
       const drawing = reading.graphs.get(graph),
         g = reading.world[graph],
         screen = this.host.space?.screen?.();
-      this.level(screen ? levelSpace(screen, drawing, g) : levelClouds(svg, drawing, g));
+      // the new rendering says its own level; the badge and its colour key show over it (Roger, 7 Nov 2026)
+      const stage = this.stage && !screen ? this.stage.level() : null;
+      this.level(screen ? levelSpace(screen, drawing, g) : (stage ?? levelClouds(svg, drawing, g)));
       const layer = screen ? screen.el.querySelector('svg.thoughtknot-space-levels') : svg;
       this.hints?.show(layer ? levelShown(layer) : null);
       // one level on at a time: still on the way to the one that fits, it draws again in a moment (level_one_step)
@@ -243,16 +294,22 @@ export class Aids {
       });
       this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
-      this.legend = new LevelLegend(this.badge, {
+      // the key of subjects waits in the View panel, shut, where there is one; else under the badge (panels_key)
+      this.legend = new LevelLegend(keyHome(this.host.viewport, this.badge), {
         viewport: this.host.viewport,
         svg: this.host.svg,
-        redraw: () => this.names(),
+        redraw: () => {
+          this.stage?.draw();
+          this.names();
+        },
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
+        colourOf: (key) => this.stage?.colourOf(key),
         nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
         editGroup: () => this.groupEditor(),
       });
       this.hints = new LevelHints(this.badge);
     }
+    keepKeyHome(this.host.viewport, this.badge); // a View panel built since takes the key
     this.said?.setText(text ?? '');
     this.backButton?.toggleClass('is-hidden', !back);
     this.badge.toggleClass('is-hidden', !text && !back);
@@ -263,10 +320,17 @@ export class Aids {
   private keepClear(): void {
     const viewport = this.host.viewport,
       win = viewport.win ?? window;
-    win.requestAnimationFrame(() => keepSlots(viewport));
+    // a badge moved to a new place is not a change of size, so the drawing is fitted again here, clear of it
+    const keep = () => {
+      const was = this.badge?.getBoundingClientRect();
+      keepSlots(viewport);
+      const now = this.badge?.getBoundingClientRect();
+      if (was && now && (was.left !== now.left || was.top !== now.top)) this.stage?.resized();
+    };
+    win.requestAnimationFrame(keep);
     const resizeObserver = (win as Window & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
     if (this.watching || typeof resizeObserver !== 'function') return;
-    const watching = new resizeObserver(() => keepSlots(viewport));
+    const watching = new resizeObserver(keep);
     for (const el of [viewport, ...slotCards(viewport)]) watching.observe(el);
     this.watching = watching;
   }
@@ -317,6 +381,8 @@ export class Aids {
 
   /** The card is going: its tooltip goes with it. */
   unload(): void {
+    this.stage?.unload();
+    this.turns?.unload();
     this.watching?.disconnect();
     this.info.onunload();
   }

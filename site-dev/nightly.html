@@ -1,0 +1,19 @@
+<section aria-labelledby="nightly-title">
+  <h1 id="nightly-title">{{nightly.heading}}</h1>
+  <p class="lede">{{nightly.lede}}</p>
+  <p class="version">{{nightly.stable}}: {{@stable}}</p>
+</section>
+<section aria-label="{{nightly.heading}}">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">{{nightly.col.version}}</th>
+        <th scope="col">{{nightly.col.date}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{@nightlies}}
+    </tbody>
+  </table>
+  <p class="note">{{@none}}</p>
+</section>

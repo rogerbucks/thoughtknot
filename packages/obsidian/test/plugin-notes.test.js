@@ -16,7 +16,7 @@ const VAULT_TEXT = /\bvault\s*\.\s*(read|cachedRead|process|modify|create|append
 const NOT_NOTES = {
   'export/vault-write.ts': 'an export, such as a picture or a data file',
   'outside/outside-plugins.ts': "a plug-in's code, a .js file",
-  'sources/source-read.ts': 'a .gql file a graph reads from',
+  'sources/source-read.ts': 'a .gql file a graph reads from, and the mapping saved beside a table',
 };
 
 /** Every TypeScript file under `dir`, by its path from src/. */

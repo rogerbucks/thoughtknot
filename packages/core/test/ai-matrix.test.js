@@ -249,7 +249,7 @@ describe('a send is held to the row', () => {
   const BODY = "# R\n\n```gql\n// graph: reader\n(question:Question {name: 'Which?'})\n```\n";
   const send = (m, level, extra = {}) =>
     prepareSend({
-      settings: { ...DEFAULT_SETTINGS, aiUse: 'on', aiModels: [m], ...extra },
+      settings: { ...DEFAULT_SETTINGS, aiUse: 'on', aiPublic: 'note', aiModels: [m], ...extra },
       model: m.name,
       note: BODY,
       notePath: 'R.md',
@@ -272,7 +272,7 @@ describe('a send is held to the row', () => {
     const m = model('Hosted', { matrixRow: 'Local model' });
     assert.ok(!('refused' in send(m, 'Internal')));
     const none = prepareSend({
-      settings: { ...DEFAULT_SETTINGS, aiUse: 'on', aiModels: [m] },
+      settings: { ...DEFAULT_SETTINGS, aiUse: 'on', aiPublic: 'note', aiModels: [m] },
       model: 'Hosted',
       note: BODY,
       notePath: 'R.md',

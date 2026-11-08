@@ -53,22 +53,24 @@ function mapText(props: Record<string, Value>): string {
 }
 
 /** A thing as GQL writes it, from the graph as read, or from its box when the graph does not hold it. */
-function thingText(key: string, g: Graph, kind: string, text: string): string {
+function thingText(key: string, g: Graph, kind: string, text: string, namesOnly = false): string {
   const node = g.nodes.get(key);
   if (!node) return `(${key}:${kind.split('.').join(':')} {name: ${gs.quote(text)}})`;
   const labels = [...node[0]].filter((l) => !gs.SCHEMA_LABELS.includes(l));
-  return `(${key}${labels.map((l) => `:${l}`).join('')}${mapText(node[1])})`;
+  // names only: its name, and none of its other values (ai_public_names_only)
+  const props = namesOnly ? Object.fromEntries(Object.entries(node[1]).filter(([k]) => k === 'name')) : node[1];
+  return `(${key}${labels.map((l) => `:${l}`).join('')}${mapText(props)})`;
 }
 
 /** Each link as GQL writes it, with its properties: the n-th link of a type between two things is the n-th edge so. */
-function linkTexts(links: Link[], g: Graph): string[] {
+function linkTexts(links: Link[], g: Graph, namesOnly = false): string[] {
   const seen = new Map<string, number>();
   return links.map((l) => {
     const key = `${l.from} ${l.type} ${l.to}`,
       n = seen.get(key) ?? 0;
     seen.set(key, n + 1);
     const edge = g.edges.filter(([f, t, d]) => f === l.from && t === l.type && d === l.to)[n];
-    return `(${l.from})-[:${l.type}${mapText(edge?.[3] ?? {})}]->(${l.to})`;
+    return `(${l.from})-[:${l.type}${namesOnly ? '' : mapText(edge?.[3] ?? {})}]->(${l.to})`;
   });
 }
 
@@ -97,9 +99,15 @@ function viewPart(
 
 /**
  * What would be sent of `note` for the user's choice, read as the editor reads the note (`shared` are the vault's
- * shared schemas). Or why it cannot be sent: a graph, view or thing the note does not hold, or nothing chosen.
+ * shared schemas). Or why it cannot be sent: a graph, view or thing the note does not hold, or nothing chosen. With
+ * `namesOnly`, for a public reviewer the vault has not allowed note text, each thing keeps its name and kinds only.
  */
-export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []): AiScope | { refused: string } {
+export function aiScope(
+  note: string,
+  choice: ScopeChoice,
+  shared: string[] = [],
+  namesOnly = false,
+): AiScope | { refused: string } {
   const reading = readNote(
     gqlBlocks(note).map((b) => b.text),
     undefined,
@@ -146,7 +154,10 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
   }
   const chosen = new Set(keys);
   const things = base.boxes.filter((b) => chosen.has(b.key));
-  const lines = [...things.map((b) => thingText(b.key, g, b.kind, b.text)), ...linkTexts(links, g)];
+  const lines = [
+    ...things.map((b) => thingText(b.key, g, b.kind, b.text, namesOnly)),
+    ...linkTexts(links, g, namesOnly),
+  ];
   const kind = choice.what === 'graph' || choice.what === 'text' ? 'whole' : choice.what === 'view' ? 'view' : 'ticked';
   return {
     graph,
