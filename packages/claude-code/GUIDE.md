@@ -177,6 +177,11 @@ So a change to the open note is never applied by Claude's own tools while `guard
 - **Other Bash that names `classification`** is refused unless each step only reads, searches or prints, or writes
   only to files not yet made. Such a step is on the `READERS` list with no argument that writes. Or it is `git` that
   only reads, `sed` whose script only prints, or `cp` or `mv` to new files.
+- **A Python heredoc** (`python3 - <<'PY'`), read by `gate-python.ts`, is allowed when every file it writes is not
+  there yet. Roger ruled so on 8 Nov 2026. Only a plain script is read: it writes with `open(…)` or `.write_text(…)`
+  to a path made of string literals, `Path`, `os.path.join`, `expanduser` and `/`, or to a name given one such path
+  once. One that defines a function, imports an unlisted module, renames an import, or could run code or move a file
+  is judged as any other program, so refused when it names `classification`.
 - **What may be sent to a new file:** only `cat`, `echo` and `printf`; `/dev/null` does not count. A heredoc onto a
   note that exists, whose text the shell would expand, is refused when the command names it.
 - **What is not read:** a command that names it is refused if it holds backticks, `$((…))`, brackets, a comment or an

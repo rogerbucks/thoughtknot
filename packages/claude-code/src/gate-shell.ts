@@ -10,6 +10,7 @@
 // cutting the front matter by line numbers, is not seen. GUIDE.md says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
+import { pythonWrites } from './gate-python.ts';
 import { LITERAL_DOLLAR, UNKNOWN, shellSteps } from './shell-steps.ts';
 import type { ShellStep } from './shell-steps.ts';
 
@@ -198,6 +199,29 @@ async function mayWrite(path: string, how: Writing, named: boolean, ports: GateP
   return sameClassification(before, how.append ? before + how.body : how.body);
 }
 
+/** A Python that reads its script from the heredoc, and the options that change nothing it may write. */
+const PYTHON = /^(\/[\w./-]*\/)?python(3(\.\d+)?)?$/;
+const PYTHON_OPTIONS = new Set(['-', '-B', '-E', '-I', '-s', '-u']);
+
+/**
+ * Whether a Python script given as a heredoc writes only files not yet made (Roger, 8 Nov 2026). Null when the step
+ * is no such script, or its script or the files it writes cannot be known: then it is judged as any other program.
+ */
+async function pythonOnlyMakes(step: ShellStep, command: readonly string[], scope: Scope, ports: GatePorts) {
+  const [program = '', ...args] = command;
+  if (!PYTHON.test(program) || step.body === null || !step.literal || step.writes.length) return null;
+  if (!args.every((arg) => PYTHON_OPTIONS.has(arg))) return null;
+  const writes = pythonWrites(step.body, ports.home);
+  if (!writes) return null;
+  for (const write of writes) {
+    if (PATH_NOT_KNOWN.test(write) || write.includes('\\')) return null;
+    if (!write.startsWith('/') && scope.cwd === null) return null;
+    const path = joined(write.startsWith('/') ? '' : (scope.cwd ?? ''), write);
+    if ((await stateOf(path, ports)) !== MISSING) return null;
+  }
+  return true;
+}
+
 /** The keywords before a step's command, and the command after them. */
 function split(words: readonly string[]): { keywords: string[]; rest: string[] } {
   let at = 0;
@@ -273,6 +297,7 @@ async function judgeStep(step: ShellStep, scope: Scope, named: boolean, ports: G
     for (const target of targets) if (!(await mayWrite(target, how, named, ports))) return false;
     return true;
   }
+  if (named && (await pythonOnlyMakes(step, command, scope, ports))) return true;
   const reads = !program || SETTERS.has(program) || program === 'read' || programOnlyReads(command);
   if (!reads) return !named;
   if (!step.writes.length) return true;

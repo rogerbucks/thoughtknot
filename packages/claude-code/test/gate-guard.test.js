@@ -317,6 +317,68 @@ describe('a note’s classification line', () => {
       allowed(await guardGateFiles('Bash', { command }, v.ports));
   });
 
+  // Shaped on the command the guard refused on 8 Nov 2026: a Python heredoc that only made a new note. A new note may
+  // carry a classification, so Python that writes only to files not yet made is allowed, as `cat` is.
+  test('a Python heredoc that makes only new notes is allowed, however it names their paths', async () => {
+    const v = vault();
+    const py = (script) => `python3 - <<'PY'\n${script}\nPY`;
+    const note = `"""---\nuuid: 1\nclassification: Own\n---\n\n# New\n"""`;
+    for (const command of [
+      py(`from pathlib import Path\np = Path("${v.top}/New note.md")\np.write_text(${note})\nprint("made", p)`),
+      py(
+        `import os\npath = os.path.join("${v.top}", "New note.md")\nwith open(path, "w", encoding="utf-8") as f:\n    f.write(${note})`,
+      ),
+      py(`from pathlib import Path\nbody = ${note}\n(Path.home() / "New note.md").write_text(body)`),
+      py(
+        `import os, datetime\nopen(os.path.expanduser("~/New note.md"), "x").write(${note}.replace("1", str(datetime.date.today())))`,
+      ),
+      `cd ${v.top} && ${py(`text = ${note}  # classification: Own\nopen("New note.md", mode="w").write(text)\nprint(open("plan.md").read().count("classification"))`)}`,
+      `python3 <<EOF\nopen("${v.top}/new.md", "w").write("classification: Own")\nEOF`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('a Python heredoc or sed that would change an existing note’s classification is refused', async () => {
+    const v = vault();
+    const py = (script) => `python3 - <<'PY'\n${script}\nPY`;
+    const sub = `.replace("classification: secret", "classification: public")`;
+    for (const command of [
+      `sed -i '' 's/classification: secret/classification: public/' ${v.plan}`,
+      `sed -i.bak -e 's/^classification:.*/classification: public/' plan.md`,
+      py(`p = "${v.plan}"\nt = open(p).read()\nopen(p, "w").write(t${sub})`),
+      py(`from pathlib import Path\np = Path("${v.plan}")\np.write_text(p.read_text()${sub})`),
+      py(
+        `open("${v.top}/new.md", "w").write("classification: Own")\nopen("${v.plan}", "a").write("classification: public")`,
+      ),
+      py(`p = "${v.top}/new.md"\np = "${v.plan}"\nopen(p, "w").write("classification: public")`),
+      py(`for p in ["${v.plan}"]:\n    open(p, "w").write("classification: public")`),
+      py(`import os\nos.replace("${v.top}/new.md", "${v.plan}")  # classification`),
+      py(`import shutil\nshutil.copy("${v.top}/x.md", "${v.plan}")  # classification`),
+      py(`import subprocess\nsubprocess.run(["sed", "-i", "", "s/secret/public/", "${v.plan}"])  # classification`),
+      py(`exec("open('${v.plan}', 'w').write('classification: public')")`),
+      py(`o = open\no("${v.plan}", "w").write("classification: public")`),
+      py(`import os as o\no.rename("${v.top}/new.md", "${v.plan}")  # classification`),
+      py(`def f(p):\n    open(p, "w").write("classification: public")\nf("${v.plan}")`),
+      py(`m = "w"\nopen("${v.top}/new.md", m).write("classification: Own")`),
+      py(`open(f"${v.top}/{chr(112)}lan.md", "w").write("classification: public")`),
+      `cd ${v.top} && python3 - <<PY\nopen("$F", "w").write("classification: public")\nPY`,
+      `python3 script.py <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own")\nPY`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
+  test('a command the guard cannot read is refused when it names it', async () => {
+    const v = vault();
+    for (const command of [
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own")\nnever closed`,
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("classification: Own)\nPY`,
+      `python3 - <<'PY'\nopen("${v.top}/new.md", "w").write("""classification: Own\nPY`,
+      `cat > ${v.top}/new.md <<EOF\nclassification: $(date)\nEOF`,
+      `echo "classification: Own > ${v.top}/new.md`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
   test('the refusals name no level, path or text of the call', () => {
     for (const refusal of [classificationRefusal(), matrixNoteRefusal()])
       assert.doesNotMatch(refusal, /secret|public|plan\.md|matrix\.md/);
