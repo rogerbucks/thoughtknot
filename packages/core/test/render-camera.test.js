@@ -116,6 +116,17 @@ test('a click picks the name on top, then the nearest dot, then the smallest clo
 });
 
 // proves: render_one_camera
+test('the pointer passes through a dot or cloud whose level is not being read, to what shows', () => {
+  const marks = [
+    { kind: 'cloud', key: 'area', x: 100, y: 100, r: 80, fill: '#f00', alpha: 0.3 },
+    { kind: 'cloud', key: 'topic', x: 120, y: 100, r: 30, fill: '#0f0', alpha: 0.06, pick: false },
+    { kind: 'dot', key: 'item', x: 125, y: 104, r: 3, fill: '#00f', alpha: 0.8, pick: false },
+  ];
+  assert.equal(pickAt(marks, 125, 104), 'area', 'a hidden item and topic are passed through');
+  assert.equal(pickAt([{ ...marks[0], pick: false }], 100, 100), null, 'a group whose insides are open is ground');
+});
+
+// proves: render_one_camera
 test('centring puts a spot in the middle of the clear part, and a glide runs evenly from one view to the other', () => {
   const view = { x: 0, y: 0, scale: 2, w: 400, h: 300, clear: { top: 0, right: 0, bottom: 0, left: 100 } };
   const to = centreOn(view, { x: 50, y: 40, r: 5 }, 4);

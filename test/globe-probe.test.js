@@ -185,34 +185,38 @@ describe('the globe view, driven in a real browser', () => {
   test('the first click picks a thing, shows its properties and turns the globe to it', options, async () => {
     await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label="Fit"]').click()`);
     await settled();
-    // the thing drawn nearest the middle of the view, where no label lies over its dot: a click there is on it. The
-    // spots are read from what was painted, so a machine whose layout differs a little still clicks on a thing.
-    const spot = await eval_(`(() => {
-      const c = document.querySelector('${STAGE}'), r = c.getBoundingClientRect(), { marks } = c.thoughtknotDrawn();
-      const labels = marks.filter((m) => m.kind === 'label');
-      const under = (m) => labels.some((l) => m.x >= l.x && m.x <= l.x + l.w && m.y >= l.y && m.y <= l.y + l.h);
-      const dots = marks.filter((m) => m.kind === 'dot' && !under(m));
-      const far = (m) => Math.hypot(m.x - r.width / 2, m.y - r.height / 2);
-      const m = dots.sort((a, b) => far(a) - far(b))[0];
-      return m && [r.x + m.x, r.y + m.y];
-    })()`);
+    // the first spot, going out from the middle of the view, where a thing can be picked
     let at;
-    const before = await picture();
-    if (spot) {
-      await click(...spot);
-      if (/Town\d+/.test(await picked())) at = spot;
+    let before;
+    for (const [dx, dy] of [
+      [0, 0],
+      [60, 0],
+      [-60, 0],
+      [0, 60],
+      [0, -60],
+      [120, 60],
+      [-120, -60],
+      [90, -90],
+    ]) {
+      const x = view.x + view.width / 2 + dx,
+        y = view.y + view.height / 2 + dy;
+      // only the level being read is picked (render_pick_shown). A click on a group glides one level nearer, so the
+      // spot is clicked again once it opens.
+      for (let tries = 0; tries < 4 && !at; tries++) {
+        before = await picture();
+        await click(x, y);
+        if (/Town\d+/.test(await picked())) at = [x, y];
+        else await settled();
+      }
+      if (at) break;
     }
     assert.ok(at, 'a click on a thing picks it');
     const name = (await picked()).match(/Town\d+/)[0];
     const turned = await picture();
-    assert.ok(before !== turned, 'the first click turned the globe to the thing (Roger, 24 Oct 2026)');
-    // clicked once more where the thing now stands, the middle of the part the controls leave clear, it stays picked
-    const middle = await eval_(`(() => {
-      const c = document.querySelector('${STAGE}'), r = c.getBoundingClientRect(), { view: v } = c.thoughtknotDrawn();
-      const o = v.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
-      return [r.x + o.left + (v.w - o.left - o.right) / 2, r.y + o.top + (v.h - o.top - o.bottom) / 2];
-    })()`);
-    await click(...middle);
+    const middle = at[0] === view.x + view.width / 2 && at[1] === view.y + view.height / 2;
+    assert.ok(before !== turned || middle, 'the first click turned the globe to the thing (Roger, 24 Oct 2026)');
+    // clicked once more, now at the middle of the view where the thing stands, it stays picked
+    await click(view.x + view.width / 2, view.y + view.height / 2);
     assert.equal((await picked()).match(/Town\d+/)?.[0], name, 'the next click keeps it picked');
   });
 });

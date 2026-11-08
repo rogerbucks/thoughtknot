@@ -404,6 +404,24 @@ describe('in reading view', () => {
   });
 
   // proves: type_try_reading
+  test('a view such as Force is looked at in reading view too, not left drawn as a network', async () => {
+    const note = noteOf(ORG);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      labelled(el, 'Diagram type').click();
+      el.querySelectorAll('.thoughtknot-view-list button')
+        .find((b) => b.textContent === 'Force')
+        .click();
+      await until(() => !!el.querySelector('.thoughtknot-type-tried'));
+      await until(() => !/Drawn as a network/.test(el.querySelector('.thoughtknot-type-drawn')?.textContent ?? ''));
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Force/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: type_try_reading
   test('the type looked at shows where the note is edited too, with Keep it, which writes it', async () => {
     const note = noteOf(ORG);
     const env = await load({ files: { [PATH]: note } });

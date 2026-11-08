@@ -2,5 +2,5 @@
   "file": "test/globe-probe.test.js",
   "test": "the globe view, driven in a real browser > the first click picks a thing, shows its properties and turns the globe to it",
   "seen_failing_first": false,
-  "evidence": "A fix to the test itself, with no code change: the old test failed on the Mac by clicking fixed offsets that missed every dot, so the new one passes on code that was already right"
+  "evidence": "The probe was brought in line with render_pick_shown, which ebe51c5 already built: a click on a group now opens it first."
 }

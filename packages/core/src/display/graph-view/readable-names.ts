@@ -8,6 +8,8 @@ import { make } from './note-callouts.ts';
 /** The words whose size is kept readable: a thing's name, a group's and the drawing's own captions, such as an axis's.
  * A link's words follow labels by zoom. */
 const NAMES = 'g.graph text';
+/** The class on a drawing shown bigger than drawn: its lines and outlines keep their screen weight (style sheet). */
+export const NEAR = 'thoughtknot-near';
 /** The class of the count beside a name that stands for crowded names left out: "+3". */
 export const MORE = 'thoughtknot-name-more';
 /** The class of a name hidden for now, as it would cover another. */
@@ -109,6 +111,8 @@ export function readableNames(
   if (!at) return;
   // a link never thins past reading, however far out; the style sheet reads this
   svg.setCssProps({ '--thoughtknot-link-least': `${linkLeast(at.k)}px` });
+  // zoomed in, a line keeps its weight on the screen and does not swell with the drawing (Roger, 8 Nov 2026)
+  svg.classList?.toggle(NEAR, at.k > 1);
   for (const old of Array.from(svg.querySelectorAll(`.${MORE}`))) old.remove();
   // a name is a text straight in its thing's, its group's or the drawing's own element; a hidden thing's is left alone
   const texts = Array.from(svg.querySelectorAll(NAMES)).filter((t) => {

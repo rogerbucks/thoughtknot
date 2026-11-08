@@ -66,3 +66,25 @@ export async function waitShown<T>(
     parent.removeAttribute('aria-busy');
   }
 }
+
+/** A block this long, in characters, shows at once that it is being drawn. A shorter one is drawn before it is seen. */
+export const DRAWN_AT_ONCE_FROM = 20_000;
+
+/**
+ * Shows in `parent` at once that `what` is under way, then does `work` (ES§44, drawing_shown_at_once). The quiet frame,
+ * the size of a card, is on the page before the work starts, so a long wait is never a blank space. It fades in after
+ * a moment, so a quick wait shows nothing. It goes when the work is done, or once what the work draws shows its own
+ * progress.
+ */
+export async function shownAtOnce<T>(parent: HTMLElement, what: string, work: () => Promise<T>): Promise<T> {
+  const frame = parent.createDiv({ cls: 'thoughtknot-drawing', attr: { role: 'status', 'aria-live': 'polite' } });
+  frame.createDiv({ cls: 'thoughtknot-drawing-bar' });
+  frame.createSpan({ cls: 'thoughtknot-progress-words', text: what });
+  // the frame is painted before the work, which may hold the page for a while, begins
+  await new Promise((painted) => window.requestAnimationFrame(() => window.setTimeout(painted, 0)));
+  try {
+    return await work();
+  } finally {
+    frame.remove();
+  }
+}

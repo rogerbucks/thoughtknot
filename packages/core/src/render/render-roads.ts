@@ -237,5 +237,29 @@ export function roadsOf(
       });
     }
   });
-  return apartOf(roads, colours);
+  return chipsApart(apartOf(roads, colours), last);
+}
+
+/** The box a road's words take on screen: half way along, or at the top of its arch, as the painter puts them. */
+function chipBox(m: RoadMark): { x: number; y: number; w: number; h: number } {
+  const [mx, my] = [(m.from[0] + m.to[0]) / 2, (m.from[1] + m.to[1]) / 2];
+  const [x, y] = m.via ? [(mx + m.via[0]) / 2, (my + m.via[1]) / 2] : [mx, my];
+  const w = m.count.length * 6.8 + 12;
+  return { x: x - w / 2, y: y - 9, w, h: 18 };
+}
+
+/**
+ * A road between items keeps its words only where they fit: on a road longer than them, clear of every chip kept
+ * before. With no `depth`, every road is weighed so. Close in, the words never pile up over each other (Roger, 8 Nov 2026: "crazy busy"). The road itself always shows.
+ */
+export function chipsApart(roads: RoadMark[], depth?: number): RoadMark[] {
+  const kept: { x: number; y: number; w: number; h: number }[] = [];
+  return roads.map((m) => {
+    if (!m.count || (depth !== undefined && m.depth !== depth)) return m;
+    const b = chipBox(m);
+    const long = Math.hypot(m.to[0] - m.from[0], m.to[1] - m.from[1]) >= b.w + 2 * CHIP_ROOM;
+    const clear = kept.every((k) => b.x >= k.x + k.w || k.x >= b.x + b.w || b.y >= k.y + k.h || k.y >= b.y + b.h);
+    if (long && clear) return (kept.push(b), m);
+    return { ...m, count: '', chevrons: chevronsOf({ ...m, count: '' }) };
+  });
 }

@@ -44,3 +44,15 @@ test('a link is 2 px at rest and the same line at 3.2 px when highlighted', () =
     /stroke-width: max\(3\.2px, calc\(var\(--thoughtknot-link-least, 0px\) \* 1\.6\)\);/,
   );
 });
+
+// proves: calm_hover
+test('zoomed in, a link and a box edge keep their weight on the screen and do not swell with the drawing', async () => {
+  assert.match(
+    rule(
+      '.thoughtknot-svg.thoughtknot-near :is(g.edge, g.node, g.cluster) > :is(path, polygon, ellipse, polyline, rect)',
+    ),
+    /vector-effect: non-scaling-stroke;/,
+  );
+  const { NEAR } = await import('../packages/core/src/display/graph-view/readable-names.ts');
+  assert.equal(NEAR, 'thoughtknot-near', 'the class the drawing carries while shown bigger than drawn');
+});

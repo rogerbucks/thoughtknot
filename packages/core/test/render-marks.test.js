@@ -473,3 +473,16 @@ test('a name keeps off a road of its own level or above where it can, still on i
   const [item] = placeLabels([{ ...ask, room: undefined }], view, [road(1)]);
   assert.deepEqual([item.x, item.y], [plain.x, plain.y]);
 });
+
+// proves: render_pick_shown
+test('only what the level being read shows can be picked: far out the subjects, close in the items', () => {
+  const pickable = (scale) => {
+    const { scene, marks } = picture(scale);
+    const depth = (m) => scene.nodes.get(m.key)?.depth;
+    return marks.filter((m) => (m.kind === 'cloud' || m.kind === 'dot') && m.pick !== false).map(depth);
+  };
+  const far = pickable(0.3);
+  assert.ok(far.length && far.every((d) => d === 0), `far out only subjects: ${far}`);
+  const near = pickable(6);
+  assert.ok(near.length && near.every((d) => d === 2), `close in only items: ${near}`);
+});
