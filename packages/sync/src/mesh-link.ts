@@ -1,4 +1,4 @@
-// The live link between two devices at a shared board (editor spec §45 and §40; board_live_together, mesh_vpn_sync,
+// The live link between two devices at a shared board (editor spec ES§45 and ES§40; board_live_together, mesh_vpn_sync,
 // encrypted_everywhere). It joins a board seat to the owner's other device over channels the host opens on the mesh
 // VPN. Nothing crosses a channel in the clear. Records go through `Peer`, one fresh sealed session for each exchange.
 // Presence goes over its own channel, sealed the same way with a fresh session. Only trusted devices get past the

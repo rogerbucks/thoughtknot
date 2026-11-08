@@ -1,4 +1,4 @@
-// The live link between two devices (editor spec §45 and §40; board_live_together, mesh_vpn_sync, encrypted_everywhere).
+// The live link between two devices (editor spec ES§45 and ES§40; board_live_together, mesh_vpn_sync, encrypted_everywhere).
 // Presence and records cross channels in memory that keep every byte they carry. Both arrive, nothing on the wire is
 // readable, and a device that is not trusted is turned away.
 import { describe, test } from 'node:test';
