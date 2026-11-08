@@ -112,3 +112,15 @@ describe('board_access: invitations between two devices', () => {
     assert.ok(!shown.includes('[ThoughtKnot key'), shown);
   });
 });
+
+describe('mesh_vpn_sync: where the link runs', () => {
+  test('the addresses are kept and come back in the next run, and an empty text clears one', async () => {
+    const keeper = memory();
+    const mine = await Sharing.start(keeper);
+    assert.deepEqual(mine.link, {});
+    await mine.setLink({ listen: ' 100.64.0.1:4040 ', dial: '100.64.0.2:4040' });
+    assert.deepEqual((await Sharing.open(keeper)).link, { listen: '100.64.0.1:4040', dial: '100.64.0.2:4040' });
+    await mine.setLink({ dial: '' });
+    assert.deepEqual((await Sharing.open(keeper)).link, {});
+  });
+});
