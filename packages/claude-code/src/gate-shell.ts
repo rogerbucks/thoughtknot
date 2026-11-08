@@ -10,6 +10,7 @@
 // cutting the front matter by line numbers, is not seen. GUIDE.md says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
+import { nodeOnlyMakes } from './gate-node.ts';
 import { pythonHeredocWrites } from './gate-python.ts';
 import { LITERAL_DOLLAR, UNKNOWN, shellSteps } from './shell-steps.ts';
 import type { ShellStep } from './shell-steps.ts';
@@ -285,6 +286,8 @@ async function judgeStep(step: ShellStep, scope: Scope, named: boolean, ports: G
     return true;
   }
   if (named && (await pythonOnlyMakes(step, command, scope, ports))) return true;
+  const node = named && !step.writes.length && step.literal;
+  if (node && (await nodeOnlyMakes(command, (w) => pathsOf(w, scope, ports.home), ports.realPath))) return true;
   const reads = !program || SETTERS.has(program) || program === 'read' || programOnlyReads(command);
   if (!reads) return !named;
   if (!step.writes.length) return true;

@@ -367,6 +367,47 @@ describe('a note’s classification line', () => {
       refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
   });
 
+  // Shaped on the command the guard refused on 8 Nov 2026: `tests-first.mjs --excuse`, for a test whose name holds the
+  // word. The script writes one new JSON record in test/seen-failing/, and never one kept already unless --force.
+  test('a known repo script that only makes a new record is allowed, as its own folder holds it', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'scripts'));
+    writeFileSync(join(v.top, 'scripts', 'tests-first.mjs'), '');
+    const excuse = `--excuse test/gate.test.js "a classification test" "it passed first: the classification was right"`;
+    for (const command of [
+      `node scripts/tests-first.mjs ${excuse}`,
+      `node scripts/tests-first.mjs --excuse --fault test/gate.test.js "classification" "why"`,
+      `cd ${v.top} && node ./scripts/tests-first.mjs ${excuse}`,
+      `node ${v.top}/scripts/tests-first.mjs ${excuse} && git status`,
+    ])
+      allowed(await guardGateFiles('Bash', { command }, v.ports));
+  });
+
+  test('node is refused when it names it, unless it runs a known script in a way that only makes a record', async () => {
+    const v = vault();
+    mkdirSync(join(v.top, 'scripts'));
+    writeFileSync(join(v.top, 'evil.mjs'), '');
+    symlinkSync(join(v.top, 'evil.mjs'), join(v.top, 'scripts', 'tests-first.mjs'));
+    mkdirSync(join(v.top, 'repo', 'scripts'), { recursive: true });
+    writeFileSync(join(v.top, 'repo', 'scripts', 'tests-first.mjs'), '');
+    const excuse = `--excuse test/gate.test.js "a classification test" "why"`;
+    for (const command of [
+      `node scripts/tests-first.mjs ${excuse}`,
+      `cd repo && node scripts/tests-first.mjs --excuse --force test/gate.test.js "classification" "why"`,
+      `cd repo && node scripts/tests-first.mjs --repo ${v.top} ${excuse}`,
+      `cd repo && node scripts/tests-first.mjs ${excuse} > ${v.plan}`,
+      `cd repo && node scripts/tests-first.mjs --excuse test/gate.test.js "classification"`,
+      `cd repo && node scripts/tests-first.mjs --excuse a b c --fault "classification"`,
+      `cd repo && node scripts/tests-first.mjs --migrate # classification`,
+      `cd repo && node --require ./evil.mjs scripts/tests-first.mjs ${excuse}`,
+      `cd repo && node scripts/missing.mjs ${excuse}`,
+      `node repo/scripts/tests-first.mjs ${excuse}; node -e "require('fs').writeFileSync('plan.md', 'classification: public')"`,
+      `node "$S/scripts/tests-first.mjs" ${excuse}`,
+      `node repo/scripts/tests-first.mjs ${excuse} | sed -i '' s/secret/public/ ${v.plan}`,
+    ])
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
+  });
+
   test('a command the guard cannot read is refused when it names it', async () => {
     const v = vault();
     for (const command of [
