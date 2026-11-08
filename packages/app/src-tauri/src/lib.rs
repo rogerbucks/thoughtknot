@@ -7,16 +7,19 @@
 // - A note is written whole: to a new file beside it, then renamed over it. So a failed write leaves the note as it was.
 // - An export is only ever new files: never written over a file already there.
 // - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
+// - Bytes between the owner's devices over a mesh VPN (mesh.rs): listen, dial, send and receive whole messages on
+//   private addresses only. The messages are sealed before they get here, so Rust holds no key.
 // - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
 //   The folder commands reach it only when asked to (`target`). Once every note is copied and checked, the two swap.
 //   So the old folder is the target, and its copies are removed only when the person says so.
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
 mod gh;
+mod mesh;
 mod place;
 
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use tauri::State;
 #[cfg(mobile)]
@@ -240,6 +243,72 @@ async fn run_gh(args: Vec<String>, input: Option<String>) -> Result<gh::GhOutput
     Err("computer-only".to_string())
 }
 
+/// Runs `work` on a thread of its own, so a wait for the network never holds the window.
+async fn off<T: Send + 'static>(
+    work: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(work)
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Listens on a private address of the mesh VPN or the home network (mesh.rs). Returns the listener and its address.
+#[tauri::command]
+async fn mesh_listen(
+    mesh: State<'_, Arc<mesh::Mesh>>,
+    address: String,
+) -> Result<(u32, String), String> {
+    let mesh = mesh.inner().clone();
+    off(move || mesh.listen(&address)).await
+}
+
+/// Waits for one device to reach the listener, and returns the connection.
+#[tauri::command]
+async fn mesh_accept(mesh: State<'_, Arc<mesh::Mesh>>, listener: u32) -> Result<u32, String> {
+    let mesh = mesh.inner().clone();
+    off(move || mesh.accept(listener)).await
+}
+
+/// Dials a private address, and returns the connection.
+#[tauri::command]
+async fn mesh_dial(
+    mesh: State<'_, Arc<mesh::Mesh>>,
+    address: String,
+    secs: u64,
+) -> Result<u32, String> {
+    let mesh = mesh.inner().clone();
+    off(move || mesh.dial(&address, secs)).await
+}
+
+/// Sends one whole message, already sealed, on a connection.
+#[tauri::command]
+async fn mesh_send(
+    mesh: State<'_, Arc<mesh::Mesh>>,
+    connection: u32,
+    message: Vec<u8>,
+) -> Result<(), String> {
+    let mesh = mesh.inner().clone();
+    off(move || mesh.send(connection, &message)).await
+}
+
+/// The next message on a connection, waiting a moment: nothing when none came, an error once it is closed.
+#[tauri::command]
+async fn mesh_receive(
+    mesh: State<'_, Arc<mesh::Mesh>>,
+    connection: u32,
+    ms: u64,
+) -> Result<Option<Vec<u8>>, String> {
+    let mesh = mesh.inner().clone();
+    off(move || mesh.receive(connection, ms)).await
+}
+
+/// Closes a connection or a listener.
+#[tauri::command]
+async fn mesh_close(mesh: State<'_, Arc<mesh::Mesh>>, id: u32) -> Result<(), String> {
+    let mesh = mesh.inner().clone();
+    off(move || Ok(mesh.close(id))).await
+}
+
 /// The folder named as the first argument, such as `thoughtknot ~/Notes`, when it is one.
 #[cfg(desktop)]
 fn folder_named() -> Option<PathBuf> {
@@ -261,7 +330,9 @@ fn own_documents<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<PathBuf, Strin
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let app = tauri::Builder::default().plugin(tauri_plugin_keeper::init());
+    let app = tauri::Builder::default()
+        .plugin(tauri_plugin_keeper::init())
+        .manage(Arc::new(mesh::Mesh::default()));
     #[cfg(desktop)]
     let app = app
         .plugin(tauri_plugin_dialog::init())
@@ -290,7 +361,13 @@ pub fn run() {
         write_new,
         pick_target,
         swap_folders,
-        run_gh
+        run_gh,
+        mesh_listen,
+        mesh_accept,
+        mesh_dial,
+        mesh_send,
+        mesh_receive,
+        mesh_close
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");

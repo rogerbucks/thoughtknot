@@ -12,6 +12,12 @@ fn main() {
         "pick_target",
         "swap_folders",
         "run_gh",
+        "mesh_listen",
+        "mesh_accept",
+        "mesh_dial",
+        "mesh_send",
+        "mesh_receive",
+        "mesh_close",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()
