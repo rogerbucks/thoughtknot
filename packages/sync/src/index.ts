@@ -30,10 +30,11 @@ export { MeshLink, sealedChannel } from './mesh-link.ts';
 export { sharedNotesLayer, type SharedNotesOptions } from './shared-notes-layer.ts';
 export { SealedStore } from './sealed-store.ts';
 export { NoteCrdt, type Anchor, type Crdt, type Made, type NoteDoc } from './crdt.ts';
+export { RemoteCrdt, type RemoteCall } from './remote-crdt.ts';
 export { Engine, errorsOf, joinMerge, newErrors, type Joined, type Refused } from './engine.ts';
 export { Projection, type Read } from './projection.ts';
 export { SyncedNotes, spliceBetween, type Changed, type Splice } from './synced-notes.ts';
-export { syncedInFolder, syncedOver } from './stack.ts';
+export { syncedInFolder, syncedOver, syncedRemote } from './stack.ts';
 export { Session } from './session.ts';
 export { MESH_VPNS, Peer, type Channel, type Synced } from './peer.ts';
 export {

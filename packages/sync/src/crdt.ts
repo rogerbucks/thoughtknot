@@ -29,7 +29,7 @@ function genesis(text: string): A.Doc<NoteDoc> {
 }
 
 /** A device's Automerge actor: the same for the same device name, so its changes always run in one sequence. */
-async function actorOf(device: string): Promise<string> {
+export async function actorOf(device: string): Promise<string> {
   const hash = await globalThis.crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(`thoughtknot device ${device}`),

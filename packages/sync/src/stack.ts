@@ -2,6 +2,8 @@
 // layer is given the one below it, and nothing else. From the bottom: the store sealed by the vault key, the CRDT, the
 // engine, the projection, and the face every editor uses.
 import { NoteCrdt } from './crdt.ts';
+import { RemoteCrdt } from './remote-crdt.ts';
+import type { RemoteCall } from './remote-crdt.ts';
 import { Engine } from './engine.ts';
 import { FolderStore } from './folder-store.ts';
 import type { FolderFiles } from './folder-store.ts';
@@ -14,6 +16,10 @@ import { SyncedNotes } from './synced-notes.ts';
 /** The five layers for `device` over `store`, sealed by `key`. */
 export const syncedOver = (store: Store, key: VaultKey, device: string): SyncedNotes =>
   new SyncedNotes(new Projection(new Engine(new NoteCrdt(new SealedStore(store, key), device))));
+
+/** The five layers for `device` over `store`, with the notes kept by a host that answers over `call` (the app, in Rust). */
+export const syncedRemote = (store: Store, key: VaultKey, device: string, call: RemoteCall): SyncedNotes =>
+  new SyncedNotes(new Projection(new Engine(new RemoteCrdt(call, new SealedStore(store, key), device))));
 
 /** The five layers for `device` over a folder that Syncthing shares, reached by `files`. */
 export const syncedInFolder = (files: FolderFiles, key: VaultKey, device: string): SyncedNotes =>
