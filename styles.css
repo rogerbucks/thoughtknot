@@ -1783,6 +1783,23 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   --thoughtknot-row-h: 2.25em;
   --thoughtknot-gutter: 3.5em;
 }
+/* its scroll bars are always drawn: a Mac hides plain ones until a scroll starts (Roger, 8 Nov 2026) */
+.thoughtknot-table-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background-color: var(--gn-bg-alt);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--gn-text-faint);
+  border: 2px solid var(--gn-bg-alt);
+  border-radius: var(--gn-radius-m);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gn-text-muted);
+}
+.thoughtknot-table-scroll::-webkit-scrollbar-corner {
+  background-color: var(--gn-bg-alt);
+}
 .thoughtknot-table-scroll.thoughtknot-rows-short {
   --thoughtknot-row-h: 1.75em;
 }
@@ -1798,6 +1815,10 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   margin-bottom: var(--gn-space-3);
   font-size: calc(var(--gn-font-size-s) * var(--thoughtknot-text-scale, 1));
   color: var(--gn-text-normal);
+}
+/* the table fills the card's width, so its rows and stripes run the whole way across */
+.thoughtknot-table table:not(.is-sized) {
+  min-inline-size: 100%;
 }
 .thoughtknot-table table.is-sized {
   table-layout: fixed;
@@ -1858,7 +1879,7 @@ g.edge.thoughtknot-explore-step[data-branch='5'] path {
   z-index: 1;
 }
 .thoughtknot-table tbody td:nth-child(2) {
-  font-weight: var(--gn-font-weight-bold);
+  font-weight: var(--gn-font-weight-semibold);
 }
 .thoughtknot-table thead :is(.thoughtknot-row-head, th[data-col='0']) {
   z-index: 3;
@@ -4826,6 +4847,7 @@ img.thoughtknot-picture-hidden,
 }
 /* the table's filters and Total row (§57, table_view): rows off screen are not drawn until they scroll into view */
 .thoughtknot-table-filters {
+  flex: none; /* the scrolling rows under it give way, never the boxes */
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -4833,8 +4855,13 @@ img.thoughtknot-picture-hidden,
   padding-block: var(--gn-space-1);
 }
 .thoughtknot-table-filter {
-  flex: 0 0 8em;
-  min-width: 0;
+  flex: 1 1 8em;
+  min-width: 6em;
+  max-width: 16em;
+  min-block-size: 1.75rem;
+  box-sizing: border-box;
+  padding: 2px var(--gn-space-2);
+  font-size: var(--gn-font-size-s);
 }
 .thoughtknot-grid tbody tr {
   content-visibility: auto;
@@ -4843,12 +4870,18 @@ img.thoughtknot-picture-hidden,
 .thoughtknot-grid tbody tr[hidden] {
   display: none;
 }
+/* the Total row stays at the foot, over the rows and the first column that scroll under it, never beside them */
 .thoughtknot-total-row td,
 .thoughtknot-total-row th {
   position: sticky;
   bottom: 0;
+  z-index: 2;
   background: var(--gn-bg);
+  border-block-start: 1px solid var(--gn-border);
   font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-table .thoughtknot-total-row > th.thoughtknot-row-head {
+  z-index: 3;
 }
 
 /* The describe box of the Highlight things form (§56, rule_look_describe): its words and the button beside them. */

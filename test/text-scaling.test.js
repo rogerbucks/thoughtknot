@@ -25,6 +25,7 @@ const FIXED_HEIGHT = {
   '.is-dock-top > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
   '.is-dock-left > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
   '.is-dock-right > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
+  '.thoughtknot-table-scroll::-webkit-scrollbar': 'the table’s scroll bar, which holds no text',
 };
 
 /** A rule of the drawing: its marks are in its own units, laid out with it, and scale with its zoom. */
