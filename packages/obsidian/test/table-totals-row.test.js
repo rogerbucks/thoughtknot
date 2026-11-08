@@ -75,8 +75,8 @@ describe('the table view with calculated columns and totals', () => {
   });
 });
 
-// Roger, 8 Nov 2026 (the table on the new look): the table filled a third of the card, its filter boxes were squashed
-// flat, and the first column showed through the Total row.
+// Roger, 8 Nov 2026: on the new look, the table filled a third of the card. Its filter boxes were squashed flat. The
+// first column showed through the Total row.
 describe('the table fills the card, and its boxes and Total row are clear', () => {
   const css = readFileSync(`${root}styles.css`, 'utf8');
   const rule = (sel) =>
