@@ -31,6 +31,8 @@ export const LAID_TYPES = [
   'containment',
   'block',
   'grid',
+  'hive',
+  'arc',
 ] as const;
 /** One of them. */
 export type LaidType = (typeof LAID_TYPES)[number];
@@ -97,9 +99,9 @@ function rows(shape: GraphShape): Map<string, Place> {
 const ROOM_EACH = ITEM_GAP * 9;
 
 /** The types drawn with tiles or boxes round their things: the stage keeps those as a backdrop. */
-const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid']);
+const TILED: ReadonlySet<string> = new Set(['treemap', 'containment', 'block', 'grid', 'hive', 'arc']);
 /** A type the view's own drawing places. */
-type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid';
+type Drawn = 'chord' | 'centroid' | 'pole' | 'treemap' | 'containment' | 'block' | 'grid' | 'hive' | 'arc';
 
 /** The marks a view draws `shape` with, in room enough for a name beside each thing. */
 function viewMarks(type: Drawn, shape: GraphShape): DrawMark[] {

@@ -21,6 +21,8 @@ interface Tile {
 interface Line {
   points: [number, number][];
   colour: string;
+  /** Its points are a start and then sets of three, a curve through them. */
+  curve?: boolean;
 }
 /** A name or a word, on the screen. */
 interface Word {
@@ -78,7 +80,7 @@ export function backdropOf(
       out.tiles.push({ x, y, w: x2 - x, h: y2 - y, fill, edge: m.kind === 'group' ? look.faint : own });
     } else if (m.kind === 'link') {
       const from = (m.from && colours.get(m.from)) || look.faint;
-      out.lines.push({ points: m.points.map(([x, y]) => at(x, y)), colour: from });
+      out.lines.push({ points: m.points.map(([x, y]) => at(x, y)), colour: from, ...(m.curve ? { curve: true } : {}) });
     } else if (m.kind === 'label' && !names.has(m.text)) {
       const px = m.size * view.scale;
       const [x, y] = at(m.x, m.y);
@@ -99,6 +101,7 @@ interface Pen {
   beginPath(): void;
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
+  bezierCurveTo(a: number, b: number, c: number, d: number, x: number, y: number): void;
   fill(): void;
   stroke(): void;
   fillText(text: string, x: number, y: number): void;
@@ -126,7 +129,13 @@ export function paintBackdrop(c: Pen, m: BackdropMark): void {
   for (const l of m.lines) {
     c.strokeStyle = l.colour;
     c.beginPath();
-    l.points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+    const [first, ...rest] = l.points;
+    if (first) c.moveTo(first[0], first[1]);
+    for (let i = 0; i < rest.length; i += l.curve ? 3 : 1) {
+      const [p, q, r] = [rest[i], rest[i + 1], rest[i + 2]];
+      if (l.curve && p && q && r) c.bezierCurveTo(p[0], p[1], q[0], q[1], r[0], r[1]);
+      else if (p) c.lineTo(p[0], p[1]);
+    }
     c.stroke();
   }
   c.globalAlpha = 0.8;

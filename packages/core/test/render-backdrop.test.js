@@ -53,3 +53,20 @@ test('a tiled type keeps its own drawing as the backdrop, with no stage roads or
   assert.equal(laid.scene.areas, undefined);
   assert.equal(laid.spots.size, 3);
 });
+
+test('a curved link keeps its curve', () => {
+  const curve = {
+    kind: 'link',
+    id: 'c',
+    style: 'link',
+    curve: true,
+    points: [
+      [0, 0],
+      [0, 10],
+      [10, 10],
+      [10, 0],
+    ],
+  };
+  const [m] = backdropOf({ marks: [curve], names: new Set() }, view(1), new Map(), LIGHT);
+  assert.equal(m.lines[0].curve, true);
+});

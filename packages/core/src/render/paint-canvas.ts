@@ -30,6 +30,7 @@ export interface Canvas2d {
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
   quadraticCurveTo(cx: number, cy: number, x: number, y: number): void;
+  bezierCurveTo(a: number, b: number, c: number, d: number, x: number, y: number): void;
   roundRect(x: number, y: number, w: number, h: number, r: number): void;
   fill(): void;
   stroke(): void;
