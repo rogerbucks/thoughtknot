@@ -10,7 +10,7 @@
 // cutting the front matter by line numbers, is not seen. GUIDE.md says so.
 import { classificationOf } from '@thoughtknot/core';
 import type { GatePorts } from './gate-guard.ts';
-import { pythonWrites } from './gate-python.ts';
+import { pythonHeredocWrites } from './gate-python.ts';
 import { LITERAL_DOLLAR, UNKNOWN, shellSteps } from './shell-steps.ts';
 import type { ShellStep } from './shell-steps.ts';
 
@@ -199,27 +199,14 @@ async function mayWrite(path: string, how: Writing, named: boolean, ports: GateP
   return sameClassification(before, how.append ? before + how.body : how.body);
 }
 
-/** A Python that reads its script from the heredoc, and the options that change nothing it may write. */
-const PYTHON = /^(\/[\w./-]*\/)?python(3(\.\d+)?)?$/;
-const PYTHON_OPTIONS = new Set(['-', '-B', '-E', '-I', '-s', '-u']);
-
-/**
- * Whether a Python script given as a heredoc writes only files not yet made (Roger, 8 Nov 2026). Null when the step
- * is no such script, or its script or the files it writes cannot be known: then it is judged as any other program.
- */
+/** Whether a Python heredoc writes only files not yet made (Roger, 8 Nov 2026): gate-python.ts reads the script. */
 async function pythonOnlyMakes(step: ShellStep, command: readonly string[], scope: Scope, ports: GatePorts) {
-  const [program = '', ...args] = command;
-  if (!PYTHON.test(program) || step.body === null || !step.literal || step.writes.length) return null;
-  if (!args.every((arg) => PYTHON_OPTIONS.has(arg))) return null;
-  const writes = pythonWrites(step.body, ports.home);
-  if (!writes) return null;
-  for (const write of writes) {
-    if (PATH_NOT_KNOWN.test(write) || write.includes('\\')) return null;
-    if (!write.startsWith('/') && scope.cwd === null) return null;
-    const path = joined(write.startsWith('/') ? '' : (scope.cwd ?? ''), write);
-    if ((await stateOf(path, ports)) !== MISSING) return null;
+  const writes = step.writes.length || !step.literal ? null : pythonHeredocWrites(command, step.body, ports.home);
+  for (const write of writes ?? []) {
+    const path = PATH_NOT_KNOWN.test(write) || write.includes('\\') ? null : pathsOf(write, scope)?.[0];
+    if (!path || (await stateOf(path, ports)) !== MISSING) return false;
   }
-  return true;
+  return writes !== null;
 }
 
 /** The keywords before a step's command, and the command after them. */

@@ -297,3 +297,14 @@ export function pythonWrites(script: string, home?: string): string[] | null {
   }
   return writes;
 }
+
+/** A Python that reads its script from the heredoc, and the options that change nothing it may write. */
+const PYTHON = /^(\/[\w./-]*\/)?python(3(\.\d+)?)?$/;
+const PYTHON_OPTIONS = new Set(['-', '-B', '-E', '-I', '-s', '-u']);
+
+/** The files a step's Python writes when it runs its heredoc as its script; null when it is no such step, or not known. */
+export function pythonHeredocWrites(command: readonly string[], body: string | null, home?: string): string[] | null {
+  const [program = '', ...args] = command;
+  if (!PYTHON.test(program) || body === null || !args.every((arg) => PYTHON_OPTIONS.has(arg))) return null;
+  return pythonWrites(body, home);
+}
