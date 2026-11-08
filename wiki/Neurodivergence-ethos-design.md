@@ -14,7 +14,7 @@ This page is the answer. The ethos itself lives in `requirements/ethos.gql`, and
   not agreeable.
 - **Three new rules** join old principles: routines survive updates, no guessing a condition, and keep the person's
   voice.
-- **Two rules are checked today.** The other eleven say plainly that nothing checks them yet, as the ethos demands.
+- **Three rules are checked today.** The other ten say plainly that nothing checks them yet, as the ethos demands.
 
 ```mermaid
 flowchart LR
