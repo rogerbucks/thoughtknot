@@ -67,6 +67,8 @@ export interface CloudMark {
   bold?: boolean;
   /** Where its room's footprint lies on the ground, when it stands above it in 3D. */
   shadow?: { x: number; y: number; r: number };
+  /** False while its level is not the one being read: the pointer passes through it (Roger, 8 Nov 2026). */
+  pick?: boolean;
 }
 
 /** The ground seen from an angle: the faint lines of a grid, each from one end to the other on the screen. */
@@ -92,6 +94,8 @@ export interface DotMark {
   ring?: string;
   /** Where it stands on the ground, when it stands above it in 3D: a thin stem joins them. */
   foot?: [number, number];
+  /** False while items are not yet a level being read: the pointer passes through it. */
+  pick?: boolean;
 }
 
 /** A name on a card. Its box is where it is drawn. */
@@ -185,6 +189,7 @@ export function marksOf(
         // its edge stays drawn while its level shows, even once its insides open and its fill fades (Roger)
         ring: RING_ALPHA * crisp(detail.shown[node.depth] ?? 0),
         ...at3d,
+        pick: picks(alpha),
       });
     else
       dots.push({
@@ -196,6 +201,7 @@ export function marksOf(
         fill,
         alpha: 0.8,
         ...(ground ? { foot: [ground.x, ground.y] } : {}),
+        pick: picks(alpha),
       });
     // a group's name stays clear as its insides open: its cloud fades, its name does not (Roger, 7 Nov 2026)
     const named = node.depth < last ? Math.max(alpha, (detail.shown[node.depth] ?? 0) * HEADER_ALPHA) : alpha;
@@ -225,6 +231,12 @@ export function marksOf(
   ];
   return focusMarks(all, scene, spots, view, colours, look, focus);
 }
+
+/**
+ * Whether a thing that shows `alpha` of itself may be hovered or clicked. Its level must be at least half in. A group
+ * stops once the level inside it opens. So the pointer finds what the reader sees, never a hidden layer.
+ */
+export const picks = (alpha: number): boolean => alpha >= 0.5;
 
 /** How clear a name is drawn as its level fades in: nothing until it is half there, then quickly all of it. */
 export const crisp = (alpha: number): number => Math.min(1, Math.max(0, (alpha - 0.35) / 0.3));

@@ -112,8 +112,8 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     stage.clicked(-50, -50);
     assert.deepEqual(said, ['clear'], 'empty space clears the choice');
     // groups: each click glides one level nearer
-    for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot'); i++) {
-      const cloud = stage.marks.find((m) => m.kind === 'cloud');
+    for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot' && m.pick !== false); i++) {
+      const cloud = stage.marks.find((m) => m.kind === 'cloud' && m.pick !== false);
       const before = view().scale;
       stage.clicked(cloud.x, cloud.y);
       assert.ok(view().scale > before, 'a click on a group opens its next level');

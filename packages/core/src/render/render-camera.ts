@@ -102,7 +102,8 @@ const REACH = 8;
 
 /**
  * What a click or tap at `x`, `y` (screen pixels) picks among `marks`, by key. The name on top comes first. Then the
- * nearest dot within reach, then the smallest cloud round the point. Null on empty space. Picking reads the marks, never the
+ * nearest dot within reach, then the smallest cloud round the point. A dot or cloud whose level is not being read is
+ * passed through (pick false), so the pointer finds only what shows. Null on empty space. Picking reads the marks, never the
  * page or the painter (rule 1, one way down).
  */
 export function pickAt(marks: readonly Mark[], x: number, y: number): string | null {
@@ -112,14 +113,14 @@ export function pickAt(marks: readonly Mark[], x: number, y: number): string | n
   }
   let best: { key: string; d: number } | null = null;
   for (const m of marks)
-    if (m.kind === 'dot') {
+    if (m.kind === 'dot' && m.pick !== false) {
       const d = Math.hypot(m.x - x, m.y - y);
       if (d <= m.r + REACH && (!best || d < best.d)) best = { key: m.key, d };
     }
   if (best) return best.key;
   let cloud: { key: string; r: number } | null = null;
   for (const m of marks)
-    if (m.kind === 'cloud' && Math.hypot(m.x - x, m.y - y) <= m.r && (!cloud || m.r < cloud.r))
+    if (m.kind === 'cloud' && m.pick !== false && Math.hypot(m.x - x, m.y - y) <= m.r && (!cloud || m.r < cloud.r))
       cloud = { key: m.key, r: m.r };
   return cloud?.key ?? null;
 }
