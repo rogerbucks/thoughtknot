@@ -23,6 +23,13 @@ export const withoutTests = (step) =>
     .filter((line) => !/^npm test\b/.test(line))
     .join('\n');
 
+/** A step whose `npm test` line runs one share of the test files, such as `2/6`: the suite split over machines. */
+export const withTestShard = (step, shard) =>
+  step
+    .split('\n')
+    .map((line) => (/^npm test\s*$/.test(line) ? `npm test -- --test-shard=${shard}` : line))
+    .join('\n');
+
 /**
  * What the README's steps read that CI's other jobs do not. Those jobs set up from their own fresh checkout, with
  * `npm ci` and `uv sync --locked`. So a lock file or a Python project file is theirs to check. The rest is the steps themselves, the npm scripts they run, the hook they set, and what decides a clone's files.
@@ -97,11 +104,16 @@ export function setupInputsChangedSince(root, base) {
 /**
  * Runs the README's steps in a fresh clone of the repository, as a newcomer would, with the clone's origin set to the
  * repository's own. Returns the problems: each step that failed, with the end of what it printed. With `skipTests` the
- * README's `npm test` line is left out (the nightly: main's CI ran the suite on that commit).
+ * README's `npm test` line is left out (the nightly: main's CI ran the suite on that commit). With a `shard` it runs
+ * only that share of the test files.
  */
-export function freshCloneProblems(root = ROOT, { log = () => {}, skipTests = false } = {}) {
+export function freshCloneProblems(root = ROOT, { log = () => {}, skipTests = false, shard = '' } = {}) {
   const found = readmeSteps(readFileSync(join(root, 'README.md'), 'utf8'));
-  const steps = skipTests ? found.map(withoutTests) : found;
+  const steps = skipTests
+    ? found.map(withoutTests)
+    : /^\d+\/\d+$/.test(shard)
+      ? found.map((step) => withTestShard(step, shard))
+      : found;
   if (!steps.length) return [{ where: 'README.md', rule: 'no-setup-steps' }];
   const clone = mkdtempSync(join(tmpdir(), 'fresh-clone-'));
   try {

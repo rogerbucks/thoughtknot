@@ -1,6 +1,7 @@
-// The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages,
-// reach no other origin and call only the app's eight folder commands. The Rust, the build script and the window's
-// capability must name the same eight commands. So a new command is never let through unseen.
+// The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages and
+// reach no other origin. It calls only ten folder commands, one gh command, six mesh commands and eight note commands.
+// The Rust, the build script and the window's capability must name the same twenty-five. So no new one slips through.
+// The gh command runs only the calls on its list, by gh's own path, with no shell (spec §48, github_repo_access).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -16,6 +17,23 @@ const COMMANDS = [
   'remove_file',
   'make_dir',
   'write_new',
+  'pick_target',
+  'swap_folders',
+  'run_gh',
+  'mesh_listen',
+  'mesh_accept',
+  'mesh_dial',
+  'mesh_send',
+  'mesh_receive',
+  'mesh_close',
+  'crdt_open',
+  'crdt_text',
+  'crdt_splice',
+  'crdt_merge',
+  'crdt_has_been',
+  'crdt_anchor',
+  'crdt_place',
+  'crdt_history',
 ];
 
 test("the window's policy allows its own pages and Tauri's calls, and no other origin", () => {
@@ -27,6 +45,11 @@ test("the window's policy allows its own pages and Tauri's calls, and no other o
   );
   assert.deepEqual(policy['default-src'], ["'self'"]);
   assert.deepEqual(policy['script-src'], ["'self'"]);
+  assert.doesNotMatch(
+    config.app.security.csp,
+    /wasm-unsafe-eval|unsafe-eval/,
+    'the window runs no WebAssembly (Roger, 8 Nov)',
+  );
   assert.deepEqual(policy['connect-src'], ["'self'", 'ipc:', 'http://ipc.localhost']);
   assert.deepEqual(policy['object-src'], ["'none'"]);
   assert.ok(!/https?:\/\/(?!ipc\.localhost)/.test(config.app.security.csp), "no web address but Tauri's own");
@@ -34,7 +57,7 @@ test("the window's policy allows its own pages and Tauri's calls, and no other o
   assert.equal(config.app.security.freezePrototype, true);
 });
 
-test('the commands in the Rust, the build script and the capability are the same eight', () => {
+test('the commands in the Rust, the build script and the capability are the same twenty-five', () => {
   const handled = /generate_handler!\[([^\]]*)\]/
     .exec(read('src-tauri/src/lib.rs'))[1]
     .split(',')
@@ -54,6 +77,29 @@ test('the commands in the Rust, the build script and the capability are the same
   assert.deepEqual(
     capability.permissions.filter((p) => !p.startsWith('allow-')),
     ['core:default'],
+  );
+});
+
+test('the gh command checks each call against its list before gh starts, and starts gh alone, with no shell', () => {
+  const lib = read('src-tauri/src/lib.rs');
+  const command = /async fn run_gh\(args: Vec<String>, input: Option<String>\)[^{]*\{([\s\S]*?)\n\}/.exec(lib)[1];
+  assert.ok(command.indexOf('gh::refusal(') >= 0 && command.indexOf('gh::refusal(') < command.indexOf('gh::run('));
+  const gh = read('src-tauri/src/gh.rs');
+  assert.deepEqual(
+    [...gh.matchAll(/Command::new\(([^)]*)\)/g)].map(([, what]) => what),
+    ['gh'],
+    'one program, by the path found for gh',
+  );
+  assert.doesNotMatch(gh, /"(?:sh|bash|cmd|cmd\.exe|powershell)"|\/bin\/sh/, 'no shell is named');
+  assert.match(
+    gh,
+    /include_str!\("\.\.\/\.\.\/\.\.\/core\/test\/fixtures\/gh-calls\.json"\)/,
+    'the Rust tests the core’s cases',
+  );
+  assert.match(
+    lib,
+    /#\[cfg\(mobile\)\]\n#\[tauri::command\]\nasync fn run_gh[\s\S]*?Err\("computer-only"/,
+    'a phone runs no gh',
   );
 });
 

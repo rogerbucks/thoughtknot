@@ -7,13 +7,17 @@ name: Desktop app
 # It runs when the app, the editor page it carries, or the core beneath them changes. The nightly also calls it, at the
 # commit it built, and carries the installers in its pre-release (nightly.yml, desktop).
 on:
+  # main, and a release tag (GitHub reads no paths filter for a tag, so every release builds)
   push:
     branches: [main]
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
     paths:
       - 'packages/app/**'
       - 'packages/claude-code/page/**'
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
+      - 'package.json'
+      - 'package-lock.json'
       - 'test/standalone-app.test.js'
       - 'scripts/desktop-build.mjs'
       - '.github/workflows/desktop-app.yml'
@@ -23,6 +27,8 @@ on:
       - 'packages/claude-code/page/**'
       - 'packages/claude-code/esbuild.page.mjs'
       - 'packages/core/src/**'
+      - 'package.json'
+      - 'package-lock.json'
       - 'test/standalone-app.test.js'
       - 'scripts/desktop-build.mjs'
       - '.github/workflows/desktop-app.yml'
@@ -55,10 +61,15 @@ jobs:
   build:
     strategy:
       fail-fast: false
+      # A pull request builds Linux alone; macOS and Windows build on main, at a release tag, by hand and in the nightly
+      # (Roger, 7 Nov 2026: macOS minutes were most of the runner bill). The laptop's pre-push hook builds macOS before
+      # a push (scripts/pre-push.mjs). The nightly a wave's merged pull request calls is not a pull request's own run.
       matrix:
-        os: [ubuntu-24.04, macos-latest, windows-latest]
+        os: ${{ contains(fromJSON('["opened","synchronize","reopened"]'), github.event.action) && fromJSON('["ubuntu-24.04"]') || fromJSON('["ubuntu-24.04","macos-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    # 90, not 45: the macOS build waits for Apple to notarise it, and Apple's first notarisations for a new
+    # team took over 40 minutes (6 Nov 2026). A hung step still stops well short of GitHub's six hours.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

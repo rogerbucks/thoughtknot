@@ -1,7 +1,22 @@
 // Where the mesh's local store keeps its rows (mesh-index.ts): in memory, or in SQLite inside the process through an
 // engine the host hands in. Both answer each read alike, in the order the rows were put (embedded_backends).
 import type { GroupedBy } from './scale-groups.ts';
-import type { MeshBackend, NoteRows, Span } from './mesh-index-rows.ts';
+import type { LinkRow, MeshBackend, NoteRows, Span, ThingRow } from './mesh-index-rows.ts';
+
+/** Each note's things by group, in order, made the first time a group is asked for. */
+const grouped = new WeakMap<NoteRows, Map<string, ThingRow[]>>();
+function byGroup(rows: NoteRows): Map<string, ThingRow[]> {
+  let made = grouped.get(rows);
+  if (made) return made;
+  made = new Map();
+  for (const t of rows.things) {
+    const list = made.get(t.group);
+    if (list) list.push(t);
+    else made.set(t.group, [t]);
+  }
+  grouped.set(rows, made);
+  return made;
+}
 
 /** The index kept in memory. */
 export function memoryBackend(): MeshBackend {
@@ -14,10 +29,15 @@ export function memoryBackend(): MeshBackend {
     notes: () => [...kept.keys()].sort(),
     groups: (note) => ({ groups: kept.get(note)?.groups ?? [], between: kept.get(note)?.between ?? [] }),
     things: (note, groups) => {
+      const rows = kept.get(note);
+      if (!rows) return [];
+      // one group's things are found by its index, so reading a huge note a group at a time never scans every thing
+      if (groups.length === 1) return byGroup(rows).get(groups[0] ?? '') ?? [];
       const wanted = new Set(groups);
-      return (kept.get(note)?.things ?? []).filter((t) => wanted.has(t.group));
+      return rows.things.filter((t) => wanted.has(t.group));
     },
     links: (note) => kept.get(note)?.links ?? [],
+    inside: (note, group) => (kept.get(note)?.links ?? []).filter((l) => l.fromGroup === group && l.toGroup === group),
   };
 }
 
@@ -36,6 +56,9 @@ const TABLES = [
      things INTEGER, links INTEGER)`,
   'CREATE TABLE IF NOT EXISTS group_links (note TEXT, graph TEXT, place INTEGER, src TEXT, dst TEXT, links INTEGER)',
   'CREATE INDEX IF NOT EXISTS things_by_group ON things (note, grp)',
+  'CREATE INDEX IF NOT EXISTS links_by_group ON links (note, src_grp, dst_grp)',
+  'CREATE INDEX IF NOT EXISTS links_by_src ON links (note, src)',
+  'CREATE INDEX IF NOT EXISTS links_by_dst ON links (note, dst)',
 ];
 
 const str = (v: unknown): string => String(typeof v === 'string' || typeof v === 'number' ? v : '');
@@ -143,18 +166,42 @@ export function sqliteBackend(engine: SqlEngine): MeshBackend {
               props: str(r['props']),
               span: span(r),
             })),
-    links: (note) =>
-      engine.run('SELECT * FROM links WHERE note = ? ORDER BY place', [note]).map((r) => ({
-        note: str(r['note']),
-        graph: str(r['graph']),
-        n: num(r['n']),
-        from: str(r['src']),
-        type: str(r['type']),
-        reading: str(r['reading']),
-        to: str(r['dst']),
-        fromGroup: str(r['src_grp']),
-        toGroup: str(r['dst_grp']),
-        span: span(r),
-      })),
+    links: (note) => engine.run('SELECT * FROM links WHERE note = ? ORDER BY place', [note]).map(linkRow),
+    inside: (note, group) => engine.run(INSIDE, [note, group, group]).map(linkRow),
+    touching: (note, keys) => touchingIn(engine, note, keys),
+  };
+}
+
+/** The links with both ends in one group. */
+const INSIDE = 'SELECT * FROM links WHERE note = ? AND src_grp = ? AND dst_grp = ? ORDER BY place';
+
+/** The most keys one query of the links touching some things names. */
+const TOUCHING_MOST = 400;
+
+/** The links of `note` with an end among `keys`, each once, in order: a few hundred keys a query, under SQLite's limit. */
+function touchingIn(engine: SqlEngine, note: string, keys: readonly string[]): LinkRow[] {
+  const places = new Map<number, Record<string, unknown>>();
+  for (let i = 0; i < keys.length; i += TOUCHING_MOST) {
+    const some = keys.slice(i, i + TOUCHING_MOST),
+      marks = some.map(() => '?').join(', ');
+    const sql = `SELECT * FROM links WHERE note = ? AND (src IN (${marks}) OR dst IN (${marks}))`;
+    for (const r of engine.run(sql, [note, ...some, ...some])) places.set(num(r['place']), r);
+  }
+  return [...places].sort(([a], [b]) => a - b).map(([, r]) => linkRow(r));
+}
+
+/** A link as SQLite gives it back. */
+function linkRow(r: Record<string, unknown>): LinkRow {
+  return {
+    note: str(r['note']),
+    graph: str(r['graph']),
+    n: num(r['n']),
+    from: str(r['src']),
+    type: str(r['type']),
+    reading: str(r['reading']),
+    to: str(r['dst']),
+    fromGroup: str(r['src_grp']),
+    toGroup: str(r['dst_grp']),
+    span: span(r),
   };
 }

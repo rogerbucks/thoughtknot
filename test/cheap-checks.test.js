@@ -245,6 +245,23 @@ describe('a quiet Python run', () => {
     },
   );
 
+  test('a failure with no Node packages installed says to run npm ci first', { skip: !python }, () => {
+    const home = scratch({ 'scripts/quiet_unittest.py': read('scripts/quiet_unittest.py') });
+    const tests = scratch({
+      'tests/test_bad.py': [
+        'import unittest',
+        '',
+        '',
+        'class Bad(unittest.TestCase):',
+        '    def test_x(self):',
+        '        self.assertEqual(1, 2)',
+      ].join('\n'),
+    });
+    const r = run('python3', [join(home, 'scripts/quiet_unittest.py')], tests);
+    assert.match(r.stdout, /^hint: .*npm ci/m);
+    assert.equal(r.stdout.split('\n').at(-2), 'FAIL 1 of 1 tests');
+  });
+
   test('npm run test:ai:py runs it inside the Python library’s environment', () => {
     const script = readJSON('package.json').scripts['test:ai:py'];
     assert.match(

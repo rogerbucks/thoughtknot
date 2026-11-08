@@ -283,7 +283,7 @@ export type {
 export { CLAUDE, claudeGate, classificationOf, noteClassification } from './claude-gate.ts';
 export type { Gate, GateSettings, NoteClassification } from './claude-gate.ts';
 export { sha256 } from './ai-digest.ts';
-export { AI_PURPOSES, endpointProblem, modelChoices, purposeWords } from './ai-choice.ts';
+export { AI_PURPOSES, endpointProblem, modelChoices, modelsAddress, purposeWords } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
 export type { HostModel } from './ai-host.ts';
@@ -375,7 +375,7 @@ export { TextHistory, type Change, type TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
-export { editInParts, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
+export { editInParts, partsRefusal, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
 export * from './index-mesh.ts';
 export * from './index-late.ts';
 export { altitudeIndexOf, searchAltitude, type NoteAltitudeIndex } from './altitude-index.ts';

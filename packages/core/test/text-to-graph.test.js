@@ -33,7 +33,7 @@ const LOCAL = {
   model: 'llama3',
   keyName: '',
 };
-const ON = settingsFrom({ aiUse: 'on', aiModels: [LOCAL] });
+const ON = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] });
 const CLOCK = () => new Date('2026-11-04T14:00:00Z');
 const base = (note) => ({ settings: ON, model: 'Local', note, notePath: 'Notes.md', level: 'Internal' });
 const textsOf = (note) => gqlBlocks(note).map((b) => b.text);

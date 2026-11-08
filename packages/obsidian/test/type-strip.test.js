@@ -1,7 +1,8 @@
 // Diagram types on a drawing's card (editor spec §15).
-// - Diagram type lists the seven types. Each that fits can be chosen. Each that does not says why.
+// - The side rail offers the seven types, among the views, in groups. Each that fits can be chosen. Each that does not
+//   says why (type_rail).
 // - The suggested one says so, and nothing is drawn as it until chosen.
-// - Types and views are one grid of tiles: drawn now first, then suggested, and what does not fit last (type_one_grid).
+// - Each type keeps its place in its group's list, marked drawn now, suggested or not fitting (type_rail).
 // - Choosing writes the type into the style graph, for the graph or the view the card shows.
 // - A chosen type that has stopped fitting is said, with the nearest that fits offered. The graph is drawn as a network
 //   meanwhile.
@@ -11,7 +12,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
-import { fence, labelled } from './host/notes.js';
+import { fence, groupOf, labelled, pickType, railOffered, typeButton } from './host/notes.js';
 import { show, styles } from './host/view-notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { installWorkers } from './host/workers.js';
@@ -42,32 +43,30 @@ async function card(note, n = 0, options = {}) {
   const { el } = await show(env, note, n);
   return { env, el, asked };
 }
-/** Each type the list offers: its words, whether it can be chosen, and what is said beside it. */
-const offered = (el) =>
-  el.querySelectorAll('.thoughtknot-type-list li').map((li) => {
-    const b = li.querySelector('button');
-    return [b.textContent, !b.disabled, li.querySelector('.thoughtknot-type-why')?.textContent ?? ''];
-  });
+/** The seven types of the core, as the rail offers them (diagram_type_set). */
+const SEVEN = ['Network', 'Tree', 'Flow', 'Radial', 'Lanes', 'Timeline', 'Table'];
+/** Each of the seven types the rail offers: its words, whether it can be chosen, and what is said beside it. */
+const offered = (el) => railOffered(el).filter(([name]) => SEVEN.includes(name));
 
 describe('Diagram type on a card', () => {
   // proves: diagram_type_set, type_only_when_fits, suggest_type
   test('lists the seven types: each that fits to choose, each that does not with why, the suggested one said', async () => {
     const { env, el } = await card(noteOf(ORG));
     try {
-      const toggle = labelled(el, 'Diagram type');
+      const toggle = groupOf(el, 'Network');
       assert.ok(toggle, 'offered on the card');
-      const list = el.querySelector('.thoughtknot-type-list');
+      const list = typeButton(el, 'Network').parentElement.parentElement;
       assert.equal(list.hidden, true, 'folded away until asked');
       toggle.click();
       assert.equal(list.hidden, false);
       assert.deepEqual(offered(el), [
         ['Network', true, 'drawn now'],
+        ['Radial', true, ''],
         ['Tree', true, 'suggested: each thing has at most one parent along MANAGES'],
         ['Flow', true, ''],
-        ['Radial', true, ''],
+        ['Lanes', false, 'lanes need things of two kinds or more'],
         ['Timeline', true, ''],
         ['Table', true, ''],
-        ['Lanes', false, 'lanes need things of two kinds or more'],
       ]);
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
     } finally {
@@ -75,20 +74,35 @@ describe('Diagram type on a card', () => {
     }
   });
 
-  // proves: type_in_bar
-  test("Diagram type sits in the card's bar, before 2D, 2.5D or 3D, and opens its list under the strip", async () => {
+  // proves: type_in_bar, type_rail
+  test('the side rail holds 2D, 2.5D, 3D and the globe in sight, then a button for each group, which opens its list', async () => {
     const { env, el } = await card(noteOf(ORG));
     try {
-      const bar = el.querySelector('.thoughtknot-bar');
-      const names = bar.querySelectorAll('button').map((b) => b.getAttribute('aria-label'));
-      const at = names.indexOf('Diagram type');
-      assert.ok(at > names.indexOf('View'), `after View, in ${names.join(', ')}`);
-      assert.match(names[at + 1], /^2D, 2\.5D or 3D/, 'just before the way it is shown');
-      assert.equal(el.querySelector('.thoughtknot-type-strip button'), null, 'no longer in the strip');
-      const toggle = labelled(el, 'Diagram type');
-      toggle.click();
-      assert.equal(el.querySelector('.thoughtknot-type-list').hidden, false);
-      assert.equal(toggle.getAttribute('aria-expanded'), 'true');
+      const rail = el.querySelector('.thoughtknot-over .thoughtknot-rail');
+      assert.ok(rail, 'the rail floats over the drawing');
+      const names = rail.querySelectorAll('.thoughtknot-rail-button').map((b) => b.getAttribute('aria-label'));
+      assert.deepEqual(names, ['2D', '2.5D', '3D', 'Globe', 'Links: Network drawn now', 'Areas', 'Data']);
+      const ways = rail.querySelectorAll('[data-space]').map((b) => b.getAttribute('aria-pressed'));
+      assert.deepEqual(ways, ['true', 'false', 'false', 'false'], 'flat now, said by the one pressed');
+      const bar = el
+        .querySelector('.thoughtknot-bar')
+        .querySelectorAll('button')
+        .map((b) => b.getAttribute('aria-label'));
+      assert.ok(
+        !bar.includes('Diagram type') && !bar.some((n) => /^2D/.test(n)),
+        `no longer in the bar: ${bar.join(', ')}`,
+      );
+      const areas = labelled(el, 'Areas');
+      areas.click();
+      assert.equal(areas.getAttribute('aria-expanded'), 'true');
+      const open = rail.querySelectorAll('.thoughtknot-rail-list').filter((l) => !l.hidden);
+      assert.deepEqual(
+        open.map((l) => l.getAttribute('data-group')),
+        ['areas'],
+        'one list open at a time',
+      );
+      labelled(el, 'Links: Network drawn now').click();
+      assert.equal(areas.getAttribute('aria-expanded'), 'false', 'opening another closes it');
     } finally {
       env.uninstall();
     }
@@ -111,10 +125,7 @@ describe('Diagram type on a card', () => {
     const note = noteOf(ORG);
     const { env, el } = await card(note);
     try {
-      labelled(el, 'Diagram type').click();
-      el.querySelectorAll('.thoughtknot-type-list button')
-        .find((b) => b.textContent === 'Tree')
-        .click();
+      pickType(el, 'Tree');
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
       await settled();
       const now = env.state.files.get(PATH);
@@ -132,46 +143,59 @@ describe('Diagram type on a card', () => {
     try {
       assert.deepEqual(asked.at(-1).diagram, { type: 'tree', tree: [0, 1, 2] });
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a tree/);
-      labelled(el, 'Diagram type').click();
-      const tree = el.querySelectorAll('.thoughtknot-type-list button').find((b) => b.textContent === 'Tree');
-      assert.equal(tree.getAttribute('aria-pressed'), 'true');
+      assert.equal(typeButton(el, 'Tree').getAttribute('aria-pressed'), 'true');
+      assert.equal(groupOf(el, 'Tree').getAttribute('aria-label'), 'Links: Tree drawn now', 'its group says so');
     } finally {
       env.uninstall();
     }
   });
 });
 
-describe('the Diagram type list looks native', () => {
-  test('its button says Diagram type in words, and each type is a tile marked drawn, suggested or not fitting', async () => {
+describe('the side rail looks native', () => {
+  // proves: type_one_grid
+  test('each button is a picture named in words, and each type a row marked drawn, suggested or not fitting', async () => {
     const { env, el } = await card(noteOf(ORG));
     try {
-      const toggle = labelled(el, 'Diagram type');
-      assert.equal(
-        toggle.querySelector('.thoughtknot-badge-text')?.textContent,
-        'Diagram type',
-        'words, not an icon alone',
-      );
-      toggle.click();
+      for (const b of el.querySelectorAll('.thoughtknot-rail-button')) {
+        assert.ok(b.querySelector('.thoughtknot-glyph'), 'a picture');
+        assert.equal(b.getAttribute('title'), b.getAttribute('aria-label'), 'its name on hover too');
+      }
       const marks = el
-        .querySelectorAll('.thoughtknot-type-list li')
+        .querySelectorAll('.thoughtknot-rail-list li')
+        .filter((li) => SEVEN.includes(li.querySelector('button').textContent))
         .map((li) =>
           ['thoughtknot-type-now', 'thoughtknot-type-suggested', 'thoughtknot-type-unfit']
             .filter((c) => li.classList.contains(c))
             .join(' '),
         );
-      // drawn now first, then suggested, then the rest that fit, and last what does not, in the order read (type_one_grid)
+      // each in its group's place, so nothing moves under the pointer (type_rail)
       assert.deepEqual(marks, [
         'thoughtknot-type-now',
+        '',
         'thoughtknot-type-suggested',
         '',
-        '',
-        '',
-        '',
         'thoughtknot-type-unfit',
+        '',
+        '',
       ]);
-      const unfit = el.querySelector('.thoughtknot-type-list li.thoughtknot-type-unfit');
+      const unfit = el.querySelector('.thoughtknot-rail-list li.thoughtknot-type-unfit');
       assert.equal(unfit.getAttribute('title'), unfit.querySelector('.thoughtknot-type-why').textContent, 'why, whole');
-      assert.match(styles, /:is\(\.thoughtknot-type-list, \.thoughtknot-view-list\) li \{/, 'views are tiles too');
+      assert.match(styles, /\.thoughtknot-over > \.thoughtknot-rail \{/, 'the rail is a card over the drawing');
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: type_rail
+  test('Escape closes the list open and gives the focus back to its button', async () => {
+    const { env, el } = await card(noteOf(ORG));
+    try {
+      const links = groupOf(el, 'Network');
+      links.click();
+      const rail = el.querySelector('.thoughtknot-rail');
+      rail.dispatchEvent(Object.assign(new Event('keydown', { bubbles: true }), { key: 'Escape' }));
+      assert.equal(links.getAttribute('aria-expanded'), 'false');
+      assert.ok(rail.querySelectorAll('.thoughtknot-rail-list').every((l) => l.hidden));
     } finally {
       env.uninstall();
     }
@@ -302,8 +326,8 @@ describe('a view’s card', () => {
     const note = noteOf(ORG, VIEW);
     const { env, el } = await card(note, 1);
     try {
-      labelled(el, 'Diagram type').click();
-      el.querySelectorAll('.thoughtknot-type-list button')
+      groupOf(el, 'Tree').click();
+      el.querySelectorAll('.thoughtknot-rail-list button')
         .find((b) => b.textContent === 'Radial')
         .click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
@@ -327,13 +351,8 @@ async function readCard(env, note, n = 0) {
   await until(() => !!el.querySelector('svg, .thoughtknot-table'));
   return el;
 }
-/** Taps type `name` in the Diagram type list of the card in `el`. */
-const pick = (el, name) => {
-  labelled(el, 'Diagram type').click();
-  el.querySelectorAll('.thoughtknot-type-list button')
-    .find((b) => b.textContent === name)
-    .click();
-};
+/** Taps type `name` in the side rail of the card in `el`. */
+const pick = pickType;
 
 describe('in reading view', () => {
   // proves: type_one_way_to_work, type_try_reading
@@ -347,7 +366,7 @@ describe('in reading view', () => {
       const el = await readCard(env, note);
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
       assert.match(el.querySelector('.thoughtknot-type-stopped').textContent, /no longer fits a tree/);
-      assert.ok(labelled(el, 'Diagram type'), 'the types are offered, to look at');
+      assert.ok(groupOf(el, 'Tree'), 'the types are offered, to look at');
       labelled(el, 'Use flow').click();
       await until(() => /Drawn as a flow/.test(el.querySelector('.thoughtknot-type-drawn')?.textContent ?? ''));
       assert.equal(env.state.files.get(PATH), note, 'the note unchanged');
@@ -398,6 +417,21 @@ describe('in reading view', () => {
       pick(el, 'Network');
       await until(() => !el.querySelector('.thoughtknot-type-tried') && !!el.querySelector('svg'));
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: type_try_reading
+  test('a view such as Force is looked at in reading view too, not left drawn as a network', async () => {
+    const note = noteOf(ORG);
+    const env = await load({ files: { [PATH]: note } });
+    try {
+      const el = await readCard(env, note);
+      pick(el, 'Force');
+      await until(() => !!el.querySelector('.thoughtknot-type-tried'));
+      await until(() => !/Drawn as a network/.test(el.querySelector('.thoughtknot-type-drawn')?.textContent ?? ''));
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Force/);
     } finally {
       env.uninstall();
     }

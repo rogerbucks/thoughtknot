@@ -3,9 +3,10 @@
 //
 // It is a card floating in a corner of the drawing (styles.css). Its head names it and folds it. Folded, only the head
 // shows, so the drawing is whole again and nothing is laid out anew. Its body holds the key controls. Under them, More
-// opens the controls used less often. The fold is kept by the dock's name, in the browser too, so a card drawn again
-// opens the same way. Closed, a dock stays closed, even after a restart (Roger, 5 Nov 2026). Its head also moves it, or docks it at either side (controls-place.ts). On a tablet-sized
-// window a dock starts folded, as a tab at the edge. The [ key folds or opens the dock of the card in focus.
+// opens the controls used less often. Every dock starts folded, on every screen (Roger, 6 Nov 2026: "The side panels
+// should be minimised by default"). Opened, it stays open for the session. Closed, it stays closed, even after a
+// restart (Roger, 5 Nov 2026). Its head also moves it, or docks it at either side (controls-place.ts). The [ key folds
+// or opens the dock of the card in focus.
 import { word } from '@thoughtknot/core';
 import { frameDock } from './controls-place.ts';
 
@@ -38,32 +39,29 @@ function keptFolds(): Record<string, boolean> {
   }
 }
 
-/** Keeps the dock `name` folded or open in the browser, where it can. */
+/**
+ * Keeps the dock `name` folded in the browser, where it can. Opened, it is open for the session only: the next start
+ * folds it again, as every dock starts (panels_minimised).
+ */
 function keepFold(name: string, folded: boolean): void {
   try {
     const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
-    win?.localStorage.setItem(FOLDS_KEPT, JSON.stringify({ ...keptFolds(), [name]: folded }));
+    const folds = keptFolds();
+    if (folded) folds[name] = true;
+    else delete folds[name];
+    win?.localStorage.setItem(FOLDS_KEPT, JSON.stringify(folds));
   } catch {
     // a private window keeps it for the session only
   }
 }
 
-/** Whether a window this wide starts its docks folded: a tablet's, where the drawing needs the room. */
-const narrowWindow = (): boolean => {
-  const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
-  return !!win?.matchMedia?.('(min-width: 600px) and (max-width: 1023px)')?.matches;
-};
-
-/** Whether a window this wide keeps its View panel open from the start: a large screen's, with room to spare. */
-export const wideWindow = (): boolean => {
-  const win = typeof activeWindow === 'undefined' ? undefined : activeWindow;
-  return !!win?.matchMedia?.('(min-width: 1600px)')?.matches;
-};
-
-/** Builds a dock named `name` in `root`, with the classes `cls` as well as its own. */
-export function renderDock(root: HTMLElement, name: string, cls: string[] = []): ControlDock {
+/**
+ * Builds a dock named `name` in `root`, with the classes `cls` as well as its own. It starts folded, unless `open`: a
+ * dock the person just asked for, as Explore is, opens whole.
+ */
+export function renderDock(root: HTMLElement, name: string, cls: string[] = [], open = false): ControlDock {
   const el = root.createDiv({ cls: ['thoughtknot-dock', ...cls], attr: { role: 'region', 'aria-label': name } });
-  const folds = dockHead(el, name);
+  const folds = dockHead(el, name, open);
   const body = el.createDiv({ cls: 'thoughtknot-dock-body' });
   const details = el.createEl('details', { cls: 'thoughtknot-dock-more' });
   details.createEl('summary', { text: word('dock.more') });
@@ -72,16 +70,18 @@ export function renderDock(root: HTMLElement, name: string, cls: string[] = []):
 }
 
 /**
- * Makes the empty `el` a dock named `name`: its head names it, moves it and folds it. Folded, only the head shows.
+ * Makes the empty `el` a dock named `name`: its head names it, moves it and folds it. Folded, only the head shows. It
+ * starts folded, unless `open`.
  * Gives back how to fold it and whether it is.
  */
-export function dockHead(el: HTMLElement, name: string): Pick<ControlDock, 'fold' | 'folded'> {
+export function dockHead(el: HTMLElement, name: string, open = false): Pick<ControlDock, 'fold' | 'folded'> {
   el.addClass('thoughtknot-dock');
   const head = el.createDiv({ cls: 'thoughtknot-dock-head' });
   head.createSpan({ cls: 'thoughtknot-dock-name', text: name });
   frameDock(el, head, name); // moved, and docked at either side (controls_panels)
   const toggle = head.createEl('button', { cls: 'thoughtknot-dock-fold', attr: { type: 'button' } });
-  let folded = kept.get(name) ?? keptFolds()[name] ?? narrowWindow();
+  // folded from the start on every screen (Roger, 6 Nov 2026: "The side panels should be minimised by default")
+  let folded = kept.get(name) ?? keptFolds()[name] ?? !open;
   const show = () => {
     el.toggleClass('is-folded', folded);
     toggle.setText(folded ? '»' : '«');

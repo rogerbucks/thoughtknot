@@ -121,6 +121,13 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note
     again. `setInParts` sets one property that way, checked as a property field checks it.
   - `storedStyle` reads the note's style blocks and checks them against the graph in the store.
+- `parts-kept.ts` — the rows of a note read in parts, kept between sessions by the digest of its text
+  (scale_parts_kept). Rows from other text, or broken, are read again. The host's place is `display/editor/kept-place.ts`:
+  the device's own IndexedDB, never the vault.
+- `parts-source.ts` — a too-big note's graph drawn a group at a time (scale_parts_overview). The overview needs only
+  the group rows. A group's things are read when it opens, and let go when it leaves the screen or the budget is full.
+  A stored graph's drawing holds its things but none of its links. Opening a group, or growing from a thing, reads the
+  links it needs from the store (`StoredGraph.parts`).
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
@@ -682,6 +689,12 @@ never data.
   - Each fault is a problem with its fix, GN905 to GN908. They are a kind that is not a drawing's, or a pin to a thing
     that is gone. They are also a shape it does not know, or points that are not pairs.
   - `writeSketch` writes the drawings in one fixed form.
+- `layout-block.ts` — where things sit, kept apart from the data (editor spec §2, layout_block): `// graph: trip_layout ·
+  LAYOUT ON trip`, one `(ann:Place {x: 120, y: 40, group: 'Team'})` per thing, named by its key.
+  - `layoutOf` (in `blocks.ts`) knows the block. `dataKind` leaves it out of the drawing.
+  - `readLayout` gives a Map of thing key to place. A place for a thing the graph does not hold is GN910. Its fix,
+    `forgetPlace`, drops it. A line that is not a Place is GN909.
+  - `placeThing` saves one place as one edit, making the block when there is none; `renamePlace` carries a rename.
 - `sketch-marks.ts` — the drawings drawn in every view.
   - `sketchMarks` turns them into shared marks, placed from what each is pinned to. A pinned box or ellipse with no size
     wraps it. A drawing pinned to a thing the view leaves out is not drawn.
@@ -1122,6 +1135,19 @@ little. A view fits the spots into its space and draws marks there. A new layout
 - `layouts.ts` — the contract, `Layout`, the list, `LAYOUTS`, and `layoutById` and `layoutsOf` to find one.
 - `force-3d.ts` — the force layout in space: depth keeps apart the links a page would cross. A new thing on a warm
   start begins beside the things it links to.
+
+### The rendering rebuild, `src/render/` (editor spec §73)
+
+The new rendering, built one way down to wiki/Rendering-spec.md. Each layer takes only what the one above gives it.
+It is built beside today's drawing, behind a switch, and is not drawn yet.
+
+- `render-scene.ts` — layer L1, `sceneOf`: one tree of the graph, far to near, with links rolled up at each level.
+- `render-rooms.ts` — layer L2, `roomsOf`: each group a round room, rooms first, linked neighbours side by side.
+- `render-detail.ts` — layer L3, `detailAt`: how much of each level shows at a zoom, fading in level by level.
+- `render-look.ts` — part of L4: every colour, light and dark, from the mockups, with shades for each level.
+- `render-marks.ts` — layer L4, `marksOf`: clouds, dots, roads and labels on screen, and the one label placer.
+- `paint-canvas.ts` — a layer L5 painter, `paintCanvas`: draws the marks on a 2D canvas exactly as given.
+- `render-camera.ts` — layer L6: fits, pans, and zooms in stops, one level per notch.
 
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
@@ -1744,6 +1770,13 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     goes by https.
   - `modelChoices`: the host's own AI first, where it has one; then the models set up for the purpose; then the rest.
     There are none while AI is off.
+- `ai-reviewers.ts` — the private and public reviewers (ES§19, ai_two_reviewers).
+  - `privateProblem`: only an address on this device or the user's own network may be private.
+  - `reviewerFor`: a private reviewer first, sent the note. A public one only with the vault's consent, names only until
+    note text is allowed, each send confirmed.
+- `metadata-write.ts` — metadata written from Reading view (ES§3, reading_view_metadata).
+  - `metadataWrite` puts a layout or AI block after its graph, or replaces it where it is. It refuses when the graph
+    changed since it was shown, or when anything else of the note would change (`onlyMetadata`).
   - `AI_PURPOSES` are the spec's purposes.
 - `ai-ceiling.ts` — `clearance`, and the credentials a text holds.
   - A note with no classification counts as `aiUnlabelled`, the most sensitive level until the user chooses another

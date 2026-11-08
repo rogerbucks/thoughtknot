@@ -1,0 +1,6 @@
+{
+  "file": "test/render-chrome.test.js",
+  "test": "the controls beside the new rendering, in a real browser > on a phone, no control covers the fitted drawing, and no icon shows as its name",
+  "seen_failing_first": false,
+  "evidence": "The replay passed it, but run in Chrome against the old harness it fails, as icons showed as their names (checked by hand, 6 Nov 2026)"
+}

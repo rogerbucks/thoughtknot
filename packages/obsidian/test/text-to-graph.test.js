@@ -19,7 +19,7 @@ const LOCAL = {
   endpoint: 'http://localhost:11434/v1/chat/completions',
   model: 'llama3',
 };
-const ON = { settings: { aiUse: 'on', aiModels: [LOCAL] } };
+const ON = { settings: { aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] } };
 const ANSWER = {
   things: [
     { name: 'acme', kind: 'Company', text: 'Acme Ltd', quote: 'Acme Ltd' },

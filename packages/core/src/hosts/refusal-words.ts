@@ -46,6 +46,10 @@ function overWhat(r: TooLarge, counted: 'drawn' | 'laid-out', say: Say): string 
 /** The sentence a refusal on the page's own thread adds, or nothing: there a layout cannot be stopped, so its limits are lower. */
 const onPage = (r: TooLarge, say: Say): string[] => (r.page ? [say.word('refusal.page')] : []);
 
+/** Why a note past the in-parts limit is not opened at all (scale_parts_budget): the limit it is over, and the numbers. */
+export const pastPartsWords = (r: Refusal, say: Say): string =>
+  say.word('refusal.past-parts', { over: r.reason === 'too-large' ? overWhat(r, 'drawn', say) : '' });
+
 /** The banner's words. */
 export function refusalWords(r: Refusal, say: Say): string {
   const { word } = say;

@@ -11,11 +11,13 @@
 // unchanged. The command also gets a JavaScript heap limit (`--max-old-space-size`) in NODE_OPTIONS, unless one is
 // already set. So a heap runaway fails fast with a stack.
 //
-// Defaults, measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests). It peaked at 1.3 GB
-// resident across 21 processes and took 64 s, on a 10-core machine. More cores run more test files at once, and use
-// more memory; fewer take longer. The slowest single test took 23 s. So:
-//   THOUGHTKNOT_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 4096. That is three times the
-//                               measured peak, and inside a CI runner's 7 to 16 GB.
+// Defaults. First measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests): 1.3 GB resident across
+// 21 processes, 64 s, on a 10-core machine. More cores run more test files at once, and use more memory; fewer take
+// longer. The slowest single test took 23 s. The suite outgrew 4 GB on 21 Oct 2026, and CI's runs got 8 GB. On 8 Nov
+// 2026 the same machine ran about 10,900 tests, browser drawing included. They peaked at about 5.8 GB and took about 8
+// minutes. So:
+//   THOUGHTKNOT_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 8192, CI's own. That is about 1.4
+//                               times the measured peak, and inside a CI runner's 7 to 16 GB.
 //   THOUGHTKNOT_TEST_MINUTES     time ceiling for the whole run, in minutes (a fraction is allowed): default 20.
 //   the heap limit              3072 MB for each Node process, under the memory ceiling.
 //   --test-timeout=300000       each test's own limit, set in package.json: 5 minutes, well over the slowest test.
@@ -30,7 +32,7 @@ import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 /** The memory ceiling, in MB, when THOUGHTKNOT_TEST_MEMORY_MB is not set. */
-export const DEFAULT_MEMORY_MB = 4096;
+export const DEFAULT_MEMORY_MB = 8192;
 /** The time ceiling, in minutes, when THOUGHTKNOT_TEST_MINUTES is not set. */
 export const DEFAULT_MINUTES = 20;
 /** The JavaScript heap limit each Node process gets, in MB, when NODE_OPTIONS sets none. */

@@ -24,7 +24,7 @@ const LOCAL = {
   endpoint: 'http://localhost:11434/v1/chat/completions',
   model: 'llama3',
 };
-const ON = { data: { settings: { aiUse: 'on', aiModels: [LOCAL] } } };
+const ON = { data: { settings: { aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL] } } };
 const OPEN = 'Highlight things that match a rule';
 const GOOD = {
   on: 'things',

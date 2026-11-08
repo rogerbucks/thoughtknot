@@ -1,0 +1,422 @@
+{
+  "about": "The graph spec's notation as a grammar a program can read (editor spec §51, spec_grammar). It covers the graph line, the containers a block can be, and the value types. Each rule is a list of choices; each choice a list of parts. A part is a rule's name, a pool's name (starting with $), or text written as it is. The first choice of each rule is the shortest, taken once the depth runs out. Two tests hold both readers to it: python/graph_spec/tests/test_readers_agree.py makes statements from it, mutates some, and compares the readers; packages/graph-spec/test/grammar.test.mjs and python/graph_spec/tests/test_grammar.py read the cases in grammar-cases.json, which are made from it. Change this file and the cases must be made again: GRAMMAR_CASES=update npm run test:ai -- packages/graph-spec/test/grammar.test.mjs",
+  "start": "block",
+  "rules": {
+    "block": [
+      [
+        "graph_line",
+        "\n",
+        "statements"
+      ]
+    ],
+    "statements": [
+      [
+        "insert"
+      ],
+      [
+        "insert",
+        "\n",
+        "update"
+      ],
+      [
+        "insert",
+        "\n",
+        "update",
+        "\n",
+        "update"
+      ]
+    ],
+    "update": [
+      [
+        "match_set"
+      ],
+      [
+        "bare_set"
+      ],
+      [
+        "insert"
+      ]
+    ],
+    "insert": [
+      [
+        "INSERT\n",
+        "items"
+      ],
+      [
+        "items"
+      ]
+    ],
+    "items": [
+      [
+        "item"
+      ],
+      [
+        "item",
+        ",\n",
+        "items"
+      ]
+    ],
+    "item": [
+      [
+        "node"
+      ],
+      [
+        "node"
+      ],
+      [
+        "edge"
+      ]
+    ],
+    "node": [
+      [
+        "(",
+        "$var",
+        ":",
+        "$label",
+        ")"
+      ],
+      [
+        "(",
+        "$var",
+        ":",
+        "$label",
+        " {",
+        "props",
+        "})"
+      ],
+      [
+        "(",
+        "$var",
+        ":",
+        "$label",
+        ":",
+        "$label",
+        " {",
+        "props",
+        "})"
+      ],
+      [
+        "(",
+        "$var",
+        " {",
+        "props",
+        "})"
+      ]
+    ],
+    "edge": [
+      [
+        "(",
+        "$var",
+        ")-[:",
+        "$type",
+        "]->(",
+        "$var",
+        ")"
+      ],
+      [
+        "(",
+        "$var",
+        ")-[:",
+        "$type",
+        " {",
+        "props",
+        "}]->(",
+        "$var",
+        ")"
+      ]
+    ],
+    "props": [
+      [
+        "prop"
+      ],
+      [
+        "prop",
+        ", ",
+        "props"
+      ]
+    ],
+    "prop": [
+      [
+        "$key",
+        ": ",
+        "value"
+      ]
+    ],
+    "value": [
+      [
+        "$str"
+      ],
+      [
+        "$int"
+      ],
+      [
+        "$float"
+      ],
+      [
+        "TRUE"
+      ],
+      [
+        "FALSE"
+      ],
+      [
+        "DATE '",
+        "$date",
+        "'"
+      ],
+      [
+        "DATETIME '",
+        "$datetime",
+        "'"
+      ],
+      [
+        "[",
+        "list",
+        "]"
+      ]
+    ],
+    "list": [
+      [
+        "value"
+      ],
+      [
+        "value",
+        ", ",
+        "list"
+      ]
+    ],
+    "match_set": [
+      [
+        "MATCH (",
+        "$var",
+        ":",
+        "$label",
+        " {id: ",
+        "$str",
+        "})\nSET ",
+        "$var",
+        ".",
+        "$key",
+        " = ",
+        "value"
+      ]
+    ],
+    "bare_set": [
+      [
+        "SET ",
+        "$var",
+        ".",
+        "$key",
+        " = ",
+        "value"
+      ]
+    ],
+    "graph_line": [
+      [
+        "// graph: g"
+      ],
+      [
+        "// graph: g · SOURCE"
+      ],
+      [
+        "// graph: g · format 1"
+      ],
+      [
+        "// graph: g · spec 1.0"
+      ],
+      [
+        "// graph: g · SOURCE · format 1 · spec 1.0"
+      ]
+    ]
+  },
+  "pools": {
+    "$var": [
+      "a",
+      "b",
+      "ada",
+      "notes",
+      "x_1"
+    ],
+    "$label": [
+      "Person",
+      "Book",
+      "ElementType",
+      "Thing"
+    ],
+    "$type": [
+      "WROTE",
+      "READ",
+      "PART_OF"
+    ],
+    "$key": [
+      "id",
+      "name",
+      "title",
+      "year",
+      "pages",
+      "kind"
+    ],
+    "$str": [
+      "'a'",
+      "'Ada'",
+      "''",
+      "'it\\'s'",
+      "'two words'",
+      "'é ünï 😀'",
+      "'back\\\\slash'",
+      "'a, b'"
+    ],
+    "$int": [
+      "0",
+      "1",
+      "-3",
+      "66",
+      "1843",
+      "9007199254740993",
+      "-0",
+      "9007199254740991",
+      "-9007199254740992"
+    ],
+    "$float": [
+      "1.5",
+      "0.1",
+      "-2.25",
+      "1e3",
+      "2.5E-2",
+      "10.0"
+    ],
+    "$date": [
+      "1843-10-01",
+      "2026-02-28",
+      "2024-02-29",
+      "2026-02-30",
+      "26-1-1",
+      "0000-01-01",
+      "9999-12-31",
+      "0050-02-29",
+      "0048-02-29"
+    ],
+    "$datetime": [
+      "2026-10-07T09:30:00+01:00",
+      "2026-10-07T09:30:00Z",
+      "2026-10-07T25:00:00Z",
+      "2026-10-07",
+      "0001-01-01T00:00:00+01:00",
+      "2026-02-29T10:00:00Z",
+      "2026-10-07T09:30Z",
+      "2026-10-07 09:30:00.5-05:00",
+      "0050-06-01T00:00:00Z",
+      "2026-10-07T09:30:00+24:00",
+      "2026-10-07T09:30:00+0530",
+      "9999-12-31T23:00:00-02:00"
+    ]
+  },
+  "mutations": [
+    "drop a character",
+    "double a character",
+    "swap two characters",
+    "cut the end"
+  ],
+  "graph_line": {
+    "form": "// graph: NAME, then any of: · SOURCE, · format N, · spec N.M",
+    "name": "letters, digits and underscores, not starting with a digit (GN102 otherwise)",
+    "must_be_first": true,
+    "missing": "GN101"
+  },
+  "containers": [
+    {
+      "kind": "data",
+      "marker": "none",
+      "text": "// graph: g\n(a:T)",
+      "reads": "things, links and SET statements",
+      "answer": "read"
+    },
+    {
+      "kind": "query",
+      "marker": "· QUERY",
+      "text": "// graph: g · QUERY\nMATCH (a:T)",
+      "reads": "asks a question; not data",
+      "answer": "GN303"
+    },
+    {
+      "kind": "excerpt",
+      "marker": "· excerpt, or a first line // excerpt",
+      "text": "// excerpt\n(a:T)",
+      "reads": "illustrates part of a graph; not data",
+      "answer": "GN304"
+    }
+  ],
+  "values": [
+    {
+      "type": "text",
+      "written": "'…' with GQL escapes",
+      "example": "'x'"
+    },
+    {
+      "type": "integer",
+      "written": "digits, a sign allowed",
+      "example": "-3"
+    },
+    {
+      "type": "decimal",
+      "written": "digits, a point and digits, an exponent allowed",
+      "example": "1.5"
+    },
+    {
+      "type": "boolean",
+      "written": "TRUE or FALSE",
+      "example": "TRUE"
+    },
+    {
+      "type": "date",
+      "written": "DATE 'YYYY-MM-DD'",
+      "example": "DATE '2026-01-01'"
+    },
+    {
+      "type": "datetime",
+      "written": "DATETIME 'YYYY-MM-DDThh:mm:ssZ'",
+      "example": "DATETIME '2026-01-01T00:00:00Z'"
+    }
+  ],
+  "outside": [
+    {
+      "name": "no graph line",
+      "text": "(a:T)",
+      "code": "GN101"
+    },
+    {
+      "name": "a graph name of two words",
+      "text": "// graph: reader-choice\n(a:T)",
+      "code": "GN102"
+    },
+    {
+      "name": "a comment after code",
+      "text": "// graph: g\n(a:T) // note",
+      "code": "GN103"
+    },
+    {
+      "name": "text that is no GQL",
+      "text": "// graph: g\n(a:T),\n@oops",
+      "code": "GN104"
+    },
+    {
+      "name": "an escape GQL does not name",
+      "text": "// graph: g\n(a:T {v: 'a\\qb'})",
+      "code": "GN105"
+    },
+    {
+      "name": "a missing close",
+      "text": "// graph: g\n(a:T {x: 1)",
+      "code": "GN201"
+    },
+    {
+      "name": "a list is no value",
+      "text": "// graph: g\n(a:T {x: [1, 2]})",
+      "code": "GN207"
+    },
+    {
+      "name": "a query is no data",
+      "text": "// graph: g · QUERY\nMATCH (a:T)",
+      "code": "GN303"
+    }
+  ]
+}

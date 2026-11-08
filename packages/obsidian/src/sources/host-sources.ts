@@ -1,5 +1,5 @@
 // The vault's own graph sources, added through the plug-in interface as any plug-in's are (editor spec §43,
-// plugin_interface). A .gql file and a note are each a source of the built-in plug-in `thoughtknot.obsidian-sources`.
+// plugin_interface). A .gql file, a note and a .csv table are each a source of the built-in plug-in `thoughtknot.obsidian-sources`.
 // Each reads the person's own vault, so a block that says FROM one still finds a moved or missing place and names it.
 import { PLUGIN_API, pluginRegistry, word } from '@thoughtknot/core';
 import type { GraphSource, PluginRegistry, SourceFetched, ThoughtKnotPlugin as CorePlugin } from '@thoughtknot/core';
@@ -18,7 +18,7 @@ export function vaultSources(vault: VaultFetch): CorePlugin {
     api: PLUGIN_API,
     uses: ['sources'],
     register: (points) => {
-      for (const kind of ['file', 'note'] as const) {
+      for (const kind of ['file', 'note', 'table'] as const) {
         const here = (target: string, from: string) => vault({ kind, target }, from);
         points.sources?.add({
           scheme: kind,

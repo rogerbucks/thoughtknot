@@ -106,7 +106,7 @@ export const READING_SOURCE_WORDS = {
   'reading.source.outside':
     '{target} is not a place inside the vault: write its path from the vault’s root, with no leading slash, drive, .. or folder starting with a dot',
   'reading.source.neither':
-    'a graph is drawn from a .gql file or a note, and {target} is neither: write FROM path/to/file.gql or FROM [[Note]]',
+    'a graph is drawn from a .gql file, a .csv table or a note, and {target} is none of them: write FROM path/to/file.gql, FROM path/to/table.csv or FROM [[Note]]',
   'reading.source.holds-lines':
     'a block drawn from {target} holds nothing of its own, so its data is never copied here: move these lines into {target}, or take out · FROM',
   // one graph from many places (connectors.ts)
@@ -114,6 +114,37 @@ export const READING_SOURCE_WORDS = {
     '{place} is too large to read, so graph {graph} is drawn without it: make it smaller, or split it in two.',
   'reading.source.no-connector': 'Nothing reads places like {place} yet, so it is left out of the drawing.',
   'reading.source.cited': '{place} line {line} ({version})',
+  'reading.source.cited-row': '{place} row {row} ({version})',
+  'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
+  'reading.source.table': 'The table {target}',
+  // a table read from a CSV file (csv-read.ts, csv-connector.ts)
+  'reading.table.too-large': '{place} is larger than {most} bytes, so it was not read: split it, or keep fewer rows.',
+  'reading.table.too-many-rows': '{place} has more than {most} rows, so it was not read: split it into smaller files.',
+  'reading.table.too-many-columns':
+    '{place} has more than {most} columns, so it was not read: take out the ones not needed.',
+  'reading.table.cell-too-long':
+    '{place} has a cell longer than {most} characters, near line {line}, so it was not read: shorten that cell.',
+  'reading.table.unclosed-quote':
+    '{place} has a quote opened on line {line} that is never closed, so it was not read: close the quote.',
+  'reading.table.no-header':
+    '{place} has no header line naming its columns, so it was not read: add one as its first line.',
+  'reading.table.not-text': '{place} is not a text file, so it was not read: save it as CSV text.',
+  'reading.table.no-mapping':
+    '{place} has no mapping yet, so it gives nothing to the graph: check the one proposed and save it as {mapping}.',
+  // a table drawn as one node: the line under its first rows (table-node.ts)
+  'reading.table.node-rows': { one: '{count} row', other: '{count} rows' },
+  'reading.table.node-more-rows': { one: '{count} more row not shown', other: '{count} more rows not shown' },
+  'reading.table.node-more-columns': {
+    one: '{count} more column not shown',
+    other: '{count} more columns not shown',
+  },
+  'reading.table.node-no-rows': 'No rows yet',
+  'reading.table.mapping-said':
+    'How {place} becomes things: one {row} for each row. Change a column’s "as" to change what it becomes.',
+  'reading.table.faded-not-kept':
+    '{place} is a ThoughtKnot export: its {rows} rows from a view’s faded context are read as the rest are, faded no longer.',
+  'reading.table.uneven':
+    '{place} has {rows} rows with more cells than its header has columns: the extra cells are left out.',
   'reading.source.file': 'The file {target}',
   'reading.source.note': 'The note {target}',
   'reading.source.plugin': 'The plug-in source {target}',
@@ -181,4 +212,19 @@ export const READING_SOURCE_WORDS = {
   // a stroke, line or arrow whose points are not pairs of numbers
   'sketch.points': '{id} needs its points as pairs of numbers, two pairs at least, so it is not drawn',
   'sketch.points.fix': "write its points in pairs, such as points: '0 0 40 10'",
+  // a metadata write from Reading view (editor spec §3, reading_view_metadata_safe, metadata-write.ts)
+  'meta.graph-changed':
+    'The graph {graph} changed since it was shown, so nothing was saved: look again, then save once more',
+  'meta.outside': 'This would change more than the note’s metadata, so nothing was saved',
+  'meta.saved': 'Saved. Undo takes it back',
+  'meta.undone': 'Taken back',
+  'meta.undo-moved': 'The note changed since, so it was not taken back',
+  // a layout block (editor spec §2, layout_block_checked, layout-block.ts): a line that is not a place
+  'layout.kind-unknown': 'a layout holds places only, not {kind}, so {id} is left where the layout puts it',
+  'layout.kind-unknown.fix': 'write it as a Place, such as (ann:Place {x: 120, y: 40}), or remove it',
+  // a place for a thing the graph does not hold
+  'layout.thing-gone': '{thing} has a place, but the graph {graph} does not hold it, so the place is not used',
+  'layout.thing-gone.fix': 'forget the place of {thing}',
+  // a place saved by a drag, as its undo toast names it (layout_drag_saves)
+  'layout.placed': 'Placed {thing}',
 } as const;

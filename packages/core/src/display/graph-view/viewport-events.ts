@@ -20,6 +20,7 @@ import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
 import { onTableControl, tableScrolls, tableTookKey } from './table-keys';
+import { fromTrackpad } from '../../render/render-tilt';
 import type { QuickInfo } from './quick-info';
 import { boxIn, foldAt, targetAt, targetOf, type Taps, type Target } from './taps';
 import { ThingMenu } from './thing-menu';
@@ -71,6 +72,9 @@ const menuOf = (host: ViewportHost, key: string): MenuItem[] => {
   const d = host.o?.diagram;
   return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
 };
+
+/** The keys held with the wheel, and whether a trackpad sent it (note_still_scrolls). */
+const wheelKeys = (e: WheelEvent) => ({ ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, pad: fromTrackpad(e) });
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
@@ -263,7 +267,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     (e: WheelEvent) => {
       host.info.hide(); // the drawing is about to move from under it
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ctrl: e.ctrlKey, meta: e.metaKey });
+      const zoomed = use(e, { kind: 'wheel', ...point(e), dy, ...wheelKeys(e) });
       // zoomed in until a folded group fills the view: it opens (cluster_opens)
       const fold = zoomed && dy < 0 ? foldAt(e.target) : null,
         r = (e.target as Element | null)?.closest?.('[data-fold]')?.getBoundingClientRect(),
@@ -301,8 +305,8 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
-    // Ctrl+Z undoes a move (move_undo). A box picked up from the keyboard takes its keys until put down; M picks it up
-    if (movers?.undo?.key(e) || keys?.key(e)) {
+    // Ctrl+Z undoes a move (move_undo), unless the stage took it. A box picked up by the keyboard keeps its keys; M lifts it
+    if (!e.defaultPrevented && (movers?.undo?.key(e) || keys?.key(e))) {
       e.preventDefault();
       return;
     }

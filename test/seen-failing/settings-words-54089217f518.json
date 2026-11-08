@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/settings-words.test.js",
+  "test": "the settings page’s words > the catalogue keeps no word of an option that is gone",
+  "seen_failing_first": false,
+  "evidence": "The test only lists a row name the page owns; before the vault-preset row existed there was no such word, so it could not fail."
+}

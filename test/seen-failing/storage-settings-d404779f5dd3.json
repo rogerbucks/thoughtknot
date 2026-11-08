@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/storage-settings.test.js",
+  "test": "each row of the group reads and saves its own setting, and nothing else in the data",
+  "seen_failing_first": false,
+  "evidence": "Coverage for code already in this PR: the module's other functions, tested directly so its lines count."
+}

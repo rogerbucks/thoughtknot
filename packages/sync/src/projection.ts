@@ -48,15 +48,19 @@ export class Projection {
     return this.#engine.merge(note);
   }
 
-  anchor(note: string, place: number): Anchor {
+  hasBeen(note: string, text: string): Promise<boolean> {
+    return this.#engine.hasBeen(note, text);
+  }
+
+  anchor(note: string, place: number): Promise<Anchor> {
     return this.#engine.anchor(note, place);
   }
 
-  place(note: string, anchor: Anchor): number {
+  place(note: string, anchor: Anchor): Promise<number> {
     return this.#engine.place(note, anchor);
   }
 
-  history(note: string): Made[] {
+  history(note: string): Promise<Made[]> {
     return this.#engine.history(note);
   }
 }

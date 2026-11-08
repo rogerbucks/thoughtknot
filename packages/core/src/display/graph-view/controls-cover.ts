@@ -14,11 +14,18 @@ export interface ScreenBox {
 }
 
 /** The cards that float over the drawing and may cover a thing chosen. */
-const CARDS = ['.thoughtknot-corner', '.thoughtknot-dock.is-free', '.thoughtknot-phone-sheet', '.thoughtknot-mini-map'];
+const CARDS = [
+  '.thoughtknot-corner',
+  '.thoughtknot-dock.is-free',
+  '.thoughtknot-phone-sheet',
+  '.thoughtknot-mini-map',
+  // the level badge in the top middle, so the fitted drawing starts below it (render_chrome_slots)
+  '.thoughtknot-level-badge',
+];
 
 /**
- * How much of `view` the `cards` cover at each edge. A card covers a strip from the edge that needs the thinnest strip
- * to clear it. A card outside the view, or of no size, covers nothing.
+ * How much of `view` the `cards` cover at each edge. A card covers a strip from the edge that leaves the most of the
+ * view clear: the thinnest strip for the view's width or height. A card outside the view, or of no size, covers nothing.
  */
 export function coverByCards(view: ScreenBox, cards: readonly ScreenBox[]): Clear {
   const clear: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -31,18 +38,25 @@ export function coverByCards(view: ScreenBox, cards: readonly ScreenBox[]): Clea
       ['top', c.bottom - view.top],
       ['bottom', view.bottom - c.top],
     ];
-    const [edge, strip] = strips.reduce((a, b) => (b[1] < a[1] ? b : a));
+    // a share of the view's width or height, so a tall panel on a short card covers the start, not the whole top
+    const [w, h] = [view.right - view.left, view.bottom - view.top];
+    const share = ([edge, strip]: [keyof Clear, number]) => strip / (edge === 'left' || edge === 'right' ? w : h);
+    const [edge, strip] = strips.reduce((a, b) => (share(b) < share(a) ? b : a));
     clear[edge] = Math.max(clear[edge], strip);
   }
   return clear;
 }
 
+/** The cards floating over `viewport` now, shown or hidden. */
+export function coverCards(viewport: HTMLElement): HTMLElement[] {
+  const card = viewport.parentElement;
+  return card ? CARDS.flatMap((sel) => Array.from(card.querySelectorAll<HTMLElement>(sel))) : [];
+}
+
 /** How much of the drawing's `viewport` (on the screen at `view`) the cards floating over it cover at each edge. */
 export function overCover(viewport: HTMLElement, view: ScreenBox): Clear {
-  const card = viewport.parentElement;
-  if (!card) return { top: 0, right: 0, bottom: 0, left: 0 };
-  const shown = CARDS.flatMap((sel) => Array.from(card.querySelectorAll<HTMLElement>(sel))).filter(
-    (el) => !el.hidden && !el.closest('[hidden]'),
+  const shown = coverCards(viewport).filter(
+    (el) => !el.hidden && !el.closest('[hidden]') && !el.classList.contains('is-hidden'),
   );
   return coverByCards(
     view,

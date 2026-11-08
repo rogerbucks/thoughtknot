@@ -7,16 +7,19 @@
 //
 // Usage:
 //   node scripts/changelog.mjs --out FILE     writes the changelog since the last release, at the manifest's version.
-//   node scripts/changelog.mjs --check FILE   exits 1 when release notes have no Library changes section.
+//   node scripts/changelog.mjs --check FILE   exits 1 when release notes lack the Library changes or Graph Spec section.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { provedIds, specRules, SPEC, suiteCases } from './graph-spec-proved.mjs';
+import { readVersion } from './graph-spec-version.mjs';
 import { breakingChanges, declarationAt, lastRelease, readInterface } from './public-api.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MERGE = /^Merge pull request #(\d+) from /;
 export const LIBRARY = '### Library changes';
+export const GRAPH_SPEC = '### Graph Spec';
 // The version rule, said in every release's notes, so a user knows a minor step may break things before 1.0.0.
 export const RULE =
   'Before 1.0.0, a step in the leftmost part that is not 0, such as 0.7 to 0.8, may change or remove what the library exports.';
@@ -67,8 +70,29 @@ function added(before, after) {
 
 const where = ({ pkg, entry, name }) => `${pkg}${entry === '.' ? '' : `/${entry.replace(/^\.\//, '')}`}: \`${name}\``;
 
-// The changelog's text: a heading, the pull requests, and the library's changes with the version rule.
-export function changelogText({ version, from, pulls, repo, before, after }) {
+/** What the release says of the graph spec (editor spec §51, spec_version_released): its version and its cases. */
+export function graphSpecFacts(root = ROOT) {
+  const proved = provedIds();
+  const rules = specRules(readFileSync(join(root, SPEC), 'utf8'));
+  return {
+    version: readVersion(root).version,
+    cases: suiteCases().size,
+    proved: rules.filter((id) => proved.has(id)).length,
+    rules: rules.length,
+  };
+}
+
+/** The Graph Spec section's lines: the version this release implements, and how many conformance cases pass. */
+export const graphSpecLines = ({ version, cases, proved, rules }) => [
+  GRAPH_SPEC,
+  '',
+  `This release implements Graph Spec ${version}. ${cases} conformance cases pass; with the tests here they prove ${proved} of its ${rules} rules.`,
+  'The library archive holds the spec and its cases, in its spec folder.',
+  '',
+];
+
+// The changelog's text: a heading, the pull requests, the graph spec, and the library's changes with the version rule.
+export function changelogText({ version, from, pulls, repo, before, after, spec }) {
   const lines = [`## ${version}`, ''];
   lines.push(from ? `Changes since ${from}.` : 'The first release.', '', '### Pull requests', '');
   if (pulls.length === 0) lines.push('No pull requests were merged.');
@@ -78,7 +102,7 @@ export function changelogText({ version, from, pulls, repo, before, after }) {
       'pull requests',
     ),
   );
-  lines.push('', LIBRARY, '', RULE, '');
+  lines.push('', ...(spec ? graphSpecLines(spec) : []), LIBRARY, '', RULE, '');
   if (!before) {
     lines.push(
       'This is the first release with a declared interface (public-api.json), so there is nothing to compare.',
@@ -113,12 +137,24 @@ export function changelogText({ version, from, pulls, repo, before, after }) {
 /** Whether release notes hold the Library changes section, as a line of its own. */
 export const hasLibraryChanges = (notes) => notes.split('\n').some((line) => line.trim() === LIBRARY);
 
+/** Whether release notes name the Graph Spec version, with the conformance count, as a section of their own. */
+export const hasGraphSpec = (notes) =>
+  notes.split('\n').some((line) => line.trim() === GRAPH_SPEC) &&
+  /implements Graph Spec \d+\.\d+\. \d+ conformance cases pass/.test(notes);
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const checking = process.argv.indexOf('--check');
   if (checking !== -1 && process.argv[checking + 1]) {
-    if (hasLibraryChanges(readFileSync(process.argv[checking + 1], 'utf8'))) process.exit(0);
-    console.error(`changelog: the release notes have no "${LIBRARY}" section, so users would not hear what changed`);
-    process.exit(1);
+    const notes = readFileSync(process.argv[checking + 1], 'utf8');
+    if (!hasLibraryChanges(notes)) {
+      console.error(`changelog: the release notes have no "${LIBRARY}" section, so users would not hear what changed`);
+      process.exit(1);
+    }
+    if (!hasGraphSpec(notes)) {
+      console.error(`changelog: the release notes have no "${GRAPH_SPEC}" section naming the spec version and cases`);
+      process.exit(1);
+    }
+    process.exit(0);
   }
   const at = process.argv.indexOf('--out');
   if (at === -1 || !process.argv[at + 1]) {
@@ -134,6 +170,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     repo: process.env.GITHUB_REPOSITORY || 'rogerbucks/thoughtknot',
     before: from ? declarationAt(from, ROOT) : null,
     after: readInterface(ROOT),
+    spec: graphSpecFacts(ROOT),
   });
   writeFileSync(process.argv[at + 1], text);
   console.log(`changelog: wrote the changes since ${from ?? 'the start'}`);

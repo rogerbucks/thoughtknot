@@ -12,7 +12,15 @@ import { atom, read, update } from 'claude-code';
 import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
+import type { Asking as AskingT, DecisionAnswer, PresentStep, StagePorts, Walk as WalkT } from './graph.js';
 import {
+  Asking,
+  decideThrough,
+  pickArgs,
+  pickedView,
+  presentThrough,
+  showThrough,
+  Walk,
   cleanSvg,
   dataFolderRefusal,
   EditorLauncher,
@@ -34,6 +42,7 @@ import {
   settingsFrom,
   viewOf,
   word,
+  pressFromPerson,
 } from './graph.js';
 
 const PANE = 'graph';
@@ -53,9 +62,97 @@ const PROPOSE_SCHEMA = {
   },
   required: ['changes'],
 };
+const SHOW = 'mcp__thoughtknot__show';
+const PRESENT = 'mcp__thoughtknot__present';
+const DECIDE = 'mcp__thoughtknot__decide';
+const LINKS_SCHEMA = {
+  type: 'array',
+  items: {
+    type: 'object',
+    properties: { from: { type: 'string' }, type: { type: 'string' }, to: { type: 'string' } },
+    required: ['from', 'type', 'to'],
+  },
+};
+const STAGE_TOOLS = [
+  {
+    name: 'show',
+    description:
+      'Show the graph of a note in the ThoughtKnot pane, or turn it to things, links, a path or a lens you name. ' +
+      'Nothing in the note changes. "note" is its path. Things are node names; links are {from, type, to}; "path" is a ' +
+      'path id; "lens" is a saved lens or a query such as "Option WHERE price < 3". A note above your level is not shown.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        note: { type: 'string' },
+        things: { type: 'array', items: { type: 'string' } },
+        links: LINKS_SCHEMA,
+        path: { type: 'string' },
+        lens: { type: 'string' },
+      },
+      required: ['note'],
+    },
+  },
+  {
+    name: 'present',
+    description:
+      'Walk the person through the graph of a note in the ThoughtKnot pane, one step at a time. Each step names the ' +
+      'things and links to pick out and a short caption. The person moves with Next and Back. Every name must be in the ' +
+      'graph, or nothing is shown and you are told which.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        note: { type: 'string' },
+        steps: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              things: { type: 'array', items: { type: 'string' } },
+              links: LINKS_SCHEMA,
+              caption: { type: 'string' },
+            },
+            required: ['caption'],
+          },
+        },
+      },
+      required: ['note', 'steps'],
+    },
+  },
+  {
+    name: 'decide',
+    description:
+      'Ask the person a question about the graph of a note, in the ThoughtKnot pane, with two to six options, each tied ' +
+      'to things in the graph. Only the person answers. You get back the option they picked and their reason, or that ' +
+      'they chose none. Their answer is kept in the note as a decision.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        note: { type: 'string' },
+        question: { type: 'string' },
+        options: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { label: { type: 'string' }, things: { type: 'array', items: { type: 'string' } } },
+            required: ['label', 'things'],
+          },
+        },
+      },
+      required: ['note', 'question', 'options'],
+    },
+  },
+] as const;
 const view = atom({ plugin: 'thoughtknot', key: 'view' } as const, null as GraphView | null);
 // counts changes to the editor pane so it is drawn again; it holds no address, token or note
 const editorChanges = atom({ plugin: 'thoughtknot', key: 'editor' } as const, 0);
+
+// counts changes of the walk or the question in the graph pane, so it is drawn again; it holds no note
+const stageChanges = atom({ plugin: 'thoughtknot', key: 'stage' } as const, 0);
+
+/** The presentation being walked: the walk, the note, and whether the person has kept it. */
+let walking: { walk: WalkT; path: string; note: string; graph: string; kept: string | null } | null = null;
+/** The question waiting for the person's answer. */
+let asking: AskingT | null = null;
 
 /** The session's editor: made when first asked for, and kept for the module's life (its server dies with it). */
 let launcher: EditorLauncher | null = null;
@@ -150,6 +247,55 @@ async function drawNote($: EngineInterface, path: string): Promise<string> {
   return shown.why ? word('cc.shown-as-text', { alt: shown.alt, why: shown.why }) : shown.alt;
 }
 
+/** What show, present and decide need of this host: the same gate as /graph, the note read, the layout, the palette. */
+async function stagePorts($: EngineInterface): Promise<StagePorts> {
+  const launcher = await launcherOf($);
+  const cwd = await $.session.cwd();
+  const run = (argv: readonly string[], stdin: string, timeoutMs: number) => $.process.run(argv, { stdin, timeoutMs });
+  return {
+    gate: (path) => launcher.gate(path, cwd),
+    read: (path) => $.fs.read(path),
+    lay: (dots) => layOut(dots, $.plugin.root, run),
+    palette: PANE_PALETTE,
+  };
+}
+
+/** Puts a view in the graph pane and opens it, drawing the stage again. */
+async function putInPane($: EngineInterface, shown: GraphView) {
+  await update($, view, () => shown);
+  await update($, stageChanges, (n) => n + 1);
+  await $.ui.open({ id: PANE, title: word('cc.pane-title', { title: shown.title }) });
+  await $.ui.invalidate('ui.render');
+}
+
+/** Draws the step the walk is on, picked out, with its caption. */
+async function drawStep($: EngineInterface) {
+  if (!walking) return;
+  const ports = await stagePorts($);
+  const shown = await pickedView(walking.note, walking.walk.step, walking.walk.said(), ports.lay, ports.palette);
+  if ('view' in shown) await putInPane($, shown.view);
+}
+
+/** Writes the person's decision or kept presentation into the note, through node; what the pane says of it. */
+async function record($: EngineInterface, request: unknown): Promise<string> {
+  try {
+    const ran = await $.process.run(['node', `${$.plugin.root}/bin/record.mjs`], {
+      stdin: JSON.stringify(request),
+      timeoutMs: 30_000,
+    });
+    return (JSON.parse(ran.stdout) as { text: string }).text;
+  } catch (err) {
+    return word('decide.not-recorded', { why: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+/** The person's answer to the waiting question, from a press or the composer; what they are told when it is refused. */
+function answerWith(from: { press: unknown } | { origin: unknown }, picked: number | null, reason?: string) {
+  if (!asking || asking.answered) return word('decide.no-question');
+  const r = asking.answer(from, picked, reason);
+  return r.ok ? null : r.why;
+}
+
 export const register: Register = (on) => {
   // the pane's words are said in the system's language (spec §42)
   followSystemLanguage();
@@ -197,7 +343,55 @@ export const register: Register = (on) => {
       inputSchema: PROPOSE_SCHEMA,
       isDeferred: false,
     });
+    // Claude shows, presents and asks in the graph pane (spec §49). None of them writes: only the person's answer does
+    for (const tool of STAGE_TOOLS) await $.tool.register({ ...tool, isDeferred: false });
     return next(e);
+  });
+
+  on('tool.call', { tool: SHOW }, async ($, e) => {
+    const shown = await showThrough(await stagePorts($), e);
+    if (!shown.view) return { deny: shown.text };
+    walking = null;
+    await putInPane($, shown.view);
+    return { result: shown.text };
+  });
+
+  on('tool.call', { tool: PRESENT }, async ($, e) => {
+    const got = await presentThrough(await stagePorts($), e);
+    if ('text' in got) return { deny: got.text };
+    const drawn = got.steps as PresentStep[];
+    const graph = /\/\/\s*graph:\s*(\w+)/.exec(got.note)?.[1] ?? 'graph';
+    walking = { walk: new Walk(drawn), path: got.path, note: got.note, graph, kept: null };
+    await drawStep($);
+    return { result: walking.walk.said() };
+  });
+
+  // Claude asks; the call waits for the person's own answer in the pane or the composer, then is told only that
+  on('tool.call', { tool: DECIDE }, async ($, e) => {
+    if (asking && !asking.answered) return { deny: word('decide.one-at-a-time') };
+    const ports = await stagePorts($);
+    const got = await decideThrough(ports, e);
+    if ('text' in got) return { deny: got.text };
+    const note = await $.fs.read(got.path);
+    const shown = await pickedView(
+      note,
+      got.focus,
+      word('decide.asks', { question: got.ask.question }),
+      ports.lay,
+      ports.palette,
+    );
+    const answer = await new Promise<DecisionAnswer>((resolve) => {
+      asking = new Asking(got.ask, { graph: got.graph, note: got.path }, resolve);
+      walking = null;
+      if ('view' in shown) void putInPane($, shown.view);
+    });
+    const { data } = await dataFolderOf($);
+    const by = (await settingsAt($, data)).decider;
+    const at = new Date().toISOString();
+    const kept = await record($, { kind: 'decision', path: got.path, graph: got.graph, ask: got.ask, answer, by, at });
+    await update($, stageChanges, (n) => n + 1);
+    await $.ui.invalidate('ui.render');
+    return { result: `${(asking as AskingT).said(answer)} ${kept}` };
   });
 
   // Claude proposes; the server makes the change set, and the user accepts or rejects it on the card (cc_claude_proposes)
@@ -211,11 +405,22 @@ export const register: Register = (on) => {
       const stopped = launcher ? await launcher.stop('/graph stop') : false;
       return { text: stopped ? sayStopped('/graph stop') : word('cc.editor.usage') };
     }
+    const origin = (e as { origin?: unknown }).origin;
+    const pick = pickArgs(e.args);
+    if (pick) {
+      const refused = answerWith({ origin }, pick.n === null ? null : pick.n - 1, pick.reason);
+      return { text: refused ?? word('decide.recorded') };
+    }
+    if (walking && /^\s*(next|back)\s*$/.test(e.args)) {
+      if (e.args.trim() === 'next') walking.walk.next();
+      else walking.walk.back();
+      await drawStep($);
+      return { text: walking.walk.said() };
+    }
     const confirming = confirmArgs(e.args);
     const editing = editArgs(e.args);
     if (confirming || editing !== null) {
       // who ran the command, as the host says: only the composer is the person typing, and nothing else may say yes
-      const origin = (e as { origin?: unknown }).origin;
       const opened = confirming
         ? await (await launcherOf($)).confirm(origin)
         : await (await launcherOf($)).edit(editing ?? '', await $.session.cwd(), origin);
@@ -262,21 +467,87 @@ export const register: Register = (on) => {
     const elements = $.ui.resolve(e);
     const { Box, Text } = elements;
     const shown = await read($, view);
+    await read($, stageChanges);
     if (!shown) return <Text dimColor>{word('cc.usage')}</Text>;
+    const drawing = stageDrawing(elements, e.surface, shown);
+    const { Button } = elements;
+    // the walk: Back and Next, the person setting the pace, and Keep, which writes the steps only once pressed
+    if (walking) {
+      const w = walking;
+      const move = (to: 'next' | 'back') => async () => {
+        if (to === 'next') w.walk.next();
+        else w.walk.back();
+        await drawStep($);
+      };
+      const keep = async (press: unknown) => {
+        if (!pressFromPerson(press)) return;
+        w.kept = await record($, {
+          kind: 'presentation',
+          path: w.path,
+          name: `${w.graph}_tour`,
+          graph: w.graph,
+          steps: w.walk.steps,
+        });
+        await update($, stageChanges, (n) => n + 1);
+        await $.ui.invalidate('ui.render');
+      };
+      return (
+        <Box flexDirection="column">
+          <Text>{w.walk.said()}</Text>
+          {drawing}
+          <Box flexDirection="row">
+            <Button label={word('present.back')} disabled={w.walk.first} onPress={move('back')} />
+            <Button label={word('present.next')} disabled={w.walk.last} onPress={move('next')} />
+            <Button label={word('present.keep')} disabled={w.kept !== null} onPress={keep} />
+          </Box>
+          {w.walk.last ? <Text dimColor>{word('present.done')}</Text> : null}
+          {w.kept ? <Text>{w.kept}</Text> : null}
+        </Box>
+      );
+    }
+    // the question: each option beside the things it is tied to, and None; only the person's press answers
+    if (asking && !asking.answered) {
+      const q = asking;
+      const pressed = (picked: number | null) => async (press: unknown) => {
+        answerWith({ press }, picked);
+        await update($, stageChanges, (n) => n + 1);
+        await $.ui.invalidate('ui.render');
+      };
+      return (
+        <Box flexDirection="column">
+          <Text>{word('decide.asks', { question: q.ask.question })}</Text>
+          {drawing}
+          {q.ask.options.map((o, i) => (
+            <Box key={`option-${i}`} flexDirection="row">
+              <Button label={word('decide.pick', { label: o.label })} onPress={pressed(i)} />
+              <Text dimColor>{word('decide.tied-to', { things: o.things.join(', ') })}</Text>
+            </Box>
+          ))}
+          <Button label={word('decide.none')} onPress={pressed(null)} />
+          <Text dimColor>{word('decide.not-the-person')}</Text>
+        </Box>
+      );
+    }
 
-    // the terminal draws no Svg (Image and Raster only), though `'Svg' in` its table holds: the text stands in there
-    const Svg = e.surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined;
-    // the drawing passes the allowlist before the pane shows it: no script, event or outside link (TRUST-7)
-    if (Svg && shown.svg) return <Svg source={cleanSvg(shown.svg)} alt={shown.alt} />;
-    // never text with no reason: a graph that could be drawn says why it is text here
-    const why = shown.why ?? (shown.svg ? word('cc.no-pictures') : undefined);
-    return (
-      <Box flexDirection="column">
-        {why ? <Text color="warning">⚠ {why}</Text> : null}
-        {shown.lines.map((line, i) => (
-          <Text key={`line-${i}`}>{line}</Text>
-        ))}
-      </Box>
-    );
+    return drawing;
   });
 };
+
+/** The graph pane's drawing: the SVG where the surface draws one, else the text, with why. Never a blank pane. */
+function stageDrawing(elements: any, surface: string, shown: GraphView) {
+  const { Box, Text } = elements;
+  // the terminal draws no Svg (Image and Raster only), though `'Svg' in` its table holds: the text stands in there
+  const Svg = surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined;
+  // the drawing passes the allowlist before the pane shows it: no script, event or outside link (TRUST-7)
+  if (Svg && shown.svg) return <Svg source={cleanSvg(shown.svg)} alt={shown.alt} />;
+  // never text with no reason: a graph that could be drawn says why it is text here
+  const why = shown.why ?? (shown.svg ? word('cc.no-pictures') : undefined);
+  return (
+    <Box flexDirection="column">
+      {why ? <Text color="warning">⚠ {why}</Text> : null}
+      {shown.lines.map((line: string, i: number) => (
+        <Text key={`line-${i}`}>{line}</Text>
+      ))}
+    </Box>
+  );
+}

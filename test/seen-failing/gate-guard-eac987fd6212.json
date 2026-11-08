@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/gate-guard.test.js",
+  "test": "a note’s classification line > a Python heredoc or sed that would change an existing note’s classification is refused",
+  "seen_failing_first": false,
+  "evidence": "It pins refusals that held before c966c8a, so the new Python reader cannot loosen them; it is meant to pass first. The test beside it, that a Python heredoc making only new notes is allowed, failed first."
+}

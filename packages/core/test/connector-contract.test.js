@@ -30,7 +30,7 @@ const fetched = (p, text = p.text) => ({ found: p.place, text });
 
 describe('connector_contract', () => {
   test('every kind of place a FROM list names has a connector', () => {
-    for (const kind of ['file', 'note', 'plugin']) assert.ok(connectorFor(kind), kind);
+    for (const kind of ['file', 'note', 'plugin', 'table']) assert.ok(connectorFor(kind), kind);
     for (const c of CONNECTORS) assert.equal(typeof c.connect, 'function');
   });
 
@@ -79,4 +79,57 @@ describe('connector_contract', () => {
         );
       });
     });
+});
+
+describe('connector_contract: the table connector', () => {
+  const source = { graph: 'sales', kind: 'table', target: 'Data/sales.csv', block: 0 };
+  const CSV = 'order_id,customer,amount\r\nA1,Acme,12.5\r\nA2,Bolt,8\r\n';
+  const MAPPING = `// graph: mapping
+(sales:DataSet {place: 'Data/sales.csv', row: 'Sale'})
+(c1:Column {name: 'order_id', as: 'key', at: 1})
+(c2:Column {name: 'customer', as: 'property', at: 2})
+(c3:Column {name: 'amount', as: 'measure', at: 3})
+(sales)-[:COLUMN]->(c1)
+(sales)-[:COLUMN]->(c2)
+(sales)-[:COLUMN]->(c3)`;
+  const fetchedTable = (text = CSV) => ({ found: 'Data/sales.csv', text, mapping: MAPPING });
+
+  test('a .csv place has a connector', () => assert.ok(connectorFor('table')));
+
+  test('gives the statements, each citing the place, its version, its line and its row', () => {
+    const c = connect(source, fetchedTable());
+    assert.ok(!('refused' in c));
+    assert.equal(c.statements.length, 2);
+    for (const [i, s] of c.statements.entries()) {
+      assert.deepEqual(Object.keys(s.cite).sort(), ['line', 'place', 'row', 'version']);
+      assert.equal(s.cite.place, 'Data/sales.csv');
+      assert.equal(s.cite.version, c.version);
+      assert.equal(s.cite.row, i + 1);
+      assert.equal(s.cite.line, i + 2);
+    }
+  });
+
+  test('its version moves when the place changes, and only then', () => {
+    const a = connect(source, fetchedTable());
+    assert.equal(connect(source, fetchedTable()).version, a.version);
+    assert.notEqual(connect(source, fetchedTable(CSV.replace('8', '9'))).version, a.version);
+  });
+
+  test('says why when there is nothing to read, naming the place', () => {
+    const gone = connect(source, { missing: true });
+    assert.ok('refused' in gone);
+    assert.equal(gone.why, 'missing');
+    assert.match(gone.refused, /Data\/sales\.csv/);
+  });
+
+  test('gives what the join takes, so the join is the same for every kind', () => {
+    const r = joinPlaces('sales', [connect(source, fetchedTable())]);
+    assert.deepEqual(
+      r.reading.graphs
+        .get('sales')
+        .boxes.map((b) => b.key)
+        .sort(),
+      ['sale_A1', 'sale_A2'],
+    );
+  });
 });

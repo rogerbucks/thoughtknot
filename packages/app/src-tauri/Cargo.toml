@@ -18,6 +18,11 @@ tauri = { version = "=2.12.1", features = [] }
 serde = { version = "1", features = ["derive"] }
 # the vault key in the phone's own secure store: this app's own plug-in, in keeper/
 tauri-plugin-keeper = { version = "=0.9.0", path = "keeper" }
+automerge = "0.12"
+
+# the gh calls' list is tested on the cases the core reads too (src/gh.rs)
+[dev-dependencies]
+serde_json = "1"
 
 # the folder dialog, on a computer only: a phone keeps its notes in the app's own folder (src/lib.rs, own_documents)
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

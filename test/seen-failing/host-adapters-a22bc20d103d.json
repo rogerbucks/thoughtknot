@@ -1,0 +1,6 @@
+{
+  "file": "test/host-adapters.test.js",
+  "test": "in a host package, only its storage adapter writes a file, so no host keeps a note writer of its own",
+  "seen_failing_first": false,
+  "evidence": "The list gains the preset route, which the earlier commit added; this fix only names it."
+}

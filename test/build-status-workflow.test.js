@@ -153,9 +153,10 @@ describe('the workflow that updates the board and the comment', () => {
 describe('the workflow that only wakes it', () => {
   const text = read(TRIGGER);
 
-  test('runs on a pull request opened, pushed to, reopened, edited (its Requirements line may be added) and closed', () => {
+  // not on a push or a reopening: CI runs on those, and its run wakes the build status itself (Roger, 7 Nov 2026)
+  test('runs on a pull request opened, edited (its Requirements line may be added) and closed', () => {
     const on = block(lines(TRIGGER), 'on', 0).join('\n');
-    assert.match(on, /pull_request:\s*\n\s*types: \[opened, synchronize, reopened, edited, closed\]/);
+    assert.match(on, /pull_request:\s*\n\s*(#.*\n\s*)*types: \[opened, edited, closed\]/);
     assert.doesNotMatch(text, /pull_request_target/);
   });
 
@@ -170,7 +171,9 @@ describe('the workflow that only wakes it', () => {
     assert.deepEqual(Object.keys(jobs(text)), [TRIGGER_JOB]);
   });
 
-  test('puts no text of the event into a command line', () => {
-    assert.doesNotMatch(text, /\$\{\{/);
+  test('puts no text of the event into a command line; only the pull request’s number names its group', () => {
+    const expressions = [...text.matchAll(/\$\{\{[^}]*\}\}/g)].map((m) => m[0]);
+    assert.deepEqual(expressions, ['${{ github.event.pull_request.number }}']);
+    assert.match(text, /^ {2}group: build-status-trigger-\$\{\{ github\.event\.pull_request\.number \}\}$/m);
   });
 });

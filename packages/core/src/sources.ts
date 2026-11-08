@@ -19,7 +19,8 @@ import { word } from './words.ts';
  */
 export interface Source {
   graph: string;
-  kind: 'file' | 'note' | 'plugin';
+  /** A .gql file, a note, a plug-in's source, or a table: a .csv file read by its mapping (csv-connector.ts). */
+  kind: 'file' | 'note' | 'plugin' | 'table';
   /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
   scheme?: string;
   /**
@@ -48,7 +49,7 @@ export interface SourceFault {
  * Or it may be larger than `READ_LIMITS.bytes`, so it was never read; `tooLarge` keeps its size in bytes.
  */
 export type Fetched =
-  | { found: string; text: string }
+  | { found: string; text: string; mapping?: string }
   | { found: string; unreadable: string }
   | { found: string; tooLarge: number }
   | { missing: true; elsewhere?: readonly string[] };
@@ -137,7 +138,13 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   }
   if (outsideVault(target)) return fault(word('reading.source.outside', { target }));
   const last = target.split('/').at(-1) ?? '';
-  const kind = /\.gql$/i.test(last) ? 'file' : /\.md$/i.test(last) || !last.includes('.') ? 'note' : null;
+  const kind = /\.gql$/i.test(last)
+    ? 'file'
+    : /\.csv$/i.test(last)
+      ? 'table'
+      : /\.md$/i.test(last) || !last.includes('.')
+        ? 'note'
+        : null;
   if (!kind) return fault(word('reading.source.neither', { target }));
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
@@ -164,7 +171,7 @@ export function sourceFor(texts: readonly string[], graph: string): Source | Sou
 export const sourceName = (s: Source): string =>
   s.kind === 'plugin'
     ? word('reading.source.plugin', { target: `${s.scheme ?? ''}:${s.target}` })
-    : word(s.kind === 'file' ? 'reading.source.file' : 'reading.source.note', { target: s.target });
+    : word(`reading.source.${s.kind}`, { target: s.target });
 
 const and = (xs: readonly string[]) => formatList([...xs]);
 
@@ -199,12 +206,12 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
       return refuse(
         source,
         'missing',
-        word(kind === 'file' ? 'reading.source.missing-file' : 'reading.source.missing-note', { name, graph }),
+        word(kind !== 'note' ? 'reading.source.missing-file' : 'reading.source.missing-note', { name, graph }),
       );
     const one = elsewhere.length === 1,
       places = and(elsewhere);
     const there =
-      kind === 'file'
+      kind !== 'note'
         ? word(one ? 'reading.source.file-elsewhere' : 'reading.source.files-elsewhere', { places })
         : word(one ? 'reading.source.note-elsewhere' : 'reading.source.notes-elsewhere', { places });
     return refuse(source, 'moved', word('reading.source.moved', { name, there, place: `${elsewhere[0]}` }));

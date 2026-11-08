@@ -92,6 +92,29 @@ function pack(stage, out, short, version) {
   return file;
 }
 
+// The graph spec with its version and its conformance cases, in the package's spec folder (spec_version_released).
+function stageSpec(dir) {
+  mkdirSync(join(dir, 'conformance'), { recursive: true });
+  for (const file of [
+    'graph-spec.gql',
+    'graph-spec-version.json',
+    'graph-spec-grammar.json',
+    'graph-spec-canonical.md',
+    'graph-spec-library-api.json',
+    'graph-spec-problem-codes.json',
+    'graph-spec-formats.json',
+    'graph-spec-ai-wire.json',
+    'graph-spec-decisions.json',
+    'graph-spec-glossary.json',
+    'graph-spec-engine-catalogue.json',
+  ])
+    copyFileSync(join(ROOT, 'requirements', file), join(dir, file));
+  copyFileSync(join(ROOT, 'LICENSE-SPEC.md'), join(dir, 'LICENSE-SPEC.md'));
+  const cases = join(ROOT, 'python/graph_spec/conformance/Standards');
+  for (const file of readdirSync(cases).filter((name) => name.endsWith('.md')))
+    copyFileSync(join(cases, file), join(dir, 'conformance', file));
+}
+
 async function stageGraphSpec(stage, version) {
   const pkg = PACKAGES[0];
   const src = join(ROOT, 'packages/graph-spec/src');
@@ -103,6 +126,7 @@ async function stageGraphSpec(stage, version) {
   for (const file of ['graph-layout.js', 'graph-spec.d.ts', 'graph-layout-types.d.ts'])
     copyFileSync(join(src, file), join(stage, file));
   common(stage, pkg, version);
+  stageSpec(join(stage, 'spec'));
   const fields = {
     type: 'commonjs',
     main: 'graph-spec-check.js',

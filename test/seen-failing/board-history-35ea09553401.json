@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/board-history.test.js",
+  "test": "the change log > records an author and undoes only that person’s change",
+  "seen_failing_first": false,
+  "evidence": "the module's behaviour was already proved by test/board-together.test.js; this file only gives it a test named after it"
+}

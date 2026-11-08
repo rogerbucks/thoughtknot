@@ -3,8 +3,12 @@
 // What the server tells Claude alone, or answers to a request its page never makes, stays in the code
 // (words-in-code.test.js). source-words.ts keeps these with every other word.
 
+import { REPO_SOURCE_WORDS } from './repo-source-words.ts';
+
 /** The editor server's own words, by key, in UK English. */
 export const SERVER_SOURCE_WORDS = {
+  // graphs kept in a GitHub repository, said by every host that keeps them there (repo-source-words.ts)
+  ...REPO_SOURCE_WORDS,
   'server.no-version-of-note': 'No such version of this note.',
   'server.no-change': 'No such change.',
   'server.note-changed':
@@ -43,6 +47,10 @@ export const SERVER_SOURCE_WORDS = {
   'server.drafts-in-vault': 'The drafts folder must be outside the vault, in the mod’s own data folder.',
   'server.export.not-json': 'The request is not JSON.',
   'server.export.no-files': 'The request holds no files.',
+  'server.vault-preset.not-json': 'The request is not JSON.',
+  'server.vault-preset.bad-id': 'The request names no starter preset. Send the id of one, or null for none.',
+  'server.vault-preset.link': 'The vault’s preset file is a link or not a file, so it was left as it is.',
+  'server.vault-preset.not-written': 'The vault’s preset could not be written: {why}',
   'server.export.too-many': 'An export holds at most {most} files.',
   'server.export.named-twice': '{name} is named twice.',
   'server.export.text-or-bytes': '{name} needs its text or its bytes, one of them.',

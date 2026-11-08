@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/csv-mapping.test.js",
+  "test": "a long cell names and reads at once, with no pattern that runs slow on it (js/polynomial-redos)",
+  "seen_failing_first": false,
+  "evidence": "Added after the fix in 527d0cd, which CodeQL found; the test keeps the slow patterns from coming back."
+}

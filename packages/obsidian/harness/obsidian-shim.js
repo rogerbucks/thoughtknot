@@ -1,5 +1,6 @@
 // A browser stand-in for the obsidian module, for looking at the plugin in an ordinary page (build.mjs). It adds
-// Obsidian's element helpers to the DOM and draws icons as their names. Not Obsidian: one note in memory as the vault, and no settings page or command palette.
+// Obsidian's element helpers to the DOM and draws icons as characters; the harness draws them as pictures
+// (demo-shim.js). Not Obsidian: one note in memory as the vault, and no settings page or command palette.
 const P = HTMLElement.prototype,
   S = SVGElement.prototype;
 function info(e, o = {}) {
@@ -107,6 +108,9 @@ export class Component {
   }
   registerEvent() {}
 }
+/** Bases' view base class, for the plugin to extend; the page never makes one. */
+export class BasesView extends Component {}
+
 export class MarkdownRenderChild extends Component {
   constructor(el) {
     super();
@@ -240,6 +244,10 @@ export class Plugin extends Component {
   registerView(type, f) {
     views.set(type, f);
   }
+  // the page has no Bases: a Bases view is not added, as in a vault with Bases turned off
+  registerBasesView() {
+    return false;
+  }
   registerEditorExtension(ext) {
     editorExtensions.push(...(Array.isArray(ext) ? ext : [ext]));
   }
@@ -252,7 +260,9 @@ export class Plugin extends Component {
   }
   removeCommand() {}
   async loadData() {
-    return null;
+    // settings may be given in the page's address, as ?settings={"newRendering":"on"}, so the scoreboard can turn one on
+    const given = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('settings');
+    return given ? { settings: JSON.parse(given) } : null;
   }
   async saveData() {}
 }
@@ -417,6 +427,7 @@ export class Menu {
     return this;
   }
 }
+/** Obsidian's icons as characters, for a page built on this shim alone. One it has none for is a square, never its name. */
 const GLYPH = {
   'zoom-in': '+',
   'zoom-out': '−',
@@ -432,7 +443,7 @@ const GLYPH = {
 export function setIcon(el, icon) {
   el.setAttribute('data-icon', icon);
   el.prepend(
-    Object.assign(document.createElement('span'), { className: 'harness-icon', textContent: GLYPH[icon] ?? icon }),
+    Object.assign(document.createElement('span'), { className: 'harness-icon', textContent: GLYPH[icon] ?? '□' }),
   );
 }
 export function setTooltip(el, t) {

@@ -14,8 +14,17 @@ import { sha256 } from './ai-digest.ts';
 import { gqlBlocks } from './fences.ts';
 import { parseValue, setProperty } from './inspector.ts';
 import type { Edit, PropType } from './inspector.ts';
-import { noteRowsPaced } from './mesh-index-rows.ts';
-import type { MeshIndex } from './mesh-index.ts';
+import { dataTooLarge, noteRowsPaced } from './mesh-index-rows.ts';
+import { PARTS_LIMITS } from './layout-limits.ts';
+import type { Refusal } from './layout-limits.ts';
+import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
+import { facetsOf } from './facet-counts.ts';
+import type { Facet } from './facet-counts.ts';
+import { PartsSource, nearFrom } from './parts-source.ts';
+import { rowsKeptOrRead } from './parts-kept.ts';
+import type { KeptPlace } from './parts-kept.ts';
+import type { LinksNear } from './parts-source.ts';
+import type { Grouping } from './scale-groups.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
 import { styleOf } from './blocks.ts';
 import { readStyle } from './style.ts';
@@ -29,6 +38,21 @@ export interface StoredGraph {
   props: (key: string) => Readonly<Record<string, unknown>>;
   /** Its things and links as the style checks read a graph: each thing by its kind, each link without properties. */
   world: () => gs.Graph;
+  /**
+   * Read in parts: its groups as the store found them, and its links, read from the store as they are needed. The
+   * drawing then holds its things but none of its links (scale_parts_overview).
+   */
+  parts: StoredParts;
+}
+
+/** A graph read in parts: its groups, each group's inside, and the links near some things, all from the store. */
+export interface StoredParts {
+  grouping: Grouping;
+  /** A group's things and the links inside it, to lay out on its own; null once the store holds other text. */
+  group: (id: string) => GraphDrawing | null;
+  near: LinksNear;
+  /** Its filters, each property's value by thing in the drawing's order, read from the store a group at a time. */
+  facets: () => Facet[];
 }
 
 /** A graph as the graph library's rules read one, from things (key, kind, properties) and links. */
@@ -47,51 +71,135 @@ function plainGraph(things: [string, string, Record<string, gs.Value>][], edges:
   };
 }
 
+/** Why a note is too large to read even in parts, naming the limit it is over; null when it is not. */
+export const partsRefusal = (text: string): Refusal | null => dataTooLarge(gqlBlocks(text), PARTS_LIMITS);
+
 /**
  * The graphs of a note, from the store. The note is read into the store first, if the store does not hold this text.
  * A huge note is read a part at a time. Between parts it waits on `pause`, which the host gives, so the page keeps
- * answering (§9). Empty
- * when no graph of it could be read, or the note changed while it was read.
+ * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read. Empty when it is
+ * past what is read in parts, no graph of it could be read, or the note changed while it was read.
  */
 export async function storedGraphs(
   ix: MeshIndex,
   note: string,
   text: string,
   pause: () => Promise<void>,
+  kept?: KeptPlace,
 ): Promise<Map<string, StoredGraph>> {
-  if (ix.version(note) !== sha256(text)) ix.backend.put(await noteRowsPaced(note, text, pause));
+  // past what the store reads in parts, nothing is read (scale_parts_budget): partsRefusal says why
+  if (partsRefusal(text)) return new Map();
+  // rows kept from an earlier session for this text are used, so the note is not read again (scale_parts_kept)
+  if (ix.version(note) !== sha256(text))
+    ix.backend.put(await rowsKeptOrRead(kept, note, text, () => noteRowsPaced(note, text, pause)));
   const out = new Map<string, StoredGraph>();
   if (ix.version(note) !== sha256(text)) return out;
-  const { groups } = ix.groups(note);
+  const { groups, between } = ix.groups(note);
   const byGraph = new Map<string, string[]>();
   for (const g of groups) byGraph.set(g.graph, [...(byGraph.get(g.graph) ?? []), g.id]);
-  const links = ix.backend.links(note);
+  const version = sha256(text);
   for (const [graph, ids] of byGraph) {
-    const things = ix.backend.things(note, ids).filter((t) => t.graph === graph);
-    const props = new Map(things.map((t) => [t.key, t.props]));
-    const parsed = new Map<string, Record<string, unknown>>();
+    // only what the overview draws is held: each thing's properties stay in the store (scale_parts_find_filter)
+    const things = ix.backend
+      .things(note, ids)
+      .filter((t) => t.graph === graph)
+      .map((t) => ({ key: t.key, kind: t.kind, text: t.text, group: t.group }));
+    const source = new PartsSource(ix, note, graph, version);
+    const linksOf = () => ix.backend.links(note).filter((l) => l.graph === graph);
+    const props = propsInParts(ix, note, graph, new Map(things.map((t) => [t.key, t.group])));
     out.set(graph, {
-      drawing: {
-        graph,
-        boxes: things.map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
-        links: links
-          .filter((l) => l.graph === graph)
-          .map((l) => ({ from: l.from, type: l.type, reading: l.reading, to: l.to })),
-        estimates: [],
+      drawing: nearFrom(
+        {
+          graph,
+          boxes: things.map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
+          links: [],
+          estimates: [],
+        },
+        source.near,
+      ),
+      parts: {
+        grouping: groupingOf(
+          groups.filter((g) => g.graph === graph),
+          between,
+          things,
+        ),
+        group: (id) => {
+          const part = source.group(id);
+          source.letGo(id); // the overview keeps the group's marks once laid out, never its rows
+          return part;
+        },
+        near: source.near,
+        facets: () => facetsInParts(things, props),
       },
-      // read from its JSON only when a filter asks for it
-      props: (key) => {
-        if (!parsed.has(key)) parsed.set(key, JSON.parse(props.get(key) ?? '{}') as Record<string, unknown>);
-        return parsed.get(key) ?? {};
-      },
+      props,
       world: () =>
         plainGraph(
-          things.map((t) => [t.key, t.kind, JSON.parse(t.props) as Record<string, gs.Value>]),
-          links.filter((l) => l.graph === graph).map((l) => [l.from, l.type, l.to, {}]),
+          things.map((t) => [t.key, t.kind, props(t.key) as Record<string, gs.Value>]),
+          linksOf().map((l) => [l.from, l.type, l.to, {}]),
         ),
     });
   }
   return out;
+}
+
+/**
+ * A thing's properties, read from the store by its group. Only the rows of the group read last are held. So reading
+ * every thing, a group after another, reads each group once (scale_parts_find_filter).
+ */
+function propsInParts(
+  ix: MeshIndex,
+  note: string,
+  graph: string,
+  groupOf: ReadonlyMap<string, string>,
+): (key: string) => Readonly<Record<string, unknown>> {
+  let held: { group: string; rows: Map<string, string> } | null = null;
+  return (key) => {
+    const group = groupOf.get(key);
+    if (group === undefined) return {};
+    if (held?.group !== group) {
+      const rows = ix.backend.things(note, [group]).filter((t) => t.graph === graph);
+      held = { group, rows: new Map(rows.map((t) => [t.key, t.props])) };
+    }
+    return JSON.parse(held.rows.get(key) ?? '{}') as Record<string, unknown>;
+  };
+}
+
+/**
+ * The filters of a graph read in parts: what facetsOf gives for `things`, with their properties read a group at a time.
+ * The things are read group by group and the columns put back in the drawing's order, so the answers are the same.
+ */
+function facetsInParts(
+  things: readonly { key: string; kind: string; group: string }[],
+  props: (key: string) => Readonly<Record<string, unknown>>,
+): Facet[] {
+  const order = things.map((_, i) => i);
+  const rank = new Map<string, number>();
+  for (const t of things) if (!rank.has(t.group)) rank.set(t.group, rank.size);
+  order.sort((a, b) => (rank.get(things[a]?.group ?? '') ?? 0) - (rank.get(things[b]?.group ?? '') ?? 0) || a - b);
+  return facetsOf(
+    order.map((i) => things[i] as (typeof things)[number]),
+    props,
+  ).map((f) => {
+    const values = new Array<string | undefined>(things.length);
+    order.forEach((i, at) => (values[i] = f.values[at]));
+    return { ...f, values };
+  });
+}
+
+/** The groups of a graph as the store holds them, each with its things' keys, and the links between them counted. */
+function groupingOf(groups: GroupRow[], between: BetweenRow[], things: { key: string; group: string }[]): Grouping {
+  const keys = new Map<string, string[]>(groups.map((g) => [g.id, []]));
+  for (const t of things) keys.get(t.group)?.push(t.key);
+  const at = new Map(groups.map((g, i) => [g.id, i]));
+  return {
+    by: groups[0]?.by ?? 'links',
+    groups: groups.map((g) => ({ id: g.id, label: g.label, by: g.by, keys: keys.get(g.id) ?? [] })),
+    between: between.flatMap((b) => {
+      const from = at.get(b.from),
+        to = at.get(b.to);
+      return from === undefined || to === undefined ? [] : [{ from, to, links: b.links }];
+    }),
+  };
 }
 
 /**

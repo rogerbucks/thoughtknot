@@ -2,6 +2,9 @@
 hooks/graph.js
 bin/render.mjs
 bin/editor-server.mjs
+bin/record.mjs
+bin/mcp.mjs
+bin/mcp-page.html
 page/
 tests/fixtures.js
 # Written by Claude Code when it loads the mod

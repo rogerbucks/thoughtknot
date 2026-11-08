@@ -3,7 +3,7 @@ risk ARCH-5).
 
 The JavaScript reader and this library's are kept by hand, each to its own code. The listed cases
 catch a drift only where a case was written for it. Here statements are made at random from one
-small grammar, packages/graph-spec/test/statement-grammar.json, and some are mutated: a character
+small grammar, requirements/graph-spec-grammar.json, and some are mutated: a character
 dropped, doubled or swapped, or the end cut off. Each block is read by both readers. Both must
 refuse it with the same code on the same line, or read it to the same canonical graph.
 
@@ -26,7 +26,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-GRAMMAR = os.path.join(ROOT, "packages", "graph-spec", "test", "statement-grammar.json")
+GRAMMAR = os.path.join(ROOT, "requirements", "graph-spec-grammar.json")
 CHECK = os.path.join(ROOT, "packages", "graph-spec", "src", "graph-spec-check.js")
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 

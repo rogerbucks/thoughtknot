@@ -85,6 +85,7 @@ export function showStoredMassive(
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
     props: stored.props,
+    parts: stored.parts,
     ...(saved ? { chosen: saved } : {}),
     ...(read ? { painter: renderFor(read.style).painter } : {}),
     ...(at

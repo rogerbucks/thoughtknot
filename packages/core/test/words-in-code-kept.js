@@ -28,6 +28,8 @@ export const CORE_KEPT = {
   'packages/core/src/settings-language.ts': '*',
   'packages/core/src/settings-pictures.ts': '*',
   'packages/core/src/settings-typing.ts': '*',
+  'packages/core/src/settings-reach.ts': '*',
+  'packages/core/src/settings-own.ts': '*',
   // what each open number governs, for a developer reading the register: no host shows it
   'packages/core/src/thresholds.ts': '*',
   // what each design token is for, and why a plug-in's token is refused: for a theme's or a plug-in's developer
@@ -35,6 +37,9 @@ export const CORE_KEPT = {
   // the contract suites a plug-in's or a backend's developer runs: their test cases and what each wanted
   'packages/core/src/plugins-contract.ts': '*',
   'packages/core/src/storage-contract.ts': '*',
+  // the history contract, a developer's error, and the heading of a history note: bytes kept as written, never said
+  'packages/core/src/history-store.ts': '*',
+  'packages/core/src/history-contract.ts': '*',
   // why an extension point refuses what a plug-in adds, or its manifest, or its file: told to its developer
   'packages/core/src/plugin-points.ts': '*',
   'packages/core/src/plugin-versions.ts': '*',

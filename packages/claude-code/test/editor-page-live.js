@@ -14,6 +14,7 @@ import { Exporter, withExport } from '../server/export-api.ts';
 import { loadPageAssets, PLUGIN_START } from '../server/page-assets.ts';
 import { pagePlugins, withPlugins } from '../server/page-plugins.ts';
 import { withSettings } from '../server/page-settings.ts';
+import { VaultPresetApi, withVaultPreset } from '../server/vault-preset-api.ts';
 import { startEditorServer } from '../server/start-server.ts';
 import { built } from './editor-page-support.js';
 import { handWatch } from './editor-store-support.js';
@@ -58,7 +59,9 @@ export async function livePage(
         notePath: (id) => store.pathOf(id),
       })
     : null;
-  const api = exporter ? withExport(exporter, store.api) : store.api;
+  const exported = exporter ? withExport(exporter, store.api) : store.api;
+  // the vault's view preset is the one setting the page writes, as the shipped server allows (vault-preset-api.ts)
+  const api = withVaultPreset(new VaultPresetApi(store.vault), exported);
   // with `plugins`, the server serves the plug-ins turned on in the vault, as the shipped one does (page-plugins.ts)
   const served = plugins ? await pagePlugins(vault, readFileSync(join(dir, PLUGIN_START), 'utf8')) : null;
   const server = await startEditorServer({
@@ -146,6 +149,8 @@ export async function livePage(
     },
     stop: async () => {
       for (const a of aborts) a.abort();
+      // a worker made from now on is ended as it starts (the test's worker stand-ins look at this)
+      window.stopped = true;
       window.close();
       await stopWorkers();
       await server.stop();

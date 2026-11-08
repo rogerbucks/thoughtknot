@@ -275,6 +275,7 @@ describe('every host’s whole interface passes the services contract', () => {
  */
 const WRITERS = [
   'packages/claude-code/server/note-file.ts',
+  'packages/claude-code/server/vault-preset-api.ts',
   'packages/obsidian/src/export/vault-write.ts',
   'packages/obsidian/src/outside/outside-plugins.ts',
   'packages/obsidian/src/storage/vault-storage.ts',

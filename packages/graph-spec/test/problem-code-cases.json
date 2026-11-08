@@ -16,6 +16,12 @@
       "code": "GN106"
     },
     {
+      "name": "a block written to a newer major Graph Spec",
+      "via": "store",
+      "block": "// graph: g · spec 2.0\n(a:T)",
+      "code": "GN107"
+    },
+    {
       "name": "an escape GQL does not name",
       "via": "store",
       "block": "// graph: g\n(a:T {v: 'a\\qb'})",

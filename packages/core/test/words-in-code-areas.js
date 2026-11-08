@@ -164,6 +164,11 @@ export const KEPT = {
   // what the editor server tells Claude alone: the answers to Claude's propose tool and the key it proposes with
   'packages/claude-code/server/editor-proposals.ts': '*',
   'packages/claude-code/bin/propose-process.ts': '*',
+  // what the MCP server's tools are and its protocol's errors, which only Claude and its host read (§49); the person's
+  // words come from the catalogue
+  'packages/claude-code/src/mcp-server.ts': '*',
+  // a request only the mod sends, refused when it cannot be read: no person makes one (§49)
+  'packages/claude-code/bin/record-process.ts': '*',
   'packages/claude-code/server/editor-store.ts': ['This key proposes changes and does nothing else.'],
   // refusals of a request the editor's own page never makes, so no person reads them, and a developer's error
   'packages/claude-code/server/request-guard.ts': '*',
@@ -185,6 +190,16 @@ export const KEPT = {
     '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ',
     '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ',
     'a Model or a Step. "read" lists what you read, if you say so.',
+    // what show, present and decide are, which only Claude reads (§49)
+    'Show the graph of a note in the ThoughtKnot pane, or turn it to things, links, a path or a lens you name. ',
+    'Nothing in the note changes. "note" is its path. Things are node names; links are {from, type, to}; "path" is a ',
+    'path id; "lens" is a saved lens or a query such as "Option WHERE price < 3". A note above your level is not shown.',
+    'Walk the person through the graph of a note in the ThoughtKnot pane, one step at a time. Each step names the ',
+    'things and links to pick out and a short caption. The person moves with Next and Back. Every name must be in the ',
+    'graph, or nothing is shown and you are told which.',
+    'Ask the person a question about the graph of a note, in the ThoughtKnot pane, with two to six options, each tied ',
+    'to things in the graph. Only the person answers. You get back the option they picked and their reason, or that ',
+    'they chose none. Their answer is kept in the note as a decision.',
   ],
   // the departures in UK English, held equal to their settings words by settings-words.test.js, which translate them
   'packages/core/src/strictness.ts': [
@@ -214,6 +229,20 @@ export const KEPT = {
   // the first line of a change set and of a judgement block, written into the note: its bytes, never translated
   'packages/core/src/proposals-text.ts': ['// graph: {} · CHANGE SET {} · against {} · by {}'],
   'packages/core/src/proposals-judgement.ts': ['// graph: judgements\n{}'],
+  // the GQL a decision is kept as, and the change set it is checked as, which the graph spec reads (§49)
+  'packages/core/src/decision-recorded.ts': [
+    '// graph: judgements\n{}',
+    'against sha-256-64:{} · by {}\n// proposed: {}\n{}',
+  ],
+  // the style sheet that picks out a step, and the GQL a kept presentation is written as (§49)
+  'packages/core/src/presentation.ts': [
+    '{}, {} { opacity: 0.25; transition: opacity 0.3s; }',
+    '{} > path, {} > polygon, {} > ellipse',
+    '@media (prefers-reduced-motion: reduce) { .thoughtknot-image .node, .thoughtknot-image .edge { transition: none; } }',
+    '({}:Slide {order: {}, caption: {}, things: {}, ',
+  ],
+  // the graph line of a table's mapping file, read by ThoughtKnot to find the mapping: its bytes, never translated
+  'packages/core/src/csv-mapping.ts': ['// graph: mapping'],
   // what the model is told and asked, which only the model reads: the instructions and the head of the graph's fence
   'packages/core/src/ai-request.ts': [
     'You help edit a graph written in GQL in a note. You are shown the part of the graph the user chose, and their question.',

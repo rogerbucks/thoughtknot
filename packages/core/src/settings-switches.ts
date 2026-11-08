@@ -17,6 +17,19 @@ function switchOption(key: keyof Settings, name: string, sentence: string): Opti
   };
 }
 
+/** Whether graphs with levels are drawn by the new rendering, (ES§73, render_switch). On until turned off. */
+export const RENDER_OPTION: Option = {
+  key: 'newRendering',
+  section: 'Drawing',
+  name: 'New rendering',
+  sentence:
+    'Draws graphs that have subjects and areas with the new rendering: clouds, roads and names, one level per scroll step. On unless you turn it off; off draws them as before.',
+  choices: [
+    { value: 'off', name: 'Off' },
+    { value: 'on', name: 'On' },
+  ],
+};
+
 /** The switches' options, in the order the settings page shows them. */
 export const SWITCH_OPTIONS: Option[] = [
   switchOption(
@@ -54,4 +67,5 @@ export const SWITCH_OPTIONS: Option[] = [
     'Draw notes as callouts',
     'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.',
   ),
+  RENDER_OPTION,
 ];

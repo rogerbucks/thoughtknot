@@ -342,7 +342,12 @@ export function renderLensChoice(
   svg: () => SVGSVGElement | null,
   picked?: () => void,
 ): HTMLSelectElement {
-  const row = menu.createEl('label', { cls: 'thoughtknot-lens-choice', text: word('view.lens'), attr: LENS_ROW }),
+  // its hint is its tooltip too, shown only on hover where a pointer hovers (panels_compact)
+  const row = menu.createEl('label', {
+      cls: 'thoughtknot-lens-choice',
+      text: word('view.lens'),
+      attr: { ...LENS_ROW, title: word('view.hint.lens') },
+    }),
     input = row.createEl('select');
   for (const l of LENSES) input.createEl('option', { text: word(`view.lens.${l}` as WordKey), attr: { value: l } });
   row.createDiv({ cls: 'thoughtknot-switch-hint', text: word('view.hint.lens') });

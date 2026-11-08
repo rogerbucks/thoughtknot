@@ -9,6 +9,23 @@ fn main() {
         "remove_file",
         "make_dir",
         "write_new",
+        "pick_target",
+        "swap_folders",
+        "run_gh",
+        "mesh_listen",
+        "mesh_accept",
+        "mesh_dial",
+        "mesh_send",
+        "mesh_receive",
+        "mesh_close",
+        "crdt_open",
+        "crdt_text",
+        "crdt_splice",
+        "crdt_merge",
+        "crdt_has_been",
+        "crdt_anchor",
+        "crdt_place",
+        "crdt_history",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()

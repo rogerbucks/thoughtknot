@@ -1,0 +1,28 @@
+{
+  "about": "The Graph Spec's version (editor spec §51, spec_versioned). The rules are requirements/graph-spec.gql. A change to the rules makes a new version: a line below with the decision that made it, the owner's approval and the rules' new hash, which 'node scripts/graph-spec-version.mjs --hash' prints. test/graph-spec-version.test.js fails a change to the rules without one. A newer major version is one a reader of the older major refuses (GN107).",
+  "version": "1.1",
+  "changelog": [
+    {
+      "version": "1.0",
+      "date": "2026-11-05",
+      "what": "The first numbered version: the 212 rules as the owner froze them on 19 Oct 2026, with the axioms of section 28 added on 28 Oct 2026.",
+      "decision": "Panel review group B, graph-spec-review: version the spec as Graph Spec 1.0",
+      "approved_by": "Roger Bucks",
+      "rules_hash": "sha-256:a14ad627bc78cbaaf79c026c1f928d7a379eae73368386193a00e75aa043827e"
+    },
+    {
+      "version": "1.1",
+      "date": "2026-11-06",
+      "what": "One removal rule (a change set may remove or change anything but a record or a cache) and one place that states who proposed. Six display rules: local ids shown with their graph, corrected judgements, AI challenges only when asked, gentle shown names, likelihood words with their range, and a one-sentence altitude.",
+      "decision": "Digest D5-D7: GS5 #781, gentle words #784, display rules #785",
+      "approved_by": "Roger Bucks",
+      "rules_hash": "sha-256:444f92f1cc10470b533e598ca1af07bd63e206bb25b659287f13272fac4b8bab"
+    }
+  ],
+  "withdrawn": [
+    {
+      "section": "2",
+      "note": "The graph spec has no section 2. The number is kept as withdrawn, so every citation of the other sections stays true."
+    }
+  ]
+}

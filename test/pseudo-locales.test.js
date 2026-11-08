@@ -269,10 +269,15 @@ const CLIPS = {
     'a link’s reading, one line of the details; its full words are read out and in the drawing',
   '.thoughtknot-link-row button.thoughtknot-link-thing':
     'a linked thing, one line of the details; its full name is its button’s words, read out whole',
+  '.thoughtknot-drawing-bar':
+    'a thin bar that runs while a long graph is drawn; it holds no words, and clips only its stripe',
 };
 
 /** The rules with a fixed width that hold no words, each with why. */
 const HOLDS_NO_WORDS = {
+  '.thoughtknot-glyph': 'a type’s picture in the side rail; its name is its button’s words, or beside it',
+  '.thoughtknot-rail .thoughtknot-rail-button .thoughtknot-glyph':
+    'a type’s picture on a rail button, named by its label',
   '.thoughtknot-swatch': 'a line in a colour of the drawing',
   '.thoughtknot-rule-line': 'a sample of a rule’s line; its words sit beside it',
   '.thoughtknot-rule-swatch': 'a dot in a colour a rule may take; its name is the button’s label',
@@ -281,6 +286,7 @@ const HOLDS_NO_WORDS = {
   '.gn-icon': 'an icon',
   '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',
   '.thoughtknot-switch-track::before': 'the toggle’s knob',
+  '.thoughtknot-table-scroll::-webkit-scrollbar': 'the table’s scroll bar; it holds no words',
   '.is-dock-left > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
   '.is-dock-right > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
   '.is-dock-bottom > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',

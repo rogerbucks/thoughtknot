@@ -321,7 +321,9 @@ async function main(argv) {
     const out = argv[argv.indexOf('--lcov-out') + 1];
     const run = (await import('./quality-suite.mjs')).measureCoverage(ROOT, argv[shardAt + 1]);
     if (!run.passed) {
-      console.error(`the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}`);
+      console.error(
+        `the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}\n${(run.said ?? '').slice(-4000)}`,
+      );
       return 1;
     }
     writeFileSync(out, run.lcov);
@@ -358,7 +360,9 @@ async function main(argv) {
   } else if (coverage) {
     const run = (await import('./quality-suite.mjs')).measureCoverage(ROOT);
     if (!run.passed) {
-      console.error(`the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}`);
+      console.error(
+        `the suite fails, so its coverage means nothing: ${run.stderr.trim().split('\n').at(-1)}\n${(run.said ?? '').slice(-4000)}`,
+      );
       return 1;
     }
     console.log(`coverage: ${JSON.stringify(run.metrics)}`);

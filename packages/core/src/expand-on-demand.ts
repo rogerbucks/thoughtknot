@@ -7,7 +7,9 @@
 //
 // Host-free and pure: it reads the drawing, and never changes it.
 import { adjacency, edgesOf } from './focus.ts';
-import type { GraphDrawing } from './note-reading.ts';
+import type { GraphDrawing, Link } from './note-reading.ts';
+import { linksNear } from './parts-source.ts';
+import type { LinksNear } from './parts-source.ts';
 
 /** The most things one step adds: more is a crowd, not an answer. */
 export const RING_MOST = 60;
@@ -23,11 +25,19 @@ export class Expansion {
   private readonly drawing: GraphDrawing;
   private readonly adj: Map<string, [number, string][]>;
   private readonly kept: Set<string>;
+  private readonly near: LinksNear | undefined;
+  /** With `near`: the things whose links are read, and the links read, by `edge`. */
+  private readonly asked = new Set<string>();
+  private readonly read = new Map<number, Link>();
 
-  /** An expansion of `drawing` from thing `from`. */
-  constructor(drawing: GraphDrawing, from: string) {
+  /**
+   * An expansion of `drawing` from thing `from`. With `near`, or for a drawing read in parts, its links are not read.
+   * Each thing's links come from `near` when a step reaches it.
+   */
+  constructor(drawing: GraphDrawing, from: string, near?: LinksNear) {
     this.drawing = drawing;
-    this.adj = adjacency(edgesOf(drawing));
+    this.near = near ?? linksNear(drawing);
+    this.adj = this.near ? new Map<string, [number, string][]>() : adjacency(edgesOf(drawing));
     this.rings = [[from]];
     this.cut = [0];
     this.kept = new Set([from]);
@@ -54,6 +64,7 @@ export class Expansion {
    */
   grow(): string[] {
     const last = this.rings.at(-1) ?? [];
+    this.ask(last);
     const found = new Map<string, number>();
     for (const at of last)
       for (const [, other] of this.adj.get(at) ?? [])
@@ -81,7 +92,33 @@ export class Expansion {
 
   /** The drawing cut down to the things kept and the links among them, to lay out on its own. */
   part(): GraphDrawing {
-    return partOf(this.drawing, this.kept);
+    if (!this.near) return partOf(this.drawing, this.kept);
+    this.ask([...this.kept]);
+    const links = [...this.read.values()].filter((l) => this.kept.has(l.from) && this.kept.has(l.to));
+    return {
+      ...partOf({ ...this.drawing, links: [] }, this.kept),
+      links: links.sort((a, b) => (a.edge ?? 0) - (b.edge ?? 0)),
+    };
+  }
+
+  /** With `near`, reads the links of those of `keys` not asked about yet, each link once. */
+  private ask(keys: readonly string[]): void {
+    if (!this.near) return;
+    const fresh = keys.filter((k) => !this.asked.has(k));
+    if (!fresh.length) return;
+    for (const k of fresh) this.asked.add(k);
+    for (const l of this.near(fresh)) {
+      const n = l.edge ?? -1;
+      if (this.read.has(n)) continue;
+      this.read.set(n, l);
+      const add = (at: string, other: string) => {
+        const list = this.adj.get(at);
+        if (list) list.push([n, other]);
+        else this.adj.set(at, [[n, other]]);
+      };
+      add(l.from, l.to);
+      if (l.to !== l.from) add(l.to, l.from);
+    }
   }
 }
 

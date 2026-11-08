@@ -5,6 +5,7 @@ import { sha256 } from './ai-digest.ts';
 import { dataKind } from './blocks.ts';
 import { gqlBlocks } from './fences.ts';
 import { textTooLarge } from './layout-limits.ts';
+import type { ReadLimits, Refusal } from './layout-limits.ts';
 import { namedKeys, readInParts, readInPartsPaced, readWhole } from './note-parts.ts';
 import type { GraphRead, PartItem } from './note-parts.ts';
 import type { Link } from './note-reading.ts';
@@ -87,6 +88,10 @@ export interface MeshBackend {
   groups(note: string): { groups: GroupRow[]; between: BetweenRow[] };
   things(note: string, groups: readonly string[]): ThingRow[];
   links(note: string): LinkRow[];
+  /** The links with both ends in group `group`, in order. Without it they are found among all the note's links. */
+  inside?(note: string, group: string): LinkRow[];
+  /** The links with an end among `keys`, each once, in order. Without it they are found among all the note's links. */
+  touching?(note: string, keys: readonly string[]): LinkRow[];
 }
 
 /** A page of things: those after `after` (a key), at most `limit` of them. */
@@ -169,8 +174,14 @@ export async function noteRowsPaced(note: string, text: string, pause: () => Pro
 }
 
 /** Whether a note's blocks are past the read limits, measured as the reader measures them. */
-const tooLarge = (blocks: { text: string }[]): boolean =>
-  textTooLarge(blocks.map((b) => b.text).filter((t) => typeof dataKind(t) === 'string')) !== null;
+const tooLarge = (blocks: { text: string }[]): boolean => dataTooLarge(blocks) !== null;
+
+/** Whether a note's data blocks are past `limits`, and which, measured as the reader measures them. */
+export const dataTooLarge = (blocks: { text: string }[], limits?: ReadLimits): Refusal | null =>
+  textTooLarge(
+    blocks.map((b) => b.text).filter((t) => typeof dataKind(t) === 'string'),
+    limits,
+  );
 
 /** The rows of a note's graphs, as read. */
 function rowsOf(note: string, text: string, reading: Map<string, GraphRead>): NoteRows {

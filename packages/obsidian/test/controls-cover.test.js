@@ -1,6 +1,7 @@
 // What the floating controls cover (editor spec §25, controls_uncover). Roger, 1 Nov 2026: the controls lie over the
 // drawing and never shrink it, so a thing chosen must never hide behind them.
 // - Each card covers a strip from the edge nearest it. The docks cover one at the start, the chip one at the top.
+// - A tall panel on a short card covers the start, as the top strip would leave almost nothing clear.
 //   The phone's sheet covers one at the foot.
 // - A card off the drawing or hidden covers nothing; the covers of the cards and the details add up edge by edge.
 // - A thing under the docks is aimed at the clear part, so it glides out from behind them.
@@ -8,10 +9,11 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from './host/fake-dom.js';
 
-let uninstall, coverByCards, widest, Zoom;
+let uninstall, coverByCards, widest, overCover, Zoom, doc;
 before(async () => {
-  uninstall = installGlobals(fakeDocument());
-  ({ coverByCards, widest } = await import('../../core/src/display/graph-view/controls-cover.ts'));
+  doc = fakeDocument();
+  uninstall = installGlobals(doc);
+  ({ coverByCards, widest, overCover } = await import('../../core/src/display/graph-view/controls-cover.ts'));
   ({ Zoom } = await import('../../core/src/zoom.ts'));
 });
 after(() => uninstall());
@@ -28,6 +30,15 @@ test('each floating card covers a strip from the edge nearest it', () => {
   const sheet = box(100, 620, 1000, 130); // the phone's sheet at peek, at the foot
   const mini = box(940, 650, 152, 92); // the mini-map, in the bottom end corner
   assert.deepEqual(coverByCards(view, [docks, sheet, mini]), { top: 0, right: 0, bottom: 130, left: 296 });
+});
+
+// A tall panel on a short card, as the edit pane's: its top strip would leave almost nothing, so it covers the start.
+// proves: controls_uncover
+test('a card covers the strip that leaves the most of the drawing clear, for its width or height', () => {
+  const short = { left: 0, top: 0, right: 594, bottom: 320 };
+  assert.deepEqual(coverByCards(short, [box(8, 8, 322, 293)]), { top: 0, right: 0, bottom: 0, left: 330 });
+  const wide = { left: 0, top: 0, right: 1200, bottom: 400 };
+  assert.deepEqual(coverByCards(wide, [box(0, 0, 500, 100)]), { top: 100, right: 0, bottom: 0, left: 0 });
 });
 
 // proves: controls_uncover
@@ -58,4 +69,18 @@ test('a thing under the docks is aimed at the part they leave clear', () => {
   assert.ok(to, 'kept clear of the docks, it moves');
   const left = to.x + thing.x * 2000 * to.scale;
   assert.ok(left >= 296, `it lands clear of the docks (at ${left})`);
+});
+
+// The level badge lies over the top middle of the drawing, so the fit keeps clear of it too, while it shows.
+// proves: render_chrome_slots
+test('the level badge covers the drawing while it shows, and nothing while it is hidden', () => {
+  const card = doc.body.createDiv({ cls: 'thoughtknot-view' });
+  const viewport = card.createDiv({ cls: 'thoughtknot-viewport' });
+  const at = { left: 0, top: 0, right: 700, bottom: 400 };
+  const none = { top: 0, right: 0, bottom: 0, left: 0 };
+  assert.deepEqual(overCover(viewport, at), none);
+  const badge = viewport.createDiv({ cls: 'thoughtknot-level-badge' });
+  assert.notDeepEqual(overCover(viewport, at), none, 'a badge shown covers a strip');
+  badge.addClass('is-hidden');
+  assert.deepEqual(overCover(viewport, at), none, 'a badge hidden covers nothing');
 });

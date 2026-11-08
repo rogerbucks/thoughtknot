@@ -83,8 +83,8 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 
 ## Zoom — spec §3
 
-- [ ] **Z-01** Desktop: the mouse wheel alone scrolls the note. With Ctrl or Command it zooms about the pointer, and so does a
-      trackpad pinch, a little quicker than the fingers move.
+- [ ] **Z-01** Desktop: the mouse wheel alone zooms about the pointer, and so does a trackpad pinch, a little quicker than
+      the fingers move. With Alt or Option the wheel scrolls the note.
 - [ ] **Z-02** Desktop: dragging empty space pans once zoomed in. Plus, minus and zero work when the drawing has focus.
 - [ ] **Z-03** Phone: one finger on a fitted drawing scrolls the note. A pinch zooms about the fingers, a little quicker than
       they move, and once zoomed in, one finger pans.

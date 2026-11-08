@@ -5,7 +5,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, settled, until } from './host/load-plugin.js';
-import { fence, labelled } from './host/notes.js';
+import { fence, pickType } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
 before(() => build());
@@ -78,11 +78,7 @@ describe('two views of one graph, stacked in one note', () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       const { all } = await both(env);
-      labelled(all, 'Diagram type').click();
-      all
-        .querySelectorAll('.thoughtknot-view-list button')
-        .find((b) => b.textContent === 'Treemap')
-        .click();
+      pickType(all, 'Treemap');
       await until(() => /treemap/.test(env.state.files.get(PATH)));
       await settled();
       const now = env.state.files.get(PATH);
