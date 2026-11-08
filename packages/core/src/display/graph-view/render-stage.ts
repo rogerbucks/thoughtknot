@@ -176,14 +176,17 @@ export class RenderStage {
 
   private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
 
-  /** A smooth zoom for the wheel with Ctrl or Cmd, as a trackpad pinch sends it; plain scrolling is the page's. */
+  /**
+   * A smooth zoom for a mouse wheel with no key held, and for a trackpad pinch, which comes as Ctrl or Cmd and the wheel.
+   * The wheel with Alt or Option, and two fingers dragged on a trackpad, scroll the page (note_still_scrolls).
+   */
   wheel(e: WheelEvent): void {
-    const plain = !e.ctrlKey && !e.metaKey;
+    const pad = !e.ctrlKey && !e.metaKey && fromTrackpad(e);
     // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
-    if (this.hands?.away?.() || (plain && !(fromTrackpad(e) && this.turnBy(-e.deltaX, -e.deltaY)))) return;
+    if (this.hands?.away?.() || e.altKey || (pad && !this.turnBy(-e.deltaX, -e.deltaY))) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!plain && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
+    if (!pad && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
   }
 
   /** Zooms by `how`, keeping the page point `x`, `y` where it is. */

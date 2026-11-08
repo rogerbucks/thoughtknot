@@ -50,7 +50,7 @@ export function laidOut<H extends { own?: OwnColour }>(
     kind === 'ego'
       ? egoOf(shape, scene, undefined, hands?.own)
       : isLaid(kind)
-        ? laidOf(kind, shape, scene, hands?.own)
+        ? laidOf(kind, shape, scene, hands?.own, drawing.diagram)
         : null;
   if (!rings) return { scene, spots: roomsOf(scene, saved), hands };
   return { scene: rings.scene, spots: rings.spots, hands: hands && { ...hands, own: rings.own } };

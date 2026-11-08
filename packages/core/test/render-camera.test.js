@@ -47,7 +47,7 @@ test('a trackpad zooms smoothly: small movements zoom a little each, never a jum
     assert.ok(k >= 1 && k < 1.03, `one small movement zoomed by ${k}`);
   }
   assert.equal(detailAt(sizes, v.scale).level, 2, 'every level is reached');
-  assert.ok(v.scale <= stops.at(-1) * 4 + 1e-9, 'a little past the last level, no further');
+  assert.ok(v.scale <= Math.max(stops.at(-1) * 4, 4) + 1e-9, 'a little past the last level, no further');
   // a mouse's big notch zooms by about half, never a leap
   const notch = wheelView({ ...v, scale: 1 }, [0.1, 10], -100, [400, 300]);
   assert.ok(notch.scale > 1.2 && notch.scale < 1.6, `${notch.scale}`);
@@ -151,4 +151,13 @@ test('zoomed right out, the first level always shows, even where the fit opens t
     assert.ok(v.scale <= fitted, 'never nearer than the fit');
     assert.ok(v.scale >= Math.min(fitted * 0.5, (0.8 * 56) / sizes[1]), 'and no further out than it takes');
   }
+});
+
+// proves: zoom_limits
+test('a drawing in one level, as Matrix or Treemap, still zooms in to four times natural size (Roger, 8 Nov 2026)', () => {
+  // fitted far out, with no deeper level: the only stop is half the fitted zoom
+  let v = { x: 0, y: 0, scale: 0.05, w: 800, h: 600 };
+  const stops = [0.025];
+  for (let i = 0; i < 2000; i++) v = wheelView(v, stops, -100, [400, 300]);
+  assert.equal(v.scale, 4, 'in to four times natural size, as every other drawing may');
 });

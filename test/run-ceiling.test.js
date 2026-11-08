@@ -147,6 +147,13 @@ describe('a test run under the ceiling', () => {
     }
   });
 
+  test('unset, the ceilings are 8 GB, CI’s own, and 20 minutes: the whole suite peaks at about 5.8 GB', async () => {
+    const { ceilings } = await import(pathToFileURL(RUNNER).href);
+    for (const env of [{}, { THOUGHTKNOT_TEST_MEMORY_MB: '', THOUGHTKNOT_TEST_MINUTES: '' }])
+      assert.deepEqual(ceilings(env), { memoryMb: 8192, minutes: 20 });
+    assert.deepEqual(ceilings({ THOUGHTKNOT_TEST_MEMORY_MB: '12288' }), { memoryMb: 12288, minutes: 20 });
+  });
+
   test('a sandbox that refuses ps with EPERM leaves the run to finish under the time and heap ceilings', () => {
     const dir = scratch({
       'refuse-ps.mjs':

@@ -14,6 +14,11 @@ import { unwrapped } from './render-globe.ts';
 const MARGIN = 24;
 /** How far past the last level the zoom may go, as a share of the last level's zoom. */
 const DEEPEST = 4;
+/**
+ * The nearest any drawing may be seen: four times its natural size (zoom_limits). A type drawn in one level, such as
+ * Matrix, has no deeper level. It may still go this near (Roger, 8 Nov 2026).
+ */
+const NATURAL_MOST = 4;
 /** How much one pixel of wheel movement zooms, as a power of e: a trackpad's small movements zoom a little each. */
 const PER_PIXEL = 0.006;
 /** The most one wheel event counts for, in pixels, so a mouse's big notch zooms by about half, never a leap. */
@@ -72,10 +77,10 @@ export function zoomTo(view: View, scale: number, at: [number, number]): View {
   return { ...to, x: view.x + fx / view.scale - px / scale, y: view.y + fy / view.scale - py / scale };
 }
 
-/** `view` zoomed by `ratio` at `at`, kept between the fitted view and a little past the last level. */
+/** `view` zoomed by `ratio` at `at`, kept between the fitted view and a little past the last level, or natural size. */
 function zoomBy(view: View, stops: readonly number[], ratio: number, at: [number, number]): View {
   const least = stops[0] ?? view.scale,
-    most = (stops[stops.length - 1] ?? view.scale) * DEEPEST;
+    most = Math.max((stops[stops.length - 1] ?? view.scale) * DEEPEST, NATURAL_MOST);
   return zoomTo(view, Math.min(most, Math.max(least, view.scale * ratio)), at);
 }
 
