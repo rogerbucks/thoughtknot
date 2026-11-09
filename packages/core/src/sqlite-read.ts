@@ -34,7 +34,34 @@ export const SQLITE_LIMITS = { bytes: 64 * 1024 * 1024, rows: 20_000 };
 
 const MAGIC = 'SQLite format 3\0';
 // every host has it (browsers, Node, Obsidian on phones); the core is typed without the page's names
-declare const TextDecoder: new (label: string) => { decode(b: Uint8Array): string };
+/** Text from UTF-16 bytes, little- or big-endian. */
+function utf16(b: Uint8Array, little: boolean): string {
+  let out = '';
+  for (let i = 0; i + 1 < b.length; i += 2)
+    out += String.fromCharCode(little ? (b[i] ?? 0) | ((b[i + 1] ?? 0) << 8) : ((b[i] ?? 0) << 8) | (b[i + 1] ?? 0));
+  return out;
+}
+
+/** Text from UTF-8 bytes; a byte out of place reads as U+FFFD, as a browser's decoder reads it. */
+function utf8(b: Uint8Array): string {
+  const points: number[] = [];
+  for (let i = 0; i < b.length;) {
+    const c = b[i] ?? 0;
+    const n = c < 0x80 ? 0 : c >= 0xf0 && c < 0xf8 ? 3 : c >= 0xe0 ? 2 : c >= 0xc2 && c < 0xe0 ? 1 : -1;
+    let p = n === 0 ? c : n === 1 ? c & 0x1f : n === 2 ? c & 0x0f : c & 0x07;
+    let ok = n >= 0;
+    for (let k = 1; ok && k <= n; k++) {
+      const d = b[i + k];
+      if (d === undefined || (d & 0xc0) !== 0x80) ok = false;
+      else p = (p << 6) | (d & 0x3f);
+    }
+    points.push(ok && p <= 0x10ffff ? p : 0xfffd);
+    i += ok ? n + 1 : 1;
+  }
+  let out = '';
+  for (let i = 0; i < points.length; i += 4096) out += String.fromCodePoint(...points.slice(i, i + 4096));
+  return out;
+}
 
 class Damaged extends Error {}
 class TooMany extends Error {}
@@ -61,9 +88,16 @@ function layoutOf(bytes: Uint8Array): Layout | SqliteRefusal {
   if (pageSize < 512 || (pageSize & (pageSize - 1)) !== 0 || usable < 480)
     return { why: 'damaged', refused: word('reading.sqlite.damaged') };
   const encoding = view.getUint32(56);
-  const decoder = new TextDecoder(encoding === 2 ? 'utf-16le' : encoding === 3 ? 'utf-16be' : 'utf-8');
+
   const pages = Math.floor(bytes.length / pageSize);
-  return { bytes, view, pageSize, usable, pages, text: (b) => decoder.decode(b) };
+  return {
+    bytes,
+    view,
+    pageSize,
+    usable,
+    pages,
+    text: (b) => (encoding === 2 || encoding === 3 ? utf16(b, encoding === 2) : utf8(b)),
+  };
 }
 
 /** A varint at `at`: its value and the bytes it took. Past 2^53 its value is only near. */

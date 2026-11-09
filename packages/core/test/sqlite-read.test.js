@@ -12,9 +12,9 @@ before(async () => {
 });
 
 /** A database file made by running `sql`, with the page size given. */
-function made(sql, pageSize = 4096) {
+function made(sql, pageSize = 4096, encoding = 'UTF-8') {
   const db = new SQL.Database();
-  db.exec(`PRAGMA page_size = ${pageSize}; VACUUM;`);
+  db.exec(`PRAGMA encoding = '${encoding}'; PRAGMA page_size = ${pageSize}; VACUUM;`);
   db.exec(sql);
   const bytes = db.export();
   db.close();
@@ -43,6 +43,22 @@ describe('sqlite_read_tables', () => {
     assert.deepEqual(t.rows[0], [1, 'Alice Smith', 34, 1.5, new Uint8Array([0, 255]), null]);
     assert.deepEqual(t.rows[1], [7, 'Bob', -300000, 0, null, "two's"]);
     assert.deepEqual(t.rows[2], [9, 'Zoë', '9007199254740993', -2.25, null, '']);
+  });
+
+  test('reads text written in UTF-8 and in UTF-16 of either order, beyond the first plane too', () => {
+    const words = ['Zoë', 'naïve café', '日本語', 'graph 🕸️ knot', ''];
+    for (const encoding of ['UTF-8', 'UTF-16le', 'UTF-16be']) {
+      const rows = words.map((w, i) => `(${i}, '${w}')`).join(',');
+      const t = sqliteTable(
+        made(`CREATE TABLE w (n INT, word TEXT); INSERT INTO w VALUES ${rows};`, 4096, encoding),
+        'w',
+      );
+      assert.deepEqual(
+        t.rows.map((r) => r[1]),
+        words,
+        encoding,
+      );
+    }
   });
 
   test('reads a table over many pages, with text spilling onto overflow pages, in rowid order', () => {
