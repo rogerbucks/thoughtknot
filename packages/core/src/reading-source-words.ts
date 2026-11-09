@@ -144,6 +144,15 @@ export const READING_SOURCE_WORDS = {
     other: '{count} more columns not shown',
   },
   'reading.table.node-no-rows': 'No rows yet',
+  // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
+  'reading.table.fetched-now': '{place} was fetched just now.',
+  'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',
+  'reading.table.fetch-failed': '{place} could not be fetched: showing the copy fetched {age} ago.',
+  'reading.table.fetch-missing': '{place} could not be fetched, and no copy is kept: connect, then fetch it again.',
+  'reading.table.snapshot': '{place} is a snapshot of {from}, kept beside the note: it never changes on its own.',
+  'reading.table.age-minutes': { one: '{count} minute', other: '{count} minutes' },
+  'reading.table.age-hours': { one: '{count} hour', other: '{count} hours' },
+  'reading.table.age-days': { one: '{count} day', other: '{count} days' },
   'reading.table.mapping-said':
     'How {place} becomes things: one {row} for each row. Change a column’s "as" to change what it becomes.',
   'reading.table.faded-not-kept':
