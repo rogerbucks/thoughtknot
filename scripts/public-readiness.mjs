@@ -19,6 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { READ_MOST, historyBlobs } from './history-blobs.mjs';
 import { privateLinkProblems } from './private-links.mjs';
 import { signOffProblems } from './sign-off.mjs';
 import { DESCRIPTION, HOMEPAGE, graphRead, topicsSetting } from './repo-profile.mjs';
@@ -44,7 +45,7 @@ const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|^noreply@anth
  * pull request is judged on its own. `refs: ['--all']` reads every branch and tag, as the check before the repository
  * is made public does.
  */
-export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
+export function historyProblems(root = ROOT, { refs = ['HEAD'], most = READ_MOST } = {}) {
   const found = [];
   const pathOf = new Map();
   const objects = git(root, ['rev-list', '--objects', ...refs]).toString();
@@ -52,13 +53,7 @@ export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
     const i = line.indexOf(' ');
     if (i > 0 && !pathOf.has(line.slice(0, i))) pathOf.set(line.slice(0, i), line.slice(i + 1));
   }
-  const batch = git(root, ['cat-file', '--batch'], [...pathOf.keys()].join('\n') + '\n');
-  for (let at = 0; at < batch.length;) {
-    const nl = batch.indexOf(10, at);
-    const [sha, type, size] = batch.subarray(at, nl).toString().split(' ');
-    const body = batch.subarray(nl + 1, nl + 1 + Number(size));
-    at = nl + 1 + Number(size) + 1;
-    if (type !== 'blob') continue;
+  for (const { sha, body } of historyBlobs(root, [...pathOf.keys()], most)) {
     const where = pathOf.get(sha);
     if (body.length > MAX_BLOB_BYTES) found.push({ where, rule: 'large-file' });
     if (body.subarray(0, 8000).includes(0)) continue;

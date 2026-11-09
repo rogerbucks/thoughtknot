@@ -639,6 +639,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/history-blobs.test.js` — the history check reads only blobs, a bounded group at a time, so its memory stays
+  bounded however long the history grows.
 - `test/walkthrough-record.test.js` — each stable release keeps a record of the accessibility walk-through (spec §11,
   walkthrough_recorded; UX-1). `scripts/walkthrough-record.mjs --new` writes an empty one to fill in. The release and
   its dry run fail until every check is ticked, or given its reason, in every host and theme.
