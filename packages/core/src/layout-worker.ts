@@ -7,6 +7,7 @@
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
 import { chosen, directions, QUICK_LAYOUT, drawnSvg, svgOf } from './render.ts';
+import { TYPE_STRATEGY } from './layouts/layout-options.ts';
 import { CurvesSaved } from './curves-saved.ts';
 import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
@@ -105,7 +106,8 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       // One laid out in no rows, such as a radial one's rings, is not. Its rows would turn into rings a moment later,
       // and every thing would jump (Roger, 3 Nov 2026: nodes stay put)
       const kept = large && asked.every((d) => saved.get(d.dot) !== undefined);
-      const rings = asked.some((d) => !d.own && /\blayout=/.test(d.dot));
+      // nor is one placed as its type places it, such as a radial one's rings: its places are already settled
+      const rings = asked.some((d) => d.dot.includes(TYPE_STRATEGY));
       // nor is one drawn again with its things kept where they were: it has nothing to settle (things_stay_put)
       const again = !!drawing.kept && Object.keys(drawing.kept).length > 0;
       const quick =

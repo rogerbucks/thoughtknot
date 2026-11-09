@@ -28,6 +28,7 @@ import { dockHead } from './controls-dock';
 import { DETAIL_LEVELS, LABEL_SCALE, type DetailLevel } from '../../view-switches.ts';
 import type { SemanticRung } from '../../semantic-zoom.ts';
 import { GROUP_BY_ROW, HINTS, OWN_HINT_CLASS, ladderAttributes } from '../../view-menu-rows.ts';
+import { TYPE_STRATEGY } from '../../layouts/layout-options.ts';
 import { OWN_ONLY, layoutControls } from './view-layout-controls.ts';
 import { trunkCount } from '../../untangle-fold.ts';
 import { PICK_ATTRIBUTE, pickSaid, pickShownOf } from '../../layouts/fingerprint.ts';
@@ -144,10 +145,12 @@ export function renderViewMenu(
   const fill = () => {
     const shown = pickShownOf(root.querySelector(`svg[${PICK_ATTRIBUTE}]`)?.getAttribute(PICK_ATTRIBUTE));
     [pickLine.hidden, pickLine.textContent] = [!shown, shown ? pickSaid(shown) : ''];
-    // only a drawing our own engine laid out says its pick; with none, what only it reads is greyed (view_controls_apply)
-    ownHint.hidden = !!shown;
-    for (const { s, b } of switches) if (OWN_ONLY.has(s)) b.disabled = !shown;
-    for (const { k, input } of [...sliders, ...lists]) if (OWN_ONLY.has(k)) input.disabled = !shown;
+    // only a drawing our own engine laid out says its pick. With none, what only it reads is greyed
+    // (view_controls_apply). A timeline or radial drawing keeps its type's places: those stay greyed too
+    const reads = !!shown && shown.chosen !== TYPE_STRATEGY;
+    ownHint.hidden = reads;
+    for (const { s, b } of switches) if (OWN_ONLY.has(s)) b.disabled = !reads;
+    for (const { k, input } of [...sliders, ...lists]) if (OWN_ONLY.has(k)) input.disabled = !reads;
     if (!list || !grouping) return;
     const said = (c: string) => (c === BY_KIND ? word('view.group-by.kind') : c);
     const choices: [string, string][] = [
