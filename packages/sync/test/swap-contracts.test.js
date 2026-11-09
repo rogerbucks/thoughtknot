@@ -150,6 +150,7 @@ describe('a chosen suite carries the vault key and the session', () => {
     const key = await VaultKey.create(ctrHmac);
     const sealed = await key.seal(new TextEncoder().encode('hello'));
     assert.equal(new TextDecoder().decode(await key.open(sealed)), 'hello');
+    assert.equal(sealed.length, 16 + 5 + 32, 'sealed as the second suite lays it out, not as AES-GCM does');
     const other = await VaultKey.create();
     await assert.rejects(other.open(sealed));
   });
@@ -160,9 +161,11 @@ describe('a chosen suite carries the vault key and the session', () => {
     const sa = await Session.open(a, b.publicKey, ba, bb.hello, ctrHmac);
     const sb = await Session.open(b, a.publicKey, bb, ba.hello, ctrHmac);
     const msg = new TextEncoder().encode('over the mesh');
-    assert.equal(new TextDecoder().decode(await sb.open(await sa.seal(msg))), 'over the mesh');
+    const sealed = await sa.seal(msg);
+    assert.equal(sealed.length, 16 + msg.length + 32, 'the session sealed with the second suite');
+    assert.equal(new TextDecoder().decode(await sb.open(sealed)), 'over the mesh');
     const wrong = await Session.open(b, a.publicKey, bb, ba.hello);
-    await assert.rejects(wrong.open(await sa.seal(msg)));
+    await assert.rejects(wrong.open(sealed));
   });
 });
 
