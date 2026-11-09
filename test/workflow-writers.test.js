@@ -50,7 +50,7 @@ describe('GitHub Actions writers', () => {
           only(
             '/wave-nightly.yml',
             'wave-nightly',
-            'attestations: write,contents: write,id-token: write,issues: write,security-events: read',
+            'actions: read,attestations: write,contents: write,id-token: write,issues: write,security-events: read',
           );
         // the risk panel's issue, the security issue and Claude's security branches: security-workflow.test.js
         const panel = only('/risk-panel.yml', 'report', 'issues: write');

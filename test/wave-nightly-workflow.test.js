@@ -11,6 +11,17 @@ import { report, waveOf, waveProblems } from '../scripts/wave-gate.mjs';
 const text = read('.github/workflows/wave-nightly.yml');
 const lines = text.split('\n');
 
+/** The `permissions:` block at `indent` in these lines, as scope → read or write; `{}` and none at all are empty. */
+function permissions(scopeLines, indent = 4) {
+  const found = block(scopeLines, 'permissions', indent) ?? [];
+  const out = new Map();
+  for (const line of found.slice(1)) {
+    const m = /^\s*([\w-]+): (read|write)\s*$/.exec(line);
+    if (m) out.set(m[1], m[2]);
+  }
+  return out;
+}
+
 describe('the wave nightly workflow', () => {
   test('wakes only when a pull request to main closes, and builds only a merged wave-done one from this repository', () => {
     const on = block(lines, 'on', 0).join('\n');
@@ -35,10 +46,38 @@ describe('the wave nightly workflow', () => {
     const call = jobs(text)['wave-nightly'].join('\n');
     assert.match(call, /needs: gate/);
     assert.match(call, /uses: \.\/\.github\/workflows\/nightly\.yml/);
-    assert.match(
-      call,
-      /contents: write\s*\n\s*issues: write\s*\n\s*security-events: read\s*\n\s*id-token: write\s*\n\s*attestations: write/,
-    );
+  });
+
+  // A called workflow may ask for no more than its caller grants. One it asks for and the caller leaves out stops the
+  // run before its first step, as a startup failure with nothing in its log. That is how every wave build from 25 Oct
+  // to 8 Nov 2026 ended: the nightly's tests-passed job asked for `actions: read`, and the call did not grant it.
+  test('grants the nightly every permission any of its jobs asks for, and nothing more', () => {
+    const granted = permissions(jobs(text)['wave-nightly']);
+    const asked = new Map();
+    const ask = (file, seen = new Set()) => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      const workflow = read(`.github/workflows/${file}`);
+      const scopes = [
+        permissions(workflow.split('\n'), 0),
+        ...Object.values(jobs(workflow)).map((j) => permissions(j)),
+      ];
+      for (const scope of scopes)
+        for (const [name, level] of scope) if (level === 'write' || !asked.has(name)) asked.set(name, level);
+      for (const [, called] of workflow.matchAll(/uses: \.\/\.github\/workflows\/([\w-]+\.yml)/g)) ask(called, seen);
+    };
+    ask('nightly.yml');
+    assert.ok(asked.size > 0);
+    for (const [name, level] of asked) {
+      const given = granted.get(name);
+      assert.ok(given, `the nightly asks for ${name}: ${level}, and the wave-end call does not grant it`);
+      assert.ok(
+        given === level || given === 'write',
+        `the nightly asks for ${name}: ${level}, and the call grants ${given}`,
+      );
+    }
+    for (const name of granted.keys())
+      assert.ok(asked.has(name), `${name} is granted and no job of the nightly asks for it`);
   });
 
   test('tells the nightly it is a wave build, which leaves the draft check to the night', () => {
