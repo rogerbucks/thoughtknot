@@ -100,13 +100,13 @@ async function fromVault(
   }
 }
 
-/** The text of the table at `place`, found from the note at `from`, or null when it cannot be read (§52, §67). */
+/** The text of the table at `place`, found from the note at `from`, or null when it cannot be read (ES§52, ES§67). */
 async function tableText(plugin: ThoughtKnotPlugin, place: string, from: string): Promise<string | null> {
   const r = await fromVault(plugin, { kind: 'table', target: place }, from);
   return 'text' in r ? r.text : null;
 }
 
-/** `drawing` with each data set of `graph` drawn as its table, read from its place (§67, format_content_node). */
+/** `drawing` with each data set of `graph` drawn as its table, read from its place (ES§67, format_content_node). */
 export async function withTables<D extends GraphDrawing | undefined>(
   plugin: ThoughtKnotPlugin,
   drawing: D,

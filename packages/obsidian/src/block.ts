@@ -195,7 +195,7 @@ export async function renderBlock(
 
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
   const read = readNote(texts, index, shared);
-  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) }; // strictness (§21)
+  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) }; // strictness (ES§21)
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read at once (spec §9): its overview, read in parts (§53), above its text and why
@@ -226,7 +226,7 @@ export async function renderBlock(
   const at = { path: target.path, graph }; // its type looked at in reading view, never saved (§15, type_try_reading)
   const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
   const styled = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
-  const drawing = await withTables(plugin, styled, reading.world[graph], target.path); // data sets as tables (§67)
+  const drawing = await withTables(plugin, styled, reading.world[graph], target.path); // data sets as tables (ES§67)
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
   // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
   const diagram =

@@ -91,7 +91,7 @@ export interface GraphDrawing {
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
   inline?: InlineProperties;
-  /** The tables its data set boxes show below their text, by box key (§67, table-source.ts); none, no table shown. */
+  /** The tables its data set boxes show below their text, by box key (ES§67, table-source.ts); none, no table shown. */
   tables?: (readonly [string, NodeTable])[];
   /** Every property of each box, as semantic zoom shows them zoomed nearest (§68); none, no box has any. */
   everyProperty?: InlineProperties;

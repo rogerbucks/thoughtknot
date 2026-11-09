@@ -128,9 +128,9 @@ export function directions(drawing: GraphDrawing): Direction[] {
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
-    // properties and data set tables shown (§14, §67), room for the pictures on boxes (§18) and nudges written in (§6). Then what the View menu
-    // folds and merges and how the links are routed (§25). With none of them, the source the Python library gives, byte
-    // for byte
+    // properties shown (§14), each data set's table (ES§67), room for the pictures on boxes (§18) and nudges written
+    // in (§6). Then what the View menu folds and merges and how the links are routed (§25). With none of them, the
+    // source the Python library gives, byte for byte
     const dot = routedSource(
       foldedSource(
         nudgedSource(
