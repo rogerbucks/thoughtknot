@@ -56,6 +56,8 @@ Rust (src-tauri/)
   that device alone. A guest pastes it and reads the inviter's fingerprint first. Joining is a press of its own.
 - `app-share-link.ts`: where the link runs. The person writes the address this device listens at and the other
   device's address, both on their mesh VPN. They are kept with the keys. Nothing is sent from this screen.
+- `app-share-offers.ts`: what this machine offers, under the link. Each offer is said in words and taken by its own
+  press of Use. The address it replaces is said back. `tauri-found.ts` asks the one looking command.
 - `app-share-dom.ts`: the small helpers of the Share screens.
 - `app-share-keeper.ts`: `indexedKeeper`. The keys are kept in the window's IndexedDB, on this device only. The private
   key is unexportable, and the vault key is kept sealed for this device itself.
@@ -65,10 +67,11 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Twenty-five commands, and no others. These are the folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
-  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`), `run_gh`, six `mesh_` ones and
-  eight `crdt_` ones. The same twenty-five are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test
-  holds the three lists together.
+- Twenty-six commands, and no others. Ten are folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+  `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`). One is `run_gh`. Six are `mesh_`
+  ones and eight are `crdt_` ones. The last is `machine_found`, which only looks for a mesh VPN address (`found.rs`).
+  The same twenty-six are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists
+  together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
   `packages/core/test/fixtures/gh-calls.json`, the cases the core checks too.

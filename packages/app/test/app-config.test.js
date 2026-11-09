@@ -1,6 +1,6 @@
 // The desktop app is shut by default (spec §41, standalone_app; offline). Its window may load only its own pages and
-// reach no other origin. It calls only ten folder commands, one gh command, six mesh commands and eight note commands.
-// The Rust, the build script and the window's capability must name the same twenty-five. So no new one slips through.
+// reach no other origin. It calls only ten folder commands, one gh command, six mesh commands, eight note commands and one that looks for a mesh VPN address.
+// The Rust, the build script and the window's capability must name the same twenty-six. So no new one slips through.
 // The gh command runs only the calls on its list, by gh's own path, with no shell (spec §48, github_repo_access).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,6 +34,7 @@ const COMMANDS = [
   'crdt_anchor',
   'crdt_place',
   'crdt_history',
+  'machine_found',
 ];
 
 test("the window's policy allows its own pages and Tauri's calls, and no other origin", () => {
@@ -57,7 +58,7 @@ test("the window's policy allows its own pages and Tauri's calls, and no other o
   assert.equal(config.app.security.freezePrototype, true);
 });
 
-test('the commands in the Rust, the build script and the capability are the same twenty-five', () => {
+test('the commands in the Rust, the build script and the capability are the same twenty-six', () => {
   const handled = /generate_handler!\[([^\]]*)\]/
     .exec(read('src-tauri/src/lib.rs'))[1]
     .split(',')

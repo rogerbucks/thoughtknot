@@ -26,6 +26,7 @@ fn main() {
         "crdt_anchor",
         "crdt_place",
         "crdt_history",
+        "machine_found",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()

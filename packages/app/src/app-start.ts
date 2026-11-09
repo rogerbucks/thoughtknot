@@ -10,6 +10,7 @@ import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
 import { githubButton, storeOf } from './app-github.ts';
 import { moveButton } from './app-move.ts';
 import { shareButton } from './app-share.ts';
+import { findOnMachine } from './tauri-found.ts';
 import { indexedKeeper } from './app-share-keeper.ts';
 
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */
@@ -53,7 +54,8 @@ export async function startApp(
     main.appendChild(Object.assign(doc.createElement(tag), { textContent: text }));
   const own = await ownFolder(invoke);
   // on a computer and on a phone: start a shared vault, over the owner's mesh VPN (ES§45, board_access)
-  const sharing = () => shareButton({ doc, keeper: indexedKeeper(doc.defaultView ?? {}) });
+  const sharing = () =>
+    shareButton({ doc, keeper: indexedKeeper(doc.defaultView ?? {}), find: () => findOnMachine(invoke) });
   const show = async (folder: string | null) => {
     main.replaceChildren();
     let notes: string[] | null = null;
