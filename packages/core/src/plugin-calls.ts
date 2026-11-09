@@ -3,8 +3,7 @@
 // dropped. Its plug-in is stopped, so nothing of it is called again. A call whose answer comes later is timed until it
 // comes. One that never answers is not stopped here. A plug-in run apart, in a worker, is stopped by the host's clock
 // (plugin-isolated.ts).
-import type { NoteStorage } from './note-storage.ts';
-import type { PluginCommand, StorageBackend, SyncStore, SyncStoreBackend } from './plugin-points.ts';
+import type { PluginCommand } from './plugin-points.ts';
 import { word } from './words.ts';
 
 /** The answer of a call into a plug-in: its value, or what went wrong and whose it was, in the reader's language. */
@@ -90,30 +89,6 @@ export function commandCalls(calls: PluginCalls, items: PluginCommand[], owner: 
     async runCommandAsync(id: string, given?: unknown): Promise<PluginResult<undefined>> {
       const f = found(id);
       return f ? calls.awaited(f.who, f.what, async () => void (await f.c.run(given))) : none(id);
-    },
-  };
-}
-
-/** The calls a registry makes into the record stores on its shelf: `owner` says whose each is. */
-export function syncStoreCalls(calls: PluginCalls, items: SyncStoreBackend[], owner: Map<string, string>) {
-  return {
-    syncStores: () => items.map((b) => ({ ...b })),
-    openSyncStore(name: string): PluginResult<SyncStore> {
-      const b = items.find((x) => x.name === name);
-      if (!b) return { ok: false, plugin: '', message: word('plugins.none.syncstore', { name }) };
-      return calls.guarded(owner.get(name) ?? '', word('plugins.what.syncstore', { title: b.title }), () => b.open());
-    },
-  };
-}
-
-/** The calls a registry makes into the storage backends on its shelf: `owner` says whose each is. */
-export function storageCalls(calls: PluginCalls, items: StorageBackend[], owner: Map<string, string>) {
-  return {
-    storages: () => items.map((b) => ({ ...b })),
-    openStorage(name: string): PluginResult<NoteStorage> {
-      const b = items.find((x) => x.name === name);
-      if (!b) return { ok: false, plugin: '', message: word('plugins.none.storage', { name }) };
-      return calls.guarded(owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
     },
   };
 }
