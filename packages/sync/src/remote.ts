@@ -12,6 +12,8 @@ import { SyncedNotes } from './synced-notes.ts';
 
 export { KeptStore, type Shelves } from './kept-store.ts';
 export { MeshLink } from './mesh-link.ts';
+export { acceptedSuite, type CipherSuite } from './suite.ts';
+export type { Channel } from './peer.ts';
 export { sharedBoard, type Link } from './shared-board.ts';
 export { sharedNotesLayer } from './shared-notes-layer.ts';
 

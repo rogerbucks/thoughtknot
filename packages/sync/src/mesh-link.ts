@@ -3,6 +3,7 @@
 // VPN. Nothing crosses a channel in the clear. Records go through `Peer`, one fresh sealed session for each exchange.
 // Presence goes over its own channel, sealed the same way with a fresh session. Only trusted devices get past the
 // first message. A device serves the other's channels, and dials its own to send.
+import type { CipherSuite } from './suite.ts';
 import { Session, EPHEMERAL_BYTES, SALT_BYTES } from './session.ts';
 import { Peer } from './peer.ts';
 import type { Channel } from './peer.ts';
@@ -60,6 +61,7 @@ export function sealedChannel(
   keys: DeviceKeys,
   trusted: readonly Uint8Array[],
   raw: Channel,
+  suite?: CipherSuite,
 ): Promise<Channel | { refused: string }> {
   return new Promise((resolve) => {
     const begun = Session.begin();
@@ -106,7 +108,7 @@ export function sealedChannel(
         const whole = message.length === PRESENCE_HELLO;
         if (!whole || same(theirs, keys.publicKey) || !trusted.some((t) => same(t, theirs)))
           return refuse('a device that is not one of the owner’s');
-        session = await Session.open(keys, theirs, await begun, message.slice(KEY_BYTES, RECORDS_HELLO));
+        session = await Session.open(keys, theirs, await begun, message.slice(KEY_BYTES, RECORDS_HELLO), suite);
         ready(session);
         return resolve(channel);
       }
@@ -144,12 +146,20 @@ export class MeshLink implements Link {
   readonly #shelf: Shelf;
   readonly #trusted: readonly Uint8Array[];
   readonly #dial: () => Promise<Channel>;
+  readonly #suite: CipherSuite | undefined;
   #presence: Promise<Channel | { refused: string }> | undefined;
   #heard: ((message: string) => void) | undefined;
   #arrived: (() => void) | undefined;
 
   /** A link for the device with `keys`, holding `shelf`, that talks only to `trusted` devices. `dial` opens a channel to the other. */
-  constructor(keys: DeviceKeys, shelf: Shelf, trusted: readonly Uint8Array[], dial: () => Promise<Channel>) {
+  constructor(
+    keys: DeviceKeys,
+    shelf: Shelf,
+    trusted: readonly Uint8Array[],
+    dial: () => Promise<Channel>,
+    suite?: CipherSuite,
+  ) {
+    this.#suite = suite;
     this.#keys = keys;
     this.#shelf = shelf;
     this.#trusted = trusted;
@@ -157,12 +167,12 @@ export class MeshLink implements Link {
   }
 
   async exchange(): Promise<void> {
-    const synced = await new Peer(this.#keys, this.#shelf, this.#trusted).sync(await this.#dial());
+    const synced = await new Peer(this.#keys, this.#shelf, this.#trusted, this.#suite).sync(await this.#dial());
     if ('got' in synced && synced.got > 0) this.#arrived?.();
   }
 
   send(message: string): void {
-    this.#presence ??= this.#dial().then((raw) => sealedChannel(this.#keys, this.#trusted, raw));
+    this.#presence ??= this.#dial().then((raw) => sealedChannel(this.#keys, this.#trusted, raw, this.#suite));
     const opened = this.#presence;
     void opened.then((c) => {
       if ('refused' in c) this.#presence = undefined;
@@ -191,11 +201,11 @@ export class MeshLink implements Link {
   async #take(raw: Channel): Promise<void> {
     const { presence, channel } = await routed(raw);
     if (!presence) {
-      const synced = await new Peer(this.#keys, this.#shelf, this.#trusted).sync(channel);
+      const synced = await new Peer(this.#keys, this.#shelf, this.#trusted, this.#suite).sync(channel);
       if ('got' in synced && synced.got > 0) this.#arrived?.();
       return;
     }
-    const sealed = await sealedChannel(this.#keys, this.#trusted, channel);
+    const sealed = await sealedChannel(this.#keys, this.#trusted, channel, this.#suite);
     if (!('refused' in sealed))
       sealed.listen(
         (m) => this.#heard?.(text.decode(m)),

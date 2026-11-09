@@ -5,11 +5,14 @@
 // was. `invoke` is handed in, so nothing here imports Tauri and the tests hand in their own.
 import type { StorageLayer } from '@thoughtknot/core';
 import {
+  acceptedSuite,
   KeptStore,
   MeshLink,
   sharedBoard,
   sharedNotesLayer,
   syncedRemote,
+  type Channel,
+  type CipherSuite,
   type Link,
   type Shelves,
 } from '@thoughtknot/sync/remote';
@@ -18,11 +21,27 @@ import type { Together } from '@thoughtknot/core';
 import { dialDevice, listenForDevice } from './tauri-mesh.ts';
 import type { Invoke } from './tauri-files.ts';
 
-/** What the window hands in. */
+/** How this device reaches the other: a channel to dial, and an address to listen at. The mesh VPN is the default. */
+export interface Transport {
+  dial(address: string): Promise<Channel>;
+  listen(address: string): Promise<{ address: string; next(): Promise<Channel>; stop(): Promise<void> }>;
+}
+
+/**
+ * The parts sharing runs on, each one a system the person may bring instead (editor spec ES§40, swap_any_part). Any
+ * part left out is today's. A cipher suite is accepted only when it passes its contract, at every start.
+ */
+export interface Recipe {
+  suite?: CipherSuite;
+  transport?: Transport;
+}
+
+/** What the window hands in. The keeper and the shelves are the other two parts a person may swap. */
 export interface SharedOptions {
   invoke: Invoke;
   keeper: Keeper | undefined;
   shelves: Shelves | undefined;
+  recipe?: Recipe;
 }
 
 /** Sharing as running: the layer for the notes' storage, and the seat at a board. */
@@ -37,7 +56,12 @@ export interface Shared {
 /** Starts sharing when this device holds a vault and a place to keep records; otherwise nothing. */
 export async function startShared(o: SharedOptions): Promise<Shared | undefined> {
   if (!o.keeper || !o.shelves) return undefined;
-  const sharing = await Sharing.open(o.keeper);
+  const suite = o.recipe?.suite ? await acceptedSuite(o.recipe.suite) : undefined;
+  const transport: Transport = o.recipe?.transport ?? {
+    dial: (address) => dialDevice(o.invoke, address),
+    listen: (address) => listenForDevice(o.invoke, address),
+  };
+  const sharing = await Sharing.open(o.keeper, suite);
   if (!sharing?.hasVault) return undefined;
   const { keys, vault } = sharing.held;
   const { dial, listen } = sharing.link;
@@ -47,8 +71,12 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
   const store = new KeptStore(o.shelves);
   const device = sharing.publicKey;
   const notes = syncedRemote(store, vault, device, o.invoke);
-  const link = new MeshLink(keys, store, trusted, () =>
-    dial ? dialDevice(o.invoke, dial) : Promise.reject(new Error('no address for the other device')),
+  const link = new MeshLink(
+    keys,
+    store,
+    trusted,
+    () => (dial ? transport.dial(dial) : Promise.reject(new Error('no address for the other device'))),
+    suite,
   );
 
   // the link tells one listener; the notes and each board seat all want to hear
@@ -73,7 +101,7 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
   });
   arrived.add(() => void shared.arrived());
 
-  const listener = listen ? await listenForDevice(o.invoke, listen) : undefined;
+  const listener = listen ? await transport.listen(listen) : undefined;
   const serving = listener && link.serve(() => listener.next());
 
   const seats = new Map<string, Together>();

@@ -1,6 +1,7 @@
 // Joining a board by invitation (editor spec §45, board_access). The board has a key of its own. An invitation carries
 // that key sealed for the one device it is meant for, so only that device can open it. The key is never written down,
 // printed or sent in the clear. It is a `VaultKey`, which says only that it is one. Web Crypto.
+import type { CipherSuite } from './suite.ts';
 import { DeviceKeys, VaultKey } from './keys.ts';
 
 /** What a person is invited to do. It is a claim: the host honours it only as far as the permissions agree. */
@@ -15,7 +16,7 @@ export interface Invitation {
 }
 
 /** A new key for a board, made on this device. */
-export const newBoardKey = (): Promise<VaultKey> => VaultKey.create();
+export const newBoardKey = (suite?: CipherSuite): Promise<VaultKey> => VaultKey.create(suite);
 
 /** An invitation to `board` as `as`, from `mine`, for the device whose public half is `theirs`. */
 export async function invite(
@@ -29,8 +30,8 @@ export async function invite(
 }
 
 /** The board key an invitation holds, opened by the invited device. Throws on any other device, or a changed invitation. */
-export function join(invitation: Invitation, mine: DeviceKeys): Promise<VaultKey> {
-  return VaultKey.openFrom(invitation.sealed, mine, invitation.from);
+export function join(invitation: Invitation, mine: DeviceKeys, suite?: CipherSuite): Promise<VaultKey> {
+  return VaultKey.openFrom(invitation.sealed, mine, invitation.from, suite);
 }
 
 const PREFIX = 'thoughtknot-invitation:';
