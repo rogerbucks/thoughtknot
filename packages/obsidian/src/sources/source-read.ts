@@ -147,7 +147,7 @@ export async function readFromVault(
   from: string,
 ): Promise<SourceRead | SourceRefusal> {
   // a table is broken into statements by its connector, as a place of a FROM list is (csv-connector.ts)
-  if (source.places || source.kind === 'table') return readPlaces(plugin, source, from);
+  if (source.places || source.kind === 'table' || source.kind === 'text') return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
   const read = readSource(source, held);
   if ('refused' in read || !read.texts.some(namesSharedSchema)) return read;

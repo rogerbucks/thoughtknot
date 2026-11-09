@@ -117,6 +117,7 @@ export const READING_SOURCE_WORDS = {
   'reading.source.cited-row': '{place} row {row} ({version})',
   'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
   'reading.source.table': 'The table {target}',
+  'reading.source.text': 'The text file {target}',
   // a table read from a CSV file (csv-read.ts, csv-connector.ts)
   'reading.table.too-large': '{place} is larger than {most} bytes, so it was not read: split it, or keep fewer rows.',
   'reading.table.too-many-rows': '{place} has more than {most} rows, so it was not read: split it into smaller files.',
@@ -144,6 +145,11 @@ export const READING_SOURCE_WORDS = {
     other: '{count} more columns not shown',
   },
   'reading.table.node-no-rows': 'No rows yet',
+  // a plain text file, read only as a proposal (text-connector.ts)
+  'reading.text.proposal-only':
+    '{place} is plain text: it becomes a graph only as a proposal, each thing citing its line, for a person to accept.',
+  'reading.text.too-long': '{place} has more than {most} characters, so it was not read: split it into smaller files.',
+  'reading.text.cites': '{place}, line {line}: "{words}"',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',

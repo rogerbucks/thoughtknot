@@ -20,7 +20,7 @@ import { word } from './words.ts';
 export interface Source {
   graph: string;
   /** A .gql file, a note, a plug-in's source, or a table: a .csv file read by its mapping (csv-connector.ts). */
-  kind: 'file' | 'note' | 'plugin' | 'table';
+  kind: 'file' | 'note' | 'plugin' | 'table' | 'text';
   /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
   scheme?: string;
   /**
@@ -142,9 +142,11 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
     ? 'file'
     : /\.csv$/i.test(last)
       ? 'table'
-      : /\.md$/i.test(last) || !last.includes('.')
-        ? 'note'
-        : null;
+      : /\.txt$/i.test(last)
+        ? 'text'
+        : /\.md$/i.test(last) || !last.includes('.')
+          ? 'note'
+          : null;
   if (!kind) return fault(word('reading.source.neither', { target }));
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
