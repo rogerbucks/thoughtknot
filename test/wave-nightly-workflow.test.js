@@ -49,8 +49,8 @@ describe('the wave nightly workflow', () => {
   });
 
   // A called workflow may ask for no more than its caller grants. One it asks for and the caller leaves out stops the
-  // run before its first step, as a startup failure with nothing in its log. That is how every wave build from 25 Oct
-  // to 8 Nov 2026 ended: the nightly's tests-passed job asked for `actions: read`, and the call did not grant it.
+  // run before its first step, as a startup failure with nothing in its log. Every wave build from 25 Oct to 8 Nov
+  // 2026 ended so: the nightly's tests-passed job asked for `actions: read`, which the call did not grant.
   test('grants the nightly every permission any of its jobs asks for, and nothing more', () => {
     const granted = permissions(jobs(text)['wave-nightly']);
     const asked = new Map();
