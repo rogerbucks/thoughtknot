@@ -23,6 +23,8 @@ export const TEXT_GRAPH_COMMAND = {
 export interface TextAsk {
   graph: string;
   words: string;
+  /** The file the words are read from, so each change cites its line there (connector_text_proposed). */
+  place?: string;
 }
 
 /** A note's own words: its text without its front matter and its gql blocks. */
@@ -41,8 +43,12 @@ export function proseOf(note: string): string {
 /** The graph the text goes into: the note's first, else one named after the note. */
 export function graphFor(note: string, file: TFile): string {
   const first = [...readNote(gqlSpans(note).map((s) => s.text)).graphs.keys()][0];
-  if (first) return first;
-  const name = file.basename
+  return first ?? graphNamed(file.basename);
+}
+
+/** A graph name made from a file's name: its words joined by underscores, lower case. */
+export function graphNamed(basename: string): string {
+  const name = basename
     .toLowerCase()
     .replace(/\W+/g, '_')
     .replace(/^_+|_+$/g, '');
@@ -60,7 +66,9 @@ export function drawTextRows(el: HTMLElement, text: TextAsk, changed: () => void
         changed();
       }),
     );
-  el.createEl('p', { text: word('ai.text-graph.text-row', { count: text.words.length }) });
+  const count = text.words.length;
+  const row = text.place ? word('ai.text-graph.text-row-file', { count, place: text.place }) : null;
+  el.createEl('p', { text: row ?? word('ai.text-graph.text-row', { count }) });
   el.createEl('pre', { cls: 'thoughtknot-ai-text', text: text.words });
 }
 

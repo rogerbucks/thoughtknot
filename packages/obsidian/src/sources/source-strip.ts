@@ -6,6 +6,7 @@ import { word } from '@thoughtknot/core';
 import type { GraphSource } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { saveMapping } from './source-read';
+import { proseGraph } from '../ai/ai';
 
 /** The source's name as the strip and its button say it: a note by its link, a file by its path. */
 const shortName = (s: GraphSource) => s.target.replace(/\.md$/i, '');
@@ -71,5 +72,25 @@ export function mappingProposal(
       else await plugin.app.workspace.openLinkText(proposal.place, '');
     })();
   });
+  return box;
+}
+
+/**
+ * A .txt place (connector_text_proposed). It shows the sentence saying its words are drawn only as a proposal. Its
+ * button opens text to graph on them, for the note at `from`. While AI is off, the button says so.
+ */
+export function proseAsk(
+  parent: HTMLElement,
+  plugin: ThoughtKnotPlugin,
+  note: string,
+  prose: { place: string; text: string },
+  from: string,
+): HTMLElement {
+  const box = sourceAlert(parent, note);
+  const ask = box.createEl('button', {
+    text: word('blocks.text-propose', { place: prose.place }),
+    attr: { type: 'button' },
+  });
+  ask.addEventListener('click', () => void proseGraph(plugin, from, prose));
   return box;
 }

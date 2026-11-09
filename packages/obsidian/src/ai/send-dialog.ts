@@ -293,7 +293,7 @@ export class SendDialog extends Modal {
     const ask = this.rule
       ? this.rule.ask(base, this.graph, this.question)
       : this.text
-        ? textToGraphAsk(base, this.text.graph, this.text.words, this.question)
+        ? textToGraphAsk(base, this.text.graph, this.text.words, this.question, this.text.place)
         : f
           ? suggestAsk(base, f, this.question)
           : { ...base, question: this.question };

@@ -12,16 +12,11 @@ import { basisOf } from './proposals-basis.ts';
 import { makeProposal } from './proposals.ts';
 import type { Proposal } from './proposals.ts';
 import { placeKey, readSource } from './sources.ts';
-import { TEXT_MOST, knownThings, textGraphIn } from './text-to-graph.ts';
+import { TEXT_MOST, citedChanges, knownThings, textGraphIn } from './text-to-graph.ts';
 import type { Matched } from './text-to-graph.ts';
 import { word } from './words.ts';
 
-/** The line, counted from 1, that character `at` of `text` is on. */
-export function lineAt(text: string, at: number): number {
-  let line = 1;
-  for (let i = 0; i < at && i < text.length; i++) if (text[i] === '\n') line++;
-  return line;
-}
+export { lineAt } from './text-to-graph.ts';
 
 /** The connector for a .txt file: no statements, its text kept as prose for a person to turn into a proposal. */
 export const textConnector: Connector = {
@@ -62,12 +57,7 @@ export function proseProposal(
   const texts = gqlBlocks(note).map((b) => b.text);
   const read = textGraphIn(answer, { text: prose.text, graph, known: knownThings(note, graph), texts });
   if (!('changes' in read)) return read;
-  const changes = read.changes.map((c, i) => {
-    const span = read.spans[i];
-    if (!span) return c;
-    const line = String(lineAt(prose.text, span.from));
-    return { ...c, reason: word('reading.text.cites', { place: prose.place, line, words: span.words }) };
-  });
+  const changes = citedChanges(read, prose.text, prose.place);
   const made = makeProposal({
     id: 'text-graph',
     graph,
