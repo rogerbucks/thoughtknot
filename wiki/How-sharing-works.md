@@ -1,6 +1,6 @@
 # How sharing works
 
-This note shows how notes and boards are shared between devices (editor spec §40 and §45). It draws each system and the
+This note shows how notes and boards are shared between devices (ES§40 and ES§45). It draws each system and the
 layers it uses. Roger asked for it on 9 November 2026.
 
 ## The short answer
