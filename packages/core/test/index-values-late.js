@@ -363,6 +363,7 @@ export const VALUES_LATE = [
   'mappingText',
   'proposeMapping',
   'readCsv',
+  'dataSetTables',
   'tableMeasures',
   'tableConnector',
   'tableKindOf',
