@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/connector-contract.test.js",
+  "test": "connector_contract: the text connector > a missing file is said as any missing place is",
+  "seen_failing_first": false,
+  "evidence": "Guards that the new text connector keeps the refusal every place gives; before it, a kind with no connector was refused too, so it already passed."
+}
