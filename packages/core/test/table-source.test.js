@@ -26,6 +26,12 @@ describe('format_content_node: a data set box shows its table', () => {
     assert.match(shown, /12 rows · 4 more rows not shown/);
   });
 
+  test('a long cell is cut to 18 letters with an ellipsis', () => {
+    const shown = tableRows({ header: ['note'], rows: [['x'.repeat(30)]] });
+    assert.ok(shown.includes(`${'x'.repeat(17)}…<`));
+    assert.ok(!shown.includes('x'.repeat(18)));
+  });
+
   test('an empty table still shows its header and says it has no rows', () => {
     const shown = tableRows({ header, rows: [] });
     assert.match(shown, /<b>customer<\/b>/);

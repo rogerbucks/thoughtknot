@@ -1,15 +1,43 @@
 // A data set drawn as its table, in the drawing Graphviz lays out (editor spec §67, format_content_node; way E of
 // wiki/Data-tables-design.md). A `DataSet` thing's box shows the table's header, its first rows and a line counting
 // the rest, below its name. Graphviz sizes the box to fit, so every layout places it, and the 3D view reads the same
-// drawing. The rows shown are those the table card shows (table-node.ts).
+// drawing. The rows shown are those the table card shows (table-node.ts), which takes its limit and last line from here.
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
-import type { NodeTable, TableNodeLimit } from './table-node.ts';
-import { TABLE_NODE_LIMIT, tableTail } from './table-node.ts';
-import { fitText } from './view-types/fit-text.ts';
+import { word } from './words.ts';
+
+/** The table a node shows: its header and its rows of cells, as csv-read.ts gives them. */
+export interface NodeTable {
+  header: readonly string[];
+  rows: readonly (readonly string[])[];
+}
+
+/** How much of a table a node shows, at most. */
+export interface TableNodeLimit {
+  rows: number;
+  columns: number;
+}
+
+/** The first rows and columns a node shows, before the line counting the rest. */
+export const TABLE_NODE_LIMIT: TableNodeLimit = { rows: 8, columns: 6 };
 
 /** The widest a cell is, in letters. A longer cell is cut with an ellipsis. */
 const CELL_LETTERS = 18;
+
+/** The last line: how many rows the table has, and what the node leaves out. */
+export function tableTail(count: number, more: { rows: number; columns: number }): string {
+  if (count === 0) return word('reading.table.node-no-rows');
+  const parts = [word('reading.table.node-rows', { count })];
+  if (more.rows > 0) parts.push(word('reading.table.node-more-rows', { count: more.rows }));
+  if (more.columns > 0) parts.push(word('reading.table.node-more-columns', { count: more.columns }));
+  return parts.join(' · ');
+}
+
+/** `text` cut to `most` letters, its last one an ellipsis when it is longer. */
+function cut(text: string, most: number): string {
+  const letters = [...text];
+  return letters.length <= most ? text : `${letters.slice(0, most - 1).join('')}…`;
+}
 
 /** How a box's line opens its label, a table: `  "<key>" [label=<<table `. */
 const BOX_LABEL = '[label=<<table ';
@@ -18,7 +46,7 @@ const BOX_LABEL = '[label=<<table ';
 function row(cells: readonly string[], columns: number, header: boolean): string {
   const size = STYLE.kind_font_size;
   const cell = (text: string) => {
-    const shown = GraphLayout.escape(fitText(text, CELL_LETTERS, 1));
+    const shown = GraphLayout.escape(cut(text, CELL_LETTERS));
     return `<td align="left"><font point-size="${size}">${header ? `<b>${shown}</b>` : shown}</font></td>`;
   };
   return `<tr>${Array.from({ length: columns }, (_, c) => cell(cells[c] ?? '')).join('')}</tr>`;

@@ -6,7 +6,7 @@ import type { CertaintyLevel } from './certainty-drawn.ts';
 import type { Estimate } from './estimates.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { InlineProperties } from './inline-properties.ts';
-import type { NodeTable } from './table-node.ts';
+import type { NodeTable } from './table-source.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
 import type { PictureBox } from './picture.ts';
