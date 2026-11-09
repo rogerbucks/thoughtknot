@@ -20,11 +20,7 @@ export interface CipherSuite<K = unknown> {
 /** The suite shipped: AES-256-GCM with a fresh nonce for each seal. */
 export const defaultSuite: CipherSuite<CryptoKey> = {
   id: 'aes-256-gcm',
-  newKey: () =>
-    globalThis.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
-      'encrypt',
-      'decrypt',
-    ]) as Promise<CryptoKey>,
+  newKey: () => globalThis.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']),
   seal: sealWith,
   open: openWith,
 };
