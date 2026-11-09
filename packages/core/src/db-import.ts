@@ -6,8 +6,8 @@
 // - The file is read by sqlite-read.ts, in plain JavaScript, with no engine and no SQL (Roger, 9 Nov 2026).
 // - Each row of the things table is a thing. The person picks its id column, and a kind column if any; the rest are
 //   properties.
-// - Each row of the links table, when one is picked, is a link: its from and to columns, and a type column or one
-//   type for all. The rest are properties.
+// - Each row of the links table, when one is picked, is a link. Its from and to columns name its ends. A type column,
+//   or one type for all, gives its type. The rest are properties.
 import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlock } from './export-data-gql.ts';
 import { oneLine } from './export-data-model.ts';
@@ -62,8 +62,8 @@ const rowsOf = (t: SqliteTable): DbRow[] =>
   t.rows.map((r) => Object.fromEntries(t.columns.map((c, i) => [c, r[i] ?? null])));
 
 /**
- * The things of a table picked in the dialog: each row a thing, its id from column `id`, its kind from column `kind`
- * when one is picked, the rest its properties. Nothing is guessed: only the columns picked are given these roles.
+ * The things of a table picked in the dialog. Each row is a thing, its id from column `id`. Its kind comes from column
+ * `kind` when one is picked, and the rest are its properties. Nothing is guessed: only the columns picked have roles.
  */
 export function pickedThings(t: SqliteTable, id: string, kind?: string): DbRow[] {
   return rowsOf(t).map((r) => {

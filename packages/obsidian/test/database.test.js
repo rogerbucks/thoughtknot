@@ -1,8 +1,8 @@
 // Import from a database (editor spec §20, db_import_on_request; §21, settings_db_connections; §13,
 // offline_and_mobile_apis).
 // - The database is a SQLite file in the vault. Import offers each one, with nothing to set up and no password kept.
-// - It reads the file when the person picks it, to list its tables, and writes only when Import is pressed, on desktop
-//   and mobile alike, on the device: no network is reached.
+// - It reads the file when the person picks it, to list its tables. It writes only when Import is pressed. On desktop
+//   and mobile alike, it reads on the device: no network is reached.
 // - It writes the rows into the note as a graph block of text. It keeps no live link: drawing the note never reads the
 //   file again, and the file itself is never written.
 // The plugin reads the file in plain JavaScript, with no engine. The files are made by sql.js in the test. The person
