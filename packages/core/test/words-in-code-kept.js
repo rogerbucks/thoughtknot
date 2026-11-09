@@ -173,4 +173,6 @@ export const CORE_KEPT = {
   'packages/core/src/lens-library.ts': '*',
   // why a phase part refuses a transition that starts elsewhere: a developer's contract error
   'packages/core/src/phase-altitude.ts': '*',
+  // the SQL words a CREATE TABLE ends with to say it has no rowid, read from the file, never shown (sqlite-read.ts)
+  'packages/core/src/sqlite-read.ts': ['without rowid'],
 };
