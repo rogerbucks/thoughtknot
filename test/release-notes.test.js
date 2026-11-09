@@ -11,7 +11,7 @@ import { changelogText, graphSpecFacts, hasGraphSpec } from '../scripts/changelo
 describe('spec_version_released', () => {
   test('the notes name the spec version and the conformance count', () => {
     const spec = graphSpecFacts();
-    assert.equal(spec.version, '1.1');
+    assert.equal(spec.version, '1.2');
     assert.ok(spec.cases >= 20, `${spec.cases} cases`);
     const text = changelogText({
       version: '0.9.0',
@@ -23,7 +23,7 @@ describe('spec_version_released', () => {
       spec,
     });
     assert.match(text, /^### Graph Spec$/m);
-    assert.match(text, new RegExp(`implements Graph Spec 1\\.1\\. ${spec.cases} conformance cases pass`));
+    assert.match(text, new RegExp(`implements Graph Spec 1\\.2\\. ${spec.cases} conformance cases pass`));
     assert.ok(hasGraphSpec(text));
   });
 

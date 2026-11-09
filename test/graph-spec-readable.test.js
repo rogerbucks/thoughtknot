@@ -8,7 +8,9 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const SPEC = read('../requirements/graph-spec.gql');
 const WHY = JSON.parse(read('../requirements/graph-spec-decisions.json')).why;
-const decisions = [...SPEC.matchAll(/:Decision \{id: 'note:([^']*)\.decision'/g)].map((m) => m[1]);
+const decisions = [...SPEC.matchAll(/:Decision \{id: 'note:((?:[^'\\]|\\.)*)\.decision'/g)].map((m) =>
+  m[1].replace(/\\'/g, "'"),
+);
 const words = (text) => text.split(/\s+/).filter(Boolean).length;
 
 describe('spec_decisions_explained', () => {

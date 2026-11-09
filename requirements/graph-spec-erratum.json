@@ -1,0 +1,17 @@
+{
+  "about": "The graph spec's erratum (editor spec §51, spec_text_restored). The spec reached the repository by a paste. The paste cut some rules' words at an apostrophe, left a stray mark and dropped apostrophes from decision names. Each repair below was read from the owner's original in the owner's vault: Standards/Graph spec model.md and the decision notes, on 9 Nov 2026. test/graph-spec-erratum.test.js holds each repair in place.",
+  "source": "Roger's vault: Standards/Graph spec model.md and the decision notes in Standards",
+  "date": "2026-11-09",
+  "repairs": [
+    { "where": "req:9.zone, its quote", "was": "happens in the item", "now": "happens in the item's own zone", "why": "cut short at an apostrophe" },
+    { "where": "req:12.prov-revision, its quote", "was": "a supersession must satisfy PROV-CONSTRAINTS", "now": "a supersession must satisfy PROV-CONSTRAINTS' ordering", "why": "cut short at an apostrophe" },
+    { "where": "req:23.rule3, its quote", "was": "Every assumption is a claim.**", "now": "Every assumption is a claim.", "why": "a stray bold mark" },
+    { "where": "a decision's name", "was": "2026-10-04 Joining documents graphs never overwrites — conflicts are contested and paradoxes held", "now": "2026-10-04 Joining documents' graphs never overwrites — conflicts are contested and paradoxes held", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-04 Process sub-flows follow SCXMLs four rules, provisionally", "now": "2026-10-04 Process sub-flows follow SCXML's four rules, provisionally", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-05 A models proposal must come from a serving", "now": "2026-10-05 A model's proposal must come from a serving", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-06 A things name in a graph block is its id", "now": "2026-10-06 A thing's name in a graph block is its id", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-10 SET never changes a nodes id", "now": "2026-10-10 SET never changes a node's id", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-10 A nodes id is always text", "now": "2026-10-10 A node's id is always text", "why": "a lost apostrophe" },
+    { "where": "a decision's name", "was": "2026-10-10 An engine keeps a blocks comments and gets its missing commas written in", "now": "2026-10-10 An engine keeps a block's comments and gets its missing commas written in", "why": "a lost apostrophe" }
+  ]
+}

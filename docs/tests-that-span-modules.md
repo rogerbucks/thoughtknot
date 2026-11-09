@@ -357,8 +357,12 @@ after a module nor listed here, and on a listed file that is missing.
   Each group that does not balance is reported (spec_conserved).
 - `packages/graph-spec/test/times.test.mjs` — both readers hold a time written with its zone as the same UTC instant.
   They refuse a time with no offset alike (spec_zoned_time).
+## The graph format library: the spec's own words
+
 - `test/graph-spec-readable.test.js` — every decision in `requirements/graph-spec.gql` has a short title, a date and
   one line on why, held in `requirements/graph-spec-decisions.json` (spec_decisions_explained).
+- `test/graph-spec-erratum.test.js` — no rule's words in `requirements/graph-spec.gql` are cut short or carry a stray
+  mark, and `requirements/graph-spec-erratum.json` lists each repair (spec_text_restored).
 - `test/graph-spec-glossary.test.js` — each term in `requirements/graph-spec-glossary.json` has one plain sentence and
   links to exactly the rules that use it. A rule statement over 25 words stays on a record that only shrinks
   (spec_glossary).
