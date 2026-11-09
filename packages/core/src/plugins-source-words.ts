@@ -8,6 +8,7 @@ export const PLUGINS_SOURCE_WORDS = {
   // nothing adds what was asked for (plugins.ts)
   'plugins.none.format': 'No plug-in adds the format "{name}".',
   'plugins.none.storage': 'No plug-in adds the storage "{name}".',
+  'plugins.none.syncstore': 'No plug-in adds the record store "{name}".',
   'plugins.none.command': 'No plug-in adds the command "{name}".',
   'plugins.none.panel': 'No plug-in adds the panel "{name}".',
   'plugins.none.source': 'No plug-in adds the source "{name}".',
@@ -18,6 +19,7 @@ export const PLUGINS_SOURCE_WORDS = {
   // what was called, by its title, as the sentences below name it
   'plugins.what.export': 'The export {title}',
   'plugins.what.storage': 'The storage {title}',
+  'plugins.what.syncstore': 'The record store {title}',
   'plugins.what.command': 'The command {title}',
   'plugins.what.panel': 'The panel {title}',
   'plugins.what.source': 'The source {title}',

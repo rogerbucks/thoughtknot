@@ -15,6 +15,8 @@ import { backendProblem, commandProblem, exporterProblem, panelProblem } from '.
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
+import { syncStoreProblem } from './plugin-points.ts';
+import type { SyncStore, SyncStoreBackend } from './plugin-points.ts';
 import { ownSecrets } from './plugin-points.ts';
 import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.ts';
@@ -33,6 +35,7 @@ import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
 export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand } from './plugin-points.ts';
 export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
+export type { SyncStore, SyncStoreBackend } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import { POINT_VERSIONS, pointsUsed } from './plugin-versions.ts';
@@ -53,6 +56,7 @@ export const EXTENSION_POINTS = [
   'ai',
   'diagrams',
   'layouts',
+  'syncstore',
 ] as const;
 
 /** One of the extension points. */
@@ -71,6 +75,8 @@ export interface ExtensionPoints {
   ai?: { add: (provider: AiProvider) => void };
   diagrams?: { add: (diagram: PluginDiagram) => void };
   layouts?: { add: (layout: PluginLayout) => void };
+  /** Where the sealed records of a shared vault are kept. Not run apart: it is added in the page or the app. */
+  syncstore?: { add: (backend: SyncStoreBackend) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -117,6 +123,10 @@ export interface PluginRegistry extends SourceFetching {
   storages: () => StorageBackend[];
   /** The notes of the backend `name`, opened, or what went wrong and whose plug-in it was. */
   openStorage: (name: string) => PluginResult<NoteStorage>;
+  /** Every record store added, in the order added. */
+  syncStores: () => SyncStoreBackend[];
+  /** The record store `name`, opened, or what went wrong and whose plug-in it was. */
+  openSyncStore: (name: string) => PluginResult<SyncStore>;
   /** Every command added, in the order added. */
   commands: () => PluginCommand[];
   commandOffered: (id: string) => boolean;
@@ -188,6 +198,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const providers = shelf<AiProvider>('name');
   const diagrams = shelf<PluginDiagram>('type');
   const layouts = shelf<PluginLayout>('id');
+  const syncStoreShelf = shelf<SyncStoreBackend>('name');
   const calls = pluginCalls(now, timeLimit);
   const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
@@ -269,7 +280,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedProviders = shelf<AiProvider>('name');
       const addedDiagrams = shelf<PluginDiagram>('type');
       const addedLayouts = shelf<PluginLayout>('id');
+      const addedSyncStores = shelf<SyncStoreBackend>('name');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
+      if (uses('syncstore'))
+        points.syncstore = onShelf(addedSyncStores, syncStoreShelf, (b, _, t) => syncStoreProblem(b, t));
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
         points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
@@ -303,6 +317,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       keep(addedProviders, providers, plugin.id);
       keep(addedDiagrams, diagrams, plugin.id);
       keep(addedLayouts, layouts, plugin.id);
+      keep(addedSyncStores, syncStoreShelf, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -322,6 +337,13 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const b = backends.items.find((x) => x.name === name);
       if (!b) return { ok: false, plugin: '', message: word('plugins.none.storage', { name }) };
       return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
+    },
+    syncStores: () => syncStoreShelf.items.map((b) => ({ ...b })),
+    openSyncStore(name) {
+      const b = syncStoreShelf.items.find((x) => x.name === name);
+      if (!b) return { ok: false, plugin: '', message: word('plugins.none.syncstore', { name }) };
+      const what = word('plugins.what.syncstore', { title: b.title });
+      return guarded(syncStoreShelf.owner.get(name) ?? '', what, () => b.open());
     },
     commands: () => commands.items.map((c) => ({ ...c })),
     ...commandCalls(calls, commands.items, commands.owner),
