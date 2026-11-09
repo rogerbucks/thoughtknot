@@ -6,8 +6,17 @@ import assert from 'node:assert/strict';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FolderStore, KeptStore, MemoryStore, SealedStore, VaultKey } from '../src/index.ts';
-import { channelContract, keeperContract, shelfContract, storeContract } from '../src/contracts.ts';
+import {
+  FolderStore,
+  KeptStore,
+  MemoryStore,
+  SealedStore,
+  VaultKey,
+  acceptedSuite,
+  defaultSuite,
+  suiteProblems,
+} from '../src/index.ts';
+import { channelContract, keeperContract, shelfContract, storeContract, suiteContract } from '../src/contracts.ts';
 import { nodeFiles } from './helpers.js';
 
 const run = (name, checks) => describe(name, () => checks.forEach((c) => test(c.name, c.run)));
@@ -89,4 +98,45 @@ test('the contracts name a part that breaks a promise', async () => {
     named.some((n) => /byte for byte/.test(n)),
     'a store that keeps nothing fails the read-back check',
   );
+});
+
+// proves: encrypted_everywhere
+run(
+  'the shipped cipher suite seals and opens safely',
+  suiteContract(() => defaultSuite),
+);
+
+describe('a cipher suite is accepted only when it passes the contract', () => {
+  /** A suite that hides nothing: sealed bytes are the plain bytes. */
+  const plain = {
+    id: 'aes-256-gcm',
+    newKey: async () => ({}),
+    seal: async (_k, p) => p.slice(),
+    open: async (_k, s) => s.slice(),
+  };
+  // proves: encrypted_everywhere
+  test('a suite that hides nothing is refused, whatever it is called', async () => {
+    const problems = await suiteProblems(plain);
+    assert.ok(problems.length > 0, 'it fails some checks');
+    await assert.rejects(acceptedSuite(plain), /is refused/);
+  });
+  // proves: encrypted_everywhere
+  test('a suite named none is refused by its name', async () => {
+    const named = { ...defaultSuite, id: 'none' };
+    const problems = await suiteProblems(named);
+    assert.ok(problems.some((p) => /not as a way of hiding nothing/.test(p)));
+  });
+  // proves: encrypted_everywhere
+  test('a suite that opens what was changed is refused', async () => {
+    const lax = {
+      ...defaultSuite,
+      open: async (key, sealed, bound) => defaultSuite.open(key, sealed, bound).catch(() => new Uint8Array()),
+    };
+    const problems = await suiteProblems(lax);
+    assert.ok(problems.some((p) => /changed byte/.test(p)));
+  });
+  // proves: encrypted_everywhere
+  test('the shipped suite is accepted', async () => {
+    assert.equal(await acceptedSuite(defaultSuite), defaultSuite);
+  });
 });

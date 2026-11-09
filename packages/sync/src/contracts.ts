@@ -2,6 +2,7 @@
 // record store, a channel between devices and a keeper of keys each have one contract. Any build that passes it can
 // stand in for another, so a person can bring a system they already have. Each check needs no test framework. It throws
 // when the part breaks the promise, so a part's tests run the checks with whatever runner they have. Host-free.
+import type { CipherSuite } from './suite.ts';
 import type { Channel } from './peer.ts';
 import type { Keeper, Kept } from './sharing.ts';
 import type { Shelf, Store } from './store.ts';
@@ -291,6 +292,133 @@ export function keeperContract(make: () => Keeper | Promise<Keeper>): ContractCh
         const got = await k.load();
         if (got?.link?.dial !== '100.64.0.2:1' || got.joined?.board !== 'Plan')
           fail('load', 'link and invitation', got);
+      },
+    },
+  ];
+}
+
+/** Names a suite may never have: each says that nothing is hidden. */
+const NO_CIPHER = /^(none|null|plain|plaintext|identity|noop|nop|off|)$/i;
+
+/** The checks every cipher suite holds to. Together they refuse a suite that hides nothing, or that trusts what it opens. */
+export function suiteContract<K>(make: () => CipherSuite<K> | Promise<CipherSuite<K>>): ContractCheck[] {
+  const secret = new TextEncoder().encode('the vault key is never in the clear');
+  return [
+    {
+      name: 'the suite is named, and not as a way of hiding nothing',
+      run: async () => {
+        const id = (await make()).id;
+        if (NO_CIPHER.test(id.trim())) fail('id', 'a name that says it seals', id);
+      },
+    },
+    {
+      name: 'what is sealed opens to the same bytes, empty ones too',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        for (const plain of [secret, bytes(), bytes(0), new Uint8Array(5000).fill(7)]) {
+          const back = await c.open(key, await c.seal(key, plain));
+          if (!same(back, plain)) fail('open', 'the bytes sealed', back.length);
+        }
+      },
+    },
+    {
+      name: 'the sealed bytes do not hold the plain bytes',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        const sealed = await c.seal(key, secret);
+        const text = new TextDecoder('latin1').decode(sealed);
+        if (text.includes('never in the clear')) fail('seal', 'the plain bytes hidden', 'found in the sealed bytes');
+        if (same(sealed, secret)) fail('seal', 'bytes unlike the plain bytes', 'the same bytes');
+      },
+    },
+    {
+      name: 'sealing the same bytes twice gives different sealed bytes',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        const [one, two] = [await c.seal(key, secret), await c.seal(key, secret)];
+        if (same(one, two)) fail('seal', 'a fresh nonce for each seal', 'the same sealed bytes twice');
+      },
+    },
+    {
+      name: 'another key does not open it',
+      run: async () => {
+        const c = await make();
+        const sealed = await c.seal(await c.newKey(), secret);
+        const opened = await c.open(await c.newKey(), sealed).then(
+          () => true,
+          () => false,
+        );
+        if (opened) fail('open', 'a refusal with another key', 'opened');
+      },
+    },
+    {
+      name: 'a changed byte, anywhere, is refused',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        const sealed = await c.seal(key, secret);
+        for (const at of [0, Math.floor(sealed.length / 2), sealed.length - 1]) {
+          const changed = sealed.slice();
+          changed[at] = changed[at]! ^ 1;
+          const opened = await c.open(key, changed).then(
+            () => true,
+            () => false,
+          );
+          if (opened) fail('open', `a refusal when byte ${at} changed`, 'opened');
+        }
+      },
+    },
+    {
+      name: 'a cut or an extended message is refused',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        const sealed = await c.seal(key, secret);
+        for (const odd of [sealed.slice(0, sealed.length - 1), Uint8Array.from([...sealed, 0])]) {
+          const opened = await c.open(key, odd).then(
+            () => true,
+            () => false,
+          );
+          if (opened) fail('open', 'a refusal for a message cut or extended', 'opened');
+        }
+      },
+    },
+    {
+      name: 'data the seal was bound to must be the same to open it',
+      run: async () => {
+        const c = await make();
+        const key = await c.newKey();
+        const sealed = await c.seal(key, secret, bytes(1, 2, 3));
+        const right = await c.open(key, sealed, bytes(1, 2, 3)).then(
+          (b) => same(b, secret),
+          () => false,
+        );
+        if (!right) fail('open', 'the bytes back with the same bound data', 'refused');
+        const wrong = await c.open(key, sealed, bytes(1, 2, 4)).then(
+          () => true,
+          () => false,
+        );
+        const none = await c.open(key, sealed).then(
+          () => true,
+          () => false,
+        );
+        if (wrong || none) fail('open', 'a refusal with other bound data', 'opened');
+      },
+    },
+    {
+      name: 'two new keys differ',
+      run: async () => {
+        const c = await make();
+        const [k1, k2] = [await c.newKey(), await c.newKey()];
+        const sealed = await c.seal(k1, secret);
+        const opened = await c.open(k2, sealed).then(
+          () => true,
+          () => false,
+        );
+        if (opened) fail('newKey', 'keys that differ', 'one opens the other’s');
       },
     },
   ];

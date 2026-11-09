@@ -35,6 +35,12 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
 `keeperContract`. Any build that passes them can stand in for another. `test/swap-contracts.test.js` runs them on every
 build that ships. A person who brings their own store, link or keeper is held to the same promises.
 
+`suite.ts` is the cipher suite: one interface for what seals and opens bytes. Roger chose on 9 Nov 2026 that even the
+cipher can be swapped. So a suite is accepted only when it passes `suiteContract`, and `acceptedSuite` runs that check
+at every start. The contract refuses a suite that hides nothing, opens what was changed, or reuses a nonce. The default
+is AES-256-GCM. The keys and the session still call the default directly. Wiring them to a chosen suite is the next
+step.
+
 `stack.ts` puts the five layers together for one device. `index.ts` is the package's one entry.
 
 ## Between devices

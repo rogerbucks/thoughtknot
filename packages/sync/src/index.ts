@@ -54,4 +54,12 @@ export {
   type Overlay,
   type Rejoined,
 } from './connected.ts';
-export { channelContract, keeperContract, shelfContract, storeContract, type ContractCheck } from './contracts.ts';
+export {
+  channelContract,
+  keeperContract,
+  shelfContract,
+  storeContract,
+  suiteContract,
+  type ContractCheck,
+} from './contracts.ts';
+export { acceptedSuite, defaultSuite, suiteProblems, type CipherSuite } from './suite.ts';
