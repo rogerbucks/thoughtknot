@@ -28,7 +28,7 @@ export interface Transport {
 }
 
 /**
- * The parts sharing runs on, each one a system the person may bring instead (editor spec ES§40, swap_any_part). Any
+ * The parts sharing runs on, each one a system the person may bring instead (editor spec ES§40, five_layer_stack). Any
  * part left out is today's. A cipher suite is accepted only when it passes its contract, at every start.
  */
 export interface Recipe {
