@@ -72,7 +72,7 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view]) => {
   for (const [graph, drawing] of reading.graphs) {
     const { style } = readStyle(texts, graph, reading), g = reading.world[graph];
     const styled = styledDrawing(drawing, style, g, view ?? undefined);
-    drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+    drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
     choice[graph] = diagramFor(drawing, style, g, view ?? undefined);
     fits[graph] = typeFits(shapeOf(drawing, g, style.nudges));
   }

@@ -56,7 +56,7 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view]) => {
   for (const [graph, drawing] of reading.graphs) {
     const { style } = readStyle(texts, graph, reading);
     const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
-    drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+    drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
     pictures[graph] = (styled.pictures ?? []).map((p) => [p.index, p.key, p.property, p.value]);
   }
   return { styles, drawn, pictures };
