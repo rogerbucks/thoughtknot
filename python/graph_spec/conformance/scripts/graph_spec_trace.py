@@ -152,7 +152,7 @@ def decisions():
     for root, dirs, files in os.walk(VAULT):
         dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('node_modules',)]
         for f in files:
-            if f.endswith('.decision.md'): out['note:' + f[:-3].replace("'", '')] = f[:-3]
+            if f.endswith('.decision.md'): out['note:' + f[:-3]] = f[:-3]
     return out
 
 def req_checks(spec_text=None, req_text=None):

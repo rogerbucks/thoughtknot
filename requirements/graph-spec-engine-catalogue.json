@@ -2,7 +2,7 @@
   "note": "The engine catalogue published with the graph spec (editor spec §51, spec_engine_catalogue). An engine is certified against this catalogue. A certificate names the spec version and the catalogue version, so it cannot be read as proof against another. The reference engine is pinned here, and the pin in python/graph_spec/pyproject.toml and its lock file must match. test/graph-spec-conformance.test.js holds the three together.",
   "catalogue": {
     "version": "1",
-    "spec": "1.1",
+    "spec": "1.2",
     "knownAnswers": [
       {
         "id": "known-answers:lending-demo@3",
@@ -22,7 +22,7 @@
   "example": {
     "engine": "grafeo",
     "engineVersion": "0.5.43",
-    "spec": "1.1",
+    "spec": "1.2",
     "catalogue": "1",
     "knownAnswers": ["known-answers:lending-demo@3"],
     "certifiedOn": "2026-10-04"
