@@ -6,7 +6,7 @@ import { accepted, offers } from '../src/index.ts';
 
 const found = {
   keychain: 'macOS Keychain',
-  syncedFolders: [{ name: 'iCloud Drive', path: '/Users/r/iCloud/ThoughtKnot' }],
+  syncedFolders: [{ name: 'iCloud Drive', path: '/sync/iCloud/ThoughtKnot' }],
   vpns: [{ name: 'Tailscale', address: '100.64.0.2:4040' }],
 };
 
