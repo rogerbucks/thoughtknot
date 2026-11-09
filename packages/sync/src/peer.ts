@@ -10,6 +10,7 @@
 //   repeated, reflected, dropped or reordered does not open.
 // - Sealed twice. What is sent is what each store keeps: records already sealed by the vault key, under hidden names.
 // - Each device then sends the records the other lacks, file by file, and stops when both have said they are done.
+import type { CipherSuite } from './suite.ts';
 import { Session, EPHEMERAL_BYTES, SALT_BYTES } from './session.ts';
 import type { DeviceKeys } from './keys.ts';
 import type { Shelf } from './store.ts';
@@ -42,8 +43,10 @@ export class Peer {
   readonly #keys: DeviceKeys;
   readonly #shelf: Shelf;
   readonly #trusted: readonly Uint8Array[];
+  readonly #suite: CipherSuite | undefined;
   /** A peer for the device with `keys`, holding `shelf`, that syncs only with the devices whose keys are `trusted`. */
-  constructor(keys: DeviceKeys, shelf: Shelf, trusted: readonly Uint8Array[]) {
+  constructor(keys: DeviceKeys, shelf: Shelf, trusted: readonly Uint8Array[], suite?: CipherSuite) {
+    this.#suite = suite;
     this.#keys = keys;
     this.#shelf = shelf;
     this.#trusted = trusted;
@@ -74,7 +77,7 @@ export class Peer {
             channel.close();
             return resolve({ refused: 'a device that is not one of the owner’s' });
           }
-          session = await Session.open(this.#keys, theirs, await begun, message.slice(KEY_BYTES));
+          session = await Session.open(this.#keys, theirs, await begun, message.slice(KEY_BYTES), this.#suite);
           return say({ held: [...(await this.#shelf.held())].map(([note, d]) => [note, [...d]]) });
         }
         let said: Said;

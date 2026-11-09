@@ -184,3 +184,7 @@ cargo install tauri-cli --locked --version 2.12.4
 npm run build --workspace packages/app
 cd packages/app/src-tauri && cargo tauri build      # the installer, in target/release/bundle/, unsigned
 ```
+
+## Bringing a part
+
+`startShared` takes an optional `recipe`. It names the cipher suite and the transport to use instead of the shipped ones. A part left out is today's. A suite is checked against its contract at every start, and one that fails is refused. The keeper and the shelves are passed in the same way.

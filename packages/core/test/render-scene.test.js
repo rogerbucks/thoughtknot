@@ -73,3 +73,15 @@ test('a handful of things is one level, every item at the top', () => {
   assert.deepEqual(scene.roots, ['a', 'b', 'c']);
   assert.deepEqual(scene.roads[0], [{ a: 'a', b: 'b', forward: 1, back: 0, types: ['RELATES'] }]);
 });
+
+// Roger, 9 Nov 2026: "Core" held a room also called "Core". A room never shows the name of the room it sits in.
+// proves: render_room_folders
+test('a room named as the room it sits in is called the part around it', () => {
+  const things = [];
+  for (const area of ['Core', 'Plans'])
+    for (let i = 0; i < 3; i++) things.push(thing(`${area}${i}`, { subject: 'Core', area }));
+  const scene = sceneOf({ things, links: [] });
+  const core = scene.nodes.get(scene.roots[0]);
+  assert.equal(core.name, 'Core');
+  assert.deepEqual(core.children.map((k) => scene.nodes.get(k).name).sort(), ['Around Core', 'Plans']);
+});

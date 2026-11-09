@@ -1,10 +1,12 @@
 // Import from a database (editor spec §20, db_import_on_request; §21, settings_db_connections; §13,
 // offline_and_mobile_apis).
 // - The database is a SQLite file in the vault. Import offers each one, with nothing to set up and no password kept.
-// - It reads the file only when Import is pressed, on desktop and mobile alike, on the device: no network is reached.
+// - It reads the file when the person picks it, to list its tables. It writes only when Import is pressed. On desktop
+//   and mobile alike, it reads on the device: no network is reached.
 // - It writes the rows into the note as a graph block of text. It keeps no live link: drawing the note never reads the
 //   file again, and the file itself is never written.
-// The plugin's own SQLite engine runs here, the one bundled into main.js, on files made by sql.js in the test.
+// The plugin reads the file in plain JavaScript, with no engine. The files are made by sql.js in the test. The person
+// picks the tables and columns: no SQL is written.
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import initSqlJs from 'sql.js';
@@ -30,17 +32,17 @@ async function salesFile() {
   return bytes;
 }
 
-/** The plugin loaded with the note open in front and the database in the vault. Each read and fetch is recorded. */
+/** The plugin loaded with the note open in front and the database in the vault. Each binary read and fetch is recorded. */
 async function open({ files = {}, ...options } = {}) {
   const bytes = await salesFile();
   const env = await load({ files: { [PATH]: NOTE, [DB]: bytes, ...files }, ...options });
   env.state.activeView = new env.obsidian.MarkdownView(env.app.vault.getAbstractFileByPath(PATH), NOTE, 'source');
   env.bytes = bytes;
   env.reads = [];
-  const real = env.plugin.queryDatabase;
-  env.plugin.queryDatabase = (file, queries) => {
-    env.reads.push(queries);
-    return real(file, queries);
+  const real = env.app.vault.readBinary.bind(env.app.vault);
+  env.app.vault.readBinary = (file) => {
+    env.reads.push(file.path);
+    return real(file);
   };
   env.fetched = [];
   env.fetch = globalThis.fetch;
@@ -66,20 +68,52 @@ function type(m, name, value) {
   field.value = value;
   field.dispatch('input');
 }
+function choose(m, name, value) {
+  const sel = row(m.contentEl, name).querySelector('select');
+  sel.value = value;
+  sel.dispatch('change');
+}
+const offered = (m, name) =>
+  row(m.contentEl, name)
+    .querySelectorAll('option')
+    .map((o) => o.textContent);
 
-/** Opens the dialog, fills it in and presses Import; resolves once a notice says how it went. */
-async function importWith(env, things, links = '') {
+/** Opens the dialog and picks the database file; resolves once its tables are listed, or it says why not. */
+async function pickFile(env, file = DB) {
   await command(env).callback();
   const m = dialog(env);
   assert.ok(m, `the dialog is open, not: ${env.state.notices.join(' | ')}`);
+  const at = offered(m, 'Database file').indexOf(file) - 1;
+  choose(m, 'Database file', String(at));
+  await until(() => row(m.contentEl, 'Things table') || m.contentEl.querySelector('[role="alert"]'));
+  return m;
+}
+
+/** Picks the file, the tables and columns, and presses Import; resolves once a notice says how it went. */
+async function importWith(env, pick) {
+  const m = await pickFile(env);
   type(m, 'Graph name', 'customers');
-  type(m, 'Things query', things);
-  if (links) type(m, 'Links query', links);
+  for (const [name, value] of pick) {
+    if (name === 'Link type') type(m, name, value);
+    else choose(m, name, value);
+  }
   const said = env.state.notices.length;
   button(m.contentEl, 'Import').click();
   await until(() => env.state.notices.length > said);
   return { m, notice: env.state.notices.at(-1) };
 }
+
+const CUSTOMERS = [
+  ['Things table', 'customers'],
+  ['Id column', 'id'],
+  ['Kind column', 'kind'],
+];
+const REFERRALS = [
+  ['Links table', 'referrals'],
+  ['From column', 'from'],
+  ['To column', 'to'],
+  ['Type column', 'type'],
+];
 
 describe('Import offers the SQLite files of the vault, with nothing to set up (settings_db_connections)', () => {
   test('each .sqlite, .sqlite3 or .db file is offered by its path; nothing else is', async () => {
@@ -89,9 +123,10 @@ describe('Import offers the SQLite files of the vault, with nothing to set up (s
       const offered = row(dialog(env).contentEl, 'Database file').querySelectorAll('option');
       assert.deepEqual(
         offered.map((o) => o.textContent),
-        ['b.db', DB],
+        ['Choose a file', 'b.db', DB],
       );
       assert.deepEqual(env.reads, [], 'opening the dialog reads nothing');
+      assert.equal(row(dialog(env).contentEl, 'Things table'), undefined, 'no table is offered before a file');
     } finally {
       env.uninstall();
     }
@@ -122,19 +157,18 @@ describe('Import offers the SQLite files of the vault, with nothing to set up (s
   });
 });
 
-describe('Import reads the file only when pressed, on the device, and writes text (db_import_on_request)', () => {
+describe('Import writes only when pressed, on the device, as text, from tables picked (db_import_on_request)', () => {
   for (const mobile of [false, true])
-    test(`on ${mobile ? 'a phone or tablet' : 'desktop'}, Import reads the file once and writes a graph block`, async () => {
+    test(`on ${mobile ? 'a phone or tablet' : 'desktop'}, the tables picked are written as a graph block`, async () => {
       const env = await open({ mobile });
       try {
-        const { m, notice } = await importWith(
-          env,
-          'select id, kind, name, logo from customers',
-          'select * from referrals',
-        );
+        const m = await pickFile(env);
+        assert.deepEqual(env.reads, [DB], 'picking the file reads it once, to list its tables');
+        assert.deepEqual(offered(m, 'Things table'), ['customers', 'referrals']);
+        assert.equal(env.state.files.get(PATH), NOTE, 'nothing is written by picking');
+        m.close();
+        const { notice } = await importWith(env, [...CUSTOMERS, ...REFERRALS]);
         assert.match(notice, /Imported customers from sales into Sales/);
-        assert.ok(!env.state.modals.includes(m), 'the dialog closed');
-        assert.deepEqual(env.reads, [['select id, kind, name, logo from customers', 'select * from referrals']]);
         const note = env.state.files.get(PATH);
         assert.ok(note.startsWith(NOTE.trimEnd()), 'the note as it was, then the import');
         assert.match(
@@ -143,7 +177,6 @@ describe('Import reads the file only when pressed, on the device, and writes tex
         );
         assert.match(note, /\(acme:Customer \{name: 'Acme'\}\)/, 'the logo, a blob, is left out');
         assert.match(note, /\(acme\)-\[:REFERRED\]->\(bolt\)/);
-        assert.doesNotMatch(note, /select /, 'the queries are not kept, so nothing runs again');
         assert.deepEqual(env.state.files.get(DB), env.bytes, 'the database file is never written');
         assert.deepEqual(env.fetched, [], 'no network was reached');
       } finally {
@@ -151,10 +184,34 @@ describe('Import reads the file only when pressed, on the device, and writes tex
       }
     });
 
+  test('with no kind column and one type for every link, nothing is guessed from a column’s name', async () => {
+    const env = await open();
+    try {
+      const pick = [
+        ['Things table', 'customers'],
+        ['Id column', 'id'],
+        ['Kind column', ''],
+        ['Links table', 'referrals'],
+        ['From column', 'from'],
+        ['To column', 'to'],
+        ['Type column', ''],
+        ['Link type', 'KNOWS'],
+      ];
+      const { notice } = await importWith(env, pick);
+      assert.match(notice, /Imported customers/);
+      const note = env.state.files.get(PATH);
+      assert.match(note, /\(acme \{name: 'Acme'\}\)/, 'the kind column is not taken for a kind unless picked');
+      assert.doesNotMatch(note, /:Customer/);
+      assert.match(note, /:KNOWS/);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the block drawn afterwards reads the file no more: it keeps no live link', async () => {
     const env = await open();
     try {
-      await importWith(env, 'select id, kind, name from customers');
+      await importWith(env, CUSTOMERS);
       const { el } = await show(env, env.state.files.get(PATH));
       await until(() => !!el.querySelector('g.node'));
       assert.equal(env.reads.length, 1, 'drawing the note read nothing');
@@ -163,36 +220,28 @@ describe('Import reads the file only when pressed, on the device, and writes tex
     }
   });
 
-  test('a query that writes fails, the file and the note left as they were', async () => {
+  test('a view is named with why it is not offered, and only tables are', async () => {
     const env = await open();
     try {
-      const { notice } = await importWith(env, 'delete from customers returning id');
-      assert.match(notice, /The import from sales failed, so nothing was written: .*readonly/);
-      assert.equal(env.state.files.get(PATH), NOTE);
-      assert.deepEqual(env.state.files.get(DB), env.bytes);
+      const SQL = await initSqlJs();
+      const db = new SQL.Database(env.bytes);
+      db.run('create view acme_only as select * from customers where id = "acme"');
+      env.state.files.set(DB, db.export());
+      db.close();
+      const m = await pickFile(env);
+      assert.deepEqual(offered(m, 'Things table'), ['customers', 'referrals']);
+      assert.match(m.contentEl.textContent, /Not offered: acme_only is a view/);
     } finally {
       env.uninstall();
     }
   });
 
-  test('a query of more than 10,000 rows fails and says how to narrow it', async () => {
-    const env = await open();
-    try {
-      const many =
-        'with recursive n(i) as (select 1 union all select i + 1 from n where i < 10001) select i as id from n';
-      const { notice } = await importWith(env, many);
-      assert.match(notice, /more than 10,000 rows\. Narrow it with where or limit/);
-      assert.equal(env.state.files.get(PATH), NOTE);
-    } finally {
-      env.uninstall();
-    }
-  });
-
-  test('a file that is not a SQLite database fails, and says why', async () => {
+  test('a file that is not a SQLite database says why, and offers nothing to import', async () => {
     const env = await open({ files: { [DB]: new TextEncoder().encode('not a database at all, only text') } });
     try {
-      const { notice } = await importWith(env, 'select * from customers');
-      assert.match(notice, /The import from sales failed, so nothing was written: .*not a database/);
+      const m = await pickFile(env);
+      assert.match(m.contentEl.querySelector('[role="alert"]').textContent, /not a SQLite database/);
+      assert.equal(button(m.contentEl, 'Import'), undefined);
       assert.equal(env.state.files.get(PATH), NOTE);
     } finally {
       env.uninstall();

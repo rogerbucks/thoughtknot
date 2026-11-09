@@ -283,7 +283,7 @@ export class Aids {
   /** Says which level of detail shows, as "Level 2 of 4 · Areas", with Back once a cloud was flown into. */
   private level(text: string | null): void {
     this.badgeText = text;
-    const back = !!this.levelTaps?.canGoBack();
+    const back = !!(this.stage?.rooms.open || this.levelTaps?.canGoBack());
     if (!text && !back && !this.badge) return;
     if (!this.badge) {
       this.badge = this.host.viewport.createDiv({ cls: 'thoughtknot-level-badge' });
@@ -292,7 +292,7 @@ export class Aids {
         text: word('levels.back'),
         attr: { 'aria-label': word('levels.back-label'), type: 'button' },
       });
-      this.backButton.addEventListener('click', () => this.levelTaps?.goBack());
+      this.backButton.addEventListener('click', () => this.stage?.rooms.up() || this.levelTaps?.goBack());
       this.said = this.badge.createSpan();
       // the key of subjects waits in the View panel, shut, where there is one; else under the badge (panels_key)
       this.legend = new LevelLegend(keyHome(this.host.viewport, this.badge), {

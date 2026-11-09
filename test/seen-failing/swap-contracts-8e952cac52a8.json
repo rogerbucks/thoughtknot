@@ -1,0 +1,6 @@
+{
+  "file": "packages/sync/test/swap-contracts.test.js",
+  "test": "a chosen suite carries the vault key and the session > a vault key made with the second suite seals and opens, and the default cannot open it",
+  "seen_failing_first": false,
+  "evidence": "The first commit's version passed on the old code because it did not check the sealed layout; a later commit checks it and fails on the old code."
+}

@@ -26,7 +26,7 @@ import {
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-const RUNTIME_ALLOWED = new Set(['@viz-js/viz', 'sql.js']); // two WebAssembly engines inside the bundle (§13, §20)
+const RUNTIME_ALLOWED = new Set(['@viz-js/viz']); // the one WebAssembly engine inside the bundle (§13); SQLite is read in plain JavaScript (§20)
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
 // The one addition for the sync package alone (§40, local_encrypted_store; Roger, 28 Oct 2026): upstream Automerge.

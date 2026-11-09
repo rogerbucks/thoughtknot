@@ -31,6 +31,21 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
    - Obsidian, VS Code, the desktop app, the phone and AI authors all use it.
    - An edit made outside the editor becomes one small splice (`spliceBetween`).
 
+## Swapping a part
+
+`contracts.ts` holds the checks a swapped part must pass: `storeContract`, `shelfContract`, `channelContract` and
+`keeperContract`. Any build that passes them can stand in for another. `test/swap-contracts.test.js` runs them on every
+build that ships. A person who brings their own store, link or keeper is held to the same promises.
+
+`suite.ts` is the cipher suite: one interface for what seals and opens bytes. Roger chose on 9 Nov 2026 that even the
+cipher can be swapped. So a suite is accepted only when it passes `suiteContract`. A suite also makes its own key from 32 bytes (`keyFrom`). So the vault key and each session use the chosen suite: pass it to `VaultKey.create`, `VaultKey.openFrom` and `Session.open`.
+
+`acceptedSuite` runs that check at every start. The contract refuses a suite that hides nothing, opens what was
+changed, or reuses a nonce. The default is AES-256-GCM. The keys and the session still call the default directly.
+Wiring them to a chosen suite is the next step.
+
+## Putting it together
+
 `stack.ts` puts the five layers together for one device. `index.ts` is the package's one entry.
 
 ## Between devices
