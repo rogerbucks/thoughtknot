@@ -23,8 +23,8 @@ async function twoEnds(b: TransportBackend): Promise<[TransportChannel, Transpor
 }
 
 /**
- * Every check a transport is held to (ES§40, five_layer_stack). Messages are bytes it cannot read, so it must give back
- * each one whole and in order, both ways, and tell one end when the other closes.
+ * Every check a transport is held to (ES§40, five_layer_stack). Messages are bytes it cannot read. It must give back
+ * each one whole and in order, both ways. It must also tell one end when the other closes.
  */
 export function transportBackendContract(b: TransportBackend): StorageCheck[] {
   const title = readsInHostDirection(b.name, b.title);
