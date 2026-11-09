@@ -14,7 +14,7 @@ import { classificationInText, classificationOf, higherClassification } from '..
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
 import { noteText } from '../storage/plugin-notes';
-import { TEXT_GRAPH_COMMAND, graphFor, proseOf } from './text-graph';
+import { TEXT_GRAPH_COMMAND, graphFor, graphNamed, proseOf } from './text-graph';
 
 /** The command's id and name. */
 export const AI_COMMAND = {
@@ -129,6 +129,23 @@ export function textGraphCommand(plugin: ThoughtKnotPlugin) {
       new SendDialog(plugin, front.file, note, level, await plugin.sharedSchemas(), start).open();
     },
   };
+}
+
+/**
+ * Text to graph on a .txt place a note draws from (connector_text_proposed). It opens the send dialog on the file's
+ * words, for the note at `path`. Each change the answer proposes cites the file and line. Nothing is written until a
+ * person keeps it.
+ */
+export async function proseGraph(plugin: ThoughtKnotPlugin, path: string, prose: { place: string; text: string }) {
+  const ready = aiReady(plugin.settings);
+  if ('off' in ready) return void new Notice(ready.off);
+  const file = plugin.app.vault.getFileByPath(path);
+  if (!file) return;
+  const note = (await noteText(plugin.app, path)) ?? '';
+  const base = prose.place.replace(/^.*\//, '').replace(/\.txt$/i, '');
+  const text = { graph: graphNamed(base), words: prose.text, place: prose.place };
+  const start = { graph: text.graph, things: [], question: word('ai.text-graph.question'), text };
+  new SendDialog(plugin, file, note, levelFor(plugin, file, note), await plugin.sharedSchemas(), start).open();
 }
 
 /** Clears the record of sends, saying how many were let go. */

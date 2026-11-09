@@ -31,6 +31,10 @@ Each layer holds only the one below it. `test/five-layers.test.js` checks that, 
    - Obsidian, VS Code, the desktop app, the phone and AI authors all use it.
    - An edit made outside the editor becomes one small splice (`spliceBetween`).
 
+`contracts.ts` holds the checks a swapped part must pass: `storeContract`, `shelfContract`, `channelContract` and
+`keeperContract`. Any build that passes them can stand in for another. `test/swap-contracts.test.js` runs them on every
+build that ships. A person who brings their own store, link or keeper is held to the same promises.
+
 `stack.ts` puts the five layers together for one device. `index.ts` is the package's one entry.
 
 ## Between devices
