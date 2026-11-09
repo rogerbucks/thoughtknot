@@ -12,6 +12,7 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import {
   connect,
   dataSetTables,
+  sha256,
   joinPlaces,
   mappingPlace,
   namesSharedSchema,
@@ -31,7 +32,8 @@ import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { vaultSourceRegistry } from './host-sources';
 import { noteText } from '../storage/plugin-notes';
-import { vaultOps } from '../export/vault-write';
+import { freePath, vaultOps } from '../export/vault-write';
+import type { DataSetHost } from '@thoughtknot/core/display/properties/data-set-controls';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
 function nameOf(source: Pick<GraphSource, 'kind' | 'target'>): string {
@@ -115,6 +117,24 @@ export async function withTables<D extends GraphDrawing | undefined>(
 ): Promise<D> {
   const tables = drawing ? await dataSetTables(graph, (place) => tableText(plugin, place, from)) : [];
   return tables.length ? { ...drawing, tables } : drawing;
+}
+
+/** How the cards of the note at `note` keep a data set as a snapshot: its file copied beside the note (ES§52). */
+export function dataSetHost(plugin: ThoughtKnotPlugin, note: string): DataSetHost {
+  return {
+    note,
+    copy: async (from, to) => {
+      const text = await tableText(plugin, from, note);
+      if (text === null) return null;
+      const place = freePath(plugin, to);
+      try {
+        await vaultOps(plugin).write(place, text);
+      } catch {
+        return null;
+      }
+      return { place, version: sha256(text) };
+    },
+  };
 }
 
 /**

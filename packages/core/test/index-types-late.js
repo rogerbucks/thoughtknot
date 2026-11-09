@@ -70,6 +70,8 @@ export const TYPES_LATE = [
   'JoinOptions',
   'JoinedGraph',
   'JoinedRead',
+  'KeptEdit',
+  'KeptSet',
   'Kept',
   'KeptDescent',
   'LaidMarks',

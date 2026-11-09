@@ -34,7 +34,7 @@ import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
 import { movingFor, writeStyle } from './style-write';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
-import { withTables } from './sources/source-read';
+import { dataSetHost, withTables } from './sources/source-read';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
@@ -336,8 +336,8 @@ export async function renderBlock(
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) }, // moving, backwards (§7)
       ...rulesOn(looked || styling, reading.world[graph], drawing, {}, problems, shown), // §56
       links,
-      // its things' images, found from this note, and the pictures its style draws on boxes (§18)
-      images: plugin.cardImages(target.path, drawing.pictures),
+      images: plugin.cardImages(target.path, drawing.pictures), // things' images, pictures on boxes (§18)
+      dataSets: dataSetHost(plugin, target.path), // a snapshot kept beside the note (ES§52)
       completeness: completenessReport(reading, graph, new Date().toISOString().slice(0, 10)),
       parked: parked(reading, graph, new Date().toISOString().slice(0, 10)),
       picture: pictureStatus(plugin, target.path, graph), // the bar says whether its picture is up to date (§62)

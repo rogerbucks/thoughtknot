@@ -1,6 +1,7 @@
 // What a drawn graph is given (spec §3, §4, §14). It is given the reading and the graph, its drawn SVG and its
 // problems, where it is shown, and what its buttons do. It is also given the editor open in place on its card, if any,
 // which its inspector writes through.
+import type { DataSetHost } from '../properties/data-set-controls';
 import type {
   CompletenessReport,
   Drawn,
@@ -154,6 +155,8 @@ export interface ViewOptions {
   profile?: ProfileShown;
   /** Its links followed through Obsidian, and those that name nothing (§18); none, links shown as plain text. */
   links?: LinkHost;
+  /** Copies a data set's file beside the note, for a snapshot (ES§52); none, no snapshot is offered. */
+  dataSets?: DataSetHost;
   /** The images its things name, found in the vault, and the boxes a Picture draws one on (§18); none, no image shown. */
   images?: CardImages;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
