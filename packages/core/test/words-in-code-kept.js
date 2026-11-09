@@ -36,6 +36,7 @@ export const CORE_KEPT = {
   'packages/core/src/theme-tokens.ts': '*',
   // the contract suites a plug-in's or a backend's developer runs: their test cases and what each wanted
   'packages/core/src/plugins-contract.ts': '*',
+  'packages/core/src/plugins-contract-sync.ts': '*',
   'packages/core/src/storage-contract.ts': '*',
   // the history contract, a developer's error, and the heading of a history note: bytes kept as written, never said
   'packages/core/src/history-store.ts': '*',

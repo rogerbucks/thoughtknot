@@ -4,7 +4,15 @@
 export { EXTENSION_POINTS, HOST_ABILITIES, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from './plugins.ts';
 export { POINT_VERSIONS } from './plugins.ts';
 export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';
-export type { PluginCommand, PluginResult, RegistryOptions, StorageBackend, StoppedPlugin } from './plugins.ts';
+export type {
+  PluginCommand,
+  PluginResult,
+  RegistryOptions,
+  StorageBackend,
+  StoppedPlugin,
+  SyncStore,
+  SyncStoreBackend,
+} from './plugins.ts';
 export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } from './plugins.ts';
 export type { GivenGraph, PluginSource, PluginStep } from './plugins.ts';
 export { TRUST_LEVELS } from './plugin-sources.ts';
@@ -42,3 +50,4 @@ export { fromPluginMarks, markBounds, marksBounds, scaledMarks } from './drawing
 export type { BoxShape, DrawMark, DrawMarkKind, DrawMarkRole, MarkBounds, MarkOutline } from './drawing-marks.ts';
 export type { LaidMarks, LaidPart } from './graphviz-marks.ts';
 export { layoutSvg } from './graphviz-svg.ts';
+export { syncStoreBackendContract } from './plugins-contract-sync.ts';

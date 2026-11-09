@@ -67,7 +67,7 @@ function fail(name: string, wanted: string, got: unknown): never {
 const FORCED_DIRECTION = /[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/u;
 
 /** The check that a title a person reads forces no direction, so it reads in the host's (plugin_rtl). */
-const readsInHostDirection = (what: string, title: string): PluginCheck => ({
+export const readsInHostDirection = (what: string, title: string): PluginCheck => ({
   name: 'its title reads in the host’s direction, forcing none of its own',
   run: () => {
     if (FORCED_DIRECTION.test(title)) fail(what, 'a title with no direction marks', title);

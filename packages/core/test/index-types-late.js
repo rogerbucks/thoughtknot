@@ -300,6 +300,8 @@ export const TYPES_LATE = [
   'SuggestionLimits',
   'SummaryGroup',
   'SwitchSetting',
+  'SyncStore',
+  'SyncStoreBackend',
   'Target',
   'TestRunOptions',
   'TextChange',
