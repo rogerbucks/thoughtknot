@@ -9,6 +9,7 @@
 // - One program may be started: the person's own gh, for the calls a GitHub repository needs and no other (gh.rs).
 // - Bytes between the owner's devices over a mesh VPN (mesh.rs): listen, dial, send and receive whole messages on
 //   private addresses only. The messages are sealed before they get here, so Rust holds no key.
+// - What the machine has for sharing (found.rs): the one command only looks, for a mesh VPN address, and changes nothing.
 // - The notes as Automerge texts (crdt.rs): open, edit, merge, ask the history and who made each change, anchor. They are kept in Rust because the
 //   window may not run WebAssembly. Bytes cross as hexadecimal text, and no record leaves unsealed.
 // - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
@@ -17,6 +18,7 @@
 // On a phone or tablet (spec §40, android_app and ios_app) there is no folder dialog. The app keeps its notes in its own
 // documents folder instead, open from the start: `own_folder` names it, and `pick_folder` gives it again.
 mod crdt;
+mod found;
 mod gh;
 mod mesh;
 mod place;
@@ -378,6 +380,14 @@ async fn crdt_anchor(
     notes.anchor(&note, place)
 }
 
+/// The mesh VPN addresses of this machine, each with the name to say it by. It only looks (found.rs).
+#[tauri::command]
+async fn machine_found() -> Result<Vec<(String, String)>, String> {
+    tauri::async_runtime::spawn_blocking(found::vpns)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Who made each change of an open note: the message kept with each, oldest first.
 #[tauri::command]
 async fn crdt_history(notes: State<'_, crdt::Notes>, note: String) -> Result<Vec<String>, String> {
@@ -461,7 +471,8 @@ pub fn run() {
         crdt_has_been,
         crdt_anchor,
         crdt_place,
-        crdt_history
+        crdt_history,
+        machine_found
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");

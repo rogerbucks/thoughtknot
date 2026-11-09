@@ -5,10 +5,12 @@
 // - Another device is trusted by pasting its public key. Only a trusted device is ever sent anything.
 // - Nothing is sent from this panel. The keys are kept by a `Keeper`, in the window's IndexedDB (app-share-keeper.ts).
 import { word } from '@thoughtknot/core';
+import type { Found } from '@thoughtknot/sync/remote';
 import { Sharing, type Keeper } from '@thoughtknot/sync/sharing';
 import { make, printOf } from './app-share-dom.ts';
 import { inviteView, joinView } from './app-share-invite.ts';
 import { linkView } from './app-share-link.ts';
+import { offersView } from './app-share-offers.ts';
 
 export interface SharePanelOptions {
   doc: Document;
@@ -16,6 +18,8 @@ export interface SharePanelOptions {
   keeper: Keeper | undefined;
   /** Called with the vault once it is started or opened, so the rest of the window can use it. */
   started?: (sharing: Sharing) => void;
+  /** Looks at what this machine has for sharing; nothing where the window cannot look. */
+  find?: () => Promise<Found>;
 }
 
 const why = (e: unknown): string => (e instanceof Error ? e.message : String(e));
@@ -58,7 +62,7 @@ async function openPanel(o: SharePanelOptions, opener: HTMLElement): Promise<voi
   const show = async (sharing: Sharing): Promise<void> => {
     const again = () => show(sharing);
     body.replaceChildren(
-      await (sharing.hasVault ? vaultView(doc, sharing, status, again) : joinView(doc, sharing, status, again)),
+      await (sharing.hasVault ? vaultView(doc, sharing, status, again, o.find) : joinView(doc, sharing, status, again)),
     );
     o.started?.(sharing);
   };
@@ -100,7 +104,13 @@ async function openPanel(o: SharePanelOptions, opener: HTMLElement): Promise<voi
 }
 
 /** The started vault: this device's public key, who is trusted, and the field to trust another device. */
-async function vaultView(doc: Document, sharing: Sharing, status: HTMLElement, again: () => Promise<void>) {
+async function vaultView(
+  doc: Document,
+  sharing: Sharing,
+  status: HTMLElement,
+  again: () => Promise<void>,
+  find?: () => Promise<Found>,
+) {
   const view = make(doc, 'div');
   const mine = make(doc, 'textarea', { readOnly: true, rows: 3, value: sharing.publicKey });
   const label = make(doc, 'label', { className: 'gn-app-field' });
@@ -144,6 +154,7 @@ async function vaultView(doc: Document, sharing: Sharing, status: HTMLElement, a
     trust,
     await inviteView(doc, sharing, status),
     linkView(doc, sharing, status),
+    offersView(doc, sharing, await (find?.().catch(() => ({})) ?? {}), status),
   );
   return view;
 }
