@@ -20,7 +20,10 @@ const bytes = (...n: number[]): Uint8Array => Uint8Array.from(n);
 const same = (a: Uint8Array, b: Uint8Array): boolean => a.length === b.length && a.every((v, i) => v === b[i]);
 const sameList = (a: readonly Uint8Array[], b: readonly Uint8Array[]): boolean =>
   a.length === b.length && a.every((r, i) => same(r, b[i]!));
-const flush = (): Promise<void> => new Promise((done) => setTimeout(done, 20));
+/** Waits for messages in flight: a hundred turns of the event loop, unless the part's host gives its own wait. */
+const turns = async (): Promise<void> => {
+  for (let i = 0; i < 100; i++) await Promise.resolve();
+};
 
 /** The checks every record store holds to, each run on a fresh, empty store from `make`. */
 export function storeContract(make: () => Store | Promise<Store>): ContractCheck[] {
@@ -144,7 +147,10 @@ export function shelfContract(make: () => (Store & Shelf) | Promise<Store & Shel
 }
 
 /** The checks every channel between devices holds to. `make` gives two ends of one channel. */
-export function channelContract(make: () => [Channel, Channel] | Promise<[Channel, Channel]>): ContractCheck[] {
+export function channelContract(
+  make: () => [Channel, Channel] | Promise<[Channel, Channel]>,
+  flush: () => Promise<void> = turns,
+): ContractCheck[] {
   return [
     {
       name: 'a message arrives whole and byte for byte',
