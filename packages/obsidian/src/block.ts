@@ -8,6 +8,7 @@ import {
   brokenLinks,
   changeSetId,
   completenessReport,
+  dataSetTables,
   depthOf,
   gqlBlocks,
   graphOfBlock,
@@ -34,6 +35,7 @@ import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
 import { movingFor, writeStyle } from './style-write';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
+import { tableText } from './sources/source-read';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
@@ -225,7 +227,12 @@ export async function renderBlock(
   const plain = reading.graphs.get(graph);
   const at = { path: target.path, graph }; // its type looked at in reading view, never saved (§15, type_try_reading)
   const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
-  const drawing = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
+  const styled = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
+  // each data set drawn as its table, read from its place (§67, format_content_node)
+  const tables = styled
+    ? await dataSetTables(reading.world[graph], (place) => tableText(plugin, place, target.path))
+    : [];
+  const drawing = styled && (tables.length ? { ...styled, tables } : styled);
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
   // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
   const diagram =

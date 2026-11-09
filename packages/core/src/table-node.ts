@@ -61,7 +61,7 @@ export function tableNode(
   );
   const pad = PAD * SIZE;
   const widths = letters.map((n) => n * LETTER * SIZE);
-  const tail = tailWords(table.rows.length, more);
+  const tail = tableTail(table.rows.length, more);
   const across = widths.reduce((s, w) => s + w, 0) + pad * Math.max(columns - 1, 0);
   const width = Math.max(across, [...tail].length * LETTER * SIZE, [...name].length * LETTER * SIZE) + 2 * pad;
   const height = (lines.length + 2) * ROW * SIZE + pad;
@@ -94,7 +94,7 @@ export function tableNode(
 }
 
 /** The last line: how many rows the table has, and what the node leaves out. */
-function tailWords(count: number, more: { rows: number; columns: number }): string {
+export function tableTail(count: number, more: { rows: number; columns: number }): string {
   if (count === 0) return word('reading.table.node-no-rows');
   const parts = [word('reading.table.node-rows', { count })];
   if (more.rows > 0) parts.push(word('reading.table.node-more-rows', { count: more.rows }));

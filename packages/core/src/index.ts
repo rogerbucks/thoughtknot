@@ -69,6 +69,7 @@ export { INLINE_ROWS } from './inline-properties.ts';
 export type { InlineProperties, PropertyRow } from './inline-properties.ts';
 export { PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor } from './picture.ts';
 export type { PictureBox } from './picture.ts';
+export { dataSetTables } from './data-set-tables.ts';
 export { imageFacts } from './image-facts.ts';
 export type { ImageFacts, ImageFormat } from './image-facts.ts';
 export { IMAGE_EXTENSIONS, imageLink, imagesOf, neverMoves } from './image-links.ts';

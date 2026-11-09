@@ -91,6 +91,12 @@ async function fromVault(
   }
 }
 
+/** The text of the table at `place`, found from the note at `from`, or null when it cannot be read (§52, §67). */
+export async function tableText(plugin: ThoughtKnotPlugin, place: string, from: string): Promise<string | null> {
+  const r = await fromVault(plugin, { kind: 'table', target: place }, from);
+  return 'text' in r ? r.text : null;
+}
+
 /**
  * A source read for the note at `from`. It is what the core makes of the text the vault holds there.
  * The vault's shared schemas are given when its blocks name one. Or it says why it cannot be drawn, naming it.
