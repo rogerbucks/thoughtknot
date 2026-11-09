@@ -1,0 +1,6 @@
+{
+  "file": "test/licences.test.js",
+  "test": "what is bundled into a release > a package recorded for its major release ships the licence file recorded, with nothing inside",
+  "seen_failing_first": false,
+  "evidence": "Before this change no record used the name@major form, so the test had no packages to check. It guards that new form."
+}
