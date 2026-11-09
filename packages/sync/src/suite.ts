@@ -2,7 +2,7 @@
 // included. So the part that seals and opens bytes is one interface, and a suite is accepted only when it passes the
 // suite contract (contracts.ts). The contract refuses a suite that sends plaintext, that opens what was changed, or
 // that reuses a nonce. It is run at every start, so a broken suite cannot run quietly. The default suite is AES-GCM.
-import { suiteContract } from './contracts.ts';
+import { suiteContract } from './suite-contract.ts';
 import { openWith, sealWith } from './keys.ts';
 
 /** What seals and opens bytes with a key. A key is opaque: only the suite that made it can use it. */

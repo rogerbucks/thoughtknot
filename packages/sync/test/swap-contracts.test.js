@@ -16,7 +16,8 @@ import {
   defaultSuite,
   suiteProblems,
 } from '../src/index.ts';
-import { channelContract, keeperContract, shelfContract, storeContract, suiteContract } from '../src/contracts.ts';
+import { channelContract, keeperContract, shelfContract, storeContract } from '../src/contracts.ts';
+import { suiteContract } from '../src/suite-contract.ts';
 import { nodeFiles } from './helpers.js';
 
 const run = (name, checks) => describe(name, () => checks.forEach((c) => test(c.name, c.run)));
