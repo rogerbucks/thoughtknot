@@ -6,7 +6,6 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
 import { sceneOf, type Scene } from '../../render/render-scene.ts';
-import { word } from '../../words.ts';
 import { panView } from '../../render/render-camera.ts';
 import { bendOf, isGlobe } from '../../render/render-globe.ts';
 import type { View } from '../../render/render-marks.ts';
@@ -99,7 +98,3 @@ export function turnedView(view: View, dx: number, dy: number): View | null {
   if (isGlobe(view)) return panView(view, dx, dy);
   return isTilted(view) ? turnedBy(view, dx, dy) : null;
 }
-
-/** The level `level` of `scene`, as a reader is told it: "Level 2 of 3 · Areas". */
-export const levelSaid = (scene: Scene, level: number): string =>
-  word('levels.badge', { at: level + 1, count: scene.depths.length, name: scene.depths[level] ?? '' });

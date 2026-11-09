@@ -10,6 +10,7 @@ import type { DetailLevel } from '../detail-levels.ts';
 import { namedLevels } from '../named-levels.ts';
 import type { GraphShape } from '../types-shape.ts';
 import type { DrawMark } from '../drawing-marks.ts';
+import { word } from '../words.ts';
 
 /** One place in the tree: a group at some level, or one item at the last. */
 export interface SceneNode {
@@ -71,9 +72,14 @@ export function sceneOf(shape: GraphShape): Scene {
   const nodes = new Map<string, SceneNode>();
   // the group each item is in at each depth, far to near
   const pathOf = new Map<string, string[]>(things.map((t) => [t.key, []]));
+  const named = new Map<string, string>();
   groupDepths.forEach((level, depth) => {
     for (const g of [...level.groups].sort((a, b) => byText(a.key, b.key))) {
-      const node: SceneNode = { key: g.key, name: g.name, depth, children: [], items: [...g.things].sort(byText) };
+      named.set(g.key, g.name);
+      // a room never shows its parent's name: it is the part round the thing the parent is named after (Roger, 9 Nov)
+      const name =
+        g.parent !== undefined && named.get(g.parent) === g.name ? word('levels.around', { name: g.name }) : g.name;
+      const node: SceneNode = { key: g.key, name, depth, children: [], items: [...g.things].sort(byText) };
       if (g.parent !== undefined) node.parent = g.parent;
       nodes.set(g.key, node);
       for (const t of g.things) pathOf.get(t)?.push(g.key);
@@ -88,8 +94,8 @@ export function sceneOf(shape: GraphShape): Scene {
   for (const node of nodes.values()) if (node.parent !== undefined) nodes.get(node.parent)?.children.push(node.key);
   for (const node of nodes.values()) node.children.sort(byText);
   const roots = [...nodes.values()].filter((n) => n.depth === 0).map((n) => n.key);
-  const named = [...new Set(shape.things.map((t) => pathOf.get(t.key)?.[0] ?? t.key))].filter((k) => roots.includes(k));
-  return { depths: levels.map((l) => l.name), nodes, roots, named, roads: roadsOf(shape, pathOf, last) };
+  const first = [...new Set(shape.things.map((t) => pathOf.get(t.key)?.[0] ?? t.key))].filter((k) => roots.includes(k));
+  return { depths: levels.map((l) => l.name), nodes, roots, named: first, roads: roadsOf(shape, pathOf, last) };
 }
 
 /** The roads at each depth: every link between two things, rolled up to the nodes each end sits in there. */
