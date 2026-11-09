@@ -46,7 +46,8 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
     const drawn = stage.canvas.thoughtknotDrawn();
     assert.equal(drawn.view, stage.view);
     assert.ok(drawn.marks.some((m) => m.kind === 'label'));
-    const at = () => Number(/^Level (\d) of 3 · /.exec(stage.level())[1]);
+    const { detailAt } = await import('../src/render/render-detail.ts');
+    const at = () => detailAt(stage.sizes, stage.view.scale).level + 1;
     const start = at();
     assert.ok(start < 3, 'a small card does not open every level at once');
     // a Mac trackpad's pinch: many Ctrl-wheel events of a few pixels each, every one heard and each a small zoom
@@ -90,7 +91,7 @@ test('the stage covers the card, zooms smoothly with a trackpad pinch, and unloa
 });
 
 // proves: render_one_camera
-test('a click picks from the marks: a group opens a level, an item opens, a second click centres it', async () => {
+test('a click picks from the marks: a room is picked then opened, an item opens, a second click centres it', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -118,12 +119,16 @@ test('a click picks from the marks: a group opens a level, an item opens, a seco
     stage.drag = null;
     stage.clicked(-50, -50);
     assert.deepEqual(said, ['clear'], 'empty space clears the choice');
-    // groups: each click glides one level nearer
+    // groups open like folders: the first click picks one and moves nothing, the second opens it
     for (let i = 0; i < 4 && !stage.marks.some((m) => m.kind === 'dot' && m.pick !== false); i++) {
-      const cloud = stage.marks.find((m) => m.kind === 'cloud' && m.pick !== false);
-      const before = view().scale;
+      const cloud = stage.marks.find((m) => m.kind === 'cloud' && m.pick !== false && !stage.rooms.around(m.key));
+      const before = { ...view() };
       stage.clicked(cloud.x, cloud.y);
-      assert.ok(view().scale > before, 'a click on a group opens its next level');
+      assert.deepEqual(view(), before, 'the first click on a room moves nothing');
+      assert.equal(stage.rooms.picked, cloud.key);
+      stage.clicked(cloud.x, cloud.y);
+      assert.ok(view().scale > before.scale, 'the second click opens it');
+      assert.equal(stage.rooms.open, cloud.key);
     }
     const dot = stage.marks.find((m) => m.kind === 'dot' && pickAt(stage.marks, m.x, m.y) === m.key);
     assert.ok(dot, 'clicking groups reaches items a click can pick');
@@ -263,7 +268,7 @@ test('while a view in space shows, the stage leaves the trackpad pinch and the p
 });
 
 // proves: render_switch, level_colours
-test('the colour key shows over the new rendering: told each new level, with the colours the drawing paints', async () => {
+test('the colour key shows over the new rendering: told each room opened, with the colours the drawing paints', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -286,17 +291,12 @@ test('the colour key shows over the new rendering: told each new level, with the
     stage.draw();
     assert.equal(told, 1, 'a drawing at the same level says nothing new');
     const before = stage.level();
-    for (let i = 0; i < 400 && stage.level() === before; i++)
-      stage.wheel({
-        ctrlKey: true,
-        deltaY: -20,
-        clientX: 400,
-        clientY: 200,
-        preventDefault() {},
-        stopPropagation() {},
-      });
+    (stage.viewport.win ?? globalThis).matchMedia = (q) => ({ matches: q.includes('reduce') });
+    const room = stage.marks.find((m) => m.kind === 'cloud' && m.pick !== false);
+    stage.clicked(room.x, room.y);
+    stage.clicked(room.x, room.y);
     assert.notEqual(stage.level(), before);
-    assert.ok(told >= 2, 'the badge hears the new level');
+    assert.ok(told >= 2, 'the badge hears the way into the room opened');
     // the chips take the drawing's colours: Work first, Money second, as the mockups do
     const [work, money] = stage.scene.named;
     assert.equal(stage.colourOf(work), LIGHT.subjects[0]);
