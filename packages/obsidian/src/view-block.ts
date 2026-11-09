@@ -43,6 +43,7 @@ import type { ViewShown } from '@thoughtknot/core/display/graph-view/view-strip'
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { sourcedView } from './sources/sources';
+import { withTables } from './sources/source-read';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -274,7 +275,7 @@ export async function renderViewBlock(
   let drawn;
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
-  const styled = styledDrawing(drawing, looked.style, g, v.name);
+  const styled = await withTables(plugin, styledDrawing(drawing, looked.style, g, v.name), g, ctx.sourcePath);
   const laidOut = (b?: object) => live(diagram.picture, state, styled, b) ?? plugin.layout(state.folded(styled, b), b);
   try {
     drawn = diagram.table

@@ -8,22 +8,11 @@
 // Host-free and pure.
 import type { DrawMark } from './drawing-marks.ts';
 import { LETTER, fitText } from './view-types/fit-text.ts';
-import { word } from './words.ts';
+import type { NodeTable, TableNodeLimit } from './table-source.ts';
+import { TABLE_NODE_LIMIT, tableTail } from './table-source.ts';
 
-/** The table a node shows: its header and its rows of cells, as csv-read.ts gives them. */
-export interface NodeTable {
-  header: readonly string[];
-  rows: readonly (readonly string[])[];
-}
-
-/** How much of a table a node shows, at most. */
-export interface TableNodeLimit {
-  rows: number;
-  columns: number;
-}
-
-/** The first rows and columns a node shows, before the line counting the rest. */
-export const TABLE_NODE_LIMIT: TableNodeLimit = { rows: 8, columns: 6 };
+export type { NodeTable, TableNodeLimit } from './table-source.ts';
+export { TABLE_NODE_LIMIT, tableTail } from './table-source.ts';
 
 /** The words' size, in the drawing's units. */
 const SIZE = 12;
@@ -61,7 +50,7 @@ export function tableNode(
   );
   const pad = PAD * SIZE;
   const widths = letters.map((n) => n * LETTER * SIZE);
-  const tail = tailWords(table.rows.length, more);
+  const tail = tableTail(table.rows.length, more);
   const across = widths.reduce((s, w) => s + w, 0) + pad * Math.max(columns - 1, 0);
   const width = Math.max(across, [...tail].length * LETTER * SIZE, [...name].length * LETTER * SIZE) + 2 * pad;
   const height = (lines.length + 2) * ROW * SIZE + pad;
@@ -91,15 +80,6 @@ export function tableNode(
   });
   marks.push(label('more', tail, pad, lines.length + 1, 'label.table-more', width - 2 * pad));
   return { width, height, more, marks };
-}
-
-/** The last line: how many rows the table has, and what the node leaves out. */
-function tailWords(count: number, more: { rows: number; columns: number }): string {
-  if (count === 0) return word('reading.table.node-no-rows');
-  const parts = [word('reading.table.node-rows', { count })];
-  if (more.rows > 0) parts.push(word('reading.table.node-more-rows', { count: more.rows }));
-  if (more.columns > 0) parts.push(word('reading.table.node-more-columns', { count: more.columns }));
-  return parts.join(' · ');
 }
 
 /** The node's marks moved so its centre is at `x`, `y`, as a layout placed it. */

@@ -577,7 +577,7 @@
     "packages/obsidian/src/block-editor/block-editor.ts": 5,
     "packages/obsidian/src/block-editor/block-note.ts": 8,
     "packages/obsidian/src/block-editor/note-writing.ts": 5,
-    "packages/obsidian/src/block.ts": 46,
+    "packages/obsidian/src/block.ts": 45,
     "packages/obsidian/src/commands.ts": 3,
     "packages/obsidian/src/convert.ts": 2,
     "packages/obsidian/src/databases/import.ts": 2,

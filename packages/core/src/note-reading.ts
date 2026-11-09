@@ -6,6 +6,7 @@ import type { CertaintyLevel } from './certainty-drawn.ts';
 import type { Estimate } from './estimates.ts';
 import type { LayoutOptions } from './layouts/layout-options.ts';
 import type { InlineProperties } from './inline-properties.ts';
+import type { NodeTable } from './table-source.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
 import type { PictureBox } from './picture.ts';
@@ -90,6 +91,8 @@ export interface GraphDrawing {
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
   inline?: InlineProperties;
+  /** The tables its data set boxes show below their text, by box key (ES§67, table-source.ts); none, no table shown. */
+  tables?: (readonly [string, NodeTable])[];
   /** Every property of each box, as semantic zoom shows them zoomed nearest (§68); none, no box has any. */
   everyProperty?: InlineProperties;
   /** The diagram type it is laid out as (spec §15), when one is chosen and fits; none, a network. */

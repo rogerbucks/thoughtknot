@@ -8,8 +8,10 @@
 import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';
 import type { BlockContext } from '../block-context';
+import type { Graph } from '@thoughtknot/graph-spec';
 import {
   connect,
+  dataSetTables,
   joinPlaces,
   mappingPlace,
   namesSharedSchema,
@@ -17,7 +19,14 @@ import {
   READ_LIMITS,
   readSource,
 } from '@thoughtknot/core';
-import type { GraphSource, JoinedRead, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
+import type {
+  GraphDrawing,
+  GraphSource,
+  JoinedRead,
+  SourceFetched,
+  SourceRead,
+  SourceRefusal,
+} from '@thoughtknot/core';
 import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { vaultSourceRegistry } from './host-sources';
@@ -89,6 +98,23 @@ async function fromVault(
   } catch (e) {
     return { found: file.path, unreadable: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/** The text of the table at `place`, found from the note at `from`, or null when it cannot be read (ES§52, ES§67). */
+async function tableText(plugin: ThoughtKnotPlugin, place: string, from: string): Promise<string | null> {
+  const r = await fromVault(plugin, { kind: 'table', target: place }, from);
+  return 'text' in r ? r.text : null;
+}
+
+/** `drawing` with each data set of `graph` drawn as its table, read from its place (ES§67, format_content_node). */
+export async function withTables<D extends GraphDrawing | undefined>(
+  plugin: ThoughtKnotPlugin,
+  drawing: D,
+  graph: Graph | undefined,
+  from: string,
+): Promise<D> {
+  const tables = drawing ? await dataSetTables(graph, (place) => tableText(plugin, place, from)) : [];
+  return tables.length ? { ...drawing, tables } : drawing;
 }
 
 /**

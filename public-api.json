@@ -718,6 +718,9 @@
         "DataLink": [
           "type = [from: string, type: string, to: string, properties: Record<string, Value>]"
         ],
+        "dataSetTables": [
+          "value: (graph: Graph | undefined, read: (place: string) => Promise<string | null>) => Promise<[string, NodeTable][]>"
+        ],
         "dataText": [
           "value: (data: ExportedData, format: DataFormat, info: DataInfo) => string"
         ],
@@ -1538,7 +1541,8 @@
           "pictures?: Array<PictureBox> | undefined",
           "placed?: Record<string, [number, number]> | undefined",
           "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined",
-          "step?: LayoutStep | undefined"
+          "step?: LayoutStep | undefined",
+          "tables?: Array<readonly [string, NodeTable]> | undefined"
         ],
         "GraphNames": [
           "type = Iterable<string> | ReadonlyMap<string, string>"
