@@ -407,13 +407,15 @@ jobs:
           enable-cache: false
       # The fresh clone runs the same tests, lint and build as the jobs above, which took 14 minutes on every push to main
       # (24 Oct 2026). So it runs only when a setup input changed (the README's steps, the npm scripts they run, the
-      # hook): a pull request or a queued change since its base, main since the push before. The nightly and the release
-      # run it whole, so a break in the steps is found within a day.
+      # hook): a pull request or a queued change since its base, main since the push before. Even then the README's
+      # `npm test` line is left out, as the nightly leaves it out: the shards above run the whole suite on this very
+      # commit, and the suite is not run a second time (Roger, 25 Oct 2026). With it, this job took 24 minutes and the
+      # run waited on it alone (9 Nov 2026). The release runs the fresh clone whole, its tests in six shards.
       - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
-        run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
+        run: node scripts/public-readiness.mjs --history --setup-since "$BASE" --no-tests
       - if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
         env:
           BEFORE: ${{ github.event.before }}
-        run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE"
+        run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE" --no-tests

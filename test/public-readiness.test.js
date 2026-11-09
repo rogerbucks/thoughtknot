@@ -419,14 +419,15 @@ describe('kept so, in CI and at every release', () => {
     assert.match(job.join('\n'), /fetch-depth: 0/);
     const text = job.join('\n');
     // A pull request or a queued change runs the fresh clone when a setup input changed since its base. A push to main
-    // runs it when one changed since the push before. Neither runs it whole: the nightly and the release do.
+    // runs it when one changed since the push before. Neither runs the suite in it: the shards of the same run do, on
+    // the same commit. Only the release runs the fresh clone whole.
     assert.match(
       text,
-      /- if: github\.event_name == 'pull_request' \|\| github\.event_name == 'merge_group'\n\s+env:\n\s+BASE: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.merge_group\.base_sha \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BASE"\n/,
+      /- if: github\.event_name == 'pull_request' \|\| github\.event_name == 'merge_group'\n\s+env:\n\s+BASE: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.merge_group\.base_sha \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BASE" --no-tests\n/,
     );
     assert.match(
       text,
-      /- if: github\.event_name != 'pull_request' && github\.event_name != 'merge_group'\n\s+env:\n\s+BEFORE: \$\{\{ github\.event\.before \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BEFORE"$/m,
+      /- if: github\.event_name != 'pull_request' && github\.event_name != 'merge_group'\n\s+env:\n\s+BEFORE: \$\{\{ github\.event\.before \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BEFORE" --no-tests$/m,
     );
     assert.doesNotMatch(text, COMMAND);
   });
