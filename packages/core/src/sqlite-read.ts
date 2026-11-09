@@ -238,7 +238,14 @@ export function columnsOf(sql: string): { columns: string[]; rowid: number; with
   }
   const only = keyed.length === 1 ? columns.indexOf(keyed[0] ?? '') : -1;
   if (rowid < 0 && only >= 0 && types[only] === 'INTEGER') rowid = only;
-  return { columns, rowid, withoutRowid: /\)\s*without\s+rowid\s*;?\s*$/i.test(sql) };
+  // what follows the last bracket, its spaces made one: compared as text, never by a pattern that could run slowly
+  const tail = sql
+    .slice(close + 1)
+    .replace(/\s+/g, ' ')
+    .replace(/;/g, '')
+    .trim()
+    .toLowerCase();
+  return { columns, rowid, withoutRowid: tail === 'without rowid' };
 }
 
 /** The file's tables and views, by name, each with why it cannot be read when it cannot. */
