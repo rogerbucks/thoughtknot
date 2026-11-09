@@ -24,6 +24,7 @@ import { readAloudButton } from './read-aloud';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import { markTouching } from './focus-marks';
+import { roomDetails, type StageRoom } from './details-room';
 
 /** The details of one drawing, shown in its card below the drawing, or in view mode as the sheet. */
 export class DetailsPanel {
@@ -99,9 +100,10 @@ export class DetailsPanel {
   }
 
   /** The window changed size (`resized`), or the note scrolled: the sheet, if open, is placed again. */
-  moved(resized: boolean): void {
-    this.sheet.moved(resized);
-  }
+  readonly moved = (resized: boolean): void => this.sheet.moved(resized);
+
+  /** A room picked on the new rendering: what is in it, by name, each a choice (render_room_folders). */
+  readonly room = (r: StageRoom): void => void ((this.shown = null), roomDetails(this.panel(r.name, r.kind), r));
 
   /** The card is going: the sheet's watchers stop, and its images let go of what they hold. */
   unload(): void {
@@ -117,9 +119,7 @@ export class DetailsPanel {
   }
 
   /** A thing or link chosen from the details: the next step of the trail, made the selection by the card. */
-  private choose(step: TrailStep): void {
-    if (this.trail.go(step)) this.step(step);
-  }
+  private readonly choose = (step: TrailStep): void => void (this.trail.go(step) && this.step(step));
 
   /** Shows a step of the trail, which goes on from it rather than starting again. */
   private step(step: TrailStep | null): void {

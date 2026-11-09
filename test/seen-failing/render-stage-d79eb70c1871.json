@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/render-stage.test.js",
+  "test": "the colour key shows over the new rendering: told each room opened, with the colours the drawing paints",
+  "seen_failing_first": false,
+  "evidence": "An existing test renamed and moved to the new trigger: the badge is now told when a room opens, which the old click on a group already did (it changed the level text), so it passed against its parent."
+}
