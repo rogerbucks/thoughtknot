@@ -45,7 +45,7 @@ test('links moved by a Flow are drawn the same by both, byte for byte', () => {
       // as the plugin draws a graph or a view (packages/obsidian/src/block.ts, view-block.ts): styled for its view
       const { style } = readStyle(texts, graph, reading);
       const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
-      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
       flow[graph] = (styled.flow ?? []).map((f) => [f.index, f.motion, f.means]);
     }
     assert.deepEqual(python[n], { styles, drawn, flow }, c.name);

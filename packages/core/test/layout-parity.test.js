@@ -351,7 +351,7 @@ test('a graph with nudges is drawn the same by both, its style read alike, byte 
       // as the plugin draws a graph (packages/obsidian/src/block.ts): its direction set, its nudges written in
       const { style } = readStyle(texts[n], graph, reading);
       const laid = directions({ ...nudgedDrawing(drawing, style), nudges: style.nudges });
-      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.source ?? d.dot]));
     }
     assert.deepEqual(python[n], { styles, drawn }, c.name);
   });
@@ -394,7 +394,7 @@ test('arrowheads hidden or shown, and properties shown inline, are drawn the sam
       // as the plugin draws a graph or a view (packages/obsidian/src/block.ts, view-block.ts): styled for its view
       const { style } = readStyle(texts, graph, reading);
       const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
-      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
       arrowless[graph] = styled.arrowless ?? [];
       inline[graph] = styled.inline ?? { boxes: [], links: [] };
     }
@@ -448,7 +448,7 @@ test('every diagram type Graphviz draws is laid out from the same source by both
       const { style } = readStyle(texts, graph, reading),
         g = reading.world[graph];
       const styled = styledDrawing(drawing, style, g, view ?? undefined);
-      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
       choice[graph] = diagramFor(drawing, style, g, view ?? undefined);
       fits[graph] = typeFits(shapeOf(drawing, g, style.nudges));
     }
@@ -509,7 +509,7 @@ test('a graph folded, merged and routed is drawn the same by both, its Links rea
       for (const group of opened?.groups ?? []) state.open({ group });
       // a case with no View menu is drawn as an export draws it, with nothing folded
       const laid = directions(switches ? state.folded(styled) : styled);
-      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.source ?? d.dot]));
     }
     assert.deepEqual(python[n], { styles, drawn }, c.name);
   });
@@ -542,7 +542,7 @@ test('a graph of more than 300 things is laid out the quick way by both, byte fo
   const python = JSON.parse(r.stdout);
   notes.forEach((note, n) => {
     const drawing = readNote([note]).graphs.get('big');
-    const core = Object.fromEntries(directions(drawing).map((d) => [d.rankdir, d.dot]));
+    const core = Object.fromEntries(directions(drawing).map((d) => [d.rankdir, d.source ?? d.dot]));
     assert.deepEqual(python[n].drawn.big, core, `${drawing.boxes.length} things`);
   });
   assert.equal(Object.keys(python[1].drawn.big).length, 1, 'one direction past 300');

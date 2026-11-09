@@ -46,7 +46,7 @@ test('room for a picture on a box is kept the same by both, byte for byte', () =
       // as the plugin draws a graph or a view (packages/obsidian/src/block.ts, view-block.ts): styled for its view
       const { style } = readStyle(texts, graph, reading);
       const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
-      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.dot]));
+      drawn[graph] = Object.fromEntries(directions(styled).map((d) => [d.rankdir, d.source ?? d.dot]));
       pictures[graph] = (styled.pictures ?? []).map((p) => [p.index, p.key, p.property, p.value]);
     }
     assert.deepEqual(python[n], { styles, drawn, pictures }, c.name);
