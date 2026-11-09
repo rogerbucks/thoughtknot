@@ -30,4 +30,4 @@
     <g id="p9">
       <path d="M143.45,15.75C143.45,15.75 143.45,15.75 143.45,15.75 164.45,15.75 164.45,50.7 185.45,50.7 191.16,50.7 191.16,50.7 196.86,50.7" paint="stroke:rgb(243, 107, 112);stroke-width:2px">
       <polygon points="196.86,53.15 203.86,50.7 196.86,48.25 196.86,53.15" paint="fill:rgb(243, 107, 112);stroke:rgb(243, 107, 112);stroke-width:2.2px">
-      <text x="167.2" y="56.73" text-anchor="middle" paint="fill:rgb(235, 144, 147);fill-opacity:0;stroke:rgb(30, 30, 30);stroke-width:5.6px"> counts against
+      <text x="167.19" y="56.73" text-anchor="middle" paint="fill:rgb(235, 144, 147);fill-opacity:0;stroke:rgb(30, 30, 30);stroke-width:5.6px"> counts against

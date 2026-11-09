@@ -1101,7 +1101,6 @@
         "Engine": [
           "interface",
           "marks?: ((source: string) => LaidMarks) | undefined",
-          "placed?: ((source: string) => LaidMarks) | undefined",
           "render: (source: string) => string",
           "version: string"
         ],

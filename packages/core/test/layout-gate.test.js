@@ -3,6 +3,7 @@
 // Each drawing of each note must score what it did then, less a margin. So a change that makes one read worse fails
 // before it merges. Fast is counted by work, not time (layout_work_counted). The top two layouts tried on one part
 // are in layouts/pick.ts.
+import { measuredMarks } from '../src/layouts/measure.ts';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -85,7 +86,7 @@ describe('an optimised layout, on the real notes', () => {
         const name = `${file} ${level} ${d.rankdir}`;
         const floor = FLOORS[name];
         assert.ok(floor, `${name} has a row of floors`);
-        const { marks } = ownLaid(engine.placed(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot));
+        const { marks } = ownLaid(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot));
         const scores = readability(marks, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
         for (const [check, least] of Object.entries(floor))
           assert.ok(scores[check] >= least, `${name}: ${check} ${scores[check].toFixed(2)}, under ${least}`);
@@ -101,7 +102,7 @@ describe('an optimised layout, on the real notes', () => {
   test('is calm: taking a leaf away moves the rest only a little', () => {
     for (const [file, graph] of [NOTES[0], NOTES[2]]) {
       const { d } = drawingsOf(file, graph).find((x) => x.level === 'all');
-      const laid = engine.placed(d.dot);
+      const laid = measuredMarks(d.dot);
       const groups = groupsIn(d.dot);
       const before = ownSpots(laid, d.rankdir, undefined, groups).spots;
       const links = new Map();

@@ -341,7 +341,7 @@
     "packages/core/src/proposals-text.ts": 1,
     "packages/core/src/proposals.ts": 2,
     "packages/core/src/reader-picture.ts": 4,
-    "packages/core/src/render.ts": 19,
+    "packages/core/src/render.ts": 18,
     "packages/core/src/repo-source-words.ts": 1,
     "packages/core/src/reserved-words.ts": 6,
     "packages/core/src/rule-look-checks.ts": 2,

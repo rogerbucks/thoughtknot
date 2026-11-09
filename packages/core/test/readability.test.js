@@ -2,6 +2,7 @@
 // layout_groups_as_boxes). Its files are layouts/readability.ts, layouts/routed-curve.ts and layouts/grouped.ts. A
 // link bends through lanes between boxes. A group is a box round its things. On a real note our drawing scores at
 // least as well as Graphviz's.
+import { measuredMarks } from '../src/layouts/measure.ts';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -324,7 +325,7 @@ describe('the overview', () => {
       merge: true,
     });
     const d = directions(state.folded(drawing))[0];
-    const s = readability(ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)), d.rankdir);
+    const s = readability(ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot)), d.rankdir);
     assert.ok(s.clear >= 0.995, `no link passes over a box: ${s.clear.toFixed(3)}`);
     assert.ok(s.clean >= 0.7, `most links cross no other: ${s.clean.toFixed(2)}`);
   });
@@ -382,7 +383,7 @@ describe('a fan of links', () => {
     };
     const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
     const d = directions(state.folded(drawing))[0];
-    const laid = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
+    const laid = ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot));
     const into = new Map(laid.marks.filter((m) => m.kind === 'link').map((m) => [m.of, m.to]));
     const seen = new Set();
     for (const m of laid.marks)
@@ -439,7 +440,7 @@ describe('the readability scores', () => {
       const d = directions(state.folded(drawing))[0];
       // with each thing's kind, as the app lays it out: a big flow of many kinds keeps its rows
       const laid = own
-        ? ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot))
+        ? ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot))
         : directLinks(engine.marks(d.dot));
       return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
     };
@@ -455,11 +456,11 @@ describe('the readability scores', () => {
     const d = directions(
       new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
     )[0];
-    const { space } = ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot));
+    const { space } = ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot));
     const shape = space.width / space.height;
     assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);
     // each group drawn round its things, never inside out
-    for (const m of ownMarks(engine.placed(d.dot), d.rankdir, groupsIn(d.dot)).marks)
+    for (const m of ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot)).marks)
       if (m.kind === 'group') assert.ok(m.width > 0 && m.height > 0, `${m.id} is ${m.width}x${m.height}`);
   });
 });

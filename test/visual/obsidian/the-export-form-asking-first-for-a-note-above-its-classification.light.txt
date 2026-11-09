@@ -11,7 +11,7 @@
     <g id="p4">
       <path d="M80.9,-19.2C80.9,-19.2 80.9,-19.2 80.9,-19.2 101.9,-19.2 101.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2 122.9,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:2px">
       <polygon points="115.9,-16.75 122.9,-19.2 115.9,-21.65 115.9,-16.75" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9);stroke-width:2.2px">
-      <text x="101.9" y="-24.98" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near
+      <text x="101.9" y="-24.97" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near
     <g id="p5">
       <path d="M305.75,-47.4C305.75,-47.4 264.79,-47.4 264.79,-47.4 258.79,-47.4 252.79,-41.4 252.79,-35.4 252.79,-35.4 252.79,-3 252.79,-3 252.79,3 258.79,9 264.79,9 264.79,9 305.75,9 305.75,9 311.75,9 317.75,3 317.75,-3 317.75,-3 317.75,-35.4 317.75,-35.4 317.75,-41.4 311.75,-47.4 305.75,-47.4" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174)">
       <text x="271.83" y="-26.6" transform="translate(0 0.41)" text-anchor="start" paint="stroke:rgb(255, 255, 255);stroke-width:5.6px"> CAFE
@@ -19,4 +19,4 @@
     <g id="p6">
       <path d="M210.79,-19.2C210.79,-19.2 210.79,-19.2 210.79,-19.2 231.79,-19.2 231.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2 252.79,-19.2" paint="stroke:rgb(177, 138, 9);stroke-width:2px">
       <polygon points="245.79,-16.75 252.79,-19.2 245.79,-21.65 245.79,-16.75" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9);stroke-width:2.2px">
-      <text x="231.79" y="-24.98" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near
+      <text x="231.79" y="-24.97" text-anchor="middle" paint="fill:rgb(129, 103, 17);stroke:rgb(255, 255, 255);stroke-width:5.6px"> near

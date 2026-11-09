@@ -4,6 +4,7 @@
 // and in full. A test counts work, never time (quality_ratchet). So each limit is the work its link passes may count,
 // its figures when kept and a quarter more. A change that makes one slow fails before it merges. So does one that
 // would show it as text: every thing is drawn, by our own engine.
+import { measuredMarks } from '../src/layouts/measure.ts';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -56,7 +57,7 @@ describe('the slowest real notes', () => {
       test(`${file}, ${level === 'all' ? 'in full' : 'folded'}: within its limit, every thing drawn by our engine`, () => {
         const { d, things } = laidOut(file, graph, level);
         assert.ok(d.own, 'laid out by our own engine');
-        const laid = engine.placed(d.dot);
+        const laid = measuredMarks(d.dot);
         const placed = ownSpots(laid, d.rankdir, undefined, groupsIn(d.dot), {}, kindsIn(d.dot));
         const work = linkWork();
         const drawn = directLinks(laid, placed.spots, placed.via, placed.rankdir, false, work);
