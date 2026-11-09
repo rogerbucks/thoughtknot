@@ -10,6 +10,7 @@ import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
+import { dataSetControls } from './data-set-controls';
 import { renderCalculated } from './details-calculated-rows';
 import { button } from '../button';
 import { linkAnchor, renderLinks } from '../links/links-list';
@@ -110,6 +111,15 @@ export class RichDetails {
     replace: (text: string) => void,
   ): void {
     noteControls(el, this.o.reading, this.o.graph, target, text, replace);
+    // a data set kept linked or as a snapshot (ES§52)
+    if ('thing' in target)
+      dataSetControls(el, target.thing, {
+        reading: this.o.reading,
+        graph: this.o.graph,
+        host: this.o.dataSets,
+        text,
+        replace,
+      });
   }
 
   /** Properties to read, as a table of each name and its value rendered by Obsidian (spec §3, §14, details_properties_table). */

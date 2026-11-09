@@ -154,6 +154,8 @@ export interface ViewOptions {
   profile?: ProfileShown;
   /** Its links followed through Obsidian, and those that name nothing (§18); none, links shown as plain text. */
   links?: LinkHost;
+  /** Copies a data set's file beside the note, for a snapshot (ES§52); none, no snapshot is offered. */
+  dataSets?: DataSetHost;
   /** The images its things name, found in the vault, and the boxes a Picture draws one on (§18); none, no image shown. */
   images?: CardImages;
   /** Writes a view block after the graph's last block in the note (§7, views_by_tapping); resolves to why not, or null. */
@@ -202,4 +204,15 @@ export interface Stay {
   leave: (at: StayedAt) => void;
   /** Where the last card was left, once; none when it was not, or long ago. */
   kept: () => StayedAt | undefined;
+}
+
+/** What a card's host does for its data sets (ES§52, data_set_linked_or_kept): none, no snapshot is offered. */
+export interface DataSetHost {
+  /** The note the card is in, beside which a snapshot is kept. */
+  note: string;
+  /**
+   * Copies the file at `from`, found from the note, to `to`, or the first free name like it: an existing file is never
+   * replaced. Resolves to where the copy is and its version (its digest), or null when it could not be copied.
+   */
+  copy: (from: string, to: string) => Promise<{ place: string; version: string } | null>;
 }

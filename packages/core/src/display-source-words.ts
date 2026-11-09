@@ -348,4 +348,9 @@ export const DISPLAY_SOURCE_WORDS = {
   'board.text-of': 'Text of {item}',
   'board.save': 'Save',
   'board.cancel': 'Cancel',
+  // a data set kept linked or as a snapshot, from its details while editing (data-set-controls.ts)
+  'details.data-set.snapshot': 'Keep a snapshot',
+  'details.data-set.link': 'Link again',
+  'details.data-set.linked': '{place} is linked: its table is read from there each time.',
+  'details.data-set.copy-failed': '{place} could not be copied beside the note, so no snapshot was kept.',
 } as const;
