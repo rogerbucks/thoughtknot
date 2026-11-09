@@ -1,6 +1,7 @@
 // What a drawn graph is given (spec §3, §4, §14). It is given the reading and the graph, its drawn SVG and its
 // problems, where it is shown, and what its buttons do. It is also given the editor open in place on its card, if any,
 // which its inspector writes through.
+import type { DataSetHost } from '../properties/data-set-controls';
 import type {
   CompletenessReport,
   Drawn,
@@ -204,15 +205,4 @@ export interface Stay {
   leave: (at: StayedAt) => void;
   /** Where the last card was left, once; none when it was not, or long ago. */
   kept: () => StayedAt | undefined;
-}
-
-/** What a card's host does for its data sets (ES§52, data_set_linked_or_kept): none, no snapshot is offered. */
-export interface DataSetHost {
-  /** The note the card is in, beside which a snapshot is kept. */
-  note: string;
-  /**
-   * Copies the file at `from`, found from the note, to `to`, or the first free name like it: an existing file is never
-   * replaced. Resolves to where the copy is and its version (its digest), or null when it could not be copied.
-   */
-  copy: (from: string, to: string) => Promise<{ place: string; version: string } | null>;
 }

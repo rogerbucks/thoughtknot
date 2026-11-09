@@ -33,7 +33,7 @@ import type ThoughtKnotPlugin from '../main';
 import { vaultSourceRegistry } from './host-sources';
 import { noteText } from '../storage/plugin-notes';
 import { freePath, vaultOps } from '../export/vault-write';
-import type { DataSetHost } from '@thoughtknot/core/display/graph-view/view-options';
+import type { DataSetHost } from '@thoughtknot/core/display/properties/data-set-controls';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
 function nameOf(source: Pick<GraphSource, 'kind' | 'target'>): string {
