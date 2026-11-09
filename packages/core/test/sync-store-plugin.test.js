@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
-import { syncStoreBackendContract } from '../src/plugins-contract.ts';
+import { syncStoreBackendContract } from '../src/plugins-contract-sync.ts';
 import { POINT_VERSIONS } from '../src/plugin-versions.ts';
 
 /** A store in memory: each note holds one list of records per device. */

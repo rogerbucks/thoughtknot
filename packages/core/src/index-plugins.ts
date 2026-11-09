@@ -17,13 +17,7 @@ export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } fr
 export type { GivenGraph, PluginSource, PluginStep } from './plugins.ts';
 export { TRUST_LEVELS } from './plugin-sources.ts';
 export type { GraphOrigin, JoinedGraph, Trust } from './plugin-sources.ts';
-export {
-  commandContract,
-  exporterContract,
-  sampleExports,
-  storageBackendContract,
-  syncStoreBackendContract,
-} from './plugins-contract.ts';
+export { commandContract, exporterContract, sampleExports, storageBackendContract } from './plugins-contract.ts';
 export { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from './plugins-contract.ts';
 export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.ts';
 export { diagramContract, layoutContract, themeTokenContract } from './plugins-contract.ts';
@@ -56,3 +50,4 @@ export { fromPluginMarks, markBounds, marksBounds, scaledMarks } from './drawing
 export type { BoxShape, DrawMark, DrawMarkKind, DrawMarkRole, MarkBounds, MarkOutline } from './drawing-marks.ts';
 export type { LaidMarks, LaidPart } from './graphviz-marks.ts';
 export { layoutSvg } from './graphviz-svg.ts';
+export { syncStoreBackendContract } from './plugins-contract-sync.ts';

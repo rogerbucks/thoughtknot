@@ -15,14 +15,13 @@ import { backendProblem, commandProblem, exporterProblem, panelProblem } from '.
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
-import { syncStoreProblem } from './plugin-points.ts';
-import type { SyncStore, SyncStoreBackend } from './plugin-points.ts';
+import { syncStoreProblem, type SyncStore, type SyncStoreBackend } from './plugin-points.ts';
 import { ownSecrets } from './plugin-points.ts';
 import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
-import { commandCalls, pluginCalls } from './plugin-calls.ts';
+import { commandCalls, pluginCalls, syncStoreCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -338,13 +337,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       if (!b) return { ok: false, plugin: '', message: word('plugins.none.storage', { name }) };
       return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
     },
-    syncStores: () => syncStoreShelf.items.map((b) => ({ ...b })),
-    openSyncStore(name) {
-      const b = syncStoreShelf.items.find((x) => x.name === name);
-      if (!b) return { ok: false, plugin: '', message: word('plugins.none.syncstore', { name }) };
-      const what = word('plugins.what.syncstore', { title: b.title });
-      return guarded(syncStoreShelf.owner.get(name) ?? '', what, () => b.open());
-    },
+    ...syncStoreCalls(calls, syncStoreShelf.items, syncStoreShelf.owner),
     commands: () => commands.items.map((c) => ({ ...c })),
     ...commandCalls(calls, commands.items, commands.owner),
     panels: () => panels.items.map((c) => ({ ...c })),
