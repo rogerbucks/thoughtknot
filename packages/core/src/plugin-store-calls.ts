@@ -1,5 +1,5 @@
-// The calls a registry makes into the places a plug-in adds for keeping things: note storage and record stores (editor spec
-// ES§43, plugin_manifest_limits). Each is timed, caught and named, as every call into a plug-in is (plugin-calls.ts).
+// The calls a registry makes into a store a plug-in adds: note storage and record stores (editor spec ES§43,
+// plugin_manifest_limits). Each is timed, caught and named, as every call into a plug-in is (plugin-calls.ts).
 import type { NoteStorage } from './note-storage.ts';
 import type { PluginCalls, PluginResult } from './plugin-calls.ts';
 import type { StorageBackend, SyncStore, SyncStoreBackend } from './plugin-points.ts';
