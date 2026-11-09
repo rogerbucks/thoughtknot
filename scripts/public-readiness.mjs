@@ -11,7 +11,7 @@
 //   node scripts/public-readiness.mjs --settings [--apply]  check GitHub's settings; --apply sets each that differs.
 //   node scripts/public-readiness.mjs --settings --export   write the ruleset and the Pages settings to .github/settings/.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
-// A pull request's run uses --setup-since. Main and the release run everything. The nightly adds --no-tests (no npm test).
+// CI uses --setup-since --no-tests, on a pull request and on main. The release runs everything. The nightly adds --no-tests.
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
