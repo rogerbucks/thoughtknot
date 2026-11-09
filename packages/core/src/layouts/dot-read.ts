@@ -105,12 +105,14 @@ function tokens(src: string): Token[] {
   return out;
 }
 
-/** Reads `src`, a DOT source as the core writes it. Throws DotError on what it cannot read. */
-export function readDot(src: string): DotGraph {
-  const ts = tokens(src);
+/** A reader of tokens: what comes next, a name, a mark taken, a list of attributes. */
+function cursor(ts: Token[]) {
   let p = 0;
   const peek = () => ts[p];
   const isOp = (v: string) => ts[p]?.t === 'op' && ts[p]?.v === v;
+  const skip = () => {
+    p++;
+  };
   const take = (v: string) => {
     if (!isOp(v)) throw new DotError('dot.expected', v);
     p++;
@@ -120,11 +122,6 @@ export function readDot(src: string): DotGraph {
     if (tk?.t !== 'id') throw new DotError('dot.expected');
     return tk.html ? `<${tk.v}>` : tk.v;
   };
-  const head = id().toLowerCase();
-  const directed = head === 'digraph' || (head === 'strict' && id().toLowerCase() === 'digraph');
-  const name = peek()?.t === 'id' ? id() : '';
-  const graph: DotGraph = { directed, name, attrs: {}, nodes: [], edges: [], groups: [] };
-  const byKey = new Map<string, DotNode>();
   const attrList = (): Attrs => {
     const a: Attrs = {};
     while (isOp('[')) {
@@ -139,6 +136,17 @@ export function readDot(src: string): DotGraph {
     }
     return a;
   };
+  return { peek, isOp, skip, take, id, attrList, atEnd: () => p >= ts.length };
+}
+
+/** Reads `src`, a DOT source as the core writes it. Throws DotError on what it cannot read. */
+export function readDot(src: string): DotGraph {
+  const { peek, isOp, skip, take, id, attrList, atEnd } = cursor(tokens(src));
+  const head = id().toLowerCase();
+  const directed = head === 'digraph' || (head === 'strict' && id().toLowerCase() === 'digraph');
+  const name = peek()?.t === 'id' ? id() : '';
+  const graph: DotGraph = { directed, name, attrs: {}, nodes: [], edges: [], groups: [] };
+  const byKey = new Map<string, DotNode>();
   type Scope = { node: Attrs; edge: Attrs; graph: Attrs; group?: DotGroup; up?: Scope };
   const addMember = (scope: Scope, key: string) => {
     for (let s: Scope | undefined = scope; s; s = s.up)
@@ -158,9 +166,9 @@ export function readDot(src: string): DotGraph {
   const body = (scope: Scope): void => {
     take('{');
     while (!isOp('}')) {
-      if (p >= ts.length) throw new DotError('dot.unclosed');
+      if (atEnd()) throw new DotError('dot.unclosed');
       if (isOp(';')) {
-        p++;
+        skip();
         continue;
       }
       if (isOp('{') || (peek()?.t === 'id' && peek()?.v.toLowerCase() === 'subgraph')) {
@@ -173,14 +181,14 @@ export function readDot(src: string): DotGraph {
         Object.assign(scope[word], attrList());
         if (word === 'graph') Object.assign(scope.group ? scope.group.attrs : graph.attrs, scope.graph);
       } else if (isOp('=')) {
-        p++;
+        skip();
         const v = id();
         scope.graph[first] = v;
         (scope.group ? scope.group.attrs : graph.attrs)[first] = v;
       } else if (isOp('->') || isOp('--')) {
         const chain = [first];
         while (isOp('->') || isOp('--')) {
-          p++;
+          skip();
           chain.push(id());
         }
         const attrs = attrList();
@@ -192,14 +200,14 @@ export function readDot(src: string): DotGraph {
             attrs: { ...scope.edge, ...attrs },
           });
       } else node(scope, first, attrList());
-      if (isOp(';') || isOp(',')) p++;
+      if (isOp(';') || isOp(',')) skip();
     }
-    p++;
+    skip();
   };
   const sub = (scope: Scope) => {
     let subName = '';
     if (!isOp('{')) {
-      p++; // subgraph
+      skip(); // subgraph
       if (!isOp('{')) subName = id();
     }
     const group: DotGroup = { name: subName, attrs: {}, members: [], groups: [] };

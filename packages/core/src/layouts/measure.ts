@@ -166,46 +166,13 @@ function edgeOps(e: { attrs: Attrs }, tail: Measured, head: Measured, directed: 
   return { out, label, mid };
 }
 
-/** Graphviz's layout of `dot`, every box where its `pos` puts it, measured but not laid out: as `nop` gives it. */
-export function measuredLayout(dot: string): GraphvizLayout {
-  const g = readDot(dot);
-  const measured = g.nodes.map(measureNode);
-  const byKey = new Map(measured.map((m) => [m.node.key, m]));
-  const edges = g.edges.map((e) => ({
-    e,
-    ...edgeOps(e, byKey.get(e.tail) as Measured, byKey.get(e.head) as Measured, g.directed),
-  }));
-  // groups: as with `nop`, a group is drawn only where its own `bb` places it, and its things do not size it
-  const flat: { group: DotGroup; inner: number[] }[] = [];
-  const visit = (group: DotGroup): number => {
-    const at = flat.length;
-    flat.push({ group, inner: [] });
-    (flat[at] as { inner: number[] }).inner = group.groups.map(visit);
-    return at;
-  };
-  g.groups.forEach(visit);
-  const groupBox = (group: DotGroup): [number, number, number, number] | undefined => {
-    const b = (group.attrs.bb ?? '').split(',').map(Number);
-    return b.length === 4 && b.every(Number.isFinite) ? (b as [number, number, number, number]) : undefined;
-  };
-  // the drawing's corner: everything drawn, moved so its bounding box starts at nought
-  let [lx, ly, ux, uy] = [Infinity, Infinity, -Infinity, -Infinity];
-  const reach = (x0: number, y0: number, x1: number, y1: number) => {
-    [lx, ly, ux, uy] = [Math.min(lx, x0), Math.min(ly, y0), Math.max(ux, x1), Math.max(uy, y1)];
-  };
-  for (const m of measured)
-    if (!styleHas(m.node.attrs.style, 'invis')) reach(m.x - m.w / 2, m.y - m.h / 2, m.x + m.w / 2, m.y + m.h / 2);
-  for (const f of flat) {
-    const box = groupBox(f.group);
-    if (box) reach(...box);
-  }
-  for (const { label, mid } of edges)
-    if (label && label.width > 0)
-      reach(mid[0] - label.width / 2, mid[1] - label.height / 2, mid[0] + label.width / 2, mid[1] + label.height / 2);
-  if (!Number.isFinite(lx)) [lx, ly, ux, uy] = [0, 0, 0, 0];
-  // Graphviz gives every place and width to two decimal places; ours are given so too, so the drawings agree
-  const fix = (n: number) => Number(n.toFixed(2));
-  const shift = (ops: GraphvizOp[] | undefined) =>
+/** Graphviz gives every place and width to two decimal places; ours are given so too, so the drawings agree. */
+const fix = (n: number) => Number(n.toFixed(2));
+
+/** Drawing steps moved by `-lx, -ly`, their colours named as Graphviz names them, rounded as it rounds. */
+const shifter =
+  (lx: number, ly: number) =>
+  (ops: GraphvizOp[] | undefined): GraphvizOp[] | undefined =>
     ops?.map((o) => ({
       ...o,
       ...(o.color ? { color: hex(o.color) } : {}),
@@ -223,43 +190,98 @@ export function measuredLayout(dot: string): GraphvizLayout {
           }
         : {}),
     }));
+
+/** Every group, outer before inner, each with the places of the groups inside it. */
+function flatten(groups: DotGroup[]): { group: DotGroup; inner: number[] }[] {
+  const flat: { group: DotGroup; inner: number[] }[] = [];
+  const visit = (group: DotGroup): number => {
+    const at = flat.length;
+    flat.push({ group, inner: [] });
+    (flat[at] as { inner: number[] }).inner = group.groups.map(visit);
+    return at;
+  };
+  groups.forEach(visit);
+  return flat;
+}
+
+/** As with `nop`, a group is drawn only where its own `bb` places it, and its things do not size it. */
+function groupBox(group: DotGroup): [number, number, number, number] | undefined {
+  const b = (group.attrs.bb ?? '').split(',').map(Number);
+  return b.length === 4 && b.every(Number.isFinite) ? (b as [number, number, number, number]) : undefined;
+}
+
+/** A group as Graphviz writes it, moved by `-lx, -ly`. */
+function groupObject(
+  group: DotGroup,
+  inner: number[],
+  lx: number,
+  ly: number,
+  shift: ReturnType<typeof shifter>,
+): GraphvizObject {
+  const box = groupBox(group);
+  if (!box) return { name: group.name, bb: '', subgraphs: inner };
+  const [x0, y0, x1, y1] = box;
+  const a = group.attrs;
+  const pen = a.color ?? a.pencolor ?? 'black';
+  const filled = styleHas(a.style, 'filled');
+  const draw: GraphvizOp[] = [];
+  if (styleHas(a.style, 'dashed')) draw.push({ op: 'S', style: 'dashed' });
+  draw.push({ op: 'c', color: pen });
+  if (filled) draw.push({ op: 'C', color: a.fillcolor ?? a.color ?? 'lightgrey' });
+  if (styleHas(a.style, 'rounded')) draw.push({ op: filled ? 'B' : 'b', points: rounded(x0, y0, x1, y1) });
+  else
+    draw.push({
+      op: filled ? 'P' : 'p',
+      points: [
+        [x0, y0],
+        [x1, y0],
+        [x1, y1],
+        [x0, y1],
+      ],
+    });
+  const label = labelOf(a, '', group.name);
+  return {
+    name: group.name,
+    bb: [x0 - lx, y0 - ly, x1 - lx, y1 - ly].map(fix).join(','),
+    subgraphs: inner,
+    _draw_: shift(draw),
+    ...(label.width > 0
+      ? { _ldraw_: shift(label.draw((x0 + x1) / 2, y1 - GROUP_MARGIN / 2 - label.height / 2, 'black')) }
+      : {}),
+    ...(a.id ? { id: a.id } : {}),
+    ...(a.class ? { class: a.class } : {}),
+  };
+}
+
+/** Graphviz's layout of `dot`, every box where its `pos` puts it, measured but not laid out: as `nop` gives it. */
+export function measuredLayout(dot: string): GraphvizLayout {
+  const g = readDot(dot);
+  const measured = g.nodes.map(measureNode);
+  const byKey = new Map(measured.map((m) => [m.node.key, m]));
+  const edges = g.edges.map((e) => ({
+    e,
+    ...edgeOps(e, byKey.get(e.tail) as Measured, byKey.get(e.head) as Measured, g.directed),
+  }));
+  const flat = flatten(g.groups);
+  // the drawing's corner: everything drawn, moved so its bounding box starts at nought
+  let [lx, ly, ux, uy] = [Infinity, Infinity, -Infinity, -Infinity];
+  const reach = (x0: number, y0: number, x1: number, y1: number) => {
+    [lx, ly, ux, uy] = [Math.min(lx, x0), Math.min(ly, y0), Math.max(ux, x1), Math.max(uy, y1)];
+  };
+  for (const m of measured)
+    if (!styleHas(m.node.attrs.style, 'invis')) reach(m.x - m.w / 2, m.y - m.h / 2, m.x + m.w / 2, m.y + m.h / 2);
+  for (const f of flat) {
+    const box = groupBox(f.group);
+    if (box) reach(...box);
+  }
+  for (const { label, mid } of edges)
+    if (label && label.width > 0)
+      reach(mid[0] - label.width / 2, mid[1] - label.height / 2, mid[0] + label.width / 2, mid[1] + label.height / 2);
+  if (!Number.isFinite(lx)) [lx, ly, ux, uy] = [0, 0, 0, 0];
+  const shift = shifter(lx, ly);
   const pad = numOr(g.attrs.pad, 0.0555) * INCH;
   const [w, h] = [ux - lx, uy - ly];
-  const objects: GraphvizObject[] = flat.map(({ group, inner }) => {
-    const box = groupBox(group);
-    if (!box) return { name: group.name, bb: '', subgraphs: inner };
-    const [x0, y0, x1, y1] = box;
-    const a = group.attrs;
-    const pen = a.color ?? a.pencolor ?? 'black';
-    const filled = styleHas(a.style, 'filled');
-    const draw: GraphvizOp[] = [];
-    if (styleHas(a.style, 'dashed')) draw.push({ op: 'S', style: 'dashed' });
-    draw.push({ op: 'c', color: pen });
-    if (filled) draw.push({ op: 'C', color: a.fillcolor ?? a.color ?? 'lightgrey' });
-    if (styleHas(a.style, 'rounded')) draw.push({ op: filled ? 'B' : 'b', points: rounded(x0, y0, x1, y1) });
-    else
-      draw.push({
-        op: filled ? 'P' : 'p',
-        points: [
-          [x0, y0],
-          [x1, y0],
-          [x1, y1],
-          [x0, y1],
-        ],
-      });
-    const label = labelOf(a, '', group.name);
-    return {
-      name: group.name,
-      bb: [x0 - lx, y0 - ly, x1 - lx, y1 - ly].map(fix).join(','),
-      subgraphs: inner,
-      _draw_: shift(draw),
-      ...(label.width > 0
-        ? { _ldraw_: shift(label.draw((x0 + x1) / 2, y1 - GROUP_MARGIN / 2 - label.height / 2, 'black')) }
-        : {}),
-      ...(a.id ? { id: a.id } : {}),
-      ...(a.class ? { class: a.class } : {}),
-    };
-  });
+  const objects: GraphvizObject[] = flat.map(({ group, inner }) => groupObject(group, inner, lx, ly, shift));
   for (const m of measured) {
     const a = m.node.attrs;
     const invisible = styleHas(a.style, 'invis');
