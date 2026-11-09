@@ -283,6 +283,8 @@ after a module nor listed here, and on a listed file that is missing.
   one only when pressed, on desktop and mobile, with no network. It writes the rows into the note as text that keeps no
   live link (editor spec §20, db_import_on_request; §21, settings_db_connections).
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
+- `packages/obsidian/test/data-set-snapshot.test.js` — a data set's box shows its table. Its details keep a snapshot
+  beside the note or link it again (editor spec §52, data_set_linked_or_kept). No file is ever replaced.
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which
   and opens it (editor spec §7, many_views_one_data, view_of_another_note).
