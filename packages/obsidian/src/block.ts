@@ -8,7 +8,6 @@ import {
   brokenLinks,
   changeSetId,
   completenessReport,
-  dataSetTables,
   depthOf,
   gqlBlocks,
   graphOfBlock,
@@ -35,7 +34,7 @@ import { exploringFor, renderViewBlock, writeViewBlock } from './view-block';
 import { movingFor, writeStyle } from './style-write';
 import { renderProposalBlock } from './proposals/proposal-block';
 import { renderSourceBlock } from './sources/sources';
-import { tableText } from './sources/source-read';
+import { withTables } from './sources/source-read';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
@@ -196,8 +195,7 @@ export async function renderBlock(
 
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
   const read = readNote(texts, index, shared);
-  // reported by the strictness set on the settings page (spec §21)
-  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
+  const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) }; // strictness (§21)
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read at once (spec §9): its overview, read in parts (§53), above its text and why
@@ -228,11 +226,7 @@ export async function renderBlock(
   const at = { path: target.path, graph }; // its type looked at in reading view, never saved (§15, type_try_reading)
   const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
   const styled = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
-  // each data set drawn as its table, read from its place (§67, format_content_node)
-  const tables = styled
-    ? await dataSetTables(reading.world[graph], (place) => tableText(plugin, place, target.path))
-    : [];
-  const drawing = styled && (tables.length ? { ...styled, tables } : styled);
+  const drawing = await withTables(plugin, styled, reading.world[graph], target.path); // data sets as tables (§67)
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
   // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
   const diagram =
