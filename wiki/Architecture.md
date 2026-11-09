@@ -16,7 +16,7 @@ box is planned.
 
 <!-- wiki:layers -->
 
-How notes and boards are shared between devices is drawn in [How sharing works](How-sharing-works).
+How notes and boards are shared between devices is drawn in [How sharing works](How-sharing-works). The parts a person can swap are mapped in [Swappable parts](Swappable-parts).
 
 ## How the code is structured
 
