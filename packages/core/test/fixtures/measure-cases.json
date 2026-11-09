@@ -1,0 +1,1428 @@
+{
+  "about": "Each thing's box and labels as Graphviz 16.1.0 (@viz-js/viz 3.31.0) measured them, relative to its box, in CSS pixels. Written on 9 Nov 2026, before Graphviz was removed, so our own measuring is held to it.",
+  "cases": [
+    {
+      "features": ["cluster", "defaults"],
+      "source": "digraph G { subgraph cluster_a { label=\"A\"; a1; a2; } subgraph cluster_b { label=\"B\"; b1; b2; } c; a1 -> b1; a2 -> c; b2 -> c; }",
+      "marks": [
+        {
+          "id": "t:a1",
+          "style": "line.outline",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:a1",
+          "style": "line",
+          "text": "a1",
+          "at": [36, 29.6],
+          "font": 18.67,
+          "width": 17.61
+        },
+        {
+          "id": "t:a2",
+          "style": "line.outline",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:a2",
+          "style": "line",
+          "text": "a2",
+          "at": [36, 29.6],
+          "font": 18.67,
+          "width": 17.61
+        },
+        {
+          "id": "t:b1",
+          "style": "line.outline",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:b1",
+          "style": "line",
+          "text": "b1",
+          "at": [36, 29.6],
+          "font": 18.67,
+          "width": 18.67
+        },
+        {
+          "id": "t:b2",
+          "style": "line.outline",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:b2",
+          "style": "line",
+          "text": "b2",
+          "at": [36, 29.6],
+          "font": 18.67,
+          "width": 18.67
+        },
+        {
+          "id": "t:c",
+          "style": "line.outline",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:c",
+          "style": "line",
+          "text": "c",
+          "at": [36, 29.6],
+          "font": 18.67,
+          "width": 8.28
+        }
+      ]
+    },
+    {
+      "features": ["plainlines"],
+      "source": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    \"loan\" [label=\"Loan\\nterms\", fillcolor=\"#000100\", color=\"#000200\"]; \"b\" [fillcolor=\"#000101\", color=\"#000201\"];\n    \"loan\" -> \"b\" [label=\"owes\", color=\"#000300\", fontcolor=\"#000400\"]; }",
+      "marks": [
+        {
+          "id": "t:loan",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [72, 50.67]
+        },
+        {
+          "id": "l:t:loan",
+          "style": "text",
+          "text": "Loan",
+          "at": [36, 20.33],
+          "font": 16.67,
+          "width": 37.08
+        },
+        {
+          "id": "l1:t:loan",
+          "style": "text",
+          "text": "terms",
+          "at": [36, 40.33],
+          "font": 16.67,
+          "width": 41.67
+        },
+        {
+          "id": "t:b",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [72, 48]
+        },
+        {
+          "id": "l:t:b",
+          "style": "text",
+          "text": "b",
+          "at": [36, 29],
+          "font": 16.67,
+          "width": 9.27
+        }
+      ]
+    },
+    {
+      "features": ["unicode"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"question\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">QUESTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Which device should I</td></tr><tr><td cellpadding=\"1\">read long PD→Fs on?</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n}",
+      "marks": [
+        {
+          "id": "t:question",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [213.53, 99.2]
+        },
+        {
+          "id": "l:t:question",
+          "style": "text.muted",
+          "text": "QUESTION",
+          "at": [75.44, 27.73],
+          "font": 12,
+          "width": 62.67
+        },
+        {
+          "id": "l1:t:question",
+          "style": "text",
+          "text": "Which device should I",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 162.12
+        },
+        {
+          "id": "l2:t:question",
+          "style": "text",
+          "text": "read long PD→Fs on?",
+          "at": [25.71, 78.8],
+          "font": 16.67,
+          "width": 162.12
+        }
+      ]
+    },
+    {
+      "features": ["properties"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"hall\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">VENUE</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Hall</td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\">a1: one</font></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\">a2: two</font></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\">a3: three</font></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\">3 properties hidden</font></td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n}",
+      "marks": [
+        {
+          "id": "t:hall",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [151.48, 143.47]
+        },
+        {
+          "id": "l:t:hall",
+          "style": "text.muted",
+          "text": "VENUE",
+          "at": [55.07, 27.73],
+          "font": 12,
+          "width": 41.35
+        },
+        {
+          "id": "l1:t:hall",
+          "style": "text",
+          "text": "Hall",
+          "at": [61.39, 54.8],
+          "font": 16.67,
+          "width": 28.71
+        },
+        {
+          "id": "l2:t:hall",
+          "style": "text",
+          "text": "a1: one",
+          "at": [55.72, 78.13],
+          "font": 12,
+          "width": 40.04
+        },
+        {
+          "id": "l3:t:hall",
+          "style": "text",
+          "text": "a2: two",
+          "at": [56.4, 93.87],
+          "font": 12,
+          "width": 38.69
+        },
+        {
+          "id": "l4:t:hall",
+          "style": "text",
+          "text": "a3: three",
+          "at": [52.05, 109.6],
+          "font": 12,
+          "width": 47.37
+        },
+        {
+          "id": "l5:t:hall",
+          "style": "text",
+          "text": "3 properties hidden",
+          "at": [24.37, 125.33],
+          "font": 12,
+          "width": 102.73
+        }
+      ]
+    },
+    {
+      "features": ["unicode", "dashed"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"queestion\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"1\">Wice shoulread long</td></tr><tr><td cellpadding=\"1\">PDFs on?</td></tr></table>>, fillcolor=\"#000163\", color=\"#000263\"];\n  \"small\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">OPTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Small e-ink reader</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"eon\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"1\">E-ink is easier →on</td></tr><tr><td cellpadding=\"1\">the eyes</td></tr></table>>, fillcolor=\"#000163\", color=\"#000263\"];\n  \"small\" -> \"queestion\" [label=\"⚠ answers (estimated)\", color=\"#0000fc\", fontcolor=\"#0000fe\", style=\"dashed\"];\n}",
+      "marks": [
+        {
+          "id": "t:queestion",
+          "style": "kind.99",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [202.43, 78.13]
+        },
+        {
+          "id": "l:t:queestion",
+          "style": "text",
+          "text": "Wice shoulread long",
+          "at": [25.71, 33.73],
+          "font": 16.67,
+          "width": 151.01
+        },
+        {
+          "id": "l1:t:queestion",
+          "style": "text",
+          "text": "PDFs on?",
+          "at": [64.16, 57.73],
+          "font": 16.67,
+          "width": 74.11
+        },
+        {
+          "id": "t:small",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [186.65, 75.2]
+        },
+        {
+          "id": "l:t:small",
+          "style": "text.muted",
+          "text": "OPTION",
+          "at": [70.33, 27.73],
+          "font": 12,
+          "width": 46
+        },
+        {
+          "id": "l1:t:small",
+          "style": "text",
+          "text": "Small e-ink reader",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 135.24
+        },
+        {
+          "id": "t:eon",
+          "style": "kind.99",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [193.13, 78.13]
+        },
+        {
+          "id": "l:t:eon",
+          "style": "text",
+          "text": "E-ink is easier →on",
+          "at": [25.71, 33.73],
+          "font": 16.67,
+          "width": 141.72
+        },
+        {
+          "id": "l1:t:eon",
+          "style": "text",
+          "text": "the eyes",
+          "at": [65.07, 57.73],
+          "font": 16.67,
+          "width": 63
+        }
+      ]
+    },
+    {
+      "features": ["picture"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"tom\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td fixedsize=\"true\" width=\"48\" height=\"48\" bgcolor=\"#0005fe\"></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">CAT</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Tom</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"kit\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">CAT</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Kit</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"rex\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">DOG</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Rex</td></tr></table>>, fillcolor=\"#000101\", color=\"#000201\"];\n  { rank=same; \"tom\"; \"kit\"; }\n  \"tom\" -> \"rex\" [label=\"chases\", color=\"#000300\", fontcolor=\"#000400\"];\n}",
+      "marks": [
+        {
+          "id": "t:tom",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [112.75, 145.87]
+        },
+        {
+          "id": "s1:t:tom",
+          "style": "picture",
+          "at": [24.37, 15.73],
+          "size": [64, 64]
+        },
+        {
+          "id": "l:t:tom",
+          "style": "text.muted",
+          "text": "CAT",
+          "at": [44.37, 98.4],
+          "font": 12,
+          "width": 24
+        },
+        {
+          "id": "l1:t:tom",
+          "style": "text",
+          "text": "Tom",
+          "at": [39.71, 125.47],
+          "font": 16.67,
+          "width": 33.33
+        },
+        {
+          "id": "t:kit",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [72.75, 75.2]
+        },
+        {
+          "id": "l:t:kit",
+          "style": "text.muted",
+          "text": "CAT",
+          "at": [24.37, 27.73],
+          "font": 12,
+          "width": 24
+        },
+        {
+          "id": "l1:t:kit",
+          "style": "text",
+          "text": "Kit",
+          "at": [26.65, 54.8],
+          "font": 16.67,
+          "width": 19.45
+        },
+        {
+          "id": "t:rex",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [81.05, 75.2]
+        },
+        {
+          "id": "l:t:rex",
+          "style": "text.muted",
+          "text": "DOG",
+          "at": [26.85, 27.73],
+          "font": 12,
+          "width": 27.33
+        },
+        {
+          "id": "l1:t:rex",
+          "style": "text",
+          "text": "Rex",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 29.64
+        }
+      ]
+    },
+    {
+      "features": ["pos"],
+      "source": "digraph G {\n  graph [splines=false];\n  // layout options {\"spacing\":1,\"linkLength\":1,\"groupPull\":0.5,\"rounds\":1,\"direction\":\"best\",\"shape\":\"screen\",\"pinned\":\"selected\",\"strategy\":\"auto\"}\n  // layout step own\n  // layout kinds {\"q\":\"Question\",\"large\":\"Option\",\"small\":\"Option\"}\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"q\" [pos=\"0,0\", label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">QUESTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Which device?</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"large\" [pos=\"300,0\", label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">OPTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Large reader</td></tr></table>>, fillcolor=\"#000101\", color=\"#000201\"];\n  \"small\" [pos=\"600,0\", label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">OPTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Small reader</td></tr></table>>, fillcolor=\"#000101\", color=\"#000201\"];\n  { rank=same; \"large\"; \"small\"; }\n  \"large\" -> \"q\" [label=\"answers\", color=\"#000300\", fontcolor=\"#000400\"];\n  \"small\" -> \"q\" [label=\"answers\", color=\"#000300\", fontcolor=\"#000400\"];\n}",
+      "marks": [
+        {
+          "id": "t:q",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [159.8, 75.2]
+        },
+        {
+          "id": "l:t:q",
+          "style": "text.muted",
+          "text": "QUESTION",
+          "at": [48.57, 27.73],
+          "font": 12,
+          "width": 62.67
+        },
+        {
+          "id": "l1:t:q",
+          "style": "text",
+          "text": "Which device?",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 108.39
+        },
+        {
+          "id": "t:large",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [146.85, 75.2]
+        },
+        {
+          "id": "l:t:large",
+          "style": "text.muted",
+          "text": "OPTION",
+          "at": [50.43, 27.73],
+          "font": 12,
+          "width": 46
+        },
+        {
+          "id": "l1:t:large",
+          "style": "text",
+          "text": "Large reader",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 95.44
+        },
+        {
+          "id": "t:small",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [145.89, 75.2]
+        },
+        {
+          "id": "l:t:small",
+          "style": "text.muted",
+          "text": "OPTION",
+          "at": [49.95, 27.73],
+          "font": 12,
+          "width": 46
+        },
+        {
+          "id": "l1:t:small",
+          "style": "text",
+          "text": "Small reader",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 94.48
+        }
+      ]
+    },
+    {
+      "features": ["dir"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"question\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">QUESTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Which device should I</td></tr><tr><td cellpadding=\"1\">read long PDFs on?</td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"large\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">OPTION</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Large e-ink reader</td></tr></table>>, fillcolor=\"#000101\", color=\"#000201\"];\n  \"eyes\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">REASON</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">E-ink is easier on the</td></tr><tr><td cellpadding=\"1\">eyes</td></tr></table>>, fillcolor=\"#000102\", color=\"#000202\"];\n  \"sm\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">ALL</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">sm</td></tr></table>>, fillcolor=\"#000103\", color=\"#000203\"];\n  \"large\" -> \"question\" [label=\"answers\", color=\"#000300\", fontcolor=\"#000400\"];\n  \"eyes\" -> \"large\" [label=\"favours\", color=\"#000301\", fontcolor=\"#000401\"];\n  \"sm\" -> \"eyes\" [label=\"counts against\", color=\"#000302\", fontcolor=\"#000402\", dir=back];\n}",
+      "marks": [
+        {
+          "id": "t:question",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [213.53, 99.2]
+        },
+        {
+          "id": "l:t:question",
+          "style": "text.muted",
+          "text": "QUESTION",
+          "at": [75.43, 27.73],
+          "font": 12,
+          "width": 62.67
+        },
+        {
+          "id": "l1:t:question",
+          "style": "text",
+          "text": "Which device should I",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 162.12
+        },
+        {
+          "id": "l2:t:question",
+          "style": "text",
+          "text": "read long PDFs on?",
+          "at": [32.65, 78.8],
+          "font": 16.67,
+          "width": 148.24
+        },
+        {
+          "id": "t:large",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [187.6, 75.2]
+        },
+        {
+          "id": "l:t:large",
+          "style": "text.muted",
+          "text": "OPTION",
+          "at": [70.8, 27.73],
+          "font": 12,
+          "width": 46
+        },
+        {
+          "id": "l1:t:large",
+          "style": "text",
+          "text": "Large e-ink reader",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 136.19
+        },
+        {
+          "id": "t:eyes",
+          "style": "kind.2",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [207.05, 99.2]
+        },
+        {
+          "id": "l:t:eyes",
+          "style": "text.muted",
+          "text": "REASON",
+          "at": [78.19, 27.73],
+          "font": 12,
+          "width": 50.68
+        },
+        {
+          "id": "l1:t:eyes",
+          "style": "text",
+          "text": "E-ink is easier on the",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 155.63
+        },
+        {
+          "id": "l2:t:eyes",
+          "style": "text",
+          "text": "eyes",
+          "at": [85.92, 78.8],
+          "font": 16.67,
+          "width": 35.2
+        },
+        {
+          "id": "t:sm",
+          "style": "kind.3",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [73.63, 75.2]
+        },
+        {
+          "id": "l:t:sm",
+          "style": "text.muted",
+          "text": "ALL",
+          "at": [26.13, 27.73],
+          "font": 12,
+          "width": 21.35
+        },
+        {
+          "id": "l1:t:sm",
+          "style": "text",
+          "text": "sm",
+          "at": [25.71, 54.8],
+          "font": 16.67,
+          "width": 22.21
+        }
+      ]
+    },
+    {
+      "features": ["datatable", "bold", "italic", "unicode"],
+      "source": "digraph G {\n  graph [splines=line];\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"sales\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">DATASET</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">sales</td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"0\"><table border=\"0\" cellborder=\"1\" cellspacing=\"0\" cellpadding=\"2\"><tr><td align=\"left\"><font point-size=\"9\"><b>order_id</b></font></td><td align=\"left\"><font point-size=\"9\"><b>customer</b></font></td><td align=\"left\"><font point-size=\"9\"><b>amount</b></font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A1</font></td><td align=\"left\"><font point-size=\"9\">Ann &amp; Co</font></td><td align=\"left\"><font point-size=\"9\">0</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A2</font></td><td align=\"left\"><font point-size=\"9\">Bob</font></td><td align=\"left\"><font point-size=\"9\">1</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A3</font></td><td align=\"left\"><font point-size=\"9\">Ann &amp; Co</font></td><td align=\"left\"><font point-size=\"9\">2</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A4</font></td><td align=\"left\"><font point-size=\"9\">Bob</font></td><td align=\"left\"><font point-size=\"9\">3</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A5</font></td><td align=\"left\"><font point-size=\"9\">Ann &amp; Co</font></td><td align=\"left\"><font point-size=\"9\">4</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A6</font></td><td align=\"left\"><font point-size=\"9\">Bob</font></td><td align=\"left\"><font point-size=\"9\">5</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A7</font></td><td align=\"left\"><font point-size=\"9\">Ann &amp; Co</font></td><td align=\"left\"><font point-size=\"9\">6</font></td></tr><tr><td align=\"left\"><font point-size=\"9\">A8</font></td><td align=\"left\"><font point-size=\"9\">Bob</font></td><td align=\"left\"><font point-size=\"9\">7</font></td></tr></table></td></tr><tr><td cellpadding=\"0\"><font point-size=\"9\"><i>12 rows · 4 more rows not shown</i></font></td></tr></table>>, fillcolor=\"#000100\", color=\"#000200\"];\n  \"report\" [label=<<table border=\"0\" cellborder=\"0\" cellspacing=\"1\" cellpadding=\"0\"><tr><td cellpadding=\"0\"><font point-size=\"9\" color=\"#0000fe\">NOTE</font></td></tr><tr><td cellpadding=\"0\" height=\"3\"></td></tr><tr><td cellpadding=\"1\">Q3</td></tr></table>>, fillcolor=\"#000101\", color=\"#000201\"];\n  \"report\" -> \"sales\" [label=\"uses\", color=\"#000300\", fontcolor=\"#000400\"];\n}",
+      "marks": [
+        {
+          "id": "t:sales",
+          "style": "kind.0",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [228.16, 299.2]
+        },
+        {
+          "id": "l:t:sales",
+          "style": "text.muted",
+          "text": "DATASET",
+          "at": [86.4, 27.73],
+          "font": 12,
+          "width": 55.35
+        },
+        {
+          "id": "l1:t:sales",
+          "style": "text",
+          "text": "sales",
+          "at": [94.63, 54.8],
+          "font": 16.67,
+          "width": 38.91
+        },
+        {
+          "id": "s1:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 66.13],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l2:t:sales",
+          "style": "text",
+          "text": "order_id",
+          "at": [28.37, 79.6],
+          "font": 12,
+          "width": 48.01
+        },
+        {
+          "id": "s2:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 66.13],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l3:t:sales",
+          "style": "text",
+          "text": "customer",
+          "at": [87.73, 79.6],
+          "font": 12,
+          "width": 54.01
+        },
+        {
+          "id": "s3:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 66.13],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l4:t:sales",
+          "style": "text",
+          "text": "amount",
+          "at": [153.11, 79.6],
+          "font": 12,
+          "width": 43.33
+        },
+        {
+          "id": "s4:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 88.53],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l5:t:sales",
+          "style": "text",
+          "text": "A1",
+          "at": [28.37, 104.53],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s5:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 88.53],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l6:t:sales",
+          "style": "text",
+          "text": "Ann & Co",
+          "at": [87.73, 104.53],
+          "font": 12,
+          "width": 51.36
+        },
+        {
+          "id": "s6:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 88.53],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l7:t:sales",
+          "style": "text",
+          "text": "0",
+          "at": [153.11, 104.53],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s7:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 110.93],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l8:t:sales",
+          "style": "text",
+          "text": "A2",
+          "at": [28.37, 126.93],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s8:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 110.93],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l9:t:sales",
+          "style": "text",
+          "text": "Bob",
+          "at": [87.73, 126.93],
+          "font": 12,
+          "width": 21.35
+        },
+        {
+          "id": "s9:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 110.93],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l10:t:sales",
+          "style": "text",
+          "text": "1",
+          "at": [153.11, 126.93],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s10:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 133.33],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l11:t:sales",
+          "style": "text",
+          "text": "A3",
+          "at": [28.37, 149.33],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s11:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 133.33],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l12:t:sales",
+          "style": "text",
+          "text": "Ann & Co",
+          "at": [87.73, 149.33],
+          "font": 12,
+          "width": 51.36
+        },
+        {
+          "id": "s12:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 133.33],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l13:t:sales",
+          "style": "text",
+          "text": "2",
+          "at": [153.11, 149.33],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s13:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 155.73],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l14:t:sales",
+          "style": "text",
+          "text": "A4",
+          "at": [28.37, 171.73],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s14:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 155.73],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l15:t:sales",
+          "style": "text",
+          "text": "Bob",
+          "at": [87.73, 171.73],
+          "font": 12,
+          "width": 21.35
+        },
+        {
+          "id": "s15:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 155.73],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l16:t:sales",
+          "style": "text",
+          "text": "3",
+          "at": [153.11, 171.73],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s16:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 178.13],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l17:t:sales",
+          "style": "text",
+          "text": "A5",
+          "at": [28.37, 194.13],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s17:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 178.13],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l18:t:sales",
+          "style": "text",
+          "text": "Ann & Co",
+          "at": [87.73, 194.13],
+          "font": 12,
+          "width": 51.36
+        },
+        {
+          "id": "s18:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 178.13],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l19:t:sales",
+          "style": "text",
+          "text": "4",
+          "at": [153.11, 194.13],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s19:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 200.53],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l20:t:sales",
+          "style": "text",
+          "text": "A6",
+          "at": [28.37, 216.53],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s20:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 200.53],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l21:t:sales",
+          "style": "text",
+          "text": "Bob",
+          "at": [87.73, 216.53],
+          "font": 12,
+          "width": 21.35
+        },
+        {
+          "id": "s21:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 200.53],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l22:t:sales",
+          "style": "text",
+          "text": "5",
+          "at": [153.11, 216.53],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s22:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 222.93],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l23:t:sales",
+          "style": "text",
+          "text": "A7",
+          "at": [28.37, 238.93],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s23:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 222.93],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l24:t:sales",
+          "style": "text",
+          "text": "Ann & Co",
+          "at": [87.73, 238.93],
+          "font": 12,
+          "width": 51.36
+        },
+        {
+          "id": "s24:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 222.93],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l25:t:sales",
+          "style": "text",
+          "text": "6",
+          "at": [153.11, 238.93],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "s25:t:sales",
+          "style": "kind.0.outline",
+          "at": [24.37, 245.33],
+          "size": [59.36, 22.4]
+        },
+        {
+          "id": "l26:t:sales",
+          "style": "text",
+          "text": "A8",
+          "at": [28.37, 261.33],
+          "font": 12,
+          "width": 14.68
+        },
+        {
+          "id": "s26:t:sales",
+          "style": "kind.0.outline",
+          "at": [83.73, 245.33],
+          "size": [65.37, 22.4]
+        },
+        {
+          "id": "l27:t:sales",
+          "style": "text",
+          "text": "Bob",
+          "at": [87.73, 261.33],
+          "font": 12,
+          "width": 21.35
+        },
+        {
+          "id": "s27:t:sales",
+          "style": "kind.0.outline",
+          "at": [149.11, 245.33],
+          "size": [54.68, 22.4]
+        },
+        {
+          "id": "l28:t:sales",
+          "style": "text",
+          "text": "7",
+          "at": [153.11, 261.33],
+          "font": 12,
+          "width": 6.68
+        },
+        {
+          "id": "l29:t:sales",
+          "style": "text",
+          "text": "12 rows · 4 more rows not shown",
+          "at": [24.37, 278.53],
+          "font": 12,
+          "width": 179.41
+        },
+        {
+          "id": "t:report",
+          "style": "kind.1",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [82.08, 75.2]
+        },
+        {
+          "id": "l:t:report",
+          "style": "text.muted",
+          "text": "NOTE",
+          "at": [24.37, 27.73],
+          "font": 12,
+          "width": 33.33
+        },
+        {
+          "id": "l1:t:report",
+          "style": "text",
+          "text": "Q3",
+          "at": [29.92, 54.8],
+          "font": 16.67,
+          "width": 22.23
+        }
+      ]
+    },
+    {
+      "features": ["mixed", "pos"],
+      "source": "digraph G {\n  graph [splines=false];\n  // layout options {\"spacing\":1,\"linkLength\":1,\"groupPull\":0.5,\"rounds\":1,\"direction\":\"best\",\"shape\":\"screen\",\"pinned\":\"selected\",\"strategy\":\"auto\"}\n  // layout kinds {\"everyone\":\"Principle\",\"every_language\":\"Principle\",\"plain_words\":\"Principle\",\"private\":\"Principle\",\"person_decides\":\"Principle\",\"checked\":\"Principle\",\"open\":\"Principle\",\"oriented\":\"Principle\",\"fit_the_place\":\"Principle\",\"guard_attention\":\"Principle\",\"lands_home\":\"Principle\",\"honest\":\"Principle\",\"r_wcag\":\"Rule\",\"r_keyboard\":\"Rule\",\"r_screen_reader\":\"Rule\",\"r_sight\":\"Rule\",\"r_catalogue\":\"Rule\",\"r_formats\":\"Rule\",\"r_direction\":\"Rule\",\"r_same_bytes\":\"Rule\",\"r_culture_neutral\":\"Rule\",\"r_plain\":\"Rule\",\"r_plain_docs\":\"Rule\",\"r_uk_spelling\":\"Rule\",\"r_offline\":\"Rule\",\"r_ai_consent\":\"Rule\",\"r_proposals\":\"Rule\",\"r_ai_disclosed\":\"Rule\",\"r_tests_first\":\"Rule\",\"r_ratchet\":\"Rule\",\"r_rules_checked\":\"Rule\",\"r_licence\":\"Rule\",\"r_name\":\"Rule\",\"r_conduct\":\"Rule\",\"r_security\":\"Rule\",\"r_signed_off\":\"Rule\",\"r_keep_place\":\"Rule\",\"r_glide\":\"Rule\",\"r_unasked\":\"Rule\",\"r_way_back\":\"Rule\",\"r_cues\":\"Rule\",\"r_every_view\":\"Rule\",\"r_routines\":\"Rule\",\"r_no_inference\":\"Rule\",\"r_own_voice\":\"Rule\",\"r_by_need\":\"Rule\",\"r_hard_day\":\"Rule\",\"r_mix\":\"Rule\",\"r_no_hooks\":\"Rule\",\"r_time_box\":\"Rule\",\"r_lands\":\"Rule\",\"r_where_was_i\":\"Rule\",\"r_how_sure\":\"Rule\",\"r_other_side\":\"Rule\",\"r_guess_not_verdict\":\"Rule\"}\n  newrank=true;\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"group: 1\" [pos=\"0,0\", id=\"fold_group_1\", label=<Everyone can use it<br/><font point-size=\"9\">5 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 2\" [pos=\"300,0\", id=\"fold_group_2\", label=<It speaks your language and fits your culture<br/><font point-size=\"9\">6 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 3\" [pos=\"600,0\", id=\"fold_group_3\", label=<Plain words<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 4\" [pos=\"900,0\", id=\"fold_group_4\", label=<Your notes stay yours<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 5\" [pos=\"1200,0\", id=\"fold_group_5\", label=<The person decides<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 6\" [pos=\"1500,0\", id=\"fold_group_6\", label=<Checked, not promised<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 7\" [pos=\"1800,0\", id=\"fold_group_7\", label=<Open to join, closed to rip-offs<br/><font point-size=\"9\">6 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 8\" [pos=\"2100,0\", id=\"fold_group_8\", label=<Never disorient the user<br/><font point-size=\"9\">8 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 9\" [pos=\"2400,0\", id=\"fold_group_9\", label=<Change the setting, not the person<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 10\" [pos=\"2700,0\", id=\"fold_group_10\", label=<Guard attention, never harvest it<br/><font point-size=\"9\">3 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 11\" [pos=\"3000,0\", id=\"fold_group_11\", label=<Work lands where it lives<br/><font point-size=\"9\">3 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 12\" [pos=\"3300,0\", id=\"fold_group_12\", label=<Honest, not agreeable<br/><font point-size=\"9\">4 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n}",
+      "marks": [
+        {
+          "id": "t:group: 1",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [192.45, 57.47]
+        },
+        {
+          "id": "l:t:group: 1",
+          "style": "text.muted",
+          "text": "Everyone can use it",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 146.37
+        },
+        {
+          "id": "l1:t:group: 1",
+          "style": "text.muted",
+          "text": "5 things",
+          "at": [75.21, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 2",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [373.12, 57.47]
+        },
+        {
+          "id": "l:t:group: 2",
+          "style": "text.muted",
+          "text": "It speaks your language and fits your culture",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 327.04
+        },
+        {
+          "id": "l1:t:group: 2",
+          "style": "text.muted",
+          "text": "6 things",
+          "at": [165.55, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 3",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [132.23, 57.47]
+        },
+        {
+          "id": "l:t:group: 3",
+          "style": "text.muted",
+          "text": "Plain words",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 86.15
+        },
+        {
+          "id": "l1:t:group: 3",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [45.09, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 4",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [207.28, 57.47]
+        },
+        {
+          "id": "l:t:group: 4",
+          "style": "text.muted",
+          "text": "Your notes stay yours",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 161.19
+        },
+        {
+          "id": "l1:t:group: 4",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [82.63, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 5",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [192.47, 57.47]
+        },
+        {
+          "id": "l:t:group: 5",
+          "style": "text.muted",
+          "text": "The person decides",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 146.39
+        },
+        {
+          "id": "l1:t:group: 5",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [75.21, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 6",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [217.47, 57.47]
+        },
+        {
+          "id": "l:t:group: 6",
+          "style": "text.muted",
+          "text": "Checked, not promised",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 171.39
+        },
+        {
+          "id": "l1:t:group: 6",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [87.72, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 7",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [267.49, 57.47]
+        },
+        {
+          "id": "l:t:group: 7",
+          "style": "text.muted",
+          "text": "Open to join, closed to rip-offs",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 221.41
+        },
+        {
+          "id": "l1:t:group: 7",
+          "style": "text.muted",
+          "text": "6 things",
+          "at": [112.73, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 8",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [223.01, 57.47]
+        },
+        {
+          "id": "l:t:group: 8",
+          "style": "text.muted",
+          "text": "Never disorient the user",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 176.93
+        },
+        {
+          "id": "l1:t:group: 8",
+          "style": "text.muted",
+          "text": "8 things",
+          "at": [90.49, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 9",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [301.81, 57.47]
+        },
+        {
+          "id": "l:t:group: 9",
+          "style": "text.muted",
+          "text": "Change the setting, not the person",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 255.73
+        },
+        {
+          "id": "l1:t:group: 9",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [129.89, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 10",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [284.17, 57.47]
+        },
+        {
+          "id": "l:t:group: 10",
+          "style": "text.muted",
+          "text": "Guard attention, never harvest it",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 238.09
+        },
+        {
+          "id": "l1:t:group: 10",
+          "style": "text.muted",
+          "text": "3 things",
+          "at": [121.07, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 11",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [230.4, 57.47]
+        },
+        {
+          "id": "l:t:group: 11",
+          "style": "text.muted",
+          "text": "Work lands where it lives",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 184.32
+        },
+        {
+          "id": "l1:t:group: 11",
+          "style": "text.muted",
+          "text": "3 things",
+          "at": [94.19, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 12",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [210.08, 57.47]
+        },
+        {
+          "id": "l:t:group: 12",
+          "style": "text.muted",
+          "text": "Honest, not agreeable",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 164
+        },
+        {
+          "id": "l1:t:group: 12",
+          "style": "text.muted",
+          "text": "4 things",
+          "at": [84.03, 40.53],
+          "font": 12,
+          "width": 42.03
+        }
+      ]
+    },
+    {
+      "features": ["mixed", "cluster", "point", "pos"],
+      "source": "digraph G {\n  graph [splines=false];\n  // layout options {\"spacing\":1,\"linkLength\":1,\"groupPull\":0.5,\"rounds\":1,\"direction\":\"best\",\"shape\":\"screen\",\"pinned\":\"selected\",\"strategy\":\"auto\"}\n  // layout kinds {\"plugins\":\"Layer\",\"apps\":\"Layer\",\"display\":\"Layer\",\"core\":\"Layer\",\"library\":\"Layer\",\"graph_spec_js\":\"Part\",\"graph_spec_py\":\"Part\",\"core_part\":\"Part\",\"display_part\":\"Part\",\"obsidian\":\"Part\",\"claude_code\":\"Part\",\"standalone\":\"Part\",\"vscode\":\"Part\",\"cowork\":\"Part\",\"sync_part\":\"Part\",\"boundary_part\":\"Part\",\"web_part\":\"Part\",\"built_in_exports\":\"Part\",\"host_interface\":\"Interface\",\"plugin_interface\":\"Interface\",\"storage_interface\":\"Interface\",\"problem_shapes\":\"Interface\",\"lib_entry\":\"Area\",\"lib_reading\":\"Area\",\"lib_rules\":\"Area\",\"lib_joins\":\"Area\",\"lib_views\":\"Area\",\"lib_layout\":\"Area\",\"lib_mesh\":\"Area\",\"lib_axioms\":\"Area\",\"lib_clusters\":\"Area\",\"lib_altitude\":\"Area\",\"lib_lenses\":\"Area\",\"lib_calculated\":\"Area\",\"lib_process\":\"Area\",\"core_entry\":\"Area\",\"core_reading\":\"Area\",\"core_problems\":\"Area\",\"core_layout\":\"Area\",\"core_editing\":\"Area\",\"core_notes\":\"Area\",\"core_style\":\"Area\",\"core_board\":\"Area\",\"core_sketch\":\"Area\",\"core_diagram_types\":\"Area\",\"core_views\":\"Area\",\"core_paths\":\"Area\",\"core_properties\":\"Area\",\"core_export\":\"Area\",\"core_proposals\":\"Area\",\"core_links_images\":\"Area\",\"core_ai\":\"Area\",\"core_steps\":\"Area\",\"core_settings\":\"Area\",\"core_mesh\":\"Area\",\"core_plugins\":\"Area\",\"core_storage\":\"Area\",\"core_massive\":\"Area\",\"core_words\":\"Area\",\"core_word_catalogues\":\"Area\",\"core_first_run\":\"Area\",\"core_permissions\":\"Area\",\"sync_stack\":\"Area\",\"boundary_rules\":\"Area\",\"web_site\":\"Area\",\"core_connectors\":\"Area\",\"core_temporal\":\"Area\",\"core_export_code\":\"Area\",\"core_ai_systems\":\"Area\",\"core_altitude\":\"Area\",\"core_process\":\"Area\",\"core_drawing_trust\":\"Area\",\"core_runs\":\"Area\",\"core_profiles\":\"Area\",\"core_discover\":\"Area\",\"core_lenses\":\"Area\",\"core_claude_gate\":\"Area\",\"core_tools\":\"Area\",\"core_hosts\":\"Area\",\"core_view_types\":\"Area\",\"display_shell\":\"Area\",\"display_editor\":\"Area\",\"display_graph_view\":\"Area\",\"display_editing\":\"Area\",\"display_massive\":\"Area\",\"display_board\":\"Area\",\"display_sketch\":\"Area\",\"display_space\":\"Area\",\"display_details\":\"Area\",\"display_levels\":\"Area\",\"display_stage\":\"Area\",\"display_untangle\":\"Area\",\"display_controls\":\"Area\",\"display_rules\":\"Area\",\"display_table\":\"Area\",\"display_properties\":\"Area\",\"display_links\":\"Area\",\"display_export\":\"Area\",\"display_images\":\"Area\",\"display_proposals\":\"Area\",\"core_render\":\"Area\"}\n  newrank=true;\n  graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2, margin=\"0.24,0.15\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n  \"group: 2\" -> \"group: 1\" [id=\"edge81\", label=\"uses\", color=\"#000301\", fontcolor=\"#000401\"];\n  \"group: 3\" -> \"group: 1\" [id=\"edge84\", label=\"in layer\", color=\"#000302\", fontcolor=\"#000402\"];\n  \"group: 4\" -> \"trunk: 1 in\" [id=\"edge86_tail\", color=\"#000302\", dir=none];\n  \"trunk: 1 out\" -> \"group: 1\" [id=\"edge86\", label=\"in layer\", color=\"#000302\", fontcolor=\"#000402\"];\n  \"group: 5\" -> \"group: 1\" [id=\"edge90\", label=\"in layer\", color=\"#000302\", fontcolor=\"#000402\"];\n  \"group: 5\" -> \"group: 2\" [id=\"edge97\", label=\"offers\", color=\"#000303\", fontcolor=\"#000403\"];\n  \"group: 4\" -> \"trunk: 1 in\" [id=\"edge98_tail\", color=\"#000303\", dir=none];\n  \"trunk: 1 out\" -> \"group: 1\" [id=\"edge98\", label=\"offers\", color=\"#000303\", fontcolor=\"#000403\"];\n  \"group: 1\" [pos=\"0,0\", id=\"fold_group_1\", label=<Core<br/><font point-size=\"9\">11 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 2\" [pos=\"300,0\", id=\"fold_group_2\", label=<Apps<br/><font point-size=\"9\">9 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 3\" [pos=\"600,0\", id=\"fold_group_3\", label=<Graph format library (JavaScript)<br/><font point-size=\"9\">15 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 4\" [pos=\"900,0\", id=\"fold_group_4\", label=<Core (2)<br/><font point-size=\"9\">45 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"group: 5\" [pos=\"1200,0\", id=\"fold_group_5\", label=<Display layer<br/><font point-size=\"9\">21 things</font>>, style=\"rounded\", color=\"#0000fe\", fontcolor=\"#0000fe\"];\n  \"trunk: 1 in\" [pos=\"1500,0\", id=\"trunk_1_in\", shape=point, width=0.08, label=\"\", color=\"#0000fe\"];\n  \"trunk: 1 out\" [pos=\"1800,0\", id=\"trunk_1_out\", shape=point, width=0.08, label=\"\", color=\"#0000fe\"];\n  \"trunk: 1 in\" -> \"trunk: 1 out\" [id=\"trunk_1\", dir=none, penwidth=2.5, label=\"2 links\", fontsize=9, fontcolor=\"#0000fe\"];\n}",
+      "marks": [
+        {
+          "id": "t:group: 2",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [88.12, 57.47]
+        },
+        {
+          "id": "l:t:group: 2",
+          "style": "text.muted",
+          "text": "Apps",
+          "at": [25.07, 28.07],
+          "font": 16.67,
+          "width": 37.99
+        },
+        {
+          "id": "l1:t:group: 2",
+          "style": "text.muted",
+          "text": "9 things",
+          "at": [23.04, 40.53],
+          "font": 12,
+          "width": 42.03
+        },
+        {
+          "id": "t:group: 1",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [94.79, 57.47]
+        },
+        {
+          "id": "l:t:group: 1",
+          "style": "text.muted",
+          "text": "Core",
+          "at": [29.33, 28.07],
+          "font": 16.67,
+          "width": 36.12
+        },
+        {
+          "id": "l1:t:group: 1",
+          "style": "text.muted",
+          "text": "11 things",
+          "at": [23.04, 40.53],
+          "font": 12,
+          "width": 48.71
+        },
+        {
+          "id": "t:group: 3",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [287.8, 57.47]
+        },
+        {
+          "id": "l:t:group: 3",
+          "style": "text.muted",
+          "text": "Graph format library (JavaScript)",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 241.73
+        },
+        {
+          "id": "l1:t:group: 3",
+          "style": "text.muted",
+          "text": "15 things",
+          "at": [119.55, 40.53],
+          "font": 12,
+          "width": 48.71
+        },
+        {
+          "id": "t:group: 4",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [107.2, 57.47]
+        },
+        {
+          "id": "l:t:group: 4",
+          "style": "text.muted",
+          "text": "Core (2)",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 61.12
+        },
+        {
+          "id": "l1:t:group: 4",
+          "style": "text.muted",
+          "text": "45 things",
+          "at": [29.25, 40.53],
+          "font": 12,
+          "width": 48.71
+        },
+        {
+          "id": "t:trunk: 1 in",
+          "style": "text.muted",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [7.68, 7.68]
+        },
+        {
+          "id": "t:trunk: 1 out",
+          "style": "text.muted",
+          "shape": "ellipse",
+          "at": [0, 0],
+          "size": [7.68, 7.68]
+        },
+        {
+          "id": "t:group: 5",
+          "style": "text.muted.outline",
+          "shape": "round",
+          "at": [0, 0],
+          "size": [141.49, 57.47]
+        },
+        {
+          "id": "l:t:group: 5",
+          "style": "text.muted",
+          "text": "Display layer",
+          "at": [23.04, 28.07],
+          "font": 16.67,
+          "width": 95.4
+        },
+        {
+          "id": "l1:t:group: 5",
+          "style": "text.muted",
+          "text": "21 things",
+          "at": [46.4, 40.53],
+          "font": 12,
+          "width": 48.71
+        }
+      ]
+    }
+  ]
+}

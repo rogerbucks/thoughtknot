@@ -33,6 +33,7 @@ import {
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
 import { layoutOptions } from './layouts/layout-options.ts';
+import { measuredMarks } from './layouts/measure.ts';
 import { LEVELLED_FROM } from './layouts/level-seed.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
@@ -41,8 +42,6 @@ export interface Engine {
   render(source: string): string;
   /** The same layout as drawing marks (spec §43), for a host that draws marks itself. */
   marks?(source: string): LaidMarks;
-  /** The marks with every box where the source puts it, measured but not laid out, for our own engine (§53). */
-  placed?(source: string): LaidMarks;
 }
 
 /** A drawing ready to show: themed SVG text, the direction chosen, and its natural size in CSS pixels. */
@@ -253,9 +252,9 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
  * where the marks cannot give the drawing back exactly, or the engine gives no marks.
  */
 export function svgOf(engine: Engine, dot: string, routing?: string, own?: boolean, wrap?: boolean): string {
-  // our own engine places the boxes Graphviz measured (layout_own_engine); Graphviz's own layout where it cannot
-  if (own && engine.placed) {
-    const measured = engine.placed(dot);
+  // our own engine places the boxes our own code measured (layout_own_engine); Graphviz's own layout where it cannot
+  if (own) {
+    const measured = measuredMarks(dot);
     if (!measured.layout?.lost)
       return ownSvg(
         measured,

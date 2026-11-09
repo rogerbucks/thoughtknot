@@ -2,6 +2,7 @@
 // When Graphviz runs out of time, our own engine lays the graph out again. When that is slow too, it goes in rows with
 // no ordering, then in a grid. Each step is said in one line beside the drawing. The runner's side is proved in
 // layout-worker.test.js; here, the ladder, the two cheaper layouts and the drawing each gives.
+import { measuredMarks } from '../src/layouts/measure.ts';
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { LAYOUT_STEPS, cheaperSpots, nextStep } from '../src/layouts/cheaper.ts';
@@ -159,7 +160,7 @@ describe('a drawing laid out by a cheaper step', () => {
     for (const step of LAYOUT_STEPS) {
       const [d] = directions({ ...readNote([NOTE]).graphs.get('g'), diagram: { type: 'radial', centre: 'b' }, step });
       assert.doesNotMatch(d.dot, /layout=twopi/, step);
-      const boxes = engine.placed(d.dot).marks.filter((m) => m.kind === 'box' && m.role === 'thing');
+      const boxes = measuredMarks(d.dot).marks.filter((m) => m.kind === 'box' && m.role === 'thing');
       assert.deepEqual(
         boxes.map((b) => Math.round(b.y)),
         [0, 0, 0, 0],

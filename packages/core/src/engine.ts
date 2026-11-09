@@ -15,6 +15,5 @@ export async function loadEngine(): Promise<Engine> {
     version: viz.graphvizVersion,
     render: (source) => viz.renderString(source, { format: 'svg' }),
     marks: (source) => layoutMarks(viz.renderJSON(source) as GraphvizLayout),
-    placed: (source) => layoutMarks(viz.renderJSON(source, { engine: 'nop' }) as GraphvizLayout),
   };
 }

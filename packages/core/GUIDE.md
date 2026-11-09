@@ -1136,6 +1136,19 @@ little. A view fits the spots into its space and draws marks there. A new layout
 - `force-3d.ts` — the force layout in space: depth keeps apart the links a page would cross. A new thing on a warm
   start begins beside the things it links to.
 
+#### Our own measuring (Roger, 9 Nov 2026: Graphviz replaced, no WebAssembly)
+
+Every box is sized from its label by our own code, not by Graphviz. It reads the DOT the core writes and gives the
+layout as Graphviz's JSON, so `graphviz-marks.ts` turns it into marks as before. Each size matches Graphviz's own.
+`test/fixtures/measure-cases.json` holds what Graphviz measured, so the match is kept after Graphviz is gone.
+
+- `measure.ts` — `measuredMarks`: every box where its `pos` puts it, sized and drawn as Graphviz's `nop` step did.
+  Links are drawn straight; our own engine lays them out again.
+- `dot-read.ts` — reads a layout source: the graph's, each thing's and each link's attributes, and the groups.
+- `label-of.ts` — a label from its attributes: HTML-like text, or plain text with Graphviz's escapes.
+- `html-label.ts` — an HTML-like label sized as Graphviz sizes it: tables, rows, cells, fonts and line breaks.
+- `text-width.ts` — how wide a text is, letter by letter, as Graphviz estimates it where it has no fonts.
+
 ### The rendering rebuild, `src/render/` (editor spec §73)
 
 The new rendering, built one way down to wiki/Rendering-spec.md. Each layer takes only what the one above gives it.
