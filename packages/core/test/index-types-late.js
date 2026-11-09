@@ -453,4 +453,9 @@ export const TYPES_LATE = [
   'VaultConsent',
   'AiPublic',
   'MetaKind',
+  // SQLite read in plain JavaScript, 9 Nov 2026
+  'SqliteEntry',
+  'SqliteRefusal',
+  'SqliteTable',
+  'SqliteValue',
 ];

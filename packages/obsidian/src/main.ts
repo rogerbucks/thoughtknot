@@ -32,7 +32,7 @@ import type {
   Settings,
   StyleGraph,
 } from '@thoughtknot/core';
-import { SENDS_KEPT, addCommands, sqliteQuery } from './commands';
+import { SENDS_KEPT, addCommands } from './commands';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { chooseLanguage, installObsidianHost } from './display-host';
@@ -251,8 +251,6 @@ export default class ThoughtKnotPlugin extends Plugin {
     return engineOnThePage();
   }
 
-  /** Runs an import's queries on the bytes of a SQLite file in the vault: a test may stand in its own. */
-  queryDatabase = sqliteQuery;
   /** The Graphviz engine on the page's own thread, started once, the first time a graph is laid out there. */
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/sqlite-read.test.js",
+  "test": "sqlite_read_tables > reads text written in UTF-8 and in UTF-16 of either order, beyond the first plane too",
+  "seen_failing_first": false,
+  "evidence": "The decoding moved from the page's TextDecoder to the reader's own, so the same behaviour held before; this test guards that it still does"
+}

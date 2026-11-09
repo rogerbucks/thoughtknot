@@ -150,6 +150,15 @@ export const READING_SOURCE_WORDS = {
     '{place} is plain text: it becomes a graph only as a proposal, each thing citing its line, for a person to accept.',
   'reading.text.too-long': '{place} has more than {most} characters, so it was not read: split it into smaller files.',
   'reading.text.cites': '{place}, line {line}: "{words}"',
+  // a SQLite database read as tables in plain JavaScript (sqlite-read.ts)
+  'reading.sqlite.not-sqlite': 'This file is not a SQLite database, so it was not read.',
+  'reading.sqlite.too-large': 'This database is larger than {most} bytes, so it was not read.',
+  'reading.sqlite.too-many-rows': 'A table holds more than {most} rows, so it was not read: export the rows you need.',
+  'reading.sqlite.damaged': 'This database is damaged or in a form this reader does not know, so it was not read.',
+  'reading.sqlite.no-table': 'The database has no table {name}.',
+  'reading.sqlite.view': '{name} is a view: only tables are read. Save the view as a table in the database to read it.',
+  'reading.sqlite.virtual': '{name} is a virtual table: only tables stored in the file are read.',
+  'reading.sqlite.without-rowid': '{name} is a WITHOUT ROWID table, which this reader does not read yet.',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',

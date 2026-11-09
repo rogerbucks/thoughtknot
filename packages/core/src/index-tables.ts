@@ -10,4 +10,7 @@ export { dataSetTables } from './data-set-tables.ts';
 export { dataSetsOf } from './data-set-reference.ts';
 export { keptOf, keptWords, linkEdit, snapshotEdit, snapshotPlace } from './data-set-kept.ts';
 export type { KeptEdit, KeptSet } from './data-set-kept.ts';
+export { pickedLinks, pickedThings } from './db-import.ts';
+export { columnsOf, sqliteEntries, sqliteTable, SQLITE_LIMITS } from './sqlite-read.ts';
+export type { SqliteEntry, SqliteRefusal, SqliteTable, SqliteValue } from './sqlite-read.ts';
 export * from './index-board.ts';

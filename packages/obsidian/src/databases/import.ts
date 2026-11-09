@@ -1,12 +1,23 @@
 // Importing from a database (spec §20, db_import_on_request; §21, settings_db_connections). The database is a SQLite
 // file in the vault, so nothing is set up and nothing reaches the network, on desktop and mobile alike. The command
-// opens a dialog on the note in front. The user picks the file, names the graph and writes the queries. Nothing is read
-// until Import is pressed. Then the rows are written at the end of the note, as a graph block of text that keeps no
-// live link.
+// opens a dialog on the note in front. The user picks the file, which lists its tables, read on the device. Then the
+// user names the graph and picks the tables and columns: no SQL is written and nothing is guessed. Nothing is written
+// until Import is pressed. Then the rows go at the end of the note, as a graph block of text that keeps no live link.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
-import { importedBlock, isDbFile, withImport, word } from '@thoughtknot/core';
+import {
+  columnsOf,
+  importedBlock,
+  isDbFile,
+  pickedLinks,
+  pickedThings,
+  sqliteEntries,
+  sqliteTable,
+  withImport,
+  word,
+} from '@thoughtknot/core';
+import type { DbRow, SqliteEntry, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
 import { changeVaultNote } from '../storage/plugin-notes';
@@ -40,12 +51,21 @@ function today(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** The dialog: the database file, the graph's name and the queries. Only Import reads the file, once. */
+/** The dialog: the database file, the graph's name, and the tables and columns picked. Only Import writes. */
 class ImportDialog extends Modal {
-  private chosen = 0;
+  private chosen = -1;
   private graph = '';
+  private entries: SqliteEntry[] = [];
+  private bytes: Uint8Array | null = null;
+  private refused = '';
   private things = '';
+  private id = '';
+  private kind = '';
   private links = '';
+  private from = '';
+  private to = '';
+  private type = '';
+  private typeName = '';
   private running = false;
 
   constructor(
@@ -59,40 +79,99 @@ class ImportDialog extends Modal {
   override onOpen(): void {
     readInHostDirection(this.modalEl);
     this.setTitle(word('import.title'));
+    this.draw();
+  }
+
+  override onClose(): void {
+    this.contentEl.empty();
+  }
+
+  /** The columns of table `name` as the file lists it; none when it is not read. */
+  private columns(name: string): string[] {
+    const e = this.entries.find((x) => x.name === name && !x.unread);
+    return e ? columnsOf(e.sql).columns : [];
+  }
+
+  /** A row with a dropdown of `options`, the one `value` chosen; `none` adds a first choice of nothing. */
+  private pick(
+    name: WordKey,
+    sentence: WordKey | '',
+    options: string[],
+    value: string,
+    set: (v: string) => void,
+    none = false,
+  ) {
+    new Setting(this.contentEl)
+      .setName(word(name))
+      .setDesc(sentence ? word(sentence) : '')
+      .addDropdown((d) => {
+        if (none) d.addOption('', word('import.none'));
+        for (const o of options) d.addOption(o, o);
+        d.setValue(value).onChange((v) => {
+          set(v);
+          this.draw();
+        });
+      });
+  }
+
+  /** Draws the dialog again from what is chosen, so each row offers only what the choice above it allows. */
+  private draw(): void {
     const el = this.contentEl;
+    el.empty();
     new Setting(el)
       .setName(word('import.file'))
       .setDesc(word('import.file.sentence'))
       .addDropdown((d) => {
+        d.addOption('-1', word('import.file.choose'));
         for (const [i, f] of this.files.entries()) d.addOption(String(i), f.path);
-        d.setValue('0').onChange((v) => {
-          this.chosen = Number(v);
-        });
+        d.setValue(String(this.chosen)).onChange((v) => void this.choose(Number(v)));
       });
+    if (this.refused) el.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' }, text: this.refused });
+    if (!this.bytes) return;
     new Setting(el)
       .setName(word('import.graph'))
       .setDesc(word('import.graph.sentence'))
       .addText((t) =>
-        t.onChange((v) => {
+        t.setValue(this.graph).onChange((v) => {
           this.graph = v.trim();
         }),
       );
-    new Setting(el)
-      .setName(word('import.things'))
-      .setDesc(word('import.things.sentence'))
-      .addTextArea((t) =>
-        t.onChange((v) => {
-          this.things = v;
-        }),
-      );
-    new Setting(el)
-      .setName(word('import.links'))
-      .setDesc(word('import.links.sentence'))
-      .addTextArea((t) =>
-        t.onChange((v) => {
-          this.links = v;
-        }),
-      );
+    const tables = this.entries.filter((e) => !e.unread).map((e) => e.name);
+    this.pick('import.things', 'import.things.sentence', tables, this.things, (v) => {
+      [this.things, this.id, this.kind] = [v, this.columns(v)[0] ?? '', ''];
+    });
+    const cols = this.columns(this.things);
+    this.pick('import.id', 'import.id.sentence', cols, this.id, (v) => (this.id = v));
+    this.pick('import.kind', 'import.kind.sentence', cols, this.kind, (v) => (this.kind = v), true);
+    this.pick(
+      'import.links',
+      'import.links.sentence',
+      tables,
+      this.links,
+      (v) => {
+        const c = this.columns(v);
+        [this.links, this.from, this.to, this.type] = [v, c[0] ?? '', c[1] ?? c[0] ?? '', ''];
+      },
+      true,
+    );
+    if (this.links) {
+      const lc = this.columns(this.links);
+      this.pick('import.from', '', lc, this.from, (v) => (this.from = v));
+      this.pick('import.to', '', lc, this.to, (v) => (this.to = v));
+      this.pick('import.type', 'import.type.sentence', lc, this.type, (v) => (this.type = v), true);
+      if (!this.type)
+        new Setting(el)
+          .setName(word('import.type-name'))
+          .setDesc(word('import.type-name.sentence'))
+          .addText((t) =>
+            t.setValue(this.typeName).onChange((v) => {
+              this.typeName = v.trim();
+            }),
+          );
+    }
+    // a view or a table this reader cannot read is named with why, never offered as if it could be
+    for (const e of this.entries.filter((x) => x.unread))
+      el.createEl('p', { cls: 'setting-item-description', text: word('import.unread', { why: e.unread ?? '' }) });
     el.createEl('p', { text: word('import.copy') });
     new Setting(el)
       .addButton((b) =>
@@ -104,25 +183,46 @@ class ImportDialog extends Modal {
       .addButton((b) => b.setButtonText(word('import.cancel')).onClick(() => this.close()));
   }
 
-  /** Reads the database file, once, and writes what it returned into the note; or says why nothing was written. */
+  /** Reads the file chosen, once, to list its tables; nothing is written. */
+  private async choose(i: number): Promise<void> {
+    this.chosen = i;
+    this.bytes = null;
+    this.entries = [];
+    this.refused = '';
+    const db = this.files[i];
+    if (db) {
+      const bytes = new Uint8Array(await this.app.vault.readBinary(db));
+      const listed = sqliteEntries(bytes);
+      if ('refused' in listed) this.refused = listed.refused;
+      else [this.bytes, this.entries] = [bytes, listed];
+      const first = this.entries.find((e) => !e.unread)?.name ?? '';
+      [this.things, this.id, this.kind, this.links] = [first, this.columns(first)[0] ?? '', '', ''];
+    }
+    this.draw();
+  }
+
+  /** Writes the rows of the tables picked into the note; or says why nothing was written. */
   private async run(): Promise<void> {
     const db = this.files[this.chosen];
-    if (!db || this.running) return;
+    if (!db || !this.bytes || this.running) return;
     this.running = true;
     const failed = (why: string) => new Notice(word('import.failed', { file: db.basename, why }));
     try {
-      const queries = this.links.trim() ? [this.things, this.links] : [this.things];
-      const [things = [], links = []] = await this.plugin.queryDatabase(await this.app.vault.readBinary(db), queries);
-      const made = importedBlock(this.graph, things, links, { file: db.basename, date: today() });
-      if ('refused' in made) {
-        failed(made.refused);
-        return;
+      const things = sqliteTable(this.bytes, this.things);
+      if ('refused' in things) return void failed(things.refused);
+      const thingRows = pickedThings(things, this.id, this.kind || undefined);
+      let linkRows: DbRow[] = [];
+      if (this.links) {
+        const links = sqliteTable(this.bytes, this.links);
+        if ('refused' in links) return void failed(links.refused);
+        const type = this.type ? { column: this.type } : { name: this.typeName };
+        linkRows = pickedLinks(links, this.from, this.to, type);
       }
+      const made = importedBlock(this.graph, thingRows, linkRows, { file: db.basename, date: today() });
+      if ('refused' in made) return void failed(made.refused);
       await changeVaultNote(this.app, this.file.path, (now) => withImport(now, made.block));
       new Notice(word('import.done', { graph: this.graph, file: db.basename, note: this.file.basename }));
       this.close();
-    } catch (e) {
-      failed(e instanceof Error ? e.message : String(e));
     } finally {
       this.running = false;
     }
