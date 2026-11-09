@@ -124,3 +124,7 @@ an edit of its own keeps it, merged in.
 - `test/mesh-vpn.test.js` — two devices sync through a real TCP relay, which sees ciphertext only; a stranger gets
   nothing.
 - `test/session-security.test.js` — a recorded, repeated, reflected, dropped or moved message does not open, even to a thief of both device keys.
+
+## Offering what a machine has
+
+`offers(found)` turns what a host found into plain-words offers: a keychain, a folder that already syncs, a VPN. Nothing is chosen for the person. `accepted(offers, ids)` returns only the offers they accepted. An offer adds a place and the old one stays.
