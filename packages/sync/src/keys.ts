@@ -3,6 +3,8 @@
 // key pair. A device's private key is made so it cannot be exported. The vault key's bytes are held in a private field
 // and never written out. A log, JSON or an export of a key says only that it is one. Web Crypto, so it runs anywhere.
 
+import type { CipherSuite } from './suite.ts';
+
 const subtle = (): SubtleCrypto => globalThis.crypto.subtle;
 const IV_BYTES = 12;
 const KEY_BYTES = 32;
@@ -58,14 +60,20 @@ export class DeviceKeys {
    * before.
    */
   async sessionKey(theirs: Uint8Array, salt: Uint8Array, fresh: Uint8Array): Promise<CryptoKey> {
+    return defaultSuite.keyFrom(await this.sessionBytes(theirs, salt, fresh));
+  }
+
+  /** The bytes of that session key, for a cipher suite to make its own key from. They never leave the session. */
+  async sessionBytes(theirs: Uint8Array, salt: Uint8Array, fresh: Uint8Array): Promise<Uint8Array> {
     const pub = await subtle().importKey('raw', own(theirs), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
     const bits = await subtle().deriveBits({ name: 'ECDH', public: pub }, this.#pair.privateKey, 256);
     const base = await subtle().importKey('raw', Uint8Array.from([...new Uint8Array(bits), ...fresh]), 'HKDF', false, [
-      'deriveKey',
+      'deriveBits',
     ]);
     const info = new TextEncoder().encode('thoughtknot mesh session 2');
-    const hkdf = { name: 'HKDF', hash: 'SHA-256', salt: own(salt), info };
-    return subtle().deriveKey(hkdf, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    return new Uint8Array(
+      await subtle().deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: own(salt), info }, base, 256),
+    );
   }
 
   toJSON(): string {
@@ -79,45 +87,53 @@ export class DeviceKeys {
   }
 }
 
-/** The owner's vault key: it seals each record and hides each name. */
+/** The owner's vault key: it seals each record and hides each name. Its cipher is the suite it was made with. */
 export class VaultKey {
   readonly #bytes: Uint8Array;
-  readonly #seal: CryptoKey;
+  readonly #suite: CipherSuite;
+  readonly #seal: unknown;
   readonly #name: CryptoKey;
-  private constructor(bytes: Uint8Array, seal: CryptoKey, name: CryptoKey) {
+  private constructor(bytes: Uint8Array, suite: CipherSuite, seal: unknown, name: CryptoKey) {
     this.#bytes = bytes;
+    this.#suite = suite;
     this.#seal = seal;
     this.#name = name;
   }
 
   /** A new vault key, made on this device. */
-  static create(): Promise<VaultKey> {
-    return VaultKey.#from(globalThis.crypto.getRandomValues(new Uint8Array(KEY_BYTES)));
+  static create(suite: CipherSuite = defaultSuite): Promise<VaultKey> {
+    return VaultKey.#from(globalThis.crypto.getRandomValues(new Uint8Array(KEY_BYTES)), suite);
   }
 
-  static async #from(bytes: Uint8Array): Promise<VaultKey> {
-    const base = await subtle().importKey('raw', own(bytes), 'HKDF', false, ['deriveKey']);
-    const derive = (info: string, alg: AesKeyGenParams | HmacKeyGenParams, use: KeyUsage[]) =>
-      subtle().deriveKey(
-        { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(), info: new TextEncoder().encode(info) },
-        base,
-        alg,
-        false,
-        use,
+  static async #from(bytes: Uint8Array, suite: CipherSuite): Promise<VaultKey> {
+    const base = await subtle().importKey('raw', own(bytes), 'HKDF', false, ['deriveBits']);
+    const derive = async (info: string) =>
+      new Uint8Array(
+        await subtle().deriveBits(
+          { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(), info: new TextEncoder().encode(info) },
+          base,
+          256,
+        ),
       );
-    const seal = await derive('thoughtknot seal', { name: 'AES-GCM', length: 256 }, ['encrypt', 'decrypt']);
-    const name = await derive('thoughtknot name', { name: 'HMAC', hash: 'SHA-256', length: 256 }, ['sign']);
-    return new VaultKey(bytes.slice(), seal, name);
+    const seal = await suite.keyFrom(await derive('thoughtknot seal'));
+    const name = await subtle().importKey(
+      'raw',
+      own(await derive('thoughtknot name')),
+      { name: 'HMAC', hash: 'SHA-256', length: 256 },
+      false,
+      ['sign'],
+    );
+    return new VaultKey(bytes.slice(), suite, seal, name);
   }
 
   /** `plain`, sealed: a fresh nonce, then the ciphertext and its tag. */
   async seal(plain: Uint8Array): Promise<Uint8Array> {
-    return sealWith(this.#seal, plain);
+    return this.#suite.seal(this.#seal, plain);
   }
 
   /** What `sealed` holds. Throws when it was not sealed by this key, or was changed. */
   async open(sealed: Uint8Array): Promise<Uint8Array> {
-    return openWith(this.#seal, sealed);
+    return this.#suite.open(this.#seal, sealed);
   }
 
   /** `name` hidden: the same for every device holding this key, and saying nothing of the name. */
@@ -132,8 +148,13 @@ export class VaultKey {
   }
 
   /** The vault key `sealed` holds, sealed for `mine` by the device whose public half is `theirs`. */
-  static async openFrom(sealed: Uint8Array, mine: DeviceKeys, theirs: Uint8Array): Promise<VaultKey> {
-    return VaultKey.#from(await openWith(await mine.sharedWith(theirs), sealed));
+  static async openFrom(
+    sealed: Uint8Array,
+    mine: DeviceKeys,
+    theirs: Uint8Array,
+    suite: CipherSuite = defaultSuite,
+  ): Promise<VaultKey> {
+    return VaultKey.#from(await openWith(await mine.sharedWith(theirs), sealed), suite);
   }
 
   toJSON(): string {
@@ -164,3 +185,12 @@ export async function openWith(key: CryptoKey, sealed: Uint8Array, bound?: Uint8
   const algorithm = { name: 'AES-GCM', iv, ...(bound ? { additionalData: own(bound) } : {}) };
   return new Uint8Array(await subtle().decrypt(algorithm, key, own(sealed.slice(IV_BYTES))));
 }
+
+/** The suite shipped: AES-256-GCM with a fresh nonce for each seal. */
+export const defaultSuite: CipherSuite<CryptoKey> = {
+  id: 'aes-256-gcm',
+  newKey: () => subtle().generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']),
+  keyFrom: (raw) => subtle().importKey('raw', own(raw), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']),
+  seal: sealWith,
+  open: openWith,
+};

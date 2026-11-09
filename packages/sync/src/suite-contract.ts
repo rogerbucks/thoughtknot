@@ -85,6 +85,20 @@ async function holdsBound<K>(c: CipherSuite<K>, key: K): Promise<void> {
   }
 }
 
+const keyBytes = (fill: number): Uint8Array => new Uint8Array(32).fill(fill);
+
+const keysFromBytes: Run = async (c) => {
+  const [one, again, other] = [
+    await c.keyFrom(keyBytes(5)),
+    await c.keyFrom(keyBytes(5)),
+    await c.keyFrom(keyBytes(6)),
+  ];
+  const sealed = await c.seal(one, secret);
+  if (!same(await c.open(again, sealed), secret))
+    fail('keyFrom', 'the same bytes to give the same key', 'a key that differs');
+  if (await opens(c, other, sealed)) fail('keyFrom', 'other bytes to give another key', 'it opened');
+};
+
 /** The checks every cipher suite holds to. Together they refuse a suite that hides nothing, or that trusts what it opens. */
 export function suiteContract<K>(make: Make<K>): ContractCheck[] {
   return [
@@ -106,6 +120,7 @@ export function suiteContract<K>(make: Make<K>): ContractCheck[] {
         if (await opens(c, await c.newKey(), sealed)) fail('open', 'a refusal with another key', 'opened');
       },
     },
+    on(make, 'a key made from the same bytes opens it, and one from other bytes does not', keysFromBytes),
     on(make, 'a changed byte, anywhere, is refused', refusesChanged),
     on(make, 'a cut or an extended message is refused', refusesCut),
     on(make, 'data the seal was bound to must be the same to open it', holdsBound),

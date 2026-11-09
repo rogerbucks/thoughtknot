@@ -3,7 +3,7 @@
 // suite contract (contracts.ts). The contract refuses a suite that sends plaintext, that opens what was changed, or
 // that reuses a nonce. It is run at every start, so a broken suite cannot run quietly. The default suite is AES-GCM.
 import { suiteContract } from './suite-contract.ts';
-import { openWith, sealWith } from './keys.ts';
+import { defaultSuite } from './keys.ts';
 
 /** What seals and opens bytes with a key. A key is opaque: only the suite that made it can use it. */
 export interface CipherSuite<K = unknown> {
@@ -11,19 +11,15 @@ export interface CipherSuite<K = unknown> {
   readonly id: string;
   /** A new random key. */
   newKey(): Promise<K>;
+  /** The key made from 32 secret bytes: the same bytes give a key that opens what the other sealed. */
+  keyFrom(raw: Uint8Array): Promise<K>;
   /** `plain` sealed by `key`. `bound` is checked on opening and is not sent. */
   seal(key: K, plain: Uint8Array, bound?: Uint8Array): Promise<Uint8Array>;
   /** What `sealed` holds. Throws when it was changed, sealed by another key or bound to other data. */
   open(key: K, sealed: Uint8Array, bound?: Uint8Array): Promise<Uint8Array>;
 }
 
-/** The suite shipped: AES-256-GCM with a fresh nonce for each seal. */
-export const defaultSuite: CipherSuite<CryptoKey> = {
-  id: 'aes-256-gcm',
-  newKey: () => globalThis.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']),
-  seal: sealWith,
-  open: openWith,
-};
+export { defaultSuite };
 
 /** Why `suite` is refused, one line for each check it fails; none when it is accepted. */
 export async function suiteProblems<K>(suite: CipherSuite<K>): Promise<string[]> {
