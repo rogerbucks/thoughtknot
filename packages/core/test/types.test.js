@@ -392,7 +392,9 @@ describe('groups written as nudges', () => {
       ],
       groups: [['Front desk', ['ann', 'bob']]],
     });
-    const { dot } = directions(drawing)[0];
+    // the DOT both cores write, before our own engine's options are added
+    const [way] = directions(drawing);
+    const dot = way.source ?? way.dot;
     const lane = dot.split('\n').find((l) => l.includes('subgraph cluster_lane_1 '));
     assert.match(lane, /"ann"; "bob"; subgraph cluster_lane_1_1 \{label=<Front desk>; .*"ann"; "bob"; \}\}$/);
     assert.equal(dot.match(/subgraph /g).length, 3, 'two lanes and the group inside one: no group box of its own');

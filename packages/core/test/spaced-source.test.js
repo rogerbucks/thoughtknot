@@ -33,7 +33,11 @@ test('a tree, flow, lanes, radial and timeline take the View menu’s spacing', 
       reading,
     ).style;
     const drawing = styledDrawing(reading.graphs.get('org'), style, reading.world.org);
-    const sep = (d) => Number(/nodesep=([0-9.]+)/.exec(directions(d)[0].dot)?.[1]);
+    // our own engine reads the spacing from its options; Graphviz's types (radial, timeline) from nodesep
+    const sep = (d) => {
+      const [way] = directions(d);
+      return Number((way.own ? /"spacing":([0-9.]+)/ : /nodesep=([0-9.]+)/).exec(way.dot)?.[1]);
+    };
     assert.ok(sep({ ...drawing, layoutOptions: { spacing: 2 } }) > sep(drawing), type);
   }
 });
@@ -90,11 +94,11 @@ test('a network Graphviz lays out keeps each kind in a column of its own with la
 });
 
 // proves: view_options_everywhere
-test('a tree, flow and lanes are laid out by the layout the View menu chose; by Graphviz on Auto', () => {
+test('a tree, flow and lanes are laid out by our own engine, on Auto and by the layout the View menu chose', () => {
   for (const type of ['tree', 'flow', 'lanes']) {
     const d = drawnAs(type);
     assert.equal(d.diagram?.type, type);
-    assert.ok(!directions(d)[0].own, `${type} on Auto: Graphviz`);
+    assert.ok(directions(d)[0].own, `${type} on Auto: our own engine, Graphviz is gone`);
     for (const strategy of ['rows', 'spread'])
       assert.ok(directions({ ...d, layoutOptions: { strategy } })[0].own, `${type} in ${strategy}`);
   }

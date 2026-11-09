@@ -32,9 +32,7 @@ import {
   stepIn,
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
-import { layoutOptions } from './layouts/layout-options.ts';
 import { measuredMarks } from './layouts/measure.ts';
-import { LEVELLED_FROM } from './layouts/level-seed.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -64,8 +62,10 @@ export interface Direction {
   rankdir: string;
   dot: string;
   src: LayoutSource;
-  /** Laid out by our own engine (layout_own_engine): Graphviz only measures it (layouts/own-draw.ts). */
+  /** Laid out by our own engine (layout_own_engine): our own code measures it (layouts/measure.ts). */
   own?: boolean;
+  /** For a drawing our own engine lays out: the DOT before its options were added, as the Python library writes it. */
+  source?: string;
   /**
    * The same drawing as our own engine lays it out (layout_types_screen_shaped). Graphviz may lay a long diagram type
    * out as a thin strip. This is drawn instead when Graphviz's drawing is far from a screen's shape.
@@ -118,9 +118,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const ours =
     step ||
     (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct')) ||
-    (shapeable(drawing) && layoutOptions(drawing.layoutOptions).strategy !== 'auto') ||
-    // a big tree, flow or lanes has levels too: each subject goes in its own room, as its clouds show (level_default)
-    (shapeable(drawing) && drawing.boxes.length > LEVELLED_FROM);
+    // a tree, flow or lanes of any size is laid out by our own engine: Graphviz is gone (layout_own_engine)
+    shapeable(drawing);
   const cheap = quick || (step && step !== 'own');
   const ways = only ? [only] : cheap ? STYLE.directions.slice(0, 1) : STYLE.directions;
   const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));
@@ -175,6 +174,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
         ),
         src,
         own: true,
+        source: dot,
       };
     // a hub's many leaves stack in one rank, and Graphviz's drawing of a long type is then a thin strip. Our own
     // engine folds them into bands, so that drawing is offered too. A timeline keeps Graphviz, which keeps its days
