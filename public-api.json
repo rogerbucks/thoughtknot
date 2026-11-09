@@ -970,6 +970,7 @@
           "own?: boolean | undefined",
           "rankdir: string",
           "shaped?: string | undefined",
+          "source?: string | undefined",
           "src: LayoutSource",
           "wrap?: true | undefined"
         ],
