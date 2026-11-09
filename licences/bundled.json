@@ -1,5 +1,5 @@
 {
-  "about": "What each bundled package carries inside it, and under which licence, keyed by its exact version. When a version changes, the tests fail until the new version's contents are checked and recorded here. THIRD_PARTY_NOTICES.md is generated from this file by scripts/notices.mjs.",
+  "about": "What each bundled package carries inside it, and under which licence, keyed by its exact version. When a version changes, the tests fail until the new version's contents are checked and recorded here. A package with nothing compiled inside may instead be keyed by its major release (name@18) and name its licence file: then a patch or minor bump lands while that file stays the recorded text. THIRD_PARTY_NOTICES.md is generated from this file by scripts/notices.mjs.",
   "packages": {
     "@automerge/automerge@3.5.0": {
       "licence": "MIT",
@@ -259,18 +259,19 @@
         }
       ]
     },
-    "marked@18.1.1": {
+    "marked@18": {
       "licence": "MIT",
       "licenceText": "texts/marked.MIT.txt",
+      "licenceFile": "LICENSE",
       "source": "https://github.com/markedjs/marked",
-      "checked": "2026-10-28, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.1, published 2026-10-12",
+      "checked": "2026-11-09, from the package's own LICENSE and package.json at 18.1.2 (no dependencies, no install script). Recorded for every 18.x: a later 18.x lands while its LICENSE stays this text, with no dependencies and nothing compiled in",
       "inside": []
     },
-    "sql.js@1.15.1": {
+    "sql.js@1.15.2": {
       "licence": "MIT",
       "licenceText": "texts/sql-js.MIT.txt",
       "source": "https://github.com/sql-js/sql.js",
-      "checked": "2026-10-28, from the Makefile and .devcontainer/Dockerfile at v1.15.1 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
+      "checked": "2026-11-09, from the package's LICENSE and package.json at 1.15.2 (no dependencies, no install script) and the SQLite version inside dist/sql-wasm-browser.wasm, still 3.54.0; first checked 2026-10-28 at v1.15.1 from its Makefile and .devcontainer/Dockerfile",
       "inside": [
         {
           "name": "SQLite",

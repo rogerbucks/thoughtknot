@@ -17,6 +17,7 @@ import {
   desktopLibraryProblems,
   licenceAllowed,
   lockedNames,
+  recordOf,
 } from './repository/licences.js';
 import { renderNotices } from '../scripts/notices.mjs';
 
@@ -105,12 +106,27 @@ describe('what is bundled into a release', () => {
     for (const p of bundledPackages()) assert.ok(licenceAllowed(p.licence), `${p.name}: ${p.licence}`);
   });
 
-  test('every bundled package has its contents recorded for its exact version', () => {
+  test('every bundled package has its contents recorded for its exact version, or for its major release', () => {
     const { packages } = record();
     for (const p of bundledPackages()) {
-      const entry = packages[`${p.name}@${p.version}`];
+      const entry = recordOf(packages, p);
       assert.ok(entry, `${p.name}@${p.version} is recorded — re-check its contents when it changes`);
       assert.equal(entry.licence, p.licence, `${p.name}: the recorded licence is the declared one`);
+    }
+  });
+
+  test('a package recorded for its major release ships the licence file recorded, with nothing inside', () => {
+    const { packages } = record();
+    for (const p of bundledPackages()) {
+      const entry = recordOf(packages, p);
+      if (!entry || packages[`${p.name}@${p.version}`]) continue;
+      const shipped = read(`node_modules/${p.name}/${entry.licenceFile}`).trim();
+      assert.equal(shipped, read(`licences/${entry.licenceText}`).trim(), `${p.name}: its licence file changed`);
+      const pkg = readJSON(`node_modules/${p.name}/package.json`);
+      assert.deepEqual(Object.keys(pkg.dependencies ?? {}), [], `${p.name} has no dependencies`);
+      assert.equal(pkg.scripts?.install ?? pkg.scripts?.postinstall, undefined, `${p.name} runs nothing on install`);
+      const wasm = walk(`node_modules/${p.name}`).some((f) => carriesWasm(f, readFileSync(path(f))));
+      assert.equal(wasm, false, `${p.name} compiles nothing in`);
     }
   });
 
@@ -122,7 +138,7 @@ describe('what is bundled into a release', () => {
 
   test('the record covers everything a package says it was built from', () => {
     for (const p of bundledPackages()) {
-      const entry = record().packages[`${p.name}@${p.version}`];
+      const entry = recordOf(record().packages, p);
       const recorded = new Set(entry.inside.map((c) => c.provenance));
       const provenance = walk(`node_modules/${p.name}`).filter((f) => f.endsWith('provenance.json'));
       for (const f of provenance) {
@@ -136,7 +152,7 @@ describe('what is bundled into a release', () => {
   test('a package with WebAssembly inside has its contents recorded', () => {
     for (const p of bundledPackages()) {
       const wasm = walk(`node_modules/${p.name}`).some((f) => carriesWasm(f, readFileSync(path(f))));
-      const entry = record().packages[`${p.name}@${p.version}`];
+      const entry = recordOf(record().packages, p);
       if (wasm) assert.ok(entry.inside.length > 0, `${p.name} compiles code in; record what`);
     }
   });
