@@ -26,6 +26,7 @@ export const AI_TEXT_GRAPH_SOURCE_WORDS = {
   'ai.text-graph.matched': '{name} is {thing}, already in the graph (by {by})',
   'ai.text-graph.graph-row': 'The graph the text goes into: one the note has, or a new name.',
   'ai.text-graph.text-row': 'The text sent, {count} characters: the selection, or the note without its graph blocks.',
+  'ai.text-graph.text-row-file': 'The text sent, {count} characters: the file {place}.',
   'ai.text-graph.review': 'Keep what the AI found for graph {graph}',
   'ai.text-graph.review-sentence':
     'This note has no such graph yet. Tick what to keep: only that is written, into a new graph block.',

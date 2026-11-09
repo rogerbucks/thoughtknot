@@ -8,7 +8,8 @@ import { mappingText, proposeMapping } from '../src/csv-mapping.ts';
 import { readCsv } from '../src/csv-read.ts';
 import { sourceOf } from '../src/sources.ts';
 import { lineAt, proseProposal } from '../src/text-connector.ts';
-import { TEXT_MOST } from '../src/text-to-graph.ts';
+import { settingsFrom } from '../src/settings.ts';
+import { TEXT_MOST, textToGraphAsk } from '../src/text-to-graph.ts';
 
 const PLACE = 'Data/sales.csv';
 const CSV = 'order_id,amount,region,customer\r\nA1,12.5,North,Acme Ltd\r\nA2,8,South,Bolt\r\nA3,,North,Acme Ltd\r\n';
@@ -136,6 +137,29 @@ describe('connector_text_proposed', () => {
     assert.ok(reasons.includes('Notes/hiring.txt, line 2: "the Berlin office"'));
     assert.ok(reasons.includes('Notes/hiring.txt, line 3: "reports to the London office"'));
     assert.deepEqual(r.proposal.provenance.by, { name: 'Local', kind: 'model' }, 'a proposal, never fact');
+  });
+
+  test('the send asked from a .txt card reads the answer with each change citing the file and its line', () => {
+    const model = {
+      name: 'Local',
+      purpose: 'Proposing changes',
+      ceiling: 'Internal',
+      endpoint: '',
+      model: 'm',
+      keyName: '',
+    };
+    const settings = settingsFrom({ aiUse: 'on', aiPublic: 'note', aiModels: [model] });
+    const base = { settings, model: 'Local', note: NOTE, notePath: 'Hiring.md', level: 'Internal' };
+    const ask = textToGraphAsk(base, 'hiring', PROSE, '', TXT);
+    assert.ok(!('refused' in ask), ask.refused);
+    const changes = ask.answers.read(ANSWER, PROSE);
+    assert.ok(Array.isArray(changes), JSON.stringify(changes));
+    assert.ok(changes.map((c) => c.reason).includes('Notes/hiring.txt, line 2: "the Berlin office"'));
+    const plain = textToGraphAsk(base, 'hiring', PROSE).answers.read(ANSWER, PROSE);
+    assert.ok(
+      plain.every((c) => !c.reason.startsWith(TXT)),
+      'text with no file keeps its character span',
+    );
   });
 
   test('an answer that quotes words the text does not hold is refused whole', () => {

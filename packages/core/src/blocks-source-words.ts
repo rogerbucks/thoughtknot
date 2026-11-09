@@ -47,6 +47,7 @@ export const BLOCKS_SOURCE_WORDS = {
   // a table with no mapping yet: the mapping proposed, and the button that saves it (source-strip.ts)
   'blocks.mapping-proposed': 'The mapping proposed',
   'blocks.mapping-save': 'Save this mapping as {place}',
+  'blocks.text-propose': 'Propose a graph from {place}',
   'blocks.source-strip-plugin':
     'Drawn from the plug-in source {name}, read each time from the plug-in: change the graph where the plug-in keeps it.',
   'blocks.source-open': 'Open {name}',
