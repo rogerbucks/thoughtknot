@@ -56,4 +56,5 @@ export {
 } from './connected.ts';
 export { channelContract, keeperContract, shelfContract, storeContract, type ContractCheck } from './contracts.ts';
 export { suiteContract } from './suite-contract.ts';
+export { accepted, offers, type Found, type Offer, type OfferedPart } from './probe.ts';
 export { acceptedSuite, defaultSuite, suiteProblems, type CipherSuite } from './suite.ts';

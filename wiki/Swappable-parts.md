@@ -69,6 +69,6 @@ No byte may travel or rest unencrypted. So a cipher suite is held to a contract 
 
 ## What is still to come
 
-1. An opt-in probe that lists what a machine offers for each part: a synced folder, a keychain, a VPN.
+1. The screen that shows the offers. The offers themselves exist: a host hands in what it found, and each thing becomes a plain-words offer that a person accepts or leaves.
 2. Plug-in points named `transport`, `syncstore`, `keeper` and `suite`, so a plug-in can bring a part.
 3. A way for an outside identity system to stand in for roles. Today roles are fixed.
