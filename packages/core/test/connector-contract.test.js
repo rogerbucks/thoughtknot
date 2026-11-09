@@ -30,7 +30,7 @@ const fetched = (p, text = p.text) => ({ found: p.place, text });
 
 describe('connector_contract', () => {
   test('every kind of place a FROM list names has a connector', () => {
-    for (const kind of ['file', 'note', 'plugin', 'table']) assert.ok(connectorFor(kind), kind);
+    for (const kind of ['file', 'note', 'plugin', 'table', 'text']) assert.ok(connectorFor(kind), kind);
     for (const c of CONNECTORS) assert.equal(typeof c.connect, 'function');
   });
 
@@ -131,5 +131,22 @@ describe('connector_contract: the table connector', () => {
         .sort(),
       ['sale_A1', 'sale_A2'],
     );
+  });
+});
+
+describe('connector_contract: the text connector', () => {
+  const source = { graph: 'notes', kind: 'text', target: 'Notes/hiring.txt', block: 0 };
+  const fetchedText = (text) => ({ found: 'Notes/hiring.txt', text });
+
+  test('gives no statement, and a version that moves only when the text changes', () => {
+    const a = connect(source, fetchedText('Acme hired Alice.\n'));
+    assert.deepEqual(a.statements, []);
+    assert.equal(a.version, connect(source, fetchedText('Acme hired Alice.\n')).version);
+    assert.notEqual(a.version, connect(source, fetchedText('Acme hired Bob.\n')).version);
+  });
+
+  test('a missing file is said as any missing place is', () => {
+    const r = connect(source, { missing: true, elsewhere: [] });
+    assert.ok('refused' in r);
   });
 });

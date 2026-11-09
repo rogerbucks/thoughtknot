@@ -22,6 +22,7 @@ import type { Problem } from './note-reading.ts';
 import { lineInSource, placeKey, readSource } from './sources.ts';
 import type { Fetched, Source, SourceRead, SourceRefusal } from './sources.ts';
 import { tableConnector } from './csv-connector.ts';
+import { textConnector } from './text-connector.ts';
 import { word } from './words.ts';
 
 /** Where a statement was read: the place, the hash of its text, and the line (1-based) in it. */
@@ -52,6 +53,8 @@ export interface Connected {
   proposal?: { place: string; text: string };
   /** What the place could not give, in a sentence: no mapping yet, or cells beyond the header. */
   note?: string;
+  /** A prose file's text, which becomes a graph only as a proposal (text-connector.ts); none for any other place. */
+  prose?: string;
 }
 
 /** The one contract every connector meets: given a place and what was fetched there, its statements or why not. */
@@ -100,7 +103,7 @@ export const gqlConnector: Connector = {
 };
 
 /** Every connector, by the kinds of place it reads. */
-export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector];
+export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector, textConnector];
 
 /** The connector that reads this kind of place. */
 export const connectorFor = (kind: Source['kind']): Connector | undefined =>

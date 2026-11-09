@@ -1,11 +1,14 @@
 // Files other than GQL broken into statements (editor spec §63, CN2). A CSV table is read by the mapping written beside
-// it. Each statement cites its row, and a link its column. Excel, SQLite and text follow (Roger, D1: CSV first).
+// it. Each statement cites its row, and a link its column. Plain text gives a proposal only, each change citing its
+// line. Excel and SQLite follow (Roger, D1: CSV first).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { connect, joinPlaces } from '../src/connectors.ts';
 import { mappingText, proposeMapping } from '../src/csv-mapping.ts';
 import { readCsv } from '../src/csv-read.ts';
 import { sourceOf } from '../src/sources.ts';
+import { lineAt, proseProposal } from '../src/text-connector.ts';
+import { TEXT_MOST } from '../src/text-to-graph.ts';
 
 const PLACE = 'Data/sales.csv';
 const CSV = 'order_id,amount,region,customer\r\nA1,12.5,North,Acme Ltd\r\nA2,8,South,Bolt\r\nA3,,North,Acme Ltd\r\n';
@@ -89,5 +92,69 @@ describe('connector_derived_kept_apart', () => {
     assert.deepEqual(a.statements, b.statements);
     assert.equal(a.version, b.version);
     assert.equal(a.read.texts.length, 1);
+  });
+});
+
+describe('connector_text_proposed', () => {
+  const TXT = 'Notes/hiring.txt';
+  const PROSE = 'Acme Ltd hired Alice Smith.\nShe now runs the Berlin office,\nwhich reports to the London office.\n';
+  const NOTE = "# Hiring\n\n```gql\n// graph: org\n(acme:Company {name: 'Acme Ltd'})\n```\n";
+  const ANSWER = JSON.stringify({
+    things: [
+      { name: 'alice', kind: 'Employee', text: 'Alice Smith', quote: 'Alice Smith' },
+      { name: 'berlin', kind: 'Office', text: 'Berlin office', quote: 'the Berlin office' },
+      { name: 'london', kind: 'Office', text: 'London office', quote: 'the London office' },
+    ],
+    links: [
+      { from: 'alice', type: 'RUNS', to: 'berlin', quote: 'runs the Berlin office' },
+      { from: 'berlin', type: 'REPORTS_TO', to: 'london', quote: 'reports to the London office' },
+    ],
+  });
+  const textSource = sourceOf(`// graph: hiring · FROM ${TXT}`);
+
+  test('a block names a .txt file after FROM, and the file gives no statement, only its text as prose', () => {
+    assert.equal(textSource.kind, 'text');
+    const c = connect(textSource, { found: TXT, text: PROSE });
+    assert.deepEqual(c.statements, []);
+    assert.equal(c.prose, PROSE);
+    assert.equal(c.read.reading.graphs.get('hiring')?.boxes.length ?? 0, 0, 'nothing is drawn as fact');
+    assert.match(c.note, /only as a proposal, each thing citing its line/);
+    assert.equal(
+      c.version,
+      connect(textSource, { found: TXT, text: PROSE }).version,
+      'the same text, the same version',
+    );
+  });
+
+  test('a text-to-graph answer on the prose is a proposal whose every change cites the file and its line', () => {
+    const r = proseProposal(NOTE, 'org', { place: TXT, text: PROSE }, ANSWER, 'Local');
+    assert.ok('proposal' in r, JSON.stringify(r));
+    const reasons = r.proposal.changes.map((c) => c.reason);
+    assert.equal(reasons.length, 5);
+    for (const reason of reasons) assert.match(reason, /^Notes\/hiring\.txt, line \d: "/);
+    assert.ok(reasons.includes('Notes/hiring.txt, line 1: "Alice Smith"'));
+    assert.ok(reasons.includes('Notes/hiring.txt, line 2: "the Berlin office"'));
+    assert.ok(reasons.includes('Notes/hiring.txt, line 3: "reports to the London office"'));
+    assert.deepEqual(r.proposal.provenance.by, { name: 'Local', kind: 'model' }, 'a proposal, never fact');
+  });
+
+  test('an answer that quotes words the text does not hold is refused whole', () => {
+    const bad = JSON.stringify({
+      things: [{ name: 'bob', kind: 'Employee', text: 'Bob', quote: 'Bob Jones' }],
+      links: [],
+    });
+    assert.ok('unread' in proseProposal(NOTE, 'org', { place: TXT, text: PROSE }, bad, 'Local'));
+  });
+
+  test('a text file longer than text to graph accepts is not read, and says so', () => {
+    const r = connect(textSource, { found: TXT, text: 'x'.repeat(TEXT_MOST + 1) });
+    assert.match(r.refused, /more than 50000 characters/);
+  });
+
+  test('a line is counted from 1 at each new line', () => {
+    assert.deepEqual(
+      [0, 5, 6, 12].map((at) => lineAt('ab\ncd\nef\ngh\n', at)),
+      [1, 2, 3, 5],
+    );
   });
 });

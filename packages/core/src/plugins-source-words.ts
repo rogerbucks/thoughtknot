@@ -54,5 +54,6 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.source.file': 'Graph file',
   'plugins.source.note': 'Note',
   'plugins.source.table': 'Table (CSV)',
+  'plugins.source.text': 'Plain text',
   'plugins.source.unread': 'Nothing could be read at "{target}".',
 } as const;

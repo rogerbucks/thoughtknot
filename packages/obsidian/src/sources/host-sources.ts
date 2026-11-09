@@ -18,7 +18,7 @@ export function vaultSources(vault: VaultFetch): CorePlugin {
     api: PLUGIN_API,
     uses: ['sources'],
     register: (points) => {
-      for (const kind of ['file', 'note', 'table'] as const) {
+      for (const kind of ['file', 'note', 'table', 'text'] as const) {
         const here = (target: string, from: string) => vault({ kind, target }, from);
         points.sources?.add({
           scheme: kind,
