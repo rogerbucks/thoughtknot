@@ -1,6 +1,6 @@
 // The connector for plain text: a .txt file (editor spec §63, connector_text_proposed, connector_files_to_gql).
-// - Prose is never read as fact. The file gives no statements, only its text, offered to text to graph (§47). Its
-//   answer comes back as a proposal (§17), and nothing is drawn until a person accepts it.
+// - Prose is never read as fact. The file gives no statements, only its text, offered to text to graph (ES§47). Its
+//   answer comes back as a proposal (ES§17), and nothing is drawn until a person accepts it.
 // - Each change of that proposal cites the file and the line of the words it came from. So a person sees where in the
 //   file each thing was read.
 // - Read on the device, to the size text to graph accepts. Host-free and pure.
