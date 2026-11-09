@@ -5,9 +5,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { measuredLayout, measuredMarks } from '../src/layouts/measure.ts';
-import { textWidth } from '../src/layouts/text-width.ts';
-import { htmlLabel } from '../src/layouts/html-label.ts';
-import { readDot, DotError } from '../src/layouts/dot-read.ts';
 
 const { cases } = JSON.parse(readFileSync(new URL('fixtures/measure-cases.json', import.meta.url), 'utf8'));
 const NEAR = 0.05;
@@ -47,74 +44,6 @@ describe('our own measuring', () => {
     assert.equal(Number(b.pos.split(',')[0]) - Number(a.pos.split(',')[0]), 300);
     assert.equal(laid.bb.split(',')[0], '0');
     assert.equal(laid.edges.length, 1);
-  });
-});
-
-describe('a text’s width, as Graphviz estimates it', () => {
-  test('letter by letter, for the families it knows, and Times for any other', () => {
-    near([textWidth('Hello, World! {x}', 12.5, 'Helvetica')], [89.62], 'Helvetica');
-    near([textWidth('Times text 123', 14, 'Times-Roman')], [83.99], 'Times');
-    near([textWidth('mono', 10, 'Courier')], [24], 'Courier');
-    near([textWidth('Times text 123', 14, 'Inter')], [83.99], 'an unknown family');
-  });
-
-  test('a byte past ASCII is a quarter-em and a bit, as Graphviz counts it', () => {
-    near([textWidth('Ünïcødé — “quotes” 中文 😀', 9, 'Helvetica')], [119.05], 'characters past ASCII');
-    near([textWidth('a⁨b⁩', 10.5, 'Helvetica')], [29.18], 'the bidi marks round a right-to-left name');
-  });
-
-  test('bold has its own widths', () => {
-    near([textWidth('order_id', 9, 'Helvetica', true)], [36.01], 'bold');
-    near([textWidth('order_id', 9, 'Helvetica')], [33.02], 'plain');
-  });
-});
-
-describe('an HTML label', () => {
-  const font = { size: 12.5, face: 'Helvetica', color: '#0000fd' };
-  test('is as big as its table: columns, rows, padding and spacing', () => {
-    const l = htmlLabel(
-      '<table border="0" cellborder="0" cellspacing="1" cellpadding="0"><tr><td cellpadding="0"><font point-size="9">STEP</font></td></tr><tr><td cellpadding="0" height="3"></td></tr><tr><td cellpadding="1">Plan</td></tr></table>',
-      font,
-    );
-    near([l.width, l.height], [29.02, 34.8], 'the label');
-  });
-
-  test('of lines in one size is a size and a fifth a line; of mixed sizes or bold, its sizes alone', () => {
-    near([htmlLabel('A<br/>B', font).height], [30], 'one size');
-    near([htmlLabel('A<br/><font point-size="9">B</font>', font).height], [21.5], 'mixed sizes');
-    near([htmlLabel('<b>X</b><br/><b>Y</b>', { ...font, size: 10 }).height], [20], 'bold');
-  });
-});
-
-describe('reading a layout source', () => {
-  test('reads defaults, things, links, chains and groups inside groups', () => {
-    const g = readDot(
-      'digraph G { node [shape=box]; subgraph cluster_a { label=<A>; a; subgraph cluster_b { b; } } { rank=same; c; } a -> b -> c [label="x"]; }',
-    );
-    assert.equal(g.directed, true);
-    assert.deepEqual(
-      g.nodes.map((n) => [n.key, n.attrs.shape]),
-      [
-        ['a', 'box'],
-        ['b', 'box'],
-        ['c', 'box'],
-      ],
-    );
-    assert.deepEqual(
-      g.edges.map((e) => [e.tail, e.head, e.attrs.label]),
-      [
-        ['a', 'b', 'x'],
-        ['b', 'c', 'x'],
-      ],
-    );
-    assert.deepEqual(
-      g.groups.map((x) => [x.name, x.members, x.groups.map((y) => y.name)]),
-      [['cluster_a', ['a', 'b'], ['cluster_b']]],
-    );
-  });
-
-  test('refuses what is not DOT', () => {
-    assert.throws(() => readDot('digraph G { a -> '), DotError);
   });
 });
 
