@@ -23,6 +23,9 @@ function meshNote(k) {
   return `// graph: note${k}\n${[...nodes, ...links].join(',\n')}`;
 }
 
+/** How many times each query runs before it is counted, so the engine has compiled it as it runs from then on. */
+const WARM_RUNS = 20;
+
 /** The query over every note of the mesh, its finds in the notes' order; a query that finds nothing is no count. */
 function query(mesh, what) {
   const found = Array.from({ length: MESH.notes }, (_, k) => mesh.find(`note${k}.md`, what)).flat();
@@ -38,7 +41,12 @@ export const BENCHMARK = {
   setup() {
     const mesh = new MeshIndex(memoryBackend());
     for (let k = 0; k < MESH.notes; k++) mesh.update(`note${k}.md`, `\`\`\`gql\n${meshNote(k)}\n\`\`\`\n`);
-    query(mesh, { name: 'Thing 1' }); // warm: a person has searched before
+    // warm: a person has searched before, by a name and by a value. So the count is the query's own work. The
+    // compiling of a first run is left out, as it moves with code the query never calls (#1804)
+    for (let i = 0; i < WARM_RUNS; i++) {
+      query(mesh, { name: `Thing ${i}` });
+      query(mesh, { property: 'tag', value: `t${i}` });
+    }
     return { mesh };
   },
   cases: {

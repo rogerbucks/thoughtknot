@@ -16,12 +16,12 @@ export const SPEED_BUDGETS = {
     why: 'the highest of its two cases over four counts, 6.35 billion, on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
   },
   mesh_query: {
-    most: 30_000_000,
-    why: 'the release runner counted 26.5 million for the larger of its two queries on 3 Nov 2026 (Linux x86-64, Node 24.20.0), up from 20.3 million on 24 Oct, and the budget is that count and 13% more. Raised to ship R2 on 3 Nov 2026; finding what made it slower is a follow-up',
+    most: 16_400_000,
+    why: 'the release runner counted 13.6 million for the larger of its two queries, each run warm, on 9 Nov 2026 (Linux x86-64, Node 24.20.0), and a fifth more. The 26.5 million of 3 Nov counted the compiling of a cold first run, not a slower query (#1804)',
   },
   cold_start_obsidian: {
     most: 2_700_000_000,
-    why: 'the release runner counted 2.50 billion for the plugin’s first drawing on 3 Nov 2026 (Linux x86-64, Node 24.20.0), up from 1.87 billion on 18 Oct, and the budget is that count and 8% more. Raised to ship R2 on 3 Nov 2026; finding what made it slower is a follow-up',
+    why: 'the release runner counted 2.42 billion for the plugin’s first drawing on 9 Nov 2026 (Linux x86-64, Node 24.20.0), and the budget is that count and 12% more. It doubled from 1.18 billion with direct links by default (#1253, Roger 24 Oct 2026): its marks and their routing are the cost of that choice (#1804)',
   },
   cold_start_claude_code: {
     most: 2_300_000_000,

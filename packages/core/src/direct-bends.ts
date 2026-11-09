@@ -3,12 +3,11 @@
 // They should cross the fewest boxes and links.
 //
 // A link drawn straight may run through a box or cross another. Then the boxes are first spread a little apart from the
-// middle of the drawing. A group moves whole, so it keeps its
-// boxes. Then each lone link is tried at a few bends, each way, the slightest first, toward the middle of the drawing.
-// A bend scores the boxes it runs through, the links it crosses, and how far it bends. Each link takes the bend that
-// scores least, given the rest. A second round tries each again. Each pass counts its looks against its budget and
-// stops there, so a big graph stays quick (layout-work.ts). The Python library does the same, step for step
-// (graphspec/style/direct_bends.py). Host-free and pure.
+// middle of the drawing. A group moves whole, so it keeps its boxes. Then each lone link is tried at a few bends, each
+// way, the slightest first, toward the middle of the drawing. A bend scores the boxes it runs through, the links it
+// crosses, and how far it bends. Each link takes the bend that scores least, given the rest. A second round tries each
+// again. Each pass counts its looks against its budget and stops there, so a big graph stays quick (layout-work.ts).
+// The Python library does the same, step for step (graphspec/style/direct_bends.py). Host-free and pure.
 import { curveOf } from './direct-curve.ts';
 import type { Placed } from './direct-curve.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
@@ -66,7 +65,7 @@ export function spread(boxes: readonly Placed[], groups: ReadonlyMap<string, Edg
 /**
  * Whether some link of `pairs`, drawn straight from middle to middle, runs through a box or crosses another. Then the
  * boxes are given room. Each look at a piece of a link by a box counts as work, as does each pair of links. A graph
- * that spends the budget before an answer is taken to need room.
+ * that spends the budget before an answer is taken to need room. A box clear of a link's own box is never looked into.
  */
 export function crowded(
   pairs: readonly (readonly [Placed, Placed])[],
@@ -76,8 +75,9 @@ export function crowded(
   for (let i = 0; i < pairs.length; i++) {
     if (!work.take(boxes.length * PIECES + pairs.length - i - 1)) return true;
     const [a, b] = pairs[i] as readonly [Placed, Placed];
+    const [x0, x1, y0, y1] = [Math.min(a.x, b.x), Math.max(a.x, b.x), Math.min(a.y, b.y), Math.max(a.y, b.y)];
     for (const o of boxes)
-      if (o !== a && o !== b)
+      if (o !== a && o !== b && o.x + o.hw > x0 && o.x - o.hw < x1 && o.y + o.hh > y0 && o.y - o.hh < y1)
         for (let k = 1; k < PIECES; k++) {
           const x = a.x + ((b.x - a.x) * k) / PIECES,
             y = a.y + ((b.y - a.y) * k) / PIECES;
@@ -148,15 +148,15 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[], work =
       if (!work.bends.take(each.length * pool.length)) return bows;
       let best = Infinity;
       for (const bow of each) {
-        const path = pathOf(l.a, l.b, bow);
+        const curve = pathOf(l.a, l.b, bow);
         const score =
-          THROUGH * through(path, l, pool) +
-          CROSSED * others.filter((o) => crosses(path, o)).length +
+          THROUGH * through(curve, l, pool) +
+          CROSSED * others.filter((o) => crosses(curve, o)).length +
           BENT * Math.abs(bow);
         if (score < best) {
           best = score;
           bows[i] = bow;
-          lines[i] = path;
+          lines[i] = curve;
         }
       }
     }
