@@ -19,6 +19,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { KEYS } from './desktop-build.mjs';
+import { withoutGitHookEnv } from './git-env.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ZERO = /^0+$/;
@@ -95,6 +96,18 @@ export function prePushPlan({ files, platform, base, cargo, whole = false, paths
   return { steps, warnings };
 }
 
+/**
+ * The environment of the step `label`. git's hook variables are taken out (scripts/git-env.mjs): GIT_DIR from a
+ * worktree's push let a test's `git config` in a folder of its own write to the real .git/config (8 Nov 2026). The
+ * hook's own git calls keep them. A local build never signs, whatever keys the shell holds.
+ */
+export function stepEnv(label, env = process.env) {
+  const out = withoutGitHookEnv(env);
+  for (const k of Object.values(KEYS).flat()) delete out[k];
+  if (label.startsWith('the whole suite')) out.THOUGHTKNOT_TEST_MEMORY_MB = SUITE_MEMORY_MB;
+  return out;
+}
+
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
 
 /** Where the pushed commits left main, and every file they change. Deleted refs push nothing and are skipped. */
@@ -156,13 +169,9 @@ function main() {
     for (const w of plan.warnings) console.log(`warning: ${w}`);
     return 0;
   }
-  // a local build never signs, whatever keys the shell holds
-  const env = { ...process.env };
-  for (const k of Object.values(KEYS).flat()) delete env[k];
   for (const [label, cmd, ...rest] of plan.steps) {
     console.error(`pre-push: ${label}`);
-    const stepEnv = label.startsWith('the whole suite') ? { ...env, THOUGHTKNOT_TEST_MEMORY_MB: SUITE_MEMORY_MB } : env;
-    const r = spawnSync(cmd, rest, { cwd: ROOT, stdio: ['ignore', 'inherit', 'inherit'], env: stepEnv });
+    const r = spawnSync(cmd, rest, { cwd: ROOT, stdio: ['ignore', 'inherit', 'inherit'], env: stepEnv(label) });
     if (r.status !== 0) {
       console.error(`pre-push: ${label} failed, so nothing was pushed. Fix it and push again.`);
       return 1;

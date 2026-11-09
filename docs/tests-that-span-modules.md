@@ -753,6 +753,8 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/pre-push.test.js` — the laptop checks a push first, and pull requests build no macOS or Windows app on
   GitHub. It covers the pre-push hook and the app builds' systems, paths and concurrency. It also covers the narrower
   build status chain.
+- `test/git-env.test.js` — git's hook variables, such as GIT_DIR, reach no command the pre-push hook or run-ceiling
+  runs. A test's scratch repository stays its own, so it cannot write to the real .git/config.
 
 ## Claude's workflows
 

@@ -30,6 +30,7 @@
 // Writes: nothing (it only runs the command, and kills it when it passes a ceiling).
 import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { withoutGitHookEnv } from './git-env.mjs';
 
 /** The memory ceiling, in MB, when THOUGHTKNOT_TEST_MEMORY_MB is not set. */
 export const DEFAULT_MEMORY_MB = 8192;
@@ -123,7 +124,8 @@ function main(argv) {
   const child = spawn(command === 'node' ? process.execPath : command, args, {
     stdio: 'inherit',
     detached: !windows,
-    env: { ...process.env, NODE_OPTIONS: withHeapLimit(process.env.NODE_OPTIONS) },
+    // git's hook variables stay out: a test that runs git in a folder of its own would write to this repository
+    env: { ...withoutGitHookEnv(process.env), NODE_OPTIONS: withHeapLimit(process.env.NODE_OPTIONS) },
   });
   const started = Date.now();
   let stopped = '';

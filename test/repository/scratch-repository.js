@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { withoutGitHookEnv } from '../../scripts/git-env.mjs';
 
 /**
  * A repository whose branch `main` holds one commit for each set of files given, each file written then committed.
@@ -15,7 +16,9 @@ import { join, dirname } from 'node:path';
  */
 export function repository(commits) {
   const dir = mkdtempSync(join(tmpdir(), 'tests-first-'));
-  const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
+  // without git's hook variables: run from a hook, GIT_DIR would point every command here at the real repository
+  const env = withoutGitHookEnv(process.env);
+  const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8', env }).trim();
   git('init', '-q', '-b', 'main');
   git('config', 'user.email', 'test@example.com');
   git('config', 'user.name', 'Test');
