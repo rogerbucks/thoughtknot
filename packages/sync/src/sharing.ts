@@ -2,6 +2,7 @@
 // and a vault key, and says which other devices it trusts. The private half of the pair cannot be exported, and the
 // vault key is kept only sealed for this device itself. So what is kept between runs opens on this device alone, and
 // the one thing shown or shared is the public half. Web Crypto, so it runs in every host.
+import type { CipherSuite } from './suite.ts';
 import { invitationFrom, invitationText, invite, join } from './board-invite.ts';
 import type { Invitation, InvitedAs } from './board-invite.ts';
 import { DeviceKeys, VaultKey } from './keys.ts';
@@ -67,12 +68,15 @@ export class Sharing {
   #link: LinkTo;
   readonly #trusted: Set<string>;
   readonly #keeper: Keeper;
+  readonly #suite: CipherSuite | undefined;
   private constructor(
     keys: DeviceKeys,
     vault: VaultKey | null,
     kept: Pick<Kept, 'sealed' | 'trusted' | 'joined' | 'link'>,
     k: Keeper,
+    suite?: CipherSuite,
   ) {
+    this.#suite = suite;
     this.#keys = keys;
     this.#vault = vault;
     this.#sealed = kept.sealed;
@@ -83,24 +87,24 @@ export class Sharing {
   }
 
   /** This device's sharing as kept in an earlier run; null when it has none. */
-  static async open(keeper: Keeper): Promise<Sharing | null> {
+  static async open(keeper: Keeper, suite?: CipherSuite): Promise<Sharing | null> {
     const kept = await keeper.load();
     if (!kept) return null;
     const keys = await DeviceKeys.restore(kept.pair);
-    const vault = kept.sealed ? await VaultKey.openFrom(kept.sealed, keys, keys.publicKey) : null;
-    return new Sharing(keys, vault, kept, keeper);
+    const vault = kept.sealed ? await VaultKey.openFrom(kept.sealed, keys, keys.publicKey, suite) : null;
+    return new Sharing(keys, vault, kept, keeper, suite);
   }
 
   /** Makes this device's keys and nothing more: to be invited into someone else's vault. */
-  static async prepare(keeper: Keeper): Promise<Sharing> {
-    const sharing = new Sharing(await DeviceKeys.create(), null, { sealed: null, trusted: [] }, keeper);
+  static async prepare(keeper: Keeper, suite?: CipherSuite): Promise<Sharing> {
+    const sharing = new Sharing(await DeviceKeys.create(), null, { sealed: null, trusted: [] }, keeper, suite);
     await sharing.#save();
     return sharing;
   }
 
   /** Starts a shared vault on this device: new keys, made here and kept here. */
-  static async start(keeper: Keeper): Promise<Sharing> {
-    const sharing = await Sharing.prepare(keeper);
+  static async start(keeper: Keeper, suite?: CipherSuite): Promise<Sharing> {
+    const sharing = await Sharing.prepare(keeper, suite);
     await sharing.#makeVault();
     return sharing;
   }
@@ -185,7 +189,7 @@ export class Sharing {
     if (!i) return 'not-an-invitation';
     let vault: VaultKey;
     try {
-      vault = await join(i, this.#keys);
+      vault = await join(i, this.#keys, this.#suite);
     } catch {
       return 'not-for-this-device';
     }
@@ -198,7 +202,7 @@ export class Sharing {
   }
 
   async #makeVault(): Promise<void> {
-    this.#vault = await VaultKey.create();
+    this.#vault = await VaultKey.create(this.#suite);
     this.#sealed = await this.#vault.sealFor(this.#keys, this.#keys.publicKey);
     await this.#save();
   }
