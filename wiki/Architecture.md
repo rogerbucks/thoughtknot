@@ -16,6 +16,8 @@ box is planned.
 
 <!-- wiki:layers -->
 
+How notes and boards are shared between devices is drawn in [How sharing works](How-sharing-works).
+
 ## How the code is structured
 
 Each part is cut into areas. An area is a set of files with one job and the spec section it serves. The graph note
