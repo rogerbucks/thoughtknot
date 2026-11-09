@@ -442,4 +442,11 @@ export const VALUES_LATE = [
   'savedPlaces',
   // the address Test beside a model's address asks (user_models), 7 Nov 2026
   'modelsAddress',
+  // SQLite read in plain JavaScript, tables picked for Import (connector_files_to_gql), 9 Nov 2026
+  'pickedLinks',
+  'pickedThings',
+  'columnsOf',
+  'sqliteEntries',
+  'sqliteTable',
+  'SQLITE_LIMITS',
 ];

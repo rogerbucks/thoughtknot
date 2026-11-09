@@ -267,32 +267,6 @@
       "checked": "2026-11-09, from the package's own LICENSE and package.json at 18.1.2 (no dependencies, no install script). Recorded for every 18.x: a later 18.x lands while its LICENSE stays this text, with no dependencies and nothing compiled in",
       "inside": []
     },
-    "sql.js@1.15.2": {
-      "licence": "MIT",
-      "licenceText": "texts/sql-js.MIT.txt",
-      "source": "https://github.com/sql-js/sql.js",
-      "checked": "2026-11-09, from the package's LICENSE and package.json at 1.15.2 (no dependencies, no install script) and the SQLite version inside dist/sql-wasm-browser.wasm, still 3.54.0; first checked 2026-10-28 at v1.15.1 from its Makefile and .devcontainer/Dockerfile",
-      "inside": [
-        {
-          "name": "SQLite",
-          "version": "3.54.0",
-          "licence": "blessing",
-          "licenceText": "texts/sqlite.blessing.txt",
-          "provenance": "https://sqlite.org/2026/sqlite-amalgamation-3540000.zip",
-          "source": "https://www.sqlite.org/src/timeline?t=version-3.54.0",
-          "note": "Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20)."
-        },
-        {
-          "name": "Emscripten",
-          "version": "6.0.12",
-          "licence": "MIT OR NCSA",
-          "licenceText": "texts/emscripten.MIT-NCSA.txt",
-          "provenance": "pkg:docker/emscripten/emsdk@6.0.12",
-          "source": "https://github.com/emscripten-core/emscripten/tree/6.0.12",
-          "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
-        }
-      ]
-    },
     "lucide-icons@redrawn": {
       "licence": "ISC AND MIT",
       "licenceText": "texts/lucide.ISC.txt",

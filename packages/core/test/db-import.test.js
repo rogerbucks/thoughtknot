@@ -1,9 +1,9 @@
 // Importing from a database (editor spec §20, db_import_on_request; §21, settings_db_connections): which vault files
-// are databases, and the block an import writes. The host runs the query; these are the core's decisions.
+// are databases, and the block an import writes. The person picks the tables and columns; these are the core's decisions.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
-import { importedBlock, isDbFile, withImport } from '../src/db-import.ts';
+import { importedBlock, isDbFile, pickedLinks, pickedThings, withImport } from '../src/db-import.ts';
 
 const INFO = { file: 'Sales', date: '2026-10-20' };
 
@@ -53,11 +53,11 @@ describe('an import is a copy written as text (db_import_on_request)', () => {
 
   test('rows it cannot write are refused, with the reason, and nothing is written', () => {
     const cases = [
-      [[{ name: 'no id' }], [], /Row 1 of the things has no id column/],
+      [[{ name: 'no id' }], [], /Row 1 of the things has no id/],
       [[{ id: 'a' }, { id: 'a' }], [], /Two rows of the things have the id a/],
       [[{ id: 'a', kind: 'not a name' }], [], /kind not a name of a is not a name/],
-      [[{ id: 'a' }], [{ from: 'a', to: 'a' }], /Row 1 of the links needs from, type and to/],
-      [[{ id: 'a' }], [{ from: 'a', type: 'X', to: 'b' }], /names b, which the things query did not return/],
+      [[{ id: 'a' }], [{ from: 'a', to: 'a' }], /Row 1 of the links needs a from, a type and a to/],
+      [[{ id: 'a' }], [{ from: 'a', type: 'X', to: 'b' }], /names b, which the things table does not hold/],
     ];
     for (const [things, links, why] of cases) {
       const r = importedBlock('sales', things, links, INFO);
@@ -76,5 +76,43 @@ describe('an import is a copy written as text (db_import_on_request)', () => {
     const note = `# Sales${'\n'.repeat(50_000)}x\n\n`;
     assert.equal(withImport(note, 'B'), `${note.trimEnd()}\n\nB\n`);
     assert.equal(withImport('\n'.repeat(50_000), 'B'), 'B\n');
+  });
+});
+
+describe('rows of the tables picked, never guessed (db_import_on_request)', () => {
+  const people = {
+    name: 'people',
+    columns: ['code', 'kind', 'name'],
+    rows: [
+      ['a1', 'Person', 'Ann'],
+      ['b2', 'Robot', 'Bo'],
+    ],
+  };
+  const knows = { name: 'knows', columns: ['who', 'whom', 'since'], rows: [['a1', 'b2', 2020]] };
+
+  test('the id and kind columns picked give each thing its id and kind; the rest are properties', () => {
+    assert.deepEqual(pickedThings(people, 'code', 'kind'), [
+      { name: 'Ann', id: 'a1', kind: 'Person' },
+      { name: 'Bo', id: 'b2', kind: 'Robot' },
+    ]);
+  });
+
+  test('a column named kind is not a kind unless it is picked', () => {
+    const [ann] = pickedThings(people, 'code');
+    assert.equal(ann.kind, undefined);
+  });
+
+  test('a link takes its from and to columns, and one type for all or a type column', () => {
+    assert.deepEqual(pickedLinks(knows, 'who', 'whom', { name: 'KNOWS' }), [
+      { since: 2020, from: 'a1', type: 'KNOWS', to: 'b2' },
+    ]);
+    assert.deepEqual(pickedLinks(knows, 'who', 'whom', { column: 'since' })[0].type, 2020);
+    const block = importedBlock(
+      'team',
+      pickedThings(people, 'code', 'kind'),
+      pickedLinks(knows, 'who', 'whom', { name: 'KNOWS' }),
+      INFO,
+    );
+    assert.match(block.block, /\(a1\)-\[:KNOWS \{since: 2020\}\]->\(b2\)/);
   });
 });

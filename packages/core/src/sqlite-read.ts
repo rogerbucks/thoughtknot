@@ -33,6 +33,8 @@ export interface SqliteRefusal {
 export const SQLITE_LIMITS = { bytes: 64 * 1024 * 1024, rows: 20_000 };
 
 const MAGIC = 'SQLite format 3\0';
+// every host has it (browsers, Node, Obsidian on phones); the core is typed without the page's names
+declare const TextDecoder: new (label: string) => { decode(b: Uint8Array): string };
 
 class Damaged extends Error {}
 class TooMany extends Error {}

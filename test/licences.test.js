@@ -98,7 +98,7 @@ describe('what is bundled into a release', () => {
   test('the bundled packages are found from the lockfile', () => {
     assert.deepEqual(
       bundledPackages().map((p) => p.name),
-      ['@automerge/automerge', '@viz-js/viz', 'marked', 'sql.js'],
+      ['@automerge/automerge', '@viz-js/viz', 'marked'],
     );
   });
 

@@ -1,15 +1,19 @@
 // Importing from a database (editor spec §20, db_import_on_request; §21, settings_db_connections). The database is a
 // SQLite file in the vault, so nothing is set up, no password is kept and nothing reaches the network. The core decides
-// which files are databases and what an import writes. The host runs the query, only when the user presses Import.
+// which files are databases and what an import writes. The host reads the file, and writes only when the user presses Import.
 // - An import is written into the note as a GQL block: a copy, as text. It keeps no live link: nothing in it runs again
 //   on its own.
-// - Each row of the things query is a thing. Its `id` column is its id, a `kind` column its kind, the rest properties.
-// - Each row of the links query, when there is one, is a link: its `from`, `type` and `to` columns, the rest properties.
+// - The file is read by sqlite-read.ts, in plain JavaScript, with no engine and no SQL (Roger, 9 Nov 2026).
+// - Each row of the things table is a thing. The person picks its id column, and a kind column if any; the rest are
+//   properties.
+// - Each row of the links table, when one is picked, is a link: its from and to columns, and a type column or one
+//   type for all. The rest are properties.
 import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlock } from './export-data-gql.ts';
 import { oneLine } from './export-data-model.ts';
 import type { DataLink, DataThing } from './export-data-model.ts';
 import { saidDate } from './export-frame.ts';
+import type { SqliteTable } from './sqlite-read.ts';
 import { word } from './words.ts';
 
 /** Whether a vault file is a SQLite database Import can read, by its ending: .sqlite, .sqlite3 or .db. */
@@ -51,6 +55,33 @@ function propsOf(row: DbRow, skip: string[]): Record<string, Value> {
     if (!skip.includes(k) && NAME.test(k) && value !== null) out[k] = value;
   }
   return out;
+}
+
+/** A table's rows as a query would give them: each column's value by the column's name. */
+const rowsOf = (t: SqliteTable): DbRow[] =>
+  t.rows.map((r) => Object.fromEntries(t.columns.map((c, i) => [c, r[i] ?? null])));
+
+/**
+ * The things of a table picked in the dialog: each row a thing, its id from column `id`, its kind from column `kind`
+ * when one is picked, the rest its properties. Nothing is guessed: only the columns picked are given these roles.
+ */
+export function pickedThings(t: SqliteTable, id: string, kind?: string): DbRow[] {
+  return rowsOf(t).map((r) => {
+    const { [id]: key, ...rest } = r;
+    if (kind === undefined) return { ...rest, kind: undefined, id: key };
+    const { [kind]: k, ...props } = rest;
+    return { ...props, id: key, kind: k };
+  });
+}
+
+/** The links of a table picked in the dialog: its `from` and `to` columns, and a type column or one type for all. */
+export function pickedLinks(t: SqliteTable, from: string, to: string, type: { column: string } | { name: string }) {
+  return rowsOf(t).map((r) => {
+    const { [from]: a, [to]: b, ...rest } = r;
+    if ('name' in type) return { ...rest, from: a, type: type.name, to: b };
+    const { [type.column]: kind, ...props } = rest;
+    return { ...props, from: a, type: kind, to: b };
+  });
 }
 
 /** An import: the block to write, or why nothing is written. */
