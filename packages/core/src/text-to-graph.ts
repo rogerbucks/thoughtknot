@@ -123,6 +123,23 @@ export interface TextGraph {
   spans: TextSpan[];
 }
 
+/** The line, counted from 1, that character `at` of `text` is on. */
+export function lineAt(text: string, at: number): number {
+  let line = 1;
+  for (let i = 0; i < at && i < text.length; i++) if (text[i] === '\n') line++;
+  return line;
+}
+
+/** The changes of `read`, each reason citing `place` and the line its words are on in `text` (connector_text_proposed). */
+export function citedChanges(read: TextGraph, text: string, place: string): ChangeInput[] {
+  return read.changes.map((c, i) => {
+    const span = read.spans[i];
+    if (!span) return c;
+    const line = String(lineAt(text, span.from));
+    return { ...c, reason: word('reading.text.cites', { place, line, words: span.words }) };
+  });
+}
+
 /** What a model may be told back: the text and the graph it is joined to. */
 export interface TextGraphFor {
   text: string;
@@ -272,12 +289,14 @@ export function textGraphIn(content: string, f: TextGraphFor): TextGraph | { unr
 /**
  * The ask to make a graph of `text`, joined to `graph` of the note, ready for `prepareSend`; or why there is none. The
  * whole graph goes with it, so the model can use the names already there. The answer is read only as a text graph.
+ * Text from a file at `place` gets each change citing the file and the line its words are on.
  */
 export function textToGraphAsk(
   base: Omit<SendAsk, 'question' | 'answers' | 'choice'>,
   graph: string,
   text: string,
   asked = '',
+  place?: string,
 ): SendAsk | SendRefused {
   if (!text.trim()) return { refused: word('ai.text-graph.no-text') };
   if (text.length > TEXT_MOST)
@@ -294,7 +313,8 @@ export function textToGraphAsk(
     text,
     read: (content, sent) => {
       const read = textGraphIn(content, { ...f, known: f.known.filter((k) => sent.includes(k.key)) });
-      return 'changes' in read ? read.changes : read;
+      if (!('changes' in read)) return read;
+      return place ? citedChanges(read, text, place) : read.changes;
     },
   };
   const question = asked.trim() || word('ai.text-graph.question');
