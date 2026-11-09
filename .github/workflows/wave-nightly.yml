@@ -44,13 +44,17 @@ jobs:
 
   wave-nightly:
     needs: gate
-    # the most the nightly's own jobs ask for: publish writes contents and attests, security reads alerts, a failure report writes issues
+    # The most the nightly's own jobs ask for: publish writes contents and attests, security reads alerts, a failure
+    # report writes issues, and tests-passed reads main's CI run. A permission a called job asks for and this grant
+    # leaves out stops the whole run before its first step (GitHub: "nested job requesting ... is not permitted").
+    # test/wave-nightly-workflow.test.js checks the grant against every job the nightly has.
     permissions:
       contents: write
       issues: write
       security-events: read
       id-token: write
       attestations: write
+      actions: read
     uses: ./.github/workflows/nightly.yml
     with:
       wave: true
