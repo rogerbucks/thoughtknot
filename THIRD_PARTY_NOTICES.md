@@ -1264,7 +1264,7 @@ used by default, but certain options use it (e.g., the optional closure compiler
 flag will run closure compiler from third_party/).
 ```
 
-## marked@18.1.1
+## marked@18
 
 - Licence: MIT
 - Source: https://github.com/markedjs/marked
@@ -1316,7 +1316,7 @@ Redistribution and use in source and binary forms, with or without modification,
 This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 ```
 
-## sql.js@1.15.1
+## sql.js@1.15.2
 
 - Licence: MIT
 - Source: https://github.com/sql-js/sql.js

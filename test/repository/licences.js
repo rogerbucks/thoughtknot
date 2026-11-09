@@ -77,6 +77,18 @@ const lockEntries = () =>
 /** Packages that can reach a release: everything the lockfile does not mark dev. */
 export const bundledPackages = () => lockEntries().filter((p) => !p.dev);
 
+/**
+ * The record of bundled package `p` in `packages` (licences/bundled.json). It is the one for its exact version, or else
+ * one for every version of its major release. That one is kept only for a package with nothing compiled inside it, and
+ * names the licence file it ships (`licenceFile`). So a patch or minor bump lands while that file stays as recorded.
+ */
+export function recordOf(packages, p) {
+  const exact = packages[`${p.name}@${p.version}`];
+  if (exact) return exact;
+  const major = packages[`${p.name}@${String(p.version).split('.')[0]}`];
+  return major && major.inside.length === 0 && major.licenceFile ? major : undefined;
+}
+
 /** Packages used only to build, test and lint. */
 export const buildTools = () => lockEntries().filter((p) => p.dev);
 
