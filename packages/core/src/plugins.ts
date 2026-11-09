@@ -15,14 +15,15 @@ import { backendProblem, commandProblem, exporterProblem, panelProblem } from '.
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
-import { syncStoreProblem, type SyncStore, type SyncStoreBackend } from './plugin-points.ts';
+import { syncStoreProblem, transportProblem } from './plugin-points.ts';
+import type { SyncStore, SyncStoreBackend, SyncTransport, TransportBackend } from './plugin-points.ts';
 import { ownSecrets } from './plugin-points.ts';
 import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
 import { commandCalls, pluginCalls } from './plugin-calls.ts';
-import { storageCalls, syncStoreCalls } from './plugin-store-calls.ts';
+import { panelCalls, storageCalls, syncStoreCalls, transportCalls } from './plugin-store-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -35,7 +36,7 @@ import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
 export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand } from './plugin-points.ts';
 export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
-export type { SyncStore, SyncStoreBackend } from './plugin-points.ts';
+export type { SyncStore, SyncStoreBackend, SyncTransport, TransportBackend } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import { POINT_VERSIONS, pointsUsed } from './plugin-versions.ts';
@@ -57,6 +58,7 @@ export const EXTENSION_POINTS = [
   'diagrams',
   'layouts',
   'syncstore',
+  'transport',
 ] as const;
 
 /** One of the extension points. */
@@ -77,6 +79,8 @@ export interface ExtensionPoints {
   layouts?: { add: (layout: PluginLayout) => void };
   /** Where the sealed records of a shared vault are kept. Not run apart: it is added in the page or the app. */
   syncstore?: { add: (backend: SyncStoreBackend) => void };
+  /** How a device reaches another. Not run apart: it is added in the page or the app. */
+  transport?: { add: (backend: TransportBackend) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -127,6 +131,10 @@ export interface PluginRegistry extends SourceFetching {
   syncStores: () => SyncStoreBackend[];
   /** The record store `name`, opened, or what went wrong and whose plug-in it was. */
   openSyncStore: (name: string) => PluginResult<SyncStore>;
+  /** Every transport added, in the order added. */
+  transports: () => TransportBackend[];
+  /** The transport `name`, opened, or what went wrong and whose plug-in it was. */
+  openTransport: (name: string) => PluginResult<SyncTransport>;
   /** Every command added, in the order added. */
   commands: () => PluginCommand[];
   commandOffered: (id: string) => boolean;
@@ -199,6 +207,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const diagrams = shelf<PluginDiagram>('type');
   const layouts = shelf<PluginLayout>('id');
   const syncStoreShelf = shelf<SyncStoreBackend>('name');
+  const transportShelf = shelf<TransportBackend>('name');
   const calls = pluginCalls(now, timeLimit);
   const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
@@ -281,8 +290,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedDiagrams = shelf<PluginDiagram>('type');
       const addedLayouts = shelf<PluginLayout>('id');
       const addedSyncStores = shelf<SyncStoreBackend>('name');
+      const addedTransports = shelf<TransportBackend>('name');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
       if (uses('syncstore')) points.syncstore = onShelf(addedSyncStores, syncStoreShelf, syncStoreProblem);
+      if (uses('transport')) points.transport = onShelf(addedTransports, transportShelf, transportProblem);
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
         points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
@@ -317,6 +328,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       keep(addedDiagrams, diagrams, plugin.id);
       keep(addedLayouts, layouts, plugin.id);
       keep(addedSyncStores, syncStoreShelf, plugin.id);
+      keep(addedTransports, transportShelf, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -333,15 +345,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     },
     ...storageCalls(calls, backends.items, backends.owner),
     ...syncStoreCalls(calls, syncStoreShelf.items, syncStoreShelf.owner),
+    ...transportCalls(calls, transportShelf.items, transportShelf.owner),
     commands: () => commands.items.map((c) => ({ ...c })),
     ...commandCalls(calls, commands.items, commands.owner),
-    panels: () => panels.items.map((c) => ({ ...c })),
-    showPanel(id, el) {
-      const c = panels.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: word('plugins.none.panel', { name: id }) };
-      const what = word('plugins.what.panel', { title: c.title });
-      return guarded(panels.owner.get(id) ?? '', what, () => void c.render(el));
-    },
+    ...panelCalls(calls, panels.items, panels.owner),
     graphSources: () => sources.items.map((c) => ({ ...c })),
     ...fetchCalls(calls, sources.items, sources.owner),
     async readGraph(scheme, target, levels) {

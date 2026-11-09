@@ -69,6 +69,6 @@ No byte may travel or rest unencrypted. So a cipher suite is held to a contract 
 
 ## What is still to come
 
-1. Plug-in point `syncstore` is built, so a plug-in can bring a record store. A `transport` point is next.
+1. Plug-in point `syncstore` is built, so a plug-in can bring a record store. Plug-in point `transport` is built too, so a plug-in can bring a way between devices.
 2. The `keeper` and `suite` points wait. A plug-in there would see keys and plain text, so they stay built in for now.
 3. A way for an outside identity system to stand in for roles. Today roles are fixed.

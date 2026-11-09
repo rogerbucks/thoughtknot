@@ -61,6 +61,32 @@ export interface SyncStoreBackend {
   open: () => SyncStore;
 }
 
+/** A channel between two devices: whole messages, in order, already sealed before they get here. */
+export interface TransportChannel {
+  send(message: Uint8Array): void;
+  /** Calls `heard` with each message the other device sends, and `closed` once the channel closes. */
+  listen(heard: (message: Uint8Array) => void, closed: () => void): void;
+  close(): void;
+}
+
+/** How a device reaches another: a channel to dial, and an address to listen at. It sees only sealed bytes. */
+export interface SyncTransport {
+  dial(address: string): Promise<TransportChannel>;
+  listen(address: string): Promise<{ address: string; next(): Promise<TransportChannel>; stop(): Promise<void> }>;
+}
+
+/** A way between devices that a plug-in adds, such as a relay or a local socket. */
+export interface TransportBackend {
+  /** The word it is chosen by, lower case: `relay`. */
+  name: string;
+  /** What it is called where it is offered: `Relay`. */
+  title: string;
+  /** An address the contract may listen at, when the plain `loopback` is not one. */
+  testAddress?: string;
+  /** The transport itself. */
+  open: () => SyncTransport;
+}
+
 /** A command a plug-in adds, which a host offers in its command list and menus. */
 export interface PluginCommand {
   /** Its id, under its plug-in's own: `acme.tags.count`. */
@@ -171,6 +197,15 @@ export function syncStoreProblem(b: SyncStoreBackend, _plugin: string, taken: Ma
   if (taken.has(b.name)) return `the record store "${b.name}" is already added by ${taken.get(b.name)}`;
   if (!b.title.trim()) return `the record store "${b.name}" has no title`;
   if (typeof b.open !== 'function') return `the record store "${b.name}" cannot be opened`;
+  return null;
+}
+
+/** Why a way between devices a plug-in adds is refused, or null when it is accepted. */
+export function transportProblem(b: TransportBackend, _plugin: string, taken: Map<string, string>): string | null {
+  if (!WORD.test(b.name)) return `the transport "${b.name}" is not named by a lower-case word`;
+  if (taken.has(b.name)) return `the transport "${b.name}" is already added by ${taken.get(b.name)}`;
+  if (!b.title.trim()) return `the transport "${b.name}" has no title`;
+  if (typeof b.open !== 'function') return `the transport "${b.name}" cannot be opened`;
   return null;
 }
 

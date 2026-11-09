@@ -35,6 +35,8 @@ export const POINT_ABOUT = {
     'A layout, named under its id, offered in the View menu. It gives back a spot for each thing as data, and the core draws it in every view.',
   syncstore:
     'A place the sealed records of a shared vault are kept, such as a synced folder or a bucket. It sees only sealed bytes, and passes the record store contract.',
+  transport:
+    'A way between devices, such as a relay or a local socket. It carries sealed messages whole and in order, and passes the transport contract.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */

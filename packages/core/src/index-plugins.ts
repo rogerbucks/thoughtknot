@@ -12,6 +12,8 @@ export type {
   StoppedPlugin,
   SyncStore,
   SyncStoreBackend,
+  SyncTransport,
+  TransportBackend,
 } from './plugins.ts';
 export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } from './plugins.ts';
 export type { GivenGraph, PluginSource, PluginStep } from './plugins.ts';
@@ -51,3 +53,4 @@ export type { BoxShape, DrawMark, DrawMarkKind, DrawMarkRole, MarkBounds, MarkOu
 export type { LaidMarks, LaidPart } from './graphviz-marks.ts';
 export { layoutSvg } from './graphviz-svg.ts';
 export { syncStoreBackendContract } from './plugins-contract-sync.ts';
+export { transportBackendContract } from './plugins-contract-transport.ts';
