@@ -3,195 +3,195 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "b57a1b3f61516a02b7dfc4f52e3417829ea40f506e19f2f588299943f0bdaba3",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "5fc0522ad6ba39f36609546cff94277336dcc2dda2d7028b53dc8fbfbf1d8abe",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "de627c7f319a30fd5d5286d340e58765d96d9493cf48f62871f45857fd25bed2",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "6923422d2bc9178ec2b9bc89d743297b671be8bca26646e2a8ac7fa149dcaf57",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "e07f8d7c76a1ea1c244116e3d3c47ce6ad3c3d321d6357ea570d204a551ebdc5",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "f838f333079284f8aed596621f84f42cd2592e743c01f8497027046385c1cc6f",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "437181750ba6447bf5ee7d5cccda5ce2be4ad925bd5c46f9a597d1eaa22da353",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "145d0eac25c67ce30e8e76da916000e4346a634fc44eecbe250f4c11966fabff",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "af862566e2700f0771082d653b00684724f75181859fbed17cb35dfe293bde9b",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "678c98949ca07645974a10374b0b61458deb23ae3976b75760be86b1c0fac2b1",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "ed3ffbae319442172b8fa273222d30adf195d0c3711b4869567c46d8bdf308fd",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "05e9238da30c8077fdf6bc73cb9ed582371e9f83da0dd5d386e4cbdd61f5c17a",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "b32e1ae645a2dd03569c1f7ec410fb39048fb5cf72ab67b8cc5940ccd3b7cb73",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e4843018b736600f3445223815009760c565ba190df2495445ae7da2ad706562",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "5f859c9f184fbab59c48fe0af689f61741ce79535bc79038c9e7fda1de370e25",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "d7c260c99f8273cf3c54caf0ff28ba6434e5067cf55ecd1440a8f05ef4c59e78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "4144dc85a5277b7fe657110cab6aeea06234c5a1d9913c9f776ae1b35c8ef4e6",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "a8408f386f54179fb63e0eb7c77684f4ffc39509067d5f655258177b414a36ff",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "3f4600227cf34ae904effd4ef1f5ee70e5396fbb1b670a2a1c70a093508d8662",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "65d766153f6fc9e9924e7ecfa539bfb13fd9999592de8bf997edc177976d9ff9",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "0f52adead6f7611dcc6a15aba02dfa65ebc0fb4a9d943c6aff5fdd1d7aab435e",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "7d2d7abaa93e72f9346b189857a34ad77a852874708666b7aba7120f00f009eb",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "4411a83b45cd8cccd93435bd720a91785a42bd7ba5ae539eeae2cff9bdd3fb8f",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "35acaa71f7ebc0aa81e759ffd270ce36a164014b9f840610ae13901feeaa7bcf",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "c0206734d7ca63dc81b3a92a3152b741855a07d0e069fef4a116899a5a35c088",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "6200c96a80ec5965a34a76b553cbf312151e85abca7b15333fc6aebcd7fe0c3b",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "fb8ad384597822a118c671ae3fc84c6c3e0c4272943bdf7b2f0ce7be66d4a101",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "ac3886cef579e7d3e1672ed1d745dcab3a47cbfdab3c67659836a86eda9a9351",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -207,27 +207,27 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "066d2e80ad1be9053dc18021d74cdfadede238274e48303176462cdec9fe4b52",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
-      "day": "2026-11-03"
+      "sha256": "0d96d7f9b1059ba976ddc23082aa356850369713c07a07c5f922a94da644d760",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "9625551d487e23308c4aeea17fa8bdc01f6c0b5f8b7903e4ee38e371001c8d87",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
-      "day": "2026-11-03"
+      "sha256": "c0751dc4472df964cccaa31caf9241eaa20a76392579627a131070150242fc5b",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "40a37c6133046f9d5842296bb232f5fcd1ded41267446df52ef3a73d173d4af8",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "01fb6a939f71b63097b683192615b83e64a1825acb01f73c245f87035c4ccc95",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "95204637813c644beb32c69047dc92734b4317c22cde77eca03e55219ed66b44",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "33a6763b9fea7ca9a1b1c7579f7dd9df6156b0d588c59ec6ac4a2172b33155f3",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
@@ -243,51 +243,51 @@
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "3639c5ac3addac49963e850f01c08ecd1ae17c8c1b49226b6c84d8cd3f06e198",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "5d49137420cedd1e72aac0ee6f97137a26778b33c4004c3585bdb15f53c10dc4",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "21db124c322b79d8021fe8e362b715e995aa24302205636fe19caded25c468f2",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "3b31dcbdaa9706bf73cbf76ec594807b195d4e4899f9294a925d0b49eb634c47",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "4144dc85a5277b7fe657110cab6aeea06234c5a1d9913c9f776ae1b35c8ef4e6",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "a8408f386f54179fb63e0eb7c77684f4ffc39509067d5f655258177b414a36ff",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "3f4600227cf34ae904effd4ef1f5ee70e5396fbb1b670a2a1c70a093508d8662",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "65d766153f6fc9e9924e7ecfa539bfb13fd9999592de8bf997edc177976d9ff9",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "3c1f1d989f9c984baf85acd8f0a87739e08678a9fd87656a2e0c432aada29800",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "f8f5f9885a62a8597fe2180764e4b714d8dc299dbae382fc99e41099a7d859df",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "487e51b140eb7aa45e150fea15a174aed9093191ac3bc8e42fd216b7dd82b442",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "a3d119d579033965f61ca73697321b597adf564cbaf581e24e9c474b93a8a6dd",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "438016eef4147f6abba66b7df912897d907e1208b042799a496a252e86dcbea9",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "08672d768a02392c39ae0f6ebc5fb7ae83e176fc2d988e0ded4607256e956b78",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "729fd716cd761a5e2d0a6a2770fb46b69516c77a247e645c14159d7e64442b2e",
-      "reason": "names edged in the page colour and placed touching their things (Roger, 2 Nov 2026)",
-      "day": "2026-11-02"
+      "sha256": "4bdbb109919635100845fb28b8c8543d65de8d7624b06c983124188372720358",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
@@ -303,75 +303,75 @@
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "325fdd13a1871a176d2bb90fd2800d2722626c0fbb9ea38fc9d9a758ae969831",
-      "reason": "The edit pane is now pictured once its names are sized, as the other cards are, so a busy machine no longer takes it first",
-      "day": "2026-11-06"
+      "sha256": "ae98e9382e073c3dc04aad76eca358b47af31d6f1a2344d6b319a5b38fb90bcc",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "9bab4aa32b9bb99b7affde649195a131766ddc25de791b5d50f833c0b3c08c0d",
-      "reason": "The edit pane is now pictured once its names are sized, as the other cards are, so a busy machine no longer takes it first",
-      "day": "2026-11-06"
+      "sha256": "4c0c6a238530ce7cc411a9e5eab333dfcee26fbb5cf0a74fdf16ce2cc8057dc7",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "d88a8fa5976e11e0ce38b65f8d8b1706b09186a0fd0b24edcebe133973730fb3",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "e9a3d7a47ec3b05312972d064cad0fe48007899c843f674c635fa069561d1c31",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "788ef6faf967a9965b279818727e435207cbb6ff5d047f00d2fec70845025a54",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "a5fb2b80263d3b10b1d4fbb2b4db714fcb01b40dba9322c94c894498e6634bc6",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "3639c5ac3addac49963e850f01c08ecd1ae17c8c1b49226b6c84d8cd3f06e198",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "5d49137420cedd1e72aac0ee6f97137a26778b33c4004c3585bdb15f53c10dc4",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "21db124c322b79d8021fe8e362b715e995aa24302205636fe19caded25c468f2",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "3b31dcbdaa9706bf73cbf76ec594807b195d4e4899f9294a925d0b49eb634c47",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "c0206734d7ca63dc81b3a92a3152b741855a07d0e069fef4a116899a5a35c088",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "6200c96a80ec5965a34a76b553cbf312151e85abca7b15333fc6aebcd7fe0c3b",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "fb8ad384597822a118c671ae3fc84c6c3e0c4272943bdf7b2f0ce7be66d4a101",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "ac3886cef579e7d3e1672ed1d745dcab3a47cbfdab3c67659836a86eda9a9351",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "db3db3e94907330b5ea2ff307343f76f3d730c7db8016a800cb22098e46b3b1c",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "c7ea0e7da3485195c9116a91863d96b399277e6d5da1cd4c38ba049267decba5",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "ab2d79520f5ce65561a56f12dcb02a2d5cdf66df3191d079598605fbecdd8310",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "fbc1f1af79fd63cf4d0472eeaeab04c4c8789e3e1ec6613988cb6efd060a9ad1",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "8fbea489e16fa3dfbca57e984612d9989fd11fe4bf53e4fd020e8b9915dc860c",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
-      "day": "2026-11-03"
+      "sha256": "088e6a132fb158f9e8b7784eea48274f3af7e4b2d9d83e50129ae60d82dee827",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "c9be8a03734f58f5f70595d63b10409d465d523ff7eee8a21114f654a9a23d6f",
-      "reason": "Names stop growing at 16 px (NAME_CEILING, PR #1792)",
-      "day": "2026-11-03"
+      "sha256": "037a1c865355a5ab4eb32e946ababa6bc71c6002f89ba20be3582517190fcb6c",
+      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
+      "day": "2026-11-09"
     }
   ]
 }

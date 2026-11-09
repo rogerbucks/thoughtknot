@@ -11,4 +11,4 @@
     <g id="p4">
       <path d="M119.13,-19.2C119.13,-19.2 119.13,-19.2 119.13,-19.2 140.13,-19.2 140.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2 161.13,-19.2" paint="stroke:rgb(117, 222, 220);stroke-width:2px">
       <polygon points="154.13,-16.75 161.13,-19.2 154.13,-21.65 154.13,-16.75" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2.2px">
-      <text x="140.13" y="-24.98" text-anchor="middle" paint="fill:rgb(151, 221, 220);stroke:rgb(30, 30, 30);stroke-width:5.6px"> answers
+      <text x="140.13" y="-24.97" text-anchor="middle" paint="fill:rgb(151, 221, 220);stroke:rgb(30, 30, 30);stroke-width:5.6px"> answers
