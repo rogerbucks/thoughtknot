@@ -1,5 +1,5 @@
-// The blobs of a repository's history, read a group at a time (scripts/history-blobs.mjs). So the history check's
-// memory stays bounded, however long the history grows.
+// The blobs of a repository's history, read a group at a time (scripts/history-blobs.mjs; spec §13, capped_test_run).
+// So the history check's memory stays bounded, however long the history grows.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
