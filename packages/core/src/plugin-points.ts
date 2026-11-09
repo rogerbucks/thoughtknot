@@ -166,7 +166,7 @@ export function backendProblem(b: StorageBackend, taken: Map<string, string>): s
 }
 
 /** Why a record store a plug-in adds is refused, or null when it is accepted. */
-export function syncStoreProblem(b: SyncStoreBackend, taken: Map<string, string>): string | null {
+export function syncStoreProblem(b: SyncStoreBackend, _plugin: string, taken: Map<string, string>): string | null {
   if (!WORD.test(b.name)) return `the record store "${b.name}" is not named by a lower-case word`;
   if (taken.has(b.name)) return `the record store "${b.name}" is already added by ${taken.get(b.name)}`;
   if (!b.title.trim()) return `the record store "${b.name}" has no title`;

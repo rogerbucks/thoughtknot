@@ -21,7 +21,7 @@ import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.ts';
 import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
-import { commandCalls, pluginCalls, syncStoreCalls } from './plugin-calls.ts';
+import { commandCalls, pluginCalls, storageCalls, syncStoreCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -281,8 +281,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedLayouts = shelf<PluginLayout>('id');
       const addedSyncStores = shelf<SyncStoreBackend>('name');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
-      if (uses('syncstore'))
-        points.syncstore = onShelf(addedSyncStores, syncStoreShelf, (b, _, t) => syncStoreProblem(b, t));
+      if (uses('syncstore')) points.syncstore = onShelf(addedSyncStores, syncStoreShelf, syncStoreProblem);
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
         points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
@@ -331,12 +330,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
         return { ok: false, plugin, message: word('plugins.export-no-text', { title: e.title, plugin }) };
       return written;
     },
-    storages: () => backends.items.map((b) => ({ ...b })),
-    openStorage(name) {
-      const b = backends.items.find((x) => x.name === name);
-      if (!b) return { ok: false, plugin: '', message: word('plugins.none.storage', { name }) };
-      return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
-    },
+    ...storageCalls(calls, backends.items, backends.owner),
     ...syncStoreCalls(calls, syncStoreShelf.items, syncStoreShelf.owner),
     commands: () => commands.items.map((c) => ({ ...c })),
     ...commandCalls(calls, commands.items, commands.owner),
