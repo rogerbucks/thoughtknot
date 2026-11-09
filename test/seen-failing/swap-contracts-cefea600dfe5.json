@@ -1,0 +1,6 @@
+{
+  "file": "packages/sync/test/swap-contracts.test.js",
+  "test": "a second suite, AES-CTR with HMAC, passes the same contract > the suite is named, and not as a way of hiding nothing",
+  "seen_failing_first": false,
+  "evidence": "The contract was shipped in the last change; this runs it on a second suite, so it passes on the old code by design."
+}

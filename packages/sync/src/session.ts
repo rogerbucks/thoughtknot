@@ -5,8 +5,9 @@
 // order. So a message recorded earlier, or in another session, does not open. Nor does one sent back the way it came,
 // one repeated, one dropped from the middle, or one moved out of order. A relay or a listener on the network can do
 // none of these without the session ending. Web Crypto, so it runs in every host.
-import { openWith, sealWith } from './keys.ts';
+import { defaultSuite } from './keys.ts';
 import type { DeviceKeys } from './keys.ts';
+import type { CipherSuite } from './suite.ts';
 
 /** Bytes of the fresh salt each side makes for a session. */
 export const SALT_BYTES = 32;
@@ -28,12 +29,14 @@ export interface Begun {
 export const EPHEMERAL_BYTES = 65;
 
 export class Session {
-  readonly #key: CryptoKey;
+  readonly #suite: CipherSuite;
+  readonly #key: unknown;
   /** Whether this device's public key sorts first: the two sides then label their messages differently. */
   readonly #first: boolean;
   #sent = 0;
   #heard = 0;
-  private constructor(key: CryptoKey, first: boolean) {
+  private constructor(suite: CipherSuite, key: unknown, first: boolean) {
+    this.#suite = suite;
     this.#key = key;
     this.#first = first;
   }
@@ -53,7 +56,13 @@ export class Session {
   }
 
   /** The session of `keys` with the device whose public half is `theirs`, from what each side began with. */
-  static async open(keys: DeviceKeys, theirs: Uint8Array, mine: Begun, theirHello: Uint8Array): Promise<Session> {
+  static async open(
+    keys: DeviceKeys,
+    theirs: Uint8Array,
+    mine: Begun,
+    theirHello: Uint8Array,
+    suite: CipherSuite = defaultSuite,
+  ): Promise<Session> {
     const first = before(keys.publicKey, theirs);
     const mySalt = mine.hello.slice(EPHEMERAL_BYTES);
     const [theirEph, theirSalt] = [theirHello.slice(0, EPHEMERAL_BYTES), theirHello.slice(EPHEMERAL_BYTES)];
@@ -68,7 +77,7 @@ export class Session {
       await globalThis.crypto.subtle.deriveBits({ name: 'ECDH', public: other }, mine.private, 256),
     );
     const salt = first ? join(mySalt, theirSalt) : join(theirSalt, mySalt);
-    return new Session(await keys.sessionKey(theirs, salt, fresh), first);
+    return new Session(suite, await suite.keyFrom(await keys.sessionBytes(theirs, salt, fresh)), first);
   }
 
   /** What each message is bound to: who sent it, as the first or the second key, and its number. */
@@ -81,12 +90,12 @@ export class Session {
 
   /** `plain` sealed as the next message this side sends. Call in the order the messages are to be sent. */
   seal(plain: Uint8Array): Promise<Uint8Array> {
-    return sealWith(this.#key, plain, Session.#bound(this.#first, this.#sent++));
+    return this.#suite.seal(this.#key, plain, Session.#bound(this.#first, this.#sent++));
   }
 
   /** What the next message from the other side holds. Throws when it is not that message, whole and unchanged, and then waits for it still. */
   async open(sealed: Uint8Array): Promise<Uint8Array> {
-    const plain = await openWith(this.#key, sealed, Session.#bound(!this.#first, this.#heard));
+    const plain = await this.#suite.open(this.#key, sealed, Session.#bound(!this.#first, this.#heard));
     this.#heard++;
     return plain;
   }
