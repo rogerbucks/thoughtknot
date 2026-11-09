@@ -45,7 +45,8 @@ describe('format_content_node: a data set box shows its table', () => {
     assert.ok(sales, 'the data set has a box');
     const plain = (await draw(drawing, engine)).svg;
     const tabled = (await draw({ ...drawing, tables: [[sales.key, TABLE]] }, engine)).svg;
-    for (const text of ['order_id', 'A1', 'A8', '12 rows · 4 more rows not shown']) assert.ok(tabled.includes(text), text);
+    for (const text of ['order_id', 'A1', 'A8', '12 rows · 4 more rows not shown'])
+      assert.ok(tabled.includes(text), text);
     assert.ok(!plain.includes('order_id'));
     const size = (svg) => svg.match(/viewBox="[^"]*"/)[0];
     assert.notEqual(size(tabled), size(plain), 'the drawing grows to fit the table');
