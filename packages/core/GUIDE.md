@@ -1462,6 +1462,10 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Its third, `storage`, adds a place notes are kept (`StorageBackend`), opened by `openStorage`. The core's own,
     `CORE_STORAGE` in core-storage.ts, keeps notes in memory.
   - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
+  - Its `syncstore` adds a place the sealed records of a shared vault are kept (`SyncStoreBackend`), opened by
+    `openSyncStore`. It sees only sealed bytes, and it runs in the host, never in a worker.
+  - Its `transport` adds a way between devices (`TransportBackend`), opened by `openTransport`. It carries sealed
+    messages only, and runs in the host, never in a worker.
   - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
   - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
     and the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
@@ -1533,6 +1537,8 @@ and is handed the port between them, as for layouts:
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.
   - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
+  - `syncStoreBackendContract`: the record store checks: bytes back as they were, in order, counts and a tail.
+  - `transportBackendContract`: the transport checks: whole messages in order both ways, and a close told to the other end.
   - `commandContract`: a command's id, its title on one line, and that it can be run.
   - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
     step is tried on `SAMPLE_GRAPH` and must give the same graph each time.

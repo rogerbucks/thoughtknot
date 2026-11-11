@@ -190,6 +190,8 @@ export const VALUES_LATE = [
   'stepOf',
   'stepOver',
   'storageBackendContract',
+  'syncStoreBackendContract',
+  'transportBackendContract',
   'storageContract',
   'storedGraphs',
   'storedStyle',

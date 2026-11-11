@@ -33,6 +33,60 @@ export interface StorageBackend {
   open: () => NoteStorage;
 }
 
+/**
+ * The records a shared vault keeps, as the sync package holds them (editor spec ES§40, five_layer_stack). Each record is
+ * already sealed before it gets here, so a store holds nothing it could read. The names are the sync package's `Store`
+ * and `Shelf` together, written out here so the core needs nothing from it.
+ */
+export interface SyncStore {
+  /** Adds `record` to the end of `device`'s file for `note`. A device writes only its own file. */
+  add(note: string, device: string, record: Uint8Array): Promise<void>;
+  /** Every record of `note`, from every device's file, each file in the order it was written. */
+  records(note: string): Promise<Uint8Array[]>;
+  /** How many records each device's file of each note holds: by note, then by device. */
+  held(): Promise<Map<string, Map<string, number>>>;
+  /** The records of `device`'s file for `note`, from the `from`th on. */
+  recordsOf(note: string, device: string, from: number): Promise<Uint8Array[]>;
+  /** Adds `records` to `device`'s file for `note`, as a copy of that device's own file. */
+  copyIn(note: string, device: string, records: readonly Uint8Array[]): Promise<void>;
+}
+
+/** A place the sealed records of a shared vault are kept that a plug-in adds, such as a synced folder or a bucket. */
+export interface SyncStoreBackend {
+  /** The word it is chosen by, lower case: `bucket`. */
+  name: string;
+  /** What it is called where it is offered: `Bucket`. */
+  title: string;
+  /** A store of the sealed records kept there. It holds nothing it can read. */
+  open: () => SyncStore;
+}
+
+/** A channel between two devices: whole messages, in order, already sealed before they get here. */
+export interface TransportChannel {
+  send(message: Uint8Array): void;
+  /** Calls `heard` with each message the other device sends, and `closed` once the channel closes. */
+  listen(heard: (message: Uint8Array) => void, closed: () => void): void;
+  close(): void;
+}
+
+/** How a device reaches another: a channel to dial, and an address to listen at. It sees only sealed bytes. */
+export interface SyncTransport {
+  dial(address: string): Promise<TransportChannel>;
+  listen(address: string): Promise<{ address: string; next(): Promise<TransportChannel>; stop(): Promise<void> }>;
+}
+
+/** A way between devices that a plug-in adds, such as a relay or a local socket. */
+export interface TransportBackend {
+  /** The word it is chosen by, lower case: `relay`. */
+  name: string;
+  /** What it is called where it is offered: `Relay`. */
+  title: string;
+  /** An address the contract may listen at, when the plain `loopback` is not one. */
+  testAddress?: string;
+  /** The transport itself. */
+  open: () => SyncTransport;
+}
+
 /** A command a plug-in adds, which a host offers in its command list and menus. */
 export interface PluginCommand {
   /** Its id, under its plug-in's own: `acme.tags.count`. */
@@ -134,6 +188,24 @@ export function backendProblem(b: StorageBackend, taken: Map<string, string>): s
   if (taken.has(b.name)) return `the storage "${b.name}" is already added by ${taken.get(b.name)}`;
   if (!b.title.trim()) return `the storage "${b.name}" has no title`;
   if (typeof b.open !== 'function') return `the storage "${b.name}" cannot be opened`;
+  return null;
+}
+
+/** Why a record store a plug-in adds is refused, or null when it is accepted. */
+export function syncStoreProblem(b: SyncStoreBackend, _plugin: string, taken: Map<string, string>): string | null {
+  if (!WORD.test(b.name)) return `the record store "${b.name}" is not named by a lower-case word`;
+  if (taken.has(b.name)) return `the record store "${b.name}" is already added by ${taken.get(b.name)}`;
+  if (!b.title.trim()) return `the record store "${b.name}" has no title`;
+  if (typeof b.open !== 'function') return `the record store "${b.name}" cannot be opened`;
+  return null;
+}
+
+/** Why a way between devices a plug-in adds is refused, or null when it is accepted. */
+export function transportProblem(b: TransportBackend, _plugin: string, taken: Map<string, string>): string | null {
+  if (!WORD.test(b.name)) return `the transport "${b.name}" is not named by a lower-case word`;
+  if (taken.has(b.name)) return `the transport "${b.name}" is already added by ${taken.get(b.name)}`;
+  if (!b.title.trim()) return `the transport "${b.name}" has no title`;
+  if (typeof b.open !== 'function') return `the transport "${b.name}" cannot be opened`;
   return null;
 }
 
