@@ -1,0 +1,6 @@
+{
+  "file": "test/quality-metrics.test.js",
+  "test": "the workflows > a quality job measures and checks, and the release waits for it",
+  "seen_failing_first": false,
+  "evidence": "Renamed and narrowed: the engine check it also named is gone with Graphviz, the rest of the test is unchanged."
+}

@@ -81,10 +81,6 @@ jobs:
         run: node scripts/walkthrough-record.mjs --release
       - name: The baseline is no worse than the commit before, or every change has a reason
         run: node scripts/quality-check.mjs --baseline-since HEAD~1
-      - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it
-        run: node scripts/engine-version.mjs --refresh
-      - name: The engine is the version the notices name, and no advisory affects it
-        run: node scripts/engine-version.mjs
       - name: Every known risk is decided, none is overdue, and none went stale since it was looked at
         run: node scripts/risk-register.mjs --release
       # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools

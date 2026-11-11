@@ -25,8 +25,8 @@ export function contentPolicy(cspSource: string, nonce: string): string {
     // the drawing and the shared styles set some styles on the element itself
     `style-src ${cspSource} 'unsafe-inline'`,
     `font-src ${cspSource}`,
-    // the worker's blob loads the worker file by its webview address; the layout engine inside it is WebAssembly
-    `script-src 'nonce-${nonce}' ${cspSource} 'wasm-unsafe-eval'`,
+    // the worker's blob loads the worker file by its webview address; the layout engine inside it is plain code
+    `script-src 'nonce-${nonce}' ${cspSource}`,
     'worker-src blob:',
   ].join('; ');
 }

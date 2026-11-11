@@ -1,0 +1,6 @@
+{
+  "file": "test/offline.test.js",
+  "test": "the layout engine starts and draws without reaching for the network",
+  "seen_failing_first": false,
+  "evidence": "Moved from Graphviz to our own engine, which already drew with no request (#2191): the test now holds that, as the engine it named is gone."
+}

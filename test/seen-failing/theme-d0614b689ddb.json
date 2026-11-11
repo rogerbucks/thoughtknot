@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/theme.test.js",
+  "test": "the themed drawing names theme colours, never the placeholders Graphviz was given",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

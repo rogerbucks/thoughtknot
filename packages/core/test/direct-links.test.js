@@ -3,14 +3,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loadGraphviz } from '../src/graphviz-engine.ts';
 import { directLinks } from '../src/direct-links.ts';
 import { CLEARANCE, GENTLE, aside } from '../src/direct-bends.ts';
 import { curveOf } from '../src/direct-curve.ts';
 import { directions, svgOf } from '../src/render.ts';
 import { readNote } from '../src/drawing.ts';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
-const engine = await loadGraphviz();
+const engine = frozenGraphviz('direct-links');
 
 /** The layout source of a note's graph of things `[key, kind]` and links `[from, type, to]`, as the card lays it out. */
 function dotOf(things, links, routing = 'direct') {

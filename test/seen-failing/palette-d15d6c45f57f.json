@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/palette.test.js",
+  "test": "drawn with the system entry, the drawing holds its own style sheet and names only its own variables",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

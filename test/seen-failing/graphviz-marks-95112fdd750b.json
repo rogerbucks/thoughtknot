@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks.test.js",
+  "test": "Graphviz layout as marks (plugin_interface) > each thing is a box with its own id, shape and label, and the marks pass the format check",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -499,12 +499,6 @@ describe('kept so, in CI and at every release', () => {
     assert.match(lock.join('\n'), /gh api -X PUT "repos\/\$REPO\/issues\/\$n\/lock"/);
   });
 
-  test("the engine's advisories are re-read every week", () => {
-    const on = block(read('.github/workflows/engine-advisories.yml').split('\n'), 'on', 0).join('\n');
-    assert.match(on, /schedule:/);
-    assert.match(on, /cron: '/);
-  });
-
   test('the README says so, and the contributing guide lists this file', () => {
     const readme = read('README.md');
     assert.match(readme, /scripts\/public-readiness\.mjs/);

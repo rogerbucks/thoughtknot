@@ -3,13 +3,12 @@
 // So the view, the theme and every host read it as before. Each source has one thing that could go wrong.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { instance } from '@viz-js/viz';
 import { layoutMarks } from '../src/graphviz-marks.ts';
 import { layoutSvg } from '../src/graphviz-svg.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
-import { loadGraphviz } from '../src/graphviz-engine.ts';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
-const viz = await instance();
+const viz = frozenGraphviz('graphviz-svg');
 /** The SVG without Graphviz's own comments, line by line: no host reads them. */
 function uncommented(svg) {
   const kept = [];
@@ -87,7 +86,7 @@ describe("the SVG written from the marks is Graphviz's own (plugin_interface)", 
   });
 
   test("the engine gives a drawing's marks too, and drawn from them it is the SVG the engine draws", async () => {
-    const engine = await loadGraphviz();
+    const engine = frozenGraphviz('graphviz-svg');
     const dot = SOURCES['a styled graph with a kind, a reading and a label of two lines'];
     assert.equal(layoutSvg(engine.marks(dot)), uncommented(engine.render(dot)));
   });

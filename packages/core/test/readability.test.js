@@ -12,7 +12,6 @@ import { layered } from '../src/layouts/layered.ts';
 import { folded } from '../src/layouts/folded-rows.ts';
 import { readability } from '../src/layouts/readability.ts';
 import { ownMarks, groupsIn, kindsIn } from '../src/layouts/own-draw.ts';
-import { directLinks } from '../src/direct-links.ts';
 import { fans } from '../src/direct-words.ts';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
@@ -21,7 +20,6 @@ import { ViewState, startingSwitches } from '../src/view-switches.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
 import { directions } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
-import { loadGraphviz } from '../src/graphviz-engine.ts';
 
 /** A shape of things by key and links `[from, to]`. */
 const shapeOf = (keys, links = []) => ({
@@ -424,8 +422,7 @@ describe('the readability scores', () => {
     assert.equal(s.flow, 0.5, 'one runs back');
   });
 
-  test('a real note drawn by our engine reads at least as well as by Graphviz', async () => {
-    const engine = await loadGraphviz();
+  test('a real note drawn by our engine reads at least as well as by Graphviz', () => {
     const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
     const note = readNote([text]);
     const style = readStyle([text], 'requirements', note);
@@ -434,19 +431,15 @@ describe('the readability scores', () => {
       diagram: undefined,
     };
     const kindOf = new Map(drawing.boxes.map((b) => [b.key, b.kind]));
-    const scored = (own) => {
-      const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: own });
-      // the whole drawing, not the overview a graph this big opens on
-      state.toDetail('all');
-      const d = directions(state.folded(drawing))[0];
-      // with each thing's kind, as the app lays it out: a big flow of many kinds keeps its rows
-      const laid = own
-        ? ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot))
-        : directLinks(engine.marks(d.source ?? d.dot));
-      return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
-    };
-    const gv = scored(false),
-      own = scored(true);
+    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    // the whole drawing, not the overview a graph this big opens on
+    state.toDetail('all');
+    const d = directions(state.folded(drawing))[0];
+    // with each thing's kind, as the app lays it out: a big flow of many kinds keeps its rows
+    const laid = ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot));
+    const own = readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
+    // how Graphviz 16.1.0 scored this note, its links drawn direct, the last time it was asked (11 Nov 2026)
+    const gv = { clean: 0.113, clear: 0.668, near: 0.855 };
     // a graph this big is laid out in subject rooms, not rows (level_default). Roger chose rooms on 5 Nov 2026,
     // so its links need not all run one way: flow is left out. The rest must still match Graphviz
     const slack = { clean: 0.02, clear: 0.02, near: 0.06 };
@@ -454,14 +447,14 @@ describe('the readability scores', () => {
       assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
     assert.ok(own.clear >= 0.8, `few links of ours pass over a box: ${own.clear.toFixed(3)}`);
     // about a screen's shape: within half and twice 1.6 wide to high
-    const d = directions(
+    const opened = directions(
       new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
     )[0];
-    const { space } = ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot));
+    const { space } = ownMarks(measuredMarks(opened.dot), opened.rankdir, groupsIn(opened.dot));
     const shape = space.width / space.height;
     assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);
     // each group drawn round its things, never inside out
-    for (const m of ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot)).marks)
+    for (const m of ownMarks(measuredMarks(opened.dot), opened.rankdir, groupsIn(opened.dot)).marks)
       if (m.kind === 'group') assert.ok(m.width > 0 && m.height > 0, `${m.id} is ${m.width}x${m.height}`);
   });
 });

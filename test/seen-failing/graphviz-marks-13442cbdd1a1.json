@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks.test.js",
+  "test": "Graphviz layout as marks (plugin_interface) > each arrowhead points along its link, at the end it is drawn at, the tail first as Graphviz draws it",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

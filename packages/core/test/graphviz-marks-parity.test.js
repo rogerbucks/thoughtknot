@@ -8,7 +8,6 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { instance } from '@viz-js/viz';
 import { layoutMarks } from '../src/graphviz-marks.ts';
 
 const { cases: CASES } = JSON.parse(
@@ -21,6 +20,7 @@ sys.path.insert(0, ${JSON.stringify(PY_SRC)})
 from graphspec.style.marks import layout_marks
 print(json.dumps([layout_marks(g) for g in json.load(sys.stdin)]))
 `;
+import { frozenGraphviz } from './frozen-graphviz.js';
 
 /** Where `a` and `b` first differ, numbers to a billionth; or null where they agree. */
 function apart(a, b, at = '') {
@@ -46,7 +46,7 @@ function apart(a, b, at = '') {
 }
 
 test('both libraries read the same layout as the same marks, part for part and number for number', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('graphviz-marks-parity');
   const layouts = CASES.map((c) => viz.renderJSON(c.dot));
   const r = spawnSync('python3', ['-c', PYTHON], { input: JSON.stringify(layouts), encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);

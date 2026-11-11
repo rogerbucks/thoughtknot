@@ -5,7 +5,6 @@
 // nothing from anywhere else.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { CSP } from './request-guard.ts';
 
 /** One file the page is made of. */
 export interface PageFile {
@@ -31,16 +30,6 @@ const TYPES: Record<string, string> = {
  */
 export const PLUGIN_START = 'plugin-start.txt';
 
-/** The worker's path, the one file served under a policy of its own. */
-export const WORKER_FILE = '/layout-worker.js';
-
-/**
- * The worker's policy: the server's own with one addition to `script-src`, `'wasm-unsafe-eval'`. It lets the worker
- * compile the Graphviz engine's WebAssembly and nothing else (no script from a string, no eval). A browser refuses to
- * compile WebAssembly under any policy that lacks it. The page's own policy is the server's, unchanged.
- */
-export const WORKER_CSP = CSP.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'");
-
 async function filesIn(folder: string, prefix: string, into: Map<string, PageFile>): Promise<void> {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const path = `${prefix}${entry.name}`;
@@ -48,7 +37,7 @@ async function filesIn(folder: string, prefix: string, into: Map<string, PageFil
     const type = TYPES[entry.name.slice(entry.name.lastIndexOf('.'))];
     if (!entry.isFile() || !type) continue;
     const body = await readFile(join(folder, entry.name));
-    into.set(path === '/index.html' ? '/' : path, { type, body, ...(path === WORKER_FILE ? { csp: WORKER_CSP } : {}) });
+    into.set(path === '/index.html' ? '/' : path, { type, body });
   }
 }
 

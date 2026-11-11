@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-svg.test.js",
+  "test": "the SVG written from the marks is Graphviz's own (plugin_interface) > the engine gives a drawing's marks too, and drawn from them it is the SVG the engine draws",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/theme.test.js",
+  "test": "the core themes a drawing exactly as graph_svg._themed does",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

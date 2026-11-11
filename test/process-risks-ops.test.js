@@ -53,12 +53,6 @@ describe('the wiki without Chrome (OPS-11)', () => {
 describe('the docs on schedules and write access (OPS-12)', () => {
   const contributing = read('CONTRIBUTING.md');
 
-  test('the advisory watch is said to run weekly, as its cron does', () => {
-    assert.match(read('.github/workflows/engine-advisories.yml'), /cron: '17 6 \* \* 1'/);
-    assert.doesNotMatch(contributing, /weekly schedule is off/);
-    assert.match(contributing, /Engine advisories" workflow\*\* runs every Monday at 06:17 UTC/);
-  });
-
   test('the README no longer says only the release job may write', () => {
     assert.doesNotMatch(read('README.md'), /only\s+the release job may write/);
     assert.match(read('README.md'), /Who may write what/);

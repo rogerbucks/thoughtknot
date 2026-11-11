@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-source.test.js",
+  "test": "each nudge > beside puts two things on one rank; before orders them with a link never drawn",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/theme.test.js",
+  "test": "where color-mix is not supported (iOS before 16.2; Obsidian runs on iOS 15), each blend falls back to its theme hue",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

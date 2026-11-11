@@ -26,7 +26,9 @@ import {
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-const RUNTIME_ALLOWED = new Set(['@viz-js/viz']); // the one WebAssembly engine inside the bundle (§13); SQLite is read in plain JavaScript (§20)
+// No runtime dependency is allowed in general (§13): the layout engine is our own (layout_own_engine), and SQLite is
+// read in plain JavaScript (§20).
+const RUNTIME_ALLOWED = new Set();
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
 // The one addition for the sync package alone (§40, local_encrypted_store; Roger, 28 Oct 2026): upstream Automerge.
@@ -149,7 +151,7 @@ describe('the supply chain', () => {
       );
   });
 
-  test('the only runtime dependencies are the Graphviz and SQLite WebAssembly engines, one Markdown renderer for the browser host and Automerge for sync', () => {
+  test('the only runtime dependencies are one Markdown renderer for the browser host and Automerge for sync', () => {
     const workspaceNames = new Set(jsPackages().map((p) => readJSON(`${p}/package.json`).name));
     for (const p of jsPackages()) {
       const deps = Object.keys(readJSON(`${p}/package.json`).dependencies ?? {});

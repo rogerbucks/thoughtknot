@@ -5,10 +5,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { instance } from '@viz-js/viz';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';
 import { themed, choose, fixed } from '../src/theme.ts';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
 const PY_SRC = fileURLToPath(new URL('../../../python/graph_spec/src', import.meta.url));
 function python(code, input) {
@@ -31,7 +31,7 @@ const GRAPHS = [
 ];
 
 test('the core themes a drawing exactly as graph_svg._themed does', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('theme');
   const cases = [];
   for (const g of GRAPHS) {
     const drawing = readNote([g]).graphs.get('g');
@@ -48,7 +48,7 @@ test('the core themes a drawing exactly as graph_svg._themed does', async () => 
 });
 
 test('the themed drawing names theme colours, never the placeholders Graphviz was given', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('theme');
   const { source, kinds, readings } = layoutSource(readNote([GRAPHS[0]]).graphs.get('g'), 'LR');
   const svg = themed(viz.renderString(source, { format: 'svg' }), kinds, readings);
   assert.doesNotMatch(svg, /#000[0-4][0-9a-f]{2}"/);
@@ -129,7 +129,7 @@ print(json.dumps(out))`,
 
 test('where color-mix is not supported (iOS before 16.2; Obsidian runs on iOS 15), each blend falls back to its theme hue', async () => {
   const { withoutColorMix } = await import('../src/theme.ts');
-  const viz = await instance();
+  const viz = frozenGraphviz('theme');
   const { source, kinds, readings } = layoutSource(readNote([GRAPHS[0]]).graphs.get('g'), 'LR');
   const svg = themed(viz.renderString(source, { format: 'svg' }), kinds, readings);
   const plain = withoutColorMix(svg);

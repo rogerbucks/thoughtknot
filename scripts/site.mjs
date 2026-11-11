@@ -31,13 +31,13 @@ const LICENCE = 'https://www.mozilla.org/en-US/MPL/2.0/';
 export const SITE_URL = 'https://thoughtknot.app/';
 
 /**
- * What the demo page may load and run (site_demo): its own files only. Its scripts may compile WebAssembly, the layout
- * engine and Import's SQLite, and start workers from their own text. It sends nothing anywhere, so a fetch, a form or a
- * frame from elsewhere is refused by the browser as well as by the code.
+ * What the demo page may load and run (site_demo): its own files only. Its scripts may start workers from their own
+ * text, and compile no WebAssembly: the layout engine and Import's SQLite reader are plain code. It sends nothing
+ * anywhere, so a fetch, a form or a frame from elsewhere is refused by the browser as well as by the code.
  */
 export const DEMO_POLICY = [
   "default-src 'none'",
-  "script-src 'self' 'wasm-unsafe-eval'",
+  "script-src 'self'",
   "worker-src 'self' blob:",
   "style-src 'self'",
   "style-src-attr 'unsafe-inline'",

@@ -665,7 +665,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
-| OPS-5 | The release waits on live OSV and NVD, with no retry | done | #1540; kept out by `test/engine-version-retry.test.js`, `scripts/engine-version.mjs` |
+| OPS-5 | The release waits on live OSV and NVD, with no retry | done | #1540; the advisory watch went with Graphviz itself (layout_own_engine), so the release asks no live service |
 | OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | done | #1540; kept out by `test/report-failure-workflow.test.js`, `.github/workflows/report-failure.yml` |
 | OPS-7 | Timed workflows pause and tokens expire without notice | done | #1540; kept out by `test/report-failure-workflow.test.js`, `.github/workflows/token-watch.yml` |
 | OPS-8 | Repository settings are not exported; only required checks are held | done | #1540; kept out by `test/settings-export.test.js`, `scripts/settings-export.mjs` |

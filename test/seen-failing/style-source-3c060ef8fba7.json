@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-source.test.js",
+  "test": "before, in a radial drawing > moves the thing just before the other in the order the boxes are written, which the radial layout follows",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}
