@@ -88,7 +88,8 @@ def word_spots(
         wide = max(r[2] for r in room) - min(r[0] for r in room)
         (ax, ay), (bx, by) = c.ends
         long = math.hypot(bx - ax, by - ay) or 1
-        off = max(size * WORDS_OFF, abs(by - ay) / long * (wide / 2) + abs(bx - ax) / long * (tall / 2))
+        reach = abs(by - ay) / long * (wide / 2) + abs(bx - ax) / long * (tall / 2)
+        off = max(size * WORDS_OFF, reach)
         best, least = c.words_at(0.5, off), float("inf")
         clear = False
         for far in (off, off * 2.2):
