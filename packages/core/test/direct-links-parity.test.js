@@ -7,7 +7,6 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { instance } from '@viz-js/viz';
 import { directLinks } from '../src/direct-links.ts';
 import { layoutMarks } from '../src/graphviz-marks.ts';
 import { layoutSvg } from '../src/graphviz-svg.ts';
@@ -31,6 +30,7 @@ def drawn(g, direct, way):
     return direct_links(layout_marks(g), way, True) if way else direct_links(layout_marks(g))
 print(json.dumps([layout_svg(drawn(g, direct, way)) for g, direct, way in asked]))
 `;
+import { frozenGraphviz } from './frozen-graphviz.js';
 
 /**
  * The SVG each library writes for `layouts`, drawn direct or as laid out: the core's, then the Python library's.
@@ -57,7 +57,7 @@ function firstApart(a, b) {
 }
 
 test('both libraries draw the same links direct, with the same SVG', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('direct-links-parity');
   const layouts = [...DIRECT, ...MARKS].map((c) => viz.renderJSON(c.dot));
   const [core, python] = both(layouts, true);
   [...DIRECT, ...MARKS].forEach((c, i) => assert.equal(firstApart(core[i], python[i]), null, c.name));
@@ -68,7 +68,7 @@ test('both libraries draw the same links direct, with the same SVG', async () =>
 });
 
 test('both libraries write the same SVG from the same layout', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('direct-links-parity');
   const layouts = MARKS.map((c) => viz.renderJSON(c.dot));
   const [core, python] = both(layouts, false);
   MARKS.forEach((c, i) => assert.equal(firstApart(core[i], python[i]), null, c.name));
@@ -76,7 +76,7 @@ test('both libraries write the same SVG from the same layout', async () => {
 
 test('both libraries route links on the rows Graphviz laid out alike, with the same SVG', async () => {
   // links_routed_in_rows: past 300 things each link passes between the boxes, through a gap in each row it crosses
-  const viz = await instance();
+  const viz = frozenGraphviz('direct-links-parity');
   const rowed = [...DIRECT, ...MARKS, ...ROWS].map((c) => viz.renderJSON(c.dot));
   for (const way of ['LR', 'TB']) {
     const [core, python] = both(rowed, true, way);

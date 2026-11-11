@@ -565,20 +565,6 @@ latest stable release. To look at the wiki before a merge:
   beyond each file's allowance in `test/fixed-sleeps.json`. It also fails an allowance higher than the file needs, so a
   sleep taken out stays out.
 
-### The engine's advisories
-
-- **The Graphviz inside the engine is watched** (spec §13). `node scripts/engine-version.mjs` reads its version from
-  the engine and checks the notices name it. It checks `quality/advisories.json` offline, and warns when the cache was
-  last checked over 14 days ago.
-- **Only `--refresh` and `--watch` ask:** OSV and NVD for Graphviz, merged, and OSV for the package that wraps it. The
-  release's quality job refreshes and checks.
-- **The "Engine advisories" workflow** runs every Monday at 06:17 UTC, and by hand. It is read-only: it fails when the
-  published advisories differ from the committed cache. Then someone runs `--refresh` and opens a pull request. The
-  plugin never asks.
-- **A slow or failing service does not spend a version number** (OPS-5). `--refresh` asks each service up to three times,
-  after 1 s and then 2 s. Say one still fails. If the committed cache is for this engine and was checked within 14
-  days, the release goes on with that cache and a warning. Otherwise it fails as before. `--watch` never falls back.
-
 ### Who may write what
 
 Every workflow runs with a read-only token. These jobs ask for more, each for one reason (OPS-12). A job that writes runs
@@ -590,7 +576,6 @@ in this table.
 | build-status | `update` | pull requests | Posts the comment on each pull request that says which requirements it proves. |
 | claude-review | `review` | pull requests | Posts the Claude review's comments. |
 | dependabot-merge | `merge` | contents, pull requests | Turns auto-merge on for a Dependabot pull request, so it merges once CI is green. |
-| engine-advisories | `report-failure` | issues | Opens an issue when the weekly advisory watch fails. |
 | lock-conversations | `lock` | pull requests | Locks each pull request's conversation, as only a collaborator contributes. |
 | nightly | `publish` | contents, id-token, attestations | Makes the nightly pre-release, attests it and removes old ones. |
 | nightly | `drafts` | contents | Reads draft releases, which GitHub lists only to a token that may write. It changes none. |

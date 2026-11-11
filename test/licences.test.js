@@ -98,7 +98,7 @@ describe('what is bundled into a release', () => {
   test('the bundled packages are found from the lockfile', () => {
     assert.deepEqual(
       bundledPackages().map((p) => p.name),
-      ['@automerge/automerge', '@viz-js/viz', 'marked'],
+      ['@automerge/automerge', 'marked'],
     );
   });
 
@@ -225,11 +225,11 @@ describe('a GPL tool, allowed only where it runs in CI alone and is never shippe
   test('cannot cover anything bundled, inside what is bundled, or in node_modules, dev or not', () => {
     const planted = structuredClone(record());
     const entry = { ...tools().valgrind };
-    for (const name of ['@viz-js/viz', 'Graphviz', 'esbuild', 'ESLint', 'valgrind'])
+    for (const name of ['@automerge/automerge', 'hashbrown', 'esbuild', 'ESLint', 'valgrind'])
       planted.ciOnlyTools.tools[name] = entry;
     const said = ciOnlyProblems(planted, lockedNames()).join('\n');
-    assert.match(said, /^@viz-js\/viz: bundled/m, 'the bundled engine');
-    assert.match(said, /^Graphviz: bundled/m, 'what the engine carries inside');
+    assert.match(said, /^@automerge\/automerge: bundled/m, 'a bundled package');
+    assert.match(said, /^hashbrown: bundled/m, 'what a bundled package carries inside');
     assert.match(said, /^esbuild: in the lockfile/m, 'a dev package in node_modules');
     assert.match(said, /^ESLint: in the lockfile/m, 'in any case');
     assert.doesNotMatch(said, /^valgrind/m, 'the real entry stays allowed');

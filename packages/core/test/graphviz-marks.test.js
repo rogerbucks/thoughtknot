@@ -2,11 +2,11 @@
 // the core draws a plug-in's. These lay real graphs out with the bundled Graphviz and read its layout back as marks.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { instance } from '@viz-js/viz';
 import { layoutMarks } from '../src/graphviz-marks.ts';
 import { drawMarksOf, marksBounds } from '../src/drawing-marks.ts';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
-const viz = await instance();
+const viz = frozenGraphviz('graphviz-marks');
 const laid = (dot) => layoutMarks(viz.renderJSON(dot));
 
 const DOT = `digraph G {

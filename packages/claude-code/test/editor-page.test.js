@@ -103,12 +103,11 @@ describe('cc_core_only: the page takes everything from the core and the shared d
       /^packages\/graph-spec\/src\//,
       /^packages\/claude-code\/src\//,
       /^python\/graph_spec\/src\/[\w.]+\.json$/, // the style data the graph library reads
-      /^node_modules\/@viz-js\//,
     ];
     assert.deepEqual(
       inputs.filter((i) => !allowed.some((a) => a.test(i))),
       [],
-      'only the core, the graph library, the Graphviz engine and the page’s own modules',
+      'only the core, the graph library and the page’s own modules',
     );
     assert.ok(
       inputs.some((i) => i.startsWith(`${LAYER}/graph-view/`)),
@@ -386,10 +385,8 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
     const worker = await ask(server.port, { path: '/layout-worker.js' });
     assert.equal(worker.status, 200);
     assert.match(worker.headers['content-type'], /^text\/javascript/);
-    assert.equal(
-      worker.headers['content-security-policy'],
-      POLICY.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'"),
-    );
+    // our own engine is plain code: the worker runs under the server's own policy, with no WebAssembly allowed
+    assert.equal(worker.headers['content-security-policy'], POLICY);
     for (const path of ['/', '/page.js', '/page.css'])
       assert.equal(
         (await ask(server.port, { path })).headers['content-security-policy'],

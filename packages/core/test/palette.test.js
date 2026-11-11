@@ -3,11 +3,11 @@
 // a Claude Code pane, takes fixed colours with the page painted in. It still meets the locked style's contrast (§11).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { instance } from '@viz-js/viz';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource, STYLE } from '../src/layout.ts';
 import { themed } from '../src/theme.ts';
 import { PALETTES, THEME_COLOURS, fixedPalette } from '../src/palette.ts';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 const luminance = (c) => {
@@ -103,7 +103,7 @@ for (const name of ['light', 'dark']) {
 }
 
 test('drawn with a fixed entry, the drawing names no variable and no color-mix, and paints its own page', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('palette');
   const { source, kinds, readings } = layoutSource(readNote([GRAPH]).graphs.get('g'), 'LR');
   const raw = viz.renderString(source, { format: 'svg' });
   const svg = themed(raw, kinds, readings, PALETTES.dark);
@@ -116,7 +116,7 @@ test('drawn with a fixed entry, the drawing names no variable and no color-mix, 
 });
 
 test('drawn with the system entry, the drawing holds its own style sheet and names only its own variables', async () => {
-  const viz = await instance();
+  const viz = frozenGraphviz('palette');
   const { source, kinds, readings } = layoutSource(readNote([GRAPH]).graphs.get('g'), 'LR');
   const svg = themed(viz.renderString(source, { format: 'svg' }), kinds, readings, PALETTES.system);
   assert.match(svg, /^<svg [^>]*>\n<style>[^<]*@media \(prefers-color-scheme: dark\)[^<]*<\/style>\n/);

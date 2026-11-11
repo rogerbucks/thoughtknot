@@ -69,7 +69,6 @@ const READERS = [
     /^(scripts\/quality-(check|spec)\.mjs|quality\/(baseline|accepted)\.json)$/,
     ['test/quality-baseline.test.js', 'test/quality-metrics.test.js'],
   ],
-  [/^quality\/advisories\.json$/, ['test/engine-version.test.js']],
   [/^(scripts\/notices\.mjs|THIRD_PARTY_NOTICES\.md)$/, ['test/licences.test.js']],
   [
     /^test\/(seen-failing|tests-first)\//,

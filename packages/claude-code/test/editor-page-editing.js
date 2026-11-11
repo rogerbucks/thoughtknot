@@ -75,7 +75,6 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
         /^packages\/graph-spec\/src\//,
         /^packages\/claude-code\/(src|page)\//,
         /^python\/graph_spec\/src\/[\w.]+\.json$/,
-        /^node_modules\/@viz-js\//,
       ];
       assert.deepEqual(
         inputs.filter((i) => !allowed.some((a) => a.test(i))),

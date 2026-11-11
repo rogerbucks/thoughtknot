@@ -27,7 +27,8 @@ test('the settings travel as JSON a note’s name cannot break out of', () => {
 test('the policy allows the extension’s files, scripts carrying the number, and workers from a blob alone', () => {
   const policy = contentPolicy('https://file.example', 'n0nce');
   assert.match(policy, /^default-src 'none'/);
-  assert.match(policy, /script-src 'nonce-n0nce' https:\/\/file.example 'wasm-unsafe-eval'/);
+  assert.match(policy, /script-src 'nonce-n0nce' https:\/\/file.example(;|$)/);
+  assert.doesNotMatch(policy, /wasm-unsafe-eval/, 'the layout engine is plain code, so no WebAssembly is allowed');
   assert.match(policy, /worker-src blob:/);
   assert.doesNotMatch(policy, /script-src[^;]*'unsafe-inline'/);
 });

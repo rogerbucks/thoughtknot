@@ -1,5 +1,5 @@
-// What runs inside the layout worker (spec §9, layout_contained): the core's side of the talk, with the bundled Graphviz
-// engine. The build bundles this file on its own, Graphviz WebAssembly and all. It puts it in main.js once, as the body
+// What runs inside the layout worker (spec §9, layout_contained): the core's side of the talk, with our own layout
+// engine. The build bundles this file on its own, the engine and all. It puts it in main.js once, as the body
 // of the function `layoutWorker` (see layout-worker.ts). A worker is started from that function's text. The page
 // calls the function itself where no worker can run.
 // The core's two modules the worker needs, by their own paths rather than through the core's entry. The entry would

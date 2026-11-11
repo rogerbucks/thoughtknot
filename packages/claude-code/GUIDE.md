@@ -309,7 +309,7 @@ runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-s
     there is refused.
   - The page's files (`PageAssets`) are read once from the built `mod/page/`. They are served by exact path with no
     token, as they say nothing of any note. With none, a placeholder is served at `/` alone.
-  - For the worker's file alone, the policy has `'wasm-unsafe-eval'` added to `script-src` (see `page-assets.ts`).
+  - The worker's file has the same policy as the page: the layout engine is plain code, so no WebAssembly is allowed.
   - Each plug-in's file, at `/plugins/<its SHA-256>.js`, has a policy of its own: `default-src 'none'; script-src
     'self'`. So it can make no connection (see `page-plugins.ts`).
   - Every `/api/` call needs the token, then goes to the `api` handed in (`ApiHandler`; none, and it is not found). A

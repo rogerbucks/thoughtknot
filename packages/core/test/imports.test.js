@@ -13,7 +13,7 @@ const imports = (text) =>
     ),
   ].map((m) => m[1] ?? m[2] ?? m[3]);
 const HOSTS = /^(obsidian|vscode|@codemirror\/|@lezer\/|node:|fs$|path$|child_process$|electron$)/;
-const ALLOWED = /^(\.\.?\/|@thoughtknot\/graph-spec(\/|$)|@viz-js\/viz$)/;
+const ALLOWED = /^(\.\.?\/|@thoughtknot\/graph-spec(\/|$))/;
 
 test('there is core source to check', () => assert.ok(sources.length >= 5));
 
@@ -28,7 +28,7 @@ for (const f of sources) {
     assert.deepEqual(
       found.filter((m) => !ALLOWED.test(m)),
       [],
-      'only the core, the graph library and the Graphviz engine',
+      'only the core and the graph library',
     );
   });
 }
@@ -55,14 +55,11 @@ for (const f of displayFiles()) {
   });
 }
 
-// The Graphviz engine is WebAssembly, which some hosts lack (a Claude Code mod has none). No host draws with it any
-// more: our own engine lays out every drawing (layout_own_engine). Only graphviz-engine.ts starts it, for the tests,
-// and nothing in the core imports that.
-test('only graphviz-engine.ts imports the Graphviz engine, and nothing in the core imports it', () => {
+// Graphviz is gone (layout_own_engine): our own engine, in plain code, lays out every drawing. So nothing imports it,
+// and the core runs in a host with no WebAssembly, such as a Claude Code mod.
+test('nothing in the core imports the Graphviz engine', () => {
   const importers = sources.filter((f) => imports(readFileSync(new URL(f, dir), 'utf8')).includes('@viz-js/viz'));
-  assert.deepEqual(importers, ['graphviz-engine.ts']);
-  const users = sources.filter((f) => imports(readFileSync(new URL(f, dir), 'utf8')).includes('./graphviz-engine.ts'));
-  assert.deepEqual(users, []);
+  assert.deepEqual(importers, []);
 });
 
 test('within the core, only the entry imports engine.ts', () => {

@@ -92,13 +92,12 @@ describe('the metrics the requirement names', () => {
     assert.ok(b.metrics.coverage_percent > 0 && b.metrics.coverage_percent <= 100);
     assert.equal(b.metrics.secrets_found, 0);
     assert.equal(b.metrics.flaky_tests, 0);
-    assert.ok(b.metrics.bundle_bytes_without_viz < b.metrics.bundle_bytes);
+    assert.ok(b.metrics.bundle_bytes_without_viz <= b.metrics.bundle_bytes);
   });
 
   test('the report says what is large in the bundle, besides the engine', () => {
     const { bundle } = baseline().details;
     assert.ok(Array.isArray(bundle) && bundle.length >= 3);
-    assert.ok(bundle.some((b) => b.name === '@viz-js/viz'));
     for (const b of bundle) assert.ok(typeof b.name === 'string' && b.bytes > 0, JSON.stringify(b));
     assert.deepEqual(
       bundle.map((b) => b.bytes),
@@ -525,7 +524,6 @@ describe('a change to the ratchet’s files', () => {
   const tracked = [
     'test/quality-metrics.test.js',
     'test/quality-baseline.test.js',
-    'test/engine-version.test.js',
     'test/policy.test.js',
     'test/run-ceiling.test.js',
   ];
@@ -548,8 +546,6 @@ describe('a change to the ratchet’s files', () => {
         all: false,
         files: ['test/quality-baseline.test.js', 'test/quality-metrics.test.js'],
       });
-    for (const changed of ['scripts/engine-version.mjs', 'quality/advisories.json'])
-      assert.deepEqual(testsForChanges([changed], tracked), { all: false, files: ['test/engine-version.test.js'] });
   });
 });
 
@@ -557,7 +553,7 @@ describe('the workflows', () => {
   const release = () => read('.github/workflows/release.yml');
   const runs = (job) => runCommands(jobs(release())[job].join('\n'));
 
-  test('a quality job measures, checks and runs the engine check, and the release waits for it', () => {
+  test('a quality job measures and checks, and the release waits for it', () => {
     assert.ok('quality' in jobs(release()), 'release.yml has a quality job');
     const quality = runs('quality');
     const at = (re) => quality.findIndex((r) => re.test(r));
@@ -565,7 +561,6 @@ describe('the workflows', () => {
     const measured = at(/^node scripts\/quality-metrics\.mjs (?:--suite-from \S+ )?--out quality\/metrics\.json\b/);
     assert.ok(measured > at(/^npm audit signatures\b/), 'the metrics are measured after the install is verified');
     assert.ok(at(/^node scripts\/quality-check\.mjs quality\/metrics\.json\b/) > measured, 'and then checked');
-    assert.ok(at(/^node scripts\/engine-version\.mjs\b(?!.*--)/) >= 0, 'the engine check runs');
     const releaseJob = block(jobs(release()).release, 'needs', 4);
     assert.ok(releaseJob, 'the release job has needs');
     assert.match(releaseJob.join('\n'), /\bquality\b/);

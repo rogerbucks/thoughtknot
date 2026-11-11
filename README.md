@@ -77,7 +77,7 @@ The short version for every app is the [privacy page](https://thoughtknot.app/pr
 The short version, for the plugin, the app and the browser editor, is the [privacy page](https://thoughtknot.app/privacy.html).
 
 The plugin makes no network request of its own. There are no analytics, no update checks, no remote images and no
-databases. Graphviz, the one runtime dependency, is bundled and runs on your device.
+databases. The layout engine is ThoughtKnot's own, in plain code, and runs on your device.
 
 **The one exception: AI models you set up.** The plugin can ask an AI model to propose changes to a graph. It sends
 content only to AI models you have set up yourself, and only when you send it. AI is off until you turn it on (Use AI
@@ -209,7 +209,6 @@ read until one is set.
   may open pull requests and issues. Every action is pinned and the token is read-only. A fork's workflows run only once
   approved. Secret scanning with push protection, Dependabot alerts and fixes, and CodeQL are on.
 - **Dependencies reviewed, advisories re-read.** Each pull request's dependency changes are checked against published
-  advisories. The Graphviz inside the engine is checked against them each week.
 - **No test framework.** Tests use the runner built into Node.
 
 ## Versions
@@ -231,5 +230,5 @@ Mozilla Public License 2.0 (MPL-2.0). See [LICENSE](LICENSE).
 The graph spec's own text is under CC-BY-4.0, so anyone may build on the format if they credit it. See
 [LICENSE-SPEC.md](LICENSE-SPEC.md) for the files it covers.
 
-The layout engine, `@viz-js/viz`, compiles Graphviz (Eclipse Public License 2.0) into WebAssembly. See
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which ships with every release.
+What the plugin bundles from others is listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which ships with
+every release.

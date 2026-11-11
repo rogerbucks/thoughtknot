@@ -513,7 +513,6 @@
       "fix": "Retry each call three times with backoff. When a source still fails, use the committed cache if it was checked within 14 days, and print a warning instead of failing. Move the refresh before the Valgrind install so a failure is cheap.",
       "check": "A test in test/engine-version.test.js with a fetch that answers 503 once, then 200.",
       "paths": [
-        "scripts/engine-version.mjs",
         ".github/workflows/release.yml",
         ".github/workflows/release-check.yml"
       ],
@@ -525,11 +524,7 @@
       },
       "status": "done",
       "wave": "Wave 5 · Automated quality and releases",
-      "done_in": "#1540",
-      "prevented_by": [
-        "test/engine-version-retry.test.js",
-        "scripts/engine-version.mjs"
-      ]
+      "done_in": "#1540; the advisory watch went with Graphviz itself (layout_own_engine), so the release asks no live service"
     },
     {
       "id": "OPS-6",
@@ -554,8 +549,7 @@
       "paths": [
         ".github/workflows/nightly.yml",
         ".github/workflows/wiki.yml",
-        ".github/workflows/pages.yml",
-        ".github/workflows/engine-advisories.yml"
+        ".github/workflows/pages.yml"
       ],
       "effort": "hours",
       "raised": "2026-10-19",
@@ -4118,7 +4112,7 @@
       "fix": "Compare the address's host name in full.",
       "check": "CI's code-scan job fails on any address checked by part of its text.",
       "paths": [
-        "test/engine-version.test.js"
+        "test/code-scanning-fixes.test.js"
       ],
       "effort": "hours",
       "raised": "2026-10-21",

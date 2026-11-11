@@ -1,4 +1,4 @@
-// Graphviz for the Claude Code host (spec §10; decision of 11 Oct 2026). A mod has no WebAssembly. So the core's own
+// The layout for the Claude Code host (spec §10; decision of 11 Oct 2026). A mod runs no layout itself. So the core's own
 // engine runs as a process through node, DOT in and SVG out (bin/render-process.ts). When node is missing it is said in
 // words. So the pane shows the graph as text with the reason, never a blank drawing. Any other failure says what it
 // was.

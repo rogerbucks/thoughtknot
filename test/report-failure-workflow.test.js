@@ -1,6 +1,6 @@
 // Requirement: ci_jobs_time_limited (spec §13).
-// OPS-6 and OPS-7: a scheduled or background workflow that fails must tell somebody. The nightly, the wiki, Pages and the
-// engine advisories each call one reusable workflow. It keeps an issue labelled workflow-failure. A daily token
+// OPS-6 and OPS-7: a scheduled or background workflow that fails must tell somebody. The nightly, the wiki and Pages each
+// call one reusable workflow. It keeps an issue labelled workflow-failure. A daily token
 // probe opens one on the third refusal in a row. Read as text, by indentation, as the other workflow tests do.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,7 +8,7 @@ import { exists, jobs, read, stripComment } from './repository/repo.js';
 
 const REPORT = '.github/workflows/report-failure.yml';
 const WATCH = '.github/workflows/token-watch.yml';
-const CALLERS = ['nightly', 'wiki', 'pages', 'engine-advisories'];
+const CALLERS = ['nightly', 'wiki', 'pages'];
 
 describe('the failure report', () => {
   test('is a reusable workflow that writes issues and nothing else, and runs no code of the repository', () => {

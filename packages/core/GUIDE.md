@@ -276,8 +276,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 - `layout.ts` — the Graphviz layout source, byte-identical to the Python library's. A box drawn under a suggested name is
   dashed and labelled so in both.
-- `engine.ts` — starting the bundled Graphviz engine, WebAssembly. It is the one module that imports it, and only the
-  entry imports this one. So the rest of the core runs in a host with no WebAssembly, such as a Claude Code mod.
+- `engine.ts` — starting our own layout engine, in plain code (`layouts/own-drawn.ts`). Graphviz is gone, so no host
+  needs WebAssembly. Only the entry imports this module.
 - `render.ts` — laying out with the engine it is handed, or around one run elsewhere (`directions`, then `chosen` with
   the SVGs it drew). It also says what a box's or link's details are.
 - `drawing-direction.ts` — a drawing in the direction it is read (spec §42, rtl_drawing_direction). In a right-to-left

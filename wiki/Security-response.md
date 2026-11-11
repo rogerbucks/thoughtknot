@@ -22,7 +22,6 @@ watches users live. We find problems three ways: our own scans, public advisorie
 | Daily scan | Code scanning, Dependabot, secret scanning, npm audit, OSV | Daily, 06:00 UTC | `.github/workflows/security.yml` |
 | Dependabot | A fix PR as soon as an advisory is published | On publish | `.github/dependabot.yml` |
 | Dependency review | A pull request that adds a risky package | Each PR | `.github/workflows/dependency-review.yml` |
-| Engine advisories | Graphviz inside the layout engine | Mondays | `.github/workflows/engine-advisories.yml` |
 | Release gate | Any open alert at release time | Each release and nightly | `.github/workflows/release.yml`, `.github/workflows/nightly.yml` |
 | Private report | Anyone who finds a problem | Any time | [Report a vulnerability](https://github.com/rogerbucks/thoughtknot/security/advisories/new) |
 | Obsidian review and community | Reports from Obsidian's team or other plug-in authors | Any time | Route to a private report (section 3) |

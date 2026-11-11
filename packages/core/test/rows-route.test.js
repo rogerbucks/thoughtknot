@@ -3,7 +3,6 @@
 // between the rows of boxes Graphviz laid out, and no box moves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadGraphviz } from '../src/graphviz-engine.ts';
 import { directLinks } from '../src/direct-links.ts';
 import { routedSource } from '../src/fold-source.ts';
 import { layoutSvg } from '../src/graphviz-svg.ts';
@@ -12,8 +11,9 @@ import { inRows, rowsOf, rowsRoute } from '../src/layouts/rows-route.ts';
 import { directions, quickSource, svgOf } from '../src/render.ts';
 import { readNote } from '../src/drawing.ts';
 import { graphOf } from '../../../scripts/benchmarks/draw-fifty.mjs';
+import { frozenGraphviz } from './frozen-graphviz.js';
 
-const engine = await loadGraphviz();
+const engine = frozenGraphviz('rows-route');
 
 /** A box `key` with its middle at (`x`, `y`), 40 by 20. */
 const box = (key, x, y) => ({ key, x, y, hw: 20, hh: 10 });

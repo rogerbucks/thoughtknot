@@ -90,7 +90,7 @@ describe('the demo page loads its own files only', () => {
     assert.equal(meta.getAttribute('content'), DEMO_POLICY);
     const rules = Object.fromEntries(DEMO_POLICY.split('; ').map((r) => [r.split(' ')[0], r.split(' ').slice(1)]));
     assert.deepEqual(rules['default-src'], ["'none'"]);
-    assert.deepEqual(rules['script-src'], ["'self'", "'wasm-unsafe-eval'"]);
+    assert.deepEqual(rules['script-src'], ["'self'"]);
     assert.deepEqual(rules['connect-src'], ["'self'", 'data:', 'blob:']);
     assert.deepEqual(rules['form-action'], ["'none'"]);
     for (const [name, values] of Object.entries(rules)) {

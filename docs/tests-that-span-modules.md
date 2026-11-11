@@ -134,7 +134,7 @@ after a module nor listed here, and on a listed file that is missing.
   sketch_reader_picture). It spans export.ts and sketch-marks.ts.
 - `test/reader-pictures.test.js` — the command line `scripts/reader-pictures.mjs` brings every picture for readers in a
   folder up to date. Its check fails while one is out of date (editor spec §62, picture_outside_tools). It runs the
-  core's folder refresh and its Graphviz.
+  core's folder refresh and its layout engine.
 - `packages/core/test/imports.test.js` — the core imports no host.
 - `packages/core/test/hosts-boundary.test.js` — the host-side modules of the core (`src/hosts/`, reached as
   `@thoughtknot/core/hosts/<module>`) are imported by no gate or other core module. They are not exported by the entry,
@@ -673,7 +673,6 @@ after a module nor listed here, and on a listed file that is missing.
   note's own graph blocks with the real functions, and matches exactly. The quotes are a read-back, a label, the tap
   text of an estimate and a box's details. They are also an export's footer and file name, and the conversion notice.
   The notes' generator scripts and filler set up the case they describe (editor spec §3).
-- `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
 - `test/ethos.test.js` — the project's ethos (`requirements/ethos.gql`). Every rule names the requirements that check
   it, or says a person checks it or nothing does yet, and only requirements that exist. Each fault is named. The wiki's
   Ethos page shows each principle and each rule's state (editor spec §41, ethos_checked).
@@ -793,7 +792,9 @@ after a module nor listed here, and on a listed file that is missing.
   checkout. Any other entry that names a file must exist, so a misspelt path is caught.
 - `test/licences.test.js` — licences through the whole build chain, and the one allowance for a GPL tool run in CI alone and never shipped.
 - `test/offline.test.js` — no network request but the one exception, a send to an AI model the user set up. The
-  bundled engine makes none. The core's AI send makes none of its own, going only through the transport it is handed.
+  layout engine makes none. The core's AI send makes none of its own, going only through the transport it is handed.
+- `test/no-wasm.test.js` — no host's page policy allows WebAssembly, no host source compiles any, and no package
+  depends on Graphviz.
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
@@ -834,8 +835,6 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `test/settings-export.test.js` — the default branch's whole ruleset and the Pages settings are exported to
   `.github/settings/` and held whole against GitHub's (OPS-8).
-- `test/engine-version-retry.test.js` — a slow or failing advisory service is asked three times, and a recent committed
-  cache stands in for one that stays down (OPS-5).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
 - `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private

@@ -3,8 +3,7 @@
 // makes it (packages/obsidian/src/ai/send.ts). test/policy.test.js holds that to be the one source that can.
 //
 // Everything else is held strictly here:
-// - The Graphviz engine the plugin bundles carries Emscripten code that could fetch a WebAssembly file or a lazy file
-//   by URL. This package inlines its WebAssembly, so that code must never run.
+// - The layout engine is our own plain code (layout_own_engine): it starts and draws with no request.
 // - The core's own AI send reaches no network of its own. It goes only through the transport a host hands it.
 // Here every way to reach the network is a trap that records the attempt.
 import { test } from 'node:test';
@@ -37,15 +36,13 @@ async function trapped(work) {
   return attempts.slice(before);
 }
 
-test('the Graphviz engine starts and draws without reaching for the network', async () => {
+test('the layout engine starts and draws without reaching for the network', async () => {
   const made = await trapped(async () => {
-    const { instance } = await import('@viz-js/viz');
-    const viz = await instance();
-    const svg = viz.renderString('digraph { a -> b [label="answers"]; c -> a; subgraph cluster_x { d; e } }', {
-      format: 'svg',
-    });
+    const { loadEngine } = await import('../packages/core/src/index.ts');
+    const engine = await loadEngine();
+    const svg = engine.render('digraph { a -> b [label="answers"]; c -> a; subgraph cluster_x { d; e } }');
     assert.match(svg, /<svg/);
-    for (const format of ['svg', 'dot', 'json', 'plain']) viz.renderString('digraph { x -> y }', { format });
+    assert.ok(engine.marks('digraph { x -> y }').marks.length > 0);
   });
   assert.deepEqual(made, []);
 });

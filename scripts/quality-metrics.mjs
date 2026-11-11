@@ -125,6 +125,7 @@ export async function measureBundle() {
   // the worker's function is counted by what is inside it, so the engine there is still the engine
   add(built.metafile);
   add(workerBuild.metafile);
+  // Graphviz is gone (layout_own_engine), so nothing is taken off: the metric stays until the baseline drops it
   const viz = bytes.get('@viz-js/viz') ?? 0;
   return {
     metrics: { bundle_bytes: total, bundle_bytes_without_viz: total - viz },

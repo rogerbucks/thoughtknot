@@ -201,12 +201,12 @@ Wave 6.
 
 ### B12. Scripts and the network
 
-- **Sides:** the repository's scripts against OSV, NVD, GitHub and a local Chrome.
-- **Crosses:** advisory lookups, project board writes and test pages.
+- **Sides:** the repository's scripts against GitHub and a local Chrome.
+- **Crosses:** project board writes and test pages.
 - **Trusted:** fixed https addresses, and the person's or the workflow's GitHub sign-in.
 - **Controls:** `gh` runs with no shell, checks the repository against origin, and never prints a token. Chrome is
   reached on 127.0.0.1 only.
-- **Code:** `scripts/engine-version.mjs`, `scripts/github-project-gh.mjs` and `scripts/chrome.mjs`.
+- **Code:** `scripts/github-project-gh.mjs` and `scripts/chrome.mjs`.
 - **Gaps:**
   - None found that cross a trust line. Retries are a reliability matter.
 

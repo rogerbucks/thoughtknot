@@ -5,13 +5,13 @@
 // How the engine gets into the worker:
 // - Obsidian installs only main.js, manifest.json and styles.css. So the worker cannot be a file of its own. Nothing
 //   may be fetched (spec §13).
-// - The build bundles worker-entry.ts on its own, the Graphviz WebAssembly inside it. main.js holds that bundle once,
+// - The build bundles worker-entry.ts on its own, our own layout engine inside it. main.js holds that bundle once,
 //   as the body of the function `layoutWorker`.
 // - A worker is started from a Blob URL of that function's own text. Function.prototype.toString gives a function's
 //   source exactly, in V8 and in JavaScriptCore alike.
 // - Where no worker can run, the page calls the same function itself.
 // This is the simplest way that works offline in Electron and in the iOS and Android web views. A Blob worker, and
-// WebAssembly in a worker, run in all three. Keeping the bundle as a string instead would put the 1.2 MB engine in
+// a worker of plain code, run in all three. Keeping the bundle as a string instead would put the engine in
 // main.js twice. Or it would leave the page able to run it only through eval, which the store's linter refuses.
 import { LayoutRunner, PAGE_LIMITS, inThreadPort, serveLayouts } from '@thoughtknot/core';
 import type { Drawn, Engine, GraphDrawing, LayoutLimits, LayoutPort, LayoutReply, Refusal } from '@thoughtknot/core';

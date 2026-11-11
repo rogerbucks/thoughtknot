@@ -1,10 +1,11 @@
 // The instruction-count benchmark of each host's cold start (editor spec §41, speed_budgets). It takes a note of 50
 // things, from a process that has drawn nothing, to its first drawing, one case for each host.
 // - The Obsidian plugin's start: the core's layout runner, the engine started in its worker's port, and the note read
-//   and drawn. The port is served in this process as draw-fifty.mjs serves it. So no second thread, with its own start
-//   and its own timing, is in the count.
+//   and drawn. Our own engine draws it, as the plugin's View does by default (layout_own_engine). The port is served
+//   in this process as draw-fifty.mjs serves it. So no second thread, with its own start and its own timing, is in the
+//   count.
 // - The Claude Code pane's start: its view of the note (graph-view.ts) loaded and run. The core's engine is laid out
-//   in this process as the pane's Graphviz process does it (bin/render-process.ts), less Node starting that process.
+//   in this process as the pane's layout process does it (bin/render-process.ts), less Node starting that process.
 // The engine and each host's own code are loaded in the case. What every benchmark shares is the setup, counted alone
 // and taken off. Run by scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';
@@ -28,7 +29,9 @@ async function obsidian({ note }) {
   const clock = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
   const runner = new LayoutRunner({ worker: port, page: port, clock, limits });
   try {
-    return drawn(await runner.draw(readNote([note]).graphs.get('g')), 'the Obsidian plugin');
+    // drawn as the plugin draws by default: by our own engine, a quick first picture and then the settled one
+    const drawing = { ...readNote([note]).graphs.get('g'), engine: 'own', live: true };
+    return drawn(await runner.draw(drawing), 'the Obsidian plugin');
   } finally {
     runner.close();
   }
