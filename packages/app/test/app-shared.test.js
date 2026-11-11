@@ -178,3 +178,30 @@ test('the apps reach each other over a transport the person brings', async () =>
   await a.stop();
   await b.stop();
 });
+
+// proves: board_access
+test('an identity system the person brings names them at a board, and only narrows what they may do', async () => {
+  const { ka, kb, start } = await owners();
+  const asked = [];
+  const directory = {
+    who: async (device) => (asked.push(device), { id: `staff-${device.slice(-6)}`, name: 'Ada' }),
+    most: async () => 'view',
+  };
+  const a = await start(ka);
+  const b = await start(kb, { identity: directory });
+  await b.layer(memoryStorage({ [NOTE]: TEXT })).read(NOTE);
+  const seat = b.seat(NOTE, 'Plan');
+  const me = seat.peers()[0];
+  assert.equal(me.name, 'Ada');
+  assert.match(me.id, /^staff-/);
+  assert.ok(asked.length > 0 && asked.every((d) => /^[0-9a-f]+$/.test(d)), 'it was given the public key alone');
+  assert.ok(await seat.change({ kind: 'move', id: 'w', x: 1, y: 1 }), 'invited to edit, but the directory says view');
+  await a.stop();
+  await b.stop();
+});
+
+// proves: board_access
+test('an identity system that cannot name the person stops sharing at the start', async () => {
+  const { ka, start } = await owners();
+  await assert.rejects(start(ka, { identity: { who: async () => ({ id: '', name: '' }) } }), /identity system/);
+});

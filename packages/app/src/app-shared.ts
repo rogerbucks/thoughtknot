@@ -3,7 +3,7 @@
 // shared over the mesh commands, sealed. A write to a note is sent to the other device. A board in a note gets a seat,
 // so the people there edit it together. With no vault, keeper or link, nothing here runs and the window stays as it
 // was. `invoke` is handed in, so nothing here imports Tauri and the tests hand in their own.
-import type { StorageLayer } from '@thoughtknot/core';
+import { identitySeat, type StorageLayer, type SyncIdentity } from '@thoughtknot/core';
 import {
   acceptedSuite,
   KeptStore,
@@ -29,11 +29,13 @@ export interface Transport {
 
 /**
  * The parts sharing runs on, each one a system the person may bring instead (editor spec ES§40, swap_any_part). Any
- * part left out is today's. A cipher suite is accepted only when it passes its contract, at every start.
+ * part left out is today's. A cipher suite is accepted only when it passes its contract, at every start. An identity
+ * system says who the person is, and is given the device's public key alone. Its role only narrows the invitation.
  */
 export interface Recipe {
   suite?: CipherSuite;
   transport?: Transport;
+  identity?: SyncIdentity;
 }
 
 /** What the window hands in. The keeper and the shelves are the other two parts a person may swap. */
@@ -70,6 +72,11 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
   const trusted = sharing.trusted.map((k) => fromHex(k)).filter((k): k is Uint8Array => k !== null);
   const store = new KeptStore(o.shelves);
   const device = sharing.publicKey;
+  const invited = sharing.joined?.as ?? 'edit';
+  // with no identity system, the person is known by their device's key, as before
+  const { who, role } = o.recipe?.identity
+    ? await identitySeat(o.recipe.identity, device, invited)
+    : { who: { id: device.slice(0, 16), name: device.slice(0, 8) }, role: invited };
   const notes = syncedRemote(store, vault, device, o.invoke);
   const link = new MeshLink(
     keys,
@@ -96,7 +103,7 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
   };
   const shared = sharedNotesLayer(notes, {
     shared: () => true,
-    author: device.slice(0, 8),
+    author: who.name,
     exchange: () => link.exchange(),
   });
   arrived.add(() => void shared.arrived());
@@ -105,7 +112,6 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
   const serving = listener && link.serve(() => listener.next());
 
   const seats = new Map<string, Together>();
-  const role = sharing.joined?.as ?? 'edit';
   return {
     layer: shared.layer,
     seat(note, board) {
@@ -117,14 +123,7 @@ export async function startShared(o: SharedOptions): Promise<Shared | undefined>
       } catch {
         return undefined;
       }
-      const made = sharedBoard(
-        notes,
-        note,
-        board,
-        { id: device.slice(0, 16), name: device.slice(0, 8) },
-        role,
-        together,
-      );
+      const made = sharedBoard(notes, note, board, who, role, together);
       seats.set(key, made);
       return made;
     },

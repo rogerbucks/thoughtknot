@@ -192,6 +192,8 @@ export const VALUES_LATE = [
   'storageBackendContract',
   'syncStoreBackendContract',
   'transportBackendContract',
+  'identityBackendContract',
+  'identitySeat',
   'storageContract',
   'storedGraphs',
   'storedStyle',

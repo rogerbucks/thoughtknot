@@ -1466,6 +1466,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     `openSyncStore`. It sees only sealed bytes, and it runs in the host, never in a worker.
   - Its `transport` adds a way between devices (`TransportBackend`), opened by `openTransport`. It carries sealed
     messages only, and runs in the host, never in a worker.
+  - Its `identity` adds a system that says who a person is (`IdentityBackend`), opened by `openIdentity`. It is given
+    a device's public key alone. The role it gives only narrows an invitation (`identitySeat`). It runs in the host.
   - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
   - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
     and the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
@@ -1539,6 +1541,7 @@ and is handed the port between them, as for layouts:
   - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
   - `syncStoreBackendContract`: the record store checks: bytes back as they were, in order, counts and a tail.
   - `transportBackendContract`: the transport checks: whole messages in order both ways, and a close told to the other end.
+  - `identityBackendContract`: the identity checks: a person for each device, the same each time, and a board role or none.
   - `commandContract`: a command's id, its title on one line, and that it can be run.
   - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
     step is tried on `SAMPLE_GRAPH` and must give the same graph each time.
