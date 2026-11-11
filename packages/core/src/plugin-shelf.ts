@@ -9,8 +9,8 @@ export interface Shelf<T> {
   key: keyof T;
 }
 
-export /** An empty shelf, its items named by `key`. */
-const shelf = <T>(key: keyof T): Shelf<T> => ({ items: [], owner: new Map(), key });
+/** An empty shelf, its items named by `key`. */
+export const shelf = <T>(key: keyof T): Shelf<T> => ({ items: [], owner: new Map(), key });
 /** The name `t` is kept under on `s`. */
 export const nameOf = <T>(s: Shelf<T>, t: T) => String(t[s.key]);
 /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
