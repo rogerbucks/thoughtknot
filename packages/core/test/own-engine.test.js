@@ -295,7 +295,10 @@ describe('a graph drawn by our own engine', () => {
     assert.equal(state.folded(tree).engine, 'own', 'a graph starts laid out by our engine');
     assert.ok(directions(state.folded(tree)).every((d) => d.own));
     for (const routing of ['curved', 'straight', 'right-angled'])
-      assert.ok(directions({ ...tree, engine: 'own', routing }).every((d) => d.own), routing);
+      assert.ok(
+        directions({ ...tree, engine: 'own', routing }).every((d) => d.own),
+        routing,
+      );
   });
 });
 
