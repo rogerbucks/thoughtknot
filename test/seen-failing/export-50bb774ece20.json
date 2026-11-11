@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/export.test.js",
+  "test": "nothing to export, and an engine that fails > when the layout cannot lay the drawing out, the failure is raised, not swallowed or drawn as a blank",
+  "seen_failing_first": false,
+  "evidence": "Rewritten from the engine to the host's layout: our own engine never fails as Graphviz could, and the export path already raised a failing layout"
+}

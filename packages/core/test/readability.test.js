@@ -21,6 +21,7 @@ import { ViewState, startingSwitches } from '../src/view-switches.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
 import { directions } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
+import { loadGraphviz } from '../src/graphviz-engine.ts';
 
 /** A shape of things by key and links `[from, to]`. */
 const shapeOf = (keys, links = []) => ({
@@ -424,7 +425,7 @@ describe('the readability scores', () => {
   });
 
   test('a real note drawn by our engine reads at least as well as by Graphviz', async () => {
-    const engine = await loadEngine();
+    const engine = await loadGraphviz();
     const text = readFileSync(new URL('../../../requirements/graph-spec.gql', import.meta.url), 'utf8');
     const note = readNote([text]);
     const style = readStyle([text], 'requirements', note);
@@ -441,7 +442,7 @@ describe('the readability scores', () => {
       // with each thing's kind, as the app lays it out: a big flow of many kinds keeps its rows
       const laid = own
         ? ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot), {}, kindsIn(d.dot))
-        : directLinks(engine.marks(d.dot));
+        : directLinks(engine.marks(d.source ?? d.dot));
       return readability(laid, d.rankdir === 'TB' ? 'TB' : 'LR', kindOf);
     };
     const gv = scored(false),

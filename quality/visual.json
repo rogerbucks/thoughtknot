@@ -231,15 +231,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "dbb5af24caef2755ed4a7da43aa2564812f5ba1074a08bd9c043ac5d8edcb0bf",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "1d2e344afd89346b1fb0964fdf7e3dafe6fcf0db83f5a61f44058e90d778750a",
+      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "72e9520a947d4f827e092cf7b1e90209617070870891fd673441105057721ae1",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "3c13c5a10cf83251cf8737276bafeec810b8a7c0488693d1e0c029a3ad3e1b93",
+      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
@@ -339,15 +339,15 @@
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "6200c96a80ec5965a34a76b553cbf312151e85abca7b15333fc6aebcd7fe0c3b",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "adfa0087ce12d63f78b933727ff361c09e66ee27679c9b27bdfc3f6ddebe310a",
+      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "ac3886cef579e7d3e1672ed1d745dcab3a47cbfdab3c67659836a86eda9a9351",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "c403b86b33e8e789c2a54b8be72fc34f01a118a557ae658bd80b6588614246cf",
+      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",

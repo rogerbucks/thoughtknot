@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
+import { loadGraphviz } from '../src/graphviz-engine.ts';
 import { drawingSource, layoutSource } from '../src/layout.ts';
 import { draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
@@ -113,7 +114,7 @@ describe('each nudge', () => {
       "(n1:Nudge {word: 'beside', thing: 'home', other: 'lake'}),",
       "(n2:Nudge {word: 'group', thing: 'cafe', group: 'Inside'})",
     );
-    const engine = await loadEngine();
+    const engine = await loadGraphviz();
     const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, style.nudges, keys));
     const y = (key) => {
       const g = new RegExp(`<title>${key}</title>[\\s\\S]*?<text[^>]*\\sy="([-\\d.]+)"`).exec(svg);
@@ -138,7 +139,7 @@ describe('each nudge', () => {
     const reading = readNote(texts);
     const { style } = readStyle(texts, 'team', reading);
     const drawing = reading.graphs.get('team');
-    const engine = await loadEngine();
+    const engine = await loadGraphviz();
     const svg = engine.render(
       nudgedSource(
         layoutSource(drawing, 'TB').source,
@@ -153,7 +154,7 @@ describe('each nudge', () => {
   test('a group label with a backslash or a quote is drawn as written, and never stops the drawing', async () => {
     const { drawing, keys } = styled();
     const nudges = [{ word: 'group', thing: 'cafe', group: 'C:\\ "inside"\\n', at: { block: 1, line: 2, id: 'g' } }];
-    const engine = await loadEngine();
+    const engine = await loadGraphviz();
     const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, nudges, keys));
     assert.match(svg, /<title>cluster_1<\/title>/);
     assert.match(svg, /C:\\ &quot;inside&quot;\\n/);

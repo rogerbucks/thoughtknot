@@ -160,7 +160,7 @@ export function counted(drawing: GraphDrawing, limits: LayoutLimits): Refusal | 
 
 /** Over the source limit, measured exactly on the drawing instructions written for each direction. */
 export function measured(laid: Direction[], sourceBytes: number): Refusal | null {
-  const count = Math.max(0, ...laid.map((d) => bytesOf(d.dot)));
+  const count = Math.max(0, ...laid.map((d) => bytesOf(d.source ?? d.dot)));
   return count > sourceBytes ? { reason: 'too-large', limit: 'source', count, most: sourceBytes } : null;
 }
 

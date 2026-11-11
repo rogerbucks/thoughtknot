@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_graph_svg_styled.py",
+  "test": "Styled.test_arrowheads_are_hidden_and_shown_as_the_core_hides_and_shows_them",
+  "seen_failing_first": false,
+  "evidence": "Reads the layout source our engine is given: it was broken by the change before it (af875d6), which the replay counts as the code before"
+}

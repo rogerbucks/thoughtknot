@@ -3,17 +3,17 @@
 // between the rows of boxes Graphviz laid out, and no box moves.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadEngine } from '../src/engine.ts';
+import { loadGraphviz } from '../src/graphviz-engine.ts';
 import { directLinks } from '../src/direct-links.ts';
 import { routedSource } from '../src/fold-source.ts';
 import { layoutSvg } from '../src/graphviz-svg.ts';
 import { readability } from '../src/layouts/readability.ts';
 import { inRows, rowsOf, rowsRoute } from '../src/layouts/rows-route.ts';
-import { directions, svgOf } from '../src/render.ts';
+import { directions, quickSource, svgOf } from '../src/render.ts';
 import { readNote } from '../src/drawing.ts';
 import { graphOf } from '../../../scripts/benchmarks/draw-fifty.mjs';
 
-const engine = await loadEngine();
+const engine = await loadGraphviz();
 
 /** A box `key` with its middle at (`x`, `y`), 40 by 20. */
 const box = (key, x, y) => ({ key, x, y, hw: 20, hh: 10 });
@@ -21,7 +21,9 @@ const box = (key, x, y) => ({ key, x, y, hw: 20, hh: 10 });
 /** The layout source, laid out straight, and its marks, of the benchmark graph of `count` things, the `way` given. */
 function laidOut(count, way = 'LR') {
   const drawing = readNote([graphOf(count, Math.round(count * 1.4))]).graphs.get('g');
-  const dot = directions({ ...drawing, direction: way })[0].dot;
+  // as Graphviz was handed it, past 300 things with the quick settings (large_drawn_quick)
+  const { source } = directions({ ...drawing, direction: way })[0];
+  const dot = count > 300 ? quickSource(source) : source;
   return { dot, laid: engine.marks(routedSource(dot, 'direct')) };
 }
 

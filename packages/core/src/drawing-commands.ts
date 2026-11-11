@@ -38,9 +38,10 @@ export function routeEvent(event: DrawingEvent, engine: CommandSink): GraphComma
   return command;
 }
 
-// What an SVG may carry: the drawing's own marks and the key that names each box. Anything more would be data, or code
-// that decides. Comments and CDATA are read past, so a word inside one is not taken for markup.
-const DATA_ATTRIBUTE = /\sdata-(?!key=|kind=)[\w-]+=/g;
+// What an SVG may carry: the drawing's own marks and the key that names each box. It may also carry how our engine
+// laid it out: what it picked, and where each thing landed (layout_own_engine, things_stay_put). Anything more would be
+// data, or code that decides. Comments and CDATA are read past, so a word inside one is not taken for markup.
+const DATA_ATTRIBUTE = /\sdata-(?!key=|kind=|layout-pick=|layout-spots=)[\w-]+=/g;
 const HOLDS = [
   ['metadata', /<metadata[\s/>]/i],
   ['script', /<script[\s/>]/i],

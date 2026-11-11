@@ -18,7 +18,7 @@ import {
   staleness,
   watch,
 } from '../scripts/engine-version.mjs';
-import { loadEngine } from '../packages/core/src/engine.ts';
+import { loadGraphviz } from '../packages/core/src/graphviz-engine.ts';
 import { exists, read, readJSON, ROOT, walk, block, jobs, runCommands, stripComment } from './repository/repo.js';
 
 const GRAPHVIZ_VERSION = /^\d+\.\d+\.\d+$/;
@@ -38,7 +38,7 @@ describe('reading the version from the engine', () => {
   test('it is Graphviz’s own, read from the engine that is bundled, and the notices name it', async () => {
     const { graphviz, wrapper } = await engineVersion();
     assert.match(graphviz, GRAPHVIZ_VERSION);
-    assert.equal((await loadEngine()).version, graphviz, 'the engine the plugin starts says the same');
+    assert.equal((await loadGraphviz()).version, graphviz, 'the engine says the same');
     assert.match(notices(), new RegExp(`Graphviz ${graphviz.replaceAll('.', '\\.')} — `));
     assert.match(notices(), new RegExp(`@viz-js/viz@${wrapper.replaceAll('.', '\\.')}`));
   });

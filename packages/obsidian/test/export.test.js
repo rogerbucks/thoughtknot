@@ -334,9 +334,9 @@ describe('the data', () => {
 });
 
 describe('a PNG too large for one sharp image', () => {
-  // The trip's image is about 711 by 206. At 250,000 pixels, that is three pages of about 237 by 206.
+  // The trip's image is about 659 by 262. At 300,000 pixels, that is three pages of about 220 by 262.
   // Each is over the least a page may be once the row is evened out.
-  const LIMIT = 250_000;
+  const LIMIT = 300_000;
   const two = (n) => String(n).padStart(2, '0');
   const today = () => {
     const d = new Date();

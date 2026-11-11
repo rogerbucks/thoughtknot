@@ -58,7 +58,7 @@ function drawn(view, ...lines) {
 /** The lines of a source that draw a link, in the order the links are drawn. */
 const linkLines = (dot) => dot.split('\n').filter((l) => /^ {2}"[^"]*" -> "[^"]*" \[label=/.test(l));
 /** The source of each direction the drawing is laid out in. */
-const sources = (drawing) => directions(drawing).map((d) => d.dot);
+const sources = (drawing) => directions(drawing).map((d) => d.source ?? d.dot);
 /** For each link of a source, how it moves: its flow class, or null when it is still. */
 const moving = (dot) =>
   linkLines(dot).map((l) => /class="thoughtknot-flow thoughtknot-flow-(\w+)/.exec(l)?.[1] ?? null);

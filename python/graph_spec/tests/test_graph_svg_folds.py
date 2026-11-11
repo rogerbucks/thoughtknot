@@ -71,7 +71,7 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view, switches, opened]) 
     for (const hub of opened?.hubs ?? []) state.open({ hub });
     for (const group of opened?.groups ?? []) state.open({ group });
     const laid = directions(switches ? state.folded(styled) : styled);
-    drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+    drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.source ?? d.dot]));
   }
   return { styles, drawn };
 })));

@@ -14,8 +14,8 @@ import { readNote } from '../../core/src/drawing.ts';
 import { draw } from '../../core/src/render.ts';
 import { loadEngine } from '../../core/src/engine.ts';
 
-// These tests walk, pan and zoom to things at the places Graphviz gives them, so they draw by Graphviz
-const GRAPHVIZ = { data: { settings: { ownLayout: 'off' } } };
+// These tests walk, pan and zoom to things where our own engine puts them. Zoomed in twice, a box still fits the view
+const DEFAULTS = {};
 
 before(() => build());
 
@@ -47,7 +47,7 @@ const alone = (b) => !b.hasClass('thoughtknot-find-explore'); // a thing found, 
 describe('show only a thing and its neighbours', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(ISLAND))).el;
     tap(el, thing(el, 'large'));
   });
@@ -150,7 +150,7 @@ describe('show only a thing and its neighbours', () => {
 describe('the legend', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -215,7 +215,7 @@ describe('the legend', () => {
 describe('the shortest path between two things', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(ISLAND))).el;
   });
   after(() => env.uninstall());
@@ -273,7 +273,7 @@ describe('the shortest path between two things', () => {
     tap(el, thing(el, 'tablet'), 10);
     offer().click();
     el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'ArrowUp', target: thing(el, 'tablet') });
-    assert.ok(thing(el, 'eyes').hasClass('is-selected'), 'the selection walked on to a neighbour');
+    assert.ok(thing(el, 'q').hasClass('is-selected'), 'the selection walked on to a neighbour');
     assert.match(said(el), /Choose a second thing to find the shortest path from Tablet\./);
     assert.doesNotMatch(said(el), /The shortest path from/);
     // tapping a second thing still answers it
@@ -285,7 +285,7 @@ describe('the shortest path between two things', () => {
 describe('finding a thing', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(ISLAND))).el;
   });
   after(() => env.uninstall());
@@ -382,12 +382,12 @@ describe('finding a thing', () => {
 describe('finding a thing brings it into view', () => {
   let env, el, areas, ids;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(GRAPH))).el;
     const drawing = readNote([GRAPH]).graphs.get('reader');
     areas = hitAreas(draw(drawing, await loadEngine()).svg);
     ids = new Map(drawing.boxes.map((b, i) => [b.key, `node${i + 1}`]));
-    for (let n = 0; n < 8; n++) labelled(el, 'Zoom in').click();
+    for (let n = 0; n < 2; n++) labelled(el, 'Zoom in').click();
   });
   after(() => env.uninstall());
 
@@ -420,7 +420,7 @@ describe('finding a thing brings it into view', () => {
 describe('walking the links by arrow key', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -530,7 +530,7 @@ describe('labels by zoom, folded hubs and groups, merged links and routing', () 
 describe('only the drawing changes, never the note', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
   });
   after(() => env.uninstall());
 

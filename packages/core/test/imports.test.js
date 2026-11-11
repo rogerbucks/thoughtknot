@@ -55,12 +55,14 @@ for (const f of displayFiles()) {
   });
 }
 
-// The Graphviz engine is WebAssembly, which some hosts lack (a Claude Code mod has none). Only engine.ts starts it, and
-// within the core only the entry hands it on. So every other module of the core runs where WebAssembly cannot. A host's
-// own code (the Obsidian layout worker, the Claude Code spike's Graphviz process) imports it as it needs.
-test('only engine.ts imports the Graphviz engine', () => {
+// The Graphviz engine is WebAssembly, which some hosts lack (a Claude Code mod has none). No host draws with it any
+// more: our own engine lays out every drawing (layout_own_engine). Only graphviz-engine.ts starts it, for the tests,
+// and nothing in the core imports that.
+test('only graphviz-engine.ts imports the Graphviz engine, and nothing in the core imports it', () => {
   const importers = sources.filter((f) => imports(readFileSync(new URL(f, dir), 'utf8')).includes('@viz-js/viz'));
-  assert.deepEqual(importers, ['engine.ts']);
+  assert.deepEqual(importers, ['graphviz-engine.ts']);
+  const users = sources.filter((f) => imports(readFileSync(new URL(f, dir), 'utf8')).includes('./graphviz-engine.ts'));
+  assert.deepEqual(users, []);
 });
 
 test('within the core, only the entry imports engine.ts', () => {

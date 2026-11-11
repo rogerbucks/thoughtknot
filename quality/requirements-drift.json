@@ -60,7 +60,6 @@
     "packages/claude-code/test/gate-guard.test.js",
     "packages/claude-code/test/graph-view.test.js",
     "packages/claude-code/test/graphviz-process.test.js",
-    "packages/core/test/engine.test.js",
     "packages/core/test/index.test.js",
     "packages/core/test/proposals-changes.test.js",
     "packages/core/test/proposals-text.test.js",
