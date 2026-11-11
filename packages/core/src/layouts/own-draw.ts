@@ -105,6 +105,14 @@ export function placedIn(dot: string): Map<string, [number, number]> {
 /** The line of a layout source that says the cheaper step it is laid out by, after a layout that was slow. */
 const STEP_LINE = /^\s*\/\/ layout step (\w+)$/m;
 
+/** How a person chose to draw the links: straight, or at right angles. */
+export type Lines = 'straight' | 'right-angled';
+/** The routing line the layout source carries (fold-source.ts routedSource): straight, or at right angles. */
+export function linesIn(dot: string): Lines | undefined {
+  const said = /graph \[splines=(line|ortho)\]/.exec(dot)?.[1];
+  return said === 'line' ? 'straight' : said === 'ortho' ? 'right-angled' : undefined;
+}
+
 /** The cheaper step `ownSource` wrote into the source `dot`, after a layout that ran out of time (layout_never_text). */
 export function stepIn(dot: string): LayoutStep | undefined {
   const step = STEP_LINE.exec(dot)?.[1];
@@ -260,7 +268,8 @@ function groupMarks(laid: LaidMarks, boxes: readonly GroupBox[], groups: readonl
  * It gives back what the engine picked, too, to be said where the View menu names the layout (layout_pick_said).
  * With `lanes`, kinds that link in order each get a lane (layout_kind_lanes). A `step` is said with it, and a
  * step of rows or a grid lays it out that way (layout_never_text). `placed` is each thing's spot from a plug-in's
- * layout, where the options choose one. Where it gave too few, the pick says the layout was missed.
+ * layout, where the options choose one. Where it gave too few, the pick says the layout was missed. `lines` draws
+ * each link straight or at right angles, as the person chose (untangle_routing).
  */
 export function ownLaid(
   laid: LaidMarks,
@@ -272,6 +281,7 @@ export function ownLaid(
   step?: LayoutStep,
   placed?: ReadonlyMap<string, [number, number]>,
   kept?: ReadonlyMap<string, [number, number]>,
+  lines?: Lines,
 ): { marks: LaidMarks; shown: PickShown; spots: ReadonlyMap<string, [number, number]> } {
   const asked = rankdir === 'TB' || rankdir === 'BT' ? 'TB' : 'LR';
   // the way the rows went: an overview's may turn (own-engine.ts)
@@ -285,8 +295,12 @@ export function ownLaid(
   const fresh = directLinks(
     groupMarks(fitted(laid, drawn.spots, drawn.boxes), drawn.boxes, groups),
     drawn.spots,
-    drawn.via,
+    lines ? undefined : drawn.via,
     way,
+    false,
+    undefined,
+    new Set(),
+    lines,
   );
   // a drawing the fresh layout draws just as the person saw it is that drawing, links and all
   const keep = kept?.size && !sameSpots(drawnAt(fresh), kept) ? kept : undefined;
@@ -301,6 +315,7 @@ export function ownLaid(
         false,
         undefined,
         new Set(keep.keys()),
+        lines,
       )
     : fresh;
   return {

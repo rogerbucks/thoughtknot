@@ -27,4 +27,14 @@ describe('roomy', () => {
     ]);
     assert.equal(roomy(spots, sizes(['a', 'b']), 10), spots);
   });
+
+  test('two linked boxes keep room for the words on their link', () => {
+    const spots = new Map([
+      ['a', [0, 0]],
+      ['b', [120, 0]],
+    ]);
+    assert.equal(roomy(spots, sizes(['a', 'b']), 10), spots, 'apart enough with no words between');
+    const out = roomy(spots, sizes(['a', 'b']), 10, { links: [{ from: 'a', to: 'b' }], gap: 60 });
+    assert.ok(out.get('b')[0] - out.get('a')[0] >= 160, 'room for words 60 wide between the boxes');
+  });
 });

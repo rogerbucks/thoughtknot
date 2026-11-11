@@ -289,12 +289,16 @@ describe('a graph drawn by our own engine', () => {
   });
 
   // proves: layout_own_default
-  test('is the default, and Graphviz stays for the routed curves a person chooses', () => {
+  test('is the default, and draws the links of every routing a person chooses too', () => {
     assert.equal(DEFAULT_SETTINGS.ownLayout, 'on');
     const state = new ViewState(startingSwitches(DEFAULT_SETTINGS));
     assert.equal(state.folded(tree).engine, 'own', 'a graph starts laid out by our engine');
     assert.ok(directions(state.folded(tree)).every((d) => d.own));
-    assert.equal(directions({ ...tree, engine: 'own', routing: 'curved' })[0].own, undefined, 'curves: Graphviz');
+    for (const routing of ['curved', 'straight', 'right-angled'])
+      assert.ok(
+        directions({ ...tree, engine: 'own', routing }).every((d) => d.own),
+        routing,
+      );
   });
 });
 

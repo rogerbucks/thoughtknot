@@ -6,6 +6,7 @@ import type { NoteStorage } from './note-storage.ts';
 import type { Fetched } from './sources.ts';
 import type { FilesOffer } from './plugin-files.ts';
 import type { ExtensionPoint } from './plugins.ts';
+import type { BoardRole } from './board-access.ts';
 
 const WORD = /^[a-z][a-z0-9-]*$/;
 
@@ -85,6 +86,33 @@ export interface TransportBackend {
   testAddress?: string;
   /** The transport itself. */
   open: () => SyncTransport;
+}
+
+/** Who a person is among the people sharing: an id no one else has, and the name the others see. */
+export interface SharingPerson {
+  id: string;
+  name: string;
+}
+
+/**
+ * Who uses a device, as a system the person already has says: a directory, a sign-in or a team list. It is given only a
+ * device's public key, in hexadecimal, never a key that seals or a note's text.
+ */
+export interface SyncIdentity {
+  /** The person using the device whose public key is `device`: the same person each time for the same device. */
+  who(device: string): Promise<SharingPerson>;
+  /** The most that person may do at a shared board, as the system's groups say. It only ever narrows the invitation. */
+  most?(device: string): Promise<BoardRole | null>;
+}
+
+/** A system that says who a person is, which a plug-in adds, such as a company directory. */
+export interface IdentityBackend {
+  /** The word it is chosen by, lower case: `directory`. */
+  name: string;
+  /** What it is called where it is offered: `Company directory`. */
+  title: string;
+  /** The identity system itself. */
+  open: () => SyncIdentity;
 }
 
 /** A command a plug-in adds, which a host offers in its command list and menus. */
@@ -206,6 +234,15 @@ export function transportProblem(b: TransportBackend, _plugin: string, taken: Ma
   if (taken.has(b.name)) return `the transport "${b.name}" is already added by ${taken.get(b.name)}`;
   if (!b.title.trim()) return `the transport "${b.name}" has no title`;
   if (typeof b.open !== 'function') return `the transport "${b.name}" cannot be opened`;
+  return null;
+}
+
+/** Why an identity system a plug-in adds is refused, or null when it is accepted. */
+export function identityProblem(b: IdentityBackend, _plugin: string, taken: Map<string, string>): string | null {
+  if (!WORD.test(b.name)) return `the identity system "${b.name}" is not named by a lower-case word`;
+  if (taken.has(b.name)) return `the identity system "${b.name}" is already added by ${taken.get(b.name)}`;
+  if (!b.title.trim()) return `the identity system "${b.name}" has no title`;
+  if (typeof b.open !== 'function') return `the identity system "${b.name}" cannot be opened`;
   return null;
 }
 

@@ -10,7 +10,7 @@ const PLACED_TYPES = new Set(['timeline', 'radial']);
 /** Each thing's spot in `d` as its diagram type places it on the stage (render-laid.ts); none for another type. */
 export function typePlaces(d: GraphDrawing): Record<string, [number, number]> | undefined {
   const type = d.diagram?.type;
-  if (!type || !PLACED_TYPES.has(type) || !isLaid(type) || (d.routing && d.routing !== 'direct')) return undefined;
+  if (!type || !PLACED_TYPES.has(type) || !isLaid(type)) return undefined;
   const places = placesOf(type, shapeOf(written(d)), d.diagram);
   return Object.fromEntries([...places].map(([k, p]) => [k, [p.x, p.y] as [number, number]]));
 }
