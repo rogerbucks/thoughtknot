@@ -1,4 +1,4 @@
-// A table of a SQLite database after FROM (editor spec §63 connector_files_to_gql, connector_mapping_written; §67
+// A table of a SQLite database after FROM (ES§63 connector_files_to_gql, connector_mapping_written; ES§67
 // format_untrusted_files): `· FROM Data/shop.sqlite#customers`. It is read in plain JavaScript and broken into
 // statements by the mapping written beside it, as a CSV file is. The files here are made by sql.js in the test.
 import { test, describe, before } from 'node:test';

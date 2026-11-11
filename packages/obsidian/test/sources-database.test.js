@@ -1,4 +1,4 @@
-// A block drawn from a table of a SQLite database in the plug-in (editor spec §63, connector_files_to_gql,
+// A block drawn from a table of a SQLite database in the plug-in (ES§63, connector_files_to_gql,
 // connector_mapping_written): `· FROM Data/shop.sqlite#customers`. With no mapping yet, the card says so and shows
 // the one proposed. Once it is saved, each row is a thing. The file is read on the device and never written.
 import { test, describe, before } from 'node:test';

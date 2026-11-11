@@ -1,5 +1,5 @@
-// The connector for a table of a SQLite database: `· FROM Data/shop.sqlite#orders` (editor spec §63
-// connector_files_to_gql, connector_mapping_written; §67 format_untrusted_files). It meets the one contract.
+// The connector for a table of a SQLite database: `· FROM Data/shop.sqlite#orders` (ES§63
+// connector_files_to_gql, connector_mapping_written; ES§67 format_untrusted_files). It meets the one contract.
 // - Read in plain JavaScript (sqlite-read.ts): no engine, no WebAssembly, no SQL. Nothing in the file can run or be
 //   written.
 // - The table is read as a CSV file's rows are, by the mapping written beside the database, `shop.orders.mapping.gql`.
