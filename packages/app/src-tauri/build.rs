@@ -27,6 +27,8 @@ fn main() {
         "crdt_place",
         "crdt_history",
         "machine_found",
+        "parts_write",
+        "parts_read",
     ];
     tauri_build::try_build(
         tauri_build::Attributes::new()

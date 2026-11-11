@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window may call the app's ten folder commands, the gh call (checked against its list in gh.rs), the six mesh commands (private addresses only, mesh.rs), the eight note commands (crdt.rs), the one command that looks for a mesh VPN address (found.rs) and Tauri's core events, nothing else.",
+  "description": "The main window may call the app's ten folder commands, the gh call (checked against its list in gh.rs), the six mesh commands (private addresses only, mesh.rs), the eight note commands (crdt.rs), the one command that looks for a mesh VPN address (found.rs), the two commands of the store of notes read in parts (parts.rs) and Tauri's core events, nothing else.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -30,6 +30,8 @@
     "allow-crdt-anchor",
     "allow-crdt-place",
     "allow-crdt-history",
-    "allow-machine-found"
+    "allow-machine-found",
+    "allow-parts-write",
+    "allow-parts-read"
   ]
 }

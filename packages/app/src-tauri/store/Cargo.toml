@@ -1,0 +1,13 @@
+[package]
+name = "thoughtknot-store"
+version = "0.9.0"
+description = "ThoughtKnot's store of huge notes read in parts, kept in a SQLite file on the device."
+license = "MPL-2.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# SQLite built from its own source into the app, so every system has the same one; no server, no WebAssembly
+rusqlite = { version = "=0.40.2", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

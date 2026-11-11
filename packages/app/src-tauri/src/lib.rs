@@ -12,6 +12,8 @@
 // - What the machine has for sharing (found.rs): the one command only looks, for a mesh VPN address, and changes nothing.
 // - The notes as Automerge texts (crdt.rs): open, edit, merge, ask the history and who made each change, anchor. They are kept in Rust because the
 //   window may not run WebAssembly. Bytes cross as hexadecimal text, and no record leaves unsealed.
+// - The rows of a note too big to read at once (parts.rs): kept in a SQLite file in the app's own data folder, so the
+//   window holds only what is on screen. Two commands: one writes a step of a note's rows, one reads a page of them.
 // - Moving the notes to another folder (spec §55, storage_user_choice): the person picks a second folder, the target.
 //   The folder commands reach it only when asked to (`target`). Once every note is copied and checked, the two swap.
 //   So the old folder is the target, and its copies are removed only when the person says so.
@@ -21,14 +23,15 @@ mod crdt;
 mod found;
 mod gh;
 mod mesh;
+mod parts;
 mod place;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use tauri::State;
 #[cfg(mobile)]
-use tauri::{Manager, Runtime};
+use tauri::Manager;
+use tauri::{Runtime, State};
 #[cfg(desktop)]
 use tauri_plugin_dialog::DialogExt;
 
@@ -404,6 +407,27 @@ async fn crdt_place(
     notes.place(&note, &anchor)
 }
 
+/// Writes one step of a note's rows to the store of notes read in parts: start, a page of things or links, the
+/// groups, the version last, or a drop.
+#[tauri::command]
+async fn parts_write<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    parts: State<'_, parts::Parts>,
+    op: thoughtknot_store::Write,
+) -> Result<(), String> {
+    parts.with(&app, |s| s.write(op))
+}
+
+/// Reads a page of rows from the store of notes read in parts, as the core's store contract names the read.
+#[tauri::command]
+async fn parts_read<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    parts: State<'_, parts::Parts>,
+    ask: thoughtknot_store::Ask,
+) -> Result<thoughtknot_store::Answer, String> {
+    parts.with(&app, |s| s.read(&ask))
+}
+
 /// The folder named as the first argument, such as `thoughtknot ~/Notes`, when it is one.
 #[cfg(desktop)]
 fn folder_named() -> Option<PathBuf> {
@@ -428,7 +452,8 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_keeper::init())
         .manage(Arc::new(mesh::Mesh::default()))
-        .manage(crdt::Notes::default());
+        .manage(crdt::Notes::default())
+        .manage(parts::Parts::default());
     #[cfg(desktop)]
     let app = app
         .plugin(tauri_plugin_dialog::init())
@@ -472,7 +497,9 @@ pub fn run() {
         crdt_anchor,
         crdt_place,
         crdt_history,
-        machine_found
+        machine_found,
+        parts_write,
+        parts_read
     ])
     .run(tauri::generate_context!())
     .expect("the app could not start");

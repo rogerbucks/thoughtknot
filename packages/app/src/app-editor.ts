@@ -1,6 +1,7 @@
 // Runs before the browser editor's page in the app's window (spec §41, standalone_app). It answers the page's
 // `/api/` calls from the picked folder (app-api.ts), so the page itself runs unchanged. It also adds a link back to
-// the list of notes, and on a computer the GitHub button, which sends the open note (app-github.ts).
+// the list of notes, and on a computer the GitHub button, which sends the open note (app-github.ts). A note too big to
+// read at once is kept in the app's file on disk (tauri-parts-store.ts).
 import { setLanguage, SOURCE_LANGUAGE, word } from '@thoughtknot/core';
 import type { NoteStorage, WriteOptions } from '@thoughtknot/core';
 import { appFetch } from './app-api.ts';
@@ -9,6 +10,7 @@ import { startShared, type Shared } from './app-shared.ts';
 import { indexedKeeper } from './app-share-keeper.ts';
 import { githubButton, onComputer, storeOf } from './app-github.ts';
 import { tauriSaveNew, tauriStorage, type Invoke } from './tauri-files.ts';
+import { orInMemory, tauriPartsStore } from './tauri-parts-store.ts';
 
 const tauri = (globalThis as { __TAURI__?: { core: { invoke: Invoke } } }).__TAURI__;
 
@@ -39,6 +41,11 @@ if (tauri) {
   // the page asks for a board's seat once it has read its note, which waited for sharing to start
   (window as Window & { thoughtknotSeat?: unknown }).thoughtknotSeat = (note: string, board: string) =>
     shared?.seat(note, board);
+  // a note too big to read at once keeps its rows in the app's file on disk, not in the window (scale_parts_on_disk)
+  (window as Window & { thoughtknotPartsStore?: unknown }).thoughtknotPartsStore = (place: string) =>
+    orInMemory(tauriPartsStore(tauri.core.invoke, place), (e) =>
+      console.warn('ThoughtKnot: the store on disk failed; this session keeps huge notes in memory', e),
+    );
   window.fetch = appFetch(
     { storage: sharedStorage(tauriStorage(tauri.core.invoke), ready), saveNew: tauriSaveNew(tauri.core.invoke) },
     window.fetch.bind(window),

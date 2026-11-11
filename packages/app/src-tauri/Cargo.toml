@@ -1,3 +1,7 @@
+[workspace]
+# the store is tested on its own, with no window: cargo test -p thoughtknot-store
+members = ["store"]
+
 [package]
 name = "thoughtknot-app"
 version = "0.9.0"
@@ -19,6 +23,8 @@ serde = { version = "1", features = ["derive"] }
 # the vault key in the phone's own secure store: this app's own plug-in, in keeper/
 tauri-plugin-keeper = { version = "=0.9.0", path = "keeper" }
 automerge = "0.12"
+# the rows of notes read in parts, in a SQLite file on the device: this app's own crate, in store/
+thoughtknot-store = { version = "=0.9.0", path = "store" }
 
 # the gh calls' list is tested on the cases the core reads too (src/gh.rs)
 [dev-dependencies]
