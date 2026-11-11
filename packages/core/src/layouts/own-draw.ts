@@ -134,10 +134,25 @@ export function kindsIn(dot: string): Map<string, string> {
   }
 }
 
-/** A quoted key in a source line, its escapes read. */
-const QUOTED = /"((?:[^"\\]|\\.)*)"/g;
-const unquoted = (line: string): string[] =>
-  [...line.matchAll(QUOTED)].map((m) => (m[1] ?? '').replace(/\\(.)/g, '$1'));
+/**
+ * Each quoted key in a source line, its escapes read. Read in one pass, never by a pattern: an unclosed quote then
+ * costs the line's length once, not its square (CodeQL js/polynomial-redos).
+ */
+function unquoted(line: string): string[] {
+  const keys: string[] = [];
+  let key: string | undefined;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i] as string;
+    if (key === undefined) {
+      if (c === '"') key = '';
+    } else if (c === '\\' && i + 1 < line.length) key += line[++i];
+    else if (c === '"') {
+      keys.push(key);
+      key = undefined;
+    } else key += c;
+  }
+  return keys;
+}
 
 /**
  * The nudges written into the source `dot` (style-source.ts, four_nudge_words): each beside line's things, and each

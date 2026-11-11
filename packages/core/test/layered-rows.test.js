@@ -4,6 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { nudgedRowsOf, rowsOf } from '../src/layouts/layered-rows.ts';
+import { nudgesIn } from '../src/layouts/own-draw.ts';
 
 const KEYS = ['home', 'park', 'cafe', 'lake'];
 const at = (k) => (KEYS.includes(k) ? KEYS.indexOf(k) : undefined);
@@ -39,4 +40,16 @@ describe('rows that keep the nudges (nudges_kept_in_rows)', () => {
     const back = nudgedRowsOf(4, chain(), at, { same: [], before: [['lake', 'home']] });
     assert.equal(new Set(back).size > 1, true);
   });
+
+  // proves: nudges_kept_in_rows
+  test(
+    'the nudges are read from the source, an unclosed quote at once (js/polynomial-redos)',
+    { timeout: 10_000 },
+    () => {
+      const dot = '  {rank=same; "a \\"b\\""; "c";}\n  "c" -> "d" [style=invis];\n';
+      assert.deepEqual(nudgesIn(dot), { same: [['a "b"', 'c']], before: [['c', 'd']] });
+      const slow = `  {rank=same; "${'\\"!'.repeat(200_000)};}\n`;
+      assert.deepEqual(nudgesIn(slow), { same: [[]], before: [] });
+    },
+  );
 });
