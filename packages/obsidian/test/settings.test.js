@@ -516,12 +516,10 @@ describe('formatting and drawing defaults', () => {
   });
 
   // proves: view_switch_hints
-  test('which engine lays graphs out is chosen here, as the View menu no longer offers it', async () => {
+  test('no engine is chosen here or in the View menu: our own is the only one', async () => {
     const env = await load();
     try {
-      choose(row(page(env), 'Lay out with ThoughtKnot'), 'off');
-      await until(() => env.state.data?.settings?.ownLayout === 'off');
-      assert.equal(env.state.data.settings.ownLayout, 'off', 'off lays them out with Graphviz');
+      assert.equal(row(page(env), 'Lay out with ThoughtKnot'), undefined);
     } finally {
       env.uninstall();
     }

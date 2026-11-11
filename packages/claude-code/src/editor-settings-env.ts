@@ -20,7 +20,6 @@ const SHOWN = [
   'foldHubs',
   'foldGroups',
   'mergeLinks',
-  'ownLayout',
   'kindLanes',
   'noteCallouts',
   'miniMap',

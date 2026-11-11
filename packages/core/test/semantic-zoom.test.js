@@ -61,7 +61,7 @@ describe('the rungs are drawn as their own pictures (projection_semantic_zoom)',
     assert.deepEqual(problems, []);
     return { style, drawing: styledDrawing(reading.graphs.get('town'), style, reading.world.town) };
   };
-  const off = { labels: true, hubs: false, groups: false, merge: false, engine: false, lanes: true };
+  const off = { labels: true, hubs: false, groups: false, merge: false, lanes: true };
 
   // proves: projection_semantic_zoom
   test('zoomed nearest, each thing shows every property it has, its name left to its text', () => {

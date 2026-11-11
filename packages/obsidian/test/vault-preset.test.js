@@ -26,7 +26,7 @@ const press = (env, name) => row(page(env), name).querySelector('button').click(
 describe('the vault’s preset file', () => {
   // proves: view_presets_scoped
   test('is followed by a card that has no preset of its own, and a graph’s own preset still wins', async () => {
-    const env = await load({ files: { [PLACE]: file('calm') }, data: { settings: { ownLayout: 'off' } } });
+    const env = await load({ files: { [PLACE]: file('calm') }, data: { settings: {} } });
     try {
       await until(() => !!env.state.files.get(PLACE));
       const plain = await show(env, fence(GRAPH));
@@ -60,7 +60,7 @@ describe('the vault’s preset file', () => {
   test('is ignored when it is not a preset file, so a card keeps the settings’ choice', async () => {
     const env = await load({
       files: { [PLACE]: '{"format": "something else"}' },
-      data: { settings: { ownLayout: 'off' } },
+      data: { settings: {} },
     });
     try {
       const plain = await show(env, fence(GRAPH));

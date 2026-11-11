@@ -352,7 +352,7 @@
     "packages/core/src/server-source-words.ts": 2,
     "packages/core/src/settings-aids.ts": 2,
     "packages/core/src/settings-switches.ts": 2,
-    "packages/core/src/settings.ts": 27,
+    "packages/core/src/settings.ts": 26,
     "packages/core/src/shortcut-source-words.ts": 1,
     "packages/core/src/sketch-proposals.ts": 1,
     "packages/core/src/sources.ts": 2,

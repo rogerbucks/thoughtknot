@@ -12,7 +12,7 @@ import { tapKey } from './host/inspector-steps.js';
 
 before(() => build());
 
-const FOCUS = { data: { settings: { viewPreset: 'focus', focusDepth: 'two', ownLayout: 'off' } } };
+const FOCUS = { data: { settings: { viewPreset: 'focus', focusDepth: 'two' } } };
 const card = (el) => el.querySelector('.thoughtknot-view');
 /** The trail's buttons in the details, by their names. */
 const trail = (el) => el.querySelectorAll('.thoughtknot-trail button').map((b) => b.getAttribute('aria-label'));
@@ -63,7 +63,7 @@ describe('the Focus support preset', () => {
 
   // proves: view_focus_support
   test('the default preset starts the trail again at each pick in the drawing, and blurs nothing', async () => {
-    const env = await load({ data: { settings: { ownLayout: 'off' } } });
+    const env = await load({ data: { settings: {} } });
     try {
       const { el } = await show(env, fence(GRAPH));
       assert.ok(!card(el).classList.contains('thoughtknot-blur-rest'));
@@ -82,7 +82,7 @@ describe('a graph’s own preset', () => {
 
   // proves: view_presets_scoped
   test('written in its style graph, it wins over the one the settings pick, for that card alone', async () => {
-    const env = await load({ data: { settings: { viewPreset: 'reading', ownLayout: 'off' } } });
+    const env = await load({ data: { settings: { viewPreset: 'reading' } } });
     try {
       const { el } = await show(env, own('focus'));
       assert.ok(card(el).classList.contains('thoughtknot-blur-rest'), 'the graph’s Focus support blurs the rest');

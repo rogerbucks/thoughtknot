@@ -109,7 +109,6 @@ export function renderViewMenu(
   const pickLine = el.createDiv({ cls: 'thoughtknot-layout-said' }); // the engine's pick, said (layout_pick_said)
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
-    if (s === 'engine') continue; // which engine lays out is the settings page's alone (Roger, 25 Oct 2026)
     const hint = `thoughtknot-switch-hint-${++hints}`;
     const b = el.createEl('button', {
       cls: 'thoughtknot-switch',

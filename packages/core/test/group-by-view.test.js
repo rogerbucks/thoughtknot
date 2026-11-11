@@ -26,7 +26,7 @@ function styledOf(...texts) {
   return { drawing: styledDrawing(reading.graphs.get('g'), style, reading.world.g), reading };
 }
 
-const off = { labels: true, hubs: false, groups: false, merge: false, engine: false };
+const off = { labels: true, hubs: false, groups: false, merge: false };
 const groupNudges = (d) => (d.nudges ?? []).filter((n) => n.word === 'group').map((n) => `${n.group}:${n.thing}`);
 
 // proves: untangle_group_by

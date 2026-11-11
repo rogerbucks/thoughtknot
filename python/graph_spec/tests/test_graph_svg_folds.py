@@ -64,9 +64,8 @@ process.stdout.write(JSON.stringify(cases.map(([texts, view, switches, opened]) 
     const { style } = readStyle(texts, graph, reading);
     const styled = styledDrawing(drawing, style, reading.world[graph], view ?? undefined);
     // with no View menu, as an export draws it, nothing is folded. The Python library lays
-    // out by Graphviz only, so the core is asked for Graphviz's source, not its own engine's
-    const settings = { ...DEFAULT_SETTINGS, ownLayout: 'off' };
-    const state = new ViewState(startingSwitches(settings, style, view ?? undefined));
+    // out by Graphviz only, so the core's layout source is the one compared
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style, view ?? undefined));
     for (const [s, on] of Object.entries(switches ?? {})) state.turn(s, on);
     for (const hub of opened?.hubs ?? []) state.open({ hub });
     for (const group of opened?.groups ?? []) state.open({ group });

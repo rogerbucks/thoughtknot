@@ -57,7 +57,7 @@ function drawingsOf(file, graph) {
   const drawing = { ...styledDrawing(note.graphs.get(graph), style.style, note.world[graph]), diagram: undefined };
   const kindOf = new Map(drawing.boxes.map((b) => [b.key, b.kind]));
   return ['overview', 'all'].flatMap((level) => {
-    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style.style));
     state.toDetail(level);
     return directions(state.folded(drawing)).map((d) => ({ level, d, kindOf }));
   });
@@ -133,7 +133,7 @@ test('a big flow drawn as a flow is laid out by our own engine, by its levels, n
   const read = readStyle([text, style], 'requirements', note);
   const drawing = styledDrawing(note.graphs.get('requirements'), read.style, note.world.requirements);
   assert.equal(drawing.diagram?.type, 'flow', 'drawn as a flow');
-  const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, read.style), engine: true });
+  const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, read.style));
   const [d] = directions(state.folded(drawing));
   assert.ok(d.own, 'our own engine lays it out, so each subject gets its own room (Roger, 5 Nov 2026)');
   assert.match(d.dot, /levels/, 'by its levels');

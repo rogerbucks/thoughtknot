@@ -53,11 +53,6 @@ export const SWITCH_OPTIONS: Option[] = [
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   ),
   switchOption(
-    'ownLayout',
-    'Lay out with ThoughtKnot',
-    'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
-  ),
-  switchOption(
     'kindLanes',
     'Lanes by kind',
     'Whether kinds that link in order each get a lane, or a plane in space; a graph’s View menu can change it.',

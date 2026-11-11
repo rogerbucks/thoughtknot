@@ -111,10 +111,10 @@ describe('a big drawing shown as it improves (layout_live_loop)', () => {
   });
 
   // proves: layout_live_loop
-  test('each card laid out by our own engine is live', () => {
+  test('each card laid out by our own engine is live, and our own engine lays out every card', () => {
     assert.equal(new ViewState(startingSwitches(DEFAULT_SETTINGS)).folded(chain(3)).live, true);
-    const graphviz = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS), engine: false });
-    assert.equal(graphviz.folded(chain(3)).live, undefined, 'Graphviz lays it out in one go');
+    const switchedOff = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS), hubs: true, groups: true });
+    assert.equal(switchedOff.folded(chain(3)).live, true, 'no switch takes the card off our engine');
   });
 });
 
