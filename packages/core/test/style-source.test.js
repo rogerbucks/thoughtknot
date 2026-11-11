@@ -9,7 +9,6 @@ import { drawingSource, layoutSource } from '../src/layout.ts';
 import { draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { nudgedDrawing, nudgedSource, styledDrawing } from '../src/style-source.ts';
-import { frozenGraphviz } from './frozen-graphviz.js';
 
 const TRIP = `// graph: trip
 (home:Place {name: 'Home'}),
@@ -114,7 +113,7 @@ describe('each nudge', () => {
       "(n1:Nudge {word: 'beside', thing: 'home', other: 'lake'}),",
       "(n2:Nudge {word: 'group', thing: 'cafe', group: 'Inside'})",
     );
-    const engine = frozenGraphviz('style-source');
+    const engine = await loadEngine();
     const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, style.nudges, keys));
     const y = (key) => {
       const g = new RegExp(`<title>${key}</title>[\\s\\S]*?<text[^>]*\\sy="([-\\d.]+)"`).exec(svg);
@@ -124,6 +123,16 @@ describe('each nudge', () => {
     assert.equal(y('home'), y('lake'));
     assert.match(svg, /<g id="clust\d+" class="cluster">\s*<title>cluster_1<\/title>/);
     assert.equal([...svg.matchAll(/<g id="node\d+" class="node">/g)].length, drawing.boxes.length);
+  });
+
+  // proves: nudges_kept_in_rows
+  test('our own engine keeps a before: the thing after sits a row after the other', async () => {
+    const { drawing, style, keys } = styled("(n1:Nudge {word: 'before', thing: 'lake', other: 'cafe'})");
+    const engine = await loadEngine();
+    const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, style.nudges, keys));
+    const y = (key) => Number(new RegExp(`<title>${key}</title>[\\s\\S]*?<text[^>]*\\sy="([-\\d.]+)"`).exec(svg)?.[1]);
+    assert.ok(y('cafe') > y('lake'), 'the cafe, once alone in the tray, comes after the lake');
+    assert.ok(y('lake') > y('park') && y('park') > y('home'));
   });
 
   // proves: four_nudge_words
@@ -139,7 +148,7 @@ describe('each nudge', () => {
     const reading = readNote(texts);
     const { style } = readStyle(texts, 'team', reading);
     const drawing = reading.graphs.get('team');
-    const engine = frozenGraphviz('style-source');
+    const engine = await loadEngine();
     const svg = engine.render(
       nudgedSource(
         layoutSource(drawing, 'TB').source,
@@ -154,7 +163,7 @@ describe('each nudge', () => {
   test('a group label with a backslash or a quote is drawn as written, and never stops the drawing', async () => {
     const { drawing, keys } = styled();
     const nudges = [{ word: 'group', thing: 'cafe', group: 'C:\\ "inside"\\n', at: { block: 1, line: 2, id: 'g' } }];
-    const engine = frozenGraphviz('style-source');
+    const engine = await loadEngine();
     const svg = engine.render(nudgedSource(layoutSource(drawing, 'TB').source, nudges, keys));
     assert.match(svg, /<title>cluster_1<\/title>/);
     assert.match(svg, /C:\\ &quot;inside&quot;\\n/);

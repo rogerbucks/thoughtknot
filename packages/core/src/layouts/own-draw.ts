@@ -13,6 +13,7 @@ import type { PickShown } from './fingerprint.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { layoutOptions } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
+import type { RowNudges } from './layered-rows.ts';
 import { LAYOUT_STEPS } from './cheaper.ts';
 import { SPOTS_ATTRIBUTE, boxesRound, drawnAt, keptSpots, sameSpots, spotsHeard, spotsSaid } from './kept-spots.ts';
 import type { LayoutStep } from './cheaper.ts';
@@ -26,7 +27,7 @@ const DEFAULTS = new Set(['graph', 'node', 'edge']);
 const ENGINE_LINE = /^ {2}graph \[layout=/;
 
 /** A group of the layout source, on one line: its name, its words, the rest of its attributes and its things. */
-const GROUP_LINE = /^\s*subgraph (cluster_\w+) \{label=<((?:[^>\\]|\\.)*)>;(.*)\}\s*$/;
+const GROUP_LINE = /^\s*subgraph (cluster_\w+) \{label=<([^>]*)>;(.*)\}\s*$/;
 /** A thing of a group line: a quoted or bare key standing alone between semicolons. */
 const MEMBER = /(?:^|;)\s*("(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_]*)\s*(?=;|$)/g;
 
@@ -35,11 +36,12 @@ export interface SourceGroup extends Group {
   style: string;
 }
 
-/** The words of a key or a label as the source writes them, unquoted and unescaped. */
-const plain = (text: string) =>
+/** The words of a key as the source writes them, unquoted and unescaped. */
+const plain = (text: string) => entities(text.replace(/^"|"$/g, '').replace(/\\(.)/g, '$1'));
+
+/** The words of an HTML-like label (`<…>`): a backslash there is a backslash, as Graphviz reads it. */
+const entities = (text: string) =>
   text
-    .replace(/^"|"$/g, '')
-    .replace(/\\(.)/g, '$1')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
@@ -60,7 +62,7 @@ export function groupsIn(dot: string): SourceGroup[] {
     const dashed = /style="[^"]*dashed/.test(rest);
     out.push({
       id: m[1] as string,
-      label: plain(m[2] as string),
+      label: entities(m[2] as string),
       members,
       style: colourToken(colour) + (dashed ? '.dashed' : ''),
     });
@@ -130,6 +132,23 @@ export function kindsIn(dot: string): Map<string, string> {
   } catch {
     return new Map();
   }
+}
+
+/** A quoted key in a source line, its escapes read. */
+const QUOTED = /"((?:[^"\\]|\\.)*)"/g;
+const unquoted = (line: string): string[] =>
+  [...line.matchAll(QUOTED)].map((m) => (m[1] ?? '').replace(/\\(.)/g, '$1'));
+
+/**
+ * The nudges written into the source `dot` (style-source.ts, four_nudge_words): each beside line's things, and each
+ * before's link never drawn. A timeline writes the same lines for its days, which its own places already keep.
+ */
+export function nudgesIn(dot: string): RowNudges | undefined {
+  const same = [...dot.matchAll(/^ {2}\{rank=same; (.*);\}$/gm)].map((m) => unquoted(m[1] ?? ''));
+  const before = [...dot.matchAll(/^ {2}("(?:[^"\\]|\\.)*" -> "(?:[^"\\]|\\.)*") \[style=invis\];$/gm)].map(
+    (m) => unquoted(m[1] ?? '') as unknown as [string, string],
+  );
+  return same.length || before.length ? { same, before } : undefined;
 }
 
 /** The options our engine lays out the source `dot` by: those `ownSource` wrote in, each kept in its range. */
