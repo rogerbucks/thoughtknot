@@ -82,7 +82,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   let index = new MarkIndex(laid);
   const opened = new Set<string>();
   // a group's inside, the things a filter keeps: read from the store for a graph read in parts, else from the drawing
-  const partIn = (id: string) => partOf(o.parts?.group(id) ?? drawing, keysOf.get(id) ?? []);
+  const partIn = async (id: string) => partOf((await o.parts?.group(id)) ?? drawing, keysOf.get(id) ?? []);
 
   const el = parent.createDiv({ cls: 'thoughtknot-massive' });
   const id = `thoughtknot-massive-${++made}`;
@@ -186,7 +186,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     win,
     () => ({ open, moving: !!gliding, overview: laid, camera, screen: { width, height }, opened, grouping }),
     async (id) => {
-      const drawn = await layIn(id, partIn(id));
+      const drawn = await layIn(id, await partIn(id));
       if (drawn) opened.add(id);
       again();
       return drawn;
@@ -322,7 +322,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   const flyTo = async (match: Match) => {
     const group = names.get(match.group) ?? match.group;
     said.setText(word('massive.opening', { group }));
-    const drawn = opened.has(match.group) || (await layIn(match.group, partIn(match.group)));
+    const drawn = opened.has(match.group) || (await layIn(match.group, await partIn(match.group)));
     if (!open) return;
     if (drawn) opened.add(match.group);
     const box = laid.marks.find((m) => m.id === match.group);

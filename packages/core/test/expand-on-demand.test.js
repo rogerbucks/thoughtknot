@@ -103,7 +103,7 @@ test('an expansion never holds more than can be laid out at once', () => {
   assert.ok(x.keys().length <= EXPANSION_MOST, `${x.keys().length} kept`);
 });
 
-test('a graph read in parts grows the same, its links read as each step reaches them (scale_parts_overview)', () => {
+test('a graph read in parts grows the same, its links read as each step reaches them (scale_parts_overview)', async () => {
   // a hub with more neighbours than a ring holds, and a tail off each, so rings are cut and ranked
   const keys = ['hub', ...Array.from({ length: RING_MOST + 20 }, (_, i) => `s${i}`)];
   const links = keys.slice(1).flatMap((k, i) => [link('hub', k), ...(i % 3 ? [] : [link(k, `t${i}`), link(k, 'hub')])]);
@@ -114,17 +114,21 @@ test('a graph read in parts grows the same, its links read as each step reaches 
     estimates: [],
   };
   const asked = [];
-  const near = (ks) => {
+  const near = async (ks) => {
     asked.push(ks.length);
     const want = new Set(ks);
     return links.flatMap((l, edge) => (want.has(l.from) || want.has(l.to) ? [{ ...l, edge }] : []));
   };
   const whole = new Expansion(big, 'hub'),
     parts = new Expansion({ ...big, links: [] }, 'hub', near);
-  for (let step = 0; step < 3; step++) assert.deepEqual(parts.grow(), whole.grow(), `step ${step + 1}`);
+  for (let step = 0; step < 3; step++) assert.deepEqual(await parts.more(), whole.grow(), `step ${step + 1}`);
   assert.deepEqual(parts.cut, whole.cut);
   const plain = (d) => d.links.map((l) => [l.from, l.to]);
-  assert.deepEqual(plain(parts.part()), plain(whole.part()), 'the part holds the same links, in written order');
+  assert.deepEqual(
+    plain(await parts.readPart()),
+    plain(whole.part()),
+    'the part holds the same links, in written order',
+  );
   assert.ok(
     asked.every((n) => n <= EXPANSION_MOST),
     'never asks for more than it can keep',

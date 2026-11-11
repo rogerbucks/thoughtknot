@@ -26,7 +26,7 @@ async function write(
   type: PropType,
   words: string,
 ): Promise<string | null> {
-  const edit = setInParts(at.ix, { note: at.path, text: at.note, graph: at.graph }, key, prop, type, words);
+  const edit = await setInParts(at.ix, { note: at.path, text: at.note, graph: at.graph }, key, prop, type, words);
   if (!edit.ok) return edit.reason;
   // read and written in one step, so a change made since the store read the note is never written over
   let written = false;

@@ -58,10 +58,13 @@ test('the filters of a note read in parts are those of the note read whole, read
   assert.ok(text.split('\n').length > READ_LIMITS.lines);
   for (const make of [memoryBackend, async () => sqliteBackend(await sqlEngine())]) {
     const { asks, backend } = counted(await make());
-    const big = (await storedGraphs(new MeshIndex(backend), 'big.md', text, now)).get('big');
+    const ix = new MeshIndex(backend);
+    ix.update('big.md', text);
+    asks.length = 0;
+    // the filters are counted as the note opens, its things' properties read a group at a time
+    const big = (await storedGraphs(ix, 'big.md', text, now)).get('big');
     const boxes = big.drawing.boxes;
     const whole = new Map(Array.from({ length: N }, (_, i) => [`n${i}`, thing(i).props]));
-    asks.length = 0;
     const facets = big.parts.facets();
     assert.deepEqual(
       facets,
@@ -73,11 +76,13 @@ test('the filters of a note read in parts are those of the note read whole, read
       ['Kind', 'status', 'tier'],
     );
     const groups = big.parts.grouping.groups.length;
+    // one read lists the things the overview draws; every other asks for one group
+    assert.equal(asks[0], groups, 'the things listed once');
     assert.ok(
-      asks.every((n) => n === 1),
+      asks.slice(1).every((n) => n === 1),
       'each read asks for one group',
     );
-    assert.equal(asks.length, groups, 'each group is read once');
+    assert.equal(asks.length - 1, groups, 'each group is read once');
     // the counts follow the filter, as for a note read whole
     const counts = (fs) =>
       new FacetIndex(
@@ -92,7 +97,7 @@ test('a thing chosen in a note read in parts reads only its own group, and searc
   const { asks, backend } = counted(memoryBackend());
   const big = (await storedGraphs(new MeshIndex(backend), 'big.md', text, now)).get('big');
   asks.length = 0;
-  assert.deepEqual(big.props('n7001'), thing(7001).props);
+  assert.deepEqual(await big.props('n7001'), thing(7001).props);
   assert.deepEqual(asks, [1]);
   const search = new ThingSearch(big.drawing.boxes, big.parts.grouping);
   const hits = search.find('Item 700', 20).map((m) => m.key);

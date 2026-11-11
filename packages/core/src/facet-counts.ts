@@ -129,28 +129,52 @@ export function facetsOf(
   props: (key: string) => Readonly<Record<string, unknown>> = () => ({}),
   kindName = 'Kind',
 ): Facet[] {
-  const columns = new Map<string, (string | undefined)[]>();
-  things.forEach((t, i) => {
-    for (const [name, v] of Object.entries(props(t.key))) {
+  const columns = new FacetColumns(things.length);
+  things.forEach((t, i) => columns.add(i, props(t.key)));
+  return columns.facets(
+    things.map((t) => t.kind),
+    kindName,
+  );
+}
+
+/**
+ * The filters of some things, their properties given a thing at a time in any order, each with the thing's place. Once
+ * every thing is given, `facets` is what facetsOf gives. So a graph read in parts reads each group once.
+ */
+export class FacetColumns {
+  private readonly columns = new Map<string, (string | undefined)[]>();
+  private readonly size: number;
+
+  constructor(size: number) {
+    this.size = size;
+  }
+
+  /** The properties of the thing at place `i`. */
+  add(i: number, props: Readonly<Record<string, unknown>>): void {
+    for (const [name, v] of Object.entries(props)) {
       if (name === 'id') continue;
       const words = wordsOf(v);
       if (words === undefined) continue;
-      let column = columns.get(name);
-      if (!column) columns.set(name, (column = new Array<string | undefined>(things.length)));
+      let column = this.columns.get(name);
+      if (!column) this.columns.set(name, (column = new Array<string | undefined>(this.size)));
       column[i] = words;
     }
-  });
-  const sorts = ([, values]: [string, (string | undefined)[]]) => {
-    const set = new Set(values.filter((v) => v !== undefined));
-    return values.filter((v) => v !== undefined).length >= 2 && set.size <= FACET_VALUES_MOST;
-  };
-  return [
-    { name: kindName, values: things.map((t) => t.kind) },
-    ...[...columns]
-      .filter(sorts)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([name, values]) => ({ name, values: Array.from(values) })),
-  ];
+  }
+
+  /** The filters: the kinds first, as `kinds` gives them by place, then each property worth sorting by, by name. */
+  facets(kinds: readonly string[], kindName = 'Kind'): Facet[] {
+    const sorts = ([, values]: [string, (string | undefined)[]]) => {
+      const set = new Set(values.filter((v) => v !== undefined));
+      return values.filter((v) => v !== undefined).length >= 2 && set.size <= FACET_VALUES_MOST;
+    };
+    return [
+      { name: kindName, values: [...kinds] },
+      ...[...this.columns]
+        .filter(sorts)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([name, values]) => ({ name, values: Array.from(values) })),
+    ];
+  }
 }
 
 /**

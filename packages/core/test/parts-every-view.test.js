@@ -87,11 +87,11 @@ test('a group opened from the store moves nothing drawn, and another opened afte
   const stored = await opened();
   const overview = overviewOf(stored.parts.grouping);
   const [first, second] = stored.parts.grouping.groups;
-  const one = openGroup(overview, first.id, insideOf(stored.parts.group(first.id)));
+  const one = openGroup(overview, first.id, insideOf(await stored.parts.group(first.id)));
   const outside = (laid, id) => laid.marks.filter((m) => !m.id.startsWith(`${id}/`) && !m.id.startsWith(`${id}:`));
   const at = (marks) => new Map(marks.map((m) => [m.id, m]));
   for (const [id, m] of at(outside(one, first.id))) assert.deepEqual(m, at(overview.marks).get(id), `${id} stays put`);
   assert.equal(one.marks.filter((m) => m.id.startsWith(`${first.id}/`)).length, first.size ?? first.keys.length);
-  const two = openGroup(one, second.id, insideOf(stored.parts.group(second.id)));
+  const two = openGroup(one, second.id, insideOf(await stored.parts.group(second.id)));
   for (const [id, m] of at(outside(two, second.id))) assert.deepEqual(m, at(one.marks).get(id), `${id} stays put`);
 });

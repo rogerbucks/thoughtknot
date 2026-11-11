@@ -26,3 +26,5 @@ packages/claude-code/mod/tests/fixtures.js
 packages/claude-code/mod/.claude-plugin/types/
 # graph files are GQL, which Prettier would take for GraphQL
 *.gql
+# the store contract's cases, written by packages/core/test/parts-store-fixture.js on one line, for the Rust store's tests
+packages/core/test/fixtures/parts-store-contract.json

@@ -166,13 +166,13 @@ export const STEPS = {
     const groups = stored.parts.grouping.groups.length;
     return { outcome: `done: ${stored.drawing.boxes.length} things in ${groups} groups`, stored };
   },
-  parts_filter({ stored }) {
+  async parts_filter({ stored }) {
     if (!stored) return { outcome: 'not built: nothing was read in parts' };
     // the values counted a group at a time, and then the largest group read from the store, its links with it
     const facets = stored.parts.facets();
     const largest = stored.parts.grouping.groups.reduce((a, g) => (g.keys.length > a.keys.length ? g : a));
-    const open = stored.parts.group(largest.id);
-    const near = stored.parts.near(largest.keys).length;
+    const open = await stored.parts.group(largest.id);
+    const near = (await stored.parts.near(largest.keys)).length;
     return { outcome: `done: ${facets.length} facets, a group of ${open.boxes.length} things and ${near} links` };
   },
 };

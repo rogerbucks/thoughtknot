@@ -128,6 +128,15 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   the group rows. A group's things are read when it opens, and let go when it leaves the screen or the budget is full.
   A stored graph's drawing holds its things but none of its links. Opening a group, or growing from a thing, reads the
   links it needs from the store (`StoredGraph.parts`).
+## The stores of notes read in parts
+
+- `parts-store.ts` — the store a note read in parts is kept in, as a part a host can swap (ES§53,
+  `scale_parts_store_swap`). `PartsStore` answers each read a page at a time and is waited on, so a store may be on
+  disk behind a host's commands. `storeOver` puts one over a backend the page holds. `lasting` says its rows outlast
+  the session, so no kept copy is written. A host hands its own to the edit pane as `PaneHost.store`.
+- `parts-store-contract.ts` — `partsStoreContract`, the checks every such store passes: the memory store's answers, in
+  its order. `contractCases` is the same as data, for a store in another language
+  (`test/fixtures/parts-store-contract.json`, written by `node packages/core/test/parts-store-fixture.js --write`).
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 

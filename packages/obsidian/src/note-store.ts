@@ -73,7 +73,7 @@ export async function overviewInParts(
     const stored = (await storedGraphs(ix, note, text, pause, keptPlace())).get(at.graph);
     // a block shown on its own is not edited here: its note's text was not given
     const editing = at.note === undefined ? null : { ix, path: at.path, note: at.note, graph: at.graph };
-    if (stored) showStoredMassive(plugin, slot, stored, editing && { ...editing, readOnly: readOnlyHere(card) });
+    if (stored) await showStoredMassive(plugin, slot, stored, editing && { ...editing, readOnly: readOnlyHere(card) });
     else slot.remove();
   } catch (e) {
     slot.remove(); // the text and why are still there

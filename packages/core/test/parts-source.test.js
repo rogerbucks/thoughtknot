@@ -40,7 +40,7 @@ test('the overview of a note read in parts comes from the group rows alone, and 
   const ix = new MeshIndex(memoryBackend());
   const big = (await partsOf(ix, 'big.md', text, now)).get('big');
   assert.ok(big instanceof PartsSource);
-  const grouping = big.overview();
+  const grouping = await big.overview();
   assert.equal(
     grouping.groups.reduce((n, g) => n + g.size, 0),
     N,
@@ -58,8 +58,8 @@ test('a group read from the store is what a whole reading gives for it, from eit
   for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
     const ix = new MeshIndex(backend);
     const big = (await partsOf(ix, 'big.md', text, now)).get('big');
-    for (const g of big.overview().groups) {
-      const part = big.group(g.id);
+    for (const g of (await big.overview()).groups) {
+      const part = await big.group(g.id);
       assert.equal(part.boxes.length, g.size);
       const keys = new Set(part.boxes.map((b) => b.key));
       assert.deepEqual(
@@ -78,20 +78,20 @@ test('the rows held follow the screen, never the size of the graph', async () =>
   const ix = new MeshIndex(memoryBackend());
   const most = 5_000;
   const big = (await partsOf(ix, 'big.md', text, now, most)).get('big');
-  const ids = big.overview().groups.map((g) => g.id);
+  const ids = (await big.overview()).groups.map((g) => g.id);
   assert.ok(ids.length >= 3);
   for (const id of ids) {
-    big.group(id);
+    await big.group(id);
     assert.ok(big.holding <= most, `held ${big.holding} after opening ${id}`);
     assert.equal(big.open.at(-1), id, 'the group just opened is held');
   }
   // a kept group stays however much else opens
-  big.group(ids[0], true);
-  for (const id of ids.slice(1)) big.group(id);
+  await big.group(ids[0], true);
+  for (const id of ids.slice(1)) await big.group(id);
   assert.ok(big.open.includes(ids[0]));
   // leaving the screen lets go of all but what is shown and kept
-  big.group(ids[1]);
-  big.group(ids[2]);
+  await big.group(ids[1]);
+  await big.group(ids[2]);
   big.onScreen([ids[1]]);
   assert.deepEqual(new Set(big.open), new Set([ids[0], ids[1]]));
   big.letGo(ids[0]);
@@ -102,7 +102,7 @@ test('the rows held follow the screen, never the size of the graph', async () =>
 test('the links near some things are read from the store, each once, with their place', async () => {
   for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
     const big = (await partsOf(new MeshIndex(backend), 'big.md', text, now)).get('big');
-    const near = big.near(['n6', 'n12']);
+    const near = await big.near(['n6', 'n12']);
     assert.deepEqual(
       near.map((l) => [l.from, l.to, l.edge]),
       [
@@ -119,7 +119,7 @@ test('rows from other text are never drawn', async () => {
   const ix = new MeshIndex(memoryBackend());
   const big = (await partsOf(ix, 'big.md', text, now)).get('big');
   ix.update('big.md', text.replace("'Item 7'", "'Item seven'"));
-  assert.equal(big.fresh, false);
-  assert.equal(big.group(big.open[0] ?? 'any'), null);
-  assert.deepEqual(big.overview().groups, []);
+  assert.equal(await big.fresh(), false);
+  assert.equal(await big.group(big.open[0] ?? 'any'), null);
+  assert.deepEqual((await big.overview()).groups, []);
 });
