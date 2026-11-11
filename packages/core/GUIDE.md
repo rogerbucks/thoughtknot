@@ -1523,6 +1523,8 @@ and is handed the port between them, as for layouts:
 - `core-ai.ts` — `CORE_AI`, the core's own AI wire format as a built-in provider plug-in (`CORE_AI_PROVIDER`).
 - `plugin-calls.ts` — every call into a plug-in, timed, caught and named. `awaited` times a call whose answer comes
   later, until it comes.
+- `plugin-store-calls.ts` — the calls into what a plug-in adds to keep or carry things: note storage, record stores,
+  transports, identity systems and panels. `plugin-shelf.ts` holds each point's additions until all are accepted.
 - `plugin-sources.ts` — what a graph source or step gives back, held as a `JoinedGraph` (trust_source_joined). It
   carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
   graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
