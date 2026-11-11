@@ -132,8 +132,15 @@ export function wordSpots(
       }
       return n;
     };
-    // off the line by half the block's height: one row sits as far off as WORDS_OFF says
-    const off = Math.max(size * WORDS_OFF, tall / 2);
+    // off the line by half the block's reach square to it: its height beside a flat line, its width beside an upright
+    // one. One row sits at least as far off as WORDS_OFF says
+    const wide = Math.max(...room.map((r) => r.x1)) - Math.min(...room.map((r) => r.x0));
+    const [[ax, ay], [bx, by]] = c.ends;
+    const long = Math.hypot(bx - ax, by - ay) || 1;
+    const off = Math.max(
+      size * WORDS_OFF,
+      (Math.abs(by - ay) / long) * (wide / 2) + (Math.abs(bx - ax) / long) * (tall / 2),
+    );
     const along = ALONG[fan?.near.get(of) ?? 'middle'];
     let best: MarkPoint = c.wordsAt(along[0] as number, off),
       least = Infinity;

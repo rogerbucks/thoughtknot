@@ -33,6 +33,8 @@ const PULLS = 12;
 /** The room a link bending through a row takes, and between two such links, in CSS pixels. */
 const LANE = 8;
 const LANE_GAP = 4;
+/** The room more that a link's words take between two things of one row it joins, in CSS pixels. */
+const WORDS_ROOM = 30;
 
 /** One thing or stand-in to place: its row, its size across the rows, and its neighbours in the rows either side. */
 interface Item {
@@ -142,6 +144,14 @@ export function layered(
       )
     : ranked;
   const rows = wrapped(laned, links, (i) => sizeOf(i), across, gap, rowGap);
+  // two things of one row a link joins are kept apart by room for its words too, so they are not cramped
+  const flat = new Set<string>();
+  for (const l of shape.links) {
+    const a = index.get(l.from),
+      b = index.get(l.to);
+    if (a !== undefined && b !== undefined && a !== b && rows[a] === rows[b])
+      flat.add(`${Math.min(a, b)} ${Math.max(a, b)}`);
+  }
   // the items: things, then a stand-in in each row a link skips, which the link bends through
   const items: Item[] = keys.map((_, i) => ({ row: rows[i] as number, across: sizeOf(i)[across], up: [], down: [] }));
   const chainOf = new Map<string, number[]>();
@@ -280,7 +290,8 @@ export function layered(
   const gapOf = (p: number, i: number) => {
     const a = items[p] as Item,
       b = items[i] as Item;
-    return (a.across + b.across) / 2 + (a.ends && b.ends ? LANE_GAP : a.ends || b.ends ? gap / 2 : gap);
+    const words = flat.has(`${Math.min(p, i)} ${Math.max(p, i)}`) ? WORDS_ROOM : 0;
+    return (a.across + b.across) / 2 + (a.ends && b.ends ? LANE_GAP : a.ends || b.ends ? gap / 2 : gap) + words;
   };
   // each kept past the one before it by the room between them; `way` -1 runs leftward
   const keepApart = (row: number[], way: 1 | -1) => {
