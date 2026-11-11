@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/own-engine.test.js",
+  "test": "a graph drawn by our own engine > is the default, and draws the links of every routing a person chooses too",
+  "seen_failing_first": false,
+  "evidence": "the code came in the commit before; on main, where curves were left to Graphviz, this test fails"
+}
