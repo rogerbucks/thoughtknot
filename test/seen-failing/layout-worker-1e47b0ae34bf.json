@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-worker.test.js",
+  "test": "the limits, checked before any layout > over the source limit as written, measured exactly in the worker before any layout runs",
+  "seen_failing_first": false,
+  "evidence": "Renamed only: Graphviz no longer runs, so the name says any layout"
+}
