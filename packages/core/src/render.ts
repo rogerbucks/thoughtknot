@@ -30,6 +30,7 @@ import {
   ownSource,
   ownSvg,
   stepIn,
+  linesIn,
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
 import { measuredMarks } from './layouts/measure.ts';
@@ -120,7 +121,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // a tree, flow or lanes is laid out by the layout the View menu chose, rows, spread out or a plug-in's, as a network is
   const ours =
     step ||
-    (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct')) ||
+    (drawing.engine === 'own' && !drawing.diagram) ||
     // a tree, flow or lanes of any size is laid out by our own engine: Graphviz is gone (layout_own_engine)
     shapeable(drawing);
   // a timeline or radial drawing keeps the places the stage gives its type, laid out by our own engine (layout_own_engine)
@@ -198,8 +199,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
 /** The diagram types laid out in ranks, which a hub with many leaves stretches into a strip. */
 const RANKED = new Set(['flow', 'tree', 'lanes']);
 /** Whether `d` is drawn in a ranked type, with links our own engine can draw. */
-const shapeable = (d: GraphDrawing): boolean =>
-  !!d.diagram && RANKED.has(d.diagram.type) && (!d.routing || d.routing === 'direct' || d.routing === 'curved');
+const shapeable = (d: GraphDrawing): boolean => !!d.diagram && RANKED.has(d.diagram.type);
 
 /** How far a drawing's shape is from a screen's, as the size of the log of their ratio. */
 const offScreen = (svg: string): number => {
@@ -271,6 +271,8 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         stepIn(dot),
         placedIn(dot),
         keptIn(dot),
+        // straight or right-angled links, as the person chose, drawn by our own router (untangle_routing)
+        linesIn(dot),
       );
   }
   // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)

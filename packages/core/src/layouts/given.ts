@@ -58,15 +58,19 @@ const ROOMY_SHARE = 0.8;
 
 /**
  * The spots grown evenly about their corner until no two boxes overlap, `gap` apart. The shape a layout gave is kept,
- * such as a radial drawing's rings. Every spot moves out by the same share, and none moves past another.
+ * such as a radial drawing's rings. Every spot moves out by the same share, and none moves past another. Two boxes
+ * `linked` keep its `gap` between them instead, where it is wider: room for the words on the link.
  */
 export function roomy(
   spots: Map<string, Point>,
   sizes: ReadonlyMap<string, readonly [number, number]>,
   gap: number,
+  linked?: { links: readonly { from: string; to: string }[]; gap: number },
 ): Map<string, Point> {
   const ks = [...spots.keys()];
   if (ks.length > SPREAD_MOST) return spots;
+  const pair = (a: string, b: string) => (a < b ? `${a}\n${b}` : `${b}\n${a}`);
+  const joined = new Set((linked?.links ?? []).map((l) => pair(l.from, l.to)));
   const needs: number[] = [];
   for (let i = 0; i < ks.length; i++)
     for (let j = i + 1; j < ks.length; j++) {
@@ -74,7 +78,8 @@ export function roomy(
       const none = [0, 0] as const;
       const [sa, sb] = [sizes.get(ks[i] as string) ?? none, sizes.get(ks[j] as string) ?? none];
       const [dx, dy] = [Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])];
-      const [nx, ny] = [(sa[0] + sb[0]) / 2 + gap, (sa[1] + sb[1]) / 2 + gap];
+      const room = linked && joined.has(pair(ks[i] as string, ks[j] as string)) ? Math.max(gap, linked.gap) : gap;
+      const [nx, ny] = [(sa[0] + sb[0]) / 2 + room, (sa[1] + sb[1]) / 2 + room];
       // apart once either way is clear: the smaller growth that clears one of them
       const need = Math.min(dx ? nx / dx : Infinity, dy ? ny / dy : Infinity);
       if (Number.isFinite(need) && need > 1) needs.push(need);

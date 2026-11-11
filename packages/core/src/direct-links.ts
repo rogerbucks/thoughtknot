@@ -17,6 +17,8 @@ import { WORDS_OFF, fans, wordSpots } from './direct-words.ts';
 import { apart, curveOf, moveTo } from './direct-curve.ts';
 import type { Curve, Placed } from './direct-curve.ts';
 import { routedCurve } from './layouts/routed-curve.ts';
+import { elbowCurve, elbowRoute } from './layouts/elbow-route.ts';
+import type { Taken } from './layouts/elbow-route.ts';
 import { inRows as inRowsOf, rowsRoute } from './layouts/rows-route.ts';
 import { CLEARANCE, HUG, bends, crowded, hug, hugged, spread, towardMiddle, trunkEnds } from './direct-bends.ts';
 import type { Edges, ToBend } from './direct-bends.ts';
@@ -37,7 +39,8 @@ const LANE = 6; // how far apart links between the same two boxes run where our 
  * `laid` with its links drawn directly and its boxes moved off them. A self link keeps its loop, moved with its box.
  * Given `at`, each box is first moved to its spot there, as our own engine placed it (layouts/own-engine.ts). With
  * `inRows`, the boxes stay where Graphviz put them and each link is routed between them, on its rows (rows-route.ts).
- * Each box `held` stays at its spot in `at`: a box over it moves off it alone (things_stay_put).
+ * Each box `held` stays at its spot in `at`: a box over it moves off it alone (things_stay_put). With `lines`, each
+ * link is drawn straight from box to box, or at right angles round the boxes in its way (untangle_routing).
  */
 export function directLinks(
   laid: LaidMarks,
@@ -47,6 +50,7 @@ export function directLinks(
   inRows = false,
   work: LinkWork = linkWork(), // each pass's work, against its own budget
   held: ReadonlySet<string> = new Set(),
+  lines?: 'straight' | 'right-angled',
 ): LaidMarks {
   const boxes = new Map<string, Placed>();
   const groups = new Map<string, Edges>();
@@ -179,22 +183,12 @@ export function directLinks(
         across ? 0 : 1,
       )
     : [];
-  const free = rowed ? toBend.filter((_, i) => !inRow[i]?.length) : toBend;
+  const free = lines ? [] : rowed ? toBend.filter((_, i) => !inRow[i]?.length) : toBend;
   const bowOf = new Map(bends(free, all, work).map((bow, i) => [free[i] as ToBend, bow]));
   // a link our own engine routed bends through its lanes (layouts/routed-curve.ts), LANE apart from its pair's
   const routed = (l: ToBend, i: number) => (rowed ? inRow[i] : via?.get(`${l.a.key}\n${l.b.key}`));
   const spaced = (l: ToBend) => (rowed ? 0 : (((l.fixed ?? 0) * LANE) / BOW) * (l.a.key < l.b.key ? 1 : -1));
-  const curves = new Map<string, Curve>(
-    toBend.map((l, i) => {
-      const bendsAt = routed(l, i);
-      return [
-        l.id,
-        bendsAt?.length
-          ? routedCurve(l.a, l.b, bendsAt, rankdir === 'TB' ? 1 : 0, spaced(l))
-          : curveOf(l.a, l.b, bowOf.get(l) ?? 0),
-      ];
-    }),
-  );
+  const curves = curvesOf(toBend, { routed, spaced, bowOf, lines, all, axis: rankdir === 'TB' ? 1 : 0 });
   // our own engine labels each fan of links once, near the end its links share
   const fan = at ? fans(laid.marks) : undefined;
   const spots = wordSpots(laid.marks, boxes, curves, fan, work.words);
@@ -239,6 +233,39 @@ export function directLinks(
     if (!by) return m;
     return shifted(m, by[0], by[1]);
   }
+}
+
+/** How `curvesOf` draws each link: its bends where it was routed, its bow, and the lines the person chose. */
+interface CurveWays {
+  routed: (l: ToBend, i: number) => readonly MarkPoint[] | undefined;
+  spaced: (l: ToBend) => number;
+  bowOf: ReadonlyMap<ToBend, number>;
+  lines: 'straight' | 'right-angled' | undefined;
+  all: readonly Placed[];
+  axis: 0 | 1;
+}
+
+/** Each link of `toBend` as the curve it is drawn along, by its id: through its bends, bowed, or as the person chose. */
+function curvesOf(toBend: readonly (ToBend & { id: string })[], ways: CurveWays): Map<string, Curve> {
+  const { routed, spaced, bowOf, lines, all, axis } = ways;
+  // right-angled links keep off the pieces the ones before them took (layouts/elbow-route.ts)
+  const taken: Taken = new Map();
+  return new Map<string, Curve>(
+    toBend.map((l, i) => {
+      if (lines) return [l.id, chosenLine(l, lines, all, axis, taken)];
+      const bendsAt = routed(l, i);
+      const drawn = bendsAt?.length ? routedCurve(l.a, l.b, bendsAt, axis, spaced(l)) : undefined;
+      return [l.id, drawn ?? curveOf(l.a, l.b, bowOf.get(l) ?? 0)];
+    }),
+  );
+}
+
+/**
+ * Link `l` drawn as the person chose: straight, two between the same boxes still bowed apart so both show. Or at right
+ * angles round `all` the boxes in its way, off the pieces earlier links have `taken` (layouts/elbow-route.ts).
+ */
+function chosenLine(l: ToBend, lines: 'straight' | 'right-angled', all: readonly Placed[], axis: 0 | 1, taken: Taken) {
+  return lines === 'straight' ? curveOf(l.a, l.b, l.fixed ?? 0) : elbowCurve(elbowRoute(l.a, l.b, all, axis, taken));
 }
 
 /** The smallest group of `groups` round the box `m`, if any. */
