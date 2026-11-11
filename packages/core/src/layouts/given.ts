@@ -50,3 +50,38 @@ export function givenSpots(shape: GraphShape, placed: ReadonlyMap<string, Point>
     }
   return spots;
 }
+
+/** The most things whose every pair is checked for room; past it the spots are left as given. */
+const SPREAD_MOST = 800;
+/** The share of crowded pairs the spots grow to clear. */
+const ROOMY_SHARE = 0.8;
+
+/**
+ * The spots grown evenly about their corner until no two boxes overlap, `gap` apart. The shape a layout gave is kept,
+ * such as a radial drawing's rings. Every spot moves out by the same share, and none moves past another.
+ */
+export function roomy(
+  spots: Map<string, Point>,
+  sizes: ReadonlyMap<string, readonly [number, number]>,
+  gap: number,
+): Map<string, Point> {
+  const ks = [...spots.keys()];
+  if (ks.length > SPREAD_MOST) return spots;
+  const needs: number[] = [];
+  for (let i = 0; i < ks.length; i++)
+    for (let j = i + 1; j < ks.length; j++) {
+      const [a, b] = [spots.get(ks[i] as string) as Point, spots.get(ks[j] as string) as Point];
+      const none = [0, 0] as const;
+      const [sa, sb] = [sizes.get(ks[i] as string) ?? none, sizes.get(ks[j] as string) ?? none];
+      const [dx, dy] = [Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])];
+      const [nx, ny] = [(sa[0] + sb[0]) / 2 + gap, (sa[1] + sb[1]) / 2 + gap];
+      // apart once either way is clear: the smaller growth that clears one of them
+      const need = Math.min(dx ? nx / dx : Infinity, dy ? ny / dy : Infinity);
+      if (Number.isFinite(need) && need > 1) needs.push(need);
+    }
+  // grown for nearly every pair, not the very worst: one tight pair would spread the whole drawing thin. The few
+  // left are pushed apart after, as any layout's are
+  needs.sort((a, b) => a - b);
+  const grow = needs.length ? (needs[Math.floor((needs.length - 1) * ROOMY_SHARE)] as number) : 1;
+  return grow === 1 ? spots : new Map([...spots].map(([k, [x, y]]) => [k, [x * grow, y * grow] as Point]));
+}

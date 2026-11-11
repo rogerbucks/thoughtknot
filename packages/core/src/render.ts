@@ -33,6 +33,9 @@ import {
 } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
 import { measuredMarks } from './layouts/measure.ts';
+import { typePlaces } from './render/render-places.ts';
+import { TYPE_STRATEGY } from './layouts/layout-options.ts';
+import { layoutOptions } from './layouts/layout-options.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -120,6 +123,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
     (drawing.engine === 'own' && !drawing.diagram && (!drawing.routing || drawing.routing === 'direct')) ||
     // a tree, flow or lanes of any size is laid out by our own engine: Graphviz is gone (layout_own_engine)
     shapeable(drawing);
+  // a timeline or radial drawing keeps the places the stage gives its type, laid out by our own engine (layout_own_engine)
+  const typed = typePlaces(drawing);
   const cheap = quick || (step && step !== 'own');
   const ways = only ? [only] : cheap ? STYLE.directions.slice(0, 1) : STYLE.directions;
   const kindsByKey = new Map(drawing.boxes.flatMap((b) => (b.kind ? [[b.key, b.kind] as const] : [])));
@@ -160,16 +165,16 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    if (ours && ownable(dot))
+    if ((ours || typed) && ownable(dot))
       return {
         rankdir,
         dot: ownSource(
           dot,
-          drawing.layoutOptions,
+          typed ? { ...layoutOptions(drawing.layoutOptions), strategy: TYPE_STRATEGY } : drawing.layoutOptions,
           kindsByKey,
           drawing.kindLanes !== false,
           step,
-          drawing.placed,
+          drawing.placed ?? typed,
           drawing.kept,
         ),
         src,
