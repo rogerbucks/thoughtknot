@@ -451,4 +451,6 @@ export const VALUES_LATE = [
   'sqliteEntries',
   'sqliteTable',
   'SQLITE_LIMITS',
+  // a table of a SQLite database named after FROM, `shop.sqlite#orders` (connector_files_to_gql), 11 Nov 2026
+  'databasePlace',
 ];
