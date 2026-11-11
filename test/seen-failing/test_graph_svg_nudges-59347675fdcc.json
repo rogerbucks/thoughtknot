@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_graph_svg_nudges.py",
+  "test": "Nudges.test_python_nudges",
+  "seen_failing_first": false,
+  "evidence": "Reads the layout source our engine is given: it was broken by the change before it (af875d6), which the replay counts as the code before"
+}
