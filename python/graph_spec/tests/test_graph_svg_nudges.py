@@ -57,7 +57,7 @@ process.stdout.write(JSON.stringify(notes.map((texts) => {
   for (const [graph, drawing] of reading.graphs) {
     const { style } = readStyle(texts, graph, reading);
     const laid = directions({ ...nudgedDrawing(drawing, style), nudges: style.nudges });
-    drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.dot]));
+    drawn[graph] = Object.fromEntries(laid.map((d) => [d.rankdir, d.source ?? d.dot]));
     // as in a view that leaves a box out: the LR source with each box's key left out in turn
     const keys = drawing.boxes.map((b) => b.key), dot = layoutSource(drawing, 'LR').source;
     without[graph] = keys.map((k) => nudgedSource(dot, style.nudges, keys.filter((x) => x !== k)));
