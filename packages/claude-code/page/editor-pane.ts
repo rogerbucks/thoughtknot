@@ -9,11 +9,12 @@
 // The drawing is laid out in that worker, in the host's own colours. The page's theme names them (theme-css.ts). So the
 // drawing follows the system's scheme with no redraw. A graph too large to lay out is its overview, in the same colours.
 // A filter chosen on it is saved in the note's style block, as the pane is where the note is edited (scale_filter_live).
-// A block too large to read at once reads its saved filter from the note's whole text.
+// A block too large to read at once reads its saved filter from the note's whole text. In the desktop app its rows are
+// kept in the app's file on disk, by the note's path.
 // The bar says whether the graph's picture for readers is up to date, as the server reads it (§62). It asks again now
 // and then. The picture may be kept from Obsidian or the command line.
 import { PALETTES, shownAsRead, styleEdit } from '@thoughtknot/core';
-import type { Settings } from '@thoughtknot/core';
+import type { PartsStore, Settings } from '@thoughtknot/core';
 import { notice } from '@thoughtknot/core/display/host';
 import { BlockEditor } from '@thoughtknot/core/display/editor/block-editor';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
@@ -43,6 +44,10 @@ export function pagePicture(pictures: () => Promise<PictureStates>, graph: strin
   };
 }
 
+/** Where the desktop app keeps the rows of a note too big to read at once, by the note's path; none in a browser. */
+const appStore = (): ((place: string) => PartsStore) | undefined =>
+  (globalThis as { thoughtknotPartsStore?: (place: string) => PartsStore }).thoughtknotPartsStore;
+
 /**
  * The pane's host: the settings as they are, read only, and a graph laid out by the page's worker under the core's
  * limits. With `note`, a filter chosen on an overview is written into it, and the page says whether it was. With
@@ -55,6 +60,7 @@ export function paneHost(
   pictures?: () => Promise<PictureStates>,
   vault?: () => string | undefined,
 ): PaneHost {
+  const onDisk = appStore();
   return {
     // the vault's own preset beats the settings' and loses to a graph's own, as in Obsidian (view_presets_scoped)
     settings: () => {
@@ -67,6 +73,8 @@ export function paneHost(
     ...(pictures && { picture: (graph: string) => pagePicture(pictures, graph) }),
     ...(note && {
       noteText: () => note.text,
+      // in the desktop app, a huge block's rows go to its file on disk (scale_parts_on_disk); else the pane keeps them
+      ...(onDisk && { store: () => onDisk(note.path) }),
       saveFilter: (graph, keep) => {
         const r = styleEdit(note.text, graph, { filter: { keep } });
         if ('refused' in r) return notice(r.refused);

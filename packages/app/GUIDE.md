@@ -47,6 +47,16 @@ Rust (src-tauri/)
 - `tauri-mesh.ts`: `dialDevice` and `listenForDevice`, the mesh commands as a sync `Channel`. Sends go in order, and the
   channel closes when the Rust says the connection ended.
 
+## Huge notes, in `src/`
+
+- `tauri-parts-store.ts`: `tauriPartsStore`, the store of a note too big to read at once, in the app's file on disk
+  (ES§53, `scale_parts_on_disk`).
+  - The window reads the note a part at a time, as everywhere. It sends the rows to the Rust 5,000 at a time, and
+    the version last.
+  - It then asks for a page of rows at a time, so it holds only what is on screen. Each note is kept under its path.
+  - The file outlasts the window, so a note seen before opens without a reading.
+  - `orInMemory` keeps the rows in memory for the rest of the session if the file fails.
+
 ## Sharing, in `src/`
 
 - `app-share.ts`: the Share button and its panel (ES§45, `board_access`). One press starts a shared vault. The keys are
@@ -67,11 +77,11 @@ Rust (src-tauri/)
 
 ## The Rust, `src-tauri/`
 
-- Twenty-six commands, and no others. Ten are folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
+- Twenty-eight commands, and no others. Ten are folder commands (`pick_folder`, `own_folder`, `read_dir`, `read_text`,
   `write_text`, `remove_file`, `make_dir`, `write_new`, `pick_target`, `swap_folders`). One is `run_gh`. Six are `mesh_`
-  ones and eight are `crdt_` ones. The last is `machine_found`, which only looks for a mesh VPN address (`found.rs`).
-  The same twenty-six are named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists
-  together.
+  ones and eight are `crdt_` ones. One is `machine_found`, which only looks for a mesh VPN address (`found.rs`). The last
+  two are `parts_write` and `parts_read`, the store of notes read in parts (`parts.rs`). The same twenty-eight are
+  named in `lib.rs`, `build.rs` and `capabilities/default.json`. A test holds the three lists together.
 - `gh.rs` holds `run_gh`'s list of allowed calls: only `gh api --hostname github.com`, for the seven calls the core's
   repository host makes. Anything else is refused before gh starts. `cargo test` checks the list against
   `packages/core/test/fixtures/gh-calls.json`, the cases the core checks too.
@@ -90,6 +100,20 @@ Rust (src-tauri/)
 - The window's policy (`tauri.conf.json`) allows only the app's own pages and Tauri's calls. No other origin.
 - `thoughtknot-app <folder>` opens that folder without asking. The end-to-end check uses this.
 - The crates are pinned to exact versions. `Cargo.lock` is committed.
+
+## The store of huge notes, in `src-tauri/`
+
+- `parts.rs` and the crate in `store/` keep the rows of notes read in parts in one SQLite file. It is
+  `parts-store.sqlite`, in the app's own data folder, never the notes folder.
+- SQLite is built into the app from its own source, with no server and no WebAssembly.
+- A write carries at most 20,000 rows, all of one note. A note's version is written last, so a note half put is never
+  read as fresh.
+- The file is only a copy. One of an older shape, or one SQLite cannot read, is thrown away and made again.
+- `cargo test -p thoughtknot-store` checks it against the core's store contract, read from
+  `packages/core/test/fixtures/parts-store-contract.json`. It needs no window, so it runs without WebKitGTK.
+
+## The notes as texts, in `src-tauri/`
+
 - `crdt.rs` keeps the notes as Automerge texts, because the window may not run WebAssembly. Its commands open a note,
   read its text, edit it, merge in records, ask whether it was ever a text, and make and find anchors. Bytes cross as
   hexadecimal text. It writes the same bytes as the JavaScript build, which a shared fixture checks.
@@ -100,6 +124,7 @@ Rust (src-tauri/)
 npm run build --workspace packages/app        # the window's files, into packages/app/dist
 cd packages/app/src-tauri && cargo build      # first: see below
 cd packages/app/src-tauri && cargo test       # the folder checks
+cd packages/app/src-tauri && cargo test -p thoughtknot-store   # the store of notes read in parts, no window needed
 cd packages/app/src-tauri && cargo run -- path/to/notes
 ```
 
