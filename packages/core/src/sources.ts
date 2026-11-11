@@ -19,8 +19,11 @@ import { word } from './words.ts';
  */
 export interface Source {
   graph: string;
-  /** A .gql file, a note, a plug-in's source, or a table: a .csv file read by its mapping (csv-connector.ts). */
-  kind: 'file' | 'note' | 'plugin' | 'table' | 'text';
+  /**
+   * A .gql file, a note, a plug-in's source, or a table: a .csv file read by its mapping (csv-connector.ts). Or a
+   * table of a SQLite database, `shop.sqlite#orders`, read by its mapping too (database-connector.ts).
+   */
+  kind: 'file' | 'note' | 'plugin' | 'table' | 'text' | 'database';
   /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
   scheme?: string;
   /**
@@ -50,6 +53,7 @@ export interface SourceFault {
  */
 export type Fetched =
   | { found: string; text: string; mapping?: string }
+  | { found: string; bytes: Uint8Array; mapping?: string }
   | { found: string; unreadable: string }
   | { found: string; tooLarge: number }
   | { missing: true; elsewhere?: readonly string[] };
@@ -81,7 +85,9 @@ const NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 /** The place written after FROM, as a link names it: brackets, alias (`|…`) and heading (`#…`) taken off. */
 function placeOf(written: string): string {
   const inner = /^\[\[([^\]]*)\]\]$/.exec(written)?.[1] ?? written;
-  return trim(inner.split('|')[0]?.split('#')[0] ?? '');
+  const linked = trim(inner.split('|')[0] ?? '');
+  // a database keeps its table after #; any other place's heading is taken off
+  return databasePlace(linked) ? linked : trim(linked.split('#')[0] ?? '');
 }
 
 /**
@@ -138,18 +144,32 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   }
   if (outsideVault(target)) return fault(word('reading.source.outside', { target }));
   const last = target.split('/').at(-1) ?? '';
-  const kind = /\.gql$/i.test(last)
-    ? 'file'
-    : /\.csv$/i.test(last)
-      ? 'table'
-      : /\.txt$/i.test(last)
-        ? 'text'
-        : /\.md$/i.test(last) || !last.includes('.')
-          ? 'note'
-          : null;
+  const kind = databasePlace(last)
+    ? 'database'
+    : /\.gql$/i.test(last)
+      ? 'file'
+      : /\.csv$/i.test(last)
+        ? 'table'
+        : /\.txt$/i.test(last)
+          ? 'text'
+          : /\.md$/i.test(last) || !last.includes('.')
+            ? 'note'
+            : null;
   if (!kind) return fault(word('reading.source.neither', { target }));
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
+}
+
+/** The table a database place names and the file it is in: `Data/shop.sqlite#orders`; null for any other place. */
+export function databasePlace(place: string): { file: string; table: string } | null {
+  const at = place.lastIndexOf('#');
+  if (at < 0) return null;
+  const file = place.slice(0, at),
+    table = place.slice(at + 1);
+  const dot = file.lastIndexOf('.');
+  const ending = dot < 0 ? '' : file.slice(dot + 1).toLowerCase();
+  if (!table || table.includes('/') || !['sqlite', 'sqlite3', 'db'].includes(ending)) return null;
+  return { file, table };
 }
 
 /** A place as one key, the same however it was written: its kind, a plug-in's word, and the place. */
@@ -227,6 +247,9 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
     const reading: NoteReading = { graphs: new Map(), problems: [], world: {}, whole: {}, texts: [], tooLarge };
     return { source, from: fetched.found, texts: [], lines: [], reading };
   }
+  // a database's bytes are read only by its connector (database-connector.ts), never as graph text
+  if ('bytes' in fetched)
+    return refuse(source, 'unreadable', word('reading.source.unreadable', { name, why: '', graph }));
   const blocks = kind === 'note' ? gqlBlocks(fetched.text) : [{ text: fileBlock(fetched.text), line: 0 }];
   const texts = blocks.map((b) => b.text);
   if (kind !== 'note' && graphOf(texts[0] ?? '') === null)

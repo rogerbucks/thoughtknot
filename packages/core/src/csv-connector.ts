@@ -19,6 +19,7 @@ import type { CsvTable } from './csv-read.ts';
 import { readNote } from './drawing.ts';
 import { gqlLines } from './export-data-gql.ts';
 import { placeKey, readSource } from './sources.ts';
+import type { Source } from './sources.ts';
 import { word } from './words.ts';
 
 /** A thing's id made from a kind and a cell: `Customer` and `Acme Ltd` give `customer_Acme_Ltd`. */
@@ -80,6 +81,45 @@ function exportStatements(own: ExportRead, table: CsvTable, place: string, versi
 }
 
 /**
+ * A table read by its mapping, as any connector of tables gives it: a .csv file, or a table of a database. With no
+ * mapping it gives no statements and proposes one. ThoughtKnot's own export reads back with none.
+ */
+export function tableConnected(
+  source: Source,
+  read: { found: string; table: CsvTable; version: string; mapping?: string },
+  shared: string[] = [],
+): Connected {
+  const place = placeKey(source);
+  const { table, version } = read;
+  const written = read.mapping ? readNote([read.mapping], 0, shared).world['mapping'] : undefined;
+  const mapping = written ? mappingOf(written, place) : null;
+  // ThoughtKnot's own export says itself what each row is, so it reads back with no mapping (format_loss_stated)
+  const own = !mapping && isExportTable(table) ? exportRead(table) : null;
+  const statements = mapping
+    ? tableStatements(table, mapping, version)
+    : own
+      ? exportStatements(own, table, place, version)
+      : [];
+  const block = [`// graph: ${source.graph}`, ...statements.map((s) => s.text)].join('\n');
+  const reading = readNote([block], 0, shared);
+  const connected: Connected = {
+    source,
+    place,
+    version,
+    statements,
+    read: { source, from: read.found, texts: [block], lines: [0], reading },
+  };
+  if (own) {
+    if (own.faded) connected.note = word('reading.table.faded-not-kept', { place, rows: String(own.faded) });
+  } else if (!mapping) {
+    connected.proposal = { place: mappingPlace(place), text: mappingText(proposeMapping(place, table)) };
+    connected.note = word('reading.table.no-mapping', { place, mapping: mappingPlace(place) });
+  } else if (table.uneven.length)
+    connected.note = word('reading.table.uneven', { place, rows: String(table.uneven.length) });
+  return connected;
+}
+
+/**
  * The connector for a table: a .csv file read with the mapping written beside it. With no mapping, it gives no
  * statements and proposes one (`proposal`, the text of the mapping file) for a person to apply.
  */
@@ -99,27 +139,10 @@ export const tableConnector: Connector = {
     }
     const table = readCsv(place, fetched.text);
     if ('refused' in table) return { source, why: 'unreadable', refused: table.refused };
-    const version = sha256(fetched.text);
-    const written = fetched.mapping ? readNote([fetched.mapping], 0, shared).world['mapping'] : undefined;
-    const mapping = written ? mappingOf(written, place) : null;
-    // ThoughtKnot's own export says itself what each row is, so it reads back with no mapping (format_loss_stated)
-    const own = !mapping && isExportTable(table) ? exportRead(table) : null;
-    const statements = mapping
-      ? tableStatements(table, mapping, version)
-      : own
-        ? exportStatements(own, table, place, version)
-        : [];
-    const block = [`// graph: ${source.graph}`, ...statements.map((s) => s.text)].join('\n');
-    const reading = readNote([block], 0, shared);
-    const read = { source, from: fetched.found, texts: [block], lines: [0], reading };
-    const connected: Connected = { source, place, version, statements, read };
-    if (own) {
-      if (own.faded) connected.note = word('reading.table.faded-not-kept', { place, rows: String(own.faded) });
-    } else if (!mapping) {
-      connected.proposal = { place: mappingPlace(place), text: mappingText(proposeMapping(place, table)) };
-      connected.note = word('reading.table.no-mapping', { place, mapping: mappingPlace(place) });
-    } else if (table.uneven.length)
-      connected.note = word('reading.table.uneven', { place, rows: String(table.uneven.length) });
-    return connected;
+    return tableConnected(
+      source,
+      { found: fetched.found, table, version: sha256(fetched.text), mapping: fetched.mapping },
+      shared,
+    );
   },
 };

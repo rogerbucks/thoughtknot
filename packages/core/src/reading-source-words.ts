@@ -118,6 +118,7 @@ export const READING_SOURCE_WORDS = {
   'reading.source.cited-cell': '{place} row {row}, column {column} ({version})',
   'reading.source.table': 'The table {target}',
   'reading.source.text': 'The text file {target}',
+  'reading.source.database': 'The database table {target}',
   // a table read from a CSV file (csv-read.ts, csv-connector.ts)
   'reading.table.too-large': '{place} is larger than {most} bytes, so it was not read: split it, or keep fewer rows.',
   'reading.table.too-many-rows': '{place} has more than {most} rows, so it was not read: split it into smaller files.',

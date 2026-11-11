@@ -23,6 +23,7 @@ import { lineInSource, placeKey, readSource } from './sources.ts';
 import type { Fetched, Source, SourceRead, SourceRefusal } from './sources.ts';
 import { tableConnector } from './csv-connector.ts';
 import { textConnector } from './text-connector.ts';
+import { databaseConnector } from './database-connector.ts';
 import { word } from './words.ts';
 
 /** Where a statement was read: the place, the hash of its text, and the line (1-based) in it. */
@@ -103,7 +104,7 @@ export const gqlConnector: Connector = {
 };
 
 /** Every connector, by the kinds of place it reads. */
-export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector, textConnector];
+export const CONNECTORS: readonly Connector[] = [gqlConnector, tableConnector, textConnector, databaseConnector];
 
 /** The connector that reads this kind of place. */
 export const connectorFor = (kind: Source['kind']): Connector | undefined =>
