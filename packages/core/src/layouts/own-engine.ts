@@ -40,6 +40,8 @@ type Point = [number, number];
 const APART = 14;
 /** The room kept between two boxes whose spots a layout gave, wide enough for a link name between them. */
 const GIVEN_ROOM = 40;
+/** The room kept each side of a link's words between two linked boxes whose spots a layout gave, in CSS pixels. */
+const WORDS_ROOM = 16;
 /** The room between two parts of a drawing packed side by side, in CSS pixels. */
 const PART_GAP = 40;
 /** The most rounds of pushing boxes apart. */
@@ -131,6 +133,7 @@ export function ownSpots(
   bands: Map<string, number>;
 } {
   const { shape: whole, sizes } = marksShape(laid.marks);
+  const words = widestWords(laid.marks);
   if (step) {
     const c = cheaperSpots(step, whole, sizes, rankdir, layoutOptions(options).spacing, MARGIN);
     return { ...c, via: new Map(), boxes: [], pick: pickLayout(whole), parts: 1, loose: 0, bands: new Map() };
@@ -159,7 +162,15 @@ export function ownSpots(
     const one = laidParts.length === 1 && !loose.length;
     const [these, over] = one ? [shape, groups] : [partShape(shape, part), groupsOver(groups, part)];
     const bands = lanesBy && bandsOf(kindsOf(these, lanesBy), these, lanesBy);
-    const piece = placedPart(these, sizes, over, way, { previous, options, turn: i === 0, bands, placed, levelled });
+    const piece = placedPart(these, sizes, over, way, {
+      previous,
+      options,
+      turn: i === 0,
+      bands,
+      placed,
+      levelled,
+      words,
+    });
     if (i === 0) way = piece.way;
     return piece;
   });
@@ -212,7 +223,19 @@ interface PartMore {
   placed?: ReadonlyMap<string, [number, number]> | undefined;
   /** Whether the whole drawing is laid out by its levels; a part of an overview never is. */
   levelled: boolean;
+  /** How wide the widest link's words are, so two linked boxes whose spots a layout gave keep room for them. */
+  words?: number;
 }
+
+/** How wide the widest words on a link of `marks` are, in CSS pixels: as measured, or else guessed from their size. */
+const widestWords = (marks: readonly DrawMark[]): number => {
+  const links = new Set(marks.flatMap((m) => (m.kind === 'link' && m.of !== undefined ? [m.of] : [])));
+  let most = 0;
+  for (const m of marks)
+    if (m.kind === 'label' && m.of !== undefined && links.has(m.of))
+      most = Math.max(most, m.maxWidth ?? m.text.length * m.size * 0.55);
+  return most;
+};
 
 /** Each thing's lane, its kind's place in `kinds`' order, where kinds link in order or across two sides. */
 function bandsOf(
@@ -293,7 +316,10 @@ function laidBy(
   const seeded = pick.why === 'levels' && !previous ? levelSeed(shape, 2, unit) : null;
   const placed =
     pick.layout === 'given'
-      ? roomy(givenSpots(shape, more.placed ?? new Map(), unit), sizes, GIVEN_ROOM * spacing)
+      ? roomy(givenSpots(shape, more.placed ?? new Map(), unit), sizes, GIVEN_ROOM * spacing, {
+          links: shape.links,
+          gap: (more.words ?? 0) + WORDS_ROOM,
+        })
       : seeded && new Map([...seeded].map(([k, [x = 0, y = 0]]) => [k, [x, y] as Point]));
   const spots =
     placed ??
