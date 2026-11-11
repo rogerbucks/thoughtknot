@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/given-roomy.test.js",
+  "test": "roomy > spots already apart are left where they are",
+  "seen_failing_first": false,
+  "evidence": "roomy came in the commit before; on main, where it does not exist, this test fails"
+}
