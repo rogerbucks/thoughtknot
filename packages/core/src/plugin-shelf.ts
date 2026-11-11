@@ -1,4 +1,4 @@
-// The shelves a plug-in registry keeps what each point adds on (editor spec §43, plugin_interface). Each plug-in's
+// The shelves a plug-in registry keeps what each point adds on (editor spec ES§43, plugin_interface). Each plug-in's
 // additions wait on a shelf of their own until all of them are accepted, then move onto the registry's.
 
 /** What a plug-in adds to one point, kept aside until all it adds has been accepted. */

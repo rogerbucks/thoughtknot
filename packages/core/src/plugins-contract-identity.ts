@@ -1,4 +1,4 @@
-// The contract of the identity point (editor spec ES§40, five_layer_stack; §45, board_access). It is kept apart from
+// The contract of the identity point (editor spec ES§40, five_layer_stack; ES§45, board_access). It is kept apart from
 // the other points' contracts so no source file grows past its size. Its checks need no test framework.
 // An identity system says who uses a device and, if it likes, the most they may do at a board. It is given a device's
 // public key alone, never a key that seals or a note's text. It only narrows what an invitation gives, never widens it.

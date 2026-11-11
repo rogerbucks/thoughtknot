@@ -1,4 +1,4 @@
-// A plug-in adds a system that says who a person is (editor spec ES§40, five_layer_stack; §45, board_access). The
+// A plug-in adds a system that says who a person is (editor spec ES§40, five_layer_stack; ES§45, board_access). The
 // registry holds it under its word. The contract refuses one that cannot name a person, or names two devices alike.
 // What it says can only narrow what an invitation gives.
 import { test, describe } from 'node:test';
