@@ -15,6 +15,7 @@ import { backendProblem, commandProblem, exporterProblem, panelProblem } from '.
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
+import { keep, nameOf, shelf, type Shelf } from './plugin-shelf.ts';
 import { identityProblem, syncStoreProblem, transportProblem } from './plugin-points.ts';
 import type { IdentityBackend, SyncIdentity } from './plugin-points.ts';
 import type { SyncStore, SyncStoreBackend, SyncTransport, TransportBackend } from './plugin-points.ts';
@@ -183,24 +184,6 @@ export interface PluginRegistry extends SourceFetching {
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
-
-/** What a plug-in adds to one point, kept aside until all it adds has been accepted. */
-interface Shelf<T> {
-  items: T[];
-  owner: Map<string, string>;
-  /** What each is named by on its point, such as a command's `id`. */
-  key: keyof T;
-}
-
-const shelf = <T>(key: keyof T): Shelf<T> => ({ items: [], owner: new Map(), key });
-const nameOf = <T>(s: Shelf<T>, t: T) => String(t[s.key]);
-/** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
-const keep = <T>(from: Shelf<T>, to: Shelf<T>, plugin: string) => {
-  for (const t of from.items) {
-    to.items.push(t);
-    to.owner.set(nameOf(to, t), plugin);
-  }
-};
 
 /** Why something a plug-in adds to a point is refused, given the plug-in's id and who added each name so far. */
 type Problem<T> = (t: T, pluginId: string, taken: Map<string, string>) => string | null;
