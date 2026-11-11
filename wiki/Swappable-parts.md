@@ -88,3 +88,4 @@ No byte may travel or rest unencrypted. So a cipher suite is held to a contract 
 2. The `keeper` and `suite` points wait. A plug-in there would see keys and plain text, so they stay built in for now.
 3. Plug-in point `identity` is built, so a plug-in can bring who a person is. The grants of the permissions stay the
    owner's to give.
+4. A live check on two Macs, with each swapped part, before sharing is turned on for everyone.
