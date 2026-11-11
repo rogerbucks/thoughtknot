@@ -171,27 +171,27 @@
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "7d2d7abaa93e72f9346b189857a34ad77a852874708666b7aba7120f00f009eb",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "2d7392fd392930676c0513e08aff103993b2e9f165e075fdff118b1dfa4837a5",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "35acaa71f7ebc0aa81e759ffd270ce36a164014b9f840610ae13901feeaa7bcf",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "01f624dad9ec9e346436f553e3c938aecadb6e4e6a15b72c1f80d44f1e0ced17",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "6200c96a80ec5965a34a76b553cbf312151e85abca7b15333fc6aebcd7fe0c3b",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "1dc871160486f4116732a5879f408105add799f08a6ef26dee08a771376b10e0",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "ac3886cef579e7d3e1672ed1d745dcab3a47cbfdab3c67659836a86eda9a9351",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "e68250bba3a97398678811eb48b7b5323c36fe5b9d582cd0bb9bf31e61fce9b6",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -219,26 +219,26 @@
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "01fb6a939f71b63097b683192615b83e64a1825acb01f73c245f87035c4ccc95",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "dc178ddd6c0d926907efde8fd336c5605bee3c8786aefe3cb1cef4179fb57e72",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "33a6763b9fea7ca9a1b1c7579f7dd9df6156b0d588c59ec6ac4a2172b33155f3",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "e3d133d4318019a7132472dc3d31855a02811f0e6de19a51a3d6befda610fd4e",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "1d2e344afd89346b1fb0964fdf7e3dafe6fcf0db83f5a61f44058e90d778750a",
-      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "sha256": "39b07394b2ab3f1ca628c76c5d76c8d157419ea94e1882d6705e868e99cd78c6",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
       "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "3c13c5a10cf83251cf8737276bafeec810b8a7c0488693d1e0c029a3ad3e1b93",
-      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "sha256": "c1d9354f363791ff18bc74669c04855f6aa79dde494424daac5a0247bf9e6d80",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
       "day": "2026-11-11"
     },
     {
@@ -267,39 +267,39 @@
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "f8f5f9885a62a8597fe2180764e4b714d8dc299dbae382fc99e41099a7d859df",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "84b209a2030d68bdf6f4f56e720fd15b4b7117851cbc5ccbfb6d89ebde311562",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "a3d119d579033965f61ca73697321b597adf564cbaf581e24e9c474b93a8a6dd",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "881145024624ab9e93935a0d00549641d9c11401e030311a86fa7dcf8c457f09",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "08672d768a02392c39ae0f6ebc5fb7ae83e176fc2d988e0ded4607256e956b78",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "027f3f113d475d269b3419736477762d051561e175c487e980e5add8a3077584",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "4bdbb109919635100845fb28b8c8543d65de8d7624b06c983124188372720358",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "fc3c0ca2007c64e9f1169d0e4c520a9fcd48a3e3f2b1800327205937da516588",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "b2a4838f75f02291fbcbbce84153025ee173afba8885500a7f338d0acf330ef2",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "778d12d22cbe8f1206b71fb5bf62f969e1625f838eae9d41094692405b391755",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "724744f3d8a376857033b01ca645e7873e30c46bed9931ee2b216e831e36d1b0",
-      "reason": "Links hold a least thickness on screen, so their width is written max(2px, ...) (Roger, 5 Nov 2026, Q-20)",
-      "day": "2026-11-05"
+      "sha256": "96683b8d87d6f3882b8d9459284335bae44a5ea010f70ec0642e8d035edbe5db",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
@@ -339,27 +339,27 @@
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "adfa0087ce12d63f78b933727ff361c09e66ee27679c9b27bdfc3f6ddebe310a",
-      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "sha256": "1d5b158dd8667e6e8cd14fbfaf85440e9814a7a3d1b5bd37751d490cb76cdc5e",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
       "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "c403b86b33e8e789c2a54b8be72fc34f01a118a557ae658bd80b6588614246cf",
-      "reason": "Graphviz is gone: every drawing is laid out by our own engine (layout_own_engine)",
+      "sha256": "ccefc88d6755e288a1af05caa5c8f960781db69c919a00559a97fb2e949678a6",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
       "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "c7ea0e7da3485195c9116a91863d96b399277e6d5da1cd4c38ba049267decba5",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "1c70cef95c2c3377b1d04ec0b9b04bbd38f40049e44080c5fa23aff9703c8f72",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "fbc1f1af79fd63cf4d0472eeaeab04c4c8789e3e1ec6613988cb6efd060a9ad1",
-      "reason": "Our own measuring replaces Graphviz's: places move by at most a hundredth of a point",
-      "day": "2026-11-09"
+      "sha256": "fc5a12c802236fe1b4d394d6b359870cb7cc4474464a8fe54a8e9f72cacd3c61",
+      "reason": "Link words sit clear of their own line: beside an upright one (same_row_words_room)",
+      "day": "2026-11-11"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",

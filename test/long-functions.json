@@ -23,7 +23,7 @@
   "packages/core/src/layouts/folded-rows.ts#folded": 109,
   "packages/core/src/layouts/force-3d.ts#forceLayout3d": 147,
   "packages/core/src/layouts/grouped.ts#groupedLayered": 193,
-  "packages/core/src/layouts/layered.ts#layered": 255,
+  "packages/core/src/layouts/layered.ts#layered": 258,
   "packages/core/src/layouts/readability.ts#readability": 120,
   "packages/core/src/link-scan.ts#lineLinks": 118,
   "packages/core/src/mesh-index-backends.ts#sqliteBackend": 104,
