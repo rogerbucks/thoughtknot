@@ -78,6 +78,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 ## The core: connectors
 
+- `packages/core/test/connector-database.test.js` — a table of a SQLite database after FROM, read by its mapping
+  (editor spec §63, connector_files_to_gql).
 - `packages/core/test/connector-files.test.js` — files other than GQL broken into cited statements (editor spec
   §63, CN2). It spans the CSV reader, its mapping, its connector and the join.
 

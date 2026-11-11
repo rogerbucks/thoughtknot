@@ -128,3 +128,6 @@ export function aspectOf(o: Partial<LayoutOptions> | undefined, screen: number):
   const { shape } = layoutOptions(o);
   return shape === 'wide' ? screen * 2 : shape === 'tall' ? 1 / screen : screen;
 }
+
+/** The layout strategy of a drawing placed as its diagram type places it: our own engine keeps those places. */
+export const TYPE_STRATEGY = 'thoughtknot.type.places';

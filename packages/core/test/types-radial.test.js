@@ -48,7 +48,8 @@ describe('a radial drawing around a chosen centre', () => {
       drawn: 'radial',
       plan: { type: 'radial', centre: 'moon' },
     });
-    for (const d of directions(styledDrawing(plain, style, g))) assert.match(d.dot, /layout=twopi, root="moon"/);
+    for (const d of directions(styledDrawing(plain, style, g)))
+      assert.match(d.source ?? d.dot, /layout=twopi, root="moon"/);
   });
 
   // proves: radial_centre_chosen

@@ -26,7 +26,7 @@ import type { Placed } from './parts.ts';
 import { kindsOf } from './fingerprint.ts';
 import type { Kinds } from './fingerprint.ts';
 import { FOLDED_GROUP, TRY_MOST, chosenPick, pickLayout, tidier } from './pick.ts';
-import { givenSpots } from './given.ts';
+import { givenSpots, roomy } from './given.ts';
 import type { Pick } from './pick.ts';
 import { cheaperSpots } from './cheaper.ts';
 import { levelSeed } from './level-seed.ts';
@@ -38,6 +38,8 @@ type Point = [number, number];
 
 /** The room kept between two boxes pushed apart, in CSS pixels. */
 const APART = 14;
+/** The room kept between two boxes whose spots a layout gave, wide enough for a link name between them. */
+const GIVEN_ROOM = 40;
 /** The room between two parts of a drawing packed side by side, in CSS pixels. */
 const PART_GAP = 40;
 /** The most rounds of pushing boxes apart. */
@@ -291,7 +293,7 @@ function laidBy(
   const seeded = pick.why === 'levels' && !previous ? levelSeed(shape, 2, unit) : null;
   const placed =
     pick.layout === 'given'
-      ? givenSpots(shape, more.placed ?? new Map(), unit)
+      ? roomy(givenSpots(shape, more.placed ?? new Map(), unit), sizes, GIVEN_ROOM * spacing)
       : seeded && new Map([...seeded].map(([k, [x = 0, y = 0]]) => [k, [x, y] as Point]));
   const spots =
     placed ??

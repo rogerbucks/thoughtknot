@@ -72,7 +72,7 @@ export function placesOf(type: LaidType, shape: GraphShape, plan?: DiagramPlan):
   if (type === 'timeline') return timelineLaid(shape, plan).places;
   if (type === 'lanes') return lanesLaid(shape).places;
   if (type === 'force') return scaled(forceLayout(shape), FORCE_UNIT);
-  if (type === 'radial') return radial(shape);
+  if (type === 'radial') return radial(shape, plan?.type === 'radial' ? plan.centre : undefined);
   if (type === 'flow') return rows(shape);
   if (type !== 'tree') return drawn(type, shape);
   return tree(shape);
@@ -190,16 +190,19 @@ function neighbours(shape: GraphShape): Map<string, string[]> {
 
 /**
  * Radial: each part of the graph round its busiest thing, each ring one link further out. A thing's children share
- * its slice of the ring by how many leaves each holds, so branches stay apart. Parts sit side by side.
+ * its slice of the ring by how many leaves each holds, so branches stay apart. Parts sit side by side. The part
+ * holding the centre a style graph names is laid round that centre instead.
  */
-function radial(shape: GraphShape): Map<string, Place> {
+function radial(shape: GraphShape, centre?: string): Map<string, Place> {
   const near = neighbours(shape);
+  const written = new Map(shape.things.map((t, i) => [t.key, i]));
   const out = new Map<string, Place>();
   const left = new Set(near.keys());
   let x0 = 0;
   while (left.size) {
     const rest = { ...shape, things: shape.things.filter((t) => left.has(t.key)) };
-    const middle = busiest(rest) as string;
+    // the centre the style graph names, in its part; the busiest thing in any other (radial_centre_chosen)
+    const middle = centre !== undefined && left.has(centre) ? centre : (busiest(rest) as string);
     // a tree of shortest paths from the middle, children in the order written
     const children = new Map<string, string[]>(),
       ring = new Map<string, number>([[middle, 0]]);
@@ -213,7 +216,10 @@ function radial(shape: GraphShape): Map<string, Place> {
           kids.push(n);
           queue.push(n);
         }
-      children.set(k, kids);
+      children.set(
+        k,
+        kids.sort((a, b) => (written.get(a) ?? 0) - (written.get(b) ?? 0)),
+      );
     }
     const leaves = new Map<string, number>();
     for (const k of [...queue].reverse())
@@ -232,8 +238,10 @@ function radial(shape: GraphShape): Map<string, Place> {
     const at = new Map<string, Place>();
     const lay = (k: string, from: number, to: number): void => {
       const d = (ring.get(k) ?? 0) * gap,
-        mid = (from + to) / 2 - Math.PI / 2;
-      at.set(k, { x: d * Math.cos(mid), y: d * Math.sin(mid) });
+        mid = (from + to) / 2 + Math.PI / 2;
+      // round the centre anticlockwise from the top, as Graphviz's rings ran: a thing written before another sits just
+      // before it going round (radial_spoke_order)
+      at.set(k, { x: d * Math.cos(mid), y: -d * Math.sin(mid) });
       let a = from;
       for (const c of children.get(k) ?? []) {
         const share = ((to - from) * (leaves.get(c) ?? 1)) / (leaves.get(k) ?? 1);
