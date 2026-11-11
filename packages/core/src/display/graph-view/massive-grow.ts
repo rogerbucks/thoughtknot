@@ -57,7 +57,7 @@ export function growBar(
   const show = async () => {
     if (!x) return;
     const box = grownBox(anchor, x.keys().length);
-    if (!(await h.layIn(GROWN, x.part(), box))) return h.say(word('massive.grow-too-large', { name }));
+    if (!(await h.layIn(GROWN, await x.readPart(), box))) return h.say(word('massive.grow-too-large', { name }));
     const cut = x.cut.at(-1) ?? 0;
     h.say(word(cut ? 'massive.grown-cut' : 'massive.grown', { name, count: x.keys().length - 1, cut }));
     await h.flyOnto(box);
@@ -67,11 +67,7 @@ export function growBar(
     bar,
     word('massive.more'),
     'network',
-    () => {
-      if (!x) return;
-      if (!x.grow().length) return h.say(word('massive.no-more', { name }));
-      void show();
-    },
+    () => void x?.more().then((ring) => (ring.length ? show() : h.say(word('massive.no-more', { name })))),
     word('massive.more'),
   );
   button(
@@ -95,9 +91,11 @@ export function growBar(
     },
     state: () => (x ? { key: x.from, name, place: anchor, steps: x.steps } : null),
     restore(s) {
-      x = s && new Expansion(h.drawing, s.key);
+      const made = (x = s && new Expansion(h.drawing, s.key));
       // the rings grow the same way each time, so growing as many steps again gives the same picture
-      for (let i = 0; x && s && i < s.steps; i++) x.grow();
+      void (async () => {
+        for (let i = 0; made && s && i < s.steps; i++) await made.more();
+      })();
       name = s?.name ?? '';
       anchor = s?.place ?? anchor;
       bar.hidden = !s;

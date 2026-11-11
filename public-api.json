@@ -626,6 +626,9 @@
         "Consequence": [
           "type = 'note' | 'link' | 'query' | 'reference'"
         ],
+        "contractCases": [
+          "value: () => Promise<{ rows: NoteRows[]; asks: (StoreAsk & { answer: unknown; })[]; }>"
+        ],
         "Converted": [
           "type = { ok: true; note: string; changed: number; } | { ok: false; reason: string; }"
         ],
@@ -1071,7 +1074,7 @@
           "type = { ok: true; text: string; } | { ok: false; reason: string; }"
         ],
         "editInParts": [
-          "value: (ix: MeshIndex, note: string, text: string, graph: string, key: string, change: (lines: string) => Edit) => Edit"
+          "value: (into: MeshIndex | PartsStore, note: string, text: string, graph: string, key: string, change: (lines: string) => Edit) => Promise<Edit>"
         ],
         "EditPlan": [
           "interface",
@@ -3246,24 +3249,50 @@
           "value: 20000"
         ],
         "partsOf": [
-          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>, most?: number) => Promise<Map<string, PartsSource>>"
+          "value: (into: MeshIndex | PartsStore, note: string, text: string, pause: () => Promise<void>, most?: number) => Promise<Map<string, PartsSource>>"
         ],
         "partsRefusal": [
           "value: (text: string) => Refusal | null"
         ],
         "PartsSource": [
           "class",
-          "static new (ix: MeshIndex, note: string, graph: string, version: string, most?: number): PartsSource",
-          "fresh: boolean",
+          "static new (store: MeshIndex | PartsStore, note: string, graph: string, version: string, most?: number): PartsSource",
+          "fresh: () => Promise<boolean>",
           "readonly graph: string",
-          "group: (id: string, keep?: boolean) => GraphDrawing | null",
+          "group: (id: string, keep?: boolean) => Promise<GraphDrawing | null>",
           "holding: number",
-          "letGo: (id: string) => void",
+          "letGo: (id: string, unpin?: boolean) => void",
           "near: LinksNear",
           "readonly note: string",
           "onScreen: (ids: Iterable<string>) => void",
           "open: Array<string>",
-          "overview: () => Grouping"
+          "overview: () => Promise<Grouping>"
+        ],
+        "PartsStore": [
+          "interface",
+          "briefs: (note: string) => Promise<ThingBrief[]>",
+          "drop: (note: string) => Promise<void>",
+          "groups: (note: string) => Promise<{ groups: GroupRow[]; between: BetweenRow[]; }>",
+          "inside: (note: string, group: string) => Promise<LinkRow[]>",
+          "readonly kind: string",
+          "readonly lasting: boolean",
+          "links: (note: string) => Promise<LinkRow[]>",
+          "put: (rows: NoteRows) => Promise<void>",
+          "span: (note: string, graph: string, key: string) => Promise<Span | null>",
+          "things: (note: string, groups: readonly string[]) => Promise<ThingRow[]>",
+          "touching: (note: string, keys: readonly string[]) => Promise<LinkRow[]>",
+          "version: (note: string) => Promise<string | null>"
+        ],
+        "PartsStoreCheck": [
+          "interface",
+          "name: string",
+          "run: () => Promise<void>"
+        ],
+        "partsStoreContract": [
+          "value: (make: () => Promise<PartsStore>) => PartsStoreCheck[]"
+        ],
+        "partsStoreOf": [
+          "value: (s: MeshIndex | PartsStore) => PartsStore"
         ],
         "pastLimit": [
           "value: ({ facts, size }: ImageAt, say?: Say) => string | null"
@@ -4800,7 +4829,7 @@
           "value: (to: 'ltr' | 'rtl') => void"
         ],
         "setInParts": [
-          "value: (ix: MeshIndex, at: { note: string; text: string; graph: string; }, key: string, prop: string, type: PropType, words: string) => Edit"
+          "value: (into: MeshIndex | PartsStore, at: { note: string; text: string; graph: string; }, key: string, prop: string, type: PropType, words: string) => Promise<Edit>"
         ],
         "setLanguage": [
           "value: (tag: string) => string"
@@ -5258,6 +5287,9 @@
         "storageSettingFrom": [
           "value: (saved: unknown) => StorageSetting"
         ],
+        "StoreAsk": [
+          "type = { ask: 'version' | 'groups' | 'briefs' | 'links'; note: string; } | { ask: 'things'; note: string; groups: string[]; } | { ask: 'inside'; note: string; group: string; } | { ask: 'touching'; note: string; keys: string[]; } | { ask: 'span'; note: string; graph: string; key: string; }"
+        ],
         "StoredChange": [
           "interface",
           "after: string | null",
@@ -5270,11 +5302,11 @@
           "interface",
           "drawing: GraphDrawing",
           "parts: StoredParts",
-          "props: (key: string) => Readonly<Record<string, unknown>>",
-          "world: () => Graph"
+          "props: (key: string) => Promise<Readonly<Record<string, unknown>>>",
+          "world: () => Promise<Graph>"
         ],
         "storedGraphs": [
-          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>, kept?: KeptPlace) => Promise<Map<string, StoredGraph>>"
+          "value: (into: MeshIndex | PartsStore, note: string, text: string, pause: () => Promise<void>, kept?: KeptPlace) => Promise<Map<string, StoredGraph>>"
         ],
         "StoredNote": [
           "interface",
@@ -5282,7 +5314,10 @@
           "version: string"
         ],
         "storedStyle": [
-          "value: (text: string, stored: StoredGraph) => { style: StyleGraph; problems: Problem[]; }"
+          "value: (text: string, stored: StoredGraph) => Promise<{ style: StyleGraph; problems: Problem[]; }>"
+        ],
+        "storeOver": [
+          "value: (backend: MeshBackend, lasting?: boolean) => PartsStore"
         ],
         "Strictness": [
           "type = 'standard' | 'forgiving' | 'simplified'"
@@ -5610,6 +5645,14 @@
         ],
         "ThingAddedNear": [
           "type = { block: number; was: string; now: string; name: string; } | { reason: string; }"
+        ],
+        "ThingBrief": [
+          "interface",
+          "graph: string",
+          "group: string",
+          "key: string",
+          "kind: string",
+          "text: string"
         ],
         "thingChange": [
           "value: (name: string, kind: string, properties?: Record<string, string | number | boolean>, extra?: { group?: string; reason?: string; }) => ChangeInput"

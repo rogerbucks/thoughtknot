@@ -5,6 +5,9 @@
 // cut to its best-linked things, and the whole is never more than can be laid out at once. A step back takes the last
 // ring away. `part` is the drawing cut down to what is kept, to lay out on its own.
 //
+// A drawing read in parts holds no links: they are read from the store as a step reaches its things. `more` and
+// `readPart` wait for them; `grow` and `part` use only the links read so far.
+//
 // Host-free and pure: it reads the drawing, and never changes it.
 import { adjacency, edgesOf } from './focus.ts';
 import type { GraphDrawing, Link } from './note-reading.ts';
@@ -64,7 +67,6 @@ export class Expansion {
    */
   grow(): string[] {
     const last = this.rings.at(-1) ?? [];
-    this.ask(last);
     const found = new Map<string, number>();
     for (const at of last)
       for (const [, other] of this.adj.get(at) ?? [])
@@ -90,10 +92,21 @@ export class Expansion {
     this.cut.pop();
   }
 
+  /** One step further out, as `grow`, once the links of the last ring are read. */
+  async more(): Promise<string[]> {
+    await this.ask(this.rings.at(-1) ?? []);
+    return this.grow();
+  }
+
+  /** The drawing to lay out, as `part`, once the links of every thing kept are read. */
+  async readPart(): Promise<GraphDrawing> {
+    await this.ask([...this.kept]);
+    return this.part();
+  }
+
   /** The drawing cut down to the things kept and the links among them, to lay out on its own. */
   part(): GraphDrawing {
     if (!this.near) return partOf(this.drawing, this.kept);
-    this.ask([...this.kept]);
     const links = [...this.read.values()].filter((l) => this.kept.has(l.from) && this.kept.has(l.to));
     return {
       ...partOf({ ...this.drawing, links: [] }, this.kept),
@@ -102,12 +115,12 @@ export class Expansion {
   }
 
   /** With `near`, reads the links of those of `keys` not asked about yet, each link once. */
-  private ask(keys: readonly string[]): void {
+  private async ask(keys: readonly string[]): Promise<void> {
     if (!this.near) return;
     const fresh = keys.filter((k) => !this.asked.has(k));
     if (!fresh.length) return;
     for (const k of fresh) this.asked.add(k);
-    for (const l of this.near(fresh)) {
+    for (const l of await this.near(fresh)) {
       const n = l.edge ?? -1;
       if (this.read.has(n)) continue;
       this.read.set(n, l);

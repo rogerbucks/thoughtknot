@@ -18,7 +18,9 @@ import { dataTooLarge, noteRowsPaced } from './mesh-index-rows.ts';
 import { PARTS_LIMITS } from './layout-limits.ts';
 import type { Refusal } from './layout-limits.ts';
 import type { BetweenRow, GroupRow, MeshIndex } from './mesh-index.ts';
-import { facetsOf } from './facet-counts.ts';
+import { partsStoreOf } from './parts-store.ts';
+import type { PartsStore } from './parts-store.ts';
+import { FacetColumns } from './facet-counts.ts';
 import type { Facet } from './facet-counts.ts';
 import { PartsSource, nearFrom } from './parts-source.ts';
 import { rowsKeptOrRead } from './parts-kept.ts';
@@ -35,9 +37,10 @@ import { word } from './words.ts';
 /** One graph of a note as the store gives it: a drawing to show as its overview, and each thing's properties. */
 export interface StoredGraph {
   drawing: GraphDrawing;
-  props: (key: string) => Readonly<Record<string, unknown>>;
+  /** A thing's properties, read from the store with its group. */
+  props: (key: string) => Promise<Readonly<Record<string, unknown>>>;
   /** Its things and links as the style checks read a graph: each thing by its kind, each link without properties. */
-  world: () => gs.Graph;
+  world: () => Promise<gs.Graph>;
   /**
    * Read in parts: its groups as the store found them, and its links, read from the store as they are needed. The
    * drawing then holds its things but none of its links (scale_parts_overview).
@@ -49,7 +52,7 @@ export interface StoredGraph {
 export interface StoredParts {
   grouping: Grouping;
   /** A group's things and the links inside it, to lay out on its own; null once the store holds other text. */
-  group: (id: string) => GraphDrawing | null;
+  group: (id: string) => Promise<GraphDrawing | null>;
   near: LinksNear;
   /** Its filters, each property's value by thing in the drawing's order, read from the store a group at a time. */
   facets: () => Facet[];
@@ -77,11 +80,12 @@ export const partsRefusal = (text: string): Refusal | null => dataTooLarge(gqlBl
 /**
  * The graphs of a note, from the store. The note is read into the store first, if the store does not hold this text.
  * A huge note is read a part at a time. Between parts it waits on `pause`, which the host gives, so the page keeps
- * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read. Empty when it is
- * past what is read in parts, no graph of it could be read, or the note changed while it was read.
+ * answering (§9). With `kept`, the rows kept there for this text are used and the note is not read; a lasting store
+ * needs no such copy. Empty when it is past what is read in parts, no graph of it could be read, or the note changed
+ * while it was read.
  */
 export async function storedGraphs(
-  ix: MeshIndex,
+  into: MeshIndex | PartsStore,
   note: string,
   text: string,
   pause: () => Promise<void>,
@@ -89,24 +93,27 @@ export async function storedGraphs(
 ): Promise<Map<string, StoredGraph>> {
   // past what the store reads in parts, nothing is read (scale_parts_budget): partsRefusal says why
   if (partsRefusal(text)) return new Map();
+  const store = partsStoreOf(into),
+    version = sha256(text);
   // rows kept from an earlier session for this text are used, so the note is not read again (scale_parts_kept)
-  if (ix.version(note) !== sha256(text))
-    ix.backend.put(await rowsKeptOrRead(kept, note, text, () => noteRowsPaced(note, text, pause)));
+  if ((await store.version(note)) !== version) {
+    const place = store.lasting ? undefined : kept;
+    await store.put(await rowsKeptOrRead(place, note, text, () => noteRowsPaced(note, text, pause)));
+  }
   const out = new Map<string, StoredGraph>();
-  if (ix.version(note) !== sha256(text)) return out;
-  const { groups, between } = ix.groups(note);
+  if ((await store.version(note)) !== version) return out;
+  const { groups, between } = await store.groups(note);
   const byGraph = new Map<string, string[]>();
   for (const g of groups) byGraph.set(g.graph, [...(byGraph.get(g.graph) ?? []), g.id]);
-  const version = sha256(text);
+  const briefs = await store.briefs(note);
   for (const [graph, ids] of byGraph) {
     // only what the overview draws is held: each thing's properties stay in the store (scale_parts_find_filter)
-    const things = ix.backend
-      .things(note, ids)
+    const things = briefs
       .filter((t) => t.graph === graph)
       .map((t) => ({ key: t.key, kind: t.kind, text: t.text, group: t.group }));
-    const source = new PartsSource(ix, note, graph, version);
-    const linksOf = () => ix.backend.links(note).filter((l) => l.graph === graph);
-    const props = propsInParts(ix, note, graph, new Map(things.map((t) => [t.key, t.group])));
+    const source = new PartsSource(store, note, graph, version);
+    const props = propsInParts(store, note, graph, new Map(things.map((t) => [t.key, t.group])));
+    const facets = await facetsInParts(store, note, graph, ids, things);
     out.set(graph, {
       drawing: nearFrom(
         {
@@ -123,20 +130,23 @@ export async function storedGraphs(
           between,
           things,
         ),
-        group: (id) => {
-          const part = source.group(id);
+        group: async (id) => {
+          const part = await source.group(id);
           source.letGo(id); // the overview keeps the group's marks once laid out, never its rows
           return part;
         },
         near: source.near,
-        facets: () => facetsInParts(things, props),
+        facets: () => facets,
       },
       props,
-      world: () =>
-        plainGraph(
-          things.map((t) => [t.key, t.kind, props(t.key) as Record<string, gs.Value>]),
-          linksOf().map((l) => [l.from, l.type, l.to, {}]),
-        ),
+      world: async () => {
+        const rows = (await store.things(note, ids)).filter((t) => t.graph === graph);
+        const links = (await store.links(note)).filter((l) => l.graph === graph);
+        return plainGraph(
+          rows.map((t) => [t.key, t.kind, JSON.parse(t.props) as Record<string, gs.Value>]),
+          links.map((l) => [l.from, l.type, l.to, {}]),
+        );
+      },
     });
   }
   return out;
@@ -147,43 +157,45 @@ export async function storedGraphs(
  * every thing, a group after another, reads each group once (scale_parts_find_filter).
  */
 function propsInParts(
-  ix: MeshIndex,
+  store: PartsStore,
   note: string,
   graph: string,
   groupOf: ReadonlyMap<string, string>,
-): (key: string) => Readonly<Record<string, unknown>> {
-  let held: { group: string; rows: Map<string, string> } | null = null;
-  return (key) => {
+): (key: string) => Promise<Readonly<Record<string, unknown>>> {
+  let held: { group: string; rows: Promise<Map<string, string>> } | null = null;
+  return async (key) => {
     const group = groupOf.get(key);
     if (group === undefined) return {};
     if (held?.group !== group) {
-      const rows = ix.backend.things(note, [group]).filter((t) => t.graph === graph);
-      held = { group, rows: new Map(rows.map((t) => [t.key, t.props])) };
+      const rows = store
+        .things(note, [group])
+        .then((all) => new Map(all.filter((t) => t.graph === graph).map((t) => [t.key, t.props])));
+      held = { group, rows };
     }
-    return JSON.parse(held.rows.get(key) ?? '{}') as Record<string, unknown>;
+    return JSON.parse((await held.rows).get(key) ?? '{}') as Record<string, unknown>;
   };
 }
 
 /**
- * The filters of a graph read in parts: what facetsOf gives for `things`, with their properties read a group at a time.
- * The things are read group by group and the columns put back in the drawing's order, so the answers are the same.
+ * The filters of a graph read in parts, as facetsOf gives them for `things`. Their properties are read from the store
+ * a group at a time, each group once. Each value goes back to its thing's place in the drawing, so the answers are the
+ * same as a whole reading gives.
  */
-function facetsInParts(
-  things: readonly { key: string; kind: string; group: string }[],
-  props: (key: string) => Readonly<Record<string, unknown>>,
-): Facet[] {
-  const order = things.map((_, i) => i);
-  const rank = new Map<string, number>();
-  for (const t of things) if (!rank.has(t.group)) rank.set(t.group, rank.size);
-  order.sort((a, b) => (rank.get(things[a]?.group ?? '') ?? 0) - (rank.get(things[b]?.group ?? '') ?? 0) || a - b);
-  return facetsOf(
-    order.map((i) => things[i] as (typeof things)[number]),
-    props,
-  ).map((f) => {
-    const values = new Array<string | undefined>(things.length);
-    order.forEach((i, at) => (values[i] = f.values[at]));
-    return { ...f, values };
-  });
+async function facetsInParts(
+  store: PartsStore,
+  note: string,
+  graph: string,
+  ids: readonly string[],
+  things: readonly { key: string; kind: string }[],
+): Promise<Facet[]> {
+  const at = new Map(things.map((t, i) => [t.key, i]));
+  const columns = new FacetColumns(things.length);
+  for (const id of ids)
+    for (const t of await store.things(note, [id])) {
+      const i = t.graph === graph ? at.get(t.key) : undefined;
+      if (i !== undefined) columns.add(i, JSON.parse(t.props) as Record<string, unknown>);
+    }
+  return columns.facets(things.map((t) => t.kind));
 }
 
 /** The groups of a graph as the store holds them, each with its things' keys, and the links between them counted. */
@@ -207,16 +219,17 @@ function groupingOf(groups: GroupRow[], between: BetweenRow[], things: { key: st
  * and gives them back edited, as setProperty in inspector.ts does. Refused when the store was read from other text
  * than `text`, so an edit never lands on the wrong lines.
  */
-export function editInParts(
-  ix: MeshIndex,
+export async function editInParts(
+  into: MeshIndex | PartsStore,
   note: string,
   text: string,
   graph: string,
   key: string,
   change: (lines: string) => Edit,
-): Edit {
-  if (ix.version(note) !== sha256(text)) return { ok: false, reason: word('editing.note-changed') };
-  const span = ix.sourceSpan(note, graph, key);
+): Promise<Edit> {
+  const store = partsStoreOf(into);
+  if ((await store.version(note)) !== sha256(text)) return { ok: false, reason: word('editing.note-changed') };
+  const span = await store.span(note, graph, key);
   if (!span) return { ok: false, reason: word('editing.not-stored', { thing: key, graph }) };
   const lines = text.split('\n');
   const done = change(lines.slice(span.line - 1, span.end).join('\n'));
@@ -228,17 +241,17 @@ export function editInParts(
  * The note's new text, with property `prop` of thing `key` set to `words`, read as `type`. It is written only on the
  * lines that wrote the thing (editInParts), and refused, with why, as a property field refuses it.
  */
-export function setInParts(
-  ix: MeshIndex,
+export async function setInParts(
+  into: MeshIndex | PartsStore,
   at: { note: string; text: string; graph: string },
   key: string,
   prop: string,
   type: PropType,
   words: string,
-): Edit {
+): Promise<Edit> {
   const value = parseValue(type, words);
   if (!value.ok) return { ok: false, reason: value.error };
-  return editInParts(ix, at.note, at.text, at.graph, key, (lines) =>
+  return editInParts(into, at.note, at.text, at.graph, key, (lines) =>
     setProperty(lines, at.graph, { thing: key }, prop, value.gql),
   );
 }
@@ -248,12 +261,15 @@ export function setInParts(
  * against the graph as the store holds it, as a whole reading checks them. The note's data blocks are never read here.
  * With no style block for the graph, the graph is not built for the checks, so a draw costs a scan of the fences.
  */
-export function storedStyle(text: string, stored: StoredGraph): { style: StyleGraph; problems: Problem[] } {
+export async function storedStyle(
+  text: string,
+  stored: StoredGraph,
+): Promise<{ style: StyleGraph; problems: Problem[] }> {
   const graph = stored.drawing.graph;
   const texts = gqlBlocks(text).map((b) => b.text);
   if (!texts.some((t) => styleOf(t) === graph)) return { style: emptyStyle(), problems: [] };
   const world = Object.assign(Object.create(null) as Record<string, gs.Graph>, {
-    [graph]: stored.world(),
+    [graph]: await stored.world(),
   });
   return readStyle(texts, graph, { world, whole: Object.create(null) as typeof world });
 }

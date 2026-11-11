@@ -4,18 +4,21 @@
 // go. So the memory a drawing holds follows the screen, not the size of the graph.
 //
 // The store stays a copy that can be thrown away. A read from rows of other text than the note has now is refused, so
-// a stale store is never drawn (text_is_the_store).
+// a stale store is never drawn (text_is_the_store). Each read waits on the store, which may be on disk
+// (scale_parts_store_swap).
 import { sha256 } from './ai-digest.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
 import type { GraphDrawing, Link } from './note-reading.ts';
 import type { MeshIndex } from './mesh-index.ts';
+import { partsStoreOf } from './parts-store.ts';
+import type { PartsStore } from './parts-store.ts';
 import type { Grouping } from './scale-groups.ts';
 
 /**
  * The links touching some things, each once, with `edge` its place among its graph's links. Given for a graph read in
  * parts, whose links are read from the store as they are needed, never all at once (scale_parts_overview).
  */
-export type LinksNear = (keys: readonly string[]) => Link[];
+export type LinksNear = (keys: readonly string[]) => Promise<Link[]>;
 
 /** Where the links of a drawing read in parts are: its drawing holds none (store-drawing.ts). */
 const linksOf = new WeakMap<GraphDrawing, LinksNear>();
@@ -42,21 +45,23 @@ interface Held {
 export class PartsSource {
   /** The groups held, the one used most lately last. */
   private readonly held = new Map<string, Held>();
+  /** The groups being read from the store now, so a group asked for twice is read once. */
+  private readonly reading = new Map<string, Promise<GraphDrawing | null>>();
   private readonly pinned = new Set<string>();
   private rows = 0;
 
-  /**
-   * The graph `graph` of `note`, read in parts into `ix` from text with digest `version`. `most` is how many rows it may
-   * hold at once.
-   */
-  private readonly ix: MeshIndex;
+  private readonly store: PartsStore;
   readonly note: string;
   readonly graph: string;
   private readonly version: string;
   private readonly most: number;
 
-  constructor(ix: MeshIndex, note: string, graph: string, version: string, most = PARTS_HELD_MOST) {
-    this.ix = ix;
+  /**
+   * The graph `graph` of `note`, read in parts into `store` from text with digest `version`. `most` is how many rows it
+   * may hold at once.
+   */
+  constructor(store: MeshIndex | PartsStore, note: string, graph: string, version: string, most = PARTS_HELD_MOST) {
+    this.store = partsStoreOf(store);
     this.note = note;
     this.graph = graph;
     this.version = version;
@@ -64,8 +69,8 @@ export class PartsSource {
   }
 
   /** Whether the store still holds the rows this was made from. */
-  get fresh(): boolean {
-    return this.ix.version(this.note) === this.version;
+  async fresh(): Promise<boolean> {
+    return (await this.store.version(this.note)) === this.version;
   }
 
   /** How many things and links it holds now. */
@@ -79,9 +84,9 @@ export class PartsSource {
   }
 
   /** Its groups and the links between them, from the group rows alone: no thing is read. Empty when not fresh. */
-  overview(): Grouping {
-    if (!this.fresh) return { by: 'links', groups: [], between: [] };
-    const rows = this.ix.groups(this.note);
+  async overview(): Promise<Grouping> {
+    if (!(await this.fresh())) return { by: 'links', groups: [], between: [] };
+    const rows = await this.store.groups(this.note);
     const groups = rows.groups.filter((g) => g.graph === this.graph);
     const at = new Map(groups.map((g, i) => [g.id, i]));
     return {
@@ -98,31 +103,35 @@ export class PartsSource {
    * more is held than the budget and it is the group used longest ago. With `keep`, it is never let go for room.
    * Null when the store no longer holds the rows this was made from.
    */
-  group(id: string, keep = false): GraphDrawing | null {
-    if (!this.fresh) return null;
+  async group(id: string, keep = false): Promise<GraphDrawing | null> {
     if (keep) this.pinned.add(id);
     const kept = this.held.get(id);
-    if (kept) {
+    if (kept && (await this.fresh())) {
       this.held.delete(id);
       this.held.set(id, kept);
       return kept.part;
     }
-    const { backend } = this.ix;
-    const inside = backend.inside
-      ? backend.inside(this.note, id)
-      : backend.links(this.note).filter((l) => l.fromGroup === id && l.toGroup === id);
+    const going = this.reading.get(id);
+    if (going) return going;
+    const read = this.read(id).finally(() => this.reading.delete(id));
+    this.reading.set(id, read);
+    return read;
+  }
+
+  /** Reads group `id` from the store and holds it. */
+  private async read(id: string): Promise<GraphDrawing | null> {
+    if (!(await this.fresh())) return null;
+    const [things, inside] = await Promise.all([this.store.things(this.note, [id]), this.store.inside(this.note, id)]);
     const part: GraphDrawing = {
       graph: this.graph,
-      boxes: backend
-        .things(this.note, [id])
-        .filter((t) => t.graph === this.graph)
-        .map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
+      boxes: things.filter((t) => t.graph === this.graph).map((t) => ({ key: t.key, kind: t.kind, text: t.text })),
       links: inside
         .filter((l) => l.graph === this.graph)
         .map((l) => ({ from: l.from, type: l.type, reading: l.reading, to: l.to })),
       estimates: [],
     };
     const rows = part.boxes.length + part.links.length;
+    this.letGo(id, false);
     this.held.set(id, { part, rows });
     this.rows += rows;
     this.makeRoom();
@@ -133,22 +142,17 @@ export class PartsSource {
    * The links with an end among `keys`, each once, read from the store. Each carries its place among the graph's links as
    * `edge`. Empty when not fresh.
    */
-  near: LinksNear = (keys) => {
-    if (!this.fresh || !keys.length) return [];
-    const { backend } = this.ix;
-    const wanted = new Set(keys);
-    const rows = backend.touching
-      ? backend.touching(this.note, keys)
-      : backend.links(this.note).filter((l) => wanted.has(l.from) || wanted.has(l.to));
-    return rows
+  near: LinksNear = async (keys) => {
+    if (!keys.length || !(await this.fresh())) return [];
+    return (await this.store.touching(this.note, keys))
       .filter((l) => l.graph === this.graph)
       .map((l): Link => ({ from: l.from, type: l.type, reading: l.reading, to: l.to, edge: l.n }));
   };
 
-  /** Lets group `id` go: it is read from the store again when next needed. */
-  letGo(id: string): void {
+  /** Lets group `id` go: it is read from the store again when next needed. `unpin` also lets it go for room. */
+  letGo(id: string, unpin = true): void {
     const kept = this.held.get(id);
-    this.pinned.delete(id);
+    if (unpin) this.pinned.delete(id);
     if (!kept) return;
     this.held.delete(id);
     this.rows -= kept.rows;
@@ -175,17 +179,18 @@ export class PartsSource {
  * at a time with `pause` between parts, unless the store holds this text. Empty when the note changed while it was read.
  */
 export async function partsOf(
-  ix: MeshIndex,
+  into: MeshIndex | PartsStore,
   note: string,
   text: string,
   pause: () => Promise<void>,
   most = PARTS_HELD_MOST,
 ): Promise<Map<string, PartsSource>> {
-  const version = sha256(text);
-  if (ix.version(note) !== version) ix.backend.put(await noteRowsPaced(note, text, pause));
+  const store = partsStoreOf(into),
+    version = sha256(text);
+  if ((await store.version(note)) !== version) await store.put(await noteRowsPaced(note, text, pause));
   const out = new Map<string, PartsSource>();
-  if (ix.version(note) !== version) return out;
-  for (const g of ix.groups(note).groups)
-    if (!out.has(g.graph)) out.set(g.graph, new PartsSource(ix, note, g.graph, version, most));
+  if ((await store.version(note)) !== version) return out;
+  for (const g of (await store.groups(note)).groups)
+    if (!out.has(g.graph)) out.set(g.graph, new PartsSource(store, note, g.graph, version, most));
   return out;
 }

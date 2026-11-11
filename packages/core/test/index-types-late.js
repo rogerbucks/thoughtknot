@@ -462,4 +462,8 @@ export const TYPES_LATE = [
   'SqliteRefusal',
   'SqliteTable',
   'SqliteValue',
+  'PartsStore',
+  'ThingBrief',
+  'PartsStoreCheck',
+  'StoreAsk',
 ];

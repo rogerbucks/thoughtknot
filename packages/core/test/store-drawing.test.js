@@ -33,7 +33,7 @@ const plain = (d) => ({
 });
 
 /** A stored graph's things, and its links as the store gives them near its things: none are held in its drawing. */
-const fromStore = (g) => ({ ...g.drawing, links: g.parts.near(g.drawing.boxes.map((b) => b.key)) });
+const fromStore = async (g) => ({ ...g.drawing, links: await g.parts.near(g.drawing.boxes.map((b) => b.key)) });
 
 test('a graph from the store is drawn as a whole reading draws it, from either backend', async () => {
   const blocks = SHOP.split('```')
@@ -42,9 +42,9 @@ test('a graph from the store is drawn as a whole reading draws it, from either b
   const whole = readNote(blocks).graphs.get('shop');
   for (const backend of [memoryBackend(), sqliteBackend(await sqlEngine())]) {
     const shop = (await storedGraphs(new MeshIndex(backend), 'shop.md', SHOP, now)).get('shop');
-    assert.deepEqual(plain(fromStore(shop)), plain(whole), backend.kind);
+    assert.deepEqual(plain(await fromStore(shop)), plain(whole), backend.kind);
     assert.deepEqual(shop.drawing.links, [], 'its links stay in the store (scale_parts_overview)');
-    assert.deepEqual(shop.props('widget'), { id: 'widget', name: 'Widget', price: 10 });
+    assert.deepEqual(await shop.props('widget'), { id: 'widget', name: 'Widget', price: 10 });
   }
 });
 
@@ -58,7 +58,7 @@ test('a huge note is read a part at a time, with the page’s turn between parts
   assert.ok(turns >= 3, `${turns} turns`);
   assert.equal(big.drawing.boxes.length, 12_000);
   assert.equal(big.drawing.links.length, 0, 'no link is held');
-  assert.equal(fromStore(big).links.length, 11_999);
+  assert.equal((await fromStore(big)).links.length, 11_999);
   assert.equal(
     big.parts.grouping.groups.reduce((n, g) => n + g.keys.length, 0),
     12_000,
@@ -99,7 +99,7 @@ test('a huge note’s saved filter is read from its style block, checked against
   ].join('\n');
   const text = SHOP + style;
   const shop = (await storedGraphs(new MeshIndex(memoryBackend()), 'shop.md', text, now)).get('shop');
-  const read = storedStyle(text, shop);
+  const read = await storedStyle(text, shop);
   assert.deepEqual(savedFilterFor(read.style.filters), { Kind: ['Part'] });
   assert.deepEqual(
     read.problems.map((p) => p.message),
@@ -110,7 +110,7 @@ test('a huge note’s saved filter is read from its style block, checked against
 
 test('a huge note with no style block for its graph never builds the graph for the style checks', async () => {
   const shop = (await storedGraphs(new MeshIndex(memoryBackend()), 'shop.md', SHOP, now)).get('shop');
-  const read = storedStyle(SHOP, {
+  const read = await storedStyle(SHOP, {
     ...shop,
     world: () => assert.fail('the graph was built, with no style to check'),
   });

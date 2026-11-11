@@ -70,27 +70,27 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
  * properties under it, to change in the note's text (stored-edit.ts). In edit mode a filter chosen is saved, as for
  * any overview. A problem in the style block is said under it. Without `at`, nothing is read from the note or written to it.
  */
-export function showStoredMassive(
+export async function showStoredMassive(
   plugin: ThoughtKnotPlugin,
   root: HTMLElement,
   stored: StoredGraph,
   at: StoredThing | null,
-): void {
+): Promise<void> {
   const graph = stored.drawing.graph;
   // the Filter for the whole graph: a view's own is for when views are drawn as overviews
-  const read = at && storedStyle(at.note, stored);
+  const read = at && (await storedStyle(at.note, stored));
   const saved = read?.style.filters.find((f) => f.view === undefined)?.keep;
   massiveView(root, stored.drawing, {
     graph,
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
-    props: stored.props,
     parts: stored.parts,
     ...(saved ? { chosen: saved } : {}),
     ...(read ? { painter: renderFor(read.style).painter } : {}),
     ...(at
       ? {
-          picked: (key: string) => showStoredThing(plugin, root, at, key, stored.props(key)),
+          picked: (key: string) =>
+            void stored.props(key).then((props) => showStoredThing(plugin, root, at, key, props)),
           chose: (keep: Parameters<NonNullable<MassiveOptions['chose']>>[0]) => {
             if (!at.readOnly)
               void writeStyle(plugin, at.path, graph, { filter: { keep } }, word('massive.filter-saved'));

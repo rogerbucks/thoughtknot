@@ -177,4 +177,6 @@ export const CORE_KEPT = {
   'packages/core/src/phase-altitude.ts': '*',
   // the SQL words a CREATE TABLE ends with to say it has no rowid, read from the file, never shown (sqlite-read.ts)
   'packages/core/src/sqlite-read.ts': ['without rowid'],
+  // the store contract's own note, its reads and a developer's error when a store breaks it, never said to a person
+  'packages/core/src/parts-store-contract.ts': '*',
 };

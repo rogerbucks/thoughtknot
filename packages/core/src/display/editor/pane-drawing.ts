@@ -3,12 +3,11 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why. A graph too
 // large to lay out is shown as its overview under the banner, where the host gives its colours (§53, scale_massive_card).
-// A block too large to read at once is read into a store in memory, a part at a time. It is shown as its overview
+// A block too large to read at once is read into a store a part at a time. The store is in memory, or the host's own. It is shown as its overview
 // from there, under the banner (§53, scale_in_parts). It starts with the filter saved in the note's style block, and a
 // filter chosen is saved there, as for any overview (scale_filter_live).
 import {
   depthOf,
-  MeshIndex,
   memoryBackend,
   parked,
   partsRefusal,
@@ -19,12 +18,14 @@ import {
   startingSwitches,
   storedGraphs,
   storedStyle,
+  storeOver,
   ViewState,
   word,
 } from '@thoughtknot/core';
 import { indexedPlace } from './kept-place.ts';
 import type {
   Drawn,
+  PartsStore,
   ExploreSave,
   FocusDepth,
   GraphDrawing,
@@ -66,6 +67,8 @@ export interface PaneHost {
   again?: () => void;
   /** Whether a graph's picture for readers is up to date, for the bar to say (§62). Not set: the bar says nothing of it. */
   picture?: (graph: string) => PictureStatus;
+  /** The store a block too large to read at once is read into (scale_parts_store_swap). Not set: kept in memory. */
+  store?: () => PartsStore;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -150,7 +153,7 @@ export class PaneDrawing extends Lifecycle {
   /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
   private state: ViewState | null = null;
   /** The store a block too large to read at once is read into, made when first needed. */
-  private store: MeshIndex | null = null;
+  private store: PartsStore | null = null;
   /** Where the last drawing was left as it went: the next, drawn from what is typed, stays there (NEURO-7). */
   private left: StayedAt | undefined;
   private readonly stay: Stay = {
@@ -191,37 +194,37 @@ export class PaneDrawing extends Lifecycle {
     const { palette } = this.host;
     const over = 'limit' in why ? why.limit : undefined;
     if (!palette || (over !== 'text-bytes' && over !== 'text-lines')) return;
-    const ix = (this.store ??= new MeshIndex(memoryBackend()));
+    const ix = (this.store ??= this.host.store?.() ?? storeOver(memoryBackend()));
     const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
     const was = s.text,
       text = `\`\`\`gql\n${was}\n\`\`\`\n`;
     const past = partsRefusal(text);
     if (past) return void pastPartsHint(host, past);
     // a change to a thing chosen: made on its lines in the block, then put in the pane's text, as a quick fix is
-    const change = (key: string) => (prop: string, type: PropType, words: string) => {
-      const edit = setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);
-      return Promise.resolve(
-        edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason,
-      );
+    const change = (key: string) => async (prop: string, type: PropType, words: string) => {
+      const edit = await setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);
+      return edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason;
     };
-    void storedGraphs(ix, 'pane', text, pause, indexedPlace(host.win)).then((graphs) => {
+    void storedGraphs(ix, 'pane', text, pause, indexedPlace(host.win)).then(async (graphs) => {
       const stored = graphs.get(s.graph);
-      if (!stored || stale()) return;
-      const slot = host.createDiv();
       const { noteText, saveFilter } = this.host;
       // the style block is read from the whole note, as it may come after the block
-      const read = noteText && storedStyle(noteText(), stored);
+      const read = stored && noteText && (await storedStyle(noteText(), stored));
+      if (!stored || stale()) return;
+      const slot = host.createDiv();
       const saved = read?.style.filters.find((f) => f.view === undefined)?.keep;
       massiveView(slot, stored.drawing, {
         graph: s.graph,
         palette,
         layout: (part, by) => this.host.layout(part, by),
-        props: stored.props,
         parts: stored.parts,
         ...(saved ? { chosen: saved } : {}),
         ...(read ? { painter: renderFor(read.style).painter } : {}),
         ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
-        picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
+        picked: (key) =>
+          void stored
+            .props(key)
+            .then((props) => massiveThing(slot, { key, props, readOnly: false, change: change(key) })),
       });
       for (const p of read?.problems ?? [])
         slot.createEl('p', {

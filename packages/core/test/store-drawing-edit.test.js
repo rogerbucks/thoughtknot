@@ -25,7 +25,7 @@ test('a graph past the read limits opens, is edited in its text first, and is re
   assert.ok(text.split('\n').length > READ_LIMITS.lines);
   const ix = new MeshIndex(memoryBackend());
   await storedGraphs(ix, 'big.md', text, now);
-  const edit = editInParts(ix, 'big.md', text, 'big', 'n7000', price('12'));
+  const edit = await editInParts(ix, 'big.md', text, 'big', 'n7000', price('12'));
   assert.ok(edit.ok, edit.reason);
   const was = text.split('\n'),
     edited = edit.text.split('\n');
@@ -36,9 +36,9 @@ test('a graph past the read limits opens, is edited in its text first, and is re
     'only the line that wrote the thing',
   );
   const before = (await storedGraphs(ix, 'big.md', text, now)).get('big');
-  assert.equal(before.props('n7000').price, undefined, 'the store is not written to before the text');
+  assert.equal((await before.props('n7000')).price, undefined, 'the store is not written to before the text');
   const after = (await storedGraphs(ix, 'big.md', edit.text, now)).get('big');
-  assert.equal(after.props('n7000').price, 12, 'read again from the new text');
+  assert.equal((await after.props('n7000')).price, 12, 'read again from the new text');
   assert.equal(after.drawing.boxes.length, 12_000);
 });
 
@@ -47,6 +47,9 @@ test('a store read from other text refuses the edit, so it never lands on the wr
   const ix = new MeshIndex(memoryBackend());
   await storedGraphs(ix, 'big.md', text, now);
   const moved = text.replace('# Big', '# Big\n\nA line more.');
-  assert.match(editInParts(ix, 'big.md', moved, 'big', 'n7000', price('12')).reason, /changed since/);
-  assert.match(editInParts(ix, 'big.md', text, 'big', 'nobody', price('12')).reason, /nobody is not in graph big/);
+  assert.match((await editInParts(ix, 'big.md', moved, 'big', 'n7000', price('12'))).reason, /changed since/);
+  assert.match(
+    (await editInParts(ix, 'big.md', text, 'big', 'nobody', price('12'))).reason,
+    /nobody is not in graph big/,
+  );
 });
