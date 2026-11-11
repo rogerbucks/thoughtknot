@@ -38,6 +38,7 @@ export const CORE_KEPT = {
   'packages/core/src/plugins-contract.ts': '*',
   'packages/core/src/plugins-contract-sync.ts': '*',
   'packages/core/src/plugins-contract-transport.ts': '*',
+  'packages/core/src/plugins-contract-identity.ts': '*',
   'packages/core/src/storage-contract.ts': '*',
   // the history contract, a developer's error, and the heading of a history note: bytes kept as written, never said
   'packages/core/src/history-store.ts': '*',

@@ -24,6 +24,7 @@ export const POINT_VERSIONS: Readonly<Record<ExtensionPoint, string>> = Object.f
   layouts: '1.0',
   syncstore: '1.0',
   transport: '1.0',
+  identity: '1.0',
 });
 
 const VERSION = /^(\d+)(?:\.(\d+))?$/;

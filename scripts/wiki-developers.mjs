@@ -37,6 +37,8 @@ export const POINT_ABOUT = {
     'A place the sealed records of a shared vault are kept, such as a synced folder or a bucket. It sees only sealed bytes, and passes the record store contract.',
   transport:
     'A way between devices, such as a relay or a local socket. It carries sealed messages whole and in order, and passes the transport contract.',
+  identity:
+    'A system that says who a person is, such as a company directory. It sees only a device’s public key, can only narrow what an invitation gives, and passes the identity contract.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */
