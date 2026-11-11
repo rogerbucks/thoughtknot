@@ -120,7 +120,7 @@ export function layoutMarks(g: GraphvizLayout): LaidMarks {
         const w = /^setlinewidth\(([\d.]+)\)$/.exec(o.style ?? '');
         if (w) width = parseFloat(w[1] ?? '1') === 1 ? undefined : parseFloat(w[1] ?? '1') * PX;
       } else if (o.op === 'T' && o.pt && o.text) {
-        const [x, y] = at(o.pt[0], o.pt[1]);
+        const [x, y] = exact(o.pt[0], o.pt[1]); // never pulled inside: a link's rows of words would land on each other
         const id = count.lines++ === 0 ? `l:${owner}` : `l${count.lines - 1}:${owner}`;
         const anchor = ANCHORS[o.align ?? 'c'] ?? 'middle';
         const widest = o.width ? { maxWidth: o.width * PX } : {};

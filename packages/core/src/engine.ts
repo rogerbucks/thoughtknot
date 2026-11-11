@@ -1,19 +1,19 @@
-// Starting the Graphviz engine (spec §1, §3): Graphviz compiled to WebAssembly, bundled, so drawing needs no network on
-// any device. The one module that imports it, so the rest of the core runs where WebAssembly cannot (spec §10).
-// A drawing can also be laid out as marks (spec §43, plugin_interface), so a built-in type gives marks as a plug-in
-// does. Drawn from its marks, its SVG is the one Graphviz writes (graphviz-svg.ts). The SVG shown is still Graphviz's
-// own: reading its layout as JSON costs about twice the work, and the drawing is the same.
-import { instance } from '@viz-js/viz';
-import { layoutMarks } from './graphviz-marks.ts';
-import type { GraphvizLayout } from './graphviz-json.ts';
-import type { Engine } from './render.ts';
+// Starting the layout engine (ES§1, ES§3, layout_own_engine). It is our own engine, in plain code. So drawing needs no
+// network and no WebAssembly on any device. Graphviz is gone. A drawing can also be laid out as marks (spec §43,
+// plugin_interface), so a built-in type gives marks as a plug-in does.
+import { ownMarks } from './layouts/own-draw.ts';
+import { ownArgs, ownDrawn } from './layouts/own-drawn.ts';
+import type { LaidMarks } from './graphviz-marks.ts';
 
-/** Starts the bundled Graphviz engine. */
-export async function loadEngine(): Promise<Engine> {
-  const viz = await instance();
+/** Starts our own layout engine. Nothing is loaded: it is plain code. */
+export async function loadEngine(): Promise<{
+  version: string;
+  render(source: string): string;
+  marks(source: string): LaidMarks;
+}> {
   return {
-    version: viz.graphvizVersion,
-    render: (source) => viz.renderString(source, { format: 'svg' }),
-    marks: (source) => layoutMarks(viz.renderJSON(source) as GraphvizLayout),
+    version: 'thoughtknot',
+    render: (source) => ownDrawn(source),
+    marks: (source) => ownMarks(...ownArgs(source)),
   };
 }

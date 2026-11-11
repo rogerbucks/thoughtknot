@@ -37,7 +37,7 @@ describe('a large graph', () => {
   // proves: large_drawn_curved
   test('keeps its links curved: the quick settings never draw them straight (Roger, 23 Oct 2026)', () => {
     const [laid] = directions(chain(QUICK_LAYOUT + 1));
-    assert.doesNotMatch(laid?.dot ?? '', /splines/, 'Graphviz curves links unless told otherwise');
+    assert.doesNotMatch(laid?.source ?? '', /splines/, 'Graphviz curves links unless told otherwise');
   });
 
   // proves: large_drawn_quick
@@ -47,7 +47,7 @@ describe('a large graph', () => {
       laid.map((d) => d.rankdir),
       STYLE.directions,
     );
-    for (const d of laid) assert.doesNotMatch(d.dot, /nslimit|mclimit|splines/);
+    for (const d of laid) assert.doesNotMatch(d.source, /nslimit|mclimit|splines/);
   });
 
   // proves: large_drawn_quick
@@ -64,7 +64,7 @@ describe('a large graph', () => {
 
   // proves: large_drawn_quick
   test('keeps the routing a person chose: it is written after the quick settings, so it wins', () => {
-    const lines = directions({ ...chain(QUICK_LAYOUT + 1), routing: 'right-angled' })[0].dot.split('\n');
+    const lines = directions({ ...chain(QUICK_LAYOUT + 1), routing: 'right-angled' })[0].source.split('\n');
     const quick = lines.findIndex((l) => l.includes('nslimit=0.5')),
       chosen = lines.findIndex((l) => l.includes('splines=ortho'));
     assert.ok(quick > 0 && chosen > quick, `the quick settings on line ${quick}, the routing chosen on ${chosen}`);

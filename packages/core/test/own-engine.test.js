@@ -284,8 +284,9 @@ describe('a graph drawn by our own engine', () => {
     for (let i = 0; i < 40; i++) assert.ok(drawn.svg.includes(`>Thing ${i}<`), `Thing ${i} is drawn`);
   });
 
-  test('is left to Graphviz when switched off', () => {
-    assert.equal(directions(tree)[0].own, undefined);
+  // proves: layout_own_engine
+  test('lays the graph out even when switched off: there is no Graphviz to leave it to', () => {
+    assert.equal(directions(tree)[0].own, true);
   });
 
   // proves: layout_own_default

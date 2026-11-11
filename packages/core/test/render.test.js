@@ -26,10 +26,8 @@ describe('drawing', () => {
     const engine = await loadEngine();
     for (const g of [WIDE, CHAIN]) {
       const drawing = readNote([g]).graphs.get('g');
-      const laid = ['LR', 'TB'].map((rankdir) => {
-        // drawn with direct links, the default (Roger, 24 Oct 2026)
-        const src = layoutSource(drawing, rankdir),
-          svg = svgOf(engine, src.source);
+      const laid = directions(drawing).map(({ rankdir, dot, src }) => {
+        const svg = engine.render(dot);
         return { rankdir, ...sizeOf(svg), svg, src };
       });
       const best = choose(laid);
@@ -51,8 +49,8 @@ describe('drawing', () => {
       ['LR', 'TB'],
     );
     for (const d of laid) {
-      assert.equal(d.dot, routedSource(foldedSource(layoutSource(drawing, d.rankdir).source, folding), 'straight'));
-      assert.ok(!d.dot.includes('"o1"'));
+      assert.equal(d.source, routedSource(foldedSource(layoutSource(drawing, d.rankdir).source, folding), 'straight'));
+      assert.ok(!d.source.includes('"o1"'));
     }
   });
 
@@ -73,14 +71,15 @@ describe('drawing', () => {
     assert.match(drawn.svg, /^<svg/);
   });
 
-  test('when the engine fails, the failure is said, not swallowed', () => {
+  // proves: layout_own_engine
+  test('is laid out by our own engine, whatever engine the host hands it', () => {
     const broken = {
       version: '0.0.0',
       render() {
         throw new Error('out of memory');
       },
     };
-    assert.throws(() => draw(readNote([CHAIN]).graphs.get('g'), broken), /out of memory/);
+    assert.match(draw(readNote([CHAIN]).graphs.get('g'), broken).svg, /^<svg/);
   });
 
   test('each box and link in the drawing can be found again by its place in the graph', async () => {

@@ -239,14 +239,11 @@ describe('nothing to export, and an engine that fails', () => {
   });
 
   // proves: failed_export
-  test('when the engine cannot lay the drawing out, the failure is raised, not swallowed or drawn as a blank', () => {
-    const broken = {
-      version: '0',
-      render() {
-        throw new Error('out of memory');
-      },
+  test('when the layout cannot lay the drawing out, the failure is raised, not swallowed or drawn as a blank', async () => {
+    const broken = async () => {
+      throw new Error('out of memory');
     };
-    assert.throws(() => exportSvg(exportScope(reading, { graph: 'team' }), broken, INFO), /out of memory/);
+    await assert.rejects(exportWithLayout(exportScope(reading, { graph: 'team' }), broken, INFO), /out of memory/);
   });
 });
 

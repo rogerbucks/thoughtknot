@@ -1,11 +1,14 @@
-// Starting the Graphviz engine (spec §1, §3): Graphviz compiled to WebAssembly and bundled, so it starts with no network.
+// Starting the layout engine (ES§1, ES§3, layout_own_engine). It is our own, in plain code. It starts with no network
+// and no WebAssembly.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';
 
 describe('drawing', () => {
-  test('the engine starts offline and names its Graphviz version', async () => {
+  // proves: layout_own_engine
+  test('the engine starts offline and names itself: it is our own, not Graphviz', async () => {
     const engine = await loadEngine();
-    assert.match(engine.version, /^\d+\.\d+\.\d+$/);
+    assert.equal(engine.version, 'thoughtknot');
+    assert.match(engine.render('digraph G {\n  "a" [label="A"];\n}'), /<svg/);
   });
 });

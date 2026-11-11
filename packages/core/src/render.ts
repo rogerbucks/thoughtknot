@@ -19,21 +19,10 @@ import type { LaidMarks } from './graphviz-marks.ts';
 import { layoutSvg } from './graphviz-svg.ts';
 import { directLinks } from './direct-links.ts';
 import { marksInRows, wrappedRows } from './layouts/rows-route.ts';
-import {
-  groupsIn,
-  kindsIn,
-  lanesIn,
-  placedIn,
-  keptIn,
-  optionsIn,
-  ownable,
-  ownSource,
-  ownSvg,
-  stepIn,
-  linesIn,
-} from './layouts/own-draw.ts';
+import { ownable, ownSource } from './layouts/own-draw.ts';
 import { SCREEN } from './layouts/folded-rows.ts';
 import { measuredMarks } from './layouts/measure.ts';
+import { ownDrawn } from './layouts/own-drawn.ts';
 import { typePlaces } from './render/render-places.ts';
 import { TYPE_STRATEGY, layoutOptions } from './layouts/layout-options.ts';
 
@@ -96,7 +85,7 @@ export const QUICK_LAYOUT = 300;
 const QUICK_SETTINGS = '  graph [nslimit=0.5, mclimit=0.05];';
 
 /** The source with the quick settings added after its first line, as `routedSource` adds its own. */
-function quickSource(dot: string): string {
+export function quickSource(dot: string): string {
   const lines = dot.split('\n');
   lines.splice(1, 0, QUICK_SETTINGS);
   return lines.join('\n');
@@ -117,12 +106,6 @@ export function directions(drawing: GraphDrawing): Direction[] {
   // drawing that fits the note best is shown. A drawing whose layout ran out of time is laid out by a cheaper step,
   // whatever its routing and type (layout_never_text). Rows and a grid are tried one way only
   const { step } = drawing;
-  // a tree, flow or lanes is laid out by the layout the View menu chose, rows, spread out or a plug-in's, as a network is
-  const ours =
-    step ||
-    (drawing.engine === 'own' && !drawing.diagram) ||
-    // a tree, flow or lanes of any size is laid out by our own engine: Graphviz is gone (layout_own_engine)
-    shapeable(drawing);
   // a timeline or radial drawing keeps the places the stage gives its type, laid out by our own engine (layout_own_engine)
   const typed = typePlaces(drawing);
   const cheap = quick || (step && step !== 'own');
@@ -165,11 +148,14 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    if ((ours || typed) && ownable(dot))
+    // every drawing is laid out by our own engine, by the layout the View menu chose: Graphviz is gone (layout_own_engine)
+    // past the quick size the source still says so, as the Python library writes it (large_drawn_quick)
+    const said = quick ? quickSource(dot) : dot;
+    if (ownable(dot))
       return {
         rankdir,
         dot: ownSource(
-          dot,
+          said,
           typed ? { ...layoutOptions(drawing.layoutOptions), strategy: TYPE_STRATEGY } : drawing.layoutOptions,
           kindsByKey,
           drawing.kindLanes !== false,
@@ -179,7 +165,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
         ),
         src,
         own: true,
-        source: dot,
+        source: said,
       };
     // a hub's many leaves stack in one rank, and Graphviz's drawing of a long type is then a thin strip. Our own
     // engine folds them into bands, so that drawing is offered too. A timeline keeps Graphviz, which keeps its days
@@ -259,19 +245,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
   // our own engine places the boxes our own code measured (layout_own_engine); Graphviz's own layout where it cannot
   if (own) {
     const measured = measuredMarks(dot);
-    if (!measured.layout?.lost)
-      return ownSvg(
-        measured,
-        /rankdir=(\w+)/.exec(dot)?.[1] ?? 'LR',
-        groupsIn(dot),
-        optionsIn(dot),
-        kindsIn(dot),
-        lanesIn(dot),
-        stepIn(dot),
-        placedIn(dot),
-        keptIn(dot),
-        linesIn(dot), // straight or right-angled, as the person chose (untangle_routing)
-      );
+    if (!measured.layout?.lost) return ownDrawn(dot, measured);
   }
   // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)
   const curved = routing === 'curved';

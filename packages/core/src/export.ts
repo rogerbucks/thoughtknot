@@ -205,7 +205,7 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
   const laid = directions(drawing);
   const drawn = chosen(
     laid,
-    laid.map((d) => drawnSvg(engine, { ...d, own: false }, drawing.routing)),
+    laid.map((d) => drawnSvg(engine, d, drawing.routing)),
     info.theme === 'dark' ? PALETTES.dark : PALETTES.light,
   );
   return framedImage(scope, drawing, drawn, info);

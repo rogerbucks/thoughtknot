@@ -308,7 +308,7 @@ describe('properties shown inline', () => {
   test('with nothing switched on, nothing is added: the source is the layout source byte for byte', () => {
     const { plain, drawing } = inline(undefined, "(s1:Show {property: 'open', kind: 'Place', inline: 'off'})");
     assert.equal(drawing.inline, undefined);
-    assert.equal(directions(drawing)[0].dot, layoutSource(plain, 'LR').source);
+    assert.equal(directions(drawing)[0].source, layoutSource(plain, 'LR').source);
   });
 
   // proves: properties_switch
@@ -334,7 +334,7 @@ describe('properties shown inline are readable', () => {
   test('below the text of their box, at the kind caption size, in the box text colour', () => {
     const { plain, drawing } = inline(undefined, "(s1:Show {property: 'open', kind: 'Place'})");
     const before = layoutSource(plain, 'LR').source.split('\n'),
-      after = directions(drawing)[0].dot.split('\n');
+      after = directions(drawing)[0].source.split('\n');
     const home = (lines) => lines.find((l) => l.startsWith('  "home" ['));
     const text = '<tr><td cellpadding="1">Home</td></tr>';
     assert.ok(home(before).includes(`${text}</table>>`));

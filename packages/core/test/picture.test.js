@@ -102,7 +102,7 @@ describe('the room a picture is drawn in', () => {
   test('is a fixed cell at the top of the box, marked by its colour, in every direction laid out', () => {
     const { drawing } = styled(["(p1:Picture {property: 'photo', kind: 'Cat'})"]);
     const cell = `<tr><td fixedsize="true" width="${PICTURE_SIZE}" height="${PICTURE_SIZE}" bgcolor="${PICTURE_MARK}"></td></tr>`;
-    for (const { dot } of directions(drawing)) {
+    for (const { source: dot } of directions(drawing)) {
       const tom = dot.split('\n').find((l) => l.startsWith('  "tom" [label=<<table '));
       assert.ok(tom.includes(`cellpadding="0">${cell}`), tom);
       const rex = dot.split('\n').find((l) => l.startsWith('  "rex" [label=<<table '));

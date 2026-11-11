@@ -17,8 +17,9 @@ import { load, GRAPH, show } from './host/view-notes.js';
 import { editing, tapKey } from './host/inspector-steps.js';
 import { PATH, NOTE } from './host/card-notes.js';
 
-// These tests walk, pan and zoom to things at the places Graphviz gives them, so they draw by Graphviz
-const GRAPHVIZ = { data: { settings: { ownLayout: 'off' } } };
+// These tests walk, pan and zoom to things at the places our own engine gives them. Zoomed in twice, each box still
+// fits the view, so a thing brought into view is wholly in it
+const DEFAULTS = {};
 
 before(() => build());
 
@@ -95,7 +96,7 @@ const outOfView = (el) => {
 describe('a thing’s links are listed by relationship type and direction, in words, with a count', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -166,14 +167,14 @@ describe('a thing’s links are listed by relationship type and direction, in wo
 describe('choosing a linked thing or a link in the list', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
 
   test('a linked thing out of view becomes the selection, its details open and it comes into view, at the same zoom', () => {
-    zoomIn(el, 8);
+    zoomIn(el, 2);
     const found = outOfView(el);
     assert.ok(found, 'zoomed in far enough that a linked thing is out of view');
     const zoom = scale(el);
@@ -215,7 +216,7 @@ describe('choosing a linked thing or a link in the list', () => {
 describe('choosing a linked thing in a narrow card', () => {
   let env, el;
   before(async () => {
-    env = await load({ ...GRAPHVIZ, width: 200 });
+    env = await load({ ...DEFAULTS, width: 200 });
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -234,10 +235,10 @@ describe('choosing a linked thing in a narrow card', () => {
 describe('the move to a chosen thing', () => {
   let env, el, found;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
-    zoomIn(el, 8);
+    zoomIn(el, 2);
   });
   after(() => env.uninstall());
 
@@ -261,7 +262,7 @@ describe('the move to a chosen thing', () => {
   });
 
   test('motion is never the only cue: the thing is selected and its details named before the view moves', () => {
-    zoomIn(el, 8);
+    zoomIn(el, 2);
     motion(env, true);
     found = outOfView(el);
     motion(env, false);
@@ -277,7 +278,7 @@ describe('the move to a chosen thing', () => {
   test('a wheel or a zoom key while it moves takes over: the move stops where the zoom left the view', () => {
     const vp = el.querySelector('.thoughtknot-viewport');
     for (const how of ['wheel', 'key']) {
-      zoomIn(el, 8);
+      zoomIn(el, 2);
       motion(env, true);
       found = outOfView(el);
       assert.ok(found, how);
@@ -295,7 +296,9 @@ describe('the move to a chosen thing', () => {
   });
 
   test('is instant when the system asks for reduced motion: there at once, and no frame asked for', () => {
-    zoomIn(el, 8);
+    // from the whole drawing, so a box still fits the view once it is brought there
+    labelled(el, 'Fit').click();
+    zoomIn(el, 2);
     motion(env, true);
     found = outOfView(el);
     const held = frames(env);
@@ -308,7 +311,7 @@ describe('the move to a chosen thing', () => {
 describe('the trail of things chosen', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -352,7 +355,7 @@ describe('the trail of things chosen', () => {
 describe('an arrow to a selection out of view', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -369,7 +372,7 @@ describe('an arrow to a selection out of view', () => {
     for (const k of Object.keys(NAMES)) {
       labelled(el, 'Fit').click();
       tapKey(el, k);
-      zoomIn(el, 8);
+      zoomIn(el, 2);
       if (!inView(el, k)) {
         key = k;
         break;
@@ -398,7 +401,7 @@ describe('an arrow to a selection out of view', () => {
     for (const k of Object.keys(NAMES)) {
       labelled(el, 'Fit').click();
       tapKey(el, k);
-      zoomIn(el, 8);
+      zoomIn(el, 2);
       if (!inView(el, k)) break;
     }
     assert.ok(arrow() && !arrow().hidden, 'the arrow shows');
@@ -410,7 +413,7 @@ describe('an arrow to a selection out of view', () => {
 describe('in view mode, details in a tall card show on screen without covering the thing chosen', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });
@@ -476,7 +479,7 @@ describe('a second tap on what is selected', () => {
   // readable, in 2D as in 3D. A tap again near things, not on the one selected, still chooses the next (§3).
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load(DEFAULTS);
     motion(env, true);
     el = (await show(env, fence(GRAPH))).el;
   });

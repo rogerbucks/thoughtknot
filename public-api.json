@@ -2507,7 +2507,7 @@
           "still?: string | undefined"
         ],
         "loadEngine": [
-          "value: () => Promise<Engine>"
+          "value: () => Promise<{ version: string; render(source: string): string; marks(source: string): LaidMarks; }>"
         ],
         "lockBlock": [
           "value: (reading: NoteReading, graph: string, today: string, indent?: string) => string"

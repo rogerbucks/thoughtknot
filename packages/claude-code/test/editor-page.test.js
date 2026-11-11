@@ -325,7 +325,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
       ),
     ];
     assert.deepEqual(packages(page), ['marked'], 'the page holds the renderer and nothing else from outside');
-    assert.deepEqual(packages(worker), ['@viz-js/viz'], 'the worker holds the Graphviz engine alone');
+    assert.deepEqual(packages(worker), [], 'the worker holds our own engine, nothing from outside: Graphviz is gone');
     const icons = readdirSync(join(PACKAGE, 'page/icons'));
     assert.ok(icons.length >= 40 && icons.every((f) => f.endsWith('.svg')), 'icons ship as image files');
     for (const f of icons) {

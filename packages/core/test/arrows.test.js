@@ -49,7 +49,7 @@ const linkLines = (dot) => dot.split('\n').filter((l) => /^ {2}"[^"]*" -> "[^"]*
 /** For each link line, whether it is drawn without its arrowhead. */
 const headless = (dot) => linkLines(dot).map((l) => l.includes('dir=none'));
 /** The source of each direction the drawing is laid out in. */
-const sources = (drawing) => directions(drawing).map((d) => d.dot);
+const sources = (drawing) => directions(drawing).map((d) => d.source ?? d.dot);
 
 describe('arrowheads are drawn unless the style graph hides them', () => {
   // proves: arrows_shown_unless_hidden

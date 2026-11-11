@@ -442,7 +442,9 @@ describe('the View menu’s untangling: labels by zoom, folded hubs and groups, 
     const svg = draw(state.folded(styled), engine).svg;
     for (const id of ['trunk_1', 'edge14', 'edge14_tail', 'edge15', 'edge15_tail'])
       assert.ok(ids(svg).includes(id), id);
-    assert.equal((svg.match(/>asks</g) ?? []).length, 2, 'each link’s reading is drawn once, as before');
+    // a trunk's links show no words of their own: the trunk's words count them (layout_one_label_per_fan)
+    assert.equal((svg.match(/>asks</g) ?? []).length, 0, 'no link’s reading is drawn on the trunk');
+    assert.match(svg, />2 links</, 'the trunk says how many links it carries');
   });
 
   // proves: untangle_routing

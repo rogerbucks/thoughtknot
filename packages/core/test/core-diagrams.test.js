@@ -76,7 +76,13 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
   test('a type the graph does not fit is drawn as a network, never wrongly', async () => {
     const loop = { ...FAMILY, links: [...FAMILY.links, { from: 'dee', type: 'PARENT_OF', to: 'ann' }] };
     assert.deepEqual(await marksOf('flow', loop), await marksOf('network', loop));
-    assert.notDeepEqual(await marksOf('flow'), await marksOf('network'), 'a flow it fits is drawn as a flow');
+    // in a tall space a network reads down to fit it; a flow still reads across
+    const tall = { width: 300, height: 400 };
+    assert.notDeepEqual(
+      await marksOf('flow', FAMILY, tall),
+      await marksOf('network', FAMILY, tall),
+      'a flow it fits is drawn as a flow',
+    );
   });
 
   test('marks are shrunk to fit a small space, and never grown to fill a large one', async () => {

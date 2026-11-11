@@ -464,7 +464,7 @@ describe('the suggested type', () => {
       const drawing = styledDrawing(plain, style, g);
       assert.equal(drawing.diagram, undefined);
       assert.deepEqual(diagramFor(plain, style, g), { drawn: 'network' });
-      for (const d of directions(drawing)) assert.equal(d.dot, layoutSource(plain, d.rankdir).source);
+      for (const d of directions(drawing)) assert.equal(d.source, layoutSource(plain, d.rankdir).source);
     }
   });
 });
@@ -481,7 +481,7 @@ describe('when an edit makes the data stop fitting the chosen type', () => {
     });
     const drawing = styledDrawing(plain, style, g);
     assert.equal(drawing.diagram, undefined, 'never drawn as a tree');
-    for (const d of directions(drawing)) assert.equal(d.dot, layoutSource(plain, d.rankdir).source);
+    for (const d of directions(drawing)) assert.equal(d.source, layoutSource(plain, d.rankdir).source);
   });
 
   // proves: type_stops_fitting

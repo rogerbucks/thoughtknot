@@ -154,7 +154,7 @@ describe('the limits, checked before any layout', () => {
     assert.equal(r.most, 1_000_000);
   });
 
-  test('over the source limit as written, measured exactly in the worker before Graphviz runs', async () => {
+  test('over the source limit as written, measured exactly in the worker before any layout runs', async () => {
     const d = drawingOf(READER);
     let rendered = 0;
     const engine = async () => ({ version: '0', render: () => (rendered++, '<svg/>') });
@@ -163,7 +163,7 @@ describe('the limits, checked before any layout', () => {
     assert.equal(out.limit, 'source');
     assert.equal(out.atLeast, undefined, 'measured, not estimated');
     assert.equal(out.count, Buffer.byteLength(drawingSourceOf(d)), 'the bytes of the longer direction’s source');
-    assert.equal(rendered, 0, 'Graphviz never ran');
+    assert.equal(rendered, 0, 'nothing was laid out');
   });
 
   test('at the limits exactly, nothing is refused', () => {
@@ -364,7 +364,7 @@ describe('a normal graph', () => {
     for (const theme of ['light', 'dark']) {
       const want = chosen(
         laid,
-        laid.map((x) => svgOf(engine, x.dot, d.routing)),
+        laid.map((x) => svgOf(engine, x.dot, d.routing, x.own)),
         PALETTES[theme],
       );
       assert.deepEqual(await r.draw(d, undefined, theme), want, `${theme} in a thread`);

@@ -1,6 +1,6 @@
 // Curves kept by what was laid out (spec §11, curves_saved). Past 300 things the worker keeps each drawing it laid out,
-// by its source. So the same graph opened again is drawn at once, with no Graphviz run at all.
-import { test, describe } from 'node:test';
+// by its source. So the same graph opened again is drawn at once, with no layout run at all.
+import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { QUICK_LAYOUT } from '../src/render.ts';
@@ -20,12 +20,16 @@ const chain = (n, name = 'Thing') =>
 /** Its links curved, as a person chose. */
 const big = { ...chain(QUICK_LAYOUT + 1), routing: 'curved' };
 
-/** A worker served on this thread, counting what its engine is asked to lay out. */
+/** A worker served on this thread, counting each drawing it laid out and kept, by its source. */
 async function counting() {
-  const engine = await loadEngine();
   const laid = [];
-  const counted = { render: (dot) => (laid.push(dot), engine.render(dot)) };
-  const port = inThreadPort((scope) => serveLayouts(scope, async () => counted));
+  const keep = CurvesSaved.prototype.keep;
+  CurvesSaved.prototype.keep = function (dot, svg) {
+    laid.push(dot);
+    return keep.call(this, dot, svg);
+  };
+  after(() => (CurvesSaved.prototype.keep = keep));
+  const port = inThreadPort((scope) => serveLayouts(scope, loadEngine));
   const waiting = new Map();
   let next = 1;
   port.onmessage = ({ data }) => {
@@ -47,7 +51,7 @@ describe('curves kept by what was laid out', () => {
     const first = await ask(big);
     const before = laid.length;
     const again = await ask(big);
-    assert.equal(laid.length, before, 'Graphviz is not run for a drawing it laid out before');
+    assert.equal(laid.length, before, 'a drawing laid out before is not laid out again');
     assert.equal(again.drawn.svg, first.drawn.svg);
   });
 
@@ -59,10 +63,10 @@ describe('curves kept by what was laid out', () => {
     await ask({ ...chain(QUICK_LAYOUT + 1, 'Step'), routing: 'curved' });
     assert.ok(laid.length > before, 'a changed graph is laid out again');
     const small = chain(QUICK_LAYOUT);
-    await ask(small);
     const then = laid.length;
     await ask(small);
-    assert.ok(laid.length > then, 'a small graph is laid out as before');
+    await ask(small);
+    assert.equal(laid.length, then, 'a small graph is not kept: it is laid out each time');
   });
 
   // proves: curves_saved

@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { directions } from '../src/render.ts';
+import { directions, draw } from '../src/render.ts';
+import { loadEngine } from '../src/engine.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
 import { spacedSource } from '../src/spaced-source.ts';
@@ -75,7 +76,6 @@ const drawnAs = (type) => {
   const texts = [...ORDERED, `// graph: org_style · STYLE org\n(d:Diagram {type: '${type}'})`];
   return styledDrawing(reading.graphs.get('org'), readStyle(texts, 'org', reading).style, reading.world.org);
 };
-const columns = (d) => (directions(d)[0].dot.match(/^ {2}\{ rank=same; /gm) ?? []).length;
 
 // proves: view_options_everywhere
 test('rounds and a wider or taller shape are written for Graphviz', () => {
@@ -86,11 +86,13 @@ test('rounds and a wider or taller shape are written for Graphviz', () => {
 });
 
 // proves: view_options_everywhere
-test('a network Graphviz lays out keeps each kind in a column of its own with lanes on, and none with lanes off', () => {
+test('a network keeps each kind in a lane of its own with lanes on, and none with lanes off', async () => {
   const reading = readNote(ORDERED);
   const d = reading.graphs.get('org');
-  assert.equal(columns(d), 2, 'the tests in one column, the code in another');
-  assert.equal(columns({ ...d, kindLanes: false }), 0);
+  const engine = await loadEngine();
+  const lanes = (g) => JSON.parse(decodeURIComponent(/data-layout-pick="([^"]*)"/.exec(draw(g, engine).svg)[1])).lanes;
+  assert.equal(lanes(d), true, 'the tests in one lane, the code in another');
+  assert.equal(lanes({ ...d, kindLanes: false }), false);
 });
 
 // proves: view_options_everywhere

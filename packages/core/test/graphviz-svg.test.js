@@ -7,7 +7,7 @@ import { instance } from '@viz-js/viz';
 import { layoutMarks } from '../src/graphviz-marks.ts';
 import { layoutSvg } from '../src/graphviz-svg.ts';
 import { drawMarksOf } from '../src/drawing-marks.ts';
-import { loadEngine } from '../src/engine.ts';
+import { loadGraphviz } from '../src/graphviz-engine.ts';
 
 const viz = await instance();
 /** The SVG without Graphviz's own comments, line by line: no host reads them. */
@@ -87,7 +87,7 @@ describe("the SVG written from the marks is Graphviz's own (plugin_interface)", 
   });
 
   test("the engine gives a drawing's marks too, and drawn from them it is the SVG the engine draws", async () => {
-    const engine = await loadEngine();
+    const engine = await loadGraphviz();
     const dot = SOURCES['a styled graph with a kind, a reading and a label of two lines'];
     assert.equal(layoutSvg(engine.marks(dot)), uncommented(engine.render(dot)));
   });
