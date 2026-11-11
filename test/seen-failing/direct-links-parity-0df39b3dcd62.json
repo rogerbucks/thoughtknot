@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/direct-links-parity.test.js",
+  "test": "both libraries route links on the rows Graphviz laid out alike, with the same SVG",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

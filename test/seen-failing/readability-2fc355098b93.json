@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/readability.test.js",
+  "test": "the overview > a real note with its groups folded is laid out in rows, its links clear of every box, most crossing none",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

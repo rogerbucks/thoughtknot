@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-svg.test.js",
+  "test": "the SVG written from the marks is Graphviz's own (plugin_interface) > the plainest graph, with the page Graphviz fills and its own room round it",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks.test.js",
+  "test": "Graphviz layout as marks (plugin_interface) > marks count from the top in CSS pixels, so the drawing fills its space as Graphviz drew it",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

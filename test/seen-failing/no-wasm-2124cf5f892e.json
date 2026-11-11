@@ -1,0 +1,6 @@
+{
+  "file": "test/no-wasm.test.js",
+  "test": "and the check finds a policy that allows it, or a source that compiles some",
+  "seen_failing_first": false,
+  "evidence": "The check's own cases: the code it guards was already free of WebAssembly when the test was written, so it passes by design."
+}

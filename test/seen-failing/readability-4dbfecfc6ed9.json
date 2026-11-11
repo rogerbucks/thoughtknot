@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/readability.test.js",
+  "test": "a fan of links > of one type into one thing is labelled once, near that thing; so is one out of one thing",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-source.test.js",
+  "test": "the order around the centre of a radial drawing > follows the before nudges: a thing written before another is drawn next to it, just before it",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

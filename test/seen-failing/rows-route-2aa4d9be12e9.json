@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rows-route.test.js",
+  "test": "links through a gap too narrow for its margins run down its middle, not along its far edge",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rows-route.test.js",
+  "test": "past 300 things no link runs over a box, and every box stays where Graphviz put it",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

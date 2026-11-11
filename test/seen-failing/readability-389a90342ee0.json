@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/readability.test.js",
+  "test": "groups as boxes > a lane keeps straight through its row, and a bend with its straight way blocked takes the nearest free room",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

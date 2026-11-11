@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/readability.test.js",
+  "test": "groups as boxes > links out of one thing share their way until they part, and those between two groups share a lane",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

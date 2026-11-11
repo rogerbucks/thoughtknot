@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/readability.test.js",
+  "test": "the readability scores > count links that cross, that pass over a box, and that run back",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

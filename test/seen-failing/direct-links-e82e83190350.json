@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/direct-links.test.js",
+  "test": "a group's name of two lines sits whole above its things once the group hugs them",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

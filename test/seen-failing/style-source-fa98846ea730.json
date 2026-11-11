@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-source.test.js",
+  "test": "each nudge > a group of things of one kind with no link between them is drawn in its box, never dropped",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

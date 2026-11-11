@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rows-route.test.js",
+  "test": "links through one gap run side by side, in the order they come from, so they do not cross there",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

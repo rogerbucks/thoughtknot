@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/direct-links.test.js",
+  "test": "a drawing with direct links keeps every part of the SVG Graphviz writes, its links redrawn",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

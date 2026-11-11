@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks-parity.test.js",
+  "test": "both libraries read the same layout as the same marks, part for part and number for number",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

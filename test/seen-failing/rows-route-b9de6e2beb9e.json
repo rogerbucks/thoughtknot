@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/rows-route.test.js",
+  "test": "a link inside one row with a box between its ends loops out beside the row",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-source.test.js",
+  "test": "each nudge > a nudged source is laid out, the boxes beside each other sharing a rank",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks.test.js",
+  "test": "Graphviz layout as marks (plugin_interface) > two links between the same things keep their own ids, and each names the things it joins",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

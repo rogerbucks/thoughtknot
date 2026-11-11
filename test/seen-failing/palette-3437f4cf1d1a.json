@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/palette.test.js",
+  "test": "one table > Obsidian’s entry names the theme’s variables, as the style file does",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

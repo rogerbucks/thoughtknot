@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/direct-links.test.js",
+  "test": "two links between the same boxes that our own engine routed run side by side, not as one line",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

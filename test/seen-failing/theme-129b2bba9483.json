@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/theme.test.js",
+  "test": "numbers are written as Python writes them, ties to even",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}

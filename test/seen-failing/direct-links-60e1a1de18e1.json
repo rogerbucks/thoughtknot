@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/direct-links.test.js",
+  "test": "a link bows round a box in its way just far enough, however far off the line the box sits",
+  "seen_failing_first": false,
+  "evidence": "Moved onto Graphviz's kept answers (frozen-graphviz.js) as Graphviz is taken away: the code it tests did not change, so it passes as before."
+}
