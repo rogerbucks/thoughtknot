@@ -319,7 +319,6 @@ describe('the overview', () => {
     // a graph this big opens by its levels, its links not merged (level_default): the overview merges them when asked
     const state = new ViewState({
       ...startingSwitches(DEFAULT_SETTINGS, style.style),
-      engine: true,
       groups: true,
       merge: true,
     });
@@ -380,7 +379,7 @@ describe('a fan of links', () => {
       ...styledDrawing(note.graphs.get('requirements'), style.style, note.world.requirements),
       diagram: undefined,
     };
-    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style.style));
     const d = directions(state.folded(drawing))[0];
     const laid = ownMarks(measuredMarks(d.dot), d.rankdir, groupsIn(d.dot));
     const into = new Map(laid.marks.filter((m) => m.kind === 'link').map((m) => [m.of, m.to]));
@@ -431,7 +430,7 @@ describe('the readability scores', () => {
       diagram: undefined,
     };
     const kindOf = new Map(drawing.boxes.map((b) => [b.key, b.kind]));
-    const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style.style));
     // the whole drawing, not the overview a graph this big opens on
     state.toDetail('all');
     const d = directions(state.folded(drawing))[0];
@@ -447,9 +446,7 @@ describe('the readability scores', () => {
       assert.ok(own[k] >= gv[k] - by, `${k}: ours ${own[k].toFixed(2)}, Graphviz ${gv[k].toFixed(2)}`);
     assert.ok(own.clear >= 0.8, `few links of ours pass over a box: ${own.clear.toFixed(3)}`);
     // about a screen's shape: within half and twice 1.6 wide to high
-    const opened = directions(
-      new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true }).folded(drawing),
-    )[0];
+    const opened = directions(new ViewState(startingSwitches(DEFAULT_SETTINGS, style.style)).folded(drawing))[0];
     const { space } = ownMarks(measuredMarks(opened.dot), opened.rankdir, groupsIn(opened.dot));
     const shape = space.width / space.height;
     assert.ok(shape > 0.8 && shape < 3.2, `the drawing is ${shape.toFixed(2)} wide to high`);

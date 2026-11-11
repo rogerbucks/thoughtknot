@@ -13,15 +13,12 @@ import { draw } from '../../core/src/render.ts';
 import { loadEngine } from '../../core/src/engine.ts';
 import { READABLE_SCALE } from '../../core/src/details-nav.ts';
 
-// drawn by Graphviz, as the drawing's size is worked out here
-const GRAPHVIZ = { data: { settings: { ownLayout: 'off' } } };
-
 before(() => build());
 
 describe('choosing a thing found', () => {
   let env, el;
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load();
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
@@ -77,7 +74,7 @@ describe('a thing found says where it sits in the levels', () => {
     '(rent)-[:BEFORE]->(food)',
   ].join('\n');
   before(async () => {
-    env = await load(GRAPHVIZ);
+    env = await load();
     el = (await show(env, fence(NAMED))).el;
   });
   after(() => env.uninstall());

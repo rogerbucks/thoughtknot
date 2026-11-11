@@ -1,7 +1,6 @@
 // The View menu's switches (editor spec §25), each on or off (view_switches). They are labels by zoom, busy hubs
-// folded, groups folded, parallel links merged and the new layout engine (layout_own_engine). The settings page alone
-// offers the engine (view_switch_hints). They start from the
-// plugin's settings, a style graph's merging, and a view's switches saved as shown (view_switch_defaults). A card's
+// folded, groups folded, parallel links merged and lanes by kind. Our own engine lays every drawing out, so there is
+// no engine to switch (layout_own_engine). They start from the plugin's settings, a style graph's merging, and a view's switches saved as shown (view_switch_defaults). A card's
 // state of them folds, opens and saves, changing only the drawing (view_switch_view_only, untangle_data_untouched).
 import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -47,8 +46,8 @@ function styledOf(...texts) {
 }
 
 describe('the switches', () => {
-  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged, the new engine and lanes by kind, in that order', () => {
-    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'engine', 'lanes']);
+  test('are labels by zoom, busy hubs folded, groups folded, parallel links merged and lanes by kind, in that order', () => {
+    assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge', 'lanes']);
     assert.deepEqual(
       VIEW_SWITCHES.map((s) => switchName(s)),
       [
@@ -56,20 +55,18 @@ describe('the switches', () => {
         'Fold busy things',
         'Fold groups',
         'Bundle links between groups',
-        'Lay out with ThoughtKnot',
         'Lanes by kind',
       ],
     );
   });
 
-  test('start from the settings: labels by zoom off, busy hubs folded off, groups folded off, links merged off, our engine on', () => {
+  test('start from the settings: labels by zoom off, busy hubs folded off, groups folded off, links merged off', () => {
     // every thing starts open, its links drawn; the person folds what they want (Roger, 24 Oct 2026)
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS), {
       labels: false,
       hubs: false,
       groups: false,
       merge: false,
-      engine: true,
       lanes: true,
     });
     const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'on', foldGroups: 'on', foldHubs: 'on' };
@@ -78,7 +75,6 @@ describe('the switches', () => {
       hubs: true,
       groups: true,
       merge: false,
-      engine: true,
       lanes: true,
     });
     assert.deepEqual(SWITCH_SETTINGS, {
@@ -86,7 +82,6 @@ describe('the switches', () => {
       hubs: 'foldHubs',
       groups: 'foldGroups',
       merge: 'mergeLinks',
-      engine: 'ownLayout',
       lanes: 'kindLanes',
     });
   });
@@ -101,7 +96,6 @@ describe('the switches', () => {
       hubs: false,
       groups: false,
       merge: true,
-      engine: true,
       lanes: true,
     });
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style, 'near'), {
@@ -109,7 +103,6 @@ describe('the switches', () => {
       hubs: false,
       groups: true,
       merge: false,
-      engine: true,
       lanes: true,
     });
   });
@@ -137,7 +130,6 @@ describe('a card’s state of the switches', () => {
       hubs: false,
       groups: true,
       merge: false,
-      engine: true,
       lanes: true,
     });
     assert.deepEqual(state.saved(), { labels: 'off', hubs: 'off', groups: 'on', merge: 'off' });
@@ -145,7 +137,7 @@ describe('a card’s state of the switches', () => {
 
   test('folds the drawing as its switches say, and opens a hub or a group again, and folds it again', () => {
     const { drawing } = styledOf(star(13), GROUPED);
-    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: false, engine: false });
+    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: false });
     const folded = state.folded(drawing);
     assert.deepEqual(folded.folding.hubs, [['hub', 13]]);
     assert.deepEqual(folded.folding.groups, [['Friends', ['ann', 'bob'], true]]);
@@ -170,13 +162,13 @@ describe('a card’s state of the switches', () => {
       '(hub)-[:NEAR]->(hub2)',
     ].join(',\n');
     const { drawing } = styledOf(two);
-    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false, engine: false });
+    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false });
     assert.deepEqual(state.hub(drawing, 'hub'), { links: 14, folded: true });
     assert.deepEqual(state.hub(drawing, 'hub2'), { links: 12, folded: true }, 'the links actually in its stub');
     state.turn('hubs', false);
     assert.deepEqual(state.hub(drawing, 'hub'), { links: 14, folded: false }, 'hubs not folded: open, offered to fold');
     const boxed = styledOf(star(13), `${GROUPED},\n(n3:Nudge {word: 'group', thing: 'hub', group: 'Centre'})`).drawing;
-    const grouped = new ViewState({ labels: true, hubs: true, groups: true, merge: false, engine: false });
+    const grouped = new ViewState({ labels: true, hubs: true, groups: true, merge: false });
     assert.equal(grouped.hub(boxed, 'hub'), null, 'a hub inside a folded box is drawn as the box');
     grouped.open({ group: 'Centre' });
     assert.deepEqual(grouped.hub(boxed, 'hub'), { links: 13, folded: true });
@@ -190,7 +182,7 @@ describe('a card’s state of the switches', () => {
       ...Array.from({ length: 13 }, (_, i) => `(hub2)-[:HAS]->(m${i})`),
     ].join(',\n');
     const { drawing } = styledOf(two);
-    const state = new ViewState({ labels: true, hubs: false, groups: false, merge: false, engine: false });
+    const state = new ViewState({ labels: true, hubs: false, groups: false, merge: false });
     // 31 things: drawn in the groups their links make (untangle_found_groups), but no hub folded
     assert.deepEqual(state.folded(drawing).folding?.hubs ?? [], [], 'nothing folded to start');
     assert.deepEqual(state.hub(drawing, 'hub2'), { links: 13, folded: false });
@@ -208,7 +200,7 @@ describe('a card’s state of the switches', () => {
 
   test('turning a switch on again folds what was opened again', () => {
     const { drawing } = styledOf(star(13));
-    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false, engine: false });
+    const state = new ViewState({ labels: true, hubs: true, groups: false, merge: false });
     state.open({ hub: 'hub' });
     state.turn('hubs', false);
     state.turn('hubs', true);
@@ -218,7 +210,7 @@ describe('a card’s state of the switches', () => {
   test('changes the drawing only: the drawing given and the note as read are as they were', () => {
     const { drawing, reading } = styledOf(star(13), GROUPED);
     const before = JSON.stringify([drawing, [...reading.graphs], reading.problems]);
-    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: true, engine: false });
+    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: true });
     state.folded(drawing);
     state.open({ hub: 'hub' });
     state.folded(drawing);
@@ -277,7 +269,7 @@ describe('a card regrouped to a thing and its neighbours (untangle_regroup)', ()
 
   test('a group keeps its box while one of its things is kept, and goes with the last', () => {
     const { drawing } = styledOf(star(3), GROUPED);
-    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: false, engine: false }),
+    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: false }),
       card = {};
     state.keepOnly(card, { things: new Set(['ann']), edges: new Set() });
     assert.deepEqual(state.folded(drawing, card).folding.groups, [['Friends', ['ann', 'bob'], true]]);
@@ -348,7 +340,7 @@ describe('a large network with no groups written', () => {
 });
 
 describe('the ladder of detail (cluster_detail_ladder)', () => {
-  const OFF = { labels: true, hubs: false, groups: false, merge: false, engine: false };
+  const OFF = { labels: true, hubs: false, groups: false, merge: false };
   /** A graph of `n` people in two teams, as a style graph writes their groups. */
   const teams = (n) => {
     const keys = Array.from({ length: n }, (_, i) => `p${i}`);

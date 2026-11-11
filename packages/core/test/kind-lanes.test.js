@@ -81,7 +81,7 @@ describe('kinds that link in order', () => {
     assert.deepEqual(Object.fromEntries(lanesShown(attribute)), { r1: 0, t1: 1 });
     assert.equal(lanesShown(null).size, 0);
     assert.equal(DEFAULT_SETTINGS.kindLanes, 'on', 'on unless the person turns it off');
-    const off = new ViewState({ ...startingSwitches({ ...DEFAULT_SETTINGS, kindLanes: 'off' }), engine: true });
+    const off = new ViewState(startingSwitches({ ...DEFAULT_SETTINGS, kindLanes: 'off' }));
     const drawing = { boxes: [], links: [], estimates: [] };
     assert.equal(off.folded(drawing).kindLanes, false);
     assert.equal(new ViewState(startingSwitches(DEFAULT_SETTINGS)).folded(drawing).kindLanes, undefined);

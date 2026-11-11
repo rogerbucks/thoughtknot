@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-live-loop.test.js",
+  "test": "a big drawing shown as it improves (layout_live_loop) > each card laid out by our own engine is live, and our own engine lays out every card",
+  "seen_failing_first": false,
+  "evidence": "Since #2192 no switch could take a card off our engine, so the new assertion holds already; this commit removes the switch the old assertion turned off."
+}

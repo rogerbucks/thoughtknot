@@ -44,7 +44,7 @@ function laidOut(file, graph, level) {
   const note = readNote([text]);
   const style = readStyle([text], graph, note);
   const drawing = { ...styledDrawing(note.graphs.get(graph), style.style, note.world[graph]), diagram: undefined };
-  const state = new ViewState({ ...startingSwitches(DEFAULT_SETTINGS, style.style), engine: true });
+  const state = new ViewState(startingSwitches(DEFAULT_SETTINGS, style.style));
   state.toDetail(level);
   const [d] = directions({ ...state.folded(drawing), engine: 'own', straightFirst: true });
   return { d, things: note.graphs.get(graph).boxes.length };

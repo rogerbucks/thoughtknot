@@ -15,7 +15,7 @@ export const HINTS = {
   groups: 'view.hint.groups',
   merge: 'view.hint.merge',
   lanes: 'view.hint.lanes',
-} as const satisfies Record<Exclude<ViewSwitch, 'engine'>, WordKey>;
+} as const satisfies Record<ViewSwitch, WordKey>;
 
 /** The View menu's layout sliders, and how far one step moves each, in every view (§53, layout_saved_with_view). */
 export const LAYOUT_SLIDERS = [

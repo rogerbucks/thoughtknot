@@ -63,8 +63,6 @@ export interface Settings extends StrictnessSettings, PictureSettings, TypingSet
   foldHubs: SwitchSetting;
   foldGroups: SwitchSetting;
   mergeLinks: SwitchSetting;
-  /** Whether graphs are laid out by our own engine, as a preview, instead of Graphviz (§53, layout_own_engine). */
-  ownLayout: SwitchSetting;
   /** Whether kinds that link in order each get a lane of their own, or a plane in space (§68, layout_kind_lanes). */
   kindLanes: SwitchSetting;
   /** Whether each note is drawn on the drawing as a callout joined to its thing by a dashed line (§24, note_callouts). */
@@ -114,7 +112,6 @@ export const DEFAULT_SETTINGS: Settings = {
   foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',
-  ownLayout: 'on',
   kindLanes: 'on',
   noteCallouts: 'off',
   miniMap: 'always',
@@ -359,7 +356,6 @@ export function settingsFrom(saved: unknown): Settings {
     foldHubs: oneOf<SwitchSetting>('foldHubs', s.foldHubs, d.foldHubs),
     foldGroups: oneOf<SwitchSetting>('foldGroups', s.foldGroups, d.foldGroups),
     mergeLinks: oneOf<SwitchSetting>('mergeLinks', s.mergeLinks, d.mergeLinks),
-    ownLayout: oneOf<SwitchSetting>('ownLayout', s.ownLayout, d.ownLayout),
     kindLanes: oneOf<SwitchSetting>('kindLanes', s.kindLanes, d.kindLanes),
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),

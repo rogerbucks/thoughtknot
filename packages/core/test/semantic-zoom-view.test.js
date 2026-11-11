@@ -9,7 +9,7 @@ import { ViewState } from '../src/view-switches.ts';
 
 /** A card of 300 things in a viewport 800 × 600, its timers run by hand, and the rungs it was stepped to. */
 function cardOf(lens = 'semantic', nearer = undefined) {
-  const state = new ViewState({ labels: true, hubs: false, groups: true, merge: true, engine: false, lanes: true });
+  const state = new ViewState({ labels: true, hubs: false, groups: true, merge: true, lanes: true });
   [state.lens, state.things] = [lens, 300];
   let timers = [];
   const win = {

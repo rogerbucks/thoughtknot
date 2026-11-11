@@ -162,11 +162,6 @@ export const SETTINGS_SOURCE_WORDS = {
     'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.',
   'settings.merge-links.on': 'On',
   'settings.merge-links.off': 'Off',
-  'settings.own-layout.name': 'Lay out with ThoughtKnot',
-  'settings.own-layout.sentence':
-    'Whether ThoughtKnot lays graphs out itself, the default. Off lays them out with Graphviz, as before.',
-  'settings.own-layout.on': 'On',
-  'settings.own-layout.off': 'Off',
   'settings.kind-lanes.name': 'Lanes by kind',
   'settings.kind-lanes.sentence':
     'Whether kinds that link in order each get a lane, or a plane in space; a graph’s View menu can change it.',
