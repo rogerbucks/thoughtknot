@@ -1,9 +1,26 @@
-// A right-angled link (editor spec §25, untangle_routing), for direct-links.ts. Graphviz drew these as its own `ortho`
+// A right-angled link (ES§25, untangle_routing), for direct-links.ts. Graphviz drew these as its own `ortho`
 // lines; now our own router does. Each link runs only across and down, from box to box, round the boxes in its way,
 // with as few corners as it can. It is found on a sparse grid made of the edges of the boxes near it. Past a size, or
 // where no way round is found, it takes one corner halfway between its boxes. Host-free and pure.
-import type { Curve, Placed } from '../direct-curve.ts';
-import type { MarkPoint } from '../plugin-diagrams.ts';
+
+/** A point, across then down, in pixels. */
+type MarkPoint = [number, number];
+/** A box a link joins or passes: its key, its middle, and its half width and height (direct-curve.ts). */
+interface Placed {
+  key: string;
+  x: number;
+  y: number;
+  hw: number;
+  hh: number;
+}
+/** A link's line as direct-links.ts draws it: its points, its tip at either end, and where its words go. */
+interface Curve {
+  at(t: number): MarkPoint;
+  cubic(cutStart: number, cutEnd: number): MarkPoint[];
+  tipAt(atStart: boolean): [MarkPoint, number];
+  wordsAt(t: number, off: number): MarkPoint;
+  ends: [MarkPoint, MarkPoint];
+}
 
 /** The room kept between a right-angled link and a box it passes, in pixels. */
 const ELBOW_GAP = 10;

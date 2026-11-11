@@ -35,8 +35,7 @@ import {
 import { SCREEN } from './layouts/folded-rows.ts';
 import { measuredMarks } from './layouts/measure.ts';
 import { typePlaces } from './render/render-places.ts';
-import { TYPE_STRATEGY } from './layouts/layout-options.ts';
-import { layoutOptions } from './layouts/layout-options.ts';
+import { TYPE_STRATEGY, layoutOptions } from './layouts/layout-options.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -271,8 +270,7 @@ export function svgOf(engine: Engine, dot: string, routing?: string, own?: boole
         stepIn(dot),
         placedIn(dot),
         keptIn(dot),
-        // straight or right-angled links, as the person chose, drawn by our own router (untangle_routing)
-        linesIn(dot),
+        linesIn(dot), // straight or right-angled, as the person chose (untangle_routing)
       );
   }
   // direct is the default. Curved is drawn by our own router; any other routing is Graphviz's own (Roger, 24 Oct 2026)

@@ -1,4 +1,4 @@
-// Right-angled and straight links drawn by our own router (editor spec §25, untangle_routing; §68, layout_own_engine).
+// Right-angled and straight links drawn by our own router (ES§25, untangle_routing; ES§68, layout_own_engine).
 // Graphviz drew them as its own lines. Now each right-angled link runs only across and down, round the boxes in its
 // way. It leaves and reaches its boxes the drawing's way. Spans layouts/elbow-route.ts, direct-links.ts and render.ts.
 import { test, describe } from 'node:test';
