@@ -1466,6 +1466,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     `openSyncStore`. It sees only sealed bytes, and it runs in the host, never in a worker.
   - Its `transport` adds a way between devices (`TransportBackend`), opened by `openTransport`. It carries sealed
     messages only, and runs in the host, never in a worker.
+  - Its `identity` adds a system that says who a person is (`IdentityBackend`), opened by `openIdentity`. It is given
+    a device's public key alone. The role it gives only narrows an invitation (`identitySeat`). It runs in the host.
   - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
   - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
     and the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
@@ -1521,6 +1523,8 @@ and is handed the port between them, as for layouts:
 - `core-ai.ts` — `CORE_AI`, the core's own AI wire format as a built-in provider plug-in (`CORE_AI_PROVIDER`).
 - `plugin-calls.ts` — every call into a plug-in, timed, caught and named. `awaited` times a call whose answer comes
   later, until it comes.
+- `plugin-store-calls.ts` — the calls into what a plug-in adds to keep or carry things: note storage, record stores,
+  transports, identity systems and panels. `plugin-shelf.ts` holds each point's additions until all are accepted.
 - `plugin-sources.ts` — what a graph source or step gives back, held as a `JoinedGraph` (trust_source_joined). It
   carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
   graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
@@ -1539,6 +1543,7 @@ and is handed the port between them, as for layouts:
   - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
   - `syncStoreBackendContract`: the record store checks: bytes back as they were, in order, counts and a tail.
   - `transportBackendContract`: the transport checks: whole messages in order both ways, and a close told to the other end.
+  - `identityBackendContract`: the identity checks: a person for each device, the same each time, and a board role or none.
   - `commandContract`: a command's id, its title on one line, and that it can be run.
   - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
     step is tried on `SAMPLE_GRAPH` and must give the same graph each time.

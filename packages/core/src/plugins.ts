@@ -15,7 +15,9 @@ import { backendProblem, commandProblem, exporterProblem, panelProblem } from '.
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
-import { syncStoreProblem, transportProblem } from './plugin-points.ts';
+import { keep, nameOf, shelf, type Shelf } from './plugin-shelf.ts';
+import { identityProblem, syncStoreProblem, transportProblem } from './plugin-points.ts';
+import type { IdentityBackend, SyncIdentity } from './plugin-points.ts';
 import type { SyncStore, SyncStoreBackend, SyncTransport, TransportBackend } from './plugin-points.ts';
 import { ownSecrets } from './plugin-points.ts';
 import type { RegistryOptions, StoppedPlugin } from './plugin-points.ts';
@@ -23,7 +25,7 @@ export type { HostOffer, RegistryOptions, StoppedPlugin } from './plugin-points.
 import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
 import { commandCalls, pluginCalls } from './plugin-calls.ts';
-import { panelCalls, storageCalls, syncStoreCalls, transportCalls } from './plugin-store-calls.ts';
+import { identityCalls, panelCalls, storageCalls, syncStoreCalls, transportCalls } from './plugin-store-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -37,6 +39,7 @@ import { gatedFiles } from './plugin-files.ts';
 export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand } from './plugin-points.ts';
 export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
 export type { SyncStore, SyncStoreBackend, SyncTransport, TransportBackend } from './plugin-points.ts';
+export type { IdentityBackend, SharingPerson, SyncIdentity } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import { POINT_VERSIONS, pointsUsed } from './plugin-versions.ts';
@@ -59,6 +62,7 @@ export const EXTENSION_POINTS = [
   'layouts',
   'syncstore',
   'transport',
+  'identity',
 ] as const;
 
 /** One of the extension points. */
@@ -81,6 +85,8 @@ export interface ExtensionPoints {
   syncstore?: { add: (backend: SyncStoreBackend) => void };
   /** How a device reaches another. Not run apart: it is added in the page or the app. */
   transport?: { add: (backend: TransportBackend) => void };
+  /** Who a person is, from a system they have. Not run apart: it is added in the page or the app. */
+  identity?: { add: (backend: IdentityBackend) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -135,6 +141,10 @@ export interface PluginRegistry extends SourceFetching {
   transports: () => TransportBackend[];
   /** The transport `name`, opened, or what went wrong and whose plug-in it was. */
   openTransport: (name: string) => PluginResult<SyncTransport>;
+  /** Every identity system added, in the order added. */
+  identities: () => IdentityBackend[];
+  /** The identity system `name`, opened, or what went wrong and whose plug-in it was. */
+  openIdentity: (name: string) => PluginResult<SyncIdentity>;
   /** Every command added, in the order added. */
   commands: () => PluginCommand[];
   commandOffered: (id: string) => boolean;
@@ -175,17 +185,6 @@ export interface PluginRegistry extends SourceFetching {
   stopped: () => StoppedPlugin[];
 }
 
-/** What a plug-in adds to one point, kept aside until all it adds has been accepted. */
-interface Shelf<T> {
-  items: T[];
-  owner: Map<string, string>;
-  /** What each is named by on its point, such as a command's `id`. */
-  key: keyof T;
-}
-
-const shelf = <T>(key: keyof T): Shelf<T> => ({ items: [], owner: new Map(), key });
-const nameOf = <T>(s: Shelf<T>, t: T) => String(t[s.key]);
-
 /** Why something a plug-in adds to a point is refused, given the plug-in's id and who added each name so far. */
 type Problem<T> = (t: T, pluginId: string, taken: Map<string, string>) => string | null;
 
@@ -208,6 +207,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const layouts = shelf<PluginLayout>('id');
   const syncStoreShelf = shelf<SyncStoreBackend>('name');
   const transportShelf = shelf<TransportBackend>('name');
+  const identityShelf = shelf<IdentityBackend>('name');
   const calls = pluginCalls(now, timeLimit);
   const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
@@ -221,13 +221,6 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     if (named.includes('secrets') && host.secrets) out.secrets = ownSecrets(host.secrets, pluginId);
     if (named.includes('files') && host.files) out.files = gatedFiles(host.files, pluginId);
     return Object.freeze(out);
-  };
-  /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
-  const keep = <T>(from: Shelf<T>, to: Shelf<T>, plugin: string) => {
-    for (const t of from.items) {
-      to.items.push(t);
-      to.owner.set(nameOf(to, t), plugin);
-    }
   };
   return {
     register(plugin) {
@@ -254,6 +247,8 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedCommands = shelf<PluginCommand>('id');
       const addedPanels = shelf<PluginPanel>('id');
       const points: ExtensionPoints = {};
+      // each shelf a point adds to is moved onto the registry's own once the plug-in has registered
+      const kept: (() => void)[] = [];
       if (uses('exports'))
         points.exports = {
           add: (e) => {
@@ -276,14 +271,17 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
           },
         });
       /** A point whose additions are checked by `problem` against all added so far, and kept aside on `mine`. */
-      const onShelf = <T>(mine: Shelf<T>, all: Shelf<T>, problem: Problem<T>, copy = (t: T): T => ({ ...t })) => ({
-        add: (t: T) => {
-          const why = problem(t, plugin.id, new Map([...all.owner, ...mine.owner]));
-          if (why) refuse(why);
-          mine.owner.set(nameOf(mine, t), plugin.id);
-          mine.items.push(copy(t));
-        },
-      });
+      const onShelf = <T>(mine: Shelf<T>, all: Shelf<T>, problem: Problem<T>, copy = (t: T): T => ({ ...t })) => {
+        kept.push(() => keep(mine, all, plugin.id));
+        return {
+          add: (t: T) => {
+            const why = problem(t, plugin.id, new Map([...all.owner, ...mine.owner]));
+            if (why) refuse(why);
+            mine.owner.set(nameOf(mine, t), plugin.id);
+            mine.items.push(copy(t));
+          },
+        };
+      };
       const addedSources = shelf<PluginSource>('scheme');
       const addedSteps = shelf<PluginStep>('id');
       const addedProviders = shelf<AiProvider>('name');
@@ -291,9 +289,11 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedLayouts = shelf<PluginLayout>('id');
       const addedSyncStores = shelf<SyncStoreBackend>('name');
       const addedTransports = shelf<TransportBackend>('name');
+      const addedIdentities = shelf<IdentityBackend>('name');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
       if (uses('syncstore')) points.syncstore = onShelf(addedSyncStores, syncStoreShelf, syncStoreProblem);
       if (uses('transport')) points.transport = onShelf(addedTransports, transportShelf, transportProblem);
+      if (uses('identity')) points.identity = onShelf(addedIdentities, identityShelf, identityProblem);
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
         points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
@@ -319,16 +319,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
         tokens.push(t);
         tokenOwner.set(t.name, plugin.id);
       }
-      keep(addedBackends, backends, plugin.id);
-      keep(addedCommands, commands, plugin.id);
-      keep(addedPanels, panels, plugin.id);
-      keep(addedSources, sources, plugin.id);
-      keep(addedSteps, steps, plugin.id);
-      keep(addedProviders, providers, plugin.id);
-      keep(addedDiagrams, diagrams, plugin.id);
-      keep(addedLayouts, layouts, plugin.id);
-      keep(addedSyncStores, syncStoreShelf, plugin.id);
-      keep(addedTransports, transportShelf, plugin.id);
+      for (const move of kept) move();
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -346,6 +337,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     ...storageCalls(calls, backends.items, backends.owner),
     ...syncStoreCalls(calls, syncStoreShelf.items, syncStoreShelf.owner),
     ...transportCalls(calls, transportShelf.items, transportShelf.owner),
+    ...identityCalls(calls, identityShelf.items, identityShelf.owner),
     commands: () => commands.items.map((c) => ({ ...c })),
     ...commandCalls(calls, commands.items, commands.owner),
     ...panelCalls(calls, panels.items, panels.owner),
