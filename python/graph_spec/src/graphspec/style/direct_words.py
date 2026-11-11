@@ -4,6 +4,8 @@ placed already and no other line. It is the core's direct-words.ts, step for ste
 
 from __future__ import annotations
 
+import math
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -81,8 +83,12 @@ def word_spots(
                                 n += size * size * 0.36
             return n
 
-        # off the line by half the block's height: one row sits as far off as WORDS_OFF says
-        off = max(size * WORDS_OFF, tall / 2)
+        # off the line by half the block's reach square to it: its height beside a flat line, its
+        # width beside an upright one. One row sits at least as far off as WORDS_OFF says
+        wide = max(r[2] for r in room) - min(r[0] for r in room)
+        (ax, ay), (bx, by) = c.ends
+        long = math.hypot(bx - ax, by - ay) or 1
+        off = max(size * WORDS_OFF, abs(by - ay) / long * (wide / 2) + abs(bx - ax) / long * (tall / 2))
         best, least = c.words_at(0.5, off), float("inf")
         clear = False
         for far in (off, off * 2.2):

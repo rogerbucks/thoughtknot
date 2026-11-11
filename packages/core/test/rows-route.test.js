@@ -27,9 +27,17 @@ function laidOut(count, way = 'LR') {
   return { dot, laid: engine.marks(routedSource(dot, 'direct')) };
 }
 
-/** Each thing's box, by its key, as `[x, y]`. */
-const spots = (laid) =>
-  Object.fromEntries(laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing').map((m) => [m.of, [m.x, m.y]]));
+/**
+ * Each thing's box, by its key, as `[x, y]` from the first box. The whole drawing may move over, so words beside a
+ * line at its edge still fit, but no box moves against another.
+ */
+const spots = (laid) => {
+  const boxes = laid.marks.filter((m) => m.kind === 'box' && m.role === 'thing');
+  const [x0, y0] = [boxes[0]?.x ?? 0, boxes[0]?.y ?? 0];
+  return Object.fromEntries(
+    boxes.map((m) => [m.of, [Math.round((m.x - x0) * 1e6) / 1e6, Math.round((m.y - y0) * 1e6) / 1e6]]),
+  );
+};
 
 test('past 300 things no link runs over a box, and every box stays where Graphviz put it', () => {
   for (const way of ['LR', 'TB']) {
