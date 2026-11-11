@@ -16,7 +16,7 @@ import { groupedLayered, tidyRows } from './grouped.ts';
 import type { Group, GroupBox } from './grouped.ts';
 import { RESTARTS } from './layered.ts';
 import { trunksBack, trunksOut } from './trunks.ts';
-import type { Layered, Size } from './layered.ts';
+import type { Layered, RowOptions, Size } from './layered.ts';
 import { SCREEN, boundsOf } from './folded-rows.ts';
 import { layoutOptions, roundsOf } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
@@ -146,8 +146,10 @@ export function ownSpots(
     things: bare.things.map((t) => ({ ...t, kinds: kindOf(t.key) ? [kindOf(t.key) as string] : [] })),
   };
   const { spacing } = layoutOptions(options);
-  // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray
-  const together = groups.map((g) => g.members);
+  // each connected part is laid out by its own shape and packed to a screen's (parts.ts); loose things go in a tray.
+  // Things nudged beside or before each other are laid out in one part, so their rows can keep the nudge
+  const { nudges } = options as RowOptions;
+  const together = [...groups.map((g) => g.members), ...(nudges?.same ?? []), ...(nudges?.before ?? [])];
   const grouped = new Set(together.flat());
   const keys = shape.things.map((t) => t.key);
   // a graph placed by its levels is laid out whole, so its levels are those of the whole graph, as its clouds' are
@@ -286,8 +288,10 @@ function laidBy(
   const { spacing, linkLength } = layoutOptions(options);
   let way = rankdir;
   if (pick.layout === 'layered') {
-    // a tree with no groups and no lanes is drawn as a tree: each parent at the middle of its children (tidy-tree.ts)
-    const tidy = pick.why === 'tree' && !groups.length && !bands?.size;
+    // a tree with no groups, lanes or nudges is drawn as a tree: each parent at the middle of its children
+    // (tidy-tree.ts). A tree's rows keep the beside and before nudges, as any rows do (four_nudge_words)
+    const nudged = !!(options as RowOptions | undefined)?.nudges;
+    const tidy = pick.why === 'tree' && !groups.length && !bands?.size && !nudged;
     const rowsOf = (w: 'LR' | 'TB') =>
       (tidy ? tidyRows(shape, sizes, w, options) : undefined) ??
       groupedLayered(

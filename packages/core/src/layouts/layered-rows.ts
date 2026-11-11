@@ -69,6 +69,57 @@ export function rowsOf(n: number, out: number[][]): number[] {
 }
 
 /**
+ * The nudges a person wrote that rows keep (ES§6, four_nudge_words), by key. Things beside each other share a row,
+ * and a thing before another sits in an earlier row, as Graphviz kept them.
+ */
+export interface RowNudges {
+  same: readonly (readonly string[])[];
+  before: readonly (readonly [string, string])[];
+}
+
+/**
+ * Each thing's row, as `rowsOf` finds it, with `nudges` kept. `index` gives a key's place. Things beside each other
+ * are searched as one, and a thing before another links to it there, by a link never drawn. `out` is given back with
+ * each link running to a later row. A link within one row, between two things beside each other, is left out of it.
+ * With no nudge, it is `rowsOf`, so a drawing with none is laid out as before.
+ */
+export function nudgedRowsOf(
+  n: number,
+  out: number[][],
+  index: (key: string) => number | undefined,
+  nudges?: RowNudges,
+): number[] {
+  const at = (keys: readonly string[]) => keys.flatMap((k) => index(k) ?? []);
+  const groups = (nudges?.same ?? []).map(at).filter((g) => g.length > 1);
+  const before = (nudges?.before ?? []).map(at).filter(([a, b]) => b !== undefined && a !== b);
+  if (!groups.length && !before.length) return rowsOf(n, out);
+  // the things beside each other become one: each is found by the first of them
+  const lead = Array.from({ length: n }, (_, i) => i);
+  const find = (i: number): number => {
+    while (lead[i] !== i) i = lead[i] = lead[lead[i] as number] as number;
+    return i;
+  };
+  for (const [first, ...rest] of groups) for (const i of rest) lead[find(i)] = find(first as number);
+  const joined: number[][] = Array.from({ length: n }, () => []);
+  const join = (a: number, b: number) => {
+    const [p, q] = [find(a), find(b)];
+    if (p !== q && !(joined[p] as number[]).includes(q)) (joined[p] as number[]).push(q);
+  };
+  out.forEach((next, v) => next.forEach((w) => join(v, w)));
+  for (const [a, b] of before) join(a as number, b as number);
+  const leadRow = rowsOf(n, joined);
+  const row = Array.from({ length: n }, (_, i) => leadRow[find(i)] as number);
+  const forward: number[][] = out.map(() => []);
+  out.forEach((next, v) => {
+    for (const w of next)
+      if ((row[v] as number) < (row[w] as number)) (forward[v] as number[]).push(w);
+      else if ((row[v] as number) > (row[w] as number)) (forward[w] as number[]).push(v);
+  });
+  out.splice(0, out.length, ...forward);
+  return row;
+}
+
+/**
  * Rows too long for the drawing's shape, split into several, so a shallow graph is not one long strip. A drawing is
  * aimed at `ASPECT` wide to one high. Each long row is cut in order of where its things' sources sit, and the rows
  * after it move along.

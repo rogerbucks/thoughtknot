@@ -7,6 +7,7 @@ import {
   kindsIn,
   lanesIn,
   linesIn,
+  nudgesIn,
   optionsIn,
   ownSource,
   ownSvg,
@@ -14,16 +15,20 @@ import {
   stepIn,
 } from './own-draw.ts';
 import type { LaidMarks } from '../graphviz-marks.ts';
+import type { RowOptions } from './layered.ts';
 
 /** What our own engine lays the layout source `dot` out with, its boxes as our own code `measured` them. */
 export function ownArgs(dot: string, measured?: LaidMarks): Parameters<typeof ownSvg> {
   // a source written for Graphviz alone is given our engine's lines first
   const src = /\/\/ layout options \{/.test(dot) ? dot : ownSource(dot);
+  // the rows keep the beside and before nudges written in (four_nudge_words)
+  const nudges = nudgesIn(src);
+  const options: RowOptions = nudges ? { ...optionsIn(src), nudges } : optionsIn(src);
   return [
     measured ?? measuredMarks(src),
     /rankdir=(\w+)/.exec(src)?.[1] ?? 'LR',
     groupsIn(src),
-    optionsIn(src),
+    options,
     kindsIn(src),
     lanesIn(src),
     stepIn(src),

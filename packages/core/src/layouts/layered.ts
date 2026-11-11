@@ -12,7 +12,8 @@
 //
 // Spots are box middles in CSS pixels, across (`LR`: rows run left to right) or down (`TB`). Host-free and pure.
 import type { GraphShape } from '../types-shape.ts';
-import { banded, rowsOf, wrapped } from './layered-rows.ts';
+import { banded, nudgedRowsOf, wrapped } from './layered-rows.ts';
+import type { RowNudges } from './layered-rows.ts';
 import { layoutOptions, roundsOf } from './layout-options.ts';
 import type { LayoutOptions } from './layout-options.ts';
 
@@ -42,6 +43,9 @@ interface Item {
   /** A stand-in's link: the things at its two ends. */
   ends?: readonly [number, number];
 }
+
+/** How rows are laid out: the person's options, and the nudges the rows keep (four_nudge_words). */
+export type RowOptions = Partial<LayoutOptions> & { nudges?: RowNudges };
 
 /** A layered layout: each thing's middle, and the bends of each link that skips rows, by `from` and `to` keys. */
 export interface Layered {
@@ -102,7 +106,7 @@ export function layered(
   sizes: ReadonlyMap<string, Size> = new Map(),
   rankdir: 'LR' | 'TB' = 'LR',
   previous?: ReadonlyMap<string, readonly number[]>,
-  options: Partial<LayoutOptions> = {},
+  options: RowOptions = {},
   tries = 0,
   bands?: ReadonlyMap<string, number>,
 ): Layered {
@@ -129,7 +133,7 @@ export function layered(
     if (l.type === TRUNK_LINK) alone.add(`${a} ${b}`);
     (links[a] as number[]).push(b);
   }
-  const ranked = rowsOf(n, links);
+  const ranked = nudgedRowsOf(n, links, (k) => index.get(k), options.nudges);
   const laned = bands?.size
     ? banded(
         ranked,

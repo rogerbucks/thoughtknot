@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layered-rows.test.js",
+  "test": "rows that keep the nudges (nudges_kept_in_rows) > the nudges are read from the source, an unclosed quote at once (js/polynomial-redos)",
+  "seen_failing_first": false,
+  "evidence": "The old pattern took minutes on this text (47 s at half its size), but a test's time limit cannot cut short code that never yields, so the replay waited and saw it pass. CodeQL js/polynomial-redos is what failed it."
+}

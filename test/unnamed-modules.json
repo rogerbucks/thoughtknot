@@ -58,8 +58,6 @@
   "packages/core/src/layouts/folded-rows.ts",
   "packages/core/src/layouts/force-3d.ts",
   "packages/core/src/layouts/grouped.ts",
-  "packages/core/src/layouts/layered-rows.ts",
-  "packages/core/src/layouts/layered.ts",
   "packages/core/src/layouts/own-draw.ts",
   "packages/core/src/layouts/pick.ts",
   "packages/core/src/layouts/routed-curve.ts",
