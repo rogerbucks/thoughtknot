@@ -133,7 +133,9 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[], work =
     return [...(away ? [away] : []), ...each.flatMap((s) => [l.toward * s, -l.toward * s])];
   });
   let crossing = links.length * (links.length + boxes.length * BENDS.length * 2) * PIECES <= CROSSINGS_PLANNED;
-  const lines = links.map((l, i) => pathOf(l.a, l.b, (tries[i] as number[])[0] as number));
+  // each bend's curve is cut once. A bend scores its bending and more, so one that is no better there cannot win
+  const cuts = links.map((l, i): Path[] => [pathOf(l.a, l.b, (tries[i] as number[])[0] as number)]);
+  const lines = cuts.map((c) => c[0] as Path);
   const bows = tries.map((t) => t[0] as number);
   for (let round = 0; round < 2; round++)
     for (let i = 0; i < links.length; i++) {
@@ -147,12 +149,15 @@ export function bends(links: readonly ToBend[], boxes: readonly Placed[], work =
       if (!crossing) others.length = 0;
       if (!work.bends.take(each.length * pool.length)) return bows;
       let best = Infinity;
-      for (const bow of each) {
-        const curve = pathOf(l.a, l.b, bow);
-        const score =
-          THROUGH * through(curve, l, pool) +
-          CROSSED * others.filter((o) => crosses(curve, o)).length +
-          BENT * Math.abs(bow);
+      for (let k = 0; k < each.length; k++) {
+        const bow = each[k] as number,
+          bent = BENT * Math.abs(bow);
+        if (bent >= best) continue;
+        const curve = ((cuts[i] as Path[])[k] ??= pathOf(l.a, l.b, bow)),
+          boxed = THROUGH * through(curve, l, pool);
+        let crossed = 0;
+        for (const o of others) if (crosses(curve, o) && boxed + CROSSED * ++crossed + bent >= best) break;
+        const score = boxed + CROSSED * crossed + bent;
         if (score < best) {
           best = score;
           bows[i] = bow;
@@ -222,13 +227,8 @@ function crosses(p: Path, q: Path): boolean {
       b = p.points[i + 1] as MarkPoint;
     for (let j = 0; j < PIECES; j++) {
       const j4 = j * 4;
-      if (
-        px1 < (qs[j4] as number) ||
-        (qs[j4 + 2] as number) < px0 ||
-        py1 < (qs[j4 + 1] as number) ||
-        (qs[j4 + 3] as number) < py0
-      )
-        continue;
+      if (px1 < (qs[j4] as number) || (qs[j4 + 2] as number) < px0) continue;
+      if (py1 < (qs[j4 + 1] as number) || (qs[j4 + 3] as number) < py0) continue;
       if (cut(a, b, q.points[j] as MarkPoint, q.points[j + 1] as MarkPoint)) return true;
     }
   }
