@@ -55,6 +55,8 @@ export const VALUES_LATE = [
   'suggestAsk',
   'suggestedPreview',
   'suggestionGroups',
+  // the cap on how much one AI edit may rewrite (ai_smallest_edit), 12 Nov 2026
+  'REWRITE_MOST',
   'INTENT_LINK_TYPES',
   'INTENT_MARKS',
   'intentOverlay',
@@ -460,4 +462,9 @@ export const VALUES_LATE = [
   'storeOver',
   'contractCases',
   'partsStoreContract',
+  // a sheet of an Excel workbook named after FROM, `book.xlsx#Sheet1` (connector_files_to_gql), 12 Nov 2026
+  'workbookPlace',
+  'workbookSheets',
+  'workbookTable',
+  'WORKBOOK_LIMITS',
 ];

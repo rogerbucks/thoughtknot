@@ -28,7 +28,7 @@ export const HOST_SOURCE_WORDS = {
   'host.command.ask-ai': 'Ask an AI model to propose changes',
   'host.command.text-to-graph': 'Make a graph of the text with an AI model',
   'host.command.clear-sends': 'Clear the record of sends to AI models',
-  'host.command.import': 'Import from a database',
+  'host.command.import': 'Import from a database or workbook',
   'host.taken':
     'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
   'host.to-convert': 'to convert it to standard GQL',

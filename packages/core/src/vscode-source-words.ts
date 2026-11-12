@@ -17,6 +17,7 @@ export const VSCODE_SOURCE_WORDS = {
   'vscode.ai.address': 'VS Code’s language model API, signed in by you',
   'vscode.ai.pick-model': 'Which of VS Code’s language models to ask',
   'vscode.ai.pick-graph': 'Which graph to send',
+  'vscode.ai.keep-words': 'Keep my words: change at most {most} things I wrote',
   'vscode.ai.pick-things': 'Tick the things to send',
   'vscode.ai.shown': 'What is sent to {model} is shown beside the note. Send exactly that, once?',
   'vscode.ai.why': 'ThoughtKnot sends the graph you chose, to propose changes to it.',

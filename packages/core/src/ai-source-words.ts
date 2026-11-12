@@ -259,6 +259,11 @@ export const AI_SOURCE_WORDS = {
   'ai.send.unreachable': '{model} could not be reached at {address} ({why}).',
   'ai.send.refused': '{model} refused the request ({why}).',
   'ai.send.unread': '{model} answered, but not with changes this editor can read: {why}.',
+  // an AI edit is the smallest change that does the job (ai-edit-size.ts, ai_smallest_edit)
+  'ai.edit.too-big':
+    '{model} answered with too big an edit: it would change or remove {count} things you wrote, and one proposal may change at most {most}. Ask for less, or turn on “Rewrite allowed” and send again.',
+  'ai.rewrite': 'Rewrite allowed',
+  'ai.rewrite.sentence': 'Off: the model may change or remove at most {most} things you wrote, so your own words stay.',
   // whether a note may open in a pane Claude can read (claude-gate.ts)
   'ai.gate.credential': 'This note holds {held}, and a credential is never shown to Claude, so it is not opened.',
   'ai.gate.unknown':

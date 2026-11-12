@@ -3,8 +3,8 @@
 
 /** The import dialog's words, by key, in UK English. */
 export const DB_SOURCE_WORDS = {
-  'db.none': 'No database file is in the vault: Import reads a .sqlite, .sqlite3 or .db file kept there.',
-  'import.title': 'Import from a database',
+  'db.none': 'No database file is in the vault: Import reads a .sqlite, .sqlite3, .db or .xlsx file kept there.',
+  'import.title': 'Import from a database or workbook',
   'import.file': 'Database file',
   'import.file.sentence':
     'A SQLite file in this vault. Choosing it lists its tables, read on this device; nothing is sent anywhere.',

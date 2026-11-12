@@ -21,6 +21,8 @@ import {
   READ_LIMITS,
   readSource,
   SQLITE_LIMITS,
+  WORKBOOK_LIMITS,
+  workbookPlace,
 } from '@thoughtknot/core';
 import type {
   GraphDrawing,
@@ -63,7 +65,7 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
   // a plug-in's source is asked of the plug-in that adds it, never looked for in the vault (plugin_source_from)
   if (source.kind === 'plugin')
     return plugin.outside.readGraph(source.scheme ?? '', source.target, plugin.settings.classifications);
-  if (source.kind === 'database') return databaseOf(plugin, source.target, from);
+  if (source.kind === 'database' || source.kind === 'workbook') return bytesOf(plugin, source, from);
   let registry = registries.get(plugin);
   if (!registry) registries.set(plugin, (registry = vaultSourceRegistry((s, f) => fromVault(plugin, s, f))));
   const r = await registry.fetchSource(source.kind, source.target, from);
@@ -75,11 +77,15 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
 }
 
 /**
- * The bytes of the database a `file#table` place names, with the table's mapping beside it, for the note at `from`
- * (connector_files_to_gql). It is read on the device, never written; one over the reader's limit is not read.
+ * The bytes of a database or workbook, for a `file#table` or `file#sheet` place, with its mapping beside it. It is
+ * for the note at `from` (connector_files_to_gql). It is read on the device and never written. A file over the
+ * reader's limit is not read.
  */
-async function databaseOf(plugin: ThoughtKnotPlugin, target: string, from: string): Promise<SourceFetched> {
-  const at = databasePlace(target);
+async function bytesOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
+  const { target } = source;
+  const db = databasePlace(target);
+  const wb = workbookPlace(target);
+  const at = db ? { file: db.file, table: db.table } : wb ? { file: wb.file, table: wb.sheet } : null;
   const file = at ? fileOf(plugin, { kind: 'file', target: at.file }, from) : null;
   if (!at || !file) {
     const name = (at?.file ?? target).split('/').at(-1) ?? '';
@@ -91,7 +97,8 @@ async function databaseOf(plugin: ThoughtKnotPlugin, target: string, from: strin
         .map((f) => f.path),
     };
   }
-  if (file.stat.size > SQLITE_LIMITS.bytes) return { found: file.path, tooLarge: file.stat.size };
+  if (file.stat.size > (wb ? WORKBOOK_LIMITS.bytes : SQLITE_LIMITS.bytes))
+    return { found: file.path, tooLarge: file.stat.size };
   try {
     const bytes = new Uint8Array(await plugin.app.vault.readBinary(file));
     const found = `${file.path}#${at.table}`;
@@ -178,7 +185,13 @@ export async function readFromVault(
   from: string,
 ): Promise<SourceRead | SourceRefusal> {
   // a table is broken into statements by its connector, as a place of a FROM list is (csv-connector.ts)
-  if (source.places || source.kind === 'table' || source.kind === 'text' || source.kind === 'database')
+  if (
+    source.places ||
+    source.kind === 'table' ||
+    source.kind === 'text' ||
+    source.kind === 'database' ||
+    source.kind === 'workbook'
+  )
     return readPlaces(plugin, source, from);
   const held = await lookUp(plugin, source, from);
   const read = readSource(source, held);

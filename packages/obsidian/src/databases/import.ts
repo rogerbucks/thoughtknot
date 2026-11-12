@@ -15,9 +15,11 @@ import {
   sqliteEntries,
   sqliteTable,
   withImport,
+  workbookSheets,
+  workbookTable,
   word,
 } from '@thoughtknot/core';
-import type { DbRow, SqliteEntry, WordKey } from '@thoughtknot/core';
+import type { DbRow, SqliteEntry, SqliteTable, WordKey } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
 import { changeVaultNote } from '../storage/plugin-notes';
@@ -34,7 +36,7 @@ export const IMPORT_COMMAND = {
 export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
   const files = plugin.app.vault
     .getFiles()
-    .filter((f) => isDbFile(f.path))
+    .filter((f) => isDbFile(f.path) || isWorkbook(f.path))
     .sort((a, b) => a.path.localeCompare(b.path));
   if (!files.length) {
     new Notice(word('db.none'));
@@ -44,6 +46,9 @@ export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
   const front = noteToRewrite(plugin.app.workspace, word('host.to-import'));
   if (front) new ImportDialog(plugin, front.file, files).open();
 }
+
+/** Whether a vault file is an Excel workbook, by its ending. */
+const isWorkbook = (path: string): boolean => /\.xlsx$/i.test(path);
 
 /** Today, as YYYY-MM-DD in the device's own time zone. */
 function today(): string {
@@ -56,6 +61,8 @@ class ImportDialog extends Modal {
   private chosen = -1;
   private graph = '';
   private entries: SqliteEntry[] = [];
+  /** A workbook's sheets, read once when it is chosen: the dialog then offers their columns as a database's. */
+  private sheets = new Map<string, SqliteTable>();
   private bytes: Uint8Array | null = null;
   private refused = '';
   private things = '';
@@ -88,8 +95,15 @@ class ImportDialog extends Modal {
 
   /** The columns of table `name` as the file lists it; none when it is not read. */
   private columns(name: string): string[] {
+    const sheet = this.sheets.get(name);
+    if (sheet) return sheet.columns;
     const e = this.entries.find((x) => x.name === name && !x.unread);
     return e ? columnsOf(e.sql).columns : [];
+  }
+
+  /** The table `name` of the file chosen, whole; or why it cannot be read. */
+  private table(name: string): SqliteTable | { refused: string } {
+    return this.sheets.get(name) ?? sqliteTable(this.bytes ?? new Uint8Array(), name);
   }
 
   /** A row with a dropdown of `options`, the one `value` chosen; `none` adds a first choice of nothing. */
@@ -192,13 +206,26 @@ class ImportDialog extends Modal {
     const db = this.files[i];
     if (db) {
       const bytes = new Uint8Array(await this.app.vault.readBinary(db));
-      const listed = sqliteEntries(bytes);
+      this.sheets = new Map();
+      const listed = isWorkbook(db.path) ? this.readSheets(bytes) : sqliteEntries(bytes);
       if ('refused' in listed) this.refused = listed.refused;
       else [this.bytes, this.entries] = [bytes, listed];
       const first = this.entries.find((e) => !e.unread)?.name ?? '';
       [this.things, this.id, this.kind, this.links] = [first, this.columns(first)[0] ?? '', '', ''];
     }
     this.draw();
+  }
+
+  /** A workbook's sheets as the entries of a database, each read once; a sheet that cannot be read is listed with why. */
+  private readSheets(bytes: Uint8Array): SqliteEntry[] | { refused: string } {
+    const names = workbookSheets(bytes);
+    if ('refused' in names) return names;
+    return names.map((name, root) => {
+      const t = workbookTable(bytes, name);
+      if ('refused' in t) return { name, root, sql: '', unread: t.refused };
+      this.sheets.set(name, { name, columns: t.header, rows: t.rows });
+      return { name, root, sql: '' };
+    });
   }
 
   /** Writes the rows of the tables picked into the note; or says why nothing was written. */
@@ -208,12 +235,12 @@ class ImportDialog extends Modal {
     this.running = true;
     const failed = (why: string) => new Notice(word('import.failed', { file: db.basename, why }));
     try {
-      const things = sqliteTable(this.bytes, this.things);
+      const things = this.table(this.things);
       if ('refused' in things) return void failed(things.refused);
       const thingRows = pickedThings(things, this.id, this.kind || undefined);
       let linkRows: DbRow[] = [];
       if (this.links) {
-        const links = sqliteTable(this.bytes, this.links);
+        const links = this.table(this.links);
         if ('refused' in links) return void failed(links.refused);
         const type = this.type ? { column: this.type } : { name: this.typeName };
         linkRows = pickedLinks(links, this.from, this.to, type);

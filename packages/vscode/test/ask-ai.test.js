@@ -25,6 +25,8 @@ const ON = { 'thoughtknot.ai.use': 'on', 'thoughtknot.ai.ceiling': 'Internal' };
 const pick = (label) => (asked) => asked.items.find((i) => (i.label ?? i) === label);
 /** The answer that types `text`. */
 const type = (text) => () => text;
+// an edit keeps the person's words unless they ask for a rewrite (ai_smallest_edit)
+const KEEP = pick('Keep my words: change at most 5 things I wrote');
 
 /** A folder holding `text` as Reader.md, in a stand-in VS Code with `settings` and one model, Copilot. */
 async function ready(text = NOTE, settings = ON) {
@@ -54,7 +56,7 @@ test('with no language model in VS Code, it says how to get one', async () => {
 
 test('the chosen model gets exactly the request shown, once Send is chosen, and its answer is a proposal', async () => {
   const { vs, model, file } = await ready();
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, pick('Send'));
   await vs.ask();
   assert.equal(model.sent.length, 1, vs.said.join('\n'));
   const shown = vs.shown[0].content;
@@ -71,7 +73,7 @@ test('the chosen model gets exactly the request shown, once Send is chosen, and 
 
 test('a note above the ceiling for VS Code’s models is refused before anything is shown or sent', async () => {
   const { vs, model, file } = await ready(NOTE.replace('Public', 'Confidential'));
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, pick('Send'));
   await vs.ask();
   assert.equal(model.sent.length, 0);
   assert.equal(vs.shown.length, 0);
@@ -80,7 +82,7 @@ test('a note above the ceiling for VS Code’s models is refused before anything
 
 test('a ceiling that is not one of the classifications, such as a typo, sends nothing', async () => {
   const { vs, model } = await ready(NOTE, { ...ON, 'thoughtknot.ai.ceiling': 'Intrnal' });
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, pick('Send'));
   await vs.ask();
   assert.equal(model.sent.length, 0);
   assert.equal(vs.shown.length, 0);
@@ -89,7 +91,7 @@ test('a ceiling that is not one of the classifications, such as a typo, sends no
 
 test('turning away from the request shown sends nothing and leaves the note as it was', async () => {
   const { vs, model, file } = await ready();
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP);
   await vs.ask();
   assert.equal(vs.shown.length, 1);
   assert.equal(model.sent.length, 0);
@@ -99,7 +101,7 @@ test('turning away from the request shown sends nothing and leaves the note as i
 test('a classification raised while the request is shown takes it away: nothing is sent', async () => {
   const { vs, model, folder } = await ready();
   const raise = () => writeFileSync(join(folder, 'Reader.md'), NOTE.replace('Public', 'Internal'));
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), (a) => (raise(), 'Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, (a) => (raise(), 'Send'));
   await vs.ask();
   assert.equal(model.sent.length, 0);
   assert.match(vs.said.at(-1), /Public/);
@@ -111,7 +113,7 @@ test('the record keeps the last 200 sends only', async () => {
     'thoughtknot.aiSends',
     Array.from({ length: 200 }, (_, i) => ({ old: i })),
   );
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, pick('Send'));
   await vs.ask();
   const sends = vs.context.globalState.get('thoughtknot.aiSends');
   assert.equal(sends.length, 200);
@@ -124,9 +126,26 @@ test('a model unsure what is meant asks its question, and nothing is written to 
   writeFileSync(join(folder, 'Reader.md'), NOTE);
   const model = fakeModel('Copilot', JSON.stringify({ question: 'Which readers do you mean?' }));
   const vs = await vscodeOn(folder, 'Reader.md', { settings: ON, models: [model] });
-  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), KEEP, pick('Send'));
   await vs.ask();
   assert.equal(model.sent.length, 1);
   assert.match(vs.said.at(-1), /asks a question first[\s\S]*Which readers do you mean\?/);
   assert.equal(readFileSync(join(folder, 'Reader.md'), 'utf8'), NOTE);
+});
+
+test('a rewrite is sent only when the person picks it, and the model is told so (ai_smallest_edit)', async () => {
+  const { vs, model } = await ready();
+  vs.answers.push(
+    pick('Copilot'),
+    pick('The whole graph'),
+    type('Rewrite it all.'),
+    pick('Rewrite allowed'),
+    pick('Send'),
+  );
+  await vs.ask();
+  assert.match(model.sent[0].messages[0].content, /asked for a rewrite/);
+  const kept = await ready();
+  kept.vs.answers.push(pick('Copilot'), pick('The whole graph'), type('Rewrite it all.'), KEEP, pick('Send'));
+  await kept.vs.ask();
+  assert.doesNotMatch(kept.model.sent[0].messages[0].content, /asked for a rewrite/);
 });

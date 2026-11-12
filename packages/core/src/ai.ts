@@ -14,7 +14,10 @@ import { aiReady, chatAddress, endpointProblem } from './ai-choice.ts';
 import { hostAiModel } from './ai-host.ts';
 import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
-import { INSTRUCTIONS, askedText, changesIn } from './ai-request.ts';
+import { editInstructions, editTooBig } from './ai-edit-size.ts';
+import { askedText, changesIn } from './ai-request.ts';
+import { gqlSpans } from './blocks.ts';
+import { readNote } from './drawing.ts';
 import type { AnswerShape } from './ai-request.ts';
 import { coreAiProvider } from './core-ai.ts';
 import { keyHeader } from './plugin-ai.ts';
@@ -72,6 +75,8 @@ export interface SendAsk {
   host?: HostModel;
   /** An answer of another shape, such as suggestions (ai-suggestions.ts): its instructions and its reader. */
   answers?: AnswerShape;
+  /** The person asked for a rewrite, with the dialog's own switch: an edit may then change more (ai_smallest_edit). */
+  rewrite?: boolean;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -99,6 +104,8 @@ export interface PreparedSend {
   /** The answer's own shape, when the ask gave one, and the things that went, which its reader holds it to. */
   answers?: AnswerShape;
   sent?: string[];
+  /** For an edit: whether the person asked for a rewrite, and what the graph sent already has (ai_smallest_edit). */
+  edit?: { rewrite: boolean; had: (thing: string, key: string) => boolean };
 }
 
 /** What a send held, as its record keeps it: the kind of choice and the counts. */
@@ -185,7 +192,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   let body: string;
   try {
     const asked = askedText(scope, ask.question, ask.answers?.text);
-    const instructions = ask.answers?.instructions ?? INSTRUCTIONS;
+    const instructions = ask.answers?.instructions ?? editInstructions(!!ask.rewrite);
     body = (provider ?? coreAiProvider()).shape({ model: model.model, instructions, asked });
   } catch (e) {
     return { refused: e instanceof Error ? e.message : String(e) };
@@ -228,8 +235,18 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
     basis: basisOf(ask.note, scope.graph, ask.shared),
     ...(provider && { provider }),
-    ...(ask.answers && { answers: ask.answers, sent: [...scope.things] }),
+    ...(ask.answers ? { answers: ask.answers, sent: [...scope.things] } : { edit: editOf(ask, scope.graph) }),
   };
+}
+
+/** What an edit is held to: the person's rewrite switch, and what the graph sent already has (ai_smallest_edit). */
+function editOf(ask: SendAsk, graph: string): NonNullable<PreparedSend['edit']> {
+  const g = readNote(
+    gqlSpans(ask.note).map((s) => s.text),
+    undefined,
+    ask.shared,
+  ).world[graph];
+  return { rewrite: !!ask.rewrite, had: (thing, key) => !!g && g.p(thing)[key] !== undefined };
 }
 
 /** The user's yes to exactly this send, once they have seen it: good for one send. */
@@ -311,6 +328,8 @@ export async function sendPrepared(
   if ('asks' in changes) return { record: { ...record, outcome: 'answered' }, asks: changes.asks };
   if ('rule' in changes) return { record: { ...record, outcome: 'answered' }, rule: changes.rule };
   if (!Array.isArray(changes)) return cannot(changes.unread);
+  const tooBig = p.edit && editTooBig(changes, p.edit, p.model.name);
+  if (tooBig) return failed(tooBig);
   const proposal = proposalFrom(changes, {
     id: record.id,
     at,
