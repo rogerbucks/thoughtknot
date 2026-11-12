@@ -78,8 +78,8 @@ async function chooseWhat(graph: string, names: string[], things: Pick<string>[]
 
 /** Asks one of VS Code's models about `given`, or the note in the active editor, as this file describes. */
 /**
- * The person's question, and whether they allow a rewrite: never guessed from the question, so an edit keeps their
- * words unless they pick the rewrite (ai_smallest_edit). Null when they turn away.
+ * The person's question, and whether they allow a rewrite. A rewrite is never guessed from the question: an edit keeps
+ * their words unless they pick it (ai_smallest_edit). Null when they turn away.
  */
 async function questionAsked(): Promise<{ question: string; rewrite: boolean } | null> {
   const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
