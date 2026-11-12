@@ -625,6 +625,15 @@
           "leftOut: Array<string>",
           "mime: string"
         ],
+        "composedExport": [
+          "value: (reading: NoteReading, scope: ExportScope, format: ComposeFormat, info: DataInfo) => ComposedExport"
+        ],
+        "ComposedExport": [
+          "interface",
+          "body: string | Uint8Array<ArrayBufferLike>",
+          "held: { things: number; links: number; }",
+          "said: string"
+        ],
         "ComposeFormat": [
           "type = 'md' | 'html' | 'docx'"
         ],
