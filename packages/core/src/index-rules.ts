@@ -37,6 +37,7 @@ export type { IntentLink, IntentSide, IntentStanding } from './intents.ts';
 export { INTENT_MARKS, intentOverlay, intentPulls, withIntentOverlay } from './intent-overlay.ts';
 export type { IntentAsk, IntentOverlay, IntentPull } from './intent-overlay.ts';
 export { CERTAINTY_WORDS, suggestAsk, suggestionGroups } from './ai-suggestions.ts';
+export { judgeAsk } from './ai-both-sides.ts';
 export { SUGGESTED_TOKEN, suggestedPreview } from './ai-suggestions-preview.ts';
 export type { SuggestFor, SuggestionGroup } from './ai-suggestions.ts';
 export type { AnswerShape } from './ai-request.ts';
