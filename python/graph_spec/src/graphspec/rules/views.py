@@ -51,17 +51,68 @@ _word = word  # the old private name, which the vault's scripts used (entry_poin
 
 def mermaid_graph(g: Graph, shared: Graph | None = None) -> str:
     """The graph's knowledge as a Mermaid flowchart — every node but the schema's, every
-    relationship between them, labelled by its reading (§5), or its type if none is declared."""
+    relationship between them, labelled by its reading (§5), or its type if none is declared.
+
+    A written group (a Cluster, editor spec §31) draws as a subgraph with its members inside, and a
+    membership drawn by nesting is not drawn again as a link. A thing in two groups sits in the
+    first by id and keeps its other membership as a link. A group that holds nothing stays a box.
+    Groups that hold each other break the loop at the first by id."""
     ids = sorted(i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS)
-    var = {i: f"n{k}" for k, i in enumerate(ids)}
+    at = {i: k for k, i in enumerate(ids)}
     type_words = readings(g, shared)
-    lines = ["flowchart LR"] + [f'    {var[i]}["{_caption(g, i)}"]' for i in ids]
-    lines += sorted(
-        f"    {var[s]} -->|{word(type_words, t)}| {var[d]}"
-        for s, t, d, _ in g.edges
-        if s in var and d in var
+    parent: dict[str, str] = {}
+    kids: dict[str, list[str]] = {}
+    for i in ids:
+        up = sorted(
+            c
+            for c in {e[2] for e in g.out(i, "MEMBER_OF")}
+            if c != i and c in at and "Cluster" in g.nodes[c][0]
+        )
+        if up:
+            parent[i] = up[0]
+            kids.setdefault(up[0], []).append(i)
+    var: dict[str, str] = {}
+    nested: dict[str, str] = {}
+    lines: list[str] = []
+
+    def draw(i: str, depth: int) -> None:
+        """Write `i`, and the things inside it if it is a group that holds any."""
+        pad = "    " * (depth + 1)
+        var[i] = f"n{at[i]}"
+        inside = []
+        for k in kids.get(i, []):
+            if k in var:
+                continue
+            nested[k] = i
+            inside.append(k)
+        mark = len(lines)
+        for k in inside:
+            draw(k, depth + 1)
+        body = lines[mark:]
+        del lines[mark:]
+        if not body:
+            lines.append(f'{pad}{var[i]}["{_caption(g, i)}"]')
+            return
+        var[i] = f"g{at[i]}"
+        lines.append(f'{pad}subgraph {var[i]}["{_caption(g, i)}"]')
+        lines.extend(body)
+        lines.append(f"{pad}end")
+
+    for i in ids:
+        if i not in parent:
+            draw(i, 0)
+    for i in ids:
+        if i not in var:
+            draw(i, 0)
+    return "\n".join(
+        ["flowchart LR"]
+        + lines
+        + sorted(
+            f"    {var[s]} -->|{word(type_words, t)}| {var[d]}"
+            for s, t, d, _ in g.edges
+            if s in var and d in var and not (t == "MEMBER_OF" and nested.get(s) == d)
+        )
     )
-    return "\n".join(lines)
 
 
 def legend(g: Graph, shared: Graph | None = None) -> str:

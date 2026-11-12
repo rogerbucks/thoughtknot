@@ -1,0 +1,72 @@
+{
+  "about": "Shared cases for the relationships view as Mermaid when a graph has written groups (clusters, editor spec §31; wiki/Mermaid-mapping-review.md, gap G1). A group draws as a subgraph and its members sit inside. Both libraries must write each expected text, byte for byte.",
+  "cases": [
+    {
+      "name": "a group draws as a subgraph",
+      "nodes": [
+        ["team", ["Cluster"]],
+        ["a", ["Person"]],
+        ["b", ["Person"]],
+        ["c", ["Person"]]
+      ],
+      "edges": [
+        ["a", "MEMBER_OF", "team"],
+        ["b", "MEMBER_OF", "team"],
+        ["a", "KNOWS", "c"]
+      ],
+      "expected": "flowchart LR\n    n2[\"c\"]\n    subgraph g3[\"team\"]\n        n0[\"a\"]\n        n1[\"b\"]\n    end\n    n0 -->|knows| n2"
+    },
+    {
+      "name": "a group inside a group nests",
+      "nodes": [
+        ["outer", ["Cluster"]],
+        ["inner", ["Cluster"]],
+        ["x", ["Thing"]],
+        ["y", ["Thing"]]
+      ],
+      "edges": [
+        ["inner", "MEMBER_OF", "outer"],
+        ["y", "MEMBER_OF", "outer"],
+        ["x", "MEMBER_OF", "inner"]
+      ],
+      "expected": "flowchart LR\n    subgraph g1[\"outer\"]\n        subgraph g0[\"inner\"]\n            n2[\"x\"]\n        end\n        n3[\"y\"]\n    end"
+    },
+    {
+      "name": "a second membership stays a link and an empty group stays a box",
+      "nodes": [
+        ["a", ["Thing"]],
+        ["empty", ["Cluster"]],
+        ["p", ["Cluster"]],
+        ["q", ["Cluster"]]
+      ],
+      "edges": [
+        ["a", "MEMBER_OF", "p"],
+        ["a", "MEMBER_OF", "q"]
+      ],
+      "expected": "flowchart LR\n    n1[\"empty\"]\n    subgraph g2[\"p\"]\n        n0[\"a\"]\n    end\n    n3[\"q\"]\n    n0 -->|member of| n3"
+    },
+    {
+      "name": "groups that hold each other break the loop",
+      "nodes": [
+        ["c1", ["Cluster"]],
+        ["c2", ["Cluster"]],
+        ["x", ["Thing"]]
+      ],
+      "edges": [
+        ["c1", "MEMBER_OF", "c2"],
+        ["c2", "MEMBER_OF", "c1"],
+        ["x", "MEMBER_OF", "c1"]
+      ],
+      "expected": "flowchart LR\n    subgraph g0[\"c1\"]\n        n1[\"c2\"]\n        n2[\"x\"]\n    end\n    g0 -->|member of| n1"
+    },
+    {
+      "name": "a graph with no groups is written as before",
+      "nodes": [
+        ["a", ["Thing"]],
+        ["b", ["Thing"]]
+      ],
+      "edges": [["a", "KNOWS", "b"]],
+      "expected": "flowchart LR\n    n0[\"a\"]\n    n1[\"b\"]\n    n0 -->|knows| n1"
+    }
+  ]
+}
