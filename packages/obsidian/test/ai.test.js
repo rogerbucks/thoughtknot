@@ -271,7 +271,10 @@ describe('asking an AI model to propose changes (§19)', () => {
     try {
       const card = await show(viewer, note, 1);
       await until(() => !!card.el.querySelector('.thoughtknot-proposal-reason'));
-      assert.equal(card.el.querySelectorAll('.thoughtknot-proposal-reason').at(-1).textContent, ` — likely (55–80%): ${reason}`);
+      assert.equal(
+        card.el.querySelectorAll('.thoughtknot-proposal-reason').at(-1).textContent,
+        ` — likely (55–80%): ${reason}`,
+      );
     } finally {
       viewer.uninstall();
     }
