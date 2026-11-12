@@ -21,6 +21,7 @@ import { PRESET_KEY, aiModelList, getModelValue, presetPicker, setModelValue, wi
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 import { PROFILE_KEY, profileGroup, profileValue, setProfileValue } from '../profile/profile-settings';
 import { PresetChoice, asSettings, sharePreset } from './preset-rows';
+import { MIX_KEY, mixDefinitions, mixValue, newMix, setMixValue } from './preset-mix-rows';
 import { setVaultPreset, vaultPresetOf } from './vault-preset';
 import { askPublicConsent, raises } from './public-consent';
 export { watchVaultPreset } from './vault-preset';
@@ -58,6 +59,9 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
 
   /** A view preset picked, shown with what it changes before it is used, and undone in one step (§69). */
   private readonly preset: PresetChoice;
+
+  /** A mix of two presets being made (presets_mix): kept only when the person asks. */
+  private readonly mix = newMix();
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
     void this.loadMatrix();
@@ -114,7 +118,12 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       ];
     if (o.key === 'classifications')
       return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
-    if (o.key === 'aiModels' || o.key === 'ownPresets') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+    if (o.key === 'ownPresets')
+      return [
+        { name: o.name, desc: o.sentence },
+        ...mixDefinitions(this.mix, this.preset.choices(), (m) => void this.preset.saveMix(m)),
+      ];
     if (o.key === 'ownPreset')
       return [
         { name: o.name, desc: o.sentence, control: { type: 'textarea', key: o.key } },
@@ -193,6 +202,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
     if (key.startsWith('aiModels.')) return getModelValue(s, key, this.matrix);
     if (key === PRESET_KEY) return '';
+    if (key.startsWith(MIX_KEY)) return mixValue(this.mix, key);
     if (key === 'viewPreset') return this.preset.shown();
     return s[key as keyof Settings];
   }
@@ -212,6 +222,7 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       return key === `${STORAGE_KEY}history` ? this.update() : undefined;
     }
     if (key === 'viewPreset') return this.preset.pick(String(value)); // shown first, used on asking (§69)
+    if (key.startsWith(MIX_KEY)) return (setMixValue(this.mix, key, value), this.update()); // kept on asking
     // more for a public reviewer is shown on one real note and allowed first; less is saved at once (ES§19)
     if (
       key === 'aiPublic' &&

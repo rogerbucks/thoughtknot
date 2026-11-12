@@ -11,3 +11,12 @@ export {
 export { vaultChoice } from './own-vault-preset.ts';
 export { PresetPanel, type PanelOwner, type PanelRow } from './preset-panel.ts';
 export { ROUTINE_KEYS, routinesLost, routinesLostSaid, type RoutineKey } from './settings-kept.ts';
+export {
+  CHAIN_LINKS,
+  firstOnly,
+  linkName,
+  mixPresets,
+  type ChainLink,
+  type MixChoice,
+  type MixSide,
+} from './preset-mix.ts';

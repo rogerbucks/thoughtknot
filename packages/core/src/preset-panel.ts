@@ -183,6 +183,13 @@ export class PresetPanel {
     this.owner.update();
   }
 
+  /** Keeps a mix of two presets as one of the person's own (presets_mix), picked like any other. */
+  async saveMix(mix: ViewPreset): Promise<void> {
+    const s = this.owner.settings();
+    await this.owner.save({ ...s, ownPresets: addOwn(s.ownPresets, mix, mix.name) });
+    this.owner.update();
+  }
+
   /** Adds the preset file `text` to the person's own list. Gives why it was not taken, else nothing. */
   async bringIn(text: string): Promise<string | undefined> {
     const read = presetFrom(text),
