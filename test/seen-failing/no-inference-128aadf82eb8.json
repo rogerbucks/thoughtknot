@@ -1,0 +1,6 @@
+{
+  "file": "test/no-inference.test.js",
+  "test": "no guessing of a condition from use (no_condition_guess) > no setting is named for a condition, or offers one as a choice",
+  "seen_failing_first": false,
+  "evidence": "A guard: the shipped code already names no condition, so the test holds before and after; it fails the day a change names one."
+}

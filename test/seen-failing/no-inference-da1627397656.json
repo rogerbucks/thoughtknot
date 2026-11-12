@@ -1,0 +1,6 @@
+{
+  "file": "test/no-inference.test.js",
+  "test": "no guessing of a condition from use (no_condition_guess) > no shipped source has a field, a function or a request named for a condition",
+  "seen_failing_first": false,
+  "evidence": "A guard: the shipped code already names no condition, so the test holds before and after; it fails the day a change names one."
+}
