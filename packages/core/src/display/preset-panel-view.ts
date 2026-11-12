@@ -37,6 +37,7 @@ export function presetPanelView(parent: HTMLElement, panel: PresetPanel): Preset
       });
       const label = word('settings.own-presets.rename');
       button(call, label, 'check', () => panel.renameOwn(mine.id, name.value), label);
+      button(call, word('settings.own-presets.delete'), 'trash', () => panel.deleteOwn(mine.id));
     }
     const list = section.createEl('ul');
     for (const row of [...panel.rows(), ...panel.ownRows()]) {

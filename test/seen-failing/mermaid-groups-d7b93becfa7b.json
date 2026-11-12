@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mermaid-groups.test.mjs",
+  "test": "the shared case \"a graph with no groups is written as before\" gives its recorded Mermaid text",
+  "seen_failing_first": false,
+  "evidence": "a guard that a graph with no groups reads exactly as before, so it passes on the old code by design"
+}

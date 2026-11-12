@@ -51,6 +51,38 @@ describe('a board on the browser editor’s page', () => {
     }
   });
 
+  // proves: board_live_together
+  test('a board drawn before sharing starts takes its seat once sharing is ready, and not before', async () => {
+    const block = ['// graph: ideas · BOARD', "(a:Sticky {x: 10, y: 20, text: 'Go by train'})"].join('\n');
+    const seatText = block + ",\n(z:Sticky {x: 90, y: 90, text: 'From the other device'})";
+    let ready = null;
+    let open = false;
+    const seat = {
+      me: 'me',
+      peers: () => [],
+      announce: () => {},
+      watch: () => {},
+      text: () => seatText,
+      change: async () => undefined,
+    };
+    const page = await livePage(['# Ideas', '```gql', block, '```', ''].join('\n'), {
+      before: (w) => {
+        w.thoughtknotSeat = () => (open ? seat : undefined);
+        w.thoughtknotSeatsReady = (then) => void (ready = then);
+      },
+    });
+    try {
+      const vp = () => page.doc.querySelector('.gn-boards .thoughtknot-board .thoughtknot-viewport');
+      await until(() => vp()?.querySelector('[data-item="a"]') && ready, 8000);
+      assert.equal(vp().querySelector('[data-item="z"]'), null, 'offline until sharing is ready');
+      open = true;
+      ready();
+      await until(() => vp()?.querySelector('[data-item="z"]'), 8000);
+    } finally {
+      await page.stop();
+    }
+  });
+
   // proves: board_live_together, board_presence, board_offline_merge
   test('a shared board is edited through its seat, shows the others and its clashes, and moves nothing on its own', async () => {
     const block = [
