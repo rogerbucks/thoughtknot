@@ -148,6 +148,22 @@ describe('own presets in the settings and the panel', () => {
     assert.equal(state.s.viewPreset, 'default');
   });
 
+  test('a deleted own preset can be brought back with one undo row (view_presets_own_list)', async () => {
+    const text = made(['A', 'B']);
+    const [a] = readOwnList(text);
+    const { p, state } = panelOver({ ownPresets: text, viewPreset: a.id });
+    assert.ok(!p.rows().some((r) => r.name === word('settings.own-presets.delete.undo')), 'nothing to undo yet');
+    p.deleteOwn(a.id);
+    await done(() => readOwnList(state.s.ownPresets).length === 1);
+    const undo = p.rows().find((r) => r.name === word('settings.own-presets.delete.undo'));
+    assert.ok(undo?.action, 'the row appears');
+    assert.match(undo.desc, /A/, 'it names what comes back');
+    undo.action();
+    await done(() => readOwnList(state.s.ownPresets).length === 2);
+    assert.equal(state.s.viewPreset, a.id, 'the preset in use is back too');
+    assert.ok(!p.rows().some((r) => r.name === word('settings.own-presets.delete.undo')), 'one step only');
+  });
+
   test('take a preset file brought in into the list, instead of refusing it', async () => {
     const { p, state } = panelOver();
     const file = presetFile({ ...calm, id: 'travel', name: 'Travel' });

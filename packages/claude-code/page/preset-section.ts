@@ -62,6 +62,8 @@ function importControl(win: Window & typeof globalThis, taken: (text: string) =>
 export async function presetSection(win: Window & typeof globalThis, deps: PresetSectionDeps): Promise<PresetSection> {
   let vault = (await deps.read()) ?? undefined;
   let draw = (): void => {};
+  // the settings are read only here, so the person's own list lives for this page's visit (delete has its undo)
+  let own = deps.settings.ownPresets;
   const setVault = async (id: string | null): Promise<void> => {
     const done = await deps.write(id);
     if (!done.ok) return notice(done.why);
@@ -69,8 +71,11 @@ export async function presetSection(win: Window & typeof globalThis, deps: Prese
     deps.changed(vault);
   };
   const panel = new PresetPanel({
-    settings: () => ({ ...deps.settings, viewPreset: vault ?? deps.settings.viewPreset }),
-    save: (next) => setVault(next.viewPreset),
+    settings: () => ({ ...deps.settings, ownPresets: own, viewPreset: vault ?? deps.settings.viewPreset }),
+    save: async (next) => {
+      own = next.ownPresets;
+      if (next.viewPreset !== (vault ?? deps.settings.viewPreset)) await setVault(next.viewPreset);
+    },
     update: () => draw(),
     share: (text) => Promise.resolve(download(win, text)),
     vault: () => vault,
