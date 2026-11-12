@@ -470,4 +470,8 @@ export const TYPES_LATE = [
   'PartsStoreCheck',
   'StoreAsk',
   'WorkbookRefusal',
+  // the AI block (ai_block), 12 Nov 2026
+  'AiReview',
+  'AiFinding',
+  'LevelNames',
 ];
