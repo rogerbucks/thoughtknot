@@ -16,7 +16,7 @@ import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { CsvTable } from './csv-read.ts';
 import { word } from './words.ts';
-import { databasePlace } from './sources.ts';
+import { databasePlace, workbookPlace } from './sources.ts';
 
 /** What a column of the table becomes. */
 export type ColumnRole = 'key' | 'name' | 'measure' | 'dimension' | 'property' | 'link' | 'skip';
@@ -58,8 +58,11 @@ export function nameOf(text: string): string {
 
 /** A kind's name from a file's: `Data/daily sales.csv` gives `DailySales`. */
 export function kindOf(place: string): string {
-  // a database's table is named by the table, never the file: `shop.sqlite#customers` gives Customers
-  const stem = databasePlace(place)?.table ?? (place.split('/').at(-1) ?? place).replace(/\.[^.]*$/, '');
+  // a database's table or a workbook's sheet is named by it, never the file: `shop.sqlite#customers` gives Customers
+  const stem =
+    databasePlace(place)?.table ??
+    workbookPlace(place)?.sheet ??
+    (place.split('/').at(-1) ?? place).replace(/\.[^.]*$/, '');
   const kind = stem
     .split(/[^A-Za-z0-9]+/)
     .filter(Boolean)
@@ -70,9 +73,10 @@ export function kindOf(place: string): string {
 
 /** The place of a table's mapping: beside the table, `Data/sales.csv` mapped by `Data/sales.mapping.gql`. */
 export function mappingPlace(place: string): string {
-  // a database's table has its own: `shop.sqlite#orders` is mapped by `shop.orders.mapping.gql`
+  // a database's table or a workbook's sheet has its own: `shop.sqlite#orders` is mapped by `shop.orders.mapping.gql`
   const db = databasePlace(place);
-  const [file, table] = db ? [db.file, `.${db.table}`] : [place, ''];
+  const wb = workbookPlace(place);
+  const [file, table] = db ? [db.file, `.${db.table}`] : wb ? [wb.file, `.${wb.sheet}`] : [place, ''];
   return `${file.replace(/\.[^./]*$/, '')}${table}.mapping.gql`;
 }
 

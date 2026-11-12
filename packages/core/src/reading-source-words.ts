@@ -160,6 +160,16 @@ export const READING_SOURCE_WORDS = {
   'reading.sqlite.view': '{name} is a view: only tables are read. Save the view as a table in the database to read it.',
   'reading.sqlite.virtual': '{name} is a virtual table: only tables stored in the file are read.',
   'reading.sqlite.without-rowid': '{name} is a WITHOUT ROWID table, which this reader does not read yet.',
+  // an Excel workbook read as tables in plain JavaScript (xlsx-read.ts)
+  'reading.xlsx.not-xlsx': 'This file is not an Excel workbook (.xlsx), so it was not read.',
+  'reading.xlsx.too-large': 'This workbook (or one of its parts) is larger than {most} bytes, so it was not read.',
+  'reading.xlsx.too-many-rows': 'A sheet holds more than {most} rows, so it was not read: keep fewer rows.',
+  'reading.xlsx.too-many-columns': 'A sheet holds more than {most} columns, so it was not read: keep fewer columns.',
+  'reading.xlsx.cell-too-long': 'A cell holds more than {most} characters, so the workbook was not read.',
+  'reading.xlsx.damaged': 'This workbook is damaged or in a form this reader does not know, so it was not read.',
+  'reading.xlsx.no-sheet': 'The workbook has no sheet {name}.',
+  'reading.xlsx.empty': 'The sheet {name} holds nothing to read: its first row is the header.',
+  'reading.source.workbook': 'The workbook sheet {target}',
   // a data set kept linked or as a snapshot, and its cached copy (data-set-kept.ts, data-set-cache.ts)
   'reading.table.fetched-now': '{place} was fetched just now.',
   'reading.table.fetched-ago': '{place} was fetched {age} ago: fetch it again to see changes.',
