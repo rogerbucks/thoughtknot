@@ -1,4 +1,4 @@
-// An Excel workbook read as tables in plain JavaScript (editor spec §63 connector_files_to_gql, §67
+// An Excel workbook read as tables in plain JavaScript (ES§63 connector_files_to_gql, ES§67
 // format_untrusted_files). The files are made by xlsx-fixture.js: a real zip of the XML parts Excel writes.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,4 +1,4 @@
-// Import from an Excel workbook (editor spec §20, db_import_on_request; §63 connector_files_to_gql). The workbook is
+// Import from an Excel workbook (ES§20, db_import_on_request; ES§63 connector_files_to_gql). The workbook is
 // a .xlsx file in the vault, read on the device when picked. Each sheet is offered as a table, with its first row as
 // the columns. Nothing is written until Import is pressed, and the workbook itself is never written.
 import { before, describe, test } from 'node:test';
