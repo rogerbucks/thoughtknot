@@ -14,6 +14,7 @@ export const AI_SUGGEST_SOURCE_WORDS = {
   'ai.suggest.not-asked': 'Suggestion {n} is for a thing that was not asked about or not sent.',
   'ai.suggest.certainty': 'Suggestion {n} has no certainty word. It must be one of: {words}.',
   'ai.suggest.read': 'Suggestion {n} says it read something that was not sent.',
+  'ai.suggest.no-basis': 'Suggestion {n} does not say what it rests on: it names nothing it read and gives no reason.',
   'ai.suggest.side': 'Suggestion {n} neither supports nor contradicts the intent.',
   'ai.suggest.value': 'Suggestion {n} has no value, or a value that was not offered.',
   'ai.suggest.twice': 'The answer suggests twice for {thing}.',

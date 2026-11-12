@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import { INSTRUCTIONS, changesIn, readReply, requestBody } from '../src/ai-request.ts';
 import { aiScope } from '../src/ai-scope.ts';
 
+// each change says how sure it is and why (ai_says_how_sure); a test's own reason is kept
+const sure = (c) => ({ certainty: 'likely', reason: 'asked for', ...c });
+
 test('an answer’s JSON is read whether or not it is fenced, each change as a proposal takes it', () => {
   const json = JSON.stringify({
     changes: [
@@ -13,20 +16,20 @@ test('an answer’s JSON is read whether or not it is fenced, each change as a p
       { op: 'set', thing: 'large', key: 'name', value: "Large's" },
       { op: 'remove-thing', thing: 'alice' },
       { op: 'remove-link', from: 'alice', type: 'ASKED', to: 'question' },
-    ],
+    ].map(sure),
   });
   const changes = changesIn('Here you are:\n```json\n' + json + '\n```');
   assert.deepEqual(changes, [
-    { op: 'add', gql: "(small:Option {name: 'Small', price: 2, cheap: true})" },
-    { op: 'add', gql: '(small)-[:ANSWERS]->(question)', reason: 'it answers it' },
-    { op: 'set', thing: 'large', key: 'name', value: "'Large\\'s'" },
-    { op: 'remove-thing', thing: 'alice' },
-    { op: 'remove-link', from: 'alice', type: 'ASKED', to: 'question' },
+    { op: 'add', gql: "(small:Option {name: 'Small', price: 2, cheap: true})", reason: 'likely: asked for' },
+    { op: 'add', gql: '(small)-[:ANSWERS]->(question)', reason: 'likely: it answers it' },
+    { op: 'set', thing: 'large', key: 'name', value: "'Large\\'s'", reason: 'likely: asked for' },
+    { op: 'remove-thing', thing: 'alice', reason: 'likely: asked for' },
+    { op: 'remove-link', from: 'alice', type: 'ASKED', to: 'question', reason: 'likely: asked for' },
   ]);
 });
 
 test('one change that cannot be read refuses the whole answer, saying which and why', () => {
-  const said = (changes) => changesIn(JSON.stringify({ changes })).unread;
+  const said = (changes) => changesIn(JSON.stringify({ changes: changes.map(sure) })).unread;
   assert.match(said([{ op: 'add-thing', name: 'two words', kind: 'Option' }]), /change 1 lacks a one-word name/);
   assert.match(said([{ op: 'add-thing', name: 'a', kind: 'K', properties: { 'x y': 1 } }]), /one-word name/);
   assert.match(said([{ op: 'set', thing: 'a', key: 'k', value: { nested: 1 } }]), /a value that is a text/);
@@ -37,10 +40,10 @@ test('one change that cannot be read refuses the whole answer, saying which and 
 
 test('a model’s reason is plain text: no Markdown in it can become an image, a link or HTML when notes are rendered', () => {
   const reason = '![](https://example.com/x.png) see [here](https://example.com) <img src=x> **now** `code` # head';
-  const [change] = changesIn(JSON.stringify({ changes: [{ op: 'remove-thing', thing: 'alice', reason }] }));
+  const [change] = changesIn(JSON.stringify({ changes: [sure({ op: 'remove-thing', thing: 'alice', reason })] }));
   assert.doesNotMatch(change.reason, /(?<!\\)!\[|(?<!\\)\[[^\]]*(?<!\\)\]\(|(?<!\\)<[a-z]|(?<!\\)\*\*|(?<!\\)`/);
   // read as Markdown, every mark is a literal character again: the words are all still there
-  assert.equal(change.reason.replace(/\\(.)/g, '$1'), reason);
+  assert.equal(change.reason.replace(/\\(.)/g, '$1'), `likely: ${reason}`);
 });
 
 test('a reply refused by its status says the status and the service’s own message, cut short', () => {
@@ -96,16 +99,19 @@ describe('a note that carries instructions is sent as data, and steers nothing p
       changes: [
         { op: 'remove-thing', thing: 'start', reason: 'the note said so' },
         { op: 'remove-thing', thing: 'finish' },
-      ],
+      ].map(sure),
     });
     const changes = changesIn(obeys);
     assert.deepEqual(changes, [
-      { op: 'remove-thing', thing: 'start', reason: 'the note said so' },
-      { op: 'remove-thing', thing: 'finish' },
+      { op: 'remove-thing', thing: 'start', reason: 'likely: the note said so' },
+      { op: 'remove-thing', thing: 'finish', reason: 'likely: asked for' },
     ]);
     assert.ok(!JSON.stringify(changes).includes('sk-stolen'));
     // a change of a kind not asked for, such as a shell command or a write, refuses the whole answer
-    assert.match(changesIn(JSON.stringify({ changes: [{ op: 'run', command: 'rm -rf ~' }] })).unread, /not one of/);
+    assert.match(
+      changesIn(JSON.stringify({ changes: [sure({ op: 'run', command: 'rm -rf ~' })] })).unread,
+      /not one of/,
+    );
   });
 });
 
@@ -114,6 +120,8 @@ test('a model unsure what is meant asks one question back, cut to a sentence or 
   assert.match(INSTRUCTIONS, /\{"question": "your one question"\}/);
   assert.deepEqual(changesIn('{"question": "  Which reader do you mean?  "}'), { asks: 'Which reader do you mean?' });
   assert.equal(changesIn(JSON.stringify({ question: 'x'.repeat(900) })).asks.length, 501, 'never a page');
-  const both = changesIn(JSON.stringify({ question: 'Sure?', changes: [{ op: 'remove-thing', thing: 'alice' }] }));
+  const both = changesIn(
+    JSON.stringify({ question: 'Sure?', changes: [sure({ op: 'remove-thing', thing: 'alice' })] }),
+  );
   assert.ok(Array.isArray(both), 'changes given with it are read as ever');
 });

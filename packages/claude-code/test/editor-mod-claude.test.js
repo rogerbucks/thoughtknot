@@ -16,9 +16,10 @@ const EXTRA = {
   name: 'extra',
   kind: 'Task',
   properties: { name: 'Extra' },
+  certainty: 'likely',
   reason: 'a step is missing',
 };
-const RENAME = { op: 'set', thing: 'start', key: 'name', value: 'Begin' };
+const RENAME = { op: 'set', thing: 'start', key: 'name', value: 'Begin', certainty: 'likely', reason: 'asked for' };
 const say = (outcome) => import('../src/editor-launch.ts').then((m) => m.sayProposed(outcome));
 
 /** The graph's own things, as the note reads them with every change set left out. */
@@ -94,7 +95,9 @@ describe('Claude is the only AI the browser editor offers (cc_claude_only)', () 
   test('a change that adds a Person, a Model or a Step is refused: no text of Claude’s declares an author', async () => {
     const { where, launcher } = await opened();
     for (const kind of ['Model', 'Person', 'Step']) {
-      const outcome = await launcher.propose({ changes: [{ op: 'add-thing', name: 'someone', kind, properties: {} }] });
+      const outcome = await launcher.propose({
+        changes: [{ op: 'add-thing', name: 'someone', kind, properties: {}, certainty: 'likely', reason: 'asked for' }],
+      });
       assert.equal(outcome.ok, false, kind);
       assert.match(outcome.why, /cannot add a Person, an Organization, a SoftwareAgent, a Model or a Step/);
     }
@@ -130,7 +133,7 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     const check = checkProposal(after, spans[1].text);
     assert.equal(check.passed, true, JSON.stringify(check.results));
     assert.match(spans[1].text, /\/\/ read: plan\.md/);
-    assert.match(spans[1].text, /\/\/@ reason: a step is missing/);
+    assert.match(spans[1].text, /\/\/@ reason: likely: a step is missing/);
   });
 
   test('the graph is not changed by the proposal: the thing is nowhere in it until it is accepted', async () => {
@@ -540,7 +543,16 @@ describe('a proposal touching content above Claude’s clearance is refused (cc_
     const { where, launcher } = await opened();
     const secret = ['v', 'a', 'l', 'u', 'e'].join('').repeat(2);
     const outcome = await launcher.propose({
-      changes: [{ op: 'add-thing', name: 'vault', kind: 'Task', properties: { db_password: secret } }],
+      changes: [
+        {
+          op: 'add-thing',
+          name: 'vault',
+          kind: 'Task',
+          properties: { db_password: secret },
+          certainty: 'likely',
+          reason: 'asked for',
+        },
+      ],
     });
     assert.equal(outcome.ok, false);
     assert.match(outcome.why, /password or secret/);
@@ -564,7 +576,14 @@ describe('a proposal touching content above Claude’s clearance is refused (cc_
       assert.equal(outcome.ok, false);
       assert.match(outcome.why, /./);
     }
-    assert.equal((await launcher.propose({ changes: [{ op: 'remove-thing', thing: 'nobody' }] })).ok, false);
+    assert.equal(
+      (
+        await launcher.propose({
+          changes: [{ op: 'remove-thing', thing: 'nobody', certainty: 'likely', reason: 'asked for' }],
+        })
+      ).ok,
+      false,
+    );
     assert.equal(readFileSync(where.plan, 'utf8'), PLAN);
   });
 });
