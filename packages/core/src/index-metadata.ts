@@ -22,5 +22,17 @@ export {
   type VaultConsent,
 } from './ai-reviewers.ts';
 export type { AiPublic } from './settings-reach.ts';
-export { metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
+export { graphSpanOf, metaOf, metadataWrite, onlyMetadata, type MetaKind } from './metadata-write.ts';
 export { forgetInNote, placeInNote, savedPlaces } from './layout-places.ts';
+export {
+  aiBlockName,
+  aiLevelsIn,
+  aiReviewIn,
+  readAiBlock,
+  saveAiReview,
+  writeAiBlock,
+  type AiReview,
+  type Finding as AiFinding,
+  type LevelNames,
+} from './ai-block.ts';
+export { keepProposal, levelsReview, reviewChanges } from './ai-block-keep.ts';

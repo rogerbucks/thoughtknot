@@ -37,6 +37,8 @@ export interface LevelGroup {
 export interface DetailLevel {
   name: string;
   groups: LevelGroup[];
+  /** Its names are your AI's, from the note's AI block, never the person's (ai_block_not_data). */
+  byAi?: boolean;
 }
 
 /** How many levels a graph of `n` things has, every item included: 1 for a handful, up to LEVELS_MOST. */

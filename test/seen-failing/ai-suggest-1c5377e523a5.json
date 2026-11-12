@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/ai-suggest.test.js",
+  "test": "asking your AI to name the levels saves them in the AI block, never the graph, with an Undo on its toast",
+  "seen_failing_first": false,
+  "evidence": "An existing test brought up to date with the AI block, which an earlier commit of this pull request built; the code it checks came first."
+}

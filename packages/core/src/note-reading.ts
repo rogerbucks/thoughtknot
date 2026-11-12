@@ -14,6 +14,7 @@ import type { Nudge } from './style-graph.ts';
 import type { TimelineOrder } from './timeline.ts';
 import type { Folding } from './untangle-fold.ts';
 import type { LayoutStep } from './layouts/cheaper.ts';
+import type { GraphShape } from './types-shape.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
 export interface Block {
@@ -80,6 +81,8 @@ export interface GraphDrawing {
   links: Link[];
   /** Near misses drawn as guesses (spec §3): never written to the note. */
   estimates: Estimate[];
+  /** The level names the note's AI block gives its things (ES§19, ai_block_not_data): drawn as named by AI. */
+  aiLevels?: GraphShape['aiLevels'];
   /** The one direction to lay it out in, one the locked style lists (spec §21); unset, the best fit of them all. */
   direction?: string;
   /** The nudges of its style graph (spec §6), written into the layout; none, the layout the Python library gives. */
