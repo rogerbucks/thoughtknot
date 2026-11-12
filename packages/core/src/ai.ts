@@ -15,6 +15,7 @@ import { hostAiModel } from './ai-host.ts';
 import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
 import { editInstructions, editTooBig } from './ai-edit-size.ts';
+import { aiWaits } from './settings-time-box.ts';
 import { askedText, changesIn } from './ai-request.ts';
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
@@ -77,6 +78,9 @@ export interface SendAsk {
   answers?: AnswerShape;
   /** The person asked for a rewrite, with the dialog's own switch: an edit may then change more (ai_smallest_edit). */
   rewrite?: boolean;
+  /** The sends recorded, and the time now, for the time box and quiet hours (ai_time_box): this device's own. */
+  sends?: readonly { at: string }[];
+  now?: Date;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -165,6 +169,9 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   // the host's own model needs AI turned on, but no model set up here
   const host = ask.host?.name === ask.model ? hostAiModel(ask.host, settings.classifications) : null;
   if ('off' in ready && !(host && settings.aiUse === 'on')) return { refused: ready.off };
+  // past the time box, or in quiet hours, AI waits (ai_time_box)
+  const waits = aiWaits(settings, ask.now ?? new Date(), ask.sends ?? []);
+  if (waits) return { refused: waits };
   const found = host ?? settings.aiModels.find((m) => m.name === ask.model);
   if (!found) return { refused: word('ai.send.no-model', { model: ask.model }) };
   // a copy, so what is shown, said yes to and sent stays as it was shown whatever the settings do meanwhile
