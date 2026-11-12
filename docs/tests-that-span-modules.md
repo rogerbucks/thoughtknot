@@ -1296,8 +1296,11 @@ after a module nor listed here, and on a listed file that is missing.
 - `test/globe-probe.test.js` — the globe driven in a real browser (editor spec §73, globe_view). It opens the harness on
   forty places and turns the wheel and pinches. Then it clicks a place, to check the click rule.
 
-## No hooks
+## No hooks, no guessing
 
 - `test/no-hooks.test.js` — no streaks, badges, endless feeds, nags or pings (editor spec ES§74, no_hooks). The copy
   check in `scripts/plain-english.mjs` fails on hook words, the catalogue in `source-words.ts` passes, and no shipped
   source sends a notification.
+- `test/no-inference.test.js` — no guess of a medical or neurological condition (editor spec ES§74, no_condition_guess).
+  Nothing in `source-words.ts`, `settings.ts` or a shipped source names one. The pull request template asks whether a
+  change measures use.

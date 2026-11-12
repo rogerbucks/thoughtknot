@@ -17,3 +17,5 @@ After:
       `Tests first:` saying why.
 - [ ] Every commit is signed off by a person: `git commit -s`, or Roger's line for a commit any AI agent writes (CONTRIBUTING.md).
 - [ ] `npm test`, `npm run typecheck`, `npm run lint` and `npm run format:check` pass.
+- [ ] Does this change measure how a person uses, writes or draws? If so, say what and why under How. It must never
+      guess a medical or neurological condition, or keep or send a signal built for one (`no_condition_guess`).
