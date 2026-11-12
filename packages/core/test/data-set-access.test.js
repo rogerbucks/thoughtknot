@@ -47,6 +47,15 @@ describe('an outside data set is fetched (data_set_access)', () => {
     assert.deepEqual(placeProblem(PLACE, ['https://data.example.org/']), { origin: 'https://data.example.org' });
   });
 
+  test('a picked source written with trailing slashes is the same source, however many it has', () => {
+    assert.deepEqual(placeProblem('https://data.example.org/a.csv', ['https://data.example.org///']), {
+      origin: 'https://data.example.org',
+    });
+    const many = `https://data.example.org${'/'.repeat(50000)}`;
+    assert.deepEqual(placeProblem('https://data.example.org/a.csv', [many]), { origin: 'https://data.example.org' });
+    assert.match(placeProblem('https://data.example.org/a.csv', [`${many}x`]), /not one of the sources you picked/);
+  });
+
   test('no password or token rides in the place a note keeps: the host signs in its own way', async () => {
     const h = host();
     for (const place of [

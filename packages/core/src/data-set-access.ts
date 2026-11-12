@@ -43,6 +43,13 @@ type Address = InstanceType<typeof URL>;
 
 const rank = (levels: readonly string[], level: string) => levels.findIndex((l) => same(l, level));
 
+/** `place` with its trailing slashes taken off, by counting back, so a long run of them costs no more than its length. */
+function trimmedSlashes(place: string): string {
+  let end = place.length;
+  while (end > 0 && place[end - 1] === '/') end -= 1;
+  return place.slice(0, end);
+}
+
 /** The origin of an https address, or why it may not be reached; a place holding a secret is refused first. */
 export function placeProblem(place: string, picked: readonly string[]): string | { origin: string } {
   if (gs.secretsIn(place).length) return word('data-access.secret');
@@ -55,7 +62,7 @@ export function placeProblem(place: string, picked: readonly string[]): string |
   if (url.username || url.password) return word('data-access.secret');
   if (url.protocol !== 'https:') return word('data-access.not-https', { place });
   const origin = url.origin;
-  if (!picked.some((p) => same(p.replace(/\/+$/, ''), origin))) return word('data-access.not-picked', { origin });
+  if (!picked.some((p) => same(trimmedSlashes(p), origin))) return word('data-access.not-picked', { origin });
   return { origin };
 }
 
