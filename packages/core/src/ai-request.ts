@@ -10,6 +10,9 @@ import type { ChangeInput } from './proposals.ts';
 import type { AiModel } from './settings.ts';
 import { word } from './words.ts';
 
+/** The most things the person wrote that one proposal may change or remove, unless they asked for a rewrite. */
+export const REWRITE_MOST = 5;
+
 /**
  * What a model is told it is for and how to answer: the first message of every request, shown with the rest. The model
  * reads it, never the person, so it stays in UK English whatever the person's language.
@@ -24,6 +27,7 @@ export const INSTRUCTIONS = [
   '{"op": "remove-thing", "thing": "a_name", "reason": "why"}',
   '{"op": "remove-link", "from": "a_name", "type": "TYPE", "to": "b_name", "reason": "why"}',
   'A name is one word of letters, digits and underscores. Nothing you propose is written until a person accepts it.',
+  `Make the smallest change that does the job: add rather than rewrite, and change or remove at most ${REWRITE_MOST} things the user wrote.`,
   'If you are unsure what the user means, answer {"question": "your one question"} instead, and propose nothing yet.',
 ].join('\n');
 

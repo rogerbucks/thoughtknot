@@ -296,7 +296,7 @@ export class SendDialog extends Modal {
         ? textToGraphAsk(base, this.text.graph, this.text.words, this.question, this.text.place)
         : f
           ? suggestAsk(base, f, this.question)
-          : { ...base, question: this.question };
+          : { ...base, question: this.question, rewrite: this.suggest.rewrite };
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;

@@ -2,13 +2,20 @@
 // models are offered, through its language model API. So the models, sign-ins and consents the person already chose in
 // VS Code apply, and ThoughtKnot holds no key. The core keeps every other rule, as for any model (ai.ts):
 // - nothing is sent while AI is off, which it is until the person turns it on in the settings;
-// - the person chooses the model, the graph, what of it, and the question;
+// - the person chooses the model, the graph, what of it, and the question, and whether a rewrite is allowed;
 // - the note's classification is held to the ceiling set for VS Code's models, and a credential is never sent;
 // - the exact request is shown beside the note, and only Send, chosen on exactly that, sends it, once;
 // - the answer is written into the note as a proposal, for the person to accept or reject in the tab;
 // - each send is recorded, whatever came of it, the last ones only and never the text sent.
 import * as vscode from 'vscode';
-import { confirmSend, prepareSend, sendPrepared, type SendRecord, type Transport } from '@thoughtknot/core';
+import {
+  REWRITE_MOST,
+  confirmSend,
+  prepareSend,
+  sendPrepared,
+  type SendRecord,
+  type Transport,
+} from '@thoughtknot/core';
 import { noteWithProposal } from '@thoughtknot/core';
 import type { HostModel } from '@thoughtknot/core';
 import type { ScopeChoice } from '@thoughtknot/core';
@@ -70,6 +77,18 @@ async function chooseWhat(graph: string, names: string[], things: Pick<string>[]
 }
 
 /** Asks one of VS Code's models about `given`, or the note in the active editor, as this file describes. */
+/**
+ * The person's question, and whether they allow a rewrite. A rewrite is never guessed from the question: an edit keeps
+ * their words unless they pick it (ai_smallest_edit). Null when they turn away.
+ */
+async function questionAsked(): Promise<{ question: string; rewrite: boolean } | null> {
+  const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
+  if (question === undefined) return null;
+  const keep = word('vscode.ai.keep-words', { most: REWRITE_MOST });
+  const size = await vscode.window.showQuickPick([keep, word('ai.rewrite')], { placeHolder: word('ai.rewrite') });
+  return size === undefined ? null : { question, rewrite: size !== keep };
+}
+
 export async function askAi(context: vscode.ExtensionContext, given?: unknown): Promise<void> {
   setLanguage(vscode.env.language);
   const uri = noteOf(given);
@@ -127,8 +146,8 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
   const things = drawn.boxes.map((b): Pick<string> => ({ label: b.text || b.key, description: b.key, value: b.key }));
   const choice = await chooseWhat(graph, views, things);
   if (!choice) return;
-  const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
-  if (question === undefined) return;
+  const asked = await questionAsked();
+  if (!asked) return;
 
   const p = prepareSend({
     settings,
@@ -138,7 +157,7 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
     notePath: note,
     level: levelOf(text),
     choice,
-    question,
+    ...asked,
   });
   if ('refused' in p) {
     void vscode.window.showWarningMessage(p.refused);

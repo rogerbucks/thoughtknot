@@ -3,7 +3,7 @@
 // come back grouped, for a person to apply a group at a time in the change set's card. The rows here choose what is
 // asked; the send itself, its ceiling and its yes are the dialog's, as for any send.
 import { Setting } from 'obsidian';
-import { word } from '@thoughtknot/core';
+import { REWRITE_MOST, word } from '@thoughtknot/core';
 import type { SuggestFor } from '@thoughtknot/core';
 
 /** What is asked for: changes, values of a property, pulls on an intent, or names for the levels (ai_levels). */
@@ -16,10 +16,19 @@ export interface SuggestRows {
   of: string;
   values: string;
   intent: string;
+  /** The person's own ask for a rewrite: off, so an edit changes at most a few things they wrote (ai_smallest_edit). */
+  rewrite: boolean;
 }
 
 /** The rows as the dialog opens: changes asked for, nothing typed. */
-export const NO_SUGGESTION: SuggestRows = { ask: 'changes', key: 'category', of: '', values: '', intent: '' };
+export const NO_SUGGESTION: SuggestRows = {
+  ask: 'changes',
+  key: 'category',
+  of: '',
+  values: '',
+  intent: '',
+  rewrite: false,
+};
 
 /** What the rows ask the model for, or null for changes. A list of values is split at its commas. */
 export function suggestForOf(rows: SuggestRows): SuggestFor | null {
@@ -76,6 +85,16 @@ export function drawSuggestRows(
           changed(true);
         }),
     );
+  if (rows.ask === 'changes')
+    new Setting(el)
+      .setName(word('ai.rewrite'))
+      .setDesc(word('ai.rewrite.sentence', { most: REWRITE_MOST }))
+      .addToggle((t) =>
+        t.setValue(rows.rewrite).onChange((v) => {
+          rows.rewrite = v;
+          changed(false);
+        }),
+      );
   if (rows.ask === 'values')
     for (const f of ['key', 'of', 'values'] as const) textRow(el, rows, f, () => changed(false));
   if (rows.ask !== 'intent') return;
