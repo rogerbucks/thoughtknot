@@ -44,6 +44,8 @@ export interface PanelOwner {
 export class PresetPanel {
   pending: string | null = null;
   private undo: Partial<Settings> | null = null;
+  /** The own preset last deleted, with what puts the list and the preset in use back: one step. */
+  private deleted: { name: string; back: Partial<Settings> } | null = null;
 
   private readonly owner: PanelOwner;
 
@@ -106,9 +108,20 @@ export class PresetPanel {
         { name: word('settings.view-preset.keep'), desc: '', action: () => this.pick(s.viewPreset) },
       ];
     }
-    if (!this.undo) return [];
+    const gone = this.deleted;
+    const restore: PanelRow[] = gone
+      ? [
+          {
+            name: word('settings.own-presets.delete.undo'),
+            desc: word('settings.own-presets.delete.undo.sentence', { name: gone.name }),
+            action: () => void this.restoreDeleted(gone.back),
+          },
+        ]
+      : [];
+    if (!this.undo) return restore;
     const back = this.undo;
     return [
+      ...restore,
       {
         name: word('settings.view-preset.undo'),
         desc: word('settings.view-preset.undo.sentence', { name: starterOf(String(back.viewPreset)).name }),
@@ -199,10 +212,13 @@ export class PresetPanel {
     void this.owner.save({ ...s, ownPresets: renameOwn(s.ownPresets, id, name) }).then(() => this.owner.update());
   }
 
-  /** Deletes the preset of the person's own `id`; one in use or picked gives way to the default. */
+  /** Deletes the preset of the person's own `id`; one in use or picked gives way to the default. One step undoes it. */
   deleteOwn(id: string): void {
-    const s = this.owner.settings();
+    const s = this.owner.settings(),
+      found = readOwnList(s.ownPresets).find((p) => p.id === id);
+    if (!found) return;
     if (this.pending === id) this.pending = null;
+    this.deleted = { name: found.name, back: { ownPresets: s.ownPresets, viewPreset: s.viewPreset } };
     void this.owner
       .save({
         ...s,
@@ -210,6 +226,13 @@ export class PresetPanel {
         viewPreset: s.viewPreset === id ? 'default' : s.viewPreset,
       })
       .then(() => this.owner.update());
+  }
+
+  /** Puts back the list and the preset in use as they were before the last delete. */
+  private async restoreDeleted(to: Partial<Settings>): Promise<void> {
+    this.deleted = null;
+    await this.owner.save({ ...this.owner.settings(), ...to });
+    this.owner.update();
   }
 
   /** Whether Your own may be picked: only once a preset of the person's own is read in. */
