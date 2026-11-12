@@ -270,7 +270,8 @@ export const READING_SOURCE_WORDS = {
   'ai-block.kind-unknown': 'an AI block holds a Review, Levels and Findings only, so {id} ({kind}) is not used',
   'ai-block.kind-unknown.fix': 'ask your AI again, or remove the line',
   // names or a finding for a thing the graph does not hold
-  'ai-block.thing-gone': 'your AI found something for {thing}, but the graph {graph} does not hold it, so it is not used',
+  'ai-block.thing-gone':
+    'your AI found something for {thing}, but the graph {graph} does not hold it, so it is not used',
   'ai-block.thing-gone.fix': 'ask your AI again, or remove the line',
   // the group an AI review's changes are applied in, naming who found them and when
   'ai-block.found-by': 'Found by {by}, {at}',
