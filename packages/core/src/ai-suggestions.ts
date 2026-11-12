@@ -16,7 +16,7 @@ import { plainText } from './ai-request.ts';
 import type { AnswerShape } from './ai-request.ts';
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
-import { intentThings } from './intents.ts';
+import { intentThings, likelihoodSaid } from './intents.ts';
 import type { IntentSide } from './intents.ts';
 import { ALTITUDES } from './named-levels.ts';
 import { linkChange, valueGql } from './proposals.ts';
@@ -136,7 +136,11 @@ function suggestionOf(
   const why = typeof s.reason === 'string' ? plainText(oneLine(s.reason)) : '';
   // what it rests on: the things it read, or its reason in words (ai_says_how_sure)
   if (!names.length && !why) return word('ai.suggest.no-basis', at);
-  const reason = word('ai.suggest.reason', { certainty, read: names.length ? names.join(', ') : '-', why: why || '-' });
+  const reason = word('ai.suggest.reason', {
+    certainty: likelihoodSaid(certainty),
+    read: names.length ? names.join(', ') : '-',
+    why: why || '-',
+  });
   if (f.kind === 'levels') return levelChanges(s, thing, open, at, reason);
   if (f.kind === 'intent') {
     if (s.side !== 'supports' && s.side !== 'contradicts') return word('ai.suggest.side', at);

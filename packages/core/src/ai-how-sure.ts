@@ -2,6 +2,7 @@
 // ai_says_how_sure, and ethos rule r_how_sure. The words are the likelihood words of a claim in a graph (graph spec §20, certainty_in_words). An edit
 // or a suggestion carries one of them and what it rests on. One that lacks either is refused, with the whole answer.
 // So nothing reaches the review without saying how sure it is.
+import { likelihoodSaid } from './intents.ts';
 import { word } from './words.ts';
 
 /** The certainty words an AI may use: the likelihood words of graph spec §20, least likely first. */
@@ -35,5 +36,5 @@ export function howSure(
   if (!isCertainty(certainty))
     return { unread: word(`ai.sure.${what}-no-word`, { n: String(n), words: CERTAINTY_WORDS.join(', ') }) };
   if (!reason) return { unread: word(`ai.sure.${what}-no-reason`, { n: String(n) }) };
-  return { said: word('ai.sure.said', { certainty, why: reason }), certainty };
+  return { said: word('ai.sure.said', { certainty: likelihoodSaid(certainty), why: reason }), certainty };
 }

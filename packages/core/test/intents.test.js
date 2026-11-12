@@ -90,7 +90,7 @@ test('the standing counts each link by its certainty word and counts unlinked th
   assert.deepEqual(s.unlinked, ['prep']);
   assert.equal(
     s.said,
-    'Out of the door by eight: supported by 3 (3 likely); contradicted by 1 (1 likely); 1 thing not linked.',
+    'Out of the door by eight: supported by 3 (3 likely 55–80%); contradicted by 1 (1 likely 55–80%); 1 thing not linked.',
   );
   const calm = intentStanding(plan('(walk)-[:SUPPORTS]->(calm)', '(walk)-[:CONTRADICTS]->(calm)'), 'calm');
   assert.deepEqual(calm.supports, { 'very-likely': 1 });
@@ -98,7 +98,7 @@ test('the standing counts each link by its certainty word and counts unlinked th
   assert.deepEqual(calm.contested, ['walk']);
   assert.equal(
     calm.said,
-    'Mornings feel calm: supported by 1 (1 very likely); contradicted by 1 (1 unlikely); 1 thing pulls both ways; 1 thing not linked.',
+    'Mornings feel calm: supported by 1 (1 very likely 80–95%); contradicted by 1 (1 unlikely 20–45%); 1 thing pulls both ways; 1 thing not linked.',
   );
   assert.equal(gs.canon(graph), before, 'working out the standing writes nothing into the graph');
   assert.ok(

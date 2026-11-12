@@ -29,7 +29,7 @@ test('each rule says how much is covered, what is deferred or overdue, and what 
       {
         rule: 'every_option_answers',
         says: 'every option answers the question',
-        summary: '1 of 3 covered, 1 overdue, 1 missing',
+        summary: '1 of 3 covered, 1 past its revisit date, 1 missing',
         covered: 1,
         counted: 3,
         deferred: [],

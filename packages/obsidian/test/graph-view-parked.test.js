@@ -60,7 +60,7 @@ describe('a thing parked for later, drawn', () => {
       const el = await show(env);
       const g = nodeOf(el, 'small');
       assert.ok(g.classList.contains('is-overdue'));
-      assert.ok(g.querySelectorAll('text').some((t) => /⏳ overdue/.test(t.textContent)));
+      assert.ok(g.querySelectorAll('text').some((t) => /⏳ past revisit date/.test(t.textContent)));
     } finally {
       env.uninstall();
     }
@@ -84,10 +84,10 @@ describe('the badge', () => {
     try {
       const el = await show(env);
       const badge = el.querySelector('.thoughtknot-badge');
-      assert.match(badge.getAttribute('aria-label'), /^No problems, 1 parked, 1 overdue$/);
+      assert.match(badge.getAttribute('aria-label'), /^No problems, 1 parked, 1 past revisit date$/);
       const items = el.querySelectorAll('li').map((li) => li.textContent);
       assert.ok(
-        items.some((t) => /Small reader/.test(t) && /overdue/i.test(t) && /its price/.test(t)),
+        items.some((t) => /Small reader/.test(t) && /past its revisit date/i.test(t) && /its price/.test(t)),
         items.join(' | '),
       );
     } finally {

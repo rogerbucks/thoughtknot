@@ -120,10 +120,22 @@ export function intentLinks(graph: Graph, intent: string | null = null, refused:
   return links;
 }
 
-/** The words of one side's counts: `2 likely, 1 unstated`, each likelihood word with its hyphens as spaces. */
+/**
+ * A likelihood word as a person reads it, with its range of chances beside it (graph spec §20): `likely (55–80%)`.
+ * Where it already sits in brackets (`inBrackets`), it is `likely 55–80%`. Its hyphens are spaces. A word that is not
+ * a likelihood word is said as it is, with no range.
+ */
+export function likelihoodSaid(likelihood: string, inBrackets = false): string {
+  const said = likelihood.replace(/-/g, ' ');
+  const range = gs.certaintyOf({ id: '', likelihood })?.range;
+  const key = inBrackets ? 'certainty.range-in-brackets' : 'certainty.range';
+  return range ? word(key, { word: said, lo: range[0], hi: range[1] }) : said;
+}
+
+/** The words of one side's counts: `2 likely 55–80%, 1 unstated`, each likelihood word with its range. */
 function byWord(counts: Record<string, number>): string {
   return Object.entries(counts)
-    .map(([w, n]) => word('intent.by-word', { count: n, likelihood: w.replace(/-/g, ' ') }))
+    .map(([w, n]) => word('intent.by-word', { count: n, likelihood: likelihoodSaid(w, true) }))
     .join(', ');
 }
 
