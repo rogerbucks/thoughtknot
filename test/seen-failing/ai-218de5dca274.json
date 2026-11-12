@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai.test.js",
+  "test": "an answer comes back as a proposal (answers_are_proposals) > it is a proposal from the model, made against the graph as it was sent",
+  "seen_failing_first": false,
+  "evidence": "Its code changed in the commit before, which gave every likelihood word its range of chances; this commit brings the test's expected words up to date."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-request.test.js",
+  "test": "a model’s reason is plain text: no Markdown in it can become an image, a link or HTML when notes are rendered",
+  "seen_failing_first": false,
+  "evidence": "Its code changed in the commit before, which gave every likelihood word its range of chances; this commit brings the test's expected words up to date."
+}
