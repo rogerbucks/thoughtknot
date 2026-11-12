@@ -6164,7 +6164,7 @@
           "type = Record<string, string | number> & { count?: number; }"
         ],
         "WORKBOOK_LIMITS": [
-          "value: { bytes: number; part: number; rows: number; columns: number; cell: number; }"
+          "value: { bytes: number; part: number; meta: number; total: number; sheets: number; strings: number; rows: number; columns: number; cell: number; }"
         ],
         "workbookPlace": [
           "value: (place: string) => { file: string; sheet: string; } | null"

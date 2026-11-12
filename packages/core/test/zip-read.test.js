@@ -31,3 +31,11 @@ describe('zip_read: parts of a zip, stored or deflated', () => {
     assert.throws(() => zipEntries(bytes.subarray(0, bytes.length - 5)), Damaged);
   });
 });
+
+describe('zip_read: a big part is decoded in pieces without splitting a character', () => {
+  test('text of two-, three- and four-byte characters across the piece edges reads back whole', () => {
+    const text = 'é€😀x'.repeat(400_000);
+    const bytes = zip({ 'a.txt': text }, { stored: true });
+    assert.equal(partText(bytes, zipEntries(bytes), 'a.txt', 1e8), text);
+  });
+});

@@ -12,7 +12,8 @@ import { Damaged, TooBig, partText as part, zipEntries, u32 } from './zip-read.t
 import type { ZipEntry } from './zip-read.ts';
 
 /** The text of the part `name` of the zip, or null when there is none. */
-const partText = (b: Uint8Array, zip: Map<string, ZipEntry>, name: string) => part(b, zip, name, WORKBOOK_LIMITS.part);
+const partText = (b: Uint8Array, zip: Map<string, ZipEntry>, name: string, most = WORKBOOK_LIMITS.part) =>
+  part(b, zip, name, most);
 
 /** Why a workbook was not read, as a sentence naming what to do. */
 export interface WorkbookRefusal {
@@ -20,10 +21,17 @@ export interface WorkbookRefusal {
   refused: string;
 }
 
-/** The most a workbook may hold before it is refused: its bytes, one inflated part, a sheet's rows, columns and a cell. */
+/**
+ * The most a workbook may hold before it is refused. That is its bytes, one inflated part, a small part such as the
+ * sheet list, and all its parts together. Also its sheets, its shared strings, a sheet's rows and columns, and a cell.
+ */
 export const WORKBOOK_LIMITS = {
   bytes: 32 * 1024 * 1024,
   part: 64 * 1024 * 1024,
+  meta: 4 * 1024 * 1024,
+  total: 256 * 1024 * 1024,
+  sheets: 100,
+  strings: 1_000_000,
   rows: 20_000,
   columns: 500,
   cell: 10_000,
@@ -50,8 +58,10 @@ function sharedStrings(xml: string): string[] {
       else if (t.open === 'rPh') hint++;
       else if (t.open === 't') inT = true;
     } else if ('close' in t) {
-      if (t.close === 'si') out.push(cur);
-      else if (t.close === 'rPh') hint--;
+      if (t.close === 'si') {
+        if (out.length >= WORKBOOK_LIMITS.strings) throw new Over('too-large');
+        out.push(cur);
+      } else if (t.close === 'rPh') hint--;
       else if (t.close === 't') inT = false;
     } else if (inT && !hint) cur += t.text;
   }
@@ -211,20 +221,35 @@ interface Opened {
   date1904: boolean;
 }
 
+/** A part's path with its `.` and `..` steps taken out. It is only a name to look up in the zip, never a file path. */
+function normal(path: string): string {
+  const out: string[] = [];
+  for (const step of path.split('/')) {
+    if (step === '..') out.pop();
+    else if (step !== '.' && step !== '') out.push(step);
+  }
+  return out.join('/');
+}
+
 function open(bytes: Uint8Array): Opened | WorkbookRefusal {
   if (bytes.length > WORKBOOK_LIMITS.bytes)
     return { why: 'too-large', refused: word('reading.xlsx.too-large', { most: String(WORKBOOK_LIMITS.bytes) }) };
   if (u32(bytes, 0) !== 0x04034b50) return { why: 'not-xlsx', refused: word('reading.xlsx.not-xlsx') };
   const zip = zipEntries(bytes);
-  const book = partText(bytes, zip, 'xl/workbook.xml');
+  // every part a sheet list could point at together stays under the most, since Import reads each sheet
+  let declared = 0;
+  for (const e of zip.values()) declared += e.size;
+  if (declared > WORKBOOK_LIMITS.total) throw new Over('too-large');
+  const book = partText(bytes, zip, 'xl/workbook.xml', WORKBOOK_LIMITS.meta);
   if (book === null) return { why: 'not-xlsx', refused: word('reading.xlsx.not-xlsx') };
   const { sheets, date1904 } = sheetList(book);
-  const rels = relations(partText(bytes, zip, 'xl/_rels/workbook.xml.rels') ?? '');
+  if (sheets.length > WORKBOOK_LIMITS.sheets) throw new Over('too-large');
+  const rels = relations(partText(bytes, zip, 'xl/_rels/workbook.xml.rels', WORKBOOK_LIMITS.meta) ?? '');
   const parts = sheets.flatMap((s) => {
     const target = rels.get(s.rid);
     if (!target) return [];
     const part = target.startsWith('/') ? target.slice(1) : `xl/${target}`;
-    return [{ name: s.name, part: part.replace(/[^/]+\/\.\.\//g, '') }];
+    return [{ name: s.name, part: normal(part) }];
   });
   return { bytes, zip, sheets: parts, date1904 };
 }
@@ -284,7 +309,7 @@ export function workbookTable(bytes: Uint8Array, name: string): CsvTable | Workb
     const xml = partText(bytes, o.zip, sheet.part);
     if (xml === null) return { why: 'damaged', refused: word('reading.xlsx.damaged') };
     const strings = sharedStrings(partText(bytes, o.zip, 'xl/sharedStrings.xml') ?? '');
-    const dates = dateStyles(partText(bytes, o.zip, 'xl/styles.xml') ?? '');
+    const dates = dateStyles(partText(bytes, o.zip, 'xl/styles.xml', WORKBOOK_LIMITS.meta) ?? '');
     const [head, ...rest] = sheetRows(xml, strings, dates, o.date1904);
     const width = head ? head.cells.length : 0;
     if (!head || head.cells.every((c) => c === ''))
