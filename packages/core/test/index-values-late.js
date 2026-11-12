@@ -276,6 +276,11 @@ export const VALUES_LATE = [
   'ROUTINE_KEYS',
   'routinesLost',
   'routinesLostSaid',
+  // a mix of two presets, part by part (presets_mix), 12 Nov 2026
+  'CHAIN_LINKS',
+  'firstOnly',
+  'linkName',
+  'mixPresets',
   'presetFile',
   'presetFrom',
   'OWN_PRESET',
