@@ -4,7 +4,7 @@
 // case is a group of its own in the review, so the person keeps or drops them one by one. Nothing is added until kept.
 // An answer that gives only one side is refused whole. Each case says how sure it is and why (ai_says_how_sure).
 import type { SendAsk, SendRefused } from './ai.ts';
-import { HOW_SURE_LINE, isCertainty } from './ai-how-sure.ts';
+import { HOW_SURE_LINE, howSure } from './ai-how-sure.ts';
 import { plainText } from './ai-request.ts';
 import type { AnswerShape } from './ai-request.ts';
 import { gqlSpans } from './blocks.ts';
@@ -56,14 +56,14 @@ function caseOf(c: unknown, n: number, idea: string, open: Open, names: Set<stri
   if (c.side !== 'supports' && c.side !== 'contradicts') return word('ai.judge.side', at);
   const said = typeof c.case === 'string' ? plainText(oneLine(c.case)) : '';
   if (!said || said.length > CASE_MOST) return word('ai.judge.case', { ...at, most: String(CASE_MOST) });
-  if (!isCertainty(c.certainty)) return word('ai.sure.change-no-word', at);
   const why = typeof c.reason === 'string' ? plainText(oneLine(c.reason)) : '';
-  if (!why) return word('ai.sure.change-no-reason', at);
+  const sure = howSure('change', n, c.certainty, why, c.reads);
+  if ('unread' in sure) return sure.unread;
   const side: Side = c.side;
   const group = word(`ai.judge.group-${side}`, { idea, n: String(n), case: said });
-  const reason = word('ai.sure.said', { certainty: c.certainty, why });
+  const reason = sure.said;
   const type = side === 'supports' ? 'SUPPORTS' : 'CONTRADICTS';
-  const props = { likelihood: c.certainty, reason: said };
+  const props = { likelihood: sure.certainty, reason: said };
   if (c.from !== undefined) {
     if (typeof c.from !== 'string' || !WORD.test(c.from) || !open.sent.includes(c.from) || c.from === idea)
       return word('ai.judge.from', at);
