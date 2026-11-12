@@ -2171,7 +2171,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_ai_time_box:Test {proves: 'with a time box set, AI work stops at its end and resumes the next day, and with none set nothing is limited', file: 'packages/core/test/ai-time-box.test.js', where: 'repo', status: 'planned'}),
 (test_since_you_left:Test {proves: 'after a break the view lists the last place and each change since, the drawing is left as it was, and closing the view loses nothing', file: 'packages/obsidian/test/since-you-left.test.js', where: 'repo', status: 'planned'}),
 (test_ai_says_how_sure:Test {proves: 'a suggestion without a certainty word and its evidence is refused, and the words are the ones certainty_in_words uses', file: 'packages/core/test/ai-how-sure.test.js', where: 'repo', status: 'written'}),
-(test_ai_both_sides:Test {proves: 'a judge request returns links of both kinds, each is a proposal the person can drop, and nothing is added until kept', file: 'packages/core/test/ai-both-sides.test.js', where: 'repo', status: 'planned'}),
+(test_ai_both_sides:Test {proves: 'a judge request returns links of both kinds, each is a proposal the person can drop, and nothing is added until kept', file: 'packages/core/test/ai-both-sides.test.js', where: 'repo', status: 'written'}),
 (test_ai_guess_label:Test {proves: 'every answer that reads tone or intent carries the guess label in each shipped language, and none is worded as a fact', file: 'test/ai-guess-label.test.js', where: 'repo', status: 'planned'}),
 
 // ── Open questions ──

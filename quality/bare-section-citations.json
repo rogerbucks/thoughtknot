@@ -568,7 +568,7 @@
     "packages/obsidian/src/ai/ai.ts": 2,
     "packages/obsidian/src/ai/model-row.ts": 1,
     "packages/obsidian/src/ai/rule-describe.ts": 2,
-    "packages/obsidian/src/ai/send-dialog.ts": 3,
+    "packages/obsidian/src/ai/send-dialog.ts": 2,
     "packages/obsidian/src/ai/send.ts": 2,
     "packages/obsidian/src/ai/suggest-rows.ts": 1,
     "packages/obsidian/src/ai/text-graph.ts": 2,
