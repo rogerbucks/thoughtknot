@@ -190,7 +190,9 @@ export const KEPT = {
     'Propose changes to the graph of the note open in the ThoughtKnot editor. Nothing is applied: the changes wait on a card ',
     'in the editor for the user to accept or reject. Each change is one of: {op: "add-thing", name, kind, properties?}, ',
     '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ',
-    '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ',
+    '{op: "remove-link", from, type, to}. Each also says how sure you are, as "certainty": one of almost-no-chance, ',
+    'very-unlikely, unlikely, even-chance, likely, very-likely, almost-certain; and what it rests on, as "reason". ',
+    'A change without both is refused. Names are one word. You cannot add a Person, ',
     'a Model or a Step. "read" lists what you read, if you say so.',
     // what show, present and decide are, which only Claude reads (§49)
     'Show the graph of a note in the ThoughtKnot pane, or turn it to things, links, a path or a lens you name. ',
