@@ -21,9 +21,9 @@ const word = (typeWords, t) => ((typeWords.get(t) || [])[0] || t.replace(/_/g, '
 // The graph's knowledge as a Mermaid flowchart: every node but the schema's, and every relationship between them.
 // Each relationship is labelled by its reading (§5), or its type if none is declared. Sorted, so the text is the same
 // as graph_rules.py's.
-// A written group (a Cluster, ES§31) draws as a subgraph with its members inside. A membership drawn by nesting is not
-// drawn again as a link. A thing in two groups sits in the first by id and keeps its other membership as a link. A
-// group that holds nothing stays a box. Groups that hold each other break the loop at the first by id.
+// A written group (a Cluster, editor spec §31) draws as a subgraph with its members inside. A membership drawn by nesting is
+// not drawn again as a link. A thing in two groups sits in the first by id and keeps its other membership as a link.
+// A group that holds nothing stays a box. Groups that hold each other break the loop at the first by id.
 function mermaidGraph(g, shared) {
   const ids = strSort([...g.nodes.keys()].filter((i) => !SCHEMA_LABELS.some((label) => g.nodes.get(i)[0].has(label)))),
     typeWords = readings(g, shared),

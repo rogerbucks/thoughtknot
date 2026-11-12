@@ -53,7 +53,7 @@ def mermaid_graph(g: Graph, shared: Graph | None = None) -> str:
     """The graph's knowledge as a Mermaid flowchart — every node but the schema's, every
     relationship between them, labelled by its reading (§5), or its type if none is declared.
 
-    A written group (a Cluster, ES§31) draws as a subgraph with its members inside, and a
+    A written group (a Cluster, editor spec §31) draws as a subgraph with its members inside, and a
     membership drawn by nesting is not drawn again as a link. A thing in two groups sits in the
     first by id and keeps its other membership as a link. A group that holds nothing stays a box.
     Groups that hold each other break the loop at the first by id."""
