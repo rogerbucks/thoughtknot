@@ -21,9 +21,10 @@ export interface Source {
   graph: string;
   /**
    * A .gql file, a note, a plug-in's source, or a table: a .csv file read by its mapping (csv-connector.ts). Or a
-   * table of a SQLite database, `shop.sqlite#orders`, read by its mapping too (database-connector.ts).
+   * table of a SQLite database, `shop.sqlite#orders`, or a sheet of an Excel workbook, `book.xlsx#Sheet1`, read by its
+   * mapping too (database-connector.ts, workbook-connector.ts).
    */
-  kind: 'file' | 'note' | 'plugin' | 'table' | 'text' | 'database';
+  kind: 'file' | 'note' | 'plugin' | 'table' | 'text' | 'database' | 'workbook';
   /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
   scheme?: string;
   /**
@@ -86,8 +87,8 @@ const NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 function placeOf(written: string): string {
   const inner = /^\[\[([^\]]*)\]\]$/.exec(written)?.[1] ?? written;
   const linked = trim(inner.split('|')[0] ?? '');
-  // a database keeps its table after #; any other place's heading is taken off
-  return databasePlace(linked) ? linked : trim(linked.split('#')[0] ?? '');
+  // a database or a workbook keeps its table or sheet after #; any other place's heading is taken off
+  return databasePlace(linked) || workbookPlace(linked) ? linked : trim(linked.split('#')[0] ?? '');
 }
 
 /**
@@ -146,30 +147,44 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   const last = target.split('/').at(-1) ?? '';
   const kind = databasePlace(last)
     ? 'database'
-    : /\.gql$/i.test(last)
-      ? 'file'
-      : /\.csv$/i.test(last)
-        ? 'table'
-        : /\.txt$/i.test(last)
-          ? 'text'
-          : /\.md$/i.test(last) || !last.includes('.')
-            ? 'note'
-            : null;
+    : workbookPlace(last)
+      ? 'workbook'
+      : /\.gql$/i.test(last)
+        ? 'file'
+        : /\.csv$/i.test(last)
+          ? 'table'
+          : /\.txt$/i.test(last)
+            ? 'text'
+            : /\.md$/i.test(last) || !last.includes('.')
+              ? 'note'
+              : null;
   if (!kind) return fault(word('reading.source.neither', { target }));
   if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
 }
 
-/** The table a database place names and the file it is in: `Data/shop.sqlite#orders`; null for any other place. */
-export function databasePlace(place: string): { file: string; table: string } | null {
+/** The part after `#` of a place whose file ends one of `endings`, and the file; null for any other place. */
+function partOf(place: string, endings: string[]): { file: string; part: string } | null {
   const at = place.lastIndexOf('#');
   if (at < 0) return null;
   const file = place.slice(0, at),
-    table = place.slice(at + 1);
+    part = place.slice(at + 1);
   const dot = file.lastIndexOf('.');
   const ending = dot < 0 ? '' : file.slice(dot + 1).toLowerCase();
-  if (!table || table.includes('/') || !['sqlite', 'sqlite3', 'db'].includes(ending)) return null;
-  return { file, table };
+  if (!part || part.includes('/') || !endings.includes(ending)) return null;
+  return { file, part };
+}
+
+/** The table a database place names and the file it is in: `Data/shop.sqlite#orders`; null for any other place. */
+export function databasePlace(place: string): { file: string; table: string } | null {
+  const p = partOf(place, ['sqlite', 'sqlite3', 'db']);
+  return p && { file: p.file, table: p.part };
+}
+
+/** The sheet a workbook place names and the file it is in: `Data/book.xlsx#Sheet1`; null for any other place. */
+export function workbookPlace(place: string): { file: string; sheet: string } | null {
+  const p = partOf(place, ['xlsx']);
+  return p && { file: p.file, sheet: p.part };
 }
 
 /** A place as one key, the same however it was written: its kind, a plug-in's word, and the place. */

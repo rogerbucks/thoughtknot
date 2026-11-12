@@ -469,4 +469,5 @@ export const TYPES_LATE = [
   'ThingBrief',
   'PartsStoreCheck',
   'StoreAsk',
+  'WorkbookRefusal',
 ];

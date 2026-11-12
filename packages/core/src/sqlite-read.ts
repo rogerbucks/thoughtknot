@@ -43,7 +43,7 @@ function utf16(b: Uint8Array, little: boolean): string {
 }
 
 /** Text from UTF-8 bytes; a byte out of place reads as U+FFFD, as a browser's decoder reads it. */
-function utf8(b: Uint8Array): string {
+export function utf8(b: Uint8Array): string {
   const points: number[] = [];
   for (let i = 0; i < b.length;) {
     const c = b[i] ?? 0;

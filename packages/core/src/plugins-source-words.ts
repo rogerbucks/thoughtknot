@@ -61,6 +61,7 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.source.note': 'Note',
   'plugins.source.table': 'Table (CSV)',
   'plugins.source.database': 'Database table (SQLite)',
+  'plugins.source.workbook': 'Workbook sheet (Excel)',
   'plugins.source.text': 'Plain text',
   'plugins.source.unread': 'Nothing could be read at "{target}".',
 } as const;
