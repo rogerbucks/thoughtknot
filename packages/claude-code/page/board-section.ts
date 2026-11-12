@@ -14,6 +14,8 @@ export interface BoardNote {
 /** What a host of shared boards puts on the page's window before the page starts: the seat of a note's board. */
 export interface WithSeats {
   thoughtknotSeat?: (note: string, board: string) => Together | undefined;
+  /** Calls the page back once sharing has started, if it ever does, so boards drawn before then take their seats. */
+  thoughtknotSeatsReady?: (then: () => void) => void;
 }
 
 /**
@@ -26,6 +28,11 @@ export type SeatFor = (name: string) => Together | undefined;
 export function seatsOf(win: Window, key: string): SeatFor | undefined {
   const seat = (win as Window & WithSeats).thoughtknotSeat;
   return seat && ((name) => seat(key, name));
+}
+
+/** Asks the host to call `then` once its seats are ready. A host with no shared boards never calls it. */
+export function whenSeatsReady(win: Window, then: () => void): void {
+  (win as Window & WithSeats).thoughtknotSeatsReady?.(then);
 }
 
 /**

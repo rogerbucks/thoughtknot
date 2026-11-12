@@ -41,6 +41,9 @@ if (tauri) {
   // the page asks for a board's seat once it has read its note, which waited for sharing to start
   (window as Window & { thoughtknotSeat?: unknown }).thoughtknotSeat = (note: string, board: string) =>
     shared?.seat(note, board);
+  // sharing may start after the page first drew its boards, so the page is called back once it has, if it does
+  (window as Window & { thoughtknotSeatsReady?: unknown }).thoughtknotSeatsReady = (then: () => void) =>
+    void ready.then((s) => s && then());
   // a note too big to read at once keeps its rows in the app's file on disk, not in the window (scale_parts_on_disk)
   (window as Window & { thoughtknotPartsStore?: unknown }).thoughtknotPartsStore = (place: string) =>
     orInMemory(tauriPartsStore(tauri.core.invoke, place), (e) =>

@@ -584,7 +584,8 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   says so for.
 - `board-section.ts` — each whiteboard in the note, opened as the board Obsidian opens (§45, `showBoard`). It pans,
   zooms and is edited by keyboard. Each edit goes through the page's version-checked write. The desktop and phone apps
-  and VS Code's tab run this page, so they open boards too.
+  and VS Code's tab run this page, so they open boards too. When the desktop app starts sharing after the page has
+  drawn, `thoughtknotSeatsReady` calls the page back and each shared board takes its seat once.
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
 - `page-plugins.ts` — the plug-ins from outside turned on in Obsidian, each run in a worker of its own. The server
   serves each sealed. When the note's style graph chooses a diagram type one adds, the page shows its picture of the
