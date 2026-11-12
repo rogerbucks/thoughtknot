@@ -3,8 +3,8 @@
 // save back. Its level names label the drawing, marked as the AI's. Anything else reaches the graph only as a proposal.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { aiLevelsIn, aiReviewIn, readAiBlock, reviewChanges, saveAiReview, writeAiBlock } from '../src/ai-block.ts';
-import { keepProposal, levelsReview } from '../src/ai-block-keep.ts';
+import { aiLevelsIn, aiReviewIn, readAiBlock, saveAiReview, writeAiBlock } from '../src/ai-block.ts';
+import { keepProposal, levelsReview, reviewChanges } from '../src/ai-block-keep.ts';
 import { dataKind, gqlSpans } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { onlyMetadata } from '../src/metadata-write.ts';

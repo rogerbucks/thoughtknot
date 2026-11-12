@@ -29,11 +29,10 @@ export {
   aiLevelsIn,
   aiReviewIn,
   readAiBlock,
-  reviewChanges,
   saveAiReview,
   writeAiBlock,
   type AiReview,
   type Finding as AiFinding,
   type LevelNames,
 } from './ai-block.ts';
-export { keepProposal, levelsReview } from './ai-block-keep.ts';
+export { keepProposal, levelsReview, reviewChanges } from './ai-block-keep.ts';

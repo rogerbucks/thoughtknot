@@ -19,8 +19,6 @@ import { metadataWrite } from './metadata-write.ts';
 import { ALTITUDES } from './named-levels.ts';
 import type { Problem } from './note-reading.ts';
 import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
-import { valueGql } from './proposals.ts';
-import type { ChangeInput } from './proposals.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 
@@ -213,33 +211,4 @@ export function aiReviewIn(note: string, graph: string): AiReview | null {
     graph,
   );
   return text === null ? null : readAiBlock(text).review;
-}
-
-/** The words that say who found something and when, for the review's group in a proposal. */
-const foundBy = (r: AiReview) => word('ai-block.found-by', { by: r.by || '?', at: r.at || '?' });
-
-/**
- * What the review would change in the graph, as a proposal's changes, for a person to apply (ai_block_not_data). That
- * is a set of each level name a thing does not carry yet (Keep as mine), and each finding. Nothing is applied here.
- * `now` is the graph's value of a key for a thing, so a change that would change nothing is left out.
- */
-export function reviewChanges(review: AiReview, now: (thing: string, key: string) => Value | undefined): ChangeInput[] {
-  const group = foundBy(review);
-  const out: ChangeInput[] = [];
-  for (const [thing, names] of review.levels)
-    for (const a of ALTITUDES) {
-      const v = names[a];
-      if (v !== undefined && now(thing, a) !== v) out.push({ op: 'set', thing, key: a, value: valueGql(v), group });
-    }
-  for (const f of review.findings)
-    if (now(f.thing, f.key) !== f.value)
-      out.push({
-        op: 'set',
-        thing: f.thing,
-        key: f.key,
-        value: valueGql(f.value),
-        group,
-        ...(f.reason !== undefined && { reason: f.reason }),
-      });
-  return out;
 }

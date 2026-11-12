@@ -4,13 +4,14 @@
 // - "Keep as mine" turns the block's names and findings into a proposal, which the person reviews and applies like
 //   any other (`keepProposal`). Only then are they the person's, as plain properties of the things.
 // Kept apart from ai-block.ts, which the note reader uses, so that reading a note never reaches the proposal writer.
-import { aiBlockName, aiReviewIn, reviewChanges } from './ai-block.ts';
+import { aiBlockName, aiReviewIn } from './ai-block.ts';
 import type { AiReview, LevelNames } from './ai-block.ts';
+import type { Value } from '@thoughtknot/graph-spec';
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { ALTITUDES } from './named-levels.ts';
 import { basisOf } from './proposals-basis.ts';
-import { makeProposal } from './proposals.ts';
+import { makeProposal, valueGql } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { word } from './words.ts';
 
@@ -64,4 +65,33 @@ export function keepProposal(note: string, graph: string, at: string): Proposal 
     basis: basisOf(note, graph),
     changes,
   });
+}
+
+/** The words that say who found something and when, for the review's group in a proposal. */
+const foundBy = (r: AiReview) => word('ai-block.found-by', { by: r.by || '?', at: r.at || '?' });
+
+/**
+ * What the review would change in the graph, as a proposal's changes, for a person to apply (ai_block_not_data). That
+ * is a set of each level name a thing does not carry yet (Keep as mine), and each finding. Nothing is applied here.
+ * `now` is the graph's value of a key for a thing, so a change that would change nothing is left out.
+ */
+export function reviewChanges(review: AiReview, now: (thing: string, key: string) => Value | undefined): ChangeInput[] {
+  const group = foundBy(review);
+  const out: ChangeInput[] = [];
+  for (const [thing, names] of review.levels)
+    for (const a of ALTITUDES) {
+      const v = names[a];
+      if (v !== undefined && now(thing, a) !== v) out.push({ op: 'set', thing, key: a, value: valueGql(v), group });
+    }
+  for (const f of review.findings)
+    if (now(f.thing, f.key) !== f.value)
+      out.push({
+        op: 'set',
+        thing: f.thing,
+        key: f.key,
+        value: valueGql(f.value),
+        group,
+        ...(f.reason !== undefined && { reason: f.reason }),
+      });
+  return out;
 }
