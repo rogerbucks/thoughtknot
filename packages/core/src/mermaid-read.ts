@@ -46,19 +46,31 @@ export interface MermaidRefusal {
   why: 'too-large' | 'too-many-lines' | 'not-text' | 'unknown-type';
 }
 
+/** Text with every tag cut out and any stray angle bracket dropped. Walked by hand, so no pattern can be made to stall. */
+function withoutTags(text: string): string {
+  let out = '';
+  let inTag = false;
+  for (const c of text) {
+    if (c === '<') inTag = true;
+    else if (c === '>') inTag = false;
+    else if (!inTag) out += c;
+  }
+  return out;
+}
+
 /** A label as plain text: quotes taken off, line breaks kept as a newline, every other tag dropped. */
 const plain = (raw: string) =>
-  raw
-    .trim()
-    .replace(/^"(.*)"$/s, '$1')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
-    .trim();
+  withoutTags(
+    raw
+      .trim()
+      .replace(/^"(.*)"$/s, '$1')
+      .replace(/<br\s*\/?>/gi, '\n'),
+  ).trim();
 
 const SHAPE = String.raw`(?:\[\[(.*?)\]\]|\[\((.*?)\)\]|\(\((.*?)\)\)|\(\[(.*?)\]\)|\[(.*?)\]|\((.*?)\)|\{(.*?)\})`;
 const NODE = new RegExp(String.raw`^\s*([A-Za-z_]\w*)${SHAPE}?`);
 const ARROW = new RegExp(
-  String.raw`^\s*(?:<?(?:-->|---+>?|-\.->|-\.-|==+>|===|--[xo])|--\s+(.+?)\s+-->|==\s+(.+?)\s+==>|-\.\s+(.+?)\s+\.->)(?:\s*\|(.*?)\|)?`,
+  String.raw`^\s*(?:<?(?:-->|---+>?|-\.->|-\.-|==+>|===|--[xo])|--\s(.+?)\s-->|==\s(.+?)\s==>|-\.\s(.+?)\s\.->)(?:\s*\|(.*?)\|)?`,
 );
 const STYLE = /^(style|classDef|class|linkStyle|click|direction|accTitle|accDescr)\b/;
 const SUBGRAPH = /^subgraph\s+(?:([A-Za-z_]\w*)\s*(?:\[(.*)\])?|(.+))$/;
