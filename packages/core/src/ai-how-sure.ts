@@ -2,6 +2,7 @@
 // ai_says_how_sure, and ethos rule r_how_sure. The words are the likelihood words of a claim in a graph (graph spec §20, certainty_in_words). An edit
 // or a suggestion carries one of them and what it rests on. One that lacks either is refused, with the whole answer.
 // So nothing reaches the review without saying how sure it is.
+import { GUESS_LINE, guessSaid, readsPerson } from './ai-guess-label.ts';
 import { likelihoodSaid } from './intents.ts';
 import { word } from './words.ts';
 
@@ -24,7 +25,7 @@ export const isCertainty = (v: unknown): v is CertaintyWord =>
   typeof v === 'string' && (CERTAINTY_WORDS as readonly string[]).includes(v);
 
 /** The line the model is told, after the shape of its answer: how to say how sure it is and why. */
-export const HOW_SURE_LINE = `"certainty" is how sure you are, one of: ${CERTAINTY_WORDS.join(', ')}. "reason" is what it rests on, in a few words.`;
+export const HOW_SURE_LINE = `"certainty" is how sure you are, one of: ${CERTAINTY_WORDS.join(', ')}. "reason" is what it rests on, in a few words. ${GUESS_LINE}`;
 
 /** What one part of an answer says of how sure it is, as the review shows it; or why it says too little. */
 export function howSure(
@@ -32,9 +33,12 @@ export function howSure(
   n: number,
   certainty: unknown,
   reason: string,
+  reads?: unknown,
 ): { said: string; certainty: CertaintyWord } | { unread: string } {
   if (!isCertainty(certainty))
     return { unread: word(`ai.sure.${what}-no-word`, { n: String(n), words: CERTAINTY_WORDS.join(', ') }) };
   if (!reason) return { unread: word(`ai.sure.${what}-no-reason`, { n: String(n) }) };
-  return { said: word('ai.sure.said', { certainty: likelihoodSaid(certainty), why: reason }), certainty };
+  const said = word('ai.sure.said', { certainty: likelihoodSaid(certainty), why: reason });
+  // a reading of a person's tone or intent is shown as a guess to check (ai_guess_label)
+  return { said: readsPerson(reads, reason) ? guessSaid(said) : said, certainty };
 }

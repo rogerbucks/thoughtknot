@@ -54,7 +54,8 @@ const PROPOSE_TOOL =
   '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ' +
   '{op: "remove-link", from, type, to}. Each also says how sure you are, as "certainty": one of almost-no-chance, ' +
   'very-unlikely, unlikely, even-chance, likely, very-likely, almost-certain; and what it rests on, as "reason". ' +
-  'A change without both is refused. Names are one word. You cannot add a Person, ' +
+  'A change without both is refused. A reason that reads how someone feels or what they mean adds "reads": "tone" ' +
+  'or "intent", and is worded as a guess, never as a fact. Names are one word. You cannot add a Person, ' +
   'a Model or a Step. "read" lists what you read, if you say so.';
 const PROPOSE_SCHEMA = {
   type: 'object',
@@ -63,7 +64,12 @@ const PROPOSE_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        properties: { op: { type: 'string' }, certainty: { type: 'string' }, reason: { type: 'string' } },
+        properties: {
+          op: { type: 'string' },
+          certainty: { type: 'string' },
+          reason: { type: 'string' },
+          reads: { type: 'string', enum: ['tone', 'intent'] },
+        },
         required: ['op', 'certainty', 'reason'],
       },
     },

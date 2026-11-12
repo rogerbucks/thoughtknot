@@ -226,6 +226,9 @@ export const AI_SOURCE_WORDS = {
   'ai.sure.change-no-word': 'change {n} does not say how sure it is: its certainty must be one of {words}',
   'ai.sure.change-no-reason': 'change {n} does not say what it rests on: it gives no reason',
   'ai.sure.said': '{certainty}: {why}',
+  // a reading of tone or intent is shown as a guess (ai-guess-label.ts, ai_guess_label)
+  'ai.guess.label': 'a guess to check',
+  'ai.guess.said': '{label}, {said}',
   'ai.change.properties':
     'change {n}: its properties are not each a one-word name with a text, a number, true or false',
   'ai.change.thing-words': 'change {n} lacks a one-word name or kind',
