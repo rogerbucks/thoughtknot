@@ -263,6 +263,11 @@ export const AI_SOURCE_WORDS = {
   'ai.send.unreachable': '{model} could not be reached at {address} ({why}).',
   'ai.send.refused': '{model} refused the request ({why}).',
   'ai.send.unread': '{model} answered, but not with changes this editor can read: {why}.',
+  // a time box and quiet hours for AI (settings-time-box.ts, ai_time_box)
+  'ai.wait.quiet':
+    'AI is waiting: these are your quiet hours, {from}:00 to {to}:00. Nothing is sent until they end. You can change them in the settings.',
+  'ai.wait.time-box':
+    'AI is waiting until tomorrow: today’s time box of {minutes} minutes is used up. You can change it in the settings.',
   // an AI edit is the smallest change that does the job (ai-edit-size.ts, ai_smallest_edit)
   'ai.edit.too-big':
     '{model} answered with too big an edit: it would change or remove {count} things you wrote, and one proposal may change at most {most}. Ask for less, or turn on “Rewrite allowed” and send again.',

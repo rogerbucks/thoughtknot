@@ -74,7 +74,8 @@ export interface EditTarget {
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
 export default class ThoughtKnotPlugin extends Plugin {
   private engine: Promise<Engine> | null = null;
-  private saved: Saved = {};
+  /** The plugin's own data as kept: the AI dialog reads the sends' times (ai_time_box); it is changed only here. */
+  saved: Saved = {};
   /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
   private schemas: Map<string, string[]> | null = null;
 

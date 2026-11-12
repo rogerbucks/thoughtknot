@@ -10,6 +10,7 @@ import { AID_OPTIONS, type DrawingHeightSetting, type MiniMapSetting } from './s
 import { SWITCH_OPTIONS } from './settings-switches.ts';
 import { MATRIX_OPTIONS, matrixFrom } from './settings-matrix.ts';
 import { DEFAULT_REACH, REACH_OPTIONS, reachFrom, type ReachSettings } from './settings-reach.ts';
+import { DEFAULT_TIME_BOX, TIME_BOX_OPTIONS, timeBoxFrom, type TimeBoxSettings } from './settings-time-box.ts';
 import { DEFAULT_PICTURES, PICTURE_OPTIONS, picturesFrom, type PictureSettings } from './settings-pictures.ts';
 import { DEFAULT_TYPING, TYPING_OPTIONS, typingFrom, type TypingSettings } from './settings-typing.ts';
 import { ownFields, OWN_PRESETS_OPTION } from './settings-own.ts';
@@ -34,7 +35,7 @@ export type AiUse = 'off' | 'on';
 export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
-export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings, ReachSettings {
+export interface Settings extends StrictnessSettings, PictureSettings, TypingSettings, ReachSettings, TimeBoxSettings {
   /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
   language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
@@ -127,6 +128,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ...DEFAULT_PICTURES,
   ...DEFAULT_TYPING,
   ...DEFAULT_REACH,
+  ...DEFAULT_TIME_BOX,
 };
 
 /** One choice of an option: its value, its name, and, where it needs one, a sentence. */
@@ -221,6 +223,7 @@ export const OPTIONS: Option[] = [
   },
   ...MATRIX_OPTIONS, // the matrix note and its class names (§19)
   ...REACH_OPTIONS, // what a public reviewer may have (ES§19)
+  ...TIME_BOX_OPTIONS, // a time box and quiet hours for AI (ES§74)
   {
     key: 'indent',
     section: 'Formatting',
@@ -376,6 +379,7 @@ export function settingsFrom(saved: unknown): Settings {
     ...picturesFrom(s),
     ...typingFrom(s),
     ...reachFrom(s),
+    ...timeBoxFrom(s),
   };
 }
 

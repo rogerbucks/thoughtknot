@@ -79,14 +79,18 @@ async function chooseWhat(graph: string, names: string[], things: Pick<string>[]
 /** Asks one of VS Code's models about `given`, or the note in the active editor, as this file describes. */
 /**
  * The person's question, and whether they allow a rewrite. A rewrite is never guessed from the question: an edit keeps
- * their words unless they pick it (ai_smallest_edit). Null when they turn away.
+ * their words unless they pick it (ai_smallest_edit). Null when they turn away. The sends recorded go with them, for
+ * the time box and quiet hours (ai_time_box).
  */
-async function questionAsked(): Promise<{ question: string; rewrite: boolean } | null> {
+async function questionAsked(
+  context: vscode.ExtensionContext,
+): Promise<{ question: string; rewrite: boolean; sends: readonly SendRecord[] } | null> {
   const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
   if (question === undefined) return null;
   const keep = word('vscode.ai.keep-words', { most: REWRITE_MOST });
   const size = await vscode.window.showQuickPick([keep, word('ai.rewrite')], { placeHolder: word('ai.rewrite') });
-  return size === undefined ? null : { question, rewrite: size !== keep };
+  const sends = context.globalState.get<SendRecord[]>(SENDS_KEY) ?? [];
+  return size === undefined ? null : { question, rewrite: size !== keep, sends };
 }
 
 export async function askAi(context: vscode.ExtensionContext, given?: unknown): Promise<void> {
@@ -146,7 +150,7 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
   const things = drawn.boxes.map((b): Pick<string> => ({ label: b.text || b.key, description: b.key, value: b.key }));
   const choice = await chooseWhat(graph, views, things);
   if (!choice) return;
-  const asked = await questionAsked();
+  const asked = await questionAsked(context);
   if (!asked) return;
 
   const p = prepareSend({
