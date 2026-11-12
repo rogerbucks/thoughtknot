@@ -1,3 +1,4 @@
+// Requirement: format_compose_out.
 // The relationships view as Mermaid draws written groups (clusters, editor spec §31) as subgraphs, with their members
 // inside (wiki/Mermaid-mapping-review.md, gap G1). Python's twin must write the same text on the shared cases.
 import { test } from 'node:test';

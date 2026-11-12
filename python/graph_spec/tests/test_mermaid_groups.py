@@ -5,6 +5,7 @@ Usage:
 
 The cases are packages/graph-spec/test/mermaid-group-cases.json (editor spec §31;
 wiki/Mermaid-mapping-review.md, gap G1). Both libraries write each expected text, byte for byte.
+Requirement: format_compose_out.
 """
 
 import json
