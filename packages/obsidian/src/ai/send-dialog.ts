@@ -20,7 +20,6 @@ import {
   prepareSend,
   readNote,
   sendPrepared,
-  suggestAsk,
   textToGraphAsk,
   viewsOf,
   word,
@@ -34,7 +33,7 @@ import { PURPOSE, drawModelRow } from './model-row';
 import { asChangeSet, drawTextRows } from './text-graph';
 import type { TextAsk } from './text-graph';
 import { obsidianTransport } from './send';
-import { NO_SUGGESTION, drawSuggestRows, levelsAsked, saveLevels, suggestForOf } from './suggest-rows';
+import { NO_SUGGESTION, askOf, drawSuggestRows, levelsAsked, offeredQuestion, saveLevels } from './suggest-rows';
 import type { SuggestRows } from './suggest-rows';
 import { changeVaultNote } from '../storage/plugin-notes';
 
@@ -184,9 +183,13 @@ export class SendDialog extends Modal {
             this.changed(true);
           }),
       );
-    drawSuggestRows(el, this.suggest, { name: this.graph, intents: this.intents.get(this.graph) ?? [] }, (redraw) => {
-      if (redraw && this.question === word(this.suggest.ask === 'changes' ? 'ai.suggest.question' : 'ai.question'))
-        this.question = word(this.suggest.ask === 'changes' ? 'ai.question' : 'ai.suggest.question');
+    const graph = {
+      name: this.graph,
+      intents: this.intents.get(this.graph) ?? [],
+      things: this.things.get(this.graph) ?? [],
+    };
+    drawSuggestRows(el, this.suggest, graph, (redraw) => {
+      if (redraw) this.question = offeredQuestion(this.suggest.ask, this.question);
       this.changed(redraw);
     });
     if (this.what === 'view') this.drawViews(el);
@@ -287,15 +290,11 @@ export class SendDialog extends Modal {
       shared: this.shared,
       matrix,
     };
-    // suggestions are asked for in the person's own words, and read back only as suggestions (§59)
-    const f = suggestForOf(this.suggest);
     const ask = this.rule
       ? this.rule.ask(base, this.graph, this.question)
       : this.text
         ? textToGraphAsk(base, this.text.graph, this.text.words, this.question, this.text.place)
-        : f
-          ? suggestAsk(base, f, this.question)
-          : { ...base, question: this.question, rewrite: this.suggest.rewrite };
+        : askOf(base, this.suggest, this.question);
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;

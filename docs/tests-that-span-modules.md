@@ -260,6 +260,13 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/placed-fits.test.js` — a card drawn off the page, as Live Preview draws it, fits its frame
   once placed. Centre here leaves no zoom or pan for the card drawn next (editor spec §15).
 
+## The Obsidian plugin: settings across updates
+
+- `test/settings-upgrade.test.js` — settings saved by the last release load with every view, preset and drawing
+  setting kept. One that cannot be kept is named at once, and the old settings are kept as saved. No command id a
+  hotkey uses is renamed or dropped (editor spec §74, routines_survive_update). It spans the core's settings and the
+  Obsidian plugin.
+
 ## The Obsidian plugin: the View menu and views
 
 - `test/orientation-cues.test.js` — every projection keeps the cues to where the person is (editor spec §25,

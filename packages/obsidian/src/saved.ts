@@ -12,6 +12,8 @@ export type Drafts = Record<string, KeptDraft>;
 export interface Saved {
   drafts?: Drafts;
   settings?: unknown;
+  /** The settings as saved before an update that could not keep some of them (ES§74, routines_survive_update). */
+  settingsBefore?: unknown;
   /** The record of every send to an AI model (§19, record_every_send): never a key. */
   aiSends?: SendRecord[];
   /** The plug-in files from outside the person turned on, each with its SHA-256 then (§54, plugin_outside_file). */

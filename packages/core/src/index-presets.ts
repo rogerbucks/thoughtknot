@@ -10,3 +10,4 @@ export {
 } from './vault-preset.ts';
 export { vaultChoice } from './own-vault-preset.ts';
 export { PresetPanel, type PanelOwner, type PanelRow } from './preset-panel.ts';
+export { ROUTINE_KEYS, routinesLost, routinesLostSaid, type RoutineKey } from './settings-kept.ts';
