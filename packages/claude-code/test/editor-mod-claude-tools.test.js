@@ -103,7 +103,7 @@ describe('a note that carries instructions steers no change past the card (risk 
     assert.notEqual(planted, before, 'the fixture plants the order in a property');
     writeFileSync(where.plan, planted);
     await opens(launcher, where.plan);
-    const removeAll = [{ op: 'remove-thing', thing: 'start' }];
+    const removeAll = [{ op: 'remove-thing', thing: 'start', certainty: 'likely', reason: 'asked for' }];
     // a key, or any field beside the changes, is refused whole; the changes alone wait on the card
     assert.equal((await launcher.propose({ changes: removeAll, key: 'sk-stolen' })).ok, false);
     assert.equal((await launcher.propose({ changes: removeAll })).ok, true);

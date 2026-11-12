@@ -57,7 +57,18 @@ test('a model by another name is not the host’s: it must be set up here as bef
 test('it is sent through the transport the host hands in, and its answer is a proposal', async () => {
   const p = prepareSend(ask());
   const sent = [];
-  const answer = { changes: [{ op: 'add-thing', name: 'tablet', kind: 'Option', properties: { name: 'Tablet' } }] };
+  const answer = {
+    changes: [
+      {
+        op: 'add-thing',
+        name: 'tablet',
+        kind: 'Option',
+        properties: { name: 'Tablet' },
+        certainty: 'likely',
+        reason: 'asked for',
+      },
+    ],
+  };
   const transport = async (request) => {
     sent.push(request);
     return { status: 200, text: JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }) };

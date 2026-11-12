@@ -29,9 +29,13 @@ const ask = (over = {}) => ({
   question: 'Tidy the names.',
   ...over,
 });
+// each change says how sure it is and why (ai_says_how_sure)
+const sure = (c) => ({ certainty: 'likely', reason: 'asked for', ...c });
 const reply = (changes) => ({
   status: 200,
-  text: JSON.stringify({ choices: [{ message: { role: 'assistant', content: JSON.stringify({ changes }) } }] }),
+  text: JSON.stringify({
+    choices: [{ message: { role: 'assistant', content: JSON.stringify({ changes: changes.map(sure) }) } }],
+  }),
 });
 const renames = (n) =>
   Array.from({ length: n }, (_, i) => ({ op: 'set', thing: `t${i}`, key: 'name', value: `Renamed ${i}` }));

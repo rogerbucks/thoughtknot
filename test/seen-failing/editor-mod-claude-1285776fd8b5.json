@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "a proposal is written by the store, whole and in turn (cc_claude_proposes) > two proposals made together are both kept, one after the other, and neither overwrites the other",
+  "seen_failing_first": false,
+  "evidence": "Only its proposals gained the certainty word and reason every change now needs; what it checks, how the store writes, is unchanged."
+}

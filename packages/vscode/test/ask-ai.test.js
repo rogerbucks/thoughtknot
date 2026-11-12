@@ -17,7 +17,16 @@ after(cleanUpVscode);
 const NOTE =
   "---\nclassification: Public\n---\n# Reader\n\n```gql\n// graph: reader\n(q:Question {name: 'Which device?'})\n```\n";
 const ANSWER = JSON.stringify({
-  changes: [{ op: 'add-thing', name: 'tablet', kind: 'Option', properties: { name: 'Tablet' } }],
+  changes: [
+    {
+      op: 'add-thing',
+      name: 'tablet',
+      kind: 'Option',
+      properties: { name: 'Tablet' },
+      certainty: 'likely',
+      reason: 'asked for',
+    },
+  ],
 });
 const ON = { 'thoughtknot.ai.use': 'on', 'thoughtknot.ai.ceiling': 'Internal' };
 

@@ -153,7 +153,8 @@ describe('the editor declares the proposer in the proposal, as its first additio
 });
 
 describe('a model’s own answer cannot declare an author', () => {
-  const answer = (change) => JSON.stringify({ changes: [change] });
+  // each change says how sure it is and why (ai_says_how_sure)
+  const answer = (change) => JSON.stringify({ changes: [{ certainty: 'likely', reason: 'asked for', ...change }] });
 
   test('an addition of a Model, a Person or a Step from a model’s answer is refused, saying so', () => {
     for (const kind of ['Model', 'Person', 'Step']) {

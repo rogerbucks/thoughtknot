@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude.test.js",
+  "test": "a proposal is written by the store, whole and in turn (cc_claude_proposes) > a write that fails leaves the note as it was and no temporary file beside it",
+  "seen_failing_first": false,
+  "evidence": "Only its proposal gained the certainty word and reason every change now needs; what it checks, a failed write, is unchanged."
+}
