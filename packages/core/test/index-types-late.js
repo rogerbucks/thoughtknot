@@ -485,4 +485,8 @@ export const TYPES_LATE = [
   'Composed',
   'HtmlRead',
   'ComposedExport',
+  // data set access, 12 Nov 2026
+  'DataSetAccess',
+  'Fetched',
+  'HostFetch',
 ];

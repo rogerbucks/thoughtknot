@@ -20,11 +20,11 @@ test('an answer’s JSON is read whether or not it is fenced, each change as a p
   });
   const changes = changesIn('Here you are:\n```json\n' + json + '\n```');
   assert.deepEqual(changes, [
-    { op: 'add', gql: "(small:Option {name: 'Small', price: 2, cheap: true})", reason: 'likely: asked for' },
-    { op: 'add', gql: '(small)-[:ANSWERS]->(question)', reason: 'likely: it answers it' },
-    { op: 'set', thing: 'large', key: 'name', value: "'Large\\'s'", reason: 'likely: asked for' },
-    { op: 'remove-thing', thing: 'alice', reason: 'likely: asked for' },
-    { op: 'remove-link', from: 'alice', type: 'ASKED', to: 'question', reason: 'likely: asked for' },
+    { op: 'add', gql: "(small:Option {name: 'Small', price: 2, cheap: true})", reason: 'likely (55–80%): asked for' },
+    { op: 'add', gql: '(small)-[:ANSWERS]->(question)', reason: 'likely (55–80%): it answers it' },
+    { op: 'set', thing: 'large', key: 'name', value: "'Large\\'s'", reason: 'likely (55–80%): asked for' },
+    { op: 'remove-thing', thing: 'alice', reason: 'likely (55–80%): asked for' },
+    { op: 'remove-link', from: 'alice', type: 'ASKED', to: 'question', reason: 'likely (55–80%): asked for' },
   ]);
 });
 
@@ -43,7 +43,7 @@ test('a model’s reason is plain text: no Markdown in it can become an image, a
   const [change] = changesIn(JSON.stringify({ changes: [sure({ op: 'remove-thing', thing: 'alice', reason })] }));
   assert.doesNotMatch(change.reason, /(?<!\\)!\[|(?<!\\)\[[^\]]*(?<!\\)\]\(|(?<!\\)<[a-z]|(?<!\\)\*\*|(?<!\\)`/);
   // read as Markdown, every mark is a literal character again: the words are all still there
-  assert.equal(change.reason.replace(/\\(.)/g, '$1'), `likely: ${reason}`);
+  assert.equal(change.reason.replace(/\\(.)/g, '$1'), `likely (55–80%): ${reason}`);
 });
 
 test('a reply refused by its status says the status and the service’s own message, cut short', () => {
@@ -103,8 +103,8 @@ describe('a note that carries instructions is sent as data, and steers nothing p
     });
     const changes = changesIn(obeys);
     assert.deepEqual(changes, [
-      { op: 'remove-thing', thing: 'start', reason: 'likely: the note said so' },
-      { op: 'remove-thing', thing: 'finish', reason: 'likely: asked for' },
+      { op: 'remove-thing', thing: 'start', reason: 'likely (55–80%): the note said so' },
+      { op: 'remove-thing', thing: 'finish', reason: 'likely (55–80%): asked for' },
     ]);
     assert.ok(!JSON.stringify(changes).includes('sk-stolen'));
     // a change of a kind not asked for, such as a shell command or a write, refuses the whole answer

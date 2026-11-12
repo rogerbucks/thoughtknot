@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/ai.test.js",
+  "test": "asking an AI model to propose changes (§19) > a model’s reason is kept escaped in the note, and shown on the card as the plain text it gave",
+  "seen_failing_first": false,
+  "evidence": "Its code changed in the commit before, which gave every likelihood word its range of chances; this commit brings the test's expected words up to date."
+}

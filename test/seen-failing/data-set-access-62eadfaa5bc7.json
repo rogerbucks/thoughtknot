@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/data-set-access.test.js",
+  "test": "an outside data set is fetched (data_set_access) > a picked source written with trailing slashes is the same source, however many it has",
+  "seen_failing_first": false,
+  "evidence": "The fix keeps what the check answers and only makes a long run of slashes cheap, which the code scan found; a test may not assert time, so this one holds the answers."
+}

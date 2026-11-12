@@ -98,7 +98,7 @@ test('AI suggestions wait in the review lens with certainty, reason and what was
       ['set', 'docs', 'category', "'docs'"],
     ],
   );
-  assert.equal(proposal.changes[1].reason, 'likely, read tests, login: tests for the login fix');
+  assert.equal(proposal.changes[1].reason, 'likely (55–80%), read tests, login: tests for the login fix');
   const note = noteWithProposal(NOTE, proposal);
   assert.equal(typeof note, 'string');
   // written into the note as a change set: the graph itself is as it was
@@ -109,9 +109,9 @@ test('AI suggestions wait in the review lens with certainty, reason and what was
   assert.deepEqual(
     rows.map((r) => [r.state, r.reason]),
     [
-      ['pending', 'very-likely, read login: a broken page'],
-      ['pending', 'likely, read tests, login: tests for the login fix'],
-      ['pending', 'almost-certain, read docs: help pages'],
+      ['pending', 'very likely (80–95%), read login: a broken page'],
+      ['pending', 'likely (55–80%), read tests, login: tests for the login fix'],
+      ['pending', 'almost certain (95–99%), read docs: help pages'],
     ],
   );
 });
