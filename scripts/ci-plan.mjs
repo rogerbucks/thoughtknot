@@ -28,7 +28,7 @@ const JS_TEST = /\.test\.(js|mjs)$/;
 const REPOSITORY_TEST = /^test\/[^/]+\.test\.(js|mjs)$/;
 
 /** The most machines a subset is spread over, as the whole suite is; and the test files each one is given at least. */
-export const SHARDS = 6;
+export const SHARDS = 7;
 const FILES_PER_SHARD = 25;
 
 /**
