@@ -460,4 +460,9 @@ export const VALUES_LATE = [
   'storeOver',
   'contractCases',
   'partsStoreContract',
+  // a sheet of an Excel workbook named after FROM, `book.xlsx#Sheet1` (connector_files_to_gql), 12 Nov 2026
+  'workbookPlace',
+  'workbookSheets',
+  'workbookTable',
+  'WORKBOOK_LIMITS',
 ];
