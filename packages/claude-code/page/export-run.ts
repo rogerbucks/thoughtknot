@@ -10,14 +10,14 @@
 import { gqlBlocks } from '@thoughtknot/core';
 import { classificationOf } from '@thoughtknot/core';
 import { readNote } from '@thoughtknot/core';
-import { dataText, exportedData, isDataFormat } from '@thoughtknot/core';
+import { composedExport, dataText, exportedData, isComposeFormat, isDataFormat } from '@thoughtknot/core';
 import { companionNote } from '@thoughtknot/core';
 import type { CompanionInfo } from '@thoughtknot/core';
 import { pageSvg, pngPages } from '@thoughtknot/core';
 import { exportPlan } from '@thoughtknot/core';
 import { exportScope } from '@thoughtknot/core';
 import { exportWithLayout, pngSize } from '@thoughtknot/core';
-import type { ExportInfo, ExportLayout, PngSize } from '@thoughtknot/core';
+import type { ComposeFormat, ExportInfo, ExportLayout, ExportScope, NoteReading, PngSize } from '@thoughtknot/core';
 import { exportFailureWords, exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
 import type { Settings } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
@@ -78,6 +78,25 @@ export async function runExport(x: PageExport, ask: ExportAsk): Promise<ExportOu
 
 const inFolder = (folder: string, name: string) => (folder ? `${folder}/${name}` : name);
 
+/**
+ * A document for people to read, as a file to save: it says, at its top and here, what it left out. `ask` is for a
+ * format a graph is composed into, which the caller has checked.
+ */
+function composed(
+  reading: NoteReading,
+  scope: ExportScope,
+  ask: ExportAsk,
+  date: string,
+  { fileName: name }: { fileName: string },
+): { files: SavedFile[]; held: CompanionInfo['data']; said: string } {
+  const { body, held, said } = composedExport(reading, scope, ask.format as ComposeFormat, { note: ask.path, date });
+  return {
+    files: [typeof body === 'string' ? { name, text: body } : { name, bytes: body }],
+    held,
+    said: ` ${said}`,
+  };
+}
+
 /** The note's classification as an export reads it: none, the level, or a word that is no level, so it is asked about. */
 function classification(text: string): string | null {
   const c = classificationOf(text);
@@ -111,9 +130,9 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
   if ('ask' in plan) return { ask: plan.ask };
   const { go } = plan;
   let files: SavedFile[];
-  let held: CompanionInfo['data'] | undefined;
-  let animation = '';
-  if (isDataFormat(ask.format)) {
+  let [held, animation]: [CompanionInfo['data'] | undefined, string] = [undefined, ''];
+  if (isComposeFormat(ask.format)) ({ files, held, said: animation } = composed(reading, scope, ask, date, go));
+  else if (isDataFormat(ask.format)) {
     const data = exportedData(reading, scope);
     files = [{ name: go.fileName, text: dataText(data, ask.format, { note: ask.path, date }) }];
     held = {

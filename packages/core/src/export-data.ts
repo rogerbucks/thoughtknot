@@ -5,6 +5,8 @@
 // graph too large to draw is still exported whole. The `///` notes on its things and links are kept where the format
 // has comments: a GQL block and GraphML. CSV has none, so they are left out of it (§24, note_standard).
 import type { Graph } from '@thoughtknot/graph-spec';
+import { composeHtml, composeMarkdown, composeOut } from './compose-out.ts';
+import type { ComposeFormat } from './compose-out.ts';
 import { csvText } from './export-data-csv.ts';
 import { gqlBlock } from './export-data-gql.ts';
 import { graphmlText } from './export-data-graphml.ts';
@@ -12,6 +14,7 @@ import type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-
 import type { ExportScope } from './export-scope.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import { PLUGIN_API, pluginRegistry, type ThoughtKnotPlugin } from './plugins.ts';
+import { word } from './words.ts';
 
 /** The formats the data is offered in (export_data_formats): a GQL block, CSV and GraphML. */
 export const DATA_FORMATS = ['gql', 'csv', 'graphml'] as const;
@@ -100,6 +103,27 @@ export const CORE_EXPORTS: ThoughtKnotPlugin = {
   },
 };
 
+/**
+ * The text compositions, added through the plug-in interface as any export plug-in is (format_compose_out): Markdown
+ * and HTML. Word is bytes, which that interface does not carry yet, so it is composed by `composeOut`.
+ */
+export const COMPOSE_EXPORTS: ThoughtKnotPlugin = {
+  id: 'thoughtknot.compose-exports',
+  version: '1.0.0',
+  api: PLUGIN_API,
+  uses: ['exports'],
+  register: (points) => {
+    points.exports?.add({
+      format: 'md',
+      title: 'Markdown',
+      extension: 'md',
+      mime: 'text/markdown',
+      write: composeMarkdown,
+    });
+    points.exports?.add({ format: 'html', title: 'HTML', extension: 'html', mime: 'text/html', write: composeHtml });
+  },
+};
+
 // the core's own exports are trusted to finish, so no time limit stops them on a large graph
 const BUILT_IN = pluginRegistry({ timeLimit: Infinity });
 BUILT_IN.register(CORE_EXPORTS);
@@ -111,4 +135,30 @@ export function dataText(data: ExportedData, format: DataFormat, info: DataInfo)
   const written = BUILT_IN.writeData(format, data, info);
   if (!written.ok) throw new Error(written.message);
   return written.value;
+}
+
+/** A graph composed into a document for a host to save: its body, what it holds, and the words that say what it left out. */
+export interface ComposedExport {
+  body: string | Uint8Array;
+  held: { things: number; links: number };
+  said: string;
+}
+
+/**
+ * The part of `reading` that `scope` picks, composed in `format` (format_compose_out), for every host's export alike.
+ * Its words say, as the document does at its top, what it left out (format_loss_stated).
+ */
+export function composedExport(
+  reading: NoteReading,
+  scope: ExportScope,
+  format: ComposeFormat,
+  info: DataInfo,
+): ComposedExport {
+  const data = exportedData(reading, scope);
+  const made = composeOut(data, format, info);
+  return {
+    body: made.body,
+    held: { things: data.things.length, links: data.links.length },
+    said: word('compose.said', { left: made.leftOut.join(', ') }),
+  };
 }

@@ -4,11 +4,30 @@
 
 /** The words of exporting, by key, in UK English. */
 export const EXPORT_SOURCE_WORDS = {
+  // a graph composed into a document (editor spec §67, format_compose_out, compose-out.ts)
+  'compose.from': 'Composed from {note} on {date}. Left out: {left}.',
+  'compose.said': 'Left out: {left}.',
+  'compose.things': 'Things',
+  'compose.links': 'Links',
+  'compose.yes': 'yes',
+  'compose.no': 'no',
+  'compose.left-look': 'the look of the drawing',
+  'compose.left-places': 'where things sit',
+  'compose.left-drawings': 'drawings over the graph',
+  'compose.left-ai': 'what your AI found',
+  'compose.left-kinds':
+    'which values are dates or numbers, so it does not read back as the same graph (export it as GQL, CSV or GraphML for that)',
+  // an HTML file read safely (editor spec §67, format_html_sandboxed, html-read.ts)
+  'html.too-large': 'This page is larger than {most} characters, so it is not read',
+  'html.dropped': 'Shown as text only. Left out, so nothing runs or loads: {what}',
   // the export form
   'export.form': 'Export',
   'export.data-gql': 'Data as a GQL block',
   'export.data-csv': 'Data as CSV',
   'export.data-graphml': 'Data as GraphML',
+  'export.compose-md': 'Document as Markdown',
+  'export.compose-html': 'Document as HTML',
+  'export.compose-docx': 'Document as a Word file',
   'export.view': 'View {name}',
   'export.view-in-context': 'View {name}, with the rest faded',
   'export.whole': 'The whole diagram',

@@ -478,4 +478,13 @@ export const VALUES_LATE = [
   'writeAiBlock',
   'keepProposal',
   'levelsReview',
+  // Markdown, HTML and Word out, and HTML read as inert text (format_compose_out, format_html_sandboxed), 12 Nov 2026
+  'COMPOSE_EXPORTS',
+  'COMPOSE_FORMATS',
+  'composeOut',
+  'isComposeFormat',
+  'htmlAsText',
+  'htmlToGql',
+  'readHtml',
+  'composedExport',
 ];

@@ -224,7 +224,7 @@ export function exportSameCases({ at, ROOT, LAYER, importsOf }) {
         const select = (label) => form.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === label);
         assert.deepEqual(
           select('Format').children.map((o) => o.getAttribute('value')),
-          ['svg', 'png', 'gql', 'csv', 'graphml'],
+          ['svg', 'png', 'gql', 'csv', 'graphml', 'md', 'html', 'docx'],
         );
         assert.deepEqual(
           select('Theme').children.map((o) => o.getAttribute('value')),
