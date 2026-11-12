@@ -5,6 +5,7 @@
 import { Setting } from 'obsidian';
 import { word } from '@thoughtknot/core';
 import type { SuggestFor } from '@thoughtknot/core';
+export { saveLevels } from './levels-save'; // what a levels answer does, for the dialog that asks for it
 
 /** What is asked for: changes, values of a property, pulls on an intent, or names for the levels (ai_levels). */
 export type AskFor = 'changes' | 'values' | 'intent' | 'levels';

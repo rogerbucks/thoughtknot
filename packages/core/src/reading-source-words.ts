@@ -247,6 +247,7 @@ export const READING_SOURCE_WORDS = {
     'The graph {graph} changed since it was shown, so nothing was saved: look again, then save once more',
   'meta.outside': 'This would change more than the note’s metadata, so nothing was saved',
   'meta.saved': 'Saved. Undo takes it back',
+  'meta.undo': 'Undo',
   'meta.undone': 'Taken back',
   'meta.undo-moved': 'The note changed since, so it was not taken back',
   // a layout block (editor spec §2, layout_block_checked, layout-block.ts): a line that is not a place
@@ -255,6 +256,20 @@ export const READING_SOURCE_WORDS = {
   // a place for a thing the graph does not hold
   'layout.thing-gone': '{thing} has a place, but the graph {graph} does not hold it, so the place is not used',
   'layout.thing-gone.fix': 'forget the place of {thing}',
+  // an AI block (editor spec §19, ai_block, ai-block.ts): a line that is not a review, a thing's levels or a finding
+  'ai-block.kind-unknown': 'an AI block holds a Review, Levels and Findings only, so {id} ({kind}) is not used',
+  'ai-block.kind-unknown.fix': 'ask your AI again, or remove the line',
+  // names or a finding for a thing the graph does not hold
+  'ai-block.thing-gone': 'your AI found something for {thing}, but the graph {graph} does not hold it, so it is not used',
+  'ai-block.thing-gone.fix': 'ask your AI again, or remove the line',
+  // the group an AI review's changes are applied in, naming who found them and when
+  'ai-block.found-by': 'Found by {by}, {at}',
+  // Keep as mine, when there is nothing to keep
+  'ai-block.none': 'The graph {graph} has nothing found by your AI to keep',
+  'ai-block.kept': 'Written as a proposal: review it, then apply what you keep',
+  'ai-block.nothing-new': 'The graph already carries everything your AI found',
+  // a levels answer saved beside the graph, as its toast says it
+  'ai-block.saved': '{model} named the levels. Saved beside the graph, marked as named by AI',
   // a place saved by a drag, as its undo toast names it (layout_drag_saves)
   'layout.placed': 'Placed {thing}',
 } as const;

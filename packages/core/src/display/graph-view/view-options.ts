@@ -166,7 +166,13 @@ export interface ViewOptions {
    * dialog with thing `key` chosen, given its text and any words typed in the quick line. `levels` opens it asking
    * your AI to name the subjects, areas and topics (§68, ai_levels).
    */
-  expand?: { ready: () => boolean; open: (key: string, thing: string, typed: string) => void; levels?: () => void };
+  expand?: {
+    ready: () => boolean;
+    open: (key: string, thing: string, typed: string) => void;
+    levels?: () => void;
+    /** Keep as mine: what the AI block holds, as a proposal a person applies (ai_block_not_data). */
+    keep?: () => void;
+  };
   /** Edit here: opens the text in place, inside this card (spec §4); given `at`, with where it is written selected. */
   onEditHere?: (at?: Chosen) => void;
   /** While the card is edited, its edit button closes the editor, as its Done does (spec §4). */

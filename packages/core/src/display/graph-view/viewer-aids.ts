@@ -305,6 +305,7 @@ export class Aids {
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
         colourOf: (key) => this.stage?.colourOf(key),
         nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
+        keepAiLevels: () => this.host.o.expand?.keep ?? null,
         editGroup: () => this.groupEditor(),
       });
       this.hints = new LevelHints(this.badge);

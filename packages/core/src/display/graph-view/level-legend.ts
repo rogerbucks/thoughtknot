@@ -4,7 +4,8 @@
 // - clicking a chip keeps it in the spotlight, and clicking it again lets it go;
 // - the chip's colour button picks the subject's next colour, and its clouds take it at once.
 // The chips are buttons, so the keyboard reaches them, and each says what it does. Nothing moves. While AI is on, a
-// button asks your AI to name the levels (ai_levels).
+// button asks your AI to name the levels (ai_levels). Levels your AI named are marked so. Keep as mine turns them
+// into a proposal the person applies. Until then they stay the AI's (ai_block_not_data).
 import type { DetailLevel } from '../../detail-levels.ts';
 import { word } from '../../words.ts';
 import { hueOf, nextHue, spotlight } from './level-colours.ts';
@@ -23,6 +24,8 @@ export interface LevelLegendHost {
   drawing: () => GraphDrawing | undefined;
   /** What asks your AI to name the levels, while AI is on; null while it is off (ai_levels). */
   nameLevels?: () => (() => void) | null;
+  /** What keeps the levels your AI named as the person's own, as a proposal; null while the note is only read. */
+  keepAiLevels?: () => (() => void) | null;
   /** How a group's things are written, while the note can be written; null while it is only read (cloud_edit). */
   editGroup?: () => CloudCardHost['edit'] | null;
   /** The colour the drawing gives a subject, where it paints its own (the new rendering), so the chip shows it. */
@@ -43,6 +46,8 @@ export class LevelLegend {
   private listed: GraphDrawing | undefined;
   /** The button that asks your AI to name the levels, shown only while AI is on. */
   private readonly ai: HTMLElement;
+  /** Keep as mine, shown only while the levels shown are your AI's (ai_block_not_data). */
+  private readonly keepButton: HTMLElement;
   /** The card that renames, merges or takes apart a named group (cloud_edit). */
   private readonly card: CloudCard;
 
@@ -63,6 +68,13 @@ export class LevelLegend {
     });
     this.ai.setAttribute('aria-label', word('levels.ai-label'));
     this.ai.addEventListener('click', () => host.nameLevels?.()?.());
+    this.keepButton = own.createEl('button', {
+      cls: 'thoughtknot-level-keep is-hidden',
+      text: word('levels.keep'),
+      attr: { type: 'button' },
+    });
+    this.keepButton.setAttribute('aria-label', word('levels.keep-label'));
+    this.keepButton.addEventListener('click', () => host.keepAiLevels?.()?.());
     this.chips = this.el.createDiv({ cls: 'thoughtknot-level-chips' });
     this.chips.setAttribute('aria-label', word('levels.legend-label'));
     // pointing at a cloud spotlights its subject too, for as long as the pointer stays on it
@@ -84,6 +96,7 @@ export class LevelLegend {
     this.chips.empty();
     this.listChoices();
     this.ai.toggleClass('is-hidden', !this.host.nameLevels?.());
+    this.keepButton.toggleClass('is-hidden', !levels?.[0]?.byAi || !this.host.keepAiLevels?.());
     const subjects = levels && levels.length > 1 ? (levels[0]?.groups ?? []) : [];
     const drawing = this.host.drawing();
     this.el.toggleClass('is-hidden', !subjects.length && !(drawing && ownLevelOf(drawing)));

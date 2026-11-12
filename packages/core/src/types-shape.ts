@@ -38,6 +38,8 @@ export interface GraphShape {
   links: ShapeLink[];
   /** Each group a nudge draws (§6), by its label, with its things drawn here, in the order first written. */
   groups?: [string, string[]][];
+  /** The level names your AI found for its things, kept in the note's AI block (ai-block.ts); none, no names. */
+  aiLevels?: ReadonlyMap<string, Readonly<Partial<Record<'subject' | 'area' | 'topic', string>>>>;
 }
 
 /** A date or an instant as the reader keeps it. */
@@ -55,7 +57,7 @@ export const dayOf = (date: string): string => date.slice(0, 10);
  *   `nudgedSource`).
  */
 export function shapeOf(
-  drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
+  drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates' | 'aiLevels'>,
   g?: Graph,
   nudges: readonly Nudge[] = [],
 ): GraphShape {
@@ -87,6 +89,7 @@ export function shapeOf(
     }),
     links: drawing.links.map((l, i) => ({ from: l.from, type: types[i] ?? l.type, to: l.to })),
     ...(groups.size ? { groups: [...groups] } : {}),
+    ...(drawing.aiLevels?.size ? { aiLevels: drawing.aiLevels } : {}),
   };
 }
 
