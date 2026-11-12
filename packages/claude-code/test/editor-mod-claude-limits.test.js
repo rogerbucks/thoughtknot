@@ -13,7 +13,15 @@ import { READ_LIMITS } from '@thoughtknot/core';
 import { ask } from './editor-threats-support.js';
 import { PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 
-const thing = (name, extra = {}) => ({ op: 'add-thing', name, kind: 'Task', properties: { name }, ...extra });
+const thing = (name, extra = {}) => ({
+  op: 'add-thing',
+  name,
+  kind: 'Task',
+  properties: { name },
+  certainty: 'likely',
+  reason: 'asked for',
+  ...extra,
+});
 
 /** An editor open on the plan; the requests the sender was handed are kept in `sent`. */
 async function opened(where = modVault(), path = where.plan) {
@@ -28,8 +36,15 @@ describe('a proposal cannot make the note grow without limit (cc_claude_proposes
     const { where, launcher } = await opened();
     const long = 'x'.repeat(5000);
     for (const change of [
-      { op: 'add-thing', name: 'a', kind: 'Task', properties: { name: long } },
-      { op: 'set', thing: 'start', key: 'name', value: long },
+      {
+        op: 'add-thing',
+        name: 'a',
+        kind: 'Task',
+        properties: { name: long },
+        certainty: 'likely',
+        reason: 'asked for',
+      },
+      { op: 'set', thing: 'start', key: 'name', value: long, certainty: 'likely', reason: 'asked for' },
       thing('b', { reason: long }),
     ]) {
       const outcome = await launcher.propose({ changes: [change] });
@@ -111,6 +126,6 @@ describe('what Claude says it read, and why, is one line of plain text (cc_claud
     const note = readFileSync(where.plan, 'utf8');
     assert.ok(!breaks.some((c) => note.includes(c)), 'no such character reaches the note');
     assert.match(note, /^\/\/ read: a b c d e f g$/m);
-    assert.match(note, /reason: a b c d e f g/);
+    assert.match(note, /reason: likely: a b c d e f g/);
   });
 });

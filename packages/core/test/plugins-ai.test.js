@@ -123,7 +123,9 @@ describe('an AI provider only shapes the request and reads the reply (trust_ai_p
   test('the answer it reads is checked as any answer is', async () => {
     const registry = registered();
     const p = prepareSend(ask(registry));
-    const bad = JSON.stringify({ output: '{"changes":[{"op":"add-thing","name":"x","kind":"Person","certainty":"likely","reason":"r"}]}' });
+    const bad = JSON.stringify({
+      output: '{"changes":[{"op":"add-thing","name":"x","kind":"Person","certainty":"likely","reason":"r"}]}',
+    });
     const r = await sendPrepared(p, confirmSend(p), { key: KEY, transport: async () => ({ status: 200, text: bad }) });
     assert.match(r.failed, /cannot add a Person/);
   });
