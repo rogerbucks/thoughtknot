@@ -126,6 +126,6 @@ describe('what Claude says it read, and why, is one line of plain text (cc_claud
     const note = readFileSync(where.plan, 'utf8');
     assert.ok(!breaks.some((c) => note.includes(c)), 'no such character reaches the note');
     assert.match(note, /^\/\/ read: a b c d e f g$/m);
-    assert.match(note, /reason: likely: a b c d e f g/);
+    assert.match(note, /reason: likely \(55–80%\): a b c d e f g/);
   });
 });

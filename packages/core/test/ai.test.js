@@ -398,7 +398,7 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
       proposal.changes.map((c) => c.op),
       ['add', 'add', 'set'],
     );
-    assert.equal(proposal.changes[0].reason, 'likely: cheaper');
+    assert.equal(proposal.changes[0].reason, 'likely (55–80%): cheaper');
   });
 
   test('written into the note it is a change set beside the graph, which it leaves as it was until a person accepts', async () => {
