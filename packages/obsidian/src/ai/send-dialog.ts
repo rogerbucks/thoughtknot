@@ -34,7 +34,7 @@ import { PURPOSE, drawModelRow } from './model-row';
 import { asChangeSet, drawTextRows } from './text-graph';
 import type { TextAsk } from './text-graph';
 import { obsidianTransport } from './send';
-import { NO_SUGGESTION, drawSuggestRows, saveLevels, suggestForOf } from './suggest-rows';
+import { NO_SUGGESTION, drawSuggestRows, levelsAsked, saveLevels, suggestForOf } from './suggest-rows';
 import type { SuggestRows } from './suggest-rows';
 import { changeVaultNote } from '../storage/plugin-notes';
 
@@ -361,8 +361,7 @@ export class SendDialog extends Modal {
     if ('rule' in result) return this.rule?.fill(result.rule, p.model.name, () => this.close()); // only fills a form
     const { proposal } = result,
       n = proposal.changes.length;
-    const at = [this.file, this.note, this.graph] as const; // levels are the AI's own: kept in its AI block (ai_block)
-    if (suggestForOf(this.suggest)?.kind === 'levels') return saveLevels(this, at, proposal, p.model);
+    if (levelsAsked(this.suggest)) return saveLevels(this, [this.file, this.note, this.graph], proposal, p.model);
     // a text for a note with no such graph is reviewed in a dialog of its own: nothing is written until then
     if (this.text && !(await asChangeSet(this.plugin, this.file, proposal))) return this.close();
     const outcome: { refused: string | null } = { refused: null };

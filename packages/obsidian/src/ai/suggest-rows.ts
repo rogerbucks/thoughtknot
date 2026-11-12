@@ -112,3 +112,6 @@ export function drawSuggestRows(
     });
   });
 }
+
+/** Whether the rows ask your AI to name the levels: its answer is then kept in the AI block (ai_block). */
+export const levelsAsked = (rows: SuggestRows): boolean => rows.ask === 'levels';

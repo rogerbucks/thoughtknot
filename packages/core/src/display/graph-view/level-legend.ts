@@ -12,6 +12,7 @@ import { hueOf, nextHue, spotlight } from './level-colours.ts';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { chooseOwnLevel, ownChoicesOf, ownLevelOf } from './level-clouds-svg.ts';
 import { CloudCard, type CloudCardHost } from './cloud-card.ts';
+import type { ViewOptions } from './view-options.ts';
 
 /** What the legend needs from its card. */
 export interface LevelLegendHost {
@@ -31,6 +32,18 @@ export interface LevelLegendHost {
   /** The colour the drawing gives a subject, where it paints its own (the new rendering), so the chip shows it. */
   colourOf?: (key: string) => string | undefined;
 }
+
+/**
+ * What asks your AI to name the levels while AI is on, and what keeps its names, from a card's Expand with AI. Each
+ * is read when asked, so a setting changed since the card was drawn is followed.
+ */
+export const aiLevelHosts = (expand: () => ViewOptions['expand']) => ({
+  nameLevels: () => {
+    const e = expand();
+    return (e?.ready() && e.levels) || null;
+  },
+  keepAiLevels: () => expand()?.keep ?? null,
+});
 
 /** The legend of one card's subjects. */
 export class LevelLegend {

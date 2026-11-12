@@ -19,7 +19,7 @@ import { LensSvg, renderLensChoice } from './lens-svg';
 import { readableNames } from './readable-names';
 import { levelClouds, levelShown, levelsOf } from './level-clouds-svg.ts';
 import { LevelHints } from './level-hints.ts';
-import { keepKeyHome, keyHome, LevelLegend } from './level-legend.ts';
+import { aiLevelHosts, keepKeyHome, keyHome, LevelLegend } from './level-legend.ts';
 import { ownHue } from './level-colours.ts';
 import { groupEdits } from '../../group-edit.ts';
 import { MoveUndo } from './move-undo.ts';
@@ -304,8 +304,7 @@ export class Aids {
         },
         drawing: () => this.host.o.reading.graphs.get(this.host.o.graph),
         colourOf: (key) => this.stage?.colourOf(key),
-        nameLevels: () => (this.host.o.expand?.ready() && this.host.o.expand.levels) || null,
-        keepAiLevels: () => this.host.o.expand?.keep ?? null,
+        ...aiLevelHosts(() => this.host.o.expand), // name the levels with AI, and keep its names (ai_levels)
         editGroup: () => this.groupEditor(),
       });
       this.hints = new LevelHints(this.badge);
