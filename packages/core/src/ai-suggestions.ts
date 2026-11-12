@@ -2,7 +2,8 @@
 // category, or whether each thing supports or contradicts an intent. It suggests only when the person asks
 // (ai_suggest_on_ask), through the one way anything is sent (ai.ts). So it reads nothing above the note's
 // classification. The person sees the request whole and says yes to it. The note's text goes as data in a fence.
-// - Each suggestion carries a certainty word, a reason and the things it read (ai_suggest_values). The answer is read
+// - Each suggestion carries a certainty word, a reason and the things it read (ai_suggest_values). One that says not
+//   how sure it is, or what it rests on, is refused (ai_says_how_sure). The answer is read
 //   only as suggestions of the shape asked, for things that were sent. Whatever the text of a thing told the model, it
 //   cannot add, remove or change anything else: such an answer is refused whole.
 // - The suggestions come back as a proposal, grouped by value (ai_suggest_groups). The review shows a sample of each
@@ -21,18 +22,11 @@ import { ALTITUDES } from './named-levels.ts';
 import { linkChange, valueGql } from './proposals.ts';
 import type { ChangeInput } from './proposals.ts';
 import type { ProposalReview } from './proposals-review.ts';
+import { CERTAINTY_WORDS, isCertainty } from './ai-how-sure.ts';
 import { word } from './words.ts';
 
-/** The certainty words a suggestion may carry: the likelihood words of graph spec §20, least likely first. */
-export const CERTAINTY_WORDS = [
-  'almost-no-chance',
-  'very-unlikely',
-  'unlikely',
-  'even-chance',
-  'likely',
-  'very-likely',
-  'almost-certain',
-] as const;
+/** The certainty words a suggestion may carry: the likelihood words of graph spec §20 (ai-how-sure.ts). */
+export { CERTAINTY_WORDS } from './ai-how-sure.ts';
 
 /** What is asked for: a value of one property (of one kind of thing, from a list if given), or a pull on an intent. */
 export type SuggestFor =
@@ -135,12 +129,13 @@ function suggestionOf(
   const { thing, certainty, read } = s;
   if (typeof thing !== 'string' || !WORD.test(thing) || !open.things.includes(thing) || !sent.includes(thing))
     return word('ai.suggest.not-asked', at);
-  if (typeof certainty !== 'string' || !(CERTAINTY_WORDS as readonly string[]).includes(certainty))
-    return word('ai.suggest.certainty', { ...at, words: CERTAINTY_WORDS.join(', ') });
+  if (!isCertainty(certainty)) return word('ai.suggest.certainty', { ...at, words: CERTAINTY_WORDS.join(', ') });
   const names = read === undefined ? [] : read;
   if (!Array.isArray(names) || !names.every((r): r is string => typeof r === 'string' && sent.includes(r)))
     return word('ai.suggest.read', at);
   const why = typeof s.reason === 'string' ? plainText(oneLine(s.reason)) : '';
+  // what it rests on: the things it read, or its reason in words (ai_says_how_sure)
+  if (!names.length && !why) return word('ai.suggest.no-basis', at);
   const reason = word('ai.suggest.reason', { certainty, read: names.length ? names.join(', ') : '-', why: why || '-' });
   if (f.kind === 'levels') return levelChanges(s, thing, open, at, reason);
   if (f.kind === 'intent') {

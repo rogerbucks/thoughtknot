@@ -48,9 +48,11 @@ const ON = { data: { settings: { aiUse: 'on', aiPublic: 'note', aiModels: [LOCAL
 // a key made here, so no line of this file has the shape of one
 const KEY = ['k', 'z'.repeat(24)].join('-');
 
+// each change says how sure it is and why (ai_says_how_sure); a test's own reason is kept
+const sure = (c) => ({ certainty: 'likely', reason: 'asked for', ...c });
 const reply = (changes) => async () => ({
   status: 200,
-  text: JSON.stringify({ choices: [{ message: { content: JSON.stringify({ changes }) } }] }),
+  text: JSON.stringify({ choices: [{ message: { content: JSON.stringify({ changes: changes.map(sure) }) } }] }),
 });
 
 /** The plugin loaded with `note` open in front, in Live Preview. */
@@ -269,7 +271,7 @@ describe('asking an AI model to propose changes (§19)', () => {
     try {
       const card = await show(viewer, note, 1);
       await until(() => !!card.el.querySelector('.thoughtknot-proposal-reason'));
-      assert.equal(card.el.querySelectorAll('.thoughtknot-proposal-reason').at(-1).textContent, ` — ${reason}`);
+      assert.equal(card.el.querySelectorAll('.thoughtknot-proposal-reason').at(-1).textContent, ` — likely: ${reason}`);
     } finally {
       viewer.uninstall();
     }

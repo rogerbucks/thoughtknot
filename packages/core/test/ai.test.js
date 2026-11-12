@@ -74,7 +74,8 @@ function fake(
 
 /** A reply as an OpenAI-compatible endpoint gives it, holding these changes. */
 function answer(changes) {
-  const content = JSON.stringify({ changes });
+  // each change says how sure it is and why (ai_says_how_sure)
+  const content = JSON.stringify({ changes: changes.map((c) => ({ certainty: 'likely', reason: 'asked for', ...c })) });
   return { status: 200, text: JSON.stringify({ choices: [{ message: { role: 'assistant', content } }] }) };
 }
 
@@ -397,7 +398,7 @@ describe('an answer comes back as a proposal (answers_are_proposals)', () => {
       proposal.changes.map((c) => c.op),
       ['add', 'add', 'set'],
     );
-    assert.equal(proposal.changes[0].reason, 'cheaper');
+    assert.equal(proposal.changes[0].reason, 'likely: cheaper');
   });
 
   test('written into the note it is a change set beside the graph, which it leaves as it was until a person accepts', async () => {
