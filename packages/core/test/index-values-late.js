@@ -272,6 +272,10 @@ export const VALUES_LATE = [
   'presetIn',
   'VAULT_PRESET_PLACE',
   'PresetPanel',
+  // the routine settings an update must keep or name (routines_survive_update), 12 Nov 2026
+  'ROUTINE_KEYS',
+  'routinesLost',
+  'routinesLostSaid',
   'presetFile',
   'presetFrom',
   'OWN_PRESET',

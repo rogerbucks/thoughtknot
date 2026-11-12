@@ -5,6 +5,12 @@
 
 /** Each settings option's words, by key, in UK English. */
 export const SETTINGS_SOURCE_WORDS = {
+  // an update that cannot keep a routine setting says so first, and keeps the old ones (settings-kept.ts)
+  'settings.routines-lost': {
+    one: 'This update of ThoughtKnot cannot keep your {names} setting as you saved it. Your old settings are kept as they were, so going back to the last version brings it back. Nothing else changed.',
+    other:
+      'This update of ThoughtKnot cannot keep your {names} settings as you saved them. Your old settings are kept as they were, so going back to the last version brings them back. Nothing else changed.',
+  },
   'settings.strictness.name': 'Strictness',
   'settings.strictness.sentence': 'How strictly a graph is read against standard GQL.',
   'settings.strictness.standard': 'Standard',
