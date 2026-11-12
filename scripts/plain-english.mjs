@@ -92,12 +92,39 @@ export function jargonIn(text, { developer = false } = {}) {
     .map((j) => j.word);
 }
 
+/**
+ * Words that promise a hook to bring a person back: a streak, a badge, a nag or a ping (ES§74, no_hooks). No record
+ * excuses one. Each is matched as whole words, ignoring case.
+ */
+export const HOOKS = [
+  /\bstreaks?\b/i,
+  // a badge as a reward; a badge that marks a thing in a drawing is a look, and allowed
+  /\b(earn(ed)?|won|win|got|collect(ed)?|new|unlock(ed)?) (an? |your )?badges?\b/i,
+  /\bbadges? (earned|won|unlocked)\b/i,
+  /\btroph(y|ies)\b/i,
+  /\blevel(l?ed)? up\b/i,
+  /\bunlock(ed)? (an? )?(achievement|reward)s?\b/i,
+  /\bachievements? unlocked\b/i,
+  /\bdaily goal\b/i,
+  /\b(endless|infinite|never-ending) (feed|scroll)\b/i,
+  /\bdon[’']t (miss|lose|break)\b/i,
+  /\bcome back (soon|tomorrow|later|every|daily|each day|and (keep|finish|continue))\b/i,
+  /\bwe miss(ed)? you\b/i,
+  /\byou haven[’']t (opened|visited|been)\b/i,
+  /\bkeep (it|your \w+) going\b/i,
+  /\bdays? in a row\b/i,
+  /\bremind(er)?s? to come\b/i,
+];
+
+/** The hook words in `text`, as they are written there. */
+export const hooksIn = (text) => HOOKS.map((h) => text.match(h)?.[0]).filter(Boolean);
+
 /** The score of one message: its words, longest sentence, reading grade (null when too short to have one) and jargon. */
 export function scoreOf(text, options = {}) {
   const words = wordsOf(text).length;
   const longest = Math.max(0, ...sentencesOf(text).map((s) => wordsOf(s).length));
   const grade = words >= LIMITS.gradedFrom ? readingGrade(text) : null;
-  return { words, longest, grade, jargon: jargonIn(text, options) };
+  return { words, longest, grade, jargon: jargonIn(text, options), hooks: hooksIn(text) };
 }
 
 /** What in a score misses the limits, in words; nothing when it keeps to them all. */
@@ -111,6 +138,7 @@ export function missesOf(score) {
     const j = JARGON.find((x) => x.word === word);
     out.push(`says “${word}”: say “${j?.instead}”`);
   }
+  for (const hook of score.hooks ?? []) out.push(`promises a hook to bring a person back: “${hook}”`);
   return out;
 }
 
@@ -119,7 +147,9 @@ export function missesOf(score) {
  * message that got worse needs its record raised, with a reason, the same as a new one.
  */
 export function covers(recorded, score) {
+  // a hook is never covered: no reason lets the app nag a person back (no_hooks)
   return (
+    !score.hooks?.length &&
     (score.grade === null || (recorded.grade ?? 0) >= score.grade) &&
     recorded.longest >= score.longest &&
     score.jargon.every((w) => (recorded.jargon ?? []).includes(w))
