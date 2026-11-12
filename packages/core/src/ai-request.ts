@@ -159,7 +159,7 @@ function changeOf(c: unknown, n: number): ChangeInput | string {
   if (typeof shaped === 'string') return shaped;
   // each change says how sure it is and what it rests on (ai_says_how_sure): one that does not is refused
   const why = typeof c.reason === 'string' ? plainText(c.reason.trim().replace(/[\s\x85]+/g, ' ')) : '';
-  const sure = howSure('change', n, c.certainty, why);
+  const sure = howSure('change', n, c.certainty, why, c.reads);
   return 'unread' in sure ? sure.unread : { ...shaped, reason: sure.said };
 }
 

@@ -22,6 +22,7 @@ import { ALTITUDES } from './named-levels.ts';
 import { linkChange, valueGql } from './proposals.ts';
 import type { ChangeInput } from './proposals.ts';
 import type { ProposalReview } from './proposals-review.ts';
+import { GUESS_LINE, guessSaid, readsPerson } from './ai-guess-label.ts';
 import { CERTAINTY_WORDS, isCertainty } from './ai-how-sure.ts';
 import { word } from './words.ts';
 
@@ -58,7 +59,7 @@ export function suggestInstructions(f: SuggestFor): string {
     asked,
     'Answer with JSON only, and no other text: {"suggestions": [ ... ]}, each suggestion like this:',
     one,
-    `"certainty" is one of: ${CERTAINTY_WORDS.join(', ')}. "read" names the things you read to decide.`,
+    `"certainty" is one of: ${CERTAINTY_WORDS.join(', ')}. "read" names the things you read to decide. ${GUESS_LINE}`,
     'Leave out any thing you cannot judge. Nothing you suggest is written until a person applies it.',
     'If you are unsure what the user means, answer {"question": "your one question"} instead, and suggest nothing yet.',
   ].join('\n');
@@ -73,7 +74,7 @@ function levelInstructions(): string {
     'Each name is one to three plain words. Things that belong together share a name. Leave out area or topic for a small graph.',
     'Answer with JSON only, and no other text: {"suggestions": [ ... ]}, each suggestion like this:',
     '{"thing": "a_name", "subject": "Money", "area": "Budget", "topic": "Rent", "certainty": "likely", "reason": "why", "read": ["a_name"]}',
-    `"certainty" is one of: ${CERTAINTY_WORDS.join(', ')}. "read" names the things you read to decide.`,
+    `"certainty" is one of: ${CERTAINTY_WORDS.join(', ')}. "read" names the things you read to decide. ${GUESS_LINE}`,
     'Leave out any thing you cannot judge. Nothing you suggest is written until a person applies it.',
     'If you are unsure what the user means, answer {"question": "your one question"} instead, and suggest nothing yet.',
   ].join('\n');
@@ -136,7 +137,9 @@ function suggestionOf(
   const why = typeof s.reason === 'string' ? plainText(oneLine(s.reason)) : '';
   // what it rests on: the things it read, or its reason in words (ai_says_how_sure)
   if (!names.length && !why) return word('ai.suggest.no-basis', at);
-  const reason = word('ai.suggest.reason', { certainty, read: names.length ? names.join(', ') : '-', why: why || '-' });
+  const said = word('ai.suggest.reason', { certainty, read: names.length ? names.join(', ') : '-', why: why || '-' });
+  // a reading of a person's tone or intent is shown as a guess to check (ai_guess_label)
+  const reason = readsPerson(s.reads, why) ? guessSaid(said) : said;
   if (f.kind === 'levels') return levelChanges(s, thing, open, at, reason);
   if (f.kind === 'intent') {
     if (s.side !== 'supports' && s.side !== 'contradicts') return word('ai.suggest.side', at);
