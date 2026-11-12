@@ -478,4 +478,5 @@ export const TYPES_LATE = [
   'ComposeFormat',
   'Composed',
   'HtmlRead',
+  'ComposedExport',
 ];

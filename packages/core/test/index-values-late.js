@@ -486,4 +486,5 @@ export const VALUES_LATE = [
   'htmlAsText',
   'htmlToGql',
   'readHtml',
+  'composedExport',
 ];

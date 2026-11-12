@@ -25,7 +25,7 @@ import {
   formatCount,
   formatSize,
   gqlBlocks,
-  composeOut,
+  composedExport,
   isComposeFormat,
   isDataFormat,
   pathsOf,
@@ -116,6 +116,25 @@ function playedWalk(
   return large ? { stopped: tooLargeWords(large) } : { path, pace: asked.pace };
 }
 
+/**
+ * A document for people to read, as a file to save: it says, at its top and here, what it left out. `ask` is for a
+ * format a graph is composed into, which the caller has checked.
+ */
+function composed(
+  reading: NoteReading,
+  scope: ExportScope,
+  ask: ExportAsk,
+  date: string,
+  go: { fileName: string; path: string },
+): { files: ExportFile[]; held: CompanionInfo['data']; said: string } {
+  const made = composedExport(reading, scope, ask.format as ComposeFormat, { note: ask.path, date });
+  return {
+    files: [{ name: go.fileName, path: go.path, bytes: made.body }],
+    held: made.held,
+    said: ` ${made.said}`,
+  };
+}
+
 /** Carries out an export the form asked for; never rejects: whatever goes wrong is said, and nothing half-done is left. */
 export async function exportGraph(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
   try {
@@ -165,16 +184,9 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
   const { go } = plan;
   let files: ExportFile[];
   let held: CompanionInfo['data'] | undefined;
-  /** What was done with each animated image, said after the outcome (export_animation_stated); none for data. */
-  let animation = '';
-  if (isComposeFormat(ask.format)) {
-    // a document for people to read: it says, at its top and here, what it left out (format_loss_stated)
-    const data = exportedData(reading, scope);
-    const made = composeOut(data, ask.format, { note: ask.path, date });
-    files = [{ name: go.fileName, path: go.path, bytes: made.body }];
-    held = { things: data.things.length, links: data.links.length };
-    animation = ` ${word('compose.said', { left: made.leftOut.join(', ') })}`;
-  } else if (isDataFormat(ask.format)) {
+  let animation = ''; // what was done with each animated image, said after the outcome (export_animation_stated)
+  if (isComposeFormat(ask.format)) ({ files, held, said: animation } = composed(reading, scope, ask, date, go));
+  else if (isDataFormat(ask.format)) {
     const data = exportedData(reading, scope);
     files = [{ name: go.fileName, path: go.path, bytes: dataText(data, ask.format, { note: ask.path, date }) }];
     held = {
