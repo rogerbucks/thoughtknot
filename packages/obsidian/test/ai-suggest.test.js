@@ -108,7 +108,7 @@ test('asking about an intent offers the graph’s intents, and an empty ask send
 });
 
 // ai_levels
-test('asking your AI to name the levels writes a subject, area and topic per thing as a change set grouped by subject', async () => {
+test('asking your AI to name the levels saves them in the AI block, never the graph, with an Undo on its toast', async () => {
   const env = await open();
   try {
     await env.state.commands.find((c) => c.id === 'ask-ai-model').callback();
@@ -124,10 +124,14 @@ test('asking your AI to name the levels writes a subject, area and topic per thi
       suggestions: [{ thing: 'login', subject: 'Product', area: 'Login', certainty: 'likely', read: ['login'] }],
     });
     button(m, 'Send').click();
-    await until(() => env.state.files.get(PATH).includes('CHANGE SET'));
+    await until(() => env.state.files.get(PATH).includes('AI ON work'));
     const note = env.state.files.get(PATH);
-    assert.ok(note.startsWith(NOTE), 'the graph is as it was');
-    assert.match(note, /\/\/@ group: Subject Product/);
+    assert.ok(note.startsWith(NOTE.trimEnd()), 'the graph is as it was');
+    assert.match(note, /\/\/ graph: work_ai · AI ON work/);
+    assert.match(note, /reviewer: 'public'/, 'the block says which reviewer ran: one not marked private is public');
+    assert.match(note, /subject: 'Product'/);
+    assert.doesNotMatch(note, /CHANGE SET/);
+    assert.ok(env.state.noticeEls.at(-1).querySelector('button'), 'the toast offers Undo');
   } finally {
     env.uninstall();
   }

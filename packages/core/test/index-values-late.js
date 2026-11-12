@@ -467,4 +467,15 @@ export const VALUES_LATE = [
   'workbookSheets',
   'workbookTable',
   'WORKBOOK_LIMITS',
+  // the AI block, where an AI's level names wait until a person keeps them (ai_block, ai_levels), 12 Nov 2026
+  'graphSpanOf',
+  'aiBlockName',
+  'aiLevelsIn',
+  'aiReviewIn',
+  'readAiBlock',
+  'reviewChanges',
+  'saveAiReview',
+  'writeAiBlock',
+  'keepProposal',
+  'levelsReview',
 ];

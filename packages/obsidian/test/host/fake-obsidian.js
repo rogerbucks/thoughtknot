@@ -309,7 +309,9 @@ export function fakeObsidian(state = {}) {
   Plugin.prototype.registerBasesView = registerBasesView;
   class Notice {
     constructor(message, duration) {
-      state.notices.push(String(message));
+      state.notices.push(typeof message === 'string' ? message : message.textContent);
+      // the toast's own buttons, such as Undo, so a test can press one
+      (state.noticeEls ??= []).push(message);
       (state.noticeDurations ??= []).push(duration);
     }
     hide() {}

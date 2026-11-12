@@ -5,6 +5,7 @@
 import { Setting } from 'obsidian';
 import { REWRITE_MOST, word } from '@thoughtknot/core';
 import type { SuggestFor } from '@thoughtknot/core';
+export { saveLevels } from './levels-save'; // what a levels answer does, for the dialog that asks for it
 
 /** What is asked for: changes, values of a property, pulls on an intent, or names for the levels (ai_levels). */
 export type AskFor = 'changes' | 'values' | 'intent' | 'levels';
@@ -111,3 +112,6 @@ export function drawSuggestRows(
     });
   });
 }
+
+/** Whether the rows ask your AI to name the levels: its answer is then kept in the AI block (ai_block). */
+export const levelsAsked = (rows: SuggestRows): boolean => rows.ask === 'levels';

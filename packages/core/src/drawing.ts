@@ -9,7 +9,8 @@ import { addNotes } from './notes.ts';
 import { mergePathProblems } from './paths.ts';
 import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
 import { textTooLarge } from './layout-limits.ts';
-import { dataKind, namesSharedSchema } from './blocks.ts';
+import { aiBlockOf, dataKind, namesSharedSchema } from './blocks.ts';
+import { readAiBlock } from './ai-block.ts';
 import { withStandardSchemas } from './standard-schemas.ts';
 import { parkedIn } from './deferred.ts';
 import { certaintyLevel } from './certainty-drawn.ts';
@@ -108,6 +109,16 @@ export function readNote(
     d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
     graphs.set(name, d);
   }
+  // the level names your AI found, from the graph's AI block, are drawn as named by AI. A block that cannot be read
+  // only says so, and the drawing goes on (ai_block_not_data)
+  upto.forEach((text, block) => {
+    const on = aiBlockOf(text)?.on;
+    const d = on === undefined ? undefined : graphs.get(on);
+    if (!d) return;
+    const read = readAiBlock(text, new Set(d.boxes.map((b) => b.key)), block);
+    problems.push(...read.problems);
+    if (read.review.levels.size) d.aiLevels = read.review.levels;
+  });
   problems.push(
     ...undeclared(whole, upto),
     ...undeclaredUse(whole, upto, problems),

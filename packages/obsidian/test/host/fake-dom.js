@@ -502,6 +502,8 @@ export function fakeDocument(width = 700) {
       applyInfo(e, typeof o === 'string' ? { cls: o } : o);
       return e;
     },
+    // a fragment, which a toast takes in place of plain words
+    createFragment: () => new FakeElement('#fragment', doc),
   };
   return doc;
 }
@@ -519,6 +521,7 @@ export function installGlobals(doc) {
   set('window', doc.defaultView);
   set('createDiv', doc.defaultView.createDiv);
   set('createSpan', doc.defaultView.createSpan);
+  set('createFragment', doc.defaultView.createFragment);
   set(
     'DOMParser',
     class {

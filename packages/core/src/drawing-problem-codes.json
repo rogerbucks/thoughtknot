@@ -246,6 +246,18 @@
       "section": "2",
       "words": ["layout.thing-gone"],
       "libraries": ["core"]
+    },
+    {
+      "code": "GN911",
+      "section": "19",
+      "words": ["ai-block.kind-unknown"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN912",
+      "section": "19",
+      "words": ["ai-block.thing-gone"],
+      "libraries": ["core"]
     }
   ]
 }

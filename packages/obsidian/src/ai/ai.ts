@@ -8,12 +8,12 @@
 // proposal, accepted one change at a time. While AI is off, the editor offers no Expand.
 import { Notice } from 'obsidian';
 import type { TFile } from 'obsidian';
-import { aiReady, word } from '@thoughtknot/core';
+import { aiReady, keepProposal, noteWithProposal, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
-import { noteText } from '../storage/plugin-notes';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 import { TEXT_GRAPH_COMMAND, graphFor, graphNamed, proseOf } from './text-graph';
 
 /** The command's id and name. */
@@ -71,7 +71,29 @@ export function expandFor(plugin: ThoughtKnotPlugin, path: string, graph: string
     ready: () => !('off' in aiReady(plugin.settings)),
     open: (key: string, thing: string, typed: string) => void expandWithAi(plugin, path, graph, key, thing, typed),
     levels: () => void nameLevels(plugin, path, graph),
+    keep: () => void keepAiLevels(plugin, path, graph),
   };
+}
+
+/**
+ * Keep as mine (ai_block_not_data): what the AI block of `graph` holds, written into note `path` as a proposal. The
+ * person reviews and applies it like any other. Nothing reaches the graph until then. Reading view is refused.
+ */
+async function keepAiLevels(plugin: ThoughtKnotPlugin, path: string, graph: string): Promise<void> {
+  const front = noteToRewrite(plugin.app.workspace, word('host.to-keep-ai'));
+  if (!front || front.file.path !== path) return;
+  let said: string | null = null;
+  await changeVaultNote(plugin.app, path, (now) => {
+    const p = keepProposal(now, graph, new Date().toISOString().slice(0, 10));
+    const written = 'refused' in p ? p : noteWithProposal(now, p);
+    if (typeof written === 'string') {
+      said = word('ai-block.kept');
+      return written;
+    }
+    said = written.refused;
+    return now;
+  });
+  if (said) new Notice(said);
 }
 
 /** Opens the send dialog on note `path`, thing `key` of `graph` chosen, asked to expand it, with what was `typed`. */

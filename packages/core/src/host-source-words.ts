@@ -33,6 +33,7 @@ export const HOST_SOURCE_WORDS = {
     'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
   'host.to-convert': 'to convert it to standard GQL',
   'host.to-ask-ai': 'to ask an AI model about its graph',
+  'host.to-keep-ai': 'to keep what your AI found as your own',
   'host.to-text-graph': 'to make a graph of its text',
   'host.to-import': 'to import into it',
   'host.not-converted': 'Not converted: {why}',
