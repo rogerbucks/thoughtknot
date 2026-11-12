@@ -29,6 +29,7 @@ describe('Obsidian’s commands', () => {
         'shortcuts',
         'text-to-graph-ai',
         'tour',
+        'where-was-i',
         'zoom-in',
         'zoom-out',
       ]);

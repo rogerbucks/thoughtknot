@@ -6,6 +6,8 @@ export interface RecentVisit {
   path: string;
   graph: string;
   thing?: string;
+  /** When it was opened, as an ISO time: what Where was I? counts a break from (ES§74, since_you_left). */
+  at?: string;
 }
 
 /** How many visits are kept. */
@@ -25,9 +27,8 @@ export function visitsFrom(saved: unknown): RecentVisit[] {
   for (const v of saved as unknown[]) {
     const o = v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
     if (typeof o.path !== 'string' || typeof o.graph !== 'string' || !o.path || !o.graph) continue;
-    kept.push(
-      typeof o.thing === 'string' ? { path: o.path, graph: o.graph, thing: o.thing } : { path: o.path, graph: o.graph },
-    );
+    const at = typeof o.at === 'string' && !Number.isNaN(Date.parse(o.at)) ? { at: o.at } : {};
+    kept.push({ path: o.path, graph: o.graph, ...(typeof o.thing === 'string' ? { thing: o.thing } : {}), ...at });
   }
   return kept.slice(0, VISITS_KEPT);
 }

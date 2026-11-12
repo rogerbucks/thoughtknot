@@ -292,4 +292,20 @@ export const READING_SOURCE_WORDS = {
   'ai-block.saved': '{model} named the levels. Saved beside the graph, marked as named by AI',
   // a place saved by a drag, as its undo toast names it (layout_drag_saves)
   'layout.placed': 'Placed {thing}',
+  // Where was I? after a break (since-you-left.ts, since_you_left)
+  'since.title': 'Where was I?',
+  'since.status': { one: 'Since you left: 1 change', other: 'Since you left: {count} changes' },
+  'since.status.none': 'Where was I?',
+  'since.away-minutes': { one: 'You were last here 1 minute ago.', other: 'You were last here {count} minutes ago.' },
+  'since.away-hours': { one: 'You were last here 1 hour ago.', other: 'You were last here {count} hours ago.' },
+  'since.away-days': { one: 'You were last here 1 day ago.', other: 'You were last here {count} days ago.' },
+  'since.places': 'Where you were, newest first',
+  'since.place-thing': '{thing} in {graph}, in {note}',
+  'since.place-graph': '{graph}, in {note}',
+  'since.open': 'Go there',
+  'since.changes': 'What changed since',
+  'since.changed': '{note}, changed {at}',
+  'since.no-changes': 'No note changed since.',
+  'since.no-trail': 'Nothing opened yet, so there is no place to go back to.',
+  'since.done': 'Done',
 } as const;

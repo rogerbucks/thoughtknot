@@ -165,6 +165,8 @@ export const TYPES_LATE = [
   'ChainLink',
   'MixChoice',
   'MixSide',
+  'NoteChange',
+  'SinceView',
   'Park',
   'Parked',
   'ParkedCount',

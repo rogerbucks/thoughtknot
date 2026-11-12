@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -74,13 +74,14 @@ jobs:
       # six files at once on the runner's four cores, as the files mostly wait on the processes they start
       # A shard that draws in the browser for three files at once peaked at 4.2 GB here (19 Oct 2026), over the
       # default 4 GB ceiling, so it got 6 GB. A shard drawing in the browser for four files at once then reached 6.3 GB
-      # (23 Oct 2026). 8 GB keeps a runaway stopped inside the runner's 16 GB.
+      # (23 Oct 2026). 8 GB keeps a runaway stopped inside the runner's 16 GB. Two test files added on 12 Nov 2026 moved
+      # the files between six shards, and one went just over 8 GB with nothing failing. So the suite has seven shards.
       # A partial run gives the shards only its own test files, through the environment, never spliced into the command.
       # Each name is checked to hold only letters, digits and `_ . / @ -`, so the shell splits them and nothing more.
       - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
         env:
           SHARD: ${{ matrix.shard }}
-          SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 6 }}
+          SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 7 }}
           TESTS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.tests || '' }}
           THOUGHTKNOT_TEST_MEMORY_MB: 8192
         run: npm test -- --test-concurrency=6 --test-shard="$SHARD/$SHARDS" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt $TESTS

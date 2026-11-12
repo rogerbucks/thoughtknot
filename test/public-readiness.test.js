@@ -382,14 +382,14 @@ describe('the settings on GitHub', () => {
     assert.match(ci.test.join('\n'), /needs: \[plan, suite\]\n\s+if: always\(\)/);
     assert.ok(runCommands(ci.test.join('\n')).some((r) => /^test "\$RESULT" = success$/m.test(r)));
     assert.match(ci.test.join('\n'), /RESULT: \$\{\{ needs\.suite\.result \}\}/);
-    // the suite in six parts, each printing only its failures and keeping the full report as a file
+    // the suite in seven parts, each printing only its failures and keeping the full report as a file
     const run = runCommands(ci.suite.join('\n')).find((r) => r.startsWith('npm test'));
     assert.match(run, /--test-shard="\$SHARD\/\$SHARDS" --test-reporter=\.\/scripts\/quiet-reporter\.mjs /);
     assert.match(
       run,
       /--test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report\.txt \$TESTS$/,
     );
-    assert.match(ci.suite.join('\n'), /shard: \[1, 2, 3, 4, 5, 6\]/);
+    assert.match(ci.suite.join('\n'), /shard: \[1, 2, 3, 4, 5, 6, 7\]/);
     assert.ok(REQUIRED_CHECKS.includes('public-readiness'));
     assert.ok(REQUIRED_CHECKS.includes('dependency-review'));
     assert.deepEqual(REQUIRED_CHECKS, [...REQUIRED_CHECKS].sort(), 'sorted, so a comparison is stable');
