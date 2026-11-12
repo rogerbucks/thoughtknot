@@ -60,7 +60,7 @@ import { HOVER_SOURCE } from './links/link-host';
 import { OutsidePlugins } from './outside/outside-plugins';
 import { Profiles } from './profile/profiles';
 import type { Drafts, Saved } from './saved';
-import { keepRoutines } from './keep-routines';
+import { afterSettings } from './after-settings';
 import { noteText, shownNotes } from './storage/plugin-notes';
 import { expandFor } from './ai/ai';
 
@@ -89,7 +89,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
-    keepRoutines(this.saved, this.settings, (saved) => void this.saveData((this.saved = saved)));
+    afterSettings(this); // the routines kept through an update, and Where was I? (ES§74)
     chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
     markBody(document.body, this.settings); // the view preset's motion and words (§69), and the spacing of its text
     this.outside = new OutsidePlugins(this, {

@@ -87,7 +87,11 @@ export function fakeObsidian(state = {}) {
     // its size in bytes, as Obsidian keeps it without reading the file
     get stat() {
       const held = files.get(this.path);
-      return { size: typeof held === 'string' ? Buffer.byteLength(held) : (held?.byteLength ?? 0), ctime: 0, mtime: 0 };
+      return {
+        size: typeof held === 'string' ? Buffer.byteLength(held) : (held?.byteLength ?? 0),
+        ctime: 0,
+        mtime: state.mtimes?.[this.path] ?? 0,
+      };
     }
   }
   const file = (path) => (files.has(path) ? new TFile(path) : null);
@@ -287,6 +291,12 @@ export function fakeObsidian(state = {}) {
     addCommand(c) {
       (state.commands ??= []).push(c);
       return c;
+    }
+    // an item of the status bar, kept in state.statusBar for a test to read and press
+    addStatusBarItem() {
+      const el = globalThis.activeDocument.body.createDiv({ cls: 'status-bar-item' });
+      (state.statusBar ??= []).push(el);
+      return el;
     }
     removeCommand(id) {
       state.commands = (state.commands ?? []).filter((c) => c.id !== id);

@@ -281,6 +281,12 @@ export const VALUES_LATE = [
   'firstOnly',
   'linkName',
   'mixPresets',
+  // Where was I? after a break (since_you_left), 12 Nov 2026
+  'BREAK_MINUTES',
+  'awaySaid',
+  'placeSaid',
+  'sinceYouLeft',
+  'staleHead',
   'presetFile',
   'presetFrom',
   'OWN_PRESET',

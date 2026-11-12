@@ -135,6 +135,8 @@ export class TFile {
     this.path = path;
     this.name = path;
     this.extension = 'md';
+    // its size and times, as Obsidian keeps them: the harness has no clock, so a note has not changed since it began
+    this.stat = { size: 0, ctime: 0, mtime: 0 };
   }
 }
 // One note in memory, as the vault; changes are reported as Obsidian reports them.

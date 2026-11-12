@@ -44,6 +44,8 @@ export async function load(options = {}) {
     files: new Map(Object.entries(options.files ?? {})),
     data: options.data ?? null,
     language: options.language ?? speaking,
+    // when each file last changed, in milliseconds, by path: 0 for any not named
+    mtimes: options.mtimes,
   };
   const obsidian = fakeObsidian(state);
   const Module = require('node:module'),
