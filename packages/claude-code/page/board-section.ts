@@ -85,9 +85,13 @@ export function boardsKept(
   seatFor?: SeatFor,
 ): () => void {
   let boards: HTMLElement | null = null;
-  return () => {
+  const draw = () => {
     boards?.remove();
     boards = boardSection(parent.ownerDocument, note, key, dark(), seatFor);
     if (boards) parent.append(boards);
   };
+  // sharing may start after the page first drew: boards drawn before then take their seats once it has
+  const win = parent.ownerDocument.defaultView;
+  if (win) whenSeatsReady(win, draw);
+  return draw;
 }

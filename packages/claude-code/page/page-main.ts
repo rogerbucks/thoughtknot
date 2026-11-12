@@ -22,7 +22,7 @@ import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
 import { exportCalls } from './export-calls.ts';
 import { exportingOf, localDay } from './export-run.ts';
-import { boardsKept, seatsOf, whenSeatsReady } from './board-section.ts';
+import { boardsKept, seatsOf } from './board-section.ts';
 import { DARK, showGraph } from './graph-section.ts';
 import { changesSection } from './changes-section.ts';
 import { reviewSection } from './review-section.ts';
@@ -159,8 +159,6 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const addTextVersion = textVersionKept(graph, () => page.text);
     // the note's whiteboards, each opened to pan, zoom and edit, made again with the note (board_view)
     const addBoards = boardsKept(graph, page, note, () => win.matchMedia(DARK).matches, seatsOf(win, note));
-    // sharing starts after the page may have drawn: boards drawn before then take their seats now, once
-    whenSeatsReady(win, addBoards);
     // the plug-ins turned on in Obsidian, each in its own sealed worker, and the note's graph by a type one adds
     // (plugin_outside_page)
     const plugins = await startPlugins(win, listed);
