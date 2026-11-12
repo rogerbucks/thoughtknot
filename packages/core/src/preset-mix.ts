@@ -98,8 +98,8 @@ export function mixPresets(
       .join(', ');
   const preset: ViewPreset = {
     id: 'mix',
-    name: word('settings.preset-mix.name', { first: first.name, second: second.name }),
-    sentence: word('settings.preset-mix.sentence', {
+    name: word('settings.preset-mix.mix-name', { first: first.name, second: second.name }),
+    sentence: word('settings.preset-mix.mix-sentence', {
       first: first.name,
       firstParts: from('first') || '-',
       second: second.name,
