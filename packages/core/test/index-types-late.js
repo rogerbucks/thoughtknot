@@ -161,6 +161,7 @@ export const TYPES_LATE = [
   'PanelOwner',
   'PanelRoot',
   'PanelRow',
+  'RoutineKey',
   'Park',
   'Parked',
   'ParkedCount',

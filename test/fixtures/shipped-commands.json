@@ -1,0 +1,20 @@
+{
+  "note": "The Obsidian command ids ThoughtKnot has shipped. A person's hotkeys are kept by these ids, so none may be renamed or dropped (ES§74, routines_survive_update). Add each new command here.",
+  "ids": [
+    "ask-ai-model",
+    "clear-ai-sends",
+    "convert-to-standard",
+    "fit",
+    "full-screen",
+    "import-from-database",
+    "insert-example",
+    "pictures-off",
+    "pictures-on",
+    "recover-drafts",
+    "shortcuts",
+    "text-to-graph-ai",
+    "tour",
+    "zoom-in",
+    "zoom-out"
+  ]
+}
