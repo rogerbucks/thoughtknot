@@ -3,7 +3,7 @@
 // the same list. Nothing is saved until then.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until, wait } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 
 before(() => build());
 
@@ -37,7 +37,7 @@ describe('mixing two presets in Obsidian (presets_mix)', () => {
       const picker = rowsOf(tab).find((r) => r.control?.key === 'viewPreset');
       assert.ok(Object.values(picker.control.options).includes(kept[0].name));
     } finally {
-      await wait(50); // the page reads the AI matrix note on drawing, which ends after the checks
+      await settled(); // the page reads the AI matrix note on drawing, which ends after the checks
       plugin.onunload();
       uninstall();
     }
