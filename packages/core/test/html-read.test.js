@@ -1,5 +1,5 @@
-// An HTML file read safely (editor spec §67, format_html_sandboxed): its text, headings and links, with nothing run
-// or fetched, as text and as GQL that cites its lines.
+// An HTML file read safely (editor spec §67, format_html_sandboxed). Its text, headings and links are kept. Nothing
+// is run or fetched. It reads as text, and as GQL that cites its lines.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
