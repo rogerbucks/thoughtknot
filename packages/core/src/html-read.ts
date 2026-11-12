@@ -71,6 +71,12 @@ export interface HtmlRead {
   dropped: string[];
 }
 
+/**
+ * Text with every tag taken out, and any `<` left over too, so no part of a tag survives. A `<` meant as text is
+ * written `&lt;`, which is decoded after this.
+ */
+const untagged = (s: string, by = ' '): string => s.replace(/<[^>]*>/g, by).replace(/</g, by);
+
 /** The value of attribute `name` in a start tag's text, if it has one. */
 function attr(tag: string, name: string): string | undefined {
   const m = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i').exec(tag);
@@ -93,7 +99,7 @@ export function readHtml(html: string): HtmlRead | { refused: string } {
     });
   }
   for (const el of INERT) if (new RegExp(`<${el}\\b`, 'i').test(src) && !dropped.includes(el)) dropped.push(el);
-  const title = oneLine(decoded(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/i.exec(src)?.[1]?.replace(/<[^>]*>/g, '') ?? ''));
+  const title = oneLine(decoded(untagged(/<title\b[^>]*>([\s\S]*?)<\/title\s*>/i.exec(src)?.[1] ?? '', '')));
   const found: Found[] = [];
   const tag = /<(\/?)([a-z][a-z0-9]*)\b([^>]*)>/gi;
   let open: { kind: 'heading' | 'link'; level?: number; href?: string; at: number; from: number } | null = null;
@@ -118,7 +124,7 @@ export function readHtml(html: string): HtmlRead | { refused: string } {
       open &&
       ((open.kind === 'heading' && name === `h${open.level}`) || (open.kind === 'link' && name === 'a'))
     ) {
-      const text = oneLine(decoded(src.slice(open.from, m.index).replace(/<[^>]*>/g, ' ')));
+      const text = oneLine(decoded(untagged(src.slice(open.from, m.index))));
       if (open.kind === 'heading' || open.href !== undefined)
         found.push({
           kind: open.kind,
@@ -132,9 +138,7 @@ export function readHtml(html: string): HtmlRead | { refused: string } {
   }
   const body =
     /<body\b[^>]*>([\s\S]*?)(?:<\/body\s*>|$)/i.exec(src)?.[1] ?? src.replace(/<head\b[\s\S]*?<\/head\s*>/i, '');
-  const text = decoded(
-    body.replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr|\/section|\/article)\b[^>]*>/gi, '\n').replace(/<[^>]*>/g, ' '),
-  )
+  const text = decoded(untagged(body.replace(/<(br|\/p|\/div|\/li|\/h[1-6]|\/tr|\/section|\/article)\b[^>]*>/gi, '\n')))
     .split('\n')
     .map(oneLine)
     .filter(Boolean)

@@ -8,7 +8,7 @@ import { COMPOSE_EXPORTS } from '../src/export-data.ts';
 import { gqlSpans } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { exportedData } from '../src/export-data.ts';
-import { HTML_MOST, htmlAsText, htmlToGql } from '../src/html-read.ts';
+import { HTML_MOST, htmlAsText, htmlToGql, readHtml } from '../src/html-read.ts';
 import { pluginRegistry } from '../src/plugins.ts';
 import { crc32, zipStored } from '../src/zip-write.ts';
 
@@ -189,6 +189,14 @@ describe('an HTML file read safely (format_html_sandboxed)', () => {
         ['h2', 'l2'],
       ],
     );
+  });
+
+  test('no part of a tag survives in its title, headings or text, however it is broken', () => {
+    const r = readHtml('<title>Hi <<b>x</title><h1>Top <scr<b></b>ipt> <</h1><p>a <</p><p>b &lt; c</p>');
+    assert.ok(!('refused' in r));
+    assert.ok(![r.title, r.text, ...r.found.map((f) => f.text)].some((t) => t.includes('<script')), r.text);
+    assert.ok(!r.found[0].text.includes('<'), r.found[0].text);
+    assert.match(r.text, /b < c/, 'a < written as &lt; is text, and kept');
   });
 
   test('a page past the limit is refused, saying why, never read in part', () => {
