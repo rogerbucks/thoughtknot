@@ -20,6 +20,7 @@ const bytesOf = (s: string): Uint8Array => Uint8Array.from(utf8(s));
 
 /** The formats a graph is composed into. */
 export const COMPOSE_FORMATS = ['md', 'html', 'docx'] as const;
+/** One format a graph is composed into. */
 export type ComposeFormat = (typeof COMPOSE_FORMATS)[number];
 
 /** Whether `format` is one a graph is composed into, rather than an image's or the data's. */
@@ -199,8 +200,8 @@ export function composeDocx(data: ExportedData, info: DataInfo): Uint8Array {
     const more = l.props.length ? ` (${l.props.map(([k, v]) => `${k}: ${v}`).join(', ')})` : '';
     paras.push(wp(`${l.from} ${l.type} ${l.to}${more}`));
   }
-  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const wordNs = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const relsNs = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const xml = (s: string) => bytesOf(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${s}`);
   return zipStored([
     {
@@ -218,7 +219,7 @@ export function composeDocx(data: ExportedData, info: DataInfo): Uint8Array {
       path: '_rels/.rels',
       bytes: xml(
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-          `<Relationship Id="rId1" Type="${R}/officeDocument" Target="word/document.xml"/>` +
+          `<Relationship Id="rId1" Type="${relsNs}/officeDocument" Target="word/document.xml"/>` +
           '</Relationships>',
       ),
     },
@@ -226,13 +227,13 @@ export function composeDocx(data: ExportedData, info: DataInfo): Uint8Array {
       path: 'word/_rels/document.xml.rels',
       bytes: xml(
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-          `<Relationship Id="rId1" Type="${R}/styles" Target="styles.xml"/>` +
+          `<Relationship Id="rId1" Type="${relsNs}/styles" Target="styles.xml"/>` +
           '</Relationships>',
       ),
     },
     {
       path: 'word/document.xml',
-      bytes: xml(`<w:document xmlns:w="${W}"><w:body>${paras.join('')}</w:body></w:document>`),
+      bytes: xml(`<w:document xmlns:w="${wordNs}"><w:body>${paras.join('')}</w:body></w:document>`),
     },
     { path: 'word/styles.xml', bytes: bytesOf(STYLES) },
   ]);
