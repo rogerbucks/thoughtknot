@@ -289,6 +289,7 @@ export class SendDialog extends Modal {
       secrets,
       shared: this.shared,
       matrix,
+      sends: this.plugin.saved.aiSends ?? [],
     };
     const ask = this.rule
       ? this.rule.ask(base, this.graph, this.question)
