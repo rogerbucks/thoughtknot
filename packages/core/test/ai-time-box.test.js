@@ -40,7 +40,7 @@ describe('a time box and quiet hours for AI (ai_time_box)', () => {
   });
 
   test('with a time box set, AI work stops at its end and starts again the next day', () => {
-    const box = { aiTimeBox: '30', aiQuietHours: 'off' };
+    const box = { aiTimeBox: 'half-hour', aiQuietHours: 'off' };
     const first = sent(at(12, 9, 0));
     assert.equal(aiWaits(box, at(12, 9, 29), first), null, 'within the box');
     assert.match(aiWaits(box, at(12, 9, 30), first), /until tomorrow: today’s time box of 30 minutes is used up/);
@@ -50,7 +50,7 @@ describe('a time box and quiet hours for AI (ai_time_box)', () => {
   });
 
   test('in quiet hours AI waits until they end, across midnight', () => {
-    const quiet = { aiTimeBox: 'off', aiQuietHours: '22-7' };
+    const quiet = { aiTimeBox: 'off', aiQuietHours: 'ten-to-seven' };
     assert.equal(aiWaits(quiet, at(12, 21, 59), []), null);
     assert.match(aiWaits(quiet, at(12, 22, 0), []), /quiet hours, 22:00 to 7:00/);
     assert.match(aiWaits(quiet, at(13, 6, 59), []), /quiet hours/);
@@ -58,7 +58,7 @@ describe('a time box and quiet hours for AI (ai_time_box)', () => {
   });
 
   test('a send asked for while AI waits is refused before anything is made ready, saying why', () => {
-    const settings = { aiTimeBox: '15' };
+    const settings = { aiTimeBox: 'quarter-hour' };
     const waiting = prepareSend(ask({ now: at(12, 10), sends: sent(at(12, 9, 0)) }, settings));
     assert.match(waiting.refused, /time box of 15 minutes is used up/);
     assert.ok(!('body' in waiting));
@@ -74,6 +74,6 @@ describe('a time box and quiet hours for AI (ai_time_box)', () => {
     }
     assert.equal(settingsFrom({ aiTimeBox: '9999', aiQuietHours: 'always' }).aiTimeBox, 'off');
     assert.equal(settingsFrom({ aiQuietHours: 'always' }).aiQuietHours, 'off');
-    assert.equal(settingsFrom({ aiTimeBox: '60' }).aiTimeBox, '60');
+    assert.equal(settingsFrom({ aiTimeBox: 'hour' }).aiTimeBox, 'hour');
   });
 });

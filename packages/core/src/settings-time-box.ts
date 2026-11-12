@@ -6,10 +6,10 @@ import type { Option } from './settings.ts';
 import { word } from './words.ts';
 
 /** How long AI may work each day, in minutes from the first send of the day; off for no limit. */
-export type AiTimeBox = 'off' | '15' | '30' | '60' | '120';
+export type AiTimeBox = 'off' | 'quarter-hour' | 'half-hour' | 'hour' | 'two-hours';
 
 /** The hours AI never works, from the first hour to the second; off for none. */
-export type AiQuietHours = 'off' | '21-7' | '22-7' | '23-6' | '20-8';
+export type AiQuietHours = 'off' | 'nine-to-seven' | 'ten-to-seven' | 'eleven-to-six' | 'eight-to-eight';
 
 /** The time box and the quiet hours. */
 export interface TimeBoxSettings {
@@ -20,8 +20,21 @@ export interface TimeBoxSettings {
 /** Off and off: nothing is limited until the person sets one. */
 export const DEFAULT_TIME_BOX: TimeBoxSettings = { aiTimeBox: 'off', aiQuietHours: 'off' };
 
-const BOXES: readonly AiTimeBox[] = ['off', '15', '30', '60', '120'];
-const QUIET: readonly AiQuietHours[] = ['off', '21-7', '22-7', '23-6', '20-8'];
+// each choice's minutes and hours; a choice is named in words, since the words catalogue keys it by its value
+const MINUTES: Record<Exclude<AiTimeBox, 'off'>, number> = {
+  'quarter-hour': 15,
+  'half-hour': 30,
+  hour: 60,
+  'two-hours': 120,
+};
+const HOURS: Record<Exclude<AiQuietHours, 'off'>, [number, number]> = {
+  'nine-to-seven': [21, 7],
+  'ten-to-seven': [22, 7],
+  'eleven-to-six': [23, 6],
+  'eight-to-eight': [20, 8],
+};
+const BOXES = ['off', ...Object.keys(MINUTES)] as readonly AiTimeBox[];
+const QUIET = ['off', ...Object.keys(HOURS)] as readonly AiQuietHours[];
 
 /** The options, as the settings page shows them, with the AI models. */
 export const TIME_BOX_OPTIONS: Option[] = [
@@ -33,10 +46,10 @@ export const TIME_BOX_OPTIONS: Option[] = [
       'How long AI may work each day, from the first time you send. After it, AI waits until tomorrow. Off until you set it.',
     choices: [
       { value: 'off', name: 'Off: no limit' },
-      { value: '15', name: '15 minutes a day' },
-      { value: '30', name: '30 minutes a day' },
-      { value: '60', name: 'An hour a day' },
-      { value: '120', name: 'Two hours a day' },
+      { value: 'quarter-hour', name: '15 minutes a day' },
+      { value: 'half-hour', name: '30 minutes a day' },
+      { value: 'hour', name: 'An hour a day' },
+      { value: 'two-hours', name: 'Two hours a day' },
     ],
   },
   {
@@ -46,10 +59,10 @@ export const TIME_BOX_OPTIONS: Option[] = [
     sentence: 'Hours when AI never works, in this device’s time. Off until you set them.',
     choices: [
       { value: 'off', name: 'Off: none' },
-      { value: '21-7', name: '9 pm to 7 am' },
-      { value: '22-7', name: '10 pm to 7 am' },
-      { value: '23-6', name: '11 pm to 6 am' },
-      { value: '20-8', name: '8 pm to 8 am' },
+      { value: 'nine-to-seven', name: '9 pm to 7 am' },
+      { value: 'ten-to-seven', name: '10 pm to 7 am' },
+      { value: 'eleven-to-six', name: '11 pm to 6 am' },
+      { value: 'eight-to-eight', name: '8 pm to 8 am' },
     ],
   },
 ];
@@ -70,7 +83,7 @@ const sameDay = (a: Date, b: Date) =>
  */
 export function aiWaits(s: TimeBoxSettings, now: Date, sends: readonly { at: string }[]): string | null {
   if (s.aiQuietHours !== 'off') {
-    const [from = 0, to = 0] = s.aiQuietHours.split('-').map(Number);
+    const [from, to] = HOURS[s.aiQuietHours];
     const h = now.getHours();
     if (from > to ? h >= from || h < to : h >= from && h < to)
       return word('ai.wait.quiet', { from: String(from), to: String(to) });
@@ -79,6 +92,6 @@ export function aiWaits(s: TimeBoxSettings, now: Date, sends: readonly { at: str
   const today = sends.map((r) => new Date(r.at)).filter((d) => !Number.isNaN(d.getTime()) && sameDay(d, now));
   if (!today.length) return null;
   const first = Math.min(...today.map((d) => d.getTime()));
-  const minutes = Number(s.aiTimeBox);
+  const minutes = MINUTES[s.aiTimeBox];
   return now.getTime() - first >= minutes * 60_000 ? word('ai.wait.time-box', { minutes: String(minutes) }) : null;
 }
