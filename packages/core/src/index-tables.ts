@@ -18,12 +18,6 @@ export { columnsOf, sqliteEntries, sqliteTable, SQLITE_LIMITS } from './sqlite-r
 export type { SqliteEntry, SqliteRefusal, SqliteTable, SqliteValue } from './sqlite-read.ts';
 export * from './index-board.ts';
 // a graph composed out into a document, and an HTML file read safely (editor spec §67, DF1)
-export {
-  COMPOSE_EXPORTS,
-  COMPOSE_FORMATS,
-  composeOut,
-  isComposeFormat,
-  type ComposeFormat,
-  type Composed,
-} from './compose-out.ts';
+export { COMPOSE_EXPORTS } from './export-data.ts';
+export { COMPOSE_FORMATS, composeOut, isComposeFormat, type ComposeFormat, type Composed } from './compose-out.ts';
 export { htmlAsText, htmlToGql, readHtml, type HtmlRead } from './html-read.ts';

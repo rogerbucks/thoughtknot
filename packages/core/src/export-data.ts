@@ -5,6 +5,7 @@
 // graph too large to draw is still exported whole. The `///` notes on its things and links are kept where the format
 // has comments: a GQL block and GraphML. CSV has none, so they are left out of it (§24, note_standard).
 import type { Graph } from '@thoughtknot/graph-spec';
+import { composeHtml, composeMarkdown } from './compose-out.ts';
 import { csvText } from './export-data-csv.ts';
 import { gqlBlock } from './export-data-gql.ts';
 import { graphmlText } from './export-data-graphml.ts';
@@ -97,6 +98,27 @@ export const CORE_EXPORTS: ThoughtKnotPlugin = {
       mime: 'application/graphml+xml',
       write: graphmlText,
     });
+  },
+};
+
+/**
+ * The text compositions, added through the plug-in interface as any export plug-in is (format_compose_out): Markdown
+ * and HTML. Word is bytes, which that interface does not carry yet, so it is composed by `composeOut`.
+ */
+export const COMPOSE_EXPORTS: ThoughtKnotPlugin = {
+  id: 'thoughtknot.compose-exports',
+  version: '1.0.0',
+  api: PLUGIN_API,
+  uses: ['exports'],
+  register: (points) => {
+    points.exports?.add({
+      format: 'md',
+      title: 'Markdown',
+      extension: 'md',
+      mime: 'text/markdown',
+      write: composeMarkdown,
+    });
+    points.exports?.add({ format: 'html', title: 'HTML', extension: 'html', mime: 'text/html', write: composeHtml });
   },
 };
 

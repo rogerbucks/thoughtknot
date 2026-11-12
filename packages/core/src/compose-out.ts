@@ -11,7 +11,6 @@ import type { Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, timeText } from './export-data-model.ts';
 import type { DataInfo, ExportedData } from './export-data-model.ts';
-import { PLUGIN_API, type ThoughtKnotPlugin } from './plugins.ts';
 import { word } from './words.ts';
 import { utf8 } from './ai-digest.ts';
 import { zipStored } from './zip-write.ts';
@@ -251,24 +250,3 @@ export function composeOut(data: ExportedData, format: ComposeFormat, info: Data
     leftOut,
   };
 }
-
-/**
- * The text compositions, added through the plug-in interface as any export plug-in is (format_compose_out): Markdown
- * and HTML. Word is bytes, which that interface does not carry yet, so it is composed by `composeOut`.
- */
-export const COMPOSE_EXPORTS: ThoughtKnotPlugin = {
-  id: 'thoughtknot.compose-exports',
-  version: '1.0.0',
-  api: PLUGIN_API,
-  uses: ['exports'],
-  register: (points) => {
-    points.exports?.add({
-      format: 'md',
-      title: 'Markdown',
-      extension: 'md',
-      mime: 'text/markdown',
-      write: composeMarkdown,
-    });
-    points.exports?.add({ format: 'html', title: 'HTML', extension: 'html', mime: 'text/html', write: composeHtml });
-  },
-};

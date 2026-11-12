@@ -3,7 +3,8 @@
 // library, as a stored zip of its XML parts (zip-write.ts).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { COMPOSE_EXPORTS, composeOut } from '../src/compose-out.ts';
+import { composeOut } from '../src/compose-out.ts';
+import { COMPOSE_EXPORTS } from '../src/export-data.ts';
 import { gqlSpans } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { exportedData } from '../src/export-data.ts';

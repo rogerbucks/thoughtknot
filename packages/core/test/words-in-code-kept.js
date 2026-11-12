@@ -151,7 +151,8 @@ export const CORE_KEPT = {
     'the image still has a theme variable in its colours, so it would not read the same outside Obsidian',
   ],
   'packages/core/src/export-data-model.ts': ['{} is not a value a note can hold, so it cannot be exported'],
-  'packages/core/src/export-data.ts': ['{} is not a format the data is exported in: {}'],
+  // and a format's own name, as a menu of formats lists it: Markdown, never translated
+  'packages/core/src/export-data.ts': ['{} is not a format the data is exported in: {}', 'Markdown'],
   // what an export writes into its file or companion note: its bytes, never translated
   'packages/core/src/export-note.ts': '*',
   'packages/core/src/export-data-gql.ts': '*',
@@ -180,8 +181,6 @@ export const CORE_KEPT = {
   'packages/core/src/sqlite-read.ts': ['without rowid'],
   // the store contract's own note, its reads and a developer's error when a store breaks it, never said to a person
   'packages/core/src/parts-store-contract.ts': '*',
-  // a format's own name, as a menu of formats lists it: Markdown, never translated (compose-out.ts)
-  'packages/core/src/compose-out.ts': ['Markdown'],
   // the GQL an HTML page's headings and links are read into, which the graph spec reads, never shown as words
   'packages/core/src/html-read.ts': '*',
   // a developer's error when the zip writer is misused, thrown in code, never said to a person
