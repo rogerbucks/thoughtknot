@@ -132,8 +132,11 @@ Wave 6.
 - **Crosses:** rows from a database, and graphs drawn from other notes.
 - **Trusted:** nothing. It is read only when the person asks.
 - **Controls:** An import runs only on Import. The database is read only, in memory, and returns at most 10,000 rows.
-  Sources go through the vault's own links and the read limits.
-- **Code:** `packages/obsidian/src/databases/`, read on the person's command.
+  Sources go through the vault's own links and the read limits. An outside data set is fetched only when the person
+  asks, and only from https sources they picked. No password or token is kept in a note, and data above the note's
+  class is refused.
+- **Code:** `packages/obsidian/src/databases/`, read on the person's command. `packages/core/src/data-set-access.ts`,
+  the one gate for an outside data set: the host does the fetch, signed in its own way.
 - **Gaps:**
   - The import has no size or time limit, and its values skip the note's class (TRUST-8).
 

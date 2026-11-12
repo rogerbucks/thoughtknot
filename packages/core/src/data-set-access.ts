@@ -82,14 +82,14 @@ export async function fetchDataSet(
   place: string,
   asked: boolean,
   access: DataSetAccess,
-  fetch: HostFetch,
+  hostReads: HostFetch,
 ): Promise<{ text: string } | { refused: string }> {
   if (!asked) return { refused: word('data-access.not-asked') };
   const where = placeProblem(place, access.picked);
   if (typeof where === 'string') return { refused: where };
   let got: Fetched;
   try {
-    got = await fetch(place);
+    got = await hostReads(place);
   } catch (e) {
     return { refused: word('data-access.failed', { origin: where.origin, why: String(e) }) };
   }
