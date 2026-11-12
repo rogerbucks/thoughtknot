@@ -2,7 +2,23 @@
 // It is the way into an .xlsx workbook (ES§63 connector_files_to_gql, ES§67 format_untrusted_files). No library and no WebAssembly.
 // - Untrusted: each size and offset is checked, and a part is inflated only to the size it declares.
 // - Zip64, encryption and split files are refused as damage.
-import { utf8 } from './sqlite-read.ts';
+import { utf8 as slowUtf8 } from './sqlite-read.ts';
+
+/** The most bytes decoded as one piece, so a big part is never held as a long list of code points at once. */
+const CHUNK = 1 << 20;
+
+/** Text from UTF-8 bytes, decoded a piece at a time, each piece cut where no character is split. */
+export function utf8(b: Uint8Array): string {
+  const pieces: string[] = [];
+  for (let from = 0; from < b.length;) {
+    let to = Math.min(from + CHUNK, b.length);
+    // a byte that continues a character belongs with the one before it
+    while (to < b.length && to > from + 1 && ((b[to] ?? 0) & 0xc0) === 0x80) to--;
+    pieces.push(slowUtf8(b.subarray(from, to)));
+    from = to;
+  }
+  return pieces.join('');
+}
 
 /** The file is damaged, or in a form this reader does not know. */
 export class Damaged extends Error {}
@@ -45,6 +61,8 @@ export function zipEntries(b: Uint8Array): Map<string, ZipEntry> {
     const [nameLen, more] = [u16(b, p + 28), u16(b, p + 30) + u16(b, p + 32)];
     if (flags & 1 || p + 46 + nameLen > b.length) throw new Damaged();
     const name = utf8(b.subarray(p + 46, p + 46 + nameLen));
+    // two files of one name could show a checker one and a reader the other: the file is refused
+    if (out.has(name.toLowerCase())) throw new Damaged();
     out.set(name.toLowerCase(), { name, method, size, packed, at: u32(b, p + 42) });
     p += 46 + nameLen + more;
   }

@@ -8,7 +8,13 @@ import { Damaged } from './zip-read.ts';
 /** One piece of XML: a tag opening (with its attributes), a tag closing, or text. */
 export type Tok = { open: string; attrs: Record<string, string>; shut: boolean } | { close: string } | { text: string };
 
-const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+const ENTITIES = new Map([
+  ['amp', '&'],
+  ['lt', '<'],
+  ['gt', '>'],
+  ['quot', '"'],
+  ['apos', "'"],
+]);
 
 /** Text with its five named and its numeric entities put back; nothing else is ever expanded. */
 function unescape(s: string): string {
@@ -18,7 +24,7 @@ function unescape(s: string): string {
       const n = e[1] === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
       return n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n < 0xe000) ? String.fromCodePoint(n) : '';
     }
-    return ENTITIES[e] ?? m;
+    return ENTITIES.get(e) ?? m;
   });
 }
 
@@ -32,7 +38,7 @@ function tagOf(inner: string): Tok {
   const body = shut ? inner.slice(0, -1) : inner;
   let i = 0;
   while (i < body.length && !/\s/.test(body[i] ?? '')) i++;
-  const attrs: Record<string, string> = {};
+  const attrs: Record<string, string> = Object.create(null) as Record<string, string>;
   for (;;) {
     while (i < body.length && /\s/.test(body[i] ?? '')) i++;
     const eq = body.indexOf('=', i);
