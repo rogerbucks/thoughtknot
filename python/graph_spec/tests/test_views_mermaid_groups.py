@@ -1,7 +1,7 @@
 """The relationships view as Mermaid draws written groups as subgraphs, like the JavaScript one.
 
 Usage:
-  cd python/graph_spec && uv run --locked python -m unittest tests.test_mermaid_groups
+  cd python/graph_spec && uv run --locked python -m unittest tests.test_views_mermaid_groups
 
 The cases are packages/graph-spec/test/mermaid-group-cases.json (editor spec §31;
 wiki/Mermaid-mapping-review.md, gap G1). Both libraries write each expected text, byte for byte.
