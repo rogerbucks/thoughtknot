@@ -21,3 +21,5 @@ export * from './index-board.ts';
 export { COMPOSE_EXPORTS, composedExport, type ComposedExport } from './export-data.ts';
 export { COMPOSE_FORMATS, composeOut, isComposeFormat, type ComposeFormat, type Composed } from './compose-out.ts';
 export { htmlAsText, htmlToGql, readHtml, type HtmlRead } from './html-read.ts';
+// an outside data set, fetched only when asked, from the sources picked (editor spec §52, data_set_access)
+export { fetchDataSet, placeProblem, type DataSetAccess, type Fetched, type HostFetch } from './data-set-access.ts';

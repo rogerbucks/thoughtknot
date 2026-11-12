@@ -487,4 +487,7 @@ export const VALUES_LATE = [
   'htmlToGql',
   'readHtml',
   'composedExport',
+  // an outside data set fetched only when asked, from picked sources (data_set_access), 12 Nov 2026
+  'fetchDataSet',
+  'placeProblem',
 ];
