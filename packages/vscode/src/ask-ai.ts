@@ -77,6 +77,18 @@ async function chooseWhat(graph: string, names: string[], things: Pick<string>[]
 }
 
 /** Asks one of VS Code's models about `given`, or the note in the active editor, as this file describes. */
+/**
+ * The person's question, and whether they allow a rewrite: never guessed from the question, so an edit keeps their
+ * words unless they pick the rewrite (ai_smallest_edit). Null when they turn away.
+ */
+async function questionAsked(): Promise<{ question: string; rewrite: boolean } | null> {
+  const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
+  if (question === undefined) return null;
+  const keep = word('vscode.ai.keep-words', { most: REWRITE_MOST });
+  const size = await vscode.window.showQuickPick([keep, word('ai.rewrite')], { placeHolder: word('ai.rewrite') });
+  return size === undefined ? null : { question, rewrite: size !== keep };
+}
+
 export async function askAi(context: vscode.ExtensionContext, given?: unknown): Promise<void> {
   setLanguage(vscode.env.language);
   const uri = noteOf(given);
@@ -134,12 +146,8 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
   const things = drawn.boxes.map((b): Pick<string> => ({ label: b.text || b.key, description: b.key, value: b.key }));
   const choice = await chooseWhat(graph, views, things);
   if (!choice) return;
-  const question = await vscode.window.showInputBox({ prompt: word('ai.your-question'), value: word('ai.question') });
-  if (question === undefined) return;
-  // a rewrite only when the person asks for one, with its own pick: never guessed from the question (ai_smallest_edit)
-  const keep = word('vscode.ai.keep-words', { most: REWRITE_MOST });
-  const size = await vscode.window.showQuickPick([keep, word('ai.rewrite')], { placeHolder: word('ai.rewrite') });
-  if (size === undefined) return;
+  const asked = await questionAsked();
+  if (!asked) return;
 
   const p = prepareSend({
     settings,
@@ -149,8 +157,7 @@ export async function askAi(context: vscode.ExtensionContext, given?: unknown): 
     notePath: note,
     level: levelOf(text),
     choice,
-    question,
-    rewrite: size !== keep,
+    ...asked,
   });
   if ('refused' in p) {
     void vscode.window.showWarningMessage(p.refused);

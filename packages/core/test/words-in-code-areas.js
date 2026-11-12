@@ -255,7 +255,7 @@ export const KEPT = {
     'If you are unsure what the user means, answer {"question": "your one question"} instead, and propose nothing yet.',
     'Graph {}, {}:\n\n{}',
   ],
-  // what the model is told when the person asked for a rewrite, which only the model reads (§74, ai_smallest_edit)
+  // what the model is told when the person asked for a rewrite, which only the model reads (ES§74, ai_smallest_edit)
   'packages/core/src/ai-edit-size.ts': [
     '{}\nThe user asked for a rewrite: you may change or remove more than {} things.',
   ],

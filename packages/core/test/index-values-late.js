@@ -55,6 +55,8 @@ export const VALUES_LATE = [
   'suggestAsk',
   'suggestedPreview',
   'suggestionGroups',
+  // the cap on how much one AI edit may rewrite (ai_smallest_edit), 12 Nov 2026
+  'REWRITE_MOST',
   'INTENT_LINK_TYPES',
   'INTENT_MARKS',
   'intentOverlay',

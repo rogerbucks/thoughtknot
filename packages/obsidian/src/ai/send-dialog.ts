@@ -14,7 +14,6 @@ import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
-  REWRITE_MOST,
   confirmSend,
   gqlBlocks,
   modelChoices,
@@ -56,8 +55,6 @@ export class SendDialog extends Modal {
   private readonly ticked = new Set<string>();
   private model: string;
   private question = word('ai.question');
-  /** The person's own ask for a rewrite: off, so an edit changes at most a few things they wrote (ai_smallest_edit). */
-  private rewrite = false;
   private prepared: PreparedSend | null = null;
   private refusal: string | null = null;
   private sending = false;
@@ -150,16 +147,6 @@ export class SendDialog extends Modal {
           this.changed(false);
         }),
       );
-    if (!this.rule && !this.text && this.suggest.ask === 'changes')
-      new Setting(el)
-        .setName(word('ai.rewrite'))
-        .setDesc(word('ai.rewrite.sentence', { most: String(REWRITE_MOST) }))
-        .addToggle((t) =>
-          t.setValue(this.rewrite).onChange((v) => {
-            this.rewrite = v;
-            this.changed(false);
-          }),
-        );
     this.shownEl = el.createDiv({ cls: 'thoughtknot-ai-shown' });
     new Setting(el)
       .addButton((b) => b.setButtonText(word('ai.show')).onClick(() => void this.show()))
@@ -309,7 +296,7 @@ export class SendDialog extends Modal {
         ? textToGraphAsk(base, this.text.graph, this.text.words, this.question, this.text.place)
         : f
           ? suggestAsk(base, f, this.question)
-          : { ...base, question: this.question, rewrite: this.rewrite };
+          : { ...base, question: this.question, rewrite: this.suggest.rewrite };
     const p = 'refused' in ask ? ask : prepareSend(ask);
     this.prepared = 'refused' in p ? null : p;
     this.refusal = 'refused' in p ? p.refused : null;

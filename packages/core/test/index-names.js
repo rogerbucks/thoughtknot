@@ -180,7 +180,6 @@ export const VALUES = [
   'REMINDER_STYLES',
   'RESIZE_STEP',
   'REVIEW_LEVELS',
-  'REWRITE_MOST',
   'RUN_SOURCES',
   'ReviewItems',
   'SAMPLE_GRAPH',
