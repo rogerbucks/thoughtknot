@@ -104,7 +104,7 @@ export const DRAWING_SOURCE_WORDS = {
   // how far a completeness rule is met (completeness.ts)
   'completeness.covered': '{covered} of {counted} covered',
   'completeness.deferred': { one: '{count} deferred', other: '{count} deferred' },
-  'completeness.overdue': { one: '{count} overdue', other: '{count} overdue' },
+  'completeness.overdue': { one: '{count} past its revisit date', other: '{count} past their revisit date' },
   'completeness.missing': { one: '{count} missing', other: '{count} missing' },
   'completeness.unchecked': 'cannot be checked',
   // a radial drawing's centre, and how to pick another (radial-centre.ts, thing-menu.ts)
@@ -179,6 +179,9 @@ export const DRAWING_SOURCE_WORDS = {
   'certainty.said.likely': 'likely',
   'certainty.said.doubtful': 'doubtful',
   'certainty.said.contested': 'contested',
+  // a likelihood word with its range of chances beside it, in percent (graph spec §20)
+  'certainty.range': '{word} ({lo}–{hi}%)',
+  'certainty.range-in-brackets': '{word} {lo}–{hi}%',
   // what the View menu groups things by (group-by.ts)
   'rail.links': 'Links',
   'rail.areas': 'Areas',

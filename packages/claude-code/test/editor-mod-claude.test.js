@@ -133,7 +133,7 @@ describe('Claude proposes through the mod, and only accept applies it (cc_claude
     const check = checkProposal(after, spans[1].text);
     assert.equal(check.passed, true, JSON.stringify(check.results));
     assert.match(spans[1].text, /\/\/ read: plan\.md/);
-    assert.match(spans[1].text, /\/\/@ reason: likely: a step is missing/);
+    assert.match(spans[1].text, /\/\/@ reason: likely \(55–80%\): a step is missing/);
   });
 
   test('the graph is not changed by the proposal: the thing is nowhere in it until it is accepted', async () => {

@@ -24,7 +24,7 @@ describe('every AI suggestion says how sure it is and what it rests on (ai_says_
 
   test('an edit says how sure it is and why, and the review shows both in words', () => {
     const [c] = edit({ op: 'remove-thing', thing: 'docs', certainty: 'very-likely', reason: 'no longer used' });
-    assert.equal(c.reason, 'very-likely: no longer used');
+    assert.equal(c.reason, 'very likely (80–95%): no longer used');
   });
 
   test('an edit without a certainty word, with a made-up one, or without a reason is refused whole', () => {

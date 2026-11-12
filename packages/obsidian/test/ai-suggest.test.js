@@ -79,7 +79,7 @@ test('the dialog asks for suggested values, and the answer is written as a chang
     const note = env.state.files.get(PATH);
     assert.ok(note.startsWith(NOTE), 'the graph is as it was');
     assert.match(note, /\/\/@ group: category 'bug'/);
-    assert.match(note, /\/\/@ reason: likely, read login: a broken page/);
+    assert.match(note, /\/\/@ reason: likely \(55–80%\), read login: a broken page/);
   } finally {
     env.uninstall();
   }

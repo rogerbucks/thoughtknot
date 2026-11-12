@@ -29,21 +29,24 @@ describe('an AI reading of tone or intent is labelled a guess to check (ai_guess
   test('a change the model marks as reading tone or intent carries the label before what it said', () => {
     for (const reads of ['tone', 'intent']) {
       const [c] = edit(remove('the note sounds unsure about this', { reads }));
-      assert.equal(c.reason, 'a guess to check, likely: the note sounds unsure about this');
+      assert.equal(c.reason, 'a guess to check, likely (55–80%): the note sounds unsure about this');
     }
   });
 
   test('a reason in the words of feeling or purpose is labelled even when the model did not mark it', () => {
     for (const why of ['the writer seems angry here', 'they want to drop it', 'its tone is sarcastic']) {
       const [c] = edit(remove(why));
-      assert.match(c.reason, /^a guess to check, likely: /, why);
+      assert.match(c.reason, /^a guess to check, likely \(55–80%\): /, why);
     }
-    assert.equal(edit(remove('no longer linked from anything'))[0].reason, 'likely: no longer linked from anything');
+    assert.equal(
+      edit(remove('no longer linked from anything'))[0].reason,
+      'likely (55–80%): no longer linked from anything',
+    );
   });
 
   test('a suggestion and a case for or against carry the label too', () => {
     const [s] = suggest({ thing: 'login', value: 'Urgent', certainty: 'likely', reason: 'the author is worried' });
-    assert.match(s.reason, /^a guess to check, likely, read -: the author is worried$/);
+    assert.match(s.reason, /^a guess to check, likely \(55–80%\), read -: the author is worried$/);
     const cases = judged([
       {
         side: 'supports',
@@ -54,8 +57,8 @@ describe('an AI reading of tone or intent is labelled a guess to check (ai_guess
       },
       { side: 'contradicts', from: 'rent', case: 'Rent is high', certainty: 'likely', reason: 'the figures' },
     ]);
-    assert.match(cases[0].reason, /^a guess to check, likely: /);
-    assert.equal(cases.at(-1).reason, 'likely: the figures');
+    assert.match(cases[0].reason, /^a guess to check, likely \(55–80%\): /);
+    assert.equal(cases.at(-1).reason, 'likely (55–80%): the figures');
   });
 
   test('the model cannot drop the label: its own words come after it, whatever they say', () => {

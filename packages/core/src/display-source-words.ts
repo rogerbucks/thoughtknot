@@ -49,7 +49,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'problems.group': '{severity}: {count} × {kind}',
   'problems.rule': '{rule}: {summary}',
   'problems.missing': '✖ Missing — {at}: {fix}',
-  'problems.overdue': '⚠ Overdue — {what}',
+  'problems.overdue': '⚠ Past its revisit date — {what}',
   'problems.deferred': '◌ Deferred — {what}',
   'problems.completeness': 'Completeness',
   'problems.recent': 'Recent messages',

@@ -3,6 +3,7 @@
 // or a suggestion carries one of them and what it rests on. One that lacks either is refused, with the whole answer.
 // So nothing reaches the review without saying how sure it is.
 import { GUESS_LINE, guessSaid, readsPerson } from './ai-guess-label.ts';
+import { likelihoodSaid } from './intents.ts';
 import { word } from './words.ts';
 
 /** The certainty words an AI may use: the likelihood words of graph spec §20, least likely first. */
@@ -37,7 +38,7 @@ export function howSure(
   if (!isCertainty(certainty))
     return { unread: word(`ai.sure.${what}-no-word`, { n: String(n), words: CERTAINTY_WORDS.join(', ') }) };
   if (!reason) return { unread: word(`ai.sure.${what}-no-reason`, { n: String(n) }) };
-  const said = word('ai.sure.said', { certainty, why: reason });
+  const said = word('ai.sure.said', { certainty: likelihoodSaid(certainty), why: reason });
   // a reading of a person's tone or intent is shown as a guess to check (ai_guess_label)
   return { said: readsPerson(reads, reason) ? guessSaid(said) : said, certainty };
 }
