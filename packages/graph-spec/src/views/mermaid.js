@@ -21,16 +21,57 @@ const word = (typeWords, t) => ((typeWords.get(t) || [])[0] || t.replace(/_/g, '
 // The graph's knowledge as a Mermaid flowchart: every node but the schema's, and every relationship between them.
 // Each relationship is labelled by its reading (§5), or its type if none is declared. Sorted, so the text is the same
 // as graph_rules.py's.
+// A written group (a Cluster, ES§31) draws as a subgraph with its members inside. A membership drawn by nesting is not
+// drawn again as a link. A thing in two groups sits in the first by id and keeps its other membership as a link. A
+// group that holds nothing stays a box. Groups that hold each other break the loop at the first by id.
 function mermaidGraph(g, shared) {
   const ids = strSort([...g.nodes.keys()].filter((i) => !SCHEMA_LABELS.some((label) => g.nodes.get(i)[0].has(label)))),
-    v = new Map(ids.map((i, k) => [i, 'n' + k])),
-    typeWords = readings(g, shared);
+    typeWords = readings(g, shared),
+    at = new Map(ids.map((i, k) => [i, k])),
+    isGroup = (i) => g.nodes.get(i)[0].has('Cluster'),
+    parent = new Map(),
+    kids = new Map();
+  for (const i of ids) {
+    const up = strSort(
+      g
+        .out(i, 'MEMBER_OF')
+        .map((e) => e[2])
+        .filter((c) => c !== i && at.has(c) && isGroup(c)),
+    );
+    if (up.length) {
+      parent.set(i, up[0]);
+      (kids.get(up[0]) || kids.set(up[0], []).get(up[0])).push(i);
+    }
+  }
+  const v = new Map(),
+    nested = new Map(),
+    lines = [];
+  // Writes `i`, and the things inside it if it is a group that holds any.
+  const draw = (i, depth) => {
+    const pad = '    '.repeat(depth + 1);
+    v.set(i, 'n' + at.get(i));
+    const inside = [];
+    for (const k of kids.get(i) || []) {
+      if (v.has(k)) continue;
+      nested.set(k, i);
+      inside.push(k);
+    }
+    const body = [];
+    const mark = lines.length;
+    for (const k of inside) draw(k, depth + 1);
+    body.push(...lines.splice(mark));
+    if (!body.length) return void lines.push(`${pad}${v.get(i)}["${caption(g, i)}"]`);
+    v.set(i, 'g' + at.get(i));
+    lines.push(`${pad}subgraph ${v.get(i)}["${caption(g, i)}"]`, ...body, `${pad}end`);
+  };
+  for (const i of ids) if (!parent.has(i)) draw(i, 0);
+  for (const i of ids) if (!v.has(i)) draw(i, 0);
   return [
     'flowchart LR',
-    ...ids.map((i) => `    ${v.get(i)}["${caption(g, i)}"]`),
+    ...lines,
     ...strSort(
       g.edges
-        .filter(([s, , d]) => v.has(s) && v.has(d))
+        .filter(([s, t, d]) => v.has(s) && v.has(d) && !(t === 'MEMBER_OF' && nested.get(s) === d))
         .map(([s, t, d]) => `    ${v.get(s)} -->|${word(typeWords, t)}| ${v.get(d)}`),
     ),
   ].join('\n');

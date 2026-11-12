@@ -29,7 +29,7 @@ What already writes Mermaid:
 
 | Where | What it writes |
 | --- | --- |
-| `packages/graph-spec/src/views/mermaid.js` (`mermaidGraph`, `mermaidPath`, `legend`) | A flowchart of every thing and link, labelled by reading (GS§5); a path at an altitude (GS§22) |
+| `packages/graph-spec/src/views/mermaid.js` (`mermaidGraph`, `mermaidPath`, `legend`) | A flowchart of every thing and link, labelled by reading (GS§5); a path at an altitude (GS§22). **Written groups (clusters) draw as `subgraph`**, nested, with their members inside (gap G1, done) |
 | `python/graph_spec/src/graphspec/rules/views.py` | The same text, byte for byte |
 | `python/graph_spec/conformance/scripts/graph_spec_diagrams.py` | The spec's example flowcharts, and a state diagram of the lending process (`TRANSITION` links) |
 | `packages/core/src/data-formats.ts` | Mermaid (`.mmd`) listed as a format: source, content, layout and export all **planned** (ES§67, DF1, #1301) |
@@ -70,7 +70,7 @@ Five small conventions would turn most Partial rows Full. Each one is a choice t
 
 | Gap | Turns on | Proposal | Challenge it |
 | --- | --- | --- | --- |
-| **G1 Groups out** | flowchart, block, architecture, C4 | `mermaidGraph` writes groups (ES§6) as `subgraph` | Nested groups get deep fast; cap the depth? |
+| **G1 Groups out (done)** | flowchart, block, architecture, C4 | `mermaidGraph` writes groups (ES§6) as `subgraph` | Nested groups get deep fast; cap the depth? |
 | **G2 A span of time** | gantt, timeline | A thing with two dates reads as start and end; a `length` number as days | Which two dates, when a thing has three? |
 | **G3 Status** | kanban, gantt, state | One property named in the style graph is "the status" | Is a named property better than a kind? |
 | **G4 Numbers on links** | sankey | A link's first number is its amount | Links hold properties in GQL, but the view's shape does not carry them yet |
@@ -94,7 +94,7 @@ graph is likely the biggest win for new users. It is the same plug-in, the other
 
 ## Suggested order, for the soon review
 
-1. Flowchart with groups and looks (G1). Smallest change, every graph gains.
+1. Flowchart with groups (G1, **done**) and looks (next). Smallest change, every graph gains.
 2. Mermaid in, for flowchart and mindmap. Biggest win for new users.
 3. Mindmap, timeline and pie out. Data already there.
 4. ER and requirement out. Our own spec becomes the first user.
