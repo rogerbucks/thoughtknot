@@ -108,7 +108,7 @@ describe('the Export button', () => {
           .find((s) => s.getAttribute('aria-label') === 'Format')
           .querySelectorAll('option')
           .map((o) => o.getAttribute('value')),
-        ['svg', 'png', 'gql', 'csv', 'graphml'],
+        ['svg', 'png', 'gql', 'csv', 'graphml', 'md', 'html', 'docx'],
       );
       choose('Format', 'png');
       go();
@@ -304,7 +304,7 @@ describe('the data', () => {
         .find((s) => s.getAttribute('aria-label') === 'Format')
         .querySelectorAll('option')
         .map((o) => o.getAttribute('value'));
-      assert.deepEqual(formats, ['gql', 'csv', 'graphml'], 'no image: there is no drawing');
+      assert.deepEqual(formats, ['gql', 'csv', 'graphml', 'md', 'html', 'docx'], 'no image: there is no drawing');
       choose('Format', 'graphml');
       go();
       await until(() => written(env, '.graphml').length === 1);

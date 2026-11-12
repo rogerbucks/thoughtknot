@@ -7,6 +7,7 @@
 // its own ending, and gets its companion note as an image does. A PNG split across pages (big_export) names each page
 // after the one name, in order.
 import type { ExportFormat } from './export.ts';
+import type { ComposeFormat } from './compose-out.ts';
 import type { DataFormat } from './export-data.ts';
 import type { ExportScope } from './export-scope.ts';
 import { vaultFolder } from './vault-folder.ts';
@@ -17,7 +18,7 @@ import { trimChars } from './text-cuts.ts';
 /** What the plan is made from. */
 export interface ExportPlanInput {
   scope: ExportScope;
-  format: ExportFormat | DataFormat;
+  format: ExportFormat | DataFormat | ComposeFormat;
   /** How many pages a PNG is split across (big_export); one, or none given, is one file. */
   pages?: number;
   /** The note's path in the vault. */
@@ -40,7 +41,7 @@ export interface ExportGo {
   folder: string;
   /** The folder and the file name. */
   path: string;
-  format: ExportFormat | DataFormat;
+  format: ExportFormat | DataFormat | ComposeFormat;
   companion: { fileName: string; path: string } | null;
   /** For a PNG split across pages: each page's file, in reading order, named after `fileName`. */
   pages?: { fileName: string; path: string }[];

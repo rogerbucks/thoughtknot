@@ -5,8 +5,8 @@
 // (classified_export). A path that can be played is offered too, as an animated SVG at a pace chosen
 // (path_animation_export). A graph or view too large to draw, shown as text, gets a bar of its own. Its Export button
 // is for its data alone (`dataExportBar`).
-import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@thoughtknot/core';
-import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
+import { DEFAULT_PACE, PATH_PACES, isComposeFormat, isDataFormat, word } from '@thoughtknot/core';
+import type { ComposeFormat, DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
 import { button } from '../button';
 import { waitShown } from '../progress';
 import type { ExportAsk, ExportOutcome } from './export-types';
@@ -36,6 +36,10 @@ const dataFormats = (): [string, string][] => [
   ['gql', word('export.data-gql')],
   ['csv', word('export.data-csv')],
   ['graphml', word('export.data-graphml')],
+  // a document for people to read, which says what it left out (format_compose_out)
+  ['md', word('export.compose-md')],
+  ['html', word('export.compose-html')],
+  ['docx', word('export.compose-docx')],
 ];
 
 /** A pace, as the form offers it; what an exported file says of it stays in UK English (`paceSaid`). */
@@ -121,7 +125,7 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   );
   // the data has no colours: the theme is offered only for an image
   const themed = () => {
-    theme.disabled = isDataFormat(format.value);
+    theme.disabled = isDataFormat(format.value) || isComposeFormat(format.value);
   };
   format.addEventListener('change', themed);
   scoped();
@@ -175,7 +179,7 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
             ? { view: x.view, context: scope === 'context' }
             : {}),
           ...walk,
-          format: format.value as ExportFormat | DataFormat,
+          format: format.value as ExportFormat | DataFormat | ComposeFormat,
           theme: theme.value as ExportTheme,
           confirmed,
         }),
