@@ -474,4 +474,8 @@ export const TYPES_LATE = [
   'AiReview',
   'AiFinding',
   'LevelNames',
+  // compose out and HTML read, 12 Nov 2026
+  'ComposeFormat',
+  'Composed',
+  'HtmlRead',
 ];

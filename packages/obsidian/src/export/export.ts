@@ -25,6 +25,8 @@ import {
   formatCount,
   formatSize,
   gqlBlocks,
+  composeOut,
+  isComposeFormat,
   isDataFormat,
   pathsOf,
   readNote,
@@ -35,6 +37,7 @@ import {
 } from '@thoughtknot/core';
 import type {
   CompanionInfo,
+  ComposeFormat,
   DataFormat,
   ExportFormat,
   ExportScope,
@@ -57,16 +60,19 @@ export type { ExportAsk, ExportOutcome };
 type Sharing = Navigator & { canShare?: (d: ShareData) => boolean };
 
 /** The media type each format is shared as. */
-const TYPES: Record<ExportFormat | DataFormat, string> = {
+const TYPES: Record<ExportFormat | DataFormat | ComposeFormat, string> = {
   svg: 'image/svg+xml',
   png: 'image/png',
   gql: 'text/plain',
   csv: 'text/csv',
   graphml: 'application/graphml+xml',
+  md: 'text/markdown',
+  html: 'text/html',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 };
 
 /** The phone's share sheet, when it can share a file of this kind; null when it cannot, and the vault is used instead. */
-function shareSheet(format: ExportFormat | DataFormat): Sharing | null {
+function shareSheet(format: ExportFormat | DataFormat | ComposeFormat): Sharing | null {
   const nav = activeWindow.navigator as Sharing | undefined;
   if (!Platform.isMobile || !nav || typeof nav.share !== 'function') return null;
   const probe = new File([''], `probe.${format}`, { type: TYPES[format] });
@@ -90,7 +96,7 @@ function playedWalk(
   reading: NoteReading,
   graph: string,
   asked: { id: string; pace: number },
-  format: ExportFormat | DataFormat,
+  format: ExportFormat | DataFormat | ComposeFormat,
   scope: ExportScope,
 ): ExportWalk | { stopped: string } {
   const path = pathsOf(reading, graph).find((p) => p.id === asked.id);
@@ -161,7 +167,14 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
   let held: CompanionInfo['data'] | undefined;
   /** What was done with each animated image, said after the outcome (export_animation_stated); none for data. */
   let animation = '';
-  if (isDataFormat(ask.format)) {
+  if (isComposeFormat(ask.format)) {
+    // a document for people to read: it says, at its top and here, what it left out (format_loss_stated)
+    const data = exportedData(reading, scope);
+    const made = composeOut(data, ask.format, { note: ask.path, date });
+    files = [{ name: go.fileName, path: go.path, bytes: made.body }];
+    held = { things: data.things.length, links: data.links.length };
+    animation = ` ${word('compose.said', { left: made.leftOut.join(', ') })}`;
+  } else if (isDataFormat(ask.format)) {
     const data = exportedData(reading, scope);
     files = [{ name: go.fileName, path: go.path, bytes: dataText(data, ask.format, { note: ask.path, date }) }];
     held = {

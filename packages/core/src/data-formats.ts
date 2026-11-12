@@ -35,7 +35,7 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
     name: 'Markdown',
     extensions: ['md'],
     reader: 'text',
-    ...roles({ built: 'sources.ts' }, planned, planned, planned),
+    ...roles({ built: 'sources.ts' }, planned, planned, { built: 'compose-out.ts' }),
   },
   { name: 'Mermaid', extensions: ['mmd'], reader: 'text', ...roles(planned, planned, planned, planned) },
   {
@@ -46,7 +46,12 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
   },
   { name: 'JSON', extensions: ['json'], reader: 'text', ...roles(planned, planned, null, planned) },
   { name: 'Excel', extensions: ['xlsx'], reader: 'library', ...roles(planned, planned, planned, planned) },
-  { name: 'Word', extensions: ['docx'], reader: 'library', ...roles(planned, planned, planned, planned) },
+  {
+    name: 'Word',
+    extensions: ['docx'],
+    reader: 'library',
+    ...roles(planned, planned, planned, { built: 'compose-out.ts' }),
+  },
   { name: 'PowerPoint', extensions: ['pptx'], reader: 'library', ...roles(planned, planned, null, planned) },
   { name: 'PDF', extensions: ['pdf'], reader: 'library', ...roles(planned, planned, planned, null) },
   {
@@ -77,7 +82,12 @@ export const FORMAT_CATALOGUE: readonly DataFormatEntry[] = [
     reader: 'text',
     ...roles({ built: 'connectors.ts' }, null, null, { built: 'export-data-gql.ts' }),
   },
-  { name: 'HTML', extensions: ['html', 'htm'], reader: 'text', ...roles(planned, planned, planned, planned) },
+  {
+    name: 'HTML',
+    extensions: ['html', 'htm'],
+    reader: 'text',
+    ...roles({ built: 'html-read.ts' }, planned, planned, { built: 'compose-out.ts' }),
+  },
 ];
 
 /** The format a file is, by its extension, or undefined when none in the catalogue is. */

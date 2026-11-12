@@ -10,7 +10,7 @@
 import { gqlBlocks } from '@thoughtknot/core';
 import { classificationOf } from '@thoughtknot/core';
 import { readNote } from '@thoughtknot/core';
-import { dataText, exportedData, isDataFormat } from '@thoughtknot/core';
+import { composeOut, dataText, exportedData, isComposeFormat, isDataFormat } from '@thoughtknot/core';
 import { companionNote } from '@thoughtknot/core';
 import type { CompanionInfo } from '@thoughtknot/core';
 import { pageSvg, pngPages } from '@thoughtknot/core';
@@ -113,7 +113,15 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
   let files: SavedFile[];
   let held: CompanionInfo['data'] | undefined;
   let animation = '';
-  if (isDataFormat(ask.format)) {
+  if (isComposeFormat(ask.format)) {
+    // a document for people to read: it says, at its top and here, what it left out (format_loss_stated)
+    const data = exportedData(reading, scope);
+    const made = composeOut(data, ask.format, { note: ask.path, date });
+    const body = made.body;
+    files = [typeof body === 'string' ? { name: go.fileName, text: body } : { name: go.fileName, bytes: body }];
+    held = { things: data.things.length, links: data.links.length };
+    animation = ` ${word('compose.said', { left: made.leftOut.join(', ') })}`;
+  } else if (isDataFormat(ask.format)) {
     const data = exportedData(reading, scope);
     files = [{ name: go.fileName, text: dataText(data, ask.format, { note: ask.path, date }) }];
     held = {
