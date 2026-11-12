@@ -80,6 +80,8 @@ after a module nor listed here, and on a listed file that is missing.
 
 - `packages/core/test/connector-database.test.js` — a table of a SQLite database after FROM, read by its mapping
   (editor spec §63, connector_files_to_gql).
+- `packages/core/test/connector-workbook.test.js` — a sheet of an Excel workbook after FROM, read by its mapping
+  (editor spec §63, connector_files_to_gql).
 - `packages/core/test/connector-files.test.js` — files other than GQL broken into cited statements (editor spec
   §63, CN2). It spans the CSV reader, its mapping, its connector and the join.
 
@@ -284,6 +286,9 @@ after a module nor listed here, and on a listed file that is missing.
 - `packages/obsidian/test/database.test.js` — Import offers the vault's SQLite files, with nothing to set up. It reads
   one only when pressed, on desktop and mobile, with no network. It writes the rows into the note as text that keeps no
   live link (editor spec §20, db_import_on_request; §21, settings_db_connections).
+- `packages/obsidian/test/database-workbook.test.js` — Import also offers the vault's .xlsx files, each sheet as a table
+  with its first row as the columns. It writes only when pressed, and never writes the workbook (editor spec §20,
+  db_import_on_request).
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/obsidian/test/data-set-snapshot.test.js` — a data set's box shows its table. Its details keep a snapshot
   beside the note or link it again (editor spec §52, data_set_linked_or_kept). No file is ever replaced.
