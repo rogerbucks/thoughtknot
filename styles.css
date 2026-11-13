@@ -2570,7 +2570,7 @@ pre.thoughtknot-code {
 }
 .thoughtknot-stage-card.is-selected {
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--thoughtknot-card-colour) 35%, transparent),
+    0 0 0 2px var(--thoughtknot-card-colour),
     var(--gn-shadow-l);
 }
 .thoughtknot-stage-card-head {
@@ -2579,10 +2579,20 @@ pre.thoughtknot-code {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  position: relative;
+  isolation: isolate;
   padding: 0 10px;
-  background: color-mix(in srgb, var(--thoughtknot-card-colour) 14%, var(--gn-bg));
   font-size: 13px;
   font-weight: var(--gn-font-weight-semibold);
+}
+/* the head's tint: the card's colour, faint, under its name */
+.thoughtknot-stage-card-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--thoughtknot-card-colour);
+  opacity: 0.14;
 }
 .thoughtknot-stage-card-name {
   overflow: hidden;

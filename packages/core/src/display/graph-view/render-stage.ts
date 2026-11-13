@@ -27,13 +27,12 @@ import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
 import { StageRooms } from './stage-rooms.ts';
 import type { StageHands } from './stage-hands.ts';
-import { StageCards, switchCards, type CardWords } from './stage-cards.ts';
+import { CardsSwitch } from './stage-cards-switch.ts';
 
 export { GLIDE_MS } from './stage-glide.ts';
 /** How far a pointer may move, in pixels, and still be a click rather than a drag. */
 const CLICK_PX = 6;
 
-export type { StageHands } from './stage-hands.ts';
 export { hasLevels } from './stage-look.ts';
 export { stageFor } from './render-stage-for.ts';
 /** One graph drawn by the new rendering, on a canvas over its card. */
@@ -56,13 +55,8 @@ export class RenderStage {
   private gliding = 0;
   private readonly mover: StageMover | undefined;
   /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
-  private cards: StageCards | null = null;
-  /** Brings a Cards glide still under way to rest at once. */
-  private stopCards = (): void => {};
-  /** What the host gives the cards to show: its own Markdown rendering, and linked notes. */
-  cardWords?: CardWords;
-  private readonly drawing: GraphDrawing;
-  private readonly g: Graph | undefined;
+  readonly cardsOn = new CardsSwitch();
+  private readonly drawn: { drawing: GraphDrawing; g: Graph | undefined; draw: () => void };
   private readonly focus = new StageFocus(() => this.draw());
   /** The room picked and the room open: the badge's way in, and its Back (render_room_folders). */
   readonly rooms: StageRooms;
@@ -87,7 +81,7 @@ export class RenderStage {
     kind: StageKind = 'network',
     seen?: Seen,
   ) {
-    [this.viewport, this.drawing, this.g] = [viewport, drawing, g];
+    [this.viewport, this.drawn] = [viewport, { drawing, g, draw: () => this.draw() }];
     ({ scene: this.scene, spots: this.spots, hands: this.hands } = laidOut(drawing, g, kind, hands, places?.saved));
     // an item dragged is moved, and its place saved in the layout block (layout_drag_saves)
     const live = { viewport, scene: this.scene, spots: this.spots, marks: () => this.marks, view: () => this.view };
@@ -186,8 +180,8 @@ export class RenderStage {
   wheel(e: WheelEvent): void {
     const pad = !e.ctrlKey && !e.metaKey && fromTrackpad(e);
     // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
-    if (this.hands?.away?.() || e.altKey || this.cards?.scrolls(e) || (pad && !this.turnBy(-e.deltaX, -e.deltaY)))
-      return;
+    const held = this.hands?.away?.() || e.altKey || !!this.cardsOn.cards?.scrolls(e); // an open card scrolls its words
+    if (held || (pad && !this.turnBy(-e.deltaX, -e.deltaY))) return;
     e.preventDefault();
     e.stopPropagation();
     if (!pad && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
@@ -216,7 +210,7 @@ export class RenderStage {
       // seen from an angle, a drag with Shift or the right button turns and tips the camera; else it moves the drawing
       const turning = isTilted(this.view) && (e.shiftKey || e.button === 2),
         r = this.canvas.getBoundingClientRect();
-      const moving = !turning && !this.cards && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
+      const moving = !turning && !this.cardsOn.cards && !!this.mover?.grab(e.clientX - r.left, e.clientY - r.top);
       this.drag = { x: e.clientX, y: e.clientY, moved: false, turning, moving };
     }
   }
@@ -272,7 +266,7 @@ export class RenderStage {
   /** A click at `x`, `y` on the canvas: what it picks is chosen, glided to, or opened. */
   clicked(x: number, y: number): void {
     // a click on the room open, or a room round it, is a click on its empty floor
-    const at = this.cards?.pickAt(x, y) ?? pickAt(this.marks, x, y),
+    const at = this.cardsOn.cards?.pickAt(x, y) ?? pickAt(this.marks, x, y),
       key = at && !this.rooms.around(at) ? at : null,
       spot = key ? this.spots.get(key) : undefined;
     // a click on a road chooses it, and a click on anything else lets it go
@@ -345,7 +339,7 @@ export class RenderStage {
     const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
     const all = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
-    this.marks = this.cards ? this.cards.under(all, this.view) : all; // the cards stand for their items' dots and names
+    this.marks = this.cardsOn.cards?.under(all, this.view) ?? all; // the cards stand for their items' dots and names
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
@@ -356,19 +350,15 @@ export class RenderStage {
     const c = this.canvas.getContext?.('2d') as (CanvasRenderingContext2D & Canvas2d) | null | undefined;
     if (c) c.setTransform(ratio, 0, 0, ratio, 0, 0);
     if (c) paintCanvas(c, this.marks, w, h);
-    this.cards?.draw(this.view, this.look(), c ?? null, (k) => this.colourOf(k), this.hands?.selected());
+    this.cardsOn.cards?.draw(this.view, this.look(), c ?? null, (k) => this.colourOf(k), this.hands?.selected());
   }
 
   /** Cards on or off (render_cards): the drawing spreads to make room for them, or draws back, gliding either way. */
   showCards(on: boolean, atOnce = false): void {
-    if (on === !!this.cards) return;
-    this.stopCards(); // a press mid-glide starts from where that glide was going
     const untouched = this.untouched,
       done = () => (untouched ? (this.view = this.fitted()) : (this.fitted(), (this.untouched = false)), this.draw());
-    const { viewport, scene, spots, sizes, drawing, g, view } = this,
-      host = { viewport, scene, spots, sizes, drawing, g, view, words: this.cardWords };
-    const next = switchCards(host, this.cards, on, () => this.draw(), done, atOnce);
-    [this.cards, this.view, this.stopCards] = [next.cards, next.view, next.stop];
+    const { viewport, scene, spots, sizes, view } = this;
+    this.view = this.cardsOn.turn({ viewport, scene, spots, sizes, view, ...this.drawn }, on, done, atOnce);
   }
 
   /** The look of the theme shown now, in the window the card is in. */
@@ -385,8 +375,7 @@ export class RenderStage {
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
-    this.stopCards();
-    this.cards?.remove();
+    this.cardsOn.remove();
     this.focus.cancel();
     this.faint.remove();
     this.viewport.removeEventListener('wheel', this.onWheel, { capture: true });

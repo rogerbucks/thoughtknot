@@ -263,6 +263,10 @@ const CLIPS = {
   '.thoughtknot-table th': 'a column of the table, which scrolls sideways when wide',
   '.thoughtknot-table td': 'a cell of the table, which scrolls sideways when wide',
   '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.thoughtknot-stage-cards': 'the card view’s layer over the drawing, which is panned and zoomed under it',
+  '.thoughtknot-stage-card': 'a card of a fixed size; its words wrap, and Show all opens the rest in place',
+  '.thoughtknot-stage-card-name': 'a card’s name on one line, ended with an ellipsis; the details show it whole',
+  '.thoughtknot-stage-card-body': 'a card’s words, which wrap; past its height Show all opens them, and they scroll',
   '.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet':
     'the sheet, a size the person set; its words wrap in its body, which scrolls',
   '.thoughtknot-link-reading':

@@ -8,10 +8,11 @@
 //   layout_concept_layers, projections_all_on).
 // A card is given the settings with its other options, the same in a note, the pane and full screen. `Aids` holds the
 // parts a card builds from them.
-import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
+import { RenderStage, stageFor } from './render-stage.ts';
+import type { StageHands } from './stage-hands.ts';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { turnControls } from './stage-turn-keys.ts';
-import { cardWordsOf, cardsControl } from './stage-cards.ts';
+import { cardWordsOf, cardsControl } from './stage-cards-switch.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -142,7 +143,6 @@ export class Aids {
   private readonly stage: RenderStage | null;
   /** The stage's turn buttons and keys, shown while it is tilted. */
   private readonly turns: ReturnType<typeof turnControls> | null;
-  private readonly cards: ReturnType<typeof cardsControl> | null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -205,15 +205,12 @@ export class Aids {
       selected: () => (this.stage ? host.lens.selected() : null), // nothing is chosen while the card is built
       away: () => !!host.space?.screen?.(),
       drawn: () => this.names(),
-      own: (key: string) => {
-        const levels = this.legend?.shown();
-        return levels ? ownHue(levels, key) : undefined;
-      },
+      own: (key: string) => ownHue(this.legend?.shown() ?? [], key), // no legend yet, no colour picked
     };
     this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
     if (this.stage) o.seen?.keep(this.stage.seen);
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
-    this.cards = this.stage && cardsControl(host.root, this.stage, o.graph, cardWordsOf(o)); // whole notes (render_cards)
+    if (this.stage) cardsControl(host.root, this.stage, o.graph, cardWordsOf(o)); // its unload takes them (render_cards)
   }
 
   /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */
@@ -386,7 +383,6 @@ export class Aids {
   unload(): void {
     this.stage?.unload();
     this.turns?.unload();
-    this.cards?.unload();
     this.watching?.disconnect();
     this.info.onunload();
   }

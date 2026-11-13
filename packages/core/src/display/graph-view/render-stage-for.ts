@@ -3,7 +3,8 @@
 import type { ViewOptions } from './view-options.ts';
 import { hasLevels, stageKind } from './stage-look.ts';
 import type { Seen } from './stage-morph.ts';
-import { RenderStage, type StageHands } from './render-stage.ts';
+import { RenderStage } from './render-stage.ts';
+import type { StageHands } from './stage-hands.ts';
 
 /** The stage for a card, when its setting is on and its graph has levels to show and its type is one the stage draws. */
 export function stageFor(
