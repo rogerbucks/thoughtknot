@@ -49,7 +49,7 @@ NOTE = os.path.join(CASES_DIR, "classification.md")
 KNOWN_P1 = {}
 KNOWN_GRAFEO_REFUSES = {
     "every whitespace character GQL names parts words and items, before keywords too (§3)": (
-        "Grafeo 0.5.43 parts words only at ASCII whitespace, not at every character GQL names"
+        "Grafeo 0.6.2 parts words only at ASCII whitespace, not at every character GQL names"
     ),
 }
 

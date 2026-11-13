@@ -1,6 +1,6 @@
 // The words a view may not use as a name, and the kinds it may not ask for. See editor spec §7 (view_profile,
 // views_agree_with_grafeo; engines_get_standard). A view is standard GQL that Grafeo runs as written. So a name in its
-// pattern is never a word GQL keeps for itself, nor one Grafeo 0.5.43 refuses as a name. A kind it asks for is never
+// pattern is never a word GQL keeps for itself, nor one Grafeo 0.6.2 refuses as a name. A kind it asks for is never
 // one Grafeo refuses as a label. GQL's reserved, pre-reserved and non-reserved words are ISO/IEC 39075:2024 §21.3. Its
 // truth values are §21.2, as the openGQL grammar (GQL.g4) gives them. Grafeo's two lists were found by running words in
 // every place a view names something (11 Oct 2026). Each word was also run in every way a view asks for a kind. The
@@ -42,7 +42,7 @@ ORDINALITY PROPERTY READ RELATIONSHIP RELATIONSHIPS REPEATABLE SHORTEST SIMPLE S
 UNDIRECTED VERTEX WALK WITHOUT WRITE ZONE`.split(/\s+/);
 
 /**
- * The words GQL leaves free that Grafeo 0.5.43 refuses as a name anywhere a view names something, in order: GQL's own
+ * The words GQL leaves free that Grafeo 0.6.2 refuses as a name anywhere a view names something, in order: GQL's own
  * non-reserved ones, Cypher's, and NaN and Inf, which Grafeo reads as numbers.
  */
 export const GRAFEO_REFUSED: readonly string[] = [
@@ -50,42 +50,32 @@ export const GRAFEO_REFUSED: readonly string[] = [
   'CONTAINS',
   'DIFFERENT',
   'ENDS',
-  'GROUPS',
   'INF',
   'MERGE',
   'NAN',
-  'ORDINALITY',
   'REPEATABLE',
   'SHORTEST',
   'SIMPLE',
   'STARTS',
   'TRAIL',
-  'TYPE',
   'UNWIND',
   'WALK',
 ];
 
 /**
- * The words Grafeo 0.5.43 refuses as a label, in order. So a view may not ask for them as a kind, written after a colon
+ * The words Grafeo 0.6.2 refuses as a label, in order. So a view may not ask for them as a kind, written after a colon
  * or in a choice after IS. Fewer than it refuses as a name: Path, Match and Nothing, which GQL keeps, are labels to it.
  */
 export const GRAFEO_REFUSED_KINDS: readonly string[] = [
-  'ACYCLIC',
   'CAST',
   'EXCEPT',
   'FOR',
   'GROUP',
-  'GROUPS',
   'INTERSECT',
   'OFFSET',
-  'ORDINALITY',
   'OTHERWISE',
   'REMOVE',
-  'SHORTEST',
-  'SIMPLE',
-  'TRAIL',
   'UNION',
-  'WALK',
   'XOR',
 ];
 

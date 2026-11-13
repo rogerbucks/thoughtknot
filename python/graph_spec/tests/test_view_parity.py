@@ -134,8 +134,9 @@ def grafeos_answer(db, graph, query):
             if "_id" in value:
                 things.add(value["id"])
             else:  # a route: the things and links it goes through
-                things |= {ids[k] for k in value["nodes"]}
-                routes |= {links[e] for e in value["edges"]}
+                # Grafeo 0.6 returns each node and edge of a route whole, with its id as _id
+                things |= {ids[k["_id"]] for k in value["nodes"]}
+                routes |= {links[e["_id"]] for e in value["edges"]}
     last = sorted(row[columns[-1]]["id"] for row in rows if "_id" in row[columns[-1]])
     return sorted(things), sorted(routes), last
 

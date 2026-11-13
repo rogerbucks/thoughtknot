@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import re
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.optional_imports import grafeo
@@ -40,8 +41,9 @@ def _block_comment(line: str) -> str:
     return f"{indent}/*{text.replace('*/', '* /')} */{after}"
 
 
-# The escapes GQL names that Grafeo 0.5.43 does not read, each written as one it does: \` \b \f
-# and \UXXXXXX (req:3.gql-escapes). \u it reads; a character past U+FFFF is written as itself.
+# The escapes GQL names that Grafeo 0.5.43 did not read (11 Oct 2026), each written as one it
+# does: \` \b \f and \UXXXXXX (req:3.gql-escapes). \u it reads; a character past U+FFFF is
+# written as itself.
 _QUOTED = re.compile(r"'(?:[^'\\]|\\[^\n])*'")
 _ESCAPE = re.compile(r"\\(U[0-9A-Fa-f]{6}|[^\n])")
 
@@ -90,6 +92,8 @@ def read(db: GrafeoDB, g: str) -> tuple[list[dict[str, Any]], list[dict[str, Any
             "MATCH (a)-[r]->(b) RETURN id(a) AS s, id(b) AS t, type(r) AS ty, properties(r) AS p"
         )
     )
+    for row in node_rows + rel_rows:
+        row["p"] = plain(row["p"])
     return node_rows, rel_rows
 
 
@@ -123,8 +127,28 @@ def canon_graph(db: GrafeoDB, g: str) -> tuple[str, int, int]:
 
 
 # ── §7 and §16: the generic process engine ──
+def plain(v: Any) -> Any:
+    """A value as Grafeo 0.5.43 returned it: an exact decimal (Grafeo 0.6 returns one for a
+    number with a point) as a float, an instant that carries an offset (0.6 keeps the offset) as
+    its naive UTC time, and a map without its null entries (0.6 keeps them)."""
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, dt.datetime) and v.tzinfo:
+        return v.astimezone(UTC).replace(tzinfo=None)
+    if isinstance(v, list):
+        return [plain(x) for x in v]
+    if isinstance(v, dict):
+        return {k: plain(x) for k, x in v.items() if x is not None}  # a map holds no null, as 0.5
+    return v
+
+
+def plain_row(r: dict[str, Any]) -> dict[str, Any]:
+    """A result row with each value made plain; a column whose value is null stays."""
+    return {k: plain(x) for k, x in r.items()}
+
+
 def _query_rows(db, q):
-    return list(db.execute_cypher(q))
+    return [plain_row(r) for r in db.execute_cypher(q)]
 
 
 Q_ = _query_rows  # the short name the engine reads with
