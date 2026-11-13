@@ -4987,6 +4987,40 @@ img.thoughtknot-picture-hidden,
   min-width: 0;
 }
 
+/* The filter by what things hold, first in the Filter panel (ES§25, untangle_ask_filter). Its box, rows, count and
+   buttons sit close together. A rule under them parts them from the legend of kinds and links. */
+.thoughtknot-filter-ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  margin-bottom: var(--gn-space-2);
+  padding-bottom: var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+}
+.thoughtknot-filter-ask select,
+.thoughtknot-filter-ask input[type='text'] {
+  min-height: 28px;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-filter-ask-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-filter-ask-hide {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  margin-inline-end: auto;
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-filter-ask-hide input {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  margin: 0;
+}
+
 /* Compact panels (§25, panels_compact). Roger, 6 Nov 2026: the side panels are "way too big", and hold "a ton of text
    … Not useful for daily use … Use tool tips". Where a mouse or trackpad hovers, the panels are dense, as a modern
    app's are:
@@ -5016,6 +5050,7 @@ img.thoughtknot-picture-hidden,
   }
   .thoughtknot-dock button,
   .thoughtknot-untangle-offers button,
+  .thoughtknot-filter button,
   .thoughtknot-dock-fold,
   .thoughtknot-dock-more > summary,
   .thoughtknot-chip-fold,

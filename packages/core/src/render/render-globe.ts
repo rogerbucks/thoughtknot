@@ -7,8 +7,10 @@
 import type { Spot } from './render-rooms.ts';
 import type { View } from './render-marks.ts';
 
-/** How far round the ball the drawing's edge lies at the fitted zoom, in radians: most of the near side, not all. */
-const REACH = 1.2;
+/** The strip of bare ball between the drawing's two edges, where they meet round the back: a share of its width. */
+const GAP = 0.1;
+/** How much of the card's shorter side the ball fills at the fitted zoom. */
+const BALL_FILLS = 0.9;
 
 /** How far a road's arch stands off the ball, as a share of its length on the screen. */
 const ARCH = 0.1;
@@ -26,7 +28,10 @@ export interface OnGlobe {
 /** Whether `view` shows the drawing on a globe. */
 export const isGlobe = (view: View): boolean => !!view.globe;
 
-/** The bend that puts the drawing of `spots` round the near side of a ball: one over its radius, in drawing units. */
+/**
+ * The bend that wraps the drawing of `spots` all the way round a ball, as a world is: one over its radius, in drawing
+ * units. Its longer side goes once round, with a strip of bare ball where its edges meet (Roger, 13 Nov 2026).
+ */
 export function bendOf(spots: Iterable<Spot>): number {
   let [left, top, right, bottom] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const s of spots) {
@@ -36,7 +41,53 @@ export function bendOf(spots: Iterable<Spot>): number {
     bottom = Math.max(bottom, s.y + s.r);
   }
   const half = Math.max(right - left, bottom - top) / 2;
-  return Number.isFinite(half) && half > 0 ? REACH / half : 0;
+  return Number.isFinite(half) && half > 0 ? Math.PI / (half * (1 + GAP)) : 0;
+}
+
+/**
+ * `view` zoomed about its middle so the ball fills the card: the fitted zoom on the globe. The drawing goes all the way
+ * round, so the whole of it never shows at once. None changes while flat.
+ */
+export function ballFitted(view: View): View {
+  if (!view.globe) return view;
+  const [cx, cy] = middleOf(view),
+    c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const scale = (BALL_FILLS / 2) * Math.min(view.w - c.left - c.right, view.h - c.top - c.bottom) * view.globe;
+  return { ...view, scale, x: view.x + cx / view.scale - cx / scale, y: view.y + cy / view.scale - cy / scale };
+}
+
+/** `d` pixels on the flat screen, brought to the nearest of its copies a whole turn of the ball apart. */
+const nearest = (d: number, view: View): number => {
+  const turn = (2 * Math.PI) / perPixel(view);
+  return d - turn * Math.round(d / turn);
+};
+
+/**
+ * `view` turned back by whole turns of the ball, so it faces the drawing's own middle within half a turn. The ball
+ * shows every point at its nearest copy, so the jump never shows. It keeps a long spin from drifting off.
+ */
+export function aroundAgain(view: View, spots: Iterable<Spot>): View {
+  if (!view.globe) return view;
+  let [left, top, right, bottom] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const s of spots)
+    [left, top, right, bottom] = [Math.min(left, s.x), Math.min(top, s.y), Math.max(right, s.x), Math.max(bottom, s.y)];
+  if (!Number.isFinite(left)) return view;
+  const turn = (2 * Math.PI) / view.globe,
+    [cx, cy] = middleOf(view);
+  const [nx, ny] = [
+    Math.round((view.x + cx / view.scale - (left + right) / 2) / turn),
+    Math.round((view.y + cy / view.scale - (top + bottom) / 2) / turn),
+  ];
+  return nx || ny ? { ...view, x: view.x - nx * turn, y: view.y - ny * turn } : view;
+}
+
+/** The copy of `spot` a whole turn of the ball away that is nearest the point facing you: none moves while flat. */
+export function nearestCopy<S extends Spot>(spot: S, view: View): S {
+  if (!view.globe) return spot;
+  const [cx, cy] = middleOf(view),
+    turn = (2 * Math.PI) / view.globe;
+  const [dx, dy] = [spot.x - view.x - cx / view.scale, spot.y - view.y - cy / view.scale];
+  return { ...spot, x: spot.x - turn * Math.round(dx / turn), y: spot.y - turn * Math.round(dy / turn) };
 }
 
 /** The middle of the part of the screen the controls leave clear: the point of the ball that faces you. */
@@ -62,9 +113,10 @@ export function wrapped(x: number, y: number, view: View): OnGlobe {
   const k = perPixel(view);
   if (!k) return { x, y, k: 1, behind: false };
   const [cx, cy] = middleOf(view);
-  const [dx, dy] = [x - cx, y - cy];
+  // the drawing goes once round the ball: a point is shown at its copy nearest the middle
+  const [dx, dy] = [nearest(x - cx, view), nearest(y - cy, view)];
   const d = Math.hypot(dx, dy);
-  if (!d) return { x, y, k: 1, behind: false };
+  if (!d) return { x: cx, y: cy, k: 1, behind: false };
   const angle = d * k,
     behind = angle > Math.PI / 2;
   const out = Math.sin(Math.min(angle, Math.PI / 2)) / k;
@@ -92,7 +144,7 @@ export function onGlobe(spot: Spot, view: View): Spot & { k: number; behind: boo
   // a thing may have its middle round the back and its body over the edge (Roger, 8 Nov 2026). It is part in sight:
   // it sits at the ball's edge, and the painter cuts it there.
   const [cx, cy] = middleOf(view);
-  const past = Math.hypot(x - cx, y - cy) * perPixel(view) - Math.PI / 2;
+  const past = Math.hypot(nearest(x - cx, view), nearest(y - cy, view)) * perPixel(view) - Math.PI / 2;
   return { x: w.x, y: w.y, r, k: w.k, behind: w.behind && past > spot.r * view.scale * perPixel(view) };
 }
 
@@ -100,7 +152,10 @@ export function onGlobe(spot: Spot, view: View): Spot & { k: number; behind: boo
 export function archOver(p: Spot, q: Spot, view: View): [number, number] | undefined {
   if (!isGlobe(view)) return undefined;
   const flat = (s: Spot): [number, number] => [(s.x - view.x) * view.scale, (s.y - view.y) * view.scale];
-  const [[ax, ay], [bx, by]] = [flat(p), flat(q)];
+  // the road runs the short way round: from `p`, to the copy of `q` nearest it
+  const [ax, ay] = flat(p),
+    [qx, qy] = flat(q);
+  const [bx, by] = [ax + nearest(qx - ax, view), ay + nearest(qy - ay, view)];
   const [s, t, m] = [wrapped(ax, ay, view), wrapped(bx, by, view), wrapped((ax + bx) / 2, (ay + by) / 2, view)];
   // the middle lifts away from the ball's middle, as a road over a hill seen from above
   const [cx, cy] = middleOf(view);

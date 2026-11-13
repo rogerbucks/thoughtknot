@@ -75,12 +75,8 @@
     "req:25.drafts-stay-drafts",
     "req:25.lock-carries",
     "req:27.meaning",
-    "req:27.local-id-shown",
-    "req:27.corrected-shown",
+    "req:27.corrected-replaced",
     "req:27.ai-challenges-asked",
-    "req:27.gentle-words",
-    "req:27.likelihood-range",
-    "req:27.altitude-defined",
     "req:27.appearance"
   ]
 }

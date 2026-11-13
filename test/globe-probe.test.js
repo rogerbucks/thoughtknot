@@ -150,7 +150,8 @@ describe('the globe view, driven in a real browser', () => {
         seen.add(await settled());
       }
       assert.equal(seen.size, 6, 'each step of a pinch moves the view a step further');
-      for (const button of ['Zoom in', 'Fit']) {
+      // Fit first: six steps in from the globe's fit, where the ball fills the card, reach the closest zoom there is
+      for (const button of ['Fit', 'Zoom in']) {
         const before = await picture();
         await eval_(`document.querySelector('.thoughtknot-fullscreen button[aria-label="${button}"]').click()`);
         await until(async () => (await picture()) !== before);
