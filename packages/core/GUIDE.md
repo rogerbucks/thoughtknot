@@ -1674,8 +1674,10 @@ shown over the graph and never written until a person accepts a change. Then it 
 - `proposals-judgement.ts` — what was decided, kept in the note (cs-rejected-out, decider_named).
   - There is a `Decision` for each change in the note's judgement graph. That is a block whose graph is `judgements`
     (or ends `_judgements`). It is reused when the note has one, and added after the change set when not.
-  - It holds the statement, who proposed it (`proposed_by`), who decided and when, and the place the change had. Who
-    decided is `decided_by`: plain text exactly as set, or "you" (`deciderName`).
+  - It holds the statement, who decided and when, and the place the change had. Who decided is `decided_by`: plain
+    text exactly as set, or "you" (`deciderName`).
+  - Who proposed it is kept once, as its PROV link. Only a proposer of unknown kind has no link, so its name is the
+    plain `proposed_by` text instead (spec_ai_rules_agree).
   - It also writes the W3C PROV attributions (the graph spec's req:24.prov-attributed).
   - The Decision is `WAS_ATTRIBUTED_TO` the proposer: a Model for a model, a Person for a person or a step. It names
     none when the kind is not known. It is also attributed to the person who decided (a Person).

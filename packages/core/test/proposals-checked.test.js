@@ -256,7 +256,7 @@ describe('cs-rejected-out: a rejected addition leaves the live graph, and the re
     assert.equal(review.reject(note, [C2], ROGER, { at: NOW }).ok, true);
   });
 
-  test('the Decision holds the statement, who proposed it, who rejected it and when', () => {
+  test('the Decision holds the statement, who rejected it and when, and links who proposed it', () => {
     const { note } = written(proposalOf({ changes: [{ ...CHANGES[0], reason: 'a pocket one' }, CHANGES[1]] }));
     const p = ProposalReview.fromChangeSet(setOf(note), note);
     const [first, second] = p.proposal.changes;
@@ -264,7 +264,9 @@ describe('cs-rejected-out: a rejected addition leaves the live graph, and the re
     const d = recordsIn(r.note).get(first.id);
     assert.equal(d.state, 'rejected');
     assert.equal(d.statement, "(small_reader:Option {name: 'Small reader'})");
-    assert.equal(d.proposed_by, 'ada');
+    // a model proposed it, so who did is its PROV link and not a second, plain copy
+    assert.equal(d.proposed_by, undefined);
+    assert.match(r.note, /\{role: 'proposed'\}\]->\(agent_model_ada_/);
     assert.equal(d.decided_by, 'roger');
     assert.equal(d.at, NOW);
     assert.equal(d.change_set, 'cs1');
@@ -446,7 +448,7 @@ describe('decider_named: the person who accepts or rejects is recorded by the na
   test('the proposer is the change set’s `by`, kept apart from the decider', () => {
     const { note } = written();
     const r = accepted(new ProposalReview(proposalOf()).reject(note, [C3], { name: 'Roger Bucks' }, { at: NOW }));
-    assert.equal(recordsIn(r.note).get(C3).proposed_by, 'ada');
+    assert.match(r.note, /\{role: 'proposed'\}\]->\(agent_model_ada_/);
     assert.equal(gs.changesetHeader(setOf(r.note)).by, 'ada');
   });
 
