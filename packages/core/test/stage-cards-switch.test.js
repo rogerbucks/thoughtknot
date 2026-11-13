@@ -89,7 +89,7 @@ test('Cards on spreads the drawing and lays a card over each item; a click picks
 });
 
 // proves: render_cards
-test('a second press mid-glide starts from where the first was going; an unload stops the glide; tilted, dots show', async () => {
+test('a second press mid-glide starts from where the first was going; an unload stops the glide; tilted, cards face the reader', async () => {
   const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
   const doc = fakeDocument(800),
     uninstall = installGlobals(doc);
@@ -116,15 +116,17 @@ test('a second press mid-glide starts from where the first was going; an unload 
       const now = stage.spots.get(k);
       assert.ok(Math.abs(now.x - s.x) < 1e-6 && Math.abs(now.y - s.y) < 1e-6, `${k} back where the layout had it`);
     }
-    // tilted, the cards hide, so the dots and names stay
+    // tilted, each card faces the reader at its item's place, and stands for its dot
     stage.showCards(true, true);
     const spot = stage.spots.get('W1');
     stage.view = { ...stage.view, scale: 1, x: spot.x - 400, y: spot.y - 300, tilt: 0.6 };
     stage.draw();
-    assert.ok(
-      stage.marks.some((m) => m.kind === 'dot' && keys.includes(m.key)),
-      'tilted, no card shows, so its dot does',
-    );
+    const { onScreen } = await import('../src/render/render-tilt.ts');
+    const card = viewport.querySelectorAll('.thoughtknot-stage-card').find((el) => el.textContent.includes('Work 1'));
+    assert.ok(!card.hidden, 'tilted, the card shows');
+    const at = onScreen({ x: spot.x, y: spot.y, r: 1 }, stage.view);
+    assert.equal(stage.cardsOn.cards.pickAt(at.x, at.y), 'W1', 'a click where the tilt puts it picks it');
+    assert.ok(!stage.marks.some((m) => m.kind === 'dot' && keys.includes(m.key)), 'the card stands for its dot');
     // an unload mid-glide: no frame draws the removed stage
     stage.showCards(false);
     let drawn = 0;
@@ -134,6 +136,43 @@ test('a second press mid-glide starts from where the first was going; an unload 
     assert.equal(drawn, 0, 'nothing draws after the unload');
   } finally {
     globalThis.requestAnimationFrame = had;
+    uninstall();
+  }
+});
+
+// proves: render_cards
+test('where places mean something, as on a treemap, nothing moves and only the chosen thing opens its card', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { installHost } = await import('../src/display/host.ts');
+    installHost({ icon: () => {}, isPhone: () => false, notice: () => {}, menu: () => {} });
+    const { RenderStage } = await import('../src/display/graph-view/render-stage.ts');
+    const { drawing, g, keys } = drawingAndGraph();
+    const viewport = doc.createElement('div');
+    doc.body.appendChild(viewport);
+    let chosen = null;
+    const hands = { open: (k) => (chosen = k), clear: () => {}, selected: () => chosen };
+    const stage = new RenderStage(viewport, drawing, g, hands, undefined, undefined, 'treemap');
+    const before = new Map([...stage.spots].map(([k, s]) => [k, { ...s }]));
+    stage.showCards(true, true);
+    for (const [k, s] of before) assert.deepEqual(stage.spots.get(k), s, `${k} stays where the treemap put it`);
+    const shown = () => viewport.querySelectorAll('.thoughtknot-stage-card').filter((el) => !el.hidden);
+    const spot = stage.spots.get('H2');
+    stage.view = { ...stage.view, scale: 1, x: spot.x - 400, y: spot.y - 300 };
+    stage.draw();
+    assert.equal(shown().length, 0, 'nothing chosen, no card');
+    assert.ok(
+      stage.marks.some((m) => m.kind === 'dot' && keys.includes(m.key)),
+      'the dots stay',
+    );
+    chosen = 'H2';
+    stage.draw();
+    assert.equal(shown().length, 1, 'only the chosen thing has its card');
+    assert.ok(shown()[0].textContent.includes('Home 2'));
+    stage.unload();
+  } finally {
     uninstall();
   }
 });

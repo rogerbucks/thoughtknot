@@ -213,7 +213,53 @@ export interface CardsLaid {
   spread: number;
   cx: number;
   cy: number;
+  /** Each item's depth in the scene, so a tilted view lifts its card as it lifts its dot. */
+  depths: Map<string, number>;
+  /** Only the chosen thing's card shows, at its own place: a drawing whose places mean something (render_cards). */
+  only?: boolean;
 }
+
+/**
+ * The drawing types whose places carry meaning: an area, a cell, a date, a spot on a map, a ring. Spreading them would
+ * say something false, so with Cards on only the chosen thing's card opens, where it is (coordinator, 13 Nov 2026).
+ */
+export const CARD_ON_CHOICE: ReadonlySet<string> = new Set([
+  'treemap',
+  'matrix',
+  'timeline',
+  'map',
+  'chord',
+  'arc',
+  'hive',
+]);
+
+/** The cards of `texts` for the items of `scene`, each at its place in `spots`, none moved: one shows at a time. */
+export function cardsInPlace(
+  scene: Scene,
+  spots: ReadonlyMap<string, Spot>,
+  texts: ReadonlyMap<string, CardText>,
+): CardsLaid {
+  const items = itemsOf(scene).filter((k) => spots.has(k));
+  const cards = items.map((k) => {
+    const s = spots.get(k) as Spot,
+      text = texts.get(k) ?? { key: k, name: scene.nodes.get(k)?.name ?? k };
+    return { key: k, x: s.x, y: s.y, ...cardSizeOf(text), text };
+  });
+  return {
+    spots: new Map(spots),
+    cards,
+    arrows: [],
+    spread: 1,
+    cx: 0,
+    cy: 0,
+    depths: depthsOf(scene, items),
+    only: true,
+  };
+}
+
+/** The depth of each of `items` in `scene`. */
+const depthsOf = (scene: Scene, items: readonly string[]): Map<string, number> =>
+  new Map(items.map((k) => [k, scene.nodes.get(k)?.depth ?? 0]));
 
 /**
  * The layout `spots` of `scene` drawn as the cards of `texts`, with arrows for `links`. Every place, groups too, is
@@ -242,7 +288,8 @@ export function cardsLaid(
   // an item's spot reaches round its whole card, so a fit shows every card whole
   for (const b of placed) out.set(b.key, { x: b.x, y: b.y, r: Math.max(b.w, b.h) / 2 });
   const cards = placed.map((b) => ({ ...(sized.get(b.key) as CardSize), ...b, text: text(b.key) }));
-  return { spots: out, cards, arrows: cardArrows(placed, links, axis), spread, cx, cy };
+  const arrows = cardArrows(placed, links, axis);
+  return { spots: out, cards, arrows, spread, cx, cy, depths: depthsOf(scene, items) };
 }
 
 /** Whether the straight piece from `p` to `q` runs through the inside of `box`, kept in from its edge by `inset`. */
