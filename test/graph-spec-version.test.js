@@ -14,7 +14,7 @@ const load = () => import('../scripts/graph-spec-version.mjs');
 describe('spec_versioned', () => {
   test('the spec names its version, and the rules match its last changelog line', async () => {
     const m = await load();
-    assert.equal(m.readVersion().version, '1.2');
+    assert.equal(m.readVersion().version, '1.3');
     assert.deepEqual(m.problems(), []);
   });
 
@@ -27,7 +27,7 @@ describe('spec_versioned', () => {
     fs.appendFileSync(path.join(root, m.SPEC_FILE), "\n(a_new_rule:Requirement {rule: 'x'})");
     const found = m.problems(root);
     assert.equal(found.length, 1);
-    assert.match(found[0], /rules changed since Graph Spec 1\.2.*new version.*decision.*approval/);
+    assert.match(found[0], /rules changed since Graph Spec 1\.3.*new version.*decision.*approval/);
   });
 
   test('a comment line in the header is not a rule', async () => {
