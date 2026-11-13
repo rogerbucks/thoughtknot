@@ -57,6 +57,26 @@ export function insideFade(s: Spot, t: Spot, view: View): number {
   return 1 - k * k * (3 - 2 * k);
 }
 
+/**
+ * How much a road shows between rooms that sit in two different rooms. It shows as much as the road between those
+ * two has faded, as the reader zooms inside one of them. So as a highway fades, the links it carried come into sight
+ * one level in. The way out never goes blank (Roger, 13 Nov 2026). A road inside one room has 1: it always shows.
+ */
+export function handedOver(
+  scene: Scene,
+  spots: Map<string, Spot>,
+  view: View,
+  road: { a: string; b: string },
+  depth: number,
+): number {
+  const [pa, pb] = [scene.nodes.get(road.a)?.parent, scene.nodes.get(road.b)?.parent];
+  if (pa === pb) return 1;
+  const [p, q] = [pa === undefined ? undefined : spots.get(pa), pb === undefined ? undefined : spots.get(pb)];
+  if (!p || !q) return 0;
+  const fade = 1 - insideFade(onScreen(p, view, depth - 1), onScreen(q, view, depth - 1), view);
+  return fade < 0.05 ? 0 : fade;
+}
+
 /** The most of a road's length each end may give up to reach its room's edge, so a road between close rooms still shows. */
 const MOST_TRIM = 0.4;
 
@@ -204,11 +224,14 @@ export function roadsOf(
     for (const road of at) {
       const p = spots.get(road.a),
         q = spots.get(road.b);
-      // only neighbours in the same room: links that leave it ride on the road of the room itself
-      if (!p || !q || scene.nodes.get(road.a)?.parent !== scene.nodes.get(road.b)?.parent) continue;
+      if (!p || !q) continue;
+      // links that leave a room ride on the road of the room itself, till the reader is inside it (handedOver)
+      const over = handedOver(scene, spots, view, road, depth);
+      if (!over) continue;
       const [s, t] = [onScreen(p, view, depth), onScreen(q, view, depth)];
       // the globe's far side has signposts instead. A road with one end round the back still runs to the ball's edge.
-      const alpha = s.behind && t.behind ? 0 : Math.max(least, shown * insideFade(s, t, view));
+      const own = shown * insideFade(s, t, view);
+      const alpha = s.behind && t.behind ? 0 : over < 1 ? over * own : Math.max(least, own);
       if (alpha < 0.05) continue;
       // a road runs from the edge of one room to the edge of the other, never into its middle (Roger)
       const [from, to] = edgesOf(s, t);

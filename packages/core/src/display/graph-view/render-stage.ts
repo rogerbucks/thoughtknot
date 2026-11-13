@@ -14,7 +14,7 @@ import { coloursOf, marksOf, type Mark, type OwnColour, type View } from '../../
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
-import { isGlobe, middleOf } from '../../render/render-globe.ts';
+import { aroundAgain, isGlobe, middleOf } from '../../render/render-globe.ts';
 import { flatOf, laidOut, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import type { StageKind } from './stage-look.ts';
 import { morphIn, seenOf, type Seen } from './stage-morph.ts';
@@ -342,7 +342,7 @@ export class RenderStage {
 
   /** Paints a whole new frame, at the device's own pixels. */
   draw(): void {
-    const { w, h } = this.view;
+    const { w, h } = (this.view = aroundAgain(this.view, this.spots.values())); // a pan round the globe comes back
     const ratio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
     this.canvas.width = Math.round(w * ratio);
     this.canvas.height = Math.round(h * ratio);
