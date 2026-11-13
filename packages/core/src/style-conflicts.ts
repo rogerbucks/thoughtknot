@@ -297,6 +297,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.presets = checked.presets; // and its preset the first written (§69)
   style.renders = checked.renders; // its space and painter too, key by key (§68, render-choice.ts)
   style.explores = checked.explores; // and its exploration the first written for a view (§71)
+  style.named = checked.named; // and its filters saved by name, the first of a name used (ES§25)
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {
     const first = style.views.get(view);

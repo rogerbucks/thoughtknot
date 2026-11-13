@@ -19,7 +19,7 @@ export interface Removal {
 type Edit = (note: string) => { note: string } | { refused: string };
 
 /** Changes the note at `path` by `edit`; gives the note before and after, or why it was not changed. */
-async function changeNote(
+export async function changeNote(
   plugin: ThoughtKnotPlugin,
   path: string,
   edit: Edit,

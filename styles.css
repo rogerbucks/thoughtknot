@@ -5020,6 +5020,20 @@ img.thoughtknot-picture-hidden,
   min-height: 1.5rem;
   margin: 0;
 }
+/* The filters saved by name, picked from one list, with Delete beside it (untangle_filter_saved). */
+.thoughtknot-filter-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-1);
+}
+.thoughtknot-filter-saved:empty {
+  display: none;
+}
+.thoughtknot-filter-saved select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 /* Compact panels (§25, panels_compact). Roger, 6 Nov 2026: the side panels are "way too big", and hold "a ton of text
    … Not useful for daily use … Use tool tips". Where a mouse or trackpad hovers, the panels are dense, as a modern

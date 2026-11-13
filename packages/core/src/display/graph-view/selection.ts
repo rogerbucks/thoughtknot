@@ -47,10 +47,7 @@ export interface SelectionHost {
   /** The drawing's viewport, and its size as the zoom has it. */
   viewport: () => HTMLElement;
   size: () => Size;
-  /**
-   * The View menu. It opens the folds a thing is hidden in (§25), and lays the graph out again with a thing and its
-   * neighbours together (untangle_regroup).
-   */
+  /** The View menu: opens a thing's folds (ES§25), lays a thing and its neighbours out together (untangle_regroup). */
   switching?: () => ViewSwitching | null;
 }
 
@@ -103,6 +100,7 @@ export class Selection {
       go: (key) => this.goTo(key, false),
       legend: o.view?.shown?.legend, // a view saved as shown opens with its legend's choices (§25, untangle_legend)
       ...(o.exploring && { exploring: o.exploring }), // and an exploration saved opens again (§71, explore_saved)
+      ...(o.named && { named: o.named }), // the filters saved by name, to pick again (untangle_filter_saved)
       regroup: (only) => this.regrouping.to(only),
       svg: host.svg,
       ...(o.ruleAsk?.describe && { describe: (w, fill) => o.ruleAsk?.describe?.(w, fill) }), // untangle_ask_filter

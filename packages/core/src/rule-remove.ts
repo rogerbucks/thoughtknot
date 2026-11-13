@@ -18,7 +18,7 @@ export interface RuleRemove {
 }
 
 /** The block's text with the item that holds `at` taken out, with its comma, or the comma before it if last. */
-function without(text: string, at: number): string {
+export function without(text: string, at: number): string {
   const all = items(text),
     k = all.findIndex((it) => it.from <= at && at < it.to);
   const it = all[k];

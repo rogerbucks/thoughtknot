@@ -75,14 +75,14 @@ export {
   type Lens,
   type Radial,
 } from './lenses.ts';
-// what the work/personal boundary builds on (§40, packages/boundary): a setting's rules, a block written back, and
-// the explicit grants
+// what the work/personal boundary builds on (§40, packages/boundary): a setting's rules, a block written back, grants
 export { applyBoundary, type Bounded, type CorporateSetting, type Redaction } from './export-boundary.ts';
 export { gqlBlock } from './export-data-gql.ts';
 export type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 export { Permissions, readable, type Guarded } from './permissions.ts';
 export * from './index-pictures.ts';
 export { savedExploreFor, type ExploreSave, type SavedExplore } from './explore-saved.ts';
+export { namedFilterRemoved, namedFiltersOf, type NamedFilterSave, type NamedFilters } from './filter-named.ts';
 // editing a thing where it is drawn, for the Copilot Cowork skill (§46, cowork_same_bytes)
 export {
   addedNear,
