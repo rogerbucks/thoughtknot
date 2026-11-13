@@ -9,7 +9,7 @@ import { detailAt, roomSizes } from '../src/render/render-detail.ts';
 import { LIGHT } from '../src/render/render-look.ts';
 import { marksOf, onScreen } from '../src/render/render-marks.ts';
 import { fitView, zoomTo } from '../src/render/render-camera.ts';
-import { ballRadius, bendOf, middleOf, unwrapped, wrapped } from '../src/render/render-globe.ts';
+import { aroundAgain, ballRadius, bendOf, middleOf, unwrapped, wrapped } from '../src/render/render-globe.ts';
 import { aNetwork, lookedFrom, turnedView } from '../src/display/graph-view/stage-look.ts';
 import { paintCanvas } from '../src/render/paint-canvas.ts';
 
@@ -164,4 +164,39 @@ test('the new rendering draws a network only: a card drawn as another type shows
   assert.equal(aNetwork({ choice: { drawn: 'radial', chosen: 'radial' } }), false);
   assert.equal(aNetwork({ choice: { drawn: 'network' }, table: {} }), false, 'a table is drawn as one');
   assert.equal(aNetwork({ choice: { drawn: 'network' }, picture: {} }), false, 'a view draws its own picture');
+});
+
+// Roger, 13 Nov 2026: "World view doesn't wrap automatically".
+// proves: globe_view
+test('a spin that goes on past the edge brings the drawing round again from the other side, with no jump', () => {
+  const { spots } = drawing();
+  const start = globeOf(spots);
+  const seen = (view) =>
+    [...spots]
+      .map(([key, s]) => [key, onScreen(s, view)])
+      .filter(([, p]) => !p.behind)
+      .map(([key, p]) => `${key} ${Math.round(p.x)} ${Math.round(p.y)}`)
+      .sort();
+  const before = seen(start);
+  assert.ok(before.length > 0);
+  // a whole turn of the ball, in screen pixels, spun in small drags as the reader would
+  const turn = ((2 * Math.PI) / start.globe) * start.scale;
+  const steps = Math.ceil(turn / 40);
+  let view = start,
+    gone = false;
+  for (let i = 0; i < steps; i++) {
+    view = turnedView(view, turn / steps, 0);
+    const again = aroundAgain(view, spots.values());
+    assert.deepEqual(seen(again), seen(view), `step ${i}: the turn back is never seen`);
+    view = again;
+    gone ||= seen(view).length === 0;
+  }
+  assert.ok(gone, 'half way round, the drawing is out of sight on the far side');
+  assert.deepEqual(seen(view), before, 'a whole turn brings it back where it was');
+  assert.ok(Math.abs(view.x - start.x) < 1e-6, 'and the view is back where it started, not a turn away');
+  // the same up and down
+  view = start;
+  for (let i = 0; i < steps; i++) view = aroundAgain(turnedView(view, 0, -turn / steps), spots.values());
+  assert.deepEqual(seen(view), before);
+  assert.equal(aroundAgain({ ...start, globe: 0, x: 1e6 }, spots.values()).x, 1e6, 'flat: nothing wraps');
 });
