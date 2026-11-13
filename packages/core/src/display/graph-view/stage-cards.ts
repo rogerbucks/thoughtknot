@@ -10,6 +10,8 @@ import { CARD_PROPS, CARD_W, type CardText, type CardsLaid } from '../../render/
 import type { Mark, View } from '../../render/render-marks.ts';
 import type { Look } from '../../render/render-look.ts';
 import type { Spot } from '../../render/render-rooms.ts';
+import { onScreen } from '../../render/render-tilt.ts';
+import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
 
@@ -24,8 +26,26 @@ const FAR_PX = 150;
 /** How clearly the cards show at zoom `scale`: not at all far out, where dots stand for them, then fading in. */
 export const cardAlpha = (scale: number): number =>
   Math.min(1, Math.max(0, (CARD_W * scale - FADE_FROM) / (FADE_TO - FADE_FROM)));
-/** How clearly the cards show under `view`: as at its zoom, but not at all tilted or on the globe. */
-const viewAlpha = (view: View): number => (!view.tilt && !view.globe ? cardAlpha(view.scale) : 0);
+/** Where `p` lies on the screen under `view`, at depth `depth`, and how much a card there is scaled: tilt and globe too. */
+const seen = (p: [number, number], view: View, depth = 0) => onScreen({ x: p[0], y: p[1], r: 1 }, view, depth);
+/** How many pieces each leg of an arrow is cut into on the globe, so it bends with the ball. */
+const GLOBE_PIECES = 8;
+
+/** An arrow's way on the screen under `view`, at `depth`; none if any of it is round the back of the globe. */
+function wayOnScreen(way: readonly [number, number][], view: View, depth = 0): [number, number][] | null {
+  const pieces = isGlobe(view) ? GLOBE_PIECES : 1;
+  const out: [number, number][] = [];
+  for (let i = 0; i < way.length; i++) {
+    const [p, q] = [way[i] as [number, number], way[i + 1]];
+    for (let j = 0; j < (q ? pieces : 1); j++) {
+      const t = j / pieces;
+      const s = seen(q ? [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t] : p, view, depth);
+      if (s.behind) return null;
+      out.push([s.x, s.y]);
+    }
+  }
+  return out;
+}
 /** The radius of an arrow's corners, and the length of its head, in screen pixels. */
 const CORNER_PX = 8;
 const HEAD_PX = 7;
@@ -190,14 +210,18 @@ export class StageCards {
     return !!(e.target as Element | null)?.closest?.('.thoughtknot-stage-card.is-open');
   }
 
-  /** The marks to paint under the cards in `view`: while the cards are faint or hidden, the dots and names still show. */
+  /**
+   * The marks to paint under the cards in `view`. While the cards are faint, the dots and names still show; so do they
+   * all when only the chosen thing has a card.
+   */
   under(marks: readonly Mark[], view: View): Mark[] {
-    return viewAlpha(view) < 0.5 ? [...marks] : underCards(marks, this.outer);
+    return this.laid.only || cardAlpha(view.scale) < 0.5 ? [...marks] : underCards(marks, this.outer);
   }
 
   /**
    * Places each card over its item under `view`, in the colour `colour` gives it, and paints the arrows on `c`, under
-   * the cards. `selected` is the item chosen now, whose card is marked. Tilted, or on the globe, no card shows.
+   * the cards. `selected` is the item chosen now, whose card is marked. Tilted or on the globe, a card faces the
+   * reader at its item's place, nearer ones larger. One round the back of the globe is hidden.
    */
   draw(
     view: View,
@@ -206,21 +230,22 @@ export class StageCards {
     colour: (key: string) => string | undefined,
     selected?: string | null,
   ): void {
-    const k = view.scale,
-      alpha = viewAlpha(view);
     this.boxes = [];
     for (const card of this.laid.cards) {
       const el = this.els.get(card.key) as HTMLElement;
       const at = this.spots.get(card.key) ?? card;
-      const [x, y] = [(at.x - card.w / 2 - view.x) * k, (at.y - card.h / 2 - view.y) * k];
-      const [w, h] = [card.w * k, card.h * k];
-      const on = alpha >= SHOWN && x < view.w && y < view.h && x + w > 0 && y + h > 0;
+      const s = seen([at.x, at.y], view, this.laid.depths.get(card.key));
+      const [k, alpha] = [s.r, s.behind ? 0 : cardAlpha(s.r)];
+      const [x, y, w, h] = [s.x - (card.w / 2) * k, s.y - (card.h / 2) * k, card.w * k, card.h * k];
+      const chosen = !this.laid.only || selected === card.key;
+      const on = chosen && alpha >= SHOWN && x < view.w && y < view.h && x + w > 0 && y + h > 0;
       el.hidden = !on;
       if (!on) continue;
       el.setCssProps({
         '--thoughtknot-card-x': `${x}px`,
         '--thoughtknot-card-y': `${y}px`,
         '--thoughtknot-card-k': String(k),
+        '--thoughtknot-card-z': String(Math.round(k * 1000)), // tilted, the nearer card stands in front
         '--thoughtknot-card-alpha': String(alpha),
         '--thoughtknot-card-colour': colour(card.key) ?? look.faint,
       });
@@ -231,18 +256,19 @@ export class StageCards {
       const tall = el.hasClass('is-open') ? Math.max(h, (el.offsetHeight || 0) * k) : h;
       if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h: tall });
     }
+    const alpha = cardAlpha(view.scale);
     if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha);
   }
 
   /** The arrows between the cards, as clear as the cards are, each with its head at its end. */
   private arrows(c: CanvasRenderingContext2D, view: View, look: Look, alpha: number): void {
-    const k = view.scale;
     c.save();
     c.strokeStyle = c.fillStyle = look.ink;
     c.lineWidth = 1.5;
     for (const a of this.laid.arrows) {
       if (a.way.length < 2) continue;
-      const pts = a.way.map(([x, y]) => [(x - view.x) * k, (y - view.y) * k] as [number, number]);
+      const pts = wayOnScreen(a.way, view, this.laid.depths.get(a.from));
+      if (!pts) continue;
       c.globalAlpha = 0.55 * Math.min(1, alpha);
       c.beginPath();
       const [first] = pts as [[number, number]];
@@ -274,6 +300,7 @@ export class StageCards {
     return null;
   }
 
+  /** Takes the cards away. */
   remove(): void {
     this.owner.unload();
     this.layer.remove();

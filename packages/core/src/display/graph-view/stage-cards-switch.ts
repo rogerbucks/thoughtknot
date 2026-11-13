@@ -4,7 +4,7 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing, NoteReading } from '../../note-reading.ts';
 import { noteOf } from '../../links.ts';
 import type { LinkHost } from '../link-host.ts';
-import { cardsLaid } from '../../render/render-cards.ts';
+import { CARD_ON_CHOICE, cardsInPlace, cardsLaid } from '../../render/render-cards.ts';
 import type { View } from '../../render/render-marks.ts';
 import { MORPH_MS, morphed } from '../../render/render-morph.ts';
 import { roomSizes } from '../../render/render-detail.ts';
@@ -25,6 +25,8 @@ export interface CardsHost {
   view: View;
   /** What the host gives the cards to show; none, plain text. */
   words?: CardWords;
+  /** What the drawing is drawn as: a type whose places mean something opens only the chosen card. */
+  kind?: string;
 }
 
 /** `spots` spread by `f` from (`cx`, `cy`), each in place: what was drawn under a view, spread so. */
@@ -46,7 +48,14 @@ export function switchCards(
   done: () => void,
   atOnce = false,
 ): { cards: StageCards | null; view: View; stop: () => void } {
-  const laid = on ? cardsLaid(h.scene, h.spots, cardTexts(h.drawing, h.g, h.words), h.drawing.links) : was?.laid;
+  const texts = on ? cardTexts(h.drawing, h.g, h.words) : null;
+  // where a place means something, nothing spreads: only the chosen thing's card opens, where it is
+  const inPlace = !!h.kind && CARD_ON_CHOICE.has(h.kind);
+  const laid = texts
+    ? inPlace
+      ? cardsInPlace(h.scene, h.spots, texts)
+      : cardsLaid(h.scene, h.spots, texts, h.drawing.links)
+    : was?.laid;
   if (!laid || (on ? false : !was)) return { cards: was, view: h.view, stop: () => {} };
   const base = on ? new Map(h.spots) : (was as StageCards).base;
   const to = on ? laid.spots : base;

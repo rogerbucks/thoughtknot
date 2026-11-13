@@ -2547,6 +2547,7 @@ pre.thoughtknot-code {
 .thoughtknot-stage-cards {
   position: absolute;
   inset: 0;
+  isolation: isolate; /* the cards stack among themselves, under the panels and dock */
   overflow: hidden;
   pointer-events: none;
 }
@@ -2562,6 +2563,7 @@ pre.thoughtknot-code {
   block-size: var(--thoughtknot-card-h);
   transform: translate(var(--thoughtknot-card-x), var(--thoughtknot-card-y)) scale(var(--thoughtknot-card-k));
   transform-origin: 0 0;
+  z-index: var(--thoughtknot-card-z);
   opacity: var(--thoughtknot-card-alpha);
   background: var(--gn-bg);
   color: var(--gn-text-normal);
@@ -2655,7 +2657,7 @@ button.thoughtknot-stage-card-more {
 }
 /* Show all opens a card in place, above the cards round it; its words scroll once taller than the card may grow */
 .thoughtknot-stage-card.is-open {
-  z-index: 1;
+  z-index: calc(var(--thoughtknot-card-z) + 100000);
   block-size: auto;
   min-block-size: var(--thoughtknot-card-h);
   max-block-size: calc(3 * var(--thoughtknot-card-h));
