@@ -125,13 +125,13 @@ describe('what is refused, and what the refusal says', () => {
     ["MATCH (n {id: 'a'})-[]-{1,2}(Match) RETURN n, Match", 'near', /^Match is a word GQL .*such as Match_1\./],
     ["MATCH (on) WHERE on.id IN ['a'] RETURN on", 'picked', /^on is a word GQL .*such as on_1\./],
     ["MATCH UNWIND = (a {id: 'a'})-[]->{1,2}(b {id: 'b'}) RETURN UNWIND", 'reaches', /^UNWIND is a word GQL /],
-    ['MATCH (type IS Person) RETURN type', 'kinds', /^type is a word GQL .*such as type_1\./],
+    ['MATCH (trail IS Person) RETURN trail', 'kinds', /^trail is a word GQL .*such as trail_1\./],
     ["MATCH (nan) WHERE nan.id IN ['a'] RETURN nan", 'picked', /^nan is a word GQL keeps .*such as nan_1\./],
     // nor a kind Grafeo refuses as a label, whichever way the kind is written
     [
-      'MATCH (n:Walk) RETURN n',
+      'MATCH (n:Except) RETURN n',
       'kinds',
-      /^Walk is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Walk_1\./,
+      /^Except is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Except_1\./,
     ],
     ['MATCH (n IS Group) RETURN n', 'kinds', /^Group is a word GQL keeps .*as a kind.*such as Group_1\./],
     ['MATCH (n IS Person|union) RETURN n', 'kinds', /^union is a word GQL keeps .*as a kind/],

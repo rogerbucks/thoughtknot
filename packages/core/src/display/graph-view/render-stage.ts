@@ -1,9 +1,8 @@
 // The stage of the new rendering (editor spec §73, render_switch; wiki/Rendering-spec.md). With its setting on, a graph
 // is drawn here, on one canvas over the card, by the layers one way down. Today's SVG stays underneath, hidden.
-// Ctrl or Cmd with the wheel, or a pinch on a trackpad or touch screen, zooms smoothly at the pointer (Roger, 6 Nov).
-// Dragging pans. Plain scrolling is left to the page. A click picks from the marks (layer L6). An item's first click
-// selects it and opens its details. Its second glides it to the middle (second_tap_centres). A group opens like a
-// folder: picked first, then opened (stage-rooms.ts). A click on empty space clears the selection.
+// Ctrl or Cmd with the wheel, or a pinch, zooms smoothly at the pointer (Roger, 6 Nov). Dragging pans; scrolling is
+// left to the page. An item's first click selects it and opens its details. Its second centres it (second_tap_centres).
+// A group opens like a folder (stage-rooms.ts). A click on empty space clears the selection.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import type { Scene } from '../../render/render-scene.ts';
@@ -20,7 +19,7 @@ import type { StageKind } from './stage-look.ts';
 import { morphIn, seenOf, type Seen } from './stage-morph.ts';
 import { coverCards, overCover } from './controls-cover.ts';
 import { glide } from './stage-glide.ts';
-import { StageFocus, pickRoad } from './stage-focus.ts';
+import { StageFocus, StageUntangle, pickRoad } from './stage-focus.ts';
 import { FaintRoads } from './stage-faint.ts';
 import { StageMiniMap } from './stage-mini-map.ts';
 import { StageMover, type PlacesHost } from './stage-places.ts';
@@ -61,6 +60,7 @@ export class RenderStage {
   /** The room picked and the room open: the badge's way in, and its Back (render_room_folders). */
   readonly rooms: StageRooms;
   private readonly faint = new FaintRoads({ viewport: () => this.viewport, changed: () => this.draw() });
+  private readonly shown = new StageUntangle(() => this.draw()); // what the legend or filter brings forward (ES§25)
 
   private readonly viewport: HTMLElement;
   private readonly hands: StageHands | undefined;
@@ -170,7 +170,7 @@ export class RenderStage {
     this.draw();
   }
 
-  private readonly onWheel = (e: WheelEvent): void => this.wheel(e);
+  private readonly onWheel = (e: WheelEvent): void => void (this.cardsOn.cards?.scrolls(e) || this.wheel(e));
   private readonly onKey = (e: KeyboardEvent): void => this.rooms.key(e);
 
   /**
@@ -180,8 +180,7 @@ export class RenderStage {
   wheel(e: WheelEvent): void {
     const pad = !e.ctrlKey && !e.metaKey && fromTrackpad(e);
     // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
-    const held = this.hands?.away?.() || e.altKey || !!this.cardsOn.cards?.scrolls(e); // an open card scrolls its words
-    if (held || (pad && !this.turnBy(-e.deltaX, -e.deltaY))) return;
+    if (this.hands?.away?.() || e.altKey || (pad && !this.turnBy(-e.deltaX, -e.deltaY))) return;
     e.preventDefault();
     e.stopPropagation();
     if (!pad && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
@@ -338,8 +337,9 @@ export class RenderStage {
     this.canvas.height = Math.round(h * ratio);
     const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
-    const all = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
-    this.marks = this.cardsOn.cards?.under(all, this.view) ?? all; // the cards stand for their items' dots and names
+    this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
+    this.marks = this.shown.of(this.marks, this.viewport, this.scene);
+    this.marks = this.cardsOn.cards?.under(this.marks, this.view) ?? this.marks; // the cards stand for dots and names
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();

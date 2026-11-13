@@ -6,6 +6,7 @@ import type { Focus } from '../../render/render-focus.ts';
 import { pickAt } from '../../render/render-camera.ts';
 import type { Mark } from '../../render/render-marks.ts';
 export { pickRoad } from '../../render/render-focus.ts';
+export { StageUntangle } from './stage-untangle.ts';
 
 /** How long the pointer rests on a thing before its links show, in milliseconds. */
 export const HOVER_MS = 400;

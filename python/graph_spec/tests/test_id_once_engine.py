@@ -88,7 +88,7 @@ def names_the_id(results, ident):
 
 
 class GrafeoTakesARepeat(unittest.TestCase):
-    """Question 3: what Grafeo 0.5.43 does when it is given one id twice."""
+    """Question 3: what Grafeo 0.6.2 does when it is given one id twice."""
 
     def test_grafeo_stores_two_nodes_for_one_id_in_one_insert(self):
         db = fresh()
@@ -109,12 +109,12 @@ class GrafeoTakesARepeat(unittest.TestCase):
         db.execute(TWO_INSERTS)
         self.assertEqual([r["p"]["id"] for r in nodes(db)], ["x", "x"])
 
-    def test_grafeo_makes_a_second_node_for_a_variable_written_twice(self):
+    def test_grafeo_refuses_a_variable_written_twice(self):
+        # Grafeo 0.5.43 made a second node here; 0.6 refuses, as the reader does
         db = fresh()
-        db.execute("INSERT (a:Person {id: 'a', name: 'A'}), (a:Person {name: 'B'})")
-        rows = nodes(db)
-        self.assertEqual(len(rows), 2)
-        self.assertEqual([r["p"].get("id") for r in rows], ["a", None])
+        with self.assertRaisesRegex(Exception, "bound variable 'a'"):
+            db.execute("INSERT (a:Person {id: 'a', name: 'A'}), (a:Person {name: 'B'})")
+        self.assertEqual(nodes(db), [])
 
 
 class TheReaderRefusesARepeat(unittest.TestCase):

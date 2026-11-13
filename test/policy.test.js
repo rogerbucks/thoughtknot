@@ -458,10 +458,10 @@ describe('Dependabot', () => {
 
   test('the Python reference engine is held at the dialect the spec names, with the reason written down', () => {
     const uv = updates().find((u) => u.ecosystem === 'uv').chunk;
-    // every version update is held, patches too: 0.5.44 already brings 0.6's breaks (#1808). Security fixes still come
+    // minor and major updates are held, as a minor may break the dialect (#1747); patches come, proved by the suites
     assert.match(
       uv,
-      /dependency-name: grafeo\n\s*update-types:\s*\[\s*'version-update:semver-patch',\s*'version-update:semver-minor',\s*'version-update:semver-major',?\s*\]/,
+      /dependency-name: grafeo\n\s*update-types:\s*\[\s*'version-update:semver-minor',\s*'version-update:semver-major',?\s*\]/,
     );
     assert.match(uv, /# Held back:/, 'the reason is written down');
     // the extra and the test group pin one version, and the hold names it

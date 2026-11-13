@@ -1,9 +1,8 @@
 // Untangling a large graph in a card (editor spec §25, slice 3), tied to the core's `Untangle`. It covers a thing and
 // its neighbours alone, the legend, the shortest path between two things and the search box. It holds only what the
-// drawing shows and says it in a banner. The card marks the drawing from `layers`. Nothing here reaches the note
-// (untangle_data_untouched). So none of it is gated for reading view: it changes the picture, never the data. Only the
-// legend's choices are ever written, by a view's Save as shown (view-strip.ts), which is gated. A view saved so starts
-// with them (untangle_legend).
+// drawing shows and says it in a banner. The card marks the drawing from `layers`, and so does the new rendering.
+// Nothing here reaches the note (untangle_data_untouched), so none of it is gated for reading view. Only the legend's
+// choices are written, by a view's gated Save as shown (view-strip.ts); a view saved so starts with them.
 import {
   MOST_STEPS,
   Untangle,
@@ -27,7 +26,7 @@ import { levelsOf } from './level-clouds-svg.ts';
 import { levelPath } from '../../detail-levels.ts';
 import type { FindRow } from './untangle-find';
 import { renderLegend } from './untangle-legend';
-import { askPanelIn } from './untangle-ask.ts';
+import { askPanelIn, untangledIn } from './untangle-ask.ts';
 import type { FilterAskHost, FilterAskPanel, ShownAsk } from './untangle-ask.ts';
 import type { LegendPanel } from './untangle-legend';
 
@@ -131,6 +130,7 @@ export class UntangleView {
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
+    untangledIn.set(root, () => this.core.layers(null)); // the new rendering marks its drawing by them too
   }
 
   /** Shows a filter by what things hold, the rest faded or hidden; null shows all again. */

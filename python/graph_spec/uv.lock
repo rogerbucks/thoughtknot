@@ -1,31 +1,30 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.12"
 
 [[package]]
 name = "grafeo"
-version = "0.5.43"
+version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "solvor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/06/f48596ff4fb880a5ba8c8b1591a78e497569ae3279777487fd07dced1616/grafeo-0.5.43.tar.gz", hash = "sha256:4f1da835d8c8fdce130e735d3e1a3d20f4f4f76450e57d8e1286547642cdf4fe", size = 2540852, upload-time = "2026-09-27T19:23:12.954Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/da/ffc4df194f957b2d751c443bf69ab52aed60685855e79c2b3d8df9085f26/grafeo-0.6.2.tar.gz", hash = "sha256:af1cd4f7b77cd31d9fab1f27cd465019bb1c3a430be7b9a53380b58a62dcbf20", size = 6139494, upload-time = "2026-11-08T18:01:58.769Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/0b/e66c5d54ea508d214b49227aa6544784d6e21d576ac65204ad1a4cd5d245/grafeo-0.5.43-cp312-abi3-macosx_10_12_x86_64.whl", hash = "sha256:e82b90b6914b63fba9d0fa15a439442015515bc2e257760997597dbc1bebbcdd", size = 4996528, upload-time = "2026-09-27T19:22:57.6Z" },
-    { url = "https://files.pythonhosted.org/packages/8e/de/587cfcad4b82fbba59d860e69c46887f2dd83376cf697808dedbdfddcd38/grafeo-0.5.43-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:f2a8e021cf0bafc67c7747efa3a2859770dc3947d75d68443c26fac13caa0919", size = 4682292, upload-time = "2026-09-27T19:23:00.141Z" },
-    { url = "https://files.pythonhosted.org/packages/a7/34/e48706b48b54b4f658c1f82d92081a07c2766d0eeb92086ff49b8d5ccea3/grafeo-0.5.43-cp312-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7a5204a14df52fc91b8653efd191b547e59aef68f4f512d8af763c0d01af2a8d", size = 4988282, upload-time = "2026-09-27T19:23:02.125Z" },
-    { url = "https://files.pythonhosted.org/packages/71/28/caadc1d97868059e1b901a5d3e99237d536b6e3c2374ec5bc613e90c9f7e/grafeo-0.5.43-cp312-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a94989cb6b0ecb964a80b9720f1ff7aa525ac4eeafca803dbb9831bdcf59f02d", size = 5199382, upload-time = "2026-09-27T19:23:04.097Z" },
-    { url = "https://files.pythonhosted.org/packages/4d/52/b11b2e4326932fa0fdb5c93a107505d5cf991814f4d99f7797faeb78a296/grafeo-0.5.43-cp312-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:abb310214d839ab799fb501f208df8d60fdda9b39d79f275b422aeb73a3ee973", size = 5168318, upload-time = "2026-09-27T19:23:05.913Z" },
-    { url = "https://files.pythonhosted.org/packages/27/8d/4c5e89070592e8e94b9ec217f8fe3c14765b8f6d1acc473471d3351af391/grafeo-0.5.43-cp312-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:76ff83f3df1fd3de1fc6b8c8b3512b1e08a105cebb73890f2c9818069b30edd6", size = 5458553, upload-time = "2026-09-27T19:23:07.613Z" },
-    { url = "https://files.pythonhosted.org/packages/9f/af/edae2e4c169187b97007a8df97fd154c65353a146776e7d639b410c6a1dd/grafeo-0.5.43-cp312-abi3-win32.whl", hash = "sha256:a97bbfa7fed92b32bff5393d43cb2879080e4f17253cc27a9bc6e932b99d3357", size = 4662749, upload-time = "2026-09-27T19:23:09.608Z" },
-    { url = "https://files.pythonhosted.org/packages/c8/52/084d0791cbfa11d0094b6fc675b6817889e21d2802aece3671d4a7d822ac/grafeo-0.5.43-cp312-abi3-win_amd64.whl", hash = "sha256:ebcf4418650daf70c2165aac3dc94b9bbd63599d0574753eeead40d2554d1d03", size = 5094694, upload-time = "2026-09-27T19:23:11.281Z" },
+    { url = "https://files.pythonhosted.org/packages/49/c9/3226dfa40806238587d5faba8bd07f045231d90346f6bb75cc829b17fbbd/grafeo-0.6.2-cp312-abi3-macosx_10_12_x86_64.whl", hash = "sha256:6638df184b6879f22c8d3655dfd8a3bcf3e70679a56fc7b97798ea9397bd25ae", size = 8494525, upload-time = "2026-11-08T18:01:40.293Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/1d/fe2d3caa253cec8f2e4335543cfa608be462355d0bb9db6041cdc2f88c64/grafeo-0.6.2-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:c37c9ac36807cf1b639ae3530c4274ad200f1272a3abbb7c778e60a25a50a1d5", size = 7916643, upload-time = "2026-11-08T18:01:42.866Z" },
+    { url = "https://files.pythonhosted.org/packages/70/f6/37aa5c9c3e8e47edc25e66cf76d296756161d2b59ce1f8bde324ca6247c3/grafeo-0.6.2-cp312-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:16093c5d82c8926c248356151e49c3d87b025cf83d97f992e89c707dcc79c033", size = 8326309, upload-time = "2026-11-08T18:01:44.666Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/cf/9b5ba40880ca35247d98abe63002148aba4335df8d8f4dcc7a2be49c8871/grafeo-0.6.2-cp312-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:606bc265b6f50f181a6f195a93104ad6eb53f55fe46bcc02baf80d4298293a1e", size = 8706289, upload-time = "2026-11-08T18:01:46.747Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/e1/ace9f528611ec06c11104a5b9ca2db88cceda639a2e977169e6e59bcf707/grafeo-0.6.2-cp312-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:686658de7ef43eb5099557e10e8f624f30aa4f8307a13d8b0a889832a5ff9de5", size = 8499303, upload-time = "2026-11-08T18:01:49.545Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/81/cbbaf9cb08fd473eeb96606ed74240969e966fbb353e3d62cc78049296f8/grafeo-0.6.2-cp312-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:950601289bfaf51f71ec2c29c583275d39aa929b4017871a5ec4c0bce72ef1d5", size = 8981001, upload-time = "2026-11-08T18:01:51.729Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/3e/00e6c01dc77017cf4dda6ef357acc20eefc1c06cb1777db07bdd8750317d/grafeo-0.6.2-cp312-abi3-win32.whl", hash = "sha256:53013c7d9fa9b5061f68fe8b482bd0f2a4d376e57db7d717b8271cb31bf657e1", size = 8068435, upload-time = "2026-11-08T18:01:54.24Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/a7/15fd80087ee01ac4ad1b21799a0023c74886f93ce29d3ed25e45fadb9329/grafeo-0.6.2-cp312-abi3-win_amd64.whl", hash = "sha256:a3e1d6fdfc257533ff17f1b5158fee86f3cb9841b40c3880866bb3e27691fdbc", size = 8667203, upload-time = "2026-11-08T18:01:56.556Z" },
 ]
 
 [[package]]
 name = "graph-spec"
 version = "0.9.0"
 source = { virtual = "." }
-default-groups = ["dev", "reference"]
 dependencies = [
     { name = "lxml" },
     { name = "pyyaml" },
@@ -47,7 +46,7 @@ reference = [
 
 [package.metadata]
 requires-dist = [
-    { name = "grafeo", marker = "extra == 'grafeo'", specifier = "==0.5.43" },
+    { name = "grafeo", marker = "extra == 'grafeo'", specifier = "==0.6.2" },
     { name = "lxml", specifier = "==6.1.3" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "rfc8785", specifier = "==0.1.4" },
@@ -56,7 +55,7 @@ provides-extras = ["grafeo"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = "==0.17.3" }]
-reference = [{ name = "grafeo", specifier = "==0.5.43" }]
+reference = [{ name = "grafeo", specifier = "==0.6.2" }]
 
 [[package]]
 name = "lxml"

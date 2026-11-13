@@ -9,6 +9,7 @@ import { blankFilter, filterKeeps, filterOfRule, filterReady, filterSaid } from 
 import { ruleChoices } from '../../rule-builder.ts';
 import { button } from '../button.ts';
 import { renderFind } from './rule-form-parts.ts';
+export { untangledIn } from './stage-untangle.ts';
 import type { FormState } from './rule-form-parts.ts';
 
 /** What the panel asks of its card. */
