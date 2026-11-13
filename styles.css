@@ -5016,8 +5016,8 @@ img.thoughtknot-picture-hidden,
   font-size: var(--gn-font-size-s);
 }
 .thoughtknot-filter-ask-hide input {
-  width: 1.5rem;
-  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
   margin: 0;
 }
 
