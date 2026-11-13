@@ -31,6 +31,8 @@ const FAR_PX = 150;
 /** How clearly the cards show at zoom `scale`: not at all far out, where dots stand for them, then fading in. */
 export const cardAlpha = (scale: number): number =>
   Math.min(1, Math.max(0, (CARD_W * scale - FADE_FROM) / (FADE_TO - FADE_FROM)));
+/** How clearly the cards show under `view`: as at its zoom, but not at all tilted or on the globe. */
+const viewAlpha = (view: View): number => (!view.tilt && !view.globe ? cardAlpha(view.scale) : 0);
 /** The radius of an arrow's corners, and the length of its head, in screen pixels. */
 const CORNER_PX = 8;
 const HEAD_PX = 7;
@@ -164,12 +166,14 @@ export class StageCards {
     const b = el.createEl('button', {
       cls: 'thoughtknot-stage-card-more',
       text: word('view.cards.more', { count: more }),
-      attr: { type: 'button' },
+      // the layer is hidden from screen readers, so its button stays out of the tab order too
+      attr: { type: 'button', tabindex: '-1', 'aria-expanded': 'false' },
     });
     b.addEventListener('click', (e) => {
       e.stopPropagation();
       const open = !el.hasClass('is-open');
       el.toggleClass('is-open', open);
+      b.setAttribute('aria-expanded', String(open));
       body.toggleClass('is-cut', !open);
       b.setText(open ? word('view.cards.less') : word('view.cards.more', { count: more }));
       if (open) this.layer.appendChild(el); // the open card stands on top
@@ -193,9 +197,9 @@ export class StageCards {
     return !!(e.target as Element | null)?.closest?.('.thoughtknot-stage-card.is-open');
   }
 
-  /** The marks to paint under the cards at zoom `scale`: while the cards are faint, the dots and names still show. */
-  under(marks: readonly Mark[], scale: number): Mark[] {
-    return cardAlpha(scale) < 0.5 ? [...marks] : underCards(marks, this.outer);
+  /** The marks to paint under the cards in `view`: while the cards are faint or hidden, the dots and names still show. */
+  under(marks: readonly Mark[], view: View): Mark[] {
+    return viewAlpha(view) < 0.5 ? [...marks] : underCards(marks, this.outer);
   }
 
   /**
@@ -210,7 +214,7 @@ export class StageCards {
     selected?: string | null,
   ): void {
     const k = view.scale,
-      alpha = !view.tilt && !view.globe ? cardAlpha(k) : 0;
+      alpha = viewAlpha(view);
     this.boxes = [];
     for (const card of this.laid.cards) {
       const el = this.els.get(card.key) as HTMLElement;
@@ -230,7 +234,9 @@ export class StageCards {
       el.toggleClass('is-far', w < FAR_PX);
       if (w >= FAR_PX) this.fillIn(card.key);
       el.toggleClass('is-selected', selected === card.key);
-      if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h });
+      // an open card grows to its words, so a click picks it over all it covers
+      const tall = el.hasClass('is-open') ? Math.max(h, (el.offsetHeight || 0) * k) : h;
+      if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h: tall });
     }
     if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha);
   }
@@ -312,9 +318,9 @@ export function switchCards(
   draw: () => void,
   done: () => void,
   atOnce = false,
-): { cards: StageCards | null; view: View } {
+): { cards: StageCards | null; view: View; stop: () => void } {
   const laid = on ? cardsLaid(h.scene, h.spots, cardTexts(h.drawing, h.g, h.words), h.drawing.links) : was?.laid;
-  if (!laid || (on ? false : !was)) return { cards: was, view: h.view };
+  if (!laid || (on ? false : !was)) return { cards: was, view: h.view, stop: () => {} };
   const base = on ? new Map(h.spots) : (was as StageCards).base;
   const to = on ? laid.spots : base;
   const f = on ? laid.spread : 1 / laid.spread;
@@ -325,17 +331,19 @@ export function switchCards(
   was?.remove();
   const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots, h.words) : null;
   const frame = typeof requestAnimationFrame === 'undefined' || atOnce ? null : requestAnimationFrame;
-  const end = () => {
+  let over = false;
+  // stopped, the places go straight to where they glide: a switch after, or an unload, starts from rest
+  const stop = (): void => {
+    if (over) return;
+    over = true;
     for (const [k, s] of to) h.spots.set(k, s);
     if (cards) cards.settled = true;
-    done();
   };
-  if (!frame) {
-    end();
-    return { cards, view };
-  }
+  const end = (): void => void (!over && (stop(), done()));
+  if (!frame) return (end(), { cards, view, stop });
   const start = performance.now();
   const step = (now: number): void => {
+    if (over) return;
     const t = (now - start) / MORPH_MS;
     if (t >= 1) return end();
     for (const [k, s] of morphed(from, to, t)) h.spots.set(k, s);
@@ -343,7 +351,7 @@ export function switchCards(
     frame(step);
   };
   frame(step);
-  return { cards, view };
+  return { cards, view, stop };
 }
 
 /**

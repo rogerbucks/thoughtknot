@@ -33,6 +33,8 @@ export const CARD_GAP = 28;
 const SPREAD_MOST = 8;
 /** How many rounds of moving cards apart. */
 const ROUNDS = 120;
+/** How many pairs of cards the rounds may weigh in all, at most. */
+const WORK = 4_000_000;
 
 /** What a card shows: its thing's key, name and kind, its own note, the body of the note it stands for, its properties. */
 export interface CardText {
@@ -124,10 +126,13 @@ export function spreadOf(boxes: readonly CardBox[]): { spread: number; cx: numbe
   const n = boxes.length || 1;
   const cx = boxes.reduce((s, b) => s + b.x, 0) / n,
     cy = boxes.reduce((s, b) => s + b.y, 0) / n;
-  const needs = boxes
-    .map((a, i) => Math.min(...boxes.filter((_, j) => j !== i).map((b) => partedAt(a, b))))
-    .filter(Number.isFinite)
-    .sort((a, b) => a - b);
+  const needs: number[] = [];
+  for (const a of boxes) {
+    let least = Infinity;
+    for (const b of boxes) if (b !== a) least = Math.min(least, partedAt(a, b));
+    if (Number.isFinite(least)) needs.push(least);
+  }
+  needs.sort((a, b) => a - b);
   const spread = Math.min(SPREAD_MOST, needs.length ? (needs[Math.floor(needs.length / 2)] as number) : 1);
   return { spread, cx, cy };
 }
@@ -142,7 +147,9 @@ export function spreadCardBoxes(boxes: readonly CardBox[]): CardBox[] {
   if (p.length < 2) return p;
   const { spread, cx, cy } = spreadOf(p);
   for (const b of p) [b.x, b.y] = [cx + (b.x - cx) * spread, cy + (b.y - cy) * spread];
-  for (let round = 0; round < ROUNDS; round++) {
+  // a big drawing gets fewer rounds, so pressing Cards never holds the page for long
+  const rounds = Math.max(1, Math.min(ROUNDS, Math.floor(WORK / (p.length * p.length))));
+  for (let round = 0; round < rounds; round++) {
     let moved = false;
     for (let i = 0; i < p.length; i++)
       for (let j = i + 1; j < p.length; j++) {

@@ -57,6 +57,8 @@ export class RenderStage {
   private readonly mover: StageMover | undefined;
   /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
   private cards: StageCards | null = null;
+  /** Brings a Cards glide still under way to rest at once. */
+  private stopCards = (): void => {};
   /** What the host gives the cards to show: its own Markdown rendering, and linked notes. */
   cardWords?: CardWords;
   private readonly drawing: GraphDrawing;
@@ -343,7 +345,7 @@ export class RenderStage {
     const detail = { ...detailAt(this.sizes, this.view.scale), faintRoads: this.faint.drawn() };
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
     const all = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
-    this.marks = this.cards ? this.cards.under(all, this.view.scale) : all; // the cards stand for their items' dots and names
+    this.marks = this.cards ? this.cards.under(all, this.view) : all; // the cards stand for their items' dots and names
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
@@ -360,11 +362,13 @@ export class RenderStage {
   /** Cards on or off (render_cards): the drawing spreads to make room for them, or draws back, gliding either way. */
   showCards(on: boolean, atOnce = false): void {
     if (on === !!this.cards) return;
+    this.stopCards(); // a press mid-glide starts from where that glide was going
     const untouched = this.untouched,
       done = () => (untouched ? (this.view = this.fitted()) : (this.fitted(), (this.untouched = false)), this.draw());
     const { viewport, scene, spots, sizes, drawing, g, view } = this,
       host = { viewport, scene, spots, sizes, drawing, g, view, words: this.cardWords };
-    ({ cards: this.cards, view: this.view } = switchCards(host, this.cards, on, () => this.draw(), done, atOnce));
+    const next = switchCards(host, this.cards, on, () => this.draw(), done, atOnce);
+    [this.cards, this.view, this.stopCards] = [next.cards, next.view, next.stop];
   }
 
   /** The look of the theme shown now, in the window the card is in. */
@@ -381,6 +385,7 @@ export class RenderStage {
   unload(): void {
     this.gliding++; // a glide still running stops with the stage
     this.mover?.unload();
+    this.stopCards();
     this.cards?.remove();
     this.focus.cancel();
     this.faint.remove();
