@@ -17,8 +17,9 @@ export const CARD_W = 240;
 export const CARD_HEAD = 30;
 /** The room inside a card's edge, round its text. */
 export const CARD_PAD = 10;
-/** The size of a card's text, and the height of each of its lines. */
+/** The size of a card's text. */
 export const CARD_PX = 12;
+/** The height of each line of a card's text. */
 export const CARD_LINE = 18;
 /** The most lines of note a card shows before "Show all" (coordinator, 13 Nov 2026: about 12). */
 export const CARD_MOST_LINES = 12;
