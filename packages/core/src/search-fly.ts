@@ -33,29 +33,42 @@ export function folded(text: string): string {
   return text.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 }
 
-/** Every thing of a graph, ready to be found by name: by its text, and by its key where they differ. */
+/**
+ * Every thing of a graph, ready to be found by name: by its text, and by its key where they differ. It holds the
+ * drawing's own boxes and a number a thing for its group, and a folded name only where folding changes it. So a huge
+ * graph's search copies no words per thing (scale_parts_overview).
+ */
 export class ThingSearch {
-  private readonly keys: string[] = [];
-  private readonly texts: string[] = [];
-  private readonly groups: string[] = [];
-  private readonly words: string[] = [];
+  private readonly boxes: Box[] = [];
+  private readonly groupAt: Int32Array;
+  private readonly groupIds: string[];
+  /** A name folded, by the thing's place, only where it differs from the name as written; else undefined. */
+  private readonly foldedText: (string | undefined)[] = [];
+  private readonly foldedKey = new Map<number, string>();
 
   constructor(boxes: readonly Box[], grouping: Grouping) {
-    const groupOf = new Map<string, string>();
-    for (const g of grouping.groups) for (const key of g.keys) groupOf.set(key, g.id);
+    this.groupIds = grouping.groups.map((g) => g.id);
+    const groupOf = new Map<string, number>();
+    grouping.groups.forEach((g, n) => {
+      for (const key of g.keys) groupOf.set(key, n);
+    });
+    const groups: number[] = [];
     for (const b of boxes) {
       const group = groupOf.get(b.key);
       if (group === undefined) continue;
-      this.keys.push(b.key);
-      this.texts.push(b.text || b.key);
-      this.groups.push(group);
-      this.words.push(folded(b.text && b.text !== b.key ? `${b.text}\n${b.key}` : b.text || b.key));
+      const i = this.boxes.length;
+      this.boxes.push(b);
+      groups.push(group);
+      const text = b.text && folded(b.text);
+      this.foldedText.push(text && text !== b.text ? text : undefined);
+      if (folded(b.key) !== b.key) this.foldedKey.set(i, folded(b.key));
     }
+    this.groupAt = Int32Array.from(groups);
   }
 
   /** How many things can be found. */
   get size(): number {
-    return this.keys.length;
+    return this.boxes.length;
   }
 
   /** The things whose name or key holds `query`, best first, at most `most`. Ties keep the order written. */
@@ -63,10 +76,21 @@ export class ThingSearch {
     const q = folded(query.trim());
     if (!q) return [];
     const found: Match[] = [];
-    for (let i = 0; i < this.words.length; i++) {
-      const rank = rankOf(this.words[i] as string, q);
+    for (let i = 0; i < this.boxes.length; i++) {
+      const b = this.boxes[i] as Box;
+      // its text, and its key where they differ, as a name and the key on a line of its own
+      let rank = b.text ? rankOf(this.foldedText[i] ?? b.text, q) : null;
+      if (!b.text || b.text !== b.key) {
+        const byKey = rankOf(this.foldedKey.get(i) ?? b.key, q);
+        if (byKey !== null && (rank === null || byKey < rank)) rank = byKey;
+      }
       if (rank === null) continue;
-      found.push({ key: this.keys[i] as string, text: this.texts[i] as string, group: this.groups[i] as string, rank });
+      found.push({
+        key: b.key,
+        text: b.text || b.key,
+        group: this.groupIds[this.groupAt[i] as number] as string,
+        rank,
+      });
     }
     // a stable sort, so things that match as well keep the order they are written in
     return found.sort((a, b) => a.rank - b.rank || a.text.length - b.text.length).slice(0, most);

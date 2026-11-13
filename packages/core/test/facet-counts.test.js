@@ -4,7 +4,7 @@
 // - A value with no things left shows zero, and the list keeps its order.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FACET_VALUES_MOST, FacetIndex, facetsOf, keptGrouping } from '../src/facet-counts.ts';
+import { FACET_VALUES_MOST, FacetIndex, codedFacet, facetsOf, keptGrouping } from '../src/facet-counts.ts';
 
 /** Six things: three people and three places, each with a status where it has one. */
 const KEYS = ['ada', 'bob', 'cy', 'oslo', 'rome', 'lima'];
@@ -40,6 +40,21 @@ test('filters combine: a thing is kept when every filter with a choice keeps it'
   const counts = index().counts(chosen);
   assert.deepEqual(table(counts, 'Kind'), { Person: 2, Place: 1 });
   assert.deepEqual(table(counts, 'status'), { open: 2, done: 1 }, 'among the people only: bob and cy, and ada');
+});
+
+test('a filter is held as numbers, a code a thing, and counts as its words do', () => {
+  const status = codedFacet(FACETS[1]);
+  assert.deepEqual(status.order, ['open', 'done']);
+  assert.deepEqual([...status.codes], [1, 0, 0, 1, -1, 0], 'rome has none');
+  assert.ok(status.codes instanceof Int16Array, 'two bytes a thing');
+  assert.equal('values' in status, false, 'no words are kept per thing');
+  assert.equal(codedFacet(status), status, 'a coded filter is kept as it is');
+  // the index holds no words per thing either, and counts the same from either
+  const coded = new FacetIndex(KEYS, FACETS.map(codedFacet));
+  assert.deepEqual(coded.facets, [{ name: 'Kind' }, { name: 'status' }]);
+  const chosen = { status: new Set(['open']) };
+  assert.deepEqual(coded.counts(chosen), index().counts(chosen));
+  assert.deepEqual(coded.kept(chosen), index().kept(chosen));
 });
 
 test('a value with no things left shows zero, and the list keeps its order', () => {
