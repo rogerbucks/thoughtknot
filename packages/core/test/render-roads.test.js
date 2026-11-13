@@ -2,7 +2,7 @@
 // way its links run, says what kind of link it is between items, and stands apart from a road it crosses.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { apartOf, chevronsOf, sayOf, wordsOf } from '../src/render/render-roads.ts';
+import { apartOf, chevronsOf, roundRooms, sayOf, wordsOf } from '../src/render/render-roads.ts';
 import { paintCanvas } from '../src/render/paint-canvas.ts';
 
 const road = (over = {}) => ({
@@ -102,4 +102,28 @@ test('the painter dashes a road that crosses another and draws its chevrons in i
     calls.some((k) => k[0] === 'lineTo' && k[1] === 100 && k[2] === 0),
     'a chevron with its tip on the spot',
   );
+});
+
+// Roger, 13 Nov 2026: a road to another room ran straight over a room between its ends.
+// proves: render_marks
+test('a road bends round a room between its ends, never round its own rooms or the room that holds them', () => {
+  const room = (key, x, y, r, depth = 1, within = [key]) => ({ key, x, y, r, depth, within: new Set(within) });
+  const road = { a: 'A', b: 'B' };
+  const ends = new Set(['A', 'B', 'Top']);
+  const [from, to] = [
+    [0, 0],
+    [400, 0],
+  ];
+  assert.equal(roundRooms(from, to, [], road, 1, ends), undefined, 'a clear line stays straight');
+  // a room sits a little above the middle of the line: the road bows under it, clear of its edge
+  const via = roundRooms(from, to, [room('C', 200, -10, 40)], road, 1, ends);
+  assert.ok(via, 'a room in the way bends it');
+  const middle = (via[1] + 0) / 2; // the curve's middle, half way from the line to its control point
+  assert.ok(middle > 30 + 8 - 1, `it passes under the room, clear of it (${middle})`);
+  // its own ends, a room inside an end, and the room that holds both ends are its own: no bend for those
+  const own = [room('A', 200, 0, 40), room('Inside', 200, 0, 30, 1, ['Inside', 'A']), room('Top', 200, 0, 50, 0)];
+  assert.equal(roundRooms(from, to, own, road, 1, ends), undefined);
+  // a room wider than the road cannot be gone round, and a deeper room is not in the way of this road
+  assert.equal(roundRooms(from, to, [room('Big', 200, 0, 300)], road, 1, ends), undefined);
+  assert.equal(roundRooms(from, to, [room('Deep', 200, 0, 40, 2)], road, 1, ends), undefined);
 });

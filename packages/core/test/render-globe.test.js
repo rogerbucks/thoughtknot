@@ -44,7 +44,9 @@ test('the globe wraps the flat drawing round a ball: the middle faces you, the e
   const kept = new Map([...spots].map(([k, s]) => [k, { ...s }]));
   const fit = fitView(spots.values(), 1280, 800);
   const view = globeOf(spots);
-  assert.ok(view.globe > 0 && view.scale === fit.scale, 'the same zoom, bent round a ball');
+  assert.ok(view.globe > 0, 'bent round a ball');
+  // the drawing goes all the way round, so the ball fills the card (Roger, 13 Nov 2026)
+  assert.ok(Math.abs(ballRadius(view) - 0.45 * 800) < 1, 'the ball fills the card');
   // with no bend, the picture is the flat one, pixel for pixel
   for (const s of spots.values()) {
     const [a, b] = [onScreen(s, fit), onScreen(s, { ...fit, globe: 0 })];
@@ -63,8 +65,9 @@ test('the globe wraps the flat drawing round a ball: the middle faces you, the e
     assert.equal(p.behind, d / radius > Math.PI / 2, 'past a quarter turn it is round the far side');
     last = p;
   }
-  // every room of the drawing is on the near side at the fitted zoom, so nothing is lost at first
-  for (const s of spots.values()) assert.ok(!onScreen(s, view).behind);
+  // the drawing goes all the way round: at the fitted zoom about half of it faces you, the rest is round the back
+  const near = [...spots.values()].filter((s) => !onScreen(s, view).behind).length;
+  assert.ok(near > 0 && near < spots.size, `${near} of ${spots.size} in sight`);
   // a point on the ball goes back to where it was on the flat drawing
   const [ux, uy] = unwrapped(...Object.values(wrapped(cx + 150, cy - 90, view)).slice(0, 2), view);
   assert.ok(Math.abs(ux - (cx + 150)) < 1e-6 && Math.abs(uy - (cy - 90)) < 1e-6);
@@ -183,15 +186,16 @@ test('a spin that goes on past the edge brings the drawing round again from the 
   const turn = ((2 * Math.PI) / start.globe) * start.scale;
   const steps = Math.ceil(turn / 40);
   let view = start,
-    gone = false;
+    bare = false;
   for (let i = 0; i < steps; i++) {
     view = turnedView(view, turn / steps, 0);
     const again = aroundAgain(view, spots.values());
     assert.deepEqual(seen(again), seen(view), `step ${i}: the turn back is never seen`);
     view = again;
-    gone ||= seen(view).length === 0;
+    bare ||= seen(view).length === 0;
   }
-  assert.ok(gone, 'half way round, the drawing is out of sight on the far side');
+  // the drawing goes all the way round, as a world does: no spin ever shows a bare ball (Roger, 13 Nov 2026)
+  assert.ok(!bare, 'some of the drawing is always in sight');
   assert.deepEqual(seen(view), before, 'a whole turn brings it back where it was');
   assert.ok(Math.abs(view.x - start.x) < 1e-6, 'and the view is back where it started, not a turn away');
   // the same up and down
