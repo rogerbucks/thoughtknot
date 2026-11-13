@@ -1,6 +1,6 @@
 {
   "about": "The Graph Spec's version (editor spec §51, spec_versioned). The rules are requirements/graph-spec.gql. A change to the rules makes a new version: a line below with the decision that made it, the owner's approval and the rules' new hash, which 'node scripts/graph-spec-version.mjs --hash' prints. test/graph-spec-version.test.js fails a change to the rules without one. A newer major version is one a reader of the older major refuses (GN107).",
-  "version": "1.2",
+  "version": "1.3",
   "changelog": [
     {
       "version": "1.0",
@@ -25,6 +25,14 @@
       "decision": "#767 spec_text_restored: restore the paste damage from the owner's original (graph-spec-review recommendation 5)",
       "approved_by": "Roger Bucks",
       "rules_hash": "sha-256:096a2d802a2136e114fed35efc29c2575bb3f41dbef2d360508aa840c715fbe7"
+    },
+    {
+      "version": "1.3",
+      "date": "2026-11-13",
+      "what": "The spec keeps only the data a view needs. Four display rules move to the editor's requirements: local ids shown with their graph, gentle shown names, likelihood words with their range, and the altitude sentence. The correction rule now says the data: a new judgement supersedes the old one, which is kept.",
+      "decision": "#785 spec_display_rules_here: display rules live in the editor's requirements (Roger, 13 Nov 2026)",
+      "approved_by": "Roger Bucks",
+      "rules_hash": "sha-256:37ae2d5f1b93428ce01da8670cfa8f088a3f213fad94a9ff76442a5414965a74"
     }
   ],
   "withdrawn": [
