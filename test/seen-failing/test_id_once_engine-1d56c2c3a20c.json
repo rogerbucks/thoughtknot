@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_id_once_engine.py",
+  "test": "GrafeoTakesARepeat.test_grafeo_refuses_a_variable_written_twice",
+  "seen_failing_first": false,
+  "evidence": "the replay runs the engine the lock file installs, and the lock moves to 0.6.2 in this same commit, so the test cannot be seen failing first"
+}

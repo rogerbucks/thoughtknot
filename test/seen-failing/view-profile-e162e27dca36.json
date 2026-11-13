@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/view-profile.test.js",
+  "test": "what is refused, and what the refusal says > refuses \"MATCH (n:Except) RETURN n\"",
+  "seen_failing_first": false,
+  "evidence": "a refusal case renamed: Except stays refused by both Grafeo versions; Walk, which 0.6.2 now allows, was the old example"
+}
