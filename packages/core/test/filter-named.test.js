@@ -76,6 +76,12 @@ test('a filter with no name or no test filled in is refused, and nothing is writ
   const empty = { on: 'things', of: 'Task', tests: [{ field: '', op: 'is', value: '' }] };
   const r = styleEdit(NOTE, 'work', { named: { name: 'Nothing', draft: empty } });
   assert.ok('refused' in r && r.refused.includes('Nothing'));
+  // a value the line could not read back as it is: refused, so the filter never goes missing after a save
+  const salt = { on: 'things', of: '', tests: [{ field: 'title', op: 'is', value: 'salt and pepper' }] };
+  const odd = styleEdit(NOTE, 'work', { named: { name: 'Salt', draft: salt } });
+  assert.ok('refused' in odd && odd.refused.includes('Salt'), 'a value holding the word and');
+  const quotes = { on: 'things', of: '', tests: [{ field: 'title', op: 'is', value: `Sam's "big" one` }] };
+  assert.ok(namedFilterRefusal({ name: 'Quotes', draft: quotes }), 'quote marks that would come back changed');
 });
 
 test('tests the builder cannot read, or a kind the graph lacks, are a problem with a fix, and the filter is left out', () => {

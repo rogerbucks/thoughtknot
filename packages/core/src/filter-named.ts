@@ -42,10 +42,20 @@ export interface NamedFilters {
   remove?: (name: string) => void;
 }
 
-/** Why `f` cannot be saved, or null: it has no name, or nothing to filter by. */
+/**
+ * Why `f` cannot be saved, or null: it has no name, or nothing to filter by. Or its tests would not read back as they
+ * are, such as a value holding the word and. Refused, no filter is saved that then goes missing.
+ */
 export function namedFilterRefusal(f: NamedFilterSave): string | null {
   if (!f.name.trim()) return word('styling.named.no-name');
-  return whenOf(f.draft) ? null : word('styling.named.empty', { name: f.name });
+  const when = whenOf(f.draft);
+  if (!when) return word('styling.named.empty', { name: f.name });
+  const filled = f.draft.tests.filter((t) => t.field.trim() && t.value.trim());
+  const back = testsOf(when);
+  const same =
+    back?.length === filled.length &&
+    back.every((t, i) => t.field === filled[i]?.field.trim() && t.op === filled[i].op && t.value === filled[i].value);
+  return same ? null : word('styling.named.unreadable', { name: f.name });
 }
 
 /** The NamedFilter line `f` writes, changed in place for the same name, or why it cannot be written. */

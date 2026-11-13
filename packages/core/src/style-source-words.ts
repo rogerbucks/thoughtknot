@@ -162,6 +162,7 @@ export const STYLE_SOURCE_WORDS = {
   'styling.named.when.fix': 'write when: \'<property> == "<value>"\', tests joined by and',
   'styling.named.no-name': 'a filter needs a name to be saved',
   'styling.named.empty': 'the filter {name} has no test filled in, so there is nothing to save',
+  'styling.named.unreadable': 'the filter {name} cannot be saved as it is: a value holds the word and, or a quote mark',
   'styling.named.none': 'no one filter named {name} is saved in this note',
   'styling.legend.twice': '{id} is chosen twice in the legend',
   'styling.legend.twice.fix': 'keep one of them',
