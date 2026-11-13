@@ -105,6 +105,7 @@ export class Selection {
       ...(o.exploring && { exploring: o.exploring }), // and an exploration saved opens again (§71, explore_saved)
       regroup: (only) => this.regrouping.to(only),
       svg: host.svg,
+      ...(o.ruleAsk?.describe && { describe: (w, fill) => o.ruleAsk?.describe?.(w, fill) }), // untangle_ask_filter
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
@@ -159,8 +160,7 @@ export class Selection {
 
   /** A thing or link chosen from the details: the selection, its details shown, brought into view readable (§25). */
   private bring(step: TrailStep): void {
-    // one hidden by a filter or the legend would be chosen out of sight. So the whole graph is shown first, as finding
-    // does; a link is numbered among the drawing's links as its edge is
+    // one hidden by a filter would be chosen out of sight, so all is shown first; a link is numbered as its edge is
     const { hidden } = this.layers;
     if ('key' in step ? hidden.things.has(step.key) : hidden.edges.has(step.link)) this.untangle.reset();
     this.came('chosen', () => this.host.open(step, true));
