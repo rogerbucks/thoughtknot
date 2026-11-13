@@ -41,7 +41,7 @@ export function bendOf(spots: Iterable<Spot>): number {
 
 /**
  * `view` turned back by whole turns of the ball, so it faces the drawing again from the other side. The drawing lies
- * once round the ball, so a pan that goes on past its edge comes round to it again, as a world does (Roger, 13 Nov
+ * once round the ball. A pan that goes on past its edge comes round to it again, as a world does (Roger, 13 Nov
  * 2026). The jump is made only half a turn away, where the whole drawing is round the back, so it never shows.
  */
 export function aroundAgain(view: View, spots: Iterable<Spot>): View {

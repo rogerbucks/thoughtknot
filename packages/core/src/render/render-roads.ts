@@ -58,9 +58,9 @@ export function insideFade(s: Spot, t: Spot, view: View): number {
 }
 
 /**
- * How much a road between rooms of two different rooms shows: as much as the road between those two has faded, as the
- * reader zooms inside one of them. So as a highway fades, the links it carried come into sight, one level in, and the
- * way out never goes blank (Roger, 13 Nov 2026). A road inside one room has 1: it always shows.
+ * How much a road shows between rooms that sit in two different rooms. It shows as much as the road between those
+ * two has faded, as the reader zooms inside one of them. So as a highway fades, the links it carried come into sight
+ * one level in. The way out never goes blank (Roger, 13 Nov 2026). A road inside one room has 1: it always shows.
  */
 export function handedOver(
   scene: Scene,
