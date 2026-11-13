@@ -80,7 +80,10 @@ describe('Diagram type on a card', () => {
     try {
       const rail = el.querySelector('.thoughtknot-over .thoughtknot-rail');
       assert.ok(rail, 'the rail floats over the drawing');
-      const names = rail.querySelectorAll('.thoughtknot-rail-button').map((b) => b.getAttribute('aria-label'));
+      const names = rail
+        .querySelectorAll('.thoughtknot-rail-button')
+        .filter((b) => !b.hidden) // the turn knob waits for a view from an angle (rail_turn_knob)
+        .map((b) => b.getAttribute('aria-label'));
       assert.deepEqual(names, ['2D', '2.5D', '3D', 'Globe', 'Links: Network drawn now', 'Areas', 'Data']);
       const ways = rail.querySelectorAll('[data-space]').map((b) => b.getAttribute('aria-pressed'));
       assert.deepEqual(ways, ['true', 'false', 'false', 'false'], 'flat now, said by the one pressed');

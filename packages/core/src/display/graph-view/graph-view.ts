@@ -138,7 +138,7 @@ export class GraphView extends Lifecycle {
       export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: played(this.o) }),
     });
     const { editing, source } = placed;
-    this.spaces.bar(placed.space, this.o.graph);
+    this.spaces.bar(placed.space, this.o.graph, placed.types.rail, (x, y) => this.aids?.stage?.turnBy(x, y));
     this.editButton = placed.editButton;
     if (this.editButton) {
       this.showEditing();

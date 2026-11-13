@@ -751,6 +751,45 @@
 .thoughtknot-rail .thoughtknot-rail-button[aria-expanded='true'] {
   background: var(--gn-bg-hover);
 }
+/* The turn knob sits under the four ways while the drawing is seen from an angle (rail_turn_knob,
+   Roger 13 Nov 2026). Its pad sits beside the rail as a group's list does: four turn buttons, then how to turn. */
+.thoughtknot-rail .thoughtknot-rail-button.thoughtknot-rail-turn[hidden] {
+  display: none;
+}
+.thoughtknot-rail > .thoughtknot-turn-pad {
+  position: absolute;
+  top: var(--thoughtknot-list-top, 0);
+  inset-inline-start: calc(100% + var(--gn-space-1));
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  width: max-content;
+  max-width: min(16rem, 80vw);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+  padding: var(--gn-space-1);
+}
+.thoughtknot-rail > .thoughtknot-turn-pad[hidden] {
+  display: none;
+}
+.thoughtknot-turn-row {
+  display: flex;
+  gap: var(--gn-space-half-1);
+}
+.thoughtknot-turn-how {
+  margin: 0;
+  padding: 0 var(--gn-space-1);
+  list-style: none;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-xs);
+  line-height: 1.5;
+}
+.thoughtknot-turn-done {
+  align-self: flex-end;
+}
 .thoughtknot-glyph {
   display: inline-block;
   flex: none;
@@ -874,7 +913,7 @@
   .thoughtknot-over:has(> .thoughtknot-rail button) > .thoughtknot-corner:not(.thoughtknot-corner-end) {
     inset-inline-start: var(--gn-space-2);
   }
-  .thoughtknot-rail > .thoughtknot-rail-list {
+  .thoughtknot-rail > :is(.thoughtknot-rail-list, .thoughtknot-turn-pad) {
     top: calc(100% + var(--gn-space-1));
     inset-inline-start: var(--thoughtknot-list-start, 0);
     max-width: min(16rem, calc(100vw - 4 * var(--gn-space-2)));
