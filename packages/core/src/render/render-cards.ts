@@ -9,6 +9,7 @@
 //   Arrows on one side keep apart where they can.
 // Host-free and pure.
 import { elbowRoute, type Taken } from '../layouts/elbow-route.ts';
+import { keepInRooms, partCards } from './render-cards-rooms.ts';
 import { textWidth, wrapName } from './render-labels.ts';
 import type { Spot } from './render-rooms.ts';
 import type { Scene } from './render-scene.ts';
@@ -31,10 +32,6 @@ export const CARD_PROPS = 3;
 export const CARD_GAP = 28;
 /** How far a layout's places may be spread out at most; past it, cards are moved apart one by one. */
 const SPREAD_MOST = 8;
-/** How many rounds of moving cards apart. */
-const ROUNDS = 120;
-/** How many pairs of cards the rounds may weigh in all, at most. */
-const WORK = 4_000_000;
 
 /** What a card shows: its thing's key, name and kind, its own note, the body of the note it stands for, its properties. */
 export interface CardText {
@@ -103,12 +100,6 @@ export function cardSizeOf(c: CardText): CardSize {
 
 const byKey = (a: CardBox, b: CardBox) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 
-/** How far apart two cards still cover one another, across and down; at or below 0 either way, they do not. */
-const overlap = (a: CardBox, b: CardBox): [number, number] => [
-  (a.w + b.w) / 2 + CARD_GAP - Math.abs(a.x - b.x),
-  (a.h + b.h) / 2 + CARD_GAP - Math.abs(a.y - b.y),
-];
-
 /** The spread that would part two cards the easier way: 1 if they are apart already, Infinity if in one place. */
 function partedAt(a: CardBox, b: CardBox): number {
   const [dx, dy] = [Math.abs(a.x - b.x), Math.abs(a.y - b.y)];
@@ -147,30 +138,7 @@ export function spreadCardBoxes(boxes: readonly CardBox[]): CardBox[] {
   if (p.length < 2) return p;
   const { spread, cx, cy } = spreadOf(p);
   for (const b of p) [b.x, b.y] = [cx + (b.x - cx) * spread, cy + (b.y - cy) * spread];
-  // a big drawing gets fewer rounds, so pressing Cards never holds the page for long
-  const rounds = Math.max(1, Math.min(ROUNDS, Math.floor(WORK / (p.length * p.length))));
-  for (let round = 0; round < rounds; round++) {
-    let moved = false;
-    for (let i = 0; i < p.length; i++)
-      for (let j = i + 1; j < p.length; j++) {
-        const a = p[i] as CardBox,
-          b = p[j] as CardBox;
-        const [ox, oy] = overlap(a, b);
-        if (ox <= 0 || oy <= 0) continue;
-        moved = true;
-        // the shorter way; two in one place part down, the first above, the same each time
-        if (oy <= ox) {
-          const s = (a.y <= b.y ? -1 : 1) * (oy / 2 + 0.01);
-          a.y += s;
-          b.y -= s;
-        } else {
-          const s = (a.x <= b.x ? -1 : 1) * (ox / 2 + 0.01);
-          a.x += s;
-          b.x -= s;
-        }
-      }
-    if (!moved) break;
-  }
+  partCards(p);
   return p;
 }
 
@@ -263,8 +231,8 @@ const depthsOf = (scene: Scene, items: readonly string[]): Map<string, number> =
 
 /**
  * The layout `spots` of `scene` drawn as the cards of `texts`, with arrows for `links`. Every place, groups too, is
- * spread from the layout's middle as far as the cards need, so groups still hold their items. Then cards still covering
- * one another are pushed apart. An item with no text gets a card of its name.
+ * spread from the layout's middle as far as the cards need. Then cards still covering one another are pushed apart,
+ * each inside its group, and the groups grow round their cards. An item with no text gets a card of its name.
  */
 export function cardsLaid(
   scene: Scene,
@@ -284,7 +252,9 @@ export function cardsLaid(
   const { spread, cx, cy } = spreadOf(boxes);
   const out = new Map<string, Spot>();
   for (const [k, s] of spots) out.set(k, { x: cx + (s.x - cx) * spread, y: cy + (s.y - cy) * spread, r: s.r * spread });
-  const placed = spreadCardBoxes(boxes);
+  const placed = boxes.map((b) => ({ ...b, x: cx + (b.x - cx) * spread, y: cy + (b.y - cy) * spread }));
+  // each card stays inside its groups' clouds, and the clouds keep apart (render-cards-rooms.ts)
+  keepInRooms(scene, out, placed);
   // an item's spot reaches round its whole card, so a fit shows every card whole
   for (const b of placed) out.set(b.key, { x: b.x, y: b.y, r: Math.max(b.w, b.h) / 2 });
   const cards = placed.map((b) => ({ ...(sized.get(b.key) as CardSize), ...b, text: text(b.key) }));
