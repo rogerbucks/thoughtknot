@@ -147,6 +147,10 @@
 /* The drawing's colours are written on each shape, which the browser does not force. So the drawing keeps its own.
    Here each shape, line and word is drawn in the system's colours, the chosen or focused thing in its highlight. */
 @media (forced-colors: active) {
+  /* the chosen card keeps its mark when the shadow is dropped */
+  .thoughtknot-stage-card.is-selected {
+    border: 3px solid Highlight;
+  }
   .thoughtknot-svg {
     forced-color-adjust: none;
   }
@@ -2565,8 +2569,8 @@ pre.thoughtknot-code {
   border-radius: 10px;
   box-shadow: var(--gn-shadow-s);
   font-family: var(--gn-font-ui);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--gn-font-size-xs);
+  line-height: 1.5;
 }
 .thoughtknot-stage-card.is-selected {
   box-shadow:
@@ -2582,7 +2586,7 @@ pre.thoughtknot-code {
   position: relative;
   isolation: isolate;
   padding: 0 10px;
-  font-size: 13px;
+  font-size: var(--gn-font-size-s);
   font-weight: var(--gn-font-weight-semibold);
 }
 /* the head's tint: the card's colour, faint, under its name */
@@ -2604,9 +2608,9 @@ pre.thoughtknot-code {
   padding: 0 6px;
   border: 1px solid var(--thoughtknot-card-colour);
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 0.9em;
   font-weight: normal;
-  line-height: 16px;
+  line-height: 1.45;
 }
 .thoughtknot-stage-card-body {
   flex: 1 1 auto;
@@ -2623,13 +2627,13 @@ pre.thoughtknot-code {
 .thoughtknot-stage-card-more {
   padding: 0 10px;
   color: var(--thoughtknot-card-colour);
-  font-size: 11px;
+  font-size: 0.9em;
   font-weight: var(--gn-font-weight-semibold);
 }
 .thoughtknot-stage-card-props {
   padding: 0 10px 8px;
   border-top: 1px dashed var(--gn-border);
-  font-size: 11px;
+  font-size: 0.9em;
   opacity: 0.75;
 }
 button.thoughtknot-stage-card-more {
