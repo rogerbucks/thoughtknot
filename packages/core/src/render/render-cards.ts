@@ -1,5 +1,5 @@
-// Things drawn as whole cards, each showing all of its note: part of layers L2 and L4 (wiki/Rendering-spec.md; editor
-// spec §73, render_cards). Roger, 13 Nov 2026: "cards show all the notes and the diagram layouts show the whole cards
+// Things drawn as whole cards, each showing all of its note: part of layers L2 and L4 (wiki/Rendering-spec.md;
+// ES§73, render_cards). Roger, 13 Nov 2026: "cards show all the notes and the diagram layouts show the whole cards
 // with arrows in the right place".
 // - A card is one width. Its height fits its name, its note, the note it stands for and a few properties. It shows up
 //   to CARD_MOST_LINES lines of text. The rest waits behind "Show all", which opens the card in place.
