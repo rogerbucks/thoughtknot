@@ -10,7 +10,7 @@ import { CARD_PROPS, CARD_W, type CardText, type CardsLaid } from '../../render/
 import type { Mark, View } from '../../render/render-marks.ts';
 import type { Look } from '../../render/render-look.ts';
 import type { Spot } from '../../render/render-rooms.ts';
-import { onScreen } from '../../render/render-tilt.ts';
+import { isTilted, onScreen } from '../../render/render-tilt.ts';
 import { isGlobe } from '../../render/render-globe.ts';
 import { word } from '../../words.ts';
 import { Lifecycle } from '../lifecycle.ts';
@@ -97,15 +97,38 @@ const CLOUD_UNDER = 0.3;
  * The marks the stage paints under the cards, once they show: only the clouds of the outermost groups, faint. The
  * cards and their arrows say the rest, so no name, dot or road shows through them.
  */
-export function underCards(marks: readonly Mark[], outer: ReadonlySet<string>): Mark[] {
+export function underCards(
+  marks: readonly Mark[],
+  outer: ReadonlySet<string>,
+  keep: ReadonlySet<string> = new Set(),
+): Mark[] {
   return marks.flatMap((m): Mark[] =>
     m.kind === 'cloud' && outer.has(m.key)
       ? [{ ...m, alpha: m.alpha * CLOUD_UNDER, ring: (m.ring ?? 0) * CLOUD_UNDER }]
-      : m.kind === 'ground'
-        ? [m]
+      : m.kind === 'ground' || ((m.kind === 'dot' || m.kind === 'label') && keep.has(m.key))
+        ? [m] // a card hidden behind a nearer one gives way to its dot and name
         : [],
   );
 }
+
+/** A card's place on the screen under a view, how much it is scaled, how clear, and whether it shows. */
+interface Placed {
+  key: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  k: number;
+  alpha: number;
+  on: boolean;
+  /** Hidden behind a nearer card, as can happen tilted: its dot and name show instead. */
+  behind: boolean;
+}
+
+/** How far apart, in screen pixels, two cards stay when tilted: a card closer than this to a nearer one hides. */
+const CLEAR_PX = 4;
+const covers = (a: Placed, b: Placed): boolean =>
+  a.x < b.x + b.w + CLEAR_PX && b.x < a.x + a.w + CLEAR_PX && a.y < b.y + b.h + CLEAR_PX && b.y < a.y + a.h + CLEAR_PX;
 
 /** A card's text as plain paragraphs, each set as text so nothing in a note runs as the page's own. */
 function fill(el: HTMLElement, markdown: string): void {
@@ -214,8 +237,33 @@ export class StageCards {
    * The marks to paint under the cards in `view`. While the cards are faint, the dots and names still show; so do they
    * all when only the chosen thing has a card.
    */
-  under(marks: readonly Mark[], view: View): Mark[] {
-    return this.laid.only || cardAlpha(view.scale) < 0.5 ? [...marks] : underCards(marks, this.outer);
+  under(marks: readonly Mark[], view: View, selected?: string | null): Mark[] {
+    if (this.laid.only || cardAlpha(view.scale) < 0.5) return [...marks];
+    const behind = this.placed(view, selected).filter((p) => p.behind);
+    return underCards(marks, this.outer, new Set(behind.map((p) => p.key)));
+  }
+
+  /**
+   * Where each card goes on the screen under `view`. Tilted or on the globe, foreshortening can bring cards together.
+   * Then the chosen card and the nearer ones keep their place, and a card that would touch one hides (R26).
+   */
+  private placed(view: View, selected?: string | null): Placed[] {
+    const out = this.laid.cards.map((card): Placed => {
+      const at = this.spots.get(card.key) ?? card;
+      const s = seen([at.x, at.y], view, this.laid.depths.get(card.key));
+      const [k, alpha] = [s.r, s.behind ? 0 : cardAlpha(s.r)];
+      const [x, y, w, h] = [s.x - (card.w / 2) * k, s.y - (card.h / 2) * k, card.w * k, card.h * k];
+      const chosen = !this.laid.only || selected === card.key;
+      const on = chosen && alpha >= SHOWN && x < view.w && y < view.h && x + w > 0 && y + h > 0;
+      return { key: card.key, x, y, w, h, k, alpha, on, behind: false };
+    });
+    if (!isTilted(view) && !isGlobe(view)) return out;
+    const kept: Placed[] = [];
+    const first = (p: Placed) => (p.key === selected ? Infinity : p.k);
+    for (const p of [...out].filter((q) => q.on).sort((a, b) => first(b) - first(a) || (a.key < b.key ? -1 : 1)))
+      if (kept.some((q) => covers(p, q))) [p.on, p.behind] = [false, true];
+      else kept.push(p);
+    return out;
   }
 
   /**
@@ -231,14 +279,10 @@ export class StageCards {
     selected?: string | null,
   ): void {
     this.boxes = [];
-    for (const card of this.laid.cards) {
-      const el = this.els.get(card.key) as HTMLElement;
-      const at = this.spots.get(card.key) ?? card;
-      const s = seen([at.x, at.y], view, this.laid.depths.get(card.key));
-      const [k, alpha] = [s.r, s.behind ? 0 : cardAlpha(s.r)];
-      const [x, y, w, h] = [s.x - (card.w / 2) * k, s.y - (card.h / 2) * k, card.w * k, card.h * k];
-      const chosen = !this.laid.only || selected === card.key;
-      const on = chosen && alpha >= SHOWN && x < view.w && y < view.h && x + w > 0 && y + h > 0;
+    const places = this.placed(view, selected);
+    const behind = new Set(places.filter((p) => p.behind).map((p) => p.key));
+    for (const { key, x, y, w, h, k, alpha, on } of places) {
+      const el = this.els.get(key) as HTMLElement;
       el.hidden = !on;
       if (!on) continue;
       el.setCssProps({
@@ -247,26 +291,26 @@ export class StageCards {
         '--thoughtknot-card-k': String(k),
         '--thoughtknot-card-z': String(Math.round(k * 1000)), // tilted, the nearer card stands in front
         '--thoughtknot-card-alpha': String(alpha),
-        '--thoughtknot-card-colour': colour(card.key) ?? look.faint,
+        '--thoughtknot-card-colour': colour(key) ?? look.faint,
       });
       el.toggleClass('is-far', w < FAR_PX);
-      if (w >= FAR_PX) this.fillIn(card.key);
-      el.toggleClass('is-selected', selected === card.key);
+      if (w >= FAR_PX) this.fillIn(key);
+      el.toggleClass('is-selected', selected === key);
       // an open card grows to its words, so a click picks it over all it covers
       const tall = el.hasClass('is-open') ? Math.max(h, (el.offsetHeight || 0) * k) : h;
-      if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h: tall });
+      if (alpha >= 0.5) this.boxes.push({ key, x, y, w, h: tall });
     }
     const alpha = cardAlpha(view.scale);
-    if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha);
+    if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha, behind);
   }
 
-  /** The arrows between the cards, as clear as the cards are, each with its head at its end. */
-  private arrows(c: CanvasRenderingContext2D, view: View, look: Look, alpha: number): void {
+  /** The arrows between the cards, as clear as the cards are, each with its head at its end; none to one `behind`. */
+  private arrows(c: CanvasRenderingContext2D, view: View, look: Look, alpha: number, behind: Set<string>): void {
     c.save();
     c.strokeStyle = c.fillStyle = look.ink;
     c.lineWidth = 1.5;
     for (const a of this.laid.arrows) {
-      if (a.way.length < 2) continue;
+      if (a.way.length < 2 || behind.has(a.from) || behind.has(a.to)) continue; // no arrow to a card that hides
       const pts = wayOnScreen(a.way, view, this.laid.depths.get(a.from));
       if (!pts) continue;
       c.globalAlpha = 0.55 * Math.min(1, alpha);

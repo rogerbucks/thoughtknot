@@ -126,7 +126,23 @@ test('a second press mid-glide starts from where the first was going; an unload 
     assert.ok(!card.hidden, 'tilted, the card shows');
     const at = onScreen({ x: spot.x, y: spot.y, r: 1 }, stage.view);
     assert.equal(stage.cardsOn.cards.pickAt(at.x, at.y), 'W1', 'a click where the tilt puts it picks it');
-    assert.ok(!stage.marks.some((m) => m.kind === 'dot' && keys.includes(m.key)), 'the card stands for its dot');
+    assert.ok(!stage.marks.some((m) => m.kind === 'dot' && m.key === 'W1'), 'the card stands for its dot');
+    // no two cards that show touch: one a nearer card would cover hides (R26)
+    const boxes = viewport
+      .querySelectorAll('.thoughtknot-stage-card')
+      .filter((el) => !el.hidden)
+      .map((el) => {
+        const [x, y, k] = ['x', 'y', 'k'].map((a) => parseFloat(el.cssProps[`--thoughtknot-card-${a}`]));
+        return {
+          x,
+          y,
+          w: parseFloat(el.cssProps['--thoughtknot-card-w']) * k,
+          h: parseFloat(el.cssProps['--thoughtknot-card-h']) * k,
+        };
+      });
+    for (const [i, a] of boxes.entries())
+      for (const b of boxes.slice(i + 1))
+        assert.ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, 'no two cards touch');
     // an unload mid-glide: no frame draws the removed stage
     stage.showCards(false);
     let drawn = 0;

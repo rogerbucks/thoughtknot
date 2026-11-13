@@ -339,7 +339,7 @@ export class RenderStage {
     const focus = this.focus.of(this.hands?.selected() ?? this.rooms.picked);
     this.marks = marksOf(this.scene, this.spots, detail, this.look(), this.view, this.hands?.own, focus);
     this.marks = this.shown.of(this.marks, this.viewport, this.scene);
-    this.marks = this.cardsOn.cards?.under(this.marks, this.view) ?? this.marks; // the cards stand for dots and names
+    this.marks = this.cardsOn.cards?.under(this.marks, this.view, this.hands?.selected()) ?? this.marks; // cards for dots
     const level = this.level();
     this.canvas.setAttribute('aria-label', level);
     if (level !== this.said) this.hands?.drawn?.();
