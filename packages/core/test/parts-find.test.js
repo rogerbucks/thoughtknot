@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MeshIndex, memoryBackend, sqliteBackend } from '../src/mesh-index.ts';
 import { storedGraphs } from '../src/store-drawing.ts';
-import { FacetIndex, facetsOf } from '../src/facet-counts.ts';
+import { FacetIndex, codedFacet, facetsOf } from '../src/facet-counts.ts';
 import { ThingSearch } from '../src/search-fly.ts';
 import { READ_LIMITS } from '../src/layout-limits.ts';
 import { sqlEngine } from './mesh-test-sql.js';
@@ -66,11 +66,8 @@ test('the filters of a note read in parts are those of the note read whole, read
     const boxes = big.drawing.boxes;
     const whole = new Map(Array.from({ length: N }, (_, i) => [`n${i}`, thing(i).props]));
     const facets = big.parts.facets();
-    assert.deepEqual(
-      facets,
-      facetsOf(boxes, (k) => whole.get(k)),
-      backend.kind,
-    );
+    // held as numbers: no words per thing (scale_parts_overview)
+    assert.deepEqual(facets, facetsOf(boxes, (k) => whole.get(k)).map(codedFacet), backend.kind);
     assert.deepEqual(
       facets.map((f) => f.name),
       ['Kind', 'status', 'tier'],

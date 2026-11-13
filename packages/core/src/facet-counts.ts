@@ -25,30 +25,45 @@ export interface FacetCount {
   count: number;
 }
 
+/**
+ * A facet held as numbers. Its values are listed once, most common first and ties by name. So the list keeps its order
+ * as choices change. Each thing's value is its place in that list, or -1 where it has none. That is two bytes a thing
+ * where words take eight, so a huge graph's filters hold no words per thing (scale_parts_overview).
+ */
+export interface CodedFacet {
+  name: string;
+  order: readonly string[];
+  codes: Int16Array | Int32Array;
+}
+
+/** `facet` held as numbers. Its value words are not kept. */
+export function codedFacet(facet: Facet | CodedFacet): CodedFacet {
+  if ('codes' in facet) return facet;
+  const n = new Map<string, number>();
+  for (const v of facet.values) if (v !== undefined) n.set(v, (n.get(v) ?? 0) + 1);
+  const order = [...n].sort(([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0)).map(([v]) => v);
+  const place = new Map(order.map((v, k) => [v, k]));
+  const codes = order.length < 0x7fff ? new Int16Array(facet.values.length) : new Int32Array(facet.values.length);
+  facet.values.forEach((v, k) => (codes[k] = v === undefined ? -1 : (place.get(v) ?? -1)));
+  return { name: facet.name, order, codes };
+}
+
 /** The things of a graph, sorted by facets, ready to be filtered and counted. */
 export class FacetIndex {
   readonly keys: readonly string[];
-  readonly facets: readonly Facet[];
+  /** Each facet's name, in order. */
+  readonly facets: readonly { name: string }[];
   /** Each facet's values, most common first, ties by name, so the list keeps its order as choices change. */
-  readonly order: string[][];
+  readonly order: (readonly string[])[];
   /** Each facet's value for each thing, as its place in `order`, or -1 where it has none: numbers compare fast. */
-  readonly codes: Int32Array[];
+  readonly codes: (Int16Array | Int32Array)[];
 
-  constructor(keys: readonly string[], facets: readonly Facet[]) {
+  constructor(keys: readonly string[], facets: readonly (Facet | CodedFacet)[]) {
     this.keys = keys;
-    this.facets = facets;
-    this.order = facets.map((f) => {
-      const n = new Map<string, number>();
-      for (const v of f.values) if (v !== undefined) n.set(v, (n.get(v) ?? 0) + 1);
-      return [...n].sort(([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0)).map(([v]) => v);
-    });
-    this.codes = facets.map((f, i) => {
-      const place = new Map((this.order[i] ?? []).map((v, k) => [v, k]));
-      return Int32Array.from({ length: keys.length }, (_, k) => {
-        const v = f.values[k];
-        return v === undefined ? -1 : (place.get(v) ?? -1);
-      });
-    });
+    const coded = facets.map(codedFacet);
+    this.facets = coded.map((f) => ({ name: f.name }));
+    this.order = coded.map((f) => f.order);
+    this.codes = coded.map((f) => f.codes);
   }
 
   /** For each facet with a choice, which of its values are kept, by place; null for a facet that keeps everything. */
@@ -65,7 +80,7 @@ export class FacetIndex {
     for (let f = 0; f < wanted.length; f++) {
       const want = wanted[f];
       if (f === skip || !want) continue;
-      const v = (this.codes[f] as Int32Array)[i] as number;
+      const v = (this.codes[f] as Int16Array | Int32Array)[i] as number;
       if (v < 0 || !want[v]) return false;
     }
     return true;
@@ -94,7 +109,7 @@ export class FacetIndex {
     const wanted = this.wanted(chosen);
     this.facets.forEach((facet, f) => {
       const order = this.order[f] ?? [],
-        codes = this.codes[f] as Int32Array;
+        codes = this.codes[f] as Int16Array | Int32Array;
       const n = new Float64Array(order.length);
       for (let i = 0; i < this.keys.length; i++) {
         const v = codes[i] as number;
