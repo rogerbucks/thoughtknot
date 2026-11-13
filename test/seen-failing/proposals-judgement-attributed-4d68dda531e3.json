@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/proposals-judgement-attributed.test.js",
+  "test": "req:24.prov-attributed: a decision is attributed to the proposer and to the person who decided > the decider’s plain text stays beside its link, exactly as typed",
+  "seen_failing_first": false,
+  "evidence": "Renamed from an older test: it keeps checking the decider text, which this change leaves as it was."
+}
