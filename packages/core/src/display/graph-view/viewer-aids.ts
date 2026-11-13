@@ -11,7 +11,7 @@
 import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { turnControls } from './stage-turn-keys.ts';
-import { cardsControl } from './stage-cards.ts';
+import { cardWordsOf, cardsControl } from './stage-cards.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -213,7 +213,7 @@ export class Aids {
     this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
     if (this.stage) o.seen?.keep(this.stage.seen);
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
-    this.cards = this.stage && cardsControl(host.root, this.stage, o.graph); // whole notes on cards (render_cards)
+    this.cards = this.stage && cardsControl(host.root, this.stage, o.graph, cardWordsOf(o)); // whole notes (render_cards)
   }
 
   /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */

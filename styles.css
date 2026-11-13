@@ -2622,6 +2622,34 @@ pre.thoughtknot-code {
   font-size: 11px;
   opacity: 0.75;
 }
+button.thoughtknot-stage-card-more {
+  display: block;
+  margin: 0;
+  padding: 0 10px 4px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: start;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.thoughtknot-stage-card-words > :first-child {
+  margin-block-start: 0;
+}
+.thoughtknot-stage-card-words :is(p, ul, ol) {
+  margin-block: 0 9px;
+}
+/* Show all opens a card in place, above the cards round it; its words scroll once taller than the card may grow */
+.thoughtknot-stage-card.is-open {
+  z-index: 1;
+  block-size: auto;
+  min-block-size: var(--thoughtknot-card-h);
+  max-block-size: calc(3 * var(--thoughtknot-card-h));
+}
+.thoughtknot-stage-card.is-open > .thoughtknot-stage-card-body {
+  overflow: auto;
+  pointer-events: auto;
+}
 /* far out a card shows only its name */
 .thoughtknot-stage-card.is-far > :not(.thoughtknot-stage-card-head) {
   visibility: hidden;

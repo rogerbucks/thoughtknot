@@ -6,6 +6,9 @@
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { GraphDrawing } from '../../note-reading.ts';
 import { valueText } from '../../inline-properties.ts';
+import { noteOf } from '../../links.ts';
+import type { NoteReading } from '../../note-reading.ts';
+import type { LinkHost } from '../link-host.ts';
 import { CARD_PROPS, CARD_W, cardsLaid, type CardText, type CardsLaid } from '../../render/render-cards.ts';
 import type { Mark, View } from '../../render/render-marks.ts';
 import type { Look } from '../../render/render-look.ts';
@@ -15,6 +18,7 @@ import type { Spot } from '../../render/render-rooms.ts';
 import type { Scene } from '../../render/render-scene.ts';
 import { word } from '../../words.ts';
 import { button } from '../button.ts';
+import { Lifecycle } from '../lifecycle.ts';
 
 /** Below this alpha a card is not shown. */
 const SHOWN = 0.05;
@@ -40,8 +44,18 @@ export const cardsChosen = (graph: string): boolean => chosen.get(graph) ?? fals
 /** Keeps whether Cards is on for `graph`. */
 export const chooseCards = (graph: string, on: boolean): void => void chosen.set(graph, on);
 
-/** What each item's card shows: its name, kind, own note and first properties, from `drawing` and graph `g`. */
-export function cardTexts(drawing: GraphDrawing, g?: Graph): Map<string, CardText> {
+/**
+ * What the host gives the cards: Markdown rendered as a note is, made safe, and for a thing that is a note, that note
+ * to embed. Without it, a card shows its words as plain text.
+ */
+export interface CardWords {
+  render?: (markdown: string, el: HTMLElement, owner: Lifecycle) => Promise<void>;
+  /** The Markdown that embeds the note thing `key` is, or links to; none for a thing that is no note. */
+  linked?: (key: string) => string | undefined;
+}
+
+/** What each item's card shows: its name, kind, own note, linked note and first properties (`drawing`, graph `g`). */
+export function cardTexts(drawing: GraphDrawing, g?: Graph, words?: CardWords): Map<string, CardText> {
   const out = new Map<string, CardText>();
   for (const b of drawing.boxes) {
     const props = Object.entries(g?.nodes.has(b.key) ? g.p(b.key) : {})
@@ -54,6 +68,7 @@ export function cardTexts(drawing: GraphDrawing, g?: Graph): Map<string, CardTex
       name: b.text || b.key,
       ...(kind ? { kind } : {}),
       ...(b.note?.text ? { note: b.note.text } : {}),
+      ...((linked) => (linked ? { linked, linkedTall: true } : {}))(words?.linked?.(b.key)),
       ...(props.length ? { props } : {}),
     });
   }
@@ -94,6 +109,13 @@ export class StageCards {
   /** Each card's box on the screen, as last drawn, top card last, for a click to pick from. */
   private boxes: { key: string; x: number; y: number; w: number; h: number }[] = [];
 
+  /** Each card's body and the words it waits to show, and the cards whose words are in. */
+  private readonly bodies = new Map<string, { body: HTMLElement; words: string[] }>();
+  private readonly filled = new Set<string>();
+  /** What the host rendered into the cards is owned here, and unloaded with them. */
+  private readonly owner = new Lifecycle();
+  private readonly words: CardWords | undefined;
+
   /** Whether the cards have come to rest: their arrows wait until then. */
   settled = false;
 
@@ -109,8 +131,10 @@ export class StageCards {
     spots: ReadonlyMap<string, Spot>,
     base: ReadonlyMap<string, Spot>,
     outer: readonly string[] = [],
+    words?: CardWords,
   ) {
-    [this.laid, this.spots, this.base] = [laid, spots, base];
+    [this.laid, this.spots, this.base, this.words] = [laid, spots, base, words];
+    this.owner.load();
     this.outer = new Set(outer);
     this.layer = viewport.createDiv({ cls: 'thoughtknot-stage-cards' });
     this.layer.setAttribute('aria-hidden', 'true'); // the canvas names the drawing; the details read a thing out
@@ -123,10 +147,9 @@ export class StageCards {
       const words = [c.text.note, c.text.linked].filter((t): t is string => !!t?.trim());
       if (words.length || c.text.props?.length) {
         const body = el.createDiv({ cls: 'thoughtknot-stage-card-body' });
-        for (const t of words) fill(body, t);
+        this.bodies.set(c.key, { body, words });
         if (c.more) body.addClass('is-cut');
-        if (c.more)
-          el.createDiv({ cls: 'thoughtknot-stage-card-more', text: word('view.cards.more', { count: c.more }) });
+        if (c.more) this.showAll(el, body, c.more);
         if (c.text.props?.length) {
           const props = el.createDiv({ cls: 'thoughtknot-stage-card-props' });
           for (const [k, v] of c.text.props) props.createDiv({ text: `${k} ${v}` });
@@ -134,6 +157,40 @@ export class StageCards {
       }
       this.els.set(c.key, el);
     }
+  }
+
+  /** The card's Show all: it opens the card in place, above the cards round it, and nothing else moves. */
+  private showAll(el: HTMLElement, body: HTMLElement, more: number): void {
+    const b = el.createEl('button', {
+      cls: 'thoughtknot-stage-card-more',
+      text: word('view.cards.more', { count: more }),
+      attr: { type: 'button' },
+    });
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !el.hasClass('is-open');
+      el.toggleClass('is-open', open);
+      body.toggleClass('is-cut', !open);
+      b.setText(open ? word('view.cards.less') : word('view.cards.more', { count: more }));
+      if (open) this.layer.appendChild(el); // the open card stands on top
+    });
+  }
+
+  /** A card's words, put in the first time it is near enough to read: rendered by the host, or as plain text. */
+  private fillIn(key: string): void {
+    const it = this.bodies.get(key);
+    if (!it || this.filled.has(key)) return;
+    this.filled.add(key);
+    for (const t of it.words) {
+      const el = it.body.createDiv({ cls: 'thoughtknot-stage-card-words' });
+      if (this.words?.render) void this.words.render(t, el, this.owner);
+      else fill(el, t);
+    }
+  }
+
+  /** Whether wheel event `e` is over an open card, which scrolls its own words rather than zooming. */
+  scrolls(e: Event): boolean {
+    return !!(e.target as Element | null)?.closest?.('.thoughtknot-stage-card.is-open');
   }
 
   /** The marks to paint under the cards at zoom `scale`: while the cards are faint, the dots and names still show. */
@@ -171,6 +228,7 @@ export class StageCards {
         '--thoughtknot-card-colour': colour(card.key) ?? look.faint,
       });
       el.toggleClass('is-far', w < FAR_PX);
+      if (w >= FAR_PX) this.fillIn(card.key);
       el.toggleClass('is-selected', selected === card.key);
       if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h });
     }
@@ -218,6 +276,7 @@ export class StageCards {
   }
 
   remove(): void {
+    this.owner.unload();
     this.layer.remove();
   }
 }
@@ -231,6 +290,8 @@ export interface CardsHost {
   drawing: GraphDrawing;
   g?: Graph;
   view: View;
+  /** What the host gives the cards to show; none, plain text. */
+  words?: CardWords;
 }
 
 /** `spots` spread by `f` from (`cx`, `cy`), each in place: what was drawn under a view, spread so. */
@@ -252,7 +313,7 @@ export function switchCards(
   done: () => void,
   atOnce = false,
 ): { cards: StageCards | null; view: View } {
-  const laid = on ? cardsLaid(h.scene, h.spots, cardTexts(h.drawing, h.g), h.drawing.links) : was?.laid;
+  const laid = on ? cardsLaid(h.scene, h.spots, cardTexts(h.drawing, h.g, h.words), h.drawing.links) : was?.laid;
   if (!laid || (on ? false : !was)) return { cards: was, view: h.view };
   const base = on ? new Map(h.spots) : (was as StageCards).base;
   const to = on ? laid.spots : base;
@@ -262,7 +323,7 @@ export function switchCards(
   const view = { ...v, x: laid.cx + (v.x - laid.cx) * f, y: laid.cy + (v.y - laid.cy) * f, scale: v.scale / f };
   h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, to as Map<string, Spot>));
   was?.remove();
-  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots) : null;
+  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots, h.words) : null;
   const frame = typeof requestAnimationFrame === 'undefined' || atOnce ? null : requestAnimationFrame;
   const end = () => {
     for (const [k, s] of to) h.spots.set(k, s);
@@ -291,11 +352,13 @@ export function switchCards(
  */
 export function cardsControl(
   root: HTMLElement,
-  stage: { showCards: (on: boolean, atOnce?: boolean) => void },
+  stage: { showCards: (on: boolean, atOnce?: boolean) => void; cardWords?: CardWords },
   graph: string,
+  words?: CardWords,
 ): { unload: () => void } | null {
   const body = root.querySelector<HTMLElement>('.thoughtknot-view-dock .thoughtknot-dock-body');
   if (!body) return null;
+  stage.cardWords = words;
   const b = button(body, word('view.cards'), 'square-stack', () => {
     const on = !cardsChosen(graph);
     chooseCards(graph, on);
@@ -306,4 +369,20 @@ export function cardsControl(
   b.setAttribute('aria-pressed', String(cardsChosen(graph)));
   if (cardsChosen(graph)) stage.showCards(true, true);
   return { unload: () => b.remove() };
+}
+
+/**
+ * What a card's options give its cards. The host renders their Markdown, made safe. Each thing that is a note embeds
+ * that note (node_is_a_note). Without a host that renders, the cards show plain text.
+ */
+export function cardWordsOf(o: { links?: LinkHost; reading: NoteReading; graph: string }): CardWords {
+  const host = o.links;
+  if (!host) return {};
+  return {
+    render: (markdown, el, owner) => host.render(markdown, el, owner),
+    linked: (key) => {
+      const note = noteOf(o.reading, o.graph, key);
+      return note ? `![[${note.opens}]]` : undefined;
+    },
+  };
 }

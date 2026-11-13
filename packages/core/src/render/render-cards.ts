@@ -43,6 +43,8 @@ export interface CardText {
   note?: string;
   /** The body of the note the thing is, or links to, as Markdown; shown below its own note. */
   linked?: string;
+  /** The linked note's length is not known until it is read: its card is as tall as a card may be. */
+  linkedTall?: boolean;
   props?: readonly (readonly [string, string])[];
 }
 
@@ -86,9 +88,12 @@ export function linesOf(markdown: string): number {
 /** The size of the card for `c`: its whole text up to CARD_MOST_LINES lines, and how many lines are left over. */
 export function cardSizeOf(c: CardText): CardSize {
   const text = [c.note, c.linked].filter((t): t is string => !!t && !!t.trim());
-  const all = text.reduce((n, t) => n + linesOf(t), 0);
+  const all = c.linkedTall
+    ? Math.max(CARD_MOST_LINES, linesOf(c.note ?? ''))
+    : text.reduce((n, t) => n + linesOf(t), 0);
   const shown = Math.min(all, CARD_MOST_LINES);
-  const more = all - shown;
+  // a note read later may be longer than the card: Show all is offered for it
+  const more = c.linkedTall ? Math.max(1, all - shown) : all - shown;
   const props = Math.min(c.props?.length ?? 0, CARD_PROPS);
   const body = shown + props + (more ? 1 : 0);
   return { w: CARD_W, h: CARD_HEAD + (body ? 2 * CARD_PAD + body * CARD_LINE : 0), shown, more };

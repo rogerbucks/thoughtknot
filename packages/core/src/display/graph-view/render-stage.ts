@@ -27,7 +27,7 @@ import { StageMover, type PlacesHost } from './stage-places.ts';
 import type { MiniMapSetting } from '../../settings-aids.ts';
 import { StageRooms } from './stage-rooms.ts';
 import type { StageHands } from './stage-hands.ts';
-import { StageCards, switchCards } from './stage-cards.ts';
+import { StageCards, switchCards, type CardWords } from './stage-cards.ts';
 
 export { GLIDE_MS } from './stage-glide.ts';
 /** How far a pointer may move, in pixels, and still be a click rather than a drag. */
@@ -57,6 +57,8 @@ export class RenderStage {
   private readonly mover: StageMover | undefined;
   /** Each item drawn as a card with its whole note, while Cards is on (render_cards). */
   private cards: StageCards | null = null;
+  /** What the host gives the cards to show: its own Markdown rendering, and linked notes. */
+  cardWords?: CardWords;
   private readonly drawing: GraphDrawing;
   private readonly g: Graph | undefined;
   private readonly focus = new StageFocus(() => this.draw());
@@ -182,7 +184,8 @@ export class RenderStage {
   wheel(e: WheelEvent): void {
     const pad = !e.ctrlKey && !e.metaKey && fromTrackpad(e);
     // seen from an angle, two fingers on a trackpad turn the view side to side and tip it up and down (Roger)
-    if (this.hands?.away?.() || e.altKey || (pad && !this.turnBy(-e.deltaX, -e.deltaY))) return;
+    if (this.hands?.away?.() || e.altKey || this.cards?.scrolls(e) || (pad && !this.turnBy(-e.deltaX, -e.deltaY)))
+      return;
     e.preventDefault();
     e.stopPropagation();
     if (!pad && e.deltaY) this.zoom((v, at) => wheelView(v, this.stops, e.deltaY, at), e.clientX, e.clientY);
@@ -360,7 +363,7 @@ export class RenderStage {
     const untouched = this.untouched,
       done = () => (untouched ? (this.view = this.fitted()) : (this.fitted(), (this.untouched = false)), this.draw());
     const { viewport, scene, spots, sizes, drawing, g, view } = this,
-      host = { viewport, scene, spots, sizes, drawing, g, view };
+      host = { viewport, scene, spots, sizes, drawing, g, view, words: this.cardWords };
     ({ cards: this.cards, view: this.view } = switchCards(host, this.cards, on, () => this.draw(), done, atOnce));
   }
 
