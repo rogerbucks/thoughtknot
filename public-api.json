@@ -3360,6 +3360,7 @@
           "edit: (text: string) => void",
           "graph: string",
           "noteChanged: (note: string) => 'unchanged' | 'reloaded' | 'conflict'",
+          "noteTexts: () => string[]",
           "reading: (note: string) => NoteReading",
           "redo: (note: string) => PaneWrite",
           "ref: BlockRef",
