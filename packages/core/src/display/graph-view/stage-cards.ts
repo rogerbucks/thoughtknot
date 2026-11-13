@@ -1,0 +1,309 @@
+// The new rendering's card view (editor spec §73, render_cards). With Cards on, each item is drawn as a card holding its
+// whole note. The card lies over the stage's canvas at the item's place. The links between items are arrows from card
+// edge to card edge, round the other cards (render-cards.ts). Groups keep their clouds and roads. A card shows as its item
+// would: it fades in as the zoom reaches the items. Far out it shows only its name. The pointer passes through the
+// cards, so the stage still pans, zooms and picks; a click on a card picks its item.
+import type { Graph } from '@thoughtknot/graph-spec';
+import type { GraphDrawing } from '../../note-reading.ts';
+import { valueText } from '../../inline-properties.ts';
+import { CARD_PROPS, CARD_W, cardsLaid, type CardText, type CardsLaid } from '../../render/render-cards.ts';
+import type { Mark, View } from '../../render/render-marks.ts';
+import type { Look } from '../../render/render-look.ts';
+import { MORPH_MS, morphed } from '../../render/render-morph.ts';
+import { roomSizes } from '../../render/render-detail.ts';
+import type { Spot } from '../../render/render-rooms.ts';
+import type { Scene } from '../../render/render-scene.ts';
+import { word } from '../../words.ts';
+import { button } from '../button.ts';
+
+/** Below this alpha a card is not shown. */
+const SHOWN = 0.05;
+/** The widths on screen, in pixels, over which the cards fade in, in place of their items' dots. */
+const FADE_FROM = 48;
+const FADE_TO = 96;
+/** Below this width on screen, in pixels, a card shows only its name. */
+const FAR_PX = 150;
+
+/** How clearly the cards show at zoom `scale`: not at all far out, where dots stand for them, then fading in. */
+export const cardAlpha = (scale: number): number =>
+  Math.min(1, Math.max(0, (CARD_W * scale - FADE_FROM) / (FADE_TO - FADE_FROM)));
+/** The radius of an arrow's corners, and the length of its head, in screen pixels. */
+const CORNER_PX = 8;
+const HEAD_PX = 7;
+/** The properties a card never lists: those that say where it sits or what it is, already shown. */
+const UNLISTED = new Set(['name', 'id', 'subject', 'area', 'topic', 'text']);
+
+/** Whether Cards is on for each graph, by its name, while the plugin runs: a card drawn again keeps it. */
+const chosen = new Map<string, boolean>();
+/** Whether Cards is on for `graph`. */
+export const cardsChosen = (graph: string): boolean => chosen.get(graph) ?? false;
+/** Keeps whether Cards is on for `graph`. */
+export const chooseCards = (graph: string, on: boolean): void => void chosen.set(graph, on);
+
+/** What each item's card shows: its name, kind, own note and first properties, from `drawing` and graph `g`. */
+export function cardTexts(drawing: GraphDrawing, g?: Graph): Map<string, CardText> {
+  const out = new Map<string, CardText>();
+  for (const b of drawing.boxes) {
+    const props = Object.entries(g?.nodes.has(b.key) ? g.p(b.key) : {})
+      .filter(([k, v]) => !UNLISTED.has(k) && v !== undefined && v !== null)
+      .slice(0, CARD_PROPS)
+      .map(([k, v]) => [k, valueText(v)] as const);
+    const kind = b.kind.split('.').filter(Boolean).join(' · ');
+    out.set(b.key, {
+      key: b.key,
+      name: b.text || b.key,
+      ...(kind ? { kind } : {}),
+      ...(b.note?.text ? { note: b.note.text } : {}),
+      ...(props.length ? { props } : {}),
+    });
+  }
+  return out;
+}
+
+/** How clear the outermost groups' clouds stay under the cards: faint, so the cards read first. */
+const CLOUD_UNDER = 0.3;
+
+/**
+ * The marks the stage paints under the cards, once they show: only the clouds of the outermost groups, faint. The
+ * cards and their arrows say the rest, so no name, dot or road shows through them.
+ */
+export function underCards(marks: readonly Mark[], outer: ReadonlySet<string>): Mark[] {
+  return marks.flatMap((m): Mark[] =>
+    m.kind === 'cloud' && outer.has(m.key)
+      ? [{ ...m, alpha: m.alpha * CLOUD_UNDER, ring: (m.ring ?? 0) * CLOUD_UNDER }]
+      : m.kind === 'ground'
+        ? [m]
+        : [],
+  );
+}
+
+/** A card's text as plain paragraphs, each set as text so nothing in a note runs as the page's own. */
+function fill(el: HTMLElement, markdown: string): void {
+  for (const para of markdown.split(/\n\s*\n/)) {
+    const text = para.replace(/^\s*[-*+]\s+/gm, '• ').trim();
+    if (text) el.createEl('p', { text });
+  }
+}
+
+/** The cards of a laid-out drawing, over the stage's canvas in `viewport`. */
+export class StageCards {
+  readonly layer: HTMLElement;
+  private readonly els = new Map<string, HTMLElement>();
+  /** The outermost groups, whose clouds stay faint under the cards. */
+  private readonly outer: Set<string>;
+  /** Each card's box on the screen, as last drawn, top card last, for a click to pick from. */
+  private boxes: { key: string; x: number; y: number; w: number; h: number }[] = [];
+
+  /** Whether the cards have come to rest: their arrows wait until then. */
+  settled = false;
+
+  readonly laid: CardsLaid;
+  /** The places the stage draws now, which the cards follow as they glide. */
+  private readonly spots: ReadonlyMap<string, Spot>;
+  /** The layout's own places, from before the cards spread them: where Cards off goes back to. */
+  readonly base: ReadonlyMap<string, Spot>;
+
+  constructor(
+    viewport: HTMLElement,
+    laid: CardsLaid,
+    spots: ReadonlyMap<string, Spot>,
+    base: ReadonlyMap<string, Spot>,
+    outer: readonly string[] = [],
+  ) {
+    [this.laid, this.spots, this.base] = [laid, spots, base];
+    this.outer = new Set(outer);
+    this.layer = viewport.createDiv({ cls: 'thoughtknot-stage-cards' });
+    this.layer.setAttribute('aria-hidden', 'true'); // the canvas names the drawing; the details read a thing out
+    for (const c of laid.cards) {
+      const el = this.layer.createDiv({ cls: 'thoughtknot-stage-card' });
+      el.setCssProps({ '--thoughtknot-card-w': `${c.w}px`, '--thoughtknot-card-h': `${c.h}px` });
+      const head = el.createDiv({ cls: 'thoughtknot-stage-card-head' });
+      head.createSpan({ cls: 'thoughtknot-stage-card-name', text: c.text.name });
+      if (c.text.kind) head.createSpan({ cls: 'thoughtknot-stage-card-kind', text: c.text.kind });
+      const words = [c.text.note, c.text.linked].filter((t): t is string => !!t?.trim());
+      if (words.length || c.text.props?.length) {
+        const body = el.createDiv({ cls: 'thoughtknot-stage-card-body' });
+        for (const t of words) fill(body, t);
+        if (c.more) body.addClass('is-cut');
+        if (c.more)
+          el.createDiv({ cls: 'thoughtknot-stage-card-more', text: word('view.cards.more', { count: c.more }) });
+        if (c.text.props?.length) {
+          const props = el.createDiv({ cls: 'thoughtknot-stage-card-props' });
+          for (const [k, v] of c.text.props) props.createDiv({ text: `${k} ${v}` });
+        }
+      }
+      this.els.set(c.key, el);
+    }
+  }
+
+  /** The marks to paint under the cards at zoom `scale`: while the cards are faint, the dots and names still show. */
+  under(marks: readonly Mark[], scale: number): Mark[] {
+    return cardAlpha(scale) < 0.5 ? [...marks] : underCards(marks, this.outer);
+  }
+
+  /**
+   * Places each card over its item under `view`, in the colour `colour` gives it, and paints the arrows on `c`, under
+   * the cards. `selected` is the item chosen now, whose card is marked. Tilted, or on the globe, no card shows.
+   */
+  draw(
+    view: View,
+    look: Look,
+    c: CanvasRenderingContext2D | null,
+    colour: (key: string) => string | undefined,
+    selected?: string | null,
+  ): void {
+    const k = view.scale,
+      alpha = !view.tilt && !view.globe ? cardAlpha(k) : 0;
+    this.boxes = [];
+    for (const card of this.laid.cards) {
+      const el = this.els.get(card.key) as HTMLElement;
+      const at = this.spots.get(card.key) ?? card;
+      const [x, y] = [(at.x - card.w / 2 - view.x) * k, (at.y - card.h / 2 - view.y) * k];
+      const [w, h] = [card.w * k, card.h * k];
+      const on = alpha >= SHOWN && x < view.w && y < view.h && x + w > 0 && y + h > 0;
+      el.hidden = !on;
+      if (!on) continue;
+      el.setCssProps({
+        '--thoughtknot-card-x': `${x}px`,
+        '--thoughtknot-card-y': `${y}px`,
+        '--thoughtknot-card-k': String(k),
+        '--thoughtknot-card-alpha': String(alpha),
+        '--thoughtknot-card-colour': colour(card.key) ?? look.faint,
+      });
+      el.toggleClass('is-far', w < FAR_PX);
+      el.toggleClass('is-selected', selected === card.key);
+      if (alpha >= 0.5) this.boxes.push({ key: card.key, x, y, w, h });
+    }
+    if (c && this.settled && alpha >= SHOWN) this.arrows(c, view, look, alpha);
+  }
+
+  /** The arrows between the cards, as clear as the cards are, each with its head at its end. */
+  private arrows(c: CanvasRenderingContext2D, view: View, look: Look, alpha: number): void {
+    const k = view.scale;
+    c.save();
+    c.strokeStyle = c.fillStyle = look.ink;
+    c.lineWidth = 1.5;
+    for (const a of this.laid.arrows) {
+      if (a.way.length < 2) continue;
+      const pts = a.way.map(([x, y]) => [(x - view.x) * k, (y - view.y) * k] as [number, number]);
+      c.globalAlpha = 0.55 * Math.min(1, alpha);
+      c.beginPath();
+      const [first] = pts as [[number, number]];
+      c.moveTo(...first);
+      for (let i = 1; i < pts.length - 1; i++)
+        c.arcTo(...(pts[i] as [number, number]), ...(pts[i + 1] as [number, number]), CORNER_PX);
+      const end = pts.at(-1) as [number, number],
+        before = pts.at(-2) as [number, number];
+      c.lineTo(...end);
+      c.stroke();
+      // the head: a small filled triangle pointing along the last piece
+      const t = Math.atan2(end[1] - before[1], end[0] - before[0]);
+      c.beginPath();
+      c.moveTo(...end);
+      c.lineTo(end[0] - HEAD_PX * Math.cos(t - 0.45), end[1] - HEAD_PX * Math.sin(t - 0.45));
+      c.lineTo(end[0] - HEAD_PX * Math.cos(t + 0.45), end[1] - HEAD_PX * Math.sin(t + 0.45));
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
+  /** The item whose card is at `x`, `y` on the screen, the top card first; none off every card. */
+  pickAt(x: number, y: number): string | null {
+    for (let i = this.boxes.length - 1; i >= 0; i--) {
+      const b = this.boxes[i] as (typeof this.boxes)[number];
+      if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.key;
+    }
+    return null;
+  }
+
+  remove(): void {
+    this.layer.remove();
+  }
+}
+
+/** What switching Cards needs of the stage: its card, scene, places and room sizes (both changed in place), and view. */
+export interface CardsHost {
+  viewport: HTMLElement;
+  scene: Scene;
+  spots: Map<string, Spot>;
+  sizes: number[];
+  drawing: GraphDrawing;
+  g?: Graph;
+  view: View;
+}
+
+/** `spots` spread by `f` from (`cx`, `cy`), each in place: what was drawn under a view, spread so. */
+function spreadBy(spots: Map<string, Spot>, f: number, cx: number, cy: number): Map<string, { x: number; y: number }> {
+  for (const [k, s] of spots) spots.set(k, { x: cx + (s.x - cx) * f, y: cy + (s.y - cy) * f, r: s.r * f });
+  return new Map([...spots].map(([k, s]) => [k, { x: s.x, y: s.y }]));
+}
+
+/**
+ * Turns Cards on or off for the stage `h`, whose cards are `was`. Every place, and the view, are first spread (or drawn
+ * back) together, so the screen shows just what it did. Then each place glides the rest of the way, drawing each
+ * frame, and `done` is told once all are at rest. `atOnce`, as when a card is drawn again, there is no glide.
+ */
+export function switchCards(
+  h: CardsHost,
+  was: StageCards | null,
+  on: boolean,
+  draw: () => void,
+  done: () => void,
+  atOnce = false,
+): { cards: StageCards | null; view: View } {
+  const laid = on ? cardsLaid(h.scene, h.spots, cardTexts(h.drawing, h.g), h.drawing.links) : was?.laid;
+  if (!laid || (on ? false : !was)) return { cards: was, view: h.view };
+  const base = on ? new Map(h.spots) : (was as StageCards).base;
+  const to = on ? laid.spots : base;
+  const f = on ? laid.spread : 1 / laid.spread;
+  const from = spreadBy(h.spots, f, laid.cx, laid.cy);
+  const v = h.view;
+  const view = { ...v, x: laid.cx + (v.x - laid.cx) * f, y: laid.cy + (v.y - laid.cy) * f, scale: v.scale / f };
+  h.sizes.splice(0, h.sizes.length, ...roomSizes(h.scene, to as Map<string, Spot>));
+  was?.remove();
+  const cards = on ? new StageCards(h.viewport, laid, h.spots, base, h.scene.roots) : null;
+  const frame = typeof requestAnimationFrame === 'undefined' || atOnce ? null : requestAnimationFrame;
+  const end = () => {
+    for (const [k, s] of to) h.spots.set(k, s);
+    if (cards) cards.settled = true;
+    done();
+  };
+  if (!frame) {
+    end();
+    return { cards, view };
+  }
+  const start = performance.now();
+  const step = (now: number): void => {
+    const t = (now - start) / MORPH_MS;
+    if (t >= 1) return end();
+    for (const [k, s] of morphed(from, to, t)) h.spots.set(k, s);
+    draw();
+    frame(step);
+  };
+  frame(step);
+  return { cards, view };
+}
+
+/**
+ * The dock's Cards button in `root`, for `stage`, on graph `graph`: pressed, each item shows as a card with its whole
+ * note. The choice is kept for the graph, so a card drawn again, as typing draws it, opens as it was left.
+ */
+export function cardsControl(
+  root: HTMLElement,
+  stage: { showCards: (on: boolean, atOnce?: boolean) => void },
+  graph: string,
+): { unload: () => void } | null {
+  const body = root.querySelector<HTMLElement>('.thoughtknot-view-dock .thoughtknot-dock-body');
+  if (!body) return null;
+  const b = button(body, word('view.cards'), 'square-stack', () => {
+    const on = !cardsChosen(graph);
+    chooseCards(graph, on);
+    b.setAttribute('aria-pressed', String(on));
+    stage.showCards(on);
+  });
+  b.setAttribute('title', word('view.cards'));
+  b.setAttribute('aria-pressed', String(cardsChosen(graph)));
+  if (cardsChosen(graph)) stage.showCards(true, true);
+  return { unload: () => b.remove() };
+}

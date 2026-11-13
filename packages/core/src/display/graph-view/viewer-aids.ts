@@ -11,6 +11,7 @@
 import { RenderStage, stageFor, type StageHands } from './render-stage.ts';
 import { ZOOM_STEP } from '../../space-controls.ts';
 import { turnControls } from './stage-turn-keys.ts';
+import { cardsControl } from './stage-cards.ts';
 import type { Lifecycle } from '../lifecycle';
 import { presetFor, renderFor, tallestOf } from '@thoughtknot/core';
 import type { Drawn, Lens, MiniMapSetting, Painter, Settings, Space, StyleGraph, View, Zoom } from '@thoughtknot/core';
@@ -141,6 +142,7 @@ export class Aids {
   private readonly stage: RenderStage | null;
   /** The stage's turn buttons and keys, shown while it is tilted. */
   private readonly turns: ReturnType<typeof turnControls> | null;
+  private readonly cards: ReturnType<typeof cardsControl> | null;
 
   /** For the card (which owns their listeners) and what they ask of it. */
   constructor(card: Lifecycle, host: AidsHost) {
@@ -211,6 +213,7 @@ export class Aids {
     this.stage = host.svg() ? stageFor(viewport, o, hands, o.seen?.before) : null; // glides from the last type shown
     if (this.stage) o.seen?.keep(this.stage.seen);
     this.turns = this.stage && turnControls(host.root, viewport, this.stage);
+    this.cards = this.stage && cardsControl(host.root, this.stage, o.graph); // whole notes on cards (render_cards)
   }
 
   /** The bar's Fit and zoom buttons on the new rendering, while it draws the card; none for today's drawing. */
@@ -383,6 +386,7 @@ export class Aids {
   unload(): void {
     this.stage?.unload();
     this.turns?.unload();
+    this.cards?.unload();
     this.watching?.disconnect();
     this.info.onunload();
   }

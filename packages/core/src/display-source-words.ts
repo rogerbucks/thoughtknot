@@ -124,6 +124,9 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.zoom-in': 'Zoom in',
   'space.zoom-out': 'Zoom out',
   'space.turn-left': 'Turn left',
+  // the card view (§73, render_cards)
+  'view.cards': 'Cards: show each thing with its whole note',
+  'view.cards.more': { one: '{count} more line', other: '{count} more lines' },
   'space.turn-right': 'Turn right',
   'space.tilt-up': 'Tilt up',
   'space.tilt-down': 'Tilt down',
