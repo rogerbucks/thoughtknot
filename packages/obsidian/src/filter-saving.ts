@@ -4,10 +4,26 @@
 // and says so with an Undo, which puts the note back only while it is still as the delete left it.
 import { namedFilterRemoved, namedFiltersOf, word } from '@thoughtknot/core';
 import type { NamedFilterSave, NamedFilters, StyleGraph } from '@thoughtknot/core';
+import type { Exploring } from '@thoughtknot/core/display/graph-view/view-options';
 import type ThoughtKnotPlugin from './main';
 import { changeNote } from './rule-removal';
 import { writeStyle } from './style-write';
 import { noticeWithUndo } from './undo-notice';
+import { exploringFor } from './view-block';
+
+/** What a card's style saved to open again: its exploration (ES§71, explore_saved) and its filters saved by name. */
+export function savedFor(
+  plugin: ThoughtKnotPlugin,
+  path: string,
+  graph: string,
+  style: StyleGraph,
+  readOnly: () => boolean,
+): { exploring: Exploring; named: NamedFilters } {
+  return {
+    exploring: exploringFor(plugin, path, graph, style, readOnly),
+    named: namedFor(plugin, path, graph, style, readOnly),
+  };
+}
 
 /** The filters saved by name in the style of `graph`, and, unless `readOnly`, how to save and delete one. */
 export function namedFor(
