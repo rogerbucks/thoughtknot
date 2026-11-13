@@ -106,3 +106,47 @@ test('a card shows the note it stands for below its own, rendered by the host on
     uninstall();
   }
 });
+
+// proves: render_cards
+test('tilted, a card that a nearer one would cover hides, and its dot and name show instead; the chosen one never hides', async () => {
+  const { fakeDocument, installGlobals } = await import('../../obsidian/test/host/fake-dom.js');
+  const doc = fakeDocument(800),
+    uninstall = installGlobals(doc);
+  try {
+    const { StageCards } = await import('../src/display/graph-view/stage-cards.ts');
+    const card = (key, y) => ({ key, x: 0, y, w: 240, h: 120, shown: 3, more: 0, text: { key, name: key } });
+    const cards = [card('near', 260), card('far', 0)];
+    const spots = new Map(cards.map((c) => [c.key, { x: c.x, y: c.y, r: 120 }]));
+    const laid = { spots, cards, arrows: [], spread: 1, cx: 0, cy: 0, depths: new Map() };
+    const viewport = doc.createElement('div');
+    const stage = new StageCards(viewport, laid, spots, spots, []);
+    const look = { faint: '#ccc', ink: '#000' };
+    const shownOf = () =>
+      viewport
+        .querySelectorAll('.thoughtknot-stage-card')
+        .filter((el) => !el.hidden)
+        .map((el) => el.textContent);
+    const flat = { x: -400, y: -200, scale: 1, w: 800, h: 600 };
+    stage.draw(flat, look, null, () => undefined);
+    assert.deepEqual(shownOf().sort(), ['far', 'near'], 'flat, both cards show: they stand apart');
+    const tilted = { ...flat, tilt: 1.2 };
+    stage.draw(tilted, look, null, () => undefined);
+    assert.equal(shownOf().length, 1, 'tilted, the two would touch: one hides');
+    const marks = [
+      { kind: 'dot', key: 'far', alpha: 1 },
+      { kind: 'dot', key: 'near', alpha: 1 },
+    ];
+    const hidden = cards.map((c) => c.key).find((k) => !shownOf().includes(k));
+    assert.deepEqual(
+      stage.under(marks, tilted).map((m) => m.key),
+      [hidden],
+      'the hidden card gives way to its dot',
+    );
+    stage.draw(tilted, look, null, () => undefined, hidden);
+    assert.ok(shownOf().includes(hidden), 'chosen, it shows, and the other gives way');
+    assert.equal(shownOf().length, 1);
+    stage.remove();
+  } finally {
+    uninstall();
+  }
+});
