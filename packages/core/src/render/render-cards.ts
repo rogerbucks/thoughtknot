@@ -1,10 +1,10 @@
 // Things drawn as whole cards, each showing all of its note: part of layers L2 and L4 (wiki/Rendering-spec.md; editor
 // spec §73, render_cards). Roger, 13 Nov 2026: "cards show all the notes and the diagram layouts show the whole cards
 // with arrows in the right place".
-// - A card is one width. It is as tall as its name, its note, the note it stands for, and a few of its properties
-//   need, up to CARD_MOST_LINES lines of text. The rest waits behind "Show all", which opens the card in place.
-// - Each layout keeps its own places. They are spread out only as far as the cards need, then any cards still
-//   covering one another are moved apart a little at a time. The same graph gives the same places, so nothing jumps.
+// - A card is one width. Its height fits its name, its note, the note it stands for and a few properties. It shows up
+//   to CARD_MOST_LINES lines of text. The rest waits behind "Show all", which opens the card in place.
+// - Each layout keeps its own places, spread out only as far as the cards need. Cards still covering one another are
+//   then moved apart a little at a time. The same graph gives the same places, so nothing jumps.
 // - An arrow leaves and reaches a card at its edge, never its middle, and goes round every other card in its way.
 //   Arrows on one side keep apart where they can.
 // Host-free and pure.
@@ -151,8 +151,8 @@ export function spreadCardBoxes(boxes: readonly CardBox[]): CardBox[] {
 }
 
 /**
- * The arrows of `links` between the cards `boxes`. Each runs across and down from the edge of its first card to the
- * edge of its second, round every other card, keeping off the arrows found before it. `axis` is the layout's way (0
+ * The arrows of `links` between the cards `boxes`. Each runs across and down, from edge to edge of its two cards. It
+ * goes round every other card, and keeps off the arrows found before it. `axis` is the layout's way (0
  * across, 1 down): an arrow leaves and reaches its cards that way where it can. A link to itself, or to a thing with
  * no card, has none.
  */

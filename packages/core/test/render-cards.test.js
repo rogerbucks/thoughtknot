@@ -1,6 +1,6 @@
 // Things drawn as whole cards with all their notes (editor spec §73, render_cards): render/render-cards.ts. A card is
-// as tall as its note up to a cap, layouts keep their shape while spreading so no card covers another, and every
-// arrow runs from card edge to card edge round the other cards.
+// as tall as its note, up to a cap. Layouts keep their shape while they spread, so no card covers another. Every arrow
+// runs from card edge to card edge, round the other cards.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
