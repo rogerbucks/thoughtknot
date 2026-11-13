@@ -10,6 +10,8 @@
 // Host-free and pure.
 import { elbowRoute, type Taken } from '../layouts/elbow-route.ts';
 import { textWidth, wrapName } from './render-labels.ts';
+import type { Spot } from './render-rooms.ts';
+import type { Scene } from './render-scene.ts';
 
 /** A card's width, in the drawing's pixels at full size. */
 export const CARD_W = 240;
@@ -31,6 +33,8 @@ export const CARD_GAP = 28;
 const SPREAD_MOST = 8;
 /** How many rounds of moving cards apart. */
 const ROUNDS = 120;
+/** How many pairs of cards the rounds may weigh in all, at most. */
+const WORK = 4_000_000;
 
 /** What a card shows: its thing's key, name and kind, its own note, the body of the note it stands for, its properties. */
 export interface CardText {
@@ -41,6 +45,8 @@ export interface CardText {
   note?: string;
   /** The body of the note the thing is, or links to, as Markdown; shown below its own note. */
   linked?: string;
+  /** The linked note's length is not known until it is read: its card is as tall as a card may be. */
+  linkedTall?: boolean;
   props?: readonly (readonly [string, string])[];
 }
 
@@ -84,9 +90,12 @@ export function linesOf(markdown: string): number {
 /** The size of the card for `c`: its whole text up to CARD_MOST_LINES lines, and how many lines are left over. */
 export function cardSizeOf(c: CardText): CardSize {
   const text = [c.note, c.linked].filter((t): t is string => !!t && !!t.trim());
-  const all = text.reduce((n, t) => n + linesOf(t), 0);
+  const all = c.linkedTall
+    ? Math.max(CARD_MOST_LINES, linesOf(c.note ?? ''))
+    : text.reduce((n, t) => n + linesOf(t), 0);
   const shown = Math.min(all, CARD_MOST_LINES);
-  const more = all - shown;
+  // a note read later may be longer than the card: Show all is offered for it
+  const more = c.linkedTall ? Math.max(1, all - shown) : all - shown;
   const props = Math.min(c.props?.length ?? 0, CARD_PROPS);
   const body = shown + props + (more ? 1 : 0);
   return { w: CARD_W, h: CARD_HEAD + (body ? 2 * CARD_PAD + body * CARD_LINE : 0), shown, more };
@@ -109,24 +118,38 @@ function partedAt(a: CardBox, b: CardBox): number {
 }
 
 /**
+ * How far a layout of the cards `boxes` is spread from its middle (`cx`, `cy`). It is as far as the middle card of them
+ * needs to stand clear of its nearest neighbour. It is at most SPREAD_MOST, and never less than 1. Spreading the whole
+ * layout so keeps its shape.
+ */
+export function spreadOf(boxes: readonly CardBox[]): { spread: number; cx: number; cy: number } {
+  const n = boxes.length || 1;
+  const cx = boxes.reduce((s, b) => s + b.x, 0) / n,
+    cy = boxes.reduce((s, b) => s + b.y, 0) / n;
+  const needs: number[] = [];
+  for (const a of boxes) {
+    let least = Infinity;
+    for (const b of boxes) if (b !== a) least = Math.min(least, partedAt(a, b));
+    if (Number.isFinite(least)) needs.push(least);
+  }
+  needs.sort((a, b) => a - b);
+  const spread = Math.min(SPREAD_MOST, needs.length ? (needs[Math.floor(needs.length / 2)] as number) : 1);
+  return { spread, cx, cy };
+}
+
+/**
  * The cards `boxes`, each centred at its layout's place, spread out so that none covers another. First the whole
- * layout is spread from its middle, as far as most cards next to one another need. That keeps its shape. Then any cards
- * still covering one another are pushed apart the shorter way, each half the overlap. The same boxes always give the
- * same places, whatever order they come in.
+ * layout is spread from its middle (`spreadOf`). Then any cards still covering one another are pushed apart the
+ * shorter way, each half the overlap. The same boxes always give the same places, whatever order they come in.
  */
 export function spreadCardBoxes(boxes: readonly CardBox[]): CardBox[] {
   const p = [...boxes].sort(byKey).map((b) => ({ ...b }));
   if (p.length < 2) return p;
-  // the spread each card needs from its nearest neighbour, and the middle one of those
-  const needs = p
-    .map((a, i) => Math.min(...p.filter((_, j) => j !== i).map((b) => partedAt(a, b))))
-    .filter(Number.isFinite)
-    .sort((a, b) => a - b);
-  const spread = Math.min(SPREAD_MOST, needs.length ? (needs[Math.floor(needs.length / 2)] as number) : 1);
-  const cx = p.reduce((s, b) => s + b.x, 0) / p.length,
-    cy = p.reduce((s, b) => s + b.y, 0) / p.length;
+  const { spread, cx, cy } = spreadOf(p);
   for (const b of p) [b.x, b.y] = [cx + (b.x - cx) * spread, cy + (b.y - cy) * spread];
-  for (let round = 0; round < ROUNDS; round++) {
+  // a big drawing gets fewer rounds, so pressing Cards never holds the page for long
+  const rounds = Math.max(1, Math.min(ROUNDS, Math.floor(WORK / (p.length * p.length))));
+  for (let round = 0; round < rounds; round++) {
     let moved = false;
     for (let i = 0; i < p.length; i++)
       for (let j = i + 1; j < p.length; j++) {
@@ -173,6 +196,53 @@ export function cardArrows(
     out.push({ from: l.from, to: l.to, way: elbowRoute(a, b, placed, axis, taken) });
   }
   return out;
+}
+
+/** The items of `scene`: the nodes at its last depth, each holding only itself. */
+export const itemsOf = (scene: Scene): string[] =>
+  [...scene.nodes.values()]
+    .filter((n) => !n.children.length && n.items.length === 1 && n.items[0] === n.key)
+    .map((n) => n.key);
+
+/** A layout drawn as cards: every place spread for them, each item's card, and the arrows between cards. */
+export interface CardsLaid {
+  spots: Map<string, Spot>;
+  cards: (CardBox & CardSize & { text: CardText })[];
+  arrows: CardArrow[];
+  /** How far every place was spread, from where. */
+  spread: number;
+  cx: number;
+  cy: number;
+}
+
+/**
+ * The layout `spots` of `scene` drawn as the cards of `texts`, with arrows for `links`. Every place, groups too, is
+ * spread from the layout's middle as far as the cards need, so groups still hold their items. Then cards still covering
+ * one another are pushed apart. An item with no text gets a card of its name.
+ */
+export function cardsLaid(
+  scene: Scene,
+  spots: ReadonlyMap<string, Spot>,
+  texts: ReadonlyMap<string, CardText>,
+  links: readonly { from: string; to: string }[],
+  axis: 0 | 1 = 1,
+): CardsLaid {
+  const items = itemsOf(scene).filter((k) => spots.has(k));
+  const text = (k: string): CardText => texts.get(k) ?? { key: k, name: scene.nodes.get(k)?.name ?? k };
+  const sized = new Map(items.map((k) => [k, cardSizeOf(text(k))]));
+  const boxes = items.map((k) => {
+    const s = spots.get(k) as Spot,
+      z = sized.get(k) as CardSize;
+    return { key: k, x: s.x, y: s.y, w: z.w, h: z.h };
+  });
+  const { spread, cx, cy } = spreadOf(boxes);
+  const out = new Map<string, Spot>();
+  for (const [k, s] of spots) out.set(k, { x: cx + (s.x - cx) * spread, y: cy + (s.y - cy) * spread, r: s.r * spread });
+  const placed = spreadCardBoxes(boxes);
+  // an item's spot reaches round its whole card, so a fit shows every card whole
+  for (const b of placed) out.set(b.key, { x: b.x, y: b.y, r: Math.max(b.w, b.h) / 2 });
+  const cards = placed.map((b) => ({ ...(sized.get(b.key) as CardSize), ...b, text: text(b.key) }));
+  return { spots: out, cards, arrows: cardArrows(placed, links, axis), spread, cx, cy };
 }
 
 /** Whether the straight piece from `p` to `q` runs through the inside of `box`, kept in from its edge by `inset`. */
