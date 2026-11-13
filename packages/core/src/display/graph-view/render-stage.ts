@@ -14,7 +14,7 @@ import { coloursOf, marksOf, type Mark, type View } from '../../render/render-ma
 import { centreOn, fitView, panView, pickAt, pinchView, stopsOf, wheelView } from '../../render/render-camera.ts';
 import { paintCanvas, type Canvas2d } from '../../render/paint-canvas.ts';
 import { fromTrackpad, groundShift, isTilted, onScreen, turnedBy } from '../../render/render-tilt.ts';
-import { aroundAgain, isGlobe, middleOf } from '../../render/render-globe.ts';
+import { aroundAgain, ballFitted, isGlobe, middleOf } from '../../render/render-globe.ts';
 import { flatOf, laidOut, lookedFrom, sameLook, turnedView } from './stage-look.ts';
 import type { StageKind } from './stage-look.ts';
 import { morphIn, seenOf, type Seen } from './stage-morph.ts';
@@ -158,7 +158,7 @@ export class RenderStage {
     }
     // a fit keeps the angle the camera looks from: 2.5D stays 2.5D, and the globe a globe
     const { tilt, turn, lift, globe } = this.view ?? {};
-    if (tilt || turn || globe) Object.assign(view, { tilt, turn, lift, globe });
+    if (tilt || turn || globe) view = ballFitted(Object.assign(view, { tilt, turn, lift, globe }));
     this.stops = stopsOf(this.sizes, view.scale);
     this.untouched = true;
     return view;

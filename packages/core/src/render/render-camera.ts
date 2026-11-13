@@ -8,7 +8,7 @@ import { OPEN_FROM, ITEMS_FROM, scaleToOpen } from './render-detail.ts';
 import type { Mark, View } from './render-marks.ts';
 import type { Clear } from '../zoom-fit.ts';
 import type { Spot } from './render-rooms.ts';
-import { unwrapped } from './render-globe.ts';
+import { nearestCopy, unwrapped } from './render-globe.ts';
 
 /** The space left round the drawing when it is fitted, in pixels. */
 const MARGIN = 24;
@@ -131,8 +131,9 @@ export function pickAt(marks: readonly Mark[], x: number, y: number): string | n
 }
 
 /** `view` at `scale` (its own when none), with `spot` in the middle of the part the controls leave clear. */
-export function centreOn(view: View, spot: Spot, scale = view.scale): View {
-  const c = view.clear ?? OPEN;
+export function centreOn(view: View, at: Spot, scale = view.scale): View {
+  const c = view.clear ?? OPEN,
+    spot = nearestCopy(at, view); // on the globe, the short way round
   const [cx, cy] = [c.left + (view.w - c.left - c.right) / 2, c.top + (view.h - c.top - c.bottom) / 2];
   return { ...view, scale, x: spot.x - cx / scale, y: spot.y - cy / scale };
 }

@@ -1,0 +1,6 @@
+{
+  "file": "test/globe-probe.test.js",
+  "test": "the globe view, driven in a real browser > a pinch zooms the view, not the page, a little at each step; the bar’s zoom and Fit move it too",
+  "seen_failing_first": false,
+  "evidence": "an existing browser probe reordered: Fit before Zoom in, as the globe's fit is now nearer"
+}
