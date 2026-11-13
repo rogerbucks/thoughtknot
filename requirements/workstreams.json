@@ -1047,7 +1047,8 @@
       "rule_look_builder",
       "rule_look_remove",
       "rule_look_off",
-      "rule_look_describe"
+      "rule_look_describe",
+      "untangle_ask_filter"
     ]
   },
   "CV1": {

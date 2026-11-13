@@ -27,6 +27,8 @@ import { levelsOf } from './level-clouds-svg.ts';
 import { levelPath } from '../../detail-levels.ts';
 import type { FindRow } from './untangle-find';
 import { renderLegend } from './untangle-legend';
+import { askPanelIn } from './untangle-ask.ts';
+import type { FilterAskHost, FilterAskPanel, ShownAsk } from './untangle-ask.ts';
 import type { LegendPanel } from './untangle-legend';
 
 /** What untangling asks of its card. */
@@ -51,6 +53,8 @@ export interface UntangleHost {
   svg?: () => SVGSVGElement | null;
   /** The exploration the style graph saved, and how to save one (explore_saved). */
   exploring?: Exploring;
+  /** Asks an AI for a filter from words, only while AI is on (untangle_ask_filter): the host shows what is sent first. */
+  describe?: FilterAskHost['describe'];
 }
 
 /** How far the thing shown with its neighbours reaches (`steps`), and a step further (1) or fewer (-1) round it. */
@@ -81,6 +85,9 @@ export class UntangleView {
   private readonly core: Untangle;
   private readonly banner: Banner;
   private readonly legend: LegendPanel;
+  /** The filter by what things hold, built the first time the panel opens: until then it costs nothing. */
+  private asker: FilterAskPanel | null | undefined;
+  private askedSaid = ''; // the filter shown, in words, for the banner
   private readonly finder: FindRow;
   private readonly sidebar: ExploreSidebar;
   private readonly host: UntangleHost;
@@ -124,6 +131,13 @@ export class UntangleView {
     });
     this.legend = renderLegend(root, kindLegend(host.drawing), this.core.legend, () => host.changed());
     this.banner = new Banner(root);
+  }
+
+  /** Shows a filter by what things hold, the rest faded or hidden; null shows all again. */
+  private showAsked(asked: ShownAsk | null): void {
+    this.core.asked = asked && { things: asked.things, hide: asked.hide };
+    this.askedSaid = asked?.said ?? '';
+    this.changed();
   }
 
   /** What the legend brings forward and hides now, as a view saved as shown keeps it. */
@@ -206,9 +220,22 @@ export class UntangleView {
     this.findButton?.focus();
   }
 
+  /** The filter by what things hold, built in the legend's panel the first time it is wanted. */
+  private ask(): FilterAskPanel | null {
+    if (this.asker === undefined) this.asker = askPanelIn(this.legend.el, this.host, (a) => this.showAsked(a));
+    return this.asker;
+  }
+
+  /** Opens the legend panel on the filter by what things hold, to change it (the banner's Change the filter). */
+  private openAsk(): void {
+    this.legend.el.hidden = false;
+    this.ask()?.focus();
+  }
+
   /** Opens or closes the legend panel (the bar's button). */
   toggleLegend(b: HTMLElement): void {
     this.legend.el.hidden = !this.legend.el.hidden;
+    if (!this.legend.el.hidden) this.ask();
     b.setAttribute('aria-expanded', String(!this.legend.el.hidden));
   }
 
@@ -281,6 +308,7 @@ export class UntangleView {
     this.core.showAll();
     this.core.legend.reset();
     this.core.clearRoute();
+    this.core.asked = null;
     this.asking = null;
     this.legend.refresh();
     this.changed();
@@ -340,6 +368,15 @@ export class UntangleView {
               this.changed();
             },
           },
+        ],
+      });
+    const asked = this.core.asked;
+    if (asked)
+      rows.push({
+        words: word('filter.ask.banner', { count: asked.things.size, said: this.askedSaid }),
+        actions: [
+          { label: word('filter.ask.edit'), run: () => this.openAsk() },
+          { label: word('filter.ask.off'), run: () => this.showAsked(null) },
         ],
       });
     if (this.asking !== null)

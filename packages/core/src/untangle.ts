@@ -7,6 +7,8 @@
 import { adjacency, edgesOf, within } from './focus.ts';
 import type { FocusEdge, Kept } from './focus.ts';
 import { ExploreSession } from './explore-session.ts';
+import { withAsked } from './filter-ask.ts';
+import type { AskedFilter } from './filter-ask.ts';
 import type { ExploreSave } from './explore-saved.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
@@ -302,6 +304,8 @@ export class Untangle {
   explore: ExploreSession | null = null;
   /** The two things a path was asked for between, and what was found: null for none. */
   routed: { from: string; to: string; found: PathFound | null } | null = null;
+  /** The filter by what things hold, shown on the drawing; null for none (untangle_ask_filter). */
+  asked: AskedFilter | null = null;
   /** The links of the drawing, as `edgesOf` gives them. */
   readonly edges: FocusEdge[];
   private readonly d: GraphDrawing;
@@ -354,12 +358,14 @@ export class Untangle {
 
   /** Whether anything is filtered, chosen or asked for. */
   active(): boolean {
-    return this.only !== null || this.explore !== null || this.routed !== null || this.legend.any();
+    const any = this.only ?? this.explore ?? this.routed ?? this.asked;
+    return any !== null || this.legend.any();
   }
 
   /** What to bring forward and what to hide, given what the selection keeps (null for no selection). */
   layers(focus: Kept | null): Layers {
-    const { forward, hidden } = this.legend.apply(this.d, this.edges);
+    // the filter asked for is brought forward over the legend's choice; what either hides stays hidden
+    const { forward, hidden } = withAsked(this.d, this.edges, this.legend.apply(this.d, this.edges), this.asked);
     const hide: Kept = { things: new Set(hidden.things), edges: new Set(hidden.edges) };
     const exploring = this.explore?.shown(this.edges);
     if (this.only || exploring) {
