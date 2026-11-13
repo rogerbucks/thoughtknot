@@ -216,7 +216,7 @@ window.pane = async () => {
   const el = document.body.appendChild(document.createElement('div'));
   el.style.width = '600px';
   const on = { edit() {}, select() {}, replace: () => false };
-  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'pets', text: texts[0] }, () => false, on);
+  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'pets', text: texts[0], noteTexts: () => texts }, () => false, on);
   for (let i = 0; i < 50 && !el.querySelector('.thoughtknot-massive'); i++) await new Promise((r) => setTimeout(r, 20));
   const stage = el.querySelector('.thoughtknot-massive-stage');
   const boxes = [...el.querySelectorAll('.thoughtknot-massive-facet input')];
@@ -243,7 +243,7 @@ window.paneInParts = async () => {
   const replaced = [];
   const on = { edit() {}, select() {}, replace: (now) => replaced.push(now) > 0 };
   const reading = readNote(texts);
-  new PaneDrawing(host).redraw(el, reading, { graph: 'huge', text: texts[0] }, () => false, on);
+  new PaneDrawing(host).redraw(el, reading, { graph: 'huge', text: texts[0], noteTexts: () => texts }, () => false, on);
   for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-stage'); i++) await new Promise((r) => setTimeout(r, 20));
   const stage = el.querySelector('.thoughtknot-massive-stage');
   const shown = {
@@ -306,7 +306,7 @@ window.paneInPartsSaved = async () => {
   const el = document.body.appendChild(document.createElement('div'));
   el.style.width = '600px';
   const on = { edit() {}, select() {}, replace: () => false };
-  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'huge', text: texts[0] }, () => false, on);
+  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'huge', text: texts[0], noteTexts: () => texts }, () => false, on);
   for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-facet'); i++) await new Promise((r) => setTimeout(r, 20));
   const boxes = [...el.querySelectorAll('.thoughtknot-massive-facet input')];
   const shown = {

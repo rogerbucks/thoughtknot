@@ -4,11 +4,13 @@
 // - A saved filter is picked from its list: it fills the rows as saved, and shows only when Show these is pressed.
 // - Delete takes it out of the note, and the toast's one Undo puts it back.
 // - In reading view the list is there, but there is no Save and no Delete.
+// - The editor pane offers the same list, and saves into the note it edits.
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { fence, labelled } from './host/notes.js';
+import { READER, open as openPane, type } from './host/pane-notes.js';
 
 before(() => build());
 
@@ -113,6 +115,38 @@ test('in reading view a saved filter can be picked, but not saved or deleted', a
     assert.equal(labelled(panelOf(el), 'Delete the saved filter picked'), undefined);
   } finally {
     env.plugin.onunload();
+    env.uninstall();
+  }
+});
+
+// proves: untangle_filter_saved
+test('the editor pane lists the filters saved, fills the rows from one, and saves one into the note', async () => {
+  const style = [
+    '```gql',
+    '// graph: reader_style · STYLE reader',
+    `(named_1:NamedFilter {name: 'Large', when: 'name == "Large reader"'})`,
+    '```',
+  ];
+  const note = `# Reader\n\n${fence(READER)}\n\n${style.join('\n')}\n`;
+  const env = await openPane({ note }, 2);
+  try {
+    type(env.el, READER);
+    await until(() => env.el.querySelector('g.node'));
+    labelled(env.el, 'Filter by kind or link').click();
+    const list = savedList(env.el);
+    assert.deepEqual(
+      list.querySelectorAll('option').map((o) => o.textContent),
+      ['Saved filters', 'Large'],
+    );
+    list.value = 'Large';
+    list.dispatch('change');
+    assert.match(said(env.el), /Filled in from the saved filter Large\. Keeps 1 of 3\./);
+    labelled(panelOf(env.el), 'Save this filter by name').click();
+    const name = panelOf(env.el).querySelector('input[name="filter-name"]');
+    name.value = 'Large again';
+    labelled(panelOf(env.el), 'Save').click();
+    await until(() => env.state.files.get('Reader.md').includes("name: 'Large again'"));
+  } finally {
     env.uninstall();
   }
 });
