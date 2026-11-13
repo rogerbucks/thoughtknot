@@ -20,9 +20,9 @@ function layersOf(el: Element | null): StageLayers | null {
   return null;
 }
 
-/** A short stamp of the layers, so a change of class that changes neither is not drawn again. */
+/** A stamp of the layers, so a change of class that changes neither is not drawn again. Sets keep their order. */
 const stampOf = (l: StageLayers | null) =>
-  !untangles(l) ? '' : `${[...(l.kept ?? [])].sort().join(',')}|${[...l.hidden].sort().join(',')}`;
+  !untangles(l) ? '' : `${[...(l.kept ?? [])].join(',')}|${[...l.hidden].join(',')}`;
 
 /** What one stage shows of its card's untangling. */
 export class StageUntangle {
