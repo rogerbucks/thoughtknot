@@ -7,7 +7,7 @@ import type { GraphDrawing } from '../../note-reading.ts';
 import { shapeOf } from '../../types-shape.ts';
 import { sceneOf, type Scene } from '../../render/render-scene.ts';
 import { panView } from '../../render/render-camera.ts';
-import { bendOf, isGlobe } from '../../render/render-globe.ts';
+import { ballFitted, bendOf, isGlobe } from '../../render/render-globe.ts';
 import type { View } from '../../render/render-marks.ts';
 import { roomsOf, type Spot } from '../../render/render-rooms.ts';
 import { egoOf } from '../../render/render-ego.ts';
@@ -80,7 +80,8 @@ export const flatOf = (view: View): View => ({ ...view, tilt: 0, turn: 0, lift: 
  * None where the stage does not show that mode. It keeps where the reader looks and how near.
  */
 export function lookedFrom(view: View, mode: string | null, spots: Iterable<Spot>): View | null {
-  if (mode === 'globe') return { ...flatOf(view), globe: bendOf(spots) };
+  // the ball fills the card, as the drawing goes all the way round it (Roger, 13 Nov 2026)
+  if (mode === 'globe') return ballFitted({ ...flatOf(view), globe: bendOf(spots) });
   const tilt = mode ? TILTS[mode] : 0;
   if (tilt === undefined) return null;
   return { ...view, tilt, turn: view.turn ?? 0, lift: (mode && LIFTS[mode]) || 0, globe: 0 };
