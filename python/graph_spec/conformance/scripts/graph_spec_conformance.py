@@ -14,7 +14,7 @@ suite a condition of conformance. The cases and their expected answers are data 
 (a yaml block starting `# conformance case`); the configurations are data in the suite note. This script
 holds no expected answers of its own — only the general properties every case must keep, and the
 safeguards it switches off to prove each one is needed.
-Needs Grafeo 0.5.43 and PyYAML in ~/.venvs/graphspec (spec §3 names the dialect).
+Needs Grafeo 0.6.2 and PyYAML in ~/.venvs/graphspec (spec §3 names the dialect).
 6 Oct 2026: also runs graph_spec_trace.py — the spec's meta-schema and requirements graph — and checks both in Grafeo.
 14 Oct 2026: a third kind of case, `reader` — short blocks read by both portable readers and by the engine route (gs.load), for
 the reading rules of §3, §14, §26 and §27 that graph-spec 0.4.3 made provable: Standards/Reader test — what the readers keep, own and refuse.

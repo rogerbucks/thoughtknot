@@ -675,9 +675,9 @@
       "reason": "TRAIL is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as TRAIL_1"
     },
     {
-      "query": "MATCH (n:Walk) RETURN n",
+      "query": "MATCH (n:Except) RETURN n",
       "nearest": "kinds",
-      "reason": "Walk is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Walk_1"
+      "reason": "Except is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Except_1"
     },
     {
       "query": "MATCH (n IS Group) RETURN n",

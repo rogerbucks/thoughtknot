@@ -86,11 +86,11 @@ describe('the query written for a view built by tapping', () => {
   // proves: views_by_tapping, views_agree_with_grafeo
   test('a kind tapped that a view cannot ask for is a RangeError that says why, never a query that would be refused', () => {
     assert.throws(
-      () => viewQuery('kinds', { kinds: ['Person', 'Walk'] }),
+      () => viewQuery('kinds', { kinds: ['Person', 'Except'] }),
       (e) =>
         e instanceof RangeError &&
         e.message ===
-          'Walk is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Walk_1',
+          'Except is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as Except_1',
     );
     assert.throws(() => viewQuery('kinds', { kinds: ['group'] }), /^RangeError: group is a word GQL keeps/);
     // a kind GQL keeps that Grafeo reads as a label is still written, and read back

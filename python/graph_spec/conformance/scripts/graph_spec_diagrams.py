@@ -19,6 +19,7 @@ suite's, which also handles sub-flows and names states by flow — the two are d
 import os, re, sys, json, shutil, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import graph_spec as gs, grafeo
+from graphspec.engine.queries import plain_row   # rows as Grafeo 0.5.43 gave them: floats, naive UTC
 VAULT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DATA = os.path.join(VAULT, 'Standards', 'Lending demo graph data.md')
 SPEC = os.path.join(VAULT, 'Standards', 'Graph spec model.md')
@@ -32,8 +33,8 @@ def draw():
     db = grafeo.GrafeoDB(); data = {}
     for g, txt in blocks.items():
         db.execute(f"CREATE GRAPH {g}"); db.set_graph(g); db.execute(gs.strip(txt))
-        N = list(db.execute_cypher("MATCH (n) RETURN id(n) AS k, labels(n) AS l, properties(n) AS p"))
-        R = list(db.execute_cypher("MATCH (a)-[r]->(b) RETURN id(a) AS s, id(b) AS t, type(r) AS ty, properties(r) AS p"))
+        N = [plain_row(r) for r in db.execute_cypher("MATCH (n) RETURN id(n) AS k, labels(n) AS l, properties(n) AS p")]
+        R = [plain_row(r) for r in db.execute_cypher("MATCH (a)-[r]->(b) RETURN id(a) AS s, id(b) AS t, type(r) AS ty, properties(r) AS p")]
         data[g] = (N, R)
     money = lambda c: f"${c/100:,.2f}"
     def d10(v): return v.isoformat()[:10] if hasattr(v, 'isoformat') else str(v)[:10]
@@ -152,9 +153,9 @@ def e4_scxml():
     note = open(DATA, encoding='utf-8').read()
     block = re.search(r"## Source — process\n\n```gql\n(.*?)\n```", note, re.S).group(1)
     db = grafeo.GrafeoDB(); db.execute(gs.strip(block))
-    S = {r['k']: r for r in db.execute_cypher("MATCH (s:State) RETURN id(s) AS k, s.id AS id, s.initial AS i, s.final AS f")}
-    T = list(db.execute_cypher("MATCH (a:State)-[t:TRANSITION]->(b:State) RETURN id(a) AS s, id(b) AS d, properties(t) AS p"))
-    SCH = list(db.execute_cypher("MATCH (x:Schedule) RETURN properties(x) AS p"))
+    S = {r['k']: plain_row(r) for r in db.execute_cypher("MATCH (s:State) RETURN id(s) AS k, s.id AS id, s.initial AS i, s.final AS f")}
+    T = [plain_row(r) for r in db.execute_cypher("MATCH (a:State)-[t:TRANSITION]->(b:State) RETURN id(a) AS s, id(b) AS d, properties(t) AS p")]
+    SCH = [plain_row(r) for r in db.execute_cypher("MATCH (x:Schedule) RETURN properties(x) AS p")]
     NS = "http://www.w3.org/2005/07/scxml"; E = lambda tag, **a: etree.Element(f"{{{NS}}}{tag}", **{k: str(v) for k, v in a.items()})
     name = lambda k: S[k]['id'].split('/')[1]
     root = etree.Element(f"{{{NS}}}scxml", nsmap={None: NS}, version="1.0", datamodel="ecmascript", initial=[name(k) for k in S if S[k]['i']][0], name="loan")

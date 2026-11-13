@@ -43,7 +43,7 @@ class Parser:
         )
 
     def name(self):
-        """A label, type, key or variable — a keyword in a name's place is a name (Grafeo 0.5.43
+        """A label, type, key or variable — a keyword in a name's place is a name (Grafeo 0.6.2
         accepts date, to and on as names)."""
         k, t, n, raw, _ = self.peek()
         if k in ("id", "kw"):

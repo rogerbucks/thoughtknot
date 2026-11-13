@@ -12,9 +12,10 @@ WHY (4 Oct 2026): the Graph spec model's E8 proof — source plus engine re-crea
 needs the engine itself in the vault, so the conformance suite (spec §17) can run it. Executed, not
 imported: set MODE = 'rebuild' and SOURCE = {graph: GQL text} in the globals, then exec this file.
 'forward' mode reads the session's original inputs and is kept only as the record of how the demo was built.
-Needs Grafeo 0.5.43 in ~/.venvs/graphspec.
+Needs Grafeo 0.6.2 in ~/.venvs/graphspec.
 """
 import grafeo, re, json, hashlib, pathlib, base64, calendar, heapq, datetime as dt, sys
+from graphspec.engine.queries import plain_row   # rows as Grafeo 0.5.43 gave them: floats, naive UTC
 from zoneinfo import ZoneInfo
 UTC = dt.timezone.utc; BNE = ZoneInfo('Australia/Brisbane'); SYD = ZoneInfo('Australia/Sydney')
 MODE = globals().get('MODE', 'forward'); ROUNDING = globals().get('ROUNDING', 'per-month')
@@ -22,7 +23,7 @@ ENGINE_V = 'engine:mac14@0.3'
 db = grafeo.GrafeoDB()
 for g in ('ledger', 'process', 'decisions', 'catalog'): db.execute(f"CREATE GRAPH {g}")
 def strip(src): return "\n".join(l for l in src.splitlines() if not l.strip().startswith("//"))
-def G(g, s): db.set_graph(g); return list(db.execute(s))
+def G(g, s): db.set_graph(g); return [plain_row(r) for r in db.execute(s)]
 def lit(t):
     m = int(t.utcoffset().total_seconds() // 60)
     return f"DATETIME '{t.strftime('%Y-%m-%dT%H:%M:%S')}{'+' if m >= 0 else '-'}{abs(m)//60:02d}:{abs(m)%60:02d}'"

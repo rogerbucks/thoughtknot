@@ -10,13 +10,14 @@ Writes: nothing (library).
 
 The one implementation the spec's tests run against; the cases and their expected answers are data
 in the test documents (spec §17), not code here. It reads and checks with the reader by default
-(req:3.reader-default): a plain install needs no engine (req:14.no-engine-install). Grafeo 0.5.43,
+(req:3.reader-default): a plain install needs no engine (req:14.no-engine-install). Grafeo 0.6.2,
 the dialect the spec names (§3), is the optional extra graph-spec[grafeo], for database work and
 for a host that sets PARSER = 'grafeo'; PyYAML is pinned in python/graph_spec.
 A host sets CLASSIFICATION_NOTE, OWNER_ENGINE and WRITTEN_BY after import (see
 graphspec/engine/settings.py); the defaults name no machine or person.
 
-DIALECT — Grafeo 0.5.43, pinned; the full list is E10 of the Graph spec model:
+DIALECT — Grafeo 0.6.2, pinned; the traps the linter flags (measured on 0.5.43) are E10 of
+the Graph spec model:
   reserved words include on, to, for, date, groups, Group · ZONED DATETIME comparisons return null
   (store DATETIME with an offset) · an aggregate mixed with a plain value in one expression returns
   null (aggregate first with WITH) · uncorrelated CALL · no byte literals · CREATE GRAPH TYPE not

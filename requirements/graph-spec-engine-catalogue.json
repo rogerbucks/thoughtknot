@@ -13,7 +13,7 @@
   },
   "referenceEngine": {
     "name": "grafeo",
-    "version": "0.5.43"
+    "version": "0.6.2"
   },
   "certificate": {
     "fields": ["engine", "engineVersion", "spec", "catalogue", "knownAnswers", "certifiedOn"],
@@ -21,10 +21,10 @@
   },
   "example": {
     "engine": "grafeo",
-    "engineVersion": "0.5.43",
+    "engineVersion": "0.6.2",
     "spec": "1.2",
     "catalogue": "1",
     "knownAnswers": ["known-answers:lending-demo@3"],
-    "certifiedOn": "2026-10-04"
+    "certifiedOn": "2026-11-13"
   }
 }
