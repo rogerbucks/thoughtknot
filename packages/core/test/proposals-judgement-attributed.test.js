@@ -1,7 +1,8 @@
 // Who proposed and who decided, kept as W3C PROV attributions in the note's judgement graph (the graph spec's
 // req:24.prov-attributed). Each Decision is WAS_ATTRIBUTED_TO the proposer (the change set's `by`) and the person who
-// decided. Each is an agent typed Person or Model (a Model counts as a SoftwareAgent). The plain `proposed_by` and
-// `decided_by` texts stay, as typed; the decider is still never a link to a Person of the data graph.
+// decided. Each is an agent typed Person or Model (a Model counts as a SoftwareAgent). The plain `decided_by` text
+// stays, as typed; the decider is still never a link to a Person of the data graph. Who proposed it is kept once: the
+// link, or the plain `proposed_by` text only when the proposer's kind is not known (spec_ai_rules_agree).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
@@ -9,6 +10,7 @@ import { readNote } from '../src/drawing.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { C1, C2, C3, C4, NOTE_WITH_ADA, NOW, blocksOf, noteWithChangeSet, proposalOf } from './proposals-fixtures.js';
 
+const ROGER = { name: 'Roger' };
 const written = (proposal = proposalOf()) => noteWithChangeSet(proposal, NOTE_WITH_ADA);
 const accepted = (r) => {
   assert.equal(r.ok, true, 'refused: ' + (r.reason ?? ''));
@@ -47,13 +49,30 @@ describe('req:24.prov-attributed: a decision is attributed to the proposer and t
     assert.deepEqual(attributions(r.note, C3), { proposed: [['Model'], 'ada'], decided: [['Person'], 'Roger'] });
   });
 
-  test('the plain texts stay beside the links, exactly as typed', () => {
+  test('the decider’s plain text stays beside its link, exactly as typed', () => {
     const { note } = written();
     const r = accepted(new ProposalReview(proposalOf()).accept(note, [C3], { name: 'Dr  Roger B.' }, { at: NOW }));
     const g = judgementGraph(r.note);
     const d = g.labelled('Decision').find((x) => g.p(x).change === C3);
     assert.equal(g.p(d).decided_by, 'Dr  Roger B.');
-    assert.equal(g.p(d).proposed_by, 'ada');
+  });
+
+  test('who proposed a change is kept in one place: the link, or the plain text when its kind is not known', () => {
+    const decision = (by) => {
+      const r = accepted(
+        new ProposalReview(proposalOf({ by })).accept(written(proposalOf({ by })).note, [C3], ROGER, { at: NOW }),
+      );
+      const g = judgementGraph(r.note);
+      return { p: g.p(g.labelled('Decision').find((x) => g.p(x).change === C3)), to: attributions(r.note, C3) };
+    };
+    for (const kind of ['model', 'person']) {
+      const d = decision({ name: 'ada', kind });
+      assert.equal(d.p.proposed_by, undefined, kind);
+      assert.equal(d.to.proposed[1], 'ada', kind);
+    }
+    const unknown = decision({ name: 'ada' });
+    assert.equal(unknown.p.proposed_by, 'ada');
+    assert.equal(unknown.to.proposed, undefined);
   });
 
   test('a proposer that is a person is a Person, and one whose kind is not known is attributed to nobody', () => {

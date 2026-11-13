@@ -4,10 +4,11 @@
 //
 // Each decision is a `Decision` in the note's judgement graph. That is a gql block whose graph is `judgements` (or ends
 // `_judgements`). It is reused when the note has one, else added after the change set. It holds the change's statement.
-// So a decided change is still shown and a rejected one can be read again. It also holds who proposed it (the change
-// set's `by`) and who decided and when. The decider is plain text, kept exactly as typed in the settings. It is "you"
-// when none is set. Each Decision is also WAS_ATTRIBUTED_TO the proposer and the decider (W3C PROV). This is the graph
-// spec's req:24.prov-attributed. They are agents of this judgement graph only. The decider is never a link to a Person
+// So a decided change is still shown and a rejected one can be read again. It also holds who decided and when. The
+// decider is plain text, kept exactly as typed in the settings. It is "you" when none is set. Each Decision is also
+// WAS_ATTRIBUTED_TO the proposer (the change set's `by`) and the decider (W3C PROV). This is the graph spec's
+// req:24.prov-attributed. Who proposed it is kept in one place: that link. Only a proposer of unknown kind has no
+// link, so its name is kept as plain `proposed_by` text instead. They are agents of this judgement graph only. The decider is never a link to a Person
 // of the data graph.
 import { items } from './block-items.ts';
 import { appended } from './linked-list.ts';
@@ -120,8 +121,18 @@ export function inOrder(
 const nameOf = (graph: string, proposal: string, change: string): string =>
   `decision_${graph}_${proposal}_${change}`.replace(/\W/g, '_');
 
-/** One Decision as an item of the judgement block: every property on the one line, text quoted as GQL writes it. */
-function itemOf(r: ToRecord, graph: string, proposal: string, proposedBy: string): string {
+/**
+ * An agent's label in the judgement graph. A Model for a model, a Person for a person or a graph step, none when the
+ * kind is unknown.
+ */
+const agentLabel = (kind: ProposerKind): string | null =>
+  kind === 'model' ? 'Model' : kind === 'unknown' ? null : 'Person';
+
+/**
+ * One Decision as an item of the judgement block: every property on the one line, text quoted as GQL writes it. Who
+ * proposed it is its PROV link. The plain `proposed_by` text is written only when the proposer's kind is not known.
+ */
+function itemOf(r: ToRecord, graph: string, proposal: string, proposedBy: Proposer): string {
   const c = r.change;
   const text = statementOf(c);
   const props = [
@@ -132,20 +143,14 @@ function itemOf(r: ToRecord, graph: string, proposal: string, proposedBy: string
     `statement: ${valueGql(text)}`,
     `group: ${valueGql(c.group)}`,
     ...(c.reason ? [`reason: ${valueGql(c.reason)}`] : []),
-    `proposed_by: ${valueGql(proposedBy)}`,
+    // one place for who proposed it (spec_ai_rules_agree): the link, or this text when there can be no link
+    ...(agentLabel(proposedBy.kind) ? [] : [`proposed_by: ${valueGql(proposedBy.name)}`]),
     `decided_by: ${valueGql(r.decision.by)}`,
     `at: ${valueGql(r.decision.at)}`,
     `order: ${r.order}`,
   ];
   return `(${nameOf(graph, proposal, c.id)}:Decision {${props.join(', ')}})`;
 }
-
-/**
- * An agent's label in the judgement graph. A Model for a model, a Person for a person or a graph step, none when the
- * kind is unknown.
- */
-const agentLabel = (kind: ProposerKind): string | null =>
-  kind === 'model' ? 'Model' : kind === 'unknown' ? null : 'Person';
 
 /** A short hash of a text (FNV-1a over its UTF-16 units, in hex), to tell agents of different names apart in a node name. */
 function shortHash(text: string): string {
@@ -206,7 +211,7 @@ export function withDecisions(
       ...attribute(d, 'decided', 'person', r.decision.by),
     ];
   });
-  const lines = [...records.map((r) => itemOf(r, graph, proposal, proposedBy.name)), ...agents, ...links];
+  const lines = [...records.map((r) => itemOf(r, graph, proposal, proposedBy)), ...agents, ...links];
   if (span) {
     const text = appended(span.text, lines);
     const w = replaceBlock(note, { line: span.open, text: span.text }, text);
