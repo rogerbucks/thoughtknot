@@ -28,6 +28,7 @@ export interface LinkMotion {
   reversed: number[];
 }
 import type { DeclaredList } from '../properties/list-row';
+import type { NamedFilters } from '../../filter-named.ts';
 import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
 import type { ProposalCard } from '../proposals/proposal-strip';
@@ -198,6 +199,8 @@ export interface ViewOptions {
   seen?: { before?: Seen; keep(seen: () => Seen): void };
   /** The exploration its style graph saved, which it opens on, and how its sidebar saves one (§71, explore_saved). */
   exploring?: Exploring;
+  /** The filters the style graph saved by name, to pick in the Filter panel, and how to save or delete one (ES§25). */
+  named?: NamedFilters;
 }
 
 /** A card's saved exploration, to open on, and how to save one: only where the note is edited (explore_saved). */

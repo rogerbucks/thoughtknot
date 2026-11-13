@@ -148,6 +148,9 @@ export const VALUES_LATE = [
   'sampleExports',
   'saveEdit',
   'savedExploreFor',
+  // a filter saved by name (ES§25, untangle_filter_saved), 13 Nov 2026
+  'namedFilterRemoved',
+  'namedFiltersOf',
   'sayWords',
   'scaledMarks',
   'scenarioText',

@@ -30,8 +30,8 @@ import { askPanelIn, untangledIn } from './untangle-ask.ts';
 import type { FilterAskHost, FilterAskPanel, ShownAsk } from './untangle-ask.ts';
 import type { LegendPanel } from './untangle-legend';
 
-/** What untangling asks of its card. */
-export interface UntangleHost {
+/** What untangling asks of its card; an AI to ask, and the filters saved by name, for its filter (untangle_ask_filter). */
+export interface UntangleHost extends Pick<FilterAskHost, 'describe' | 'named'> {
   drawing: GraphDrawing;
   reading: NoteReading;
   graph: string;
@@ -52,8 +52,6 @@ export interface UntangleHost {
   svg?: () => SVGSVGElement | null;
   /** The exploration the style graph saved, and how to save one (explore_saved). */
   exploring?: Exploring;
-  /** Asks an AI for a filter from words, only while AI is on (untangle_ask_filter): the host shows what is sent first. */
-  describe?: FilterAskHost['describe'];
 }
 
 /** How far the thing shown with its neighbours reaches (`steps`), and a step further (1) or fewer (-1) round it. */

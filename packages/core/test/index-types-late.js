@@ -248,6 +248,9 @@ export const TYPES_LATE = [
   'SavedExplore',
   // a saved exploration (§71), 31 Oct 2026
   'ExploreSave',
+  // a filter saved by name (ES§25, untangle_filter_saved), 13 Nov 2026
+  'NamedFilterSave',
+  'NamedFilters',
   'Scenario',
   'Scheduler',
   'SchemaMove',
