@@ -39,6 +39,26 @@ export function bendOf(spots: Iterable<Spot>): number {
   return Number.isFinite(half) && half > 0 ? REACH / half : 0;
 }
 
+/**
+ * `view` turned back by whole turns of the ball, so it faces the drawing again from the other side. The drawing lies
+ * once round the ball. A pan that goes on past its edge comes round to it again, as a world does (Roger, 13 Nov
+ * 2026). The jump is made only half a turn away, where the whole drawing is round the back, so it never shows.
+ */
+export function aroundAgain(view: View, spots: Iterable<Spot>): View {
+  if (!view.globe) return view;
+  let [left, top, right, bottom] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const s of spots)
+    [left, top, right, bottom] = [Math.min(left, s.x), Math.min(top, s.y), Math.max(right, s.x), Math.max(bottom, s.y)];
+  if (!Number.isFinite(left)) return view;
+  const turn = (2 * Math.PI) / view.globe,
+    [cx, cy] = middleOf(view);
+  const [nx, ny] = [
+    Math.round((view.x + cx / view.scale - (left + right) / 2) / turn),
+    Math.round((view.y + cy / view.scale - (top + bottom) / 2) / turn),
+  ];
+  return nx || ny ? { ...view, x: view.x - nx * turn, y: view.y - ny * turn } : view;
+}
+
 /** The middle of the part of the screen the controls leave clear: the point of the ball that faces you. */
 export function middleOf(view: View): [number, number] {
   const c = view.clear ?? { top: 0, right: 0, bottom: 0, left: 0 };

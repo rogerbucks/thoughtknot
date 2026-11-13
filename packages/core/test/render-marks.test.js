@@ -138,8 +138,9 @@ test('a road says its count each way, and a single link says nothing', () => {
 });
 
 // proves: render_marks
-test('roads join only neighbours in the same room', () => {
-  const { scene, marks } = picture(2);
+test('roads join only neighbours in the same room, while no room fills the screen', () => {
+  const { scene, marks } = picture(0.3);
+  assert.ok(marks.some((m) => m.kind === 'road'));
   for (const r of marks.filter((m) => m.kind === 'road'))
     assert.equal(scene.nodes.get(r.a).parent, scene.nodes.get(r.b).parent, `${r.a} to ${r.b}`);
 });
@@ -485,4 +486,40 @@ test('only what the level being read shows can be picked: far out the subjects, 
   assert.ok(far.length && far.every((d) => d === 0), `far out only subjects: ${far}`);
   const near = pickable(6);
   assert.ok(near.length && near.every((d) => d === 2), `close in only items: ${near}`);
+});
+
+// Roger, 13 Nov 2026: "Highways at a zoomed in level disappear but no links appear at the mid level zoom to indicate
+// what the links were".
+// proves: render_marks
+test('as a highway fades inside a room, the links it carried fade in one level in, so a way out never goes blank', () => {
+  const things = [];
+  for (const subject of ['Work', 'Money', 'Home'])
+    for (const area of ['A', 'B'])
+      for (let i = 0; i < 8; i++) things.push(thing(`${subject[0]}${area}${i}`, { subject, area }));
+  const scene = sceneOf({ things, links: [link('WA0', 'MA0'), link('MA1', 'WB1'), link('HA0', 'WA2')] });
+  const spots = roomsOf(scene);
+  const sizes = roomSizes(scene, spots);
+  const work = spots.get(scene.named[0]);
+  // the rooms one end of the link WA0 to MA0 sits in, far to near, and the same for the other end
+  const pathOf = (key) => {
+    const path = [];
+    for (let at = key; at !== undefined; at = scene.nodes.get(at).parent) path.unshift(at);
+    return path;
+  };
+  const [from, to] = [pathOf('WA0'), pathOf('MA0')];
+  for (let fill = 0.3; fill <= 6; fill *= 1.15) {
+    const scale = (fill * 800) / (2 * work.r);
+    const view = { x: work.x - 640 / scale, y: work.y - 400 / scale, scale, w: 1280, h: 800 };
+    const roads = marksOf(scene, spots, detailAt(sizes, scale), LIGHT, view).filter((m) => m.kind === 'road');
+    const carried = roads.filter((r) =>
+      from.some((a, i) => (r.a === a && r.b === to[i]) || (r.b === a && r.a === to[i])),
+    );
+    const most = Math.max(0, ...carried.map((r) => r.alpha));
+    assert.ok(most >= 0.25, `with Work ${fill.toFixed(2)} of the screen across, a road shows the link (${most})`);
+  }
+  // close in, the link runs between the two items themselves
+  const scale = (6 * 800) / (2 * work.r);
+  const near = { x: work.x - 640 / scale, y: work.y - 400 / scale, scale, w: 1280, h: 800 };
+  const roads = marksOf(scene, spots, detailAt(sizes, scale), LIGHT, near).filter((m) => m.kind === 'road');
+  assert.ok(roads.some((r) => [r.a, r.b].sort().join() === 'MA0,WA0'));
 });

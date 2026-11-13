@@ -202,7 +202,7 @@ A domain is modelled as **separate graphs, one per role**. Names are chosen per 
 - **A prefixed id is global.** An id written `<system>:<key>` must be read as global, the same thing in every graph that uses it — `person:alice`, `note:<file name>`.
 - **Local, said explicitly.** A local id may be written `local:<name>`, and must be when a bare name would read as global, because it contains a colon.
 - **Forced, when a graph asks.** A graph may insist that every local id says so, by `ids: 'explicit'` on its `GraphMeta`, or `· ids explicit` in a draft's header. In such a graph a bare id must be refused, and a thing written without an id must take `local:<name>`.
-- **Joins match global ids only.** Graphs read together must match things by global ids, never by local ones, and must show a local id with its graph — `reader_choice/large_reader`.
+- **Joins match global ids only.** Graphs read together must match things by global ids, never by local ones — `reader_choice/large_reader`.
 
 ### 11. Derived data, caches and proofs
 
@@ -751,12 +751,9 @@ Roger, 10 Oct 2026: *"Confirm the three homes for extensions"* — [[2026-10-10 
 - **Meaning goes in the schema graph.** An extension that changes what a graph means — a reverse name, a reading, a cardinality, a provenance — must be written as properties of its `Meta:ElementType` in the schema graph, never in a comment.
 - **Tool hints go in tagged comments.** An extension that is safe to lose must be written as a whole line `//@ key: value`, owned by the element on the line directly below, under the ownership rules of §26. Engines must ignore it, and exports must keep it where the target format has comments. A run may mix `//@` and `///` lines (§26).
 - **Appearance goes in the style graph.** Colour, layout and default view must be written in the style graph in the same note, never in the data graph or a sidecar file.
-- **A local id is shown with its graph.** A view must show a local id with its graph, so two things that share a local id are never mistaken for one.
-- **A correction is shown as one.** A judgement replaced by a newer one is shown as corrected by a new judgement that replaces it. The old one stays folded away.
+- **A correction replaces, and keeps.** A judgement is corrected by a new judgement that replaces it: the new one supersedes it. The old one is kept, folded away.
+- **How things look is not here.** This spec holds only the data a view needs. How a view shows it lives in the editor's requirements and its view settings.
 - **The AI challenges only when asked.** An AI may question a judgement, but AI challenges only when asked.
-- **Shown names are gentle.** A view shows paradox as clash, excuse as exception and overdue as past its revisit date. The words shown are clash, exception, past its revisit date. The names stored do not change.
-- **A likelihood shows its range.** A likelihood word is never shown alone, because a likelihood word always shows its range.
-- **Altitude has one plain sentence.** Altitude has one plain definition: altitude is how far a view stands back. High shows the whole and low shows the detail.
 - **Notes are not extensions.** Text for people is a `///` note (§26); a `//@` line is for tools.
 - **Two readers, one answer.** Both readers must read the same `//@` lines from the same text, proved by shared conformance cases. *(Not yet built.)*
 
