@@ -2,7 +2,7 @@
   "name": "thoughtknot-vscode",
   "displayName": "ThoughtKnot",
   "description": "Draw and edit the graph blocks of your Markdown notes, in a VS Code tab.",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "publisher": "thoughtknot",
@@ -102,9 +102,9 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@thoughtknot/app": "0.9.0",
-    "@thoughtknot/claude-code": "0.9.0",
-    "@thoughtknot/core": "0.9.0"
+    "@thoughtknot/app": "0.10.0",
+    "@thoughtknot/claude-code": "0.10.0",
+    "@thoughtknot/core": "0.10.0"
   },
   "devDependencies": {
     "@types/vscode": "1.145.0"

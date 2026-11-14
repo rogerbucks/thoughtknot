@@ -1,6 +1,6 @@
 {
   "name": "@thoughtknot/app",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "The desktop app: the browser editor in a Tauri window, over a plain folder of notes, offline.",
   "license": "MPL-2.0",
@@ -14,8 +14,8 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@thoughtknot/claude-code": "0.9.0",
-    "@thoughtknot/core": "0.9.0",
-    "@thoughtknot/sync": "0.9.0"
+    "@thoughtknot/claude-code": "0.10.0",
+    "@thoughtknot/core": "0.10.0",
+    "@thoughtknot/sync": "0.10.0"
   }
 }
