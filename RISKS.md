@@ -36,7 +36,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
-| LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
+| LEGAL-3 | The iPhone app's encryption answer has no lawyer's check yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | SEC-23 | Kept drafts hold note text that Claude can read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | SEC-24 | A hand-started desktop build runs any branch with the signing keys | ●○○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
 | SEC-25 | The panel may write anywhere in its checkout | ●○○ | ●○○ | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
@@ -340,15 +340,15 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-### LEGAL-3 The iPhone app's encryption has no export answer yet
+### LEGAL-3 The iPhone app's encryption answer has no lawyer's check yet
 
 **Who found it:** Senior security engineer. **Where:** `requirements/editor-requirements.md`, `packages/app/**`.
 
 **Risk:** ios_app keeps notes encrypted with keys in the Keychain, and sync may add more. TestFlight, the App Store and notarising each ask about encryption, and some answers need a report in the US or France. A wrong answer can pull the app.
 
-**Fix:** Before the first TestFlight build, a lawyer confirms the export answer and any report due. Use Apple's own encryption where possible. Set ITSAppUsesNonExemptEncryption to match.
+**Fix:** The app uses only Apple's built-in encryption, so ITSAppUsesNonExemptEncryption is false (Roger, 14 Nov 2026, for TestFlight builds he alone tests). Before any public release, a lawyer confirms the export answer and any report due.
 
-**Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
+**Check:** A test holds the Info.plist value (packages/app/test/app-config.test.js). A person checks, with a lawyer, before any public release.
 
 ### SEC-23 Kept drafts hold note text that Claude can read
 
