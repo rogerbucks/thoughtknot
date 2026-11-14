@@ -70,7 +70,7 @@ describe('a board offered as things, links and groups', () => {
     const twin = BOARD.replace("text: 'Dana'", "text: 'Ann'");
     const r = boardProposal(note(TEAM, twin), twin, { selection: ['s1'] });
     assert.deepEqual(adds(r), ["(ann_2:Person {name: 'Ann'})"]);
-    const linked = BOARD.replace('(s1:Sticky {', "(s1:Sticky {graph: 'ann', ").replace('(s2:', '(s2:');
+    const linked = BOARD.replace('(s1:Sticky {', "(s1:Sticky {graph: 'ann', ");
     const q = boardProposal(note(TEAM, linked), linked, { selection: ['s2'] });
     assert.ok(!adds(q).some((g) => g.includes("'Dana'")), 'a linked item is not offered again');
     assert.ok(adds(q).includes('(ann)-[:MENTORS]->(eli_ng)'), 'a connector joins the thing it stands for');
