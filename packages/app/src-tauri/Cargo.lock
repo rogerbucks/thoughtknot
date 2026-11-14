@@ -3467,7 +3467,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-keeper"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "serde",
  "tauri",
@@ -3624,7 +3624,7 @@ dependencies = [
 
 [[package]]
 name = "thoughtknot-app"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "automerge",
  "serde",

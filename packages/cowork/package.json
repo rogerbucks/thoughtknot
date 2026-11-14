@@ -1,6 +1,6 @@
 {
   "name": "@thoughtknot/cowork",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "The Copilot Cowork skill: read, check, draw and edit the graph blocks of notes kept in Microsoft 365, on the same core.",
   "license": "MPL-2.0",
@@ -9,6 +9,6 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@thoughtknot/core": "0.9.0"
+    "@thoughtknot/core": "0.10.0"
   }
 }
