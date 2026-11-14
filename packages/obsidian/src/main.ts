@@ -78,7 +78,7 @@ export default class ThoughtKnotPlugin extends Plugin {
   saved: Saved = {};
   /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
   private schemas: Map<string, string[]> | null = null;
-  private marks!: WindowMarks; // the settings' marks on each window's page (§69)
+  private marks!: WindowMarks; // the settings' marks on each window's page (ES§69)
 
   override async onload(): Promise<void> {
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
