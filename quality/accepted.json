@@ -161,6 +161,13 @@
       "to": 21,
       "reason": "All 21 are one flaw (minimatch, GHSA-g3hv-75wg-m249) counted again for each lint tool that depends on it. Build machines only, never shipped; accepted as risk SEC-26 and by Roger, 3 Nov 2026. Undo when the lint tools accept minimatch 11.0.1 or later.",
       "date": "2026-11-03"
+    },
+    {
+      "metric": "quiet_run_bytes",
+      "from": 14,
+      "to": 117,
+      "reason": "0.9.0 ships now, privately. A plain run prints one console warning, \"web workers cannot run here\", from a layout test where no worker can start; it is meant to be said once. Accepted by Roger, 14 Nov 2026.",
+      "date": "2026-11-14"
     }
   ]
 }
