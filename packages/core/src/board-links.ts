@@ -2,7 +2,7 @@
 // - An item that became one thing names it, in its `graph` property. The thing's details say it is on a board: which
 //   board, and which item. Each opens the other.
 // - A rename on either side follows to the other. A thing renamed changes every item that names it. An item's words
-//   changed give the change that renames the thing, offered as a proposal like any change (§17).
+//   changed give the change that renames the thing, offered as a proposal like any change (ES§17).
 // - Deleting a thing never deletes its item: the item is marked unlinked. Deleting an item never deletes its things.
 // - Each edit gives the board's text as it was too, so an undo puts both sides back.
 // An item that became several things, a list, names none: its things are linked by what they cite. Host-free and pure.
